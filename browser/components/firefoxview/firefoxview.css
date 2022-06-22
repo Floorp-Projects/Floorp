@@ -4,21 +4,27 @@
 
 :host,
 :root {
-  --content-area-padding: 16px;
-  --sidebar-width: var(--in-content-sidebar-width);
+  --content-area-gutter: 24px;
+  --sidebar-width: 200px;
   --header-spacing: 40px;
   --footer-spacing: 80px;
 
   --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
 }
 
+:root {
+  /* align the base font-size on root element with that of <body>
+     so rem-based layout widths and break-points behave predictably */
+  font-size: 15px;
+}
+
 body {
   display: flex;
-  align-items: stretch;
   justify-content: center;
   padding-block: var(--header-spacing) var(--footer-spacing);
-  padding-inline: var(--content-area-padding);
-  max-width: 90rem;
+  padding-inline: var(--content-area-gutter);
+  max-width: 96rem;
+  margin-inline: auto;
 }
 
 h1 {
@@ -27,34 +33,34 @@ h1 {
 }
 
 .content-container {
-  padding-inline: var(--content-area-padding);
+  padding-inline: var(--content-area-gutter);
+  padding-block: 16px;
 }
 
 body > nav {
-  border-inline-end-width: 1px;
-  flex: 0 1 content;
-  min-width: calc(var(--content-area-padding) * 2 + var(--sidebar-width));
+  flex: 0 0 var(--sidebar-width);
 }
 
 body > main {
   flex: 1 1 auto;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  column-gap: 16px;
+  grid-template-columns: 2fr 1fr;
 }
 
 body > main > section {
-  grid-column: 1 / 5;
+  grid-column: 1;
 }
 
 body > main > aside {
-  grid-column: 5 / -1;
+  grid-column: 2;
+  grid-row: 1 / 3;
 }
 
 @media (max-width: 76rem) {
   :host,
   :root {
     --sidebar-width: 40px;
+    --content-area-gutter: 12px;
   }
   .brand-logo > .brand-feature-name {
     display: none;
@@ -65,6 +71,7 @@ body > main > aside {
   body > main > section,
   body > main > aside {
     grid-column: 1 / -1;
+    grid-row: auto;
   }
 }
 
@@ -73,7 +80,6 @@ body > main > aside {
   :root {
     --header-spacing: 16px;
     --footer-spacing: 16px;
-    --content-area-padding: 8px;
   }
 }
 
@@ -262,10 +268,6 @@ body > main > aside {
 
 .setup-step > footer > progress {
   margin-block: 0 8px;
-}
-
-#recently-closed-tabs-container {
-  padding-top: 30px;
 }
 
 #recently-closed-tabs-container > p {
