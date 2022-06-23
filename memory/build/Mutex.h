@@ -16,22 +16,6 @@
 #endif
 #include "mozilla/Attributes.h"
 
-#if defined(XP_DARWIN)
-// For information about the following undocumented flags and functions see
-// https://github.com/apple/darwin-xnu/blob/main/bsd/sys/ulock.h and
-// https://github.com/apple/darwin-libplatform/blob/main/private/os/lock_private.h
-#  define OS_UNFAIR_LOCK_DATA_SYNCHRONIZATION (0x00010000)
-#  define OS_UNFAIR_LOCK_ADAPTIVE_SPIN (0x00040000)
-
-extern "C" {
-
-typedef uint32_t os_unfair_lock_options_t;
-OS_UNFAIR_LOCK_AVAILABILITY
-OS_EXPORT OS_NOTHROW OS_NONNULL_ALL void os_unfair_lock_lock_with_options(
-    os_unfair_lock_t lock, os_unfair_lock_options_t options);
-}
-#endif  // defined(XP_DARWIN)
-
 // Mutexes based on spinlocks.  We can't use normal pthread spinlocks in all
 // places, because they require malloc()ed memory, which causes bootstrapping
 // issues in some cases.  We also can't use constructors, because for statics,
@@ -76,16 +60,7 @@ struct Mutex {
 #if defined(XP_WIN)
     EnterCriticalSection(&mMutex);
 #elif defined(XP_DARWIN)
-    // We rely on a non-public function to improve performance here.
-    // The OS_UNFAIR_LOCK_DATA_SYNCHRONIZATION flag informs the kernel that
-    // the calling thread is able to make progress even in absence of actions
-    // from other threads and the OS_UNFAIR_LOCK_ADAPTIVE_SPIN one causes the
-    // kernel to spin on a contested lock if the owning thread is running on
-    // the same physical core (presumably only on x86 CPUs given that ARM
-    // macs don't have cores capable of SMT).
-    os_unfair_lock_lock_with_options(
-        &mMutex,
-        OS_UNFAIR_LOCK_DATA_SYNCHRONIZATION | OS_UNFAIR_LOCK_ADAPTIVE_SPIN);
+    os_unfair_lock_lock(&mMutex);
 #else
     pthread_mutex_lock(&mMutex);
 #endif
