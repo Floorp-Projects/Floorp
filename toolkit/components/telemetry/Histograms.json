@@ -7029,16 +7029,6 @@
     "n_buckets": 30,
     "description": "PLACES: Time to search the history library (ms)"
   },
-  "PLACES_AUTOCOMPLETE_URLINLINE_DOMAIN_QUERY_TIME_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 50,
-    "high": 2000,
-    "n_buckets": 10,
-    "description": "PLACES: Duration of the domain query for the url inline autocompletion (ms)"
-  },
   "PLACES_IDLE_FRECENCY_DECAY_TIME_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],
