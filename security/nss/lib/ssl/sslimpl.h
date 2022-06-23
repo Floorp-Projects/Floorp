@@ -666,6 +666,12 @@ typedef struct SSL3HandshakeStateStr {
         PRUint8 data[72];
     } finishedMsgs;
 
+    /* True when handshake is blocked on client certificate selection */
+    PRBool clientCertificatePending;
+    /* Parameters stored whilst waiting for client certificate */
+    SSLSignatureScheme *clientAuthSignatureSchemes;
+    unsigned int clientAuthSignatureSchemesLen;
+
     PRBool authCertificatePending;
     /* Which function should SSL_RestartHandshake* call if we're blocked?
      * One of NULL, ssl3_SendClientSecondRound, ssl3_FinishHandshake,
@@ -1139,10 +1145,6 @@ struct sslSocketStr {
 
     /* An out-of-band PSK. */
     sslPsk *psk;
-
-    /* peer data passed in during getClientAuthData */
-    const SSLSignatureScheme *peerSignatureSchemes;
-    unsigned int peerSignatureSchemeCount;
 };
 
 struct sslSelfEncryptKeysStr {
@@ -1468,6 +1470,7 @@ extern SECStatus SSL3_SendAlert(sslSocket *ss, SSL3AlertLevel level,
 extern SECStatus ssl3_DecodeError(sslSocket *ss);
 
 extern SECStatus ssl3_AuthCertificateComplete(sslSocket *ss, PRErrorCode error);
+extern SECStatus ssl3_ClientCertCallbackComplete(sslSocket *ss, SECStatus outcome, SECKEYPrivateKey *clientPrivateKey, CERTCertificate *clientCertificate);
 
 /*
  * for dealing with SSL 3.0 clients sending SSL 2.0 format hellos
@@ -1750,7 +1753,7 @@ SECStatus ssl_GetCertificateRequestCAs(const sslSocket *ss,
                                        unsigned int *nnamesp);
 SECStatus ssl3_ParseCertificateRequestCAs(sslSocket *ss, PRUint8 **b,
                                           PRUint32 *length, CERTDistNames *ca_list);
-SECStatus ssl3_CompleteHandleCertificateRequest(
+SECStatus ssl3_BeginHandleCertificateRequest(
     sslSocket *ss, const SSLSignatureScheme *signatureSchemes,
     unsigned int signatureSchemeCount, CERTDistNames *ca_list);
 SECStatus ssl_ConstructServerHello(sslSocket *ss, PRBool helloRetry,

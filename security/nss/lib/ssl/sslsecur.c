@@ -1293,6 +1293,43 @@ SSL_AuthCertificateComplete(PRFileDesc *fd, PRErrorCode error)
     return rv;
 }
 
+SECStatus
+SSL_ClientCertCallbackComplete(PRFileDesc *fd, SECStatus outcome, SECKEYPrivateKey *clientPrivateKey,
+                               CERTCertificate *clientCertificate)
+{
+    SECStatus rv;
+    sslSocket *ss = ssl_FindSocket(fd);
+
+    if (!ss) {
+        SSL_DBG(("%d: SSL[%d]: bad socket in SSL_ClientCertCallbackComplete",
+                 SSL_GETPID(), fd));
+        return SECFailure;
+    }
+
+    /* There exists a codepath which exercises each lock.
+     * Socket is blocked whilst waiting on this callback anyway. */
+    ssl_Get1stHandshakeLock(ss);
+    ssl_GetRecvBufLock(ss);
+    ssl_GetSSL3HandshakeLock(ss);
+
+    if (!ss->ssl3.hs.clientCertificatePending) {
+        /* Application invoked callback at wrong time */
+        SSL_DBG(("%d: SSL[%d]: socket not waiting for SSL_ClientCertCallbackComplete",
+                 SSL_GETPID(), fd));
+        PORT_SetError(PR_INVALID_STATE_ERROR);
+        rv = SECFailure;
+        goto cleanup;
+    }
+
+    rv = ssl3_ClientCertCallbackComplete(ss, outcome, clientPrivateKey, clientCertificate);
+
+cleanup:
+    ssl_ReleaseRecvBufLock(ss);
+    ssl_ReleaseSSL3HandshakeLock(ss);
+    ssl_Release1stHandshakeLock(ss);
+    return rv;
+}
+
 /* For more info see ssl.h */
 SECStatus
 SSL_SNISocketConfigHook(PRFileDesc *fd, SSLSNISocketConfig func,

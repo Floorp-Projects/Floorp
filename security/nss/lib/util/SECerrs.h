@@ -559,5 +559,5 @@ ER3(SEC_ERROR_POLICY_LOCKED, (SEC_ERROR_BASE + 180),
 ER3(SEC_ERROR_SIGNATURE_ALGORITHM_DISABLED, (SEC_ERROR_BASE + 181),
     "Could not create or verify a signature using a signature algorithm that is disabled because it is not secure.")
 
-ER3(SEC_ERROR_SIGNATURE_ALGORITHM_DISABLED, (SEC_ERROR_BASE + 181),
+ER3(SEC_ERROR_ALGORITHM_MISMATCH, (SEC_ERROR_BASE + 182),
     "The signature algorithm in the signature field of the certificate does not match the algorithm in its signatureAlgorithm field.")

@@ -8,8 +8,9 @@ Releases
    :glob:
    :hidden:
 
+   nss_3_80.rst
    nss_3_79.rst
-   nss_3_78_1.rst 
+   nss_3_78_1.rst
    nss_3_78.rst
    nss_3_77.rst
    nss_3_76_1.rst
@@ -36,8 +37,8 @@ Releases
 
 .. note::
 
-   **NSS 3.79** is the latest version of NSS.
-   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_79_release_notes`
+   **NSS 3.80** is the latest version of NSS.
+   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_80_release_notes`
 
    **NSS 3.79** is the latest ESR version of NSS.
    Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_79_release_notes`
@@ -45,20 +46,24 @@ Releases
 
 .. container::
 
-   Changes in 3.79 included in this release:
+   Changes in 3.80 included in this release:
 
-   - Bug 205717 - Use PK11_GetSlotInfo instead of raw C_GetSlotInfo calls.
-   - Bug 1766907 - Update mercurial in clang-format docker image.
-   - Bug 1454072 - Use of uninitialized pointer in lg_init after alloc fail.
-   - Bug 1769295 - selfserv and tstclnt should use PR_GetPrefLoopbackAddrInfo.
-   - Bug 1753315 - Add SECMOD_LockedModuleHasRemovableSlots.
-   - Bug 1387919 - Fix secasn1d parsing of indefinite SEQUENCE inside indefinite GROUP.
-   - Bug 1765753 - Added RFC8422 compliant TLS <= 1.2 undefined/compressed ECPointFormat extension alerts.
-   - Bug 1765753 - TLS 1.3 Server: Send protocol_version alert on unsupported ClientHello.legacy_version.
-   - Bug 1764788 - Correct invalid record inner and outer content type alerts.
-   - Bug 1757075 - NSS does not properly import or export pkcs12 files with large passwords and pkcs5v2 encoding.
-   - Bug 1766978 - improve error handling after nssCKFWInstance_CreateObjectHandle.
-   - Bug 1767590 - Initialize pointers passed to NSS_CMSDigestContext_FinishMultiple.
-   - Bug 1769302 - NSS 3.79 should depend on NSPR 4.34   
-
+   - Bug 1774720 - Fix SEC_ERROR_ALGORITHM_MISMATCH entry in SECerrs.h.
+   - Bug 1617956 - Add support for asynchronous client auth hooks.
+   - Bug 1497537 - nss-policy-check: make unknown keyword check optional.
+   - Bug 1765383 - GatherBuffer: Reduced plaintext buffer allocations by allocating it on initialization. Replaced redundant code with assert. Debug builds: Added buffer freeing/allocation for each record.
+   - Bug 1773022 - Mark 3.79 as an ESR release.
+   - Bug 1764206 - Bump nssckbi version number for June.
+   - Bug 1759815 - Remove Hellenic Academic 2011 Root.
+   - Bug 1770267 - Add E-Tugra Roots.
+   - Bug 1768970 - Add Certainly Roots.
+   - Bug 1764392 - Add DigitCert Roots.
+   - Bug 1759794 - Protect SFTKSlot needLogin with slotLock.
+   - Bug 1366464 - Compare signature and signatureAlgorithm fields in legacy certificate verifier.
+   - Bug 1771497 - Uninitialized value in cert_VerifyCertChainOld.
+   - Bug 1771495 - Unchecked return code in sec_DecodeSigAlg.
+   - Bug 1771498 - Uninitialized value in cert_ComputeCertType.
+   - Bug 1760998 - Avoid data race on primary password change.
+   - Bug 1769063 - Replace ppc64 dcbzl intrinisic.
+   - Bug 1771036 - Allow LDFLAGS override in makefile builds.
 

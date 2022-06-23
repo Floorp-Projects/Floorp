@@ -63,7 +63,7 @@ NSS=flags=policyOnly,moduleDB
     echo "config=\"${policy}\"" >> "$POLICY_FILE"
     echo "" >> "$POLICY_FILE"
 
-    nss-policy-check "$POLICY_FILE" >${TMP}/$HOST.tmp.$$ 2>&1
+    nss-policy-check -f identifier -f value "$POLICY_FILE" >${TMP}/$HOST.tmp.$$ 2>&1
     ret=$?
     cat ${TMP}/$HOST.tmp.$$
 

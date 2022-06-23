@@ -39,6 +39,13 @@ enum SessionResumptionMode {
   RESUME_BOTH = RESUME_SESSIONID | RESUME_TICKET
 };
 
+enum class ClientAuthCallbackType {
+  kAsyncImmediate,
+  kAsyncDelay,
+  kSync,
+  kNone,
+};
+
 class PacketFilter;
 class TlsAgent;
 class TlsCipherSpec;
@@ -144,9 +151,13 @@ class TlsAgent : public PollTarget {
   bool ConfigServerCertWithChain(const std::string& name);
   bool EnsureTlsSetup(PRFileDesc* modelSocket = nullptr);
 
-  void SetupClientAuth();
+  void SetupClientAuth(
+      ClientAuthCallbackType callbackType = ClientAuthCallbackType::kSync,
+      bool callbackSuccess = true);
   void RequestClientAuth(bool requireAuth);
-
+  void ClientAuthCallbackComplete();
+  bool CheckClientAuthCallbacksCompleted(uint8_t expected);
+  void CheckClientAuthCompleted(uint8_t handshakes = 1);
   void SetOption(int32_t option, int value);
   void ConfigureSessionCache(SessionResumptionMode mode);
   void Set0RttEnabled(bool en);
@@ -465,6 +476,11 @@ class TlsAgent : public PollTarget {
   std::vector<uint8_t> resumption_token_;
   NssPolicy policy_;
   NssOption option_;
+  ClientAuthCallbackType client_auth_callback_type_ =
+      ClientAuthCallbackType::kNone;
+  bool client_auth_callback_success_ = false;
+  uint8_t client_auth_callback_fired_ = 0;
+  bool client_auth_callback_awaiting_ = false;
 };
 
 inline std::ostream& operator<<(std::ostream& stream,
