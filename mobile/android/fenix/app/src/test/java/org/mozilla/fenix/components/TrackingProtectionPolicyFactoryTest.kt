@@ -8,6 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -137,21 +138,40 @@ class TrackingProtectionPolicyFactoryTest {
     }
 
     @Test
-    fun `adaptPolicyToChannel MUST only update properties that have changed per given channel`() {
-        mockkObject(Config)
+    fun `GIVEN TCP is enabled by nimbus WHEN applyTCPIfNeeded THEN cookie policy should be TCP`() {
+        val settings: Settings = mockk(relaxed = true)
+        every { settings.enabledTotalCookieProtection } returns true
 
         val policies = arrayOf(
             TrackingProtectionPolicy.strict(), TrackingProtectionPolicy.recommended(),
             TrackingProtectionPolicy.select()
         )
 
-        for (channel in ReleaseChannel.values()) {
-            every { Config.channel } returns channel
+        for (policy in policies) {
+            val adaptedPolicy = policy.applyTCPIfNeeded(settings)
+            assertEquals(
+                CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
+                adaptedPolicy.cookiePolicy
+            )
+        }
+    }
 
-            for (policy in policies) {
-                val adaptedPolicy = policy.adaptPolicyToChannel()
-                policy.assertPolicyEquals(adaptedPolicy, checkPrivacy = false)
-            }
+    fun `GIVEN TCP is NOT enabled by nimbus WHEN applyTCPIfNeeded THEN reuse cookie policy`() {
+        val settings: Settings = mockk(relaxed = true)
+
+        every { settings.enabledTotalCookieProtection } returns false
+
+        val policies = arrayOf(
+            TrackingProtectionPolicy.strict(), TrackingProtectionPolicy.recommended(),
+            TrackingProtectionPolicy.select()
+        )
+
+        for (policy in policies) {
+            val adaptedPolicy = policy.applyTCPIfNeeded(settings)
+            assertEquals(
+                policy.cookiePolicy,
+                adaptedPolicy.cookiePolicy
+            )
         }
     }
 
@@ -578,6 +598,7 @@ class TrackingProtectionPolicyFactoryTest {
         useCustom: Boolean = false,
         useTrackingProtection: Boolean = false
     ): Settings = mockk {
+        every { enabledTotalCookieProtection } returns false
         every { useStrictTrackingProtection } returns useStrict
         every { useCustomTrackingProtection } returns useCustom
         every { shouldUseTrackingProtection } returns useTrackingProtection

@@ -15,6 +15,9 @@ engine-settings:
     tabs-prioritization-enabled:
       type: boolean
       description: "If true, enables tabs prioritization feature."
+    total-cookie-protection-enabled:
+      type: boolean
+      description: "If true, enables the total cookie protection in all browsing modes."
 homescreen:
   description: The homescreen that the user goes to when they press home or new tab.
   hasExposure: true

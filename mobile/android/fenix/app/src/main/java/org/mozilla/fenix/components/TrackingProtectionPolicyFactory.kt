@@ -42,16 +42,22 @@ class TrackingProtectionPolicyFactory(
             }
 
         return when {
-            normalMode && privateMode -> trackingProtectionPolicy.adaptPolicyToChannel()
-            normalMode && !privateMode -> trackingProtectionPolicy.adaptPolicyToChannel().forRegularSessionsOnly()
-            !normalMode && privateMode -> trackingProtectionPolicy.adaptPolicyToChannel().forPrivateSessionsOnly()
+            normalMode && privateMode -> trackingProtectionPolicy.applyTCPIfNeeded(settings)
+            normalMode && !privateMode -> trackingProtectionPolicy.applyTCPIfNeeded(settings).forRegularSessionsOnly()
+            !normalMode && privateMode -> trackingProtectionPolicy.applyTCPIfNeeded(settings).forPrivateSessionsOnly()
             else -> TrackingProtectionPolicy.none()
         }
     }
 
     private fun createCustomTrackingProtectionPolicy(): TrackingProtectionPolicy {
+        val cookiePolicy = if (settings.enabledTotalCookieProtection) {
+            CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
+        } else {
+            getCustomCookiePolicy()
+        }
+
         return TrackingProtectionPolicy.select(
-            cookiePolicy = getCustomCookiePolicy(),
+            cookiePolicy = cookiePolicy,
             trackingCategories = getCustomTrackingCategories(),
             cookiePurging = getCustomCookiePurgingPolicy()
         ).let {
@@ -106,10 +112,17 @@ class TrackingProtectionPolicyFactory(
 }
 
 @VisibleForTesting
-internal fun TrackingProtectionPolicyForSessionTypes.adaptPolicyToChannel(): TrackingProtectionPolicyForSessionTypes {
+internal fun TrackingProtectionPolicyForSessionTypes.applyTCPIfNeeded(settings: Settings):
+    TrackingProtectionPolicyForSessionTypes {
+    val updatedCookiePolicy = if (settings.enabledTotalCookieProtection) {
+        CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
+    } else {
+        cookiePolicy
+    }
+
     return TrackingProtectionPolicy.select(
         trackingCategories = trackingCategories,
-        cookiePolicy = cookiePolicy,
+        cookiePolicy = updatedCookiePolicy,
         strictSocialTrackingProtection = strictSocialTrackingProtection,
         cookiePurging = cookiePurging
     )
