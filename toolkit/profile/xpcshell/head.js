@@ -6,7 +6,6 @@ const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -541,15 +540,6 @@ function checkProfileService(
   if (verifyBackup) {
     checkBackup(profileData);
   }
-}
-
-/**
- * Asynchronously reads an nsIFile from disk.
- */
-async function readFile(file) {
-  let decoder = new TextDecoder();
-  let data = await OS.File.read(file.path);
-  return decoder.decode(data);
 }
 
 function checkStartupReason(expected = undefined) {
