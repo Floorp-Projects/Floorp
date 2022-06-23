@@ -60,29 +60,44 @@ function initContentProcessTarget(msg) {
   const response = { watcherActorID, prefix, actor: actor.form() };
   mm.sendAsyncMessage("debug:content-process-actor", response);
 
-  // Clean up things when the client disconnects
-  mm.addMessageListener("debug:content-process-disconnect", function onDestroy(
-    message
-  ) {
+  function onDestroy() {
+    mm.removeMessageListener(
+      "debug:content-process-disconnect",
+      onContentProcessDisconnect
+    );
+    actor.off("destroyed", onDestroy);
+
+    // Notify the parent process that the actor is being destroyed
+    mm.sendAsyncMessage("debug:content-process-actor-destroyed", {
+      watcherActorID,
+    });
+
+    // Call DevToolsServerConnection.close to destroy all child actors. It should end up
+    // calling DevToolsServerConnection.onTransportClosed that would actually cleanup all actor
+    // pools.
+    conn.close();
+
+    // Destroy the related loader when the target is destroyed
+    // and we were the last user of the special loader
+    releaseDistinctSystemPrincipalLoader(loaderRequester);
+  }
+  function onContentProcessDisconnect(message) {
     if (message.data.prefix != prefix) {
       // Several copies of this process script can be running for a single process if
       // we are debugging the same process from multiple clients.
       // If this disconnect request doesn't match a connection known here, ignore it.
       return;
     }
-    mm.removeMessageListener("debug:content-process-disconnect", onDestroy);
+    onDestroy();
+  }
 
-    // Call DevToolsServerConnection.close to destroy all child actors. It should end up
-    // calling DevToolsServerConnection.onTransportClosed that would actually cleanup all actor
-    // pools.
-    conn.close();
-  });
-
-  // Destroy the related loader when the target is destroyed
-  // and we were the last user of the special loader
-  actor.once("destroyed", () => {
-    releaseDistinctSystemPrincipalLoader(loaderRequester);
-  });
+  // Clean up things when the client disconnects
+  mm.addMessageListener(
+    "debug:content-process-disconnect",
+    onContentProcessDisconnect
+  );
+  // And also when the target actor is destroyed
+  actor.on("destroyed", onDestroy);
 
   return {
     actor,
