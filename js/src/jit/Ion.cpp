@@ -199,7 +199,7 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
   generateProfilerExitFrameTailStub(masm, &profilerExitTail);
 
   JitSpew(JitSpew_Codegen, "# Emitting exception tail stub");
-  generateExceptionTailStub(masm, &profilerExitTail);
+  generateExceptionTailStub(masm, &profilerExitTail, &bailoutTail);
 
   Linker linker(masm);
   trampolineCode_ = linker.newCode(cx, CodeKind::Other);

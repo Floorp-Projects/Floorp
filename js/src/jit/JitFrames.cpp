@@ -866,7 +866,7 @@ uintptr_t* JitFrameLayout::slotRef(SafepointSlotEntry where) {
   if (where.stack) {
     return (uintptr_t*)((uint8_t*)this - where.slot);
   }
-  return (uintptr_t*)((uint8_t*)argv() + where.slot);
+  return (uintptr_t*)((uint8_t*)thisAndActualArgs() + where.slot);
 }
 
 #ifdef JS_NUNBOX32
@@ -905,7 +905,7 @@ static void TraceThisAndArguments(JSTracer* trc, const JSJitFrameIter& frame,
 
   size_t newTargetOffset = std::max(nargs, fun->nargs());
 
-  Value* argv = layout->argv();
+  Value* argv = layout->thisAndActualArgs();
 
   // Trace |this|.
   TraceRoot(trc, argv, "ion-thisv");
@@ -1312,7 +1312,7 @@ static void TraceRectifierFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   // Baseline JIT code generated as part of the ICCall_Fallback stub may use
   // it if we're calling a constructor that returns a primitive value.
   RectifierFrameLayout* layout = (RectifierFrameLayout*)frame.fp();
-  TraceRoot(trc, &layout->argv()[0], "ion-thisv");
+  TraceRoot(trc, &layout->thisv(), "rectifier-thisv");
 }
 
 static void TraceJSJitToWasmFrame(JSTracer* trc, const JSJitFrameIter& frame) {

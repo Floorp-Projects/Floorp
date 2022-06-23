@@ -831,7 +831,8 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
   }
   void pushValue(const Address& addr);
 
-  void handleFailureWithHandlerTail(Label* profilerExitTail);
+  void handleFailureWithHandlerTail(Label* profilerExitTail,
+                                    Label* bailoutTail);
 
   /////////////////////////////////////////////////////////////////
   // Common interface.
