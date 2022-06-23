@@ -107,5 +107,5 @@ fuzzy(0-2,0-800000) == large-gradient-5.html large-gradient-5-ref.html
 fuzzy(0-4,0-800000) fails-if(useDrawSnapshot) == mask-gradient-translucent-end-color-1.html mask-gradient-translucent-end-color-1-ref.html
 
 == scaled-color-stop-position.html scaled-color-stop-position-ref.html
-fuzzy-if(winWidget,0-1,0-387) == color-stop-clamp-interpolation.html color-stop-clamp-interpolation-ref.html
+fuzzy(0-1,0-40000) == color-stop-clamp-interpolation.html color-stop-clamp-interpolation-ref.html
 fuzzy-if(swgl,0-2,0-81000) == linear-gradient-repeated.html linear-gradient-repeated-ref.html
