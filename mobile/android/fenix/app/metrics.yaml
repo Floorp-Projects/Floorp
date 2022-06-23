@@ -1636,7 +1636,7 @@ customize_home:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/25401
     data_reviews:
-      - ???
+      - https://github.com/mozilla-mobile/fenix/pull/25418#issuecomment-1163390855
     data_sensitivity:
       - interaction
     notification_emails:
@@ -5439,7 +5439,7 @@ pocket:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/25401
     data_reviews:
-      - ?????
+      - https://github.com/mozilla-mobile/fenix/pull/25418#issuecomment-1163390855
     data_sensitivity:
       - interaction
     notification_emails:
@@ -5466,7 +5466,7 @@ pocket:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/25401
     data_reviews:
-      - ???
+      - https://github.com/mozilla-mobile/fenix/pull/25418#issuecomment-1163390855
     data_sensitivity:
       - interaction
     notification_emails:
