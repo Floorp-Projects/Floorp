@@ -711,4 +711,3 @@ def extsetup(ui):
             extensions.find(ext)
         except KeyError:
             extensions.load(ui, ext, None)
-

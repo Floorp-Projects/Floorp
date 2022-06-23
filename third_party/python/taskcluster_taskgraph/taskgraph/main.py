@@ -2,7 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
 import atexit
+import json
+import logging
 import os
 import re
 import shutil
@@ -10,9 +13,6 @@ import subprocess
 import sys
 import tempfile
 import traceback
-import argparse
-import logging
-import json
 from collections import namedtuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -163,7 +163,7 @@ def dump_output(out, path=None, params_spec=None):
         fh = open(path, "w")
     else:
         print(
-            "Dumping result with parameters from {}:".format(params_name),
+            f"Dumping result with parameters from {params_name}:",
             file=sys.stderr,
         )
     print(out + "\n", file=fh)
@@ -486,7 +486,7 @@ def show_taskgraph(options):
             )
 
     if len(parameters) > 1:
-        print("See '{}' for logs".format(logdir), file=sys.stderr)
+        print(f"See '{logdir}' for logs", file=sys.stderr)
 
 
 @command("build-image", help="Build a Docker image")
@@ -501,7 +501,7 @@ def show_taskgraph(options):
     metavar="context.tar",
 )
 def build_image(args):
-    from taskgraph.docker import build_image, build_context
+    from taskgraph.docker import build_context, build_image
 
     if args["context_only"] is None:
         build_image(args["image_name"], args["tag"], os.environ)
@@ -671,10 +671,10 @@ def action_callback(options):
 @argument("--input", default=None, help="Action input (.yml or .json)")
 @argument("callback", default=None, help="Action callback name (Python function name)")
 def test_action_callback(options):
-    import taskgraph.parameters
     import taskgraph.actions
-    from taskgraph.util import yaml
+    import taskgraph.parameters
     from taskgraph.config import load_graph_config
+    from taskgraph.util import yaml
 
     def load_data(filename):
         with open(filename) as f:

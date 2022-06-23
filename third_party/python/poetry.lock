@@ -607,7 +607,7 @@ test = ["pytest", "pytest-cov", "pytest-mock", "httmock", "mock", "setuptools-li
 
 [[package]]
 name = "taskcluster-taskgraph"
-version = "1.4.0"
+version = "1.7.1"
 description = "Build taskcluster taskgraphs"
 category = "main"
 optional = false
@@ -729,7 +729,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "f473795bdc4bd0ee2360afd9b5346ede7792e1befae9cc7dd5bf6b9b814a7874"
+content-hash = "5e8aec06392b2810bc395d02c3c526dcf107ef680ced6bd8911f3fc37833a01e"
 
 [metadata.files]
 aiohttp = [
@@ -1113,8 +1113,8 @@ taskcluster = [
     {file = "taskcluster-44.2.2.tar.gz", hash = "sha256:0266a6a901e1a2ec838984a7f24e7adb6d58f9f2e221a7f613388f8f23f786fc"},
 ]
 taskcluster-taskgraph = [
-    {file = "taskcluster-taskgraph-1.4.0.tar.gz", hash = "sha256:237ed0399ef55e9eef537e6163b456c04d58a7b72bc1b55e8c61a05331170b1e"},
-    {file = "taskcluster_taskgraph-1.4.0-py3-none-any.whl", hash = "sha256:2be5ac94745180029dfad260486aafeb14f564f5a95d1d3269e0d17834273f11"},
+    {file = "taskcluster-taskgraph-1.7.1.tar.gz", hash = "sha256:9cb13e19ddf74331c51a9f1dd68afde179f148e7856269e8e5f6182e0a2e5732"},
+    {file = "taskcluster_taskgraph-1.7.1-py3-none-any.whl", hash = "sha256:736054efee8c56987417d4ad2960cfc99c91338253580eadece072a43e042718"},
 ]
 taskcluster-urls = [
     {file = "taskcluster-urls-13.0.1.tar.gz", hash = "sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367"},

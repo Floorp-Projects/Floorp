@@ -6,7 +6,6 @@
 import hashlib
 import time
 
-
 TARGET_CACHE_INDEX = "{cache_prefix}.cache.level-{level}.{type}.{name}.hash.{digest}"
 EXTRA_CACHE_INDEXES = [
     "{cache_prefix}.cache.level-{level}.{type}.{name}.latest",
@@ -27,7 +26,7 @@ def add_optimization(
     :param dict taskdesc: The description of the current task.
     :param str cache_type: The type of task result being cached.
     :param str cache_name: The name of the object being cached.
-    :param digest: A unique string indentifying this version of the artifacts
+    :param digest: A unique string identifying this version of the artifacts
         being generated. Typically this will be the hash of inputs to the task.
     :type digest: bytes or None
     :param digest_data: A list of bytes representing the inputs of this task.

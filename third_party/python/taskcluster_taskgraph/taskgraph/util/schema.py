@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import re
-import pprint
 import collections
-import voluptuous
+import pprint
+import re
 
+import voluptuous
 
 import taskgraph
 
@@ -46,18 +46,26 @@ def optionally_keyed_by(*arguments):
     schema = arguments[-1]
     fields = arguments[:-1]
 
-    # build the nestable schema by generating schema = Any(schema,
-    # by-fld1, by-fld2, by-fld3) once for each field.  So we don't allow
-    # infinite nesting, but one level of nesting for each field.
-    for _ in arguments:
-        options = [schema]
-        for field in fields:
-            options.append({"by-" + field: {str: schema}})
-        schema = voluptuous.Any(*options)
-    return schema
+    def validator(obj):
+        if isinstance(obj, dict) and len(obj) == 1:
+            k, v = list(obj.items())[0]
+            if k.startswith("by-") and k[len("by-") :] in fields:
+                res = {}
+                for kk, vv in v.items():
+                    try:
+                        res[kk] = validator(vv)
+                    except voluptuous.Invalid as e:
+                        e.prepend([k, kk])
+                        raise
+                return res
+        return Schema(schema)(obj)
+
+    return validator
 
 
-def resolve_keyed_by(item, field, item_name, **extra_values):
+def resolve_keyed_by(
+    item, field, item_name, defer=None, enforce_single_match=True, **extra_values
+):
     """
     For values which can either accept a literal value, or be keyed by some
     other attribute of the item, perform that lookup and replacement in-place
@@ -96,6 +104,26 @@ def resolve_keyed_by(item, field, item_name, **extra_values):
                         cedar: ..
                 linux: 13
                 default: 12
+
+    Args:
+        item (dict): Object being evaluated.
+        field (str): Name of the key to perform evaluation on.
+        item_name (str): Used to generate useful error messages.
+        defer (list):
+            Allows evaluating a by-* entry at a later time. In the example
+            above it's possible that the project attribute hasn't been set yet,
+            in which case we'd want to stop before resolving that subkey and
+            then call this function again later. This can be accomplished by
+            setting `defer=["project"]` in this example.
+        enforce_single_match (bool):
+            If True (default), each task may only match a single arm of the
+            evaluation.
+        extra_values (kwargs):
+            If supplied, represent additional values available
+            for reference from by-<field>.
+
+    Returns:
+        dict: item which has also been modified in-place.
     """
     # find the field, returning the item unchanged if anything goes wrong
     container, subfield = item, field
@@ -113,6 +141,8 @@ def resolve_keyed_by(item, field, item_name, **extra_values):
     container[subfield] = evaluate_keyed_by(
         value=container[subfield],
         item_name=f"`{field}` in `{item_name}`",
+        defer=defer,
+        enforce_single_match=enforce_single_match,
         attributes=dict(item, **extra_values),
     )
 
@@ -132,7 +162,7 @@ WHITELISTED_SCHEMA_IDENTIFIERS = [
 
 
 def check_schema(schema):
-    identifier_re = re.compile("^[a-z][a-z0-9-]*$")
+    identifier_re = re.compile(r"^\$?[a-z][a-z0-9-]*$")
 
     def whitelisted(path):
         return any(f(path) for f in WHITELISTED_SCHEMA_IDENTIFIERS)
@@ -182,16 +212,26 @@ class Schema(voluptuous.Schema):
     in the process.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, check=True, **kwargs):
         super().__init__(*args, **kwargs)
-        check_schema(self)
+
+        self.check = check
+        if not taskgraph.fast and self.check:
+            check_schema(self)
 
     def extend(self, *args, **kwargs):
         schema = super().extend(*args, **kwargs)
-        check_schema(schema)
+
+        if self.check:
+            check_schema(schema)
         # We want twice extend schema to be checked too.
         schema.__class__ = Schema
         return schema
+
+    def _compile(self, schema):
+        if taskgraph.fast:
+            return
+        return super()._compile(schema)
 
     def __getitem__(self, item):
         return self.schema[item]
