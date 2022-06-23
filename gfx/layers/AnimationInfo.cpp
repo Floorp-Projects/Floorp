@@ -480,8 +480,12 @@ void AnimationInfo::AddAnimationForProperty(
           ? static_cast<float>(aAnimation->PlaybackRate())
           : std::numeric_limits<float>::quiet_NaN();
   animation->transformData() = aTransformData;
-  animation->easingFunction() =
-      ComputedTimingFunction::ToLayersTimingFunction(timing.TimingFunction());
+  animation->easingFunction() = Nothing();
+  if (timing.TimingFunction().isSome()) {
+    animation->easingFunction().emplace(
+        ComputedTimingFunction::ToStyleComputedTimingFunction(
+            *timing.TimingFunction()));
+  }
   animation->iterationComposite() = static_cast<uint8_t>(
       aAnimation->GetEffect()->AsKeyframeEffect()->IterationComposite());
   animation->isNotPlaying() = !aAnimation->IsPlaying();
@@ -518,8 +522,12 @@ void AnimationInfo::AddAnimationForProperty(
     animSegment->startComposite() =
         static_cast<uint8_t>(segment.mFromComposite);
     animSegment->endComposite() = static_cast<uint8_t>(segment.mToComposite);
-    animSegment->sampleFn() =
-        ComputedTimingFunction::ToLayersTimingFunction(segment.mTimingFunction);
+    animSegment->sampleFn() = Nothing();
+    if (segment.mTimingFunction.isSome()) {
+      animSegment->sampleFn().emplace(
+          ComputedTimingFunction::ToStyleComputedTimingFunction(
+              *segment.mTimingFunction));
+    }
   }
 }
 
@@ -834,7 +842,7 @@ void AnimationInfo::AddNonAnimatingTransformLikePropertiesStyles(
                                        : AddAnimation();
     animation->property() = aProperty;
     animation->baseStyle() = std::move(aBaseStyle);
-    animation->easingFunction() = null_t();
+    animation->easingFunction() = Nothing();
     animation->isNotAnimating() = true;
   };
 

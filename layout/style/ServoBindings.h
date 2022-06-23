@@ -86,6 +86,7 @@ BASIC_SERDE_FUNCS(StyleTransform)
 BASIC_SERDE_FUNCS(StyleOffsetPath)
 BASIC_SERDE_FUNCS(StyleOffsetRotate)
 BASIC_SERDE_FUNCS(StylePositionOrAuto)
+BASIC_SERDE_FUNCS(StyleComputedTimingFunction)
 
 #undef BASIC_SERDE_FUNCS
 
