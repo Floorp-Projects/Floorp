@@ -27,6 +27,11 @@ import org.mozilla.fenix.gleanplumb.MessagingState
  */
 sealed class AppAction : Action {
     data class UpdateInactiveExpanded(val expanded: Boolean) : AppAction()
+
+    /**
+     * Updates whether the first frame of the homescreen has been [drawn].
+     */
+    data class UpdateFirstFrameDrawn(val drawn: Boolean) : AppAction()
     data class AddNonFatalCrash(val crash: NativeCodeCrash) : AppAction()
     data class RemoveNonFatalCrash(val crash: NativeCodeCrash) : AppAction()
     object RemoveAllNonFatalCrashes : AppAction()

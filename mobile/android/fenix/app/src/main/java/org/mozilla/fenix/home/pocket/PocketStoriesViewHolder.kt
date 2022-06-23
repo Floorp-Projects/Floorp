@@ -52,9 +52,22 @@ class PocketStoriesViewHolder(
     override fun Content() {
         val horizontalPadding = dimensionResource(R.dimen.home_item_horizontal_margin)
 
+        val homeScreenReady = components.appStore
+            .observeAsComposableState { state -> state.firstFrameDrawn }.value ?: false
+
         val stories = components.appStore
             .observeAsComposableState { state -> state.pocketStories }.value
 
+        /* This was originally done to address this perf issue:
+         * https://github.com/mozilla-mobile/fenix/issues/25545 for details.
+         * It was determined that Pocket content was becoming available before the first frame was
+         * rendered more regularly. Including Pocket in the first render pass significantly
+         * increases time-to-render in lower-end devices. By waiting until the first frame has
+         * rendered, the perceived performance should increase since the app becomes active more
+         * quickly. This was intended as a workaround until the Compose upgrade was completed and a
+         * more robust solution could be investigated.
+         */
+        if (!homeScreenReady) return
         LaunchedEffect(stories) {
             // We should report back when a certain story is actually being displayed.
             // Cannot do it reliably so for now we'll just mass report everything as being displayed.

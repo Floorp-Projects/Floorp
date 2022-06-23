@@ -2,6 +2,10 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- RecyclerViews will focus the first element that is focusable. This prevents views below
+the top from being scrolled to unintentionally. -->
 <View xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="0dp"/>
+    android:layout_height="0dp"
+    android:focusable="true" />

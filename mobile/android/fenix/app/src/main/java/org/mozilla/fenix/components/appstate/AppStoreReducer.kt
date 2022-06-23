@@ -26,6 +26,9 @@ internal object AppStoreReducer {
     fun reduce(state: AppState, action: AppAction): AppState = when (action) {
         is AppAction.UpdateInactiveExpanded ->
             state.copy(inactiveTabsExpanded = action.expanded)
+        is AppAction.UpdateFirstFrameDrawn -> {
+            state.copy(firstFrameDrawn = action.drawn)
+        }
         is AppAction.AddNonFatalCrash ->
             state.copy(nonFatalCrashes = state.nonFatalCrashes + action.crash)
         is AppAction.RemoveNonFatalCrash ->
