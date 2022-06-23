@@ -15,10 +15,8 @@
 
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
-#include "nsDeque.h"
 #include "nsMenuX.h"
 #include "nsObjCExceptions.h"
-#include "nsThreadUtils.h"
 #include "SDKDeclarations.h"
 
 static BOOL sNeedToUnwindForMenuClosing = NO;
@@ -38,10 +36,6 @@ static BOOL sNeedToUnwindForMenuClosing = NO;
   // non-nil between asynchronouslyOpenMenu:atScreenPosition:forView: and the
   // time at at which it is unqueued in _runMenu.
   MOZMenuOpeningInfo* mPendingOpening;  // strong
-
-  // Any runnables we want to run after the current menu event loop has been exited.
-  // Only non-empty if mRunMenuIsOnTheStack is true.
-  nsRefPtrDeque<mozilla::Runnable> mPendingAfterMenuCloseRunnables;
 
   // An incrementing counter
   NSInteger mLastHandle;
@@ -64,7 +58,6 @@ static BOOL sNeedToUnwindForMenuClosing = NO;
 
 - (void)dealloc {
   MOZ_RELEASE_ASSERT(!mPendingOpening, "should be empty at shutdown");
-  MOZ_RELEASE_ASSERT(mPendingAfterMenuCloseRunnables.GetSize() == 0, "should be empty at shutdown");
   [super dealloc];
 }
 
@@ -118,11 +111,6 @@ static BOOL sNeedToUnwindForMenuClosing = NO;
 
     // We have exited _openMenu's nested event loop.
     MOZMenuOpeningCoordinator.needToUnwindForMenuClosing = NO;
-
-    // Dispatch any pending "after menu close" runnables to the event loop.
-    while (mPendingAfterMenuCloseRunnables.GetSize() != 0) {
-      NS_DispatchToCurrentThread(mPendingAfterMenuCloseRunnables.PopFront());
-    }
   }
 
   mRunMenuIsOnTheStack = NO;
@@ -132,16 +120,6 @@ static BOOL sNeedToUnwindForMenuClosing = NO;
   if (mPendingOpening && mPendingOpening.handle == aHandle) {
     [mPendingOpening release];
     mPendingOpening = nil;
-  }
-}
-
-- (void)runAfterMenuClosed:(RefPtr<mozilla::Runnable>&&)aRunnable {
-  MOZ_RELEASE_ASSERT(aRunnable);
-
-  if (mRunMenuIsOnTheStack) {
-    mPendingAfterMenuCloseRunnables.Push(aRunnable.forget());
-  } else {
-    NS_DispatchToCurrentThread(aRunnable.forget());
   }
 }
 
