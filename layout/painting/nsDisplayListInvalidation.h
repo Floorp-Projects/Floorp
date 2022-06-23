@@ -142,7 +142,7 @@ class nsImageGeometryMixin {
       return false;
     }
 
-    return true;
+    return false;
   }
 
  private:
