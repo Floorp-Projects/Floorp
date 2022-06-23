@@ -41,7 +41,6 @@ CUSTOM_NSIS_PLUGINS = \
 	InvokeShellVerb.dll \
 	liteFirewallW.dll \
 	nsJSON.dll \
-	PinToTaskbar.dll \
 	ServicesHelper.dll \
 	ShellLink.dll \
 	UAC.dll \
