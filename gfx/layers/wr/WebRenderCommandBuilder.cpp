@@ -938,13 +938,9 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
         if (aDirty) {
           // We don't currently support doing invalidation inside 3d transforms.
           // For now just paint it as a single item.
-          nsRect buildingRect = aItem->GetBuildingRect();
-          aItem->SetBuildingRect(aItem->GetClippedBounds(mDisplayListBuilder));
-
           aItem->AsPaintedDisplayItem()->Paint(mDisplayListBuilder, aContext);
           TakeExternalSurfaces(aRecorder, aData->mExternalSurfaces,
                                aRootManager, aResources);
-          aItem->SetBuildingRect(buildingRect);
         }
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
       } else {
@@ -1014,9 +1010,6 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
     case DisplayItemType::TYPE_MASK: {
       GP("Paint Mask\n");
       auto maskItem = static_cast<nsDisplayMasksAndClipPaths*>(aItem);
-      nsRect buildingRect = maskItem->GetBuildingRect();
-      maskItem->SetBuildingRect(
-          maskItem->GetClippedBounds(mDisplayListBuilder));
       if (maskItem->IsValidMask()) {
         maskItem->PaintWithContentsPaintCallback(
             mDisplayListBuilder, aContext, [&] {
@@ -1033,7 +1026,6 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
                              aResources);
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
       }
-      maskItem->SetBuildingRect(buildingRect);
       break;
     }
     case DisplayItemType::TYPE_FILTER: {
@@ -1049,12 +1041,10 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
         nsRegion visible(aItem->GetClippedBounds(mDisplayListBuilder));
         nsRect buildingRect = aItem->GetBuildingRect();
         visible.And(visible, buildingRect);
-        aItem->SetBuildingRect(visible.GetBounds());
 
         filterItem->Paint(mDisplayListBuilder, aContext);
         TakeExternalSurfaces(aRecorder, aData->mExternalSurfaces, aRootManager,
                              aResources);
-        aItem->SetBuildingRect(buildingRect);
       }
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
       break;
@@ -2424,11 +2414,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
                            ? itemBounds
                            : aItem->GetClippedBounds(aDisplayListBuilder);
 
-  nsRegion visibleRegion(paintBounds);
   nsRect buildingRect = aItem->GetBuildingRect();
-  aItem->SetBuildingRect(paintBounds);
-  auto resetBuildingRect =
-      MakeScopeExit([&]() { aItem->SetBuildingRect(buildingRect); });
 
   const int32_t appUnitsPerDevPixel =
       aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
