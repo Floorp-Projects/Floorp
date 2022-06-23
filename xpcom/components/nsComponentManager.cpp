@@ -361,7 +361,6 @@ nsresult nsComponentManagerImpl::Init() {
 
   nsCategoryManager::GetSingleton()->SuppressNotifications(true);
 
-  RegisterModule(&kXPCOMModule);
   RegisterModule(&kNeckoModule);
   RegisterModule(&kPowerManagerModule);
   RegisterModule(&kContentProcessWidgetModule);
