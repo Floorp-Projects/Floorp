@@ -26,7 +26,7 @@ class nsINIParserImpl final : public nsIINIParser, public nsIINIParserWriter {
   bool ContainsNull(const nsACString& aStr);
 };
 
-NS_IMPL_ISUPPORTS(nsINIParserFactory, nsIINIParserFactory, nsIFactory)
+NS_IMPL_ISUPPORTS(nsINIParserFactory, nsIINIParserFactory)
 
 NS_IMETHODIMP
 nsINIParserFactory::CreateINIParser(nsIFile* aINIFile, nsIINIParser** aResult) {
@@ -43,12 +43,6 @@ nsINIParserFactory::CreateINIParser(nsIFile* aINIFile, nsIINIParser** aResult) {
 
   p.forget(aResult);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsINIParserFactory::CreateInstance(REFNSIID aIID, void** aResult) {
-  // We are our own singleton.
-  return QueryInterface(aIID, aResult);
 }
 
 NS_IMPL_ISUPPORTS(nsINIParserImpl, nsIINIParser, nsIINIParserWriter)
