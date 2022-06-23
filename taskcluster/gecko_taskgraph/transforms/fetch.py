@@ -10,15 +10,16 @@ import os
 import re
 
 import attr
-import gecko_taskgraph
+import taskgraph
 from mozbuild.shellutil import quote as shell_quote
 from mozpack import path as mozpath
 from taskgraph.util.treeherder import join_symbol
 from voluptuous import Any, Extra, Optional, Required
 
+import gecko_taskgraph
+from .base import TransformSequence
 from ..util.cached_tasks import add_optimization
 from ..util.schema import Schema, validate_schema
-from .base import TransformSequence
 
 CACHE_TYPE = "content.v1"
 
@@ -162,7 +163,7 @@ def make_task(config, jobs):
             task["scopes"] = ["secrets:get:" + job.get("secret")]
             task["worker"]["taskcluster-proxy"] = True
 
-        if not gecko_taskgraph.fast:
+        if not taskgraph.fast:
             cache_name = task["label"].replace(f"{config.kind}-", "", 1)
 
             # This adds the level to the index path automatically.

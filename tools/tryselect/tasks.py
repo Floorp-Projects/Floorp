@@ -10,6 +10,7 @@ import sys
 from collections import defaultdict
 
 import mozpack.path as mozpath
+import taskgraph
 from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozpack.files import FileFinder
@@ -17,7 +18,6 @@ from moztest.resolve import TestResolver, TestManifestLoader, get_suite_definiti
 from taskgraph.parameters import ParameterMismatch, parameters_loader
 from taskgraph.taskgraph import TaskGraph
 
-import gecko_taskgraph
 from gecko_taskgraph.generator import TaskGraphGenerator
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -80,7 +80,7 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
         },
     )
     root = os.path.join(build.topsrcdir, "taskcluster", "ci")
-    gecko_taskgraph.fast = True
+    taskgraph.fast = True
     generator = TaskGraphGenerator(root_dir=root, parameters=params)
 
     cache_dir = os.path.join(
