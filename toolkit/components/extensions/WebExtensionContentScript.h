@@ -112,10 +112,14 @@ class MozDocumentMatcher : public nsISupports, public nsWrapperCache {
       dom::GlobalObject& aGlobal, const dom::MozDocumentMatcherInit& aInit,
       ErrorResult& aRv);
 
-  bool Matches(const DocInfo& aDoc) const;
-  bool MatchesURI(const URLInfo& aURL) const;
+  bool Matches(const DocInfo& aDoc, bool aIgnorePermissions) const;
+  bool Matches(const DocInfo& aDoc) const { return Matches(aDoc, false); }
 
-  bool MatchesWindowGlobal(dom::WindowGlobalChild& aWindow) const;
+  bool MatchesURI(const URLInfo& aURL, bool aIgnorePermissions) const;
+  bool MatchesURI(const URLInfo& aURL) const { return MatchesURI(aURL, false); }
+
+  bool MatchesWindowGlobal(dom::WindowGlobalChild& aWindow,
+                           bool aIgnorePermissions) const;
 
   WebExtensionPolicy* GetExtension() { return mExtension; }
 
