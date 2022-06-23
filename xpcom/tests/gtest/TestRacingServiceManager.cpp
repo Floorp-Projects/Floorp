@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIFactory.h"
+#include "mozilla/Module.h"
 #include "nsXULAppAPI.h"
 #include "nsIThread.h"
 
-#include "nsComponentManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
@@ -195,17 +195,31 @@ TestRunnable::Run() {
 
 static Factory* gFactory;
 
+static already_AddRefed<nsIFactory> CreateFactory(
+    const mozilla::Module& module, const mozilla::Module::CIDEntry& entry) {
+  if (!gFactory) {
+    gFactory = new Factory();
+    NS_ADDREF(gFactory);
+  }
+  nsCOMPtr<nsIFactory> ret = gFactory;
+  return ret.forget();
+}
+
+static const mozilla::Module::CIDEntry kLocalCIDs[] = {
+    {&kFactoryCID1, false, CreateFactory, nullptr},
+    {&kFactoryCID2, false, CreateFactory, nullptr},
+    {nullptr}};
+
+static const mozilla::Module::ContractIDEntry kLocalContracts[] = {
+    {FACTORY_CONTRACTID, &kFactoryCID2}, {nullptr}};
+
+static const mozilla::Module kLocalModule = {mozilla::Module::kVersion,
+                                             kLocalCIDs, kLocalContracts};
+
 TEST(RacingServiceManager, Test)
 {
   nsresult rv;
-
-  gFactory = new Factory();
-  NS_ADDREF(gFactory);
-
-  nsComponentManagerImpl::gComponentManager->RegisterFactory(
-      kFactoryCID2, "factory1", FACTORY_CONTRACTID, gFactory);
-  nsComponentManagerImpl::gComponentManager->RegisterFactory(
-      kFactoryCID1, "factory2", nullptr, gFactory);
+  XRE_AddStaticComponent(&kLocalModule);
 
   AutoCreateAndDestroyReentrantMonitor mon1(&gReentrantMonitor);
 

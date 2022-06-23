@@ -80,6 +80,8 @@ already_AddRefed<nsINativeAppSupport> NS_GetNativeAppSupport();
 
 nsresult NS_NewToolkitProfileService(nsIToolkitProfileService** aResult);
 
+nsresult NS_NewToolkitProfileFactory(nsIFactory** aResult);
+
 /**
  * Try to acquire exclusive access to the specified profile directory.
  *

@@ -15,10 +15,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = "dom_power"
 
-XPCOM_MANIFESTS += [
-    "components.conf",
-]
-
 EXPORTS.mozilla.dom += [
     "WakeLock.h",
 ]
