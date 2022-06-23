@@ -1777,7 +1777,7 @@ void MacroAssemblerMIPS64Compat::checkStackAlignment() {
 }
 
 void MacroAssemblerMIPS64Compat::handleFailureWithHandlerTail(
-    Label* profilerExitTail) {
+    Label* profilerExitTail, Label* bailoutTail) {
   // Reserve space for exception information.
   int size = (sizeof(ResumeFromException) + ABIStackAlignment) &
              ~(ABIStackAlignment - 1);
@@ -1905,9 +1905,10 @@ void MacroAssemblerMIPS64Compat::handleFailureWithHandlerTail(
   // the bailout tail stub. Load 1 (true) in ReturnReg to indicate success.
   bind(&bailout);
   loadPtr(Address(sp, ResumeFromException::offsetOfBailoutInfo()), a2);
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfStackPointer()),
+          StackPointer);
   ma_li(ReturnReg, Imm32(1));
-  loadPtr(Address(sp, ResumeFromException::offsetOfTarget()), a1);
-  jump(a1);
+  jump(bailoutTail);
 
   // If we are throwing and the innermost frame was a wasm frame, reset SP and
   // FP; SP is pointing to the unwound return address to the wasm entry, so

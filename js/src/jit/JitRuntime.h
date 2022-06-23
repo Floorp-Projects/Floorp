@@ -129,9 +129,6 @@ class JitRuntime {
   // Shared exception-handler tail.
   WriteOnceData<uint32_t> exceptionTailOffset_{0};
 
-  // Shared post-bailout-handler tail.
-  WriteOnceData<uint32_t> bailoutTailOffset_{0};
-
   // Shared profiler exit frame tail.
   WriteOnceData<uint32_t> profilerExitFrameTailOffset_{0};
 
@@ -232,7 +229,8 @@ class JitRuntime {
   void generateDoubleToInt32ValueStub(MacroAssembler& masm);
   void generateProfilerExitFrameTailStub(MacroAssembler& masm,
                                          Label* profilerExitTail);
-  void generateExceptionTailStub(MacroAssembler& masm, Label* profilerExitTail);
+  void generateExceptionTailStub(MacroAssembler& masm, Label* profilerExitTail,
+                                 Label* bailoutTail);
   void generateBailoutTailStub(MacroAssembler& masm, Label* bailoutTail);
   void generateEnterJIT(JSContext* cx, MacroAssembler& masm);
   void generateArgumentsRectifier(MacroAssembler& masm,
@@ -318,10 +316,6 @@ class JitRuntime {
 
   TrampolinePtr getExceptionTail() const {
     return trampolineCode(exceptionTailOffset_);
-  }
-
-  TrampolinePtr getBailoutTail() const {
-    return trampolineCode(bailoutTailOffset_);
   }
 
   TrampolinePtr getProfilerExitFrameTail() const {
