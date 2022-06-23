@@ -27,10 +27,10 @@ enum PrintObjectType { eDoc = 0, eIFrame = 1 };
 //---------------------------------------------------
 //-- nsPrintObject Class
 //---------------------------------------------------
-class nsPrintObject {
+class nsPrintObject final {
  public:
   nsPrintObject();
-  ~nsPrintObject();  // non-virtual
+  ~nsPrintObject();
 
   nsresult InitAsRootObject(nsIDocShell* aDocShell,
                             mozilla::dom::Document* aDoc,
