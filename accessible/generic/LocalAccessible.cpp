@@ -3236,7 +3236,11 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         }
 
         LocalAccessible* acc = doc->GetAccessibleOrContainer(content);
-        if (!acc) {
+        // The document is sometimes placed too early in the list, which would
+        // cause us to return the document instead of the correct descendant.
+        // We skip the document here and handle it as a fallback when hit
+        // testing.
+        if (!acc || acc == mDoc) {
           continue;
         }
 

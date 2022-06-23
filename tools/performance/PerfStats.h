@@ -128,6 +128,7 @@ class PerfStats {
   static StaticAutoPtr<PerfStats> sSingleton;
   TimeStamp mRecordedStarts[static_cast<size_t>(Metric::Max)];
   double mRecordedTimes[static_cast<size_t>(Metric::Max)];
+  uint32_t mRecordedCounts[static_cast<size_t>(Metric::Max)];
 };
 
 static_assert(1 << (static_cast<uint64_t>(PerfStats::Metric::Max) - 1) <=

@@ -316,6 +316,15 @@ double RemoteAccessibleBase<Derived>::Step() const {
 template <class Derived>
 Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
     int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
+  if (IsOuterDoc() && aWhichChild == EWhichChildAtPoint::DirectChild) {
+    // This is an iframe, which is as deep as the viewport cache goes. The
+    // caller wants a direct child, which can only be the embedded document.
+    if (Bounds().Contains(aX, aY)) {
+      return RemoteFirstChild();
+    }
+    return nullptr;
+  }
+
   RemoteAccessible* lastMatch = nullptr;
   // If `this` is a document, use its viewport cache instead of
   // the cache of its parent document.
@@ -338,7 +347,26 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
           continue;
         }
 
+        if (acc->IsOuterDoc() &&
+            aWhichChild == EWhichChildAtPoint::DeepestChild &&
+            acc->Bounds().Contains(aX, aY)) {
+          // acc is an iframe, which is as deep as the viewport cache goes. This
+          // iframe contains the requested point.
+          RemoteAccessible* innerDoc = acc->RemoteFirstChild();
+          if (innerDoc) {
+            MOZ_ASSERT(innerDoc->IsDoc());
+            // Search the embedded document's viewport cache so we return the
+            // deepest descendant in that embedded document.
+            return innerDoc->ChildAtPoint(aX, aY,
+                                          EWhichChildAtPoint::DeepestChild);
+          }
+          // If there is no embedded document, the iframe itself is the deepest
+          // descendant.
+          return acc;
+        }
+
         if (acc == this) {
+          MOZ_ASSERT(!acc->IsOuterDoc());
           // Even though we're searching from the doc's cache
           // this call shouldn't pass the boundary defined by
           // the acc this call originated on. If we hit `this`,
@@ -346,25 +374,7 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
           break;
         }
 
-        if (acc == doc) {
-          // If we're already in `doc`s viewport cache, and the doc is
-          // not the acc this call originated on, skip it.
-          // We have to have `doc` in this list, because we need to support
-          // calling `doc->ChildAtPoint()`. Without this check, we end up
-          // calling `doc->ChildAtPoint(...)` below which changes the context of
-          // this call.
-          continue;
-        }
-
         if (acc->Bounds().Contains(aX, aY)) {
-          if (acc->IsDoc()) {
-            // If we encounter a doc, search its viewport
-            // cache. Do this even if we're looking for the
-            // deepest child, since in that case we should return
-            // the deepest child in the subdoc.
-            return acc->ChildAtPoint(aX, aY, aWhichChild);
-          }
-
           if (aWhichChild == EWhichChildAtPoint::DeepestChild) {
             // Because our rects are in hittesting order, the
             // first match we encounter is guaranteed to be the
