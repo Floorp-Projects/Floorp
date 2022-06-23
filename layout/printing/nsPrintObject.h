@@ -33,8 +33,7 @@ class nsPrintObject final {
   ~nsPrintObject();
 
   nsresult InitAsRootObject(nsIDocShell* aDocShell,
-                            mozilla::dom::Document* aDoc,
-                            bool aForPrintPreview);
+                            mozilla::dom::Document* aDoc);
   nsresult InitAsNestedObject(nsIDocShell* aDocShell,
                               mozilla::dom::Document* aDoc,
                               nsPrintObject* aParent);

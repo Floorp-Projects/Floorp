@@ -411,8 +411,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   {
     nsAutoScriptBlocker scriptBlocker;
     mPrintObject = MakeUnique<nsPrintObject>();
-    rv =
-        mPrintObject->InitAsRootObject(docShell, aDoc, mIsCreatingPrintPreview);
+    rv = mPrintObject->InitAsRootObject(docShell, aDoc);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mPrintDocList.AppendElement(mPrintObject.get());
