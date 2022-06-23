@@ -7,12 +7,3 @@ Dogear implements the merge algorithm only; it doesn't handle syncing, storage, 
 ## Requirements
 
 * Rust 1.31.0 or higher
-
-
-## Updating this package
-Once a new version of Dogear is ready to release. The new version will need to be published to [crates.io](https://crates.io/crates/dogear). Dogear follows the documentation detailed in the [Cargo book](https://doc.rust-lang.org/cargo/reference/publishing.html#publishing-a-new-version-of-an-existing-crate).
-### Steps to publish a new verison
-1. Bump the version in the `Cargo.toml` file
-2. Run `cargo publish --dry-run`
-    - Validate it does what you want it to do
-3. Run `cargo publish` and follow the steps cargo provides

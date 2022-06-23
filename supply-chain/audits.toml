@@ -34,12 +34,6 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "1.1.0 -> 1.1.1"
 
-[[audits.dogear]]
-who = "Sammy Khamis <skhamis@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.4.0 -> 0.5.0"
-notes = "The repository for this crate belongs in the Mozilla org."
-
 [[audits.getrandom]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

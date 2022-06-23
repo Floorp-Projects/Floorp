@@ -2860,7 +2860,6 @@ fn problems() {
                 DivergedParentGuid::NonFolder("bookmarkGGGG".into()).into(),
             ]),
         )
-        .note(&"bookmarkRRRR".into(), Problem::InvalidItem)
         .note(
             &"bookmarkHHHH".into(),
             Problem::DivergedParents(vec![
@@ -2887,8 +2886,7 @@ fn problems() {
             Problem::DivergedParents(vec![
                 DivergedParentGuid::Deleted("folderQQQQQQ".into()).into()
             ]),
-        )
-        .note(&"bookmarkQQQQ".into(), Problem::InvalidItem);
+        );
 
     let mut summary = problems.summarize().collect::<Vec<_>>();
     summary.sort_by(|a, b| a.guid().cmp(b.guid()));
@@ -2902,8 +2900,6 @@ fn problems() {
              nonexistent parent folderKKKKKK",
             "bookmarkLLLL has diverged parents",
             "bookmarkPPPP has deleted parent folderQQQQQQ",
-            "bookmarkQQQQ is invalid",
-            "bookmarkRRRR is invalid",
             "folderMMMMMM has nonexistent child bookmarkNNNN",
             "folderMMMMMM has nonexistent child bookmarkOOOO",
             "menu________ is a user content root, but is in children of unfiled_____",
@@ -2923,7 +2919,6 @@ fn problems() {
             parent_child_disagreements: 7,
             deleted_children: 0,
             missing_children: 2,
-            invalid_items: 2,
         }
     );
 }

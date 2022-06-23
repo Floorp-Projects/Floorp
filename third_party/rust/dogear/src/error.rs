@@ -15,7 +15,7 @@
 use std::{error, fmt, result, str::Utf8Error, string::FromUtf16Error};
 
 use crate::guid::Guid;
-use crate::Item;
+use crate::tree::Kind;
 
 pub type Result<T> = result::Result<T, Error>;
 
@@ -57,42 +57,25 @@ impl From<Utf8Error> for Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // We format the guid-specific params with <guid: {}> to make it easier on the
-        // telemetry side to parse out the user-specific guid and normalize the errors
-        // to better aggregate the data
         match self.kind() {
-            ErrorKind::MismatchedItemKind(local_item, remote_item) => write!(
+            ErrorKind::MismatchedItemKind(local_kind, remote_kind) => write!(
                 f,
-                "Can't merge local {} <guid: {}> and remote {} <guid: {}>",
-                local_item.kind, local_item.guid, remote_item.kind, remote_item.guid,
+                "Can't merge local kind {} and remote kind {}",
+                local_kind, remote_kind
             ),
-            ErrorKind::DuplicateItem(guid) => {
-                write!(f, "Item <guid: {}> already exists in tree", guid)
-            }
-            ErrorKind::MissingItem(guid) => {
-                write!(f, "Item <guid: {}> doesn't exist in tree", guid)
-            }
-            ErrorKind::InvalidParent(child, parent) => write!(
+            ErrorKind::DuplicateItem(guid) => write!(f, "Item {} already exists in tree", guid),
+            ErrorKind::MissingItem(guid) => write!(f, "Item {} doesn't exist in tree", guid),
+            ErrorKind::InvalidParent(child_guid, parent_guid) => write!(
                 f,
-                "Can't insert {} <guid: {}> into {} <guid: {}>",
-                child.kind, child.guid, parent.kind, parent.guid,
+                "Can't insert item {} into non-folder {}",
+                child_guid, parent_guid
             ),
-            ErrorKind::InvalidParentForUnknownChild(child_guid, parent) => write!(
+            ErrorKind::MissingParent(child_guid, parent_guid) => write!(
                 f,
-                "Can't insert unknown child <guid: {}> into {} <guid: {}>",
-                child_guid, parent.kind, parent.guid,
+                "Can't insert item {} into nonexistent parent {}",
+                child_guid, parent_guid
             ),
-            ErrorKind::MissingParent(child, parent_guid) => write!(
-                f,
-                "Can't insert {} <guid: {}> into nonexistent parent <guid: {}>",
-                child.kind, child.guid, parent_guid,
-            ),
-            ErrorKind::MissingParentForUnknownChild(child_guid, parent_guid) => write!(
-                f,
-                "Can't insert unknown child <guid: {}> into nonexistent parent <guid: {}>",
-                child_guid, parent_guid,
-            ),
-            ErrorKind::Cycle(guid) => write!(f, "Item <guid: {}> can't contain itself", guid),
+            ErrorKind::Cycle(guid) => write!(f, "Item {} can't contain itself", guid),
             ErrorKind::MergeConflict => write!(f, "Local tree changed during merge"),
             ErrorKind::UnmergedLocalItems => {
                 write!(f, "Merged tree doesn't mention all items from local tree")
@@ -101,13 +84,9 @@ impl fmt::Display for Error {
                 write!(f, "Merged tree doesn't mention all items from remote tree")
             }
             ErrorKind::InvalidGuid(invalid_guid) => {
-                write!(
-                    f,
-                    "Merged tree contains invalid GUID <guid: {}>",
-                    invalid_guid
-                )
+                write!(f, "Merged tree contains invalid GUID {}", invalid_guid)
             }
-            ErrorKind::InvalidByte(b) => write!(f, "Invalid byte <byte: {}> in UTF-16 encoding", b),
+            ErrorKind::InvalidByte(b) => write!(f, "Invalid byte {} in UTF-16 encoding", b),
             ErrorKind::MalformedString(err) => err.fmt(f),
             ErrorKind::Abort => write!(f, "Operation aborted"),
         }
@@ -116,12 +95,10 @@ impl fmt::Display for Error {
 
 #[derive(Debug)]
 pub enum ErrorKind {
-    MismatchedItemKind(Item, Item),
+    MismatchedItemKind(Kind, Kind),
     DuplicateItem(Guid),
-    InvalidParent(Item, Item),
-    InvalidParentForUnknownChild(Guid, Item),
-    MissingParent(Item, Guid),
-    MissingParentForUnknownChild(Guid, Guid),
+    InvalidParent(Guid, Guid),
+    MissingParent(Guid, Guid),
     MissingItem(Guid),
     Cycle(Guid),
     MergeConflict,
