@@ -22,10 +22,4 @@ UNIFIED_SOURCES += [
     "FileSystemWritableFileStream.cpp",
 ]
 
-LOCAL_INCLUDES += [
-    "/dom/fs/include",
-]
-
 FINAL_LIBRARY = "xul"
-
-include("/ipc/chromium/chromium-config.mozbuild")

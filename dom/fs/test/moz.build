@@ -26,7 +26,3 @@ TEST_HARNESS_FILES.xpcshell.dom.fs.test.common += [
     "common/nsresult.js",
     "common/test_basics.js",
 ]
-
-TEST_DIRS += [
-    "gtest",
-]

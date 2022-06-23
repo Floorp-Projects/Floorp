@@ -22,13 +22,6 @@ struct FileSystemRemoveOptions;
 
 class FileSystemDirectoryHandle final : public FileSystemHandle {
  public:
-  FileSystemDirectoryHandle(nsIGlobalObject* aGlobal,
-                            const fs::FileSystemEntryMetadata& aMetadata,
-                            fs::FileSystemRequestHandler* aRequestHandler);
-
-  FileSystemDirectoryHandle(nsIGlobalObject* aGlobal,
-                            const fs::FileSystemEntryMetadata& aMetadata);
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemDirectoryHandle,
                                            FileSystemHandle)
@@ -38,7 +31,7 @@ class FileSystemDirectoryHandle final : public FileSystemHandle {
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL Interface
-  FileSystemHandleKind Kind() const override;
+  FileSystemHandleKind Kind() override;
 
   [[nodiscard]] already_AddRefed<FileSystemDirectoryIterator> Entries();
 

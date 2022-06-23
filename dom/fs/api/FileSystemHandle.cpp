@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileSystemHandle.h"
-#include "fs/FileSystemRequestHandler.h"
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
@@ -21,13 +20,6 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemHandle);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemHandle);
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystemHandle, mGlobal);
 
-FileSystemHandle::FileSystemHandle(
-    nsIGlobalObject* aGlobal, const fs::FileSystemEntryMetadata& aMetadata,
-    fs::FileSystemRequestHandler* aRequestHandler)
-    : mGlobal(aGlobal),
-      mMetadata(aMetadata),
-      mRequestHandler(aRequestHandler) {}
-
 // WebIDL Boilerplate
 
 nsIGlobalObject* FileSystemHandle::GetParentObject() const { return mGlobal; }
@@ -39,12 +31,10 @@ JSObject* FileSystemHandle::WrapObject(JSContext* aCx,
 
 // WebIDL Interface
 
-void FileSystemHandle::GetName(nsAString& aResult) {
-  aResult = mMetadata.entryName();
-}
+void FileSystemHandle::GetName(DOMString& aResult) { aResult.SetNull(); }
 
 already_AddRefed<Promise> FileSystemHandle::IsSameEntry(
-    FileSystemHandle& aOther, ErrorResult& aError) const {
+    FileSystemHandle& aOther, ErrorResult& aError) {
   RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
   if (aError.Failed()) {
     return nullptr;
