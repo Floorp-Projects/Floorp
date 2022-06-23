@@ -252,10 +252,15 @@ class nsMenuX final : public nsMenuParentX,
   // menuItemHit.
   RefPtr<mozilla::CancelableRunnable> mPendingAsyncMenuCloseRunnable;
 
-  // Any runnables for running asynchronous command events.
-  // These are only used during automated tests, via ActivateItemAfterClosing.
-  // We keep track of them here so that we can ensure they're run before popuphiding/popuphidden.
-  nsTArray<RefPtr<mozilla::Runnable>> mPendingCommandRunnables;
+  struct PendingCommandEvent {
+    RefPtr<nsMenuItemX> mMenuItem;
+    NSEventModifierFlags mModifiers;
+    int16_t mButton;
+  };
+
+  // Any pending command events.
+  // These are queued by ActivateItemAfterClosing and run by MenuClosedAsync.
+  nsTArray<PendingCommandEvent> mPendingCommandEvents;
 
   GeckoNSMenu* mNativeMenu = nil;     // [strong]
   MenuDelegate* mMenuDelegate = nil;  // [strong]
