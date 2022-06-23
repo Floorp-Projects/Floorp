@@ -3607,7 +3607,6 @@ dependencies = [
 [[package]]
 name = "neqo-common"
 version = "0.5.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
 dependencies = [
  "chrono",
  "env_logger 0.8.999",
