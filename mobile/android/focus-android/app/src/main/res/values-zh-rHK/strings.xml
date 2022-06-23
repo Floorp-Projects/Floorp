@@ -471,8 +471,14 @@
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">允許佢：</string>
 
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. 去 Android 設定</string>
+
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">去設定</string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">相機</string>
 
     <!-- Preference for altering the microphone access for all websites -->
     <string name="preference_phone_feature_microphone">咪高風</string>
