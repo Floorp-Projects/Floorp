@@ -4,7 +4,7 @@
 
 
 from collections import deque
-import gecko_taskgraph
+import taskgraph
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.cached_tasks import add_optimization
 
@@ -47,7 +47,7 @@ def format_task_digest(cached_task):
 
 @transforms.add
 def cache_task(config, tasks):
-    if gecko_taskgraph.fast:
+    if taskgraph.fast:
         for task in tasks:
             yield task
         return
