@@ -193,6 +193,43 @@ add_task(async function test_aboutpreferences_simple_template() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
+add_task(async function test_aboutpreferences_advanced_template() {
+  await clearPolicies();
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.preferences.moreFromMozilla", true],
+      ["browser.preferences.moreFromMozilla.template", "advanced"],
+      ["browser.vpn_promo.enabled", true],
+    ],
+  });
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let moreFromMozillaCategory = doc.getElementById(
+    "category-more-from-mozilla"
+  );
+
+  moreFromMozillaCategory.click();
+
+  let productCards = doc.querySelectorAll(".mozilla-product-item.advanced");
+  Assert.ok(productCards, "The product cards from advanced template found");
+  Assert.equal(productCards.length, 3, "3 product cards displayed");
+  Assert.deepEqual(
+    Array.from(productCards).map(
+      node => node.querySelector(".product-img")?.id
+    ),
+    ["firefox-mobile-image", "mozilla-vpn-image", "mozilla-rally-image"],
+    "Advanced template product marketing images"
+  );
+
+  let qrCodeButtons = doc.querySelectorAll('.qr-code-box[hidden="false"]');
+  Assert.equal(qrCodeButtons.length, 1, "1 qr-code box displayed");
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
 add_task(async function test_aboutpreferences_clickBtnVPN() {
   await clearPolicies();
   await SpecialPowers.pushPrefEnv({
@@ -310,7 +347,10 @@ add_task(async function test_aboutpreferences_clickBtnMobile() {
 add_task(async function test_aboutpreferences_search() {
   await clearPolicies();
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.preferences.moreFromMozilla", true]],
+    set: [
+      ["browser.preferences.moreFromMozilla", true],
+      ["browser.preferences.moreFromMozilla.template", "advanced"],
+    ],
   });
 
   await openPreferencesViaOpenPreferencesAPI(null, {
@@ -334,7 +374,10 @@ add_task(async function test_aboutpreferences_search() {
 
 add_task(async function test_aboutpreferences_clickBtnRally() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.preferences.moreFromMozilla", true]],
+    set: [
+      ["browser.preferences.moreFromMozilla", true],
+      ["browser.preferences.moreFromMozilla.template", "simple"],
+    ],
   });
   await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
     leaveOpen: true,

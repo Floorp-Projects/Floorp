@@ -33,6 +33,7 @@ var gExceptionPaths = [
   "chrome://browser/content/assets/moz-vpn.svg",
   "chrome://browser/content/assets/vpn-logo.svg",
   "chrome://browser/content/assets/focus-promo.png",
+  "chrome://browser/content/preferences/more-from-mozilla-qr-code-advanced.svg",
   "chrome://browser/content/assets/klar-qr-code.svg",
 
   // toolkit/components/pdfjs/content/build/pdf.js
