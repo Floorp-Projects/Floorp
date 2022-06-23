@@ -18,7 +18,6 @@
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/TestingFunctions.h"
-#include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Statistics.h"
 #include "jit/Assembler.h"
 #include "jit/AtomicOperations.h"
@@ -176,8 +175,6 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 
   js::coverage::InitLCov();
 
-  RETURN_IF_FAIL(js::MemoryProtectionExceptionHandler::install());
-
   RETURN_IF_FAIL(js::jit::InitializeJit());
 
   RETURN_IF_FAIL(js::InitDateTimeState());
@@ -276,8 +273,6 @@ JS_PUBLIC_API void JS_ShutDown(void) {
   js::DestroyTraceLoggerThreadState();
   js::DestroyTraceLoggerGraphState();
 #endif
-
-  js::MemoryProtectionExceptionHandler::uninstall();
 
   js::wasm::ShutDown();
 
