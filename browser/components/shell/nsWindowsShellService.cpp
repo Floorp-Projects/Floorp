@@ -1048,6 +1048,48 @@ static nsresult GetMatchingShortcut(int aCSIDL, const nsAString& aAUMID,
 
   return result;
 }
+
+static nsresult FindMatchingShortcut(const nsAString& aAppUserModelId,
+                                     const bool aPrivateBrowsing,
+                                     nsAutoString& aShortcutPath) {
+  wchar_t exePath[MAXPATHLEN] = {};
+  if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int shortcutCSIDLs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS,
+                          CSIDL_COMMON_DESKTOPDIRECTORY,
+                          CSIDL_DESKTOPDIRECTORY};
+  for (int shortcutCSIDL : shortcutCSIDLs) {
+    // GetMatchingShortcut may fail when the exe path doesn't match, even
+    // if it refers to the same file. This should be rare, and the worst
+    // outcome would be failure to pin, so the risk is acceptable.
+    nsresult rv = GetMatchingShortcut(shortcutCSIDL, aAppUserModelId, exePath,
+                                      aPrivateBrowsing, aShortcutPath);
+    if (NS_SUCCEEDED(rv)) {
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FILE_NOT_FOUND;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::HasMatchingShortcut(const nsAString& aAppUserModelId,
+                                           const bool aPrivateBrowsing,
+                                           bool* aHasMatch) {
+  nsAutoString shortcutPath;
+  nsresult rv =
+      FindMatchingShortcut(aAppUserModelId, aPrivateBrowsing, shortcutPath);
+  if (SUCCEEDED(rv)) {
+    *aHasMatch = true;
+  } else {
+    *aHasMatch = false;
+  }
+
+  return NS_OK;
+}
+
 static nsresult PinCurrentAppToTaskbarWin7(bool aCheckOnly,
                                            nsAutoString aShortcutPath) {
   nsModuleHandle shellInst(LoadLibraryW(L"shell32.dll"));
@@ -1256,27 +1298,11 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
       !NS_IsMainThread(),
       "PinCurrentAppToTaskbarImpl should be called off main thread only");
 
-  wchar_t exePath[MAXPATHLEN] = {};
-  if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Try to find a shortcut matching the running app
   nsAutoString shortcutPath;
-  int shortcutCSIDLs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS,
-                          CSIDL_COMMON_DESKTOPDIRECTORY,
-                          CSIDL_DESKTOPDIRECTORY};
-  for (size_t i = 0; i < ArrayLength(shortcutCSIDLs); ++i) {
-    // GetMatchingShortcut may fail when the exe path doesn't match, even
-    // if it refers to the same file. This should be rare, and the worst
-    // outcome would be failure to pin, so the risk is acceptable.
-    nsresult rv = GetMatchingShortcut(shortcutCSIDLs[i], aAppUserModelId,
-                                      exePath, aPrivateBrowsing, shortcutPath);
-    if (NS_SUCCEEDED(rv)) {
-      break;
-    } else {
-      shortcutPath.Truncate();
-    }
+  nsresult rv =
+      FindMatchingShortcut(aAppUserModelId, aPrivateBrowsing, shortcutPath);
+  if (NS_FAILED(rv)) {
+    shortcutPath.Truncate();
   }
   if (shortcutPath.IsEmpty()) {
     if (aCheckOnly) {
@@ -1313,6 +1339,11 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
 
     nsAutoString linkName(desc);
     linkName.AppendLiteral(".lnk");
+
+    wchar_t exePath[MAXPATHLEN] = {};
+    if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
+      return NS_ERROR_FAILURE;
+    }
 
     nsAutoString exeStr;
     nsCOMPtr<nsIFile> exeFile;
