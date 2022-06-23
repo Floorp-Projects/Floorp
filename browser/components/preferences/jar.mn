@@ -20,6 +20,5 @@ browser.jar:
    content/browser/preferences/findInPage.js
    content/browser/preferences/more-from-mozilla-qr-code-simple.svg
    content/browser/preferences/more-from-mozilla-qr-code-simple-cn.svg
-   content/browser/preferences/more-from-mozilla-qr-code-advanced.svg
    content/browser/preferences/web-appearance-dark.svg
    content/browser/preferences/web-appearance-light.svg
