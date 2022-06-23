@@ -703,8 +703,7 @@ WebExtensionContentScript::WebExtensionContentScript(
   }
 }
 
-bool MozDocumentMatcher::Matches(const DocInfo& aDoc,
-                                 bool aIgnorePermissions) const {
+bool MozDocumentMatcher::Matches(const DocInfo& aDoc) const {
   if (!mFrameID.IsNull()) {
     if (aDoc.FrameID() != mFrameID.Value()) {
       return false;
@@ -760,11 +759,10 @@ bool MozDocumentMatcher::Matches(const DocInfo& aDoc,
     return true;
   }
 
-  return MatchesURI(urlinfo, aIgnorePermissions);
+  return MatchesURI(urlinfo);
 }
 
-bool MozDocumentMatcher::MatchesURI(const URLInfo& aURL,
-                                    bool aIgnorePermissions) const {
+bool MozDocumentMatcher::MatchesURI(const URLInfo& aURL) const {
   MOZ_ASSERT((!mRestricted && !mCheckPermissions) || mExtension);
 
   if (!mMatches->Matches(aURL)) {
@@ -787,7 +785,7 @@ bool MozDocumentMatcher::MatchesURI(const URLInfo& aURL,
     return false;
   }
 
-  if (mCheckPermissions && !aIgnorePermissions &&
+  if (mCheckPermissions &&
       !mExtension->CanAccessURI(aURL, false, false, true)) {
     return false;
   }
@@ -795,8 +793,7 @@ bool MozDocumentMatcher::MatchesURI(const URLInfo& aURL,
   return true;
 }
 
-bool MozDocumentMatcher::MatchesWindowGlobal(WindowGlobalChild& aWindow,
-                                             bool aIgnorePermissions) const {
+bool MozDocumentMatcher::MatchesWindowGlobal(WindowGlobalChild& aWindow) const {
   if (aWindow.IsClosed() || !aWindow.IsCurrentGlobal()) {
     return false;
   }
@@ -804,7 +801,7 @@ bool MozDocumentMatcher::MatchesWindowGlobal(WindowGlobalChild& aWindow,
   if (!inner || !inner->GetDocShell()) {
     return false;
   }
-  return Matches(inner->GetOuterWindow(), aIgnorePermissions);
+  return Matches(inner->GetOuterWindow());
 }
 
 void MozDocumentMatcher::GetOriginAttributesPatterns(

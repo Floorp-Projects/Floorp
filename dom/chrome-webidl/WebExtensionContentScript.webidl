@@ -21,12 +21,10 @@ interface MozDocumentMatcher {
   boolean matchesURI(URI uri);
 
   /**
-   * Returns true if the given window matches. This should be used to
-   * determine whether to run a script in a window at load time. Use
-   * ignorePermissions to match without origin permissions in MV3.
+   * Returns true if the given window matches. This should be used
+   * to determine whether to run a script in a window at load time.
    */
-  boolean matchesWindowGlobal(WindowGlobalChild windowGlobal,
-                              optional boolean ignorePermissions = false);
+  boolean matchesWindowGlobal(WindowGlobalChild windowGlobal);
 
   /**
    * If true, match all frames. If false, match only top-level frames.

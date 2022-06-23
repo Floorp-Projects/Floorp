@@ -14,15 +14,11 @@ interface nsIDOMProcessParent;
 interface WindowContext {
   readonly attribute BrowsingContext? browsingContext;
 
-  readonly attribute WindowGlobalChild? windowGlobalChild; // in-process only
-
   readonly attribute unsigned long long innerWindowId;
 
   readonly attribute WindowContext? parentWindowContext;
 
   readonly attribute WindowContext topWindowContext;
-
-  readonly attribute boolean isInProcess;
 
   // True if this WindowContext is currently frozen in the BFCache.
   readonly attribute boolean isInBFCache;
@@ -58,6 +54,7 @@ enum PermitUnloadAction {
 [Exposed=Window, ChromeOnly]
 interface WindowGlobalParent : WindowContext {
   readonly attribute boolean isClosed;
+  readonly attribute boolean isInProcess;
 
   readonly attribute boolean isCurrentGlobal;
 
