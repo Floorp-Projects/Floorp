@@ -17,6 +17,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RemoteLazyInputStreamParent.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/dom/BackgroundFileSystemParent.h"
 #include "mozilla/dom/BackgroundSessionStorageServiceParent.h"
 #include "mozilla/dom/ClientManagerActors.h"
 #include "mozilla/dom/ContentParent.h"
@@ -189,6 +190,14 @@ auto BackgroundParentImpl::AllocPBackgroundIDBFactoryParent(
   AssertIsOnBackgroundThread();
 
   return AllocPBackgroundIDBFactoryParent(aLoggingInfo);
+}
+
+auto BackgroundParentImpl::AllocPBackgroundFileSystemParent()
+    -> already_AddRefed<PBackgroundFileSystemParent> {
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return MakeAndAddRef<mozilla::dom::BackgroundFileSystemParent>();
 }
 
 mozilla::ipc::IPCResult
