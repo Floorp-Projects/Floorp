@@ -2924,8 +2924,11 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
 
   OnDonePrinting();
   RefPtr<nsPrintJob> printJob = new nsPrintJob();
+
+  // Note: mContainer and mDocument are known to be non-null via null-checks
+  // earlier in this function.
   nsresult rv =
-      printJob->Initialize(this, mContainer, mDocument,
+      printJob->Initialize(*this, *mContainer, *mDocument,
                            float(AppUnitsPerCSSInch()) /
                                float(mDeviceContext->AppUnitsPerDevPixel()));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2935,7 +2938,6 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
 
   mPrintJob = printJob;
 
-  // Note: mDocument was null-checked earlier in this function.
   rv = printJob->Print(*mDocument, aPrintSettings, aRemotePrintJob,
                        aWebProgressListener);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2971,8 +2973,10 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
 
   RefPtr<nsPrintJob> printJob = new nsPrintJob();
 
+  // Note: mContainer and doc are known to be non-null via null-checks earlier
+  // in this function.
   nsresult rv =
-      printJob->Initialize(this, mContainer, doc,
+      printJob->Initialize(*this, *mContainer, *doc,
                            float(AppUnitsPerCSSInch()) /
                                float(mDeviceContext->AppUnitsPerDevPixel()));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2981,7 +2985,6 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
   mPrintJob = printJob;
 
-  // Note: doc is known-non-null via NS_ENSURE_STATE null-check above.
   rv = printJob->PrintPreview(*doc, aPrintSettings, aWebProgressListener,
                               std::move(aCallback));
   if (NS_WARN_IF(NS_FAILED(rv))) {
