@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -40,7 +39,6 @@ import org.mozilla.geckoview.BuildConfig as GeckoViewBuildConfig
  */
 class AboutFragment : Fragment(), AboutPageListener {
 
-    private lateinit var headerAppName: String
     private lateinit var appName: String
     private var aboutPageAdapter: AboutPageAdapter? = AboutPageAdapter(this)
     private var _binding: FragmentAboutBinding? = null
@@ -54,8 +52,6 @@ class AboutFragment : Fragment(), AboutPageListener {
     ): View {
         _binding = FragmentAboutBinding.inflate(inflater, container, false)
         appName = getString(R.string.app_name)
-        headerAppName =
-            if (Config.channel.isRelease) getString(R.string.daylight_app_name) else appName
 
         return binding.root
     }
@@ -128,7 +124,7 @@ class AboutFragment : Fragment(), AboutPageListener {
             ""
         }
 
-        val content = getString(R.string.about_content, headerAppName)
+        val content = getString(R.string.about_content, appName)
         val buildDate = BuildConfig.BUILD_DATE
 
         binding.aboutText.text = aboutText

@@ -52,9 +52,6 @@
     <!-- Content description (not visible, for screen readers etc.) used to announce [LinkTextView]. -->
     <string name="link_text_view_type_announcement" translatable="false">link</string>
 
-    <!-- Name of the application for about page -->
-    <string name="daylight_app_name" translatable="false">Firefox Daylight</string>
-
     <!-- Secret debug info strings -->
     <string name="debug_info_region_home" translatable="false">Home region</string>
     <string name="debug_info_region_current" translatable="false">Current region</string>
