@@ -263,15 +263,13 @@ nsresult nsComponentManagerImpl::Create(REFNSIID aIID, void** aResult) {
   return gComponentManager->QueryInterface(aIID, aResult);
 }
 
-static const int CONTRACTID_HASHTABLE_INITIAL_LENGTH = 16;
+static const int CONTRACTID_HASHTABLE_INITIAL_LENGTH = 8;
 
 nsComponentManagerImpl::nsComponentManagerImpl()
     : mFactories(CONTRACTID_HASHTABLE_INITIAL_LENGTH),
       mContractIDs(CONTRACTID_HASHTABLE_INITIAL_LENGTH),
       mLock("nsComponentManagerImpl.mLock"),
       mStatus(NOT_INITIALIZED) {}
-
-extern const mozilla::Module kContentProcessWidgetModule;
 
 static nsTArray<const mozilla::Module*>* sExtraStaticModules;
 
@@ -355,8 +353,6 @@ nsresult nsComponentManagerImpl::Init() {
   InitializeStaticModules();
 
   nsCategoryManager::GetSingleton()->SuppressNotifications(true);
-
-  RegisterModule(&kContentProcessWidgetModule);
 
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {
     RegisterModule((*sExtraStaticModules)[i]);
@@ -465,6 +461,7 @@ nsresult nsComponentManagerImpl::Init() {
   mStatus = NORMAL;
 
   MOZ_ASSERT(!XRE_IsContentProcess() ||
+             CONTRACTID_HASHTABLE_INITIAL_LENGTH <= 8 ||
                  mFactories.Count() > CONTRACTID_HASHTABLE_INITIAL_LENGTH / 3,
              "Initial component hashtable size is too large");
 
