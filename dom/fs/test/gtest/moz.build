@@ -4,11 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
+TEST_DIRS += [
     "api",
     "child",
-    "parent",
-    "shared",
 ]
 
-TEST_DIRS += ["test"]
+UNIFIED_SOURCES = [
+    "FileSystemMocks.cpp",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+FINAL_LIBRARY = "xul-gtest"
+
+LOCAL_INCLUDES += [
+    "/dom/fs/include",
+]
