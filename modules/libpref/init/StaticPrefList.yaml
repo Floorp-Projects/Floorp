@@ -1454,24 +1454,6 @@
   value: 15000
   mirror: always
 
-# Platform collection of data for session store
-- name: browser.sessionstore.platform_collection
-  type: bool
-  value: false
-  mirror: once
-
-# Platform collection of session storage data for session store
-- name: browser.sessionstore.collect_session_storage
-  type: bool
-  value: false
-  mirror: once
-
-# Platform collection of zoom data for session store
-- name: browser.sessionstore.collect_zoom
-  type: bool
-  value: false
-  mirror: once
-
 # Causes SessionStore to ignore non-final update messages from
 # browser tabs that were not caused by a flush from the parent.
 # This is a testing flag and should not be used by end-users.

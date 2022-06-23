@@ -12,7 +12,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PSessionStoreParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
-#include "mozilla/dom/SessionStoreScrollData.h"
 
 namespace mozilla::dom {
 class BrowserParent;
@@ -32,8 +31,7 @@ class SessionStoreParent final : public PSessionStoreParent {
    */
   mozilla::ipc::IPCResult RecvSessionStoreUpdate(
       const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
-      const MaybeSessionStoreZoom& aZoom, const bool aNeedCollectSHistory,
-      const uint32_t& aEpoch);
+      const bool aNeedCollectSHistory, const uint32_t& aEpoch);
 
   mozilla::ipc::IPCResult RecvIncrementalSessionStoreUpdate(
       const MaybeDiscarded<BrowsingContext>& aBrowsingContext,
@@ -50,7 +48,6 @@ class SessionStoreParent final : public PSessionStoreParent {
   friend class SessionStoreChild;
   void SessionStoreUpdate(const Maybe<nsCString>& aDocShellCaps,
                           const Maybe<bool>& aPrivatedMode,
-                          const MaybeSessionStoreZoom& aZoom,
                           const bool aNeedCollectSHistory,
                           const uint32_t& aEpoch);
 
@@ -67,9 +64,6 @@ class SessionStoreParent final : public PSessionStoreParent {
 
   already_AddRefed<SessionStoreParent::FlushTabStatePromise>
   FlushSessionStore();
-
-  bool mHasNewFormData = false;
-  bool mHasNewScrollPosition = false;
 
   RefPtr<CanonicalBrowsingContext> mBrowsingContext;
   RefPtr<BrowserSessionStore> mSessionStore;
