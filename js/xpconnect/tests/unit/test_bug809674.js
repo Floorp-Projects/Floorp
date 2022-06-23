@@ -2,13 +2,40 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
+var Bug809674 = {
+  QueryInterface: ChromeUtils.generateQI(["nsIXPCTestBug809674"]),
+
+  /* nsIXPCTestBug809674 */
+  methodWithOptionalArgc() {},
+
+  addArgs(x, y) {
+    return x + y;
+  },
+  addSubMulArgs(x, y, subOut, mulOut) {
+    subOut.value = x - y;
+    mulOut.value = x * y;
+    return x + y;
+  },
+  addVals(x, y) {
+    return x + y;
+  },
+  addMany(x1, x2, x3, x4, x5, x6, x7, x8) {
+    return x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8;
+  },
+
+  methodNoArgs() {
+    return 7;
+  },
+  methodNoArgsNoRetVal() {},
+
+  valProperty: {value: 42},
+  uintProperty: 123,
+};
+
 function run_test() {
-
-  // Load the component manifest.
-  Components.manager.autoRegister(do_get_file('../components/js/xpctest.manifest'));
-
-  // Instantiate the object.
-  var o = Cc["@mozilla.org/js/xpc/test/js/Bug809674;1"].createInstance(Ci["nsIXPCTestBug809674"]);
+  // XPConnect wrap the object
+  var o = xpcWrap(Bug809674, Ci.nsIXPCTestBug809674);
 
   // Methods marked [implicit_jscontext].
 
@@ -46,5 +73,4 @@ function run_test() {
     Assert.ok(true);
     Assert.ok(/optional_argc/.test(e))
   }
-
 }

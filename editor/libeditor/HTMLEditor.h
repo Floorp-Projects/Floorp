@@ -863,10 +863,12 @@ class HTMLEditor final : public EditorBase,
   RelativeFontChangeOnTextNode(FontSize aDir, Text& aTextNode,
                                uint32_t aStartOffset, uint32_t aEndOffset);
 
-  MOZ_CAN_RUN_SCRIPT nsresult SetInlinePropertyOnNode(nsIContent& aNode,
-                                                      nsAtom& aProperty,
-                                                      nsAtom* aAttribute,
-                                                      const nsAString& aValue);
+  /**
+   * @return            A suggest point to put caret.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  SetInlinePropertyOnNode(nsIContent& aContent, nsAtom& aProperty,
+                          nsAtom* aAttribute, const nsAString& aValue);
 
   /**
    * SplitAncestorStyledInlineElementsAtRangeEdges() splits all ancestor inline
@@ -1075,13 +1077,12 @@ class HTMLEditor final : public EditorBase,
   /**
    * CreateStyleForInsertText() sets CSS properties which are stored in
    * TypeInState to proper element node.
-   * XXX This modifies Selection, but should return insertion point instead.
    *
-   * @param aAbstractRange      Set current selection range where new text
-   *                            should be inserted.
+   * @param aPointToInsertText  The point to insert text.
+   * @return                    A suggest point to put caret or unset point.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  CreateStyleForInsertText(const dom::AbstractRange& aAbstractRange);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  CreateStyleForInsertText(const EditorDOMPoint& aPointToInsertText);
 
   /**
    * GetMostDistantAncestorMailCiteElement() returns most-ancestor mail cite
@@ -1128,9 +1129,11 @@ class HTMLEditor final : public EditorBase,
    * @param aInsertToBreak      The point where new linefeed character will be
    *                            inserted before.
    * @param aEditingHost        Current active editing host.
+   * @return                    A suggest point to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleInsertLinefeed(
-      const EditorDOMPoint& aInsertToBreak, const Element& aEditingHost);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  HandleInsertLinefeed(const EditorDOMPoint& aInsertToBreak,
+                       const Element& aEditingHost);
 
   /**
    * SplitParentInlineElementsAtRangeEdges() splits parent inline nodes at both
@@ -3897,9 +3900,10 @@ class HTMLEditor final : public EditorBase,
    *       tree.
    *
    * @param aSpecifiedStyle  Whether the class and style attributes should
-   *                         be preserved or discareded.
+   *                         be preserved or discarded.
+   * @return                 A suggest point to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   RemoveStyleInside(Element& aElement, nsAtom* aProperty, nsAtom* aAttribute,
                     SpecifiedStyle aSpecifiedStyle);
 
@@ -4194,9 +4198,13 @@ class HTMLEditor final : public EditorBase,
                                     nsAtom* aAttribute,
                                     const nsAString* aValue);
 
-  MOZ_CAN_RUN_SCRIPT nsresult
-  SetInlinePropertyOnNodeImpl(nsIContent& aNode, nsAtom& aProperty,
+  /**
+   * @return            A suggest point to put caret.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  SetInlinePropertyOnNodeImpl(nsIContent& aContent, nsAtom& aProperty,
                               nsAtom* aAttribute, const nsAString& aValue);
+
   typedef enum { eInserted, eAppended } InsertedOrAppended;
   MOZ_CAN_RUN_SCRIPT void DoContentInserted(
       nsIContent* aChild, InsertedOrAppended aInsertedOrAppended);

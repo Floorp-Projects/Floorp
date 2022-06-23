@@ -158,7 +158,7 @@ class CSSAnimation final : public Animation {
   // This is used for setting the elapsedTime member of CSS AnimationEvents.
   TimeDuration InitialAdvance() const {
     return mEffect ? std::max(TimeDuration(),
-                              mEffect->SpecifiedTiming().Delay() * -1)
+                              mEffect->NormalizedTiming().Delay() * -1)
                    : TimeDuration();
   }
 

@@ -43,8 +43,7 @@ inline bool probes::EnterScript(JSContext* cx, JSScript* script,
     if (!cx->geckoProfiler().enter(cx, script)) {
       return false;
     }
-    MOZ_ASSERT_IF(!fp->script()->isGenerator() && !fp->script()->isAsync(),
-                  !fp->hasPushedGeckoProfilerFrame());
+    MOZ_ASSERT(!fp->hasPushedGeckoProfilerFrame());
     fp->setPushedGeckoProfilerFrame();
   }
 

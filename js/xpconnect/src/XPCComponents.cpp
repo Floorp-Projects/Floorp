@@ -12,7 +12,7 @@
 #include "XPCJSWeakReference.h"
 #include "WrapperFactory.h"
 #include "nsJSUtils.h"
-#include "mozJSComponentLoader.h"
+#include "mozJSModuleLoader.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
 #include "jsfriendapi.h"
@@ -1550,7 +1550,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::Import(const nsACString& registryLocation,
                               HandleValue targetObj, JSContext* cx,
                               uint8_t optionalArgc, MutableHandleValue retval) {
-  RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+  RefPtr moduleloader = mozJSModuleLoader::Get();
   MOZ_ASSERT(moduleloader);
 
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("nsXPCComponents_Utils::Import", OTHER,
@@ -1563,7 +1563,7 @@ nsXPCComponents_Utils::Import(const nsACString& registryLocation,
 NS_IMETHODIMP
 nsXPCComponents_Utils::IsModuleLoaded(const nsACString& aResourceURI,
                                       bool* retval) {
-  RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+  RefPtr moduleloader = mozJSModuleLoader::Get();
   MOZ_ASSERT(moduleloader);
   return moduleloader->IsModuleLoaded(aResourceURI, retval);
 }
@@ -1571,7 +1571,7 @@ nsXPCComponents_Utils::IsModuleLoaded(const nsACString& aResourceURI,
 NS_IMETHODIMP
 nsXPCComponents_Utils::IsJSModuleLoaded(const nsACString& aResourceURI,
                                         bool* retval) {
-  RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+  RefPtr moduleloader = mozJSModuleLoader::Get();
   MOZ_ASSERT(moduleloader);
   return moduleloader->IsJSModuleLoaded(aResourceURI, retval);
 }
@@ -1579,14 +1579,14 @@ nsXPCComponents_Utils::IsJSModuleLoaded(const nsACString& aResourceURI,
 NS_IMETHODIMP
 nsXPCComponents_Utils::IsESModuleLoaded(const nsACString& aResourceURI,
                                         bool* retval) {
-  RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+  RefPtr moduleloader = mozJSModuleLoader::Get();
   MOZ_ASSERT(moduleloader);
   return moduleloader->IsESModuleLoaded(aResourceURI, retval);
 }
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::Unload(const nsACString& registryLocation) {
-  RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+  RefPtr moduleloader = mozJSModuleLoader::Get();
   MOZ_ASSERT(moduleloader);
   return moduleloader->Unload(registryLocation);
 }
@@ -2538,39 +2538,26 @@ nsXPCComponents_Utils::CreateHTMLCopyEncoder(
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetLoadedModules(nsTArray<nsCString>& aLoadedModules) {
-  return mozJSComponentLoader::Get()->GetLoadedJSAndESModules(aLoadedModules);
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::GetLoadedComponents(
-    nsTArray<nsCString>& aLoadedComponents) {
-  mozJSComponentLoader::Get()->GetLoadedComponents(aLoadedComponents);
-  return NS_OK;
+  return mozJSModuleLoader::Get()->GetLoadedJSAndESModules(aLoadedModules);
 }
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetLoadedJSModules(
     nsTArray<nsCString>& aLoadedJSModules) {
-  mozJSComponentLoader::Get()->GetLoadedModules(aLoadedJSModules);
+  mozJSModuleLoader::Get()->GetLoadedModules(aLoadedJSModules);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetLoadedESModules(
     nsTArray<nsCString>& aLoadedESModules) {
-  return mozJSComponentLoader::Get()->GetLoadedESModules(aLoadedESModules);
+  return mozJSModuleLoader::Get()->GetLoadedESModules(aLoadedESModules);
 }
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetModuleImportStack(const nsACString& aLocation,
                                             nsACString& aRetval) {
-  return mozJSComponentLoader::Get()->GetModuleImportStack(aLocation, aRetval);
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::GetComponentLoadStack(const nsACString& aLocation,
-                                             nsACString& aRetval) {
-  return mozJSComponentLoader::Get()->GetComponentLoadStack(aLocation, aRetval);
+  return mozJSModuleLoader::Get()->GetModuleImportStack(aLocation, aRetval);
 }
 
 /***************************************************************************/

@@ -353,19 +353,19 @@ public class Autocomplete {
     @AnyThread
     /* package */ Address(final @NonNull GeckoBundle bundle) {
       guid = bundle.getString(GUID_KEY);
-      name = bundle.getString(NAME_KEY);
-      givenName = bundle.getString(GIVEN_NAME_KEY);
-      additionalName = bundle.getString(ADDITIONAL_NAME_KEY);
-      familyName = bundle.getString(FAMILY_NAME_KEY);
-      organization = bundle.getString(ORGANIZATION_KEY);
-      streetAddress = bundle.getString(STREET_ADDRESS_KEY);
-      addressLevel1 = bundle.getString(ADDRESS_LEVEL1_KEY);
-      addressLevel2 = bundle.getString(ADDRESS_LEVEL2_KEY);
-      addressLevel3 = bundle.getString(ADDRESS_LEVEL3_KEY);
-      postalCode = bundle.getString(POSTAL_CODE_KEY);
-      country = bundle.getString(COUNTRY_KEY);
-      tel = bundle.getString(TEL_KEY);
-      email = bundle.getString(EMAIL_KEY);
+      name = bundle.getString(NAME_KEY, "");
+      givenName = bundle.getString(GIVEN_NAME_KEY, "");
+      additionalName = bundle.getString(ADDITIONAL_NAME_KEY, "");
+      familyName = bundle.getString(FAMILY_NAME_KEY, "");
+      organization = bundle.getString(ORGANIZATION_KEY, "");
+      streetAddress = bundle.getString(STREET_ADDRESS_KEY, "");
+      addressLevel1 = bundle.getString(ADDRESS_LEVEL1_KEY, "");
+      addressLevel2 = bundle.getString(ADDRESS_LEVEL2_KEY, "");
+      addressLevel3 = bundle.getString(ADDRESS_LEVEL3_KEY, "");
+      postalCode = bundle.getString(POSTAL_CODE_KEY, "");
+      country = bundle.getString(COUNTRY_KEY, "");
+      tel = bundle.getString(TEL_KEY, "");
+      email = bundle.getString(EMAIL_KEY, "");
     }
 
     @Override
@@ -667,7 +667,7 @@ public class Autocomplete {
     @AnyThread
     /* package */ LoginEntry(final @NonNull GeckoBundle bundle) {
       guid = bundle.getString(GUID_KEY);
-      origin = bundle.getString(ORIGIN_KEY);
+      origin = bundle.getString(ORIGIN_KEY, "");
       formActionOrigin = bundle.getString(FORM_ACTION_ORIGIN_KEY);
       httpRealm = bundle.getString(HTTP_REALM_KEY);
       username = bundle.getString(USERNAME_KEY, "");

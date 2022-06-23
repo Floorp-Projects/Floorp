@@ -7,8 +7,6 @@
 #include "WebrtcTCPSocketWrapper.h"
 
 #include "mozilla/net/WebrtcTCPSocketChild.h"
-#include "ipc/WebrtcTCPSocket.h"
-#include "mozilla/LoadInfo.h"
 
 #include "nsNetCID.h"
 #include "nsProxyRelease.h"

@@ -12,7 +12,6 @@
 #include "nsDebug.h"
 #include "nsToolkit.h"
 #include "nsUXThemeConstants.h"
-#include "WinContentSystemParameters.h"
 #include "gfxWindowsPlatform.h"
 
 using namespace mozilla;
@@ -350,19 +349,10 @@ void nsUXThemeData::UpdateNativeThemeInfo() {
 
 // static
 bool nsUXThemeData::AreFlatMenusEnabled() {
-  if (XRE_IsContentProcess()) {
-    return WinContentSystemParameters::GetSingleton()->AreFlatMenusEnabled();
-  }
-
   BOOL useFlat = FALSE;
   return !!::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ? useFlat
                                                                    : false;
 }
 
 // static
-bool nsUXThemeData::IsAppThemed() {
-  if (XRE_IsContentProcess()) {
-    return WinContentSystemParameters::GetSingleton()->IsAppThemed();
-  }
-  return !!::IsAppThemed();
-}
+bool nsUXThemeData::IsAppThemed() { return !!::IsAppThemed(); }

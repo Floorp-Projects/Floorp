@@ -79,7 +79,6 @@
 #include "HTMLFieldSetElement.h"
 #include "nsTextNode.h"
 #include "HTMLBRElement.h"
-#include "HTMLMenuElement.h"
 #include "nsDOMMutationObserver.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FromParser.h"
@@ -1590,19 +1589,6 @@ bool nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr,
   nsContentUtils::NewURIWithDocumentCharset(aURI, attr->GetStringValue(),
                                             OwnerDoc(), baseURI);
   return true;
-}
-
-HTMLMenuElement* nsGenericHTMLElement::GetContextMenu() const {
-  nsAutoString value;
-  GetHTMLAttr(nsGkAtoms::contextmenu, value);
-  if (!value.IsEmpty()) {
-    // XXXsmaug How should this work in Shadow DOM?
-    Document* doc = GetUncomposedDoc();
-    if (doc) {
-      return HTMLMenuElement::FromNodeOrNull(doc->GetElementById(value));
-    }
-  }
-  return nullptr;
 }
 
 bool nsGenericHTMLElement::IsLabelable() const {

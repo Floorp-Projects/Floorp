@@ -32,12 +32,7 @@ var FullZoomHelper = {
      */
 
     let parsedZoomValue = parseFloat((parseInt(newZoom) / 100).toFixed(2));
-
-    let commandsUpdated = BrowserTestUtils.waitForEvent(
-      window,
-      "ZoomCommandsUpdated"
-    );
-    let completion = new Promise(resolve => {
+    await new Promise(resolve => {
       gContentPrefs.setGlobal(
         FullZoom.name,
         parsedZoomValue,
@@ -49,7 +44,16 @@ var FullZoomHelper = {
         }
       );
     });
-    await Promise.all([commandsUpdated, completion]);
+    // The zoom level is used to update the commands associated with
+    // increasing, decreasing or resetting the Zoom levels. There are
+    // a series of async things we need to wait for (writing the content
+    // pref to the database, and then reading that content pref back out
+    // again and reacting to it), so waiting for the zoom level to reach
+    // the expected level is actually simplest to make sure we're okay to
+    // proceed.
+    await TestUtils.waitForCondition(() => {
+      return ZoomManager.zoom == parsedZoomValue;
+    });
   },
 
   async getGlobalValue() {

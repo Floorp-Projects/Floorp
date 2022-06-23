@@ -486,11 +486,7 @@ class DiscoveryStreamFeed {
         this.store.getState().Prefs.values?.pocketConfig || {};
 
       let items = isBasicLayout ? 3 : 21;
-      if (
-        pocketConfig.compactLayout ||
-        pocketConfig.fourCardLayout ||
-        pocketConfig.hybridLayout
-      ) {
+      if (pocketConfig.fourCardLayout || pocketConfig.hybridLayout) {
         items = isBasicLayout ? 4 : 24;
       }
 
@@ -508,7 +504,6 @@ class DiscoveryStreamFeed {
         widgetData: [
           ...(this.locale.startsWith("en-") ? [{ type: "TopicsWidget" }] : []),
         ],
-        compactLayout: pocketConfig.compactLayout,
         hybridLayout: pocketConfig.hybridLayout,
         hideCardBackground: pocketConfig.hideCardBackground,
         fourCardLayout: pocketConfig.fourCardLayout,
@@ -1909,7 +1904,6 @@ class DiscoveryStreamFeed {
      `items` How many items to include in the primary card grid.
      `spocPositions` Changes the position of spoc cards.
      `sponsoredCollectionsEnabled` Tuns on and off the sponsored collection section.
-     `compactLayout` Changes cards to smaller more compact cards.
      `hybridLayout` Changes cards to smaller more compact cards only for specific breakpoints.
      `hideCardBackground` Removes Pocket card background and borders.
      `fourCardLayout` Enable four Pocket cards per row.
@@ -1934,7 +1928,6 @@ getHardcodedLayout = ({
   widgetPositions = [],
   widgetData = [],
   sponsoredCollectionsEnabled = false,
-  compactLayout = false,
   hybridLayout = false,
   hideCardBackground = false,
   fourCardLayout = false,
@@ -2030,18 +2023,18 @@ getHardcodedLayout = ({
           properties: {
             items,
             hybridLayout,
-            hideCardBackground: hideCardBackground || compactLayout,
-            fourCardLayout: fourCardLayout || compactLayout,
-            hideDescriptions: hideDescriptions || compactLayout,
+            hideCardBackground,
+            fourCardLayout,
+            hideDescriptions,
             compactImages,
             imageGradient,
-            newSponsoredLabel: newSponsoredLabel || compactLayout,
-            titleLines: (compactLayout && 3) || titleLines,
+            newSponsoredLabel,
+            titleLines,
             descLines,
             compactGrid,
             essentialReadsHeader,
             editorsPicksHeader,
-            readTime: readTime || compactLayout,
+            readTime,
           },
           widgets: {
             positions: widgetPositions.map(position => {

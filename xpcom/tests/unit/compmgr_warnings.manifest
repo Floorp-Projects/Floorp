@@ -1,9 +1,0 @@
-# The following line is malformed (mismatched braces)
-component {94b346d7-0cde-4e6e-b819-95d6f200bbf6 MyComponent.js
-
-component 94b346d7-0cde-4e6e-b819-95d6f200bbf7 MyComponent.js
-# The following line re-registers an existing CID
-component {94b346d7-0cde-4e6e-b819-95d6f200bbf7} MyOtherComponent.js
-
-# The following line maps a contractID to a non-existent CID
-contract @testing/foo {0c07730f-f875-436b-8deb-90c4251920ec}

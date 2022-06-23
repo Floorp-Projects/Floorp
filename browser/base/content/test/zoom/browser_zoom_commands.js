@@ -79,6 +79,7 @@ add_task(async () => {
     // and the other without.
     for (let textZoom of [true, false]) {
       info(`Running variation with textZoom set to ${textZoom}`);
+
       await SpecialPowers.pushPrefEnv({
         set: [["browser.zoom.full", !textZoom]],
       });

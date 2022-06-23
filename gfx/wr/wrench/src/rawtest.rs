@@ -1331,23 +1331,26 @@ impl<'a> RawtestHarness<'a> {
         builder.begin();
 
         // Add a rectangle that covers the entire scene.
-        let info = self.make_common_properties(LayoutRect::from_size(layout_size));
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         builder.push_hit_test(
-            &info,
+            LayoutRect::from_size(layout_size),
+            ClipChainId::INVALID,
+            space_and_clip.spatial_id,
+            PrimitiveFlags::default(),
             (0, 1),
         );
 
         // Add a simple 100x100 rectangle at 100,0.
-        let info = self.make_common_properties(LayoutRect::from_origin_and_size(
-            LayoutPoint::new(100., 0.),
-            LayoutSize::new(100., 100.)
-        ));
         builder.push_hit_test(
-            &info,
+            LayoutRect::from_origin_and_size(
+                LayoutPoint::new(100., 0.),
+                LayoutSize::new(100., 100.)
+            ),
+            ClipChainId::INVALID,
+            space_and_clip.spatial_id,
+            PrimitiveFlags::default(),
             (0, 2),
         );
-
-        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
 
         let make_rounded_complex_clip = |rect: &LayoutRect, radius: f32| -> ComplexClipRegion {
             ComplexClipRegion::new(
@@ -1363,13 +1366,12 @@ impl<'a> RawtestHarness<'a> {
             &space_and_clip,
             make_rounded_complex_clip(&rect, 20.),
         );
+        let clip_chain_id = builder.define_clip_chain(None, vec![temp_clip_id]);
         builder.push_hit_test(
-            &CommonItemProperties {
-                clip_rect: rect,
-                clip_id: temp_clip_id,
-                spatial_id: space_and_clip.spatial_id,
-                flags: PrimitiveFlags::default(),
-            },
+            rect,
+            clip_chain_id,
+            space_and_clip.spatial_id,
+            PrimitiveFlags::default(),
             (0, 4),
         );
 
@@ -1381,12 +1383,10 @@ impl<'a> RawtestHarness<'a> {
         );
         let clip_chain_id = builder.define_clip_chain(None, vec![clip_id]);
         builder.push_hit_test(
-            &CommonItemProperties {
-                clip_rect: rect,
-                clip_id: ClipId::ClipChain(clip_chain_id),
-                spatial_id: space_and_clip.spatial_id,
-                flags: PrimitiveFlags::default(),
-            },
+            rect,
+            clip_chain_id,
+            space_and_clip.spatial_id,
+            PrimitiveFlags::default(),
             (0, 5),
         );
 

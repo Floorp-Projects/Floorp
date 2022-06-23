@@ -378,8 +378,6 @@ NS_EVENT_MESSAGE(eVRDisplayConnect)
 NS_EVENT_MESSAGE(eVRDisplayDisconnect)
 NS_EVENT_MESSAGE(eVRDisplayPresentChange)
 
-NS_EVENT_MESSAGE(eShow)
-
 // Fullscreen DOM API
 NS_EVENT_MESSAGE(eFullscreenChange)
 NS_EVENT_MESSAGE(eFullscreenError)

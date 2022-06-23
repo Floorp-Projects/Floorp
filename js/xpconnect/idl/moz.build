@@ -9,7 +9,6 @@ XPIDL_SOURCES += [
     "nsIXPConnect.idl",
     "nsIXPCScriptable.idl",
     "xpccomponents.idl",
-    "xpcIJSGetFactory.idl",
     "xpcIJSWeakReference.idl",
 ]
 

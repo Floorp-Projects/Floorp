@@ -6,12 +6,14 @@
 
 #include "OffscreenCanvas.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/OffscreenCanvasDisplayHelper.h"
 #include "mozilla/dom/OffscreenCanvasRenderingContext2D.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/Telemetry.h"
@@ -273,23 +275,32 @@ already_AddRefed<ImageBitmap> OffscreenCanvas::TransferToImageBitmap(
 }
 
 already_AddRefed<EncodeCompleteCallback>
-OffscreenCanvas::CreateEncodeCompleteCallback(
-    nsCOMPtr<nsIGlobalObject>&& aGlobal, Promise* aPromise) {
+OffscreenCanvas::CreateEncodeCompleteCallback(Promise* aPromise) {
   // Encoder callback when encoding is complete.
   class EncodeCallback : public EncodeCompleteCallback {
    public:
-    EncodeCallback(nsCOMPtr<nsIGlobalObject>&& aGlobal, Promise* aPromise)
-        : mGlobal(std::move(aGlobal)), mPromise(aPromise) {}
+    explicit EncodeCallback(Promise* aPromise)
+        : mPromise(aPromise), mCanceled(false) {
+      WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
+      if (wp) {
+        mWorkerRef = WeakWorkerRef::Create(
+            wp, [self = RefPtr{this}]() { self->Cancel(); });
+        if (!mWorkerRef) {
+          Cancel();
+        }
+      }
+    }
 
-    // This is called on main thread.
     nsresult ReceiveBlobImpl(already_AddRefed<BlobImpl> aBlobImpl) override {
       RefPtr<BlobImpl> blobImpl = aBlobImpl;
+      mWorkerRef = nullptr;
 
       if (mPromise) {
-        if (NS_WARN_IF(!blobImpl)) {
+        RefPtr<nsIGlobalObject> global = mPromise->GetGlobalObject();
+        if (NS_WARN_IF(!global) || NS_WARN_IF(!blobImpl)) {
           mPromise->MaybeReject(NS_ERROR_FAILURE);
         } else {
-          RefPtr<Blob> blob = Blob::Create(mGlobal, blobImpl);
+          RefPtr<Blob> blob = Blob::Create(global, blobImpl);
           if (NS_WARN_IF(!blob)) {
             mPromise->MaybeReject(NS_ERROR_FAILURE);
           } else {
@@ -298,17 +309,25 @@ OffscreenCanvas::CreateEncodeCompleteCallback(
         }
       }
 
-      mGlobal = nullptr;
       mPromise = nullptr;
 
       return NS_OK;
     }
 
-    nsCOMPtr<nsIGlobalObject> mGlobal;
+    bool CanBeDeletedOnAnyThread() override { return mCanceled; }
+
+    void Cancel() {
+      mPromise = nullptr;
+      mWorkerRef = nullptr;
+      mCanceled = true;
+    }
+
     RefPtr<Promise> mPromise;
+    RefPtr<WeakWorkerRef> mWorkerRef;
+    Atomic<bool> mCanceled;
   };
 
-  return MakeAndAddRef<EncodeCallback>(std::move(aGlobal), aPromise);
+  return MakeAndAddRef<EncodeCallback>(aPromise);
 }
 
 already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
@@ -350,7 +369,7 @@ already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
   }
 
   RefPtr<EncodeCompleteCallback> callback =
-      CreateEncodeCompleteCallback(std::move(global), promise);
+      CreateEncodeCompleteCallback(promise);
   bool usePlaceholder = ShouldResistFingerprinting();
   CanvasRenderingContextHelper::ToBlob(callback, type, encodeOptions,
                                        /* aUsingCustomOptions */ false,
@@ -391,7 +410,7 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
   }
 
   RefPtr<EncodeCompleteCallback> callback =
-      CreateEncodeCompleteCallback(std::move(global), promise);
+      CreateEncodeCompleteCallback(promise);
   bool usePlaceholder = ShouldResistFingerprinting();
   CanvasRenderingContextHelper::ToBlob(aCx, callback, aType, aParams,
                                        usePlaceholder, aRv);

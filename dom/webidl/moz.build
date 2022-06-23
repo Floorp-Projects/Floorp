@@ -622,7 +622,6 @@ WEBIDL_FILES = [
     "HTMLMarqueeElement.webidl",
     "HTMLMediaElement.webidl",
     "HTMLMenuElement.webidl",
-    "HTMLMenuItemElement.webidl",
     "HTMLMetaElement.webidl",
     "HTMLMeterElement.webidl",
     "HTMLModElement.webidl",
@@ -1111,6 +1110,9 @@ if CONFIG["MOZ_DEBUG"] and CONFIG["ENABLE_TESTS"]:
         "TestInterfaceJSDictionaries.webidl",
         "TestInterfaceJSMaplikeSetlikeIterable.webidl",
         "TestInterfaceObservableArray.webidl",
+    ]
+    XPCOM_MANIFESTS += [
+        "components.conf",
     ]
 
 WEBIDL_FILES += [

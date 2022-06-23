@@ -45,9 +45,6 @@ class PromptFactory {
       case "click":
         this._handleClick(aEvent);
         break;
-      case "contextmenu":
-        this._handleContextMenu(aEvent);
-        break;
       case "DOMPopupBlocked":
         this._handlePopupBlocked(aEvent);
         break;
@@ -309,127 +306,6 @@ class PromptFactory {
     aElement.dispatchEvent(
       new aElement.ownerGlobal.Event("change", { bubbles: true })
     );
-  }
-
-  _handleContextMenu(aEvent) {
-    const target = aEvent.composedTarget;
-    if (aEvent.defaultPrevented || target.isContentEditable) {
-      return;
-    }
-
-    // Look through all ancestors for a context menu per spec.
-    let parent = target;
-    let menu = target.contextMenu;
-    while (!menu && parent) {
-      menu = parent.contextMenu;
-      parent = parent.parentElement;
-    }
-    if (!menu) {
-      return;
-    }
-
-    const builder = {
-      _cursor: undefined,
-      _id: 0,
-      _map: {},
-      _stack: [],
-      items: [],
-
-      // nsIMenuBuilder
-      openContainer(aLabel) {
-        if (!this._cursor) {
-          // Top-level
-          this._cursor = this;
-          return;
-        }
-        const newCursor = {
-          id: String(this._id++),
-          items: [],
-          label: aLabel,
-        };
-        this._cursor.items.push(newCursor);
-        this._stack.push(this._cursor);
-        this._cursor = newCursor;
-      },
-
-      addItemFor(aElement, aCanLoadIcon) {
-        this._cursor.items.push({
-          disabled: aElement.disabled,
-          icon:
-            aCanLoadIcon && aElement.icon && aElement.icon.length
-              ? aElement.icon
-              : null,
-          id: String(this._id),
-          label: aElement.label,
-          selected: aElement.checked,
-        });
-        this._map[this._id++] = aElement;
-      },
-
-      addSeparator() {
-        this._cursor.items.push({
-          disabled: true,
-          id: String(this._id++),
-          separator: true,
-        });
-      },
-
-      undoAddSeparator() {
-        const sep = this._cursor.items[this._cursor.items.length - 1];
-        if (sep && sep.separator) {
-          this._cursor.items.pop();
-        }
-      },
-
-      closeContainer() {
-        const childItems =
-          this._cursor.label === "" ? this._cursor.items : null;
-        this._cursor = this._stack.pop();
-
-        if (
-          childItems !== null &&
-          this._cursor &&
-          this._cursor.items.length === 1
-        ) {
-          // Merge a single nameless child container into the parent container.
-          // This lets us build an HTML contextmenu within a submenu.
-          this._cursor.items = childItems;
-        }
-      },
-
-      toJSONString() {
-        return JSON.stringify(this.items);
-      },
-
-      click(aId) {
-        const item = this._map[aId];
-        if (item) {
-          item.click();
-        }
-      },
-    };
-
-    // XXX the "show" event is not cancelable but spec says it should be.
-    menu.sendShowEvent();
-    menu.build(builder);
-
-    const prompt = new lazy.GeckoViewPrompter(target.ownerGlobal);
-    prompt.asyncShowPrompt(
-      {
-        type: "choice",
-        mode: "menu",
-        choices: builder.items,
-      },
-      result => {
-        // OK: result
-        // Cancel: !result
-        if (result && result.choices !== undefined) {
-          builder.click(result.choices[0]);
-        }
-      }
-    );
-
-    aEvent.preventDefault();
   }
 
   _handlePopupBlocked(aEvent) {

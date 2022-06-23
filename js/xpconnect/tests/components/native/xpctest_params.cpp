@@ -380,20 +380,18 @@ nsXPCTestParams::TestOptionalSequence(const nsTArray<uint8_t>& aInArr,
 }
 
 NS_IMETHODIMP
-nsXPCTestParams::TestOmittedOptionalOut(nsIURI** aOut) {
+nsXPCTestParams::TestOmittedOptionalOut(nsIXPCTestParams* aJSObj,
+                                        nsIURI** aOut) {
   MOZ_ASSERT(!(*aOut), "Unexpected value received");
   // Call the js component, to check XPConnect won't crash when passing nullptr
   // as the optional out parameter, and that the out object is built regardless.
   nsresult rv;
-  nsCOMPtr<nsIXPCTestParams> jsComponent =
-      do_CreateInstance("@mozilla.org/js/xpc/test/js/Params;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
   // Invoke it directly passing nullptr.
-  rv = jsComponent->TestOmittedOptionalOut(nullptr);
+  rv = aJSObj->TestOmittedOptionalOut(nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
   // Also invoke it with a ref pointer.
   nsCOMPtr<nsIURI> someURI;
-  rv = jsComponent->TestOmittedOptionalOut(getter_AddRefs(someURI));
+  rv = aJSObj->TestOmittedOptionalOut(nullptr, getter_AddRefs(someURI));
   NS_ENSURE_SUCCESS(rv, rv);
   nsAutoCString spec;
   rv = someURI->GetSpec(spec);

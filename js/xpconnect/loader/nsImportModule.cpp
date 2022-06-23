@@ -7,7 +7,7 @@
 #include "nsImportModule.h"
 
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozJSComponentLoader.h"
+#include "mozJSModuleLoader.h"
 #include "nsContentUtils.h"
 #include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
@@ -52,8 +52,8 @@ nsresult ImportModule(const char* aURI, const char* aExportName,
 
   JS::RootedObject global(cx);
   JS::RootedObject exports(cx);
-  nsresult rv = mozJSComponentLoader::Get()->Import(
-      cx, nsDependentCString(aURI), &global, &exports);
+  nsresult rv = mozJSModuleLoader::Get()->Import(cx, nsDependentCString(aURI),
+                                                 &global, &exports);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     if (aInfallible) {
       AnnotateCrashReportWithJSException(cx, aURI);

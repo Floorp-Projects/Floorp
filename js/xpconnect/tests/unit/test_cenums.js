@@ -1,16 +1,35 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-function run_test() {
 
+function TestCEnums() {
+}
+
+TestCEnums.prototype = {
+  /* Boilerplate */
+  QueryInterface: ChromeUtils.generateQI(["nsIXPCTestCEnums"]),
+
+  testCEnumInput: function(input) {
+    if (input != Ci.nsIXPCTestCEnums.shouldBe12Explicit)
+    {
+      throw new Error("Enum values do not match expected value");
+    }
+  },
+
+  testCEnumOutput: function() {
+    return Ci.nsIXPCTestCEnums.shouldBe8Explicit;
+  },
+};
+
+
+function run_test() {
   // Load the component manifests.
   registerXPCTestComponents();
-  registerAppManifest(do_get_file('../components/js/xpctest.manifest'));
 
   // Test for each component.
   test_interface_consts();
-  test_component("@mozilla.org/js/xpc/test/native/CEnums;1");
-  test_component("@mozilla.org/js/xpc/test/js/CEnums;1");
+  test_component(Cc["@mozilla.org/js/xpc/test/native/CEnums;1"].createInstance());
+  test_component(xpcWrap(new TestCEnums()));
 }
 
 function test_interface_consts() {
@@ -29,10 +48,8 @@ function test_interface_consts() {
   Assert.equal(Ci.nsIXPCTestCEnums.shouldBe3AgainImplicit, 3);
 }
 
-function test_component(contractid) {
-
-  // Instantiate the object.
-  var o = Cc[contractid].createInstance(Ci["nsIXPCTestCEnums"]);
+function test_component(obj) {
+  var o = obj.QueryInterface(Ci.nsIXPCTestCEnums);
   o.testCEnumInput(Ci.nsIXPCTestCEnums.shouldBe12Explicit);
   o.testCEnumInput(Ci.nsIXPCTestCEnums.shouldBe8Explicit | Ci.nsIXPCTestCEnums.shouldBe4Explicit);
   var a = o.testCEnumOutput();

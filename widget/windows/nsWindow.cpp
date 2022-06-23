@@ -133,7 +133,6 @@
 #include "SystemTimeConverter.h"
 #include "WinTaskbar.h"
 #include "WidgetUtils.h"
-#include "WinContentSystemParameters.h"
 #include "WinWindowOcclusionTracker.h"
 #include "nsIWidgetListener.h"
 #include "mozilla/dom/Document.h"
@@ -672,11 +671,16 @@ static bool IsMouseVanishKey(WPARAM aVirtKey) {
     case VK_RIGHT:
     case VK_PRIOR:  // PgUp
     case VK_NEXT:   // PgDn
+    case 0xff:      // Undefined.  May be sent for Fn key.
       return false;
     default:
-      // Return true unless Ctrl or Alt is pressed
+      // Vanish unless Ctrl or Alt is also pressed, or if a key in
+      // a relevant range is pressed.
+      // The range between VK_F1 and VK_LAUNCH_APP2 includes control,
+      // function, browser, volume and media keys, all of which we ignore.
       return (GetKeyState(VK_CONTROL) & 0x8000) != 0x8000 &&
-             (GetKeyState(VK_MENU) & 0x8000) != 0x8000;
+             (GetKeyState(VK_MENU) & 0x8000) != 0x8000 &&
+             (aVirtKey < VK_F1 || aVirtKey > VK_LAUNCH_APP2);
   }
 }
 
@@ -5150,9 +5154,6 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_THEMECHANGED: {
-      // Before anything else, push updates to child processes
-      WinContentSystemParameters::GetSingleton()->OnThemeChanged();
-
       // Update non-client margin offsets
       UpdateNonClientMargins();
       nsUXThemeData::UpdateNativeThemeInfo();

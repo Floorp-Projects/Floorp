@@ -581,12 +581,6 @@ ul, menu, dir {
   padding-inline-start: 40px;
 }
 
-@supports -moz-bool-pref("dom.menuitem.enabled") {
-  menu[type="context"] {
-    display: none !important;
-  }
-}
-
 ul, ol, menu {
   counter-reset: list-item;
 }

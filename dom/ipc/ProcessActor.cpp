@@ -7,7 +7,6 @@
 #include "mozilla/dom/ProcessActor.h"
 
 #include "nsContentUtils.h"
-#include "mozJSComponentLoader.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/JSActorService.h"

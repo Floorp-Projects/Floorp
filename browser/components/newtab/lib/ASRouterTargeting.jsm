@@ -133,8 +133,8 @@ const jexlEvaluationCache = new Map();
 
 /**
  * CachedTargetingGetter
- * @param property {string} Name of the method called on ActivityStreamProvider
- * @param options {{}?} Options object passsed to ActivityStreamProvider method
+ * @param property {string} Name of the method
+ * @param options {any=} Options passed to the method
  * @param updateInterval {number?} Update interval for query. Defaults to FRECENT_SITES_UPDATE_INTERVAL
  */
 function CachedTargetingGetter(
@@ -268,6 +268,12 @@ const QueryCache = {
     doesAppNeedPin: new CachedTargetingGetter(
       "doesAppNeedPin",
       null,
+      FRECENT_SITES_UPDATE_INTERVAL,
+      ShellService
+    ),
+    doesAppNeedPrivatePin: new CachedTargetingGetter(
+      "doesAppNeedPin",
+      true,
       FRECENT_SITES_UPDATE_INTERVAL,
       ShellService
     ),
@@ -676,6 +682,10 @@ const TargetingGetters = {
 
   get doesAppNeedPin() {
     return QueryCache.getters.doesAppNeedPin.get();
+  },
+
+  get doesAppNeedPrivatePin() {
+    return QueryCache.getters.doesAppNeedPrivatePin.get();
   },
 };
 

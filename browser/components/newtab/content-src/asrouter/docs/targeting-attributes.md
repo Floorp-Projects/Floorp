@@ -52,6 +52,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [hasActiveEnterprisePolicies](#hasactiveenterprisepolicies)
 * [userMonthlyActivity](#usermonthlyactivity)
 * [doesAppNeedPin](#doesappneedpin)
+* [doesAppNeedPrivatePin](#doesappneedprivatepin)
 
 ## Detailed usage
 
@@ -826,4 +827,8 @@ user activity where the first entry is the total urls visited for that day.
 
 ### `doesAppNeedPin`
 
-Checks if Firefox app can and isn't pinned to OS taskbar/dock.
+Checks if Firefox app can be and isn't pinned to OS taskbar/dock.
+
+### `doesAppNeedPrivatePin`
+
+Checks if Firefox Private Browsing Mode can be and isn't pinned to OS taskbar/dock. Currently this only works on certain Windows versions.

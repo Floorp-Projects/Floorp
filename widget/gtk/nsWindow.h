@@ -455,6 +455,7 @@ class nsWindow final : public nsBaseWidget {
   void DispatchActivateEvent(void);
   void DispatchDeactivateEvent(void);
   void MaybeDispatchResized();
+  void DispatchPanGesture(mozilla::PanGestureInput& aPanInput);
 
   void RegisterTouchWindow() override;
   bool CompositorInitiallyPaused() override {

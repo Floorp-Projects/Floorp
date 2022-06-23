@@ -4332,6 +4332,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         TraceLogStartEvent(logger, scriptEvent);
         TraceLogStartEvent(logger, TraceLogger_Interpreter);
 
+        if (!probes::EnterScript(cx, generatorScript,
+                                 generatorScript->function(), REGS.fp())) {
+          goto error;
+        }
+
         if (!DebugAPI::onResumeFrame(cx, REGS.fp())) {
           if (cx->isPropagatingForcedReturn()) {
             MOZ_ASSERT_IF(

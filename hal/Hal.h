@@ -7,8 +7,6 @@
 #ifndef mozilla_Hal_h
 #define mozilla_Hal_h
 
-#include "base/basictypes.h"
-#include "base/platform_thread.h"
 #include "nsTArray.h"
 #include "mozilla/hal_sandbox/PHal.h"
 #include "mozilla/HalScreenConfiguration.h"
@@ -16,8 +14,9 @@
 #include "mozilla/HalNetworkInformation.h"
 #include "mozilla/HalWakeLockInformation.h"
 #include "mozilla/HalTypes.h"
-#include "mozilla/Types.h"
 #include "mozilla/MozPromise.h"
+
+#include <cstdint>
 
 /*
  * Hal.h contains the public Hal API.

@@ -23,6 +23,7 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsICanvasRenderingContextInternal.h"
@@ -251,30 +252,30 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   class LruPosition final {
     std::list<WebGLContext*>::iterator mItr;
 
-    void reset();
+    LruPosition(const LruPosition&) = delete;
+    LruPosition(LruPosition&&) = delete;
+    LruPosition& operator=(const LruPosition&) = delete;
+    LruPosition& operator=(LruPosition&&) = delete;
 
    public:
+    void AssignLocked(WebGLContext& aContext,
+                      const StaticMutexAutoLock& aProofOfLock);
+
+    void Reset();
+    void ResetLocked(const StaticMutexAutoLock& aProofOfLock);
+
     LruPosition();
     explicit LruPosition(WebGLContext&);
 
-    LruPosition& operator=(LruPosition&& rhs) {
-      reset();
-      std::swap(mItr, rhs.mItr);
-      rhs.reset();
-      return *this;
-    }
-
-    ~LruPosition() { reset(); }
+    ~LruPosition() { Reset(); }
   };
 
-  mutable LruPosition mLruPosition;
+  mutable LruPosition mLruPosition GUARDED_BY(sLruMutex);
+
+  void BumpLruLocked(const StaticMutexAutoLock& aProofOfLock);
 
  public:
-  void BumpLru() {
-    LruPosition next{*this};
-    mLruPosition = std::move(next);
-  }
-
+  void BumpLru();
   void LoseLruContextIfLimitExceeded();
 
   // -
@@ -728,6 +729,9 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   bool IsEnabled(GLenum cap);
 
  private:
+  static StaticMutex sLruMutex;
+  static std::list<WebGLContext*> sLru GUARDED_BY(sLruMutex);
+
   // State tracking slots
   bool mDitherEnabled = true;
   bool mRasterizerDiscardEnabled = false;
@@ -1099,6 +1103,10 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   }
 
   ////
+
+ private:
+  void LoseContextLruLocked(webgl::ContextLossReason reason,
+                            const StaticMutexAutoLock& aProofOfLock);
 
  public:
   void LoseContext(

@@ -381,10 +381,6 @@ function reset_preferences(win) {
 
 function run_test_subset(subset) {
   info("subset: " + Array.from(subset, x => x.name).join(",") + "\n");
-  SpecialPowers.pushPrefEnv({
-    set: [["browser.preferences.instantApply", true]],
-  });
-
   let tests = [cache_preferences, ...subset, reset_preferences];
   for (let test of tests) {
     add_task(runTestOnPrivacyPrefPane.bind(undefined, test));

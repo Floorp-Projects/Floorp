@@ -530,45 +530,19 @@ class BrowsingContextModule extends Module {
    */
 
   _subscribeEvent(params) {
-    // TODO: Bug 1741861. Move this logic to a shared module or the an abstract
-    // class.
     switch (params.event) {
       case "browsingContext.contextCreated":
         this.#contextListener.startListening();
-
-        return this.messageHandler.addSessionData({
-          moduleName: "browsingContext",
-          category: "event",
-          contextDescriptor: {
-            type: lazy.ContextDescriptorType.All,
-          },
-          values: [params.event],
-        });
-      default:
-        throw new Error(
-          `Unsupported event for browsingContext module ${params.event}`
-        );
     }
+    return this.addEventSessionData("browsingContext", params.event);
   }
 
   _unsubscribeEvent(params) {
     switch (params.event) {
       case "browsingContext.contextCreated":
         this.#contextListener.stopListening();
-
-        return this.messageHandler.removeSessionData({
-          moduleName: "browsingContext",
-          category: "event",
-          contextDescriptor: {
-            type: lazy.ContextDescriptorType.All,
-          },
-          values: [params.event],
-        });
-      default:
-        throw new Error(
-          `Unsupported event for browsingContext module ${params.event}`
-        );
     }
+    return this.removeEventSessionData("browsingContext", params.event);
   }
 
   static get supportedEvents() {

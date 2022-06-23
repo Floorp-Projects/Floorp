@@ -103,12 +103,8 @@ if CONFIG["MOZ_ENABLE_DBUS"]:
         "DBusHelpers.h",
     ]
 
-EXTRA_COMPONENTS += [
-    "HandlerService.js",
-    "HandlerService.manifest",
-]
-
 EXTRA_JS_MODULES += [
+    "ExtHandlerService.jsm",
     "WebHandlerApp.jsm",
 ]
 

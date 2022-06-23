@@ -220,11 +220,6 @@ union SystemParameterValue {
   float;
 };
 
-struct SystemParameterKVPair {
-  uint8_t id;
-  SystemParameterValue value;
-};
-
 struct ClipboardCapabilities {
   bool supportsSelectionClipboard;
   bool supportsFindClipboard;
@@ -366,7 +361,6 @@ struct XPCOMInitData
     nsCString[] requestedLocales;
     L10nFileSourceDescriptor[] l10nFileSources;
     DynamicScalarDefinition[] dynamicScalarDefs;
-    SystemParameterKVPair[] systemParameters;
 };
 
 struct VisitedQueryResult
@@ -657,8 +651,6 @@ child:
      * necessary.
      */
     async ThemeChanged(FullLookAndFeel lookAndFeelData, ThemeChangeKind aKind);
-
-    async UpdateSystemParameters(SystemParameterKVPair[] aUpdates);
 
     async PreferenceUpdate(Pref pref);
     async VarUpdate(GfxVarUpdate var);
