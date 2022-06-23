@@ -416,8 +416,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     mPrintDocList.AppendElement(mPrintObject.get());
 
-    mPrintObject->mFrameType = eDoc;
-
     BuildNestedPrintObjects(mPrintObject);
   }
 
