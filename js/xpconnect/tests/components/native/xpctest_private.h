@@ -19,7 +19,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ModuleUtils.h"
 
-nsresult xpcTestRegisterComponents();
+extern const mozilla::Module kXPCTestModule;
 
 class xpcTestObjectReadOnly final : public nsIXPCTestObjectReadOnly {
  public:

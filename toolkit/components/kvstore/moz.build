@@ -17,10 +17,10 @@ XPIDL_SOURCES += [
     "nsIKeyValue.idl",
 ]
 
-XPCOM_MANIFESTS += [
-    "components.conf",
-]
-
 XPIDL_MODULE = "kvstore"
+
+UNIFIED_SOURCES += [
+    "nsKeyValueModule.cpp",
+]
 
 FINAL_LIBRARY = "xul"
