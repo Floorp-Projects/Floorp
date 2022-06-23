@@ -2316,6 +2316,12 @@
   value: false
   mirror: always
 
+# Whether or not File Handle is enabled.
+- name: dom.fileHandle.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Support @autocomplete values for form autofill feature.
 - name: dom.forms.autocomplete.formautofill
   type: bool

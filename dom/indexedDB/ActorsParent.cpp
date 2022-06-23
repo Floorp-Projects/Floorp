@@ -337,8 +337,6 @@ constexpr auto kSQLiteJournalSuffix = u".sqlite-journal"_ns;
 constexpr auto kSQLiteSHMSuffix = u".sqlite-shm"_ns;
 constexpr auto kSQLiteWALSuffix = u".sqlite-wal"_ns;
 
-const char kPrefFileHandleEnabled[] = "dom.fileHandle.enabled";
-
 constexpr auto kPermissionStringBase = "indexedDB-chrome-"_ns;
 constexpr auto kPermissionReadSuffix = "-read"_ns;
 constexpr auto kPermissionWriteSuffix = "-write"_ns;
@@ -15487,7 +15485,7 @@ FactoryOp::CheckPermission(ContentParent* aContentParent) {
     }
   }
 
-  mFileHandleDisabled = !Preferences::GetBool(kPrefFileHandleEnabled);
+  mFileHandleDisabled = !StaticPrefs::dom_fileHandle_enabled();
 
   PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
 
