@@ -260,7 +260,7 @@ class BrowserToolbarIntegration(
             flow.mapNotNull { state -> state.showTrackingProtectionCfrForTab }
                 .ifChanged()
                 .collect { showTrackingProtectionCfrForTab ->
-                    if (showTrackingProtectionCfrForTab.getOrDefault(store.state.selectedTabId, false)) {
+                    if (showTrackingProtectionCfrForTab[store.state.selectedTabId] == true) {
                         FocusNimbus.features.onboarding.recordExposure()
                         CFRPopup(
                             container = fragment.requireView(),

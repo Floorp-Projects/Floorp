@@ -44,9 +44,7 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
 
         if (action is TabListAction.AddTabAction &&
             onboardingConfig.isCfrEnabled &&
-            !components.appStore.state.showTrackingProtectionCfrForTab.getOrDefault(
-                    context.state.selectedTabId, false
-                )
+            components.appStore.state.showTrackingProtectionCfrForTab[context.state.selectedTabId] != true
         ) {
             components.settings.numberOfTabsOpened++
             if (components.settings.numberOfTabsOpened == ERASE_CFR_LIMIT) {
