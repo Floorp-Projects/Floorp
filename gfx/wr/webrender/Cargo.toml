@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.61.0"
+version = "0.62.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -24,7 +24,7 @@ sw_compositor = ["swgl"]
 [build-dependencies]
 build-parallel = "0.1.2"
 glslopt = "0.1.9"
-webrender_build = { version = "0.0.1", path = "../webrender_build" }
+webrender_build = { version = "0.0.2", path = "../webrender_build" }
 
 [dependencies]
 bincode = "1.0"
@@ -44,9 +44,9 @@ ron = { optional = true, version = "0.7" }
 serde = { optional = true, version = "1.0", features = ["serde_derive"] }
 smallvec = "1"
 time = "0.1"
-api = { version = "0.61.0", path = "../webrender_api", package = "webrender_api" }
-webrender_build = { version = "0.0.1", path = "../webrender_build" }
-malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of", package = "wr_malloc_size_of" }
+api = { version = "0.62.0", path = "../webrender_api", package = "webrender_api" }
+webrender_build = { version = "0.0.2", path = "../webrender_build" }
+malloc_size_of = { version = "0.0.2", path = "../wr_malloc_size_of", package = "wr_malloc_size_of" }
 svg_fmt = "0.4"
 tracy-rs = "0.1.2"
 derive_more = { version = "0.99", default-features = false, features = ["add_assign"] }

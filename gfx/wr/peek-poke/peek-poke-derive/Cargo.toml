@@ -1,6 +1,6 @@
 [package]
 name = "peek-poke-derive"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
 repository = "https://github.com/servo/webrender"
 description = "Derive macro for peek-poke."
