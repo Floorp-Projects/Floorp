@@ -479,7 +479,7 @@ void nsMenuX::MenuOpenedAsync() {
   EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 }
 
-void nsMenuX::MenuClosed(bool aEntireMenuClosingDueToActivateItem) {
+void nsMenuX::MenuClosed() {
   if (!mIsOpen) {
     return;
   }
@@ -490,7 +490,7 @@ void nsMenuX::MenuClosed(bool aEntireMenuClosingDueToActivateItem) {
   // If any of our submenus were opened programmatically, make sure they get closed first.
   for (auto& child : mMenuChildren) {
     if (child.is<RefPtr<nsMenuX>>()) {
-      child.as<RefPtr<nsMenuX>>()->MenuClosed(aEntireMenuClosingDueToActivateItem);
+      child.as<RefPtr<nsMenuX>>()->MenuClosed();
     }
   }
 
@@ -526,20 +526,7 @@ void nsMenuX::MenuClosed(bool aEntireMenuClosingDueToActivateItem) {
 
   mPendingAsyncMenuCloseRunnable = new MenuClosedAsyncRunnable(this);
 
-  if (aEntireMenuClosingDueToActivateItem) {
-    // Delay the call to MenuClosedAsync until after the menu's event loop has been exited, by using
-    // -[MOZMenuOpeningCoordinator runAfterMenuClosed:]. Otherwise, the runnable might potentially
-    // run before the event loop has been exited, and MenuClosedAsync() would flush the pending
-    // command runnable for the menu activation, and then the command event would run inside the
-    // menu's event loop which is what we're trying to avoid.
-    [MOZMenuOpeningCoordinator.sharedInstance runAfterMenuClosed:mPendingAsyncMenuCloseRunnable];
-  } else {
-    // Just dispatch to the Gecko event queue.
-    // One way to get here is if a submenu is closed but the rest of the menu stays open; in that
-    // case, we really can't use runAfterMenuClosed because the submenu's MenuClosedAsync method
-    // would run way too late.
-    NS_DispatchToCurrentThread(mPendingAsyncMenuCloseRunnable);
-  }
+  NS_DispatchToCurrentThread(mPendingAsyncMenuCloseRunnable);
 }
 
 void nsMenuX::FlushMenuClosedRunnable() {
