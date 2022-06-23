@@ -97,9 +97,7 @@ static SECStatus tls13_ComputeFinished(
     const SSL3Hashes *hashes, PRBool sending, PRUint8 *output,
     unsigned int *outputLen, unsigned int maxOutputLen);
 static SECStatus tls13_SendClientSecondRound(sslSocket *ss);
-static SECStatus tls13_SendClientSecondFlight(sslSocket *ss,
-                                              PRBool sendClientCert,
-                                              SSL3AlertDescription *sendAlert);
+static SECStatus tls13_SendClientSecondFlight(sslSocket *ss);
 static SECStatus tls13_FinishHandshake(sslSocket *ss);
 
 const char kHkdfLabelClient[] = "c";
@@ -2639,6 +2637,38 @@ loser:
 }
 
 static SECStatus
+tls13_SendPostHandshakeCertificate(sslSocket *ss)
+{
+    SECStatus rv;
+    if (ss->ssl3.hs.restartTarget) {
+        PR_NOT_REACHED("unexpected ss->ssl3.hs.restartTarget");
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
+    }
+
+    if (ss->ssl3.hs.clientCertificatePending) {
+        SSL_TRC(3, ("%d: TLS13[%d]: deferring tls13_SendClientSecondFlight because"
+                    " certificate authentication is still pending.",
+                    SSL_GETPID(), ss->fd));
+        ss->ssl3.hs.restartTarget = tls13_SendPostHandshakeCertificate;
+        PORT_SetError(PR_WOULD_BLOCK_ERROR);
+        return SECFailure;
+    }
+
+    ssl_GetXmitBufLock(ss);
+    rv = tls13_SendClientSecondFlight(ss);
+    ssl_ReleaseXmitBufLock(ss);
+    PORT_Assert(ss->ssl3.hs.ws == idle_handshake);
+    PORT_Assert(ss->ssl3.hs.shaPostHandshake != NULL);
+    PK11_DestroyContext(ss->ssl3.hs.shaPostHandshake, PR_TRUE);
+    ss->ssl3.hs.shaPostHandshake = NULL;
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    return rv;
+}
+
+static SECStatus
 tls13_HandleCertificateRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
     SECStatus rv;
@@ -2695,12 +2725,19 @@ tls13_HandleCertificateRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
             SECKEY_DestroyPrivateKey(ss->ssl3.clientPrivateKey);
             ss->ssl3.clientPrivateKey = NULL;
         }
+        if (ss->ssl3.hs.clientAuthSignatureSchemes != NULL) {
+            PORT_Free(ss->ssl3.hs.clientAuthSignatureSchemes);
+            ss->ssl3.hs.clientAuthSignatureSchemes = NULL;
+            ss->ssl3.hs.clientAuthSignatureSchemesLen = 0;
+        }
         SECITEM_FreeItem(&ss->xtnData.certReqContext, PR_FALSE);
         ss->xtnData.certReqContext.data = NULL;
     } else {
         PORT_Assert(ss->ssl3.clientCertChain == NULL);
         PORT_Assert(ss->ssl3.clientCertificate == NULL);
         PORT_Assert(ss->ssl3.clientPrivateKey == NULL);
+        PORT_Assert(ss->ssl3.hs.clientAuthSignatureSchemes == NULL);
+        PORT_Assert(ss->ssl3.hs.clientAuthSignatureSchemesLen == 0);
         PORT_Assert(!ss->ssl3.hs.clientCertRequested);
         PORT_Assert(ss->xtnData.certReqContext.data == NULL);
     }
@@ -2748,33 +2785,16 @@ tls13_HandleCertificateRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
     ss->ssl3.hs.clientCertRequested = PR_TRUE;
 
     if (ss->firstHsDone) {
-        SSL3AlertDescription sendAlert = no_alert;
 
         /* Request a client certificate. */
-        rv = ssl3_CompleteHandleCertificateRequest(
+        rv = ssl3_BeginHandleCertificateRequest(
             ss, ss->xtnData.sigSchemes, ss->xtnData.numSigSchemes,
             &ss->xtnData.certReqAuthorities);
         if (rv != SECSuccess) {
             FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
             return rv;
         }
-
-        ssl_GetXmitBufLock(ss);
-        rv = tls13_SendClientSecondFlight(ss, !ss->ssl3.sendEmptyCert,
-                                          &sendAlert);
-        ssl_ReleaseXmitBufLock(ss);
-        if (rv != SECSuccess) {
-            if (sendAlert != no_alert) {
-                FATAL_ERROR(ss, PORT_GetError(), sendAlert);
-            } else {
-                LOG_ERROR(ss, PORT_GetError());
-            }
-            return SECFailure;
-        }
-        PORT_Assert(ss->ssl3.hs.ws == idle_handshake);
-        PORT_Assert(ss->ssl3.hs.shaPostHandshake != NULL);
-        PK11_DestroyContext(ss->ssl3.hs.shaPostHandshake, PR_TRUE);
-        ss->ssl3.hs.shaPostHandshake = NULL;
+        rv = tls13_SendPostHandshakeCertificate(ss);
     } else {
         TLS13_SET_HS_STATE(ss, wait_server_cert);
     }
@@ -4553,7 +4573,7 @@ tls13_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length)
     /* Request a client certificate now if one was requested. */
     if (ss->ssl3.hs.clientCertRequested) {
         PORT_Assert(!ss->sec.isServer);
-        rv = ssl3_CompleteHandleCertificateRequest(
+        rv = ssl3_BeginHandleCertificateRequest(
             ss, ss->xtnData.sigSchemes, ss->xtnData.numSigSchemes,
             &ss->xtnData.certReqAuthorities);
         if (rv != SECSuccess) {
@@ -5052,15 +5072,17 @@ tls13_FinishHandshake(sslSocket *ss)
 /* Do the parts of sending the client's second round that require
  * the XmitBuf lock. */
 static SECStatus
-tls13_SendClientSecondFlight(sslSocket *ss, PRBool sendClientCert,
-                             SSL3AlertDescription *sendAlert)
+tls13_SendClientSecondFlight(sslSocket *ss)
 {
     SECStatus rv;
     unsigned int offset = 0;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
+    PORT_Assert(!ss->ssl3.hs.clientCertificatePending);
 
-    *sendAlert = internal_error;
+    PRBool sendClientCert = !ss->ssl3.sendEmptyCert &&
+                            ss->ssl3.clientCertChain != NULL &&
+                            ss->ssl3.clientPrivateKey != NULL;
 
     if (ss->firstHsDone) {
         offset = SSL_BUFFER_LEN(&ss->sec.ci.sendBuf);
@@ -5071,12 +5093,12 @@ tls13_SendClientSecondFlight(sslSocket *ss, PRBool sendClientCert,
         rv = ssl3_SendEmptyCertificate(ss);
         /* Don't send verify */
         if (rv != SECSuccess) {
-            return SECFailure; /* error code is set. */
+            goto alert_error; /* error code is set. */
         }
     } else if (sendClientCert) {
         rv = tls13_SendCertificate(ss);
         if (rv != SECSuccess) {
-            return SECFailure; /* error code is set. */
+            goto alert_error; /* err code was set. */
         }
     }
 
@@ -5085,7 +5107,7 @@ tls13_SendClientSecondFlight(sslSocket *ss, PRBool sendClientCert,
                                             SSL_BUFFER_BASE(&ss->sec.ci.sendBuf) + offset,
                                             SSL_BUFFER_LEN(&ss->sec.ci.sendBuf) - offset);
         if (rv != SECSuccess) {
-            return SECFailure; /* error code is set. */
+            goto alert_error; /* err code was set. */
         }
     }
 
@@ -5109,7 +5131,7 @@ tls13_SendClientSecondFlight(sslSocket *ss, PRBool sendClientCert,
         SECKEY_DestroyPrivateKey(ss->ssl3.clientPrivateKey);
         ss->ssl3.clientPrivateKey = NULL;
         if (rv != SECSuccess) {
-            return SECFailure; /* err is set. */
+            goto alert_error; /* err code was set. */
         }
 
         if (ss->firstHsDone) {
@@ -5117,39 +5139,39 @@ tls13_SendClientSecondFlight(sslSocket *ss, PRBool sendClientCert,
                                                 SSL_BUFFER_BASE(&ss->sec.ci.sendBuf) + offset,
                                                 SSL_BUFFER_LEN(&ss->sec.ci.sendBuf) - offset);
             if (rv != SECSuccess) {
-                return SECFailure; /* error is set. */
+                goto alert_error; /* err code was set. */
             }
         }
     }
 
     rv = tls13_SendFinished(ss, ss->firstHsDone ? ss->ssl3.hs.clientTrafficSecret : ss->ssl3.hs.clientHsTrafficSecret);
     if (rv != SECSuccess) {
-        return SECFailure; /* err code was set. */
+        goto alert_error; /* err code was set. */
     }
     rv = ssl3_FlushHandshake(ss, 0);
     if (rv != SECSuccess) {
         /* No point in sending an alert here because we're not going to
          * be able to send it if we couldn't flush the handshake. */
-        *sendAlert = no_alert;
-        return SECFailure;
+        goto error;
     }
 
     return SECSuccess;
+
+alert_error:
+    FATAL_ERROR(ss, PORT_GetError(), internal_error);
+    return SECFailure;
+error:
+    LOG_ERROR(ss, PORT_GetError());
+    return SECFailure;
 }
 
 static SECStatus
 tls13_SendClientSecondRound(sslSocket *ss)
 {
     SECStatus rv;
-    PRBool sendClientCert;
-    SSL3AlertDescription sendAlert = no_alert;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
-
-    sendClientCert = !ss->ssl3.sendEmptyCert &&
-                     ss->ssl3.clientCertChain != NULL &&
-                     ss->ssl3.clientPrivateKey != NULL;
 
     /* Defer client authentication sending if we are still waiting for server
      * authentication.  This avoids unnecessary disclosure of client credentials
@@ -5160,8 +5182,8 @@ tls13_SendClientSecondRound(sslSocket *ss)
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
-    if (ss->ssl3.hs.authCertificatePending) {
-        SSL_TRC(3, ("%d: TLS13[%d]: deferring ssl3_SendClientSecondRound because"
+    if (ss->ssl3.hs.authCertificatePending || ss->ssl3.hs.clientCertificatePending) {
+        SSL_TRC(3, ("%d: TLS13[%d]: deferring tls13_SendClientSecondRound because"
                     " certificate authentication is still pending.",
                     SSL_GETPID(), ss->fd));
         ss->ssl3.hs.restartTarget = tls13_SendClientSecondRound;
@@ -5208,14 +5230,10 @@ tls13_SendClientSecondRound(sslSocket *ss)
     }
 
     ssl_GetXmitBufLock(ss); /*******************************/
-    rv = tls13_SendClientSecondFlight(ss, sendClientCert, &sendAlert);
+    /* This call can't block, as clientAuthCertificatePending is checked above */
+    rv = tls13_SendClientSecondFlight(ss);
     ssl_ReleaseXmitBufLock(ss); /*******************************/
     if (rv != SECSuccess) {
-        if (sendAlert != no_alert) {
-            FATAL_ERROR(ss, PORT_GetError(), sendAlert);
-        } else {
-            LOG_ERROR(ss, PORT_GetError());
-        }
         return SECFailure;
     }
     rv = tls13_SetCipherSpec(ss, TrafficKeyApplicationData,

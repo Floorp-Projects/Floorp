@@ -127,6 +127,10 @@ secmod_NewModule(void)
                                                *the other flags are set */
 #define SECMOD_FLAG_INTERNAL_KEY_SLOT 0x02
 
+/* private flags for policy check. */
+#define SECMOD_FLAG_POLICY_CHECK_IDENTIFIER 0x01
+#define SECMOD_FLAG_POLICY_CHECK_VALUE 0x02
+
 /*
  * for 3.4 we continue to use the old SECMODModule structure
  */
@@ -496,7 +500,7 @@ secmod_ArgGetSubValue(const char *cipher, char sep1, char sep2,
 
 static PRUint32
 secmod_parsePolicyValue(const char *policyFlags, int policyLength,
-                        PRBool printPolicyFeedback)
+                        PRBool printPolicyFeedback, PRUint32 policyCheckFlags)
 {
     const char *flag, *currentString;
     PRUint32 flags = 0;
@@ -521,7 +525,8 @@ secmod_parsePolicyValue(const char *policyFlags, int policyLength,
                 break;
             }
         }
-        if (unknown && printPolicyFeedback) {
+        if (unknown && printPolicyFeedback &&
+            (policyCheckFlags & SECMOD_FLAG_POLICY_CHECK_VALUE)) {
             PR_SetEnv("NSS_POLICY_FAIL=1");
             fprintf(stderr, "NSS-POLICY-FAIL %.*s: unknown value: %.*s\n",
                     policyLength, policyFlags, length, flag);
@@ -630,7 +635,7 @@ secmod_getOperationString(NSSPolicyOperation operation)
 
 static SECStatus
 secmod_applyCryptoPolicy(const char *policyString, NSSPolicyOperation operation,
-                         PRBool printPolicyFeedback)
+                         PRBool printPolicyFeedback, PRUint32 policyCheckFlags)
 {
     const char *cipher, *currentString;
     unsigned i, j;
@@ -658,7 +663,7 @@ secmod_applyCryptoPolicy(const char *policyString, NSSPolicyOperation operation,
             /* disable or enable all options by default */
             PRUint32 value = 0;
             if (newValue) {
-                value = secmod_parsePolicyValue(&cipher[3] + 1, length - 3 - 1, printPolicyFeedback);
+                value = secmod_parsePolicyValue(&cipher[3] + 1, length - 3 - 1, printPolicyFeedback, policyCheckFlags);
             }
             for (i = 0; i < PR_ARRAY_SIZE(algOptLists); i++) {
                 const algListsDef *algOptList = &algOptLists[i];
@@ -688,7 +693,8 @@ secmod_applyCryptoPolicy(const char *policyString, NSSPolicyOperation operation,
                     if (newOption) {
                         value = secmod_parsePolicyValue(&cipher[name_size] + 1,
                                                         length - name_size - 1,
-                                                        printPolicyFeedback);
+                                                        printPolicyFeedback,
+                                                        policyCheckFlags);
                     }
                     rv = secmod_setPolicyOperation(algOptList->list[j].oid, operation, value);
                     if (rv != SECSuccess) {
@@ -717,7 +723,8 @@ secmod_applyCryptoPolicy(const char *policyString, NSSPolicyOperation operation,
                 rv = secmod_getPolicyOptValue(policyValue, policyValueLength,
                                               &val);
                 if (rv != SECSuccess) {
-                    if (printPolicyFeedback) {
+                    if (printPolicyFeedback &&
+                        (policyCheckFlags & SECMOD_FLAG_POLICY_CHECK_VALUE)) {
                         PR_SetEnv("NSS_POLICY_FAIL=1");
                         fprintf(stderr, "NSS-POLICY-FAIL %.*s: unknown value: %.*s\n",
                                 length, cipher, policyValueLength, policyValue);
@@ -737,7 +744,8 @@ secmod_applyCryptoPolicy(const char *policyString, NSSPolicyOperation operation,
             }
         }
 
-        if (unknown && printPolicyFeedback) {
+        if (unknown && printPolicyFeedback &&
+            (policyCheckFlags & SECMOD_FLAG_POLICY_CHECK_IDENTIFIER)) {
             PR_SetEnv("NSS_POLICY_FAIL=1");
             fprintf(stderr, "NSS-POLICY-FAIL %s: unknown identifier: %.*s\n",
                     secmod_getOperationString(operation), length, cipher);
@@ -813,7 +821,8 @@ secmod_sanityCheckCryptoPolicy(void)
 }
 
 static SECStatus
-secmod_parseCryptoPolicy(const char *policyConfig, PRBool printPolicyFeedback)
+secmod_parseCryptoPolicy(const char *policyConfig, PRBool printPolicyFeedback,
+                         PRUint32 policyCheckFlags)
 {
     char *args;
     SECStatus rv;
@@ -828,28 +837,32 @@ secmod_parseCryptoPolicy(const char *policyConfig, PRBool printPolicyFeedback)
         return rv;
     }
     args = NSSUTIL_ArgGetParamValue("disallow", policyConfig);
-    rv = secmod_applyCryptoPolicy(args, NSS_DISALLOW, printPolicyFeedback);
+    rv = secmod_applyCryptoPolicy(args, NSS_DISALLOW, printPolicyFeedback,
+                                  policyCheckFlags);
     if (args)
         PORT_Free(args);
     if (rv != SECSuccess) {
         return rv;
     }
     args = NSSUTIL_ArgGetParamValue("allow", policyConfig);
-    rv = secmod_applyCryptoPolicy(args, NSS_ALLOW, printPolicyFeedback);
+    rv = secmod_applyCryptoPolicy(args, NSS_ALLOW, printPolicyFeedback,
+                                  policyCheckFlags);
     if (args)
         PORT_Free(args);
     if (rv != SECSuccess) {
         return rv;
     }
     args = NSSUTIL_ArgGetParamValue("disable", policyConfig);
-    rv = secmod_applyCryptoPolicy(args, NSS_DISABLE, printPolicyFeedback);
+    rv = secmod_applyCryptoPolicy(args, NSS_DISABLE, printPolicyFeedback,
+                                  policyCheckFlags);
     if (args)
         PORT_Free(args);
     if (rv != SECSuccess) {
         return rv;
     }
     args = NSSUTIL_ArgGetParamValue("enable", policyConfig);
-    rv = secmod_applyCryptoPolicy(args, NSS_ENABLE, printPolicyFeedback);
+    rv = secmod_applyCryptoPolicy(args, NSS_ENABLE, printPolicyFeedback,
+                                  policyCheckFlags);
     if (args)
         PORT_Free(args);
     if (rv != SECSuccess) {
@@ -880,6 +893,22 @@ secmod_parseCryptoPolicy(const char *policyConfig, PRBool printPolicyFeedback)
     return rv;
 }
 
+static PRUint32
+secmod_parsePolicyCheckFlags(const char *nss)
+{
+    PRUint32 policyCheckFlags = 0;
+
+    if (NSSUTIL_ArgHasFlag("flags", "policyCheckIdentifier", nss)) {
+        policyCheckFlags |= SECMOD_FLAG_POLICY_CHECK_IDENTIFIER;
+    }
+
+    if (NSSUTIL_ArgHasFlag("flags", "policyCheckValue", nss)) {
+        policyCheckFlags |= SECMOD_FLAG_POLICY_CHECK_VALUE;
+    }
+
+    return policyCheckFlags;
+}
+
 /*
  * for 3.4 we continue to use the old SECMODModule structure
  */
@@ -891,11 +920,10 @@ SECMOD_CreateModuleEx(const char *library, const char *moduleName,
     SECMODModule *mod;
     SECStatus rv;
     char *slotParams, *ciphers;
-    /* pk11pars.h still does not have const char * interfaces */
-    char *nssc = (char *)nss;
-    PRBool printPolicyFeedback = NSSUTIL_ArgHasFlag("flags", "printPolicyFeedback", nssc);
+    PRBool printPolicyFeedback = NSSUTIL_ArgHasFlag("flags", "printPolicyFeedback", nss);
+    PRUint32 policyCheckFlags = secmod_parsePolicyCheckFlags(nss);
 
-    rv = secmod_parseCryptoPolicy(config, printPolicyFeedback);
+    rv = secmod_parseCryptoPolicy(config, printPolicyFeedback, policyCheckFlags);
 
     /* do not load the module if policy parsing fails */
     if (rv != SECSuccess) {
@@ -919,27 +947,27 @@ SECMOD_CreateModuleEx(const char *library, const char *moduleName,
         mod->libraryParams = PORT_ArenaStrdup(mod->arena, parameters);
     }
 
-    mod->internal = NSSUTIL_ArgHasFlag("flags", "internal", nssc);
-    mod->isFIPS = NSSUTIL_ArgHasFlag("flags", "FIPS", nssc);
+    mod->internal = NSSUTIL_ArgHasFlag("flags", "internal", nss);
+    mod->isFIPS = NSSUTIL_ArgHasFlag("flags", "FIPS", nss);
     /* if the system FIPS mode is enabled, force FIPS to be on */
     if (SECMOD_GetSystemFIPSEnabled()) {
         mod->isFIPS = PR_TRUE;
     }
-    mod->isCritical = NSSUTIL_ArgHasFlag("flags", "critical", nssc);
-    slotParams = NSSUTIL_ArgGetParamValue("slotParams", nssc);
+    mod->isCritical = NSSUTIL_ArgHasFlag("flags", "critical", nss);
+    slotParams = NSSUTIL_ArgGetParamValue("slotParams", nss);
     mod->slotInfo = NSSUTIL_ArgParseSlotInfo(mod->arena, slotParams,
                                              &mod->slotInfoCount);
     if (slotParams)
         PORT_Free(slotParams);
     /* new field */
-    mod->trustOrder = NSSUTIL_ArgReadLong("trustOrder", nssc,
+    mod->trustOrder = NSSUTIL_ArgReadLong("trustOrder", nss,
                                           NSSUTIL_DEFAULT_TRUST_ORDER, NULL);
     /* new field */
-    mod->cipherOrder = NSSUTIL_ArgReadLong("cipherOrder", nssc,
+    mod->cipherOrder = NSSUTIL_ArgReadLong("cipherOrder", nss,
                                            NSSUTIL_DEFAULT_CIPHER_ORDER, NULL);
     /* new field */
-    mod->isModuleDB = NSSUTIL_ArgHasFlag("flags", "moduleDB", nssc);
-    mod->moduleDBOnly = NSSUTIL_ArgHasFlag("flags", "moduleDBOnly", nssc);
+    mod->isModuleDB = NSSUTIL_ArgHasFlag("flags", "moduleDB", nss);
+    mod->moduleDBOnly = NSSUTIL_ArgHasFlag("flags", "moduleDBOnly", nss);
     if (mod->moduleDBOnly)
         mod->isModuleDB = PR_TRUE;
 
@@ -951,13 +979,13 @@ SECMOD_CreateModuleEx(const char *library, const char *moduleName,
      * code checking if (mod->isModuleDB) will continue to work correctly. */
     if (mod->isModuleDB) {
         char flags = SECMOD_FLAG_MODULE_DB_IS_MODULE_DB;
-        if (NSSUTIL_ArgHasFlag("flags", "skipFirst", nssc)) {
+        if (NSSUTIL_ArgHasFlag("flags", "skipFirst", nss)) {
             flags |= SECMOD_FLAG_MODULE_DB_SKIP_FIRST;
         }
-        if (NSSUTIL_ArgHasFlag("flags", "defaultModDB", nssc)) {
+        if (NSSUTIL_ArgHasFlag("flags", "defaultModDB", nss)) {
             flags |= SECMOD_FLAG_MODULE_DB_DEFAULT_MODDB;
         }
-        if (NSSUTIL_ArgHasFlag("flags", "policyOnly", nssc)) {
+        if (NSSUTIL_ArgHasFlag("flags", "policyOnly", nss)) {
             flags |= SECMOD_FLAG_MODULE_DB_POLICY_ONLY;
         }
         /* additional moduleDB flags could be added here in the future */
@@ -967,13 +995,13 @@ SECMOD_CreateModuleEx(const char *library, const char *moduleName,
     if (mod->internal) {
         char flags = SECMOD_FLAG_INTERNAL_IS_INTERNAL;
 
-        if (NSSUTIL_ArgHasFlag("flags", "internalKeySlot", nssc)) {
+        if (NSSUTIL_ArgHasFlag("flags", "internalKeySlot", nss)) {
             flags |= SECMOD_FLAG_INTERNAL_KEY_SLOT;
         }
         mod->internal = (PRBool)flags;
     }
 
-    ciphers = NSSUTIL_ArgGetParamValue("ciphers", nssc);
+    ciphers = NSSUTIL_ArgGetParamValue("ciphers", nss);
     NSSUTIL_ArgParseCipherFlags(&mod->ssl[0], ciphers);
     if (ciphers)
         PORT_Free(ciphers);
@@ -1903,6 +1931,7 @@ SECMOD_LoadModule(char *modulespec, SECMODModule *parent, PRBool recurse)
     SECMODModule *oldModule = NULL;
     SECStatus rv;
     PRBool forwardPolicyFeedback = PR_FALSE;
+    PRUint32 forwardPolicyCheckFlags;
 
     /* initialize the underlying module structures */
     SECMOD_Init();
@@ -1916,6 +1945,8 @@ SECMOD_LoadModule(char *modulespec, SECMODModule *parent, PRBool recurse)
 
     module = SECMOD_CreateModuleEx(library, moduleName, parameters, nss, config);
     forwardPolicyFeedback = NSSUTIL_ArgHasFlag("flags", "printPolicyFeedback", nss);
+    forwardPolicyCheckFlags = secmod_parsePolicyCheckFlags(nss);
+
     if (library)
         PORT_Free(library);
     if (moduleName)
@@ -1984,6 +2015,17 @@ SECMOD_LoadModule(char *modulespec, SECMODModule *parent, PRBool recurse)
                     /* Add printPolicyFeedback to the nss flags */
                     char *specWithForwards =
                         NSSUTIL_AddNSSFlagToModuleSpec(*index, "printPolicyFeedback");
+                    char *tmp;
+                    if (forwardPolicyCheckFlags & SECMOD_FLAG_POLICY_CHECK_IDENTIFIER) {
+                        tmp = NSSUTIL_AddNSSFlagToModuleSpec(specWithForwards, "policyCheckIdentifier");
+                        PORT_Free(specWithForwards);
+                        specWithForwards = tmp;
+                    }
+                    if (forwardPolicyCheckFlags & SECMOD_FLAG_POLICY_CHECK_VALUE) {
+                        tmp = NSSUTIL_AddNSSFlagToModuleSpec(specWithForwards, "policyCheckValue");
+                        PORT_Free(specWithForwards);
+                        specWithForwards = tmp;
+                    }
                     child = SECMOD_LoadModule(specWithForwards, module, PR_TRUE);
                     PORT_Free(specWithForwards);
                 }
