@@ -22,8 +22,8 @@
   </head>
 
   <body>
-    <nav>
-      <div class="content-container brand-logo">
+    <nav class="content-container">
+      <div class="brand-logo">
         <span class="brand-icon"></span>
         <span class="brand-feature-name" data-l10n-id="firefoxview-page-title"></span>
       </div>
@@ -112,7 +112,9 @@
         <button class="primary" id="colorways-button"></button>
         <img id="colorways-collection-graphic">
       </template>
-      <aside id="colorways"></aside>
+      <aside class="content-container">
+        <section id="colorways"></section>
+      </aside>
 
       <section class="content-container" is="recently-closed-tabs-container" id="recently-closed-tabs-container">
         <header class="page-section-header">

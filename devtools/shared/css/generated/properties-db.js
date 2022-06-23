@@ -5972,6 +5972,7 @@ exports.CSS_PROPERTIES = {
       "revert-layer",
       "size",
       "strict",
+      "style",
       "unset"
     ]
   },

@@ -14,8 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsHttpAuthCache.h"
 #include "nsProxyInfo.h"
-#include "nsCRT.h"
-#include "nsICancelableRunnable.h"
+#include "nsICancelable.h"
 
 class nsIHttpAuthenticableChannel;
 class nsIHttpAuthenticator;

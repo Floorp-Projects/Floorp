@@ -118,19 +118,39 @@ bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
   return eq;
 }
 
-static std::list<WebGLContext*> sWebglLru;
+StaticMutex WebGLContext::sLruMutex;
+std::list<WebGLContext*> WebGLContext::sLru;
 
-WebGLContext::LruPosition::LruPosition() : mItr(sWebglLru.end()) {}  // NOLINT
+WebGLContext::LruPosition::LruPosition() {
+  StaticMutexAutoLock lock(sLruMutex);
+  mItr = sLru.end();
+}  // NOLINT
 
-WebGLContext::LruPosition::LruPosition(WebGLContext& context)
-    : mItr(sWebglLru.insert(sWebglLru.end(), &context)) {}
+WebGLContext::LruPosition::LruPosition(WebGLContext& context) {
+  StaticMutexAutoLock lock(sLruMutex);
+  mItr = sLru.insert(sLru.end(), &context);
+}
 
-void WebGLContext::LruPosition::reset() {
-  const auto end = sWebglLru.end();
+void WebGLContext::LruPosition::AssignLocked(
+    WebGLContext& aContext, const StaticMutexAutoLock& aProofOfLock) {
+  sLruMutex.AssertCurrentThreadOwns();
+  ResetLocked(aProofOfLock);
+  mItr = sLru.insert(sLru.end(), &aContext);
+}
+
+void WebGLContext::LruPosition::ResetLocked(
+    const StaticMutexAutoLock& aProofOfLock) {
+  sLruMutex.AssertCurrentThreadOwns();
+  const auto end = sLru.end();
   if (mItr != end) {
-    sWebglLru.erase(mItr);
+    sLru.erase(mItr);
     mItr = end;
   }
+}
+
+void WebGLContext::LruPosition::Reset() {
+  StaticMutexAutoLock lock(sLruMutex);
+  ResetLocked(lock);
 }
 
 WebGLContext::WebGLContext(HostWebGLContext& host,
@@ -677,7 +697,19 @@ void WebGLContext::SetCompositableHost(
   mCompositableHost = aCompositableHost;
 }
 
+void WebGLContext::BumpLruLocked(const StaticMutexAutoLock& aProofOfLock) {
+  sLruMutex.AssertCurrentThreadOwns();
+  mLruPosition.AssignLocked(*this, aProofOfLock);
+}
+
+void WebGLContext::BumpLru() {
+  StaticMutexAutoLock lock(sLruMutex);
+  BumpLruLocked(lock);
+}
+
 void WebGLContext::LoseLruContextIfLimitExceeded() {
+  StaticMutexAutoLock lock(sLruMutex);
+
   const auto maxContexts = std::max(1u, StaticPrefs::webgl_max_contexts());
   const auto maxContextsPerPrincipal =
       std::max(1u, StaticPrefs::webgl_max_contexts_per_principal());
@@ -685,11 +717,11 @@ void WebGLContext::LoseLruContextIfLimitExceeded() {
   // it's important to update the index on a new context before losing old
   // contexts, otherwise new unused contexts would all have index 0 and we
   // couldn't distinguish older ones when choosing which one to lose first.
-  BumpLru();
+  BumpLruLocked(lock);
 
   {
     size_t forPrincipal = 0;
-    for (const auto& context : sWebglLru) {
+    for (const auto& context : sLru) {
       if (context->mPrincipalKey == mPrincipalKey) {
         forPrincipal += 1;
       }
@@ -702,10 +734,10 @@ void WebGLContext::LoseLruContextIfLimitExceeded() {
           maxContextsPerPrincipal);
       mHost->JsWarning(ToString(text));
 
-      for (const auto& context : sWebglLru) {
+      for (const auto& context : sLru) {
         if (context->mPrincipalKey == mPrincipalKey) {
           MOZ_ASSERT(context != this);
-          context->LoseContext(webgl::ContextLossReason::None);
+          context->LoseContextLruLocked(webgl::ContextLossReason::None, lock);
           forPrincipal -= 1;
           break;
         }
@@ -713,7 +745,7 @@ void WebGLContext::LoseLruContextIfLimitExceeded() {
     }
   }
 
-  auto total = sWebglLru.size();
+  auto total = sLru.size();
   while (total > maxContexts) {
     const auto text = nsPrintfCString(
         "Exceeded %u live WebGL contexts, losing the least "
@@ -721,9 +753,9 @@ void WebGLContext::LoseLruContextIfLimitExceeded() {
         maxContexts);
     mHost->JsWarning(ToString(text));
 
-    const auto& context = sWebglLru.front();
+    const auto& context = sLru.front();
     MOZ_ASSERT(context != this);
-    context->LoseContext(webgl::ContextLossReason::None);
+    context->LoseContextLruLocked(webgl::ContextLossReason::None, lock);
     total -= 1;
   }
 }
@@ -1218,12 +1250,20 @@ void WebGLContext::CheckForContextLoss() {
   LoseContext(reason);
 }
 
-void WebGLContext::LoseContext(const webgl::ContextLossReason reason) {
+void WebGLContext::LoseContextLruLocked(
+    const webgl::ContextLossReason reason,
+    const StaticMutexAutoLock& aProofOfLock) {
   printf_stderr("WebGL(%p)::LoseContext(%u)\n", this,
                 static_cast<uint32_t>(reason));
+  sLruMutex.AssertCurrentThreadOwns();
   mIsContextLost = true;
-  mLruPosition = {};
+  mLruPosition.ResetLocked(aProofOfLock);
   mHost->OnContextLoss(reason);
+}
+
+void WebGLContext::LoseContext(const webgl::ContextLossReason reason) {
+  StaticMutexAutoLock lock(sLruMutex);
+  LoseContextLruLocked(reason, lock);
 }
 
 void WebGLContext::DidRefresh() {

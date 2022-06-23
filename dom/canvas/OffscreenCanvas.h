@@ -160,7 +160,7 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   ~OffscreenCanvas();
 
   already_AddRefed<EncodeCompleteCallback> CreateEncodeCompleteCallback(
-      nsCOMPtr<nsIGlobalObject>&& aGlobal, Promise* aPromise);
+      Promise* aPromise);
 
   void CanvasAttrChanged() {
     ErrorResult dummy;

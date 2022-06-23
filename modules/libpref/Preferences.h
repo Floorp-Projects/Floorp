@@ -539,6 +539,13 @@ extern Atomic<bool, Relaxed> sCrashOnBlocklistedPref;
 
 bool ShouldSanitizePreference(const char* aPref, bool aIsDestWebContentProcess);
 
+const char kFissionEnforceBlockList[] =
+    "fission.enforceBlocklistedPrefsInSubprocesses";
+const char kFissionOmitBlockListValues[] =
+    "fission.omitBlocklistedPrefsInSubprocesses";
+
+void OnFissionBlocklistPrefChange(const char* aPref, void* aData);
+
 }  // namespace mozilla
 
 #endif  // mozilla_Preferences_h

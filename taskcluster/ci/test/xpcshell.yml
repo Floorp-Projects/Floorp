@@ -44,6 +44,7 @@ xpcshell:
     description: "xpcshell test run"
     treeherder-symbol: X(X)
     variants:
+        - conditioned_profile+fission
         - fission
         - socketprocess_networking+no-fission
         - socketprocess_networking+fission
@@ -51,6 +52,11 @@ xpcshell:
     run-without-variant: false
     run-on-projects:
         by-variant:
+            conditioned_profile+fission:
+                by-test-platform:
+                    linux1804-64(-shippable)?-qr/opt: ['trunk']
+                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
+                    default: []
             fission:
                 by-test-platform:
                     android.*: []

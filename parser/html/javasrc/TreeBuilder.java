@@ -196,11 +196,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int KEYGEN = 65;
 
-    final static int MENUITEM = 66;
+    final static int TEMPLATE = 66;
 
-    final static int TEMPLATE = 67;
-
-    final static int IMG = 68;
+    final static int IMG = 67;
 
     // start insertion modes
 
@@ -2121,7 +2119,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 reconstructTheActiveFormattingElements();
                                 // FALL THROUGH to PARAM_OR_SOURCE_OR_TRACK
                                 // CPPONLY: MOZ_FALLTHROUGH;
-                            // CPPONLY: case MENUITEM:
                             case PARAM_OR_SOURCE_OR_TRACK:
                                 appendVoidElementToCurrentMayFoster(
                                         elementName,
@@ -3570,7 +3567,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             break;
                         case AREA_OR_WBR:
                         case KEYGEN: // XXX??
-                        // CPPONLY: case MENUITEM:
                         case PARAM_OR_SOURCE_OR_TRACK:
                         case EMBED:
                         case IMG:

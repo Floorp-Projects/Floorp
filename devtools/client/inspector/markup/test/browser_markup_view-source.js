@@ -88,11 +88,8 @@ async function clickOnJumpToDebuggerIconForNode(
   );
   evHolder.scrollIntoView();
   info(`Display event tooltip for node "${nodeSelector}"`);
-  EventUtils.synthesizeMouseAtCenter(
-    evHolder,
-    {},
-    inspector.markup.doc.defaultView
-  );
+  evHolder.click();
+
   const tooltip = inspector.markup.eventDetailsTooltip;
   await tooltip.once("shown");
 

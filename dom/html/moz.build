@@ -23,12 +23,6 @@ MOCHITEST_CHROME_MANIFESTS += [
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
 
-XPIDL_SOURCES += [
-    "nsIMenuBuilder.idl",
-]
-
-XPIDL_MODULE = "content_html"
-
 EXPORTS += [
     "nsGenericHTMLElement.h",
     "nsGenericHTMLFrameElement.h",
@@ -85,7 +79,6 @@ EXPORTS.mozilla.dom += [
     "HTMLMarqueeElement.h",
     "HTMLMediaElement.h",
     "HTMLMenuElement.h",
-    "HTMLMenuItemElement.h",
     "HTMLMetaElement.h",
     "HTMLMeterElement.h",
     "HTMLModElement.h",
@@ -169,7 +162,6 @@ UNIFIED_SOURCES += [
     "HTMLMarqueeElement.cpp",
     "HTMLMediaElement.cpp",
     "HTMLMenuElement.cpp",
-    "HTMLMenuItemElement.cpp",
     "HTMLMetaElement.cpp",
     "HTMLMeterElement.cpp",
     "HTMLModElement.cpp",
@@ -222,10 +214,6 @@ UNIFIED_SOURCES += [
     "TimeRanges.cpp",
     "ValidityState.cpp",
     "VideoDocument.cpp",
-]
-
-EXTRA_JS_MODULES += [
-    "HTMLMenuBuilder.jsm",
 ]
 
 XPCOM_MANIFESTS += [

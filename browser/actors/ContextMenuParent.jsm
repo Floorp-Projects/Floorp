@@ -93,11 +93,4 @@ class ContextMenuParent extends JSWindowActorParent {
       targetIdentifier,
     });
   }
-
-  doCustomCommand(generatedItemId, handlingUserInput) {
-    this.sendAsyncMessage("ContextMenu:DoCustomCommand", {
-      generatedItemId,
-      handlingUserInput,
-    });
-  }
 }

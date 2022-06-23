@@ -53,7 +53,7 @@ describe("#CachedTargetingGetter", () => {
   it("should cache allow for optional getter argument", async () => {
     let cachedGetter = new CachedTargetingGetter(
       "doesAppNeedPin",
-      undefined,
+      true,
       undefined,
       { doesAppNeedPin: doesAppNeedPinStub }
     );
@@ -66,6 +66,9 @@ describe("#CachedTargetingGetter", () => {
 
     // Called once; cached request
     assert.calledOnce(doesAppNeedPinStub);
+
+    // Called with option argument
+    assert.calledWith(doesAppNeedPinStub, true);
 
     // Expire and call again
     clock.tick(sixHours);

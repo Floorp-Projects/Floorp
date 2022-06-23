@@ -16,17 +16,18 @@
 #  include <fcntl.h>
 #  include <netdb.h>
 #  ifdef XP_LINUX
-#    include <sys/prctl.h>
-#    include <sys/ioctl.h>
-#    include <termios.h>
-#    include <sys/resource.h>
-#    include <sys/time.h>
-#    include <sys/utsname.h>
+#    include <linux/mempolicy.h>
 #    include <sched.h>
+#    include <sys/ioctl.h>
+#    include <sys/prctl.h>
+#    include <sys/resource.h>
 #    include <sys/socket.h>
 #    include <sys/syscall.h>
+#    include <sys/sysmacros.h>
+#    include <sys/time.h>
 #    include <sys/un.h>
-#    include <linux/mempolicy.h>
+#    include <sys/utsname.h>
+#    include <termios.h>
 #    include "mozilla/ProcInfo_linux.h"
 #    include "mozilla/UniquePtrExtensions.h"
 #    ifdef MOZ_X11
@@ -623,6 +624,18 @@ void RunTestsRDD(SandboxTestingChild* child) {
   int c;
   child->ErrnoTest("getcpu"_ns, true,
                    [&] { return syscall(SYS_getcpu, &c, NULL, NULL); });
+
+  // The nvidia proprietary drivers will, in some cases, try to
+  // mknod their device files; we reject this politely.
+  child->ErrnoValueTest("mknod"_ns, EPERM, [] {
+    return mknod("/dev/null", S_IFCHR | 0666, makedev(1, 3));
+  });
+
+  // nvidia defines some ioctls with the type 0x46 ('F', otherwise
+  // used by fbdev) and numbers starting from 200 (0xc8).
+  child->ErrnoValueTest("ioctl_nvidia"_ns, ENOTTY,
+                        [] { return ioctl(0, 0x46c8, nullptr); });
+
 #  elif XP_MACOSX
   RunMacTestLaunchProcess(child);
   RunMacTestWindowServer(child);

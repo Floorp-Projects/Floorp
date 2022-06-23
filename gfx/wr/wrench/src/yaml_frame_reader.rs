@@ -878,9 +878,17 @@ impl YamlFrameReader {
             &info.clip_rect
         );
 
+        let clip_chain_id = match info.clip_id {
+            ClipId::Clip(..) => panic!("bug: must be a clip-chain"),
+            ClipId::ClipChain(id) => id,
+        };
+
         if let Some(tag) = self.to_hit_testing_tag(&item["hit-testing-tag"]) {
             dl.push_hit_test(
-                info,
+                info.clip_rect,
+                clip_chain_id,
+                info.spatial_id,
+                info.flags,
                 tag,
             );
         }

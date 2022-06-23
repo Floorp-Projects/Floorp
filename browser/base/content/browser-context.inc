@@ -47,7 +47,6 @@
       </menugroup>
 #endif
       <menuseparator id="context-sep-navigation"/>
-      <menuseparator id="page-menu-separator"/>
       <menuitem id="context-viewsource-goToLine"
                 oncommand="gViewSourceUtils.getPageActor(gContextMenu.browser).promptAndGoToLine()"/>
       <menuitem id="context-viewsource-wrapLongLines"

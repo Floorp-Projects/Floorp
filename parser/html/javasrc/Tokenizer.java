@@ -3673,7 +3673,7 @@ public class Tokenizer implements Locator, Locator2 {
                              */
                             reconsume = true;
                             state = transition(state, Tokenizer.DECIMAL_NRC_LOOP, reconsume, pos);
-                            // `break` optimizes; `continue stateloop;` would be valid                            
+                            // `break` optimizes; `continue stateloop;` would be valid
                             break;
                     }
                     // CPPONLY: MOZ_FALLTHROUGH;

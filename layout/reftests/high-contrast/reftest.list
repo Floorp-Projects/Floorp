@@ -92,6 +92,6 @@ pref(browser.display.use_system_colors,true) pref(browser.display.document_color
 != border-color-transparent.html about:blank
 == border-color-transparent.html border-color-transparent-ref.html
 
-!= color-mix.html color-mix-notref.html
+pref(layout.css.color-mix.enabled,true) != color-mix.html color-mix-notref.html
 
 test-pref(browser.display.background_color,"black") test-pref(browser.display.foreground_color,"white") test-pref(ui.-moz-fieldtext,"black") test-pref(ui.-moz-fieldtext.dark,"white") pref(ui.use_standins_for_native_colors,false) pref(browser.display.use_system_colors,false) == no-system-colors-color-scheme.html no-system-colors-color-scheme-ref.html

@@ -11,30 +11,32 @@
     }
   </style>
 
-  <iframe class="no-mime" src="file_nosniff_navigation.sjs?xml"> </iframe>
-  <iframe class="no-mime" src="file_nosniff_navigation.sjs?html"></iframe>
-  <iframe class="no-mime" src="file_nosniff_navigation.sjs?css" ></iframe>
-  <iframe class="no-mime" src="file_nosniff_navigation.sjs?json"></iframe>
-  <iframe class="no-mime" src="file_nosniff_navigation.sjs?img"></iframe>
-  <iframe class="no-mime" src="file_nosniff_navigation.sjs"></iframe>
- 
+  <!-- Using Content-Type: */* -->
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?mime=*%2F*&content=xml"></iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?mime=*%2F*&content=html"></iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?mime=*%2F*&content=css" ></iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?mime=*%2F*&content=json"></iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?mime=*%2F*&content=img"></iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?mime=*%2F*&content=pdf"></iframe>
+  <iframe class="no-mime" src="file_nosniff_navigation.sjs?mime=*%2F*"></iframe>
   <hr>
-  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs?html"></iframe>
-  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs?xml"></iframe>
-  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs?css"></iframe>
-  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs?json"></iframe>
-  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs?img"></iframe>
-  <iframe class="mismatch-mime" src="file_nosniff_navigation_mismatch.sjs"></iframe>
+  <!-- Using Content-Type: image/png -->
+  <iframe class="mismatch-mime" src="file_nosniff_navigation.sjs?mime=image%2Fpng&content=xml"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation.sjs?mime=image%2Fpng&content=html"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation.sjs?mime=image%2Fpng&content=css"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation.sjs?mime=image%2Fpng&content=json"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation.sjs?mime=image%2Fpng&content=img"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation.sjs?mime=image%2Fpng&content=pdf"></iframe>
+  <iframe class="mismatch-mime" src="file_nosniff_navigation.sjs?mime=image%2Fpng"></iframe>
   <hr>
-
-  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs?xml"> </iframe>
-  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs?html"></iframe>
-  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs?css" ></iframe>
-  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs?json"></iframe>
-  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs?img"></iframe>
-  <iframe class="garbage-mime" src="file_nosniff_navigation_garbage.sjs"></iframe>
- 
-
+  <!-- Using Content-Type: garbage/garbage -->
+  <iframe class="garbage-mime" src="file_nosniff_navigation.sjs?mime=garbage%2Fgarbage&content=xml"> </iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation.sjs?mime=garbage%2Fgarbage&content=html"></iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation.sjs?mime=garbage%2Fgarbage&content=css" ></iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation.sjs?mime=garbage%2Fgarbage&content=json"></iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation.sjs?mime=garbage%2Fgarbage&content=img"></iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation.sjs?mime=garbage%2Fgarbage&content=pdf"></iframe>
+  <iframe class="garbage-mime" src="file_nosniff_navigation.sjs?mime=garbage%2Fgarbage"></iframe>
 </head>
 
 <body>
@@ -45,25 +47,25 @@
 
 <script class="testbody" type="text/javascript">
 /* Description of the test:
- * We're testing if Firefox respects the nosniff Header for Top-Level 
+ * We're testing if Firefox respects the nosniff Header for Top-Level
  * Navigations.
- * If Firefox cant Display the Page, it will prompt a download 
+ * If Firefox cant Display the Page, it will prompt a download
  * and the URL of the Page will be about:blank.
  * So we will try to open different content send with
  * no-mime, mismatched-mime and garbage-mime types.
- * 
+ *
  */
 
 SimpleTest.waitForExplicitFinish();
 
 window.addEventListener("load", ()=>{
   let noMimeFrames = Array.from(document.querySelectorAll(".no-mime"));
-
-  noMimeFrames.forEach( frame => {
+  noMimeFrames.forEach(frame => {
+    let doc = frame.contentWindow.document;
     // In case of no Provided Content Type, not rendering or assuming text/plain is valid
-    let result = frame.contentWindow.document.URL == "about:blank" || frame.contentWindow.document.contentType == "text/plain";
-    let sniffTarget = (new URL(frame.src)).search;
-    window.opener.ok(result, `${sniffTarget} without MIME - was not Sniffed`);
+    let result = doc.URL == "about:blank" || doc.contentType == "text/plain";
+    let sniffTarget = (new URL(frame.src)).searchParams.get("content");
+    window.opener.ok(result, `${sniffTarget} without MIME - was not sniffed`);
   });
 
   let mismatchedMimes = Array.from(document.querySelectorAll(".mismatch-mime"));
@@ -71,21 +73,20 @@ window.addEventListener("load", ()=>{
     // In case the Server mismatches the Mime Type (sends content X as image/png)
     // assert that we do not sniff and correct this.
     let result = frame.contentWindow.document.contentType == "image/png";
-    let sniffTarget = (new URL(frame.src)).search;
+    let sniffTarget = (new URL(frame.src)).searchParams.get("content");
     window.opener.ok(result, `${sniffTarget} send as image/png - was not Sniffed`);
   });
 
   let badMimeFrames = Array.from(document.querySelectorAll(".garbage-mime"));
-
-  badMimeFrames.forEach( frame => {
-    // In the case we got a bogous mime, assert that we dont sniff. 
+  badMimeFrames.forEach(frame => {
+    // In the case we got a bogous mime, assert that we dont sniff.
     // We must not default here to text/plain
-    // as the Server at least provided a mime type. 
+    // as the Server at least provided a mime type.
     let result = frame.contentWindow.document.URL == "about:blank";
-    let sniffTarget = (new URL(frame.src)).search;
+    let sniffTarget = (new URL(frame.src)).searchParams.get("content");
     window.opener.ok(result, `${sniffTarget} send as garbage/garbage - was not Sniffed`);
   });
-  
+
   window.opener.SimpleTest.finish();
   this.close();
 });

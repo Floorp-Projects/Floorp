@@ -1,6 +1,7 @@
 import pytest
 
 from webdriver.bidi.client import BidiSession
+from webdriver.bidi.modules.script import ContextTarget
 
 pytestmark = pytest.mark.asyncio
 
@@ -11,31 +12,13 @@ async def test_navigator_webdriver_enabled(inline, browser):
     server_port = current_browser.remote_agent_port
 
     async with BidiSession.bidi_only(f"ws://localhost:{server_port}") as bidi_session:
-        # Until script.evaluate has been implemented use console logging
-        # as workaround to retrieve the value for navigator.webdriver.
-        url = inline(
-            """
-            <script>console.log("navigator.webdriver", navigator.webdriver);</script>
-            """
-        )
-
-        await bidi_session.session.subscribe(events=["log.entryAdded"])
-
-        on_entry_added = bidi_session.event_loop.create_future()
-
-        async def on_event(method, data):
-            remove_listener()
-            on_entry_added.set_result(data)
-
-        remove_listener = bidi_session.add_event_listener("log.entryAdded", on_event)
-
         contexts = await bidi_session.browsing_context.get_tree(max_depth=0)
         assert len(contexts) > 0
 
-        await bidi_session.browsing_context.navigate(
-            context=contexts[0]["context"], url=url, wait="complete"
+        result = await bidi_session.script.evaluate(
+            expression="navigator.webdriver",
+            target=ContextTarget(contexts[0]["context"]),
+            await_promise=False,
         )
 
-        event_data = await on_entry_added
-        assert event_data["args"][0]["value"] == "navigator.webdriver"
-        assert event_data["args"][1]["value"] is True
+        assert result == {"type": "boolean", "value": True}

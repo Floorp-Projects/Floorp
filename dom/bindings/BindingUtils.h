@@ -2943,10 +2943,6 @@ bool CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
              "making a fresh global object's [[Prototype]] immutable can "
              "internally fail, but it should never be unsuccessful");
 
-  if (!JS_DefineProfilingFunctions(aCx, aGlobal)) {
-    return false;
-  }
-
   return true;
 }
 

@@ -123,6 +123,8 @@ conditioned_profile:
         mozharness:
             extra-options:
                 - "--conditioned-profile"
+    replace:
+        chunks: 8
 
 socketprocess:
     description: "{description} with socket process enabled"

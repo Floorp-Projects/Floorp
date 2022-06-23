@@ -65,12 +65,7 @@ loader.lazyRequireGetter(
   "devtools/client/shared/screenshot",
   true
 );
-
-loader.lazyImporter(
-  this,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
+loader.lazyRequireGetter(this, "debounce", "devtools/shared/debounce", true);
 
 const { LocalizationHelper, localizeMarkup } = require("devtools/shared/l10n");
 const INSPECTOR_L10N = new LocalizationHelper(
@@ -168,7 +163,12 @@ function Inspector(toolbox, commands) {
   this.onNewSelection = this.onNewSelection.bind(this);
   this.onResourceAvailable = this.onResourceAvailable.bind(this);
   this.onRootNodeAvailable = this.onRootNodeAvailable.bind(this);
-  this.onPanelWindowResize = this.onPanelWindowResize.bind(this);
+  this._onLazyPanelResize = this._onLazyPanelResize.bind(this);
+  this.onPanelWindowResize = debounce(
+    this._onLazyPanelResize,
+    LAZY_RESIZE_INTERVAL_MS,
+    this
+  );
   this.onPickerCanceled = this.onPickerCanceled.bind(this);
   this.onPickerHovered = this.onPickerHovered.bind(this);
   this.onPickerPicked = this.onPickerPicked.bind(this);
@@ -837,31 +837,16 @@ Inspector.prototype = {
 
   _onLazyPanelResize: async function() {
     // We can be called on a closed window or destroyed toolbox because of the deferred task.
-    if (window.closed || this._destroyed) {
+    if (
+      window.closed ||
+      this._destroyed ||
+      this._toolbox.currentToolId !== "inspector"
+    ) {
       return;
     }
 
     this.splitBox.setState({ vert: this.useLandscapeMode() });
     this.emit("inspector-resize");
-  },
-
-  /**
-   * If Toolbox width is less than 600 px, the splitter changes its mode
-   * to `horizontal` to support portrait view.
-   */
-  onPanelWindowResize: function() {
-    if (this.toolbox.currentToolId !== "inspector") {
-      return;
-    }
-
-    if (!this._lazyResizeHandler) {
-      this._lazyResizeHandler = new DeferredTask(
-        this._onLazyPanelResize.bind(this),
-        LAZY_RESIZE_INTERVAL_MS,
-        0
-      );
-    }
-    this._lazyResizeHandler.arm();
   },
 
   getSidebarSize: function() {

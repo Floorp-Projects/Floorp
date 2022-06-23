@@ -214,4 +214,16 @@ bool TimingParams::operator==(const TimingParams& aOther) const {
          mFunction == aOther.mFunction;
 }
 
+void TimingParams::Normalize() {
+  // FIXME: Bug 1775327, do normalization, instead of using these magic numbers.
+  mDuration = Some(StickyTimeDuration::FromMilliseconds(
+      PROGRESS_TIMELINE_DURATION_MILLISEC));
+  mDelay = TimeDuration::FromMilliseconds(0);
+  mIterations = std::numeric_limits<double>::infinity();
+  mDirection = dom::PlaybackDirection::Alternate;
+  mFill = dom::FillMode::Both;
+
+  Update();
+}
+
 }  // namespace mozilla

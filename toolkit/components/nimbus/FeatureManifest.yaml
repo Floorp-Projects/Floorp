@@ -246,10 +246,6 @@ pocketNewtab:
       type: string
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.widget-positions
       description: CSV string of widget position indexes on newtab grid
-    compactLayout:
-      type: boolean
-      fallbackPref: browser.newtabpage.activity-stream.discoverystream.compactLayout.enabled
-      description: Enable compact cards on newtab grid
     hybridLayout:
       type: boolean
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.hybridLayout.enabled

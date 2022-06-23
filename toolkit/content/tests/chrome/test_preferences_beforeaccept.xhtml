@@ -10,40 +10,49 @@
   <script type="application/javascript">
   <![CDATA[
     SimpleTest.waitForExplicitFinish();
-    SpecialPowers.pushPrefEnv({"set":[["browser.preferences.instantApply", false]]}).then(function() {
-      SimpleTest.registerCleanupFunction(() => {
-        SpecialPowers.clearUserPref("tests.beforeaccept.dialogShown");
-        SpecialPowers.clearUserPref("tests.beforeaccept.called");
-      });
-
-      // No instant-apply for this test
-      var prefWindow = window.browsingContext.topChromeWindow.openDialog("window_preferences_beforeaccept.xhtml", "", "", windowOnload);
-
-      function windowOnload() {
-        var dialogShown = prefWindow.Preferences.get("tests.beforeaccept.dialogShown");
-        var called = prefWindow.Preferences.get("tests.beforeaccept.called");
-        is(dialogShown.value, true, "dialog opened, shown pref set");
-        is(dialogShown.valueFromPreferences, null, "shown pref not committed");
-        is(called.value, null, "beforeaccept not yet called");
-        is(called.valueFromPreferences, null, "beforeaccept not yet called, pref not committed");
-
-        // try to accept the dialog, should fail the first time
-        prefWindow.document.getElementById("beforeaccept_dialog").acceptDialog();
-        is(prefWindow.closed, false, "window not closed");
-        is(dialogShown.value, true, "shown pref still set");
-        is(dialogShown.valueFromPreferences, null, "shown pref still not committed");
-        is(called.value, true, "beforeaccept called");
-        is(called.valueFromPreferences, null, "called pref not committed");
-
-        // try again, this one should succeed
-        prefWindow.document.getElementById("beforeaccept_dialog").acceptDialog();
-        is(prefWindow.closed, true, "window now closed");
-        is(dialogShown.valueFromPreferences, true, "shown pref committed");
-        is(called.valueFromPreferences, true, "called pref committed");
-
-        SimpleTest.finish();
-      }
+    SimpleTest.registerCleanupFunction(() => {
+      SpecialPowers.clearUserPref("tests.beforeaccept.dialogShown");
+      SpecialPowers.clearUserPref("tests.beforeaccept.called");
     });
+
+    // No instant-apply for this test because type="child".
+    var prefWindow = window.browsingContext.topChromeWindow.openDialog(
+      "window_preferences_beforeaccept.xhtml",
+      "",
+      "",
+      windowOnload
+    );
+
+    function windowOnload() {
+      var dialogShown = prefWindow.Preferences.get(
+        "tests.beforeaccept.dialogShown"
+      );
+      var called = prefWindow.Preferences.get("tests.beforeaccept.called");
+      is(dialogShown.value, true, "dialog opened, shown pref set");
+      is(dialogShown.valueFromPreferences, null, "shown pref not committed");
+      is(called.value, null, "beforeaccept not yet called");
+      is(
+        called.valueFromPreferences,
+        null,
+        "beforeaccept not yet called, pref not committed"
+      );
+
+      // try to accept the dialog, should fail the first time
+      prefWindow.document.getElementById("beforeaccept_dialog").acceptDialog();
+      is(prefWindow.closed, false, "window not closed");
+      is(dialogShown.value, true, "shown pref still set");
+      is(dialogShown.valueFromPreferences, null, "shown pref still not committed");
+      is(called.value, true, "beforeaccept called");
+      is(called.valueFromPreferences, null, "called pref not committed");
+
+      // try again, this one should succeed
+      prefWindow.document.getElementById("beforeaccept_dialog").acceptDialog();
+      is(prefWindow.closed, true, "window now closed");
+      is(dialogShown.valueFromPreferences, true, "shown pref committed");
+      is(called.valueFromPreferences, true, "called pref committed");
+
+      SimpleTest.finish();
+    }
   ]]>
   </script>
 

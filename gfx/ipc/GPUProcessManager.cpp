@@ -635,6 +635,7 @@ void GPUProcessManager::DisableWebRender(wr::WebRenderError aError,
 }
 
 void GPUProcessManager::NotifyWebRenderError(wr::WebRenderError aError) {
+  gfxCriticalNote << "Handling webrender error " << (unsigned int)aError;
   if (aError == wr::WebRenderError::VIDEO_OVERLAY) {
 #ifdef XP_WIN
     gfxVars::SetUseWebRenderDCompVideoOverlayWin(false);

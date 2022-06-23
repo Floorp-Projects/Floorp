@@ -53,7 +53,6 @@
 #include "nsLookAndFeel.h"
 #include "nsUnicharUtils.h"
 #include "nsWindowsHelpers.h"
-#include "WinContentSystemParameters.h"
 #include "WinWindowOcclusionTracker.h"
 
 #include <textstor.h>
@@ -563,9 +562,6 @@ void WinUtils::Log(const char* fmt, ...) {
 
 // static
 float WinUtils::SystemDPI() {
-  if (XRE_IsContentProcess()) {
-    return WinContentSystemParameters::GetSingleton()->SystemDPI();
-  }
   // The result of GetDeviceCaps won't change dynamically, as it predates
   // per-monitor DPI and support for on-the-fly resolution changes.
   // Therefore, we only need to look it up once.
@@ -628,9 +624,6 @@ static bool SlowIsPerMonitorDPIAware() {
 
 /* static */
 bool WinUtils::IsPerMonitorDPIAware() {
-  if (XRE_IsContentProcess()) {
-    return WinContentSystemParameters::GetSingleton()->IsPerMonitorDPIAware();
-  }
   static bool perMonitorDPIAware = SlowIsPerMonitorDPIAware();
   return perMonitorDPIAware;
 }
@@ -1834,6 +1827,26 @@ uint32_t WinUtils::GetMaxTouchPoints() {
   }
   return 0;
 }
+
+// Starting with version 10.0.22621.0 of the Windows SDK the AR_STATE enum and
+// types are only defined when building for Windows 8 instead of Windows 7.
+#if (WDK_NTDDI_VERSION >= 0x0A00000C) && (WINVER < 0x0602)
+
+enum AR_STATE {
+  AR_ENABLED = 0x0,
+  AR_DISABLED = 0x1,
+  AR_SUPPRESSED = 0x2,
+  AR_REMOTESESSION = 0x4,
+  AR_MULTIMON = 0x8,
+  AR_NOSENSOR = 0x10,
+  AR_NOT_SUPPORTED = 0x20,
+  AR_DOCKED = 0x40,
+  AR_LAPTOP = 0x80
+};
+
+using PAR_STATE = enum AR_STATE*;
+
+#endif  // (WDK_NTDDI_VERSION >= 0x0A00000C) && (WINVER < 0x0602)
 
 /* static */
 POWER_PLATFORM_ROLE

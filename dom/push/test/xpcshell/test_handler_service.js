@@ -4,26 +4,45 @@
 // manager for push notifications against a specific scope, that service is
 // instantiated before the message is delivered.
 
-// This component is registered for "chrome://test-scope"
-const kServiceContractID = "@mozilla.org/dom/push/test/PushServiceHandler;1";
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
 
 let pushService = Cc["@mozilla.org/push/Service;1"].getService(
   Ci.nsIPushService
 );
 
-add_test(function test_service_instantiation() {
-  do_load_manifest("PushServiceHandler.manifest");
+function PushServiceHandler() {
+  // Register a push observer.
+  this.observed = [];
+  Services.obs.addObserver(this, pushService.pushTopic);
+  Services.obs.addObserver(this, pushService.subscriptionChangeTopic);
+  Services.obs.addObserver(this, pushService.subscriptionModifiedTopic);
+}
 
+PushServiceHandler.prototype = {
+  classID: Components.ID("{bb7c5199-c0f7-4976-9f6d-1306e32c5591}"),
+  QueryInterface: ChromeUtils.generateQI([]),
+
+  observe(subject, topic, data) {
+    this.observed.push({ subject, topic, data });
+  },
+};
+
+let handlerService = new PushServiceHandler();
+
+add_test(function test_service_instantiation() {
+  const CONTRACT_ID = "@mozilla.org/dom/push/test/PushServiceHandler;1";
   let scope = "chrome://test-scope";
+
+  MockRegistrar.register(CONTRACT_ID, handlerService);
+  Services.catMan.addCategoryEntry("push", scope, CONTRACT_ID, false, false);
+
   let pushNotifier = Cc["@mozilla.org/push/Notifier;1"].getService(
     Ci.nsIPushNotifier
   );
   let principal = Services.scriptSecurityManager.getSystemPrincipal();
   pushNotifier.notifyPush(scope, principal, "");
-
-  // Now get a handle to our service and check it received the notification.
-  let handlerService = Cc[kServiceContractID].getService(Ci.nsISupports)
-    .wrappedJSObject;
 
   equal(handlerService.observed.length, 1);
   equal(handlerService.observed[0].topic, pushService.pushTopic);

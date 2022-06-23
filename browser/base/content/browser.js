@@ -417,14 +417,6 @@ XPCOMUtils.defineLazyGetter(this, "InlineSpellCheckerUI", () => {
   return new InlineSpellChecker();
 });
 
-XPCOMUtils.defineLazyGetter(this, "PageMenuParent", () => {
-  // eslint-disable-next-line no-shadow
-  let { PageMenuParent } = ChromeUtils.import(
-    "resource://gre/modules/PageMenu.jsm"
-  );
-  return new PageMenuParent();
-});
-
 XPCOMUtils.defineLazyGetter(this, "PopupNotifications", () => {
   // eslint-disable-next-line no-shadow
   let { PopupNotifications } = ChromeUtils.import(
@@ -10035,7 +10027,10 @@ var ConfirmationHint = {
 var FirefoxViewHandler = {
   tab: null,
   init() {
-    if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
+    if (
+      AppConstants.NIGHTLY_BUILD &&
+      !Services.prefs.getBoolPref("browser.tabs.firefox-view")
+    ) {
       document.getElementById("menu_openFirefoxView").hidden = true;
     }
   },

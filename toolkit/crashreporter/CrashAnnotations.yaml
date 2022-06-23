@@ -364,6 +364,16 @@ GraphicsDrawShader:
     See file names in gfx/wr/webrender/res/* for the possible values.
   type: string
 
+GraphicsNumActiveRenderers:
+  description: >
+    Number of webrender renderer instances that are not in a paused state.
+  type: integer
+
+GraphicsNumRenderers:
+  description: >
+    Total number of webrender renderer instances.
+  type: integer
+
 GraphicsStartupTest:
   description: >
     Set to 1 by the graphics driver crash guard when it's activated.

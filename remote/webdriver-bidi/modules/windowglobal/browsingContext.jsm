@@ -62,7 +62,7 @@ class BrowsingContextModule extends Module {
    */
 
   _applySessionData(params) {
-    // TODO: Bug 1741861. Move this logic to a shared module or the an abstract
+    // TODO: Bug 1775231. Move this logic to a shared module or an abstract
     // class.
     const { category, added = [], removed = [] } = params;
     if (category === "internal-event") {

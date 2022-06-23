@@ -15,212 +15,216 @@
     const kPref = SpecialPowers.Services.prefs;
 
     // preference values, set 1
-    const kPrefValueSet1 =
-    {
-        int:          23,
-        bool:         true,
-        string:       "rheeet!",
-        unichar:      "äöüßÄÖÜ",
-        wstring_data: "日本語",
-        file_data:    "/",
+    const kPrefValueSet1 = {
+      int: 23,
+      bool: true,
+      string: "rheeet!",
+      unichar: "äöüßÄÖÜ",
+      wstring_data: "日本語",
+      file_data: "/",
 
-        wstring: Cc["@mozilla.org/pref-localizedstring;1"]
-                   .createInstance(Ci.nsIPrefLocalizedString),
-        file:    Cc["@mozilla.org/file/local;1"]
-                   .createInstance(Ci.nsIFile)
+      wstring: Cc["@mozilla.org/pref-localizedstring;1"].createInstance(
+        Ci.nsIPrefLocalizedString
+      ),
+      file: Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile),
     };
     kPrefValueSet1.wstring.data = kPrefValueSet1.wstring_data;
     SafeFileInit(kPrefValueSet1.file, kPrefValueSet1.file_data);
 
     // preference values, set 2
-    const kPrefValueSet2 =
-    {
-        int:          42,
-        bool:         false,
-        string:       "Mozilla",
-        unichar:      "áôùšŽ",
-        wstring_data: "헤드라인A",
-        file_data:    "/home",
+    const kPrefValueSet2 = {
+      int: 42,
+      bool: false,
+      string: "Mozilla",
+      unichar: "áôùšŽ",
+      wstring_data: "헤드라인A",
+      file_data: "/home",
 
-        wstring: Cc["@mozilla.org/pref-localizedstring;1"]
-                   .createInstance(Ci.nsIPrefLocalizedString),
-        file:    Cc["@mozilla.org/file/local;1"]
-                   .createInstance(Ci.nsIFile)
+      wstring: Cc["@mozilla.org/pref-localizedstring;1"].createInstance(
+        Ci.nsIPrefLocalizedString
+      ),
+      file: Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile),
     };
     kPrefValueSet2.wstring.data = kPrefValueSet2.wstring_data;
     SafeFileInit(kPrefValueSet2.file, kPrefValueSet2.file_data);
 
-
-    function SafeFileInit(aFile, aPath)
-    {
+    function SafeFileInit(aFile, aPath) {
       // set file path without dying for exceptions
-      try
-      {
+      try {
         aFile.initWithPath(aPath);
-      }
-      catch (ignored) {}
+      } catch {}
     }
 
-    function CreateEmptyPrefValueSet()
-    {
-      var result =
-      {
-        int:          undefined,
-        bool:         undefined,
-        string:       undefined,
-        unichar:      undefined,
+    function CreateEmptyPrefValueSet() {
+      var result = {
+        int: undefined,
+        bool: undefined,
+        string: undefined,
+        unichar: undefined,
         wstring_data: undefined,
-        file_data:    undefined,
-        wstring:      undefined,
-        file:         undefined
+        file_data: undefined,
+        wstring: undefined,
+        file: undefined,
       };
       return result;
     }
 
-    function WritePrefsToSystem(aPrefValueSet)
-    {
+    function WritePrefsToSystem(aPrefValueSet) {
       // write preference data via XPCOM
-      kPref.setIntPref ("tests.static_preference_int",    aPrefValueSet.int);
-      kPref.setBoolPref("tests.static_preference_bool",   aPrefValueSet.bool);
+      kPref.setIntPref("tests.static_preference_int", aPrefValueSet.int);
+      kPref.setBoolPref("tests.static_preference_bool", aPrefValueSet.bool);
       kPref.setCharPref("tests.static_preference_string", aPrefValueSet.string);
       kPref.setStringPref("tests.static_preference_unichar", aPrefValueSet.unichar);
-      kPref.setComplexValue("tests.static_preference_wstring",
-                            Ci.nsIPrefLocalizedString,
-                            aPrefValueSet.wstring);
-      kPref.setComplexValue("tests.static_preference_file",
-                            Ci.nsIFile,
-                            aPrefValueSet.file);
+      kPref.setComplexValue(
+        "tests.static_preference_wstring",
+        Ci.nsIPrefLocalizedString,
+        aPrefValueSet.wstring
+      );
+      kPref.setComplexValue(
+        "tests.static_preference_file",
+        Ci.nsIFile,
+        aPrefValueSet.file
+      );
     }
 
-    function ReadPrefsFromSystem()
-    {
+    function ReadPrefsFromSystem() {
       // read preference data via XPCOM
       var result = CreateEmptyPrefValueSet();
       // eslint-disable-next-line mozilla/use-default-preference-values
-      try {result.int    = kPref.getIntPref ("tests.static_preference_int")   } catch (ignored) {};
+      try {
+        result.int = kPref.getIntPref("tests.static_preference_int");
+      } catch {}
       // eslint-disable-next-line mozilla/use-default-preference-values
-      try {result.bool   = kPref.getBoolPref("tests.static_preference_bool")  } catch (ignored) {};
+      try {
+        result.bool = kPref.getBoolPref("tests.static_preference_bool");
+      } catch {}
       // eslint-disable-next-line mozilla/use-default-preference-values
-      try {result.string = kPref.getCharPref("tests.static_preference_string")} catch (ignored) {};
-      try
-      {
+      try {
+        result.string = kPref.getCharPref("tests.static_preference_string");
+      } catch {}
+      try {
         result.unichar = kPref.getStringPref("tests.static_preference_unichar");
-      }
-      catch (ignored) {};
-      try
-      {
-        result.wstring = kPref.getComplexValue("tests.static_preference_wstring",
-                                               Ci.nsIPrefLocalizedString);
+      } catch {}
+      try {
+        result.wstring = kPref.getComplexValue(
+          "tests.static_preference_wstring",
+          Ci.nsIPrefLocalizedString
+        );
         result.wstring_data = result.wstring.data;
-      }
-      catch (ignored) {};
-      try
-      {
-        result.file = kPref.getComplexValue("tests.static_preference_file",
-                                            Ci.nsIFile);
-        result.file_data    = result.file.data;
-      }
-      catch (ignored) {};
+      } catch {}
+      try {
+        result.file = kPref.getComplexValue(
+          "tests.static_preference_file",
+          Ci.nsIFile
+        );
+        result.file_data = result.file.data;
+      } catch {}
       return result;
     }
 
-    function GetXULElement(aPrefWindow, aID)
-    {
+    function GetXULElement(aPrefWindow, aID) {
       return aPrefWindow.document.getElementById(aID);
     }
 
-    function GetPreference(aPrefWindow, aID)
-    {
+    function GetPreference(aPrefWindow, aID) {
       return aPrefWindow.Preferences.get(aID);
     }
 
-    function WritePrefsToPreferences(aPrefWindow, aPrefValueSet)
-    {
+    function WritePrefsToPreferences(aPrefWindow, aPrefValueSet) {
       // write preference data into Preference instances
-      GetPreference(aPrefWindow, "tests.static_preference_int"    ).value = aPrefValueSet.int;
-      GetPreference(aPrefWindow, "tests.static_preference_bool"   ).value = aPrefValueSet.bool;
-      GetPreference(aPrefWindow, "tests.static_preference_string" ).value = aPrefValueSet.string;
-      GetPreference(aPrefWindow, "tests.static_preference_unichar").value = aPrefValueSet.unichar;
-      GetPreference(aPrefWindow, "tests.static_preference_wstring").value = aPrefValueSet.wstring_data;
-      GetPreference(aPrefWindow, "tests.static_preference_file"   ).value = aPrefValueSet.file_data;
+      GetPreference(aPrefWindow, "tests.static_preference_int").value =
+        aPrefValueSet.int;
+      GetPreference(aPrefWindow, "tests.static_preference_bool").value =
+        aPrefValueSet.bool;
+      GetPreference(aPrefWindow, "tests.static_preference_string").value =
+        aPrefValueSet.string;
+      GetPreference(aPrefWindow, "tests.static_preference_unichar").value =
+        aPrefValueSet.unichar;
+      GetPreference(aPrefWindow, "tests.static_preference_wstring").value =
+        aPrefValueSet.wstring_data;
+      GetPreference(aPrefWindow, "tests.static_preference_file").value =
+        aPrefValueSet.file_data;
     }
 
-    function ReadPrefsFromPreferences(aPrefWindow)
-    {
+    function ReadPrefsFromPreferences(aPrefWindow) {
       // read preference data from Preference instances
-      var result =
-      {
-        int:          GetPreference(aPrefWindow, "tests.static_preference_int"    ).value,
-        bool:         GetPreference(aPrefWindow, "tests.static_preference_bool"   ).value,
-        string:       GetPreference(aPrefWindow, "tests.static_preference_string" ).value,
-        unichar:      GetPreference(aPrefWindow, "tests.static_preference_unichar").value,
-        wstring_data: GetPreference(aPrefWindow, "tests.static_preference_wstring").value,
-        file_data:    GetPreference(aPrefWindow, "tests.static_preference_file"   ).value,
-        wstring: Cc["@mozilla.org/pref-localizedstring;1"]
-                   .createInstance(Ci.nsIPrefLocalizedString),
-        file:    Cc["@mozilla.org/file/local;1"]
-                   .createInstance(Ci.nsIFile)
-      }
+      var result = {
+        int: GetPreference(aPrefWindow, "tests.static_preference_int").value,
+        bool: GetPreference(aPrefWindow, "tests.static_preference_bool").value,
+        string: GetPreference(aPrefWindow, "tests.static_preference_string").value,
+        unichar: GetPreference(aPrefWindow, "tests.static_preference_unichar")
+          .value,
+        wstring_data: GetPreference(aPrefWindow, "tests.static_preference_wstring")
+          .value,
+        file_data: GetPreference(aPrefWindow, "tests.static_preference_file").value,
+        wstring: Cc["@mozilla.org/pref-localizedstring;1"].createInstance(
+          Ci.nsIPrefLocalizedString
+        ),
+        file: Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile),
+      };
       result.wstring.data = result.wstring_data;
       SafeFileInit(result.file, result.file_data);
       return result;
     }
 
-    function WritePrefsToUI(aPrefWindow, aPrefValueSet)
-    {
+    function WritePrefsToUI(aPrefWindow, aPrefValueSet) {
       // write preference data into UI elements
-      GetXULElement(aPrefWindow, "static_element_int"    ).value   = aPrefValueSet.int;
-      GetXULElement(aPrefWindow, "static_element_bool"   ).checked = aPrefValueSet.bool;
-      GetXULElement(aPrefWindow, "static_element_string" ).value   = aPrefValueSet.string;
-      GetXULElement(aPrefWindow, "static_element_unichar").value   = aPrefValueSet.unichar;
-      GetXULElement(aPrefWindow, "static_element_wstring").value   = aPrefValueSet.wstring_data;
-      GetXULElement(aPrefWindow, "static_element_file"   ).value   = aPrefValueSet.file_data;
+      GetXULElement(aPrefWindow, "static_element_int").value = aPrefValueSet.int;
+      GetXULElement(aPrefWindow, "static_element_bool").checked =
+        aPrefValueSet.bool;
+      GetXULElement(aPrefWindow, "static_element_string").value =
+        aPrefValueSet.string;
+      GetXULElement(aPrefWindow, "static_element_unichar").value =
+        aPrefValueSet.unichar;
+      GetXULElement(aPrefWindow, "static_element_wstring").value =
+        aPrefValueSet.wstring_data;
+      GetXULElement(aPrefWindow, "static_element_file").value =
+        aPrefValueSet.file_data;
     }
 
-    function ReadPrefsFromUI(aPrefWindow)
-    {
+    function ReadPrefsFromUI(aPrefWindow) {
       // read preference data from Preference instances
-      var result =
-      {
-        int:          GetXULElement(aPrefWindow, "static_element_int"    ).value,
-        bool:         GetXULElement(aPrefWindow, "static_element_bool"   ).checked,
-        string:       GetXULElement(aPrefWindow, "static_element_string" ).value,
-        unichar:      GetXULElement(aPrefWindow, "static_element_unichar").value,
+      var result = {
+        int: GetXULElement(aPrefWindow, "static_element_int").value,
+        bool: GetXULElement(aPrefWindow, "static_element_bool").checked,
+        string: GetXULElement(aPrefWindow, "static_element_string").value,
+        unichar: GetXULElement(aPrefWindow, "static_element_unichar").value,
         wstring_data: GetXULElement(aPrefWindow, "static_element_wstring").value,
-        file_data:    GetXULElement(aPrefWindow, "static_element_file"   ).value,
-        wstring: Cc["@mozilla.org/pref-localizedstring;1"]
-                   .createInstance(Ci.nsIPrefLocalizedString),
-        file:    Cc["@mozilla.org/file/local;1"]
-                   .createInstance(Ci.nsIFile)
-      }
+        file_data: GetXULElement(aPrefWindow, "static_element_file").value,
+        wstring: Cc["@mozilla.org/pref-localizedstring;1"].createInstance(
+          Ci.nsIPrefLocalizedString
+        ),
+        file: Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile),
+      };
       result.wstring.data = result.wstring_data;
       SafeFileInit(result.file, result.file_data);
       return result;
     }
 
-
-    function RunInstantPrefTest(aPrefWindow)
-    {
+    function RunInstantPrefTest(aPrefWindow) {
       // remark: there's currently no UI element binding for files
 
       // were all Preference instances correctly initialized?
       var expected = kPrefValueSet1;
-      var found    = ReadPrefsFromPreferences(aPrefWindow);
-      ok(found.int          === expected.int,          "instant pref init int"    );
-      ok(found.bool         === expected.bool,         "instant pref init bool"   );
-      ok(found.string       === expected.string,       "instant pref init string" );
-      ok(found.unichar      === expected.unichar,      "instant pref init unichar");
+      var found = ReadPrefsFromPreferences(aPrefWindow);
+      ok(found.int === expected.int, "instant pref init int");
+      ok(found.bool === expected.bool, "instant pref init bool");
+      ok(found.string === expected.string, "instant pref init string");
+      ok(found.unichar === expected.unichar, "instant pref init unichar");
       ok(found.wstring_data === expected.wstring_data, "instant pref init wstring");
-      todo(found.file_data  === expected.file_data,    "instant pref init file"   );
+      todo(found.file_data === expected.file_data, "instant pref init file");
 
       // were all elements correctly initialized? (loose check)
       found = ReadPrefsFromUI(aPrefWindow);
-      ok(found.int          == expected.int,          "instant element init int"    );
-      ok(found.bool         == expected.bool,         "instant element init bool"   );
-      ok(found.string       == expected.string,       "instant element init string" );
-      ok(found.unichar      == expected.unichar,      "instant element init unichar");
-      ok(found.wstring_data == expected.wstring_data, "instant element init wstring");
-      todo(found.file_data  == expected.file_data,    "instant element init file"   );
+      ok(found.int == expected.int, "instant element init int");
+      ok(found.bool == expected.bool, "instant element init bool");
+      ok(found.string == expected.string, "instant element init string");
+      ok(found.unichar == expected.unichar, "instant element init unichar");
+      ok(
+        found.wstring_data == expected.wstring_data,
+        "instant element init wstring"
+      );
+      todo(found.file_data == expected.file_data, "instant element init file");
 
       // do some changes in the UI
       expected = kPrefValueSet2;
@@ -229,300 +233,282 @@
       // UI changes should get passed to the Preference instances,
       // but currently they aren't if the changes are made programmatically
       // (the handlers preference.change/prefpane.input and prefpane.change
-      //  are called for manual changes, though).
+      // are called for manual changes, though).
       found = ReadPrefsFromPreferences(aPrefWindow);
-      todo(found.int          === expected.int,          "instant change pref int"    );
-      todo(found.bool         === expected.bool,         "instant change pref bool"   );
-      todo(found.string       === expected.string,       "instant change pref string" );
-      todo(found.unichar      === expected.unichar,      "instant change pref unichar");
-      todo(found.wstring_data === expected.wstring_data, "instant change pref wstring");
-      todo(found.file_data    === expected.file_data,    "instant change pref file"   );
+      todo(found.int === expected.int, "instant change pref int");
+      todo(found.bool === expected.bool, "instant change pref bool");
+      todo(found.string === expected.string, "instant change pref string");
+      todo(found.unichar === expected.unichar, "instant change pref unichar");
+      todo(
+        found.wstring_data === expected.wstring_data,
+        "instant change pref wstring"
+      );
+      todo(found.file_data === expected.file_data, "instant change pref file");
 
       // and these changes should get passed to the system instantly
       // (which obviously can't pass with the above failing)
       found = ReadPrefsFromSystem();
-      todo(found.int          === expected.int,          "instant change element int"    );
-      todo(found.bool         === expected.bool,         "instant change element bool"   );
-      todo(found.string       === expected.string,       "instant change element string" );
-      todo(found.unichar      === expected.unichar,      "instant change element unichar");
-      todo(found.wstring_data === expected.wstring_data, "instant change element wstring");
-      todo(found.file_data    === expected.file_data,    "instant change element file"   );
+      todo(found.int === expected.int, "instant change element int");
+      todo(found.bool === expected.bool, "instant change element bool");
+      todo(found.string === expected.string, "instant change element string");
+      todo(found.unichar === expected.unichar, "instant change element unichar");
+      todo(
+        found.wstring_data === expected.wstring_data,
+        "instant change element wstring"
+      );
+      todo(found.file_data === expected.file_data, "instant change element file");
 
       // try resetting the prefs to default values (which should be empty here)
-      GetPreference(aPrefWindow, "tests.static_preference_int"    ).reset();
-      GetPreference(aPrefWindow, "tests.static_preference_bool"   ).reset();
-      GetPreference(aPrefWindow, "tests.static_preference_string" ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_int").reset();
+      GetPreference(aPrefWindow, "tests.static_preference_bool").reset();
+      GetPreference(aPrefWindow, "tests.static_preference_string").reset();
       GetPreference(aPrefWindow, "tests.static_preference_unichar").reset();
       GetPreference(aPrefWindow, "tests.static_preference_wstring").reset();
-      GetPreference(aPrefWindow, "tests.static_preference_file"   ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_file").reset();
 
       // check system
       expected = CreateEmptyPrefValueSet();
-      found    = ReadPrefsFromSystem();
-      ok(found.int          === expected.int,          "instant reset system int"    );
-      ok(found.bool         === expected.bool,         "instant reset system bool"   );
-      ok(found.string       === expected.string,       "instant reset system string" );
-      ok(found.unichar      === expected.unichar,      "instant reset system unichar");
-      ok(found.wstring_data === expected.wstring_data, "instant reset system wstring");
-      ok(found.file_data    === expected.file_data,    "instant reset system file"   );
+      found = ReadPrefsFromSystem();
+      ok(found.int === expected.int, "instant reset system int");
+      ok(found.bool === expected.bool, "instant reset system bool");
+      ok(found.string === expected.string, "instant reset system string");
+      ok(found.unichar === expected.unichar, "instant reset system unichar");
+      ok(
+        found.wstring_data === expected.wstring_data,
+        "instant reset system wstring"
+      );
+      ok(found.file_data === expected.file_data, "instant reset system file");
 
       // check UI
-      expected =
-      {
+      expected = {
         // alas, we don't have XUL elements with typeof(value) == int :(
         // int:         0,
-        int:          "",
-        bool:         false,
-        string:       "",
-        unichar:      "",
+        int: "",
+        bool: false,
+        string: "",
+        unichar: "",
         wstring_data: "",
-        file_data:    "",
-        wstring:      {},
-        file:         {}
+        file_data: "",
+        wstring: {},
+        file: {},
       };
       found = ReadPrefsFromUI(aPrefWindow);
-      ok(found.int          === expected.int,          "instant reset element int"    );
-      ok(found.bool         === expected.bool,         "instant reset element bool"   );
-      ok(found.string       === expected.string,       "instant reset element string" );
-      ok(found.unichar      === expected.unichar,      "instant reset element unichar");
-      ok(found.wstring_data === expected.wstring_data, "instant reset element wstring");
-//      ok(found.file_data    === expected.file_data,    "instant reset element file"   );
+      ok(found.int === expected.int, "instant reset element int");
+      ok(found.bool === expected.bool, "instant reset element bool");
+      ok(found.string === expected.string, "instant reset element string");
+      ok(found.unichar === expected.unichar, "instant reset element unichar");
+      ok(
+        found.wstring_data === expected.wstring_data,
+        "instant reset element wstring"
+      );
+      ok(found.file_data === expected.file_data, "instant reset element file");
 
       // check hasUserValue
-      ok(GetPreference(aPrefWindow, "tests.static_preference_int"    ).hasUserValue === false, "instant reset hasUserValue int"    );
-      ok(GetPreference(aPrefWindow, "tests.static_preference_bool"   ).hasUserValue === false, "instant reset hasUserValue bool"   );
-      ok(GetPreference(aPrefWindow, "tests.static_preference_string" ).hasUserValue === false, "instant reset hasUserValue string" );
-      ok(GetPreference(aPrefWindow, "tests.static_preference_unichar").hasUserValue === false, "instant reset hasUserValue unichar");
-      ok(GetPreference(aPrefWindow, "tests.static_preference_wstring").hasUserValue === false, "instant reset hasUserValue wstring");
-      ok(GetPreference(aPrefWindow, "tests.static_preference_file"   ).hasUserValue === false, "instant reset hasUserValue file"   );
-
-      // done with instant apply checks
+      ok(
+        !GetPreference(aPrefWindow, "tests.static_preference_int").hasUserValue,
+        "instant reset hasUserValue int"
+      );
+      ok(
+        !GetPreference(aPrefWindow, "tests.static_preference_bool").hasUserValue,
+        "instant reset hasUserValue bool"
+      );
+      ok(
+        !GetPreference(aPrefWindow, "tests.static_preference_string").hasUserValue,
+        "instant reset hasUserValue string"
+      );
+      ok(
+        !GetPreference(aPrefWindow, "tests.static_preference_unichar").hasUserValue,
+        "instant reset hasUserValue unichar"
+      );
+      ok(
+        !GetPreference(aPrefWindow, "tests.static_preference_wstring").hasUserValue,
+        "instant reset hasUserValue wstring"
+      );
+      ok(
+        !GetPreference(aPrefWindow, "tests.static_preference_file").hasUserValue,
+        "instant reset hasUserValue file"
+      );
     }
 
-    function RunNonInstantPrefTestGeneral(aPrefWindow)
-    {
-      // Non-instant apply tests are harder: not only do we need to check that
-      // fiddling with the values does *not* change the system settings, but
-      // also that they *are* (not) set after closing (cancelling) the dialog...
-
-      // remark: there's currently no UI element binding for files
-
-      // were all Preference instances correctly initialized?
-      var expected = kPrefValueSet1;
-      var found    = ReadPrefsFromPreferences(aPrefWindow);
-      ok(found.int          === expected.int,          "non-instant pref init int"    );
-      ok(found.bool         === expected.bool,         "non-instant pref init bool"   );
-      ok(found.string       === expected.string,       "non-instant pref init string" );
-      ok(found.unichar      === expected.unichar,      "non-instant pref init unichar");
-      ok(found.wstring_data === expected.wstring_data, "non-instant pref init wstring");
-      todo(found.file_data  === expected.file_data,    "non-instant pref init file"   );
-
-      // were all elements correctly initialized? (loose check)
-      found = ReadPrefsFromUI(aPrefWindow);
-      ok(found.int          == expected.int,          "non-instant element init int"    );
-      ok(found.bool         == expected.bool,         "non-instant element init bool"   );
-      ok(found.string       == expected.string,       "non-instant element init string" );
-      ok(found.unichar      == expected.unichar,      "non-instant element init unichar");
-      ok(found.wstring_data == expected.wstring_data, "non-instant element init wstring");
-      todo(found.file_data  == expected.file_data,    "non-instant element init file"   );
-
-      // do some changes in the UI
-      expected = kPrefValueSet2;
-      WritePrefsToUI(aPrefWindow, expected);
-
-      // UI changes should get passed to the Preference instances,
-      // but currently they aren't if the changes are made programmatically
-      // (the handlers preference.change/prefpane.input and prefpane.change
-      //  are called for manual changes, though).
-      found = ReadPrefsFromPreferences(aPrefWindow);
-      todo(found.int          === expected.int,          "non-instant change pref int"    );
-      todo(found.bool         === expected.bool,         "non-instant change pref bool"   );
-      todo(found.string       === expected.string,       "non-instant change pref string" );
-      todo(found.unichar      === expected.unichar,      "non-instant change pref unichar");
-      todo(found.wstring_data === expected.wstring_data, "non-instant change pref wstring");
-      todo(found.file_data    === expected.file_data,    "non-instant change pref file"   );
-
-      // and these changes should *NOT* get passed to the system
-      // (which obviously always passes with the above failing)
-      expected = kPrefValueSet1;
-      found    = ReadPrefsFromSystem();
-      ok(found.int          === expected.int,          "non-instant change element int"    );
-      ok(found.bool         === expected.bool,         "non-instant change element bool"   );
-      ok(found.string       === expected.string,       "non-instant change element string" );
-      ok(found.unichar      === expected.unichar,      "non-instant change element unichar");
-      ok(found.wstring_data === expected.wstring_data, "non-instant change element wstring");
-      todo(found.file_data  === expected.file_data,    "non-instant change element file"   );
-
-      // try resetting the prefs to default values (which should be empty here)
-      GetPreference(aPrefWindow, "tests.static_preference_int"    ).reset();
-      GetPreference(aPrefWindow, "tests.static_preference_bool"   ).reset();
-      GetPreference(aPrefWindow, "tests.static_preference_string" ).reset();
-      GetPreference(aPrefWindow, "tests.static_preference_unichar").reset();
-      GetPreference(aPrefWindow, "tests.static_preference_wstring").reset();
-      GetPreference(aPrefWindow, "tests.static_preference_file"   ).reset();
-
-      // check system: the current values *MUST NOT* change
-      expected = kPrefValueSet1;
-      found    = ReadPrefsFromSystem();
-      ok(found.int          === expected.int,          "non-instant reset system int"    );
-      ok(found.bool         === expected.bool,         "non-instant reset system bool"   );
-      ok(found.string       === expected.string,       "non-instant reset system string" );
-      ok(found.unichar      === expected.unichar,      "non-instant reset system unichar");
-      ok(found.wstring_data === expected.wstring_data, "non-instant reset system wstring");
-      todo(found.file_data  === expected.file_data,    "non-instant reset system file"   );
-
-      // check UI: these values should be reset
-      expected =
-      {
-        // alas, we don't have XUL elements with typeof(value) == int :(
-        // int:         0,
-        int:          "",
-        bool:         false,
-        string:       "",
-        unichar:      "",
-        wstring_data: "",
-        file_data:    "",
-        wstring:      {},
-        file:         {}
-      };
-      found = ReadPrefsFromUI(aPrefWindow);
-      ok(found.int          === expected.int,          "non-instant reset element int"    );
-      ok(found.bool         === expected.bool,         "non-instant reset element bool"   );
-      ok(found.string       === expected.string,       "non-instant reset element string" );
-      ok(found.unichar      === expected.unichar,      "non-instant reset element unichar");
-      ok(found.wstring_data === expected.wstring_data, "non-instant reset element wstring");
-//      ok(found.file_data    === expected.file_data,    "non-instant reset element file"   );
-
-      // check hasUserValue
-      ok(GetPreference(aPrefWindow, "tests.static_preference_int"    ).hasUserValue === false, "non-instant reset hasUserValue int"    );
-      ok(GetPreference(aPrefWindow, "tests.static_preference_bool"   ).hasUserValue === false, "non-instant reset hasUserValue bool"   );
-      ok(GetPreference(aPrefWindow, "tests.static_preference_string" ).hasUserValue === false, "non-instant reset hasUserValue string" );
-      ok(GetPreference(aPrefWindow, "tests.static_preference_unichar").hasUserValue === false, "non-instant reset hasUserValue unichar");
-      ok(GetPreference(aPrefWindow, "tests.static_preference_wstring").hasUserValue === false, "non-instant reset hasUserValue wstring");
-      ok(GetPreference(aPrefWindow, "tests.static_preference_file"   ).hasUserValue === false, "non-instant reset hasUserValue file"   );
-    }
-
-    function RunNonInstantPrefTestClose(aPrefWindow)
-    {
-      WritePrefsToPreferences(aPrefWindow, kPrefValueSet2);
-    }
-
-    function RunCheckCommandRedirect(aPrefWindow)
-    {
+    function RunCheckCommandRedirect(aPrefWindow) {
+      ok(
+        GetPreference(aPrefWindow, "tests.static_preference_bool").value,
+        "redirected command bool"
+      );
       GetXULElement(aPrefWindow, "checkbox").click();
-      ok(GetPreference(aPrefWindow, "tests.static_preference_bool").value, "redirected command bool");
+      ok(
+        !GetPreference(aPrefWindow, "tests.static_preference_bool").value,
+        "redirected command bool"
+      );
       GetXULElement(aPrefWindow, "checkbox").click();
-      ok(!GetPreference(aPrefWindow, "tests.static_preference_bool").value, "redirected command bool");
+      ok(
+        GetPreference(aPrefWindow, "tests.static_preference_bool").value,
+        "redirected command bool"
+      );
     }
 
-    function RunCheckDisabled(aPrefWindow)
-    {
-      ok(!GetXULElement(aPrefWindow, "disabled_checkbox").disabled, "Checkbox should be enabled");
-      GetPreference(aPrefWindow, "tests.disabled_preference_bool").updateControlDisabledState(true);
-      ok(GetXULElement(aPrefWindow, "disabled_checkbox").disabled, "Checkbox should be disabled");
-      GetPreference(aPrefWindow, "tests.locked_preference_bool").updateControlDisabledState(false);;
-      ok(GetXULElement(aPrefWindow, "locked_checkbox").disabled, "Locked checkbox should stay disabled");
+    function RunCheckDisabled(aPrefWindow) {
+      ok(
+        !GetXULElement(aPrefWindow, "disabled_checkbox").disabled,
+        "Checkbox should be enabled"
+      );
+      GetPreference(
+        aPrefWindow,
+        "tests.disabled_preference_bool"
+      ).updateControlDisabledState(true);
+      ok(
+        GetXULElement(aPrefWindow, "disabled_checkbox").disabled,
+        "Checkbox should be disabled"
+      );
+      GetPreference(
+        aPrefWindow,
+        "tests.locked_preference_bool"
+      ).updateControlDisabledState(false);
+      ok(
+        GetXULElement(aPrefWindow, "locked_checkbox").disabled,
+        "Locked checkbox should stay disabled"
+      );
     }
 
-    function RunResetPrefTest(aPrefWindow)
-    {
+    function RunResetPrefTest(aPrefWindow) {
       // try resetting the prefs to default values
-      GetPreference(aPrefWindow, "tests.static_preference_int"    ).reset();
-      GetPreference(aPrefWindow, "tests.static_preference_bool"   ).reset();
-      GetPreference(aPrefWindow, "tests.static_preference_string" ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_int").reset();
+      GetPreference(aPrefWindow, "tests.static_preference_bool").reset();
+      GetPreference(aPrefWindow, "tests.static_preference_string").reset();
       GetPreference(aPrefWindow, "tests.static_preference_unichar").reset();
       GetPreference(aPrefWindow, "tests.static_preference_wstring").reset();
-      GetPreference(aPrefWindow, "tests.static_preference_file"   ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_file").reset();
     }
 
-    function InitTestPrefs(aInstantApply)
-    {
-      // set instant apply mode and init prefs to set 1
-      kPref.setBoolPref("browser.preferences.instantApply", aInstantApply);
+    function RunTestApplyPref() {
+      // Test in parent window.
       WritePrefsToSystem(kPrefValueSet1);
-    }
+      window.browsingContext.topChromeWindow.openDialog(
+        "window_preferences.xhtml",
+        "",
+        "modal",
+        RunInstantPrefTest,
+        false
+      );
 
-    function RunTestInstant()
-    {
-      // test with instantApply
-      InitTestPrefs(true);
-      window.browsingContext.topChromeWindow.openDialog("window_preferences.xhtml", "", "modal", RunInstantPrefTest, false);
-
-      // - test deferred reset in child window
-      InitTestPrefs(true);
-      window.browsingContext.topChromeWindow.openDialog("window_preferences2.xhtml", "", "modal", RunResetPrefTest, false);
+      // Test deferred reset in child window.
+      WritePrefsToSystem(kPrefValueSet1);
+      window.browsingContext.topChromeWindow.openDialog(
+        "window_preferences2.xhtml",
+        "",
+        "modal",
+        RunResetPrefTest,
+        false
+      );
       let expected = kPrefValueSet1;
-      let found    = ReadPrefsFromSystem();
-      ok(found.int          === expected.int,          "instant reset deferred int"    );
-      ok(found.bool         === expected.bool,         "instant reset deferred bool"   );
-      ok(found.string       === expected.string,       "instant reset deferred string" );
-      ok(found.unichar      === expected.unichar,      "instant reset deferred unichar");
-      ok(found.wstring_data === expected.wstring_data, "instant reset deferred wstring");
-      todo(found.file_data  === expected.file_data,    "instant reset deferred file"   );
-    }
+      let found = ReadPrefsFromSystem();
+      ok(found.int === expected.int, "instant reset deferred int");
+      ok(found.bool === expected.bool, "instant reset deferred bool");
+      ok(found.string === expected.string, "instant reset deferred string");
+      ok(found.unichar === expected.unichar, "instant reset deferred unichar");
+      ok(
+        found.wstring_data === expected.wstring_data,
+        "instant reset deferred wstring"
+      );
+      todo(found.file_data === expected.file_data, "instant reset deferred file");
 
-    function RunTestNonInstant()
-    {
-      // test without instantApply
-      // - general tests, similar to instant apply
-      InitTestPrefs(false);
-      window.browsingContext.topChromeWindow.openDialog("window_preferences.xhtml", "", "modal", RunNonInstantPrefTestGeneral, false);
+      // Test cancel in child window.
+      WritePrefsToSystem(kPrefValueSet1);
+      window.browsingContext.topChromeWindow.openDialog(
+        "window_preferences2.xhtml",
+        "",
+        "modal",
+        aPrefWindow => WritePrefsToPreferences(aPrefWindow, kPrefValueSet2),
+        false
+      );
+      expected = kPrefValueSet1;
+      found = ReadPrefsFromSystem();
+      ok(found.int === expected.int, "non-instant cancel system int");
+      ok(found.bool === expected.bool, "non-instant cancel system bool");
+      ok(found.string === expected.string, "non-instant cancel system string");
+      ok(found.unichar === expected.unichar, "non-instant cancel system unichar");
+      ok(
+        found.wstring_data === expected.wstring_data,
+        "non-instant cancel system wstring"
+      );
+      todo(
+        found.file_data === expected.file_data,
+        "non-instant cancel system file"
+      );
 
-      // - test Cancel
-      InitTestPrefs(false);
-      window.browsingContext.topChromeWindow.openDialog("window_preferences.xhtml", "", "modal", RunNonInstantPrefTestClose, false);
-      var expected = kPrefValueSet1;
-      var found    = ReadPrefsFromSystem();
-      ok(found.int          === expected.int,          "non-instant cancel system int"    );
-      ok(found.bool         === expected.bool,         "non-instant cancel system bool"   );
-      ok(found.string       === expected.string,       "non-instant cancel system string" );
-      ok(found.unichar      === expected.unichar,      "non-instant cancel system unichar");
-      ok(found.wstring_data === expected.wstring_data, "non-instant cancel system wstring");
-      todo(found.file_data  === expected.file_data,    "non-instant cancel system file"   );
-      
-      // - test Accept
-      InitTestPrefs(false);
-      window.browsingContext.topChromeWindow.openDialog("window_preferences.xhtml", "", "modal", RunNonInstantPrefTestClose, true);
+      // Test accept in child window.
+      WritePrefsToSystem(kPrefValueSet1);
+      window.browsingContext.topChromeWindow.openDialog(
+        "window_preferences2.xhtml",
+        "",
+        "modal",
+        aPrefWindow => WritePrefsToPreferences(aPrefWindow, kPrefValueSet2),
+        true
+      );
       expected = kPrefValueSet2;
-      found    = ReadPrefsFromSystem();
-      ok(found.int          === expected.int,          "non-instant accept system int"    );
-      ok(found.bool         === expected.bool,         "non-instant accept system bool"   );
-      ok(found.string       === expected.string,       "non-instant accept system string" );
-      ok(found.unichar      === expected.unichar,      "non-instant accept system unichar");
-      ok(found.wstring_data === expected.wstring_data, "non-instant accept system wstring");
-      todo(found.file_data  === expected.file_data,    "non-instant accept system file"   );
+      found = ReadPrefsFromSystem();
+      ok(found.int === expected.int, "non-instant accept system int");
+      ok(found.bool === expected.bool, "non-instant accept system bool");
+      ok(found.string === expected.string, "non-instant accept system string");
+      ok(found.unichar === expected.unichar, "non-instant accept system unichar");
+      ok(
+        found.wstring_data === expected.wstring_data,
+        "non-instant accept system wstring"
+      );
+      todo(
+        found.file_data === expected.file_data,
+        "non-instant accept system file"
+      );
 
-      // - test deferred reset in child window
-      InitTestPrefs(false);
-      window.browsingContext.topChromeWindow.openDialog("window_preferences2.xhtml", "", "modal", RunResetPrefTest, true);
+      // Test deferred reset in child window.
+      WritePrefsToSystem(kPrefValueSet1);
+      window.browsingContext.topChromeWindow.openDialog(
+        "window_preferences2.xhtml",
+        "",
+        "modal",
+        RunResetPrefTest,
+        true
+      );
       expected = CreateEmptyPrefValueSet();
-      found    = ReadPrefsFromSystem();
-      ok(found.int          === expected.int,          "non-instant reset deferred int"    );
-      ok(found.bool         === expected.bool,         "non-instant reset deferred bool"   );
-      ok(found.string       === expected.string,       "non-instant reset deferred string" );
-      ok(found.unichar      === expected.unichar,      "non-instant reset deferred unichar");
-      ok(found.wstring_data === expected.wstring_data, "non-instant reset deferred wstring");
-      ok(found.file_data    === expected.file_data,    "non-instant reset deferred file"   );
+      found = ReadPrefsFromSystem();
+      ok(found.int === expected.int, "non-instant reset deferred int");
+      ok(found.bool === expected.bool, "non-instant reset deferred bool");
+      ok(found.string === expected.string, "non-instant reset deferred string");
+      ok(found.unichar === expected.unichar, "non-instant reset deferred unichar");
+      ok(
+        found.wstring_data === expected.wstring_data,
+        "non-instant reset deferred wstring"
+      );
+      ok(found.file_data === expected.file_data, "non-instant reset deferred file");
     }
 
-    function RunTestCommandRedirect()
-    {
-      window.browsingContext.topChromeWindow.openDialog("window_preferences_commandretarget.xhtml", "", "modal", RunCheckCommandRedirect, true);
+    function RunTestCommandRedirect() {
+      WritePrefsToSystem(kPrefValueSet1);
+      window.browsingContext.topChromeWindow.openDialog(
+        "window_preferences_commandretarget.xhtml",
+        "",
+        "modal",
+        RunCheckCommandRedirect,
+        true
+      );
     }
 
-    function RunTestDisabled()
-    {
+    function RunTestDisabled() {
       // Because this pref is on the default branch and locked, we need to set it before opening the dialog.
       const defaultBranch = kPref.getDefaultBranch("");
       defaultBranch.setBoolPref("tests.locked_preference_bool", true);
       defaultBranch.lockPref("tests.locked_preference_bool");
-      window.browsingContext.topChromeWindow.openDialog("window_preferences_disabled.xhtml", "", "modal", RunCheckDisabled, true);
+      window.browsingContext.topChromeWindow.openDialog(
+        "window_preferences_disabled.xhtml",
+        "",
+        "modal",
+        RunCheckDisabled,
+        true
+      );
     }
 
-    function RunTest()
-    {
-      RunTestInstant();
-      RunTestNonInstant();
+    function RunTest() {
+      RunTestApplyPref();
       RunTestCommandRedirect();
       RunTestDisabled();
       SimpleTest.finish();

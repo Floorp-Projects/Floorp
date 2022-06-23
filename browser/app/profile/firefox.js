@@ -1019,12 +1019,6 @@ pref("plugins.show_infobar", false);
 pref("plugins.favorfallback.mode", "follow-ctp");
 pref("plugins.favorfallback.rules", "nosrc,video");
 
-#ifdef XP_WIN
-  pref("browser.preferences.instantApply", false);
-#else
-  pref("browser.preferences.instantApply", true);
-#endif
-
 // Toggling Search bar on and off in about:preferences
 pref("browser.preferences.search", true);
 #if defined(NIGHTLY_BUILD)
@@ -1527,8 +1521,6 @@ pref("browser.newtabpage.activity-stream.asrouter.useRemoteL10n", true);
 // These prefs control if Discovery Stream is enabled.
 pref("browser.newtabpage.activity-stream.discoverystream.enabled", true);
 pref("browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout", false);
-// A preset compact layout, similar to setting a collection of prefs to build a complete layout.
-pref("browser.newtabpage.activity-stream.discoverystream.compactLayout.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.hybridLayout.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.hideCardBackground.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.fourCardLayout.enabled", false);

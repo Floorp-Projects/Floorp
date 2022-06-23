@@ -111,6 +111,11 @@ class EncodeCompleteCallback {
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult ReceiveBlobImpl(already_AddRefed<BlobImpl> aBlobImpl) = 0;
 
+  // CanBeDeletedOnAnyThread is pure virtual, so that whoever extends this class
+  // needs to think how to handle cases like the owning DOM worker thread
+  // shutting down.
+  virtual bool CanBeDeletedOnAnyThread() = 0;
+
  protected:
   virtual ~EncodeCompleteCallback() = default;
 };

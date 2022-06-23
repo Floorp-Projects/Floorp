@@ -10,7 +10,7 @@
 #include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "nsString.h"
 #include "nsNativeCharsetUtils.h"
-#include "mozJSComponentLoader.h"
+#include "mozJSModuleLoader.h"
 #include "xpc_make_class.h"
 
 namespace mozilla::ctypes {
@@ -88,7 +88,7 @@ static bool InitAndSealCTypesClass(JSContext* cx,
 NS_IMETHODIMP
 Module::Call(nsIXPConnectWrappedNative* wrapper, JSContext* cx, JSObject* obj,
              const JS::CallArgs& args, bool* _retval) {
-  mozJSComponentLoader* loader = mozJSComponentLoader::Get();
+  mozJSModuleLoader* loader = mozJSModuleLoader::Get();
   JS::Rooted<JSObject*> targetObj(cx);
   loader->FindTargetObject(cx, &targetObj);
 

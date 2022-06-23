@@ -451,6 +451,10 @@ class Pref;
 static bool ShouldSanitizePreference(const Pref* const aPref,
                                      bool aIsWebContentProcess = true);
 
+// Note that this never changes in the parent process, and is only read in
+// content processes.
+static bool gContentProcessPrefsAreInited = false;
+
 class Pref {
  public:
   explicit Pref(const nsACString& aName)
@@ -532,7 +536,7 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
+        gContentProcessPrefsAreInited && ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -548,7 +552,7 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
+        gContentProcessPrefsAreInited && ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -565,7 +569,7 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
+        gContentProcessPrefsAreInited && ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -1035,6 +1039,16 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
         return PrefValue{GetIntValue(aKind)};
       case PrefType::String:
         return PrefValue{GetBareStringValue(aKind)};
+      case PrefType::None:
+        // This check will be performed in the above functions; but for NoneType
+        // we need to do it explicitly, then fall-through.
+        if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
+            gContentProcessPrefsAreInited && ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
+          MOZ_CRASH_UNSAFE_PRINTF(
+              "Should not access the preference '%s' in the Content Processes",
+              Name());
+        }
+        [[fallthrough]];
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected pref type");
         return PrefValue{};
@@ -1043,6 +1057,23 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
 
   Result<PrefValueKind, nsresult> WantValueKind(PrefType aType,
                                                 PrefValueKind aKind) const {
+    // WantValueKind may short-circuit GetValue functions and cause them to
+    // return early, before this check occurs in GetFooValue()
+    if (this->is<Pref*>() && !XRE_IsParentProcess() &&
+        sCrashOnBlocklistedPref && gContentProcessPrefsAreInited &&
+        ShouldSanitizePreference(this->as<Pref*>(), XRE_IsContentProcess())) {
+      MOZ_CRASH_UNSAFE_PRINTF(
+          "Should not access the preference '%s' in the Content Processes",
+          Name());
+    } else if (!this->is<Pref*>()) {
+      // While we could use Name() above, and avoid the Variant checks, it
+      // would less efficient than needed and we can instead do a debug-only
+      // assert here to limit the inefficientcy
+      MOZ_ASSERT(!(!XRE_IsParentProcess() && gContentProcessPrefsAreInited &&
+                   ShouldSanitizePreference(Name(), XRE_IsContentProcess())),
+                 "We should never have a sanitized SharedPrefMap::Pref.");
+    }
+
     if (Type() != aType) {
       return Err(NS_ERROR_UNEXPECTED);
     }
@@ -1574,14 +1605,6 @@ static PrefSaveData pref_savePrefs() {
   return savedPrefs;
 }
 
-#ifdef DEBUG
-
-// Note that this never changes in the parent process, and is only read in
-// content processes.
-static bool gContentProcessPrefsAreInited = false;
-
-#endif  // DEBUG
-
 static Pref* pref_HashTableLookup(const char* aPrefName) {
   MOZ_ASSERT(NS_IsMainThread() || ServoStyleSet::IsInServoTraversal());
 
@@ -1620,7 +1643,7 @@ Maybe<PrefWrapper> pref_Lookup(const char* aPrefName,
     return Some(*gCallbackPref);
   }
   if (Pref* pref = pref_HashTableLookup(aPrefName)) {
-    if (aIncludeTypeNone || !pref->IsTypeNone()) {
+    if (aIncludeTypeNone || !pref->IsTypeNone() || pref->IsSanitized()) {
       return Some(pref);
     }
   } else if (gSharedMap) {
@@ -3666,10 +3689,8 @@ void Preferences::DeserializePreferences(char* aStr, size_t aPrefsLen) {
   // memory. (aPrefsLen includes the '\0'.)
   MOZ_ASSERT(p == aStr + aPrefsLen - 1);
 
-#ifdef DEBUG
   MOZ_ASSERT(!gContentProcessPrefsAreInited);
   gContentProcessPrefsAreInited = true;
-#endif
 }
 
 // Forward declarations.
@@ -3951,7 +3972,8 @@ void Preferences::SetPreference(const dom::Pref& aDomPref) {
   //   `pref` will be valueless. We will end up adding and removing the value
   //   needlessly, but that's ok because this case is rare.
   //
-  if (!pref->HasDefaultValue() && !pref->HasUserValue()) {
+  if (!pref->HasDefaultValue() && !pref->HasUserValue() &&
+      !pref->IsSanitized()) {
     // If the preference exists in the shared map, we need to keep the dynamic
     // entry around to mask it.
     if (gSharedMap->Has(pref->Name())) {
@@ -5104,7 +5126,11 @@ nsresult Preferences::ClearUser(const char* aPrefName) {
     pref->ClearUserValue();
 
     if (!pref->HasDefaultValue()) {
-      if (!gSharedMap || !gSharedMap->Has(pref->Name())) {
+      MOZ_ASSERT(
+          !gSharedMap || !pref->IsSanitized() || !gSharedMap->Has(pref->Name()),
+          "A sanitized pref should never be in the shared pref map.");
+      if (!pref->IsSanitized() &&
+          (!gSharedMap || !gSharedMap->Has(pref->Name()))) {
         HashTable()->remove(aPrefName);
       } else {
         pref->SetType(PrefType::None);
@@ -5158,6 +5184,16 @@ int32_t Preferences::GetType(const char* aPrefName) {
 
     case PrefType::Bool:
       return PREF_BOOL;
+
+    case PrefType::None:
+      if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
+          gContentProcessPrefsAreInited &&
+          ShouldSanitizePreference(aPrefName, XRE_IsContentProcess())) {
+        MOZ_CRASH_UNSAFE_PRINTF(
+            "Should not access the preference '%s' in the Content Processes",
+            aPrefName);
+      }
+      [[fallthrough]];
 
     default:
       MOZ_CRASH();
@@ -5695,7 +5731,7 @@ static void InitStaticPrefsFromShared() {
   {                                                                            \
     StripAtomic<cpp_type> val;                                                 \
     if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
-        sCrashOnBlocklistedPref) {                                             \
+        gContentProcessPrefsAreInited && sCrashOnBlocklistedPref) {            \
       MOZ_DIAGNOSTIC_ASSERT(                                                   \
           !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
           "Should not access the preference '" name "' in Content Processes"); \
@@ -5708,7 +5744,7 @@ static void InitStaticPrefsFromShared() {
   {                                                                            \
     cpp_type val;                                                              \
     if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
-        sCrashOnBlocklistedPref) {                                             \
+        gContentProcessPrefsAreInited && sCrashOnBlocklistedPref) {            \
       MOZ_DIAGNOSTIC_ASSERT(                                                   \
           !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
           "Should not access the preference '" name "' in Content Processes"); \
@@ -5772,7 +5808,9 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
     PREF_LIST_ENTRY("browser.urlbar"),
     PREF_LIST_ENTRY("browser.urlbar.resultGroups"),
     PREF_LIST_ENTRY("devtools.debugger.pending-selected-location"),
-    PREF_LIST_ENTRY("identity.fxaccounts."),
+    PREF_LIST_ENTRY("identity.fxaccounts.account.device.name"),
+    PREF_LIST_ENTRY("identity.fxaccounts.account.telemetry.sanitized_uid"),
+    PREF_LIST_ENTRY("identity.fxaccounts.lastSignedInUserHash"),
     PREF_LIST_ENTRY("services."),
 
     // Remove UUIDs
@@ -5793,7 +5831,6 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
     PREF_LIST_ENTRY("browser.laterrun.bookkeeping.profileCreationTime"),
     PREF_LIST_ENTRY("browser.newtabpage.activity-stream.discoverystream."),
     PREF_LIST_ENTRY("browser.region.update.updated"),
-    PREF_LIST_ENTRY("browser.safebrowsing.provider"),
     PREF_LIST_ENTRY("browser.sessionstore.upgradeBackup.latestBuildID"),
     PREF_LIST_ENTRY("browser.shell.mostRecentDateSetAsDefault"),
     PREF_LIST_ENTRY("fission.experiment.max-origins.last-"),
@@ -5814,7 +5851,40 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
 };
 
 static const PrefListEntry sDynamicPrefOverrideList[]{
+    PREF_LIST_ENTRY("browser.contentblocking.category"),
+    PREF_LIST_ENTRY("browser.search.region"),
+    PREF_LIST_ENTRY(
+        "browser.tabs.remote.testOnly.failPBrowserCreation.browsingContext"),
+    PREF_LIST_ENTRY("browser.translation.bing.authURL"),
+    PREF_LIST_ENTRY("browser.translation.bing.clientIdOverride"),
+    PREF_LIST_ENTRY("browser.translation.bing.translateArrayURL"),
+    PREF_LIST_ENTRY("browser.translation.bing.apiKeyOverride"),
+    PREF_LIST_ENTRY("browser.translation.yandex.apiKeyOverride"),
+    PREF_LIST_ENTRY("browser.translation.yandex.translateURLOverride"),
+    PREF_LIST_ENTRY("dom.securecontext.allowlist"),
+    PREF_LIST_ENTRY("extensions.foobaz"),
+    PREF_LIST_ENTRY("general.appname.override"),
+    PREF_LIST_ENTRY("general.appversion.override"),
+    PREF_LIST_ENTRY("general.useragent.override"),
+    PREF_LIST_ENTRY("general.platform.override"),
+    PREF_LIST_ENTRY("gfx.blacklist.hardwarevideodecoding.failureid"),
+    PREF_LIST_ENTRY("marionette.log.level"),
+    PREF_LIST_ENTRY("media.audio_loopback_dev"),
+    PREF_LIST_ENTRY("media.getusermedia.fake-camera-name"),
+    PREF_LIST_ENTRY("media.hls.server.url"),
+    PREF_LIST_ENTRY("media.peerconnection.nat_simulator.filtering_type"),
+    PREF_LIST_ENTRY("media.peerconnection.nat_simulator.mapping_type"),
+    PREF_LIST_ENTRY("media.peerconnection.nat_simulator.redirect_address"),
+    PREF_LIST_ENTRY("media.peerconnection.nat_simulator.redirect_targets"),
+    PREF_LIST_ENTRY("media.video_loopback_dev"),
+    PREF_LIST_ENTRY("media.webspeech.service.endpoint"),
     PREF_LIST_ENTRY("print.printer_"),
+    PREF_LIST_ENTRY("places.interactions.customBlocklist"),
+    PREF_LIST_ENTRY("spellchecker.dictionary"),
+    PREF_LIST_ENTRY("test.char"),
+    PREF_LIST_ENTRY("toolkit.mozprotocol.url"),
+    PREF_LIST_ENTRY("toolkit.telemetry.log.level"),
+    PREF_LIST_ENTRY("ui.-moz-fieldtext.dark"),
 };
 
 #undef PREF_LIST_ENTRY
@@ -5843,11 +5913,29 @@ static bool ShouldSanitizePreference_Impl(const T& aPref,
   if (XRE_IsParentProcess()) {
     const char* prefName = aPref.Name();
 
+    // If a pref starts with this magic string, it is a Once-Initialized pref
+    // from Static Prefs. It should* not be in the above list and while it looks
+    // like a dnyamically named pref, it is not.
+    // * nothing enforces this
+    if (strncmp(prefName, "$$$", 3) == 0) {
+      return false;
+    }
+
     // First check against the denylist, the denylist is used for
     // all subprocesses to reduce IPC traffic.
+    // The services pref is an annoying one - it's much easier to blocklist
+    // the whole branch and then add this one check to let this one annoying
+    // pref through.
     for (const auto& entry : sParentOnlyPrefBranchList) {
       if (strncmp(entry.mPrefBranch, prefName, entry.mLen) == 0) {
-        return true;
+        auto p = prefName;  // This avoids clang-format doing ugly things.
+        if (strncmp("services.settings.clock_skew_seconds", p, 36) == 0 ||
+            strncmp("services.settings.last_update_seconds", p, 37) == 0 ||
+            strncmp("services.settings.server", p, 24) == 0) {
+          return false;
+        } else {
+          return true;
+        }
       }
     }
 
@@ -5884,6 +5972,12 @@ bool ShouldSanitizePreference(const char* aPrefName,
     return false;
   }
 
+  // Perform this comparison (see notes above) early to avoid a lookup
+  // if we can avoid it.
+  if (strncmp(aPrefName, "$$$", 3) == 0) {
+    return false;
+  }
+
   if (Maybe<PrefWrapper> pref = pref_Lookup(aPrefName)) {
     if (pref.isNothing()) {
       return true;
@@ -5896,6 +5990,18 @@ bool ShouldSanitizePreference(const char* aPrefName,
 
 Atomic<bool, Relaxed> sOmitBlocklistedPrefValues(false);
 Atomic<bool, Relaxed> sCrashOnBlocklistedPref(false);
+
+void OnFissionBlocklistPrefChange(const char* aPref, void* aData) {
+  if (strcmp(aPref, kFissionEnforceBlockList) == 0) {
+    sCrashOnBlocklistedPref =
+        StaticPrefs::fission_enforceBlocklistedPrefsInSubprocesses_tmp();
+  } else if (strcmp(aPref, kFissionOmitBlockListValues) == 0) {
+    sOmitBlocklistedPrefValues =
+        StaticPrefs::fission_omitBlocklistedPrefsInSubprocesses_tmp();
+  } else {
+    MOZ_CRASH("Unknown pref passed to callback");
+  }
+}
 
 }  // namespace mozilla
 
