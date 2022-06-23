@@ -1954,6 +1954,23 @@ class TabManagerBase {
   }
 
   /**
+   * Activate MV3 content scripts if extension has (ungranted) host permission.
+   * @param {NativeTab} nativeTab
+   */
+  activateScripts(nativeTab) {
+    let tab = this.getWrapper(nativeTab);
+    if (
+      this.extension.originControls &&
+      this.extension.optionalOrigins.matches(tab._uri) &&
+      !tab.matchesHostPermission &&
+      (this.extension.contentScripts.length ||
+        this.extension.registeredContentScripts.size)
+    ) {
+      tab.queryContent("ActivateScripts", { id: this.extension.id });
+    }
+  }
+
+  /**
    * Returns true if the extension has permissions to access restricted
    * properties of the given native tab. In practice, this means that it has
    * either requested the "tabs" permission or has activeTab permissions for the
