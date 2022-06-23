@@ -346,16 +346,6 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
           break;
         }
 
-        if (acc == doc) {
-          // If we're already in `doc`s viewport cache, and the doc is
-          // not the acc this call originated on, skip it.
-          // We have to have `doc` in this list, because we need to support
-          // calling `doc->ChildAtPoint()`. Without this check, we end up
-          // calling `doc->ChildAtPoint(...)` below which changes the context of
-          // this call.
-          continue;
-        }
-
         if (acc->Bounds().Contains(aX, aY)) {
           if (acc->IsDoc()) {
             // If we encounter a doc, search its viewport
