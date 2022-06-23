@@ -272,9 +272,6 @@ nsComponentManagerImpl::nsComponentManagerImpl()
       mStatus(NOT_INITIALIZED) {}
 
 extern const mozilla::Module kContentProcessWidgetModule;
-#if defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
-extern const mozilla::Module kWidgetModule;
-#endif
 
 static nsTArray<const mozilla::Module*>* sExtraStaticModules;
 
@@ -360,9 +357,6 @@ nsresult nsComponentManagerImpl::Init() {
   nsCategoryManager::GetSingleton()->SuppressNotifications(true);
 
   RegisterModule(&kContentProcessWidgetModule);
-#if defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
-  RegisterModule(&kWidgetModule);
-#endif
 
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {
     RegisterModule((*sExtraStaticModules)[i]);
