@@ -6176,7 +6176,7 @@ site_permissions:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/25658
     data_reviews:
-      - ??????????????
+      - https://github.com/mozilla-mobile/fenix/pull/25664#issuecomment-1159151213
     data_sensitivity:
       - interaction
     notification_emails:
@@ -6197,7 +6197,7 @@ site_permissions:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/25658
     data_reviews:
-      - ??????????????
+      - https://github.com/mozilla-mobile/fenix/pull/25664#issuecomment-1159151213
     data_sensitivity:
       - interaction
     notification_emails:
@@ -6218,7 +6218,7 @@ site_permissions:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/25658
     data_reviews:
-      - ??????????????
+      - https://github.com/mozilla-mobile/fenix/pull/25664#issuecomment-1159151213
     data_sensitivity:
       - interaction
     notification_emails:
