@@ -11,7 +11,6 @@
 #include "mozilla/ipc/PTestShellParent.h"
 #include "mozilla/ipc/PTestShellCommandParent.h"
 
-#include "js/TypeDecls.h"
 #include "js/RootingAPI.h"
 #include "js/Value.h"
 #include "nsString.h"

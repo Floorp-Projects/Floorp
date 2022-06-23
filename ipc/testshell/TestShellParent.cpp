@@ -7,12 +7,9 @@
 /* This must occur *after* TestShellParent.h to avoid typedefs conflicts. */
 #include "jsfriendapi.h"
 #include "js/CallAndConstruct.h"  // JS_CallFunctionValue
-#include "mozilla/ArrayUtils.h"
 
 #include "mozilla/dom/AutoEntryScript.h"
-#include "mozilla/dom/ScriptSettings.h"
 
-#include "xpcpublic.h"
 
 using namespace mozilla;
 using mozilla::ipc::PTestShellCommandParent;
