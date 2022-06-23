@@ -44,29 +44,22 @@ xpcshell:
     description: "xpcshell test run"
     treeherder-symbol: X(X)
     variants:
-        - conditioned_profile+fission
-        - fission
+        - conditioned_profile
         - socketprocess_networking+no-fission
-        - socketprocess_networking+fission
+        - socketprocess_networking
         - no-fission
-    run-without-variant: false
     run-on-projects:
         by-variant:
-            conditioned_profile+fission:
+            conditioned_profile:
                 by-test-platform:
                     linux1804-64(-shippable)?-qr/opt: ['trunk']
                     windows10-64-2004(-shippable)?-qr/opt: ['trunk']
                     default: []
-            fission:
-                by-test-platform:
-                    android.*: []
-                    .*-tsan-qr/opt: ['trunk']
-                    default: built-projects
             socketprocess_networking+no-fission:
                 by-test-platform:
                     linux1804-64(-qr)?/debug: ['autoland', 'mozilla-central']
                     default: []
-            socketprocess_networking+fission:
+            socketprocess_networking:
                 by-test-platform:
                     macosx.*-64(-shippable|-devedition|-asan)?(-qr)?/.*: ['autoland', 'mozilla-central']
                     linux1804-64(-qr)?/debug: ['autoland', 'mozilla-central']
@@ -80,6 +73,11 @@ xpcshell:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
+            default:
+                by-test-platform:
+                    android.*: []
+                    .*-tsan-qr/opt: ['trunk']
+                    default: built-projects
     chunks:
         by-test-platform:
             .*-ccov.*/.*: 6
