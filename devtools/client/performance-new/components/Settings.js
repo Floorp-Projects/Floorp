@@ -130,9 +130,9 @@ const threadColumns = [
       l10nId: "perftools-thread-render-backend",
     },
     {
-      name: "PaintWorker",
-      id: "paint-worker",
-      l10nId: "perftools-thread-paint-worker",
+      name: "Timer",
+      id: "timer",
+      l10nId: "perftools-thread-timer",
     },
     {
       name: "StyleThread",
