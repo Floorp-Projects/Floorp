@@ -2057,10 +2057,10 @@ void MacroAssembler::generateBailoutTail(Register scratch,
       Label endOfCopy;
       bind(&copyLoop);
       branchPtr(Assembler::BelowOrEqual, copyCur, copyEnd, &endOfCopy);
-      subPtr(Imm32(4), copyCur);
-      subFromStackPtr(Imm32(4));
-      load32(Address(copyCur, 0), temp);
-      store32(temp, Address(getStackPointer(), 0));
+      subPtr(Imm32(sizeof(uintptr_t)), copyCur);
+      subFromStackPtr(Imm32(sizeof(uintptr_t)));
+      loadPtr(Address(copyCur, 0), temp);
+      storePtr(temp, Address(getStackPointer(), 0));
       jump(&copyLoop);
       bind(&endOfCopy);
     }

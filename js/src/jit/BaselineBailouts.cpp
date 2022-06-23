@@ -1612,8 +1612,9 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   // Do stack check.
   bool overRecursed = false;
   BaselineBailoutInfo* info = builder.info();
-  uint8_t* newsp =
-      info->incomingStack - (info->copyStackTop - info->copyStackBottom);
+  size_t numBytesToPush = info->copyStackTop - info->copyStackBottom;
+  MOZ_ASSERT((numBytesToPush % sizeof(uintptr_t)) == 0);
+  uint8_t* newsp = info->incomingStack - numBytesToPush;
 #ifdef JS_SIMULATOR
   if (Simulator::Current()->overRecursed(uintptr_t(newsp))) {
     overRecursed = true;
