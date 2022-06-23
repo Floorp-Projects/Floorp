@@ -49,8 +49,8 @@ nsPrintObject::~nsPrintObject() {
 
 //------------------------------------------------------------------
 
-nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
-                                         bool aForPrintPreview) {
+nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell,
+                                         Document* aDoc) {
   NS_ENSURE_STATE(aDocShell);
   NS_ENSURE_STATE(aDoc);
 
