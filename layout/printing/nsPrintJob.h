@@ -87,8 +87,8 @@ class nsPrintJob final : public nsIWebProgressListener,
    * document as aOriginalDoc (it doesn't want to pass the actual original
    * document since it may have mutated)!
    */
-  nsresult Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
-                      nsIDocShell* aDocShell, Document* aOriginalDoc,
+  nsresult Initialize(nsIDocumentViewerPrint& aDocViewerPrint,
+                      nsIDocShell& aDocShell, Document& aOriginalDoc,
                       float aScreenDPI);
 
   // Our nsIWebBrowserPrint implementation (nsDocumentViewer) defers to the
