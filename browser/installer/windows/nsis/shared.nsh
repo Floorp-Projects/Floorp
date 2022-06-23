@@ -40,16 +40,7 @@
   ${EndIf}
 
   ; Adds a pinned Task Bar shortcut (see MigrateTaskBarShortcut for details).
-  ; When we enabled this feature for Windows 10 & 11 we decided _not_ to pin
-  ; during an update (even once) because we already offered to do when the
-  ; the user originally installed, and we don't want to go against their
-  ; explicit wishes.
-  ; For Windows 7 and 8, we've been doing this ~forever, and those users may
-  ; not have experienced the onboarding offer to pin to taskbar, so we're
-  ; leaving it enabled there.
-  ${If} ${AtMostWin2012R2}
-    ${MigrateTaskBarShortcut}
-  ${EndIf}
+  ${MigrateTaskBarShortcut}
 
   ; Update the name/icon/AppModelID of our shortcuts as needed, then update the
   ; lastwritetime of the Start Menu shortcut to clear the tile icon cache.
@@ -1290,6 +1281,28 @@ ${RemoveDefaultBrowserAgentShortcut}
           ${PinToTaskBar}
         ${EndIf}
       ${EndIf}
+    ${ElseIf} ${AtLeastWin10}
+      ${GetInstallerRegistryPref} "Software\Mozilla\${AppName}" \
+        "installer.taskbarpin.win10.enabled" $2
+      ${If} $2 == "true"
+        ; On Windows 10, we may have previously tried to make a taskbar pin
+        ; and failed because the API we tried to use was blocked by the OS.
+        ; We have an option that works in more cases now, so we're going to try
+        ; again, but also record that we've done so by writing a particular
+        ; registry value, so that we don't continue to do this repeatedly.
+        ClearErrors
+        ReadRegDWORD $2 HKCU \
+            "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
+            "WasPinnedToTaskbar"
+        ${If} ${Errors}
+          WriteRegDWORD HKCU \
+            "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
+            "WasPinnedToTaskbar" 1
+          ${If} $AddTaskbarSC != "0"
+            ${PinToTaskBar}
+          ${EndIf}
+        ${EndIf}
+      ${EndIf}
     ${EndIf}
   ${EndIf}
 !macroend
@@ -1356,22 +1369,17 @@ ${RemoveDefaultBrowserAgentShortcut}
               ; Pin the shortcut to the TaskBar. 5386 is the shell32.dll
               ; resource id for the "Pin to Taskbar" string.
               InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "5386"
-            ${ElseIf} ${AtMostWaaS} 1809
+            ${Else}
               ; In Windows 10 the "Pin to Taskbar" resource was removed, so we
               ; can't access the verb that way anymore. We have a create a
               ; command key using the GUID that's assigned to this action and
-              ; then invoke that as a verb. This works up until build 1809
+              ; then invoke that as a verb.
               ReadRegStr $R9 HKLM \
                 "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\Windows.taskbarpin" \
                 "ExplorerCommandHandler"
               WriteRegStr HKCU "Software\Classes\*\shell\${AppRegName}-$AppUserModelID" "ExplorerCommandHandler" $R9
               InvokeShellVerb::DoIt "$SMPROGRAMS" "$1" "${AppRegName}-$AppUserModelID"
               DeleteRegKey HKCU "Software\Classes\*\shell\${AppRegName}-$AppUserModelID"
-            ${Else}
-              ; In the Windows 10 1903 and up (and Windows 11) the above no
-              ; longer works. We have yet another method for these versions
-              ; which is detailed in the PinToTaskbar plugin code.
-              PinToTaskbar::Pin "$SMPROGRAMS\$1"
             ${EndIf}
 
             ; Delete the shortcut if it was created
