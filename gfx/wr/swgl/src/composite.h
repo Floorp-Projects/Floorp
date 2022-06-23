@@ -2,6 +2,75 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Converts a pixel from a source format to a destination format. By default,
+// just return the value unchanged as for a simple copy.
+template <typename P, typename U>
+static ALWAYS_INLINE P convert_pixel(U src) {
+  return src;
+}
+
+// R8 format maps to BGRA value 0,0,R,1. The byte order is endian independent,
+// but the shifts unfortunately depend on endianness.
+template <>
+ALWAYS_INLINE uint32_t convert_pixel<uint32_t>(uint8_t src) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  return (uint32_t(src) << 16) | 0xFF000000;
+#else
+  return (uint32_t(src) << 8) | 0x000000FF;
+#endif
+}
+
+// RG8 format maps to BGRA value 0,G,R,1.
+template <>
+ALWAYS_INLINE uint32_t convert_pixel<uint32_t>(uint16_t src) {
+  uint32_t rg = src;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  return ((rg & 0x00FF) << 16) | (rg & 0xFF00) | 0xFF000000;
+#else
+  return (rg & 0xFF00) | ((rg & 0x00FF) << 16) | 0x000000FF;
+#endif
+}
+
+// RGBA8 format maps to R.
+template <>
+ALWAYS_INLINE uint8_t convert_pixel<uint8_t>(uint32_t src) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  return (src >> 16) & 0xFF;
+#else
+  return (src >> 8) & 0xFF;
+#endif
+}
+
+// RGBA8 formats maps to R,G.
+template <>
+ALWAYS_INLINE uint16_t convert_pixel<uint16_t>(uint32_t src) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  return ((src >> 16) & 0x00FF) | (src & 0xFF00);
+#else
+  return (src & 0xFF00) | ((src >> 16) & 0x00FF);
+#endif
+}
+
+// R8 format maps to R,0.
+template <>
+ALWAYS_INLINE uint16_t convert_pixel<uint16_t>(uint8_t src) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  return src;
+#else
+  return uint16_t(src) << 8;
+#endif
+}
+
+// RG8 format maps to R.
+template <>
+ALWAYS_INLINE uint8_t convert_pixel<uint8_t>(uint16_t src) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  return src & 0xFF;
+#else
+  return src >> 8;
+#endif
+}
+
 template <bool COMPOSITE, typename P>
 static inline void copy_row(P* dst, const P* src, int span) {
   // No scaling, so just do a fast copy.
@@ -28,12 +97,12 @@ void copy_row<true, uint32_t>(uint32_t* dst, const uint32_t* src, int span) {
   }
 }
 
-template <bool COMPOSITE, typename P>
-static inline void scale_row(P* dst, int dstWidth, const P* src, int srcWidth,
+template <bool COMPOSITE, typename P, typename U>
+static inline void scale_row(P* dst, int dstWidth, const U* src, int srcWidth,
                              int span, int frac) {
   // Do scaling with different source and dest widths.
   for (P* end = dst + span; dst < end; dst++) {
-    *dst = *src;
+    *dst = convert_pixel<P>(*src);
     // Step source according to width ratio.
     for (frac += srcWidth; frac >= dstWidth; frac -= dstWidth) {
       src++;
@@ -42,8 +111,9 @@ static inline void scale_row(P* dst, int dstWidth, const P* src, int srcWidth,
 }
 
 template <>
-void scale_row<true, uint32_t>(uint32_t* dst, int dstWidth, const uint32_t* src,
-                               int srcWidth, int span, int frac) {
+void scale_row<true, uint32_t, uint32_t>(uint32_t* dst, int dstWidth,
+                                         const uint32_t* src, int srcWidth,
+                                         int span, int frac) {
   // Do scaling with different source and dest widths.
   // Gather source pixels four at a time for better packing.
   auto* end = dst + span;
@@ -124,7 +194,6 @@ static NO_INLINE void scale_blit(Texture& srctex, const IntRect& srcReq,
   }
 
   // Calculate source and dest pointers from clamped offsets
-  int bpp = srctex.bpp();
   int srcStride = srctex.stride();
   int destStride = dsttex.stride();
   char* dest = dsttex.sample_ptr(dstReq, dstBounds);
@@ -142,27 +211,63 @@ static NO_INLINE void scale_blit(Texture& srctex, const IntRect& srcReq,
   }
   int span = dstBounds.width();
   for (int rows = dstBounds.height(); rows > 0; rows--) {
-    switch (bpp) {
+    switch (srctex.bpp()) {
       case 1:
-        if (srcWidth == dstWidth)
-          copy_row<COMPOSITE>((uint8_t*)dest, (uint8_t*)src, span);
-        else
-          scale_row<COMPOSITE>((uint8_t*)dest, dstWidth, (uint8_t*)src,
-                               srcWidth, span, fracX);
+        switch (dsttex.bpp()) {
+          case 2:
+            scale_row<COMPOSITE>((uint16_t*)dest, dstWidth, (uint8_t*)src,
+                                 srcWidth, span, fracX);
+            break;
+          case 4:
+            scale_row<COMPOSITE>((uint32_t*)dest, dstWidth, (uint8_t*)src,
+                                 srcWidth, span, fracX);
+            break;
+          default:
+            if (srcWidth == dstWidth)
+              copy_row<COMPOSITE>((uint8_t*)dest, (uint8_t*)src, span);
+            else
+              scale_row<COMPOSITE>((uint8_t*)dest, dstWidth, (uint8_t*)src,
+                                   srcWidth, span, fracX);
+            break;
+        }
         break;
       case 2:
-        if (srcWidth == dstWidth)
-          copy_row<COMPOSITE>((uint16_t*)dest, (uint16_t*)src, span);
-        else
-          scale_row<COMPOSITE>((uint16_t*)dest, dstWidth, (uint16_t*)src,
-                               srcWidth, span, fracX);
+        switch (dsttex.bpp()) {
+          case 1:
+            scale_row<COMPOSITE>((uint8_t*)dest, dstWidth, (uint16_t*)src,
+                                 srcWidth, span, fracX);
+            break;
+          case 4:
+            scale_row<COMPOSITE>((uint32_t*)dest, dstWidth, (uint16_t*)src,
+                                 srcWidth, span, fracX);
+            break;
+          default:
+            if (srcWidth == dstWidth)
+              copy_row<COMPOSITE>((uint16_t*)dest, (uint16_t*)src, span);
+            else
+              scale_row<COMPOSITE>((uint16_t*)dest, dstWidth, (uint16_t*)src,
+                                   srcWidth, span, fracX);
+            break;
+        }
         break;
       case 4:
-        if (srcWidth == dstWidth)
-          copy_row<COMPOSITE>((uint32_t*)dest, (uint32_t*)src, span);
-        else
-          scale_row<COMPOSITE>((uint32_t*)dest, dstWidth, (uint32_t*)src,
-                               srcWidth, span, fracX);
+        switch (dsttex.bpp()) {
+          case 1:
+            scale_row<COMPOSITE>((uint8_t*)dest, dstWidth, (uint32_t*)src,
+                                 srcWidth, span, fracX);
+            break;
+          case 2:
+            scale_row<COMPOSITE>((uint16_t*)dest, dstWidth, (uint32_t*)src,
+                                 srcWidth, span, fracX);
+            break;
+          default:
+            if (srcWidth == dstWidth)
+              copy_row<COMPOSITE>((uint32_t*)dest, (uint32_t*)src, span);
+            else
+              scale_row<COMPOSITE>((uint32_t*)dest, dstWidth, (uint32_t*)src,
+                                   srcWidth, span, fracX);
+            break;
+        }
         break;
       default:
         assert(false);
@@ -312,6 +417,18 @@ static NO_INLINE void linear_blit(Texture& srctex, const IntRect& srcReq,
   }
 }
 
+// Whether the blit format is renderable.
+static inline bool is_renderable_format(GLenum format) {
+  switch (format) {
+    case GL_R8:
+    case GL_RG8:
+    case GL_RGBA8:
+      return true;
+    default:
+      return false;
+  }
+}
+
 extern "C" {
 
 void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
@@ -327,7 +444,12 @@ void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
   Texture& dsttex = ctx->textures[dstfb->color_attachment];
   if (!dsttex.buf) return;
   assert(!dsttex.locked);
-  if (srctex.internal_format != dsttex.internal_format) {
+  if (srctex.internal_format != dsttex.internal_format &&
+      (!is_renderable_format(srctex.internal_format) ||
+       !is_renderable_format(dsttex.internal_format))) {
+    // If the internal formats don't match, then we may have to convert. Require
+    // that the format is a simple renderable format to limit combinatoric
+    // explosion for now.
     assert(false);
     return;
   }
@@ -349,8 +471,8 @@ void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
   prepare_texture(srctex);
   prepare_texture(dsttex, &dstReq);
   if (!srcReq.same_size(dstReq) && srctex.width >= 2 && filter == GL_LINEAR &&
-      (srctex.internal_format == GL_RGBA8 || srctex.internal_format == GL_R8 ||
-       srctex.internal_format == GL_RG8)) {
+      srctex.internal_format == dsttex.internal_format &&
+      is_renderable_format(srctex.internal_format)) {
     linear_blit(srctex, srcReq, dsttex, dstReq, false, invertY, dstReq);
   } else {
     scale_blit(srctex, srcReq, dsttex, dstReq, invertY, clipRect);
