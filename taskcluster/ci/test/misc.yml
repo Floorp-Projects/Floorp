@@ -35,12 +35,7 @@ telemetry-tests-client:
     description: "Telemetry tests client run"
     suite: telemetry-tests-client
     treeherder-symbol: tt(c)
-    variants:
-        - fission
-    run-without-variant: false
-    run-on-projects:
-        by-variant:
-            fission: built-projects
+    run-on-projects: built-projects
     max-run-time: 1200
     tier: default
     mozharness:
@@ -60,30 +55,27 @@ test-verify:
     max-run-time: 10800
     allow-software-gl-layers: false
     variants:
-        - fission
         - no-fission
-    run-without-variant: false
     run-on-projects:
         by-variant:
-            fission:
-                by-test-platform:
-                    # do not run on ccov or asan or shippable
-                    .*(-ccov|-asan|-shippable).*: []
-                    # we prefer -qr platforms with fission, no need to run on both
-                    (?!.*(-ccov|-asan|-shippable))(?!.*-qr).*: []
-                    # do not run on mozilla-central, beta or release: usually just confirms earlier results
-                    android.*: []
-                    default: ['integration']
             no-fission:
                 by-test-platform:
                     # do not run on ccov or asan or shippable
                     .*(-ccov|-asan|-shippable).*: []
-                    # we prefer -qr platforms with fission, no need to run on both
+                    # we prefer -qr platforms with fis, no need to run on both
                     (?!.*(-ccov|-asan|-shippable))(?!.*-qr).*: []
                     # do not run on mozilla-central, beta or release: usually just confirms earlier results
                     android.*: ['integration']
                     default: []
-            default: []
+            default:
+                by-test-platform:
+                    # do not run on ccov or asan or shippable
+                    .*(-ccov|-asan|-shippable).*: []
+                    # we prefer -qr platforms with fis, no need to run on both
+                    (?!.*(-ccov|-asan|-shippable))(?!.*-qr).*: []
+                    # do not run on mozilla-central, beta or release: usually just confirms earlier results
+                    android.*: []
+                    default: ['integration']
     built-projects-only: true
     target:
         by-test-platform:
@@ -151,19 +143,14 @@ test-verify-gpu:
     virtualization: virtual-with-gpu
     max-run-time: 10800
     allow-software-gl-layers: false
-    variants: ["fission"]
-    run-without-variant: false
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    # do not run on ccov or asan
-                    .*-ccov.*/.*: []
-                    .*-asan/.*: []
-                    .*shippable.*: []
-                    # do not run on mozilla-central, beta or release: usually just confirms earlier results
-                    linux.*: ['integration']
-                    default: []
+        by-test-platform:
+            # do not run on ccov or asan
+            .*-ccov.*/.*: []
+            .*-asan/.*: []
+            .*shippable.*: []
+            # do not run on mozilla-central, beta or release: usually just confirms earlier results
+            linux.*: ['integration']
             default: []
     built-projects-only: true
     optimization:
@@ -198,14 +185,9 @@ test-coverage:
     instance-size: default
     max-run-time: 10800
     allow-software-gl-layers: false
-    variants: ["fission"]
-    run-without-variant: false
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    .*-ccov.*/.*: built-projects
-                    default: []
+        by-test-platform:
+            .*-ccov.*/.*: built-projects
             default: []
     tier: 2
     mozharness:
@@ -266,15 +248,10 @@ test-coverage-gpu:
     instance-size: default
     max-run-time: 10800
     allow-software-gl-layers: false
-    variants: ["fission"]
-    run-without-variant: false
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    # only run on mozilla-central and try.
-                    .*-ccov.*/.*: ['mozilla-central']
-                    default: []
+        by-test-platform:
+            # only run on mozilla-central and try.
+            .*-ccov.*/.*: ['mozilla-central']
             default: []
     tier:
         by-test-platform:

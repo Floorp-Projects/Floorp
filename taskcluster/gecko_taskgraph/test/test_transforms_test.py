@@ -281,7 +281,7 @@ def assert_spi_disabled(task):
             id="excluded suite",
         ),
         pytest.param(
-            {"attributes": {"unittest_variant": "fission+socketprocess"}},
+            {"attributes": {"unittest_variant": "no-fission+socketprocess"}},
             assert_spi_not_disabled,
             id="composite variant",
         ),

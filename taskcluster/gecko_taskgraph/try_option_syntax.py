@@ -629,10 +629,6 @@ class TryOptionSyntax:
         def check_run_on_projects():
             return {"all"} & set(attr("run_on_projects", []))
 
-        # Don't schedule fission tests when try option syntax is used
-        if attr("unittest_variant") == "fission":
-            return False
-
         def match_test(try_spec, attr_name):
             run_by_default = True
             if attr("build_type") not in self.build_types:

@@ -44,18 +44,12 @@ crashtest:
             linux.*64-tsan-qr/opt: 32
             default: 1
     variants:
-        - fission
         - no-fission
         - wayland
         - webrender-sw+no-fission
-        - webrender-sw+fission
-    run-without-variant: false
+        - webrender-sw
     run-on-projects:
         by-variant:
-            fission:
-                by-test-platform:
-                    android.*: []
-                    default: built-projects
             wayland:
                 by-test-platform:
                     linux1804-64-qr/debug: built-projects
@@ -67,7 +61,7 @@ crashtest:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
-            webrender-sw+fission:
+            webrender-sw:
                 by-test-platform:
                     macosx101.*64-qr/debug: built-projects
                     linux.*-64-qr/debug: built-projects
@@ -82,6 +76,10 @@ crashtest:
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
                     default: []
+            default:
+                by-test-platform:
+                    android.*: []
+                    default: built-projects
     max-run-time: 3600
     tier:
         by-test-platform:
@@ -96,13 +94,11 @@ crashtest-qr:
     treeherder-symbol: R(C)
     chunks: 1
     variants:
-        - fission
         - no-fission
-    run-without-variant: false
     run-on-projects:
         by-variant:
-            fission: []
             no-fission: built-projects
+            default: []
     max-run-time: 1200
     tier: 2
     virtualization: virtual
@@ -131,15 +127,9 @@ jsreftest:
             .*ccov.*: 7200
             default: 3600
     variants:
-        - fission
         - no-fission
-    run-without-variant: false
     run-on-projects:
         by-variant:
-            fission:
-                by-test-platform:
-                    android.*/.*: []
-                    default: built-projects
             no-fission:
                 by-test-platform:
                     linux1804-64-qr/debug: ['trunk']
@@ -148,6 +138,10 @@ jsreftest:
                     android-hw-.*-arm7(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
                     android.*: built-projects
                     default: []
+            default:
+                by-test-platform:
+                    android.*/.*: []
+                    default: built-projects
     virtualization: virtual
 
 reftest:
@@ -169,20 +163,12 @@ reftest:
             windows10-64-2004-ccov-qr/opt: 9
             default: 8
     variants:
-        - fission
         - no-fission
         - wayland
         - webrender-sw+no-fission
-        - webrender-sw+fission
-    run-without-variant: false
+        - webrender-sw
     run-on-projects:
         by-variant:
-            fission:
-                by-test-platform:
-                    android.*/.*: []
-                    linux.*asan/opt: []
-                    windows10-aarch64-qr/opt: []
-                    default: built-projects
             wayland:
                 by-test-platform:
                     linux1804-64-qr/debug: built-projects
@@ -194,7 +180,7 @@ reftest:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
-            webrender-sw+fission:
+            webrender-sw:
                 by-test-platform:
                     linux1804-64-qr/debug: built-projects
                     linux1804-64(-asan|-tsan)-qr/opt: built-projects
@@ -209,6 +195,12 @@ reftest:
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
                     default: []
+            default:
+                by-test-platform:
+                    android.*/.*: []
+                    linux.*asan/opt: []
+                    windows10-aarch64-qr/opt: []
+                    default: built-projects
     max-run-time:
         by-test-platform:
             windows10-32-mingwclang-qr/debug: 5400
@@ -240,7 +232,6 @@ reftest-qr:
     run-without-variant: false
     run-on-projects:
         by-variant:
-            fission: []
             webrender-sw+no-fission:
                 by-test-platform:
                     android-hw-p2-8-0-android-aarch64-qr/debug: built-projects
@@ -256,15 +247,9 @@ reftest-snapshot:
     description: "Reftest snapshot"
     treeherder-symbol: R(Rs)
     virtualization: virtual
-    run-without-variant: false
-    variants:
-        - fission
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    linux1804-64-qr/debug: ['trunk']
-                    default: []
+        by-test-platform:
+            linux1804-64-qr/debug: ['trunk']
             default: []
     tier: default
     chunks: 8
