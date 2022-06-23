@@ -162,12 +162,9 @@ class BaselineFrame {
   unsigned numFormalArgs() const { return script()->function()->nargs(); }
   Value& thisArgument() const {
     MOZ_ASSERT(isFunctionFrame());
-    return framePrefix()->argv()[0];
+    return framePrefix()->thisv();
   }
-  Value* argv() const {
-    // +1 to skip |this|.
-    return framePrefix()->argv() + 1;
-  }
+  Value* argv() const { return framePrefix()->actualArgs(); }
 
   [[nodiscard]] bool saveGeneratorSlots(JSContext* cx, unsigned nslots,
                                         ArrayObject* dest) const;

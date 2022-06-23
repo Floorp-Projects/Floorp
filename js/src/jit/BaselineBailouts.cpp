@@ -1604,7 +1604,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 
   if (!builder.outermostFrameFormals().empty()) {
     // Set the first frame's formals, see the comment in InitFromBailout.
-    Value* argv = builder.startFrame()->argv() + 1;  // +1 to skip |this|.
+    Value* argv = builder.startFrame()->actualArgs();
     mozilla::PodCopy(argv, builder.outermostFrameFormals().begin(),
                      builder.outermostFrameFormals().length());
   }
