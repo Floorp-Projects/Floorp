@@ -18,10 +18,13 @@ import {
   createFaviconElement,
 } from "./helpers.js";
 
+const SYNCED_TABS_CHANGED = "services.sync.tabs.changed";
+
 class TabPickupList extends HTMLElement {
   constructor() {
     super();
     this.maxTabsLength = 3;
+    this.boundObserve = (...args) => this.getSyncedTabData(...args);
   }
 
   get tabsList() {
@@ -37,12 +40,22 @@ class TabPickupList extends HTMLElement {
 
   connectedCallback() {
     this.addEventListener("click", this);
+
+    this.getSyncedTabData();
+    Services.obs.addObserver(this.boundObserve, SYNCED_TABS_CHANGED);
   }
 
   handleEvent(event) {
-    if (event.type == "click") {
+    if (
+      event.type == "click" ||
+      (event.type == "keydown" && event.keyCode == KeyEvent.DOM_VK_RETURN)
+    ) {
       this.openTab(event);
     }
+  }
+
+  cleanup() {
+    Services.obs.removeObserver(this.boundObserve, SYNCED_TABS_CHANGED);
   }
 
   openTab(event) {
@@ -66,19 +79,29 @@ class TabPickupList extends HTMLElement {
       .sort((a, b) => b.lastUsed - a.lastUsed)
       .slice(0, this.maxTabsLength);
 
-    if (tabs.length) {
-      this.initiateTabsList(tabs);
-    } else {
-      // TODO show empty state placeholder
-    }
+    this.updateTabsList(tabs);
   }
 
-  initiateTabsList(syncedTabs) {
+  updateTabsList(syncedTabs) {
+    while (this.tabsList.firstChild) {
+      this.tabsList.firstChild.remove();
+    }
+
+    if (!syncedTabs.length) {
+      // TODO show empty state placeholder, see bug 1774168
+      this.tabsList.hidden = true;
+      return;
+    }
+
     for (let i = 0; i < syncedTabs.length; i++) {
       const li = this.generateListItem(syncedTabs[i], i);
       this.tabsList.append(li);
     }
-    this.tabsList.hidden = false;
+    // TODO implement placeholder for empty li, see bug 1775469
+
+    if (this.tabsList.hidden) {
+      this.tabsList.hidden = false;
+    }
   }
 
   generateListItem(tab, index) {
