@@ -392,6 +392,8 @@ if (!window.FB) {
     },
     AppEvents: {
       activateApp() {},
+      clearAppVersion() {},
+      clearUserID() {},
       EventNames: {
         ACHIEVED_LEVEL: "fb_mobile_level_achieved",
         ADDED_PAYMENT_INFO: "fb_mobile_add_payment_info",
@@ -407,7 +409,11 @@ if (!window.FB) {
         UNLOCKED_ACHIEVEMENT: "fb_mobile_achievement_unlocked",
         VIEWED_CONTENT: "fb_mobile_content_view",
       },
+      getAppVersion: () => "",
+      getUserID: () => "",
+      logEvent() {},
       logPageView() {},
+      logPurchase() {},
       ParameterNames: {
         APP_USER_ID: "_app_user_id",
         APP_VERSION: "_appVersion",
@@ -423,6 +429,9 @@ if (!window.FB) {
         SEARCH_STRING: "fb_search_string",
         SUCCESS: "fb_success",
       },
+      setAppVersion() {},
+      setUserID() {},
+      updateUserProperties() {},
     },
     Canvas: {
       getHash: () => "",

@@ -510,7 +510,10 @@ const AVAILABLE_SHIMS = [
     name: "Optimizely",
     bug: "1714431",
     file: "optimizely.js",
-    matches: ["*://cdn.optimizely.com/js/*.js"],
+    matches: [
+      "*://cdn.optimizely.com/js/*.js",
+      "*://cdn.optimizely.com/public/*.js",
+    ],
     onlyIfBlockedByETP: true,
   },
   {
