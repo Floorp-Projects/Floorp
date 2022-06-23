@@ -139,9 +139,6 @@ pref("dom.indexedDB.logging.details", true);
 // Enable profiler marks for indexedDB events.
 pref("dom.indexedDB.logging.profiler-marks", false);
 
-// Whether or not File Handle is enabled.
-pref("dom.fileHandle.enabled", true);
-
 // The number of workers per domain allowed to run concurrently.
 // We're going for effectively infinite, while preventing abuse.
 pref("dom.workers.maxPerDomain", 512);

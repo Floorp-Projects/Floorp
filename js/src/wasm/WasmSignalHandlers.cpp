@@ -827,13 +827,12 @@ void wasm::EnsureEagerProcessSignalHandlers() {
 
 #    if defined(MOZ_ASAN)
   // Under ASan we need to let the ASan runtime's ShadowExceptionHandler stay
-  // in the first handler position. This requires some coordination with
-  // MemoryProtectionExceptionHandler::isDisabled().
+  // in the first handler position.
   const bool firstHandler = false;
 #    else
   // Otherwise, WasmTrapHandler needs to go first, so that we can recover
   // from wasm faults and continue execution without triggering handlers
-  // such as MemoryProtectionExceptionHandler that assume we are crashing.
+  // such as Breakpad that assume we are crashing.
   const bool firstHandler = true;
 #    endif
   if (!AddVectoredExceptionHandler(firstHandler, WasmTrapHandler)) {
