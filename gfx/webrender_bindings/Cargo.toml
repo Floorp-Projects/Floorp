@@ -24,7 +24,7 @@ gecko-profiler = { path = "../../tools/profiler/rust-api" }
 
 [dependencies.webrender]
 path = "../wr/webrender"
-version = "0.61.0"
+version = "0.62.0"
 default-features = false
 features = ["capture", "serialize_program", "gecko", "sw_compositor"]
 
