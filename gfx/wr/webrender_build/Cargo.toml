@@ -1,7 +1,7 @@
 [package]
 name = "webrender_build"
 authors = ["The Servo Project Developers"]
-version = "0.0.2"
+version = "0.0.1"
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
 description = "Code shared between precompilation (build.rs) and the rest of WebRender"
