@@ -242,10 +242,6 @@ class ErrorSanitizer {
     // these in error messages. Note that JSON.stringified stuff comes through
     // here, so we explicitly ignore double-quotes as well.
     error = error.replace(/[^\s"]+:[^\s"]+/g, "<URL>");
-
-    // Anywhere that's normalized the guid in errors we can easily filter
-    // to make it easier to aggregate these types of errors
-    error = error.replace(/<guid: ([^>]+)>/g, "<GUID>");
     return this.#cleanOSErrorMessage(error);
   }
 }

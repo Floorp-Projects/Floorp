@@ -318,11 +318,7 @@ impl<'t, D: Driver, A: AbortSignal> Merger<'t, D, A> {
                 self.driver,
                 "Merging local {} and remote {} with different kinds", local_node, remote_node
             );
-            return Err(ErrorKind::MismatchedItemKind(
-                local_node.item().clone(),
-                remote_node.item().clone(),
-            )
-            .into());
+            return Err(ErrorKind::MismatchedItemKind(local_node.kind, remote_node.kind).into());
         }
 
         self.merged_guids.insert(local_node.guid.clone());
@@ -1684,7 +1680,10 @@ impl<'t, D: Driver, A: AbortSignal> Merger<'t, D, A> {
                     *node
                 })
             };
-            self.matching_dupes_by_local_parent_guid = matching_dupes_by_local_parent_guid;
+            mem::replace(
+                &mut self.matching_dupes_by_local_parent_guid,
+                matching_dupes_by_local_parent_guid,
+            );
             Ok(new_remote_node)
         } else {
             trace!(
@@ -1740,7 +1739,10 @@ impl<'t, D: Driver, A: AbortSignal> Merger<'t, D, A> {
                     *node
                 })
             };
-            self.matching_dupes_by_local_parent_guid = matching_dupes_by_local_parent_guid;
+            mem::replace(
+                &mut self.matching_dupes_by_local_parent_guid,
+                matching_dupes_by_local_parent_guid,
+            );
             Ok(new_local_node)
         } else {
             trace!(
