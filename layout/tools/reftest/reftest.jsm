@@ -65,11 +65,6 @@ const { E10SUtils } = ChromeUtils.import(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "OS", function() {
-    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-    return OS;
-});
-
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   proxyService: [
     "@mozilla.org/network/protocol-proxy-service;1",
@@ -258,7 +253,7 @@ function InitAndStartRefTests()
     try {
       prefs.setBoolPref("android.widget_paints_background", false);
     } catch (e) {}
-    
+
     // If fission is enabled, then also put data: URIs in the default web process,
     // since most reftests run in the file process, and this will make data:
     // <iframe>s OOP.
@@ -438,9 +433,8 @@ function ReadTests() {
 
         if (testList) {
             logger.debug("Reading test objects from: " + testList);
-            let promise = lazy.OS.File.read(testList).then(function onSuccess(array) {
-                let decoder = new TextDecoder();
-                g.urls = JSON.parse(decoder.decode(array)).map(CreateUrls);
+            let promise = IOUtils.readJSON(testList).then(function onSuccess(json) {
+                g.urls = json.map(CreateUrls);
                 StartTests();
             }).catch(function onFailure(e) {
                 logger.error("Failed to load test objects: " + e);
@@ -487,9 +481,7 @@ function ReadTests() {
 
             if (dumpTests) {
                 logger.debug("Dumping test objects to file: " + dumpTests);
-                let encoder = new TextEncoder();
-                let tests = encoder.encode(JSON.stringify(g.urls));
-                lazy.OS.File.writeAtomic(dumpTests, tests, {flush: true}).then(
+                IOUtils.writeJSON(dumpTests, g.urls, { flush: true }).then(
                   function onSuccess() {
                     DoneTests();
                   },
@@ -1927,20 +1919,18 @@ function pdfjsHasLoadedPromise() {
 }
 
 function readPdf(path, callback) {
-    lazy.OS.File.open(path, { read: true }).then(function (file) {
-        file.read().then(function (data) {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = "resource://pdf.js/build/pdf.worker.js";
-            pdfjsLib.getDocument({
-                data: data
-            }).promise.then(function (pdf) {
-                callback(null, pdf);
-            }, function (e) {
-                callback(new Error(`Couldn't parse ${path}, exception: ${e}`));
-            });
-            return;
+    IOUtils.read(path).then(function (data) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "resource://pdf.js/build/pdf.worker.js";
+        pdfjsLib.getDocument({
+            data: data
+        }).promise.then(function (pdf) {
+            callback(null, pdf);
         }, function (e) {
-            callback(new Error(`Couldn't read PDF ${path}, exception: ${e}`));
+            callback(new Error(`Couldn't parse ${path}, exception: ${e}`));
         });
+        return;
+    }, function (e) {
+        callback(new Error(`Couldn't read PDF ${path}, exception: ${e}`));
     });
 }
 
