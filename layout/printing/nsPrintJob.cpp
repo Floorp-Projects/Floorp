@@ -196,7 +196,9 @@ void nsPrintJob::BuildNestedPrintObjects(
     }
 
     auto childPO = MakeUnique<nsPrintObject>();
-    nsresult rv = childPO->Init(docShell, doc, aParentPO.get());
+    // Note: docShell and doc are known-non-null at this point; they've been
+    // null-checked above (with null leading to 'continue' statements).
+    nsresult rv = childPO->Init(*docShell, *doc, aParentPO.get());
     if (NS_FAILED(rv)) {
       MOZ_ASSERT_UNREACHABLE("Init failed?");
     }
@@ -343,7 +345,7 @@ static void DumpLayoutData(const char* aTitleStr, const char* aURLStr,
 nsresult nsPrintJob::CommonPrint(bool aIsPrintPreview,
                                  nsIPrintSettings* aPrintSettings,
                                  nsIWebProgressListener* aWebProgressListener,
-                                 Document* aSourceDoc) {
+                                 Document& aSourceDoc) {
   // Callers must hold a strong reference to |this| to ensure that we stay
   // alive for the duration of this method, because our main owning reference
   // (on nsDocumentViewer) might be cleared during this function (if we cause
@@ -370,8 +372,8 @@ nsresult nsPrintJob::CommonPrint(bool aIsPrintPreview,
 nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
                                    nsIPrintSettings* aPrintSettings,
                                    nsIWebProgressListener* aWebProgressListener,
-                                   Document* aDoc) {
-  MOZ_ASSERT(aDoc->IsStaticDocument());
+                                   Document& aDoc) {
+  MOZ_ASSERT(aDoc.IsStaticDocument());
 
   nsresult rv;
 
@@ -411,7 +413,9 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   {
     nsAutoScriptBlocker scriptBlocker;
     mPrintObject = MakeUnique<nsPrintObject>();
-    rv = mPrintObject->Init(docShell, aDoc);
+    // Note: docShell is implicitly non-null via do_QueryReferent necessarily
+    // having succeeded (if we got here).
+    rv = mPrintObject->Init(*docShell, aDoc);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mPrintDocList.AppendElement(mPrintObject.get());
@@ -469,14 +473,14 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 }
 
 //---------------------------------------------------------------------------------
-nsresult nsPrintJob::Print(Document* aDoc, nsIPrintSettings* aPrintSettings,
+nsresult nsPrintJob::Print(Document& aDoc, nsIPrintSettings* aPrintSettings,
                            RemotePrintJobChild* aRemotePrintJob,
                            nsIWebProgressListener* aWebProgressListener) {
   mRemotePrintJob = aRemotePrintJob;
   return CommonPrint(false, aPrintSettings, aWebProgressListener, aDoc);
 }
 
-nsresult nsPrintJob::PrintPreview(Document* aDoc,
+nsresult nsPrintJob::PrintPreview(Document& aDoc,
                                   nsIPrintSettings* aPrintSettings,
                                   nsIWebProgressListener* aWebProgressListener,
                                   PrintPreviewResolver&& aCallback) {

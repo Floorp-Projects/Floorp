@@ -2934,7 +2934,9 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
   }
 
   mPrintJob = printJob;
-  rv = printJob->Print(mDocument, aPrintSettings, aRemotePrintJob,
+
+  // Note: mDocument was null-checked earlier in this function.
+  rv = printJob->Print(*mDocument, aPrintSettings, aRemotePrintJob,
                        aWebProgressListener);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     OnDonePrinting();
@@ -2979,7 +2981,8 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
   mPrintJob = printJob;
 
-  rv = printJob->PrintPreview(doc, aPrintSettings, aWebProgressListener,
+  // Note: doc is known-non-null via NS_ENSURE_STATE null-check above.
+  rv = printJob->PrintPreview(*doc, aPrintSettings, aWebProgressListener,
                               std::move(aCallback));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     OnDonePrinting();

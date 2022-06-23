@@ -99,7 +99,7 @@ class nsPrintJob final : public nsIWebProgressListener,
    * PrintPreview calls.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  Print(Document* aSourceDoc, nsIPrintSettings* aPrintSettings,
+  Print(Document& aSourceDoc, nsIPrintSettings* aPrintSettings,
         RemotePrintJobChild* aRemotePrintJob,
         nsIWebProgressListener* aWebProgressListener);
 
@@ -114,7 +114,7 @@ class nsPrintJob final : public nsIWebProgressListener,
    * is actually our docViewer's current document!
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  PrintPreview(Document* aSourceDoc, nsIPrintSettings* aPrintSettings,
+  PrintPreview(Document& aSourceDoc, nsIPrintSettings* aPrintSettings,
                nsIWebProgressListener* aWebProgressListener,
                PrintPreviewResolver&& aCallback);
 
@@ -199,11 +199,11 @@ class nsPrintJob final : public nsIWebProgressListener,
 
   MOZ_CAN_RUN_SCRIPT nsresult CommonPrint(
       bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
-      nsIWebProgressListener* aWebProgressListener, Document* aSourceDoc);
+      nsIWebProgressListener* aWebProgressListener, Document& aSourceDoc);
 
   MOZ_CAN_RUN_SCRIPT nsresult DoCommonPrint(
       bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
-      nsIWebProgressListener* aWebProgressListener, Document* aSourceDoc);
+      nsIWebProgressListener* aWebProgressListener, Document& aSourceDoc);
 
   void FirePrintCompletionEvent();
 

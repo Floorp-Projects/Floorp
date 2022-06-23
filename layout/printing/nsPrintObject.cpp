@@ -49,15 +49,12 @@ nsPrintObject::~nsPrintObject() {
 
 //------------------------------------------------------------------
 
-nsresult nsPrintObject::Init(nsIDocShell* aDocShell, Document* aDoc,
+nsresult nsPrintObject::Init(nsIDocShell& aDocShell, Document& aDoc,
                              nsPrintObject* aParent) {
-  NS_ENSURE_STATE(aDocShell);
-  NS_ENSURE_STATE(aDoc);
+  MOZ_ASSERT(aDoc.IsStaticDocument());
 
-  MOZ_ASSERT(aDoc->IsStaticDocument());
-
-  mDocShell = aDocShell;
-  mDocument = aDoc;
+  mDocShell = &aDocShell;
+  mDocument = &aDoc;
 
   if (!aParent) {
     // We are a root nsPrintObject.
@@ -66,7 +63,7 @@ nsresult nsPrintObject::Init(nsIDocShell* aDocShell, Document* aDoc,
   } else {
     // We are a nested nsPrintObject.
     mParent = aParent;
-    nsCOMPtr<nsPIDOMWindowOuter> window = aDoc->GetWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> window = aDoc.GetWindow();
     mContent = window->GetFrameElementInternal();
     mFrameType = eIFrame;
   }
