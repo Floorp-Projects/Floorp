@@ -22,8 +22,6 @@ namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-enum PrintObjectType { eDoc = 0, eIFrame = 1 };
-
 //---------------------------------------------------
 //-- nsPrintObject Class
 //---------------------------------------------------
@@ -64,7 +62,6 @@ class nsPrintObject final {
   RefPtr<nsViewManager> mViewManager;
 
   nsCOMPtr<nsIContent> mContent;
-  const PrintObjectType mFrameType;
 
   nsTArray<mozilla::UniquePtr<nsPrintObject>> mKids;
   const nsPrintObject* mParent;  // This is a non-owning pointer.
