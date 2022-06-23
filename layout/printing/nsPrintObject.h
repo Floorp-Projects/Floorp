@@ -68,8 +68,8 @@ class nsPrintObject final {
 
   nsTArray<mozilla::UniquePtr<nsPrintObject>> mKids;
   const nsPrintObject* mParent;  // This is a non-owning pointer.
-  bool mHasBeenPrinted;
-  bool mInvisible;  // Indicates PO is set to not visible by CSS
+  bool mHasBeenPrinted = false;
+  bool mInvisible = false;  // Indicates PO is set to not visible by CSS
 
   // The scale factor that sheets should be scaled by. This is either the
   // explicit scale chosen by the user or else the shrink-to-fit scale factor

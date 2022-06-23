@@ -34,11 +34,8 @@ nsPrintObject::nsPrintObject(nsIDocShell& aDocShell, Document& aDoc,
                              nsPrintObject* aParent)
     : mDocShell(&aDocShell),
       mDocument(&aDoc),
-      mContent(nullptr),
       mFrameType(aParent ? eIFrame : eDoc),
-      mParent(aParent),
-      mHasBeenPrinted(false),
-      mInvisible(false) {
+      mParent(aParent) {
   MOZ_COUNT_CTOR(nsPrintObject);
   MOZ_ASSERT(aDoc.IsStaticDocument());
 
