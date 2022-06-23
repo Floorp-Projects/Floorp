@@ -3,21 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import copy
 
-from taskgraph.util.attributes import keymatch
-
 import gecko_taskgraph
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.attributes import is_try
 from gecko_taskgraph.util.chunking import (
+    DefaultLoader,
     chunk_manifests,
     get_manifest_loader,
     get_runtimes,
     guess_mozinfo_from_task,
-    DefaultLoader,
 )
 from gecko_taskgraph.util.perfile import perfile_number_of_chunks
-from gecko_taskgraph.util.treeherder import split_symbol, join_symbol
-
+from taskgraph.util.attributes import keymatch
+from taskgraph.util.treeherder import join_symbol, split_symbol
 
 DYNAMIC_CHUNK_DURATION = 20 * 60  # seconds
 """The approximate time each test chunk should take to run."""
