@@ -102,13 +102,9 @@ class BaselineFrame {
   inline void popOffEnvironmentChain();
   inline void replaceInnermostEnvironment(EnvironmentObject& env);
 
-  CalleeToken calleeToken() const {
-    uint8_t* pointer = (uint8_t*)this + Size() + offsetOfCalleeToken();
-    return *(CalleeToken*)pointer;
-  }
+  CalleeToken calleeToken() const { return framePrefix()->calleeToken(); }
   void replaceCalleeToken(CalleeToken token) {
-    uint8_t* pointer = (uint8_t*)this + Size() + offsetOfCalleeToken();
-    *(CalleeToken*)pointer = token;
+    framePrefix()->replaceCalleeToken(token);
   }
   bool isConstructing() const {
     return CalleeTokenIsConstructing(calleeToken());
@@ -166,12 +162,11 @@ class BaselineFrame {
   unsigned numFormalArgs() const { return script()->function()->nargs(); }
   Value& thisArgument() const {
     MOZ_ASSERT(isFunctionFrame());
-    return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
-                     BaselineFrame::Size() + offsetOfThis());
+    return framePrefix()->argv()[0];
   }
   Value* argv() const {
-    return (Value*)(reinterpret_cast<const uint8_t*>(this) +
-                    BaselineFrame::Size() + offsetOfArg(0));
+    // +1 to skip |this|.
+    return framePrefix()->argv() + 1;
   }
 
   [[nodiscard]] bool saveGeneratorSlots(JSContext* cx, unsigned nslots,
@@ -319,14 +314,6 @@ class BaselineFrame {
     return (JitFrameLayout*)fp;
   }
 
-  // Methods below are used by the compiler.
-  static size_t offsetOfCalleeToken() {
-    return JitFrameLayout::offsetOfCalleeToken();
-  }
-  static size_t offsetOfThis() { return JitFrameLayout::offsetOfThis(); }
-  static size_t offsetOfArg(size_t index) {
-    return JitFrameLayout::offsetOfActualArg(index);
-  }
   static size_t Size() { return sizeof(BaselineFrame); }
 
   // The reverseOffsetOf methods below compute the offset relative to the
