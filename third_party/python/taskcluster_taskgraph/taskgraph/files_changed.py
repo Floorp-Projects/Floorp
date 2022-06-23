@@ -8,10 +8,12 @@ Support for optimizing tasks based on the set of files that have changed.
 
 
 import logging
+
 import requests
 from redo import retry
-from .util.path import match as match_path
+
 from .util.memoize import memoize
+from .util.path import match as match_path
 
 logger = logging.getLogger(__name__)
 

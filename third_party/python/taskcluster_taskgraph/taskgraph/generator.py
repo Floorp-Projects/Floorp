@@ -2,26 +2,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import copy
 import logging
 import os
-import copy
-import attr
 from typing import AnyStr
 
+import attr
+
 from . import filter_tasks
+from .config import GraphConfig, load_graph_config
 from .graph import Graph
-from .taskgraph import TaskGraph
-from .task import Task
+from .morph import morph
 from .optimize import optimize_task_graph
 from .parameters import Parameters
-from .morph import morph
+from .task import Task
+from .taskgraph import TaskGraph
+from .transforms.base import TransformConfig, TransformSequence
 from .util.python_path import find_object
-from .transforms.base import TransformSequence, TransformConfig
-from .util.verify import (
-    verifications,
-)
+from .util.verify import verifications
 from .util.yaml import load_yaml
-from .config import load_graph_config, GraphConfig
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +125,7 @@ class TaskGraphGenerator:
     ):
         """
         @param root_dir: root directory, with subdirectories for each kind
-        @param paramaters: parameters for this task-graph generation, or callable
+        @param parameters: parameters for this task-graph generation, or callable
             taking a `GraphConfig` and returning parameters
         @type parameters: Union[Parameters, Callable[[GraphConfig], Parameters]]
         """
@@ -172,7 +171,7 @@ class TaskGraphGenerator:
     @property
     def target_task_set(self):
         """
-        The set of targetted tasks (a graph without edges)
+        The set of targeted tasks (a graph without edges)
 
         @type: TaskGraph
         """
@@ -181,7 +180,7 @@ class TaskGraphGenerator:
     @property
     def target_task_graph(self):
         """
-        The set of targetted tasks and all of their dependencies
+        The set of targeted tasks and all of their dependencies
 
         @type: TaskGraph
         """
@@ -190,7 +189,7 @@ class TaskGraphGenerator:
     @property
     def optimized_task_graph(self):
         """
-        The set of targetted tasks and all of their dependencies; tasks that
+        The set of targeted tasks and all of their dependencies; tasks that
         have been optimized out are either omitted or replaced with a Task
         instance containing only a task_id.
 
@@ -265,8 +264,8 @@ class TaskGraphGenerator:
         else:
             parameters = self._parameters
 
-        logger.info("Using {}".format(parameters))
-        logger.debug("Dumping parameters:\n{}".format(repr(parameters)))
+        logger.info(f"Using {parameters}")
+        logger.debug(f"Dumping parameters:\n{repr(parameters)}")
 
         filters = parameters.get("filters", [])
         # Always add legacy target tasks method until we deprecate that API.

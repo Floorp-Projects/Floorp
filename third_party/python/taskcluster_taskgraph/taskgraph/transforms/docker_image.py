@@ -8,19 +8,13 @@ import logging
 import os
 import re
 
+from voluptuous import Optional, Required
+
 import taskgraph
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.docker import (
-    generate_context_hash,
-    create_context_tar,
-)
-from taskgraph.util.schema import (
-    Schema,
-)
-from voluptuous import (
-    Optional,
-    Required,
-)
+from taskgraph.util.docker import create_context_tar, generate_context_hash
+from taskgraph.util.schema import Schema
+
 from .task import task_description_schema
 
 logger = logging.getLogger(__name__)

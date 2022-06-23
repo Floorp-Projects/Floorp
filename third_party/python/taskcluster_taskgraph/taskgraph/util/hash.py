@@ -5,8 +5,8 @@
 import hashlib
 from pathlib import Path
 
-from taskgraph.util.memoize import memoize
 from taskgraph.util import path as mozpath
+from taskgraph.util.memoize import memoize
 
 
 @memoize

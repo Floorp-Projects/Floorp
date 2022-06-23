@@ -3,11 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import os
 import gzip
+import os
 import stat
 import tarfile
-
 
 # 2016-01-01T00:00:00+0000
 DEFAULT_MTIME = 1451606400

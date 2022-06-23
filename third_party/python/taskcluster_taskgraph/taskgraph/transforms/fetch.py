@@ -6,31 +6,19 @@
 # it as task artifacts.
 
 
-import attr
-
 import os
 import re
 
-from voluptuous import (
-    Optional,
-    Required,
-    Extra,
-)
+import attr
+from voluptuous import Extra, Optional, Required
 
 import taskgraph
 
-from .base import (
-    TransformSequence,
-)
-from ..util.cached_tasks import (
-    add_optimization,
-)
-from ..util.schema import Schema, validate_schema
-from ..util.treeherder import (
-    join_symbol,
-)
 from ..util import path
-
+from ..util.cached_tasks import add_optimization
+from ..util.schema import Schema, validate_schema
+from ..util.treeherder import join_symbol
+from .base import TransformSequence
 
 CACHE_TYPE = "content.v1"
 
@@ -214,6 +202,10 @@ def make_task(config, jobs):
         # Add the given prefix to each file entry in the archive.
         # Requires an artifact-name ending with .tar.zst.
         Optional("add-prefix"): str,
+        # Headers to pass alongside the request.
+        Optional("headers"): {
+            str: str,
+        },
         # IMPORTANT: when adding anything that changes the behavior of the task,
         # it is important to update the digest data used to compute cache hits.
     },
@@ -250,7 +242,7 @@ def create_fetch_url_task(config, name, fetch):
         sig_url = fetch["gpg-signature"]["sig-url"].format(url=fetch["url"])
         key_path = os.path.join(taskgraph.GECKO, fetch["gpg-signature"]["key-path"])
 
-        with open(key_path, "r") as fh:
+        with open(key_path) as fh:
             gpg_key = fh.read()
 
         env["FETCH_GPG_KEY"] = gpg_key
@@ -262,6 +254,10 @@ def create_fetch_url_task(config, name, fetch):
                 "FETCH_GPG_KEY",
             ]
         )
+
+    if "headers" in fetch:
+        for k, v in fetch["headers"].items():
+            command.extend(["-H", f"{k}:{v}"])
 
     command.extend(
         [

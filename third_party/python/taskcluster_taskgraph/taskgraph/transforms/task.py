@@ -16,23 +16,24 @@ import time
 from copy import deepcopy
 
 import attr
+from voluptuous import All, Any, Extra, NotIn, Optional, Required
 
+from taskgraph import MAX_DEPENDENCIES
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.hash import hash_path
 from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.memoize import memoize
-from taskgraph.util.treeherder import split_symbol
-from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import (
-    validate_schema,
+    OptimizationSchema,
     Schema,
     optionally_keyed_by,
     resolve_keyed_by,
-    OptimizationSchema,
     taskref_or_string,
+    validate_schema,
 )
+from taskgraph.util.treeherder import split_symbol
 from taskgraph.util.workertypes import worker_type_implementation
-from voluptuous import Any, Required, Optional, Extra, All, NotIn
-from taskgraph import MAX_DEPENDENCIES
+
 from ..util import docker as dockerutil
 from ..util.workertypes import get_worker_type
 
@@ -66,7 +67,7 @@ task_description_schema = Schema(
                 str,
                 NotIn(
                     ["self", "decision"],
-                    "Can't use 'self` or 'decision' as depdency names.",
+                    "Can't use 'self` or 'decision' as dependency names.",
                 ),
             ): object,
         },
@@ -118,7 +119,7 @@ task_description_schema = Schema(
             # Type of gecko v2 index to use
             "type": str,
             # The rank that the task will receive in the TaskCluster
-            # index.  A newly completed task supercedes the currently
+            # index.  A newly completed task supersedes the currently
             # indexed task iff it has a higher rank.  If unspecified,
             # 'by-tier' behavior will be used.
             "rank": Any(
@@ -317,7 +318,7 @@ def verify_index(config, index):
         # the exit status code(s) that indicates the caches used by the task
         # should be purged
         Optional("purge-caches-exit-status"): [int],
-        # Wether any artifacts are assigned to this worker
+        # Whether any artifacts are assigned to this worker
         Optional("skip-artifacts"): bool,
     },
 )
@@ -482,7 +483,9 @@ def build_docker_worker_payload(config, task, task_def):
             suffix = f"{cache_version}-{_run_task_suffix()}"
 
             if out_of_tree_image:
-                name_hash = hashlib.sha256(out_of_tree_image).hexdigest()
+                name_hash = hashlib.sha256(
+                    out_of_tree_image.encode("utf-8")
+                ).hexdigest()
                 suffix += name_hash[0:12]
 
         else:
@@ -597,7 +600,7 @@ def build_docker_worker_payload(config, task, task_def):
         # optional features
         Required("chain-of-trust"): bool,
         Optional("taskcluster-proxy"): bool,
-        # Wether any artifacts are assigned to this worker
+        # Whether any artifacts are assigned to this worker
         Optional("skip-artifacts"): bool,
     },
 )

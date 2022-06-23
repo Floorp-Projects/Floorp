@@ -3,15 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import os
 import logging
+import os
 import sys
-import attr
-from .util import path
 
+import attr
+from voluptuous import All, Any, Extra, Length, Optional, Required
+
+from .util import path
 from .util.python_path import find_object
-from .util.schema import validate_schema, Schema, optionally_keyed_by
-from voluptuous import Required, Extra, Any, Optional, Length, All
+from .util.schema import Schema, optionally_keyed_by, validate_schema
 from .util.yaml import load_yaml
 
 logger = logging.getLogger(__name__)

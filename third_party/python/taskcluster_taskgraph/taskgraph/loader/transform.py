@@ -5,7 +5,6 @@
 
 import logging
 
-
 from ..util.templates import merge
 from ..util.yaml import load_yaml
 

@@ -7,10 +7,7 @@ Tools for interacting with existing taskgraphs.
 """
 
 
-from taskgraph.util.taskcluster import (
-    find_task_id,
-    get_artifact,
-)
+from taskgraph.util.taskcluster import find_task_id, get_artifact
 
 
 def find_decision_task(parameters, graph_config):

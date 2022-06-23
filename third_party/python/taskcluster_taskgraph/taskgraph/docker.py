@@ -9,10 +9,7 @@ import tarfile
 from io import BytesIO
 
 from taskgraph.util import docker
-from taskgraph.util.taskcluster import (
-    get_artifact_url,
-    get_session,
-)
+from taskgraph.util.taskcluster import get_artifact_url, get_session
 
 
 def get_image_digest(image_name):
@@ -133,7 +130,7 @@ def load_image(url, imageName=None, imageTag=None):
 
     def download_and_modify_image():
         # This function downloads and edits the downloaded tar file on the fly.
-        # It emits chunked buffers of the editted tar file, as a generator.
+        # It emits chunked buffers of the edited tar file, as a generator.
         print(f"Downloading from {url}")
         # get_session() gets us a requests.Session set to retry several times.
         req = get_session().get(url, stream=True)
