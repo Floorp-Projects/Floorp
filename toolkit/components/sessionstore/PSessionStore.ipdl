@@ -9,6 +9,7 @@ include protocol PInProcess;
 include SessionStoreTypes;
 
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
+using mozilla::dom::MaybeSessionStoreZoom from "mozilla/dom/SessionStoreScrollData.h";
 
 namespace mozilla {
 namespace dom {
@@ -31,8 +32,8 @@ parent:
    * collected incrementally.
    */
   async SessionStoreUpdate(
-    nsCString? aDocShellCaps, bool? aPrivateMode, bool aNeedCollectSHistory,
-    uint32_t aEpoch);
+    nsCString? aDocShellCaps, bool? aPrivateMode, MaybeSessionStoreZoom aZoom,
+    bool aNeedCollectSHistory, uint32_t aEpoch);
 
   /**
    * Sends data to be stored to the session store. The collected data
