@@ -214,14 +214,17 @@ const ContentProcessTargetActor = TargetActorMixin(
     },
 
     destroy: function() {
-      if (this.isDestroyed()) {
+      // Avoid reentrancy. We will destroy the Transport when emitting "destroyed",
+      // which will force destroying all actors.
+      if (this.destroying) {
         return;
       }
-      Resources.unwatchAllResources(this);
+      this.destroying = true;
 
       this.emit("destroyed");
 
       Actor.prototype.destroy.call(this);
+      Resources.unwatchAllResources(this);
 
       if (this.threadActor) {
         this.threadActor = null;
