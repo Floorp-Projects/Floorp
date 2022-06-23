@@ -231,8 +231,6 @@ static nsresult GetDefaultPrintSettings(nsIPrintSettings** aSettings) {
 NS_IMPL_ISUPPORTS(nsPrintJob, nsIWebProgressListener, nsISupportsWeakReference)
 
 //-------------------------------------------------------
-nsPrintJob::nsPrintJob() = default;
-
 nsPrintJob::~nsPrintJob() {
   Destroy();  // for insurance
   DisconnectPagePrintTimer();
@@ -258,19 +256,13 @@ void nsPrintJob::DestroyPrintingData() {
   mPrt = nullptr;
 }
 
-//---------------------------------------------------------------------------------
-//-- Section: Methods needed by the DocViewer
-//---------------------------------------------------------------------------------
-
-//--------------------------------------------------------
-nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint& aDocViewerPrint,
-                                nsIDocShell& aDocShell, Document& aOriginalDoc,
-                                float aScreenDPI) {
-  mDocViewerPrint = &aDocViewerPrint;
-  mDocShell = do_GetWeakReference(&aDocShell);
-  mScreenDPI = aScreenDPI;
-
-  // Anything state that we need from aOriginalDoc must be fetched and stored
+nsPrintJob::nsPrintJob(nsIDocumentViewerPrint& aDocViewerPrint,
+                       nsIDocShell& aDocShell, Document& aOriginalDoc,
+                       float aScreenDPI)
+    : mDocViewerPrint(&aDocViewerPrint),
+      mDocShell(do_GetWeakReference(&aDocShell)),
+      mScreenDPI(aScreenDPI) {
+  // Any state that we need from aOriginalDoc must be fetched and stored
   // here, since the document that the user selected to print may mutate
   // across consecutive PrintPreview() calls.
 
@@ -287,8 +279,6 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint& aDocViewerPrint,
       wbc->IsWindowModal(&mIsForModalWindow);
     }
   }
-
-  return NS_OK;
 }
 
 //-----------------------------------------------------------------
@@ -320,9 +310,6 @@ nsPrintJob::GetSeqFrameAndCountSheets() const {
   // count the total number of sheets
   return {seqFrame, seqFrame->PrincipalChildList().GetLength()};
 }
-//---------------------------------------------------------------------------------
-//-- Done: Methods needed by the DocViewer
-//---------------------------------------------------------------------------------
 
 // Foward decl for Debug Helper Functions
 #ifdef EXTENDED_DEBUG_PRINTING
