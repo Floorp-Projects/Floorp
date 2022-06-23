@@ -32,10 +32,7 @@ using mozilla::dom::Selection;
 //---------------------------------------------------
 nsPrintObject::nsPrintObject(nsIDocShell& aDocShell, Document& aDoc,
                              nsPrintObject* aParent)
-    : mDocShell(&aDocShell),
-      mDocument(&aDoc),
-      mFrameType(aParent ? eIFrame : eDoc),
-      mParent(aParent) {
+    : mDocShell(&aDocShell), mDocument(&aDoc), mParent(aParent) {
   MOZ_COUNT_CTOR(nsPrintObject);
   MOZ_ASSERT(aDoc.IsStaticDocument());
 
