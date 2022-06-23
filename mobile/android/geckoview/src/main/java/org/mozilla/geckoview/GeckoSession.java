@@ -1311,6 +1311,36 @@ public class GeckoSession {
             }
           });
     }
+
+    @WrapForJNI(calledFrom = "gecko")
+    private void onUpdateSessionStore(final GeckoBundle aBundle) {
+      ThreadUtils.runOnUiThread(
+          () -> {
+            final GeckoSession session = mOwner.get();
+            if (session == null) {
+              return;
+            }
+            GeckoBundle scroll = aBundle.getBundle("scroll");
+            if (scroll == null) {
+              scroll = new GeckoBundle();
+              aBundle.putBundle("scroll", scroll);
+            }
+
+            // Here we unfortunately need to do some re-mapping since `zoom` is passed in a separate
+            // bunds and we wish to keep the bundle format.
+            scroll.putBundle("zoom", aBundle.getBundle("zoom"));
+            final SessionState stateCache = session.mStateCache;
+            stateCache.updateSessionState(aBundle);
+            final SessionState state = new SessionState(stateCache);
+            if (!state.isEmpty()) {
+              final ProgressDelegate progressDelegate = session.getProgressDelegate();
+              if (progressDelegate != null) {
+                progressDelegate.onSessionStateChange(session, state);
+              } else {
+              }
+            }
+          });
+    }
   }
 
   private class Listener implements BundleEventListener {
