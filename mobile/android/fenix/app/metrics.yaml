@@ -1528,7 +1528,7 @@ metrics:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/25538
     data_reviews:
-      - ???????
+      - https://github.com/mozilla-mobile/fenix/pull/25539#issuecomment-1163393066
     data_sensitivity:
       - interaction
     notification_emails:
