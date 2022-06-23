@@ -91,8 +91,7 @@ class TNotification : public Notification {
  * Used to process notifications from core for the document accessible.
  */
 class NotificationController final : public EventQueue,
-                                     public nsARefreshObserver,
-                                     public nsAPostRefreshObserver {
+                                     public nsARefreshObserver {
  public:
   NotificationController(DocAccessible* aDocument, PresShell* aPresShell);
 
@@ -300,7 +299,6 @@ class NotificationController final : public EventQueue,
 
   // nsARefreshObserver
   virtual void WillRefresh(mozilla::TimeStamp aTime) override;
-  virtual void DidRefresh() override;
 
   /**
    * Set and returns a hide event, paired with a show event, for the move.
