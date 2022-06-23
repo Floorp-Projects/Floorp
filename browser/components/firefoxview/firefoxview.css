@@ -258,6 +258,7 @@ body > main > aside {
 
 .setup-step > .step-body > button.primary {
   white-space: nowrap;
+  min-width: fit-content;
 }
 
 .setup-step > footer {
