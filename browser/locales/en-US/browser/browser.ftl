@@ -45,6 +45,8 @@ browser-main-window-mac =
 # `browser-main-window` and `browser-main-window-mac`.
 browser-main-window-title = { -brand-full-name }
 
+private-browsing-shortcut-text = { -brand-short-name } Private Browsing
+
 ##
 
 urlbar-identity-button =

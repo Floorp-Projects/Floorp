@@ -44,6 +44,7 @@
 ; resource IDs in the registry are 0-based.
 !define IDI_APPICON_ZERO_BASED      "0"
 !define IDI_DOCUMENT_ZERO_BASED     "1"
+!define IDI_PBICON_ZERO_BASED       "4"
 !define IDI_DOCUMENT_PDF_ZERO_BASED "5"
 
 !define CERTIFICATE_NAME            "Mozilla Corporation"
