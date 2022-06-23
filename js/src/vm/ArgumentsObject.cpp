@@ -158,7 +158,7 @@ struct CopyJitFrameArgs {
     MOZ_ASSERT(std::max(numActuals, numFormals) == totalArgs);
 
     /* Copy all arguments. */
-    Value* src = frame_->argv() + 1; /* +1 to skip this. */
+    Value* src = frame_->actualArgs();
     Value* end = src + numActuals;
     GCPtr<Value>* dst = dstBase;
     while (src != end) {

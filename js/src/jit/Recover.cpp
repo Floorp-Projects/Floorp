@@ -2042,7 +2042,7 @@ bool RRest::recover(JSContext* cx, SnapshotIterator& iter) const {
   uint32_t numFormals = numFormals_;
 
   uint32_t length = std::max(numActuals, numFormals) - numFormals;
-  Value* src = frame->argv() + numFormals + 1;  // +1 to skip |this|.
+  Value* src = frame->actualArgs() + numFormals;
   JSObject* rest = jit::InitRestParameter(cx, length, src, nullptr);
   if (!rest) {
     return false;
