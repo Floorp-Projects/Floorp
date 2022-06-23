@@ -695,8 +695,8 @@ static nsresult WriteShortcutToLog(KNOWNFOLDERID aFolderId,
                                    const nsAString& aShortcutName) {
   // the section inside the shortcuts log
   nsAutoCString section;
-  if (aFolderId == FOLDERID_CommonStartMenu ||
-      aFolderId == FOLDERID_StartMenu) {
+  // the shortcuts log wants "Programs" shortcuts in its "STARTMENU" section
+  if (aFolderId == FOLDERID_CommonPrograms || aFolderId == FOLDERID_Programs) {
     section.Assign("STARTMENU");
   } else if (aFolderId == FOLDERID_PublicDesktop ||
              aFolderId == FOLDERID_Desktop) {
@@ -843,7 +843,7 @@ static nsresult CreateShortcutImpl(
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFile> shortcutFile;
-  if (aShortcutFolder == FOLDERID_StartMenu) {
+  if (aShortcutFolder == FOLDERID_Programs) {
     rv = directoryService->Get(NS_WIN_PROGRAMS_DIR, NS_GET_IID(nsIFile),
                                getter_AddRefs(shortcutFile));
   } else if (aShortcutFolder == FOLDERID_Desktop) {
@@ -878,8 +878,8 @@ nsWindowsShellService::CreateShortcut(
   // and let CreateShortcutImpl take care of converting it to
   // an nsIFile.
   KNOWNFOLDERID folderId;
-  if (aShortcutFolder.Equals(L"StartMenu")) {
-    folderId = FOLDERID_StartMenu;
+  if (aShortcutFolder.Equals(L"Programs")) {
+    folderId = FOLDERID_Programs;
   } else if (aShortcutFolder.Equals(L"Desktop")) {
     folderId = FOLDERID_Desktop;
   } else {
@@ -1328,7 +1328,7 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
     iconIndex--;
 
     rv = CreateShortcutImpl(exeFile, arguments, desc, exeFile, iconIndex,
-                            aAppUserModelId, FOLDERID_StartMenu, linkName,
+                            aAppUserModelId, FOLDERID_Programs, linkName,
                             shortcutPath);
     if (!NS_SUCCEEDED(rv)) {
       return NS_ERROR_FILE_NOT_FOUND;
