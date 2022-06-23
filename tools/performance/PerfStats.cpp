@@ -38,6 +38,7 @@ void PerfStats::SetCollectionMask(MetricMask aMask) {
     }
 
     GetSingleton()->mRecordedTimes[i] = 0;
+    GetSingleton()->mRecordedCounts[i] = 0;
   }
 
   if (!XRE_IsParentProcess()) {
@@ -86,6 +87,7 @@ void PerfStats::RecordMeasurementEndInternal(Metric aMetric) {
       (TimeStamp::Now() -
        sSingleton->mRecordedStarts[static_cast<size_t>(aMetric)])
           .ToMilliseconds();
+  sSingleton->mRecordedCounts[static_cast<size_t>(aMetric)]++;
 }
 
 void PerfStats::RecordMeasurementInternal(Metric aMetric,
@@ -96,6 +98,7 @@ void PerfStats::RecordMeasurementInternal(Metric aMetric,
 
   sSingleton->mRecordedTimes[static_cast<size_t>(aMetric)] +=
       aDuration.ToMilliseconds();
+  sSingleton->mRecordedCounts[static_cast<size_t>(aMetric)]++;
 }
 
 void PerfStats::RecordMeasurementCounterInternal(Metric aMetric,
@@ -106,6 +109,7 @@ void PerfStats::RecordMeasurementCounterInternal(Metric aMetric,
 
   sSingleton->mRecordedTimes[static_cast<size_t>(aMetric)] +=
       double(aIncrementAmount);
+  sSingleton->mRecordedCounts[static_cast<size_t>(aMetric)]++;
 }
 
 struct StringWriteFunc : public JSONWriteFunc {
@@ -265,6 +269,7 @@ nsCString PerfStats::CollectLocalPerfStatsJSONInternal() {
           w.IntProperty("id", i);
           w.StringProperty("metric", MakeStringSpan(sMetricNames[i]));
           w.DoubleProperty("time", mRecordedTimes[i]);
+          w.IntProperty("count", mRecordedCounts[i]);
         }
         w.EndObject();
       }
