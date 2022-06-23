@@ -536,7 +536,8 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        gContentProcessPrefsAreInited && ShouldSanitizePreference(this, XRE_IsContentProcess())) {
+        gContentProcessPrefsAreInited &&
+        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -552,7 +553,8 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        gContentProcessPrefsAreInited && ShouldSanitizePreference(this, XRE_IsContentProcess())) {
+        gContentProcessPrefsAreInited &&
+        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -569,7 +571,8 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        gContentProcessPrefsAreInited && ShouldSanitizePreference(this, XRE_IsContentProcess())) {
+        gContentProcessPrefsAreInited &&
+        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -1043,7 +1046,8 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
         // This check will be performed in the above functions; but for NoneType
         // we need to do it explicitly, then fall-through.
         if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-            gContentProcessPrefsAreInited && ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
+            gContentProcessPrefsAreInited &&
+            ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
           MOZ_CRASH_UNSAFE_PRINTF(
               "Should not access the preference '%s' in the Content Processes",
               Name());
