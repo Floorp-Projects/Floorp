@@ -832,22 +832,10 @@ uint32_t JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm,
   return offset;
 }
 
-void JitRuntime::generateExceptionTailStub(MacroAssembler& masm,
-                                           Label* profilerExitTail) {
-  AutoCreatedBy acb(masm, "JitRuntime::generateExceptionTailStub");
-
-  exceptionTailOffset_ = startTrampolineCode(masm);
-
-  masm.bind(masm.failureLabel());
-  masm.handleFailureWithHandlerTail(profilerExitTail);
-}
-
 void JitRuntime::generateBailoutTailStub(MacroAssembler& masm,
                                          Label* bailoutTail) {
   AutoCreatedBy acb(masm, "JitRuntime::generateBailoutTailStub");
 
-  bailoutTailOffset_ = startTrampolineCode(masm);
   masm.bind(bailoutTail);
-
   masm.generateBailoutTail(a1, a2);
 }
