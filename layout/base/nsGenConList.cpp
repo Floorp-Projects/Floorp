@@ -127,6 +127,10 @@ bool nsGenConList::NodeAfter(const nsGenConNode* aNode1,
 
 nsGenConNode* nsGenConList::BinarySearch(
     const mozilla::FunctionRef<bool(nsGenConNode*)>& aIsAfter) {
+  if (mList.isEmpty()) {
+    return nullptr;
+  }
+
   // The range of indices at which |aNode| could end up.
   // (We already know it can't be at index mSize.)
   uint32_t first = 0, last = mSize - 1;
