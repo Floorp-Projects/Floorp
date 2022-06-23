@@ -30,13 +30,27 @@ using mozilla::dom::Selection;
 //---------------------------------------------------
 //-- nsPrintObject Class Impl
 //---------------------------------------------------
-nsPrintObject::nsPrintObject()
-    : mContent(nullptr),
-      mFrameType(eDoc),
-      mParent(nullptr),
+nsPrintObject::nsPrintObject(nsIDocShell& aDocShell, Document& aDoc,
+                             nsPrintObject* aParent)
+    : mDocShell(&aDocShell),
+      mDocument(&aDoc),
+      mContent(nullptr),
+      mFrameType(aParent ? eIFrame : eDoc),
+      mParent(aParent),
       mHasBeenPrinted(false),
       mInvisible(false) {
   MOZ_COUNT_CTOR(nsPrintObject);
+  MOZ_ASSERT(aDoc.IsStaticDocument());
+
+  if (!aParent) {
+    // We are a root nsPrintObject.
+    // Ensure the document has no presentation.
+    DestroyPresentation();
+  } else {
+    // We are a nested nsPrintObject.
+    nsCOMPtr<nsPIDOMWindowOuter> window = aDoc.GetWindow();
+    mContent = window->GetFrameElementInternal();
+  }
 }
 
 nsPrintObject::~nsPrintObject() {
@@ -45,29 +59,6 @@ nsPrintObject::~nsPrintObject() {
   DestroyPresentation();
   mDocShell = nullptr;
   mTreeOwner = nullptr;  // mTreeOwner must be released after mDocShell;
-}
-
-//------------------------------------------------------------------
-
-nsresult nsPrintObject::Init(nsIDocShell& aDocShell, Document& aDoc,
-                             nsPrintObject* aParent) {
-  MOZ_ASSERT(aDoc.IsStaticDocument());
-
-  mDocShell = &aDocShell;
-  mDocument = &aDoc;
-
-  if (!aParent) {
-    // We are a root nsPrintObject.
-    // Ensure the document has no presentation.
-    DestroyPresentation();
-  } else {
-    // We are a nested nsPrintObject.
-    mParent = aParent;
-    nsCOMPtr<nsPIDOMWindowOuter> window = aDoc.GetWindow();
-    mContent = window->GetFrameElementInternal();
-    mFrameType = eIFrame;
-  }
-  return NS_OK;
 }
 
 //------------------------------------------------------------------

@@ -29,15 +29,13 @@ enum PrintObjectType { eDoc = 0, eIFrame = 1 };
 //---------------------------------------------------
 class nsPrintObject final {
  public:
-  nsPrintObject();
-  ~nsPrintObject();
-
   /**
    * If aParent is nullptr (default), then this instance will be initialized as
    * a "root" nsPrintObject.  Otherwise, this will be a "nested" nsPrintObject.
    */
-  nsresult Init(nsIDocShell& aDocShell, mozilla::dom::Document& aDoc,
+  nsPrintObject(nsIDocShell& aDocShell, mozilla::dom::Document& aDoc,
                 nsPrintObject* aParent = nullptr);
+  ~nsPrintObject();
 
   void DestroyPresentation();
 
@@ -66,10 +64,10 @@ class nsPrintObject final {
   RefPtr<nsViewManager> mViewManager;
 
   nsCOMPtr<nsIContent> mContent;
-  PrintObjectType mFrameType;
+  const PrintObjectType mFrameType;
 
   nsTArray<mozilla::UniquePtr<nsPrintObject>> mKids;
-  nsPrintObject* mParent;  // This is a non-owning pointer.
+  const nsPrintObject* mParent;  // This is a non-owning pointer.
   bool mHasBeenPrinted;
   bool mInvisible;  // Indicates PO is set to not visible by CSS
 
