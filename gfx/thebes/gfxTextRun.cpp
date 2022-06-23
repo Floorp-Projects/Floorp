@@ -2537,7 +2537,7 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
 
   // we need to do numeral processing even on 8-bit text,
   // in case we're converting Western to Hindi/Arabic digits
-  int32_t numOption = gfxPlatform::GetPlatform()->GetBidiNumeralOption();
+  uint32_t numOption = gfxPlatform::GetPlatform()->GetBidiNumeralOption();
   UniquePtr<char16_t[]> transformedString;
   if (numOption != IBMBIDI_NUMERAL_NOMINAL) {
     // scan the string for numerals that may need to be transformed;

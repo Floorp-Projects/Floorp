@@ -478,17 +478,6 @@ pref("gfx.downloadable_fonts.fallback_delay_short", 100);
 // the uncached load behavior across pages (useful for testing reflow problems)
 pref("gfx.downloadable_fonts.disable_cache", false);
 
-// whether to always search all font cmaps during system font fallback
-pref("gfx.font_rendering.fallback.always_use_cmaps", false);
-
-// cache shaped word results
-pref("gfx.font_rendering.wordcache.charlimit", 32);
-
-// cache shaped word results
-pref("gfx.font_rendering.wordcache.maxentries", 10000);
-
-pref("gfx.font_rendering.graphite.enabled", true);
-
 #ifdef XP_WIN
   pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
@@ -2160,36 +2149,6 @@ pref("mousewheel.with_win.delta_multiplier_z", 100);
 
 // We can show it anytime from menus
 pref("profile.manage_only_at_launch", false);
-
-// ------------------
-//  Text Direction
-// ------------------
-// 1 = directionLTRBidi *
-// 2 = directionRTLBidi
-pref("bidi.direction", 1);
-// ------------------
-//  Text Type
-// ------------------
-// 1 = charsettexttypeBidi *
-// 2 = logicaltexttypeBidi
-// 3 = visualtexttypeBidi
-pref("bidi.texttype", 1);
-// ------------------
-//  Numeral Style
-// ------------------
-// 0 = nominalnumeralBidi *
-// 1 = regularcontextnumeralBidi
-// 2 = hindicontextnumeralBidi
-// 3 = arabicnumeralBidi
-// 4 = hindinumeralBidi
-// 5 = persiancontextnumeralBidi
-// 6 = persiannumeralBidi
-pref("bidi.numeral", 0);
-
-// Setting this pref to |true| forces Bidi UI menu items and keyboard shortcuts
-// to be exposed, and enables the directional caret hook. By default, only
-// expose it for bidi-associated system locales.
-pref("bidi.browser.ui", false);
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction

@@ -846,6 +846,44 @@
 #endif
   mirror: always
 
+# Bidi numeral style:
+# 0 = nominalnumeralBidi *
+# 1 = regularcontextnumeralBidi
+# 2 = hindicontextnumeralBidi
+# 3 = arabicnumeralBidi
+# 4 = hindinumeralBidi
+# 5 = persiancontextnumeralBidi
+# 6 = persiannumeralBidi
+- name: bidi.numeral
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+
+# Bidi text type
+# 1 = charsettexttypeBidi *
+# 2 = logicaltexttypeBidi
+# 3 = visualtexttypeBidi
+- name: bidi.texttype
+  type: RelaxedAtomicUint32
+  value: 1
+  mirror: always
+
+# Bidi direction
+# 1 = directionLTRBidi *
+# 2 = directionRTLBidi
+- name: bidi.direction
+  type: RelaxedAtomicUint32
+  value: 1
+  mirror: always
+
+# Setting this pref to |true| forces Bidi UI menu items and keyboard shortcuts
+# to be exposed, and enables the directional caret hook. By default, only
+# expose it for bidi-associated system locales.
+- name: bidi.browser.ui
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "browser."
 #---------------------------------------------------------------------------
@@ -5559,6 +5597,12 @@
   value: true
   mirror: always
 
+# whether to always search all font cmaps during system font fallback
+- name: gfx.font_rendering.fallback.always_use_cmaps
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #if defined(XP_WIN)
 # Whether the DirectWrite bold simulation should be used when a bold font-weight
 # is requested but no bold face available in the family. This renders poorly with
@@ -5573,6 +5617,23 @@
   value: 1
   mirror: always
 #endif
+
+- name: gfx.font_rendering.graphite.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Cache shaped word results
+- name: gfx.font_rendering.wordcache.charlimit
+  type: RelaxedAtomicUint32
+  value: 32
+  mirror: always
+
+# Cache shaped word results
+- name: gfx.font_rendering.wordcache.maxentries
+  type: RelaxedAtomicUint32
+  value: 10000
+  mirror: always
 
 # The level of logging:
 # - 0: no logging;
