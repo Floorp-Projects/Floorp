@@ -105,13 +105,13 @@ Network Monitor
 See the network requests made when a page is loaded.
 
 
-Performance Tools
+Performance Panel
 -----------------
 
-.. image:: landingpage_performance.png
+.. image:: landingpage_performance_2022.png
     :class: border
-    :target: performance
-    :alt: Performance Tools in Firefox 57 Developer Tools.
+    :target: https://profiler.firefox.com/docs/
+    :alt: Performance Panel in Firefox 103 Developer Tools.
 
 Analyze your site's general responsiveness, JavaScript, and layout performance.
 
