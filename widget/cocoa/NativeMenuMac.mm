@@ -8,6 +8,7 @@
 #include "NativeMenuMac.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Document.h"
@@ -89,6 +90,9 @@ bool NativeMenuMac::ActivateNativeMenuItemAt(const nsAString& aIndexString) {
     if (parent) {
       // NSLog(@"Performing action for native menu item titled: %@\n",
       //       [[currentSubmenu itemAtIndex:targetIndex] title]);
+      mozilla::AutoRestore<bool> autoRestore(
+          nsMenuUtilsX::gIsSynchronouslyActivatingNativeMenuItemDuringTest);
+      nsMenuUtilsX::gIsSynchronouslyActivatingNativeMenuItemDuringTest = true;
       [parent performActionForItemAtIndex:[parent indexOfItem:item]];
       return true;
     }
