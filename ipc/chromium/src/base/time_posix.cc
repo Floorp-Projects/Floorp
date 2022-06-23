@@ -20,8 +20,8 @@
 #endif
 
 #include <limits>
+#include <cstdint>
 
-#include "base/basictypes.h"
 #include "base/logging.h"
 
 namespace base {

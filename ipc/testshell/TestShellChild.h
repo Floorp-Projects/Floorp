@@ -5,10 +5,10 @@
 #ifndef ipc_testshell_TestShellChild_h
 #define ipc_testshell_TestShellChild_h 1
 
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/PTestShellChild.h"
 #include "mozilla/ipc/PTestShellCommandChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
-#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 

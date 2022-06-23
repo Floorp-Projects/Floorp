@@ -7,11 +7,8 @@
 #ifndef mozilla_ipc_backgroundchildimpl_h__
 #define mozilla_ipc_backgroundchildimpl_h__
 
-#include "mozilla/Attributes.h"
-#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/UniquePtr.h"
-#include "nsRefPtrHashtable.h"
 
 namespace mozilla {
 namespace dom {

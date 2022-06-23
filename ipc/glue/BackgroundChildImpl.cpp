@@ -6,12 +6,10 @@
 
 #include "BackgroundChildImpl.h"
 
-#include "ActorsChild.h"  // IndexedDB
 #include "BroadcastChannelChild.h"
 #ifdef MOZ_WEBRTC
 #  include "CamerasChild.h"
 #endif
-#include "mozilla/media/MediaChild.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/dom/ClientManagerActors.h"
@@ -23,11 +21,10 @@
 #include "mozilla/dom/PBackgroundSDBConnectionChild.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/EndpointForReportChild.h"
-#include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/dom/PMediaTransportChild.h"
+#include "mozilla/dom/PVsync.h"
 #include "mozilla/dom/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/cache/ActorUtils.h"
-#include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/indexedDB/ThreadLocal.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
@@ -37,25 +34,16 @@
 #include "mozilla/dom/ServiceWorkerChild.h"
 #include "mozilla/dom/SharedWorkerChild.h"
 #include "mozilla/dom/StorageIPC.h"
-#include "mozilla/dom/GamepadEventChannelChild.h"
-#include "mozilla/dom/GamepadTestChannelChild.h"
-#include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/MessagePortChild.h"
-#include "mozilla/dom/ServiceWorkerActors.h"
 #include "mozilla/dom/ServiceWorkerContainerChild.h"
 #include "mozilla/dom/ServiceWorkerManagerChild.h"
-#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
-#include "mozilla/net/HttpBackgroundChannelChild.h"
 #include "mozilla/net/PUDPSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
 #include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "mozilla/dom/MIDIPortChild.h"
 #include "mozilla/dom/MIDIManagerChild.h"
-#include "mozilla/psm/IPCClientCertsChild.h"
-#include "mozilla/RemoteLazyInputStreamChild.h"
 #include "nsID.h"
-#include "nsTraceRefcnt.h"
 
 namespace {
 
