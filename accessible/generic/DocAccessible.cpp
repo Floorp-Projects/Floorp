@@ -1430,6 +1430,15 @@ void DocAccessible::ProcessQueuedCacheUpdates() {
 
   mQueuedCacheUpdates.Clear();
 
+  if (mViewportCacheDirty) {
+    RefPtr<AccAttributes> fields =
+        BundleFieldsForCache(CacheDomain::Viewport, CacheUpdateType::Update);
+    if (fields->Count()) {
+      data.AppendElement(CacheData(0, fields));
+    }
+    mViewportCacheDirty = false;
+  }
+
   if (data.Length()) {
     IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
   }
