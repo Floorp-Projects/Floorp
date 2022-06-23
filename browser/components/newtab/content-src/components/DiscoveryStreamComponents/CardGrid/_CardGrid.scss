@@ -18,6 +18,11 @@ $col4-header-font-size: 14;
     border-radius: 4px;
   }
 
+  .ds-sub-header {
+    grid-column: 1 / -1;
+    margin-bottom: -7px;
+  }
+
   .ds-column-12 &.ds-card-grid-hero {
     @media (min-width: $break-point-large) {
       grid-template-columns: repeat(12, 1fr);
@@ -286,10 +291,6 @@ $col4-header-font-size: 14;
 }
 
 .ds-layout {
-  .ds-sub-header {
-    margin-top: 24px;
-  }
-
   .ds-card-grid-load-more-button {
     display: block;
     margin: 32px auto 0;

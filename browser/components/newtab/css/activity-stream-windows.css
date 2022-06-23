@@ -2645,6 +2645,10 @@ main.has-snippet {
 [lwt-newtab-brighttext] .ds-card-grid .ds-card {
   background: none;
 }
+.ds-card-grid .ds-sub-header {
+  grid-column: 1/-1;
+  margin-bottom: -7px;
+}
 @media (min-width: 866px) {
   .ds-column-12 .ds-card-grid.ds-card-grid-hero {
     grid-template-columns: repeat(12, 1fr);
@@ -2953,9 +2957,6 @@ main.has-snippet {
   padding: 12px 0 0;
 }
 
-.ds-layout .ds-sub-header {
-  margin-top: 24px;
-}
 .ds-layout .ds-card-grid-load-more-button {
   display: block;
   margin: 32px auto 0;
