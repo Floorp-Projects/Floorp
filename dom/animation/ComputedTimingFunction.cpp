@@ -13,9 +13,8 @@
 namespace mozilla {
 
 ComputedTimingFunction::Function ComputedTimingFunction::ConstructFunction(
-    const nsTimingFunction& aFunction) {
-  const StyleComputedTimingFunction& timing = aFunction.mTiming;
-  switch (timing.tag) {
+    const StyleComputedTimingFunction& aFunction) {
+  switch (aFunction.tag) {
     case StyleComputedTimingFunction::Tag::Keyword: {
       static_assert(
           static_cast<uint8_t>(StyleTimingKeyword::Linear) == 0 &&
@@ -32,33 +31,39 @@ ComputedTimingFunction::Function ComputedTimingFunction::ConstructFunction(
           {0.42f, 0.00f, 0.58f, 1.00f}   // ease-in-out
       };
       const float(&values)[4] =
-          timingFunctionValues[uint8_t(timing.keyword._0)];
+          timingFunctionValues[uint8_t(aFunction.keyword._0)];
       return AsVariant(KeywordFunction{
-          timing.keyword._0,
+          aFunction.keyword._0,
           SMILKeySpline{values[0], values[1], values[2], values[3]}});
     }
     case StyleComputedTimingFunction::Tag::CubicBezier:
       return AsVariant(
-          SMILKeySpline{timing.cubic_bezier.x1, timing.cubic_bezier.y1,
-                        timing.cubic_bezier.x2, timing.cubic_bezier.y2});
+          SMILKeySpline{aFunction.cubic_bezier.x1, aFunction.cubic_bezier.y1,
+                        aFunction.cubic_bezier.x2, aFunction.cubic_bezier.y2});
     case StyleComputedTimingFunction::Tag::Steps:
-      return AsVariant(
-          StepFunc{static_cast<uint32_t>(timing.steps._0), timing.steps._1});
+      return AsVariant(StepFunc{static_cast<uint32_t>(aFunction.steps._0),
+                                aFunction.steps._1});
     case StyleComputedTimingFunction::Tag::LinearFunction: {
       StylePiecewiseLinearFunction result;
-      Servo_CreatePiecewiseLinearFunction(&timing.linear_function._0, &result);
+      Servo_CreatePiecewiseLinearFunction(&aFunction.linear_function._0,
+                                          &result);
       return AsVariant(result);
     }
   }
   MOZ_ASSERT_UNREACHABLE("Unknown timing function.");
-  return ConstructFunction(nsTimingFunction{StyleTimingKeyword::Linear});
+  return ConstructFunction(mozilla::StyleComputedTimingFunction::Keyword(
+      StyleTimingKeyword::Linear));
 }
 
 ComputedTimingFunction::ComputedTimingFunction(
-    const nsTimingFunction& aFunction)
+    const StyleComputedTimingFunction& aFunction)
     : mFunction{ConstructFunction(aFunction)} {}
 
-static inline double StepTiming(
+ComputedTimingFunction::ComputedTimingFunction(
+    const nsTimingFunction& aFunction)
+    : ComputedTimingFunction{aFunction.mTiming} {}
+
+double ComputedTimingFunction::StepTiming(
     const ComputedTimingFunction::StepFunc& aStepFunc, double aPortion,
     ComputedTimingFunction::BeforeFlag aBeforeFlag) {
   // Use the algorithm defined in the spec:
@@ -185,7 +190,16 @@ double ComputedTimingFunction::GetValue(
 
 void ComputedTimingFunction::AppendToString(nsACString& aResult) const {
   nsTimingFunction timing;
-  timing.mTiming = {mFunction.match(
+  // This does not preserve the original input either - that is,
+  // linear(0 0% 50%, 1 50% 100%) -> linear(0 0%, 0 50%, 1 50%, 1 100%)
+  timing.mTiming = {ToStyleComputedTimingFunction(*this)};
+  Servo_SerializeEasing(&timing, &aResult);
+}
+
+StyleComputedTimingFunction
+ComputedTimingFunction::ToStyleComputedTimingFunction(
+    const ComputedTimingFunction& aComputedTimingFunction) {
+  return aComputedTimingFunction.mFunction.match(
       [](const KeywordFunction& aFunction) {
         return StyleComputedTimingFunction::Keyword(aFunction.mKeyword);
       },
@@ -201,7 +215,6 @@ void ComputedTimingFunction::AppendToString(nsACString& aResult) const {
             static_cast<int>(aFunction.mSteps), aFunction.mPos);
       },
       [](const StylePiecewiseLinearFunction& aFunction) {
-        // TODO(dshin, bug 1773493): Having to go back and forth isn't ideal.
         Vector<StyleComputedLinearStop> stops;
         bool reserved = stops.initCapacity(aFunction.entries.Length());
         MOZ_RELEASE_ASSERT(reserved, "Failed to reserve memory");
@@ -212,75 +225,6 @@ void ComputedTimingFunction::AppendToString(nsACString& aResult) const {
         }
         return StyleComputedTimingFunction::LinearFunction(
             StyleOwnedSlice<StyleComputedLinearStop>{std::move(stops)});
-      })};
-  Servo_SerializeEasing(&timing, &aResult);
-}
-
-Maybe<ComputedTimingFunction> ComputedTimingFunction::FromLayersTimingFunction(
-    const layers::TimingFunction& aTimingFunction) {
-  switch (aTimingFunction.type()) {
-    case layers::TimingFunction::Tnull_t:
-      return Nothing();
-    case layers::TimingFunction::TCubicBezierFunction: {
-      auto cbf = aTimingFunction.get_CubicBezierFunction();
-      return Some(ComputedTimingFunction::CubicBezier(cbf.x1(), cbf.y1(),
-                                                      cbf.x2(), cbf.y2()));
-    }
-    case layers::TimingFunction::TStepFunction: {
-      auto sf = aTimingFunction.get_StepFunction();
-      StyleStepPosition pos = static_cast<StyleStepPosition>(sf.type());
-      return Some(ComputedTimingFunction::Steps(sf.steps(), pos));
-    }
-    case layers::TimingFunction::TLinearFunction: {
-      auto lf = aTimingFunction.get_LinearFunction();
-      Vector<StylePiecewiseLinearFunctionEntry> stops;
-      bool reserved = stops.initCapacity(lf.stops().Length());
-      MOZ_RELEASE_ASSERT(reserved, "Failed to reserve memory");
-      for (const auto& e : lf.stops()) {
-        stops.infallibleAppend(
-            StylePiecewiseLinearFunctionEntry{e.input(), e.output()});
-      }
-      StylePiecewiseLinearFunction result;
-      return Some(ComputedTimingFunction{result});
-    }
-    case layers::TimingFunction::T__None:
-      break;
-  }
-  MOZ_ASSERT_UNREACHABLE("Unexpected timing function type.");
-  return Nothing();
-}
-
-layers::TimingFunction ComputedTimingFunction::ToLayersTimingFunction(
-    const Maybe<ComputedTimingFunction>& aComputedTimingFunction) {
-  if (aComputedTimingFunction.isNothing()) {
-    return {null_t{}};
-  }
-  return aComputedTimingFunction->mFunction.match(
-      [](const KeywordFunction& aFunction) {
-        return layers::TimingFunction{layers::CubicBezierFunction{
-            static_cast<float>(aFunction.mFunction.X1()),
-            static_cast<float>(aFunction.mFunction.Y1()),
-            static_cast<float>(aFunction.mFunction.X2()),
-            static_cast<float>(aFunction.mFunction.Y2())}};
-      },
-      [](const SMILKeySpline& aFunction) {
-        return layers::TimingFunction{
-            layers::CubicBezierFunction{static_cast<float>(aFunction.X1()),
-                                        static_cast<float>(aFunction.Y1()),
-                                        static_cast<float>(aFunction.X2()),
-                                        static_cast<float>(aFunction.Y2())}};
-      },
-      [](const StepFunc& aFunction) {
-        return layers::TimingFunction{
-            layers::StepFunction{static_cast<int>(aFunction.mSteps),
-                                 static_cast<uint8_t>(aFunction.mPos)}};
-      },
-      [](const StylePiecewiseLinearFunction& aFunction) {
-        nsTArray<layers::LinearStop> stops{aFunction.entries.Length()};
-        for (const auto& e : aFunction.entries.AsSpan()) {
-          stops.AppendElement(layers::LinearStop{e.x, e.y});
-        }
-        return layers::TimingFunction{layers::LinearFunction{stops}};
       });
 }
 
