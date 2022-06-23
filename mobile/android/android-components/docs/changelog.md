@@ -49,6 +49,11 @@ permalink: /changelog/
 * **support-rusterrors**
   * 🆕 New component to report Rust errors
 
+* **lib-auth**
+  *  Added new `lib-auth` component for various forms of authentication.
+  *  Adds a new `BiometricPromptAuth` for authenticating with biometrics or PIN.
+    [issue # 12289](https://github.com/mozilla-mobile/android-components/issues/12289)
+
 # 102.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v101.0.0...v102.0.1)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/149?closed=1)

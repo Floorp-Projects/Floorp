@@ -375,6 +375,10 @@ projects:
     path: components/support/webextensions
     description: 'A component containing building blocks for features implemented as web extensions.'
     publish: true
+  lib-auth:
+    path: components/lib/auth
+    description: 'A component for various kinds of authentication mechanisms.'
+    publish: true
   lib-crash:
     path: components/lib/crash
     description: 'A generic crash reporter library that can report crashes to multiple services.'

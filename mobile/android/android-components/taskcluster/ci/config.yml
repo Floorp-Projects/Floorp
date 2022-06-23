@@ -69,6 +69,7 @@ treeherder:
         feature-webcompat: feature-webcompat
         feature-webnotifications: feature-webnotifications
         lib-crash: lib-crash
+        lib-auth: lib-auth
         lib-crash-sentry: lib-crash-sentry
         lib-crash-sentry-legacy: lib-crash-sentry-legacy
         lib-dataprotect: lib-dataprotect
