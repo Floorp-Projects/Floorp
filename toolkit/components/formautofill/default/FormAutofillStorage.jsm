@@ -16,8 +16,6 @@ const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 const {
   FormAutofillStorageBase,
   CreditCardsBase,
@@ -283,5 +281,5 @@ class FormAutofillStorage extends FormAutofillStorageBase {
 
 // The singleton exposed by this module.
 const formAutofillStorage = new FormAutofillStorage(
-  OS.Path.join(OS.Constants.Path.profileDir, PROFILE_JSON_FILE_NAME)
+  PathUtils.join(PathUtils.profileDir, PROFILE_JSON_FILE_NAME)
 );
