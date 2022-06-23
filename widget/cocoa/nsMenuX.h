@@ -131,10 +131,7 @@ class nsMenuX final : public nsMenuParentX,
   // Ignored if the menu is already considered closed.
   // When calling this method, the caller must hold a strong reference to this object, because other
   // references to this object can be dropped during the handling of the DOM event.
-  // If aEntireMenuClosingDueToActivateItem is true, it means that popuphiding/popuphidden events
-  // can be delayed until the event loop for the menu is exited. If this is a submenu, this is
-  // usually not possible because the rest of the menu might stay open.
-  void MenuClosed(bool aEntireMenuClosingDueToActivateItem = false);
+  void MenuClosed();
 
   // Close the menu if it's open, and flush any pending popuphiding / popuphidden events.
   bool Close();

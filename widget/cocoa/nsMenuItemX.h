@@ -76,6 +76,7 @@ class nsMenuItemX final : public nsChangeObserver,
   nsresult DispatchDOMEvent(const nsString& eventName,
                             bool* preventDefaultCalled);
   void SetupIcon();
+  nsMenuX* ParentMenu() { return mMenuParent; }
   nsIContent* Content() { return mContent; }
   NSMenuItem* NativeNSMenuItem() { return mNativeMenuItem; }
 
