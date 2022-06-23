@@ -196,7 +196,7 @@ void nsPrintJob::BuildNestedPrintObjects(
     }
 
     auto childPO = MakeUnique<nsPrintObject>();
-    nsresult rv = childPO->InitAsNestedObject(docShell, doc, aParentPO.get());
+    nsresult rv = childPO->Init(docShell, doc, aParentPO.get());
     if (NS_FAILED(rv)) {
       MOZ_ASSERT_UNREACHABLE("Init failed?");
     }
@@ -411,7 +411,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   {
     nsAutoScriptBlocker scriptBlocker;
     mPrintObject = MakeUnique<nsPrintObject>();
-    rv = mPrintObject->InitAsRootObject(docShell, aDoc);
+    rv = mPrintObject->Init(docShell, aDoc);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mPrintDocList.AppendElement(mPrintObject.get());
