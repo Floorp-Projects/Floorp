@@ -437,7 +437,7 @@ class _RemoteSettingsExperimentLoader {
       description: manifest.description,
       type: "object",
       properties: {},
-      additionalProperties: true,
+      additionalProperties: false,
     };
 
     for (const [varName, desc] of Object.entries(manifest.variables)) {
@@ -449,21 +449,19 @@ class _RemoteSettingsExperimentLoader {
           break;
 
         case "int":
-          // NB: This is what Experimenter maps the int type to.
-          prop.type = "number";
+          prop.type = "integer";
           break;
 
         case "json":
-          // NB: Experimenter presently ignores the json type, it will still be
-          // allowed under additionalProperties.
-          continue;
+          // NB: Don't set a type of json fields, since they can be of any type.
+          break;
 
         default:
           // NB: Experimenter doesn't outright reject invalid types either.
           Cu.reportError(
             `Feature ID ${featureId} has variable ${varName} with invalid FML type: ${prop.type}`
           );
-          continue;
+          break;
       }
 
       if (prop.type === "string" && !!desc.enum) {
