@@ -2030,13 +2030,21 @@ void MacroAssembler::generateBailoutTail(Register scratch,
                   !regs.has(AsRegister(getStackPointer())));
     regs.take(bailoutInfo);
 
-    // Reset SP to the point where clobbering starts.
-    loadStackPtr(
-        Address(bailoutInfo, offsetof(BaselineBailoutInfo, incomingStack)));
+    Register temp = regs.takeAny();
+
+#ifdef DEBUG
+    // Assert the stack pointer points to the JitFrameLayout header. Copying
+    // starts here.
+    Label ok;
+    loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, incomingStack)),
+            temp);
+    branchStackPtr(Assembler::Equal, temp, &ok);
+    assumeUnreachable("Unexpected stack pointer value");
+    bind(&ok);
+#endif
 
     Register copyCur = regs.takeAny();
     Register copyEnd = regs.takeAny();
-    Register temp = regs.takeAny();
 
     // Copy data onto stack.
     loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, copyStackTop)),
@@ -2049,10 +2057,10 @@ void MacroAssembler::generateBailoutTail(Register scratch,
       Label endOfCopy;
       bind(&copyLoop);
       branchPtr(Assembler::BelowOrEqual, copyCur, copyEnd, &endOfCopy);
-      subPtr(Imm32(4), copyCur);
-      subFromStackPtr(Imm32(4));
-      load32(Address(copyCur, 0), temp);
-      store32(temp, Address(getStackPointer(), 0));
+      subPtr(Imm32(sizeof(uintptr_t)), copyCur);
+      subFromStackPtr(Imm32(sizeof(uintptr_t)));
+      loadPtr(Address(copyCur, 0), temp);
+      storePtr(temp, Address(getStackPointer(), 0));
       jump(&copyLoop);
       bind(&endOfCopy);
     }

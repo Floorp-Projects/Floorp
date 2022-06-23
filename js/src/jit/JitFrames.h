@@ -258,14 +258,15 @@ class JitFrameLayout : public CommonFrameLayout {
     return offsetOfActualArgs() + arg * sizeof(JS::Value);
   }
 
-  JS::Value thisv() {
+  JS::Value& thisv() {
     MOZ_ASSERT(CalleeTokenIsFunction(calleeToken()));
-    return argv()[0];
+    return thisAndActualArgs()[0];
   }
-  JS::Value* argv() {
+  JS::Value* thisAndActualArgs() {
     MOZ_ASSERT(CalleeTokenIsFunction(calleeToken()));
     return (JS::Value*)(this + 1);
   }
+  JS::Value* actualArgs() { return thisAndActualArgs() + 1; }
   uintptr_t numActualArgs() const {
     return descriptor() >> NUMACTUALARGS_SHIFT;
   }

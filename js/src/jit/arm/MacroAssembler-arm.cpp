@@ -3313,7 +3313,7 @@ void MacroAssemblerARMCompat::checkStackAlignment() {
 }
 
 void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
-    Label* profilerExitTail) {
+    Label* profilerExitTail, Label* bailoutTail) {
   // Reserve space for exception information.
   int size = (sizeof(ResumeFromException) + 7) & ~7;
 
@@ -3462,10 +3462,11 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
     ScratchRegisterScope scratch(asMasm());
     ma_ldr(Address(sp, ResumeFromException::offsetOfBailoutInfo()), r2,
            scratch);
+    ma_ldr(Address(sp, ResumeFromException::offsetOfStackPointer()), sp,
+           scratch);
     ma_mov(Imm32(1), ReturnReg);
-    ma_ldr(Address(sp, ResumeFromException::offsetOfTarget()), r1, scratch);
   }
-  jump(r1);
+  jump(bailoutTail);
 
   // If we are throwing and the innermost frame was a wasm frame, reset SP and
   // FP; SP is pointing to the unwound return address to the wasm entry, so

@@ -292,7 +292,7 @@ bool jit::ExceptionHandlerBailout(JSContext* cx,
     }
 
     rfe->kind = ExceptionResumeKind::Bailout;
-    rfe->target = cx->runtime()->jitRuntime()->getBailoutTail().value;
+    rfe->stackPointer = bailoutInfo->incomingStack;
     rfe->bailoutInfo = bailoutInfo;
   } else {
     // Drop the exception that triggered the bailout and instead propagate the

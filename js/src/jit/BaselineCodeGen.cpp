@@ -4169,7 +4169,8 @@ bool BaselineInterpreterCodeGen::emitFormalArgAccess(JSOp op) {
   }
   masm.bind(&isUnaliased);
   {
-    BaseValueIndex addr(FramePointer, argReg, BaselineFrame::offsetOfArg(0));
+    BaseValueIndex addr(FramePointer, argReg,
+                        JitFrameLayout::offsetOfActualArgs());
     if (op == JSOp::GetArg) {
       masm.loadValue(addr, R0);
       frame.push(R0);
@@ -4244,7 +4245,7 @@ bool BaselineCodeGen<Handler>::emit_NewTarget() {
     masm.cmp32Move32(Assembler::Below, argvLen, nformals, nformals, argvLen);
 
     BaseValueIndex newTarget(FramePointer, argvLen,
-                             BaselineFrame::offsetOfArg(0));
+                             JitFrameLayout::offsetOfActualArgs());
     masm.loadValue(newTarget, R0);
     masm.jump(&done);
   }

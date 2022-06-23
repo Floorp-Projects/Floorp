@@ -509,7 +509,8 @@ void MacroAssemblerX86::finish() {
   }
 }
 
-void MacroAssemblerX86::handleFailureWithHandlerTail(Label* profilerExitTail) {
+void MacroAssemblerX86::handleFailureWithHandlerTail(Label* profilerExitTail,
+                                                     Label* bailoutTail) {
   // Reserve space for exception information.
   subl(Imm32(sizeof(ResumeFromException)), esp);
   movl(esp, eax);
@@ -621,8 +622,9 @@ void MacroAssemblerX86::handleFailureWithHandlerTail(Label* profilerExitTail) {
   // bailout tail stub. Load 1 (true) in ReturnReg to indicate success.
   bind(&bailout);
   loadPtr(Address(esp, ResumeFromException::offsetOfBailoutInfo()), ecx);
+  loadPtr(Address(esp, ResumeFromException::offsetOfStackPointer()), esp);
   move32(Imm32(1), ReturnReg);
-  jmp(Operand(esp, ResumeFromException::offsetOfTarget()));
+  jump(bailoutTail);
 
   // If we are throwing and the innermost frame was a wasm frame, reset SP and
   // FP; SP is pointing to the unwound return address to the wasm entry, so

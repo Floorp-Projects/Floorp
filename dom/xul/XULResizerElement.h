@@ -17,8 +17,7 @@ nsXULElement* NS_NewXULResizerElement(
 
 class XULResizerElement final : public nsXULElement {
  public:
-  explicit XULResizerElement(
-      already_AddRefed<dom::NodeInfo>&& aNodeInfo)
+  explicit XULResizerElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
       : nsXULElement(std::move(aNodeInfo)) {}
 
   MOZ_CAN_RUN_SCRIPT
@@ -49,8 +48,8 @@ class XULResizerElement final : public nsXULElement {
    * @param aMovement the amount the mouse was moved
    * @param aResizerDirection resizer direction returned by GetDirection
    */
-  static void AdjustDimensions(int32_t* aPos, int32_t* aSize,
-                               int32_t aMovement, int8_t aResizerDirection);
+  static void AdjustDimensions(int32_t* aPos, int32_t* aSize, int32_t aMovement,
+                               int8_t aResizerDirection);
 
   struct SizeInfo {
     nsCString width, height;

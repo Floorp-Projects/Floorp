@@ -149,7 +149,7 @@ void JSJitFrameIter::baselineScriptAndPc(JSScript** scriptRes,
   *pcRes = entry.pc(script);
 }
 
-Value* JSJitFrameIter::actualArgs() const { return jsFrame()->argv() + 1; }
+Value* JSJitFrameIter::actualArgs() const { return jsFrame()->actualArgs(); }
 
 uint8_t* JSJitFrameIter::prevFp() const { return current()->callerFramePtr(); }
 

@@ -17,6 +17,17 @@
 using namespace js;
 using namespace js::jit;
 
+void JitRuntime::generateExceptionTailStub(MacroAssembler& masm,
+                                           Label* profilerExitTail,
+                                           Label* bailoutTail) {
+  AutoCreatedBy acb(masm, "JitRuntime::generateExceptionTailStub");
+
+  exceptionTailOffset_ = startTrampolineCode(masm);
+
+  masm.bind(masm.failureLabel());
+  masm.handleFailureWithHandlerTail(profilerExitTail, bailoutTail);
+}
+
 void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
                                                    Label* profilerExitTail) {
   AutoCreatedBy acb(masm, "JitRuntime::generateProfilerExitFrameTailStub");
