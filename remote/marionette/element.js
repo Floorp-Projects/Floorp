@@ -230,23 +230,6 @@ element.ReferenceStore = class {
  * See the {@link element.Strategy} enum for a full list of supported
  * search strategies that can be passed to <var>strategy</var>.
  *
- * Available flags for <var>opts</var>:
- *
- * <dl>
- *   <dt><code>all</code>
- *   <dd>
- *     If true, a multi-element search selector is used and a sequence
- *     of elements will be returned.  Otherwise a single element.
- *
- *   <dt><code>timeout</code>
- *   <dd>
- *     Duration to wait before timing out the search.  If <code>all</code>
- *     is false, a {@link NoSuchElementError} is thrown if unable to
- *     find the element within the timeout duration.
- *
- *   <dt><code>startNode</code>
- *   <dd>Element to use as the root of the search.
- *
  * @param {Object.<string, WindowProxy>} container
  *     Window object.
  * @param {string} strategy
@@ -254,8 +237,16 @@ element.ReferenceStore = class {
  * @param {string} selector
  *     Selector search pattern.  The selector must be compatible with
  *     the chosen search <var>strategy</var>.
- * @param {Object.<string, ?>} opts
- *     Options.
+ * @param {Object=} options
+ * @param {boolean=} all
+ *     If true, a multi-element search selector is used and a sequence of
+ *     elements will be returned, otherwise a single element. Defaults to false.
+ * @param {Element=} startNode
+ *     Element to use as the root of the search.
+ * @param {number=} timeout
+ *     Duration to wait before timing out the search.  If <code>all</code>
+ *     is false, a {@link NoSuchElementError} is thrown if unable to
+ *     find the element within the timeout duration.
  *
  * @return {Promise.<(Element|Array.<Element>)>}
  *     Single element or a sequence of elements.
@@ -268,13 +259,11 @@ element.ReferenceStore = class {
  *     If a single element is requested, this error will throw if the
  *     element is not found.
  */
-element.find = function(container, strategy, selector, opts = {}) {
-  let all = !!opts.all;
-  let timeout = opts.timeout || 0;
-  let startNode = opts.startNode;
+element.find = function(container, strategy, selector, options = {}) {
+  const { all = false, startNode, timeout = 0 } = options;
 
   let searchFn;
-  if (opts.all) {
+  if (all) {
     searchFn = findElements.bind(this);
   } else {
     searchFn = findElement.bind(this);
@@ -299,12 +288,12 @@ element.find = function(container, strategy, selector, opts = {}) {
     findElements.then(foundEls => {
       // the following code ought to be moved into findElement
       // and findElements when bug 1254486 is addressed
-      if (!opts.all && (!foundEls || foundEls.length == 0)) {
+      if (!all && (!foundEls || foundEls.length == 0)) {
         let msg = `Unable to locate element: ${selector}`;
         reject(new lazy.error.NoSuchElementError(msg));
       }
 
-      if (opts.all) {
+      if (all) {
         resolve(foundEls);
       }
       resolve(foundEls[0]);
@@ -346,7 +335,7 @@ function find_(
 /**
  * Find a single element by XPath expression.
  *
- * @param {HTMLDocument} document
+ * @param {Document} document
  *     Document root.
  * @param {Element} startNode
  *     Where in the DOM hiearchy to begin searching.
@@ -370,7 +359,7 @@ element.findByXPath = function(document, startNode, expression) {
 /**
  * Find elements by XPath expression.
  *
- * @param {HTMLDocument} document
+ * @param {Document} document
  *     Document root.
  * @param {Element} startNode
  *     Where in the DOM hierarchy to begin searching.
@@ -378,7 +367,7 @@ element.findByXPath = function(document, startNode, expression) {
  *     XPath search expression.
  *
  * @return {Iterable.<Node>}
- *     Iterator over elements matching <var>expression</var>.
+ *     Iterator over nodes matching <var>expression</var>.
  */
 element.findByXPathAll = function*(document, startNode, expression) {
   let iter = document.evaluate(
@@ -461,13 +450,13 @@ function* filterLinks(startNode, predicate) {
  *     Selector strategy to use.
  * @param {string} selector
  *     Selector expression.
- * @param {HTMLDocument} document
+ * @param {Document} document
  *     Document root.
  * @param {Element=} startNode
- *     Optional node from which to start searching.
+ *     Optional Element from which to start searching.
  *
  * @return {Element}
- *     Found elements.
+ *     Found element.
  *
  * @throws {InvalidSelectorError}
  *     If strategy <var>using</var> is not recognised.
@@ -537,10 +526,10 @@ function findElement(strategy, selector, document, startNode = undefined) {
  *     Selector strategy to use.
  * @param {string} selector
  *     Selector expression.
- * @param {HTMLDocument} document
+ * @param {Document} document
  *     Document root.
  * @param {Element=} startNode
- *     Optional node from which to start searching.
+ *     Optional Element from which to start searching.
  *
  * @return {Array.<Element>}
  *     Found elements.
@@ -594,11 +583,11 @@ function findElements(strategy, selector, document, startNode = undefined) {
 }
 
 /**
- * Finds the closest parent node of <var>startNode</var> by CSS a
+ * Finds the closest parent node of <var>startNode</var> matching a CSS
  * <var>selector</var> expression.
  *
  * @param {Node} startNode
- *     Cyce through <var>startNode</var>'s parent nodes in tree-order
+ *     Cycle through <var>startNode</var>'s parent nodes in tree-order
  *     and return the first match to <var>selector</var>.
  * @param {string} selector
  *     CSS selector expression.
@@ -624,9 +613,9 @@ element.findClosest = function(startNode, selector) {
  * @param {Element} el
  *     The DOM element to generate the identifier for.
  *
- * @return {object} The ContentDOMReference ElementIdentifier for the DOM
- *     element augmented with a Marionette WebReference reference, and some
- *     additional properties.
+ * @return {object}
+ *     The ContentDOMReference ElementIdentifier for the DOM element augmented
+ *     with a Marionette WebReference reference, and some additional properties.
  *
  * @throws {StaleElementReferenceError}
  *     If the element has gone stale, indicating it is no longer
@@ -714,11 +703,11 @@ element.resolveElement = function(id, win) {
 /**
  * Determines if <var>obj<var> is an HTML or JS collection.
  *
- * @param {*} seq
+ * @param {Object} seq
  *     Type to determine.
  *
  * @return {boolean}
- *     True if <var>seq</va> is collection.
+ *     True if <var>seq</va> is a collection.
  */
 element.isCollection = function(seq) {
   switch (Object.prototype.toString.call(seq)) {
@@ -752,7 +741,7 @@ element.isCollection = function(seq) {
  * browsing context such as an <tt>&lt;iframe&gt;</tt>.
  *
  * @param {Element=} el
- *     DOM element to check for staleness.  If null, which may be
+ *     Element to check for staleness.  If null, which may be
  *     the case if the element has been unwrapped from a weak
  *     reference, it is always considered stale.
  * @param {WindowProxy=} win
@@ -782,7 +771,7 @@ element.isStale = function(el, win = undefined) {
  * <tt>&lt;input type=radio&gt;</tt>,
  * and <tt>&gt;option&gt;</tt> elements.
  *
- * @param {(DOMElement|XULElement)} el
+ * @param {Element} el
  *     Element to test if selected.
  *
  * @return {boolean}
@@ -1275,29 +1264,29 @@ element.scrollIntoView = function(el) {
 };
 
 /**
- * Ascertains whether <var>node</var> is a DOM-, SVG-, or XUL element.
+ * Ascertains whether <var>obj</var> is a DOM-, SVG-, or XUL element.
  *
- * @param {Node} node
- *     Element thought to be an <code>Element</code> or
+ * @param {Object} obj
+ *     Object thought to be an <code>Element</code> or
  *     <code>XULElement</code>.
  *
  * @return {boolean}
- *     True if <var>node</var> is an element, false otherwise.
+ *     True if <var>obj</var> is an element, false otherwise.
  */
-element.isElement = function(node) {
-  return element.isDOMElement(node) || element.isXULElement(node);
+element.isElement = function(obj) {
+  return element.isDOMElement(obj) || element.isXULElement(obj);
 };
 
 /**
  * Returns the shadow root of an element.
  *
- * @param {Node} node
+ * @param {Element} el
  *     Element thought to have a <code>shadowRoot</code>
  * @returns {ShadowRoot}
- *     shadow root of the element.
+ *     Shadow root of the element.
  */
-element.getShadowRoot = function(node) {
-  const shadowRoot = node.openOrClosedShadowRoot;
+element.getShadowRoot = function(el) {
+  const shadowRoot = el.openOrClosedShadowRoot;
   if (!shadowRoot) {
     throw new lazy.error.NoSuchShadowRootError();
   }
@@ -1305,63 +1294,62 @@ element.getShadowRoot = function(node) {
 };
 
 /**
- * Checks whether a node has a shadow root.
- * @param {Node} node
+ * Ascertains whether <var>obj</var> is a shadow root.
+ *
+ * @param {ShadowRoot} obj
  *   The node that will be checked to see if it has a shadow root
+ *
  * @returns {boolean}
- *   true, if it has a shadow root
+ *     True if <var>obj</var> is a shadow root, false otherwise.
  */
-element.isShadowRoot = function(node) {
+element.isShadowRoot = function(obj) {
   return (
-    node !== null &&
-    typeof node == "object" &&
-    node.containingShadowRoot == node
+    obj !== null && typeof obj == "object" && obj.containingShadowRoot == obj
   );
 };
 
 /**
- * Ascertains whether <var>node</var> is a DOM element.
+ * Ascertains whether <var>obj</var> is a DOM element.
  *
- * @param {*} node
- *     Element thought to be an <code>Element</code>.
+ * @param {Object} obj
+ *     Object to check.
  *
  * @return {boolean}
- *     True if <var>node</var> is a DOM element, false otherwise.
+ *     True if <var>obj</var> is a DOM element, false otherwise.
  */
-element.isDOMElement = function(node) {
+element.isDOMElement = function(obj) {
   return (
-    typeof node == "object" &&
-    node !== null &&
-    "nodeType" in node &&
-    [ELEMENT_NODE, DOCUMENT_NODE].includes(node.nodeType) &&
-    !element.isXULElement(node)
+    typeof obj == "object" &&
+    obj !== null &&
+    "nodeType" in obj &&
+    [ELEMENT_NODE, DOCUMENT_NODE].includes(obj.nodeType) &&
+    !element.isXULElement(obj)
   );
 };
 
 /**
- * Ascertains whether <var>node</var> is a XUL element.
+ * Ascertains whether <var>obj</var> is a XUL element.
  *
- * @param {*} node
- *     Element to check
+ * @param {Object} obj
+ *     Object to check.
  *
  * @return {boolean}
- *     True if <var>node</var> is a XULElement,
- *     false otherwise.
+ *     True if <var>obj</var> is a XULElement, false otherwise.
  */
-element.isXULElement = function(node) {
+element.isXULElement = function(obj) {
   return (
-    typeof node == "object" &&
-    node !== null &&
-    "nodeType" in node &&
-    node.nodeType === node.ELEMENT_NODE &&
-    node.namespaceURI === XUL_NS
+    typeof obj == "object" &&
+    obj !== null &&
+    "nodeType" in obj &&
+    obj.nodeType === obj.ELEMENT_NODE &&
+    obj.namespaceURI === XUL_NS
   );
 };
 
 /**
  * Ascertains whether <var>node</var> is in a privileged document.
  *
- * @param {*} node
+ * @param {Node} node
  *     Node to check.
  *
  * @return {boolean}
@@ -1373,24 +1361,24 @@ element.isInPrivilegedDocument = function(node) {
 };
 
 /**
- * Ascertains whether <var>node</var> is a <code>WindowProxy</code>.
+ * Ascertains whether <var>obj</var> is a <code>WindowProxy</code>.
  *
- * @param {*} node
- *     Node thought to be a <code>WindowProxy</code>.
+ * @param {Object} obj
+ *     Object to check.
  *
  * @return {boolean}
- *     True if <var>node</var> is a DOM window.
+ *     True if <var>obj</var> is a DOM window.
  */
-element.isDOMWindow = function(node) {
+element.isDOMWindow = function(obj) {
   // TODO(ato): This should use Object.prototype.toString.call(node)
   // but it's not clear how to write a good xpcshell test for that,
   // seeing as we stub out a WindowProxy.
   return (
-    typeof node == "object" &&
-    node !== null &&
-    typeof node.toString == "function" &&
-    node.toString() == "[object Window]" &&
-    node.self === node
+    typeof obj == "object" &&
+    obj !== null &&
+    typeof obj.toString == "function" &&
+    obj.toString() == "[object Window]" &&
+    obj.self === obj
   );
 };
 
@@ -1427,7 +1415,7 @@ const boolEls = {
 /**
  * Tests if the attribute is a boolean attribute on element.
  *
- * @param {DOMElement} el
+ * @param {Element} el
  *     Element to test if <var>attr</var> is a boolean attribute on.
  * @param {string} attr
  *     Attribute to test is a boolean attribute.
@@ -1490,18 +1478,18 @@ class WebReference {
   }
 
   /**
-   * Returns a new {@link WebReference} reference for a DOM element,
-   * <code>WindowProxy</code>, ShadowRoot, or XUL element.
+   * Returns a new {@link WebReference} reference for a DOM or XUL element,
+   * <code>WindowProxy</code>, or <code>ShadowRoot</code>.
    *
    * @param {(Element|ShadowRoot|WindowProxy|XULElement)} node
    *     Node to construct a web element reference for.
    *
-   * @return {(ShadowRoot|WebElement|ChromeWebElement)}
-   *     Web element reference for <var>el</var>.
+   * @return {WebReference)}
+   *     Web reference for <var>node</var>.
    *
    * @throws {InvalidArgumentError}
    *     If <var>node</var> is neither a <code>WindowProxy</code>,
-   *     DOM element, or a XUL element.
+   *     DOM or XUL element, or <code>ShadowRoot</code>.
    */
   static from(node) {
     const uuid = WebReference.generateUUID();
@@ -1530,20 +1518,19 @@ class WebReference {
   }
 
   /**
-   * Unmarshals a JSON Object to one of {@link WebElement},
-   * {@link WebWindow}, {@link WebFrame},
-   * or {@link ChromeWebElement}.
+   * Unmarshals a JSON Object to one of {@link WebElement}, {@link WebFrame},
+   * {@link WebWindow}, or {@link ChromeWebElement}.
    *
    * @param {Object.<string, string>} json
-   *     Web element reference, which is supposed to be a JSON Object
+   *     Web reference, which is supposed to be a JSON Object
    *     where the key is one of the {@link WebReference} concrete
    *     classes' UUID identifiers.
    *
    * @return {WebReference}
-   *     Representation of the web element.
+   *     Web reference for the JSON object.
    *
    * @throws {InvalidArgumentError}
-   *     If <var>json</var> is not a web element reference.
+   *     If <var>json</var> is not a web reference.
    */
   static fromJSON(json) {
     lazy.assert.object(json);
@@ -1572,7 +1559,7 @@ class WebReference {
     }
 
     throw new lazy.error.InvalidArgumentError(
-      lazy.pprint`Expected web element reference, got: ${json}`
+      lazy.pprint`Expected web reference, got: ${json}`
     );
   }
 
@@ -1587,10 +1574,10 @@ class WebReference {
    * {@link WebReference} to return.
    *
    * @param {string} uuid
-   *     UUID to be associated with the web element.
+   *     UUID to be associated with the web reference.
    * @param {Context} context
    *     Context, which is used to determine if the returned type
-   *     should be a content web element or a chrome web element.
+   *     should be a web element or a chrome web element.
    *
    * @return {WebReference}
    *     One of {@link WebElement} or {@link ChromeWebElement},
@@ -1618,12 +1605,13 @@ class WebReference {
   }
 
   /**
-   * Checks if <var>ref<var> is a {@link WebReference} reference,
+   * Checks if <var>obj<var> is a {@link WebReference} reference,
    * i.e. if it has {@link WebElement.Identifier}, or
    * {@link ChromeWebElement.Identifier} as properties.
    *
    * @param {Object.<string, string>} obj
-   *     Object that represents a reference to a {@link WebReference}.
+   *     Object that represents a {@link WebReference}.
+   *
    * @return {boolean}
    *     True if <var>obj</var> is a {@link WebReference}, false otherwise.
    */
@@ -1648,7 +1636,7 @@ class WebReference {
    * Generates a unique identifier.
    *
    * @return {string}
-   *     UUID.
+   *     Generated UUID.
    */
   static generateUUID() {
     let uuid = Services.uuid.generateUUID().toString();
@@ -1681,7 +1669,7 @@ class WebElement extends WebReference {
 WebElement.Identifier = "element-6066-11e4-a52e-4f735466cecf";
 
 /**
- * Shadow Root elements are represented as web elements when they are
+ * Shadow Root elements are represented as shadow root references when they are
  * transported over the wire protocol
  */
 class ShadowRoot extends WebReference {
