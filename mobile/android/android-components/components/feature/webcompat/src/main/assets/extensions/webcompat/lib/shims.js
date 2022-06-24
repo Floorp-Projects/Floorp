@@ -53,9 +53,11 @@ class Shim {
     this.notHosts = opts.notHosts;
     this.onlyIfBlockedByETP = opts.onlyIfBlockedByETP;
     this.onlyIfDFPIActive = opts.onlyIfDFPIActive;
+    this.onlyIfPrivateBrowsing = opts.onlyIfPrivateBrowsing;
     this._options = opts.options || {};
     this.needsShimHelpers = opts.needsShimHelpers;
     this.platform = opts.platform || "all";
+    this.runFirst = opts.runFirst;
     this.unblocksOnOptIn = unblocksOnOptIn;
     this.requestStorageAccessForRedirect = opts.requestStorageAccessForRedirect;
 
@@ -519,7 +521,7 @@ class Shims {
           if (shim.isGoogleTrendsDFPIFix) {
             addTypePatterns(type, patterns, allHeaderChangingMatchTypePatterns);
           }
-          if (target || shim.file) {
+          if (target || shim.file || shim.runFirst) {
             addTypePatterns(type, patterns, allMatchTypePatterns);
           }
         }
@@ -909,13 +911,19 @@ class Shims {
     for (const shim of this.shims.values()) {
       await shim.ready;
 
-      if (!shim.enabled || !shim.redirectsRequests) {
+      if (!shim.enabled || (!shim.redirectsRequests && !shim.runFirst)) {
         continue;
       }
 
-      if (shim.onlyIfDFPIActive) {
+      if (shim.onlyIfDFPIActive || shim.onlyIfPrivateBrowsing) {
         const isPB = (await browser.tabs.get(details.tabId)).incognito;
-        if (!(await browser.trackingProtection.isDFPIActive(isPB))) {
+        if (!isPB && shim.onlyIfPrivateBrowsing) {
+          continue;
+        }
+        if (
+          shim.onlyIfDFPIActive &&
+          !(await browser.trackingProtection.isDFPIActive(isPB))
+        ) {
           continue;
         }
       }
@@ -947,6 +955,8 @@ class Shims {
       }
     }
 
+    let runFirst = false;
+
     if (shimToApply) {
       // Note that sites may request the same shim twice, but because the requests
       // may differ enough for some to fail (CSP/CORS/etc), we always let the request
@@ -954,18 +964,32 @@ class Shims {
 
       const { target } = match;
       const { bug, file, id, name, needsShimHelpers } = shimToApply;
+      runFirst = shimToApply.runFirst;
 
       const redirect = target || file;
 
       warn(
-        `Shimming tracking ${type} ${url} on tab ${tabId} frame ${frameId} with ${redirect}`
+        `Shimming tracking ${type} ${url} on tab ${tabId} frame ${frameId} with ${redirect ||
+          runFirst}`
       );
 
       const warning = `${name} is being shimmed by Firefox. See https://bugzilla.mozilla.org/show_bug.cgi?id=${bug} for details.`;
 
-      try {
-        // For scripts, we also set up any needed shim helpers.
-        if (type === "script" && needsShimHelpers?.length) {
+      let needConsoleMessage = true;
+
+      if (runFirst) {
+        try {
+          await browser.tabs.executeScript(tabId, {
+            file: `/shims/${runFirst}`,
+            frameId,
+            runAt: "document_start",
+          });
+        } catch (_) {}
+      }
+
+      // For scripts, we also set up any needed shim helpers.
+      if (type === "script" && needsShimHelpers?.length) {
+        try {
           await browser.tabs.executeScript(tabId, {
             file: "/lib/shim_messaging_helper.js",
             frameId,
@@ -977,14 +1001,23 @@ class Shims {
             { origin, shimId: id, needsShimHelpers, warning },
             { frameId }
           );
+          needConsoleMessage = false;
           shimToApply.setActiveOnTab(tabId);
-        } else {
+        } catch (_) {}
+      }
+
+      if (needConsoleMessage) {
+        try {
           await browser.tabs.executeScript(tabId, {
             code: `console.warn(${JSON.stringify(warning)})`,
             runAt: "document_start",
           });
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }
+
+      if (!redirect.indexOf("http://") || !redirect.indexOf("https://")) {
+        return { redirectUrl: redirect };
+      }
 
       // If any shims matched the request to replace it, then redirect to the local
       // file bundled with SmartBlock, so the request never hits the network.
@@ -998,7 +1031,9 @@ class Shims {
       return { cancel: true };
     }
 
-    debug(`ignoring ${url} on tab ${tabId} frame ${frameId}`);
+    if (!runFirst) {
+      debug(`ignoring ${url} on tab ${tabId} frame ${frameId}`);
+    }
     return undefined;
   }
 }

@@ -190,7 +190,11 @@ if (!window.r3_common) {
     charset: "UTF-8",
     checkParamCookieValue: () => null,
     d: document,
-    data: { JSON },
+    data: {
+      JSON: {
+        placements: [],
+      },
+    },
     debugWindow() {},
     set defaultCallback(fn) {
       call(fn);

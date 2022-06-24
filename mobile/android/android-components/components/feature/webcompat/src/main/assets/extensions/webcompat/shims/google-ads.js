@@ -71,3 +71,7 @@ if (window.gapi?._pl === undefined) {
     zoomableimage: stub,
   };
 }
+
+for (const e of document.querySelectorAll("ins.adsbygoogle")) {
+  e.style.maxWidth = "0px";
+}

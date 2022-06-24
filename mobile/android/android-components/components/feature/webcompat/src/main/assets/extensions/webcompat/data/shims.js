@@ -149,6 +149,25 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "AdSafeProtectedFavIcon",
+    platform: "all",
+    name: "Ad Safe Protected favicon",
+    bug: "1717806",
+    matches: [
+      {
+        patterns: ["*://static.adsafeprotected.com/favicon.ico"],
+        target: "https://redirect.firefox.etp/adsafeprotected_favicon",
+        types: ["image", "imageset", "xmlhttprequest"],
+      },
+      {
+        patterns: ["https://redirect.firefox.etp/adsafeprotected_favicon"],
+        target: "tracking-pixel.png",
+        types: ["image", "imageset", "xmlhttprequest"],
+      },
+    ],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "AdSafeProtectedGoogleIMAAdapter",
     platform: "all",
     branches: ["nightly:android"],
@@ -164,7 +183,35 @@ const AVAILABLE_SHIMS = [
     name: "Ads by Google",
     bug: "1713726",
     file: "google-ads.js",
-    matches: ["*://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"],
+    matches: [
+      "*://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",
+      {
+        patterns: [
+          "*://pagead2.googlesyndication.com/pagead/*.js*fcd=true",
+          "*://pagead2.googlesyndication.com/pagead/js/*.js*fcd=true",
+        ],
+        target: "empty-script.js",
+        types: ["xmlhttprequest"],
+      },
+    ],
+    onlyIfBlockedByETP: true,
+  },
+  {
+    id: "Branch",
+    platform: "all",
+    name: "Branch Web SDK",
+    bug: "1716220",
+    file: "branch.js",
+    matches: ["*://cdn.branch.io/branch-latest.min.js*"],
+    onlyIfBlockedByETP: true,
+  },
+  {
+    id: "DoubleVerify",
+    platform: "all",
+    name: "DoubleVerify",
+    bug: "1771557",
+    file: "doubleverify.js",
+    matches: ["*://pub.doubleverify.com/signals/pub.js*"],
     onlyIfBlockedByETP: true,
   },
   {
@@ -246,6 +293,19 @@ const AVAILABLE_SHIMS = [
       },
     ],
     onlyIfBlockedByETP: true,
+  },
+  {
+    id: "PBMWebAPIFixes",
+    platform: "all",
+    name: "Private Browsing Web APIs",
+    bug: "1773110",
+    runFirst: "private-browsing-web-api-fixes.js",
+    matches: [
+      "*://*.imgur.com/js/vendor.*.bundle.js",
+      "*://*.imgur.io/js/vendor.*.bundle.js",
+      "*://www.rva311.com/static/js/main.*.chunk.js",
+    ],
+    onlyIfPrivateBrowsing: true,
   },
   {
     id: "Eluminate",
@@ -392,6 +452,15 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
+    id: "IAM",
+    platform: "all",
+    name: "INFOnline IAM",
+    bug: "1761774",
+    file: "iam.js",
+    matches: ["*://script.ioam.de/iam.js"],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "IASPET",
     platform: "all",
     name: "Integral Ad Science PET",
@@ -427,12 +496,24 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "Nielsen",
+    platform: "all",
+    name: "Nielsen",
+    bug: "1760754",
+    file: "nielsen.js",
+    matches: ["*://*.imrworldwide.com/v60.js"],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "Optimizely",
     platform: "all",
     name: "Optimizely",
     bug: "1714431",
     file: "optimizely.js",
-    matches: ["*://cdn.optimizely.com/js/*.js"],
+    matches: [
+      "*://cdn.optimizely.com/js/*.js",
+      "*://cdn.optimizely.com/public/*.js",
+    ],
     onlyIfBlockedByETP: true,
   },
   {
@@ -455,6 +536,19 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "Firebase",
+    platform: "all",
+    name: "Firebase",
+    bug: "1668408",
+    onlyIfPrivateBrowsing: true,
+    runFirst: "firebase.js",
+    matches: [
+      "*://www.gstatic.com/firebasejs/*/firebase-messaging.js*",
+      "*://orangerie.eu/js/vendor*.js*",
+      "*://web.whatsapp.com/vendor*bootstrap_qr*.js*",
+    ],
+  },
+  {
     id: "StackBlitz",
     platform: "all",
     name: "StackBlitz",
@@ -468,6 +562,28 @@ const AVAILABLE_SHIMS = [
         allFrames: true,
       },
     ],
+  },
+  {
+    id: "StickyAdsTV",
+    platform: "all",
+    name: "StickyAdsTV",
+    bug: "1717806",
+    matches: [
+      {
+        patterns: [
+          "*://ads.stickyadstv.com/auto-user-sync*",
+          "*://ads.stickyadstv.com/user-matching*",
+        ],
+        target: "https://redirect.firefox.etp/stickadstv",
+        types: ["image", "imageset", "xmlhttprequest"],
+      },
+      {
+        patterns: ["https://redirect.firefox.etp/stickadstv"],
+        target: "tracking-pixel.png",
+        types: ["image", "imageset", "xmlhttprequest"],
+      },
+    ],
+    onlyIfBlockedByETP: true,
   },
   {
     id: "Vidible",

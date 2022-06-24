@@ -32,7 +32,7 @@ if (window.googletag?.apiReady === undefined) {
       requestAnimationFrame(() => {
         const size = [0, 0];
         for (const cb of eventCallbacks.get(name) || []) {
-          cb({ isEmpty: false, size, slot });
+          cb({ isEmpty: true, size, slot });
         }
         resolve();
       });
@@ -49,6 +49,8 @@ if (window.googletag?.apiReady === undefined) {
       f.srcdoc = "<body></body>";
       f.style =
         "position:absolute; width:0; height:0; left:0; right:0; z-index:-1; border:0";
+      f.setAttribute("width", 0);
+      f.setAttribute("height", 0);
       node.appendChild(f);
     }
   };
@@ -94,6 +96,13 @@ if (window.googletag?.apiReady === undefined) {
     return this;
   };
 
+  const removeEventListener = function(name, listener) {
+    if (eventCallbacks.has(name)) {
+      return eventCallbacks.get(name).delete(listener);
+    }
+    return false;
+  };
+
   const companionAdsService = {
     addEventListener,
     display,
@@ -112,6 +121,7 @@ if (window.googletag?.apiReady === undefined) {
     notifyUnfilledSlots() {},
     onImplementationLoaded() {},
     refreshAllSlots() {},
+    removeEventListener,
     set() {},
     setRefreshUnfilledSlots() {},
     setVideoSession() {},
@@ -121,6 +131,7 @@ if (window.googletag?.apiReady === undefined) {
   const contentService = {
     addEventListener,
     setContent() {},
+    removeEventListener,
   };
 
   const getTargetingValue = v => {
@@ -143,6 +154,10 @@ if (window.googletag?.apiReady === undefined) {
   };
 
   const newSlot = (adUnitPath, size, opt_div) => {
+    if (slotsById.has(opt_div)) {
+      document.getElementById(opt_div)?.remove();
+      return undefined;
+    }
     const attributes = new Map();
     const targeting = new Map();
     const exclusions = new Set();
@@ -318,6 +333,7 @@ if (window.googletag?.apiReady === undefined) {
         }
       }
     },
+    removeEventListener,
     set(k, v) {
       gAttributes[k] = v;
       return this;
