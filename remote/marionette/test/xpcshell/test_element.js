@@ -4,11 +4,11 @@
 
 const {
   ChromeWebElement,
-  ContentWebWindow,
   element,
   WebElement,
   WebFrame,
   WebReference,
+  WebWindow,
 } = ChromeUtils.import("chrome://remote/content/marionette/element.js");
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -436,7 +436,7 @@ add_test(function test_WebElemenet_is() {
 add_test(function test_WebReference_from() {
   ok(WebReference.from(domEl) instanceof WebElement);
   ok(WebReference.from(xulEl) instanceof WebElement);
-  ok(WebReference.from(domWin) instanceof ContentWebWindow);
+  ok(WebReference.from(domWin) instanceof WebWindow);
   ok(WebReference.from(domFrame) instanceof WebFrame);
   ok(WebReference.from(domElInPrivilegedDocument) instanceof ChromeWebElement);
   ok(WebReference.from(xulElInPrivilegedDocument) instanceof ChromeWebElement);
@@ -464,10 +464,10 @@ add_test(function test_WebReference_fromJSON_WebElement() {
   run_next_test();
 });
 
-add_test(function test_WebReference_fromJSON_ContentWebWindow() {
-  let ref = { [ContentWebWindow.Identifier]: "foo" };
+add_test(function test_WebReference_fromJSON_WebWindow() {
+  let ref = { [WebWindow.Identifier]: "foo" };
   let win = WebReference.fromJSON(ref);
-  ok(win instanceof ContentWebWindow);
+  ok(win instanceof WebWindow);
   equal(win.uuid, "foo");
 
   run_next_test();
@@ -520,7 +520,7 @@ add_test(function test_WebReference_isReference() {
   }
 
   ok(WebReference.isReference({ [WebElement.Identifier]: "foo" }));
-  ok(WebReference.isReference({ [ContentWebWindow.Identifier]: "foo" }));
+  ok(WebReference.isReference({ [WebWindow.Identifier]: "foo" }));
   ok(WebReference.isReference({ [WebFrame.Identifier]: "foo" }));
   ok(WebReference.isReference({ [ChromeWebElement.Identifier]: "foo" }));
 
@@ -556,19 +556,19 @@ add_test(function test_WebElement_fromJSON() {
   run_next_test();
 });
 
-add_test(function test_ContentWebWindow_toJSON() {
-  let win = new ContentWebWindow("foo");
+add_test(function test_WebWindow_toJSON() {
+  let win = new WebWindow("foo");
   let json = win.toJSON();
-  ok(ContentWebWindow.Identifier in json);
-  equal(json[ContentWebWindow.Identifier], "foo");
+  ok(WebWindow.Identifier in json);
+  equal(json[WebWindow.Identifier], "foo");
 
   run_next_test();
 });
 
-add_test(function test_ContentWebWindow_fromJSON() {
-  let ref = { [ContentWebWindow.Identifier]: "foo" };
-  let win = ContentWebWindow.fromJSON(ref);
-  ok(win instanceof ContentWebWindow);
+add_test(function test_WebWindow_fromJSON() {
+  let ref = { [WebWindow.Identifier]: "foo" };
+  let win = WebWindow.fromJSON(ref);
+  ok(win instanceof WebWindow);
   equal(win.uuid, "foo");
 
   run_next_test();

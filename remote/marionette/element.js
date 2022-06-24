@@ -7,11 +7,11 @@
 const EXPORTED_SYMBOLS = [
   "ChromeWebElement",
   "ContentShadowRoot",
-  "ContentWebWindow",
   "element",
   "WebElement",
   "WebFrame",
   "WebReference",
+  "WebWindow",
 ];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -1519,7 +1519,7 @@ class WebReference {
       return new WebElement(uuid);
     } else if (element.isDOMWindow(node)) {
       if (node.parent === node) {
-        return new ContentWebWindow(uuid);
+        return new WebWindow(uuid);
       }
       return new WebFrame(uuid);
     }
@@ -1531,7 +1531,7 @@ class WebReference {
 
   /**
    * Unmarshals a JSON Object to one of {@link WebElement},
-   * {@link ContentWebWindow}, {@link WebFrame},
+   * {@link WebWindow}, {@link WebFrame},
    * or {@link ChromeWebElement}.
    *
    * @param {Object.<string, string>} json
@@ -1560,11 +1560,11 @@ class WebReference {
         case WebElement.Identifier:
           return WebElement.fromJSON(json);
 
-        case ContentWebWindow.Identifier:
-          return ContentWebWindow.fromJSON(json);
-
         case WebFrame.Identifier:
           return WebFrame.fromJSON(json);
+
+        case WebWindow.Identifier:
+          return WebWindow.fromJSON(json);
 
         case ChromeWebElement.Identifier:
           return ChromeWebElement.fromJSON(json);
@@ -1635,8 +1635,8 @@ class WebReference {
     if (
       ContentShadowRoot.Identifier in obj ||
       WebElement.Identifier in obj ||
-      ContentWebWindow.Identifier in obj ||
       WebFrame.Identifier in obj ||
+      WebWindow.Identifier in obj ||
       ChromeWebElement.Identifier in obj
     ) {
       return true;
@@ -1709,22 +1709,22 @@ ContentShadowRoot.Identifier = "shadow-6066-11e4-a52e-4f735466cecf";
  * whose <code>opener</code> is null, are represented as web windows
  * over the wire protocol.
  */
-class ContentWebWindow extends WebReference {
+class WebWindow extends WebReference {
   toJSON() {
-    return { [ContentWebWindow.Identifier]: this.uuid };
+    return { [WebWindow.Identifier]: this.uuid };
   }
 
   static fromJSON(json) {
-    if (!(ContentWebWindow.Identifier in json)) {
+    if (!(WebWindow.Identifier in json)) {
       throw new lazy.error.InvalidArgumentError(
         lazy.pprint`Expected web window reference, got: ${json}`
       );
     }
-    let uuid = json[ContentWebWindow.Identifier];
-    return new ContentWebWindow(uuid);
+    let uuid = json[WebWindow.Identifier];
+    return new WebWindow(uuid);
   }
 }
-ContentWebWindow.Identifier = "window-fcc6-11e5-b4f8-330a88ab9d7f";
+WebWindow.Identifier = "window-fcc6-11e5-b4f8-330a88ab9d7f";
 
 /**
  * Nested browsing contexts, such as the <code>WindowProxy</code>
