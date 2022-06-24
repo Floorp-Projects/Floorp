@@ -18,6 +18,7 @@
 #include "nsIStringBundle.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsNSSComponent.h"
 #include "nsReadableUtils.h"
 #include "nsSandboxFlags.h"
 #include "nsServiceManagerUtils.h"
@@ -984,6 +985,13 @@ bool nsCSPHashSrc::allows(enum CSPKeyword aKeyword,
 
   // Convert aHashOrNonce to UTF-8
   NS_ConvertUTF16toUTF8 utf8_hash(aHashOrNonce);
+
+  // Ensure that NSS is initialized, since NS_NewCryptoHash will use NSS
+  // functions and we should make sure the NSS modules are already loaded
+  // (See Bug 1775119).
+  if (NS_WARN_IF(!EnsureNSSInitializedChromeOrContent())) {
+    return false;
+  }
 
   nsCOMPtr<nsICryptoHash> hasher;
   nsresult rv = NS_NewCryptoHash(NS_ConvertUTF16toUTF8(mAlgorithm),
