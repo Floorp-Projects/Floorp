@@ -25,6 +25,12 @@
 #include "nsImportModule.h"
 #include "nsIXPConnect.h"
 
+#ifdef ANDROID
+#  include "mozilla/widget/nsWindow.h"
+#  include "mozilla/jni/GeckoBundleUtils.h"
+#  include "JavaBuiltins.h"
+#endif /* ANDROID */
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -33,9 +39,81 @@ SessionStoreParent::SessionStoreParent(
     BrowserSessionStore* aSessionStore)
     : mBrowsingContext(aBrowsingContext), mSessionStore(aSessionStore) {}
 
+#ifdef ANDROID
 static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
                                  const Maybe<nsCString>& aDocShellCaps,
                                  const Maybe<bool>& aPrivatedMode,
+                                 SessionStoreFormData* aFormData,
+                                 SessionStoreScrollData* aScroll,
+                                 const MaybeSessionStoreZoom& aZoom,
+                                 bool aNeedCollectSHistory, uint32_t aEpoch) {
+  RefPtr<BrowserSessionStore> sessionStore =
+      BrowserSessionStore::GetOrCreate(aBrowsingContext->Top());
+
+  nsCOMPtr<nsIWidget> widget =
+      aBrowsingContext->GetParentProcessWidgetContaining();
+  if (RefPtr<nsWindow> window = nsWindow::From(widget)) {
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(xpc::PrivilegedJunkScope())) {
+      return;
+    }
+    jni::Object::LocalRef formDataBundle(jni::GetGeckoThreadEnv());
+    jni::Object::LocalRef scrollBundle(jni::GetGeckoThreadEnv());
+
+    if (aFormData) {
+      JS::RootedObject object(jsapi.cx());
+      ErrorResult rv;
+      aFormData->ToJSON(jsapi.cx(), &object);
+
+      JS::RootedValue value(jsapi.cx(), JS::ObjectValue(*object));
+
+      if (NS_FAILED(jni::BoxData(jsapi.cx(), value, formDataBundle, true))) {
+        JS_ClearPendingException(jsapi.cx());
+        return;
+      }
+    }
+
+    if (aScroll) {
+      JS::RootedObject object(jsapi.cx());
+      ErrorResult rv;
+      aScroll->ToJSON(jsapi.cx(), &object);
+      JS::RootedValue value(jsapi.cx(), JS::ObjectValue(*object));
+
+      if (NS_FAILED(jni::BoxData(jsapi.cx(), value, scrollBundle, true))) {
+        JS_ClearPendingException(jsapi.cx());
+        return;
+      }
+    }
+
+    GECKOBUNDLE_START(update);
+    GECKOBUNDLE_PUT(update, "formdata", formDataBundle);
+    GECKOBUNDLE_PUT(update, "scroll", scrollBundle);
+    if (aZoom) {
+      GECKOBUNDLE_START(zoomBundle);
+      GECKOBUNDLE_PUT(zoomBundle, "resolution",
+                      java::sdk::Double::New(Get<0>(*aZoom)));
+      GECKOBUNDLE_START(displaySizeBundle);
+      GECKOBUNDLE_PUT(displaySizeBundle, "width",
+                      java::sdk::Integer::ValueOf(Get<1>(*aZoom)));
+      GECKOBUNDLE_PUT(displaySizeBundle, "height",
+                      java::sdk::Integer::ValueOf(Get<2>(*aZoom)));
+      GECKOBUNDLE_FINISH(displaySizeBundle);
+      GECKOBUNDLE_PUT(zoomBundle, "displaySize", displaySizeBundle);
+      GECKOBUNDLE_FINISH(zoomBundle);
+      GECKOBUNDLE_PUT(update, "zoom", zoomBundle);
+    }
+    GECKOBUNDLE_FINISH(update);
+
+    window->OnUpdateSessionStore(update);
+  }
+}
+#else
+static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
+                                 const Maybe<nsCString>& aDocShellCaps,
+                                 const Maybe<bool>& aPrivatedMode,
+                                 SessionStoreFormData* aFormData,
+                                 SessionStoreScrollData* aScroll,
+                                 const MaybeSessionStoreZoom& aZoom,
                                  bool aNeedCollectSHistory, uint32_t aEpoch) {
   UpdateSessionStoreData data;
   if (aDocShellCaps.isSome()) {
@@ -54,11 +132,19 @@ static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
   RefPtr<BrowserSessionStore> sessionStore =
       BrowserSessionStore::GetOrCreate(aBrowsingContext->Top());
 
-  SessionStoreFormData* formData = sessionStore->GetFormdata();
-  data.mFormdata.Construct(formData);
+  if (!aFormData) {
+    SessionStoreFormData* formData = sessionStore->GetFormdata();
+    data.mFormdata.Construct(formData);
+  } else {
+    data.mFormdata.Construct(aFormData);
+  }
 
-  SessionStoreScrollData* scroll = sessionStore->GetScroll();
-  data.mScroll.Construct(scroll);
+  if (!aScroll) {
+    SessionStoreScrollData* scroll = sessionStore->GetScroll();
+    data.mScroll.Construct(scroll);
+  } else {
+    data.mScroll.Construct(aScroll);
+  }
 
   nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportModule(
       "resource://gre/modules/SessionStoreFunctions.jsm", fallible);
@@ -82,6 +168,7 @@ static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
   Unused << funcs->UpdateSessionStore(nullptr, aBrowsingContext, key, aEpoch,
                                       aNeedCollectSHistory, update);
 }
+#endif
 
 void SessionStoreParent::FlushAllSessionStoreChildren(
     const std::function<void()>& aDone) {
@@ -157,13 +244,23 @@ void SessionStoreParent::FinalFlushAllSessionStoreChildren(
 
 mozilla::ipc::IPCResult SessionStoreParent::RecvSessionStoreUpdate(
     const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
-    const bool aNeedCollectSHistory, const uint32_t& aEpoch) {
+    const MaybeSessionStoreZoom& aZoom, const bool aNeedCollectSHistory,
+    const uint32_t& aEpoch) {
   if (!mBrowsingContext) {
     return IPC_OK();
   }
 
-  DoSessionStoreUpdate(mBrowsingContext, aDocShellCaps, aPrivatedMode,
-                       aNeedCollectSHistory, aEpoch);
+  RefPtr<SessionStoreFormData> formData =
+      mHasNewFormData ? mSessionStore->GetFormdata() : nullptr;
+  RefPtr<SessionStoreScrollData> scroll =
+      mHasNewScrollPosition ? mSessionStore->GetScroll() : nullptr;
+
+  DoSessionStoreUpdate(mBrowsingContext, aDocShellCaps, aPrivatedMode, formData,
+                       scroll, aZoom, aNeedCollectSHistory, aEpoch);
+
+  mHasNewFormData = false;
+  mHasNewScrollPosition = false;
+
   return IPC_OK();
 }
 
@@ -172,6 +269,13 @@ mozilla::ipc::IPCResult SessionStoreParent::RecvIncrementalSessionStoreUpdate(
     const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
     uint32_t aEpoch) {
   if (!aBrowsingContext.IsNull()) {
+    if (aFormData.isSome()) {
+      mHasNewFormData = true;
+    }
+    if (aScrollPosition.isSome()) {
+      mHasNewScrollPosition = true;
+    }
+
     mSessionStore->UpdateSessionStore(
         aBrowsingContext.GetMaybeDiscarded()->Canonical(), aFormData,
         aScrollPosition, aEpoch);
@@ -191,8 +295,9 @@ mozilla::ipc::IPCResult SessionStoreParent::RecvResetSessionStore(
 
 void SessionStoreParent::SessionStoreUpdate(
     const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
-    const bool aNeedCollectSHistory, const uint32_t& aEpoch) {
-  Unused << RecvSessionStoreUpdate(aDocShellCaps, aPrivatedMode,
+    const MaybeSessionStoreZoom& aZoom, const bool aNeedCollectSHistory,
+    const uint32_t& aEpoch) {
+  Unused << RecvSessionStoreUpdate(aDocShellCaps, aPrivatedMode, aZoom,
                                    aNeedCollectSHistory, aEpoch);
 }
 
