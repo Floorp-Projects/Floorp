@@ -10,7 +10,7 @@
 var rule = require("../lib/rules/valid-lazy");
 var RuleTester = require("eslint").RuleTester;
 
-const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
+const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 13 } });
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -27,30 +27,30 @@ ruleTester.run("valid-lazy", rule, {
     `
       const lazy = {};
       XPCOMUtils.defineLazyGetter(lazy, "foo", () => {});
-      lazy.foo.bar();
+      if (x) { lazy.foo.bar(); }
     `,
     `
       const lazy = {};
       XPCOMUtils.defineLazyModuleGetters(lazy, {
         foo: "foo.jsm",
       });
-      lazy.foo.bar();
+      if (x) { lazy.foo.bar(); }
     `,
     `
       const lazy = {};
       ChromeUtils.defineESModuleGetters(lazy, {
         foo: "foo.mjs",
       });
-      lazy.foo.bar();
+      if (x) { lazy.foo.bar(); }
     `,
     `
       const lazy = {};
       Integration.downloads.defineModuleGetter(lazy, "foo", "foo.jsm");
-      lazy.foo.bar();
+      if (x) { lazy.foo.bar(); }
     `,
     `
       const lazy = createLazyLoaders({ foo: () => {}});
-      lazy.foo.bar();
+      if (x) { lazy.foo.bar(); }
     `,
     `
       const lazy = {};
@@ -60,18 +60,57 @@ ruleTester.run("valid-lazy", rule, {
         "bar",
         true
       );
-      lazy.foo1.bar();
-      lazy.foo2.bar();
+      if (x) {
+        lazy.foo1.bar();
+        lazy.foo2.bar();
+      }
+    `,
+    // Test for top-level unconditional.
+    `
+      const lazy = {};
+      XPCOMUtils.defineLazyGetter(lazy, "foo", () => {});
+      if (x) { lazy.foo.bar(); }
+      for (;;) { lazy.foo.bar(); }
+      for (var x in y) { lazy.foo.bar(); }
+      for (var x of y) { lazy.foo.bar(); }
+      while (true) { lazy.foo.bar(); }
+      do { lazy.foo.bar(); } while (true);
+      switch (x) { case 1: lazy.foo.bar(); }
+      try { lazy.foo.bar(); } catch (e) {}
+      function f() { lazy.foo.bar(); }
+      (function f() { lazy.foo.bar(); });
+      () => { lazy.foo.bar(); };
+      class C {
+        constructor() { lazy.foo.bar(); }
+        foo() { lazy.foo.bar(); }
+        get x() { lazy.foo.bar(); }
+        set x(v) { lazy.foo.bar(); }
+        a = lazy.foo.bar();
+        #b = lazy.foo.bar();
+        static {
+          lazy.foo.bar();
+        }
+      }
+      a && lazy.foo.bar();
+      a || lazy.foo.bar();
+      a ?? lazy.foo.bar();
+      a ? lazy.foo.bar() : b;
+      a?.b[lazy.foo.bar()];
+      a ||= lazy.foo.bar();
+      a &&= lazy.foo.bar();
+      a ??= lazy.foo.bar();
+      var { x = lazy.foo.bar() } = {};
+      var [ y = lazy.foo.bar() ] = [];
     `,
   ],
   invalid: [
-    invalidCode("lazy.bar", "bar", "unknownProperty"),
+    invalidCode("if (x) { lazy.bar; }", "bar", "unknownProperty"),
     invalidCode(
       `
         const lazy = {};
         XPCOMUtils.defineLazyGetter(lazy, "foo", "foo.jsm");
         XPCOMUtils.defineLazyGetter(lazy, "foo", "foo1.jsm");
-        lazy.foo.bar();
+        if (x) { lazy.foo.bar(); }
       `,
       "foo",
       "duplicateSymbol"
@@ -82,7 +121,7 @@ ruleTester.run("valid-lazy", rule, {
         XPCOMUtils.defineLazyModuleGetters(lazy, {
           "foo-bar": "foo.jsm",
         });
-        lazy["foo-bar"].bar();
+        if (x) { lazy["foo-bar"].bar(); }
       `,
       "foo-bar",
       "incorrectType"
@@ -93,6 +132,20 @@ ruleTester.run("valid-lazy", rule, {
       `,
       "foo",
       "unusedProperty"
+    ),
+    invalidCode(
+      `const lazy = {};
+      XPCOMUtils.defineLazyGetter(lazy, "foo1", () => {});
+      lazy.foo1.bar();`,
+      "foo1",
+      "topLevelAndUnconditional"
+    ),
+    invalidCode(
+      `const lazy = {};
+      XPCOMUtils.defineLazyGetter(lazy, "foo1", () => {});
+      { x = -f(1 + lazy.foo1.bar()); }`,
+      "foo1",
+      "topLevelAndUnconditional"
     ),
   ],
 });

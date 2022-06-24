@@ -534,6 +534,61 @@ module.exports = {
   },
 
   /**
+   * Check whether the node is evaluated at top-level script unconditionally.
+   *
+   * @param {Array} ancestors
+   *        The parents of the current node.
+   *
+   * @return {Boolean}
+   *         True or false
+   */
+  getIsTopLevelAndUnconditionallyExecuted(ancestors) {
+    for (let parent of ancestors) {
+      switch (parent.type) {
+        // Control flow
+        case "IfStatement":
+        case "SwitchStatement":
+        case "TryStatement":
+        case "WhileStatement":
+        case "DoWhileStatement":
+        case "ForStatement":
+        case "ForInStatement":
+        case "ForOfStatement":
+          return false;
+
+        // Function
+        case "FunctionDeclaration":
+        case "FunctionExpression":
+        case "ArrowFunctionExpression":
+        case "ClassBody":
+          return false;
+
+        // Branch
+        case "LogicalExpression":
+        case "ConditionalExpression":
+        case "ChainExpression":
+          return false;
+
+        case "AssignmentExpression":
+          switch (parent.operator) {
+            // Branch
+            case "||=":
+            case "&&=":
+            case "??=":
+              return false;
+          }
+          break;
+
+        // Implicit branch (default value)
+        case "ObjectPattern":
+        case "ArrayPattern":
+          return false;
+      }
+    }
+    return true;
+  },
+
+  /**
    * Check whether we might be in a test head file.
    *
    * @param  {RuleContext} scope

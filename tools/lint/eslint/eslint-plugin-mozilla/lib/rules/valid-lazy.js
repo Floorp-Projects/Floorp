@@ -59,6 +59,8 @@ module.exports = {
       incorrectType: "Unexpected literal for property name {{name}}",
       unknownProperty: "Unknown lazy member property {{name}}",
       unusedProperty: "Unused lazy property {{name}}",
+      topLevelAndUnconditional:
+        "Lazy property {{name}} is used at top-level unconditionally. It should be non-lazy.",
     },
     type: "problem",
   },
@@ -177,6 +179,17 @@ module.exports = {
           unknownProperties.push({ name, node });
         } else {
           property.used = true;
+        }
+        if (
+          helpers.getIsTopLevelAndUnconditionallyExecuted(
+            context.getAncestors()
+          )
+        ) {
+          context.report({
+            node,
+            messageId: "topLevelAndUnconditional",
+            data: { name },
+          });
         }
       },
 
