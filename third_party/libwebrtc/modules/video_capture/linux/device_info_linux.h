@@ -60,8 +60,7 @@ class DeviceInfoLinux : public DeviceInfoImpl {
   int EventCheck(int fd);
   int HandleEvents(int fd);
   int ProcessInotifyEvents();
-  std::unique_ptr<rtc::PlatformThread> _inotifyEventThread;
-  static void InotifyEventThread(void*);
+  rtc::PlatformThread _inotifyEventThread;
   void InotifyProcess();
   int _fd_v4l, _fd_dev, _wd_v4l, _wd_dev; /* accessed on InotifyEventThread thread */
   std::atomic<bool> _isShutdown;
