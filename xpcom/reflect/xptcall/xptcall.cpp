@@ -6,7 +6,6 @@
 /* entry point wrappers. */
 
 #include "xptcprivate.h"
-#include "nsPrintfCString.h"
 
 using namespace mozilla;
 

@@ -12,7 +12,6 @@
 #include "nsISupports.h"
 #include "xptinfo.h"
 #include "js/Value.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
 struct nsXPTCMiniVariant {

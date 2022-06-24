@@ -18,8 +18,6 @@
 #include "nsExceptionHandler.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"
-#include "prprf.h"
-#include "nsError.h"
 #include "prerror.h"
 #include "prerr.h"
 #include "prenv.h"
@@ -91,8 +89,6 @@ static void Break(const char* aMsg);
 #  include <windows.h>
 #  include <signal.h>
 #  include <malloc.h>  // for _alloca
-#elif defined(XP_UNIX)
-#  include <stdlib.h>
 #endif
 
 using namespace mozilla;

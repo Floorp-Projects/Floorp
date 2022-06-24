@@ -8,9 +8,9 @@
 #define IdleTaskRunner_h
 
 #include "mozilla/TimeStamp.h"
-#include "mozilla/TaskCategory.h"
-#include "mozilla/TaskController.h"
-#include "nsThreadUtils.h"
+#include "nsIEventTarget.h"
+#include "nsISupports.h"
+#include "nsITimer.h"
 #include <functional>
 
 namespace mozilla {

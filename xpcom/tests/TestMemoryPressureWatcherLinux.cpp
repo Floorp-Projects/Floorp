@@ -6,7 +6,6 @@
 #include "mozilla/AvailableMemoryWatcherUtils.h"
 
 #include <fstream>
-#include <iostream>
 
 using namespace mozilla;
 

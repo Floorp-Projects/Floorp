@@ -6,16 +6,11 @@
 
 #include "mozilla/FileUtils.h"
 
-#include <errno.h>
-#include <stdio.h>
-#include <inttypes.h>
-
 #include "nscore.h"
 #include "private/pprio.h"
 #include "prmem.h"
-#include "mozilla/Assertions.h"
-#include "mozilla/MemUtils.h"
 #include "mozilla/BaseProfilerMarkers.h"
+#include "mozilla/MemUtils.h"
 
 #if defined(XP_MACOSX)
 #  include <fcntl.h>

@@ -18,7 +18,6 @@
 #include "mozilla/FilePreferences.h"
 #include "prtime.h"
 
-#include <sys/fcntl.h>
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -26,10 +25,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <utime.h>
 #include <dirent.h>
-#include <ctype.h>
-#include <locale.h>
 
 #if defined(XP_MACOSX)
 #  include <sys/xattr.h>
@@ -45,13 +41,9 @@
 #endif
 
 #include "nsDirectoryServiceDefs.h"
-#include "nsCRT.h"
 #include "nsCOMPtr.h"
-#include "nsMemory.h"
 #include "nsIFile.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
-#include "prproces.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsSimpleEnumerator.h"
 #include "private/pprio.h"
@@ -78,7 +70,6 @@ static nsresult MacErrorMapper(OSErr inErr);
 
 #include "nsNativeCharsetUtils.h"
 #include "nsTraceRefcnt.h"
-#include "nsHashKeys.h"
 
 /**
  *  we need these for statfs()
@@ -96,11 +87,6 @@ extern "C" int statvfs(const char*, struct statvfs*);
 
 #ifdef HAVE_SYS_VFS_H
 #  include <sys/vfs.h>
-#endif
-
-#ifdef HAVE_SYS_MOUNT_H
-#  include <sys/param.h>
-#  include <sys/mount.h>
 #endif
 
 #if defined(HAVE_STATVFS64) && (!defined(LINUX) && !defined(__osf__))
