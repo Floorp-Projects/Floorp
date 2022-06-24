@@ -157,8 +157,7 @@ build and OS are 32-bit or 64-bit.
    Firefox. (The "Build Architecture" field should be "amd64" in this
    case.)
 
-Some crash reports have a field "ContainsMemoryReport", which indicates
-that the crash report contains a memory report. This memory report will
+Some crash reports might contain a memory report. This memory report will
 have been made some time before the crash, at a time when available
 memory was low. In this case, a number of key measurements from the
 memory report are shown in the Details tab, each one having a field name
@@ -274,9 +273,7 @@ These links are to the following items.
    crash report; see :ref:`this page <Debugging A Minidump>` for an
    explanation how to use them.
 #. The aforementioned JSON raw crash report.
-#. The memory report contained within the crash report. Only crash
-   reports with the ``ContainsMemoryReport`` field set will have this
-   link.
+#. The memory report contained within the crash report.
 #. The unredacted crash report, which has additional information.
 
 Extensions tab
