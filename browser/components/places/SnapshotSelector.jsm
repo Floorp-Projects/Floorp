@@ -309,14 +309,22 @@ class SnapshotSelector extends EventEmitter {
    * @param {string} [url]
    *  The url of the current context.
    * @param {number} [time]
-   *  The time, in milliseconds from the Unix epoch.
+   *  The time, in milliseconds since the Unix epoch.
    * @param {PageDataSchema.DATA_TYPE} [type]
    *  The type of snapshots for this selector.
+   * @param {number} [sessionStartTime]
+   *  The start time of the session, in milliseconds since the Unix epoch.
    * @param {string} [rebuildImmediately] (default: false)
    *  Whether to rebuild immediately instead of waiting some delay. Useful on
    *  startup.
    */
-  updateDetailsAndRebuild({ url, time, type, rebuildImmediately = false }) {
+  updateDetailsAndRebuild({
+    url,
+    time,
+    type,
+    sessionStartTime,
+    rebuildImmediately = false,
+  }) {
     let rebuild = false;
     if (url !== undefined) {
       url = lazy.Snapshots.stripFragments(url);
@@ -333,6 +341,14 @@ class SnapshotSelector extends EventEmitter {
       this.#context.type = type;
       rebuild = true;
     }
+    if (
+      sessionStartTime != undefined &&
+      sessionStartTime != this.#context.sessionStartTime
+    ) {
+      this.#context.sessionStartTime = sessionStartTime;
+      rebuild = true;
+    }
+
     if (rebuild) {
       if (rebuildImmediately) {
         this.#buildSnapshots();

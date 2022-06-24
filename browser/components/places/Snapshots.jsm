@@ -109,6 +109,26 @@ XPCOMUtils.defineLazyPreferenceGetter(
   10
 );
 
+/**
+ * We may apply a penalty to timeOfDay scores, based on how much time elapsed
+ * from the start of the browsing session.
+ * After "start" time passed from the begin of the browsing session, the score
+ * will be reduced linearly until 0.1 at the "end" time.
+ * Setting the start time to -1 disables the penalty.
+ */
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "snapshot_timeofday_sessiondecay_start_s",
+  "browser.places.interactions.snapshotTimeOfDaySessionDecayStartSeconds",
+  1800 // 30 mins
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "snapshot_timeofday_sessiondecay_end_s",
+  "browser.places.interactions.snapshotTimeOfDaySessionDecayEndSeconds",
+  28800 // 8 hours
+);
+
 const DEFAULT_CRITERIA = [
   {
     property: "total_view_time",
@@ -899,7 +919,11 @@ const Snapshots = new (class Snapshots {
     // For now instead we assign a score based on the number of interactions
     // with the page during `snapshot_timeofday_limit_days`.
     entries.forEach(e => {
-      e.score = this.timeOfDayScore(e.data.interactions, interactionCounts);
+      e.score = this.timeOfDayScore({
+        interactions: e.data.interactions,
+        context: selectionContext,
+        ...interactionCounts,
+      });
     });
     return entries;
   }
@@ -909,6 +933,8 @@ const Snapshots = new (class Snapshots {
    *
    * @param {number} interactions
    *  The number of interactions with the page.
+   * @param {object} context
+   *  The selection context.
    * @param {number} min
    *  The minimum number of interactions during snapshot_timeofday_limit_days.
    * @param {number} max
@@ -916,7 +942,7 @@ const Snapshots = new (class Snapshots {
    * @returns {float} Calculated score for the page.
    * @note This function is useful for testing scores.
    */
-  timeOfDayScore(interactions, { min, max }) {
+  timeOfDayScore({ interactions, context, min, max }) {
     // Assign score 1.0 to the pages having more than max / 2 interactions,
     // other pages get a decreasing score between 0.5 and 1.0.
     let score = 1.0;
@@ -931,6 +957,28 @@ const Snapshots = new (class Snapshots {
         (1 +
           (interactions - 1) /
             (lazy.snapshot_timeofday_expected_interactions - 1));
+    }
+    // Finally, if the session decay prefs are set, apply an additional penalty
+    // based on how much time passed from the start of the browsing session.
+    // The idea behind this is that starting a new session is likely to identify
+    // the begin of a workflow, that may be repeated in days.
+    // The score is reduced linearly to 0.1 between a "start" and an "end" time.
+    if (
+      context.sessionStartTime &&
+      lazy.snapshot_timeofday_sessiondecay_start_s >= 0
+    ) {
+      let timeFromSessionStart = context.time - context.sessionStartTime;
+      let decay = {
+        start: lazy.snapshot_timeofday_sessiondecay_start_s * 1000,
+        end: lazy.snapshot_timeofday_sessiondecay_end_s * 1000,
+      };
+      if (score > 0.1 && timeFromSessionStart > decay.start) {
+        if (timeFromSessionStart > decay.end) {
+          return 0.1;
+        }
+        score +=
+          ((timeFromSessionStart - decay.start) * (0.1 - score)) / decay.end;
+      }
     }
     // Round to 2 decimal positions.
     return Math.round(score * 1e2) / 1e2;
@@ -1036,9 +1084,13 @@ const Snapshots = new (class Snapshots {
       return;
     }
 
-    lazy.logConsole.debug(
-      `Testing ${urls ? urls.length : "all"} potential snapshots`
-    );
+    if (urls) {
+      lazy.logConsole.debug(
+        `Testing ${urls.length} potential snapshots: ${urls}`
+      );
+    } else {
+      lazy.logConsole.debug("Testing for any potential snapshot");
+    }
 
     let model;
     try {
@@ -1153,8 +1205,6 @@ const Snapshots = new (class Snapshots {
           createdAt: now,
         });
 
-        lazy.logConsole.debug(`Inserted ${results.length} snapshots`);
-
         let newUrls = [];
         for (let row of results) {
           // If created_at differs from the passed value then this snapshot already existed.
@@ -1171,7 +1221,9 @@ const Snapshots = new (class Snapshots {
     );
 
     if (insertedUrls.length) {
-      lazy.logConsole.debug(`${insertedUrls.length} snapshots created`);
+      lazy.logConsole.debug(
+        `${insertedUrls.length} snapshots created: ${insertedUrls}`
+      );
       await this.#addPageData(insertedUrls);
       this.#notify(
         "places-snapshots-added",
