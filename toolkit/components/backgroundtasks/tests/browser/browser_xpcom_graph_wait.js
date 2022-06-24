@@ -109,7 +109,7 @@ const backgroundtaskPhases = {
           condition: WIN,
         },
         {
-          name: "@mozilla.org/gfx/parent/screenmanager;1",
+          name: "@mozilla.org/gfx/screenmanager;1",
           condition: WIN,
         },
       ],
