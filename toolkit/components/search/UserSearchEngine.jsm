@@ -4,20 +4,14 @@
 
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { SearchEngine } = ChromeUtils.import(
+  "resource://gre/modules/SearchEngine.jsm"
 );
-
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  SearchEngine: "resource://gre/modules/SearchEngine.jsm",
-});
 
 /**
  * UserSearchEngine represents a search engine defined by a user.
  */
-class UserSearchEngine extends lazy.SearchEngine {
+class UserSearchEngine extends SearchEngine {
   /**
    * Creates a UserSearchEngine.
    *
