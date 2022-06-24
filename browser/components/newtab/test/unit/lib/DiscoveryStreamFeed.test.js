@@ -31,6 +31,7 @@ describe("DiscoveryStreamFeed", () => {
   let fetchStub;
   let clock;
   let fakeNewTabUtils;
+  let fakePktApi;
   let globals;
 
   const setPref = (name, value) => {
@@ -109,6 +110,13 @@ describe("DiscoveryStreamFeed", () => {
       },
     };
     globals.set("NewTabUtils", fakeNewTabUtils);
+
+    fakePktApi = {
+      isUserLoggedIn: () => false,
+      getRecentSavesCache: () => null,
+      getRecentSaves: () => null,
+    };
+    globals.set("pktApi", fakePktApi);
   });
 
   afterEach(() => {
@@ -207,6 +215,63 @@ describe("DiscoveryStreamFeed", () => {
           method: "POST",
           body: "{}",
         }
+      );
+    });
+  });
+
+  describe("#setupPocketState", () => {
+    it("should setup logged in state and recent saves with cache", async () => {
+      fakePktApi.isUserLoggedIn = () => true;
+      fakePktApi.getRecentSavesCache = () => [1, 2, 3];
+      sandbox.spy(feed.store, "dispatch");
+      await feed.setupPocketState({});
+      assert.calledTwice(feed.store.dispatch);
+      assert.calledWith(
+        feed.store.dispatch.firstCall,
+        ac.OnlyToOneContent(
+          {
+            type: at.DISCOVERY_STREAM_POCKET_STATE_SET,
+            data: { isUserLoggedIn: true },
+          },
+          {}
+        )
+      );
+      assert.calledWith(
+        feed.store.dispatch.secondCall,
+        ac.OnlyToOneContent(
+          {
+            type: at.DISCOVERY_STREAM_RECENT_SAVES,
+            data: { recentSaves: [1, 2, 3] },
+          },
+          {}
+        )
+      );
+    });
+    it("should setup logged in state and recent saves without cache", async () => {
+      fakePktApi.isUserLoggedIn = () => true;
+      fakePktApi.getRecentSaves = ({ success }) => success([1, 2, 3]);
+      sandbox.spy(feed.store, "dispatch");
+      await feed.setupPocketState({});
+      assert.calledTwice(feed.store.dispatch);
+      assert.calledWith(
+        feed.store.dispatch.firstCall,
+        ac.OnlyToOneContent(
+          {
+            type: at.DISCOVERY_STREAM_POCKET_STATE_SET,
+            data: { isUserLoggedIn: true },
+          },
+          {}
+        )
+      );
+      assert.calledWith(
+        feed.store.dispatch.secondCall,
+        ac.OnlyToOneContent(
+          {
+            type: at.DISCOVERY_STREAM_RECENT_SAVES,
+            data: { recentSaves: [1, 2, 3] },
+          },
+          {}
+        )
       );
     });
   });
@@ -1999,6 +2064,17 @@ describe("DiscoveryStreamFeed", () => {
         },
         type: at.SET_PREF,
       });
+    });
+  });
+
+  describe("#onAction: DISCOVERY_STREAM_POCKET_STATE_INIT", async () => {
+    it("should call setupPocketState", async () => {
+      sandbox.spy(feed, "setupPocketState");
+      feed.onAction({
+        type: at.DISCOVERY_STREAM_POCKET_STATE_INIT,
+        meta: { fromTarget: {} },
+      });
+      assert.calledOnce(feed.setupPocketState);
     });
   });
 
