@@ -7,7 +7,6 @@
 #include <iostream>
 #include <map>
 
-#include "nspr.h"
 #include "nss.h"
 #include "ssl.h"
 
@@ -24,7 +23,6 @@
 #include "jsep/JsepTrack.h"
 #include "jsep/JsepSession.h"
 #include "jsep/JsepSessionImpl.h"
-#include "jsep/JsepTrack.h"
 
 namespace mozilla {
 static std::string kAEqualsCandidate("a=candidate:");
