@@ -11,6 +11,8 @@
 #ifndef MODULES_AUDIO_CODING_NETEQ_DECISION_LOGIC_H_
 #define MODULES_AUDIO_CODING_NETEQ_DECISION_LOGIC_H_
 
+#include <memory>
+
 #include "api/neteq/neteq.h"
 #include "api/neteq/neteq_controller.h"
 #include "api/neteq/tick_timer.h"
@@ -29,6 +31,9 @@ class DecisionLogic : public NetEqController {
 
   // Constructor.
   DecisionLogic(NetEqController::Config config);
+  DecisionLogic(NetEqController::Config config,
+                std::unique_ptr<DelayManager> delay_manager,
+                std::unique_ptr<BufferLevelFilter> buffer_level_filter);
 
   ~DecisionLogic() override;
 
@@ -95,7 +100,7 @@ class DecisionLogic : public NetEqController {
   bool PeakFound() const override { return false; }
 
   int GetFilteredBufferLevel() const override {
-    return buffer_level_filter_.filtered_current_level();
+    return buffer_level_filter_->filtered_current_level();
   }
 
   // Accessors and mutators.
@@ -168,7 +173,7 @@ class DecisionLogic : public NetEqController {
   bool MaxWaitForPacket() const;
 
   std::unique_ptr<DelayManager> delay_manager_;
-  BufferLevelFilter buffer_level_filter_;
+  std::unique_ptr<BufferLevelFilter> buffer_level_filter_;
   const TickTimer* tick_timer_;
   int sample_rate_;
   size_t output_size_samples_;
