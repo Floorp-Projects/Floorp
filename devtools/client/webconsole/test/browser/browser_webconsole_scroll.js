@@ -17,6 +17,9 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html><p>Web Console tes
     }
   </script>
 `;
+
+const { MESSAGE_SOURCE } = require("devtools/client/webconsole/constants");
+
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { ui } = hud;
@@ -85,6 +88,47 @@ add_task(async function() {
   info("Evaluate a command to check that the console scrolls to the bottom");
   await executeAndWaitForResultMessage(hud, "21 + 21", "42");
   ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
+  ok(
+    isScrolledToBottom(outputContainer),
+    "The console is scrolled to the bottom"
+  );
+
+  info("Scroll up and wait for the layout to stabilize");
+  outputContainer.scrollTop = 0;
+  await new Promise(r =>
+    window.requestAnimationFrame(() => TestUtils.executeSoon(r))
+  );
+
+  info(
+    "Trigger a network request so the last message in the console store won't be visible"
+  );
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    await content.fetch(
+      "http://mochi.test:8888/browser/devtools/client/webconsole/test/browser/sjs_cors-test-server.sjs",
+      { mode: "cors" }
+    );
+  });
+
+  // Wait until the evalation result message isn't the last in the store anymore
+  await waitFor(() => {
+    const state = ui.wrapper.getStore().getState();
+    return (
+      state.messages.mutableMessagesById.get(state.messages.lastMessageId)
+        ?.source === MESSAGE_SOURCE.NETWORK
+    );
+  });
+
+  // Wait a bit so the pin to bottom would have the chance to be hit.
+  await wait(500);
+  ok(
+    !isScrolledToBottom(outputContainer),
+    "The console is not scrolled to the bottom"
+  );
+
+  info(
+    "Evaluate a new command to check that the console scrolls to the bottom"
+  );
+  await executeAndWaitForResultMessage(hud, "7 + 2", "9");
   ok(
     isScrolledToBottom(outputContainer),
     "The console is scrolled to the bottom"
