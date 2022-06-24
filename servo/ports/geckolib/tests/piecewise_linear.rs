@@ -263,3 +263,44 @@ fn input_domain_not_complete() {
     assert!(not_covered.at(0.5).approx_eq(&0.5));
     assert!(not_covered.at(1.0).approx_eq(&1.0));
 }
+
+#[test]
+fn input_second_negative() {
+    let function = PiecewiseLinearFunctionBuilder::new()
+        .push(0.0, None, None)
+        .push(0.0, Some(-0.1), None)
+        .push(0.3, Some(-0.05), None)
+        .push(0.5, None, None)
+        .push(0.2, Some(0.6), None)
+        .push(1.0, None, None)
+        .build();
+    let equivalent = PiecewiseLinearFunctionBuilder::new()
+        .push(0.0, Some(0.0), None)
+        .push(0.0, Some(0.0), None)
+        .push(0.3, Some(0.0), None)
+        .push(0.5, Some(0.3), None)
+        .push(0.2, Some(0.6), None)
+        .push(1.0, Some(1.0), None)
+        .build();
+    assert!(function.at(-0.1).approx_eq(&equivalent.at(-0.1)));
+    assert!(function.at(0.0).approx_eq(&equivalent.at(0.0)));
+    assert!(function.at(0.3).approx_eq(&equivalent.at(0.3)));
+    assert!(function.at(0.6).approx_eq(&equivalent.at(0.6)));
+    assert!(function.at(1.0).approx_eq(&equivalent.at(1.0)));
+}
+
+#[test]
+fn input_second_last_above_1() {
+    let function = PiecewiseLinearFunctionBuilder::new()
+        .push(0.0, Some(0.0), None)
+        .push(1.0, Some(2.0), None)
+        .push(1.0, None, None)
+        .build();
+    assert!(function.at(-0.5).approx_eq(&-0.25));
+    assert!(function.at(0.0).approx_eq(&0.0));
+    assert!(function.at(0.5).approx_eq(&0.25));
+    assert!(function.at(1.0).approx_eq(&0.5));
+    assert!(function.at(1.5).approx_eq(&0.75));
+    assert!(function.at(2.0).approx_eq(&1.0));
+    assert!(function.at(3.0).approx_eq(&1.0));
+}
