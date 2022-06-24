@@ -803,3 +803,4 @@ load 1728319.html
 asserts(2-8) load 1730506.html # asserts from integer overflow & bogus sizes
 asserts(1-4) load 1730570.html # asserts from integer overflow & bogus sizes
 load 1734015.html
+load 1776079.html

@@ -4817,9 +4817,12 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
       data->mContentBoxCrossSize = flr.mContentBoxCrossSize;
 
       SetProperty(SumOfChildrenBlockSizeProperty(), sumOfChildrenBlockSize);
-    } else if (data) {
-      // We are fully-complete, so no next-in-flow is needed. Delete the
-      // existing data.
+    } else if (data && !GetNextInFlow()) {
+      // We are fully-complete, so no next-in-flow is needed. However, if we
+      // report SetInlineLineBreakBeforeAndReset() in a incremental reflow, our
+      // next-in-flow might still exist. It can be reflowed again before us if
+      // it is an overflow container. Delete the existing data only if we don't
+      // have a next-in-flow.
       RemoveProperty(SharedFlexData::Prop());
       RemoveProperty(SumOfChildrenBlockSizeProperty());
     }
