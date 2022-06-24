@@ -8,18 +8,21 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { SearchEngine } = ChromeUtils.import(
+  "resource://gre/modules/SearchEngine.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
-  SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
 /**
  * AddonSearchEngine represents a search engine defined by an add-on.
  */
-class AddonSearchEngine extends lazy.SearchEngine {
+class AddonSearchEngine extends SearchEngine {
   /**
    * Creates a AddonSearchEngine.
    *

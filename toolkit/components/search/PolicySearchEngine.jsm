@@ -8,10 +8,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { SearchEngine } = ChromeUtils.import(
+  "resource://gre/modules/SearchEngine.jsm"
+);
+
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
@@ -19,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * PolicySearchEngine represents a search engine defined by an enterprise
  * policy.
  */
-class PolicySearchEngine extends lazy.SearchEngine {
+class PolicySearchEngine extends SearchEngine {
   /**
    * Creates a PolicySearchEngine.
    *
