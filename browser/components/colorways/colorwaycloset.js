@@ -1,23 +1,202 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 const { BuiltInThemes } = ChromeUtils.import(
   "resource:///modules/BuiltInThemes.jsm"
 );
-const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 
-const colorwaySelector = document.getElementById("colorway-selector");
+const INTENSITY_SOFT = "soft";
+const INTENSITY_BALANCED = "balanced";
+const INTENSITY_BOLD = "bold";
+const ID_SUFFIX_FOR_PRIMARY_INTENSITY = `-${INTENSITY_BALANCED}-colorway@mozilla.org`;
+const ID_SUFFIXES_FOR_SECONDARY_INTENSITIES = new RegExp(
+  `-(${INTENSITY_SOFT}|${INTENSITY_BOLD})-colorway@mozilla\\.org$`
+);
+const MATCH_INTENSITY_FROM_ID = new RegExp(
+  `-(${INTENSITY_SOFT}|${INTENSITY_BALANCED}|${INTENSITY_BOLD})-colorway@mozilla\\.org$`
+);
 
-document.getElementById("set-colorway").onclick = () => {
-  colorwaySelector.selectedTheme.enable();
+const ColorwaySelector = {
+  // This is essentially an instant-apply dialog, but we make an effort to only
+  // keep the theme change if the user hits the "Set colorway" button, and
+  // otherwise revert to the previous theme upon closing the modal. However,
+  // this doesn't cover the application quitting while the modal is open, in
+  // which case the theme change will be kept.
+  revertToPreviousTheme: true,
+
+  colorwayRadios: document.getElementById("colorway-selector"),
+  intensityContainer: document.getElementById("colorway-intensities"),
+
+  init() {
+    this._displayCollectionData();
+
+    AddonManager.addAddonListener(this);
+    window.addEventListener("unload", this);
+
+    this._initColorwayRadios();
+    this.colorwayRadios.addEventListener("change", this);
+    this.intensityContainer.addEventListener("change", this);
+
+    document.getElementById("set-colorway").onclick = () => {
+      this.revertToPreviousTheme = false;
+      window.close();
+    };
+  },
+
+  async _initColorwayRadios() {
+    BuiltInThemes.ensureBuiltInThemes();
+    let themes = await AddonManager.getAddonsByTypes(["theme"]);
+    this.previousTheme = themes.find(theme => theme.isActive);
+    this.colorways = themes.filter(theme =>
+      BuiltInThemes.isColorwayFromCurrentCollection(theme.id)
+    );
+
+    // The radio buttons represent colorway "groups". A group is a colorway
+    // from the current collection to represent related colorways with another
+    // intensity. If the current collection doesn't have intensities, each
+    // colorway has their own group.
+    this.colorwayGroups = this.colorways.filter(
+      colorway => !ID_SUFFIXES_FOR_SECONDARY_INTENSITIES.test(colorway.id)
+    );
+
+    for (const addon of this.colorwayGroups) {
+      let input = document.createElement("input");
+      input.type = "radio";
+      input.name = "colorway";
+      input.value = addon.id;
+      // TODO bug 1770030: localize name with Fluent
+      // TODO: this name includes the intensity, which we don't want here
+      input.setAttribute("title", addon.name);
+      input.style.setProperty("--colorway-icon", `url(${addon.iconURL})`);
+      this.colorwayRadios.appendChild(input);
+    }
+
+    // If the current active theme is part of our collection, make the UI reflect
+    // that. Otherwise go ahead and enable the first theme in our list.
+    this.selectedColorway = this.colorways.find(colorway => colorway.isActive);
+    if (this.selectedColorway) {
+      this.refresh();
+    } else {
+      this.colorwayGroups[0].enable();
+    }
+  },
+
+  _displayCollectionData() {
+    const collection = BuiltInThemes.findActiveColorwayCollection();
+    if (!collection) {
+      // Whoops. There should be no entry point to this UI without an active
+      // collection.
+      window.close();
+    }
+    document.l10n.setAttributes(
+      document.getElementById("collection-title"),
+      collection.l10nId.title
+    );
+    document.l10n.setAttributes(
+      document.querySelector("#collection-expiry-date > span"),
+      "colorway-collection-expiry-date-span",
+      {
+        expiryDate: collection.expiry.getTime(),
+      }
+    );
+  },
+
+  _displayColorwayData() {
+    // TODO bug 1770030: localize name and description with Fluent
+    // TODO: this name includes the intensity, which we don't want here
+    document.getElementById(
+      "colorway-name"
+    ).innerText = this.selectedColorway.name;
+    document.getElementById(
+      "colorway-description"
+    ).innerText = this.groupIdForSelectedColorway;
+
+    this.intensityContainer.hidden = !this.hasIntensities;
+    if (this.hasIntensities) {
+      let selectedIntensity = this.selectedColorway.id.match(
+        MATCH_INTENSITY_FROM_ID
+      )[1];
+      for (let radio of document.querySelectorAll(
+        ".colorway-intensity-radio"
+      )) {
+        let intensity = radio.getAttribute("data-intensity");
+        radio.value = this.selectedColorway.id.replace(
+          MATCH_INTENSITY_FROM_ID,
+          `-${intensity}-colorway@mozilla.org`
+        );
+        if (intensity == selectedIntensity) {
+          radio.checked = true;
+        }
+      }
+    }
+  },
+
+  _getColorwayGroupId(colorwayId) {
+    let groupId = colorwayId.replace(
+      ID_SUFFIXES_FOR_SECONDARY_INTENSITIES,
+      ID_SUFFIX_FOR_PRIMARY_INTENSITY
+    );
+    return this.colorwayGroups.map(addon => addon.id).includes(groupId)
+      ? groupId
+      : null;
+  },
+
+  handleEvent(e) {
+    switch (e.type) {
+      case "change":
+        this.colorways.find(colorway => colorway.id == e.target.value).enable();
+        break;
+      case "unload":
+        AddonManager.removeAddonListener(this);
+        if (this.revertToPreviousTheme) {
+          this.previousTheme.enable();
+        }
+        break;
+    }
+  },
+
+  onEnabled(addon) {
+    if (addon.type == "theme") {
+      if (!this.colorways.find(colorway => colorway.id == addon.id)) {
+        // The selected theme changed to a non-colorway from outside the modal.
+        // This UI can't represent that state, so bail out.
+        this.revertToPreviousTheme = false;
+        window.close();
+        return;
+      }
+      this.selectedColorway = addon;
+      this.refresh();
+    }
+  },
+
+  refresh() {
+    this.groupIdForSelectedColorway = this._getColorwayGroupId(
+      this.selectedColorway.id
+    );
+    this.hasIntensities = this.groupIdForSelectedColorway.endsWith(
+      ID_SUFFIX_FOR_PRIMARY_INTENSITY
+    );
+    for (let input of this.colorwayRadios.children) {
+      if (input.value == this.groupIdForSelectedColorway) {
+        input.checked = true;
+        this._displayColorwayData();
+        break;
+      }
+    }
+  },
 };
 
-function showUseFXHomeControls(fluentStrings) {
-  let homeState;
+function showUseFXHomeControls() {
+  const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
   const useFXHomeControls = document.getElementById("use-fx-home-controls");
   useFXHomeControls.hidden = HomePage.isDefault;
   if (!HomePage.isDefault) {
+    let homeState;
     useFXHomeControls
       .querySelector(".reset-prompt > button")
       .addEventListener("click", () => {
@@ -34,20 +213,5 @@ function showUseFXHomeControls(fluentStrings) {
   }
 }
 
-const collection = BuiltInThemes.findActiveColorwayCollection();
-if (collection) {
-  const { expiry, l10nId } = collection;
-  const collectionTitle = document.getElementById("collection-title");
-  document.l10n.setAttributes(collectionTitle, l10nId.title);
-  const colorwayExpiryDateSpan = document.querySelector(
-    "#collection-expiry-date > span"
-  );
-  document.l10n.setAttributes(
-    colorwayExpiryDateSpan,
-    "colorway-collection-expiry-date-span",
-    {
-      expiryDate: expiry.getTime(),
-    }
-  );
-  showUseFXHomeControls();
-}
+ColorwaySelector.init();
+showUseFXHomeControls();
