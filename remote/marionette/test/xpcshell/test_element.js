@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {
-  ChromeWebElement,
   element,
   WebElement,
   WebFrame,
@@ -438,8 +437,8 @@ add_test(function test_WebReference_from() {
   ok(WebReference.from(xulEl) instanceof WebElement);
   ok(WebReference.from(domWin) instanceof WebWindow);
   ok(WebReference.from(domFrame) instanceof WebFrame);
-  ok(WebReference.from(domElInPrivilegedDocument) instanceof ChromeWebElement);
-  ok(WebReference.from(xulElInPrivilegedDocument) instanceof ChromeWebElement);
+  ok(WebReference.from(domElInPrivilegedDocument) instanceof WebElement);
+  ok(WebReference.from(xulElInPrivilegedDocument) instanceof WebElement);
 
   Assert.throws(() => WebReference.from({}), /InvalidArgumentError/);
 
@@ -482,15 +481,6 @@ add_test(function test_WebReference_fromJSON_WebFrame() {
   run_next_test();
 });
 
-add_test(function test_WebReference_fromJSON_ChromeWebReference() {
-  let ref = { [ChromeWebElement.Identifier]: "foo" };
-  let el = WebReference.fromJSON(ref);
-  ok(el instanceof ChromeWebElement);
-  equal(el.uuid, "foo");
-
-  run_next_test();
-});
-
 add_test(function test_WebReference_fromJSON_malformed() {
   Assert.throws(() => WebReference.fromJSON({}), /InvalidArgumentError/);
   Assert.throws(() => WebReference.fromJSON(null), /InvalidArgumentError/);
@@ -498,18 +488,9 @@ add_test(function test_WebReference_fromJSON_malformed() {
 });
 
 add_test(function test_WebReference_fromUUID() {
-  let xulWebEl = WebReference.fromUUID("foo", "chrome");
-  ok(xulWebEl instanceof ChromeWebElement);
-  equal(xulWebEl.uuid, "foo");
-
-  let domWebEl = WebReference.fromUUID("bar", "content");
+  let domWebEl = WebReference.fromUUID("bar");
   ok(domWebEl instanceof WebElement);
   equal(domWebEl.uuid, "bar");
-
-  Assert.throws(
-    () => WebReference.fromUUID("baz", "bah"),
-    /InvalidArgumentError/
-  );
 
   run_next_test();
 });
@@ -522,7 +503,6 @@ add_test(function test_WebReference_isReference() {
   ok(WebReference.isReference({ [WebElement.Identifier]: "foo" }));
   ok(WebReference.isReference({ [WebWindow.Identifier]: "foo" }));
   ok(WebReference.isReference({ [WebFrame.Identifier]: "foo" }));
-  ok(WebReference.isReference({ [ChromeWebElement.Identifier]: "foo" }));
 
   run_next_test();
 });
@@ -587,24 +567,6 @@ add_test(function test_WebFrame_fromJSON() {
   let ref = { [WebFrame.Identifier]: "foo" };
   let win = WebFrame.fromJSON(ref);
   ok(win instanceof WebFrame);
-  equal(win.uuid, "foo");
-
-  run_next_test();
-});
-
-add_test(function test_ChromeWebElement_toJSON() {
-  let el = new ChromeWebElement("foo");
-  let json = el.toJSON();
-  ok(ChromeWebElement.Identifier in json);
-  equal(json[ChromeWebElement.Identifier], "foo");
-
-  run_next_test();
-});
-
-add_test(function test_ChromeWebElement_fromJSON() {
-  let ref = { [ChromeWebElement.Identifier]: "foo" };
-  let win = ChromeWebElement.fromJSON(ref);
-  ok(win instanceof ChromeWebElement);
   equal(win.uuid, "foo");
 
   run_next_test();

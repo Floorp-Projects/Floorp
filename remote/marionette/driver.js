@@ -1357,7 +1357,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
   // Bug 1495063: Elements should be passed as WebReference reference
   let byFrame;
   if (typeof el == "string") {
-    byFrame = lazy.WebReference.fromUUID(el, this.context);
+    byFrame = lazy.WebReference.fromUUID(el);
   } else if (el) {
     byFrame = lazy.WebReference.fromJSON(el);
   }
@@ -1399,7 +1399,7 @@ GeckoDriver.prototype.singleTap = async function(cmd) {
   lazy.assert.open(this.getBrowsingContext());
 
   let { id, x, y } = cmd.parameters;
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   await this.getActor().singleTap(
     webEl,
@@ -1488,7 +1488,7 @@ GeckoDriver.prototype.findElement = async function(cmd) {
 
   let startNode;
   if (typeof el != "undefined") {
-    startNode = lazy.WebReference.fromUUID(el, this.context);
+    startNode = lazy.WebReference.fromUUID(el);
   }
 
   let opts = {
@@ -1533,7 +1533,7 @@ GeckoDriver.prototype.findElements = async function(cmd) {
 
   let startNode;
   if (typeof el != "undefined") {
-    startNode = lazy.WebReference.fromUUID(el, this.context);
+    startNode = lazy.WebReference.fromUUID(el);
   }
 
   let opts = {
@@ -1578,7 +1578,7 @@ GeckoDriver.prototype.getShadowRoot = async function(cmd) {
     cmd.parameters.id,
     lazy.pprint`Expected "id" to be a string, got ${cmd.parameters.id}`
   );
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   return this.getActor().getShadowRoot(webEl);
 };
@@ -1630,7 +1630,7 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   const actor = this.getActor();
 
@@ -1681,7 +1681,7 @@ GeckoDriver.prototype.getElementAttribute = async function(cmd) {
 
   const id = lazy.assert.string(cmd.parameters.id);
   const name = lazy.assert.string(cmd.parameters.name);
-  const webEl = lazy.WebReference.fromUUID(id, this.context);
+  const webEl = lazy.WebReference.fromUUID(id);
 
   return this.getActor().getElementAttribute(webEl, name);
 };
@@ -1714,7 +1714,7 @@ GeckoDriver.prototype.getElementProperty = async function(cmd) {
 
   const id = lazy.assert.string(cmd.parameters.id);
   const name = lazy.assert.string(cmd.parameters.name);
-  const webEl = lazy.WebReference.fromUUID(id, this.context);
+  const webEl = lazy.WebReference.fromUUID(id);
 
   return this.getActor().getElementProperty(webEl, name);
 };
@@ -1745,7 +1745,7 @@ GeckoDriver.prototype.getElementText = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   return this.getActor().getElementText(webEl);
 };
@@ -1775,7 +1775,7 @@ GeckoDriver.prototype.getElementTagName = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   return this.getActor().getElementTagName(webEl);
 };
@@ -1803,7 +1803,7 @@ GeckoDriver.prototype.isElementDisplayed = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   return this.getActor().isElementDisplayed(
     webEl,
@@ -1839,7 +1839,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = async function(cmd) {
 
   let id = lazy.assert.string(cmd.parameters.id);
   let prop = lazy.assert.string(cmd.parameters.propertyName);
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   return this.getActor().getElementValueOfCssProperty(webEl, prop);
 };
@@ -1869,7 +1869,7 @@ GeckoDriver.prototype.isElementEnabled = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   return this.getActor().isElementEnabled(
     webEl,
@@ -1900,7 +1900,7 @@ GeckoDriver.prototype.isElementSelected = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   return this.getActor().isElementSelected(
     webEl,
@@ -1925,7 +1925,7 @@ GeckoDriver.prototype.getElementRect = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   return this.getActor().getElementRect(webEl);
 };
@@ -1955,7 +1955,7 @@ GeckoDriver.prototype.sendKeysToElement = async function(cmd) {
 
   let id = lazy.assert.string(cmd.parameters.id);
   let text = lazy.assert.string(cmd.parameters.text);
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   return this.getActor().sendKeysToElement(
     webEl,
@@ -1986,7 +1986,7 @@ GeckoDriver.prototype.clearElement = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = lazy.WebReference.fromUUID(id, this.context);
+  let webEl = lazy.WebReference.fromUUID(id);
 
   await this.getActor().clearElement(webEl);
 };
@@ -2337,7 +2337,7 @@ GeckoDriver.prototype.takeScreenshot = async function(cmd) {
   full = typeof full == "undefined" ? true : full;
   scroll = typeof scroll == "undefined" ? true : scroll;
 
-  let webEl = id ? lazy.WebReference.fromUUID(id, this.context) : null;
+  let webEl = id ? lazy.WebReference.fromUUID(id) : null;
 
   // Only consider full screenshot if no element has been specified
   full = webEl ? false : full;
