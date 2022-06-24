@@ -280,6 +280,10 @@ browser-screenshots:
     description: "Browser Screenshots"
     suite:
         name: mochitest-browser-chrome-screenshots
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     treeherder-symbol: M(ss)
     loopback-video: true
     test-manifest-loader: null  # don't load tests in the taskgraph
@@ -296,6 +300,11 @@ browser-screenshots:
 mochitest-chrome:
     description: "Mochitest chrome run"
     treeherder-symbol: M(c)
+    worker-type:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: t-linux-xlarge-gcp
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-chrome
     loopback-video: true
     run-without-variant: false
