@@ -12,8 +12,8 @@ Also contains a few additional utilities not found in :py:mod:`os.path`.
 # https://searchfox.org/mozilla-central/rev/c3ebaf6de2d481c262c04bb9657eaf76bf47e2ac/python/mozbuild/mozpack/path.py
 
 
-import posixpath
 import os
+import posixpath
 import re
 
 

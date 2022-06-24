@@ -100,7 +100,7 @@ disperse_tasks = list(
             "attributes": {
                 "test_manifests": ["bar/test.ini"],
                 "test_platform": "linux/opt",
-                "unittest_variant": "fission",
+                "unittest_variant": "no-fission",
             }
         },
         {

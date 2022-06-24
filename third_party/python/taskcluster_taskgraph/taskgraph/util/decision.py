@@ -7,14 +7,15 @@ Utilities for generating a decision task from :file:`.taskcluster.yml`.
 """
 
 
-import jsone
-import yaml
 import os
-import slugid
 
-from .vcs import find_hg_revision_push_info
+import jsone
+import slugid
+import yaml
+
 from .templates import merge
 from .time import current_json_time
+from .vcs import find_hg_revision_push_info
 
 
 def make_decision_task(params, root, context, head_rev=None):

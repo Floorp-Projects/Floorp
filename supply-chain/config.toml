@@ -1,6 +1,10 @@
 
 # cargo-vet config file
 
+[policy.async-task]
+audit-as-crates-io = true
+notes = "This is the upstream code plus an extra fix that hasn't been released yet, see bug 1746533."
+
 [policy.audioipc-client]
 criteria = []
 notes = "Going away very soon in bug 1697845"
@@ -9,9 +13,30 @@ notes = "Going away very soon in bug 1697845"
 criteria = []
 notes = "Going away very soon in bug 1697845"
 
+[policy.autocfg]
+audit-as-crates-io = true
+notes = "This is the upstream code plus a few local fixes, see bug 1685697."
+
+[policy.chardetng]
+audit-as-crates-io = true
+notes = "This is a crate Henri wrote which is also published. We should probably update Firefox to tip and certify that."
+
+[policy.chardetng_c]
+audit-as-crates-io = true
+notes = "This is a crate Henri wrote which is also published. We should probably update Firefox to tip and certify that."
+
+[policy.coremidi]
+audit-as-crates-io = true
+notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
+
+[policy.d3d12]
+audit-as-crates-io = true
+notes = "wgpu-hal pins this crate."
+
 [policy.geckodriver]
+audit-as-crates-io = true
 criteria = "safe-to-run"
-notes = "Used for automation."
+notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem. It's also used only for automation, so its subtree can be safe-to-run."
 
 [policy.gkrust-gtest]
 criteria = "safe-to-run"
@@ -35,13 +60,98 @@ notes = "Used for testing."
 dependency-criteria = { fluent-testing = "safe-to-run", tokio = "safe-to-run" }
 notes = "This crate has two testing-only dependencies which are specified as regular-but-optional rather than a dev-dependencies, because they need to be available to both benchmarks and integration tests."
 
+[policy.libudev-sys]
+audit-as-crates-io = false
+notes = "This override is an api-compatible fork with an orthogonal implementation."
+
+[policy.marionette]
+audit-as-crates-io = true
+notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+
+[policy.metal]
+audit-as-crates-io = true
+notes = "wgpu-hal pins this crate."
+
+[policy.midir]
+audit-as-crates-io = true
+notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
+
+[policy.mio]
+audit-as-crates-io = true
+notes = "Version 0.6.23 is a local fork of upstream which just twiddles some dependencies."
+
+[policy.mio-named-pipes]
+audit-as-crates-io = true
+notes = "We have a local fork, but this entire subtree is going away shortly anyway with the old audioipc code."
+
+[policy.mozbuild]
+audit-as-crates-io = false
+notes = "The crates.io version of this is just a placeholder to allow public crates to depend on mozbuild."
+
+[policy.mozdevice]
+audit-as-crates-io = true
+notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+
+[policy.mozprofile]
+audit-as-crates-io = true
+notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+
+[policy.mozrunner]
+audit-as-crates-io = true
+notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+
+[policy.naga]
+audit-as-crates-io = true
+notes = "wgpu-core pins this crate."
+
+[policy.packed_simd_2]
+audit-as-crates-io = true
+notes = "Based on upstream, see bug 1719674."
+
+[policy.pulse]
+audit-as-crates-io = false
+notes = "This is a first-party crate which is entirely unrelated to the crates.io package of the same name."
+
+[policy.qcms]
+audit-as-crates-io = true
+notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+
+[policy.selectors]
+audit-as-crates-io = true
+notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+
+[policy.servo_arc]
+audit-as-crates-io = true
+notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+
 [policy.smoosh]
 criteria = "safe-to-run"
 notes = "We're not shipping this and have no plans to ship it."
 
+[policy.storage]
+audit-as-crates-io = false
+notes = "This is a first-party crate which is entirely unrelated to the crates.io package of the same name."
+
 [policy.webdriver]
+audit-as-crates-io = true
 criteria = "safe-to-run"
-notes = "Used for automation."
+notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem. It's also used only for automation, so its subtree can be safe-to-run."
+
+[policy.wgpu]
+audit-as-crates-io = true
+notes = "Upstream project which we pin."
+
+[policy.wgpu-core]
+audit-as-crates-io = true
+notes = "Upstream project which we pin."
+
+[policy.wgpu-hal]
+audit-as-crates-io = true
+notes = "Upstream project which we pin."
+
+[policy.wgpu-types]
+audit-as-crates-io = true
+notes = "Upstream project which we pin."
 
 [[unaudited.adler]]
 version = "1.0.2"
@@ -115,6 +225,10 @@ criteria = "safe-to-deploy"
 version = "0.12.2"
 criteria = "safe-to-deploy"
 
+[[unaudited.async-task]]
+version = "4.0.3"
+criteria = "safe-to-deploy"
+
 [[unaudited.async-trait]]
 version = "0.1.56"
 criteria = "safe-to-deploy"
@@ -137,6 +251,10 @@ criteria = "safe-to-deploy"
 
 [[unaudited.authenticator]]
 version = "0.3.1"
+criteria = "safe-to-deploy"
+
+[[unaudited.autocfg]]
+version = "1.1.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.base64]]
@@ -231,6 +349,14 @@ criteria = "safe-to-deploy"
 version = "0.1.1"
 criteria = "safe-to-deploy"
 
+[[unaudited.chardetng]]
+version = "0.1.9"
+criteria = "safe-to-deploy"
+
+[[unaudited.chardetng_c]]
+version = "0.1.2"
+criteria = "safe-to-deploy"
+
 [[unaudited.chrono]]
 version = "0.4.19"
 criteria = "safe-to-deploy"
@@ -293,6 +419,10 @@ criteria = "safe-to-deploy"
 
 [[unaudited.coreaudio-sys]]
 version = "0.2.10"
+criteria = "safe-to-deploy"
+
+[[unaudited.coremidi]]
+version = "0.6.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.coremidi-sys]]
@@ -393,6 +523,10 @@ criteria = "safe-to-deploy"
 
 [[unaudited.cubeb-sys]]
 version = "0.10.0"
+criteria = "safe-to-deploy"
+
+[[unaudited.d3d12]]
+version = "0.4.1"
 criteria = "safe-to-deploy"
 
 [[unaudited.darling]]
@@ -639,6 +773,10 @@ criteria = "safe-to-deploy"
 version = "0.2.1"
 criteria = "safe-to-deploy"
 
+[[unaudited.geckodriver]]
+version = "0.31.0"
+criteria = "safe-to-run"
+
 [[unaudited.generic-array]]
 version = "0.14.5"
 criteria = "safe-to-deploy"
@@ -867,10 +1005,6 @@ criteria = "safe-to-deploy"
 version = "0.4.7"
 criteria = "safe-to-deploy"
 
-[[unaudited.log]]
-version = "0.4.14"
-criteria = "safe-to-deploy"
-
 [[unaudited.mach]]
 version = "0.3.2"
 criteria = "safe-to-deploy"
@@ -882,6 +1016,10 @@ criteria = "safe-to-deploy"
 [[unaudited.malloc_size_of_derive]]
 version = "0.1.2"
 criteria = "safe-to-deploy"
+
+[[unaudited.marionette]]
+version = "0.2.0"
+criteria = "safe-to-run"
 
 [[unaudited.matches]]
 version = "0.1.9"
@@ -907,6 +1045,14 @@ criteria = "safe-to-deploy"
 version = "0.6.5"
 criteria = "safe-to-deploy"
 
+[[unaudited.metal]]
+version = "0.23.1"
+criteria = "safe-to-deploy"
+
+[[unaudited.midir]]
+version = "0.7.0"
+criteria = "safe-to-deploy"
+
 [[unaudited.mime]]
 version = "0.3.16"
 criteria = "safe-to-deploy"
@@ -924,6 +1070,10 @@ version = "0.5.3"
 criteria = "safe-to-deploy"
 
 [[unaudited.mio]]
+version = "0.6.23"
+criteria = "safe-to-run"
+
+[[unaudited.mio]]
 version = "0.8.0"
 criteria = "safe-to-deploy"
 
@@ -939,8 +1089,24 @@ criteria = "safe-to-deploy"
 version = "0.1.2"
 criteria = "safe-to-deploy"
 
+[[unaudited.mozdevice]]
+version = "0.5.0"
+criteria = "safe-to-run"
+
+[[unaudited.mozprofile]]
+version = "0.8.0"
+criteria = "safe-to-run"
+
+[[unaudited.mozrunner]]
+version = "0.14.0"
+criteria = "safe-to-run"
+
 [[unaudited.murmurhash3]]
 version = "0.0.5"
+criteria = "safe-to-deploy"
+
+[[unaudited.naga]]
+version = "0.8.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.net2]]
@@ -1025,6 +1191,10 @@ criteria = "safe-to-deploy"
 
 [[unaudited.owning_ref]]
 version = "0.4.1"
+criteria = "safe-to-deploy"
+
+[[unaudited.packed_simd_2]]
+version = "0.3.7"
 criteria = "safe-to-deploy"
 
 [[unaudited.parking_lot]]
@@ -1137,6 +1307,10 @@ criteria = "safe-to-deploy"
 
 [[unaudited.prost-derive]]
 version = "0.8.0"
+criteria = "safe-to-deploy"
+
+[[unaudited.qcms]]
+version = "0.2.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.qlog]]
@@ -1283,6 +1457,10 @@ criteria = "safe-to-deploy"
 version = "0.10.5"
 criteria = "safe-to-deploy"
 
+[[unaudited.selectors]]
+version = "0.22.0"
+criteria = "safe-to-deploy"
+
 [[unaudited.self_cell]]
 version = "0.10.2"
 criteria = "safe-to-deploy"
@@ -1334,6 +1512,10 @@ criteria = "safe-to-run"
 [[unaudited.serial_test_derive]]
 version = "0.5.1"
 criteria = "safe-to-run"
+
+[[unaudited.servo_arc]]
+version = "0.1.1"
+criteria = "safe-to-deploy"
 
 [[unaudited.sfv]]
 version = "0.9.2"
@@ -1631,12 +1813,28 @@ criteria = "safe-to-deploy"
 version = "41.0.0"
 criteria = "safe-to-deploy"
 
+[[unaudited.webdriver]]
+version = "0.45.0"
+criteria = "safe-to-run"
+
 [[unaudited.webrtc-sdp]]
 version = "0.3.9"
 criteria = "safe-to-deploy"
 
 [[unaudited.weedle2]]
 version = "2.0.1"
+criteria = "safe-to-deploy"
+
+[[unaudited.wgpu-core]]
+version = "0.12.0"
+criteria = "safe-to-deploy"
+
+[[unaudited.wgpu-hal]]
+version = "0.12.0"
+criteria = "safe-to-deploy"
+
+[[unaudited.wgpu-types]]
+version = "0.12.0"
 criteria = "safe-to-deploy"
 
 [[unaudited.whatsys]]

@@ -1,5 +1,0 @@
-=========
-Scenarios
-=========
-
-Performance scenarios

@@ -115,6 +115,109 @@ def print_line(prefix, m):
     sys.stdout.buffer.flush()
 
 
+def _call_windows_retry(func, args=(), retry_max=5, retry_delay=0.5):
+    """
+    It's possible to see spurious errors on Windows due to various things
+    keeping a handle to the directory open (explorer, virus scanners, etc)
+    So we try a few times if it fails with a known error.
+    retry_delay is multiplied by the number of failed attempts to increase
+    the likelihood of success in subsequent attempts.
+    """
+    retry_count = 0
+    while True:
+        try:
+            func(*args)
+        except OSError as e:
+            # Error codes are defined in:
+            # https://docs.python.org/3/library/errno.html#module-errno
+            if e.errno not in (errno.EACCES, errno.ENOTEMPTY, errno.ENOENT):
+                raise
+
+            if retry_count == retry_max:
+                raise
+
+            retry_count += 1
+
+            print(
+                '%s() failed for "%s". Reason: %s (%s). Retrying...'
+                % (func.__name__, args, e.strerror, e.errno)
+            )
+            time.sleep(retry_count * retry_delay)
+        else:
+            # If no exception has been thrown it should be done
+            break
+
+
+def remove(path):
+    """Removes the specified file, link, or directory tree.
+
+    This is a replacement for shutil.rmtree that works better under
+    windows. It does the following things:
+
+     - check path access for the current user before trying to remove
+     - retry operations on some known errors due to various things keeping
+       a handle on file paths - like explorer, virus scanners, etc. The
+       known errors are errno.EACCES and errno.ENOTEMPTY, and it will
+       retry up to 5 five times with a delay of (failed_attempts * 0.5) seconds
+       between each attempt.
+
+    Note that no error will be raised if the given path does not exists.
+
+    :param path: path to be removed
+    """
+
+    def _update_permissions(path):
+        """Sets specified pemissions depending on filetype"""
+        if os.path.islink(path):
+            # Path is a symlink which we don't have to modify
+            # because it should already have all the needed permissions
+            return
+
+        stats = os.stat(path)
+
+        if os.path.isfile(path):
+            mode = stats.st_mode | stat.S_IWUSR
+        elif os.path.isdir(path):
+            mode = stats.st_mode | stat.S_IWUSR | stat.S_IXUSR
+        else:
+            # Not supported type
+            return
+
+        _call_windows_retry(os.chmod, (path, mode))
+
+    if not os.path.lexists(path):
+        print_line(b'remove', b'WARNING: %s does not exists!\n' % path.encode('utf-8'))
+        return
+
+    """
+    On Windows, adds '\\\\?\\' to paths which match ^[A-Za-z]:\\.* to access
+    files or directories that exceed MAX_PATH(260) limitation or that ends
+    with a period.
+    """
+    if (
+        sys.platform in ("win32", "cygwin")
+        and len(path) >= 3
+        and path[1] == ":"
+        and path[2] == "\\"
+    ):
+        path = u"\\\\?\\%s" % path
+
+    if os.path.isfile(path) or os.path.islink(path):
+        # Verify the file or link is read/write for the current user
+        _update_permissions(path)
+        _call_windows_retry(os.remove, (path,))
+
+    elif os.path.isdir(path):
+        # Verify the directory is read/write/execute for the current user
+        _update_permissions(path)
+
+        # We're ensuring that every nested item has writable permission.
+        for root, dirs, files in os.walk(path):
+            for entry in dirs + files:
+                _update_permissions(os.path.join(root, entry))
+        _call_windows_retry(shutil.rmtree, (path,))
+
+
 def run_required_command(prefix, args, *, extra_env=None, cwd=None):
     res = run_command(prefix, args, extra_env=extra_env, cwd=cwd)
     if res:
@@ -416,6 +519,40 @@ def configure_volume_posix(volume, user, group, running_as_root):
         set_dir_permissions(volume, user.pw_uid, group.gr_gid)
 
 
+def _clean_git_checkout(destination_path):
+    # Delete untracked files (i.e. build products)
+    print_line(b'vcs', b'cleaning git checkout...\n')
+    args = [
+        'git',
+        'clean',
+        # Two -f`s causes subdirectories with `.git`
+        # directories to be cleaned as well.
+        '-nxdff',
+    ]
+    print_line(b'vcs', b'executing %r\n' % args)
+    p = subprocess.Popen(args,
+                         # Disable buffering because we want to receive output
+                         # as it is generated so timestamps in logs are
+                         # accurate.
+                         bufsize=0,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT,
+                         stdin=sys.stdin.fileno(),
+                         cwd=destination_path,
+                         env=os.environ)
+    stdout = io.TextIOWrapper(p.stdout, encoding='latin1')
+    ret = p.wait()
+    if ret:
+        sys.exit(ret)
+    data = stdout.read()
+    prefix = 'Would remove '
+    filenames = [os.path.join(destination_path, line[len(prefix):]) for line in data.splitlines()]
+    print_line(b'vcs', b'removing %r\n' % filenames)
+    for filename in filenames:
+        remove(filename)
+    print_line(b'vcs', b'successfully cleaned git checkout!\n')
+
+
 def git_checkout(
     destination_path: str,
     head_repo: str,
@@ -474,15 +611,7 @@ def git_checkout(
 
     run_required_command(b'vcs', args, cwd=destination_path)
 
-    args = [
-        'git',
-        'clean',
-        # Two -f`s causes subdirectories with `.git` directories to be removed
-        # as well.
-        '-xdff',
-    ]
-
-    run_required_command(b'vcs', args, cwd=destination_path)
+    _clean_git_checkout(destination_path)
 
     args = [
         'git',
@@ -806,7 +935,10 @@ def install_pip_requirements(repositories):
     if not requirements:
         return
 
-    cmd = [sys.executable, '-mpip', 'install', '--require-hashes']
+    cmd = [sys.executable, '-mpip', 'install']
+    if os.environ.get("PIP_DISABLE_REQUIRE_HASHES") != "1":
+        cmd.append("--require-hashes")
+
     for path in requirements:
         cmd.extend(['-r', path])
 
@@ -869,7 +1001,8 @@ def maybe_run_resource_monitoring():
 
 
 def main(args):
-    print_line(b'setup', b'run-task started in %s\n' % os.getcwd().encode('utf-8'))
+    os.environ["TASK_WORKDIR"] = os.getcwd()
+    print_line(b'setup', b'run-task started in %s\n' % os.environ["TASK_WORKDIR"].encode('utf-8'))
     running_as_root = IS_POSIX and os.getuid() == 0
 
     # Arguments up to '--' are ours. After are for the main task
@@ -1110,7 +1243,7 @@ def main(args):
         fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
         if fetches_dir and os.path.isdir(fetches_dir):
             print_line(b'fetches', b'removing %s\n' % fetches_dir.encode('utf-8'))
-            shutil.rmtree(fetches_dir)
+            remove(fetches_dir)
             print_line(b'fetches', b'finished\n')
 
 

@@ -360,20 +360,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1711082",
-    platform: "all",
-    domain: "m.aliexpress.com",
-    bug: "1711082",
-    contentScripts: {
-      matches: ["*://m.aliexpress.com/*"],
-      js: [
-        {
-          file: "injections/js/bug1711082-m.aliexpress.com-undisable-search.js",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1712833",
     platform: "all",
     domain: "buskocchi.desuca.co.jp",
@@ -508,26 +494,17 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1756692",
-    platform: "android",
-    domain: "zee5.com",
-    bug: "1756692",
-    contentScripts: {
-      matches: ["*://www.zee5.com/*"],
-      js: [
-        {
-          file: "injections/js/bug1756692-effectiveType-shim.js",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1739489",
     platform: "desktop",
-    domain: "draft.js",
+    domain: "Sites using draft.js",
     bug: "1739489",
     contentScripts: {
-      matches: ["*://draftjs.org/*", "*://www.facebook.com/*"],
+      matches: [
+        "*://draftjs.org/*", // Bug 1739489
+        "*://www.facebook.com/*", // Bug 1739489
+        "*://twitter.com/*", // Bug 1776229
+        "*://mobile.twitter.com/*", // Bug 1776229
+      ],
       js: [
         {
           file: "injections/js/bug1739489-draftjs-beforeinput.js",
@@ -574,6 +551,36 @@ const AVAILABLE_INJECTIONS = [
         {
           file:
             "injections/css/bug1770962-coldwellbankerhomes.com-image-height.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1774490",
+    platform: "all",
+    domain: "rainews.it",
+    bug: "1774490",
+    contentScripts: {
+      matches: ["*://www.rainews.it/*"],
+      css: [
+        {
+          file: "injections/css/bug1774490-rainews.it-gallery-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1774005",
+    platform: "all",
+    domain: "Sites relying on window.InstallTrigger",
+    bug: "1774005",
+    contentScripts: {
+      matches: [
+        "*://*.pixiv.net/*", // Bug 1774006
+      ],
+      js: [
+        {
+          file: "injections/js/bug1774005-installtrigger-shim.js",
         },
       ],
     },

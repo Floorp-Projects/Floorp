@@ -986,9 +986,13 @@ static BOOL gMenuItemsExecuteCommands = YES;
   // given the commandID, look it up in our hashtable and dispatch to
   // that menu item.
   if (menuGroupOwner) {
-    nsMenuItemX* menuItem = menuGroupOwner->GetMenuItemForCommandID(static_cast<uint32_t>(tag));
-    if (menuItem) {
-      menuItem->DoCommand(modifierFlags, button);
+    if (RefPtr<nsMenuItemX> menuItem =
+            menuGroupOwner->GetMenuItemForCommandID(static_cast<uint32_t>(tag))) {
+      if (nsMenuUtilsX::gIsSynchronouslyActivatingNativeMenuItemDuringTest) {
+        menuItem->DoCommand(modifierFlags, button);
+      } else if (RefPtr<nsMenuX> menu = menuItem->ParentMenu()) {
+        menu->ActivateItemAfterClosing(std::move(menuItem), modifierFlags, button);
+      }
     }
   }
 }

@@ -8,7 +8,6 @@
 
 #include "base/shared_memory.h"
 
-#include "base/process_util.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/ipc/SharedMemoryBasic.h"

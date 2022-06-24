@@ -359,7 +359,7 @@ dtls_HandleHandshake(sslSocket *ss, DTLSEpoch epoch, sslSequenceNumber seqNum,
 
             rv = dtls_HandleHandshakeMessage(ss, buf.buf,
                                              buf.len == fragment_length);
-            if (rv == SECFailure) {
+            if (rv != SECSuccess) {
                 goto loser;
             }
         } else {
@@ -468,7 +468,7 @@ dtls_HandleHandshake(sslSocket *ss, DTLSEpoch epoch, sslSequenceNumber seqNum,
                     rv = dtls_HandleHandshakeMessage(ss, ss->ssl3.hs.msg_body.buf,
                                                      buf.len == fragment_length);
 
-                    if (rv == SECFailure) {
+                    if (rv != SECSuccess) {
                         goto loser;
                     }
                 }

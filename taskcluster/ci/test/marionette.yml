@@ -25,25 +25,22 @@ job-defaults:
             default: default
     tier:
         by-variant:
-            fission: default
             headless: 2
-            default: 2
+            default: default
     variants:
-        - fission
-        - webrender-sw+fission
-        - headless+fission
-    run-without-variant: false
+        - webrender-sw
+        - headless
     run-on-projects:
         by-variant:
-            fission: built-projects
-            headless+fission:
+            headless:
                 by-test-platform:
                     (linux.*64)(-shippable)?-qr/opt: built-projects
                     default: []
-            webrender-sw+fission:
+            webrender-sw:
                 by-test-platform:
                     .*/debug: built-projects
                     default: []
+            default: built-projects
     virtualization: virtual
 
 marionette:

@@ -78,7 +78,7 @@ add_task(async function test_experiment_control() {
       );
 
       let pipExplainerMessage = l10n.formatValueSync(
-        "videocontrols-picture-in-picture-explainer"
+        "videocontrols-picture-in-picture-explainer2"
       );
 
       await SimpleTest.promiseFocus(browser);

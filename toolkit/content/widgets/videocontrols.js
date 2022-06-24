@@ -2863,9 +2863,9 @@ this.VideoControlsImplWidget = class {
               <div class="pip-expanded clickable">
                 <span class="pip-icon-label clickable">
                   <span class="pip-icon"></span>
-                  <span class="pip-label" data-l10n-id="videocontrols-picture-in-picture-toggle-label"></span>
+                  <span class="pip-label" data-l10n-id="videocontrols-picture-in-picture-toggle-label2"></span>
                 </span>
-                <div class="pip-explainer clickable" data-l10n-id="videocontrols-picture-in-picture-explainer"></div>
+                <div class="pip-explainer clickable" data-l10n-id="videocontrols-picture-in-picture-explainer2"></div>
               </div>
               <div class="pip-icon clickable"></div>
             </button>
@@ -3369,9 +3369,9 @@ this.NoControlsDesktopImplWidget = class {
               <div class="pip-expanded clickable">
                 <span class="pip-icon-label clickable">
                   <span class="pip-icon"></span>
-                  <span class="pip-label" data-l10n-id="videocontrols-picture-in-picture-toggle-label"></span>
+                  <span class="pip-label" data-l10n-id="videocontrols-picture-in-picture-toggle-label2"></span>
                 </span>
-                <div class="pip-explainer clickable" data-l10n-id="videocontrols-picture-in-picture-explainer"></div>
+                <div class="pip-explainer clickable" data-l10n-id="videocontrols-picture-in-picture-explainer2"></div>
               </div>
               <div class="pip-icon"></div>
             </button>

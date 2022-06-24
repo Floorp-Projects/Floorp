@@ -18,11 +18,11 @@ from collections import defaultdict
 
 from slugid import nice as slugid
 
-from .graph import Graph
 from . import files_changed
+from .graph import Graph
 from .taskgraph import TaskGraph
-from .util.taskcluster import find_task_id
 from .util.parameterization import resolve_task_references
+from .util.taskcluster import find_task_id
 
 logger = logging.getLogger(__name__)
 

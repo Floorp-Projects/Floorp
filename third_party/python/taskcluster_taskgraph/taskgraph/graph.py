@@ -3,8 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import attr
 import collections
+
+import attr
 
 
 @attr.s(frozen=True)

@@ -18,3 +18,21 @@ function testVisibility(browser, expected) {
     }
   }
 }
+
+async function waitForElementVisible(browser, selector, isVisible = true) {
+  const { document } = browser.contentWindow;
+  const elem = document.querySelector(selector);
+  ok(elem, `Got element with selector: ${selector}`);
+
+  await BrowserTestUtils.waitForMutationCondition(
+    elem,
+    {
+      attributeFilter: ["hidden"],
+    },
+    () => {
+      return isVisible
+        ? BrowserTestUtils.is_visible(elem)
+        : BrowserTestUtils.is_hidden(elem);
+    }
+  );
+}

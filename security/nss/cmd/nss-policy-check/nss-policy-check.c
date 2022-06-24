@@ -21,6 +21,7 @@
 #include "secmod.h"
 #include "ssl.h"
 #include "prenv.h"
+#include "plgetopt.h"
 
 const char *sWarn = "WARN";
 const char *sInfo = "INFO";
@@ -68,6 +69,21 @@ get_tls_info(SSLProtocolVariant protocolVariant, const char *display)
 #define PATH_MAX 1024
 #endif
 
+/* private flags for policy check; should be in sync with pk11wrap/pk11pars.c */
+#define SECMOD_FLAG_POLICY_CHECK_IDENTIFIER 0x01
+#define SECMOD_FLAG_POLICY_CHECK_VALUE 0x02
+
+static void
+printUsage(const char *progName)
+{
+    fprintf(stderr,
+            "Usage: %s [options] <path-to-policy-file>\n"
+            "\tWhere options are:\n"
+            "\t-f flag\t Set policy check flag (can be specified multiple times)\n"
+            "\t       \t Possible flags: \"identifier\" or \"value\"\n",
+            progName);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -80,18 +96,65 @@ main(int argc, char **argv)
     char moduleSpec[1024 + PATH_MAX];
     unsigned num_enabled = 0;
     int result = 0;
+    char *flags = NULL;
+    PLOptState *optstate = NULL;
+    PLOptStatus status;
+    char *fullPath = NULL;
     int fullPathLen;
+    char *progName = NULL;
+    PRUint32 policyCheckFlags = 0;
 
-    if (argc != 2) {
-        fprintf(stderr, "Syntax: nss-policy-check <path-to-policy-file>\n");
+    progName = PORT_Strdup(argv[0]);
+    if (!progName) {
         result = 2;
         goto loser_no_shutdown;
     }
 
-    fullPathLen = strlen(argv[1]);
+    /* Use PL_CreateOptState as SECU_ParseCommandLine ignores
+     * positional parameters */
+    optstate = PL_CreateOptState(argc, argv, "f:");
+    if (!optstate) {
+        result = 2;
+        goto loser_no_shutdown;
+    }
+    while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
+        switch (optstate->option) {
+            case 0: /* positional parameter */
+                fullPath = PL_strdup(optstate->value);
+                if (!fullPath) {
+                    result = 2;
+                    goto loser_no_shutdown;
+                }
+                goto breakout;
+            case 'f':
+                if (!PORT_Strcmp(optstate->value, "identifier")) {
+                    policyCheckFlags |= SECMOD_FLAG_POLICY_CHECK_IDENTIFIER;
+                } else if (!PORT_Strcmp(optstate->value, "value")) {
+                    policyCheckFlags |= SECMOD_FLAG_POLICY_CHECK_VALUE;
+                } else {
+                    fprintf(stderr, "not a valid flag: %s\n", optstate->value);
+                    printUsage(progName);
+                    result = 2;
+                    goto loser_no_shutdown;
+                }
+                break;
+            default:
+                printUsage(progName);
+                result = 2;
+                goto loser_no_shutdown;
+        }
+    }
+breakout:
+    if (status != PL_OPT_OK || !fullPath) {
+        printUsage(progName);
+        result = 2;
+        goto loser_no_shutdown;
+    }
 
-    if (!fullPathLen || PR_Access(argv[1], PR_ACCESS_READ_OK) != PR_SUCCESS) {
-        fprintf(stderr, "Error: cannot read file %s\n", argv[1]);
+    fullPathLen = strlen(fullPath);
+
+    if (!fullPathLen || PR_Access(fullPath, PR_ACCESS_READ_OK) != PR_SUCCESS) {
+        fprintf(stderr, "Error: cannot read file %s\n", fullPath);
         result = 2;
         goto loser_no_shutdown;
     }
@@ -103,16 +166,16 @@ main(int argc, char **argv)
     }
 
     path[0] = 0;
-    filename = argv[1] + fullPathLen - 1;
-    while ((filename > argv[1]) && (*filename != NSSUTIL_PATH_SEPARATOR[0])) {
+    filename = fullPath + fullPathLen - 1;
+    while ((filename > fullPath) && (*filename != NSSUTIL_PATH_SEPARATOR[0])) {
         filename--;
     }
 
-    if (filename == argv[1]) {
+    if (filename == fullPath) {
         PORT_Strcpy(path, ".");
     } else {
         filename++; /* Go past the path separator. */
-        PORT_Strncat(path, argv[1], (filename - argv[1]));
+        PORT_Strncat(path, fullPath, (filename - fullPath));
     }
 
     PR_SetEnv("NSS_IGNORE_SYSTEM_POLICY=1");
@@ -127,13 +190,43 @@ main(int argc, char **argv)
     PR_SetEnv("NSS_POLICY_FAIL=0");
     PR_SetEnv("NSS_POLICY_WARN=0");
 
+    flags = PORT_Strdup("internal,moduleDB,skipFirst,moduleDBOnly,critical,printPolicyFeedback");
+    if (!flags) {
+        result = 2;
+        goto loser_no_shutdown;
+    }
+
+    if (policyCheckFlags & SECMOD_FLAG_POLICY_CHECK_IDENTIFIER) {
+        char *newflags;
+
+        newflags = PORT_Realloc(flags, strlen(flags) + strlen(",policyCheckIdentifier") + 1);
+        if (!newflags) {
+            result = 2;
+            goto loser_no_shutdown;
+        }
+        flags = newflags;
+        PORT_Strcat(flags, ",policyCheckIdentifier");
+    }
+
+    if (policyCheckFlags & SECMOD_FLAG_POLICY_CHECK_VALUE) {
+        char *newflags;
+
+        newflags = PORT_Realloc(flags, strlen(flags) + strlen(",policyCheckValue") + 1);
+        if (!newflags) {
+            result = 2;
+            goto loser_no_shutdown;
+        }
+        flags = newflags;
+        PORT_Strcat(flags, ",policyCheckValue");
+    }
+
     sprintf(moduleSpec,
             "name=\"Policy File\" "
             "parameters=\"configdir='sql:%s' "
             "secmod='%s' "
             "flags=readOnly,noCertDB,forceSecmodChoice,forceOpen\" "
-            "NSS=\"flags=internal,moduleDB,skipFirst,moduleDBOnly,critical,printPolicyFeedback\"",
-            path, filename);
+            "NSS=\"flags=%s\"",
+            path, filename, flags);
 
     module = SECMOD_LoadModule(moduleSpec, NULL, PR_TRUE);
     if (!module || !module->loaded || atoi(PR_GetEnvSecure("NSS_POLICY_LOADED")) != 1) {
@@ -197,6 +290,12 @@ loser:
         result = 2;
     }
 loser_no_shutdown:
+    if (optstate) {
+        PL_DestroyOptState(optstate);
+    }
+    PORT_Free(flags);
+    PORT_Free(progName);
+    PORT_Free(fullPath);
     if (result == 2) {
         fprintf(stderr, "NSS-POLICY-FAIL\n");
     } else if (result == 1) {

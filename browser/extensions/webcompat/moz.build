@@ -63,6 +63,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1765947-veniceincoming.com-left-fix.css",
     "injections/css/bug1768243-cloud.google.com-allow-table-scrolling.css",
     "injections/css/bug1770962-coldwellbankerhomes.com-image-height.css",
+    "injections/css/bug1774490-rainews.it-gallery-fix.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
@@ -74,14 +75,13 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1605611-maps.google.com-directions-time.js",
     "injections/js/bug1610358-pcloud.com-appVersion-change.js",
     "injections/js/bug1631811-datastudio.google.com-indexedDB.js",
-    "injections/js/bug1711082-m.aliexpress.com-undisable-search.js",
     "injections/js/bug1722955-frontgate.com-ua-override.js",
     "injections/js/bug1724764-amextravel.com-window-print.js",
     "injections/js/bug1724868-news.yahoo.co.jp-ua-override.js",
     "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
     "injections/js/bug1739489-draftjs-beforeinput.js",
-    "injections/js/bug1756692-effectiveType-shim.js",
     "injections/js/bug1769762-tiktok.com-plugins-shim.js",
+    "injections/js/bug1774005-installtrigger-shim.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [

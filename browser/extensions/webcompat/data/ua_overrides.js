@@ -716,6 +716,7 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: [
         "*://*.commerzbank.de/*", // Bug 1767630
         "*://*.edf.com/*", // Bug 1764786
+        "*://*.ibmserviceengage.com/*", // #105438
         "*://*.wordpress.org/*", // Bug 1743431
         "*://as.eservice.asus.com/*", // #104113
         "*://bethesda.net/*", // #94607,
@@ -726,6 +727,7 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://mon.allianzbanque.fr/*", // #101074
         "*://online.citi.com/*", // #101268
         "*://simperium.com/*", // #98934
+        "*://survey.sogosurvey.com/*", // Bug 1765925
         "*://ubank.com.au/*", // #104099
         "*://wifi.sncf/*", // #100194
         "*://www.accringtonobserver.co.uk/*", // Bug 1762928 (Reach Plc)
@@ -789,6 +791,7 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://www.leeds-live.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.leicestermercury.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.lincolnshirelive.co.uk/*", // Bug 1762928 (Reach Plc)
+        "*://www.liveobserverpark.com/*", // #105244
         "*://www.liverpool.com/*", // Bug 1762928 (Reach Plc)
         "*://www.liverpoolecho.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.loughboroughecho.net/*", // Bug 1762928 (Reach Plc)
@@ -811,7 +814,6 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://www.southportvisiter.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.staffordshire-live.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.stokesentinel.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://survey.sogosurvey.com/*", // Bug 1765925
         "*://www.sussexlive.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.tm-awx.com/*", // Bug 1762928 (Reach Plc)
         "*://www.walesonline.co.uk/*", // Bug 1762928 (Reach Plc)

@@ -68,6 +68,7 @@ using mozilla::StyleRotate from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleScale from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleTranslate from "mozilla/ServoStyleConsts.h";
 using mozilla::StyleTransform from "mozilla/ServoStyleConsts.h";
+using mozilla::StyleComputedTimingFunction from "mozilla/ServoStyleConsts.h";
 
 namespace mozilla {
 namespace layers {
@@ -88,35 +89,6 @@ struct OpAttachAsyncCompositable {
   LayerHandle layer;
   CompositableHandle compositable;
 };
-
-struct CubicBezierFunction {
-  float x1;
-  float y1;
-  float x2;
-  float y2;
-};
-
-struct StepFunction {
-  int steps;
-  uint8_t type; // Converted from StyleStepPosition.
-};
-
-struct LinearStop {
-  float input;
-  float output;
-};
-
-struct LinearFunction {
-  LinearStop[] stops;
-};
-
-union TimingFunction {
-  null_t;
-  CubicBezierFunction;
-  StepFunction;
-  LinearFunction;
-};
-
 struct LayerColor { DeviceColor value; };
 
 [Comparable] union Animatable {
@@ -140,7 +112,7 @@ struct AnimationSegment {
   float endPortion;
   uint8_t startComposite;
   uint8_t endComposite;
-  TimingFunction sampleFn;
+  StyleComputedTimingFunction? sampleFn;
 };
 
 [Comparable] struct MotionPathData {
@@ -234,7 +206,7 @@ struct Animation {
   // to the playbackRate is being performed.
   float previousPlaybackRate;
   // This is used in the transformed progress calculation.
-  TimingFunction easingFunction;
+  StyleComputedTimingFunction? easingFunction;
   uint8_t iterationComposite;
   // True if the animation has a fixed current time (e.g. paused and
   // forward-filling animations).

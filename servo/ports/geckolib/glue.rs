@@ -1087,6 +1087,12 @@ impl_basic_serde_funcs!(
     computed::position::PositionOrAuto
 );
 
+impl_basic_serde_funcs!(
+    Servo_StyleComputedTimingFunction_Serialize,
+    Servo_StyleComputedTimingFunction_Deserialize,
+    computed::easing::ComputedTimingFunction
+);
+
 #[no_mangle]
 pub extern "C" fn Servo_SVGPathData_Normalize(
     input: &specified::SVGPathData,

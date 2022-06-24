@@ -12,13 +12,13 @@ from taskgraph.graph import Graph
 from taskgraph.parameters import parameters_loader
 from taskgraph.task import Task
 from taskgraph.taskgraph import TaskGraph
+from taskgraph.util.python_path import find_object
 from taskgraph.util.yaml import load_yaml
 
 from . import filter_tasks
 from .morph import morph
 from .optimize import optimize_task_graph
 from .transforms.base import TransformSequence, TransformConfig
-from .util.python_path import find_object
 from .util.verify import verifications
 from .config import load_graph_config
 

@@ -1,0 +1,5 @@
+
+1 Added function:
+
+  'function SECStatus SSL_ClientCertCallbackComplete(PRFileDesc*, SECStatus, SECKEYPrivateKey*, CERTCertificate*)'    {SSL_ClientCertCallbackComplete@@NSS_3.80}
+

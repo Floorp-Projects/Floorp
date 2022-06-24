@@ -15,6 +15,7 @@ import logging
 import json
 
 import mozpack.path as mozpath
+from taskgraph.util.python_path import import_sibling_modules
 from taskgraph.util.taskcluster import get_artifact_prefix
 from voluptuous import (
     Extra,
@@ -29,7 +30,6 @@ from gecko_taskgraph.util.schema import (
     validate_schema,
     Schema,
 )
-from gecko_taskgraph.util.python_path import import_sibling_modules
 from gecko_taskgraph.util.workertypes import worker_type_implementation
 from gecko_taskgraph.transforms.task import task_description_schema
 

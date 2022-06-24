@@ -41,9 +41,7 @@
 
 #include "qcms.h"
 
-#ifdef DEBUG
-#  include "nsSize.h"
-#endif
+#include <bitset>
 
 using namespace mozilla;
 
@@ -54,50 +52,61 @@ using FontID = mozilla::LookAndFeel::FontID;
 
 template <typename Index, typename Value, Index kEnd>
 class EnumeratedCache {
-  static constexpr uint32_t ChunkFor(Index aIndex) {
-    return uint32_t(aIndex) >> 5;  // >> 5 is the same as / 32.
-  }
-  static constexpr uint32_t BitFor(Index aIndex) {
-    return 1u << (uint32_t(aIndex) & 31);
-  }
-  static constexpr uint32_t kChunks = ChunkFor(kEnd) + 1;
-
   mozilla::EnumeratedArray<Index, kEnd, Value> mEntries;
-  uint32_t mValidity[kChunks] = {0};
+  std::bitset<size_t(kEnd)> mValidity;
 
  public:
   constexpr EnumeratedCache() = default;
 
-  bool IsValid(Index aIndex) const {
-    return mValidity[ChunkFor(aIndex)] & BitFor(aIndex);
-  }
+  bool IsValid(Index aIndex) const { return mValidity[size_t(aIndex)]; }
 
   const Value* Get(Index aIndex) const {
     return IsValid(aIndex) ? &mEntries[aIndex] : nullptr;
   }
 
   void Insert(Index aIndex, Value aValue) {
-    mValidity[ChunkFor(aIndex)] |= BitFor(aIndex);
+    mValidity[size_t(aIndex)] = true;
     mEntries[aIndex] = aValue;
   }
 
   void Remove(Index aIndex) {
-    mValidity[ChunkFor(aIndex)] &= ~BitFor(aIndex);
+    mValidity[size_t(aIndex)] = false;
     mEntries[aIndex] = Value();
   }
 
   void Clear() {
-    for (auto& chunk : mValidity) {
-      chunk = 0;
-    }
+    mValidity.reset();
     for (auto& entry : mEntries) {
       entry = Value();
     }
   }
 };
 
-static EnumeratedCache<ColorID, Maybe<nscolor>, ColorID::End> sLightColorCache;
-static EnumeratedCache<ColorID, Maybe<nscolor>, ColorID::End> sDarkColorCache;
+using ColorCache = EnumeratedCache<ColorID, Maybe<nscolor>, ColorID::End>;
+
+struct ColorCaches {
+  using UseStandins = LookAndFeel::UseStandins;
+
+  ColorCache mCaches[2][2];
+
+  constexpr ColorCaches() = default;
+
+  ColorCache& Get(ColorScheme aScheme, UseStandins aUseStandins) {
+    return mCaches[aScheme == ColorScheme::Dark]
+                  [aUseStandins == UseStandins::Yes];
+  }
+
+  void Clear() {
+    for (auto& c : mCaches) {
+      for (auto& cache : c) {
+        cache.Clear();
+      }
+    }
+  }
+};
+
+static ColorCaches sColorCaches;
+
 static EnumeratedCache<FloatID, Maybe<float>, FloatID::End> sFloatCache;
 static EnumeratedCache<IntID, Maybe<int32_t>, IntID::End> sIntCache;
 static EnumeratedCache<FontID, widget::LookAndFeelFont, FontID::End> sFontCache;
@@ -201,30 +210,6 @@ static_assert(ArrayLength(sFloatPrefs) == size_t(LookAndFeel::FloatID::End),
 // This array MUST be kept in the same order as the color list in
 // specified/color.rs
 static const char sColorPrefs[][41] = {
-    "ui.textSelectDisabledBackground",
-    "ui.textSelectAttentionBackground",
-    "ui.textSelectAttentionForeground",
-    "ui.textHighlightBackground",
-    "ui.textHighlightForeground",
-    "ui.IMERawInputBackground",
-    "ui.IMERawInputForeground",
-    "ui.IMERawInputUnderline",
-    "ui.IMESelectedRawTextBackground",
-    "ui.IMESelectedRawTextForeground",
-    "ui.IMESelectedRawTextUnderline",
-    "ui.IMEConvertedTextBackground",
-    "ui.IMEConvertedTextForeground",
-    "ui.IMEConvertedTextUnderline",
-    "ui.IMESelectedConvertedTextBackground",
-    "ui.IMESelectedConvertedTextForeground",
-    "ui.IMESelectedConvertedTextUnderline",
-    "ui.SpellCheckerUnderline",
-    "ui.themedScrollbar",
-    "ui.themedScrollbarInactive",
-    "ui.themedScrollbarThumb",
-    "ui.themedScrollbarThumbHover",
-    "ui.themedScrollbarThumbActive",
-    "ui.themedScrollbarThumbInactive",
     "ui.activeborder",
     "ui.activecaption",
     "ui.appworkspace",
@@ -237,6 +222,8 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-field",
     "ui.-moz-disabledfield",
     "ui.-moz-fieldtext",
+    "ui.-moz-comboboxtext",
+    "ui.-moz-combobox",
     "ui.graytext",
     "ui.highlight",
     "ui.highlighttext",
@@ -304,10 +291,32 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-hyperlinktext",
     "ui.-moz-activehyperlinktext",
     "ui.-moz-visitedhyperlinktext",
-    "ui.-moz-comboboxtext",
-    "ui.-moz-combobox",
     "ui.-moz-colheadertext",
     "ui.-moz-colheaderhovertext",
+    "ui.textSelectDisabledBackground",
+    "ui.textSelectAttentionBackground",
+    "ui.textSelectAttentionForeground",
+    "ui.textHighlightBackground",
+    "ui.textHighlightForeground",
+    "ui.IMERawInputBackground",
+    "ui.IMERawInputForeground",
+    "ui.IMERawInputUnderline",
+    "ui.IMESelectedRawTextBackground",
+    "ui.IMESelectedRawTextForeground",
+    "ui.IMESelectedRawTextUnderline",
+    "ui.IMEConvertedTextBackground",
+    "ui.IMEConvertedTextForeground",
+    "ui.IMEConvertedTextUnderline",
+    "ui.IMESelectedConvertedTextBackground",
+    "ui.IMESelectedConvertedTextForeground",
+    "ui.IMESelectedConvertedTextUnderline",
+    "ui.SpellCheckerUnderline",
+    "ui.themedScrollbar",
+    "ui.themedScrollbarInactive",
+    "ui.themedScrollbarThumb",
+    "ui.themedScrollbarThumbHover",
+    "ui.themedScrollbarThumbActive",
+    "ui.themedScrollbarThumbInactive",
 };
 
 static_assert(ArrayLength(sColorPrefs) == size_t(LookAndFeel::ColorID::End),
@@ -875,13 +884,7 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID, ColorScheme aScheme,
   }
 #endif
 
-  if (aUseStandins == UseStandins::Yes) {
-    aResult = GetStandinForNativeColor(aID, aScheme);
-    return NS_OK;
-  }
-
-  auto& cache =
-      aScheme == ColorScheme::Light ? sLightColorCache : sDarkColorCache;
+  auto& cache = sColorCaches.Get(aScheme, aUseStandins);
   if (const auto* cached = cache.Get(aID)) {
     if (cached->isNothing()) {
       return NS_ERROR_FAILURE;
@@ -890,40 +893,51 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID, ColorScheme aScheme,
     return NS_OK;
   }
 
-  if (NS_SUCCEEDED(GetColorFromPref(aID, aScheme, aResult))) {
-    cache.Insert(aID, Some(aResult));
-    return NS_OK;
+  // NOTE: Servo holds a lock and the main thread is paused, so writing to the
+  // global cache here is fine.
+  auto result = GetUncachedColor(aID, aScheme, aUseStandins);
+  cache.Insert(aID, result);
+  if (!result) {
+    return NS_ERROR_FAILURE;
   }
+  aResult = *result;
+  return NS_OK;
+}
 
-  if (!StaticPrefs::widget_use_theme_accent() &&
-      (aID == ColorID::Accentcolor || aID == ColorID::Accentcolortext)) {
-    aResult = GetStandinForNativeColor(aID, aScheme);
-    return NS_OK;
+Maybe<nscolor> nsXPLookAndFeel::GetUncachedColor(ColorID aID,
+                                                 ColorScheme aScheme,
+                                                 UseStandins aUseStandins) {
+  const bool useStandins = [&] {
+    if (aUseStandins == UseStandins::Yes) {
+      return true;
+    }
+    return !StaticPrefs::widget_use_theme_accent() &&
+           (aID == ColorID::Accentcolor || aID == ColorID::Accentcolortext);
+  }();
+  if (useStandins) {
+    return Some(GetStandinForNativeColor(aID, aScheme));
   }
-
-  if (NS_SUCCEEDED(NativeGetColor(aID, aScheme, aResult))) {
-    if (gfxPlatform::GetCMSMode() == CMSMode::All &&
-        !IsSpecialColor(aID, aResult)) {
+  nscolor r;
+  if (NS_SUCCEEDED(GetColorFromPref(aID, aScheme, r))) {
+    return Some(r);
+  }
+  if (NS_SUCCEEDED(NativeGetColor(aID, aScheme, r))) {
+    if (gfxPlatform::GetCMSMode() == CMSMode::All && !IsSpecialColor(aID, r)) {
       qcms_transform* transform = gfxPlatform::GetCMSInverseRGBTransform();
       if (transform) {
         uint8_t color[4];
-        color[0] = NS_GET_R(aResult);
-        color[1] = NS_GET_G(aResult);
-        color[2] = NS_GET_B(aResult);
-        color[3] = NS_GET_A(aResult);
+        color[0] = NS_GET_R(r);
+        color[1] = NS_GET_G(r);
+        color[2] = NS_GET_B(r);
+        color[3] = NS_GET_A(r);
         qcms_transform_data(transform, color, color, 1);
-        aResult = NS_RGBA(color[0], color[1], color[2], color[3]);
+        r = NS_RGBA(color[0], color[1], color[2], color[3]);
       }
     }
 
-    // NOTE: Servo holds a lock and the main thread is paused, so writing to the
-    // global cache here is fine.
-    cache.Insert(aID, Some(aResult));
-    return NS_OK;
+    return Some(r);
   }
-
-  cache.Insert(aID, Nothing());
-  return NS_ERROR_FAILURE;
+  return Nothing();
 }
 
 nsresult nsXPLookAndFeel::GetIntValue(IntID aID, int32_t& aResult) {
@@ -1041,8 +1055,7 @@ bool nsXPLookAndFeel::GetFontValue(FontID aID, nsString& aName,
 
 void nsXPLookAndFeel::RefreshImpl() {
   // Wipe out our caches.
-  sLightColorCache.Clear();
-  sDarkColorCache.Clear();
+  sColorCaches.Clear();
   sFontCache.Clear();
   sFloatCache.Clear();
   sIntCache.Clear();
@@ -1133,57 +1146,41 @@ void LookAndFeel::DoHandleGlobalThemeChange() {
       }));
 }
 
+#define BIT_FOR(_c) (1ull << size_t(ColorID::_c))
+
 // We want to use a non-native color scheme for the non-native theme (except in
 // high-contrast mode), so spoof some of the colors with stand-ins to prevent
 // lack of contrast.
-static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
-    const dom::Document& aDoc, LookAndFeel::ColorID aColor,
-    const PreferenceSheet::Prefs& aPrefs) {
-  using ColorID = LookAndFeel::ColorID;
-  if (!aDoc.ShouldAvoidNativeTheme() ||
-      aPrefs.NonNativeThemeShouldBeHighContrast()) {
-    return false;
-  }
-
-  switch (aColor) {
+static constexpr std::bitset<size_t(ColorID::End)> sNonNativeThemeStandinColors{
     // Used by default button styles.
-    case ColorID::Buttonface:
-    case ColorID::Buttontext:
-    case ColorID::MozButtonhoverface:
-    case ColorID::MozButtonhovertext:
-    case ColorID::MozButtonactiveface:
-    case ColorID::MozButtonactivetext:
-    case ColorID::MozButtondisabledface:
-
+    BIT_FOR(Buttonface) | BIT_FOR(Buttontext) | BIT_FOR(MozButtonhoverface) |
+    BIT_FOR(MozButtonhovertext) | BIT_FOR(MozButtonactiveface) |
+    BIT_FOR(MozButtonactivetext) | BIT_FOR(MozButtondisabledface) |
     // Used by select elements.
-    case ColorID::Threedlightshadow:
+    BIT_FOR(MozCombobox) | BIT_FOR(MozComboboxtext) |
+    BIT_FOR(Threedlightshadow) |
     // For symmetry with the above.
-    case ColorID::Threeddarkshadow:
+    BIT_FOR(Threeddarkshadow) |
     // Used by fieldset borders.
-    case ColorID::Threedface:
-
-    // Used by select elements.
-    case ColorID::MozCombobox:
-    case ColorID::MozComboboxtext:
-
+    BIT_FOR(Threedface) |
     // Used by input / textarea.
-    case ColorID::Field:
-    case ColorID::Fieldtext:
-
+    BIT_FOR(Field) | BIT_FOR(Fieldtext) |
     // Used by disabled form controls.
-    case ColorID::MozDisabledfield:
-    case ColorID::Graytext:
-
+    BIT_FOR(MozDisabledfield) | BIT_FOR(Graytext) |
     // Some pages expect these to return windows-like colors, see bug 1773795.
     // Also, per spec these should match Canvas/CanvasText, see
     // https://drafts.csswg.org/css-color-4/#window
-    case ColorID::Window:
-    case ColorID::Windowtext:
-      return true;
+    BIT_FOR(Window) | BIT_FOR(Windowtext)};
+#undef BIT_FOR
 
-    default:
-      return false;
+static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
+    const dom::Document& aDoc, LookAndFeel::ColorID aColor,
+    const PreferenceSheet::Prefs& aPrefs) {
+  if (!sNonNativeThemeStandinColors[size_t(aColor)]) {
+    return false;
   }
+  return aDoc.ShouldAvoidNativeTheme() &&
+         !aPrefs.NonNativeThemeShouldBeHighContrast();
 }
 
 ColorScheme LookAndFeel::sChromeColorScheme;

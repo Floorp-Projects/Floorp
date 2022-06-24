@@ -153,7 +153,7 @@ def retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=1.5, jitter=
             time.sleep(sleeptime_real)
 
 
-def stream_download(url, sha256=None, size=None):
+def stream_download(url, sha256=None, size=None, headers=None):
     """Download a URL to a generator, optionally with content verification.
 
     If ``sha256`` or ``size`` are defined, the downloaded URL will be
@@ -167,12 +167,19 @@ def stream_download(url, sha256=None, size=None):
     on after the generator is exhausted without raising.
     """
     log('Downloading %s' % url)
+    headers = headers or []
 
     h = hashlib.sha256()
     length = 0
 
     t0 = time.time()
-    with urllib.request.urlopen(url) as fh:
+    req_headers = {}
+    for header in headers:
+        key, val = header.split(":")
+        req_headers[key.strip()] = val.strip()
+
+    req = urllib.request.Request(url, None, req_headers)
+    with urllib.request.urlopen(req) as fh:
         if not url.endswith('.gz') and fh.info().get('Content-Encoding') == 'gzip':
             fh = gzip.GzipFile(fileobj=fh)
 
@@ -207,7 +214,7 @@ def stream_download(url, sha256=None, size=None):
                 url, sha256, digest))
 
 
-def download_to_path(url, path, sha256=None, size=None):
+def download_to_path(url, path, sha256=None, size=None, headers=None):
     """Download a URL to a filesystem path, possibly with verification."""
 
     # We download to a temporary file and rename at the end so there's
@@ -223,7 +230,7 @@ def download_to_path(url, path, sha256=None, size=None):
             log('Downloading %s to %s' % (url, path))
 
             with rename_after_close(path, 'wb') as fh:
-                for chunk in stream_download(url, sha256=sha256, size=size):
+                for chunk in stream_download(url, sha256=sha256, size=size, headers=headers):
                     fh.write(chunk)
 
             return
@@ -551,7 +558,8 @@ def command_static_url(args):
         dl_dest = dest.parent / basename
 
     try:
-        download_to_path(args.url, dl_dest, sha256=args.sha256, size=args.size)
+        download_to_path(args.url, dl_dest, sha256=args.sha256, size=args.size,
+                         headers=args.headers)
 
         if gpg_sig_url:
             gpg_verify_path(dl_dest, gpg_key, gpg_signature)
@@ -652,6 +660,9 @@ def main():
     url.add_argument('--add-prefix', default='',
                      help='Prefix to add to file names in the downloaded '
                           'archive')
+    url.add_argument('-H', '--header', default=[], action='append', dest='headers',
+                     help='Header to send as part of the request, can be passed '
+                          'multiple times')
     url.add_argument('url', help='URL to fetch')
     url.add_argument('dest', help='Destination path')
 

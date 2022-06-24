@@ -324,10 +324,19 @@ void TlsAgent::SetAntiReplayContext(ScopedSSLAntiReplayContext& ctx) {
   EXPECT_EQ(SECSuccess, SSL_SetAntiReplayContext(ssl_fd(), ctx.get()));
 }
 
-void TlsAgent::SetupClientAuth() {
+// Defaults to a Sync callback returning success
+void TlsAgent::SetupClientAuth(ClientAuthCallbackType callbackType,
+                               bool callbackSuccess) {
   EXPECT_TRUE(EnsureTlsSetup());
   ASSERT_EQ(CLIENT, role_);
 
+  client_auth_callback_type_ = callbackType;
+  client_auth_callback_success_ = callbackSuccess;
+
+  if (callbackType == ClientAuthCallbackType::kNone && !callbackSuccess) {
+    // Don't set a callback for this case.
+    return;
+  }
   EXPECT_EQ(SECSuccess,
             SSL_GetClientAuthDataHook(ssl_fd(), GetClientAuthDataHook,
                                       reinterpret_cast<void*>(this)));
@@ -344,26 +353,95 @@ void CheckCertReqAgainstDefaultCAs(const CERTDistNames* caNames) {
   }
 }
 
+// Complete processing of Client Certificate Selection
+// A No-op if the agent is using synchronous client cert selection.
+// Otherwise, calls SSL_ClientCertCallbackComplete.
+// kAsyncDelay triggers a call to SSL_ForceHandshake prior to completion to
+// ensure that the socket is correctly blocked.
+void TlsAgent::ClientAuthCallbackComplete() {
+  ASSERT_EQ(CLIENT, role_);
+
+  if (client_auth_callback_type_ != ClientAuthCallbackType::kAsyncDelay &&
+      client_auth_callback_type_ != ClientAuthCallbackType::kAsyncImmediate) {
+    return;
+  }
+  client_auth_callback_fired_++;
+  EXPECT_TRUE(client_auth_callback_awaiting_);
+
+  std::cerr << "client: calling SSL_ClientCertCallbackComplete with status "
+            << (client_auth_callback_success_ ? "success" : "failed")
+            << std::endl;
+
+  client_auth_callback_awaiting_ = false;
+
+  if (client_auth_callback_type_ == ClientAuthCallbackType::kAsyncDelay) {
+    std::cerr
+        << "Running Handshake prior to running SSL_ClientCertCallbackComplete"
+        << std::endl;
+    SECStatus rv = SSL_ForceHandshake(ssl_fd());
+    EXPECT_EQ(rv, SECFailure);
+    EXPECT_EQ(PORT_GetError(), PR_WOULD_BLOCK_ERROR);
+  }
+
+  ScopedCERTCertificate cert;
+  ScopedSECKEYPrivateKey priv;
+  if (client_auth_callback_success_) {
+    ASSERT_TRUE(TlsAgent::LoadCertificate(name(), &cert, &priv));
+    EXPECT_EQ(SECSuccess,
+              SSL_ClientCertCallbackComplete(ssl_fd(), SECSuccess,
+                                             priv.release(), cert.release()));
+  } else {
+    EXPECT_EQ(SECSuccess, SSL_ClientCertCallbackComplete(ssl_fd(), SECFailure,
+                                                         nullptr, nullptr));
+  }
+}
+
 SECStatus TlsAgent::GetClientAuthDataHook(void* self, PRFileDesc* fd,
                                           CERTDistNames* caNames,
                                           CERTCertificate** clientCert,
                                           SECKEYPrivateKey** clientKey) {
   TlsAgent* agent = reinterpret_cast<TlsAgent*>(self);
-  ScopedCERTCertificate peerCert(SSL_PeerCertificate(agent->ssl_fd()));
-  EXPECT_TRUE(peerCert) << "Client should be able to see the server cert";
+  EXPECT_EQ(CLIENT, agent->role_);
+  agent->client_auth_callback_fired_++;
 
-  // See bug 1573945
-  // CheckCertReqAgainstDefaultCAs(caNames);
+  switch (agent->client_auth_callback_type_) {
+    case ClientAuthCallbackType::kAsyncDelay:
+    case ClientAuthCallbackType::kAsyncImmediate:
+      std::cerr << "Waiting for complete call" << std::endl;
+      agent->client_auth_callback_awaiting_ = true;
+      return SECWouldBlock;
+    case ClientAuthCallbackType::kSync:
+    case ClientAuthCallbackType::kNone:
+      // Handle the sync case. None && Success is treated as Sync and Success.
+      if (!agent->client_auth_callback_success_) {
+        return SECFailure;
+      }
+      ScopedCERTCertificate peerCert(SSL_PeerCertificate(agent->ssl_fd()));
+      EXPECT_TRUE(peerCert) << "Client should be able to see the server cert";
 
-  ScopedCERTCertificate cert;
-  ScopedSECKEYPrivateKey priv;
-  if (!TlsAgent::LoadCertificate(agent->name(), &cert, &priv)) {
-    return SECFailure;
+      // See bug 1573945
+      // CheckCertReqAgainstDefaultCAs(caNames);
+
+      ScopedCERTCertificate cert;
+      ScopedSECKEYPrivateKey priv;
+      if (!TlsAgent::LoadCertificate(agent->name(), &cert, &priv)) {
+        return SECFailure;
+      }
+
+      *clientCert = cert.release();
+      *clientKey = priv.release();
+      return SECSuccess;
   }
+  /* This is unreachable, but some old compilers can't tell that. */
+  PORT_Assert(0);
+  PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+  return SECFailure;
+}
 
-  *clientCert = cert.release();
-  *clientKey = priv.release();
-  return SECSuccess;
+// Increments by 1 for each callback
+bool TlsAgent::CheckClientAuthCallbacksCompleted(uint8_t expected) {
+  EXPECT_EQ(CLIENT, role_);
+  return expected == client_auth_callback_fired_;
 }
 
 bool TlsAgent::GetPeerChainLength(size_t* count) {
@@ -954,6 +1032,24 @@ void TlsAgent::Connected() {
   SetState(STATE_CONNECTED);
 }
 
+void TlsAgent::CheckClientAuthCompleted(uint8_t handshakes) {
+  EXPECT_FALSE(client_auth_callback_awaiting_);
+  switch (client_auth_callback_type_) {
+    case ClientAuthCallbackType::kNone:
+      if (!client_auth_callback_success_) {
+        EXPECT_TRUE(CheckClientAuthCallbacksCompleted(0));
+        break;
+      }
+    case ClientAuthCallbackType::kSync:
+      EXPECT_TRUE(CheckClientAuthCallbacksCompleted(handshakes));
+      break;
+    case ClientAuthCallbackType::kAsyncDelay:
+    case ClientAuthCallbackType::kAsyncImmediate:
+      EXPECT_TRUE(CheckClientAuthCallbacksCompleted(2 * handshakes));
+      break;
+  }
+}
+
 void TlsAgent::EnableExtendedMasterSecret() {
   SetOption(SSL_ENABLE_EXTENDED_MASTER_SECRET, PR_TRUE);
 }
@@ -988,6 +1084,10 @@ void TlsAgent::SetDowngradeCheckVersion(uint16_t ver) {
 void TlsAgent::Handshake() {
   LOGV("Handshake");
   SECStatus rv = SSL_ForceHandshake(ssl_fd());
+  if (client_auth_callback_awaiting_) {
+    ClientAuthCallbackComplete();
+    rv = SSL_ForceHandshake(ssl_fd());
+  }
   if (rv == SECSuccess) {
     Connected();
     Poller::Instance()->Wait(READABLE_EVENT, adapter_, this,

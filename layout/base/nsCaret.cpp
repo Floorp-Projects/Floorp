@@ -13,6 +13,7 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
+#include "mozilla/StaticPrefs_bidi.h"
 #include "nsCOMPtr.h"
 #include "nsFontMetrics.h"
 #include "nsITimer.h"
@@ -105,7 +106,7 @@ static void AdjustCaretFrameForLineEnd(nsIFrame** aFrame, int32_t* aOffset) {
   }
 }
 
-static bool IsBidiUI() { return Preferences::GetBool("bidi.browser.ui"); }
+static bool IsBidiUI() { return StaticPrefs::bidi_browser_ui(); }
 
 nsCaret::nsCaret()
     : mOverrideOffset(0),

@@ -232,6 +232,34 @@ def verify_dependency_tiers(task, taskgraph, scratch_pad, graph_config, paramete
                     )
 
 
+@verifications.add("full_task_graph")
+def verify_toolchain_alias(task, taskgraph, scratch_pad, graph_config, parameters):
+    """
+    This function verifies that toolchain aliases are not reused.
+    """
+    if task is None:
+        return
+    attributes = task.attributes
+    if "toolchain-alias" in attributes:
+        keys = attributes["toolchain-alias"]
+        if not keys:
+            keys = []
+        elif isinstance(keys, str):
+            keys = [keys]
+        for key in keys:
+            if key in scratch_pad:
+                raise Exception(
+                    "Duplicate toolchain-alias in tasks "
+                    "`{}`and `{}`: {}".format(
+                        task.label,
+                        scratch_pad[key],
+                        key,
+                    )
+                )
+            else:
+                scratch_pad[key] = task.label
+
+
 @verifications.add("optimized_task_graph")
 def verify_always_optimized(task, taskgraph, scratch_pad, graph_config, parameters):
     """

@@ -9,6 +9,7 @@ Support for running spidermonkey jobs via dedicated scripts
 import os
 import re
 
+import taskgraph
 from taskgraph.util.taskcluster import get_root_url
 from voluptuous import Any, Optional, Required
 
@@ -18,7 +19,6 @@ from gecko_taskgraph.transforms.job.common import add_artifacts
 from gecko_taskgraph.util.hash import hash_path
 from gecko_taskgraph.util.schema import Schema
 from gecko_taskgraph import GECKO
-import gecko_taskgraph
 
 DSC_PACKAGE_RE = re.compile(".*(?=_)")
 SOURCE_PACKAGE_RE = re.compile(r".*(?=[-_]\d)")
@@ -208,7 +208,7 @@ def common_package(config, job, taskdesc, distro, version):
             hash_path(os.path.join(GECKO, "build", "debian-packages", run["patch"]))
         )
 
-    if not gecko_taskgraph.fast:
+    if not taskgraph.fast:
         taskdesc["cache"] = {
             "type": "packages.v1",
             "name": name,

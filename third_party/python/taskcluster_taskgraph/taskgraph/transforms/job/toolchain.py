@@ -5,21 +5,18 @@
 Support for running toolchain-building jobs via dedicated scripts
 """
 
+from voluptuous import Any, Optional, Required
 
-from taskgraph.util.schema import Schema
-from voluptuous import Optional, Required, Any
-
-from taskgraph.transforms.job import (
-    configure_taskdesc_for_run,
-    run_job_using,
-)
+import taskgraph
+from taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_artifacts,
+    generic_worker_add_artifacts,
     get_vcsdir_name,
 )
 from taskgraph.util.hash import hash_paths
-import taskgraph
-
+from taskgraph.util.schema import Schema
+from taskgraph.util.shell import quote as shell_quote
 
 CACHE_TYPE = "toolchains.v3"
 
@@ -45,7 +42,11 @@ toolchain_run_schema = Schema(
             "toolchain-alias",
             description="An alias that can be used instead of the real toolchain job name in "
             "fetch stanzas for jobs.",
-        ): str,
+        ): Any(str, [str]),
+        Optional(
+            "toolchain-env",
+            description="Additional env variables to add to the worker when using this toolchain",
+        ): {str: object},
         # Base work directory used to set up the task.
         Required("workdir"): str,
     }
@@ -59,6 +60,8 @@ def get_digest_data(config, run, taskdesc):
 
     # Accumulate dependency hashes for index generation.
     data = [hash_paths(config.graph_config.vcs_root, files)]
+
+    data.append(taskdesc["attributes"]["toolchain-artifact"])
 
     # If the task uses an in-tree docker image, we want it to influence
     # the index path as well. Ideally, the content of the docker image itself
@@ -78,18 +81,7 @@ def get_digest_data(config, run, taskdesc):
     return data
 
 
-toolchain_defaults = {
-    "sparse-profile": "toolchain-build",
-}
-
-
-@run_job_using(
-    "docker-worker",
-    "toolchain-script",
-    schema=toolchain_run_schema,
-    defaults=toolchain_defaults,
-)
-def docker_worker_toolchain(config, job, taskdesc):
+def common_toolchain(config, job, taskdesc, is_docker):
     run = job["run"]
 
     worker = taskdesc["worker"] = job["worker"]
@@ -97,14 +89,18 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     srcdir = get_vcsdir_name(worker["os"])
 
-    # If the task doesn't have a docker-image, set a default
-    worker.setdefault("docker-image", {"in-tree": "toolchain-build"})
+    if is_docker:
+        # If the task doesn't have a docker-image, set a default
+        worker.setdefault("docker-image", {"in-tree": "toolchain-build"})
 
     # Allow the job to specify where artifacts come from, but add
     # public/build if it's not there already.
     artifacts = worker.setdefault("artifacts", [])
     if not any(artifact.get("name") == "public/build" for artifact in artifacts):
-        docker_worker_add_artifacts(config, job, taskdesc)
+        if is_docker:
+            docker_worker_add_artifacts(config, job, taskdesc)
+        else:
+            generic_worker_add_artifacts(config, job, taskdesc)
 
     env = worker["env"]
     env.update(
@@ -118,6 +114,8 @@ def docker_worker_toolchain(config, job, taskdesc):
     attributes["toolchain-artifact"] = run.pop("toolchain-artifact")
     if "toolchain-alias" in run:
         attributes["toolchain-alias"] = run.pop("toolchain-alias")
+    if "toolchain-env" in run:
+        attributes["toolchain-env"] = run.pop("toolchain-env")
 
     if not taskgraph.fast:
         name = taskdesc["label"].replace(f"{config.kind}-", "", 1)
@@ -127,10 +125,50 @@ def docker_worker_toolchain(config, job, taskdesc):
             "digest-data": get_digest_data(config, run, taskdesc),
         }
 
+    script = run.pop("script")
     run["using"] = "run-task"
     run["cwd"] = "{checkout}/.."
-    run["command"] = [
-        "{}/taskcluster/scripts/toolchain/{}".format(srcdir, run.pop("script"))
-    ] + run.pop("arguments", [])
+
+    if script.endswith(".ps1"):
+        run["exec-with"] = "powershell"
+
+    command = [f"{srcdir}/taskcluster/scripts/toolchain/{script}"] + run.pop(
+        "arguments", []
+    )
+
+    if not is_docker:
+        # Don't quote the first item in the command because it purposely contains
+        # an environment variable that is not meant to be quoted.
+        if len(command) > 1:
+            command = command[0] + " " + shell_quote(*command[1:])
+        else:
+            command = command[0]
+
+    run["command"] = command
 
     configure_taskdesc_for_run(config, job, taskdesc, worker["implementation"])
+
+
+toolchain_defaults = {
+    "sparse-profile": "toolchain-build",
+}
+
+
+@run_job_using(
+    "docker-worker",
+    "toolchain-script",
+    schema=toolchain_run_schema,
+    defaults=toolchain_defaults,
+)
+def docker_worker_toolchain(config, job, taskdesc):
+    common_toolchain(config, job, taskdesc, is_docker=True)
+
+
+@run_job_using(
+    "generic-worker",
+    "toolchain-script",
+    schema=toolchain_run_schema,
+    defaults=toolchain_defaults,
+)
+def generic_worker_toolchain(config, job, taskdesc):
+    common_toolchain(config, job, taskdesc, is_docker=False)

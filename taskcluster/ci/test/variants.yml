@@ -104,10 +104,10 @@ no-fission:
             extra-options:
                 - "--disable-fission"
 
-fission-xorigin:
-    description: "{description} with cross-origin and fission enabled"
+xorigin:
+    description: "{description} with cross-origin"
     component: "Core::DOM: Content Processes"
-    suffix: "fis-xorig"
+    suffix: "xorig"
     replace:
         e10s: true
     merge:

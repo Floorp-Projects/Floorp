@@ -10,7 +10,9 @@ treeherder configuration and attributes for that platform.
 import copy
 import os
 
+import taskgraph
 from taskgraph.util.attributes import keymatch
+from taskgraph.util.treeherder import join_symbol, split_symbol
 from voluptuous import (
     Any,
     Extra,
@@ -18,16 +20,10 @@ from voluptuous import (
     Required,
 )
 
-import gecko_taskgraph
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.job import job_description_schema
 from gecko_taskgraph.util.hg import get_json_automationrelevance
-from gecko_taskgraph.util.schema import (
-    resolve_keyed_by,
-    optionally_keyed_by,
-    Schema,
-)
-from gecko_taskgraph.util.treeherder import join_symbol, split_symbol
+from gecko_taskgraph.util.schema import Schema, resolve_keyed_by, optionally_keyed_by
 
 source_test_description_schema = Schema(
     {
@@ -251,7 +247,7 @@ def set_code_review_env(config, jobs):
 def set_base_revision_in_tgdiff(config, jobs):
     # Don't attempt to download 'json-automation' locally as the revision may
     # not exist in the repository.
-    if not os.environ.get("MOZ_AUTOMATION") or gecko_taskgraph.fast:
+    if not os.environ.get("MOZ_AUTOMATION") or taskgraph.fast:
         yield from jobs
         return
 

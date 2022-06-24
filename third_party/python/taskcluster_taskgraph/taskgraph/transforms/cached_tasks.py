@@ -4,6 +4,7 @@
 
 
 from collections import deque
+
 import taskgraph
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.cached_tasks import add_optimization

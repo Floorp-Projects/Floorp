@@ -57,15 +57,14 @@ class nsPrintJob final : public nsIWebProgressListener,
   using RemotePrintJobChild = mozilla::layout::RemotePrintJobChild;
 
  public:
-  nsPrintJob();
-
   // nsISupports interface...
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   /**
-   * Initialize for printing, or for creating a print preview document.
+   * Construct & initialize for printing, or for creating a print preview
+   * document.
    *
    * aDocViewerPrint owns us.
    *
@@ -86,10 +85,12 @@ class nsPrintJob final : public nsIWebProgressListener,
    * with a new docViewer and nsPrintJob, and passes the previous print preview
    * document as aOriginalDoc (it doesn't want to pass the actual original
    * document since it may have mutated)!
+   * TODO(dholbert): This^ note is probably somewhat out of date, in part
+   * because frontend code doesn't create "print preview tabs" anymore,
+   * now that we have a tab-modal print/print-preview dialog...
    */
-  nsresult Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
-                      nsIDocShell* aDocShell, Document* aOriginalDoc,
-                      float aScreenDPI);
+  nsPrintJob(nsIDocumentViewerPrint& aDocViewerPrint, nsIDocShell& aDocShell,
+             Document& aOriginalDoc, float aScreenDPI);
 
   // Our nsIWebBrowserPrint implementation (nsDocumentViewer) defers to the
   // following methods.
@@ -99,7 +100,7 @@ class nsPrintJob final : public nsIWebProgressListener,
    * PrintPreview calls.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  Print(Document* aSourceDoc, nsIPrintSettings* aPrintSettings,
+  Print(Document& aSourceDoc, nsIPrintSettings* aPrintSettings,
         RemotePrintJobChild* aRemotePrintJob,
         nsIWebProgressListener* aWebProgressListener);
 
@@ -114,7 +115,7 @@ class nsPrintJob final : public nsIWebProgressListener,
    * is actually our docViewer's current document!
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  PrintPreview(Document* aSourceDoc, nsIPrintSettings* aPrintSettings,
+  PrintPreview(Document& aSourceDoc, nsIPrintSettings* aPrintSettings,
                nsIWebProgressListener* aWebProgressListener,
                PrintPreviewResolver&& aCallback);
 
@@ -199,11 +200,11 @@ class nsPrintJob final : public nsIWebProgressListener,
 
   MOZ_CAN_RUN_SCRIPT nsresult CommonPrint(
       bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
-      nsIWebProgressListener* aWebProgressListener, Document* aSourceDoc);
+      nsIWebProgressListener* aWebProgressListener, Document& aSourceDoc);
 
   MOZ_CAN_RUN_SCRIPT nsresult DoCommonPrint(
       bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
-      nsIWebProgressListener* aWebProgressListener, Document* aSourceDoc);
+      nsIWebProgressListener* aWebProgressListener, Document& aSourceDoc);
 
   void FirePrintCompletionEvent();
 

@@ -23,24 +23,17 @@ struct ParamTraits<mozilla::widget::ThemeChangeKind>
 template <>
 struct ParamTraits<mozilla::LookAndFeel::IntID>
     : ContiguousEnumSerializer<mozilla::LookAndFeel::IntID,
-                               mozilla::LookAndFeel::IntID::CaretBlinkTime,
+                               mozilla::LookAndFeel::IntID(0),
                                mozilla::LookAndFeel::IntID::End> {
   using IdType = std::underlying_type_t<mozilla::LookAndFeel::IntID>;
-  static_assert(static_cast<IdType>(
-                    mozilla::LookAndFeel::IntID::CaretBlinkTime) == IdType(0));
 };
 
 template <>
 struct ParamTraits<mozilla::LookAndFeel::ColorID>
-    : ContiguousEnumSerializer<
-          mozilla::LookAndFeel::ColorID,
-          mozilla::LookAndFeel::ColorID::TextSelectDisabledBackground,
-          mozilla::LookAndFeel::ColorID::End> {
+    : ContiguousEnumSerializer<mozilla::LookAndFeel::ColorID,
+                               mozilla::LookAndFeel::ColorID(0),
+                               mozilla::LookAndFeel::ColorID::End> {
   using IdType = std::underlying_type_t<mozilla::LookAndFeel::ColorID>;
-  static_assert(
-      static_cast<IdType>(
-          mozilla::LookAndFeel::ColorID::TextSelectDisabledBackground) ==
-      IdType(0));
 };
 
 template <>

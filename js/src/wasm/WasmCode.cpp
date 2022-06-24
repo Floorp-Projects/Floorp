@@ -217,7 +217,7 @@ static void SendCodeRangesToProfiler(const ModuleSegment& ms,
                                      const CodeRangeVector& codeRanges) {
   bool enabled = false;
 #ifdef JS_ION_PERF
-  enabled |= PerfFuncEnabled();
+  enabled |= PerfEnabled();
 #endif
 #ifdef MOZ_VTUNE
   enabled |= vtune::IsProfilingActive();
@@ -244,7 +244,7 @@ static void SendCodeRangesToProfiler(const ModuleSegment& ms,
     (void)size;
 
 #ifdef JS_ION_PERF
-    if (PerfFuncEnabled()) {
+    if (PerfEnabled()) {
       const char* file = metadata.filename.get();
       if (codeRange.isFunction()) {
         if (!name.append('\0')) {

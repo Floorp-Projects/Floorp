@@ -4,17 +4,15 @@
 
 
 import json
-import os
-from types import FunctionType
 from collections import namedtuple
-
+from types import FunctionType
 
 from taskgraph import create
 from taskgraph.config import load_graph_config
-from taskgraph.util import taskcluster, yaml, hash
 from taskgraph.parameters import Parameters
+from taskgraph.util import hash, taskcluster, yaml
 from taskgraph.util.memoize import memoize
-
+from taskgraph.util.python_path import import_sibling_modules
 
 actions = []
 callbacks = {}
@@ -103,7 +101,7 @@ def register_callback_action(
             Otherwise, if ``context = [{'k': 'b', 'p': 'l'}, {'k': 't'}]`` will only
             be displayed in the context menu for tasks that has
             ``task.tags.k == 'b' && task.tags.p = 'l'`` or ``task.tags.k = 't'``.
-            Esentially, this allows filtering on ``task.tags``.
+            Essentially, this allows filtering on ``task.tags``.
 
             If this is a function, it is given the decision parameters and must return
             a value of the form described above.
@@ -344,10 +342,7 @@ def trigger_action_callback(
 def _load(graph_config):
     # Load all modules from this folder, relying on the side-effects of register_
     # functions to populate the action registry.
-    actions_dir = os.path.dirname(__file__)
-    for f in os.listdir(actions_dir):
-        if f.endswith(".py") and f not in ("__init__.py", "registry.py", "util.py"):
-            __import__("taskgraph.actions." + f[:-3])
+    import_sibling_modules(exceptions=("util.py",))
     return callbacks, actions
 
 

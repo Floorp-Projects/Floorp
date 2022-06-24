@@ -8,11 +8,10 @@ from typing import AnyStr
 
 import attr
 
-
 from ..config import GraphConfig
 from ..parameters import Parameters
-from ..util.schema import Schema, validate_schema
 from ..util.memoize import memoize
+from ..util.schema import Schema, validate_schema
 
 
 @attr.s(frozen=True)

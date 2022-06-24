@@ -116,7 +116,17 @@ static uint32_t gDumpLOFileNameCnt = 0;
 #endif
 
 #define PRT_YESNO(_p) ((_p) ? "YES" : "NO")
-static const char* gFrameTypesStr[] = {"eDoc", "eIFrame"};
+
+inline const char* LoggableTypeOfPO(const nsPrintObject* aPO) {
+  // TODO(dholbert): These strings used to represent actual enum values, but
+  // the enum type has been removed. We could replace them with more
+  // descriptive names, if anyone uses this logging and cares to do so.
+  return aPO->mParent ? "eIFrame" : "eDoc";
+}
+
+inline const char* ShortLoggableTypeOfPO(const nsPrintObject* aPO) {
+  return aPO->mParent ? "IF" : "DC";
+}
 
 // This processes the selection on aOrigDoc and creates an inverted selection on
 // aDoc, which it then deletes. If the start or end of the inverted selection
@@ -161,7 +171,7 @@ void nsPrintJob::BuildNestedPrintObjects(
 
   // If aParentPO is for an iframe and its original document was the document
   // that had focus then always set as the selection root.
-  if (aParentPO->mFrameType == eIFrame &&
+  if (aParentPO->mParent &&
       aParentPO->mDocument->GetProperty(nsGkAtoms::printisfocuseddoc)) {
     mSelectionRoot = aParentPO.get();
   } else if (!mSelectionRoot && aParentPO->HasSelection()) {
@@ -195,11 +205,9 @@ void nsPrintJob::BuildNestedPrintObjects(
       continue;
     }
 
-    auto childPO = MakeUnique<nsPrintObject>();
-    nsresult rv = childPO->InitAsNestedObject(docShell, doc, aParentPO.get());
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT_UNREACHABLE("Init failed?");
-    }
+    // Note: docShell and doc are known-non-null at this point; they've been
+    // null-checked above (with null leading to 'continue' statements).
+    auto childPO = MakeUnique<nsPrintObject>(*docShell, *doc, aParentPO.get());
 
     mPrintDocList.AppendElement(childPO.get());
     BuildNestedPrintObjects(childPO);
@@ -223,8 +231,6 @@ static nsresult GetDefaultPrintSettings(nsIPrintSettings** aSettings) {
 NS_IMPL_ISUPPORTS(nsPrintJob, nsIWebProgressListener, nsISupportsWeakReference)
 
 //-------------------------------------------------------
-nsPrintJob::nsPrintJob() = default;
-
 nsPrintJob::~nsPrintJob() {
   Destroy();  // for insurance
   DisconnectPagePrintTimer();
@@ -250,32 +256,22 @@ void nsPrintJob::DestroyPrintingData() {
   mPrt = nullptr;
 }
 
-//---------------------------------------------------------------------------------
-//-- Section: Methods needed by the DocViewer
-//---------------------------------------------------------------------------------
-
-//--------------------------------------------------------
-nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
-                                nsIDocShell* aDocShell, Document* aOriginalDoc,
-                                float aScreenDPI) {
-  NS_ENSURE_ARG_POINTER(aDocViewerPrint);
-  NS_ENSURE_ARG_POINTER(aDocShell);
-  NS_ENSURE_ARG_POINTER(aOriginalDoc);
-
-  mDocViewerPrint = aDocViewerPrint;
-  mDocShell = do_GetWeakReference(aDocShell);
-  mScreenDPI = aScreenDPI;
-
-  // Anything state that we need from aOriginalDoc must be fetched and stored
+nsPrintJob::nsPrintJob(nsIDocumentViewerPrint& aDocViewerPrint,
+                       nsIDocShell& aDocShell, Document& aOriginalDoc,
+                       float aScreenDPI)
+    : mDocViewerPrint(&aDocViewerPrint),
+      mDocShell(do_GetWeakReference(&aDocShell)),
+      mScreenDPI(aScreenDPI) {
+  // Any state that we need from aOriginalDoc must be fetched and stored
   // here, since the document that the user selected to print may mutate
   // across consecutive PrintPreview() calls.
 
-  Element* root = aOriginalDoc->GetRootElement();
+  Element* root = aOriginalDoc.GetRootElement();
   mDisallowSelectionPrint =
       root &&
       root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint);
 
-  if (nsPIDOMWindowOuter* window = aOriginalDoc->GetWindow()) {
+  if (nsPIDOMWindowOuter* window = aOriginalDoc.GetWindow()) {
     if (nsCOMPtr<nsIWebBrowserChrome> wbc = window->GetWebBrowserChrome()) {
       // We only get this in order to skip opening the progress dialog when
       // the window is modal.  Once the platform code stops opening the
@@ -283,8 +279,6 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
       wbc->IsWindowModal(&mIsForModalWindow);
     }
   }
-
-  return NS_OK;
 }
 
 //-----------------------------------------------------------------
@@ -316,9 +310,6 @@ nsPrintJob::GetSeqFrameAndCountSheets() const {
   // count the total number of sheets
   return {seqFrame, seqFrame->PrincipalChildList().GetLength()};
 }
-//---------------------------------------------------------------------------------
-//-- Done: Methods needed by the DocViewer
-//---------------------------------------------------------------------------------
 
 // Foward decl for Debug Helper Functions
 #ifdef EXTENDED_DEBUG_PRINTING
@@ -343,7 +334,7 @@ static void DumpLayoutData(const char* aTitleStr, const char* aURLStr,
 nsresult nsPrintJob::CommonPrint(bool aIsPrintPreview,
                                  nsIPrintSettings* aPrintSettings,
                                  nsIWebProgressListener* aWebProgressListener,
-                                 Document* aSourceDoc) {
+                                 Document& aSourceDoc) {
   // Callers must hold a strong reference to |this| to ensure that we stay
   // alive for the duration of this method, because our main owning reference
   // (on nsDocumentViewer) might be cleared during this function (if we cause
@@ -370,8 +361,8 @@ nsresult nsPrintJob::CommonPrint(bool aIsPrintPreview,
 nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
                                    nsIPrintSettings* aPrintSettings,
                                    nsIWebProgressListener* aWebProgressListener,
-                                   Document* aDoc) {
-  MOZ_ASSERT(aDoc->IsStaticDocument());
+                                   Document& aDoc) {
+  MOZ_ASSERT(aDoc.IsStaticDocument());
 
   nsresult rv;
 
@@ -410,14 +401,10 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
   {
     nsAutoScriptBlocker scriptBlocker;
-    mPrintObject = MakeUnique<nsPrintObject>();
-    rv =
-        mPrintObject->InitAsRootObject(docShell, aDoc, mIsCreatingPrintPreview);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    // Note: docShell is implicitly non-null via do_QueryReferent necessarily
+    // having succeeded (if we got here).
+    mPrintObject = MakeUnique<nsPrintObject>(*docShell, aDoc);
     mPrintDocList.AppendElement(mPrintObject.get());
-
-    mPrintObject->mFrameType = eDoc;
 
     BuildNestedPrintObjects(mPrintObject);
   }
@@ -472,14 +459,14 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 }
 
 //---------------------------------------------------------------------------------
-nsresult nsPrintJob::Print(Document* aDoc, nsIPrintSettings* aPrintSettings,
+nsresult nsPrintJob::Print(Document& aDoc, nsIPrintSettings* aPrintSettings,
                            RemotePrintJobChild* aRemotePrintJob,
                            nsIWebProgressListener* aWebProgressListener) {
   mRemotePrintJob = aRemotePrintJob;
   return CommonPrint(false, aPrintSettings, aWebProgressListener, aDoc);
 }
 
-nsresult nsPrintJob::PrintPreview(Document* aDoc,
+nsresult nsPrintJob::PrintPreview(Document& aDoc,
                                   nsIPrintSettings* aPrintSettings,
                                   nsIWebProgressListener* aWebProgressListener,
                                   PrintPreviewResolver&& aCallback) {
@@ -1337,7 +1324,7 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   }
 
   PR_PL(("In DV::ReflowPrintObject PO: %p pS: %p (%9s) Setting w,h to %d,%d\n",
-         aPO.get(), aPO->mPresShell.get(), gFrameTypesStr[aPO->mFrameType],
+         aPO.get(), aPO->mPresShell.get(), LoggableTypeOfPO(aPO.get()),
          adjSize.width, adjSize.height));
 
   aPO->mPresShell->BeginObservingDocument();
@@ -1641,7 +1628,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DeleteNonSelectedNodes(
 nsresult nsPrintJob::DoPrint(const UniquePtr<nsPrintObject>& aPO) {
   PR_PL(("\n"));
   PR_PL(("**************************** %s ****************************\n",
-         gFrameTypesStr[aPO->mFrameType]));
+         LoggableTypeOfPO(aPO.get())));
   PR_PL(("****** In DV::DoPrint   PO: %p \n", aPO.get()));
 
   PresShell* poPresShell = aPO->mPresShell;
@@ -1730,7 +1717,7 @@ nsresult nsPrintJob::DoPrint(const UniquePtr<nsPrintObject>& aPO) {
 
     // Schedule Page to Print
     PR_PL(("Scheduling Print of PO: %p (%s) \n", aPO.get(),
-           gFrameTypesStr[aPO->mFrameType]));
+           LoggableTypeOfPO(aPO.get())));
     StartPagePrintTimer(aPO);
   }
 
@@ -1796,8 +1783,7 @@ bool nsPrintJob::PrintSheet(nsPrintObject* aPO, bool& aInRange) {
   RefPtr<nsPrintData> printData = mPrt;
 
   PR_PL(("-----------------------------------\n"));
-  PR_PL(("------ In DV::PrintSheet PO: %p (%s)\n", aPO,
-         gFrameTypesStr[aPO->mFrameType]));
+  PR_PL(("------ In DV::PrintSheet PO: %p (%s)\n", aPO, LoggableTypeOfPO(aPO)));
 
   if (printData->mIsAborted) {
     return true;
@@ -1881,7 +1867,7 @@ void nsPrintJob::SetIsPrintPreview(bool aIsPrintPreview) {
 bool nsPrintJob::DonePrintingSheets(nsPrintObject* aPO, nsresult aResult) {
   // NS_ASSERTION(aPO, "Pointer is null!");
   PR_PL(("****** In DV::DonePrintingSheets PO: %p (%s)\n", aPO,
-         aPO ? gFrameTypesStr[aPO->mFrameType] : ""));
+         aPO ? LoggableTypeOfPO(aPO) : ""));
 
   // If there is a pageSeqFrame, make sure there are no more printCanvas active
   // that might call |Notify| on the pagePrintTimer after things are cleaned up
@@ -1903,7 +1889,7 @@ bool nsPrintJob::DonePrintingSheets(nsPrintObject* aPO, nsresult aResult) {
       PR_PL(
           ("****** In DV::DonePrintingSheets PO: %p (%s) didPrint:%s (Not Done "
            "Printing)\n",
-           aPO, gFrameTypesStr[aPO->mFrameType], PRT_YESNO(didPrint)));
+           aPO, LoggableTypeOfPO(aPO), PRT_YESNO(didPrint)));
       return false;
     }
   }
@@ -1950,8 +1936,7 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
 
   // If mSelectionRoot is a selected iframe without a selection, then just
   // enable normally from that point.
-  if (mSelectionRoot->mFrameType == eIFrame &&
-      !mSelectionRoot->HasSelection()) {
+  if (mSelectionRoot->mParent && !mSelectionRoot->HasSelection()) {
     mSelectionRoot->EnablePrinting(true);
   } else {
     // Otherwise, only enable nsPrintObjects that have a selection.
@@ -2296,7 +2281,6 @@ static void DumpPrintObjectsList(const nsTArray<nsPrintObject*>& aDocList) {
     return;
   }
 
-  const char types[][3] = {"DC", "FR", "IF", "FS"};
   PR_PL(("Doc List\n***************************************************\n"));
   PR_PL(
       ("T  P A H    PO    DocShell   Seq     Page      Root     Page#    "
@@ -2315,7 +2299,7 @@ static void DumpPrintObjectsList(const nsTArray<nsPrintObject*>& aDocList) {
       }
     }
 
-    PR_PL(("%s %d %d %p %p %p\n", types[po->mFrameType],
+    PR_PL(("%s %d %d %p %p %p\n", ShortLoggableTypeOfPO(po),
            po->PrintingIsEnabled(), po->mHasBeenPrinted, po,
            po->mDocShell.get(), rootFrame));
   }
@@ -2330,7 +2314,6 @@ static void DumpPrintObjectsTree(nsPrintObject* aPO, int aLevel, FILE* aFD) {
   NS_ASSERTION(aPO, "Pointer is null!");
 
   FILE* fd = aFD ? aFD : stdout;
-  const char types[][3] = {"DC", "FR", "IF", "FS"};
   if (aLevel == 0) {
     fprintf(fd,
             "DocTree\n***************************************************\n");
@@ -2339,7 +2322,7 @@ static void DumpPrintObjectsTree(nsPrintObject* aPO, int aLevel, FILE* aFD) {
   for (const auto& po : aPO->mKids) {
     NS_ASSERTION(po, "nsPrintObject can't be null!");
     for (int32_t k = 0; k < aLevel; k++) fprintf(fd, "  ");
-    fprintf(fd, "%s %p %p\n", types[po->mFrameType], po.get(),
+    fprintf(fd, "%s %p %p\n", ShortLoggableTypeOfPO(po.get()), po.get(),
             po->mDocShell.get());
   }
 }
@@ -2365,7 +2348,6 @@ static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
   NS_ASSERTION(aPO, "Pointer is null!");
   NS_ASSERTION(aDC, "Pointer is null!");
 
-  const char types[][3] = {"DC", "FR", "IF", "FS"};
   FILE* fd = nullptr;
   if (aLevel == 0) {
     fd = fopen("tree_layout.txt", "w");
@@ -2382,7 +2364,7 @@ static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
       rootFrame = aPO->mPresShell->GetRootFrame();
     }
     for (int32_t k = 0; k < aLevel; k++) fprintf(fd, "  ");
-    fprintf(fd, "%s %p %p\n", types[aPO->mFrameType], aPO.get(),
+    fprintf(fd, "%s %p %p\n", ShortLoggableTypeOfPO(aPO.get()), aPO.get(),
             aPO->mDocShell.get());
     if (aPO->PrintingIsEnabled()) {
       nsAutoCString docStr;

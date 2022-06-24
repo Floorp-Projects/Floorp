@@ -3,7 +3,6 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -21,17 +20,17 @@ const nsFile = Components.Constructor(
 add_task(async function() {
   let prof = do_get_profile();
 
-  let basePath = OS.Path.join(prof.path, "\u263a", "dictionaries");
+  let basePath = PathUtils.join(prof.path, "\u263a", "dictionaries");
   let baseDir = nsFile(basePath);
-  await OS.File.makeDir(basePath, { from: prof.path });
+  await IOUtils.makeDirectory(basePath, { createAncestors: true });
 
-  let dicPath = OS.Path.join(basePath, "dict.dic");
-  let affPath = OS.Path.join(basePath, "dict.aff");
+  let dicPath = PathUtils.join(basePath, "dict.dic");
+  let affPath = PathUtils.join(basePath, "dict.aff");
 
   const WORD = "Flehgragh";
 
-  await OS.File.writeAtomic(dicPath, new TextEncoder().encode(`1\n${WORD}\n`));
-  await OS.File.writeAtomic(affPath, new TextEncoder().encode(""));
+  await IOUtils.writeUTF8(dicPath, `1\n${WORD}\n`);
+  await IOUtils.writeUTF8(affPath, "");
 
   spellCheck.loadDictionariesFromDir(baseDir);
   spellCheck.dictionaries = ["dict"];

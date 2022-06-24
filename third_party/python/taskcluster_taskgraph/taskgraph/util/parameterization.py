@@ -5,8 +5,8 @@
 
 import re
 
-from taskgraph.util.time import json_time_from_now
 from taskgraph.util.taskcluster import get_artifact_url
+from taskgraph.util.time import json_time_from_now
 
 TASK_REFERENCE_PATTERN = re.compile("<([^>]+)>")
 ARTIFACT_REFERENCE_PATTERN = re.compile("<([^/]+)/([^>]+)>")

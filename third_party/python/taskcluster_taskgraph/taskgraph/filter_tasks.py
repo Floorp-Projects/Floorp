@@ -5,9 +5,7 @@
 
 import logging
 
-from . import (
-    target_tasks,
-)
+from . import target_tasks
 
 logger = logging.getLogger(__name__)
 

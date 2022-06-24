@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1655816223553,
+      "derHash": "cj4fieqqwPVrn5OF8TEvbNvXVFQGl7pGNA3yrjDqWec=",
+      "subject": "CN=SSL.com High Assurance CA,OU=www.ssl.com,O=SSL.com,C=US",
+      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMRAwDgYDVQQKEwdTU0wuY29tMRQwEgYDVQQLEwt3d3cuc3NsLmNvbTEiMCAGA1UEAxMZU1NMLmNvbSBIaWdoIEFzc3VyYW5jZSBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "71002c2662ef686fd97b1ed39205f25720a2a54c2d5da18fc7df07bfe9b794d0",
+        "size": 2121,
+        "filename": "Ck8cX6ydytkZDI6Az0ES3m8TykmMPRUEb5UVDjRtJ_w=.pem",
+        "location": "security-state-staging/intermediates/c9101671-f46c-4528-bbd3-0ebe60946c0b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Ck8cX6ydytkZDI6Az0ES3m8TykmMPRUEb5UVDjRtJ/w=",
+      "crlite_enrolled": false,
+      "id": "28852233-ff69-424d-9c51-72ed58ffda41",
+      "last_modified": 1655945823355
+    },
+    {
       "schema": 1655707894171,
       "derHash": "uL4mSapRjpQ78P0eNKJARD5G556ntWLgn8yDCsfS8/w=",
       "subject": "CN=CFCA DV OCA,O=China Financial Certification Authority,C=CN",
@@ -6065,24 +6083,6 @@
       "crlite_enrolled": true,
       "id": "82c5b68d-3d2b-4686-8b64-24ccd521c598",
       "last_modified": 1645579197618
-    },
-    {
-      "schema": 1645578803602,
-      "derHash": "WAuzqxJ/XhPpQK5zZePGmmKtIE1/36RRWS/nxH3AKpU=",
-      "subject": "CN=Prodrive Technologies B.V. OV SSL Issuing CA,O=Prodrive Technologies B.V.,C=NL",
-      "subjectDN": "MGkxCzAJBgNVBAYTAk5MMSMwIQYDVQQKExpQcm9kcml2ZSBUZWNobm9sb2dpZXMgQi5WLjE1MDMGA1UEAxMsUHJvZHJpdmUgVGVjaG5vbG9naWVzIEIuVi4gT1YgU1NMIElzc3VpbmcgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f33b1ca67bc2f7ef2190fc43c1d09060a4d6392a8969577007ae2dcf61b1b92a",
-        "size": 1788,
-        "filename": "-wd4uhPIbo8yHwCQuKSPir6tNrh9C4xO-yIp2mXFvWw=.pem",
-        "location": "security-state-staging/intermediates/b75b8f12-54d5-4290-9778-3f8795b0e379.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "+wd4uhPIbo8yHwCQuKSPir6tNrh9C4xO+yIp2mXFvWw=",
-      "crlite_enrolled": true,
-      "id": "76e5c38b-4491-41a0-8c39-a018f7f39515",
-      "last_modified": 1645579197605
     },
     {
       "schema": 1645578816572,
@@ -15317,24 +15317,6 @@
       "crlite_enrolled": false,
       "id": "836b982b-2923-4f21-a669-3b1ebbf6f665",
       "last_modified": 1614347896121
-    },
-    {
-      "schema": 1612900699058,
-      "derHash": "cj4fieqqwPVrn5OF8TEvbNvXVFQGl7pGNA3yrjDqWec=",
-      "subject": "CN=SSL.com High Assurance CA,OU=www.ssl.com,O=SSL.com,C=US",
-      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMRAwDgYDVQQKEwdTU0wuY29tMRQwEgYDVQQLEwt3d3cuc3NsLmNvbTEiMCAGA1UEAxMZU1NMLmNvbSBIaWdoIEFzc3VyYW5jZSBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "71002c2662ef686fd97b1ed39205f25720a2a54c2d5da18fc7df07bfe9b794d0",
-        "size": 2121,
-        "filename": "Ck8cX6ydytkZDI6Az0ES3m8TykmMPRUEb5UVDjRtJ_w=.pem",
-        "location": "security-state-staging/intermediates/c9101671-f46c-4528-bbd3-0ebe60946c0b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Ck8cX6ydytkZDI6Az0ES3m8TykmMPRUEb5UVDjRtJ/w=",
-      "crlite_enrolled": true,
-      "id": "28852233-ff69-424d-9c51-72ed58ffda41",
-      "last_modified": 1612922307167
     },
     {
       "schema": 1612576168069,
@@ -25147,5 +25129,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1655708223204
+  "timestamp": 1655945823355
 }

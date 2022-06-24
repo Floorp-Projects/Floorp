@@ -43,6 +43,8 @@ void CheckNativeMenuConsistency(NSMenuItem* aMenuItem);
 void DumpNativeMenu(NSMenu* aMenu);
 void DumpNativeMenuItem(NSMenuItem* aMenuItem);
 
+extern bool gIsSynchronouslyActivatingNativeMenuItemDuringTest;
+
 }  // namespace nsMenuUtilsX
 
 #endif  // nsMenuUtilsX_h_

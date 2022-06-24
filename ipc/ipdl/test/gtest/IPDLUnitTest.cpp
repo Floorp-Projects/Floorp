@@ -7,8 +7,6 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/_ipdltest/IPDLUnitTest.h"
-#include "mozilla/dom/ContentParent.h"
-#include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/ipc/NodeController.h"
 #include "mozilla/ipc/ProtocolUtils.h"

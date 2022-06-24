@@ -258,6 +258,7 @@ body > main > aside {
 
 .setup-step > .step-body > button.primary {
   white-space: nowrap;
+  min-width: fit-content;
 }
 
 .setup-step > footer {
@@ -509,7 +510,7 @@ body > main > aside {
   background-size: cover;
 }
 
-.favicon, .icon {
+.favicon, .icon, .synced-tab-li-favicon {
   width: 16px;
   height: 16px;
 }
