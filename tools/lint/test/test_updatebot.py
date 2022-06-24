@@ -6,9 +6,14 @@ LINTER = "updatebot"
 def test_basic(lint, paths):
     results = lint(paths())
 
-    assert len(results) == 1
+    assert len(results) == 2
 
     i = 0
+    assert results[i].level == "error"
+    assert "cargo-mismatch.yaml" in results[i].relpath
+    assert "was not found in Cargo.lock" in results[i].message
+
+    i += 1
     assert results[i].level == "error"
     assert "no-revision.yaml" in results[i].relpath
     assert (
