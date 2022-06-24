@@ -5913,7 +5913,7 @@ version = "0.3.100"
 
 [[package]]
 name = "webdriver"
-version = "0.45.0"
+version = "0.46.0"
 dependencies = [
  "base64",
  "bytes 1.1.0",
