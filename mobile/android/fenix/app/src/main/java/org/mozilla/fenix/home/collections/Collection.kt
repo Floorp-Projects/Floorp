@@ -105,6 +105,7 @@ fun Collection(
 
             ExpandableListHeader(
                 headerText = collection.title,
+                headerTextStyle = FirefoxTheme.typography.headline7,
                 expanded = isExpanded,
             ) {
                 if (isExpanded) {

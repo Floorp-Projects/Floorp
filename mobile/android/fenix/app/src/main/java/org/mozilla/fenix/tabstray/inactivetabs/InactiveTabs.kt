@@ -138,6 +138,7 @@ private fun InactiveTabsHeader(
 ) {
     ExpandableListHeader(
         headerText = stringResource(R.string.inactive_tabs_title),
+        headerTextStyle = FirefoxTheme.typography.headline7,
         expanded = expanded,
         expandActionContentDescription = stringResource(R.string.inactive_tabs_expand_content_description),
         collapseActionContentDescription = stringResource(R.string.inactive_tabs_collapse_content_description),
