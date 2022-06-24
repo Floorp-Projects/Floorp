@@ -40,41 +40,15 @@ const { CreditCard } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DeferredTask",
-  "resource://gre/modules/DeferredTask.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormLikeFactory",
-  "resource://gre/modules/FormLikeFactory.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginFormFactory",
-  "resource://gre/modules/LoginFormFactory.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginRecipesContent",
-  "resource://gre/modules/LoginRecipes.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "InsecurePasswordUtils",
-  "resource://gre/modules/InsecurePasswordUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ContentDOMReference",
-  "resource://gre/modules/ContentDOMReference.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
+  LoginFormFactory: "resource://gre/modules/LoginFormFactory.jsm",
+  LoginRecipesContent: "resource://gre/modules/LoginRecipes.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
+  ContentDOMReference: "resource://gre/modules/ContentDOMReference.jsm",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
