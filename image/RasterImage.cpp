@@ -1351,10 +1351,10 @@ ImgDrawResult RasterImage::DrawInternal(DrawableSurface&& aSurface,
   IntSize finalSize = aSurface->GetSize();
   bool couldRedecodeForBetterFrame = false;
   if (finalSize != aSize.ToUnknownSize()) {
-    gfx::Size scale(double(aSize.width) / finalSize.width,
-                    double(aSize.height) / finalSize.height);
-    aContext->Multiply(gfxMatrix::Scaling(scale.width, scale.height));
-    region.Scale(1.0 / scale.width, 1.0 / scale.height);
+    gfx::MatrixScales scale(double(aSize.width) / finalSize.width,
+                            double(aSize.height) / finalSize.height);
+    aContext->Multiply(gfx::Matrix::Scaling(scale));
+    region.Scale(1.0 / scale.xScale, 1.0 / scale.yScale);
 
     couldRedecodeForBetterFrame = CanDownscaleDuringDecode(aSize, aFlags);
   }
