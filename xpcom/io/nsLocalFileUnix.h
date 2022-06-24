@@ -12,14 +12,9 @@
 #define _nsLocalFileUNIX_H_
 
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include "nscore.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
-#include "nsIClassInfoImpl.h"
-#include "mozilla/Attributes.h"
 #ifdef MOZ_WIDGET_COCOA
 #  include "nsILocalFileMac.h"
 #endif

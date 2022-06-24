@@ -6,7 +6,8 @@
 
 // Platform specific code to invoke XPCOM methods on native objects
 
-#include "xptcprivate.h"
+#include "xptcall.h"
+#include "xptinfo.h"
 
 // 6 integral parameters are passed in registers, but 1 is |this| which isn't
 // considered here.

@@ -9,7 +9,7 @@
 #include "nsTHashMap.h"
 #include "nsInterfaceHashtable.h"
 #include "nsClassHashtable.h"
-#include "nsRefPtrHashtable.h"
+#include "nsRefCountedHashtable.h"
 
 #include "nsCOMPtr.h"
 #include "nsIMemoryReporter.h"

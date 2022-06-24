@@ -6,16 +6,12 @@
 
 #include "mozilla/Bootstrap.h"
 
-#include "nspr.h"
-#include "nsDebug.h"
 #include "nsXPCOMPrivate.h"
-#include "nsCOMPtr.h"
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "mozilla/FileUtils.h"
 #include "mozilla/Result.h"
-#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 

@@ -7,8 +7,8 @@
 #include "nsDumpUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "prenv.h"
 #include <errno.h>
+#include "prenv.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -19,7 +19,6 @@
 #  include "mozilla/Preferences.h"
 #  include <fcntl.h>
 #  include <unistd.h>
-#  include <sys/types.h>
 #  include <sys/stat.h>
 
 using namespace mozilla;
