@@ -408,7 +408,7 @@ def _schema_1():
                 # that isn't a Space, ~, ^, :, ?, *, or ]
                 # The second group [^ ~^:?*[\]\.]+ matches 1 or more times
                 # anything that isn't a Space, ~, ^, :, ?, *, [, ], or .
-                Required("revision"): Match(r"^[^ ~^:?*[\]]*[^ ~^:?*[\]\.]+$"),
+                "revision": Match(r"^[^ ~^:?*[\]]*[^ ~^:?*[\]\.]+$"),
             },
             "updatebot": {
                 Required("maintainer-phab"): All(str, Length(min=1)),
@@ -528,6 +528,12 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
     if "vendoring" in manifest and "origin" not in manifest:
         raise ValueError('"vendoring" requires an "origin"')
 
+    # Cannot vendor without a computer-readable revision.
+    if "vendoring" in manifest and "revision" not in manifest["origin"]:
+        raise ValueError(
+            'If "vendoring" is present, "revision" must be present in "origin"'
+        )
+
     # Only commit and tag are allowed for tracking
     if "vendoring" in manifest:
         if "tracking" not in manifest["vendoring"]:
@@ -547,10 +553,6 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
         if "vendoring" not in manifest or "url" not in manifest["vendoring"]:
             raise ValueError(
                 "If Updatebot tasks are specified, a vendoring url must be included."
-            )
-        if "origin" not in manifest or "revision" not in manifest["origin"]:
-            raise ValueError(
-                "If Updatebot tasks are specified, an origin revision must be specified."
             )
 
     # Check for a simple YAML file
