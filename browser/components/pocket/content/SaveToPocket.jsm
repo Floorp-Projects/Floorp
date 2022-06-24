@@ -28,11 +28,9 @@ ChromeUtils.defineModuleGetter(
 
 var EXPORTED_SYMBOLS = ["SaveToPocket"];
 
-XPCOMUtils.defineLazyGetter(lazy, "gStrings", () => {
-  return Services.strings.createBundle(
-    "chrome://global/locale/aboutReader.properties"
-  );
-});
+const gStrings = Services.strings.createBundle(
+  "chrome://global/locale/aboutReader.properties"
+);
 var PocketCustomizableWidget = {
   init() {
     lazy.CustomizableUI.createWidget({
@@ -131,7 +129,7 @@ var SaveToPocket = {
   _readerButtonData: {
     id: "pocket-button",
     telemetryId: "save-to-pocket",
-    label: lazy.gStrings.formatStringFromName("readerView.savetopocket.label", [
+    label: gStrings.formatStringFromName("readerView.savetopocket.label", [
       "Pocket",
     ]),
     image: "chrome://global/skin/icons/pocket.svg",
