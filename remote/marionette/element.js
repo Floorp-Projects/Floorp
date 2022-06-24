@@ -7,10 +7,10 @@
 const EXPORTED_SYMBOLS = [
   "ChromeWebElement",
   "ContentShadowRoot",
-  "ContentWebFrame",
   "ContentWebWindow",
   "element",
   "WebElement",
+  "WebFrame",
   "WebReference",
 ];
 
@@ -1521,7 +1521,7 @@ class WebReference {
       if (node.parent === node) {
         return new ContentWebWindow(uuid);
       }
-      return new ContentWebFrame(uuid);
+      return new WebFrame(uuid);
     }
 
     throw new lazy.error.InvalidArgumentError(
@@ -1531,7 +1531,7 @@ class WebReference {
 
   /**
    * Unmarshals a JSON Object to one of {@link WebElement},
-   * {@link ContentWebWindow}, {@link ContentWebFrame},
+   * {@link ContentWebWindow}, {@link WebFrame},
    * or {@link ChromeWebElement}.
    *
    * @param {Object.<string, string>} json
@@ -1563,8 +1563,8 @@ class WebReference {
         case ContentWebWindow.Identifier:
           return ContentWebWindow.fromJSON(json);
 
-        case ContentWebFrame.Identifier:
-          return ContentWebFrame.fromJSON(json);
+        case WebFrame.Identifier:
+          return WebFrame.fromJSON(json);
 
         case ChromeWebElement.Identifier:
           return ChromeWebElement.fromJSON(json);
@@ -1636,7 +1636,7 @@ class WebReference {
       ContentShadowRoot.Identifier in obj ||
       WebElement.Identifier in obj ||
       ContentWebWindow.Identifier in obj ||
-      ContentWebFrame.Identifier in obj ||
+      WebFrame.Identifier in obj ||
       ChromeWebElement.Identifier in obj
     ) {
       return true;
@@ -1731,22 +1731,22 @@ ContentWebWindow.Identifier = "window-fcc6-11e5-b4f8-330a88ab9d7f";
  * associated with <tt>&lt;frame&gt;</tt> and <tt>&lt;iframe&gt;</tt>,
  * are represented as web frames over the wire protocol.
  */
-class ContentWebFrame extends WebReference {
+class WebFrame extends WebReference {
   toJSON() {
-    return { [ContentWebFrame.Identifier]: this.uuid };
+    return { [WebFrame.Identifier]: this.uuid };
   }
 
   static fromJSON(json) {
-    if (!(ContentWebFrame.Identifier in json)) {
+    if (!(WebFrame.Identifier in json)) {
       throw new lazy.error.InvalidArgumentError(
         lazy.pprint`Expected web frame reference, got: ${json}`
       );
     }
-    let uuid = json[ContentWebFrame.Identifier];
-    return new ContentWebFrame(uuid);
+    let uuid = json[WebFrame.Identifier];
+    return new WebFrame(uuid);
   }
 }
-ContentWebFrame.Identifier = "frame-075b-4da1-b6ba-e579c2d3230a";
+WebFrame.Identifier = "frame-075b-4da1-b6ba-e579c2d3230a";
 
 /**
  * XUL elements in chrome space are represented as chrome web elements

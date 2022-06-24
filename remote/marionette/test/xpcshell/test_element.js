@@ -4,10 +4,10 @@
 
 const {
   ChromeWebElement,
-  ContentWebFrame,
   ContentWebWindow,
   element,
   WebElement,
+  WebFrame,
   WebReference,
 } = ChromeUtils.import("chrome://remote/content/marionette/element.js");
 
@@ -437,7 +437,7 @@ add_test(function test_WebReference_from() {
   ok(WebReference.from(domEl) instanceof WebElement);
   ok(WebReference.from(xulEl) instanceof WebElement);
   ok(WebReference.from(domWin) instanceof ContentWebWindow);
-  ok(WebReference.from(domFrame) instanceof ContentWebFrame);
+  ok(WebReference.from(domFrame) instanceof WebFrame);
   ok(WebReference.from(domElInPrivilegedDocument) instanceof ChromeWebElement);
   ok(WebReference.from(xulElInPrivilegedDocument) instanceof ChromeWebElement);
 
@@ -473,10 +473,10 @@ add_test(function test_WebReference_fromJSON_ContentWebWindow() {
   run_next_test();
 });
 
-add_test(function test_WebReference_fromJSON_ContentWebFrame() {
-  let ref = { [ContentWebFrame.Identifier]: "foo" };
+add_test(function test_WebReference_fromJSON_WebFrame() {
+  let ref = { [WebFrame.Identifier]: "foo" };
   let frame = WebReference.fromJSON(ref);
-  ok(frame instanceof ContentWebFrame);
+  ok(frame instanceof WebFrame);
   equal(frame.uuid, "foo");
 
   run_next_test();
@@ -521,7 +521,7 @@ add_test(function test_WebReference_isReference() {
 
   ok(WebReference.isReference({ [WebElement.Identifier]: "foo" }));
   ok(WebReference.isReference({ [ContentWebWindow.Identifier]: "foo" }));
-  ok(WebReference.isReference({ [ContentWebFrame.Identifier]: "foo" }));
+  ok(WebReference.isReference({ [WebFrame.Identifier]: "foo" }));
   ok(WebReference.isReference({ [ChromeWebElement.Identifier]: "foo" }));
 
   run_next_test();
@@ -574,19 +574,19 @@ add_test(function test_ContentWebWindow_fromJSON() {
   run_next_test();
 });
 
-add_test(function test_ContentWebFrame_toJSON() {
-  let frame = new ContentWebFrame("foo");
+add_test(function test_WebFrame_toJSON() {
+  let frame = new WebFrame("foo");
   let json = frame.toJSON();
-  ok(ContentWebFrame.Identifier in json);
-  equal(json[ContentWebFrame.Identifier], "foo");
+  ok(WebFrame.Identifier in json);
+  equal(json[WebFrame.Identifier], "foo");
 
   run_next_test();
 });
 
-add_test(function test_ContentWebFrame_fromJSON() {
-  let ref = { [ContentWebFrame.Identifier]: "foo" };
-  let win = ContentWebFrame.fromJSON(ref);
-  ok(win instanceof ContentWebFrame);
+add_test(function test_WebFrame_fromJSON() {
+  let ref = { [WebFrame.Identifier]: "foo" };
+  let win = WebFrame.fromJSON(ref);
+  ok(win instanceof WebFrame);
   equal(win.uuid, "foo");
 
   run_next_test();
