@@ -52,6 +52,7 @@ async function runTests() {
 
   rf.caseSensitive = false;
   rf.matchDiacritics = false;
+  rf.entireWord = false;
 
   searchValue = "TexT";
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
@@ -273,6 +274,27 @@ async function runTests() {
   assertNotFound(quotes, "Tardigrade");
   assertNotFound(quotes, "Amoeba");
 
+  // Simple checks for behavior of the entireWord option.
+  var entireWord = document.getElementById("entireWord");
+  rf.entireWord = true;
+  assertFound(entireWord, "one");
+  assertNotFound(entireWord, "on");
+  assertFound(entireWord, "(one)");
+  assertFound(entireWord, "two");
+  assertFound(entireWord, "[two]");
+  assertFound(entireWord, "[three]");
+  assertFound(entireWord, "foo");
+  assertFound(entireWord, "-foo");
+  assertFound(entireWord, "bar");
+  assertFound(entireWord, "-bar");
+  assertNotFound(entireWord, "-fo");
+  assertNotFound(entireWord, "-ba");
+
+  rf.entireWord = false;
+  assertFound(entireWord, "on");
+  assertFound(entireWord, "-fo");
+  assertFound(entireWord, "-ba");
+
   // Do these test at the end since they trigger failure screenshots in
   // the test harness, and we want as much information as possible about
   // any OTHER tests that may have already failed.
@@ -345,6 +367,7 @@ async function runTests() {
     Tardigrade
     <div>Amoeba</div>
 </div>
+<div id="entireWord"><p>(one)</p><p>[two] [three]</p><p>-foo -bar</p></div>
 <div id="content" style="display: none">
 
 </div>
