@@ -8,31 +8,12 @@
 #define mozilla_Module_h
 
 #include "nscore.h"
-#include "nsID.h"
-#include "nsIFactory.h"
-#include "nsCOMPtr.h"  // for already_AddRefed
 
 namespace mozilla {
 
-/**
- * A module implements one or more XPCOM components. This structure is used
- * for binary modules.
- */
-struct Module {
-  static const unsigned int kVersion = 103;
-
-  struct CIDEntry;
-
-  typedef already_AddRefed<nsIFactory> (*GetFactoryProcPtr)(
-      const Module& module, const CIDEntry& entry);
-
-  typedef nsresult (*ConstructorProcPtr)(const nsIID& aIID, void** aResult);
-
-  typedef nsresult (*LoadFuncPtr)();
-  typedef void (*UnloadFuncPtr)();
-
+namespace Module {
   /**
-   * This selector allows CIDEntrys to be marked so that they're only loaded
+   * This selector allows components to be marked so that they're only loaded
    * into certain kinds of processes. Selectors can be combined.
    */
   // Note: This must be kept in sync with the selector matching in
@@ -88,76 +69,6 @@ struct Module {
     NO_TASKS = 0x0,
     ALL_TASKS = 0xFFFF,
   };
-
-  /**
-   * The constructor callback is an implementation detail of the default binary
-   * loader and may be null.
-   */
-  struct CIDEntry {
-    const nsCID* cid;
-    bool service;
-    GetFactoryProcPtr getFactoryProc;
-    ConstructorProcPtr constructorProc;
-    ProcessSelector processSelector;
-  };
-
-  struct ContractIDEntry {
-    const char* contractid;
-    nsID const* cid;
-    ProcessSelector processSelector;
-  };
-
-  struct CategoryEntry {
-    const char* category;
-    const char* entry;
-    const char* value;
-  };
-
-  /**
-   * Binary compatibility check, should be kModuleVersion.
-   */
-  unsigned int mVersion;
-
-  /**
-   * An array of CIDs (class IDs) implemented by this module. The final entry
-   * should be { nullptr }.
-   */
-  const CIDEntry* mCIDs;
-
-  /**
-   * An array of mappings from contractid to CID. The final entry should
-   * be { nullptr }.
-   */
-  const ContractIDEntry* mContractIDs;
-
-  /**
-   * An array of category manager entries. The final entry should be
-   * { nullptr }.
-   */
-  const CategoryEntry* mCategoryEntries;
-
-  /**
-   * When the component manager tries to get the factory for a CID, it first
-   * checks for this module-level getfactory callback. If this function is
-   * not implemented, it checks the CIDEntry getfactory callback. If that is
-   * also nullptr, a generic factory is generated using the CIDEntry
-   * constructor callback which must be non-nullptr.
-   */
-  GetFactoryProcPtr getFactoryProc;
-
-  /**
-   * Optional Function which are called when this module is loaded and
-   * at shutdown. These are not C++ constructor/destructors to avoid
-   * calling them too early in startup or too late in shutdown.
-   */
-  LoadFuncPtr loadProc;
-  UnloadFuncPtr unloadProc;
-
-  /**
-   * Optional flags which control whether the module loads on a process-type
-   * basis.
-   */
-  ProcessSelector selector;
 };
 
 }  // namespace mozilla
