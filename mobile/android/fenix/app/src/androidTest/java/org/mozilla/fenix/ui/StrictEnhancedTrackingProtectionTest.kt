@@ -161,7 +161,6 @@ class StrictEnhancedTrackingProtectionTest {
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/25726")
     @Test
     fun testStrictVisitSheetDetails() {
         val genericPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -176,7 +175,9 @@ class StrictEnhancedTrackingProtectionTest {
         }
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
+        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {
+            verifyTrackingProtectionWebContent("blocked")
+        }
         enhancedTrackingProtection {
         }.openEnhancedTrackingProtectionSheet {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
