@@ -4,10 +4,10 @@
 
 const {
   ChromeWebElement,
-  ContentWebElement,
   ContentWebFrame,
   ContentWebWindow,
   element,
+  WebElement,
   WebReference,
 } = ChromeUtils.import("chrome://remote/content/marionette/element.js");
 
@@ -434,8 +434,8 @@ add_test(function test_WebElemenet_is() {
 });
 
 add_test(function test_WebReference_from() {
-  ok(WebReference.from(domEl) instanceof ContentWebElement);
-  ok(WebReference.from(xulEl) instanceof ContentWebElement);
+  ok(WebReference.from(domEl) instanceof WebElement);
+  ok(WebReference.from(xulEl) instanceof WebElement);
   ok(WebReference.from(domWin) instanceof ContentWebWindow);
   ok(WebReference.from(domFrame) instanceof ContentWebFrame);
   ok(WebReference.from(domElInPrivilegedDocument) instanceof ChromeWebElement);
@@ -446,19 +446,19 @@ add_test(function test_WebReference_from() {
   run_next_test();
 });
 
-add_test(function test_WebReference_fromJSON_ContentWebElement() {
-  const { Identifier } = ContentWebElement;
+add_test(function test_WebReference_fromJSON_WebElement() {
+  const { Identifier } = WebElement;
 
   let ref = { [Identifier]: "foo" };
   let webEl = WebReference.fromJSON(ref);
-  ok(webEl instanceof ContentWebElement);
+  ok(webEl instanceof WebElement);
   equal(webEl.uuid, "foo");
 
   let identifierPrecedence = {
     [Identifier]: "identifier-uuid",
   };
   let precedenceEl = WebReference.fromJSON(identifierPrecedence);
-  ok(precedenceEl instanceof ContentWebElement);
+  ok(precedenceEl instanceof WebElement);
   equal(precedenceEl.uuid, "identifier-uuid");
 
   run_next_test();
@@ -503,7 +503,7 @@ add_test(function test_WebReference_fromUUID() {
   equal(xulWebEl.uuid, "foo");
 
   let domWebEl = WebReference.fromUUID("bar", "content");
-  ok(domWebEl instanceof ContentWebElement);
+  ok(domWebEl instanceof WebElement);
   equal(domWebEl.uuid, "bar");
 
   Assert.throws(
@@ -519,7 +519,7 @@ add_test(function test_WebReference_isReference() {
     ok(!WebReference.isReference(t));
   }
 
-  ok(WebReference.isReference({ [ContentWebElement.Identifier]: "foo" }));
+  ok(WebReference.isReference({ [WebElement.Identifier]: "foo" }));
   ok(WebReference.isReference({ [ContentWebWindow.Identifier]: "foo" }));
   ok(WebReference.isReference({ [ContentWebFrame.Identifier]: "foo" }));
   ok(WebReference.isReference({ [ChromeWebElement.Identifier]: "foo" }));
@@ -532,10 +532,10 @@ add_test(function test_WebReference_generateUUID() {
   run_next_test();
 });
 
-add_test(function test_ContentWebElement_toJSON() {
-  const { Identifier } = ContentWebElement;
+add_test(function test_WebElement_toJSON() {
+  const { Identifier } = WebElement;
 
-  let el = new ContentWebElement("foo");
+  let el = new WebElement("foo");
   let json = el.toJSON();
 
   ok(Identifier in json);
@@ -544,14 +544,14 @@ add_test(function test_ContentWebElement_toJSON() {
   run_next_test();
 });
 
-add_test(function test_ContentWebElement_fromJSON() {
-  const { Identifier } = ContentWebElement;
+add_test(function test_WebElement_fromJSON() {
+  const { Identifier } = WebElement;
 
-  let el = ContentWebElement.fromJSON({ [Identifier]: "foo" });
-  ok(el instanceof ContentWebElement);
+  let el = WebElement.fromJSON({ [Identifier]: "foo" });
+  ok(el instanceof WebElement);
   equal(el.uuid, "foo");
 
-  Assert.throws(() => ContentWebElement.fromJSON({}), /InvalidArgumentError/);
+  Assert.throws(() => WebElement.fromJSON({}), /InvalidArgumentError/);
 
   run_next_test();
 });
