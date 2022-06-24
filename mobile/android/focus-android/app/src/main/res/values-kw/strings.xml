@@ -18,34 +18,34 @@
     <string name="teaser">Peuri privedh awtomatek.\nPeurowgh. Dileowgh. Daswrewgh.</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
-    <string name="feedback_erase">Diles re beu agas istori peuri.</string>
+    <string name="feedback_erase">Diles re beu dha istori peuri.</string>
     <string name="feedback_erase2">Istori peuri a veu diles</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
-    <string name="feedback_erase_custom_tab">Diles re beu istori peuri an tabb.</string>
+    <string name="feedback_erase_custom_tab">Diles re beu istori peuri an tab.</string>
 
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
     <string name="search_hint">Hwilas %1$s</string>
 
     <!-- Menu item: Share the currently visible page -->
-    <string name="menu_share">Ranna…</string>
+    <string name="menu_share">Kevrenna…</string>
 
     <!-- Menu item: Report an issue on the current site -->
-    <string name="menu_report_site_issue">Derivas kudyn war an wiasva</string>
+    <string name="menu_report_site_issue">Derivas Kudyn an Wiasva</string>
 
     <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
       replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
       links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
-    <string name="menu_open_with_default_browser2">Ygeri dre %1$s</string>
+    <string name="menu_open_with_default_browser2">Ygeri yn %1$s</string>
 
     <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
       will be shown if there are multiple browsers and we do not know which one is the default
       browser or in case Focus is actually the default browser. Clicking this menu item will show
       a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
-    <string name="menu_open_with_a_browser2">Ygeri dre…</string>
+    <string name="menu_open_with_a_browser2">Ygeri yn…</string>
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
-    <string name="menu_add_to_home_screen">Keworra dhe\'n skrin dre</string>
+    <string name="menu_add_to_home_screen">Keworra dhe\'n skrin tre</string>
 
     <!-- Menu item: Add the current site as a shortcut on the Home screen -->
     <string name="menu_add_to_shortcuts">Keworra dhe skochfordhow</string>
@@ -54,10 +54,10 @@
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Pandr\'yw nowydh</string>
-    <string name="menu_settings">Settyansow</string>
+    <string name="menu_settings">Dewisyow</string>
     <string name="menu_about">A-dro</string>
     <string name="menu_help">Gweres</string>
-    <string name="menu_rights">Agas gwiryow</string>
+    <string name="menu_rights">Dha wiryow</string>
 
     <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
          for the currently loaded website. The number of blocked trackers is shown below this label.
@@ -66,14 +66,10 @@
          doesn't work correctly with blocked content. -->
     <string name="menu_trackers_blocked_title">Helerghellow lettys</string>
 
-    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
-    trackers have been blocked for the currently loaded website.  -->
-    <string name="menu_trackers_blocked_subtitle">Diallosegi hemma a allsa ewna nebes kudynnow y\'n wiasva</string>
-
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">Lettya dalgh</string>
     <!-- This is the subtitle content blocking toggle -->
-    <string name="menu_content_blocking_subtitle">Diallosegi rag ewna neb gwiasvaow</string>
+    <string name="menu_content_blocking_subtitle">Diallosegi dhe ewna nebes gwiasvaow</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
@@ -82,13 +78,13 @@
 
     <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
          sharing an URL. -->
-    <string name="share_dialog_title">Ranna dre</string>
+    <string name="share_dialog_title">Kevrenna dre</string>
 
     <!-- While a browsing session is active (in the foreground or background) we will show a notification
          so that the user doesn't forget about the website still being open. This text is shown in
          the notification. Clicking the notification will have the same effect as clicking the "erase"
          button in the application. -->
-    <string name="notification_erase_text">Dilea an istori peuri</string>
+    <string name="notification_erase_text">Dilea istori peuri</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
     <string name="notification_action_open">Ygeri</string>
@@ -104,7 +100,7 @@
     <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
          instead of the short title when it has enough space. Android recommends a maximum length
          of 25 characters. -->
-    <string name="shortcut_erase_long_label">Dilea an istori peuri</string>
+    <string name="shortcut_erase_long_label">Dilea istori peuri</string>
 
 
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
@@ -136,14 +132,14 @@
 <a href="%2$s">Dyski moy</a></p>]]></string>
 
     <!-- Header for the Privacy and Security settings menu -->
-    <string name="preference_privacy_and_security_header">Privetter ha sekerder</string>
+    <string name="preference_privacy_and_security_header">Privetter &amp; Diogeledh</string>
 
     <!-- Preference summary for settings related to privacy and security -->
     <string name="preference_privacy_and_security_summary">Helerghi, pastiow, dewisyow kedhlow</string>
 
     <!-- Preference category description for settings related to search, set default
     and autocomplete are settings a user can find and change inside the "search" settings screen -->
-    <string name="preference_search_summary">Settya defowt, awto-gowlwul</string>
+    <string name="preference_search_summary">Settya skwir, eskowlwul</string>
 
     <!-- Preference category description for settings screen for settings related to Mozilla -->
     <!-- About the app and help are links that are inside this menu -->
