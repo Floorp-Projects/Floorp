@@ -2812,7 +2812,9 @@ nscoord nsFloatManager::ShapeInfo::XInterceptAtY(const nscoord aY,
                                                  const nscoord aRadiusY) {
   // Solve for x in the ellipse equation (x/radiusX)^2 + (y/radiusY)^2 = 1.
   MOZ_ASSERT(aRadiusY > 0);
-  return aRadiusX * std::sqrt(1 - (aY * aY) / double(aRadiusY * aRadiusY));
+  const auto ratioY = aY / static_cast<double>(aRadiusY);
+  MOZ_ASSERT(ratioY <= 1, "Why is position y outside of the radius on y-axis?");
+  return NSToCoordTrunc(aRadiusX * std::sqrt(1 - ratioY * ratioY));
 }
 
 /* static */
