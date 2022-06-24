@@ -848,9 +848,10 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
       }
     }
 
-    // Figure whether the previous char is a word-breaking one.
-    bool wordBreakPrev = false;
-    if (mEntireWord) {
+    // Figure whether the previous char is a word-breaking one,
+    // if we care about word boundaries.
+    bool wordBreakPrev = true;
+    if (mEntireWord && prevChar) {
       if (prevChar == NBSP_CHARCODE) {
         prevChar = CHAR_TO_UNICHAR(' ');
       }
@@ -911,7 +912,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
           }
 
           // If a word break isn't there when it needs to be, reset search.
-          if (mEntireWord && !BreakInBetween(c, nextChar)) {
+          if (mEntireWord && nextChar && !BreakInBetween(c, nextChar)) {
             matchAnchorNode = nullptr;
             continue;
           }
