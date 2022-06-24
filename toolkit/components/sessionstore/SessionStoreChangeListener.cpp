@@ -24,6 +24,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsTHashMap.h"
 #include "nsTHashtable.h"
+#include "nsLayoutUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -31,6 +32,7 @@ using namespace mozilla::dom;
 namespace {
 constexpr auto kInput = u"input"_ns;
 constexpr auto kScroll = u"mozvisualscroll"_ns;
+constexpr auto kResize = u"mozvisualresize"_ns;
 
 static constexpr char kNoAutoUpdates[] =
     "browser.sessionstore.debug.no_auto_updates";
@@ -120,14 +122,16 @@ SessionStoreChangeListener::HandleEvent(dom::Event* aEvent) {
     RecordChange(windowContext, Change::Input);
   } else if (eventType == kScroll) {
     RecordChange(windowContext, Change::Scroll);
+  } else if (eventType == kResize && browsingContext->IsTop()) {
+    RecordChange(windowContext, Change::Resize);
   }
-
   return NS_OK;
 }
 
 /* static */ already_AddRefed<SessionStoreChangeListener>
 SessionStoreChangeListener::Create(BrowsingContext* aBrowsingContext) {
-  MOZ_RELEASE_ASSERT(SessionStoreUtils::NATIVE_LISTENER);
+  MOZ_RELEASE_ASSERT(
+      StaticPrefs::browser_sessionstore_platform_collection_AtStartup());
   if (!aBrowsingContext) {
     return nullptr;
   }
@@ -181,6 +185,29 @@ static void CollectFormData(Document* aDocument,
   }
 }
 
+static void GetZoom(BrowsingContext* aBrowsingContext,
+                    Maybe<SessionStoreZoom>& aZoom) {
+  nsIDocShell* docShell = aBrowsingContext->GetDocShell();
+  if (!docShell) {
+    return;
+  }
+
+  PresShell* presShell = docShell->GetPresShell();
+  if (!presShell) {
+    return;
+  }
+
+  LayoutDeviceIntSize displaySize;
+
+  if (!nsLayoutUtils::GetContentViewerSize(presShell->GetPresContext(),
+                                           displaySize)) {
+    return;
+  }
+
+  aZoom.emplace(presShell->GetResolution(), displaySize.width,
+                displaySize.height);
+}
+
 void SessionStoreChangeListener::FlushSessionStore() {
   if (mTimer) {
     mTimer->Cancel();
@@ -189,6 +216,7 @@ void SessionStoreChangeListener::FlushSessionStore() {
 
   bool collectSessionHistory = false;
   bool collectWireFrame = false;
+  bool didResize = false;
 
   for (auto& iter : mSessionStoreChanges) {
     WindowContext* windowContext = iter.GetKey();
@@ -230,6 +258,10 @@ void SessionStoreChangeListener::FlushSessionStore() {
     collectSessionHistory =
         collectSessionHistory || changes.contains(Change::SessionHistory);
 
+    if (presShell && changes.contains(Change::Resize)) {
+      didResize = true;
+    }
+
     mSessionStoreChild->IncrementalSessionStoreUpdate(
         browsingContext, maybeFormData, maybeScroll, mEpoch);
   }
@@ -239,7 +271,13 @@ void SessionStoreChangeListener::FlushSessionStore() {
   }
 
   mSessionStoreChanges.Clear();
-  mSessionStoreChild->UpdateSessionStore(collectSessionHistory);
+
+  Maybe<SessionStoreZoom> zoom;
+  if (didResize) {
+    GetZoom(mBrowsingContext->Top(), zoom);
+  }
+
+  mSessionStoreChild->UpdateSessionStore(collectSessionHistory, zoom);
 }
 
 /* static */
@@ -314,6 +352,9 @@ void SessionStoreChangeListener::AddEventListeners() {
   if (EventTarget* target = GetEventTarget()) {
     target->AddSystemEventListener(kInput, this, false);
     target->AddSystemEventListener(kScroll, this, false);
+    if (StaticPrefs::browser_sessionstore_collect_zoom_AtStartup()) {
+      target->AddSystemEventListener(kResize, this, false);
+    }
     mCurrentEventTarget = target;
   }
 }
@@ -322,6 +363,9 @@ void SessionStoreChangeListener::RemoveEventListeners() {
   if (mCurrentEventTarget) {
     mCurrentEventTarget->RemoveSystemEventListener(kInput, this, false);
     mCurrentEventTarget->RemoveSystemEventListener(kScroll, this, false);
+    if (StaticPrefs::browser_sessionstore_collect_zoom_AtStartup()) {
+      mCurrentEventTarget->RemoveSystemEventListener(kResize, this, false);
+    }
   }
 
   mCurrentEventTarget = nullptr;

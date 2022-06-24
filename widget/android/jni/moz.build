@@ -21,6 +21,7 @@ EXPORTS.mozilla.jni += [
 
 UNIFIED_SOURCES += [
     "Conversions.cpp",
+    "GeckoBundleUtils.cpp",
     "Utils.cpp",
 ]
 
