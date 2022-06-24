@@ -20,6 +20,7 @@ const {
   getAllMessagesUiById,
   getAllCssMessagesMatchingElements,
   getAllNetworkMessagesUpdateById,
+  getLastMessageId,
   getVisibleMessages,
   getAllRepeatById,
   getAllWarningGroupsById,
@@ -65,6 +66,7 @@ class ConsoleOutput extends Component {
       editorMode: PropTypes.bool.isRequired,
       cacheGeneration: PropTypes.number.isRequired,
       disableVirtualization: PropTypes.bool,
+      lastMessageId: PropTypes.string.isRequired,
     };
   }
 
@@ -165,11 +167,12 @@ class ConsoleOutput extends Component {
     const visibleMessagesDelta =
       nextProps.visibleMessages.length - this.props.visibleMessages.length;
     const messagesDelta = nextProps.messageCount - this.props.messageCount;
-    // We can retrieve the last message id in visibleMessages as evaluation result are
-    // always visible.
+    // Evaluation results are never filtered out, so if it's in the store, it will be
+    // visible in the output.
     const isNewMessageEvaluationResult =
       messagesDelta > 0 &&
-      nextProps.mutableMessages.get(nextProps.visibleMessages.at(-1))?.type ===
+      nextProps.lastMessageId &&
+      nextProps.mutableMessages.get(nextProps.lastMessageId)?.type ===
         MESSAGE_TYPE.RESULT;
 
     const messagesUiDelta =
@@ -350,6 +353,7 @@ function mapStateToProps(state, props) {
     // on state change (since we can't do it with mutableMessagesById).
     messageCount: mutableMessages.size,
     mutableMessages,
+    lastMessageId: getLastMessageId(state),
     visibleMessages: getVisibleMessages(state),
     messagesUi: getAllMessagesUiById(state),
     cssMatchingElements: getAllCssMessagesMatchingElements(state),
