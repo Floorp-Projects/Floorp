@@ -391,9 +391,19 @@ def gen_composition_table(canon_comp, out):
 def gen_decomposition_tables(canon_decomp, compat_decomp, cjk_compat_variants_decomp, out):
     tables = [(canon_decomp, 'canonical'), (compat_decomp, 'compatibility'), (cjk_compat_variants_decomp, 'cjk_compat_variants')]
     for table, name in tables:
-        gen_mph_data(name + '_decomposed', table, "(u32, &'static [char])",
-            lambda k: "(0x{:x}, &[{}])".format(k,
-                ", ".join("'\\u{%s}'" % hexify(c) for c in table[k])))
+        offsets = {}
+        offset = 0
+        out.write("pub(crate) const %s_DECOMPOSED_CHARS: &[char] = &[\n" % name.upper())
+        for k, v in table.items():
+            offsets[k] = offset
+            offset += len(v)
+            for c in v:
+                out.write("    '\\u{%s}',\n" % hexify(c))
+        # The largest offset must fit in a u16.
+        assert offset < 65536
+        out.write("];\n")
+        gen_mph_data(name + '_decomposed', table, "(u32, (u16, u16))",
+            lambda k: "(0x{:x}, ({}, {}))".format(k, offsets[k], len(table[k])))
 
 def gen_qc_match(prop_table, out):
     out.write("    match c {\n")
