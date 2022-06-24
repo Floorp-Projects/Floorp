@@ -192,8 +192,7 @@ static void CallUnloadFuncs() {
 //# @unload_funcs@
 }
 
-static nsresult CreateInstanceImpl(ModuleID aID, const nsIID& aIID,
-                                   void** aResult) {
+nsresult CreateInstanceImpl(ModuleID aID, const nsIID& aIID, void** aResult) {
   // The full set of constructors for all static modules.
   // This switch statement will be compiled to a relative address jump table
   // with no runtime relocations and a single indirect jump.
