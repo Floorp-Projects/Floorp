@@ -15,8 +15,6 @@ use webdriver::error::WebDriverResult;
 use webdriver::httpapi::WebDriverExtensionRoute;
 use webdriver::Parameters;
 
-pub const CHROME_ELEMENT_KEY: &str = "chromeelement-9fc5-4b51-a3c8-01716eedeb04";
-
 pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
     return vec![
         (

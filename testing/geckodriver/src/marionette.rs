@@ -7,7 +7,7 @@ use crate::build;
 use crate::capabilities::{FirefoxCapabilities, FirefoxOptions, ProfileType};
 use crate::command::{
     AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
-    GeckoExtensionCommand, GeckoExtensionRoute, CHROME_ELEMENT_KEY,
+    GeckoExtensionCommand, GeckoExtensionRoute,
 };
 use crate::logging;
 use marionette_rs::common::{
@@ -336,13 +336,12 @@ impl MarionetteSession {
             "Failed to convert data to an object"
         );
 
-        let chrome_element = data.get(CHROME_ELEMENT_KEY);
         let element = data.get(ELEMENT_KEY);
         let frame = data.get(FRAME_KEY);
         let window = data.get(WINDOW_KEY);
 
         let value = try_opt!(
-            element.or(chrome_element).or(frame).or(window),
+            element.or(frame).or(window),
             ErrorStatus::UnknownError,
             "Failed to extract web element from Marionette response"
         );
