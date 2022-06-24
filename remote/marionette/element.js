@@ -5,7 +5,6 @@
 "use strict";
 
 const EXPORTED_SYMBOLS = [
-  "ChromeWebElement",
   "element",
   "ShadowRoot",
   "WebElement",
@@ -1500,10 +1499,6 @@ class WebReference {
       // See Bug 1743541
       return new ShadowRoot(uuid);
     } else if (element.isElement(node)) {
-      if (element.isInPrivilegedDocument(node)) {
-        // If the node is in a priviledged document, we are in "chrome" context.
-        return new ChromeWebElement(uuid);
-      }
       return new WebElement(uuid);
     } else if (element.isDOMWindow(node)) {
       if (node.parent === node) {
@@ -1518,8 +1513,8 @@ class WebReference {
   }
 
   /**
-   * Unmarshals a JSON Object to one of {@link WebElement}, {@link WebFrame},
-   * {@link WebWindow}, or {@link ChromeWebElement}.
+   * Unmarshals a JSON Object to one of {@link ShadowRoot}, {@link WebElement},
+   * {@link WebFrame}, or {@link WebWindow}.
    *
    * @param {Object.<string, string>} json
    *     Web reference, which is supposed to be a JSON Object
@@ -1552,9 +1547,6 @@ class WebReference {
 
         case WebWindow.Identifier:
           return WebWindow.fromJSON(json);
-
-        case ChromeWebElement.Identifier:
-          return ChromeWebElement.fromJSON(json);
       }
     }
 
@@ -1564,50 +1556,29 @@ class WebReference {
   }
 
   /**
-   * Constructs a {@link WebElement} or {@link ChromeWebElement}
-   * or {@link ShadowRoot} from a a string <var>uuid</var>.
+   * Constructs a {@link WebElement} from a string <var>uuid</var>.
    *
    * This whole function is a workaround for the fact that clients
    * to Marionette occasionally pass <code>{id: <uuid>}</code> JSON
-   * Objects instead of web element representations.  For that reason
-   * we need the <var>context</var> argument to determine what kind of
-   * {@link WebReference} to return.
+   * Objects instead of web element representations.
    *
    * @param {string} uuid
    *     UUID to be associated with the web reference.
-   * @param {Context} context
-   *     Context, which is used to determine if the returned type
-   *     should be a web element or a chrome web element.
    *
-   * @return {WebReference}
-   *     One of {@link WebElement} or {@link ChromeWebElement},
-   *     based on <var>context</var>.
+   * @return {WebElement}
+   *     The web element reference.
    *
    * @throws {InvalidArgumentError}
-   *     If <var>uuid</var> is not a string or <var>context</var>
-   *     is an invalid context.
+   *     If <var>uuid</var> is not a string.
    */
-  static fromUUID(uuid, context) {
+  static fromUUID(uuid) {
     lazy.assert.string(uuid);
 
-    switch (context) {
-      case "chrome":
-        return new ChromeWebElement(uuid);
-
-      case "content":
-        return new WebElement(uuid);
-
-      default:
-        throw new lazy.error.InvalidArgumentError(
-          "Unknown context: " + context
-        );
-    }
+    return new WebElement(uuid);
   }
 
   /**
-   * Checks if <var>obj<var> is a {@link WebReference} reference,
-   * i.e. if it has {@link WebElement.Identifier}, or
-   * {@link ChromeWebElement.Identifier} as properties.
+   * Checks if <var>obj<var> is a {@link WebReference} reference.
    *
    * @param {Object.<string, string>} obj
    *     Object that represents a {@link WebReference}.
@@ -1624,8 +1595,7 @@ class WebReference {
       ShadowRoot.Identifier in obj ||
       WebElement.Identifier in obj ||
       WebFrame.Identifier in obj ||
-      WebWindow.Identifier in obj ||
-      ChromeWebElement.Identifier in obj
+      WebWindow.Identifier in obj
     ) {
       return true;
     }
@@ -1735,25 +1705,3 @@ class WebFrame extends WebReference {
   }
 }
 WebFrame.Identifier = "frame-075b-4da1-b6ba-e579c2d3230a";
-
-/**
- * XUL elements in chrome space are represented as chrome web elements
- * over the wire protocol.
- */
-class ChromeWebElement extends WebReference {
-  toJSON() {
-    return { [ChromeWebElement.Identifier]: this.uuid };
-  }
-
-  static fromJSON(json) {
-    if (!(ChromeWebElement.Identifier in json)) {
-      throw new lazy.error.InvalidArgumentError(
-        "Expected chrome element reference " +
-          lazy.pprint`for XUL element, got: ${json}`
-      );
-    }
-    let uuid = json[ChromeWebElement.Identifier];
-    return new ChromeWebElement(uuid);
-  }
-}
-ChromeWebElement.Identifier = "chromeelement-9fc5-4b51-a3c8-01716eedeb04";
