@@ -1014,6 +1014,10 @@ void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
                                                      jsid id) {
   MOZ_ASSERT(mode_ == ICState::Mode::Megamorphic);
 
+  // We don't support GetBoundName because environment objects have
+  // lookupProperty hooks and GetBoundName is usually not megamorphic.
+  MOZ_ASSERT(JSOp(*pc_) != JSOp::GetBoundName);
+
   if (cacheKind_ == CacheKind::GetProp ||
       cacheKind_ == CacheKind::GetPropSuper) {
     writer.megamorphicLoadSlotResult(objId, id.toAtom()->asPropertyName());
@@ -1042,7 +1046,8 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
     case CanAttachReadSlot: {
       auto* nobj = &obj->as<NativeObject>();
 
-      if (mode_ == ICState::Mode::Megamorphic) {
+      if (mode_ == ICState::Mode::Megamorphic &&
+          JSOp(*pc_) != JSOp::GetBoundName) {
         attachMegamorphicNativeSlot(objId, id);
         return AttachDecision::Attach;
       }
