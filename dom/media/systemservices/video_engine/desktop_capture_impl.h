@@ -31,14 +31,16 @@
 #include "desktop_device_info.h"
 #include "VideoEngine.h"
 
+#if !defined(_WIN32)
+#  include "rtc_base/platform_thread.h"
+#endif
+
 using namespace webrtc::videocapturemodule;
 using namespace mozilla::camera;  // for mozilla::camera::CaptureDeviceType
 
 namespace rtc {
 #if defined(_WIN32)
 class PlatformUIThread;
-#else
-class PlatformThread;
 #endif
 }  // namespace rtc
 
@@ -248,7 +250,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
 #if defined(_WIN32)
   std::unique_ptr<rtc::PlatformUIThread> capturer_thread_;
 #else
-  std::unique_ptr<rtc::PlatformThread> capturer_thread_;
+  rtc::PlatformThread capturer_thread_;
 #endif
   std::atomic<bool> started_;
 };
