@@ -1,0 +1,75 @@
+.. _mozilla_projects_nss_nss_3_80_release_notes:
+
+NSS 3.80 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.80 was released on **23 June 2022**.
+
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_80_RTM. NSS 3.80 requires NSPR 4.34 or newer.
+
+   NSS 3.80 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_80_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.80:
+
+`Changes in NSS 3.80 <#changes_in_nss_3.80>`__
+----------------------------------------------------
+
+.. container::
+
+   - Bug 1774720 - Fix SEC_ERROR_ALGORITHM_MISMATCH entry in SECerrs.h.
+   - Bug 1617956 - Add support for asynchronous client auth hooks.
+   - Bug 1497537 - nss-policy-check: make unknown keyword check optional.
+   - Bug 1765383 - GatherBuffer: Reduced plaintext buffer allocations by allocating it on initialization. Replaced redundant code with assert. Debug builds: Added buffer freeing/allocation for each record.
+   - Bug 1773022 - Mark 3.79 as an ESR release.
+   - Bug 1764206 - Bump nssckbi version number for June.
+   - Bug 1759815 - Remove Hellenic Academic 2011 Root.
+   - Bug 1770267 - Add E-Tugra Roots.
+   - Bug 1768970 - Add Certainly Roots.
+   - Bug 1764392 - Add DigitCert Roots.
+   - Bug 1759794 - Protect SFTKSlot needLogin with slotLock.
+   - Bug 1366464 - Compare signature and signatureAlgorithm fields in legacy certificate verifier.
+   - Bug 1771497 - Uninitialized value in cert_VerifyCertChainOld.
+   - Bug 1771495 - Unchecked return code in sec_DecodeSigAlg.
+   - Bug 1771498 - Uninitialized value in cert_ComputeCertType.
+   - Bug 1760998 - Avoid data race on primary password change.
+   - Bug 1769063 - Replace ppc64 dcbzl intrinisic.
+   - Bug 1771036 - Allow LDFLAGS override in makefile builds.
+
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.80 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).

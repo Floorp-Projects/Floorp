@@ -1455,9 +1455,9 @@ dependencies = [
 
 [[package]]
 name = "dogear"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "268360cf7696c0c2c83061edb6af090cfea85cbde7d1b8425d6e4ffe9f1c0ec9"
+checksum = "3f430ca247b6a905681a3cce3eb4f1a72062f3e8dc178e7660c1acd06c64ecce"
 dependencies = [
  "log",
  "smallbitvec",
@@ -3119,9 +3119,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.14"
+version = "0.4.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51b9bbe6c47d51fc3e1a9b945965946b4c44142ab8792c50835a980d362c2710"
+checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
 dependencies = [
  "cfg-if 1.0.0",
 ]
@@ -3607,7 +3607,6 @@ dependencies = [
 [[package]]
 name = "neqo-common"
 version = "0.5.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
 dependencies = [
  "chrono",
  "env_logger 0.8.999",
@@ -4013,7 +4012,7 @@ checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
 
 [[package]]
 name = "peek-poke"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "euclid",
  "peek-poke-derive",
@@ -4021,7 +4020,7 @@ dependencies = [
 
 [[package]]
 name = "peek-poke-derive"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5977,7 +5976,7 @@ dependencies = [
 
 [[package]]
 name = "webrender"
-version = "0.61.0"
+version = "0.62.0"
 dependencies = [
  "bincode",
  "bitflags",
@@ -6019,7 +6018,7 @@ dependencies = [
 
 [[package]]
 name = "webrender_api"
-version = "0.61.0"
+version = "0.62.0"
 dependencies = [
  "app_units",
  "bitflags",
@@ -6066,7 +6065,7 @@ dependencies = [
 
 [[package]]
 name = "webrender_build"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "bitflags",
  "lazy_static",
@@ -6248,7 +6247,7 @@ dependencies = [
 
 [[package]]
 name = "wr_malloc_size_of"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "app_units",
  "euclid",

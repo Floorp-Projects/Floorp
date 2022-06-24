@@ -6,8 +6,8 @@
 # more complicated or less precise and we lean on time delta here.
 
 
-import re
 import datetime
+import re
 
 PATTERN = re.compile(r"((?:\d+)?\.?\d+) *([a-z]+)")
 

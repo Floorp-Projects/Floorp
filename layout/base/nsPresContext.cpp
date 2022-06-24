@@ -79,6 +79,7 @@
 #include "nsFontFaceUtils.h"
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/StaticPrefs_bidi.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_zoom.h"
@@ -450,18 +451,10 @@ void nsPresContext::GetUserPreferences() {
 
   uint32_t bidiOptions = GetBidi();
 
-  int32_t prefInt = Preferences::GetInt(IBMBIDI_TEXTDIRECTION_STR,
-                                        GET_BIDI_OPTION_DIRECTION(bidiOptions));
-  SET_BIDI_OPTION_DIRECTION(bidiOptions, prefInt);
-  mPrefBidiDirection = prefInt;
-
-  prefInt = Preferences::GetInt(IBMBIDI_TEXTTYPE_STR,
-                                GET_BIDI_OPTION_TEXTTYPE(bidiOptions));
-  SET_BIDI_OPTION_TEXTTYPE(bidiOptions, prefInt);
-
-  prefInt = Preferences::GetInt(IBMBIDI_NUMERAL_STR,
-                                GET_BIDI_OPTION_NUMERAL(bidiOptions));
-  SET_BIDI_OPTION_NUMERAL(bidiOptions, prefInt);
+  mPrefBidiDirection = StaticPrefs::bidi_direction();
+  SET_BIDI_OPTION_DIRECTION(bidiOptions, mPrefBidiDirection);
+  SET_BIDI_OPTION_TEXTTYPE(bidiOptions, StaticPrefs::bidi_texttype());
+  SET_BIDI_OPTION_NUMERAL(bidiOptions, StaticPrefs::bidi_numeral());
 
   // We don't need to force reflow: either we are initializing a new
   // prescontext or we are being called from PreferenceChanged()

@@ -9,11 +9,11 @@ phase will replace the task with the task from the other graph.
 """
 
 
-from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import Schema
-from taskgraph.transforms.job import run_job_using
-
 from voluptuous import Required
+
+from taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.job import run_job_using
+from taskgraph.util.schema import Schema
 
 transforms = TransformSequence()
 

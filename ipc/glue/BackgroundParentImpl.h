@@ -7,8 +7,6 @@
 #ifndef mozilla_ipc_backgroundparentimpl_h__
 #define mozilla_ipc_backgroundparentimpl_h__
 
-#include "mozilla/Attributes.h"
-#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 
 namespace mozilla::ipc {

@@ -5,14 +5,14 @@
 
 import concurrent.futures as futures
 import json
-import sys
 import logging
+import sys
 
 from slugid import nice as slugid
 
 from taskgraph.util.parameterization import resolve_timestamps
+from taskgraph.util.taskcluster import CONCURRENCY, get_session
 from taskgraph.util.time import current_json_time
-from taskgraph.util.taskcluster import get_session, CONCURRENCY
 
 logger = logging.getLogger(__name__)
 

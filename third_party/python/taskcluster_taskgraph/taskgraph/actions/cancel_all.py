@@ -6,13 +6,15 @@
 import concurrent.futures as futures
 import logging
 import os
+
 import requests
 
 from taskgraph.util.taskcluster import (
-    list_task_group_incomplete_tasks,
-    cancel_task,
     CONCURRENCY,
+    cancel_task,
+    list_task_group_incomplete_tasks,
 )
+
 from .registry import register_callback_action
 
 logger = logging.getLogger(__name__)

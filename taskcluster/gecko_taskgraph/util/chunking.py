@@ -52,7 +52,7 @@ def guess_mozinfo_from_task(task):
         "e10s": not setting["runtime"].get("1proc", False),
         "no-fission": "no-fission" in setting["runtime"].keys(),
         "fission": any(
-            "fission" in key and "no-fission" not in key
+            "1proc" not in key or "no-fission" not in key
             for key in setting["runtime"].keys()
         ),
         "headless": "-headless" in task["test-name"],

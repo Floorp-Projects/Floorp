@@ -4,9 +4,9 @@
 
 
 from taskgraph.util.attributes import (
+    match_run_on_git_branches,
     match_run_on_projects,
     match_run_on_tasks_for,
-    match_run_on_git_branches,
 )
 
 _target_task_methods = {}

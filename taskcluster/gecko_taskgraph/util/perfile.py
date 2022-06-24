@@ -8,10 +8,11 @@ import json
 import logging
 import math
 
+import taskgraph
 from mozbuild.util import memoize
 from mozpack.path import match as mozpackmatch
+
 from gecko_taskgraph import files_changed
-import gecko_taskgraph
 from .. import GECKO
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 @memoize
 def perfile_number_of_chunks(is_try, try_task_config, head_repository, head_rev, type):
-    if gecko_taskgraph.fast and not is_try:
+    if taskgraph.fast and not is_try:
         # When iterating on taskgraph changes, the exact number of chunks that
         # test-verify runs usually isn't important, so skip it when going fast.
         return 3

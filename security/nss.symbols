@@ -667,6 +667,7 @@ SSL_CipherPrefGet
 SSL_CipherPrefSet
 SSL_CipherPrefSetDefault
 SSL_ClearSessionCache
+SSL_ClientCertCallbackComplete
 SSL_ConfigSecureServer
 SSL_ConfigSecureServerWithCertChain
 SSL_ConfigServerCert

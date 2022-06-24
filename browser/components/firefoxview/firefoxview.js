@@ -72,5 +72,9 @@ window.addEventListener("load", () => {
 
 window.addEventListener("unload", () => {
   tabsSetupFlowManager?.uninit();
+  const tabPickupList = document.querySelector("tab-pickup-list");
+  if (tabPickupList) {
+    tabPickupList.cleanup();
+  }
   document.getElementById("recently-closed-tabs-container").cleanup();
 });

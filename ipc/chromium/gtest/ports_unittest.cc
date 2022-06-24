@@ -4,17 +4,13 @@
 
 #include <inttypes.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include <map>
-#include <sstream>
 #include <utility>
 
 #include "base/logging.h"
 #include "base/waitable_event.h"
 #include "base/thread.h"
-#include "base/string_piece.h"
 #include "base/string_util.h"
 #include "mojo/core/ports/event.h"
 #include "mojo/core/ports/node.h"

@@ -22,22 +22,18 @@ namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-enum PrintObjectType { eDoc = 0, eIFrame = 1 };
-
 //---------------------------------------------------
 //-- nsPrintObject Class
 //---------------------------------------------------
-class nsPrintObject {
+class nsPrintObject final {
  public:
-  nsPrintObject();
-  ~nsPrintObject();  // non-virtual
-
-  nsresult InitAsRootObject(nsIDocShell* aDocShell,
-                            mozilla::dom::Document* aDoc,
-                            bool aForPrintPreview);
-  nsresult InitAsNestedObject(nsIDocShell* aDocShell,
-                              mozilla::dom::Document* aDoc,
-                              nsPrintObject* aParent);
+  /**
+   * If aParent is nullptr (default), then this instance will be initialized as
+   * a "root" nsPrintObject.  Otherwise, this will be a "nested" nsPrintObject.
+   */
+  nsPrintObject(nsIDocShell& aDocShell, mozilla::dom::Document& aDoc,
+                nsPrintObject* aParent = nullptr);
+  ~nsPrintObject();
 
   void DestroyPresentation();
 
@@ -66,12 +62,11 @@ class nsPrintObject {
   RefPtr<nsViewManager> mViewManager;
 
   nsCOMPtr<nsIContent> mContent;
-  PrintObjectType mFrameType;
 
   nsTArray<mozilla::UniquePtr<nsPrintObject>> mKids;
-  nsPrintObject* mParent;  // This is a non-owning pointer.
-  bool mHasBeenPrinted;
-  bool mInvisible;  // Indicates PO is set to not visible by CSS
+  const nsPrintObject* mParent;  // This is a non-owning pointer.
+  bool mHasBeenPrinted = false;
+  bool mInvisible = false;  // Indicates PO is set to not visible by CSS
 
   // The scale factor that sheets should be scaled by. This is either the
   // explicit scale chosen by the user or else the shrink-to-fit scale factor

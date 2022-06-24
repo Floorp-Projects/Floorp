@@ -460,6 +460,10 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
 
     PropertyAnimation* propertyAnimation =
         currData->mAnimations.AppendElement();
+    Maybe<mozilla::ComputedTimingFunction> easingFunction;
+    if (animation.easingFunction().isSome()) {
+      easingFunction.emplace(*animation.easingFunction());
+    }
 
     propertyAnimation->mOriginTime = animation.originTime();
     propertyAnimation->mStartTime = animation.startTime();
@@ -477,21 +481,23 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
                      animation.iterationStart(),
                      static_cast<dom::PlaybackDirection>(animation.direction()),
                      GetAdjustedFillMode(animation),
-                     ComputedTimingFunction::FromLayersTimingFunction(
-                         animation.easingFunction())};
+                     std::move(easingFunction)};
     propertyAnimation->mScrollTimelineOptions =
         animation.scrollTimelineOptions();
 
     nsTArray<PropertyAnimation::SegmentData>& segmentData =
         propertyAnimation->mSegments;
     for (const AnimationSegment& segment : animation.segments()) {
+      Maybe<mozilla::ComputedTimingFunction> sampleFn;
+      if (segment.sampleFn().isSome()) {
+        sampleFn.emplace(*segment.sampleFn());
+      }
       segmentData.AppendElement(PropertyAnimation::SegmentData{
           AnimationValue::FromAnimatable(animation.property(),
                                          segment.startState()),
           AnimationValue::FromAnimatable(animation.property(),
                                          segment.endState()),
-          ComputedTimingFunction::FromLayersTimingFunction(segment.sampleFn()),
-          segment.startPortion(), segment.endPortion(),
+          std::move(sampleFn), segment.startPortion(), segment.endPortion(),
           static_cast<dom::CompositeOperation>(segment.startComposite()),
           static_cast<dom::CompositeOperation>(segment.endComposite())});
     }

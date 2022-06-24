@@ -1254,27 +1254,7 @@ richlistitem .text-link:hover {
   fill: currentColor;
 }
 
-#moreFromMozillaCategory .advanced .product-title {
-  background-size: initial;
-  padding-inline-start: 0;
-  padding-top: 33px;
-}
-
-/* The firefox-mobile product has three columns and needs to constrain the
- * .product-info section to one of them.
- */
-#firefox-mobile-div.advanced .product-info {
-  max-width: 200px;
-}
-
-#moreFromMozillaCategory .product-img {
-  background-repeat: no-repeat;
-  background-size: 170px;
-  padding-inline-start: 184px;
-}
-
-#moreFromMozillaCategory .product-title:-moz-locale-dir(rtl),
-#moreFromMozillaCategory .product-img:-moz-locale-dir(rtl) {
+#moreFromMozillaCategory .product-title:-moz-locale-dir(rtl) {
   background-position-x: right;
 }
 
@@ -1286,36 +1266,9 @@ richlistitem .text-link:hover {
   line-height: 1.4em;
 }
 
-#moreFromMozillaCategory .advanced .description {
-  padding-inline-start: 0;
-}
-
 #moreFromMozillaCategory .small-button {
   margin-block: 14px 2px;
   margin-inline: 30px 0;
-}
-
-#moreFromMozillaCategory .advanced .small-button {
-  margin: 24px 0;
-}
-
-#moreFromMozillaCategory .mozilla-product-item.advanced {
-  box-shadow: 0 2px 6px rgba(58, 57, 68, 0.2);
-  border-radius: 4px;
-
-  margin-block: 20px 10px;
-  margin-inline: 2px 0;
-  padding: 16px;
-}
-
-@media (prefers-color-scheme: dark) {
-  #moreFromMozillaCategory .mozilla-product-item.advanced {
-    background-color: rgb(66, 65, 77);
-  }
-}
-
-#moreFromMozillaCategory .advanced .product-info {
-  width: 500px;
 }
 
 #moreFromMozillaCategory .text-link {
@@ -1347,22 +1300,6 @@ richlistitem .text-link:hover {
   background-image: url("chrome://browser/skin/preferences/rally-logo.svg");
 }
 
-#firefox-mobile-image {
-  background-image: url("chrome://browser/skin/preferences/img-mobile.svg");
-}
-
-.advanced #firefox-mobile-image {
-  display: flex;
-}
-
-#mozilla-vpn-image {
-  background-image: url("chrome://browser/skin/preferences/img-vpn.svg");
-}
-
-#mozilla-rally-image {
-  background-image: url("chrome://browser/skin/preferences/img-rally.png");
-}
-
 /*
  * The :not clause is required because hiding an element with `display: flex` only
  * partially hides it.
@@ -1386,20 +1323,6 @@ richlistitem .text-link:hover {
   }
 }
 
-.advanced .qr-code-box {
-  align-items: flex-start;
-  margin-inline-start: 12px;
-}
-
-.qr-code-top-box {
-  display: flex;
-}
-
-.advanced .qr-code-top-box {
-  align-items: center;
-  width: 310px;
-}
-
 .qr-code-box-image {
   border-radius: 4px;
   padding: 2px;
@@ -1407,19 +1330,6 @@ richlistitem .text-link:hover {
   flex: 0 0 auto;
   -moz-context-properties: fill;
   fill: currentColor;
-}
-
-.advanced .qr-code-box-image {
-  max-width: 86px;
-  height: 86px;
-  margin-inline-end: 16px;
-  margin-block: 18px;
-
-  fill: rgb(87, 77, 77);
-}
-
-#moreFromMozillaCategory .advanced .text-link {
-  margin-inline-start: 0;
 }
 
 .qr-code-title-label {
@@ -1451,12 +1361,6 @@ richlistitem .text-link:hover {
   padding: 10px;
 }
 
-.advanced .qr-code-box-title {
-  text-align: start;
-  margin-inline: 16px;
-  margin-block: revert;
-}
-
 #moreFromMozillaCategory .qr-code-link {
   font-size: .87em;
   line-height: 1.42em;
@@ -1464,19 +1368,9 @@ richlistitem .text-link:hover {
   margin-inline: 0; /* make sure we're correctly centered by overriding button rule */
 }
 
-#moreFromMozillaCategory .advanced .qr-code-link {
-  margin-inline: 16px;
-  margin-block-start: 30px;
-}
-
 @media (prefers-color-scheme: dark) {
   .qr-code-box:not([hidden="true"]) {
     background-color: rgba(91,91,102,0.45);
-  }
-
-  .advanced .qr-code-box-image {
-    background-color: white;
-    fill: black;
   }
 
   .qr-code-box-title {

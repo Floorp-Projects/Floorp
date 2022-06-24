@@ -11,12 +11,7 @@ job-defaults:
             linux.*: t-linux-large-gcp
             default: default
     test-manifest-loader: null  # don't load tests in the taskgraph
-    variants:
-        - fission
-    run-without-variant: false
-    run-on-projects:
-        by-variant:
-            fission: built-projects
+    run-on-projects: built-projects
     mozharness:
         script: firefox_ui_tests.py
         config:

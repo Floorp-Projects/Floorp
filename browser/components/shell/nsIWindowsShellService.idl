@@ -144,6 +144,8 @@ interface nsIWindowsShellService : nsISupports
    */
   AString classifyShortcut(in AString aPath);
 
+  bool hasMatchingShortcut(in AString aAUMID, in bool aPrivateBrowsing);
+
   /*
    * Check if setDefaultBrowserUserChoice() is expected to succeed.
    *

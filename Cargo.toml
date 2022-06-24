@@ -167,3 +167,8 @@ webext-storage = { git = "https://github.com/mozilla/application-services", rev 
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
 [patch.crates-io.mio]
 path = "third_party/rust/mio-0.6.23"
+
+# Patch neqo 0.5.7 to be compatible with newer versions of the log crate.
+# https://github.com/mozilla/neqo/pull/1350
+[patch."https://github.com/mozilla/neqo"]
+neqo-common = { path = "third_party/rust/neqo-common" }

@@ -7,12 +7,14 @@ taskcluster/ci/upload-symbols/job-template.yml into an actual task description.
 """
 
 
-from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.attributes import RELEASE_PROJECTS
-from gecko_taskgraph.util.treeherder import join_symbol, inherit_treeherder_from_dep
-from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
-
 import logging
+
+from gecko_taskgraph.transforms.base import TransformSequence
+from gecko_taskgraph.util.attributes import (
+    RELEASE_PROJECTS,
+    copy_attributes_from_dependent_job,
+)
+from taskgraph.util.treeherder import inherit_treeherder_from_dep, join_symbol
 
 logger = logging.getLogger(__name__)
 

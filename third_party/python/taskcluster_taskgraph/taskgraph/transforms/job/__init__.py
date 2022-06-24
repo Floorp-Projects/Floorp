@@ -11,28 +11,19 @@ run-using handlers in `taskcluster/taskgraph/transforms/job`.
 
 
 import copy
-import logging
 import json
-import os
+import logging
 
+from voluptuous import Any, Exclusive, Extra, Optional, Required
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util import path as mozpath
-from taskgraph.util.schema import (
-    validate_schema,
-    Schema,
-)
-from taskgraph.util.taskcluster import get_artifact_prefix
-from taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.cached_tasks import order_tasks
 from taskgraph.transforms.task import task_description_schema
-from voluptuous import (
-    Extra,
-    Any,
-    Optional,
-    Required,
-    Exclusive,
-)
+from taskgraph.util import path as mozpath
+from taskgraph.util.python_path import import_sibling_modules
+from taskgraph.util.schema import Schema, validate_schema
+from taskgraph.util.taskcluster import get_artifact_prefix
+from taskgraph.util.workertypes import worker_type_implementation
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +43,7 @@ job_description_schema = Schema(
         Optional("job-from"): task_description_schema["job-from"],
         Optional("dependencies"): task_description_schema["dependencies"],
         Optional("soft-dependencies"): task_description_schema["soft-dependencies"],
+        Optional("if-dependencies"): task_description_schema["if-dependencies"],
         Optional("requires"): task_description_schema["requires"],
         Optional("expires-after"): task_description_schema["expires-after"],
         Optional("routes"): task_description_schema["routes"],
@@ -207,6 +199,7 @@ def get_attribute(dict, key, attributes, attribute_name):
 def use_fetches(config, jobs):
     artifact_names = {}
     aliases = {}
+    extra_env = {}
 
     if config.kind in ("toolchain", "fetch"):
         jobs = list(jobs)
@@ -226,6 +219,7 @@ def use_fetches(config, jobs):
                 task.attributes,
                 f"{task.kind}-artifact",
             )
+            get_attribute(extra_env, task.label, task.attributes, f"{task.kind}-env")
             value = task.attributes.get(f"{task.kind}-alias")
             if value:
                 aliases[f"{task.kind}-{value}"] = task.label
@@ -243,6 +237,7 @@ def use_fetches(config, jobs):
         name = job.get("name", job.get("label"))
         dependencies = job.setdefault("dependencies", {})
         worker = job.setdefault("worker", {})
+        env = worker.setdefault("env", {})
         prefix = get_artifact_prefix(job)
         for kind, artifacts in fetches.items():
             if kind in ("fetch", "toolchain"):
@@ -255,6 +250,8 @@ def use_fetches(config, jobs):
                                 kind=config.kind, name=name, fetch=fetch_name
                             )
                         )
+                    if label in extra_env:
+                        env.update(extra_env[label])
 
                     path = artifact_names[label]
 
@@ -329,7 +326,6 @@ def use_fetches(config, jobs):
                 if scope not in job.setdefault("scopes", []):
                     job["scopes"].append(scope)
 
-        env = worker.setdefault("env", {})
         env["MOZ_FETCHES"] = {"task-reference": json.dumps(job_fetches, sort_keys=True)}
 
         env.setdefault("MOZ_FETCHES_DIR", "fetches")
@@ -341,7 +337,8 @@ def use_fetches(config, jobs):
 def make_task_description(config, jobs):
     """Given a build description, create a task description"""
     # import plugin modules first, before iterating over jobs
-    import_all()
+    import_sibling_modules(exceptions=("common.py",))
+
     for job in jobs:
         # always-optimized tasks never execute, so have no workdir
         if job["worker"]["implementation"] in ("docker-worker", "generic-worker"):
@@ -434,11 +431,3 @@ def configure_taskdesc_for_run(config, job, taskdesc, worker_implementation):
             ),
         )
     func(config, job, taskdesc)
-
-
-def import_all():
-    """Import all modules that are siblings of this one, triggering the decorator
-    above in the process."""
-    for f in os.listdir(os.path.dirname(__file__)):
-        if f.endswith(".py") and f not in ("commmon.py", "__init__.py"):
-            __import__("taskgraph.transforms.job." + f[:-3])

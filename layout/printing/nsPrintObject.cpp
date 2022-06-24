@@ -30,13 +30,21 @@ using mozilla::dom::Selection;
 //---------------------------------------------------
 //-- nsPrintObject Class Impl
 //---------------------------------------------------
-nsPrintObject::nsPrintObject()
-    : mContent(nullptr),
-      mFrameType(eDoc),
-      mParent(nullptr),
-      mHasBeenPrinted(false),
-      mInvisible(false) {
+nsPrintObject::nsPrintObject(nsIDocShell& aDocShell, Document& aDoc,
+                             nsPrintObject* aParent)
+    : mDocShell(&aDocShell), mDocument(&aDoc), mParent(aParent) {
   MOZ_COUNT_CTOR(nsPrintObject);
+  MOZ_ASSERT(aDoc.IsStaticDocument());
+
+  if (!aParent) {
+    // We are a root nsPrintObject.
+    // Ensure the document has no presentation.
+    DestroyPresentation();
+  } else {
+    // We are a nested nsPrintObject.
+    nsCOMPtr<nsPIDOMWindowOuter> window = aDoc.GetWindow();
+    mContent = window->GetFrameElementInternal();
+  }
 }
 
 nsPrintObject::~nsPrintObject() {
@@ -45,42 +53,6 @@ nsPrintObject::~nsPrintObject() {
   DestroyPresentation();
   mDocShell = nullptr;
   mTreeOwner = nullptr;  // mTreeOwner must be released after mDocShell;
-}
-
-//------------------------------------------------------------------
-
-nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
-                                         bool aForPrintPreview) {
-  NS_ENSURE_STATE(aDocShell);
-  NS_ENSURE_STATE(aDoc);
-
-  MOZ_ASSERT(aDoc->IsStaticDocument());
-
-  mDocShell = aDocShell;
-  mDocument = aDoc;
-
-  // Ensure the document has no presentation.
-  DestroyPresentation();
-
-  return NS_OK;
-}
-
-nsresult nsPrintObject::InitAsNestedObject(nsIDocShell* aDocShell,
-                                           Document* aDoc,
-                                           nsPrintObject* aParent) {
-  NS_ENSURE_STATE(aDocShell);
-  NS_ENSURE_STATE(aDoc);
-
-  mParent = aParent;
-  mDocShell = aDocShell;
-  mDocument = aDoc;
-
-  nsCOMPtr<nsPIDOMWindowOuter> window = aDoc->GetWindow();
-  mContent = window->GetFrameElementInternal();
-
-  mFrameType = eIFrame;
-
-  return NS_OK;
 }
 
 //------------------------------------------------------------------

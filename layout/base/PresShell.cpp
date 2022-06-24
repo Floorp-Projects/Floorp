@@ -5378,6 +5378,9 @@ void PresShell::AddCanvasBackgroundColorItem(
 bool PresShell::IsTransparentContainerElement() const {
   nsPresContext* pc = GetPresContext();
   if (!pc->IsRootContentDocumentCrossProcess()) {
+    if (pc->IsChrome()) {
+      return true;
+    }
     // Frames are transparent except if their embedder color-scheme is
     // mismatched, in which case we use an opaque background to avoid
     // black-on-black or white-on-white text, see

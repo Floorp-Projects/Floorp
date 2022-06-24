@@ -2,26 +2,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
+import gzip
 import hashlib
 import json
 import os
 import time
 from datetime import datetime
+from io import BytesIO
 from pprint import pformat
 from subprocess import CalledProcessError
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
+from voluptuous import ALLOW_EXTRA, Optional, Required, Schema
+
+from taskgraph.util import yaml
 from taskgraph.util.readonlydict import ReadOnlyDict
 from taskgraph.util.schema import validate_schema
+from taskgraph.util.taskcluster import find_task_id, get_artifact_url
 from taskgraph.util.vcs import get_repository
-from voluptuous import (
-    ALLOW_EXTRA,
-    Required,
-    Optional,
-    Schema,
-)
 
 
 class ParameterMismatch(Exception):
@@ -271,8 +270,6 @@ def load_parameters_file(
         task-id=fdtgsD5DQUmAQZEaGMvQ4Q
         project=mozilla-central
     """
-    from taskgraph.util.taskcluster import get_artifact_url, find_task_id
-    from taskgraph.util import yaml
 
     if overrides is None:
         overrides = {}
@@ -304,6 +301,11 @@ def load_parameters_file(
         if task_id:
             spec = get_artifact_url(task_id, "public/parameters.yml")
         f = urlopen(spec)
+
+        # Decompress gzipped parameters.
+        if f.info().get("Content-Encoding") == "gzip":
+            buf = BytesIO(f.read())
+            f = gzip.GzipFile(fileobj=buf)
 
     if spec.endswith(".yml"):
         kwargs = yaml.load_stream(f)

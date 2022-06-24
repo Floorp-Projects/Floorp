@@ -13,19 +13,17 @@ from functools import reduce
 from requests.exceptions import HTTPError
 
 from taskgraph import create
-from taskgraph.decision import read_artifact, write_artifact, rename_artifact
-from taskgraph.taskgraph import TaskGraph
+from taskgraph.decision import read_artifact, rename_artifact, write_artifact
 from taskgraph.optimize import optimize_task_graph
+from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.taskcluster import (
-    get_session,
+    CONCURRENCY,
     get_artifact,
+    get_session,
     list_tasks,
     parse_time,
-    CONCURRENCY,
 )
-from taskgraph.util.taskgraph import (
-    find_decision_task,
-)
+from taskgraph.util.taskgraph import find_decision_task
 
 logger = logging.getLogger(__name__)
 

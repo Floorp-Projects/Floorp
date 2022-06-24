@@ -24,8 +24,8 @@ import re
 
 from slugid import nice as slugid
 
-from .task import Task
 from .graph import Graph
+from .task import Task
 from .taskgraph import TaskGraph
 from .util.workertypes import get_worker_type
 

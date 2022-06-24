@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1773802
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1773802</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1773802">Mozilla Bug 1773802</a>
+<p id="display"></p>
+</div>
+
+<textarea id="editor">correct правильный, incarrect непровильный</textarea>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const Ci = SpecialPowers.Ci;
+
+let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+);
+
+function getMisspelledWords(editor) {
+  return editor.selectionController.getSelection(Ci.nsISelectionController.SELECTION_SPELLCHECK).toString();
+}
+
+/** Test for Bug 1773802 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(start);
+async function start() {
+  /* global actorParent */
+  /* eslint-env mozilla/frame-script */
+  let script = SpecialPowers.loadChromeScript(() => {
+    // eslint-disable-next-line mozilla/use-services
+    let dir = Cc["@mozilla.org/file/directory_service;1"]
+                .getService(Ci.nsIProperties)
+                .get("CurWorkD", Ci.nsIFile);
+    dir.append("tests");
+    dir.append("editor");
+    dir.append("spellchecker");
+    dir.append("tests");
+
+    let hunspell = Cc["@mozilla.org/spellchecker/engine;1"]
+                     .getService(Ci.mozISpellCheckingEngine);
+
+    // Install ru-RU dictionary.
+    let ru_RU = dir.clone();
+    ru_RU.append("ru-RU");
+    hunspell.addDirectory(ru_RU);
+
+    addMessageListener("destroy", () => hunspell.removeDirectory(ru_RU));
+    addMessageListener("ru_RU-exists", () => ru_RU.exists());
+  });
+  is(await script.sendQuery("ru_RU-exists"), true,
+     "true expected (ru_RU directory should exist)");
+
+  let textarea = document.getElementById("editor");
+  let editor = SpecialPowers.wrap(textarea).editor;
+  textarea.focus();
+
+  maybeOnSpellCheck(textarea, () => {
+    let isc = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(false);
+    ok(isc, "Inline spell checker should exist after focus and spell check");
+    let spellchecker = isc.spellChecker;
+
+    spellchecker.setCurrentDictionaries(["en-US", "ru-RU"]).then(async () => {
+      textarea.blur();
+      textarea.focus();
+      maybeOnSpellCheck(textarea, async function() {
+        let currentDictionaries = spellchecker.getCurrentDictionaries();
+
+        is(currentDictionaries.length, 2, "expected two dictionaries");
+        is(currentDictionaries[0], "en-US", "expected en-US");
+        is(currentDictionaries[1], "ru-RU", "expected ru-RU");
+        is(getMisspelledWords(editor), "incarrectнепровильный", "some misspelled words expected: incarrect непровильный");
+
+        // Remove the fake ru_RU dictionary again.
+        await script.sendQuery("destroy");
+
+        // This will clear the content preferences and reset "spellchecker.dictionary".
+        spellchecker.setCurrentDictionaries([]).then(() => {
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+}
+</script>
+</pre>
+</body>
+</html>

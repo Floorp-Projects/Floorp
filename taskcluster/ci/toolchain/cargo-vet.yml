@@ -61,4 +61,5 @@ win64-cargo-vet:
         toolchain:
             - linux64-clang-toolchain
             - linux64-rust-windows-1.61
+            - linux64-liblowercase
             - win64-vs2017

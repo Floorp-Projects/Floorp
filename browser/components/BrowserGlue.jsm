@@ -137,6 +137,13 @@ const PREF_PDFJS_ISDEFAULT_CACHE_STATE = "pdfjs.enabledCache.state";
 const PREF_DFPI_ENABLED_BY_DEFAULT =
   "privacy.restrict3rdpartystorage.rollout.enabledByDefault";
 
+// Index of Private Browsing icon in firefox.exe
+// Must line up with the one in nsNativeAppSupportWin.h.
+const PRIVATE_BROWSING_ICON_INDEX = 5;
+const PREF_PRIVACY_SEGMENTATION = "browser.privacySegmentation.enabled";
+const PREF_PRIVATE_BROWSING_SHORTCUT_CREATED =
+  "browser.privacySegmentation.createdShortcut";
+
 /**
  * Fission-compatible JSProcess implementations.
  * Each actor options object takes the form of a ProcessActorOptions dictionary.
@@ -2507,6 +2514,75 @@ BrowserGlue.prototype = {
             "os.environment.launch_method",
             classification
           );
+        },
+      },
+
+      // Ensure a Private Browsing Shortcut exists. This is needed in case
+      // a user tries to use Windows functionality to pin our Private Browsing
+      // mode icon to the Taskbar (eg: the "Pin to Taskbar" context menu item).
+      // This is also created by the installer, but it's possible that a user
+      // has removed it, or is running out of a zip build. The consequences of not
+      // having a Shortcut for this are that regular Firefox will be pinned instead
+      // of the Private Browsing version -- so it's quite important we do our best
+      // to make sure one is available.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1762994 for additional
+      // background.
+      {
+        condition:
+          AppConstants.platform == "win" &&
+          // Pref'ed off until Private Browsing window separation is enabled by default
+          // to avoid a situation where a user pins the Private Browsing shortcut to
+          // the Taskbar, which will end up launching into a different Taskbar icon.
+          Services.prefs.getBoolPref(PREF_PRIVACY_SEGMENTATION, false) &&
+          // Private Browsing shortcuts for packaged builds come with the package,
+          // if they exist at all. We shouldn't try to create our own.
+          !Services.sysinfo.getProperty("hasWinPackageId") &&
+          // If we've ever done this successfully before, don't try again. The
+          // user may have deleted the shortcut, and we don't want to force it
+          // on them.
+          !Services.prefs.getBoolPref(
+            PREF_PRIVATE_BROWSING_SHORTCUT_CREATED,
+            false
+          ),
+        task: async () => {
+          let shellService = Cc[
+            "@mozilla.org/browser/shell-service;1"
+          ].getService(Ci.nsIWindowsShellService);
+          let winTaskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(
+            Ci.nsIWinTaskbar
+          );
+
+          if (
+            !shellService.hasMatchingShortcut(
+              winTaskbar.defaultPrivateGroupId,
+              true
+            )
+          ) {
+            let exe = Services.dirsvc.get("XREExeF", Ci.nsIFile);
+            let strings = new Localization(
+              ["branding/brand.ftl", "browser/browser.ftl"],
+              true
+            );
+            let [desc] = await strings.formatValues([
+              "private-browsing-shortcut-text",
+            ]);
+            shellService.createShortcut(
+              exe,
+              ["-private-window"],
+              desc,
+              exe,
+              // The code we're calling indexes from 0 instead of 1
+              PRIVATE_BROWSING_ICON_INDEX - 1,
+              winTaskbar.defaultPrivateGroupId,
+              "Programs",
+              desc + ".lnk",
+              Services.dirsvc.get("GreD", Ci.nsIFile)
+            );
+            Services.prefs.setBoolPref(
+              PREF_PRIVATE_BROWSING_SHORTCUT_CREATED,
+              true
+            );
+          }
         },
       },
 

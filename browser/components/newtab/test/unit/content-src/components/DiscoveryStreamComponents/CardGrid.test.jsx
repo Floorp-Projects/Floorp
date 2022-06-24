@@ -1,4 +1,11 @@
-import { CardGrid } from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
+import {
+  CardGrid,
+  DSSubHeader,
+  GridContainer,
+} from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
+import { combineReducers, createStore } from "redux";
+import { INITIAL_STATE, reducers } from "common/Reducers.jsm";
+import { Provider } from "react-redux";
 import {
   DSCard,
   LastCardMessage,
@@ -6,7 +13,7 @@ import {
 import { TopicsWidget } from "content-src/components/DiscoveryStreamComponents/TopicsWidget/TopicsWidget";
 import { actionCreators as ac } from "common/Actions.jsm";
 import React from "react";
-import { shallow } from "enzyme";
+import { shallow, mount } from "enzyme";
 
 describe("<CardGrid>", () => {
   let wrapper;
@@ -23,10 +30,10 @@ describe("<CardGrid>", () => {
   it("should render DSCards", () => {
     wrapper.setProps({ items: 2, data: { recommendations: [{}, {}] } });
 
-    assert.lengthOf(wrapper.find(".ds-card-grid").children(), 2);
+    assert.lengthOf(wrapper.find(GridContainer).children(), 2);
     assert.equal(
       wrapper
-        .find(".ds-card-grid")
+        .find(GridContainer)
         .children()
         .at(0)
         .type(),
@@ -62,19 +69,40 @@ describe("<CardGrid>", () => {
   });
 
   it("should render sub header in the middle of the card grid for both regular and compact", () => {
-    wrapper.setProps({
-      essentialReadsHeader: true,
-      editorsPicksHeader: true,
-      data: { recommendations: [{}, {}] },
-    });
+    let store = createStore(combineReducers(reducers), INITIAL_STATE);
+    wrapper = mount(
+      <Provider store={store}>
+        <CardGrid
+          essentialReadsHeader={true}
+          editorsPicksHeader={true}
+          items={12}
+          data={{
+            recommendations: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+          }}
+        />
+      </Provider>
+    );
 
-    assert.ok(wrapper.find(".ds-sub-header").exists());
+    assert.ok(wrapper.find(DSSubHeader).exists());
 
     wrapper.setProps({
       compact: true,
     });
+    wrapper = mount(
+      <Provider store={store}>
+        <CardGrid
+          essentialReadsHeader={true}
+          editorsPicksHeader={true}
+          compact={true}
+          items={12}
+          data={{
+            recommendations: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+          }}
+        />
+      </Provider>
+    );
 
-    assert.ok(wrapper.find(".ds-sub-header").exists());
+    assert.ok(wrapper.find(DSSubHeader).exists());
   });
 
   it("should add/hide description classname to card grid", () => {

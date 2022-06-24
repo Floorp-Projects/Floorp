@@ -16,7 +16,6 @@ var gWrittenProfile = false;
 const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
@@ -415,7 +414,7 @@ function dumpProfile() {
   gWritingProfile = true;
 
   let cwd = Services.dirsvc.get("CurWorkD", Ci.nsIFile).path;
-  let filename = OS.Path.join(cwd, gArgs.profileFilename);
+  let filename = PathUtils.join(cwd, gArgs.profileFilename);
 
   dump(`Writing profile to ${filename}...\n`);
 

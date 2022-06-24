@@ -222,6 +222,7 @@ class PanelActionBase {
     // existing preloaded activeTab permission.
     this.setActiveTabForPreload(null);
     this.extension.tabManager.addActiveTabPermission(tab);
+    this.extension.tabManager.activateScripts(tab);
 
     let popupUrl = this.getProperty(tab, "popup");
     // The "click" event is only dispatched when the popup is not shown. This

@@ -25,6 +25,8 @@
 
 using namespace mozilla;
 
+bool nsMenuUtilsX::gIsSynchronouslyActivatingNativeMenuItemDuringTest = false;
+
 void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent,
                                      NSEventModifierFlags aModifierFlags, int16_t aButton) {
   MOZ_ASSERT(aTargetContent, "null ptr");
