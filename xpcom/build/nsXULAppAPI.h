@@ -28,6 +28,7 @@ struct XREShellData;
 namespace mozilla {
 class XREAppData;
 struct BootstrapConfig;
+struct Module;
 }  // namespace mozilla
 
 /**
@@ -219,6 +220,11 @@ nsresult XRE_GetFileFromPath(const char* aPath, nsIFile** aResult);
 nsresult XRE_GetBinaryPath(nsIFile** aResult);
 
 /**
+ * Get the static module built in to libxul.
+ */
+const mozilla::Module* XRE_GetStaticModule();
+
+/**
  * Lock a profile directory using platform-specific semantics.
  *
  * @param aDirectory  The profile directory to lock.
@@ -250,6 +256,13 @@ nsresult XRE_LockProfileDirectory(nsIFile* aDirectory,
 
 nsresult XRE_InitEmbedding2(nsIFile* aLibXULDirectory, nsIFile* aAppDirectory,
                             nsIDirectoryServiceProvider* aAppDirProvider);
+
+/**
+ * Register static XPCOM component information.
+ * This method may be called at any time before or after XRE_main or
+ * XRE_InitEmbedding.
+ */
+nsresult XRE_AddStaticComponent(const mozilla::Module* aComponent);
 
 /**
  * Register XPCOM components found in an array of files/directories.

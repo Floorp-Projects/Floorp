@@ -227,6 +227,12 @@ nsresult SessionStorageManagerConstructor(REFNSIID aIID, void** aResult) {
   return manager->QueryInterface(aIID, aResult);
 }
 
+static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
+    // clang-format off
+    {nullptr}
+    // clang-format on
+};
+
 void nsLayoutModuleDtor() {
   if (XRE_GetProcessType() == GeckoProcessType_GPU ||
       XRE_GetProcessType() == GeckoProcessType_VR ||
@@ -246,3 +252,11 @@ void nsLayoutModuleDtor() {
   nsScriptSecurityManager::Shutdown();
   xpcModuleDtor();
 }
+
+extern const mozilla::Module kLayoutModule = {mozilla::Module::kVersion,
+                                              nullptr,
+                                              nullptr,
+                                              kLayoutCategories,
+                                              nullptr,
+                                              nullptr,
+                                              nullptr};
