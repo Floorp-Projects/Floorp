@@ -51,6 +51,7 @@ pub(crate) fn canonical_fully_decomposed(c: char) -> Option<&'static [char]> {
         pair_lookup_fv_opt,
         None,
     )
+    .map(|(start, len)| &CANONICAL_DECOMPOSED_CHARS[start as usize..][..len as usize])
 }
 
 pub(crate) fn compatibility_fully_decomposed(c: char) -> Option<&'static [char]> {
@@ -62,6 +63,7 @@ pub(crate) fn compatibility_fully_decomposed(c: char) -> Option<&'static [char]>
         pair_lookup_fv_opt,
         None,
     )
+    .map(|(start, len)| &COMPATIBILITY_DECOMPOSED_CHARS[start as usize..][..len as usize])
 }
 
 pub(crate) fn cjk_compat_variants_fully_decomposed(c: char) -> Option<&'static [char]> {
@@ -73,6 +75,7 @@ pub(crate) fn cjk_compat_variants_fully_decomposed(c: char) -> Option<&'static [
         pair_lookup_fv_opt,
         None,
     )
+    .map(|(start, len)| &CJK_COMPAT_VARIANTS_DECOMPOSED_CHARS[start as usize..][..len as usize])
 }
 
 /// Return whether the given character is a combining mark (`General_Category=Mark`)
