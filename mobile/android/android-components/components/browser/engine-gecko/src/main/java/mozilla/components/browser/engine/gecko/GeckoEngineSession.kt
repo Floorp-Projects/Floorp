@@ -602,7 +602,9 @@ class GeckoEngineSession(
                 null
             }
 
-            lastLoadRequestUri = request.uri
+            if (interceptionResponse !is InterceptionResponse.AppIntent) {
+                lastLoadRequestUri = request.uri
+            }
             return interceptionResponse
         }
     }
