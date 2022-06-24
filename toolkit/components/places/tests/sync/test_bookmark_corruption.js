@@ -2661,7 +2661,7 @@ add_task(async function test_partial_cycle() {
 
   await Assert.rejects(
     buf.apply(),
-    /Item folderBBBBBB can't contain itself/,
+    /Item <guid: folderBBBBBB> can't contain itself/,
     "Should abort merge if remote tree parents form `parentid` cycle"
   );
 
@@ -2720,7 +2720,7 @@ add_task(async function test_complete_cycle() {
 
   await Assert.rejects(
     buf.apply(),
-    /Item folderAAAAAA can't contain itself/,
+    /Item <guid: folderAAAAAA> can't contain itself/,
     "Should abort merge if remote tree parents form cycle through `children`"
   );
 

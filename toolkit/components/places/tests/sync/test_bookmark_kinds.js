@@ -303,7 +303,7 @@ add_task(async function test_incompatible_types() {
 
     await Assert.rejects(
       buf.apply(),
-      /Can't merge local kind Bookmark and remote kind Folder/
+      /Can't merge local Bookmark <guid: AAAAAAAAAAAA> and remote Folder <guid: AAAAAAAAAAAA>/
     );
   } finally {
     await PlacesUtils.bookmarks.eraseEverything();
