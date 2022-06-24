@@ -187,8 +187,9 @@ class RestoreSelectionState;
 
 class TextControlState final : public SupportsWeakPtr {
  public:
-  typedef dom::Element Element;
-  typedef dom::HTMLInputElement HTMLInputElement;
+  using Element = dom::Element;
+  using HTMLInputElement = dom::HTMLInputElement;
+  using SelectionDirection = nsITextControlFrame::SelectionDirection;
 
   static TextControlState* Construct(TextControlElement* aOwningElement);
 
@@ -299,11 +300,11 @@ class TextControlState final : public SupportsWeakPtr {
   // XXX We might have to add assertion when it is into editable,
   // or reconsider fixing bug 597525 to remove these.
   void EmptyValue() {
-    if (mValue) {
-      mValue->Truncate();
+    if (!mValue.IsVoid()) {
+      mValue.Truncate();
     }
   }
-  bool IsEmpty() const { return mValue ? mValue->IsEmpty() : true; }
+  bool IsEmpty() const { return mValue.IsEmpty(); }
 
   Element* GetRootNode();
   Element* GetPreviewNode();
@@ -331,7 +332,7 @@ class TextControlState final : public SupportsWeakPtr {
    public:
     bool IsDefault() const {
       return mStart == 0 && mEnd == 0 &&
-             mDirection == nsITextControlFrame::eForward;
+             mDirection == SelectionDirection::Forward;
     }
     uint32_t GetStart() const { return mStart; }
     bool SetStart(uint32_t value) {
@@ -349,10 +350,8 @@ class TextControlState final : public SupportsWeakPtr {
       mIsDirty |= changed;
       return changed;
     }
-    nsITextControlFrame::SelectionDirection GetDirection() const {
-      return mDirection;
-    }
-    bool SetDirection(nsITextControlFrame::SelectionDirection value) {
+    SelectionDirection GetDirection() const { return mDirection; }
+    bool SetDirection(SelectionDirection value) {
       bool changed = mDirection != value;
       mDirection = value;
       mIsDirty |= changed;
@@ -376,8 +375,7 @@ class TextControlState final : public SupportsWeakPtr {
     uint32_t mEnd = 0;
     Maybe<uint32_t> mMaxLength;
     bool mIsDirty = false;
-    nsITextControlFrame::SelectionDirection mDirection =
-        nsITextControlFrame::eForward;
+    SelectionDirection mDirection = SelectionDirection::Forward;
   };
 
   bool IsSelectionCached() const { return mSelectionCached; }
@@ -513,16 +511,19 @@ class TextControlState final : public SupportsWeakPtr {
   RefPtr<TextInputSelectionController> mSelCon;
   RefPtr<RestoreSelectionState> mRestoringSelection;
   RefPtr<TextEditor> mTextEditor;
-  nsTextControlFrame* mBoundFrame;
+  nsTextControlFrame* mBoundFrame = nullptr;
   RefPtr<TextInputListener> mTextListener;
   UniquePtr<PasswordMaskData> mPasswordMaskData;
-  Maybe<nsString> mValue;
+
+  nsString mValue { VoidString() };  // Void if there's no value.
+
   SelectionProperties mSelectionProperties;
-  bool mEverInited;  // Have we ever been initialized?
-  bool mEditorInitialized;
-  bool mValueTransferInProgress;  // Whether a value is being transferred to the
-                                  // frame
-  bool mSelectionCached;          // Whether mSelectionProperties is valid
+
+  bool mEverInited : 1;  // Have we ever been initialized?
+  bool mEditorInitialized : 1;
+  bool mValueTransferInProgress : 1;  // Whether a value is being transferred to
+                                      // the frame
+  bool mSelectionCached : 1;          // Whether mSelectionProperties is valid
 
   /**
    * For avoiding allocation cost of the instance, we should reuse instances

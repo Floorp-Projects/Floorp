@@ -922,7 +922,7 @@ already_AddRefed<TextEditor> nsTextControlFrame::GetTextEditor() {
 
 nsresult nsTextControlFrame::SetSelectionInternal(
     nsINode* aStartNode, uint32_t aStartOffset, nsINode* aEndNode,
-    uint32_t aEndOffset, nsITextControlFrame::SelectionDirection aDirection) {
+    uint32_t aEndOffset, SelectionDirection aDirection) {
   // Get the selection, clear it and add the new range to it!
   TextControlElement* textControlElement =
       TextControlElement::FromNode(GetContent());
@@ -935,11 +935,12 @@ nsresult nsTextControlFrame::SetSelectionInternal(
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   nsDirection direction;
-  if (aDirection == eNone) {
+  if (aDirection == SelectionDirection::None) {
     // Preserve the direction
     direction = selection->GetDirection();
   } else {
-    direction = (aDirection == eBackward) ? eDirPrevious : eDirNext;
+    direction =
+        (aDirection == SelectionDirection::Backward) ? eDirPrevious : eDirNext;
   }
 
   MOZ_TRY(selection->SetStartAndEndInLimiter(*aStartNode, aStartOffset,
