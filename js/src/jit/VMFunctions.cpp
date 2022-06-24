@@ -1655,6 +1655,8 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
 
   size_t numHops = 0;
   while (true) {
+    MOZ_ASSERT(!obj->getOpsLookupProperty());
+
     uint32_t index;
     if (PropMap* map = obj->shape()->lookup(cx, id, &index)) {
       PropertyInfo prop = map->getPropertyInfo(index);
@@ -1865,6 +1867,8 @@ bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp) {
     if (MOZ_UNLIKELY(!obj->is<NativeObject>())) {
       return false;
     }
+
+    MOZ_ASSERT(!obj->getOpsLookupProperty());
 
     uint32_t index;
     if (PropMap* map = obj->shape()->lookup(cx, id, &index)) {
