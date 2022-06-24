@@ -9,7 +9,6 @@
 
 #include <type_traits>
 
-#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Module.h"
 
