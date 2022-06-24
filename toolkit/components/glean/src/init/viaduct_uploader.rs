@@ -4,7 +4,7 @@
 
 use glean::net::{PingUploader, UploadResult};
 use url::Url;
-use viaduct::Request;
+use viaduct::{Error::*, Request};
 
 /// An uploader that uses [Viaduct](https://github.com/mozilla/application-services/tree/main/components/viaduct).
 #[derive(Debug)]
@@ -51,7 +51,14 @@ impl PingUploader for ViaductUploader {
         );
         match result {
             Ok(result) => result,
-            _ => UploadResult::unrecoverable_failure(),
+            Err(NonTlsUrl | UrlError(_)) => UploadResult::unrecoverable_failure(),
+            Err(
+                RequestHeaderError(_)
+                | BackendError(_)
+                | NetworkError(_)
+                | BackendNotInitialized
+                | SetBackendError,
+            ) => UploadResult::recoverable_failure(),
         }
     }
 }

@@ -62,15 +62,15 @@ body > section {
   grid-area: main;
 }
 
-fieldset {
+#colorway-selector {
   border: none;
   display: flex;
   flex-direction: row;
   padding: 0;
 }
 
-input[type="radio"],
-input[type="radio"]:checked {
+#colorway-selector > input[type="radio"],
+#colorway-selector > input[type="radio"]:checked {
   box-sizing: content-box;
   padding: 2px;
   border: 2px solid transparent;
@@ -89,33 +89,13 @@ input[type="radio"]:checked {
   border-radius: 50%;
 }
 
-input[type="radio"].active::before {
-  content: "";
-  display: inline-block;
-  height: 16px;
-  width: 16px;
-  position: relative;
-  inset-inline-start: 4px;
-  inset-block-start: 4px;
-  /* Use mask-image and filter to ensure the checkmark is visible over the icon: */
-  mask-image: url(chrome://global/skin/icons/check.svg);
-  filter: invert(1);
-  background-image: var(--colorway-icon);
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-input[type="radio"]:enabled:checked,
-input[type="radio"]:enabled:checked:hover {
+#colorway-selector > input[type="radio"]:enabled:checked,
+#colorway-selector > input[type="radio"]:enabled:checked:hover {
   border-color: var(--in-content-accent-color);
 }
 
 /* override common-shared.css */
-input[type="radio"]:enabled:hover,
-input[type="radio"]:enabled:hover:active,
-input[type="radio"]:checked,
-input[type="radio"]:enabled:checked:hover,
-input[type="radio"]:enabled:checked:hover:active {
+#colorway-selector > input[type="radio"]:is(:enabled:hover, :enabled:hover:active, :checked, :enabled:checked:hover, :enabled:checked:hover:active) {
   background-color: unset;
 }
 
@@ -135,4 +115,36 @@ input[type="radio"]:enabled:checked:hover:active {
 #colorway-description {
   font-size: 1.1em;
   margin-block: 0 24px;
+}
+
+/* Intensity Picker */
+#colorway-intensities {
+  border: unset;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
+#colorway-intensities > legend {
+  padding-inline-start: 0;
+}
+
+#colorway-intensity-radios {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+#colorway-intensity-radios > label {
+  background-color: var(--in-content-box-background-color);
+  border-radius: 4px;
+  border: 1px solid var(--in-content-box-border-color);
+  color: var(--in-content-text-color);
+  display: flex;
+  overflow: clip;
+  padding: 4px 8px;
+  width: 100%;
+}
+
+#set-colorway {
+  margin-inline-start: 0;
 }

@@ -193,16 +193,13 @@ ToolbarKeyboardNavigator = {
     let button = walker.nextNode();
     if (!button || !this._isButton(button)) {
       // If we think we're moving backward, and focus came from outside the
-      // toolbox, we might actually have wrapped around. This currently only
-      // happens in popup windows (because in normal windows, focus first
-      // goes to the tabstrip, where we don't have tabstops). In this case,
-      // the event target was the first tabstop. If we can't find a button,
-      // e.g. because we're in a popup where most buttons are hidden, we
+      // toolbox, we might actually have wrapped around. In this case, the
+      // event target was the first tabstop. If we can't find a button, e.g.
+      // because we're in a popup where most buttons are hidden, we
       // should ensure focus keeps moving forward:
       if (
-        oldFocus &&
         this._isFocusMovingBackward &&
-        !gNavToolbox.contains(oldFocus)
+        (!oldFocus || !gNavToolbox.contains(oldFocus))
       ) {
         let allStops = Array.from(
           gNavToolbox.querySelectorAll("toolbartabstop")

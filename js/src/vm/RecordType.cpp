@@ -24,6 +24,7 @@
 #include "vm/ObjectFlags.h"
 #include "vm/PropertyInfo.h"
 #include "vm/PropMap.h"
+#include "vm/RecordTupleShared.h"
 #include "vm/StringType.h"
 #include "vm/ToSource.h"
 #include "vm/TupleType.h"

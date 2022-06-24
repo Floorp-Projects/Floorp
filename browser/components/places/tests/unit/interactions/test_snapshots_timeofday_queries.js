@@ -20,13 +20,25 @@ XPCOMUtils.defineLazyPreferenceGetter(
   15
 );
 
-add_task(async function test_query() {
-  await reset();
-  Services.prefs.setBoolPref("browser.places.interactions.enabled", true);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "snapshot_timeofday_sessiondecay_start_s",
+  "browser.places.interactions.snapshotTimeOfDaySessionDecayStartSeconds",
+  1800 // 30 mins
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "snapshot_timeofday_sessiondecay_end_s",
+  "browser.places.interactions.snapshotTimeOfDaySessionDecayEndSeconds",
+  28800 // 8 hours
+);
 
-  info("Add some random pages at 15 minutes intervals that are not snapshots.");
+const now = new Date();
+
+add_task(async function setup() {
+  Services.prefs.setBoolPref("browser.places.interactions.enabled", true);
+  info("Sanity check: add random non-snapshot pages at 15 minutes intervals.");
   let nonSnapshotPages = [];
-  const now = new Date();
   for (let i = 7 * 24 * 4; i >= 0; --i) {
     nonSnapshotPages.push({
       uri: `https://nonsnapshot${i}.com/`,
@@ -34,6 +46,10 @@ add_task(async function test_query() {
     });
   }
   await PlacesTestUtils.addVisits(nonSnapshotPages);
+});
+
+add_task(async function test_query() {
+  await reset();
 
   // Made up so max / 2 is > snapshot_timeofday_expected_interactions.
   const interactionCounts = {
@@ -143,11 +159,19 @@ add_task(async function test_query() {
 
   // We are adding interactions quite in the past.
   const daysThreshold = 101;
+  const context = {
+    url: snapshots[0].url,
+    time: now.getTime(),
+  };
   await assertTimeOfDaySnapshots(
     [
       {
         url: "https://snapshot3.com/",
-        scoreEqualTo: Snapshots.timeOfDayScore(1, interactionCounts),
+        scoreEqualTo: Snapshots.timeOfDayScore({
+          interactions: 1,
+          context,
+          ...interactionCounts,
+        }),
         daysThreshold,
         scoreLessThan: 1.0,
       },
@@ -158,7 +182,11 @@ add_task(async function test_query() {
       },
       {
         url: "https://snapshot6.com/",
-        scoreEqualTo: Snapshots.timeOfDayScore(1, interactionCounts),
+        scoreEqualTo: Snapshots.timeOfDayScore({
+          interactions: 1,
+          context,
+          ...interactionCounts,
+        }),
         daysThreshold,
         scoreLessThan: 1.0,
       },
@@ -169,17 +197,138 @@ add_task(async function test_query() {
       },
       {
         url: "https://snapshot10.com/",
-        scoreEqualTo: Snapshots.timeOfDayScore(
-          snapshot_timeofday_expected_interactions,
-          interactionCounts
-        ),
+        scoreEqualTo: Snapshots.timeOfDayScore({
+          interactions: snapshot_timeofday_expected_interactions,
+          context,
+          ...interactionCounts,
+        }),
         daysThreshold,
         scoreLessThan: 1.0,
       },
     ],
+    context
+  );
+});
+
+add_task(async function test_session_decay() {
+  await reset();
+  Services.prefs.setIntPref(
+    "browser.places.interactions.snapshotTimeOfDayExpectedInteractions",
+    1
+  );
+
+  // Add snapshots in the interval and out of it.
+  let snapshots = [
     {
-      url: snapshots[0].url,
+      url: "https://snapshot3.com/",
+      // It's in interval for yesterday.
+      created_at: new Date(now).setDate(now.getDate() - 1),
+    },
+    {
+      url: "https://snapshot4.com/",
+      // It's in interval for 3 days ago with max interactions.
+      created_at: new Date(now).setDate(now.getDate() - 3),
+    },
+    {
+      url: "https://snapshot6.com/",
+      // It's in interval for a week ago.
+      created_at: new Date(now).setDate(now.getDate() - 7),
+    },
+  ];
+
+  await addInteractions(snapshots);
+  for (let snapshot of snapshots) {
+    await Snapshots.add(snapshot);
+  }
+
+  const daysThreshold = 8;
+
+  info("early in the session, before decay start");
+  await assertTimeOfDaySnapshots(
+    [
+      {
+        url: "https://snapshot3.com/",
+        scoreEqualTo: 1.0,
+        daysThreshold,
+      },
+      {
+        url: "https://snapshot4.com/",
+        scoreEqualTo: 1.0,
+        daysThreshold,
+      },
+      {
+        url: "https://snapshot6.com/",
+        scoreEqualTo: 1.0,
+        daysThreshold,
+      },
+    ],
+    {
+      url: "about:robots",
       time: now.getTime(),
+      sessionStartTime:
+        new Date(now) - snapshot_timeofday_sessiondecay_start_s * 1000,
+    }
+  );
+
+  info("late in the session, after decay end");
+  await assertTimeOfDaySnapshots(
+    [
+      {
+        url: "https://snapshot3.com/",
+        scoreEqualTo: 0.1,
+        daysThreshold,
+      },
+      {
+        url: "https://snapshot4.com/",
+        scoreEqualTo: 0.1,
+        daysThreshold,
+      },
+      {
+        url: "https://snapshot6.com/",
+        scoreEqualTo: 0.1,
+        daysThreshold,
+      },
+    ],
+    {
+      url: "about:robots",
+      time: now.getTime(),
+      sessionStartTime:
+        new Date(now) - snapshot_timeofday_sessiondecay_end_s * 1000 - 1000,
+    }
+  );
+
+  info("between decay start and end");
+  await assertTimeOfDaySnapshots(
+    [
+      {
+        url: "https://snapshot3.com/",
+        scoreLessThan: 1.0,
+        scoreGreaterThan: 0.1,
+        daysThreshold,
+      },
+      {
+        url: "https://snapshot4.com/",
+        scoreLessThan: 1.0,
+        scoreGreaterThan: 0.1,
+        daysThreshold,
+      },
+      {
+        url: "https://snapshot6.com/",
+        scoreLessThan: 1.0,
+        scoreGreaterThan: 0.1,
+        daysThreshold,
+      },
+    ],
+    {
+      url: "about:robots",
+      time: now.getTime(),
+      sessionStartTime:
+        now.getTime() -
+        (snapshot_timeofday_sessiondecay_start_s +
+          (snapshot_timeofday_sessiondecay_end_s -
+            snapshot_timeofday_sessiondecay_start_s) /
+            2) *
+          1000,
     }
   );
 });
