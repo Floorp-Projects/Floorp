@@ -7,7 +7,9 @@
 #ifndef mozilla_GenericFactory_h
 #define mozilla_GenericFactory_h
 
-#include "nsIFactory.h"
+#include "mozilla/Attributes.h"
+
+#include "mozilla/Module.h"
 
 namespace mozilla {
 
@@ -17,10 +19,10 @@ namespace mozilla {
  * module.
  */
 class GenericFactory final : public nsIFactory {
-  ~GenericFactory() = default;
+  ~GenericFactory() {}
 
  public:
-  typedef nsresult (*ConstructorProcPtr)(const nsIID& aIID, void** aResult);
+  typedef Module::ConstructorProcPtr ConstructorProcPtr;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIFACTORY

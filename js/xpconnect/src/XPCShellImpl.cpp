@@ -645,7 +645,7 @@ static bool RegisterXPCTestComponents(JSContext* cx, unsigned argc, Value* vp) {
     JS_ReportErrorASCII(cx, "Wrong number of arguments");
     return false;
   }
-  nsresult rv = xpcTestRegisterComponents();
+  nsresult rv = XRE_AddStaticComponent(&kXPCTestModule);
   if (NS_FAILED(rv)) {
     XPCThrower::Throw(rv, cx);
     return false;
