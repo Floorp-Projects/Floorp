@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
 // See LOG_LEVELS in Console.jsm. Common examples: "all", "debug", "info", "warn", "error".
-XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+const log = (() => {
   const { ConsoleAPI } = ChromeUtils.import(
     "resource://gre/modules/Console.jsm"
   );
@@ -45,7 +45,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
     maxLogLevelPref: "services.settings.loglevel",
     prefix: "services.settings",
   });
-});
+})();
 
 XPCOMUtils.defineLazyGetter(lazy, "isRunningTests", () => {
   const env = Cc["@mozilla.org/process/environment;1"].getService(
@@ -113,7 +113,7 @@ var Utils = {
   /**
    * Logger instance.
    */
-  log: lazy.log,
+  log,
 
   get CERT_CHAIN_ROOT_IDENTIFIER() {
     if (this.SERVER_URL == AppConstants.REMOTE_SETTINGS_SERVER_URL) {
@@ -202,7 +202,7 @@ var Utils = {
         !lazy.gNetworkLinkService.isLinkUp
       );
     } catch (ex) {
-      lazy.log.warn("Could not determine network status.", ex);
+      log.warn("Could not determine network status.", ex);
     }
     return false;
   },
@@ -330,7 +330,7 @@ var Utils = {
             );
             this._dumpStats = await res.json();
           } catch (e) {
-            lazy.log.warn(`Failed to load last_modified.json: ${e}`);
+            log.warn(`Failed to load last_modified.json: ${e}`);
             this._dumpStats = {};
           }
           delete this._dumpStatsInitPromise;
