@@ -71,6 +71,9 @@ let AVAILABLE_PIP_OVERRIDES;
       "https://play.hbomax.com/feature/*": {
         videoWrapperScriptPath: "video-wrappers/hbomax.js",
       },
+      "https://play.hbomax.com/episode/*": {
+        videoWrapperScriptPath: "video-wrappers/hbomax.js",
+      },
     },
 
     hotstar: {
