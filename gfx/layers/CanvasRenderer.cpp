@@ -9,6 +9,7 @@
 #include "BuildConstants.h"
 #include "ipc/KnowsCompositor.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/widget/DMABufSurface.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "PersistentBufferProvider.h"
@@ -123,16 +124,15 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
     if (knowsCompositor->SupportsD3D11()) {
       return TextureType::D3D11;
     }
-    return TextureType::Unknown;
   }
   if (kIsMacOS) {
     return TextureType::MacIOSurface;
   }
   if (kIsWayland) {
-    if (knowsCompositor->UsingSoftwareWebRender()) {
-      return TextureType::Unknown;
+    if (!knowsCompositor->UsingSoftwareWebRender() &&
+        widget::GetDMABufDevice()->IsDMABufWebGLEnabled()) {
+      return TextureType::DMABUF;
     }
-    return TextureType::DMABUF;
   }
 
   if (kIsAndroid) {
