@@ -6,11 +6,11 @@
 
 const EXPORTED_SYMBOLS = [
   "ChromeWebElement",
-  "ContentWebElement",
   "ContentShadowRoot",
   "ContentWebFrame",
   "ContentWebWindow",
   "element",
+  "WebElement",
   "WebReference",
 ];
 
@@ -1496,7 +1496,7 @@ class WebReference {
    * @param {(Element|ShadowRoot|WindowProxy|XULElement)} node
    *     Node to construct a web element reference for.
    *
-   * @return {(ContentShadowRoot|ContentWebElement|ChromeWebElement)}
+   * @return {(ContentShadowRoot|WebElement|ChromeWebElement)}
    *     Web element reference for <var>el</var>.
    *
    * @throws {InvalidArgumentError}
@@ -1516,7 +1516,7 @@ class WebReference {
         // If the node is in a priviledged document, we are in "chrome" context.
         return new ChromeWebElement(uuid);
       }
-      return new ContentWebElement(uuid);
+      return new WebElement(uuid);
     } else if (element.isDOMWindow(node)) {
       if (node.parent === node) {
         return new ContentWebWindow(uuid);
@@ -1530,7 +1530,7 @@ class WebReference {
   }
 
   /**
-   * Unmarshals a JSON Object to one of {@link ContentWebElement},
+   * Unmarshals a JSON Object to one of {@link WebElement},
    * {@link ContentWebWindow}, {@link ContentWebFrame},
    * or {@link ChromeWebElement}.
    *
@@ -1557,8 +1557,8 @@ class WebReference {
         case ContentShadowRoot.Identifier:
           return ContentShadowRoot.fromJSON(json);
 
-        case ContentWebElement.Identifier:
-          return ContentWebElement.fromJSON(json);
+        case WebElement.Identifier:
+          return WebElement.fromJSON(json);
 
         case ContentWebWindow.Identifier:
           return ContentWebWindow.fromJSON(json);
@@ -1577,7 +1577,7 @@ class WebReference {
   }
 
   /**
-   * Constructs a {@link ContentWebElement} or {@link ChromeWebElement}
+   * Constructs a {@link WebElement} or {@link ChromeWebElement}
    * or {@link ContentShadowRoot} from a a string <var>uuid</var>.
    *
    * This whole function is a workaround for the fact that clients
@@ -1593,7 +1593,7 @@ class WebReference {
    *     should be a content web element or a chrome web element.
    *
    * @return {WebReference}
-   *     One of {@link ContentWebElement} or {@link ChromeWebElement},
+   *     One of {@link WebElement} or {@link ChromeWebElement},
    *     based on <var>context</var>.
    *
    * @throws {InvalidArgumentError}
@@ -1608,7 +1608,7 @@ class WebReference {
         return new ChromeWebElement(uuid);
 
       case "content":
-        return new ContentWebElement(uuid);
+        return new WebElement(uuid);
 
       default:
         throw new lazy.error.InvalidArgumentError(
@@ -1619,7 +1619,7 @@ class WebReference {
 
   /**
    * Checks if <var>ref<var> is a {@link WebReference} reference,
-   * i.e. if it has {@link ContentWebElement.Identifier}, or
+   * i.e. if it has {@link WebElement.Identifier}, or
    * {@link ChromeWebElement.Identifier} as properties.
    *
    * @param {Object.<string, string>} obj
@@ -1634,7 +1634,7 @@ class WebReference {
 
     if (
       ContentShadowRoot.Identifier in obj ||
-      ContentWebElement.Identifier in obj ||
+      WebElement.Identifier in obj ||
       ContentWebWindow.Identifier in obj ||
       ContentWebFrame.Identifier in obj ||
       ChromeWebElement.Identifier in obj
@@ -1660,13 +1660,13 @@ class WebReference {
  * DOM elements are represented as web elements when they are
  * transported over the wire protocol.
  */
-class ContentWebElement extends WebReference {
+class WebElement extends WebReference {
   toJSON() {
-    return { [ContentWebElement.Identifier]: this.uuid };
+    return { [WebElement.Identifier]: this.uuid };
   }
 
   static fromJSON(json) {
-    const { Identifier } = ContentWebElement;
+    const { Identifier } = WebElement;
 
     if (!(Identifier in json)) {
       throw new lazy.error.InvalidArgumentError(
@@ -1675,10 +1675,10 @@ class ContentWebElement extends WebReference {
     }
 
     let uuid = json[Identifier];
-    return new ContentWebElement(uuid);
+    return new WebElement(uuid);
   }
 }
-ContentWebElement.Identifier = "element-6066-11e4-a52e-4f735466cecf";
+WebElement.Identifier = "element-6066-11e4-a52e-4f735466cecf";
 
 /**
  * Shadow Root elements are represented as web elements when they are
