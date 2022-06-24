@@ -22,4 +22,5 @@ updatebot:
     maintainer-bz: jgilbert@mozilla.com
 
 vendoring:
+  source-hosting: github
   url: https://github.com/KhronosGroup/WebGL/tree/main/sdk/tests
