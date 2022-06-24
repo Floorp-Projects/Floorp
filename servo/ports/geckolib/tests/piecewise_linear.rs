@@ -25,7 +25,7 @@ fn linear_keyword_equivalent_out_of_bounds() {
 
 fn get_const_function() -> PiecewiseLinearFunction {
     PiecewiseLinearFunctionBuilder::new()
-        .push(CONST_VALUE as f32, None, None)
+        .push(CONST_VALUE as f32, None)
         .build()
 }
 
@@ -49,12 +49,12 @@ fn const_function_out_of_bounds() {
 #[test]
 fn implied_input_spacing() {
     let explicit_spacing = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, Some(0.0), None)
-        .push(1.0, Some(1.0), None)
+        .push(0.0, Some(0.0))
+        .push(1.0, Some(1.0))
         .build();
     let implied_spacing = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, None, None)
-        .push(1.0, None, None)
+        .push(0.0, None)
+        .push(1.0, None)
         .build();
     assert!(implied_spacing
         .at(0.)
@@ -70,9 +70,9 @@ fn implied_input_spacing() {
 #[test]
 fn interpolation() {
     let interpolate = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, None, None)
-        .push(0.7, None, None)
-        .push(1.0, None, None)
+        .push(0.0, None)
+        .push(0.7, None)
+        .push(1.0, None)
         .build();
     assert!(interpolate.at(0.1).approx_eq(&0.14));
     assert!(interpolate.at(0.25).approx_eq(&0.35));
@@ -85,14 +85,14 @@ fn interpolation() {
 #[test]
 fn implied_multiple_input_spacing() {
     let multiple_implied = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, None, None)
-        .push(0.8, None, None)
-        .push(0.6, None, None)
-        .push(0.4, None, None)
-        .push(0.5, Some(0.4), None)
-        .push(0.1, None, None)
-        .push(0.9, None, None)
-        .push(1.0, None, None)
+        .push(0.0, None)
+        .push(0.8, None)
+        .push(0.6, None)
+        .push(0.4, None)
+        .push(0.5, Some(0.4))
+        .push(0.1, None)
+        .push(0.9, None)
+        .push(1.0, None)
         .build();
     assert!(multiple_implied.at(0.1).approx_eq(&0.8));
     assert!(multiple_implied.at(0.2).approx_eq(&0.6));
@@ -106,8 +106,8 @@ fn implied_multiple_input_spacing() {
 #[test]
 fn nonzero_edge_values() {
     let nonzero_edges = PiecewiseLinearFunctionBuilder::new()
-        .push(0.1, Some(0.0), None)
-        .push(0.7, Some(1.0), None)
+        .push(0.1, Some(0.0))
+        .push(0.7, Some(1.0))
         .build();
     assert!(nonzero_edges.at(0.).approx_eq(&0.1));
     assert!(nonzero_edges.at(0.5).approx_eq(&0.4));
@@ -118,9 +118,9 @@ fn nonzero_edge_values() {
 fn out_of_bounds_extrapolate() {
     // General case: extrapolate from the edges' slope
     let oob_extend = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, None, None)
-        .push(0.7, None, None)
-        .push(1.0, None, None)
+        .push(0.0, None)
+        .push(0.7, None)
+        .push(1.0, None)
         .build();
     assert!(oob_extend.at(-0.25).approx_eq(&-0.35));
     assert!(oob_extend.at(1.25).approx_eq(&1.15));
@@ -130,11 +130,11 @@ fn out_of_bounds_extrapolate() {
 fn out_of_bounds_flat() {
     // Repeated endpoints: flat extrapolation out-of-bounds
     let oob_flat = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, Some(0.0), None)
-        .push(0.0, Some(0.0), None)
-        .push(0.7, None, None)
-        .push(1.0, Some(1.0), None)
-        .push(1.0, Some(1.0), None)
+        .push(0.0, Some(0.0))
+        .push(0.0, Some(0.0))
+        .push(0.7, None)
+        .push(1.0, Some(1.0))
+        .push(1.0, Some(1.0))
         .build();
     assert!(oob_flat
         .at(0.0)
@@ -145,9 +145,10 @@ fn out_of_bounds_flat() {
 #[test]
 fn flat_region() {
     let flat = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, Some(0.0), None)
-        .push(0.5, Some(0.25), Some(0.7))
-        .push(1.0, Some(1.0), None)
+        .push(0.0, Some(0.0))
+        .push(0.5, Some(0.25))
+        .push(0.5, Some(0.7))
+        .push(1.0, Some(1.0))
         .build();
     assert!(flat.at(0.125).approx_eq(&0.25));
     assert!(flat.at(0.5).approx_eq(&0.5));
@@ -157,9 +158,10 @@ fn flat_region() {
 #[test]
 fn step() {
     let step = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, Some(0.0), None)
-        .push(0.0, Some(0.5), None)
-        .push(1.0, Some(0.5), Some(1.0))
+        .push(0.0, Some(0.0))
+        .push(0.0, Some(0.5))
+        .push(1.0, Some(0.5))
+        .push(1.0, Some(1.0))
         .build();
     assert!(step.at(0.25).approx_eq(&0.0));
     // At the discontinuity, take the left hand side value
@@ -170,10 +172,12 @@ fn step() {
 #[test]
 fn step_multiple_conflicting() {
     let step = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, Some(0.0), None)
-        .push(0.0, Some(0.5), None)
-        .push(0.75, Some(0.5), Some(0.5))
-        .push(1.0, Some(0.5), Some(1.0))
+        .push(0.0, Some(0.0))
+        .push(0.0, Some(0.5))
+        .push(0.75, Some(0.5))
+        .push(0.75, Some(0.5))
+        .push(1.0, Some(0.5))
+        .push(1.0, Some(1.0))
         .build();
     assert!(step.at(0.25).approx_eq(&0.0));
     assert!(step.at(0.5).approx_eq(&0.0));
@@ -183,10 +187,10 @@ fn step_multiple_conflicting() {
 #[test]
 fn always_monotonic() {
     let monotonic = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, Some(0.0), None)
-        .push(0.3, Some(0.5), None)
-        .push(0.4, Some(0.4), None)
-        .push(1.0, Some(1.0), None)
+        .push(0.0, Some(0.0))
+        .push(0.3, Some(0.5))
+        .push(0.4, Some(0.4))
+        .push(1.0, Some(1.0))
         .build();
     assert!(monotonic.at(0.25).approx_eq(&0.15));
     // A discontinuity at x = 0.5 from y = 0.3 to 0.4
@@ -197,10 +201,11 @@ fn always_monotonic() {
 #[test]
 fn always_monotonic_flat() {
     let monotonic = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, Some(0.0), None)
-        .push(0.2, Some(0.2), None)
-        .push(0.4, Some(0.1), Some(0.15))
-        .push(1.0, Some(1.0), None)
+        .push(0.0, Some(0.0))
+        .push(0.2, Some(0.2))
+        .push(0.4, Some(0.1))
+        .push(0.4, Some(0.15))
+        .push(1.0, Some(1.0))
         .build();
     assert!(monotonic.at(0.2).approx_eq(&0.2));
     // A discontinuity at x = 0.2 from y = 0.2 to 0.4
@@ -210,10 +215,11 @@ fn always_monotonic_flat() {
 #[test]
 fn always_monotonic_flat_backwards() {
     let monotonic = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, Some(0.0), None)
-        .push(0.2, Some(0.2), None)
-        .push(0.3, Some(0.3), Some(0.2))
-        .push(1.0, Some(1.0), None)
+        .push(0.0, Some(0.0))
+        .push(0.2, Some(0.2))
+        .push(0.3, Some(0.3))
+        .push(0.3, Some(0.2))
+        .push(1.0, Some(1.0))
         .build();
     assert!(monotonic.at(0.2).approx_eq(&0.2));
     assert!(monotonic.at(0.3).approx_eq(&0.3));
@@ -223,8 +229,8 @@ fn always_monotonic_flat_backwards() {
 #[test]
 fn input_out_of_bounds() {
     let oob = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, Some(-0.5), None)
-        .push(1.0, Some(1.5), None)
+        .push(0.0, Some(-0.5))
+        .push(1.0, Some(1.5))
         .build();
     assert!(oob.at(-0.5).approx_eq(&0.0));
     assert!(oob.at(0.0).approx_eq(&0.25));
@@ -236,14 +242,14 @@ fn input_out_of_bounds() {
 #[test]
 fn invalid_builder_input() {
     let built_from_invalid = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, Some(f32::NEG_INFINITY), None)
-        .push(0.7, Some(f32::NAN), None)
-        .push(1.0, Some(f32::INFINITY), None)
+        .push(0.0, Some(f32::NEG_INFINITY))
+        .push(0.7, Some(f32::NAN))
+        .push(1.0, Some(f32::INFINITY))
         .build();
     let equivalent = PiecewiseLinearFunctionBuilder::new()
-        .push(0.0, None, None)
-        .push(0.7, None, None)
-        .push(1.0, None, None)
+        .push(0.0, None)
+        .push(0.7, None)
+        .push(1.0, None)
         .build();
 
     assert!(built_from_invalid.at(0.0).approx_eq(&equivalent.at(0.0)));
@@ -256,8 +262,8 @@ fn invalid_builder_input() {
 #[test]
 fn input_domain_not_complete() {
     let not_covered = PiecewiseLinearFunctionBuilder::new()
-        .push(0.2, Some(0.2), None)
-        .push(0.8, Some(0.8), None)
+        .push(0.2, Some(0.2))
+        .push(0.8, Some(0.8))
         .build();
     assert!(not_covered.at(0.0).approx_eq(&0.0));
     assert!(not_covered.at(0.5).approx_eq(&0.5));
