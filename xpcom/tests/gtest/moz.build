@@ -152,6 +152,7 @@ SOURCES += [
 LOCAL_INCLUDES += [
     "../../base",
     "/toolkit/components/telemetry/tests/gtest",
+    "/xpcom/components",
 ]
 
 GeneratedFile(
