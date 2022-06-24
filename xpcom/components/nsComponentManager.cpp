@@ -277,7 +277,6 @@ extern const mozilla::Module kContentProcessWidgetModule;
 #if defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
 extern const mozilla::Module kWidgetModule;
 #endif
-extern const mozilla::Module kKeyValueModule;
 extern const mozilla::Module kXREModule;
 
 static nsTArray<const mozilla::Module*>* sExtraStaticModules;
@@ -370,7 +369,6 @@ nsresult nsComponentManagerImpl::Init() {
 #if defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
   RegisterModule(&kWidgetModule);
 #endif
-  RegisterModule(&kKeyValueModule);
   RegisterModule(&kXREModule);
 
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {
