@@ -40,6 +40,8 @@
 #include "nsDebugImpl.h"
 #include "nsSystemInfo.h"
 
+#include "nsINIParserImpl.h"
+
 #include "nsComponentManager.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsIServiceManager.h"
@@ -150,6 +152,30 @@ mozilla::Atomic<bool, mozilla::SequentiallyConsistent> gXPCOMThreadsShutDown(
     false);
 bool gXPCOMMainThreadEventsAreDoomed = false;
 char16_t* gGREBinPath = nullptr;
+
+static NS_DEFINE_CID(kINIParserFactoryCID, NS_INIPARSERFACTORY_CID);
+
+static already_AddRefed<nsIFactory> CreateINIParserFactory(
+    const mozilla::Module& aModule, const mozilla::Module::CIDEntry& aEntry) {
+  nsCOMPtr<nsIFactory> f = new nsINIParserFactory();
+  return f.forget();
+}
+
+const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
+    {&kINIParserFactoryCID, false, CreateINIParserFactory}, {nullptr}};
+
+const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
+    {NS_INIPARSERFACTORY_CONTRACTID, &kINIParserFactoryCID}, {nullptr}};
+
+const mozilla::Module kXPCOMModule = {
+    mozilla::Module::kVersion,
+    kXPCOMCIDEntries,
+    kXPCOMContracts,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    mozilla::Module::ALLOW_IN_GPU_RDD_VR_SOCKET_AND_UTILITY_PROCESS};
 
 // gDebug will be freed during shutdown.
 static nsIDebug2* gDebug = nullptr;
