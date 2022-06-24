@@ -1,4 +1,4 @@
-const { element, WebElement } = ChromeUtils.import(
+const { element, WebReference } = ChromeUtils.import(
   "chrome://remote/content/marionette/element.js"
 );
 
@@ -76,11 +76,11 @@ const xulEl = new XULElement("browser");
 const frameEl = new DOMElement("iframe");
 const innerEl = new DOMElement("p", { id: "inner" });
 
-const domWebEl = WebElement.from(domEl);
-const svgWebEl = WebElement.from(svgEl);
-const xulWebEl = WebElement.from(xulEl);
-const frameWebEl = WebElement.from(frameEl);
-const innerWebEl = WebElement.from(innerEl);
+const domWebEl = WebReference.from(domEl);
+const svgWebEl = WebReference.from(svgEl);
+const xulWebEl = WebReference.from(xulEl);
+const frameWebEl = WebReference.from(frameEl);
+const innerWebEl = WebReference.from(innerEl);
 
 const domElId = { id: 1, browsingContextId: 4, webElRef: domWebEl.toJSON() };
 const svgElId = { id: 2, browsingContextId: 15, webElRef: svgWebEl.toJSON() };

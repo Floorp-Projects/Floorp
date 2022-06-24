@@ -8,7 +8,7 @@ const {
   ContentWebFrame,
   ContentWebWindow,
   element,
-  WebElement,
+  WebReference,
 } = ChromeUtils.import("chrome://remote/content/marionette/element.js");
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -408,20 +408,20 @@ add_test(function test_coordinates() {
   run_next_test();
 });
 
-add_test(function test_WebElement_ctor() {
-  let el = new WebElement("foo");
+add_test(function test_WebReference_ctor() {
+  let el = new WebReference("foo");
   equal(el.uuid, "foo");
 
   for (let t of [42, true, [], {}, null, undefined]) {
-    Assert.throws(() => new WebElement(t), /to be a string/);
+    Assert.throws(() => new WebReference(t), /to be a string/);
   }
 
   run_next_test();
 });
 
 add_test(function test_WebElemenet_is() {
-  let a = new WebElement("a");
-  let b = new WebElement("b");
+  let a = new WebReference("a");
+  let b = new WebReference("b");
 
   ok(a.is(a));
   ok(b.is(b));
@@ -433,102 +433,102 @@ add_test(function test_WebElemenet_is() {
   run_next_test();
 });
 
-add_test(function test_WebElement_from() {
-  ok(WebElement.from(domEl) instanceof ContentWebElement);
-  ok(WebElement.from(xulEl) instanceof ContentWebElement);
-  ok(WebElement.from(domWin) instanceof ContentWebWindow);
-  ok(WebElement.from(domFrame) instanceof ContentWebFrame);
-  ok(WebElement.from(domElInPrivilegedDocument) instanceof ChromeWebElement);
-  ok(WebElement.from(xulElInPrivilegedDocument) instanceof ChromeWebElement);
+add_test(function test_WebReference_from() {
+  ok(WebReference.from(domEl) instanceof ContentWebElement);
+  ok(WebReference.from(xulEl) instanceof ContentWebElement);
+  ok(WebReference.from(domWin) instanceof ContentWebWindow);
+  ok(WebReference.from(domFrame) instanceof ContentWebFrame);
+  ok(WebReference.from(domElInPrivilegedDocument) instanceof ChromeWebElement);
+  ok(WebReference.from(xulElInPrivilegedDocument) instanceof ChromeWebElement);
 
-  Assert.throws(() => WebElement.from({}), /InvalidArgumentError/);
+  Assert.throws(() => WebReference.from({}), /InvalidArgumentError/);
 
   run_next_test();
 });
 
-add_test(function test_WebElement_fromJSON_ContentWebElement() {
+add_test(function test_WebReference_fromJSON_ContentWebElement() {
   const { Identifier } = ContentWebElement;
 
   let ref = { [Identifier]: "foo" };
-  let webEl = WebElement.fromJSON(ref);
+  let webEl = WebReference.fromJSON(ref);
   ok(webEl instanceof ContentWebElement);
   equal(webEl.uuid, "foo");
 
   let identifierPrecedence = {
     [Identifier]: "identifier-uuid",
   };
-  let precedenceEl = WebElement.fromJSON(identifierPrecedence);
+  let precedenceEl = WebReference.fromJSON(identifierPrecedence);
   ok(precedenceEl instanceof ContentWebElement);
   equal(precedenceEl.uuid, "identifier-uuid");
 
   run_next_test();
 });
 
-add_test(function test_WebElement_fromJSON_ContentWebWindow() {
+add_test(function test_WebReference_fromJSON_ContentWebWindow() {
   let ref = { [ContentWebWindow.Identifier]: "foo" };
-  let win = WebElement.fromJSON(ref);
+  let win = WebReference.fromJSON(ref);
   ok(win instanceof ContentWebWindow);
   equal(win.uuid, "foo");
 
   run_next_test();
 });
 
-add_test(function test_WebElement_fromJSON_ContentWebFrame() {
+add_test(function test_WebReference_fromJSON_ContentWebFrame() {
   let ref = { [ContentWebFrame.Identifier]: "foo" };
-  let frame = WebElement.fromJSON(ref);
+  let frame = WebReference.fromJSON(ref);
   ok(frame instanceof ContentWebFrame);
   equal(frame.uuid, "foo");
 
   run_next_test();
 });
 
-add_test(function test_WebElement_fromJSON_ChromeWebElement() {
+add_test(function test_WebReference_fromJSON_ChromeWebReference() {
   let ref = { [ChromeWebElement.Identifier]: "foo" };
-  let el = WebElement.fromJSON(ref);
+  let el = WebReference.fromJSON(ref);
   ok(el instanceof ChromeWebElement);
   equal(el.uuid, "foo");
 
   run_next_test();
 });
 
-add_test(function test_WebElement_fromJSON_malformed() {
-  Assert.throws(() => WebElement.fromJSON({}), /InvalidArgumentError/);
-  Assert.throws(() => WebElement.fromJSON(null), /InvalidArgumentError/);
+add_test(function test_WebReference_fromJSON_malformed() {
+  Assert.throws(() => WebReference.fromJSON({}), /InvalidArgumentError/);
+  Assert.throws(() => WebReference.fromJSON(null), /InvalidArgumentError/);
   run_next_test();
 });
 
-add_test(function test_WebElement_fromUUID() {
-  let xulWebEl = WebElement.fromUUID("foo", "chrome");
+add_test(function test_WebReference_fromUUID() {
+  let xulWebEl = WebReference.fromUUID("foo", "chrome");
   ok(xulWebEl instanceof ChromeWebElement);
   equal(xulWebEl.uuid, "foo");
 
-  let domWebEl = WebElement.fromUUID("bar", "content");
+  let domWebEl = WebReference.fromUUID("bar", "content");
   ok(domWebEl instanceof ContentWebElement);
   equal(domWebEl.uuid, "bar");
 
   Assert.throws(
-    () => WebElement.fromUUID("baz", "bah"),
+    () => WebReference.fromUUID("baz", "bah"),
     /InvalidArgumentError/
   );
 
   run_next_test();
 });
 
-add_test(function test_WebElement_isReference() {
+add_test(function test_WebReference_isReference() {
   for (let t of [42, true, "foo", [], {}]) {
-    ok(!WebElement.isReference(t));
+    ok(!WebReference.isReference(t));
   }
 
-  ok(WebElement.isReference({ [ContentWebElement.Identifier]: "foo" }));
-  ok(WebElement.isReference({ [ContentWebWindow.Identifier]: "foo" }));
-  ok(WebElement.isReference({ [ContentWebFrame.Identifier]: "foo" }));
-  ok(WebElement.isReference({ [ChromeWebElement.Identifier]: "foo" }));
+  ok(WebReference.isReference({ [ContentWebElement.Identifier]: "foo" }));
+  ok(WebReference.isReference({ [ContentWebWindow.Identifier]: "foo" }));
+  ok(WebReference.isReference({ [ContentWebFrame.Identifier]: "foo" }));
+  ok(WebReference.isReference({ [ChromeWebElement.Identifier]: "foo" }));
 
   run_next_test();
 });
 
-add_test(function test_WebElement_generateUUID() {
-  equal(typeof WebElement.generateUUID(), "string");
+add_test(function test_WebReference_generateUUID() {
+  equal(typeof WebReference.generateUUID(), "string");
   run_next_test();
 });
 
