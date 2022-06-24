@@ -20,7 +20,16 @@ add_task(async function test_experiment_plain_text() {
       infoIcon: "chrome://branding/content/about-logo.png",
       promoTitle: "Promo title",
       promoLinkText: "Promo link",
-      promoLinkUrl: "https://test.com",
+      promoLinkType: "link",
+      promoButton: {
+        action: {
+          type: "OPEN_URL",
+          data: {
+            args: "https://example.com",
+            where: "tabshifted",
+          },
+        },
+      },
     },
     // Priority ensures this message is picked over the one in
     // OnboardingMessageProvider
@@ -36,10 +45,10 @@ add_task(async function test_experiment_plain_text() {
     const infoBody = content.document.getElementById("info-body");
     const infoLink = content.document.getElementById("private-browsing-myths");
     const promoText = content.document.getElementById(
-      "private-browsing-vpn-text"
+      "private-browsing-promo-text"
     );
     const promoLink = content.document.getElementById(
-      "private-browsing-vpn-link"
+      "private-browsing-promo-link"
     );
 
     // Check experiment values are rendered
@@ -124,7 +133,15 @@ add_task(async function test_experiment_format_urls() {
       infoEnabled: true,
       promoEnabled: true,
       infoLinkUrl: "http://foo.mozilla.com/%LOCALE%",
-      promoLinkUrl: "http://bar.mozilla.com/%LOCALE%",
+      promoButton: {
+        action: {
+          data: {
+            args: "http://bar.mozilla.com/%LOCALE%",
+            where: "tabshifted",
+          },
+          type: "OPEN_URL",
+        },
+      },
     },
     // Priority ensures this message is picked over the one in
     // OnboardingMessageProvider
@@ -140,10 +157,10 @@ add_task(async function test_experiment_format_urls() {
       "http://foo.mozilla.com/" + locale,
       "should format the infoLinkUrl url"
     );
-    is(
-      content.document.querySelector(".promo button").getAttribute("href"),
-      "http://bar.mozilla.com/" + locale,
-      "should format the promoLinkUrl url"
+
+    ok(
+      content.document.querySelector(".promo button"),
+      "should render promo button"
     );
   });
 
@@ -192,7 +209,16 @@ add_task(async function test_experiment_click_promo_telemetry() {
     template: "pb_newtab",
     content: {
       promoEnabled: true,
-      promoLinkUrl: "http://example.com",
+      promoLinkType: "link",
+      promoButton: {
+        action: {
+          type: "OPEN_URL",
+          data: {
+            args: "https://example.com",
+            where: "tabshifted",
+          },
+        },
+      },
     },
     // Priority ensures this message is picked over the one in
     // OnboardingMessageProvider
@@ -205,6 +231,14 @@ add_task(async function test_experiment_click_promo_telemetry() {
   Services.telemetry.clearEvents();
 
   await SpecialPowers.spawn(tab, [], () => {
+    is(
+      content.document
+        .querySelector(".promo-cta button")
+        .classList.contains("promo-link"),
+      true,
+      "Should have a button styled as a link"
+    );
+
     const el = content.document.querySelector(".promo button");
     el.click();
   });
@@ -232,13 +266,21 @@ add_task(async function test_experiment_bottom_promo() {
       ...defaultMessageContent,
       promoEnabled: true,
       promoLinkType: "button",
-      promoLinkUrl: "http://bar.example.com/%LOCALE%",
       promoSectionStyle: "bottom",
       promoHeader: "Need more privacy?",
       infoTitleEnabled: true,
       promoTitleEnabled: false,
       promoImageLarge: "",
       promoImageSmall: "chrome://browser/content/assets/vpn-logo.svg",
+      promoButton: {
+        action: {
+          data: {
+            args: "http://bar.example.com/%LOCALE%",
+            where: "tabshifted",
+          },
+          type: "OPEN_URL",
+        },
+      },
     },
     // Priority ensures this message is picked over the one in
     // OnboardingMessageProvider
@@ -251,8 +293,8 @@ add_task(async function test_experiment_bottom_promo() {
   await SpecialPowers.spawn(tab, [], async function() {
     is(
       content.document
-        .querySelector(".promo-cta .button")
-        .classList.contains("button"),
+        .querySelector(".promo-cta button")
+        .classList.contains("primary"),
       true,
       "Should have a button CTA"
     );
@@ -266,15 +308,11 @@ add_task(async function test_experiment_bottom_promo() {
       "Should have .bottom for the promo section"
     );
     ok(
-      !content.document.querySelector("#private-browsing-vpn-text"),
-      "Should not render promo title if promoTitleEnabled is false"
-    );
-    ok(
       content.document.querySelector("#info-title"),
       "Should render info title if infoTitleEnabled is true"
     );
     ok(
-      !content.document.querySelector("#private-browsing-vpn-text"),
+      !content.document.querySelector("#private-browsing-promo-text"),
       "Should not render promo title if promoTitleEnabled is false"
     );
   });
@@ -294,7 +332,6 @@ add_task(async function test_experiment_below_search_promo() {
       ...defaultMessageContent,
       promoEnabled: true,
       promoLinkType: "button",
-      promoLinkUrl: "http://example.com",
       promoSectionStyle: "below-search",
       promoHeader: "Need more privacy?",
       promoTitle:
@@ -302,6 +339,15 @@ add_task(async function test_experiment_below_search_promo() {
       promoImageLarge: "chrome://browser/content/assets/moz-vpn.svg",
       promoImageSmall: "chrome://browser/content/assets/vpn-logo.svg",
       infoTitleEnabled: false,
+      promoButton: {
+        action: {
+          data: {
+            args: "https://foo.example.com",
+            where: "tabshifted",
+          },
+          type: "OPEN_URL",
+        },
+      },
     },
     // Priority ensures this message is picked over the one in
     // OnboardingMessageProvider
@@ -314,8 +360,8 @@ add_task(async function test_experiment_below_search_promo() {
   await SpecialPowers.spawn(tab, [], async function() {
     is(
       content.document
-        .querySelector(".promo-cta .button")
-        .classList.contains("button"),
+        .querySelector(".promo-cta button")
+        .classList.contains("primary"),
       true,
       "Should have a button CTA"
     );
@@ -338,7 +384,7 @@ add_task(async function test_experiment_below_search_promo() {
       "Should not render info title if infoTitleEnabled is false"
     );
     ok(
-      content.document.querySelector("#private-browsing-vpn-text"),
+      content.document.querySelector("#private-browsing-promo-text"),
       "Should render promo title if promoTitleEnabled is true"
     );
   });
@@ -358,7 +404,6 @@ add_task(async function test_experiment_top_promo() {
       ...defaultMessageContent,
       promoEnabled: true,
       promoLinkType: "button",
-      promoLinkUrl: "http://example.com",
       promoSectionStyle: "top",
       promoHeader: "Need more privacy?",
       promoTitle:
@@ -366,6 +411,15 @@ add_task(async function test_experiment_top_promo() {
       promoImageLarge: "chrome://browser/content/assets/moz-vpn.svg",
       promoImageSmall: "chrome://browser/content/assets/vpn-logo.svg",
       infoTitleEnabled: false,
+      promoButton: {
+        action: {
+          data: {
+            args: "https://foo.example.com",
+            where: "tabshifted",
+          },
+          type: "OPEN_URL",
+        },
+      },
     },
     // Priority ensures this message is picked over the one in
     // OnboardingMessageProvider
@@ -399,7 +453,7 @@ add_task(async function test_experiment_top_promo() {
       "Should not render info title if infoTitleEnabled is false"
     );
     ok(
-      content.document.querySelector("#private-browsing-vpn-text"),
+      content.document.querySelector("#private-browsing-promo-text"),
       "Should render promo title if promoTitleEnabled is true"
     );
   });

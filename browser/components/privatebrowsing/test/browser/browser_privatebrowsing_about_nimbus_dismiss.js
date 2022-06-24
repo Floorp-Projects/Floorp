@@ -16,7 +16,16 @@ add_task(async function test_experiment_messaging_system_dismiss() {
       infoBody: "fluent:about-private-browsing-info-title",
       promoLinkText: "fluent:about-private-browsing-prominent-cta",
       infoLinkUrl: "http://foo.example.com/%LOCALE%",
-      promoLinkUrl: "http://bar.example.com/%LOCALE%",
+      promoLinkType: "link",
+      promoButton: {
+        action: {
+          data: {
+            args: "http://bar.example.com/%LOCALE%",
+            where: "tabshifted",
+          },
+          type: "OPEN_URL",
+        },
+      },
     },
     // Priority ensures this message is picked over the one in
     // OnboardingMessageProvider
@@ -27,12 +36,6 @@ add_task(async function test_experiment_messaging_system_dismiss() {
   let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
 
   await SpecialPowers.spawn(tab1, [LOCALE], async function(locale) {
-    is(
-      content.document.querySelector(".promo button").getAttribute("href"),
-      "http://bar.example.com/" + locale,
-      "should format the promoLinkUrl url"
-    );
-
     content.document.querySelector("#dismiss-btn").click();
     info("button clicked");
   });
@@ -73,7 +76,16 @@ add_task(async function test_experiment_messaging_show_default_on_dismiss() {
       infoBody: "fluent:about-private-browsing-info-title",
       promoLinkText: "fluent:about-private-browsing-prominent-cta",
       infoLinkUrl: "http://foo.example.com",
-      promoLinkUrl: "http://bar.example.com",
+      promoLinkType: "link",
+      promoButton: {
+        action: {
+          data: {
+            args: "http://bar.example.com",
+            where: "tabshifted",
+          },
+          type: "OPEN_URL",
+        },
+      },
     },
     // Priority ensures this message is picked over the one in
     // OnboardingMessageProvider

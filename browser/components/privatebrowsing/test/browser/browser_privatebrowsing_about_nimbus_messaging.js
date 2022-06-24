@@ -17,7 +17,15 @@ add_task(async function test_experiment_messaging_system() {
       infoBody: "fluent:about-private-browsing-info-title",
       promoLinkText: "fluent:about-private-browsing-prominent-cta",
       infoLinkUrl: "http://foo.example.com/%LOCALE%",
-      promoLinkUrl: "http://bar.example.com/%LOCALE%",
+      promoButton: {
+        action: {
+          data: {
+            args: "http://bar.example.com/%LOCALE%",
+            where: "tabshifted",
+          },
+          type: "OPEN_URL",
+        },
+      },
     },
     // Priority ensures this message is picked over the one in
     // OnboardingMessageProvider
@@ -30,7 +38,7 @@ add_task(async function test_experiment_messaging_system() {
   await SpecialPowers.spawn(tab, [LOCALE], async function(locale) {
     const infoBody = content.document.getElementById("info-body");
     const promoLink = content.document.getElementById(
-      "private-browsing-vpn-link"
+      "private-browsing-promo-link"
     );
 
     // Check experiment values are rendered
@@ -53,11 +61,6 @@ add_task(async function test_experiment_messaging_system() {
       content.document.querySelector(".info a").getAttribute("target"),
       "_blank",
       "should open info url in new tab"
-    );
-    is(
-      content.document.querySelector(".promo button").getAttribute("target"),
-      "_blank",
-      "should open promo url in new tab"
     );
   });
 
@@ -119,6 +122,15 @@ add_task(async function test_experiment_promo_action() {
       content.document.querySelector(".promo"),
       "should render the promo experiment message"
     );
+
+    is(
+      content.document
+        .querySelector(".promo button")
+        .classList.contains("primary"),
+      true,
+      "should render the promo button styled as a button"
+    );
+
     content.document.querySelector(".promo button").click();
     info("promo button clicked");
   });
