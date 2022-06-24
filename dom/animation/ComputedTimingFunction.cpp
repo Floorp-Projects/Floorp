@@ -220,8 +220,7 @@ ComputedTimingFunction::ToStyleComputedTimingFunction(
         MOZ_RELEASE_ASSERT(reserved, "Failed to reserve memory");
         for (const auto& e : aFunction.entries.AsSpan()) {
           stops.infallibleAppend(StyleComputedLinearStop{
-              e.y, StyleOptional<StylePercentage>::Some(StylePercentage{e.x}),
-              StyleOptional<StylePercentage>::None()});
+              e.y, StyleOptional<StylePercentage>::Some(StylePercentage{e.x})});
         }
         return StyleComputedTimingFunction::LinearFunction(
             StyleOwnedSlice<StyleComputedLinearStop>{std::move(stops)});
