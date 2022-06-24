@@ -134,9 +134,8 @@ add_task(async function testTabOrder() {
     await focused;
     ok(true, "Printer picker focused after tab");
 
-    const lastButtonName = AppConstants.platform == "win" ? "cancel" : "print";
     const lastButton = helper.doc.querySelector(
-      `button[name=${lastButtonName}]`
+      `#button-container > button:last-child`
     );
     focused = BrowserTestUtils.waitForEvent(lastButton, "focus");
     lastButton.focus();
@@ -151,7 +150,7 @@ add_task(async function testTabOrder() {
     focused = BrowserTestUtils.waitForEvent(lastButton, "focus");
     EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
     await focused;
-    ok(true, "Cancel button focused after shift+tab");
+    ok(true, "Last button focused after shift+tab");
 
     await helper.withClosingFn(() => {
       EventUtils.synthesizeKey("VK_ESCAPE", {});
