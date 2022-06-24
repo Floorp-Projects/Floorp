@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 
 %{C++
-#define NS_POWERMANAGERSERVICE_CID { 0x18c2e238, 0x3a0a, 0x4153, {0x89, 0xfc, 0x16, 0x6b, 0x3b, 0x14, 0x65, 0xa1 } }
 #define POWERMANAGERSERVICE_CONTRACTID "@mozilla.org/power/powermanagerservice;1"
 %}
 
