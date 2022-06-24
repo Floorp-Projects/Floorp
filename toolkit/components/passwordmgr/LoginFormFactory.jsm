@@ -17,16 +17,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormLikeFactory",
-  "resource://gre/modules/FormLikeFactory.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return lazy.LoginHelper.createLogger("LoginFormFactory");

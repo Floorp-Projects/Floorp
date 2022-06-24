@@ -18,20 +18,11 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginStore",
-  "resource://gre/modules/LoginStore.jsm"
-);
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
   FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  LoginStore: "resource://gre/modules/LoginStore.jsm",
 });
 
 class LoginManagerStorage_json {
