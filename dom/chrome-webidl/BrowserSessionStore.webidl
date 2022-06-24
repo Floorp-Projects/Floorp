@@ -26,18 +26,6 @@ interface SessionStoreFormData {
   object toJSON();
 };
 
-[GenerateConversionToJS]
-dictionary SessionStoreDisplaySize {
-  unsigned long width;
-  unsigned long height;
-};
-
-[GenerateConversionToJS]
-dictionary SessionStoreZoomData {
-  double resolution;
-  SessionStoreDisplaySize displaySize;
-};
-
 [ChromeOnly, Exposed=Window]
 interface SessionStoreScrollData {
   [Cached, Pure]

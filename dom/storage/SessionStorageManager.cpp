@@ -918,7 +918,7 @@ void BackgroundSessionStorageManager::SetCurrentBrowsingContextId(
 }
 
 void BackgroundSessionStorageManager::MaybeScheduleSessionStoreUpdate() {
-  if (!StaticPrefs::browser_sessionstore_platform_collection_AtStartup()) {
+  if constexpr (!SessionStoreUtils::NATIVE_LISTENER) {
     return;
   }
 

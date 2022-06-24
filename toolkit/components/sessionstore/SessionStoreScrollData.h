@@ -7,24 +7,17 @@
 #ifndef mozilla_dom_SessionStoreScrollData_h
 #define mozilla_dom_SessionStoreScrollData_h
 
-#include "js/TypeDecls.h"
 #include "mozilla/WeakPtr.h"
 #include "nsPoint.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/WindowGlobalParent.h"
-#include "mozilla/dom/SessionStoreChangeListener.h"
 
 namespace mozilla::dom {
 
 class BrowsingContext;
 class WindowGlobalParent;
 class OwningByteStringOrObjectOrNull;
-struct SessionStoreZoomData;
-
-using SessionStoreZoom = mozilla::Tuple<float, uint32_t, uint32_t>;
-using MaybeSessionStoreZoom =
-    mozilla::Maybe<mozilla::Tuple<float, uint32_t, uint32_t>>;
 
 class SessionStoreScrollData final : public nsISupports,
                                      public nsWrapperCache,
@@ -60,7 +53,6 @@ class SessionStoreScrollData final : public nsISupports,
   ~SessionStoreScrollData() = default;
 
   nsPoint mScroll;
-  MaybeSessionStoreZoom mZoom;
   nsTArray<RefPtr<SessionStoreScrollData>> mChildren;
 };
 

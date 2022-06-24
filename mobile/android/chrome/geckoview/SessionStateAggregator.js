@@ -28,7 +28,6 @@ const DEFAULT_INTERVAL_MS = 1500;
 const TIMEOUT_DISABLED_PREF = "browser.sessionstore.debug.no_auto_updates";
 
 const PREF_INTERVAL = "browser.sessionstore.interval";
-const PREF_SESSION_COLLECTION = "browser.sessionstore.platform_collection";
 
 class Handler {
   constructor(store) {
@@ -425,10 +424,6 @@ class MessageQueue extends Handler {
       TIMEOUT_DISABLED_PREF,
       false
     );
-    this.sessionCollection = Services.prefs.getBoolPref(
-      PREF_SESSION_COLLECTION,
-      false
-    );
     this._timeoutWaitIdlePeriodMs = Services.prefs.getIntPref(
       PREF_INTERVAL,
       DEFAULT_INTERVAL_MS
@@ -604,16 +599,12 @@ class SessionStateAggregator extends GeckoViewChildModule {
     this.stateChangeNotifier = new StateChangeNotifier(this);
 
     this.handlers = [
+      new FormDataListener(this),
       new SessionHistoryListener(this),
+      new ScrollPositionListener(this),
       this.stateChangeNotifier,
       this.messageQueue,
     ];
-    if (!this.sessionCollection) {
-      this.handlers.push(
-        new FormDataListener(this),
-        new ScrollPositionListener(this)
-      );
-    }
 
     this.messageManager.addMessageListener("GeckoView:FlushSessionState", this);
   }
