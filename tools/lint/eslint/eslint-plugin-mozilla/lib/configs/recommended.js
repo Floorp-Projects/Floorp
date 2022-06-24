@@ -51,6 +51,7 @@ module.exports = {
       files: ["**/*.sys.mjs", "**/*.jsm", "**/*.jsm.js"],
       rules: {
         "mozilla/lazy-getter-object-name": "error",
+        "mozilla/reject-eager-module-in-lazy-getter": "error",
         "mozilla/reject-global-this": "error",
         "mozilla/reject-globalThis-modification": "error",
         "mozilla/reject-top-level-await": "error",
