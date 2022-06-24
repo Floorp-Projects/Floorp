@@ -1088,7 +1088,8 @@ already_AddRefed<AccAttributes> LocalAccessible::Attributes() {
   // 'xml-roles' attribute coming from ARIA.
   nsString xmlRoles;
   if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::role,
-                                     xmlRoles)) {
+                                     xmlRoles) &&
+      !xmlRoles.IsEmpty()) {
     attributes->SetAttribute(nsGkAtoms::xmlroles, std::move(xmlRoles));
   } else if (nsAtom* landmark = LandmarkRole()) {
     // 'xml-roles' attribute for landmark.
@@ -3589,15 +3590,30 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     if (mContent && mContent->IsElement()) {
       fields->SetAttribute(nsGkAtoms::tag, mContent->NodeInfo()->NameAtom());
 
+      dom::Element* el = mContent->AsElement();
       if (IsTextField() || IsDateTimeField()) {
         // Cache text input types. Accessible is recreated if this changes,
         // so it is considered immutable.
-        if (const nsAttrValue* attr =
-                mContent->AsElement()->GetParsedAttr(nsGkAtoms::type)) {
+        if (const nsAttrValue* attr = el->GetParsedAttr(nsGkAtoms::type)) {
           RefPtr<nsAtom> inputType = attr->GetAsAtom();
           if (inputType) {
             fields->SetAttribute(nsGkAtoms::textInputType, inputType);
           }
+        }
+      }
+
+      // Changing the role attribute currently re-creates the Accessible, so
+      // it's immutable in the cache.
+      if (const nsRoleMapEntry* roleMap = ARIARoleMap()) {
+        // Most of the time, the role attribute is a single, known role. We
+        // already send the map index, so we don't need to double up.
+        if (!el->AttrValueIs(kNameSpaceID_None, nsGkAtoms::role,
+                             roleMap->roleAtom, eIgnoreCase)) {
+          // Multiple roles or unknown roles are rare, so just send them as a
+          // string.
+          nsAutoString role;
+          el->GetAttr(kNameSpaceID_None, nsGkAtoms::role, role);
+          fields->SetAttribute(nsGkAtoms::role, std::move(role));
         }
       }
     }
