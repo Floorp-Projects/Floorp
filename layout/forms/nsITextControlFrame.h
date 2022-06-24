@@ -22,13 +22,13 @@ class nsITextControlFrame : public nsIFormControlFrame {
  public:
   NS_DECL_QUERYFRAME_TARGET(nsITextControlFrame)
 
-  enum SelectionDirection { eNone, eForward, eBackward };
+  enum class SelectionDirection : uint8_t { None, Forward, Backward };
 
   virtual already_AddRefed<mozilla::TextEditor> GetTextEditor() = 0;
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD
   SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd,
-                    SelectionDirection aDirection = eNone) = 0;
+                    SelectionDirection = SelectionDirection::None) = 0;
 
   NS_IMETHOD GetOwnedSelectionController(nsISelectionController** aSelCon) = 0;
   virtual nsFrameSelection* GetOwnedFrameSelection() = 0;
