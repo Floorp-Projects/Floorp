@@ -556,14 +556,16 @@ class PageAction {
     let panelTitle;
 
     headerLabel.value = await this.getStrings(content.heading_text);
-    headerLink.setAttribute(
-      "href",
-      SUMO_BASE_URL + content.info_icon.sumo_path
-    );
-    headerImage.setAttribute(
-      "tooltiptext",
-      await this.getStrings(content.info_icon.label, "tooltiptext")
-    );
+    if (content.info_icon) {
+      headerLink.setAttribute(
+        "href",
+        SUMO_BASE_URL + content.info_icon.sumo_path
+      );
+      headerImage.setAttribute(
+        "tooltiptext",
+        await this.getStrings(content.info_icon.label, "tooltiptext")
+      );
+    }
     headerLink.onclick = () =>
       this._sendTelemetry({
         message_id: id,

@@ -110,7 +110,7 @@ add_task(async function test_PanelTestProvider() {
 
 add_task(async function test_SpotlightAsCFR() {
   let message = await PanelTestProvider.getMessages().then(msgs =>
-    msgs.find(msg => msg.id === "TCP_SPOTLIGHT_MESSAGE_95")
+    msgs.find(msg => msg.id === "SPOTLIGHT_MESSAGE_93")
   );
 
   message = {

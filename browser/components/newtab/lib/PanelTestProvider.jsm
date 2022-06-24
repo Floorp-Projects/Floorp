@@ -260,56 +260,41 @@ const MESSAGES = () => [
     trigger: { id: "defaultBrowserCheck" },
   },
   {
-    id: "TCP_SPOTLIGHT_MESSAGE_95",
-    groups: ["panel-test-provider"],
-    template: "spotlight",
+    id: "TCP_CFR_MESSAGE_103",
+    groups: ["cfr"],
+    template: "cfr_doorhanger",
     content: {
-      template: "logo-and-content",
-      logo: {
-        imageURL: "chrome://branding/content/about-logo@2x.png",
-        size: "64px",
+      bucket_id: "TCP_CFR",
+      layout: "icon_and_message",
+      icon: "chrome://branding/content/about-logo@2x.png",
+      icon_class: "cfr-doorhanger-large-icon",
+      heading_text: {
+        string_id: "cfr-total-cookie-protection-header",
       },
-      body: {
-        title: {
-          label: {
-            string_id: "spotlight-total-cookie-protection-header",
-          },
-          size: "24px",
-        },
-        text: {
-          label: {
-            string_id: "spotlight-total-cookie-protection-body",
-          },
-          size: "18px",
-        },
+      text: {
+        string_id: "cfr-total-cookie-protection-body",
+      },
+      buttons: {
         primary: {
           label: {
-            string_id: "spotlight-total-cookie-protection-primary-button",
+            string_id: "cfr-doorhanger-milestone-close-button",
           },
           action: {
-            type: "ENABLE_TOTAL_COOKIE_PROTECTION",
+            type: "CANCEL",
           },
         },
-        secondary: {
-          label: {
-            string_id: "spotlight-total-cookie-protection-secondary-button",
-          },
-          action: {
-            type: "ENABLE_TOTAL_COOKIE_PROTECTION_SECTION_AND_OPT_OUT",
-          },
-        },
+        secondary: [],
       },
-      extra: {
-        expanded: {
-          label: {
-            string_id: "spotlight-total-cookie-protection-expanded",
-          },
-          size: "13px",
-        },
-      },
+      anchor_id: "tracking-protection-icon-container",
+      skip_address_bar_notifier: true,
     },
-    frequency: { lifetime: 3 },
-    trigger: { id: "defaultBrowserCheck" },
+    frequency: { lifetime: 1 },
+    trigger: {
+      id: "openURL",
+      patterns: ["*://*/*"],
+    },
+    targeting:
+      "firefoxVersion >= 103 && 'privacy.restrict3rdpartystorage.rollout.enabledByDefault'|preferenceValue",
   },
   {
     id: "BETTER_INTERNET_GLOBAL_ROLLOUT",
