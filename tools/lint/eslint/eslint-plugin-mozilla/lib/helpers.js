@@ -73,15 +73,17 @@ module.exports = {
    * @param  {Object} astOptions
    *         Extra configuration to pass to the espree parser, these will override
    *         the configuration from getPermissiveConfig().
+   * @param  {Object} configOptions
+   *         Extra options for getPermissiveConfig().
    *
    * @return {Object}
    *         Returns an object containing `ast`, `scopeManager` and
    *         `visitorKeys`
    */
-  parseCode(sourceText, astOptions = {}) {
+  parseCode(sourceText, astOptions = {}, configOptions = {}) {
     // Use a permissive config file to allow parsing of anything that Espree
     // can parse.
-    let config = { ...this.getPermissiveConfig(), ...astOptions };
+    let config = { ...this.getPermissiveConfig(configOptions), ...astOptions };
 
     let parseResult =
       "parseForESLint" in parser
@@ -440,10 +442,14 @@ module.exports = {
    * To allow espree to parse almost any JavaScript we need as many features as
    * possible turned on. This method returns that config.
    *
+   * @param {Object} options
+   *        {
+   *          useBabel: {boolean} whether to set babelOptions.
+   *        }
    * @return {Object}
    *         Espree compatible permissive config.
    */
-  getPermissiveConfig() {
+  getPermissiveConfig({ useBabel = true } = {}) {
     const config = {
       range: true,
       requireConfigFile: false,
@@ -464,7 +470,7 @@ module.exports = {
       sourceType: "script",
     };
 
-    if (this.isMozillaCentralBased()) {
+    if (useBabel && this.isMozillaCentralBased()) {
       config.babelOptions.configFile = path.join(
         gRootDir,
         ".babel-eslint.rc.js"
