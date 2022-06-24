@@ -12,15 +12,13 @@ use crate::values::generics::easing::{
 };
 use crate::values::generics::easing::{StepPosition, TimingKeyword};
 use crate::values::specified::{Integer, Number, Percentage};
-use cssparser::{Delimiter, Parser, Token};
+use cssparser::Parser;
 use selectors::parser::SelectorParseErrorKind;
 use std::iter::FromIterator;
 use style_traits::{ParseError, StyleParseErrorKind};
 
 /// A specified timing function.
 pub type TimingFunction = GenericTimingFunction<Integer, Number, Percentage>;
-
-type LinearStop = GenericLinearStop<Number, Percentage>;
 
 #[cfg(feature = "gecko")]
 fn linear_timing_function_enabled() -> bool {
@@ -117,35 +115,23 @@ impl TimingFunction {
         if input.is_exhausted() {
             return Ok(GenericTimingFunction::LinearFunction(crate::OwnedSlice::default()))
         }
-        let mut result = vec![];
-        loop {
-            input.parse_until_before(Delimiter::Comma, |i| {
-                let mut input_start = i.try_parse(|i| Percentage::parse(context, i)).ok();
-                let mut input_end = i.try_parse(|i| Percentage::parse(context, i)).ok();
+        let entries = input.parse_comma_separated(|i| {
+            let mut input_start = i.try_parse(|i| Percentage::parse(context, i)).ok();
+            let mut input_end = i.try_parse(|i| Percentage::parse(context, i)).ok();
 
-                let output = Number::parse(context, i)?;
-                if input_start.is_none() {
-                    debug_assert!(input_end.is_none(), "Input end parsed without input start?");
-                    input_start = i.try_parse(|i| Percentage::parse(context, i)).ok();
-                    input_end = i.try_parse(|i| Percentage::parse(context, i)).ok();
-                }
-                result.push(LinearStop { output, input: input_start.into() });
-                if input_end.is_some() {
-                    debug_assert!(input_start.is_some(), "Input end valid but not input start?");
-                    result.push(LinearStop { output, input: input_end.into() });
-                }
-
-                Ok(())
-            })?;
-
-            match input.next() {
-                Err(_) => break,
-                Ok(&Token::Comma) => continue,
-                Ok(_) => unreachable!(),
+            let output = Number::parse(context, i)?;
+            if input_start.is_none() {
+                debug_assert!(input_end.is_none(), "Input end parsed without input start?");
+                input_start = i.try_parse(|i| Percentage::parse(context, i)).ok();
+                input_end = i.try_parse(|i| Percentage::parse(context, i)).ok();
             }
-        }
-
-        Ok(GenericTimingFunction::LinearFunction(crate::OwnedSlice::from(result)))
+            Ok(GenericLinearStop {
+                output,
+                input_start: input_start.into(),
+                input_end: input_end.into()
+            })
+        })?;
+        Ok(GenericTimingFunction::LinearFunction(crate::OwnedSlice::from(entries)))
     }
 }
 
@@ -171,8 +157,13 @@ impl TimingFunction {
             GenericTimingFunction::LinearFunction(steps) => {
                 let iter = steps.iter().map(|e| ComputedLinearStop {
                     output: e.output.get(),
-                    input: e
-                        .input
+                    input_start: e
+                        .input_start
+                        .into_rust()
+                        .map(|x| ComputedPercentage(x.get()))
+                        .into(),
+                    input_end: e
+                        .input_end
                         .into_rust()
                         .map(|x| ComputedPercentage(x.get()))
                         .into(),
