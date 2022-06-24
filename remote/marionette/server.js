@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
   Message: "chrome://remote/content/marionette/message.js",
   Response: "chrome://remote/content/marionette/message.js",
-  WebElement: "chrome://remote/content/marionette/element.js",
+  WebReference: "chrome://remote/content/marionette/element.js",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
@@ -304,7 +304,7 @@ class TCPConnection {
     let rv = await fn.bind(this.driver)(cmd);
 
     if (rv != null) {
-      if (rv instanceof lazy.WebElement || typeof rv != "object") {
+      if (rv instanceof lazy.WebReference || typeof rv != "object") {
         resp.body = { value: rv };
       } else {
         resp.body = rv;

@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   element: "chrome://remote/content/marionette/element.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
-  WebElement: "chrome://remote/content/marionette/element.js",
+  WebReference: "chrome://remote/content/marionette/element.js",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
@@ -216,9 +216,9 @@ evaluate.sandbox = function(
  *     Arbitrary object containing web elements or ElementIdentifiers.
  * @param {element.ReferenceStore=} seenEls
  *     Known element store to look up web elements from. If `seenEls` is an
- *     instance of `element.ReferenceStore`, return WebElement. If `seenEls` is
+ *     instance of `element.ReferenceStore`, return WebReference. If `seenEls` is
  *     `undefined` the Element from the ContentDOMReference cache is returned
- *     when executed in the child process, in the parent process the WebElement
+ *     when executed in the child process, in the parent process the WebReference
  *     is passed-through.
  * @param {WindowProxy=} win
  *     Current browsing context, if `seenEls` is provided.
@@ -253,7 +253,7 @@ evaluate.fromJSON = function(options = {}) {
         return obj.map(e => evaluate.fromJSON({ obj: e, seenEls, win }));
 
         // ElementIdentifier and ReferenceStore (used by JSWindowActor)
-      } else if (lazy.WebElement.isReference(obj.webElRef)) {
+      } else if (lazy.WebReference.isReference(obj.webElRef)) {
         if (seenEls instanceof lazy.element.ReferenceStore) {
           // Parent: Store web element reference in the cache
           return seenEls.add(obj);
@@ -288,7 +288,7 @@ evaluate.fromJSON = function(options = {}) {
  *   ContentDOMReference registry. Once known, the elements'
  *   associated web element representation is returned.
  *
- * - WebElements are transformed to the corresponding ElementIdentifier
+ * - WebReferences are transformed to the corresponding ElementIdentifier
  *   for use in the content process, if an `element.ReferenceStore` is provided.
  *
  * - Objects with custom JSON representations, i.e. if they have
@@ -335,13 +335,13 @@ evaluate.toJSON = function(obj, seenEls) {
     evaluate.assertAcyclic(obj);
     return [...obj].map(el => evaluate.toJSON(el, seenEls));
 
-    // WebElement
-  } else if (lazy.WebElement.isReference(obj)) {
+    // WebReference
+  } else if (lazy.WebReference.isReference(obj)) {
     // Parent: Convert to ElementIdentifier for use in child actor
-    return seenEls.get(lazy.WebElement.fromJSON(obj));
+    return seenEls.get(lazy.WebReference.fromJSON(obj));
 
     // ElementIdentifier
-  } else if (lazy.WebElement.isReference(obj.webElRef)) {
+  } else if (lazy.WebReference.isReference(obj.webElRef)) {
     // Parent: Pass-through ElementIdentifiers to the child
     return obj;
 

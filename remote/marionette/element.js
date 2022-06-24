@@ -11,7 +11,7 @@ const EXPORTED_SYMBOLS = [
   "ContentWebFrame",
   "ContentWebWindow",
   "element",
-  "WebElement",
+  "WebReference",
 ];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -88,7 +88,7 @@ element.Strategy = {
  * Stores known/seen web element references and their associated
  * ContentDOMReference ElementIdentifiers.
  *
- * The ContentDOMReference ElementIdentifier is augmented with a WebElement
+ * The ContentDOMReference ElementIdentifier is augmented with a WebReference
  * reference, so in Marionette's IPC it looks like the following example:
  *
  * { browsingContextId: 9,
@@ -133,7 +133,7 @@ element.ReferenceStore = class {
    * @param {Array.<ElementIdentifer>} elIds
    *     Sequence of ids to add to set of seen elements.
    *
-   * @return {Array.<WebElement>}
+   * @return {Array.<WebReference>}
    *     List of the web element references associated with each element
    *     from <var>els</var>.
    */
@@ -147,7 +147,7 @@ element.ReferenceStore = class {
    * @param {ElementIdentifier} elId
    *    {id, browsingContextId} to add to set of seen elements.
    *
-   * @return {WebElement}
+   * @return {WebReference}
    *     Web element reference associated with element.
    *
    */
@@ -158,9 +158,9 @@ element.ReferenceStore = class {
       );
     }
     if (this.domRefs.has(elId.id)) {
-      return WebElement.fromJSON(this.domRefs.get(elId.id));
+      return WebReference.fromJSON(this.domRefs.get(elId.id));
     }
-    const webEl = WebElement.fromJSON(elId.webElRef);
+    const webEl = WebReference.fromJSON(elId.webElRef);
     this.refs.set(webEl.uuid, elId);
     this.domRefs.set(elId.id, elId.webElRef);
     return webEl;
@@ -172,17 +172,17 @@ element.ReferenceStore = class {
    * Unlike when getting the element, a staleness check is not
    * performed.
    *
-   * @param {WebElement} webEl
+   * @param {WebReference} webEl
    *     Element's associated web element reference.
    *
    * @return {boolean}
    *     True if element is in the store, false otherwise.
    *
    * @throws {TypeError}
-   *     If <var>webEl</var> is not a {@link WebElement}.
+   *     If <var>webEl</var> is not a {@link WebReference}.
    */
   has(webEl) {
-    if (!(webEl instanceof WebElement)) {
+    if (!(webEl instanceof WebReference)) {
       throw new TypeError(lazy.pprint`Expected web element, got: ${webEl}`);
     }
     return this.refs.has(webEl.uuid);
@@ -190,22 +190,22 @@ element.ReferenceStore = class {
 
   /**
    * Retrieve a DOM {@link Element} or a {@link XULElement} by its
-   * unique {@link WebElement} reference.
+   * unique {@link WebReference} reference.
    *
-   * @param {WebElement} webEl
+   * @param {WebReference} webEl
    *     Web element reference to find the associated {@link Element}
    *     of.
    * @returns {ElementIdentifier}
    *     ContentDOMReference identifier
    *
    * @throws {TypeError}
-   *     If <var>webEl</var> is not a {@link WebElement}.
+   *     If <var>webEl</var> is not a {@link WebReference}.
    * @throws {NoSuchElementError}
    *     If the web element reference <var>uuid</var> has not been
    *     seen before.
    */
   get(webEl) {
-    if (!(webEl instanceof WebElement)) {
+    if (!(webEl instanceof WebReference)) {
       throw new TypeError(lazy.pprint`Expected web element, got: ${webEl}`);
     }
     const elId = this.refs.get(webEl.uuid);
@@ -625,7 +625,7 @@ element.findClosest = function(startNode, selector) {
  *     The DOM element to generate the identifier for.
  *
  * @return {object} The ContentDOMReference ElementIdentifier for the DOM
- *     element augmented with a Marionette WebElement reference, and some
+ *     element augmented with a Marionette WebReference reference, and some
  *     additional properties.
  *
  * @throws {StaleElementReferenceError}
@@ -643,7 +643,7 @@ element.getElementId = function(el) {
     );
   }
 
-  const webEl = WebElement.from(el);
+  const webEl = WebReference.from(el);
 
   const id = lazy.ContentDOMReference.get(el);
   const browsingContext = BrowsingContext.get(id.browsingContextId);
@@ -1454,13 +1454,13 @@ element.isBooleanAttribute = function(el, attr) {
 };
 
 /**
- * A web element is an abstraction used to identify an element when
+ * A web reference is an abstraction used to identify an element when
  * it is transported via the protocol, between remote- and local ends.
  *
  * In Marionette this abstraction can represent DOM elements,
  * WindowProxies, and XUL elements.
  */
-class WebElement {
+class WebReference {
   /**
    * @param {string} uuid
    *     Identifier that must be unique across all browsing contexts
@@ -1474,7 +1474,7 @@ class WebElement {
    * Performs an equality check between this web element and
    * <var>other</var>.
    *
-   * @param {WebElement} other
+   * @param {WebReference} other
    *     Web element to compare with this.
    *
    * @return {boolean}
@@ -1482,7 +1482,7 @@ class WebElement {
    *     otherwise.
    */
   is(other) {
-    return other instanceof WebElement && this.uuid === other.uuid;
+    return other instanceof WebReference && this.uuid === other.uuid;
   }
 
   toString() {
@@ -1490,7 +1490,7 @@ class WebElement {
   }
 
   /**
-   * Returns a new {@link WebElement} reference for a DOM element,
+   * Returns a new {@link WebReference} reference for a DOM element,
    * <code>WindowProxy</code>, ShadowRoot, or XUL element.
    *
    * @param {(Element|ShadowRoot|WindowProxy|XULElement)} node
@@ -1504,7 +1504,7 @@ class WebElement {
    *     DOM element, or a XUL element.
    */
   static from(node) {
-    const uuid = WebElement.generateUUID();
+    const uuid = WebReference.generateUUID();
 
     if (element.isShadowRoot(node) && !element.isInPrivilegedDocument(node)) {
       // When we support Chrome Shadowroots we will need to
@@ -1536,10 +1536,10 @@ class WebElement {
    *
    * @param {Object.<string, string>} json
    *     Web element reference, which is supposed to be a JSON Object
-   *     where the key is one of the {@link WebElement} concrete
+   *     where the key is one of the {@link WebReference} concrete
    *     classes' UUID identifiers.
    *
-   * @return {WebElement}
+   * @return {WebReference}
    *     Representation of the web element.
    *
    * @throws {InvalidArgumentError}
@@ -1547,7 +1547,7 @@ class WebElement {
    */
   static fromJSON(json) {
     lazy.assert.object(json);
-    if (json instanceof WebElement) {
+    if (json instanceof WebReference) {
       return json;
     }
     let keys = Object.keys(json);
@@ -1584,7 +1584,7 @@ class WebElement {
    * to Marionette occasionally pass <code>{id: <uuid>}</code> JSON
    * Objects instead of web element representations.  For that reason
    * we need the <var>context</var> argument to determine what kind of
-   * {@link WebElement} to return.
+   * {@link WebReference} to return.
    *
    * @param {string} uuid
    *     UUID to be associated with the web element.
@@ -1592,7 +1592,7 @@ class WebElement {
    *     Context, which is used to determine if the returned type
    *     should be a content web element or a chrome web element.
    *
-   * @return {WebElement}
+   * @return {WebReference}
    *     One of {@link ContentWebElement} or {@link ChromeWebElement},
    *     based on <var>context</var>.
    *
@@ -1618,14 +1618,14 @@ class WebElement {
   }
 
   /**
-   * Checks if <var>ref<var> is a {@link WebElement} reference,
+   * Checks if <var>ref<var> is a {@link WebReference} reference,
    * i.e. if it has {@link ContentWebElement.Identifier}, or
    * {@link ChromeWebElement.Identifier} as properties.
    *
    * @param {Object.<string, string>} obj
-   *     Object that represents a reference to a {@link WebElement}.
+   *     Object that represents a reference to a {@link WebReference}.
    * @return {boolean}
-   *     True if <var>obj</var> is a {@link WebElement}, false otherwise.
+   *     True if <var>obj</var> is a {@link WebReference}, false otherwise.
    */
   static isReference(obj) {
     if (Object.prototype.toString.call(obj) != "[object Object]") {
@@ -1660,7 +1660,7 @@ class WebElement {
  * DOM elements are represented as web elements when they are
  * transported over the wire protocol.
  */
-class ContentWebElement extends WebElement {
+class ContentWebElement extends WebReference {
   toJSON() {
     return { [ContentWebElement.Identifier]: this.uuid };
   }
@@ -1684,7 +1684,7 @@ ContentWebElement.Identifier = "element-6066-11e4-a52e-4f735466cecf";
  * Shadow Root elements are represented as web elements when they are
  * transported over the wire protocol
  */
-class ContentShadowRoot extends WebElement {
+class ContentShadowRoot extends WebReference {
   toJSON() {
     return { [ContentShadowRoot.Identifier]: this.uuid };
   }
@@ -1709,7 +1709,7 @@ ContentShadowRoot.Identifier = "shadow-6066-11e4-a52e-4f735466cecf";
  * whose <code>opener</code> is null, are represented as web windows
  * over the wire protocol.
  */
-class ContentWebWindow extends WebElement {
+class ContentWebWindow extends WebReference {
   toJSON() {
     return { [ContentWebWindow.Identifier]: this.uuid };
   }
@@ -1731,7 +1731,7 @@ ContentWebWindow.Identifier = "window-fcc6-11e5-b4f8-330a88ab9d7f";
  * associated with <tt>&lt;frame&gt;</tt> and <tt>&lt;iframe&gt;</tt>,
  * are represented as web frames over the wire protocol.
  */
-class ContentWebFrame extends WebElement {
+class ContentWebFrame extends WebReference {
   toJSON() {
     return { [ContentWebFrame.Identifier]: this.uuid };
   }
@@ -1752,7 +1752,7 @@ ContentWebFrame.Identifier = "frame-075b-4da1-b6ba-e579c2d3230a";
  * XUL elements in chrome space are represented as chrome web elements
  * over the wire protocol.
  */
-class ChromeWebElement extends WebElement {
+class ChromeWebElement extends WebReference {
   toJSON() {
     return { [ChromeWebElement.Identifier]: this.uuid };
   }

@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   evaluate: "chrome://remote/content/marionette/evaluate.js",
   event: "chrome://remote/content/marionette/event.js",
   Log: "chrome://remote/content/shared/Log.jsm",
-  WebElement: "chrome://remote/content/marionette/element.js",
+  WebReference: "chrome://remote/content/marionette/element.js",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
@@ -314,7 +314,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
       break;
 
     case "click":
-      webEl = lazy.WebElement.fromUUID(pack[1], "content");
+      webEl = lazy.WebReference.fromUUID(pack[1], "content");
       el = this.seenEls.get(webEl);
       let button = pack[2];
       let clickCount = pack[3];
@@ -362,7 +362,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
       if (i != chain.length && chain[i][0].includes("move")) {
         this.scrolling = true;
       }
-      webEl = lazy.WebElement.fromUUID(pack[1], "content");
+      webEl = lazy.WebReference.fromUUID(pack[1], "content");
       el = this.seenEls.get(webEl);
       c = lazy.element.coordinates(el, pack[2], pack[3]);
       touchId = this.generateEvents("press", c.x, c.y, null, el, keyModifiers);
@@ -383,7 +383,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
       break;
 
     case "move":
-      webEl = lazy.WebElement.fromUUID(pack[1], "content");
+      webEl = lazy.WebReference.fromUUID(pack[1], "content");
       el = this.seenEls.get(webEl);
       c = lazy.element.coordinates(el);
       this.generateEvents("move", c.x, c.y, touchId, null, keyModifiers);
