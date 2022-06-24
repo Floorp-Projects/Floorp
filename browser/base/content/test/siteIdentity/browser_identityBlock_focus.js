@@ -111,7 +111,7 @@ add_task(async function testInvalidPageProxyState() {
       { shiftKey: true }
     );
     await synthesizeKeyAndWaitForFocus(
-      gBrowser.getTabForBrowser(browser),
+      document.getElementById("tabs-newtab-button"),
       "VK_TAB",
       { shiftKey: true }
     );
