@@ -2093,15 +2093,6 @@ RefPtr<MozPromise<bool, bool, false>> nsWindow::OnLoadRequest(
              : nullptr;
 }
 
-void nsWindow::OnUpdateSessionStore(mozilla::jni::Object::Param aBundle) {
-  auto geckoViewSupport(mGeckoViewSupport.Access());
-  if (!geckoViewSupport) {
-    return;
-  }
-
-  geckoViewSupport->OnUpdateSessionStore(aBundle);
-}
-
 float nsWindow::GetDPI() {
   float dpi = 160.0f;
 
@@ -2437,16 +2428,6 @@ void nsWindow::ShowDynamicToolbar() {
   }
 
   acc->OnShowDynamicToolbar();
-}
-
-void GeckoViewSupport::OnUpdateSessionStore(
-    mozilla::jni::Object::Param aBundle) {
-  GeckoSession::Window::LocalRef window(mGeckoViewWindow);
-  if (!window) {
-    return;
-  }
-
-  window->OnUpdateSessionStore(aBundle);
 }
 
 void nsWindow::OnSizeChanged(const gfx::IntSize& aSize) {
