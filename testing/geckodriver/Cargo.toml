@@ -29,7 +29,7 @@ serde_yaml = "0.8"
 tempfile = "3"
 url = "2.0"
 uuid = { version = "0.8", features = ["v4"] }
-webdriver = { path = "../webdriver", version="0.45.0" }
+webdriver = { path = "../webdriver", version="0.46.0" }
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
