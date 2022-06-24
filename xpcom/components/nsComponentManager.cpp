@@ -271,7 +271,6 @@ nsComponentManagerImpl::nsComponentManagerImpl()
       mLock("nsComponentManagerImpl.mLock"),
       mStatus(NOT_INITIALIZED) {}
 
-extern const mozilla::Module kPowerManagerModule;
 extern const mozilla::Module kContentProcessWidgetModule;
 #if defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
 extern const mozilla::Module kWidgetModule;
@@ -360,7 +359,6 @@ nsresult nsComponentManagerImpl::Init() {
 
   nsCategoryManager::GetSingleton()->SuppressNotifications(true);
 
-  RegisterModule(&kPowerManagerModule);
   RegisterModule(&kContentProcessWidgetModule);
 #if defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
   RegisterModule(&kWidgetModule);
