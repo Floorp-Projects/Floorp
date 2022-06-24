@@ -12467,7 +12467,7 @@
 - name: security.tls.ech.grease_probability
   type: RelaxedAtomicUint32
 #ifdef IS_NIGHTLY_BUILD
-  value: 10
+  value: 50
 #else
   value: 0
 #endif
