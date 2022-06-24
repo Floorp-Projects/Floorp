@@ -526,6 +526,28 @@ module.exports = {
   },
 
   /**
+   * Check whether `this` expression points the global this.
+   *
+   * @param {Array} ancestors
+   *        The parents of the current node.
+   *
+   * @return {Boolean}
+   *         True or false
+   */
+  getIsGlobalThis(ancestors) {
+    for (let parent of ancestors) {
+      switch (parent.type) {
+        case "FunctionDeclaration":
+        case "FunctionExpression":
+        case "PropertyDefinition":
+        case "StaticBlock":
+          return false;
+      }
+    }
+    return true;
+  },
+
+  /**
    * Check whether we might be in a test head file.
    *
    * @param  {RuleContext} scope
