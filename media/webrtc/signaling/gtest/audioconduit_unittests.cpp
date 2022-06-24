@@ -10,7 +10,6 @@
 #include "AudioConduit.h"
 #include "ConcreteConduitControl.h"
 #include "WaitFor.h"
-#include "WebrtcCallWrapper.h"
 
 #include "MockCall.h"
 

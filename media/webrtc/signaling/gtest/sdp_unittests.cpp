@@ -4,19 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "timecard.h"
-
 #include <string>
-#include <sstream>
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 
-#include "nspr.h"
 #include "nss.h"
 #include "ssl.h"
 
-#include "nsThreadUtils.h"
 
 #include "sdp/RsdparsaSdpParser.h"
 #include "sdp/SipccSdpParser.h"
