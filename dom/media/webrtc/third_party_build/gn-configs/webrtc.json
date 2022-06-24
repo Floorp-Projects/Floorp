@@ -65,6 +65,7 @@
     "third_party/libwebrtc/modules/video_coding/codecs/vp8/screenshare_layers.cc",
     "third_party/libwebrtc/modules/video_coding/svc/scalability_structure_key_svc.cc",
     "third_party/libwebrtc/modules/video_coding/svc/scalability_structure_s2t1.cc",
+    "third_party/libwebrtc/rtc_base/win/hstring.cc",
     "third_party/libwebrtc/third_party/abseil-cpp/absl/strings/numbers.cc",
     "third_party/libwebrtc/third_party/abseil-cpp/absl/synchronization/blocking_counter.cc",
     "third_party/libwebrtc/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_posix.cc",
