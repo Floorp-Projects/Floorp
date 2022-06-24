@@ -331,6 +331,9 @@ impl TryFrom<Builder> for Tree {
         let mut parents = Vec::with_capacity(builder.entries.len());
         let mut reparented_child_indices_by_parent: HashMap<Index, Vec<Index>> = HashMap::new();
         for (entry_index, entry) in builder.entries.iter().enumerate() {
+            if entry.item.validity == Validity::Replace {
+                problems.note(&entry.item.guid, Problem::InvalidItem);
+            }
             let r = ResolveParent::new(&builder, entry, &mut problems);
             let resolved_parent = r.resolve();
             if let ResolvedParent::ByParentGuid(parent_index) = resolved_parent {
@@ -485,7 +488,7 @@ impl<'b> ItemBuilder<'b> {
     /// items with similar contents and different GUIDs.
     #[inline]
     pub fn content<'c>(&'c mut self, content: Content) -> &'c mut ItemBuilder<'b> {
-        mem::replace(&mut self.0.entries[self.1].content, Some(content));
+        self.0.entries[self.1].content = Some(content);
         self
     }
 
@@ -523,14 +526,35 @@ impl<'b> ParentBuilder<'b> {
     pub fn by_children(self, parent_guid: &Guid) -> Result<&'b mut Builder> {
         let parent_index = match self.0.entry_index_by_guid.get(parent_guid) {
             Some(&parent_index) if self.0.entries[parent_index].item.is_folder() => parent_index,
-            _ => {
-                let child_guid = match &self.1 {
-                    BuilderEntryChild::Exists(index) => &self.0.entries[*index].item.guid,
-                    BuilderEntryChild::Missing(guid) => guid,
+            Some(&parent_index) => {
+                let parent = &self.0.entries[parent_index].item;
+
+                let child = match &self.1 {
+                    BuilderEntryChild::Exists(index) => &self.0.entries[*index].item,
+                    BuilderEntryChild::Missing(child_guid) => {
+                        return Err(ErrorKind::InvalidParentForUnknownChild(
+                            child_guid.clone(),
+                            parent.clone(),
+                        )
+                        .into())
+                    }
                 };
-                return Err(
-                    ErrorKind::InvalidParent(child_guid.clone(), parent_guid.clone()).into(),
-                );
+
+                return Err(ErrorKind::InvalidParent(child.clone(), parent.clone()).into());
+            }
+            _ => {
+                let child = match &self.1 {
+                    BuilderEntryChild::Exists(index) => &self.0.entries[*index].item,
+                    BuilderEntryChild::Missing(child_guid) => {
+                        return Err(ErrorKind::MissingParentForUnknownChild(
+                            child_guid.clone(),
+                            parent_guid.clone(),
+                        )
+                        .into())
+                    }
+                };
+
+                return Err(ErrorKind::MissingParent(child.clone(), parent_guid.clone()).into());
             }
         };
         if let BuilderEntryChild::Exists(child_index) = &self.1 {
@@ -588,14 +612,35 @@ impl<'b> ParentBuilder<'b> {
     pub fn by_structure(self, parent_guid: &Guid) -> Result<&'b mut Builder> {
         let parent_index = match self.0.entry_index_by_guid.get(parent_guid) {
             Some(&parent_index) if self.0.entries[parent_index].item.is_folder() => parent_index,
-            _ => {
-                let child_guid = match &self.1 {
-                    BuilderEntryChild::Exists(index) => &self.0.entries[*index].item.guid,
-                    BuilderEntryChild::Missing(guid) => guid,
+            Some(&parent_index) => {
+                let parent = &self.0.entries[parent_index].item;
+
+                let child = match &self.1 {
+                    BuilderEntryChild::Exists(index) => &self.0.entries[*index].item,
+                    BuilderEntryChild::Missing(child_guid) => {
+                        return Err(ErrorKind::InvalidParentForUnknownChild(
+                            child_guid.clone(),
+                            parent.clone(),
+                        )
+                        .into())
+                    }
                 };
-                return Err(
-                    ErrorKind::InvalidParent(child_guid.clone(), parent_guid.clone()).into(),
-                );
+
+                return Err(ErrorKind::InvalidParent(child.clone(), parent.clone()).into());
+            }
+            _ => {
+                let child = match &self.1 {
+                    BuilderEntryChild::Exists(index) => &self.0.entries[*index].item,
+                    BuilderEntryChild::Missing(child_guid) => {
+                        return Err(ErrorKind::MissingParentForUnknownChild(
+                            child_guid.clone(),
+                            parent_guid.clone(),
+                        )
+                        .into())
+                    }
+                };
+
+                return Err(ErrorKind::MissingParent(child.clone(), parent_guid.clone()).into());
             }
         };
         if let BuilderEntryChild::Exists(child_index) = &self.1 {
@@ -655,7 +700,7 @@ impl BuilderEntry {
         let old_parent = mem::replace(&mut self.parent, BuilderEntryParent::None);
         let new_parent = match old_parent {
             BuilderEntryParent::Root => {
-                mem::replace(&mut self.parent, BuilderEntryParent::Root);
+                self.parent = BuilderEntryParent::Root;
                 return Err(ErrorKind::DuplicateItem(self.item.guid.clone()).into());
             }
             BuilderEntryParent::None => match new_parents {
@@ -683,7 +728,7 @@ impl BuilderEntry {
                 BuilderEntryParent::Partial(parents)
             }
         };
-        mem::replace(&mut self.parent, new_parent);
+        self.parent = new_parent;
         Ok(())
     }
 }
@@ -1125,10 +1170,17 @@ pub enum Problem {
     DivergedParents(Vec<DivergedParent>),
 
     /// The item is mentioned in a folder's `children`, but doesn't exist.
-    MissingChild { child_guid: Guid },
+    MissingChild {
+        child_guid: Guid,
+    },
 
     /// The item is mentioned in a folder's `children`, but is deleted.
-    DeletedChild { child_guid: Guid },
+    DeletedChild {
+        child_guid: Guid,
+    },
+
+    // This item is invalid e.g the URL is malformed
+    InvalidItem,
 }
 
 impl Problem {
@@ -1167,6 +1219,12 @@ impl Problem {
                 },
             ),
             Problem::DivergedParents(parents) => (parents, ProblemCounts::default()),
+            Problem::InvalidItem => {
+                return ProblemCounts {
+                    invalid_items: 1,
+                    ..ProblemCounts::default()
+                }
+            }
         };
         let deltas = match parents.as_slice() {
             // For items with different parents `by_parent_guid` and
@@ -1359,6 +1417,7 @@ impl<'a> fmt::Display for ProblemSummary<'a> {
             Problem::DeletedChild { child_guid } => {
                 return write!(f, "{} has deleted child {}", self.guid(), child_guid);
             }
+            Problem::InvalidItem => return write!(f, "{} is invalid", self.guid()),
         };
         match parents.as_slice() {
             [a] => write!(f, "{}", a)?,
@@ -1404,6 +1463,8 @@ pub struct ProblemCounts {
     pub deleted_children: usize,
     /// Number of nonexistent items mentioned in all parents' `children`.
     pub missing_children: usize,
+    // Number of items with malformed URLs
+    pub invalid_items: usize,
 }
 
 impl ProblemCounts {
@@ -1421,6 +1482,7 @@ impl ProblemCounts {
                 + other.parent_child_disagreements,
             deleted_children: self.deleted_children + other.deleted_children,
             missing_children: self.missing_children + other.missing_children,
+            invalid_items: self.invalid_items + other.invalid_items,
         }
     }
 }
@@ -1606,7 +1668,7 @@ impl<'t> fmt::Display for Node<'t> {
 }
 
 /// An item in a local or remote bookmark tree.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Item {
     pub guid: Guid,
     pub kind: Kind,
