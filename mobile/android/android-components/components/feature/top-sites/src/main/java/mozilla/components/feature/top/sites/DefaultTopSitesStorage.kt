@@ -8,7 +8,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
-import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.feature.top.sites.ext.hasUrl
 import mozilla.components.feature.top.sites.ext.toTopSite
 import mozilla.components.feature.top.sites.facts.emitTopSitesCountFact
@@ -86,7 +85,7 @@ class DefaultTopSitesStorage(
     @Suppress("ComplexCondition", "TooGenericExceptionCaught")
     override suspend fun getTopSites(
         totalSites: Int,
-        frecencyConfig: FrecencyThresholdOption?,
+        frecencyConfig: TopSitesFrecencyConfig?,
         providerConfig: TopSitesProviderConfig?
     ): List<TopSite> {
         val topSites = ArrayList<TopSite>()
@@ -114,13 +113,17 @@ class DefaultTopSitesStorage(
 
         topSites.addAll(pinnedSites)
 
-        if (frecencyConfig != null && numSitesRequired > 0) {
+        if (frecencyConfig?.frecencyTresholdOption != null && numSitesRequired > 0) {
             // Get 'totalSites' sites for duplicate entries with
             // existing pinned sites
             val frecentSites = historyStorage
-                .getTopFrecentSites(totalSites, frecencyConfig)
+                .getTopFrecentSites(totalSites, frecencyConfig.frecencyTresholdOption)
                 .map { it.toTopSite() }
-                .filter { !pinnedSites.hasUrl(it.url) && !providerTopSites.hasUrl(it.url) }
+                .filter {
+                    !pinnedSites.hasUrl(it.url) &&
+                        !providerTopSites.hasUrl(it.url) &&
+                        frecencyConfig.frecencyFilter?.invoke(it) ?: true
+                }
                 .take(numSitesRequired)
 
             topSites.addAll(frecentSites)

@@ -11,15 +11,14 @@ import mozilla.components.concept.storage.FrecencyThresholdOption
  * whether or not to include top frecent sites in the top sites feature.
  *
  * @property totalSites A total number of sites that will be displayed.
- * @property frecencyConfig If [frecencyConfig] is specified, only visited sites with a frecency
- * score above the given threshold will be returned. Otherwise, frecent top site results are
- * not included.
+ * @property frecencyConfig An instance of [TopSitesFrecencyConfig] that specifies which top
+ * frecent sites should be included.
  * @property providerConfig An instance of [TopSitesProviderConfig] that specifies whether or
  * not to fetch top sites from the [TopSitesProvider].
  */
 data class TopSitesConfig(
     val totalSites: Int,
-    val frecencyConfig: FrecencyThresholdOption? = null,
+    val frecencyConfig: TopSitesFrecencyConfig? = null,
     val providerConfig: TopSitesProviderConfig? = null
 )
 
@@ -35,4 +34,17 @@ data class TopSitesProviderConfig(
     val showProviderTopSites: Boolean,
     val maxThreshold: Int = Int.MAX_VALUE,
     val providerFilter: ((TopSite) -> Boolean)? = null
+)
+
+/**
+ * Top sites frecency configuration used to specify which top frecent sites should be included.
+ *
+ * @property frecencyTresholdOption If [frecencyTresholdOption] is specified, only visited sites with a frecency
+ * score above the given threshold will be returned. Otherwise, frecent top site results are
+ * not included.
+ * @property frecencyFilter Optional function used to filter the top frecent sites.
+ */
+data class TopSitesFrecencyConfig(
+    val frecencyTresholdOption: FrecencyThresholdOption? = null,
+    val frecencyFilter: ((TopSite) -> Boolean)? = null
 )

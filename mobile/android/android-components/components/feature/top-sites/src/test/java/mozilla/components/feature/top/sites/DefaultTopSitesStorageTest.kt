@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.top.sites
 
+import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
@@ -522,7 +523,9 @@ class DefaultTopSitesStorageTest {
 
         var topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 0,
-            frecencyConfig = FrecencyThresholdOption.NONE,
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            ),
             providerConfig = TopSitesProviderConfig(
                 showProviderTopSites = true
             )
@@ -532,7 +535,9 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 1,
-            frecencyConfig = FrecencyThresholdOption.NONE,
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            ),
             providerConfig = TopSitesProviderConfig(
                 showProviderTopSites = true
             )
@@ -544,7 +549,9 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 2,
-            frecencyConfig = FrecencyThresholdOption.NONE,
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            ),
             providerConfig = TopSitesProviderConfig(
                 showProviderTopSites = true
             )
@@ -557,7 +564,9 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 3,
-            frecencyConfig = FrecencyThresholdOption.NONE,
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            ),
             providerConfig = TopSitesProviderConfig(
                 showProviderTopSites = true
             )
@@ -571,7 +580,9 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            frecencyConfig = FrecencyThresholdOption.NONE,
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            ),
             providerConfig = TopSitesProviderConfig(
                 showProviderTopSites = true
             )
@@ -620,14 +631,18 @@ class DefaultTopSitesStorageTest {
 
         var topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 0,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            )
         )
 
         assertTrue(topSites.isEmpty())
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 1,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            )
         )
 
         assertEquals(1, topSites.size)
@@ -636,7 +651,9 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 2,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            )
         )
 
         assertEquals(2, topSites.size)
@@ -646,7 +663,9 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            )
         )
 
         assertEquals(3, topSites.size)
@@ -667,7 +686,9 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            )
         )
 
         assertEquals(5, topSites.size)
@@ -690,7 +711,9 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            )
         )
 
         assertEquals(5, topSites.size)
@@ -755,7 +778,9 @@ class DefaultTopSitesStorageTest {
 
         val topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            )
         )
 
         verify(historyStorage).getTopFrecentSites(5, frecencyThreshold = FrecencyThresholdOption.NONE)
@@ -830,7 +855,9 @@ class DefaultTopSitesStorageTest {
 
         var topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 3,
-            frecencyConfig = FrecencyThresholdOption.NONE,
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            ),
             providerConfig = providerConfig
         )
 
@@ -842,7 +869,9 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 4,
-            frecencyConfig = FrecencyThresholdOption.NONE,
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            ),
             providerConfig = providerConfig
         )
 
@@ -920,7 +949,9 @@ class DefaultTopSitesStorageTest {
 
         val topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 10,
-            frecencyConfig = FrecencyThresholdOption.NONE,
+            frecencyConfig = TopSitesFrecencyConfig(
+                frecencyTresholdOption = FrecencyThresholdOption.NONE
+            ),
             providerConfig = TopSitesProviderConfig(
                 showProviderTopSites = true
             )
@@ -936,6 +967,105 @@ class DefaultTopSitesStorageTest {
         assertEquals(frecentSiteWithNoTitle.toTopSite(), topSites[4])
         assertEquals(frecentSite1.toTopSite(), topSites[5])
         assertEquals("mozilla.com", frecentSiteWithNoTitle.toTopSite().title)
+        assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
+    }
+
+    @Test
+    fun `GIVEN frecencyFilter is set WHEN getTopSites is called THEN the frecent top sites are filtered`() = runTestOnMain {
+        val defaultTopSitesStorage = DefaultTopSitesStorage(
+            pinnedSitesStorage = pinnedSitesStorage,
+            historyStorage = historyStorage,
+            topSitesProvider = topSitesProvider,
+            coroutineContext = coroutineContext
+        )
+
+        val filterMethod: ((TopSite) -> Boolean) = { topSite ->
+            val uri = Uri.parse(topSite.url)
+            if (!uri.queryParameterNames.contains("key")) {
+                true
+            } else {
+                uri.getQueryParameter("key") != "value"
+            }
+        }
+
+        val filteredUrl = "https://test.com/?key=value"
+
+        val frecencyConfig = TopSitesFrecencyConfig(
+            frecencyTresholdOption = FrecencyThresholdOption.NONE,
+            frecencyFilter = filterMethod
+        )
+
+        val defaultSite = TopSite.Default(
+            id = 1,
+            title = "Firefox",
+            url = "https://firefox.com",
+            createdAt = 1
+        )
+        val pinnedSite = TopSite.Pinned(
+            id = 2,
+            title = "Test",
+            url = "https://test.com",
+            createdAt = 2
+        )
+
+        whenever(pinnedSitesStorage.getPinnedSites()).thenReturn(
+            listOf(
+                defaultSite,
+                pinnedSite
+            )
+        )
+
+        val providedFilteredSite = TopSite.Provided(
+            id = 3,
+            title = "Filtered",
+            url = "https://test.com",
+            clickUrl = "https://test.com/click",
+            imageUrl = "https://test.com/image2.jpg",
+            impressionUrl = "https://example.com",
+            createdAt = 3
+        )
+
+        whenever(topSitesProvider.getTopSites()).thenReturn(
+            listOf(
+                providedFilteredSite
+            )
+        )
+
+        val frecentSite = TopFrecentSiteInfo("https://getpocket.com", "Pocket")
+
+        val frecentFilteredSite = TopFrecentSiteInfo(filteredUrl, "testSearch")
+
+        whenever(historyStorage.getTopFrecentSites(anyInt(), any())).thenReturn(
+            listOf(
+                frecentSite,
+                frecentFilteredSite
+            )
+        )
+
+        var topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 4,
+            frecencyConfig = frecencyConfig,
+            providerConfig = TopSitesProviderConfig(showProviderTopSites = true)
+        )
+
+        assertEquals(4, topSites.size)
+        assertTrue(topSites.contains(frecentSite.toTopSite()))
+        assertTrue(topSites.contains(providedFilteredSite))
+        assertTrue(topSites.contains(defaultSite))
+        assertTrue(topSites.contains(pinnedSite))
+        assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
+
+        topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 5,
+            frecencyConfig = frecencyConfig,
+            providerConfig = TopSitesProviderConfig(showProviderTopSites = true)
+        )
+
+        assertEquals(4, topSites.size)
+        assertTrue(topSites.contains(frecentSite.toTopSite()))
+        assertTrue(topSites.contains(providedFilteredSite))
+        assertTrue(topSites.contains(defaultSite))
+        assertTrue(topSites.contains(pinnedSite))
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
     }
 }
