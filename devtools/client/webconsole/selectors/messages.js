@@ -57,6 +57,10 @@ function getAllWarningGroupsById(state) {
   return state.messages.warningGroupsById;
 }
 
+function getLastMessageId(state) {
+  return state.messages.lastMessageId;
+}
+
 function isMessageInWarningGroup(message, visibleMessages = []) {
   if (!getWarningGroupType(message)) {
     return false;
@@ -76,6 +80,7 @@ module.exports = {
   getCurrentGroup,
   getFilteredMessagesCount,
   getGroupsById,
+  getLastMessageId,
   getMessage,
   getVisibleMessages,
   isMessageInWarningGroup,
