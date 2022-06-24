@@ -14,6 +14,10 @@
 #include "PersistentBufferProvider.h"
 #include "WebGLTypes.h"
 
+#ifdef MOZ_WAYLAND
+#include "mozilla/widget/DMABufSurface.h"
+#endif
+
 namespace mozilla {
 namespace layers {
 
@@ -123,17 +127,19 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
     if (knowsCompositor->SupportsD3D11()) {
       return TextureType::D3D11;
     }
-    return TextureType::Unknown;
   }
   if (kIsMacOS) {
     return TextureType::MacIOSurface;
   }
+
+#ifdef MOZ_WAYLAND
   if (kIsWayland) {
-    if (knowsCompositor->UsingSoftwareWebRender()) {
-      return TextureType::Unknown;
+    if (!knowsCompositor->UsingSoftwareWebRender() &&
+        widget::GetDMABufDevice()->IsDMABufWebGLEnabled()) {
+      return TextureType::DMABUF;
     }
-    return TextureType::DMABUF;
   }
+#endif
 
   if (kIsAndroid) {
     if (gfx::gfxVars::UseAHardwareBufferSharedSurface()) {

@@ -51,10 +51,6 @@ with Files("*NativeKeyBindings*"):
 
 toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
 
-XPCOM_MANIFESTS += [
-    "components.conf",
-]
-
 if toolkit in ("android", "cocoa", "gtk", "uikit", "windows"):
     DIRS += [toolkit]
 
@@ -225,6 +221,7 @@ UNIFIED_SOURCES += [
     "nsClipboardHelper.cpp",
     "nsClipboardProxy.cpp",
     "nsColorPickerProxy.cpp",
+    "nsContentProcessWidgetFactory.cpp",
     "nsDragServiceProxy.cpp",
     "nsFilePickerProxy.cpp",
     "nsHTMLFormatConverter.cpp",
