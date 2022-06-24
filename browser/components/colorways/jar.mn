@@ -4,6 +4,5 @@
 
 browser.jar:
     content/browser/colorwaycloset.html
-    content/browser/ColorwayClosetSelector.js
     content/browser/colorwaycloset.css
     content/browser/colorwaycloset.js
