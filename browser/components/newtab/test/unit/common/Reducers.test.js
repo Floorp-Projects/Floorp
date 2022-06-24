@@ -982,6 +982,27 @@ describe("Reducers", () => {
       });
       assert.deepEqual(state.config, { enabled: true });
     });
+    it("should set recentSavesEnabled with DISCOVERY_STREAM_PREFS_SETUP", () => {
+      const state = DiscoveryStream(undefined, {
+        type: at.DISCOVERY_STREAM_PREFS_SETUP,
+        data: { recentSavesEnabled: true },
+      });
+      assert.isTrue(state.recentSavesEnabled);
+    });
+    it("should set recentSavesData with DISCOVERY_STREAM_RECENT_SAVES", () => {
+      const state = DiscoveryStream(undefined, {
+        type: at.DISCOVERY_STREAM_RECENT_SAVES,
+        data: { recentSaves: [1, 2, 3] },
+      });
+      assert.deepEqual(state.recentSavesData, [1, 2, 3]);
+    });
+    it("should set isUserLoggedIn with DISCOVERY_STREAM_POCKET_STATE_SET", () => {
+      const state = DiscoveryStream(undefined, {
+        type: at.DISCOVERY_STREAM_POCKET_STATE_SET,
+        data: { isUserLoggedIn: true },
+      });
+      assert.isTrue(state.isUserLoggedIn);
+    });
     it("should set feeds as loaded with DISCOVERY_STREAM_FEEDS_UPDATE", () => {
       const state = DiscoveryStream(undefined, {
         type: at.DISCOVERY_STREAM_FEEDS_UPDATE,

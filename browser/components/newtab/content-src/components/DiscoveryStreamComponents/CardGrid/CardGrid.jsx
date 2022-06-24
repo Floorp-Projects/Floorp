@@ -10,8 +10,9 @@ import {
 import { DSEmptyState } from "../DSEmptyState/DSEmptyState.jsx";
 import { TopicsWidget } from "../TopicsWidget/TopicsWidget.jsx";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
-import { actionCreators as ac } from "common/Actions.jsm";
-import React from "react";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { connect, useSelector } from "react-redux";
 const WIDGET_IDS = {
   TOPICS: 1,
 };
@@ -40,7 +41,133 @@ export function GridContainer(props) {
   );
 }
 
-export class CardGrid extends React.PureComponent {
+export function IntersectionObserver({
+  children,
+  windowObj = window,
+  onIntersecting,
+}) {
+  const intersectionElement = useRef(null);
+
+  useEffect(() => {
+    let observer;
+    if (!observer && onIntersecting && intersectionElement.current) {
+      observer = new windowObj.IntersectionObserver(entries => {
+        const entry = entries.find(e => e.isIntersecting);
+
+        if (entry) {
+          // Stop observing since element has been seen
+          if (observer && intersectionElement.current) {
+            observer.unobserve(intersectionElement.current);
+          }
+
+          onIntersecting();
+        }
+      });
+      observer.observe(intersectionElement.current);
+    }
+    // Cleanup
+    return () => observer?.disconnect();
+  }, [windowObj, onIntersecting]);
+
+  return <div ref={intersectionElement}>{children}</div>;
+}
+
+export function RecentSavesContainer({
+  className,
+  dispatch,
+  windowObj = window,
+  items = 3,
+}) {
+  const { recentSavesData, isUserLoggedIn } = useSelector(
+    state => state.DiscoveryStream
+  );
+
+  const [visible, setVisible] = useState(false);
+  const onIntersecting = useCallback(() => setVisible(true), []);
+
+  useEffect(() => {
+    if (visible) {
+      dispatch(
+        ac.AlsoToMain({
+          type: at.DISCOVERY_STREAM_POCKET_STATE_INIT,
+        })
+      );
+    }
+  }, [visible, dispatch]);
+
+  // The user has not yet scrolled to this section,
+  // so wait before potentially requesting Pocket data.
+  if (!visible) {
+    return (
+      <IntersectionObserver
+        windowObj={windowObj}
+        onIntersecting={onIntersecting}
+      />
+    );
+  }
+
+  // Intersection observer has finished, but we're not yet logged in.
+  if (visible && !isUserLoggedIn) {
+    return null;
+  }
+
+  function renderCard(rec, index) {
+    return (
+      <DSCard
+        key={`dscard-${rec?.id || index}`}
+        id={rec.id}
+        pos={index}
+        type="CARDGRID_RECENT_SAVES"
+        image_src={rec.image_src}
+        raw_image_src={rec.raw_image_src}
+        word_count={rec.word_count}
+        time_to_read={rec.time_to_read}
+        title={rec.title}
+        excerpt={rec.excerpt}
+        url={rec.url}
+        source={rec.domain}
+        isRecentSave={true}
+        dispatch={dispatch}
+      />
+    );
+  }
+
+  const recentSavesCards = [];
+  // We fill the cards with a for loop over an inline map because
+  // we want empty placeholders if there are not enough cards.
+  for (let index = 0; index < items; index++) {
+    const recentSave = recentSavesData[index];
+    if (!recentSave) {
+      recentSavesCards.push(<PlaceholderDSCard key={`dscard-${index}`} />);
+    } else {
+      recentSavesCards.push(
+        renderCard(
+          {
+            id: recentSave.item_id || recentSave.resolved_id,
+            image_src: recentSave.top_image_url,
+            raw_image_src: recentSave.top_image_url,
+            word_count: recentSave.word_count,
+            time_to_read: recentSave.time_to_read,
+            title: recentSave.resolved_title,
+            url: recentSave.resolved_url,
+            domain: recentSave.domain_metadata?.name,
+            excerpt: recentSave.excerpt,
+          },
+          index
+        )
+      );
+    }
+  }
+
+  // We are visible and logged in.
+  return (
+    <GridContainer className={className} header="Recently Saved to your List">
+      {recentSavesCards}
+    </GridContainer>
+  );
+}
+
+export class _CardGrid extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = { moreLoaded: false };
@@ -68,6 +195,8 @@ export class CardGrid extends React.PureComponent {
 
   renderCards() {
     let { items } = this.props;
+    const { DiscoveryStream } = this.props;
+    const { recentSavesEnabled } = DiscoveryStream;
     const {
       hybridLayout,
       hideCardBackground,
@@ -191,17 +320,22 @@ export class CardGrid extends React.PureComponent {
       }
     }
 
+    let moreRecsHeader = "";
     // For now this is English only.
-    if (essentialReadsHeader && editorsPicksHeader) {
+    if (recentSavesEnabled || (essentialReadsHeader && editorsPicksHeader)) {
       let spliceAt = 6;
       // For 4 card row layouts, second row is 8 cards, and regular it is 6 cards.
       if (fourCardLayout) {
         spliceAt = 8;
       }
+      // If we have a custom header, ensure the more recs section also has a header.
+      moreRecsHeader = "More Recommendations";
       // Put the first 2 rows into essentialReadsCards.
       essentialReadsCards = [...cards.splice(0, spliceAt)];
       // Put the rest into editorsPicksCards.
-      editorsPicksCards = [...cards.splice(0, cards.length)];
+      if (essentialReadsHeader && editorsPicksHeader) {
+        editorsPicksCards = [...cards.splice(0, cards.length)];
+      }
     }
 
     // Used for CSS overrides to default styling (eg: "hero")
@@ -231,13 +365,21 @@ export class CardGrid extends React.PureComponent {
             {essentialReadsCards}
           </GridContainer>
         )}
+        {recentSavesEnabled && (
+          <RecentSavesContainer
+            className={className}
+            dispatch={this.props.dispatch}
+          />
+        )}
         {editorsPicksCards?.length > 0 && (
           <GridContainer className={className} header="Editor’s Picks">
             {editorsPicksCards}
           </GridContainer>
         )}
         {cards?.length > 0 && (
-          <GridContainer className={className}>{cards}</GridContainer>
+          <GridContainer className={className} header={moreRecsHeader}>
+            {cards}
+          </GridContainer>
         )}
       </>
     );
@@ -289,7 +431,7 @@ export class CardGrid extends React.PureComponent {
   }
 }
 
-CardGrid.defaultProps = {
+_CardGrid.defaultProps = {
   border: `border`,
   items: 4, // Number of stories to display
   enable_video_playheads: false,
@@ -297,3 +439,7 @@ CardGrid.defaultProps = {
   saveToPocketCard: false,
   loadMoreThreshold: 12,
 };
+
+export const CardGrid = connect(state => ({
+  DiscoveryStream: state.DiscoveryStream,
+}))(_CardGrid);

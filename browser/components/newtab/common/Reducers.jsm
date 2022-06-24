@@ -81,6 +81,9 @@ const INITIAL_STATE = {
       utmCampaign: undefined,
       utmContent: undefined,
     },
+    recentSavesData: [],
+    isUserLoggedIn: false,
+    recentSavesEnabled: false,
   },
   Personalization: {
     lastUpdated: null,
@@ -638,6 +641,21 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
       return {
         ...prevState,
         isCollectionDismissible: action.data.value,
+      };
+    case at.DISCOVERY_STREAM_PREFS_SETUP:
+      return {
+        ...prevState,
+        recentSavesEnabled: action.data.recentSavesEnabled,
+      };
+    case at.DISCOVERY_STREAM_RECENT_SAVES:
+      return {
+        ...prevState,
+        recentSavesData: action.data.recentSaves,
+      };
+    case at.DISCOVERY_STREAM_POCKET_STATE_SET:
+      return {
+        ...prevState,
+        isUserLoggedIn: action.data.isUserLoggedIn,
       };
     case at.HIDE_PRIVACY_INFO:
       return {

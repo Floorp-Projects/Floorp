@@ -103,7 +103,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 
 const actionTypes = {};
 
-for (const type of ["ABOUT_SPONSORED_TOP_SITES", "ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TARGETING_UPDATE", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "CLEAR_PREF", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_SEARCH", "DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_RESET", "DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_DEV_EXPIRE_CACHE", "DISCOVERY_STREAM_DEV_IDLE_DAILY", "DISCOVERY_STREAM_DEV_SYNC_RS", "DISCOVERY_STREAM_DEV_SYSTEM_TICK", "DISCOVERY_STREAM_EXPERIMENT_DATA", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_FEED_UPDATE", "DISCOVERY_STREAM_IMPRESSION_STATS", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_LINK_BLOCKED", "DISCOVERY_STREAM_LOADED_CONTENT", "DISCOVERY_STREAM_PERSONALIZATION_INIT", "DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED", "DISCOVERY_STREAM_PERSONALIZATION_TOGGLE", "DISCOVERY_STREAM_RETRY_FEED", "DISCOVERY_STREAM_SPOCS_CAPS", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_PLACEMENTS", "DISCOVERY_STREAM_SPOCS_UPDATE", "DISCOVERY_STREAM_SPOC_BLOCKED", "DISCOVERY_STREAM_SPOC_IMPRESSION", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_PRIVACY_INFO", "INIT", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PARTNER_LINK_ATTRIBUTION", "PLACES_BOOKMARKS_REMOVED", "PLACES_BOOKMARK_ADDED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LINK_DELETED_OR_ARCHIVED", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_PRIVACY_INFO", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SUBMIT_SIGNIN", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_IMPRESSION_STATS", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ABOUT_SPONSORED_TOP_SITES", "ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TARGETING_UPDATE", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "CLEAR_PREF", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_SEARCH", "DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_RESET", "DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_DEV_EXPIRE_CACHE", "DISCOVERY_STREAM_DEV_IDLE_DAILY", "DISCOVERY_STREAM_DEV_SYNC_RS", "DISCOVERY_STREAM_DEV_SYSTEM_TICK", "DISCOVERY_STREAM_EXPERIMENT_DATA", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_FEED_UPDATE", "DISCOVERY_STREAM_IMPRESSION_STATS", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_LINK_BLOCKED", "DISCOVERY_STREAM_LOADED_CONTENT", "DISCOVERY_STREAM_PERSONALIZATION_INIT", "DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED", "DISCOVERY_STREAM_PERSONALIZATION_TOGGLE", "DISCOVERY_STREAM_POCKET_STATE_INIT", "DISCOVERY_STREAM_POCKET_STATE_SET", "DISCOVERY_STREAM_PREFS_SETUP", "DISCOVERY_STREAM_RECENT_SAVES", "DISCOVERY_STREAM_RETRY_FEED", "DISCOVERY_STREAM_SPOCS_CAPS", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_PLACEMENTS", "DISCOVERY_STREAM_SPOCS_UPDATE", "DISCOVERY_STREAM_SPOC_BLOCKED", "DISCOVERY_STREAM_SPOC_IMPRESSION", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_PRIVACY_INFO", "INIT", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PARTNER_LINK_ATTRIBUTION", "PLACES_BOOKMARKS_REMOVED", "PLACES_BOOKMARK_ADDED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LINK_DELETED_OR_ARCHIVED", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_PRIVACY_INFO", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SUBMIT_SIGNIN", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_IMPRESSION_STATS", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 } // Helper function for creating routed actions between content and main
 // Not intended to be used by consumers
@@ -6864,12 +6864,16 @@ class DSLinkMenu extends (external_React_default()).PureComponent {
       dispatch
     } = this.props;
     let pocketMenuOptions = [];
+    let TOP_STORIES_CONTEXT_MENU_OPTIONS = ["OpenInNewWindow", "OpenInPrivateWindow"];
 
-    if (this.props.pocket_button_enabled) {
-      pocketMenuOptions = this.props.saveToPocketCard ? ["CheckDeleteFromPocket"] : ["CheckSavedToPocket"];
+    if (!this.props.isRecentSave) {
+      if (this.props.pocket_button_enabled) {
+        pocketMenuOptions = this.props.saveToPocketCard ? ["CheckDeleteFromPocket"] : ["CheckSavedToPocket"];
+      }
+
+      TOP_STORIES_CONTEXT_MENU_OPTIONS = ["CheckBookmark", "CheckArchiveFromPocket", ...pocketMenuOptions, "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", ...(this.props.showPrivacyInfo ? ["ShowPrivacyInfo"] : [])];
     }
 
-    const TOP_STORIES_CONTEXT_MENU_OPTIONS = ["CheckBookmark", "CheckArchiveFromPocket", ...pocketMenuOptions, "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", ...(this.props.showPrivacyInfo ? ["ShowPrivacyInfo"] : [])];
     const type = this.props.type || "DISCOVERY_STREAM";
     const title = this.props.title || this.props.source;
     return /*#__PURE__*/external_React_default().createElement("div", {
@@ -7485,7 +7489,8 @@ const DefaultMeta = ({
   cta_variant,
   sponsor,
   sponsored_by_override,
-  saveToPocketCard
+  saveToPocketCard,
+  isRecentSave
 }) => /*#__PURE__*/external_React_default().createElement("div", {
   className: "meta"
 }, /*#__PURE__*/external_React_default().createElement("div", {
@@ -7779,7 +7784,8 @@ class _DSCard extends (external_React_default()).PureComponent {
       imageGradient,
       titleLines = 3,
       descLines = 3,
-      displayReadTime
+      displayReadTime,
+      isRecentSave
     } = this.props;
     const excerpt = !hideDescriptions ? this.props.excerpt : "";
     let timeToRead;
@@ -7879,7 +7885,8 @@ class _DSCard extends (external_React_default()).PureComponent {
       onMenuUpdate: this.onMenuUpdate,
       onMenuShow: this.onMenuShow,
       saveToPocketCard: saveToPocketCard,
-      pocket_button_enabled: this.props.pocket_button_enabled
+      pocket_button_enabled: this.props.pocket_button_enabled,
+      isRecentSave: isRecentSave
     }))), !saveToPocketCard && /*#__PURE__*/external_React_default().createElement(DSLinkMenu, {
       id: this.props.id,
       index: this.props.pos,
@@ -7896,7 +7903,8 @@ class _DSCard extends (external_React_default()).PureComponent {
       hostRef: this.contextMenuButtonHostRef,
       onMenuUpdate: this.onMenuUpdate,
       onMenuShow: this.onMenuShow,
-      pocket_button_enabled: this.props.pocket_button_enabled
+      pocket_button_enabled: this.props.pocket_button_enabled,
+      isRecentSave: isRecentSave
     }));
   }
 
@@ -8141,6 +8149,7 @@ const TopicsWidget = (0,external_ReactRedux_namespaceObject.connect)(state => ({
 
 
 
+
 const WIDGET_IDS = {
   TOPICS: 1
 };
@@ -8165,7 +8174,128 @@ function GridContainer(props) {
     className: `ds-card-grid ${className}`
   }, children));
 }
-class CardGrid extends (external_React_default()).PureComponent {
+function CardGrid_IntersectionObserver({
+  children,
+  windowObj = window,
+  onIntersecting
+}) {
+  const intersectionElement = (0,external_React_namespaceObject.useRef)(null);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    let observer;
+
+    if (!observer && onIntersecting && intersectionElement.current) {
+      observer = new windowObj.IntersectionObserver(entries => {
+        const entry = entries.find(e => e.isIntersecting);
+
+        if (entry) {
+          // Stop observing since element has been seen
+          if (observer && intersectionElement.current) {
+            observer.unobserve(intersectionElement.current);
+          }
+
+          onIntersecting();
+        }
+      });
+      observer.observe(intersectionElement.current);
+    } // Cleanup
+
+
+    return () => {
+      var _observer;
+
+      return (_observer = observer) === null || _observer === void 0 ? void 0 : _observer.disconnect();
+    };
+  }, [windowObj, onIntersecting]);
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    ref: intersectionElement
+  }, children);
+}
+function RecentSavesContainer({
+  className,
+  dispatch,
+  windowObj = window,
+  items = 3
+}) {
+  const {
+    recentSavesData,
+    isUserLoggedIn
+  } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.DiscoveryStream);
+  const [visible, setVisible] = (0,external_React_namespaceObject.useState)(false);
+  const onIntersecting = (0,external_React_namespaceObject.useCallback)(() => setVisible(true), []);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (visible) {
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.DISCOVERY_STREAM_POCKET_STATE_INIT
+      }));
+    }
+  }, [visible, dispatch]); // The user has not yet scrolled to this section,
+  // so wait before potentially requesting Pocket data.
+
+  if (!visible) {
+    return /*#__PURE__*/external_React_default().createElement(CardGrid_IntersectionObserver, {
+      windowObj: windowObj,
+      onIntersecting: onIntersecting
+    });
+  } // Intersection observer has finished, but we're not yet logged in.
+
+
+  if (visible && !isUserLoggedIn) {
+    return null;
+  }
+
+  function renderCard(rec, index) {
+    return /*#__PURE__*/external_React_default().createElement(DSCard, {
+      key: `dscard-${(rec === null || rec === void 0 ? void 0 : rec.id) || index}`,
+      id: rec.id,
+      pos: index,
+      type: "CARDGRID_RECENT_SAVES",
+      image_src: rec.image_src,
+      raw_image_src: rec.raw_image_src,
+      word_count: rec.word_count,
+      time_to_read: rec.time_to_read,
+      title: rec.title,
+      excerpt: rec.excerpt,
+      url: rec.url,
+      source: rec.domain,
+      isRecentSave: true,
+      dispatch: dispatch
+    });
+  }
+
+  const recentSavesCards = []; // We fill the cards with a for loop over an inline map because
+  // we want empty placeholders if there are not enough cards.
+
+  for (let index = 0; index < items; index++) {
+    const recentSave = recentSavesData[index];
+
+    if (!recentSave) {
+      recentSavesCards.push( /*#__PURE__*/external_React_default().createElement(PlaceholderDSCard, {
+        key: `dscard-${index}`
+      }));
+    } else {
+      var _recentSave$domain_me;
+
+      recentSavesCards.push(renderCard({
+        id: recentSave.item_id || recentSave.resolved_id,
+        image_src: recentSave.top_image_url,
+        raw_image_src: recentSave.top_image_url,
+        word_count: recentSave.word_count,
+        time_to_read: recentSave.time_to_read,
+        title: recentSave.resolved_title,
+        url: recentSave.resolved_url,
+        domain: (_recentSave$domain_me = recentSave.domain_metadata) === null || _recentSave$domain_me === void 0 ? void 0 : _recentSave$domain_me.name,
+        excerpt: recentSave.excerpt
+      }, index));
+    }
+  } // We are visible and logged in.
+
+
+  return /*#__PURE__*/external_React_default().createElement(GridContainer, {
+    className: className,
+    header: "Recently Saved to your List"
+  }, recentSavesCards);
+}
+class _CardGrid extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -8199,6 +8329,12 @@ class CardGrid extends (external_React_default()).PureComponent {
     let {
       items
     } = this.props;
+    const {
+      DiscoveryStream
+    } = this.props;
+    const {
+      recentSavesEnabled
+    } = DiscoveryStream;
     const {
       hybridLayout,
       hideCardBackground,
@@ -8312,20 +8448,25 @@ class CardGrid extends (external_React_default()).PureComponent {
           cards.splice(position.index, 1, widgetComponent);
         }
       }
-    } // For now this is English only.
+    }
 
+    let moreRecsHeader = ""; // For now this is English only.
 
-    if (essentialReadsHeader && editorsPicksHeader) {
+    if (recentSavesEnabled || essentialReadsHeader && editorsPicksHeader) {
       let spliceAt = 6; // For 4 card row layouts, second row is 8 cards, and regular it is 6 cards.
 
       if (fourCardLayout) {
         spliceAt = 8;
-      } // Put the first 2 rows into essentialReadsCards.
+      } // If we have a custom header, ensure the more recs section also has a header.
 
+
+      moreRecsHeader = "More Recommendations"; // Put the first 2 rows into essentialReadsCards.
 
       essentialReadsCards = [...cards.splice(0, spliceAt)]; // Put the rest into editorsPicksCards.
 
-      editorsPicksCards = [...cards.splice(0, cards.length)];
+      if (essentialReadsHeader && editorsPicksHeader) {
+        editorsPicksCards = [...cards.splice(0, cards.length)];
+      }
     } // Used for CSS overrides to default styling (eg: "hero")
 
 
@@ -8338,11 +8479,15 @@ class CardGrid extends (external_React_default()).PureComponent {
     const className = `ds-card-grid-${this.props.border} ${variantClass} ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`;
     return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, ((_essentialReadsCards = essentialReadsCards) === null || _essentialReadsCards === void 0 ? void 0 : _essentialReadsCards.length) > 0 && /*#__PURE__*/external_React_default().createElement(GridContainer, {
       className: className
-    }, essentialReadsCards), ((_editorsPicksCards = editorsPicksCards) === null || _editorsPicksCards === void 0 ? void 0 : _editorsPicksCards.length) > 0 && /*#__PURE__*/external_React_default().createElement(GridContainer, {
+    }, essentialReadsCards), recentSavesEnabled && /*#__PURE__*/external_React_default().createElement(RecentSavesContainer, {
+      className: className,
+      dispatch: this.props.dispatch
+    }), ((_editorsPicksCards = editorsPicksCards) === null || _editorsPicksCards === void 0 ? void 0 : _editorsPicksCards.length) > 0 && /*#__PURE__*/external_React_default().createElement(GridContainer, {
       className: className,
       header: "Editor\u2019s Picks"
     }, editorsPicksCards), (cards === null || cards === void 0 ? void 0 : cards.length) > 0 && /*#__PURE__*/external_React_default().createElement(GridContainer, {
-      className: className
+      className: className,
+      header: moreRecsHeader
     }, cards));
   }
 
@@ -8379,7 +8524,7 @@ class CardGrid extends (external_React_default()).PureComponent {
   }
 
 }
-CardGrid.defaultProps = {
+_CardGrid.defaultProps = {
   border: `border`,
   items: 4,
   // Number of stories to display
@@ -8388,6 +8533,9 @@ CardGrid.defaultProps = {
   saveToPocketCard: false,
   loadMoreThreshold: 12
 };
+const CardGrid = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  DiscoveryStream: state.DiscoveryStream
+}))(_CardGrid);
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -10335,7 +10483,10 @@ const INITIAL_STATE = {
       utmSource: "pocket-newtab",
       utmCampaign: undefined,
       utmContent: undefined
-    }
+    },
+    recentSavesData: [],
+    isUserLoggedIn: false,
+    recentSavesEnabled: false
   },
   Personalization: {
     lastUpdated: null,
@@ -10978,6 +11129,21 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
     case actionTypes.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE:
       return { ...prevState,
         isCollectionDismissible: action.data.value
+      };
+
+    case actionTypes.DISCOVERY_STREAM_PREFS_SETUP:
+      return { ...prevState,
+        recentSavesEnabled: action.data.recentSavesEnabled
+      };
+
+    case actionTypes.DISCOVERY_STREAM_RECENT_SAVES:
+      return { ...prevState,
+        recentSavesData: action.data.recentSaves
+      };
+
+    case actionTypes.DISCOVERY_STREAM_POCKET_STATE_SET:
+      return { ...prevState,
+        isUserLoggedIn: action.data.isUserLoggedIn
       };
 
     case actionTypes.HIDE_PRIVACY_INFO:
