@@ -212,18 +212,6 @@ class _BuiltInThemes {
   findActiveColorwayCollection() {
     return this.builtInThemeMap.findActiveColorwayCollection(new Date());
   }
-
-  /**
-   * @return {boolean}
-   *   Whether a specific theme is part of the currently active colorway
-   *   collection.
-   */
-  isColorwayFromCurrentCollection(id) {
-    let collection = this.findActiveColorwayCollection();
-    return (
-      collection && this.builtInThemeMap.get(id)?.collection == collection.id
-    );
-  }
 }
 
 var BuiltInThemes = new _BuiltInThemes();
