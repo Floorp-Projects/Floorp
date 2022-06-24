@@ -371,3 +371,38 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test support for the xml-roles attribute.
+ */
+addAccessibleTask(
+  `
+<div id="knownRole" role="main">knownRole</div>
+<div id="emptyRole" role="">emptyRole</div>
+<div id="unknownRole" role="foo">unknownRole</div>
+<div id="multiRole" role="foo main">multiRole</div>
+<main id="markup">markup</main>
+<main id="markupWithRole" role="banner">markupWithRole</main>
+<main id="markupWithEmptyRole" role="">markupWithEmptyRole</main>
+  `,
+  async function(browser, docAcc) {
+    const knownRole = findAccessibleChildByID(docAcc, "knownRole");
+    testAttrs(knownRole, { "xml-roles": "main" }, true);
+    const emptyRole = findAccessibleChildByID(docAcc, "emptyRole");
+    testAbsentAttrs(emptyRole, { "xml-roles": "" });
+    const unknownRole = findAccessibleChildByID(docAcc, "unknownRole");
+    testAttrs(unknownRole, { "xml-roles": "foo" }, true);
+    const multiRole = findAccessibleChildByID(docAcc, "multiRole");
+    testAttrs(multiRole, { "xml-roles": "foo main" }, true);
+    const markup = findAccessibleChildByID(docAcc, "markup");
+    testAttrs(markup, { "xml-roles": "main" }, true);
+    const markupWithRole = findAccessibleChildByID(docAcc, "markupWithRole");
+    testAttrs(markupWithRole, { "xml-roles": "banner" }, true);
+    const markupWithEmptyRole = findAccessibleChildByID(
+      docAcc,
+      "markupWithEmptyRole"
+    );
+    testAttrs(markupWithEmptyRole, { "xml-roles": "main" }, true);
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);

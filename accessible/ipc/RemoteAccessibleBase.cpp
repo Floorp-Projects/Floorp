@@ -821,6 +821,28 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
     if (auto ariaAttrs = GetCachedARIAAttributes()) {
       ariaAttrs->CopyTo(attributes);
     }
+
+    nsAutoString role;
+    mCachedFields->GetAttribute(nsGkAtoms::role, role);
+    if (role.IsEmpty()) {
+      bool found = false;
+      if (const nsRoleMapEntry* roleMap = ARIARoleMap()) {
+        if (roleMap->roleAtom != nsGkAtoms::_empty) {
+          // Single, known role.
+          attributes->SetAttribute(nsGkAtoms::xmlroles, roleMap->roleAtom);
+          found = true;
+        }
+      }
+      if (!found) {
+        if (nsAtom* landmark = LandmarkRole()) {
+          // Landmark role from markup; e.g. HTML <main>.
+          attributes->SetAttribute(nsGkAtoms::xmlroles, landmark);
+        }
+      }
+    } else {
+      // Unknown role or multiple roles.
+      attributes->SetAttribute(nsGkAtoms::xmlroles, std::move(role));
+    }
   }
 
   nsAutoString name;
