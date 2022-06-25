@@ -11,7 +11,11 @@
 #include "nsDependentString.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "nsIXPConnect.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/ScriptSettings.h"
 
+#include "XPCWrapper.h"
 #include "xpcprivate.h"
 
 #include "jsapi.h"
@@ -28,9 +32,12 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ProxyHandlerUtils.h"
+#include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/XrayExpandoClass.h"
+#include "nsGlobalWindow.h"
 
 using namespace mozilla::dom;
 using namespace JS;

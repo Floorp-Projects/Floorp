@@ -7,6 +7,7 @@
 #ifndef XrayWrapper_h
 #define XrayWrapper_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 
 #include "WrapperFactory.h"

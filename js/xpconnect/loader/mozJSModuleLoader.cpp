@@ -40,14 +40,19 @@
 #include "nsIJARURI.h"
 #include "nsIChannel.h"
 #include "nsNetUtil.h"
+#include "nsJSPrincipals.h"
 #include "nsJSUtils.h"
 #include "xpcprivate.h"
 #include "xpcpublic.h"
 #include "nsContentUtils.h"
+#include "nsReadableUtils.h"
 #include "nsXULAppAPI.h"
 #include "WrapperFactory.h"
 #include "JSMEnvironmentProxy.h"
 #include "ModuleEnvironmentProxy.h"
+
+#include "AutoMemMap.h"
+#include "ScriptPreloader-inl.h"
 
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
@@ -62,6 +67,8 @@
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
