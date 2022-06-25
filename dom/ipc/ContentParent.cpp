@@ -3050,6 +3050,8 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   isReadyForBackgroundProcessing = dllSvc->IsReadyForBackgroundProcessing();
 #endif
 
+  xpcomInit.perfStatsMask() = PerfStats::GetCollectionMask();
+
   Unused << SendSetXPCOMProcessAttributes(
       xpcomInit, initialData, lnf, fontList, std::move(sharedUASheetHandle),
       sharedUASheetAddress, std::move(sharedFontListBlocks),

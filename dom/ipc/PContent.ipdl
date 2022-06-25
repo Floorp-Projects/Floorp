@@ -153,6 +153,7 @@ using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
 using mozilla::dom::PerformanceTimingData from "mozilla/dom/PerformanceTiming.h";
 [RefCounted] using mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
 using Wireframe from "mozilla/dom/DocumentBinding.h";
+using mozilla::PerfStats::MetricMask from "mozilla/PerfStats.h";
 
 union ChromeRegistryItem
 {
@@ -361,6 +362,7 @@ struct XPCOMInitData
     nsCString[] requestedLocales;
     L10nFileSourceDescriptor[] l10nFileSources;
     DynamicScalarDefinition[] dynamicScalarDefs;
+    MetricMask perfStatsMask;
 };
 
 struct VisitedQueryResult

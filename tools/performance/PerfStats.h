@@ -103,6 +103,7 @@ class PerfStats {
   };
 
   static void SetCollectionMask(MetricMask aMask);
+  static MetricMask GetCollectionMask();
 
   static RefPtr<PerfStatsPromise> CollectPerfStatsJSON() {
     return GetSingleton()->CollectPerfStatsJSONInternal();
