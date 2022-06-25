@@ -288,9 +288,11 @@
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_private_tabs">Омогући само у приватним картицама</string>
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
-    <string name="errorpage_httpsonly_title">Безбедан сајт није доступан</string>
+    <string name="errorpage_httpsonly_title">Безбедна страница није доступна</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Највероватније, страница једноставно не подржава HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Ипак, могуће је да је у питању дигитални напад. Ако наставите ка страници, немојте уносити било какве осетљиве податке. Ако наставите, HTTPS режим биће привремено искључен на овој страници.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Приступачност</string>
     <!-- Preference to override the Firefox Account server -->
