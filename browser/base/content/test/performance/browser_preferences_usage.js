@@ -122,7 +122,7 @@ add_task(async function startup() {
     },
     "media.gmp-provider.enabled": {
       min: 0,
-      max: 45,
+      max: 46,
     },
   };
 

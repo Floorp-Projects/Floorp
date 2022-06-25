@@ -1,5 +1,7 @@
 import {
-  CardGrid,
+  _CardGrid as CardGrid,
+  IntersectionObserver,
+  RecentSavesContainer,
   DSSubHeader,
   GridContainer,
 } from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
@@ -8,18 +10,28 @@ import { INITIAL_STATE, reducers } from "common/Reducers.jsm";
 import { Provider } from "react-redux";
 import {
   DSCard,
+  PlaceholderDSCard,
   LastCardMessage,
 } from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
 import { TopicsWidget } from "content-src/components/DiscoveryStreamComponents/TopicsWidget/TopicsWidget";
-import { actionCreators as ac } from "common/Actions.jsm";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import React from "react";
 import { shallow, mount } from "enzyme";
+
+// Wrap this around any component that uses useSelector,
+// or any mount that uses a child that uses redux.
+function WrapWithProvider({ children, state = INITIAL_STATE }) {
+  let store = createStore(combineReducers(reducers), state);
+  return <Provider store={store}>{children}</Provider>;
+}
 
 describe("<CardGrid>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<CardGrid />);
+    wrapper = shallow(
+      <CardGrid DiscoveryStream={INITIAL_STATE.DiscoveryStream} />
+    );
   });
 
   it("should render an empty div", () => {
@@ -69,9 +81,8 @@ describe("<CardGrid>", () => {
   });
 
   it("should render sub header in the middle of the card grid for both regular and compact", () => {
-    let store = createStore(combineReducers(reducers), INITIAL_STATE);
     wrapper = mount(
-      <Provider store={store}>
+      <WrapWithProvider>
         <CardGrid
           essentialReadsHeader={true}
           editorsPicksHeader={true}
@@ -79,8 +90,9 @@ describe("<CardGrid>", () => {
           data={{
             recommendations: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
           }}
+          DiscoveryStream={INITIAL_STATE.DiscoveryStream}
         />
-      </Provider>
+      </WrapWithProvider>
     );
 
     assert.ok(wrapper.find(DSSubHeader).exists());
@@ -89,7 +101,7 @@ describe("<CardGrid>", () => {
       compact: true,
     });
     wrapper = mount(
-      <Provider store={store}>
+      <WrapWithProvider>
         <CardGrid
           essentialReadsHeader={true}
           editorsPicksHeader={true}
@@ -98,8 +110,9 @@ describe("<CardGrid>", () => {
           data={{
             recommendations: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
           }}
+          DiscoveryStream={INITIAL_STATE.DiscoveryStream}
         />
-      </Provider>
+      </WrapWithProvider>
     );
 
     assert.ok(wrapper.find(DSSubHeader).exists());
@@ -182,5 +195,134 @@ describe("<CardGrid>", () => {
     });
 
     assert.ok(wrapper.find(TopicsWidget).exists());
+  });
+});
+
+// Build IntersectionObserver class with the arg `entries` for the intersect callback.
+function buildIntersectionObserver(entries) {
+  return class {
+    constructor(callback) {
+      this.callback = callback;
+    }
+
+    observe() {
+      this.callback(entries);
+    }
+
+    unobserve() {}
+
+    disconnect() {}
+  };
+}
+
+describe("<IntersectionObserver>", () => {
+  let wrapper;
+  let fakeWindow;
+  let intersectEntries;
+
+  beforeEach(() => {
+    intersectEntries = [{ isIntersecting: true }];
+    fakeWindow = {
+      IntersectionObserver: buildIntersectionObserver(intersectEntries),
+    };
+    wrapper = mount(<IntersectionObserver windowObj={fakeWindow} />);
+  });
+
+  it("should render an empty div", () => {
+    assert.ok(wrapper.exists());
+    assert.equal(
+      wrapper
+        .children()
+        .at(0)
+        .type(),
+      "div"
+    );
+  });
+
+  it("should fire onIntersecting", () => {
+    const onIntersecting = sinon.stub();
+    wrapper = mount(
+      <IntersectionObserver
+        windowObj={fakeWindow}
+        onIntersecting={onIntersecting}
+      />
+    );
+    assert.calledOnce(onIntersecting);
+  });
+});
+
+describe("<RecentSavesContainer>", () => {
+  let wrapper;
+  let fakeWindow;
+  let intersectEntries;
+  let dispatch;
+
+  beforeEach(() => {
+    dispatch = sinon.stub();
+    intersectEntries = [{ isIntersecting: false }];
+    fakeWindow = {
+      IntersectionObserver: buildIntersectionObserver(intersectEntries),
+    };
+    wrapper = mount(
+      <WrapWithProvider>
+        <RecentSavesContainer windowObj={fakeWindow} dispatch={dispatch} />
+      </WrapWithProvider>
+    ).find(RecentSavesContainer);
+  });
+
+  it("should render an IntersectionObserver when not visible", () => {
+    assert.ok(wrapper.exists());
+    assert.ok(wrapper.find(IntersectionObserver).exists());
+  });
+
+  it("should render a nothing if visible until we log in", () => {
+    intersectEntries = [{ isIntersecting: true }];
+    fakeWindow = {
+      IntersectionObserver: buildIntersectionObserver(intersectEntries),
+    };
+    wrapper = mount(
+      <WrapWithProvider>
+        <RecentSavesContainer windowObj={fakeWindow} dispatch={dispatch} />
+      </WrapWithProvider>
+    ).find(RecentSavesContainer);
+    assert.ok(!wrapper.find(IntersectionObserver).exists());
+    assert.calledOnce(dispatch);
+    assert.calledWith(
+      dispatch,
+      ac.AlsoToMain({
+        type: at.DISCOVERY_STREAM_POCKET_STATE_INIT,
+      })
+    );
+  });
+
+  it("should render a GridContainer if visible and logged in", () => {
+    intersectEntries = [{ isIntersecting: true }];
+    fakeWindow = {
+      IntersectionObserver: buildIntersectionObserver(intersectEntries),
+    };
+    wrapper = mount(
+      <WrapWithProvider
+        state={{
+          DiscoveryStream: {
+            isUserLoggedIn: true,
+            recentSavesData: [
+              {
+                resolved_id: "resolved_id",
+                top_image_url: "top_image_url",
+                title: "title",
+                resolved_url: "resolved_url",
+                domain: "domain",
+                excerpt: "excerpt",
+              },
+            ],
+          },
+        }}
+      >
+        <RecentSavesContainer windowObj={fakeWindow} dispatch={dispatch} />
+      </WrapWithProvider>
+    ).find(RecentSavesContainer);
+    assert.lengthOf(wrapper.find(GridContainer), 1);
+    assert.lengthOf(wrapper.find(PlaceholderDSCard), 2);
+    assert.lengthOf(wrapper.find(DSCard), 3);
   });
 });

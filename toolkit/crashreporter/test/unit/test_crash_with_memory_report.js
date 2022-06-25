@@ -44,8 +44,8 @@ add_task(async function run_test() {
 
       crashReporter.saveMemoryReport();
     },
-    function(mdump, extra) {
-      Assert.equal(extra.ContainsMemoryReport, "1");
+    function(mdump, extra, extrafile, memoryfile) {
+      Assert.ok(memoryfile.exists());
     },
     true
   );

@@ -162,7 +162,7 @@ async function handleMinidump(callback) {
   let extra = JSON.parse(decoder.decode(data));
 
   if (callback) {
-    await callback(minidump, extra, extrafile);
+    await callback(minidump, extra, extrafile, memoryfile);
   }
 
   cleanup();

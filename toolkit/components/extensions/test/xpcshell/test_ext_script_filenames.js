@@ -12,6 +12,18 @@ server.registerDirectory("/data/", do_get_file("data"));
 
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
+function computeSHA256Hash(text) {
+  const hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
+  hasher.init(Ci.nsICryptoHash.SHA256);
+  hasher.update(
+    text.split("").map(c => c.charCodeAt(0)),
+    text.length
+  );
+  return hasher.finish(true);
+}
+
 // This function represents a dummy content or background script that the test
 // cases below should attempt to load but it shouldn't be loaded because we
 // check the extensions of JavaScript files in `nsJARChannel`.
@@ -159,42 +171,67 @@ add_task(async function test_background_scripts() {
 
 add_task(async function test_background_page_injects_scripts_inline() {
   function injectedBackgroundScript() {
+    browser.test.log(
+      "inline script injectedBackgroundScript has been executed"
+    );
     browser.test.sendMessage("background-script-loaded");
   }
 
   let backgroundHtmlPage = "background_page.html";
   let validFileName = "injected_background.js";
   let invalidFileName = "invalid_background.xyz";
-  // This is needed to "easily" generate a valid CSP script hash because it
-  // generates a one-line JS payload. If the content below is modified, the
-  // hash has to be updated in `content_security_policy` too.
-  let inlineScript = [
-    'const script = document.createElement("script");',
-    'script.src = "./invalid_background.xyz";',
-    "document.head.appendChild(script);",
-    'const validScript = document.createElement("script");',
-    'validScript.src = "./injected_background.js";',
-    "document.head.appendChild(validScript);",
-  ].join("");
+
+  let inlineScript = `(${function() {
+    const script = document.createElement("script");
+    script.src = "./invalid_background.xyz";
+    document.head.appendChild(script);
+    const validScript = document.createElement("script");
+    validScript.src = "./injected_background.js";
+    document.head.appendChild(validScript);
+  }})()`;
+
+  const inlineScriptSHA256 = computeSHA256Hash(inlineScript);
+
+  info(
+    `Computed sha256 for the inline script injectedBackgroundScript: ${inlineScriptSHA256}`
+  );
+
   let extensionData = {
     manifest: {
       background: { page: backgroundHtmlPage },
       content_security_policy: [
         "script-src",
         "'self'",
-        "'sha256-2xldfE9/s8HWuAO69FOx5nKY4YDuAVQpUH2d7nX9KIM='",
+        `'sha256-${inlineScriptSHA256}'`,
         ";",
         "object-src",
         "'self'",
+        ";",
       ].join(" "),
     },
     files: {
       [invalidFileName]: scriptThatShouldNotBeLoaded,
       [validFileName]: injectedBackgroundScript,
+      "pre-script.js": () => {
+        window.onsecuritypolicyviolation = evt => {
+          const { violatedDirective, originalPolicy } = evt;
+          browser.test.fail(
+            `Unexpected csp violation: ${JSON.stringify({
+              violatedDirective,
+              originalPolicy,
+            })}`
+          );
+          // Let the test to fail immediately when an unexpected csp violation
+          // prevented the inline script from being executed successfully.
+          browser.test.sendMessage("background-script-loaded");
+        };
+      },
       [backgroundHtmlPage]: `
+        <!DOCTYPE html>
         <html>
           <head>
             <meta charset="utf-8"></head>
+            <script src="pre-script.js"></script>
             <script>${inlineScript}</script>
           </head>
         </html>`,

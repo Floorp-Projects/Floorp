@@ -1224,10 +1224,11 @@ void VectorImage::Show(gfxDrawable* aDrawable,
   gfxContextMatrixAutoSaveRestore saveMatrix(aParams.context);
   ImageRegion region(aParams.region);
   if (aParams.drawSize != aParams.size) {
-    gfx::Size scale(double(aParams.drawSize.width) / aParams.size.width,
-                    double(aParams.drawSize.height) / aParams.size.height);
-    aParams.context->Multiply(gfxMatrix::Scaling(scale.width, scale.height));
-    region.Scale(1.0 / scale.width, 1.0 / scale.height);
+    gfx::MatrixScales scale(
+        double(aParams.drawSize.width) / aParams.size.width,
+        double(aParams.drawSize.height) / aParams.size.height);
+    aParams.context->Multiply(gfx::Matrix::Scaling(scale));
+    region.Scale(1.0 / scale.xScale, 1.0 / scale.yScale);
   }
 
   MOZ_ASSERT(aDrawable, "Should have a gfxDrawable by now");

@@ -194,12 +194,6 @@ CoMarshalInterfaceFailure:
     via CoMarshalInterface during the creation of an IPC proxy stream.
   type: string
 
-ContainsMemoryReport:
-  description: >
-    Indicates that the crash dump contains a memory report.
-  type: boolean
-  ping: true
-
 ContentSandboxCapabilities:
   description: >
     List of capabilities of the content process sandbox.

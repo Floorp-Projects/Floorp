@@ -26,7 +26,15 @@ add_task(async function test_experiment_messaging_system_impressions() {
       infoBody: "fluent:about-private-browsing-info-title",
       promoLinkText: "fluent:about-private-browsing-prominent-cta",
       infoLinkUrl: "http://foo.example.com/%LOCALE%",
-      promoLinkUrl: "http://bar.example.com/%LOCALE%",
+      promoButton: {
+        action: {
+          data: {
+            args: "https://bar.example.com/%LOCALE%",
+            where: "tabshifted",
+          },
+          type: "OPEN_URL",
+        },
+      },
     },
     frequency: {
       lifetime: 2,
@@ -43,9 +51,11 @@ add_task(async function test_experiment_messaging_system_impressions() {
 
   await SpecialPowers.spawn(tab1, [LOCALE], async function(locale) {
     is(
-      content.document.querySelector(".promo button").getAttribute("href"),
-      "http://bar.example.com/" + locale,
-      "should format the promoLinkUrl url"
+      content.document
+        .querySelector(".promo button")
+        .classList.contains("primary"),
+      true,
+      "should render the promo button as a button"
     );
   });
 
@@ -66,9 +76,11 @@ add_task(async function test_experiment_messaging_system_impressions() {
 
   await SpecialPowers.spawn(tab2, [LOCALE], async function(locale) {
     is(
-      content.document.querySelector(".promo button").getAttribute("href"),
-      "http://bar.example.com/" + locale,
-      "should format the promoLinkUrl url"
+      content.document
+        .querySelector(".promo button")
+        .classList.contains("primary"),
+      true,
+      "should render the promo button as a button"
     );
   });
 

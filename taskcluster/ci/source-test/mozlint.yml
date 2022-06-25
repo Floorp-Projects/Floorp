@@ -178,6 +178,16 @@ mingw-cap:
             - '**/*.h'
             - 'tools/lint/mingw-capitalization.yml'
 
+updatebot:
+    description: Ensure moz.yaml files are valid per schema
+    treeherder:
+        symbol: misc(mozyaml)
+    run:
+        mach: lint -v -l updatebot -f treeherder -f json:/builds/worker/mozlint.json *
+    when:
+        files-changed:
+            - '**/moz.yaml'
+
 mscom-init:
     description: Lint for Microsoft COM initialization
     treeherder:
