@@ -58,6 +58,7 @@
     "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_egress.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_video.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_util.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/ulpfec_generator.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/video_rtp_depacketizer_vp9.cc",
     "third_party/libwebrtc/modules/third_party/g722/g722_encode.c",
