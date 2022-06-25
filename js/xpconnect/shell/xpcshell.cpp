@@ -11,7 +11,6 @@
 #include "mozilla/Bootstrap.h"
 #include "XREShellData.h"
 
-#include "nsXULAppAPI.h"
 #ifdef XP_MACOSX
 #  include "xpcshellMacUtils.h"
 #endif
