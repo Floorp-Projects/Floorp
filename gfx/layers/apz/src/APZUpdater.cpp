@@ -325,6 +325,12 @@ void APZUpdater::RunOnUpdaterThread(LayersId aLayersId,
   // the callback to run tasks.
 
   if (IsUpdaterThread()) {
+    // This function should only be called from the updater thread in test
+    // scenarios where we are not connected to WebRender. If it were called from
+    // the updater thread when we are connected to WebRender, running the task
+    // right away would be incorrect (we'd need to check that |aLayersId|
+    // isn't blocked, and if it is then enqueue the task instead).
+    MOZ_ASSERT(!IsConnectedToWebRender());
     task->Run();
     return;
   }
