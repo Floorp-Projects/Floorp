@@ -77,18 +77,12 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
   }
 
   if (gen->compilingWasm()) {
-    // Since wasm uses the system ABI which does not necessarily use a
-    // regular array where all slots are sizeof(Value), it maintains the max
-    // argument stack depth separately.
-    MOZ_ASSERT(graph->argumentSlotCount() == 0);
-
 #ifdef JS_CODEGEN_ARM64
     // Ensure SP is aligned to 16 bytes.
     frameDepth_ = AlignBytes(graph->localSlotsSize(), WasmStackAlignment);
 #else
     frameDepth_ = AlignBytes(graph->localSlotsSize(), sizeof(uintptr_t));
 #endif
-    frameDepth_ += gen->wasmMaxStackArgBytes();
 
 #ifdef ENABLE_WASM_SIMD
 #  if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || \
@@ -101,6 +95,12 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
 #endif
 
     if (gen->needsStaticStackAlignment()) {
+      // Since wasm uses the system ABI which does not necessarily use a
+      // regular array where all slots are sizeof(Value), it maintains the max
+      // argument stack depth separately.
+      MOZ_ASSERT(graph->argumentSlotCount() == 0);
+      frameDepth_ += gen->wasmMaxStackArgBytes();
+
       // An MWasmCall does not align the stack pointer at calls sites but
       // instead relies on the a priori stack adjustment. This must be the
       // last adjustment of frameDepth_.
