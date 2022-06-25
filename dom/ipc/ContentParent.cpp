@@ -3050,6 +3050,8 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   isReadyForBackgroundProcessing = dllSvc->IsReadyForBackgroundProcessing();
 #endif
 
+  xpcomInit.perfStatsMask() = PerfStats::GetCollectionMask();
+
   Unused << SendSetXPCOMProcessAttributes(
       xpcomInit, initialData, lnf, fontList, std::move(sharedUASheetHandle),
       sharedUASheetAddress, std::move(sharedFontListBlocks),
@@ -5604,6 +5606,12 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
 mozilla::ipc::IPCResult ContentParent::RecvShutdownProfile(
     const nsCString& aProfile) {
   profiler_received_exit_profile(aProfile);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvShutdownPerfStats(
+    const nsCString& aPerfStats) {
+  PerfStats::StorePerfStats(this, aPerfStats);
   return IPC_OK();
 }
 
