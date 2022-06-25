@@ -190,6 +190,8 @@ class nsDMABufDevice {
 
   // Use dmabuf for WebRender general web content
   bool IsDMABufTexturesEnabled();
+  // Use dmabuf for VA-API video playback
+  bool IsDMABufVAAPIEnabled();
   // Use dmabuf for WebGL content
   bool IsDMABufWebGLEnabled();
   void DisableDMABufWebGL();

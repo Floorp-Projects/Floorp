@@ -113,6 +113,10 @@ gfxPlatformGtk::gfxPlatformGtk() {
     if (gfxConfig::IsEnabled(Feature::DMABUF)) {
       gfxVars::SetUseDMABuf(true);
     }
+    InitVAAPIConfig();
+    if (gfxConfig::IsEnabled(Feature::VAAPI)) {
+      gfxVars::SetUseVAAPI(true);
+    }
   }
 
   InitBackendPrefs(GetBackendPrefs());
@@ -225,29 +229,32 @@ void gfxPlatformGtk::InitDmabufConfig() {
 #endif
 }
 
-bool gfxPlatformGtk::InitVAAPIConfig(bool aEnabledByPlatform) {
-  FeatureState& feature =
-      gfxConfig::GetFeature(Feature::HARDWARE_VIDEO_DECODING);
+void gfxPlatformGtk::InitVAAPIConfig() {
+  FeatureState& feature = gfxConfig::GetFeature(Feature::VAAPI);
 #ifdef MOZ_WAYLAND
+#  ifdef NIGHTLY_BUILD
   feature.EnableByDefault();
-
+#  else
+  feature.DisableByDefault(FeatureStatus::Disabled,
+                           "VAAPI is disabled by default",
+                           "FEATURE_VAAPI_DISABLED"_ns);
+#  endif
   nsCString failureId;
-  int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
+  int32_t status;
   nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-  if (NS_FAILED(gfxInfo->GetFeatureStatus(
-          nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING, failureId, &status))) {
+  if (NS_FAILED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_VAAPI, failureId,
+                                          &status))) {
     feature.Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
                     "FEATURE_FAILURE_NO_GFX_INFO"_ns);
   } else if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
     feature.Disable(FeatureStatus::Blocklisted, "Blocklisted by gfxInfo",
                     failureId);
   }
-  if (status != nsIGfxInfo::FEATURE_STATUS_OK && aEnabledByPlatform) {
+
+  if (StaticPrefs::media_ffmpeg_vaapi_enabled()) {
     feature.UserForceEnable("Force enabled by pref");
   }
-  if (!aEnabledByPlatform) {
-    feature.Disable(FeatureStatus::Blocked, "Blocked by platform", failureId);
-  }
+
   if (!gfxVars::UseEGL()) {
     feature.ForceDisable(FeatureStatus::Unavailable, "Requires EGL",
                          "FEATURE_FAILURE_REQUIRES_EGL"_ns);
@@ -257,7 +264,6 @@ bool gfxPlatformGtk::InitVAAPIConfig(bool aEnabledByPlatform) {
                            "Wayland support missing",
                            "FEATURE_FAILURE_NO_WAYLAND"_ns);
 #endif
-  return feature.IsEnabled();
 }
 
 void gfxPlatformGtk::InitWebRenderConfig() {
