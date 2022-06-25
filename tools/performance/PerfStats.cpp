@@ -63,6 +63,8 @@ void PerfStats::SetCollectionMask(MetricMask aMask) {
   }
 }
 
+PerfStats::MetricMask PerfStats::GetCollectionMask() { return sCollectionMask; }
+
 PerfStats* PerfStats::GetSingleton() {
   if (!sSingleton) {
     sSingleton = new PerfStats;
