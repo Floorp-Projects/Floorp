@@ -387,7 +387,7 @@ p {
   align-items: center;
 }
 
-.promo-cta .primary.button {
+.promo-cta .primary {
   padding-block: 11px;
   margin: 8px 0;
   font-weight: 600;
@@ -437,4 +437,11 @@ p {
 
 .promo.top > .promo-content {
   padding: 10px 6px;
+}
+
+.promo-link {
+  margin: 0;
+  cursor: pointer;
+  color: var(--in-content-link-color-active);
+  text-decoration: underline;
 }

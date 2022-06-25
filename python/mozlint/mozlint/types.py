@@ -67,24 +67,6 @@ class BaseType(object):
             pass
         return errors
 
-    @abstractmethod
-    def _lint(self, path, config, **lintargs):
-        pass
-
-
-class LineType(BaseType):
-    """Abstract base class for linter types that check each line individually.
-
-    Subclasses of this linter type will read each file and check the provided
-    payload against each line one by one.
-    """
-
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def condition(payload, line, config):
-        pass
-
     def _lint_dir(self, path, config, **lintargs):
         if not config.get("extensions"):
             patterns = ["**"]
@@ -99,6 +81,58 @@ class LineType(BaseType):
             for p, f in finder.find(pattern):
                 errors.extend(self._lint(os.path.join(path, p), config, **lintargs))
         return errors
+
+    @abstractmethod
+    def _lint(self, path, config, **lintargs):
+        pass
+
+
+class FileType(BaseType):
+    """Abstract base class for linter types that check each file
+
+    Subclasses of this linter type will read each file and check the file contents
+    """
+
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def lint_single_file(payload, line, config):
+        """Run linter defined by `config` against `paths` with `lintargs`.
+
+        :param path: Path to the file to lint.
+        :param config: Linter config the paths are being linted against.
+        :param lintargs: External arguments to the linter not defined in
+                         the definition, but passed in by a consumer.
+        :returns: An error message or None
+        """
+        pass
+
+    def _lint(self, path, config, **lintargs):
+        if os.path.isdir(path):
+            return self._lint_dir(path, config, **lintargs)
+
+        payload = config["payload"]
+
+        errors = []
+        message = self.lint_single_file(payload, path, config)
+        if message:
+            errors.append(result.from_config(config, message=message, path=path))
+
+        return errors
+
+
+class LineType(BaseType):
+    """Abstract base class for linter types that check each line individually.
+
+    Subclasses of this linter type will read each file and check the provided
+    payload against each line one by one.
+    """
+
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def condition(payload, line, config):
+        pass
 
     def _lint(self, path, config, **lintargs):
         if os.path.isdir(path):

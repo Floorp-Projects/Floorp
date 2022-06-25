@@ -66,7 +66,7 @@ add_task(
       const { win, tab } = await openTabAndWaitForRender();
       await SpecialPowers.spawn(tab, [], async function() {
         const buttonText = content.document.querySelector(
-          "#private-browsing-vpn-link"
+          "#private-browsing-promo-link"
         ).textContent;
         Assert.equal(
           buttonText,

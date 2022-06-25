@@ -14,6 +14,11 @@ ChromeUtils.defineModuleGetter(
   "RemoteSettings",
   "resource://services-settings/remote-settings.js"
 );
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "pktApi",
+  "chrome://pocket/content/pktApi.jsm"
+);
 const { setTimeout, clearTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
@@ -234,6 +239,18 @@ class DiscoveryStreamFeed {
         },
       })
     );
+    const nimbusConfig = this.store.getState().Prefs.values?.pocketConfig || {};
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_PREFS_SETUP,
+        data: {
+          recentSavesEnabled: nimbusConfig.recentSavesEnabled,
+        },
+        meta: {
+          isStartup,
+        },
+      })
+    );
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE,
@@ -247,6 +264,45 @@ class DiscoveryStreamFeed {
         },
       })
     );
+  }
+
+  async setupPocketState(target) {
+    let dispatch = action =>
+      this.store.dispatch(ac.OnlyToOneContent(action, target));
+    const isUserLoggedIn = lazy.pktApi.isUserLoggedIn();
+    dispatch({
+      type: at.DISCOVERY_STREAM_POCKET_STATE_SET,
+      data: {
+        isUserLoggedIn,
+      },
+    });
+
+    // If we're not logged in, don't bother fetching recent saves, we're done.
+    if (isUserLoggedIn) {
+      let recentSaves = await lazy.pktApi.getRecentSavesCache();
+      if (recentSaves) {
+        // We have cache, so we can use those.
+        dispatch({
+          type: at.DISCOVERY_STREAM_RECENT_SAVES,
+          data: {
+            recentSaves,
+          },
+        });
+      } else {
+        // We don't have cache, so fetch fresh stories.
+        lazy.pktApi.getRecentSaves({
+          success(data) {
+            dispatch({
+              type: at.DISCOVERY_STREAM_RECENT_SAVES,
+              data: {
+                recentSaves: data,
+              },
+            });
+          },
+          error(error) {},
+        });
+      }
+    }
   }
 
   uninitPrefs() {
@@ -1730,7 +1786,9 @@ class DiscoveryStreamFeed {
           )
         );
         break;
-
+      case at.DISCOVERY_STREAM_POCKET_STATE_INIT:
+        this.setupPocketState(action.meta.fromTarget);
+        break;
       case at.DISCOVERY_STREAM_CONFIG_RESET:
         // This is a generic config reset likely related to an external feed pref.
         this.configReset();

@@ -1501,8 +1501,10 @@ class BuildDriver(MozbuildObject):
                     pathToThirdparty, encoding="utf-8", newline="\n"
                 ) as f, io.open(pathToGenerated, encoding="utf-8", newline="\n") as g:
                     # Normalize the path (no trailing /)
-                    suppress = f.readlines() + g.readlines()
-                    LOCAL_SUPPRESS_DIRS = tuple(s.strip("/") for s in suppress)
+                    LOCAL_SUPPRESS_DIRS = tuple(
+                        [line.strip("\n/") for line in f]
+                        + [line.strip("\n/") for line in g]
+                    )
             else:
                 # For application based on gecko like thunderbird
                 LOCAL_SUPPRESS_DIRS = ()

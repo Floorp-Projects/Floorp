@@ -1,0 +1,6 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+# Explicity default .yamllint to isolate tests from tree-wide yamlint config.
+---
+extends: default

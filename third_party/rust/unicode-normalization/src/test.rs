@@ -106,6 +106,11 @@ fn test_nfkc() {
 }
 
 #[test]
+fn test_normalize_char() {
+    assert_eq!('\u{2126}'.nfd().to_string(), "\u{3a9}")
+}
+
+#[test]
 fn test_is_combining_mark_ascii() {
     for cp in 0..0x7f {
         assert!(!is_combining_mark(char::from_u32(cp).unwrap()));

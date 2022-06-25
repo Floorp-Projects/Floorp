@@ -335,6 +335,12 @@ pocketNewtab:
       description: >-
         Updates the Pocket section header and title to say "Editor’s Picks", if used with
         essentialReadsHeader, creates a second section 2 rows down for editorsPicksHeader.
+    recentSavesEnabled:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.recentSaves.enabled
+      description: >-
+        Updates the Pocket section with a new header and 1 row of recently saved Pocket stories.
     readTime:
       type: boolean
       fallbackPref: >-

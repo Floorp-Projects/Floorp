@@ -153,17 +153,10 @@ spotlight-public-wifi-vpn-link = Not Now
 
 ## Total Cookie Protection Rollout
 
-# "Test pilot" is used as a verb. Possible alternatives: "Be the first to try",
-# "Join an early experiment". This header text can be explicitly wrapped.
-spotlight-total-cookie-protection-header =
-  Test pilot our most powerful
-  privacy experience ever
-spotlight-total-cookie-protection-body = Total Cookie Protection stops trackers from using cookies to stalk you around the web.
+cfr-total-cookie-protection-header = Thanks to you, { -brand-short-name } is more private and secure than ever
 # "Early access" for this feature rollout means it's a "feature preview" or
-# "soft launch" as not everybody will get it yet.
-spotlight-total-cookie-protection-expanded = { -brand-short-name } builds a fence around cookies, limiting them to the site you’re on so trackers can’t use them to follow you. With early access, you’ll help optimize this feature so we can keep building a better web for everyone.
-spotlight-total-cookie-protection-primary-button = Turn on Total Cookie Protection
-spotlight-total-cookie-protection-secondary-button = Not now
+# "soft launch". Only those who received it and accepted are shown this message.
+cfr-total-cookie-protection-body = Total Cookie Protection is our strongest privacy protection yet – and it’s now a default setting for { -brand-short-name } users everywhere. We couldn’t have done it without early access participants like you. So thanks for helping us create a better, more private internet.
 
 ## Emotive Continuous Onboarding
 

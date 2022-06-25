@@ -282,7 +282,12 @@ add_task(async function test_remoteImages_fail() {
 });
 
 add_task(async function test_contentExpanded() {
-  let message = await getMessage("TCP_SPOTLIGHT_MESSAGE_95");
+  let message = await getMessage("SPOTLIGHT_MESSAGE_93");
+  message.content.extra = {
+    expanded: {
+      label: "expanded",
+    },
+  };
 
   let dispatchStub = sinon.stub();
   let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
