@@ -1318,6 +1318,11 @@ parent:
     async ShutdownProfile(nsCString aProfile);
 
     /**
+     * This sends any collected perf stats data on shutdown.
+     */
+    async ShutdownPerfStats(nsCString aPerfStats);
+
+    /**
      * Request graphics initialization information from the parent.
      */
     sync GetGraphicsDeviceInitData()

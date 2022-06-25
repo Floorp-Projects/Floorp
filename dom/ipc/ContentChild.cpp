@@ -3041,6 +3041,10 @@ void ContentChild::ShutdownInternal() {
                     : "Not profiling - SendShutdownProfile (failed)"_ns));
   }
 
+  if (PerfStats::GetCollectionMask() != 0) {
+    SendShutdownPerfStats(PerfStats::CollectLocalPerfStatsJSON());
+  }
+
   // Start a timer that will insure we quickly exit after a reasonable
   // period of time. Prevents shutdown hangs after our connection to the
   // parent closes.

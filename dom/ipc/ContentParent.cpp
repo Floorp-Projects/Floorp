@@ -5609,6 +5609,12 @@ mozilla::ipc::IPCResult ContentParent::RecvShutdownProfile(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvShutdownPerfStats(
+    const nsCString& aPerfStats) {
+  PerfStats::StorePerfStats(this, aPerfStats);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvGetGraphicsDeviceInitData(
     ContentDeviceData* aOut) {
   gfxPlatform::GetPlatform()->BuildContentDeviceData(aOut);
