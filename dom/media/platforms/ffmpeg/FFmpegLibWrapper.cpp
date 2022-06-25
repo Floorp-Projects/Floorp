@@ -284,7 +284,7 @@ void FFmpegLibWrapper::Unlink() {
 
 #ifdef MOZ_WAYLAND
 void FFmpegLibWrapper::LinkVAAPILibs() {
-  if (!widget::GetDMABufDevice()->IsDMABufVAAPIEnabled()) {
+  if (!gfx::gfxVars::CanUseHardwareVideoDecoding() || !XRE_IsRDDProcess()) {
     return;
   }
 
