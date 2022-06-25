@@ -678,6 +678,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
   mSharedFontListBlocks = std::move(aSharedFontListBlocks);
 
   gfx::gfxVars::SetValuesForInitialize(aXPCOMInit.gfxNonDefaultVarUpdates());
+  PerfStats::SetCollectionMask(aXPCOMInit.perfStatsMask());
   InitSharedUASheets(std::move(aSharedUASheetHandle), aSharedUASheetAddress);
   InitXPCOM(std::move(aXPCOMInit), aInitialData,
             aIsReadyForBackgroundProcessing);
@@ -3038,6 +3039,10 @@ void ContentChild::ShutdownInternal() {
              : (isProfiling
                     ? "Profiling - SendShutdownProfile (failed)"_ns
                     : "Not profiling - SendShutdownProfile (failed)"_ns));
+  }
+
+  if (PerfStats::GetCollectionMask() != 0) {
+    SendShutdownPerfStats(PerfStats::CollectLocalPerfStatsJSON());
   }
 
   // Start a timer that will insure we quickly exit after a reasonable
