@@ -75,7 +75,6 @@
     "third_party/libwebrtc/third_party/abseil-cpp/absl/synchronization/blocking_counter.cc",
     "third_party/libwebrtc/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_posix.cc",
     "third_party/libwebrtc/third_party/abseil-cpp/absl/time/time.cc",
-    "third_party/libwebrtc/video/rtp_video_stream_receiver2.cc",
-    "third_party/libwebrtc/video/video_receive_stream.cc"
+    "third_party/libwebrtc/video/rtp_video_stream_receiver2.cc"
   ]
 }
