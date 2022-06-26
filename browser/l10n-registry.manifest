@@ -1,1 +1,2 @@
-category l10n-registry 5-browser resource://app/localization/{locale}/
+category l10n-registry 5-browser resource://app/localization/{locale}/ backgroundtask=0
+category l10n-registry 5-browser resource://app/localization/{locale}/ backgroundtask=1
