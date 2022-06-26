@@ -9719,7 +9719,11 @@
   # acceleration for decoding.
 -   name: media.navigator.mediadatadecoder_vpx_enabled
     type: RelaxedAtomicBool
+#if defined(NIGHTLY_BUILD)
     value: true
+#else
+    value: false
+#endif
     mirror: always
 
   # Use MediaDataDecoder API for H264 in WebRTC. This includes hardware
