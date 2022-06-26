@@ -183,10 +183,10 @@
     <string name="preference_search_engine_label">搜索引擎</string>
 
     <!-- Text that is shown below a "switch" preference that is enabled. -->
-    <string name="preference_state_on">开</string>
+    <string name="preference_state_on">开启</string>
 
     <!-- Text that is shown below a "switch" preference that is disabled. -->
-    <string name="preference_state_off">关</string>
+    <string name="preference_state_off">关闭</string>
 
     <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
     <string name="preference_subitem_autocomplete">网址自动补全</string>
@@ -870,8 +870,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">立即显示新建打开的链接</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">安全浏览</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">拦截潜在的危险与诈骗网站</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -881,8 +879,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_https_only_title">HTTPS-Only 模式</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">自动尝试使用 HTTPS 连接到网站以增强安全性。HTTPS 可在您与访问的网站之间提供安全、加密的连接。</string>
-
     <string name="preference_https_only_summary3">自动尝试使用 HTTPS 加密协议连接至网站，以增强安全性。</string>
 
     <!-- Preference for exceptions tracking protection -->
