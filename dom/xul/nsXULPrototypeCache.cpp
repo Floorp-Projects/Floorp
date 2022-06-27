@@ -381,7 +381,7 @@ nsresult nsXULPrototypeCache::BeginCaching(nsIURI* aURI) {
         (!fileChromePath.Equals(chromePath) || !fileLocale.Equals(locale))) {
       // Our cache won't be valid in this case, we'll need to rewrite.
       // XXX This blows away work that other consumers (like
-      // mozJSModuleLoader) have done, need more fine-grained control.
+      // mozJSComponentLoader) have done, need more fine-grained control.
       startupCache->InvalidateCache();
       mStartupCacheURITable.Clear();
       rv = NS_ERROR_UNEXPECTED;

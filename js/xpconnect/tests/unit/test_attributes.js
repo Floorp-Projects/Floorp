@@ -2,50 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var ObjectReadWrite = {
-  QueryInterface: ChromeUtils.generateQI(["nsIXPCTestObjectReadWrite"]),
-
-  /* nsIXPCTestObjectReadWrite */
-  stringProperty: "XPConnect Read-Writable String",
-  booleanProperty: true,
-  shortProperty: 32767,
-  longProperty: 2147483647,
-  floatProperty: 5.5,
-  charProperty: "X",
-  // timeProperty is PRTime and signed type.
-  // So it has to allow negative value.
-  timeProperty: -1,
-};
-
-var ObjectReadOnly = {
-  QueryInterface: ChromeUtils.generateQI(["nsIXPCTestObjectReadOnly"]),
-
-  /* nsIXPCTestObjectReadOnly */
-  strReadOnly: "XPConnect Read-Only String",
-  boolReadOnly: true,
-  shortReadOnly: 32767,
-  longReadOnly: 2147483647,
-  floatReadOnly: 5.5,
-  charReadOnly: "X",
-  // timeProperty is PRTime and signed type.
-  // So it has to allow negative value.
-  timeReadOnly: -1,
-};
-
 function run_test() {
+
   // Load the component manifests.
   registerXPCTestComponents();
+  registerAppManifest(do_get_file('../components/js/xpctest.manifest'));
 
   // Test for each component.
-  test_component_readwrite(Cc["@mozilla.org/js/xpc/test/native/ObjectReadWrite;1"].createInstance());
-  test_component_readwrite(xpcWrap(ObjectReadWrite));
-  test_component_readonly(Cc["@mozilla.org/js/xpc/test/native/ObjectReadOnly;1"].createInstance());
-  test_component_readonly(xpcWrap(ObjectReadOnly));
+  test_component_readwrite("@mozilla.org/js/xpc/test/native/ObjectReadWrite;1");
+  test_component_readwrite("@mozilla.org/js/xpc/test/js/ObjectReadWrite;1");
+  test_component_readonly("@mozilla.org/js/xpc/test/native/ObjectReadOnly;1");
+  test_component_readonly("@mozilla.org/js/xpc/test/js/ObjectReadOnly;1");
 }
 
-function test_component_readwrite(obj) {
+function test_component_readwrite(contractid) {
+
   // Instantiate the object.
-  var o = obj.QueryInterface(Ci.nsIXPCTestObjectReadWrite);
+  var o = Cc[contractid].createInstance(Ci["nsIXPCTestObjectReadWrite"]);
 
   // Test the initial values.
   Assert.equal("XPConnect Read-Writable String", o.stringProperty);
@@ -89,8 +62,10 @@ function test_component_readwrite(obj) {
   SetAndTestBooleanProperty({}, true);
 }
 
-function test_component_readonly(obj) {
-  var o = obj.QueryInterface(Ci.nsIXPCTestObjectReadOnly);
+function test_component_readonly(contractid) {
+
+  // Instantiate the object.
+  var o = Cc[contractid].createInstance(Ci["nsIXPCTestObjectReadOnly"]);
 
   // Test the initial values.
   Assert.equal("XPConnect Read-Only String", o.strReadOnly);

@@ -104,9 +104,16 @@
 @BINPATH@/components/antitracking.manifest
 
 @BINPATH@/components/ProcessSingleton.manifest
+@BINPATH@/components/HandlerService.manifest
+@BINPATH@/components/HandlerService.js
 @BINPATH@/components/servicesComponents.manifest
 @BINPATH@/components/servicesSettings.manifest
 @BINPATH@/components/l10n-registry.manifest
+
+#if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
+@BINPATH@/components/TestInterfaceJS.js
+@BINPATH@/components/TestInterfaceJS.manifest
+#endif
 
 ; Modules
 @BINPATH@/modules/*

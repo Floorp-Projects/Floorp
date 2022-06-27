@@ -1,3 +1,8 @@
+EXTRA_COMPONENTS += [
+    "PushServiceHandler.js",
+    "PushServiceHandler.manifest",
+]
+
 TESTING_JS_MODULES += [
     "broadcast_handler.jsm",
 ]

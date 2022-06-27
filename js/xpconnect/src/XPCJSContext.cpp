@@ -15,7 +15,7 @@
 #include "XPCJSMemoryReporter.h"
 #include "XPCSelfHostedShmem.h"
 #include "WrapperFactory.h"
-#include "mozJSModuleLoader.h"
+#include "mozJSComponentLoader.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 

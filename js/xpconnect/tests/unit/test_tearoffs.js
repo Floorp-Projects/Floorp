@@ -2,24 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function TestInterfaceAll() {}
-TestInterfaceAll.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIXPCTestInterfaceA",
-                                          "nsIXPCTestInterfaceB",
-                                          "nsIXPCTestInterfaceC"]),
-
-  /* nsIXPCTestInterfaceA / nsIXPCTestInterfaceB */
-  name: "TestInterfaceAllDefaultName",
-
-  /* nsIXPCTestInterfaceC */
-  someInteger: 42
-};
-
-function newWrappedJS() {
-  return xpcWrap(new TestInterfaceAll());
-}
-
 function run_test() {
+
+  // Load the component manifest containing our test interface implementations.
+  Components.manager.autoRegister(do_get_file('../components/js/xpctest.manifest'));
+
   // Shortcut the interfaces we're using.
   var ifs = {
     a: Ci['nsIXPCTestInterfaceA'],
@@ -27,17 +14,20 @@ function run_test() {
     c: Ci['nsIXPCTestInterfaceC']
   };
 
+  // Shortcut the class we're instantiating. This implements all three interfaces.
+  var cls = Cc["@mozilla.org/js/xpc/test/js/TestInterfaceAll;1"];
+
   // Run through the logic a few times.
-  for (let i = 0; i < 2; ++i)
-    play_with_tearoffs(ifs);
+  for (i = 0; i < 2; ++i)
+    play_with_tearoffs(ifs, cls);
 }
 
-function play_with_tearoffs(ifs) {
+function play_with_tearoffs(ifs, cls) {
 
   // Allocate a bunch of objects, QI-ed to B.
   var instances = [];
   for (var i = 0; i < 300; ++i)
-    instances.push(newWrappedJS().QueryInterface(ifs.b));
+    instances.push(cls.createInstance(ifs.b));
 
   // Nothing to collect.
   gc();

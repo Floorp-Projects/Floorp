@@ -724,6 +724,8 @@ interface nsIXPCComponents_Utils : nsISupports
     // Array of the URI of JSM and ESM loaded, converting ESM URI into JSM URI.
     readonly attribute Array<ACString> loadedModules;
 
+    readonly attribute Array<ACString> loadedComponents;
+
     // Array of the URI of JSM loaded.
     readonly attribute Array<ACString> loadedJSModules;
 
@@ -731,10 +733,11 @@ interface nsIXPCComponents_Utils : nsISupports
     readonly attribute Array<ACString> loadedESModules;
 
 
-    // This function will only return useful values if the
+    // These 2 functions will only return useful values if the
     // "browser.startup.record" preference was true at the time the JS file
     // was loaded.
     ACString getModuleImportStack(in AUTF8String aLocation);
+    ACString getComponentLoadStack(in AUTF8String aLocation);
 };
 
 /**

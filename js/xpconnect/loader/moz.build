@@ -18,10 +18,10 @@ UNIFIED_SOURCES += [
     "URLPreloader.cpp",
 ]
 
-# mozJSModuleLoader.cpp cannot be built in unified mode because it uses
+# mozJSComponentLoader.cpp cannot be built in unified mode because it uses
 # windows.h
 SOURCES += [
-    "mozJSModuleLoader.cpp",
+    "mozJSComponentLoader.cpp",
 ]
 
 IPDL_SOURCES += [

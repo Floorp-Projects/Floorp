@@ -96,6 +96,10 @@ extern "C" const char* __lsan_default_suppressions() {
          // nsComponentManagerImpl intentionally leaks factory entries, and
          // probably some other stuff.
          "leak:nsComponentManagerImpl\n"
+         // These two variants are needed when fast unwind is disabled and stack
+         // depth is limited.
+         "leak:mozJSComponentLoader::LoadModule\n"
+         "leak:nsNativeModuleLoader::LoadModule\n"
 
          // Bug 981220 - Pixman fails to free TLS memory.
          "leak:pixman_implementation_lookup_composite\n"
@@ -183,7 +187,7 @@ extern "C" const char* __lsan_default_suppressions() {
          "leak:js::frontend::GeneralParser\n"
          "leak:js::frontend::Parse\n"
          "leak:xpc::CIGSHelper\n"
-         "leak:mozJSModuleLoader\n"
+         "leak:mozJSComponentLoader\n"
          "leak:mozilla::xpcom::ConstructJSMComponent\n"
          "leak:XPCWrappedNativeJSOps\n"
 

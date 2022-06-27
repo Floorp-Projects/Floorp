@@ -12,6 +12,11 @@ DEFINES["MOZILLA_INTERNAL_API"] = True
 
 Library("dombindings_test_s")
 
+EXTRA_COMPONENTS += [
+    "TestInterfaceJS.js",
+    "TestInterfaceJS.manifest",
+]
+
 MOCHITEST_MANIFESTS += ["mochitest.ini"]
 
 MOCHITEST_CHROME_MANIFESTS += ["chrome.ini"]
@@ -20,10 +25,6 @@ TEST_WEBIDL_FILES += [
     "TestDictionary.webidl",
     "TestJSImplInheritanceGen.webidl",
     "TestTypedef.webidl",
-]
-
-TESTING_JS_MODULES += [
-    "TestInterfaceJS.jsm",
 ]
 
 PREPROCESSED_TEST_WEBIDL_FILES += [

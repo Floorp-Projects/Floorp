@@ -1,19 +1,6 @@
 // Test that it's not possible to create expando properties on XPCWNs.
 // See <https://bugzilla.mozilla.org/show_bug.cgi?id=1143810#c5>.
 
-function TestInterfaceAll() {}
-TestInterfaceAll.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIXPCTestInterfaceA",
-                                          "nsIXPCTestInterfaceB",
-                                          "nsIXPCTestInterfaceC"]),
-
-  /* nsIXPCTestInterfaceA / nsIXPCTestInterfaceB */
-  name: "TestInterfaceAllDefaultName",
-
-  /* nsIXPCTestInterfaceC */
-  someInteger: 42
-};
-
 function check_throws(f) {
   try {
     f();
@@ -172,7 +159,8 @@ function run_test() {
   });
 
   // Test a tearoff object.
-  let b = xpcWrap(new TestInterfaceAll(), Ci.nsIXPCTestInterfaceB);
+  Components.manager.autoRegister(do_get_file('../components/js/xpctest.manifest'));
+  let b = Cc["@mozilla.org/js/xpc/test/js/TestInterfaceAll;1"].createInstance(Ci.nsIXPCTestInterfaceB);
   let tearoff = b.nsIXPCTestInterfaceA;
   test_twice(tearoff, {
     method: "QueryInterface"

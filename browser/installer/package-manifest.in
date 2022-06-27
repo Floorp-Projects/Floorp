@@ -173,6 +173,12 @@
 @RESPATH@/components/nsUpdateService.manifest
 #endif
 @RESPATH@/components/ProcessSingleton.manifest
+@RESPATH@/components/HandlerService.manifest
+@RESPATH@/components/HandlerService.js
+#ifdef XP_MACOSX
+@RESPATH@/browser/components/MacTouchBar.manifest
+@RESPATH@/browser/components/MacTouchBar.js
+#endif
 @RESPATH@/components/SyncComponents.manifest
 @RESPATH@/components/servicesComponents.manifest
 @RESPATH@/components/servicesSettings.manifest
@@ -190,6 +196,16 @@
 #ifdef ENABLE_WEBDRIVER
 @RESPATH@/chrome/remote@JAREXT@
 @RESPATH@/chrome/remote.manifest
+#endif
+
+#if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
+@RESPATH@/components/TestInterfaceJS.js
+@RESPATH@/components/TestInterfaceJS.manifest
+#endif
+
+#if defined(MOZ_DEBUG) || defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
+@RESPATH@/browser/components/testComponents.manifest
+@RESPATH@/browser/components/startupRecorder.js
 #endif
 
 ; [Extensions]

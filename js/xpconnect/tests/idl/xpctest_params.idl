@@ -114,5 +114,5 @@ interface nsIXPCTestParams : nsISupports {
   ACString             testStringArrayOptionalSize([array, size_is(aLength)] in string a, [optional] in unsigned long aLength);
 
   // Test for omitted optional out parameter.
-  void                 testOmittedOptionalOut(in nsIXPCTestParams aJSObj, [optional] out nsIURI aOut);
+  void                 testOmittedOptionalOut([optional] out nsIURI aOut);
 };

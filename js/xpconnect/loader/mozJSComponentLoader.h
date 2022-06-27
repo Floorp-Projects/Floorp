@@ -4,13 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozJSModuleLoader_h
-#define mozJSModuleLoader_h
+#ifndef mozJSComponentLoader_h
+#define mozJSComponentLoader_h
 
 #include "ComponentModuleLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/FileLocation.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Module.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIMemoryReporter.h"
@@ -21,10 +22,11 @@
 #include "jsapi.h"
 #include "js/experimental/JSStencil.h"
 
+#include "xpcIJSGetFactory.h"
 #include "xpcpublic.h"
 
 class nsIFile;
-class ModuleLoaderInfo;
+class ComponentLoaderInfo;
 
 namespace mozilla {
 class ScriptPreloader;
@@ -34,7 +36,7 @@ class ScriptPreloader;
 #  define STARTUP_RECORDER_ENABLED
 #endif
 
-class mozJSModuleLoader final : public nsIMemoryReporter {
+class mozJSComponentLoader final : public nsIMemoryReporter {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
@@ -48,8 +50,13 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   // Returns the list of all JSMs and ESMs.
   nsresult GetLoadedJSAndESModules(nsTArray<nsCString>& aLoadedModules);
 
+  void GetLoadedComponents(nsTArray<nsCString>& aLoadedComponents);
   nsresult GetModuleImportStack(const nsACString& aLocation,
                                 nsACString& aRetval);
+  nsresult GetComponentLoadStack(const nsACString& aLocation,
+                                 nsACString& aRetval);
+
+  const mozilla::Module* LoadModule(mozilla::FileLocation& aFile);
 
   void FindTargetObject(JSContext* aCx, JS::MutableHandleObject aTargetObject);
 
@@ -57,8 +64,8 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   static void Unload();
   static void Shutdown();
 
-  static mozJSModuleLoader* Get() {
-    MOZ_ASSERT(sSelf, "Should have already created the module loader");
+  static mozJSComponentLoader* Get() {
+    MOZ_ASSERT(sSelf, "Should have already created the component loader");
     return sSelf;
   }
 
@@ -97,13 +104,13 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
  protected:
-  mozJSModuleLoader();
-  ~mozJSModuleLoader();
+  mozJSComponentLoader();
+  ~mozJSComponentLoader();
 
   friend class XPCJSRuntime;
 
  private:
-  static mozilla::StaticRefPtr<mozJSModuleLoader> sSelf;
+  static mozilla::StaticRefPtr<mozJSComponentLoader> sSelf;
 
   void UnloadModules();
 
@@ -116,10 +123,11 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 
   static bool LocationIsRealFile(nsIURI* aURI);
 
-  JSObject* PrepareObjectForLocation(JSContext* aCx, nsIFile* aModuleFile,
-                                     nsIURI* aURI, bool aRealFile);
+  JSObject* PrepareObjectForLocation(JSContext* aCx, nsIFile* aComponentFile,
+                                     nsIURI* aComponent, bool aRealFile);
 
-  nsresult ObjectForLocation(ModuleLoaderInfo& aInfo, nsIFile* aModuleFile,
+  nsresult ObjectForLocation(ComponentLoaderInfo& aInfo,
+                             nsIFile* aComponentFile,
                              JS::MutableHandleObject aObject,
                              JS::MutableHandleScript aTableScript,
                              char** aLocation, bool aCatchException,
@@ -127,8 +135,9 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 
   // Get the script for a given location, either from a cached stencil or by
   // compiling it from source.
-  static nsresult GetScriptForLocation(JSContext* aCx, ModuleLoaderInfo& aInfo,
-                                       nsIFile* aModuleFile, bool aUseMemMap,
+  static nsresult GetScriptForLocation(JSContext* aCx,
+                                       ComponentLoaderInfo& aInfo,
+                                       nsIFile* aComponentFile, bool aUseMemMap,
                                        JS::MutableHandleScript aScriptOut,
                                        char** aLocationOut = nullptr);
 
@@ -141,16 +150,31 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   nsresult ImportInto(const nsACString& aLocation, JS::HandleObject targetObj,
                       JSContext* callercx, JS::MutableHandleObject vp);
 
-  class ModuleEntry {
+  nsCOMPtr<nsIComponentManager> mCompMgr;
+
+  class ModuleEntry : public mozilla::Module {
    public:
     explicit ModuleEntry(JS::RootingContext* aRootingCx)
-        : obj(aRootingCx), exports(aRootingCx), thisObjectKey(aRootingCx) {
+        : mozilla::Module(),
+          obj(aRootingCx),
+          exports(aRootingCx),
+          thisObjectKey(aRootingCx) {
+      mVersion = mozilla::Module::kVersion;
+      mCIDs = nullptr;
+      mContractIDs = nullptr;
+      mCategoryEntries = nullptr;
+      getFactoryProc = GetFactory;
+      loadProc = nullptr;
+      unloadProc = nullptr;
+
       location = nullptr;
     }
 
     ~ModuleEntry() { Clear(); }
 
     void Clear() {
+      getfactoryobj = nullptr;
+
       if (obj) {
         if (JS_HasExtensibleLexicalEnvironment(obj)) {
           JS::RootedObject lexicalEnv(mozilla::dom::RootingCx(),
@@ -176,6 +200,10 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+    static already_AddRefed<nsIFactory> GetFactory(
+        const mozilla::Module& module, const mozilla::Module::CIDEntry& entry);
+
+    nsCOMPtr<xpcIJSGetFactory> getfactoryobj;
     JS::PersistentRootedObject obj;
     JS::PersistentRootedObject exports;
     JS::PersistentRootedScript thisObjectKey;
@@ -186,8 +214,11 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 #endif
   };
 
-  nsresult ExtractExports(JSContext* aCx, ModuleLoaderInfo& aInfo,
+  nsresult ExtractExports(JSContext* aCx, ComponentLoaderInfo& aInfo,
                           ModuleEntry* aMod, JS::MutableHandleObject aExports);
+
+  // Modules are intentionally leaked, but still cleared.
+  nsTHashMap<nsCStringHashKey, ModuleEntry*> mModules;
 
   nsClassHashtable<nsCStringHashKey, ModuleEntry> mImports;
   nsTHashMap<nsCStringHashKey, ModuleEntry*> mInProgressImports;

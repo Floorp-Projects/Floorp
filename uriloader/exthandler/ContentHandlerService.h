@@ -30,8 +30,6 @@ class ContentHandlerService : public nsIHandlerService {
   static void nsIHandlerInfoToHandlerInfo(nsIHandlerInfo* aInfo,
                                           HandlerInfo* aHandlerInfo);
 
-  static already_AddRefed<nsIHandlerService> Create();
-
  private:
   virtual ~ContentHandlerService();
   RefPtr<HandlerServiceChild> mHandlerServiceChild;

@@ -18,7 +18,7 @@
 #include "mozilla/TaskController.h"
 #include "mozilla/Unused.h"
 #include "mozilla/XPCOM.h"
-#include "mozJSModuleLoader.h"
+#include "mozJSComponentLoader.h"
 #include "nsXULAppAPI.h"
 
 #ifndef ANDROID
@@ -689,7 +689,7 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
   // log files. We have to ignore them before we can move
   // the mozilla::PoisonWrite call before this point. See bug
   // 834945 for the details.
-  mozJSModuleLoader::Unload();
+  mozJSComponentLoader::Unload();
 
   // Clear the profiler's JS context before cycle collection. The profiler will
   // notify the JS engine that it can let go of any data it's holding on to for

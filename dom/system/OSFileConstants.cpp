@@ -76,7 +76,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsXULAppAPI.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "mozJSModuleLoader.h"
+#include "mozJSComponentLoader.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
@@ -969,7 +969,7 @@ OSFileConstantsService::Init(JSContext* aCx) {
     return rv;
   }
 
-  mozJSModuleLoader* loader = mozJSModuleLoader::Get();
+  mozJSComponentLoader* loader = mozJSComponentLoader::Get();
   JS::Rooted<JSObject*> targetObj(aCx);
   loader->FindTargetObject(aCx, &targetObj);
 

@@ -147,6 +147,9 @@ class nsComponentManagerImpl final : public nsIComponentManager,
     explicit KnownModule(const mozilla::Module* aModule)
         : mModule(aModule), mLoaded(false), mFailed(false) {}
 
+    explicit KnownModule(mozilla::FileLocation& aFile)
+        : mModule(nullptr), mFile(aFile), mLoaded(false), mFailed(false) {}
+
     ~KnownModule() {
       if (mLoaded && mModule->unloadProc) {
         mModule->unloadProc();
@@ -165,6 +168,7 @@ class nsComponentManagerImpl final : public nsIComponentManager,
 
    private:
     const mozilla::Module* mModule;
+    mozilla::FileLocation mFile;
     bool mLoaded;
     bool mFailed;
   };
@@ -172,6 +176,8 @@ class nsComponentManagerImpl final : public nsIComponentManager,
   // The KnownModule is kept alive by these members, it is
   // referenced by pointer from the factory entries.
   nsTArray<mozilla::UniquePtr<KnownModule>> mKnownStaticModules;
+  // The key is the URI string of the module
+  nsClassHashtable<nsCStringHashKey, KnownModule> mKnownModules;
 
   // Mutex not held
   void RegisterModule(const mozilla::Module* aModule);
@@ -199,6 +205,10 @@ class nsComponentManagerImpl final : public nsIComponentManager,
 
   void ManifestManifest(ManifestProcessingContext& aCx, int aLineNo,
                         char* const* aArgv);
+  void ManifestComponent(ManifestProcessingContext& aCx, int aLineNo,
+                         char* const* aArgv);
+  void ManifestContract(ManifestProcessingContext& aCx, int aLineNo,
+                        char* const* aArgv);
   void ManifestCategory(ManifestProcessingContext& aCx, int aLineNo,
                         char* const* aArgv);
 
@@ -211,6 +221,8 @@ class nsComponentManagerImpl final : public nsIComponentManager,
     SHUTDOWN_IN_PROGRESS,
     SHUTDOWN_COMPLETE
   } mStatus;
+
+  mozilla::ArenaAllocator<1024 * 1, 8> mArena;
 
   struct PendingServiceInfo {
     const nsCID* cid;

@@ -12,7 +12,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ScopeExit.h"
-#include "mozJSModuleLoader.h"
+#include "mozJSComponentLoader.h"
 #include "jsapi.h"
 #include "js/CallAndConstruct.h"    // JS::Construct
 #include "js/PropertyAndElement.h"  // JS_GetProperty
@@ -60,8 +60,8 @@ already_AddRefed<JSActor> JSActorManager::GetActor(JSContext* aCx,
   // while importing etc.
   JSAutoRealm ar(aCx, xpc::PrivilegedJunkScope());
 
-  // Load the module using mozJSModuleLoader.
-  RefPtr loader = mozJSModuleLoader::Get();
+  // Load the module using mozJSComponentLoader.
+  RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::Get();
   MOZ_ASSERT(loader);
 
   // If a module URI was provided, use it to construct an instance of the actor.
