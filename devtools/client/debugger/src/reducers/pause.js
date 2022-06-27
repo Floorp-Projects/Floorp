@@ -127,6 +127,20 @@ function update(state = initialPauseState(), action) {
 
     case "FETCHED_FRAMES": {
       const { frames } = action;
+
+      // We typically receive a PAUSED action before this one,
+      // with only the first frame. Here, we avoid replacing it
+      // with a copy of it in order to avoid triggerring selectors
+      // uncessarily
+      // (note that in jest, action's frames might be empty)
+      // (and if we resume in between PAUSED and FETCHED_FRAMES
+      //  threadState().frames might be null)
+      if (threadState().frames) {
+        const previousFirstFrame = threadState().frames[0];
+        if (previousFirstFrame.id == frames[0]?.id) {
+          frames.splice(0, 1, previousFirstFrame);
+        }
+      }
       return updateThreadState({ frames, framesLoading: false });
     }
 
