@@ -26,3 +26,4 @@ Contributing to GeckoView
    GeckoView's architecture.
 -  `Junit Test Framework <junit.html>`_: An overview of GeckoView's custom
    Junit code.
+-  `apilint <apilint.html>`_: GeckoView's linter for the API.
