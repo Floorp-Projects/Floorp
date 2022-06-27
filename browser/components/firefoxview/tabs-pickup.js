@@ -208,6 +208,9 @@ class TabsPickupContainer extends HTMLElement {
     super();
     this.manager = null;
     this._currentSetupStateIndex = -1;
+    XPCOMUtils.defineLazyModuleGetters(this, {
+      Services: "resource://gre/modules/Services.jsm",
+    });
   }
   get setupContainerElem() {
     return this.querySelector(".sync-setup-container");
@@ -227,6 +230,11 @@ class TabsPickupContainer extends HTMLElement {
           .map(str => str.trim());
         elem.setAttribute(name, elementId + value);
         delete elem.dataset.prefix;
+      }
+      for (let elem of cloned.querySelectorAll("a[data-support-url]")) {
+        elem.href =
+          this.Services.urlFormatter.formatURLPref("app.support.baseURL") +
+          elem.dataset.supportUrl;
       }
     }
     this.appendChild(cloned);
