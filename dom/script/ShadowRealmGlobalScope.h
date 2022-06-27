@@ -70,6 +70,8 @@ JSObject* NewShadowRealmGlobal(JSContext* aCx, JS::RealmOptions& aOptions,
                                JSPrincipals* aPrincipals,
                                JS::Handle<JSObject*> aGlobalObj);
 
+bool IsShadowRealmGlobal(JSObject* aObject);
+
 }  // namespace mozilla::dom
 
 #endif
