@@ -4379,8 +4379,8 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("map", "ArrayMap", 1, 0),
     JS_SELF_HOSTED_FN("filter", "ArrayFilter", 1, 0),
 #ifdef NIGHTLY_BUILD
-    JS_SELF_HOSTED_FN("groupBy", "ArrayGroupBy", 1, 0),
-    JS_SELF_HOSTED_FN("groupByToMap", "ArrayGroupByToMap", 1, 0),
+    JS_SELF_HOSTED_FN("group", "ArrayGroup", 1, 0),
+    JS_SELF_HOSTED_FN("groupToMap", "ArrayGroupToMap", 1, 0),
 #endif
     JS_SELF_HOSTED_FN("reduce", "ArrayReduce", 1, 0),
     JS_SELF_HOSTED_FN("reduceRight", "ArrayReduceRight", 1, 0),
