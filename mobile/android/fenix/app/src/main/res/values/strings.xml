@@ -40,8 +40,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Recent bookmarks</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all" moz:removedIn="101" tools:ignore="UnusedResources">Show all</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Show all saved bookmarks</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
@@ -1032,8 +1030,6 @@
     <string name="snackbar_tabs_closed">Tabs closed</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Bookmarks saved!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites" moz:RemovedIn="101" tools:ignore="UnusedResources">Added to top sites!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Added to shortcuts!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1632,10 +1628,6 @@
     <string name="no_site_exceptions">No site exceptions</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Are you sure you want to delete this bookmark?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites" moz:RemovedIn="101" tools:ignore="UnusedResources">Add to top sites</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites" moz:RemovedIn="101" tools:ignore="UnusedResources">Remove from top sites</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Add to shortcuts</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1707,12 +1699,8 @@
     <string name="synced_tabs_collapse_group">Collapse group of synced tabs</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title" moz:RemovedIn="101" tools:ignore="UnusedResources">Top site limit reached</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Shortcut limit reached</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2" moz:RemovedIn="101" tools:ignore="UnusedResources">To add a new top site, remove one. Touch and hold the site and select remove.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">To add a new shortcut, remove one. Touch and hold the site and select remove.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1721,8 +1709,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">Shortcuts</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Name</string>
-	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint" moz:RemovedIn="101" tools:ignore="UnusedResources">Top site name</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Shortcut name</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
