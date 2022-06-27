@@ -677,6 +677,8 @@ class Descriptor(DescriptorProvider):
                 config.maxProtoChainLength, len(self.prototypeChain)
             )
 
+        self.hasOrdinaryObjectPrototype = desc.get("hasOrdinaryObjectPrototype", False)
+
     def binaryNameFor(self, name):
         return self._binaryNames.get(name, name)
 
