@@ -24,7 +24,7 @@ body.dark {
 
 body.hcm {
   --current-voice: inherit;
-  --narrate-word-highlight-color: CanvasText;
+  --narrate-word-highlight-color: SelectedItem;
   --narrating-paragraph-background-color: Canvas;
 }
 
@@ -39,9 +39,16 @@ body.hcm {
   display: none;
   transform: translate(-50%, calc(-50% - 2px));
   z-index: -1;
-  border-bottom-style: solid;
-  border-bottom-width: 7px;
+  border-bottom: 7px solid var(--narrate-word-highlight-color);
   transition: left 0.1s ease, width 0.1s ease;
+}
+
+body.hcm .narrate-word-highlight {
+  /* Shift the word highlight a bit downwards to not cover the bottom part of characters.
+   * The z-index above is meant to have the highlight appear below the text,
+   * but that's not best practice in HCM so we do this instead. */
+  transform: translate(-50%, calc(-50% + 2px));
+  border-bottom-width: 3px;
 }
 
 .narrating > .narrate-word-highlight {
@@ -50,10 +57,6 @@ body.hcm {
 
 .narrate-word-highlight.newline {
   transition: none;
-}
-
-.narrate-word-highlight {
-  border-bottom-color: var(--narrate-word-highlight-color);
 }
 
 .narrate-toggle {
@@ -77,6 +80,7 @@ body.hcm .speaking .narrate-toggle:hover {
 
 .narrate-dropdown > .dropdown-popup button {
   background-color: transparent;
+  fill: var(--popup-button-foreground);
 }
 
 .narrate-dropdown > .dropdown-popup button:enabled:hover,
@@ -88,6 +92,10 @@ body.hcm .speaking .narrate-toggle:hover {
 
 .narrate-dropdown > .dropdown-popup button:enabled:hover:active {
   background-color: var(--popup-button-background-active);
+}
+
+.narrate-dropdown > .dropdown-popup button:enabled:focus-visible {
+  outline-offset: -2px;
 }
 
 .narrate-dropdown > .dropdown-popup {
