@@ -43,6 +43,8 @@ export class ContentSection extends React.PureComponent {
       highlightsEnabled,
       showSponsoredTopSitesEnabled,
       showSponsoredPocketEnabled,
+      showRecentSavesEnabled,
+      recentSavesExperiment,
       topSitesRowsCount,
     } = this.props.enabledSections;
 
@@ -194,6 +196,25 @@ export class ContentSection extends React.PureComponent {
                         data-l10n-id="newtab-custom-pocket-sponsored"
                       />
                     </div>
+                    {recentSavesExperiment && (
+                      <div className="check-wrapper" role="presentation">
+                        <input
+                          id="recent-saves-pocket"
+                          className="sponsored-checkbox"
+                          disabled={!pocketEnabled}
+                          checked={showRecentSavesEnabled}
+                          type="checkbox"
+                          onChange={this.onPreferenceSelect}
+                          preference="showRecentSaves"
+                          eventSource="POCKET_RECENT_SAVES"
+                        />
+                        <label
+                          className="sponsored"
+                          htmlFor="recent-saves-pocket"
+                          data-l10n-id="newtab-custom-pocket-show-recent-saves"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -270,6 +270,7 @@ newtab-custom-sponsored-sites = Sponsored shortcuts
 newtab-custom-pocket-title = Recommended by { -pocket-brand-name }
 newtab-custom-pocket-subtitle = Exceptional content curated by { -pocket-brand-name }, part of the { -brand-product-name } family
 newtab-custom-pocket-sponsored = Sponsored stories
+newtab-custom-pocket-show-recent-saves = Show recent saves
 newtab-custom-recent-title = Recent activity
 newtab-custom-recent-subtitle = A selection of recent sites and content
 newtab-custom-close-button = Close
