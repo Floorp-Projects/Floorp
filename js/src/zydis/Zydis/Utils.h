@@ -26,7 +26,7 @@
 
 /**
  * @file
- * @brief   Other utility functions.
+ * Other utility functions.
  */
 
 #ifndef ZYDIS_UTILS_H
@@ -57,87 +57,87 @@ extern "C" {
 /* ============================================================================================== */
 
 /**
- * @brief   Defines the `ZydisInstructionSegment` struct.
+ * Defines the `ZydisInstructionSegment` struct.
  */
 typedef enum ZydisInstructionSegment_
 {
     ZYDIS_INSTR_SEGMENT_NONE,
     /**
-     * @brief   The legacy prefixes (including ignored `REX` prefixes).
+     * The legacy prefixes (including ignored `REX` prefixes).
      */
     ZYDIS_INSTR_SEGMENT_PREFIXES,
     /**
-     * @brief   The effective `REX` prefix byte.
+     * The effective `REX` prefix byte.
      */
     ZYDIS_INSTR_SEGMENT_REX,
     /**
-     * @brief   The `XOP` prefix bytes.
+     * The `XOP` prefix bytes.
      */
     ZYDIS_INSTR_SEGMENT_XOP,
     /**
-     * @brief   The `VEX` prefix bytes.
+     * The `VEX` prefix bytes.
      */
     ZYDIS_INSTR_SEGMENT_VEX,
     /**
-     * @brief   The `EVEX` prefix bytes.
+     * The `EVEX` prefix bytes.
      */
     ZYDIS_INSTR_SEGMENT_EVEX,
     /**
-     * @brief   The `MVEX` prefix bytes.
+     * The `MVEX` prefix bytes.
      */
     ZYDIS_INSTR_SEGMENT_MVEX,
     /**
-     * @brief   The opcode bytes.
+     * The opcode bytes.
      */
     ZYDIS_INSTR_SEGMENT_OPCODE,
     /**
-     * @brief   The `ModRM` byte.
+     * The `ModRM` byte.
      */
     ZYDIS_INSTR_SEGMENT_MODRM,
     /**
-     * @brief   The `SIB` byte.
+     * The `SIB` byte.
      */
     ZYDIS_INSTR_SEGMENT_SIB,
     /**
-     * @brief   The displacement bytes.
+     * The displacement bytes.
      */
     ZYDIS_INSTR_SEGMENT_DISPLACEMENT,
     /**
-     * @brief   The immediate bytes.
+     * The immediate bytes.
      */
     ZYDIS_INSTR_SEGMENT_IMMEDIATE,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_INSTR_SEGMENT_MAX_VALUE = ZYDIS_INSTR_SEGMENT_IMMEDIATE,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_INSTR_SEGMENT_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_INSTR_SEGMENT_MAX_VALUE)
 } ZydisInstructionSegment;
 
 /**
- * @brief   Defines the `ZydisInstructionSegments` struct.
+ * Defines the `ZydisInstructionSegments` struct.
  */
 typedef struct ZydisInstructionSegments_
 {
     /**
-     * @brief   The number of logical instruction segments.
+     * The number of logical instruction segments.
      */
     ZyanU8 count;
     struct
     {
         /**
-         * @brief   The type of the segment.
+         * The type of the segment.
          */
         ZydisInstructionSegment type;
         /**
-         * @brief   The offset of the segment relative to the start of the instruction (in bytes).
+         * The offset of the segment relative to the start of the instruction (in bytes).
          */
         ZyanU8 offset;
         /**
-         * @brief   The size of the segment, in bytes.
+         * The size of the segment, in bytes.
          */
         ZyanU8 size;
     } segments[ZYDIS_MAX_INSTRUCTION_SEGMENT_COUNT];
@@ -149,7 +149,7 @@ typedef struct ZydisInstructionSegments_
 
 /**
  * @addtogroup utils Utils
- * @brief Miscellaneous utility functions. Address translation and other helpers.
+ * Miscellaneous utility functions. Address translation and other helpers.
  * @{
  */
 
@@ -160,7 +160,7 @@ typedef struct ZydisInstructionSegments_
 // TODO: Provide a function that works in minimal-mode and does not require a operand parameter
 
 /**
- * @brief   Calculates the absolute address value for the given instruction operand.
+ * Calculates the absolute address value for the given instruction operand.
  *
  * @param   instruction     A pointer to the `ZydisDecodedInstruction` struct.
  * @param   operand         A pointer to the `ZydisDecodedOperand` struct.
@@ -179,7 +179,7 @@ ZYDIS_EXPORT ZyanStatus ZydisCalcAbsoluteAddress(const ZydisDecodedInstruction* 
     const ZydisDecodedOperand* operand, ZyanU64 runtime_address, ZyanU64* result_address);
 
 /**
- * @brief   Calculates the absolute address value for the given instruction operand.
+ * Calculates the absolute address value for the given instruction operand.
  *
  * @param   instruction         A pointer to the `ZydisDecodedInstruction` struct.
  * @param   operand             A pointer to the `ZydisDecodedOperand` struct.
@@ -204,7 +204,7 @@ ZYDIS_EXPORT ZyanStatus ZydisCalcAbsoluteAddressEx(const ZydisDecodedInstruction
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Returns a mask of accessed CPU-flags matching the given `action`.
+ * Returns a mask of accessed CPU-flags matching the given `action`.
  *
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
  * @param   action      The CPU-flag action.
@@ -216,35 +216,41 @@ ZYDIS_EXPORT ZyanStatus ZydisGetAccessedFlagsByAction(const ZydisDecodedInstruct
     ZydisCPUFlagAction action, ZydisCPUFlags* flags);
 
 /**
- * @brief   Returns a mask of accessed CPU-flags that are read (tested) by the current instruction.
+ * Returns a mask of accessed CPU-flags that are read (tested) by the current instruction.
+ *
+ * DEPRECATED. This function will be removed in the next major release. Please refer to the
+ * `cpu_flags_read` or `fpu_flags_read` fields of the `ZydisDecodedInstruction` instead.
  *
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
  * @param   flags       Receives the flag mask.
  *
  * @return  A zyan status code.
  */
-ZYDIS_EXPORT ZyanStatus ZydisGetAccessedFlagsRead(const ZydisDecodedInstruction* instruction,
-    ZydisCPUFlags* flags);
+ZYDIS_DEPRECATED_EXPORT ZyanStatus ZydisGetAccessedFlagsRead(
+    const ZydisDecodedInstruction* instruction, ZydisCPUFlags* flags);
 
 /**
- * @brief   Returns a mask of accessed CPU-flags that are written (modified, undefined) by the
- *          current instruction.
+ * Returns a mask of accessed CPU-flags that are written (modified, undefined) by the current
+ * instruction.
+ *
+ * DEPRECATED. This function will be removed in the next major release. Please refer to the
+ * `cpu_flags_written` or `fpu_flags_written` fields of the `ZydisDecodedInstruction` instead.
  *
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
  * @param   flags       Receives the flag mask.
  *
  * @return  A zyan status code.
  */
-ZYDIS_EXPORT ZyanStatus ZydisGetAccessedFlagsWritten(const ZydisDecodedInstruction* instruction,
-    ZydisCPUFlags* flags);
+ZYDIS_DEPRECATED_EXPORT ZyanStatus ZydisGetAccessedFlagsWritten(
+    const ZydisDecodedInstruction* instruction, ZydisCPUFlags* flags);
 
 /* ---------------------------------------------------------------------------------------------- */
 /* Instruction segments                                                                           */
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Returns offsets and sizes of all logical instruction segments (e.g. `OPCODE`,
- *          `MODRM`, ...).
+ * Returns offsets and sizes of all logical instruction segments (e.g. `OPCODE`,
+ * `MODRM`, ...).
  *
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
  * @param   segments    Receives the instruction segments information.

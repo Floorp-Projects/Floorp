@@ -165,8 +165,18 @@ ZyanStatus ZydisFormatterATTFormatInstruction(const ZydisFormatter* formatter,
                 }
             } else
             {
-                if ((i == (context->instruction->operand_count - 1)) ||
-                    (context->instruction->operands[i + 1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE))
+                ZyanBool decorate_operand = ZYAN_FALSE;
+                if (i == (context->instruction->operand_count - 1))
+                {
+                    decorate_operand = operand->type != ZYDIS_OPERAND_TYPE_IMMEDIATE;
+                }
+                else
+                {
+                    decorate_operand =
+                        (context->instruction->operands[i + 1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE) ||
+                        (context->instruction->operands[i + 1].visibility == ZYDIS_OPERAND_VISIBILITY_HIDDEN);
+                }
+                if (decorate_operand)
                 {
                     if (context->instruction->encoding == ZYDIS_INSTRUCTION_ENCODING_MVEX)
                     {
@@ -211,32 +221,39 @@ ZyanStatus ZydisFormatterATTFormatOperandMEM(const ZydisFormatter* formatter,
         ZYAN_CHECK(formatter->func_print_address_abs(formatter, buffer, context));
     } else
     {
+        const ZyanBool should_print_reg = context->operand->mem.base != ZYDIS_REGISTER_NONE;
+        const ZyanBool should_print_idx = context->operand->mem.index != ZYDIS_REGISTER_NONE;
+        const ZyanBool neither_reg_nor_idx = !should_print_reg && !should_print_idx;
+
         // Regular memory operand
-        if (context->operand->mem.disp.has_displacement && context->operand->mem.disp.value)
+        if (neither_reg_nor_idx)
+        {
+            ZYAN_CHECK(formatter->func_print_address_abs(formatter, buffer, context));
+        } else if (context->operand->mem.disp.has_displacement && context->operand->mem.disp.value)
         {
             ZYAN_CHECK(formatter->func_print_disp(formatter, buffer, context));
         }
 
-        if ((context->operand->mem.base  == ZYDIS_REGISTER_NONE) &&
-            (context->operand->mem.index == ZYDIS_REGISTER_NONE))
+        if (neither_reg_nor_idx)
         {
             return ZYAN_STATUS_SUCCESS;
         }
 
         ZYDIS_BUFFER_APPEND(buffer, MEMORY_BEGIN_ATT);
 
-        if (context->operand->mem.base != ZYDIS_REGISTER_NONE)
+        if (should_print_reg)
         {
             ZYAN_CHECK(formatter->func_print_register(formatter, buffer, context,
                 context->operand->mem.base));
         }
-        if ((context->operand->mem.index != ZYDIS_REGISTER_NONE) &&
-            (context->operand->mem.type  != ZYDIS_MEMOP_TYPE_MIB))
+        if (should_print_idx)
         {
             ZYDIS_BUFFER_APPEND(buffer, DELIM_MEMORY);
             ZYAN_CHECK(formatter->func_print_register(formatter, buffer, context,
                 context->operand->mem.index));
-            if (context->operand->mem.scale)
+            if (context->operand->mem.scale &&
+                (context->operand->mem.type != ZYDIS_MEMOP_TYPE_MIB) &&
+                ((context->operand->mem.scale > 1) || formatter->force_memory_scale))
             {
                 ZYDIS_BUFFER_APPEND_TOKEN(buffer, ZYDIS_TOKEN_DELIMITER);
                 ZYDIS_BUFFER_APPEND(buffer, DELIM_MEMORY);
@@ -347,6 +364,22 @@ ZyanStatus ZydisFormatterATTPrintRegister(const ZydisFormatter* formatter,
             formatter->case_registers);
     }
     return ZydisStringAppendShortCase(&buffer->string, str, formatter->case_registers);
+}
+
+ZyanStatus ZydisFormatterATTPrintAddressABS(const ZydisFormatter* formatter,
+    ZydisFormatterBuffer* buffer, ZydisFormatterContext* context)
+{
+    ZYAN_ASSERT(formatter);
+    ZYAN_ASSERT(buffer);
+    ZYAN_ASSERT(context);
+
+    if ((context->instruction->meta.branch_type != ZYDIS_BRANCH_TYPE_NONE) &&
+        (context->instruction->operands[0].type == ZYDIS_OPERAND_TYPE_MEMORY))
+    {
+        ZYDIS_BUFFER_APPEND(buffer, MUL);
+    } 
+
+    return ZydisFormatterBasePrintAddressABS(formatter, buffer, context);
 }
 
 ZyanStatus ZydisFormatterATTPrintDISP(const ZydisFormatter* formatter,

@@ -156,9 +156,23 @@ ZyanStatus ZydisFormatterBaseFormatOperandPTR(const ZydisFormatter* formatter,
     ZYDIS_STRING_APPEND_NUM_U(formatter, formatter->addr_base, &buffer->string,
         context->operand->ptr.segment, 4);
     ZYDIS_BUFFER_APPEND(buffer, DELIM_SEGMENT);
+
+    ZyanU8 padding;
+    switch (context->instruction->operand_width)
+    {
+    case 16:
+        padding = 4;
+        break;
+    case 32:
+        padding = 8;
+        break;
+    default:
+        return ZYAN_STATUS_INVALID_ARGUMENT;
+    }
+
     ZYDIS_BUFFER_APPEND_TOKEN(buffer, ZYDIS_TOKEN_IMMEDIATE);
     ZYDIS_STRING_APPEND_NUM_U(formatter, formatter->addr_base, &buffer->string,
-        context->operand->ptr.offset , 8);
+        context->operand->ptr.offset , padding);
 
     return ZYAN_STATUS_SUCCESS;
 }
@@ -515,7 +529,16 @@ ZyanStatus ZydisFormatterBasePrintPrefixes(const ZydisFormatter* formatter,
     if (context->instruction->attributes & ZYDIS_ATTRIB_HAS_LOCK)
     {
         ZYDIS_BUFFER_APPEND_CASE(buffer, PREF_LOCK, formatter->case_prefixes);
-        return ZYAN_STATUS_SUCCESS;
+    }
+
+    if (context->instruction->attributes & ZYDIS_ATTRIB_HAS_BND)
+    {
+        ZYDIS_BUFFER_APPEND_CASE(buffer, PREF_BND, formatter->case_prefixes);
+    }
+
+    if (context->instruction->attributes & ZYDIS_ATTRIB_HAS_NOTRACK)
+    {
+        ZYDIS_BUFFER_APPEND_CASE(buffer, PREF_NOTRACK, formatter->case_prefixes);
     }
 
     if (context->instruction->attributes & ZYDIS_ATTRIB_HAS_REP)
@@ -531,12 +554,6 @@ ZyanStatus ZydisFormatterBasePrintPrefixes(const ZydisFormatter* formatter,
     if (context->instruction->attributes & ZYDIS_ATTRIB_HAS_REPNE)
     {
         ZYDIS_BUFFER_APPEND_CASE(buffer, PREF_REPNE, formatter->case_prefixes);
-        return ZYAN_STATUS_SUCCESS;
-    }
-
-    if (context->instruction->attributes & ZYDIS_ATTRIB_HAS_BND)
-    {
-        ZYDIS_BUFFER_APPEND_CASE(buffer, PREF_BND, formatter->case_prefixes);
         return ZYAN_STATUS_SUCCESS;
     }
 
@@ -579,7 +596,8 @@ ZyanStatus ZydisFormatterBasePrintDecorator(const ZydisFormatter* formatter,
 
             // Only print the zeroing decorator, if the instruction is not a "zeroing masking only"
             // instruction (e.g. `vcmpsd`)
-            if ((context->instruction->avx.mask.mode == ZYDIS_MASK_MODE_ZEROING) &&
+            if ((context->instruction->avx.mask.mode == ZYDIS_MASK_MODE_ZEROING ||
+                 context->instruction->avx.mask.mode == ZYDIS_MASK_MODE_CONTROL_ZEROING) &&
                 (context->instruction->raw.evex.z))
             {
                 ZYDIS_BUFFER_APPEND_CASE(buffer, DECO_ZERO, formatter->case_decorators);
@@ -608,11 +626,20 @@ ZyanStatus ZydisFormatterBasePrintDecorator(const ZydisFormatter* formatter,
             case ZYDIS_BROADCAST_MODE_1_TO_16:
                 ZYDIS_BUFFER_APPEND_CASE(buffer, DECO_1TO16, formatter->case_decorators);
                 break;
+            case ZYDIS_BROADCAST_MODE_1_TO_32:
+                ZYDIS_BUFFER_APPEND_CASE(buffer, DECO_1TO32, formatter->case_decorators);
+                break;
+            case ZYDIS_BROADCAST_MODE_1_TO_64:
+                ZYDIS_BUFFER_APPEND_CASE(buffer, DECO_1TO64, formatter->case_decorators);
+                break;
             case ZYDIS_BROADCAST_MODE_4_TO_8:
                 ZYDIS_BUFFER_APPEND_CASE(buffer, DECO_4TO8, formatter->case_decorators);
                 break;
             case ZYDIS_BROADCAST_MODE_4_TO_16:
                 ZYDIS_BUFFER_APPEND_CASE(buffer, DECO_4TO16, formatter->case_decorators);
+                break;
+            case ZYDIS_BROADCAST_MODE_8_TO_16:
+                ZYDIS_BUFFER_APPEND_CASE(buffer, DECO_8TO16, formatter->case_decorators);
                 break;
             default:
                 return ZYAN_STATUS_INVALID_ARGUMENT;

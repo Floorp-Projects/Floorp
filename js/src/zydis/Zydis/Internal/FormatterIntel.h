@@ -26,7 +26,7 @@
 
 /**
  * @file
- * @brief   Implements the `INTEL` style instruction-formatter.
+ * Implements the `INTEL` style instruction-formatter.
  */
 
 #ifndef ZYDIS_FORMATTER_INTEL_H
@@ -87,13 +87,14 @@ ZyanStatus ZydisFormatterIntelPrintAddressMASM(const ZydisFormatter* formatter,
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   The default formatter configuration for `INTEL` style disassembly.
+ * The default formatter configuration for `INTEL` style disassembly.
  */
 static const ZydisFormatter FORMATTER_INTEL =
 {
     /* style                   */ ZYDIS_FORMATTER_STYLE_INTEL,
     /* force_memory_size       */ ZYAN_FALSE,
     /* force_memory_seg        */ ZYAN_FALSE,
+    /* force_memory_scale      */ ZYAN_TRUE,
     /* force_relative_branches */ ZYAN_FALSE,
     /* force_relative_riprel   */ ZYAN_FALSE,
     /* print_branch_size       */ ZYAN_FALSE,
@@ -174,13 +175,14 @@ static const ZydisFormatter FORMATTER_INTEL =
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   The default formatter configuration for `MASM` style disassembly.
+ * The default formatter configuration for `MASM` style disassembly.
  */
 static const ZydisFormatter FORMATTER_INTEL_MASM =
 {
     /* style                   */ ZYDIS_FORMATTER_STYLE_INTEL_MASM,
     /* force_memory_size       */ ZYAN_TRUE,
     /* force_memory_seg        */ ZYAN_FALSE,
+    /* force_memory_scale      */ ZYAN_TRUE,
     /* force_relative_branches */ ZYAN_FALSE,
     /* force_relative_riprel   */ ZYAN_FALSE,
     /* print_branch_size       */ ZYAN_FALSE,
