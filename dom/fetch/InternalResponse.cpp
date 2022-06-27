@@ -196,6 +196,7 @@ SafeRefPtr<InternalResponse> InternalResponse::Clone(CloneType aCloneType) {
   clone->mPaddingSize = mPaddingSize;
 
   clone->mCacheInfoChannel = mCacheInfoChannel;
+  clone->mCredentialsMode = mCredentialsMode;
 
   if (mWrappedResponse) {
     clone->mWrappedResponse = mWrappedResponse->Clone(aCloneType);
