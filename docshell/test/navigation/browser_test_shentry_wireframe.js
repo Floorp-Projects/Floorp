@@ -20,24 +20,32 @@ add_setup(async function() {
 add_task(async function() {
   await BrowserTestUtils.withNewTab(PAGE_1, async browser => {
     let sh = browser.browsingContext.sessionHistory;
-    Assert.equal(sh.count, 1, "Got the right SessionHistory entry count.");
+    Assert.equal(
+      sh.count,
+      1,
+      "Got the right SessionHistory entry count after initial tab load."
+    );
     Assert.ok(
       !sh.getEntryAtIndex(0).wireframe,
-      "No wireframe for the loaded entry."
+      "No wireframe for the loaded entry after initial tab load."
     );
 
     let loaded = BrowserTestUtils.browserLoaded(browser, false, PAGE_2);
     BrowserTestUtils.loadURI(browser, PAGE_2);
     await loaded;
 
-    Assert.equal(sh.count, 2, "Got the right SessionHistory entry count.");
+    Assert.equal(
+      sh.count,
+      2,
+      "Got the right SessionHistory entry count after loading page 2."
+    );
     Assert.ok(
       sh.getEntryAtIndex(0).wireframe,
-      "A wireframe was captured for the first entry."
+      "A wireframe was captured for the first entry after loading page 2."
     );
     Assert.ok(
       !sh.getEntryAtIndex(1).wireframe,
-      "No wireframe for the loaded entry."
+      "No wireframe for the loaded entry after loading page 2."
     );
 
     // Now go back
@@ -47,11 +55,11 @@ add_task(async function() {
     // These are TODO due to bug 1759528.
     todo(
       sh.getEntryAtIndex(1).wireframe,
-      "A wireframe was captured for the second entry."
+      "A wireframe was captured for the second entry after going back."
     );
     todo(
       !sh.getEntryAtIndex(0).wireframe,
-      "No wireframe for the loaded entry."
+      "No wireframe for the loaded entry after going back."
     );
 
     // Now forward again
@@ -59,14 +67,18 @@ add_task(async function() {
     browser.goForward();
     await loaded;
 
-    Assert.equal(sh.count, 2, "Got the right SessionHistory entry count.");
+    Assert.equal(
+      sh.count,
+      2,
+      "Got the right SessionHistory entry count after going forward again."
+    );
     Assert.ok(
       sh.getEntryAtIndex(0).wireframe,
-      "A wireframe was captured for the first entry."
+      "A wireframe was captured for the first entry after going forward again."
     );
     Assert.ok(
       !sh.getEntryAtIndex(1).wireframe,
-      "No wireframe for the loaded entry."
+      "No wireframe for the loaded entry after going forward again."
     );
 
     // And using pushState
@@ -75,22 +87,26 @@ add_task(async function() {
       content.history.pushState({}, "", "nothing-2.html");
     });
 
-    Assert.equal(sh.count, 4, "Got the right SessionHistory entry count.");
+    Assert.equal(
+      sh.count,
+      4,
+      "Got the right SessionHistory entry count after using pushState."
+    );
     Assert.ok(
       sh.getEntryAtIndex(0).wireframe,
-      "A wireframe was captured for the first entry."
+      "A wireframe was captured for the first entry after using pushState."
     );
     Assert.ok(
       sh.getEntryAtIndex(1).wireframe,
-      "A wireframe was captured for the second entry."
+      "A wireframe was captured for the second entry after using pushState."
     );
     Assert.ok(
       sh.getEntryAtIndex(2).wireframe,
-      "A wireframe was captured for the third entry."
+      "A wireframe was captured for the third entry after using pushState."
     );
     Assert.ok(
       !sh.getEntryAtIndex(3).wireframe,
-      "No wireframe for the loaded entry."
+      "No wireframe for the loaded entry after using pushState."
     );
 
     // Now check that wireframes can be written to in case we're restoring
