@@ -17,6 +17,8 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Søk eller skriv inn ei adresse</string>
 
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Skriv inn søkjetekst</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Dei opne fanene dine vert viste her.</string>
 
@@ -429,6 +431,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Sponsa historier</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Bakgrunnsbilde</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -1532,6 +1536,11 @@
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Handsam adresser</string>
 
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Lagre og fyll ut adresser automatisk</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Inkluderer informasjon som telefonnummer, e-post og leveringsadresser</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Legg til betalingskort</string>
     <!-- Title of the "Edit card" screen -->
@@ -1605,6 +1614,8 @@
     <string name="addresses_city">Stad</string>
     <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">Stat</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Fylke</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Postnummer</string>
     <!-- The header for the country or region of an address -->
@@ -1818,6 +1829,12 @@
     <string name="inactive_tabs_title">Inaktive faner</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Lat att alle inaktive faner</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Utvid inaktive faner</string>
+
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Fald saman inaktive faner</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
