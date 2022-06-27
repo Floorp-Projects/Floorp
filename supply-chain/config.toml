@@ -34,9 +34,9 @@ audit-as-crates-io = true
 notes = "wgpu-hal pins this crate."
 
 [policy.geckodriver]
-audit-as-crates-io = true
+audit-as-crates-io = false
 criteria = "safe-to-run"
-notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem. It's also used only for automation, so its subtree can be safe-to-run."
+notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here. It's also used only for automation, so its subtree can be safe-to-run."
 
 [policy.gkrust-gtest]
 criteria = "safe-to-run"
@@ -133,9 +133,9 @@ audit-as-crates-io = false
 notes = "This is a first-party crate which is entirely unrelated to the crates.io package of the same name."
 
 [policy.webdriver]
-audit-as-crates-io = true
+audit-as-crates-io = false
 criteria = "safe-to-run"
-notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem. It's also used only for automation, so its subtree can be safe-to-run."
+notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here. It's also used only for automation, so its subtree can be safe-to-run."
 
 [policy.wgpu]
 audit-as-crates-io = true
