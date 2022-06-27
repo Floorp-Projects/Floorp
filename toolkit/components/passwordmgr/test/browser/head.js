@@ -225,13 +225,13 @@ async function getFormSubmitResponseResult(
  *
  * @param {String} aPageFile - test page file name which auto-submits to formsubmit.sjs
  * @param {Function} aTaskFn - task which can be run before the tab closes.
- * @param {String} [aOrigin="http://example.com"] - origin of the server to use
+ * @param {String} [aOrigin="https://example.com"] - origin of the server to use
  *                                                  to load `aPageFile`.
  */
 function testSubmittingLoginForm(
   aPageFile,
   aTaskFn,
-  aOrigin = "http://example.com"
+  aOrigin = "https://example.com"
 ) {
   return BrowserTestUtils.withNewTab(
     {
@@ -251,6 +251,22 @@ function testSubmittingLoginForm(
       return fieldValues;
     }
   );
+}
+/**
+ * Loads a test page in `DIRECTORY_URL` which automatically submits to formsubmit.sjs and returns a
+ * promise resolving with the field values when the optional `aTaskFn` is done.
+ *
+ * @param {String} aPageFile - test page file name which auto-submits to formsubmit.sjs
+ * @param {Function} aTaskFn - task which can be run before the tab closes.
+ * @param {String} [aOrigin="http://example.com"] - origin of the server to use
+ *                                                  to load `aPageFile`.
+ */
+function testSubmittingLoginFormHTTP(
+  aPageFile,
+  aTaskFn,
+  aOrigin = "http://example.com"
+) {
+  return testSubmittingLoginForm(aPageFile, aTaskFn, aOrigin);
 }
 
 function checkOnlyLoginWasUsedTwice({ justChanged }) {
