@@ -5,6 +5,17 @@ Prefer ``.isInstance()`` in chrome scripts over the standard ``instanceof``
 operator for DOM interfaces, since the latter will return false when the object
 is created from a different context.
 
+These files are covered:
+
+- ``*.sys.mjs``
+- ``*.jsm``
+- ``*.jsm.js``
+- ``*.js`` with a heuristic
+
+Since there is no straightforward way to detect chrome scripts, currently the
+linter assumes that any script including ``ChromeUtils`` is chrome privileged.
+This of course may not be sufficient and is open for change.
+
 Examples of incorrect code for this rule:
 -----------------------------------------
 

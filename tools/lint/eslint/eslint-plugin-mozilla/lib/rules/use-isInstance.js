@@ -74,6 +74,24 @@ function pointsToDOMInterface(currentScope, node) {
   return false;
 }
 
+/**
+ * @param {import("eslint").Rule.RuleContext} context
+ */
+function isChromeContext(context) {
+  const filename = context.getFilename();
+  const isChromeFileName =
+    filename.endsWith(".sys.mjs") ||
+    filename.endsWith(".jsm") ||
+    filename.endsWith(".jsm.js");
+  if (isChromeFileName) {
+    return true;
+  }
+
+  // Treat scripts using ChromeUtils as chrome scripts, but not SpecialPowers.ChromeUtils
+  const source = context.getSourceCode().text;
+  return !!source.match(/(^|\s)ChromeUtils/);
+}
+
 module.exports = {
   meta: {
     docs: {
@@ -88,6 +106,10 @@ module.exports = {
    * @param {import("eslint").Rule.RuleContext} context
    */
   create(context) {
+    if (!isChromeContext(context)) {
+      return {};
+    }
+
     return {
       BinaryExpression(node) {
         const { operator, right } = node;
