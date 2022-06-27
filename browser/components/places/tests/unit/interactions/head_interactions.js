@@ -172,8 +172,10 @@ function assertRecentDate(date, threshold = 1) {
 function assertSnapshot(actual, expected) {
   // This may be a recommendation.
   let score = 0;
+  let source = null;
   if ("snapshot" in actual) {
     score = actual.score;
+    source = actual.source;
     actual = actual.snapshot;
   }
 
@@ -216,6 +218,13 @@ function assertSnapshot(actual, expected) {
       actual.commonName,
       expected.commonName,
       "Should have the Snapshot URL's common name."
+    );
+  }
+  if (expected.source) {
+    Assert.equal(
+      source,
+      expected.source,
+      "Should have the correct recommendation source."
     );
   }
   if (expected.scoreEqualTo != null) {
@@ -432,6 +441,14 @@ function assertRecommendations(recommendations, expected) {
       expected[i].score,
       `Should have set the expected score for ${expected[i].url}`
     );
+
+    if (expected[i].source) {
+      Assert.equal(
+        recommendations[i].source,
+        expected[i].source,
+        `Should have set the correct source for ${expected[i].url}`
+      );
+    }
   }
 }
 

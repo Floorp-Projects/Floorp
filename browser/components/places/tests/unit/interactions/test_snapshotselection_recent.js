@@ -31,7 +31,7 @@ add_task(async function test_interactions_recent() {
   await Snapshots.add({ url: TEST_URL1 });
   snapshots = await snapshotPromise;
 
-  await assertSnapshotList(snapshots, [{ url: TEST_URL1 }]);
+  await assertSnapshotList(snapshots, [{ url: TEST_URL1, source: "recent" }]);
 
   // Changing the url should generate new snapshots and should exclude the
   // current url.
@@ -45,32 +45,41 @@ add_task(async function test_interactions_recent() {
   selector.updateDetailsAndRebuild({ url: TEST_URL2 });
   snapshots = await snapshotPromise;
 
-  await assertSnapshotList(snapshots, [{ url: TEST_URL1 }]);
+  await assertSnapshotList(snapshots, [{ url: TEST_URL1, source: "recent" }]);
 
   snapshotPromise = selector.once("snapshots-updated");
   await Snapshots.add({ url: TEST_URL2 });
   snapshots = await snapshotPromise;
 
-  await assertSnapshotList(snapshots, [{ url: TEST_URL1 }]);
+  await assertSnapshotList(snapshots, [{ url: TEST_URL1, source: "recent" }]);
 
   snapshotPromise = selector.once("snapshots-updated");
   await Snapshots.add({ url: TEST_URL3 });
   snapshots = await snapshotPromise;
 
-  await assertSnapshotList(snapshots, [{ url: TEST_URL1 }, { url: TEST_URL3 }]);
+  await assertSnapshotList(snapshots, [
+    { url: TEST_URL1, source: "recent" },
+    { url: TEST_URL3, source: "recent" },
+  ]);
 
   snapshotPromise = selector.once("snapshots-updated");
   selector.updateDetailsAndRebuild({ url: TEST_URL3 });
   snapshots = await snapshotPromise;
 
-  await assertSnapshotList(snapshots, [{ url: TEST_URL2 }, { url: TEST_URL1 }]);
+  await assertSnapshotList(snapshots, [
+    { url: TEST_URL2, source: "recent" },
+    { url: TEST_URL1, source: "recent" },
+  ]);
 
   snapshotPromise = selector.once("snapshots-updated");
   selector.updateDetailsAndRebuild({ url: TEST_URL4 });
   snapshots = await snapshotPromise;
 
   // The snapshot count is limited to 2.
-  await assertSnapshotList(snapshots, [{ url: TEST_URL2 }, { url: TEST_URL1 }]);
+  await assertSnapshotList(snapshots, [
+    { url: TEST_URL2, source: "recent" },
+    { url: TEST_URL1, source: "recent" },
+  ]);
 
   await reset();
 });
