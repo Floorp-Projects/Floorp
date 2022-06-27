@@ -11,34 +11,22 @@ import { isGeneratedId } from "devtools-source-map";
 import { getSelectedLocation as _getSelectedLocation } from "../utils/selected-location";
 import { createSelector } from "reselect";
 
-const getSelectedFrames = createSelector(
-  state => state.pause.threads,
+export const getSelectedFrame = createSelector(
+  (state, thread) => state.pause.threads[thread],
   threadPauseState => {
-    const selectedFrames = {};
-    for (const thread in threadPauseState) {
-      const pausedThread = threadPauseState[thread];
-      const { selectedFrameId, frames } = pausedThread;
-      if (frames) {
-        selectedFrames[thread] = frames.find(
-          frame => frame.id == selectedFrameId
-        );
-      }
+    if (!threadPauseState) return null;
+    const { selectedFrameId, frames } = threadPauseState;
+    if (frames) {
+      return frames.find(frame => frame.id == selectedFrameId);
     }
-    return selectedFrames;
+    return null;
   }
 );
 
-export function getSelectedFrame(state, thread) {
-  const selectedFrames = getSelectedFrames(state);
-  return selectedFrames[thread];
-}
-
 export const getVisibleSelectedFrame = createSelector(
   getSelectedLocation,
-  getSelectedFrames,
-  getCurrentThread,
-  (selectedLocation, selectedFrames, thread) => {
-    const selectedFrame = selectedFrames[thread];
+  state => getSelectedFrame(state, getCurrentThread(state)),
+  (selectedLocation, selectedFrame) => {
     if (!selectedFrame) {
       return null;
     }
