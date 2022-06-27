@@ -1,5 +1,5 @@
-#!/usr/bin/env vpython3
-
+#!/usr/bin/env python
+#
 # Copyright 2014 The LibYuv Project Authors. All rights reserved.
 #
 # Use of this source code is governed by a BSD-style license
@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.join(checkout_root, 'build'))
 sys.path.insert(0, os.path.join(checkout_root, 'tools', 'find_depot_tools'))
 
 
-import vs_toolchain  # pylint: disable=wrong-import-position
+import vs_toolchain
 
 
 if __name__ == '__main__':

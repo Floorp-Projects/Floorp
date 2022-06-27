@@ -12,18 +12,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "libyuv/cpu_id.h"
-
-#ifdef __cplusplus
-using namespace libyuv;
-#endif
+#define INCLUDE_LIBYUV_COMPARE_H_
+#include "libyuv.h"
+#include "./psnr.h"
+#include "./ssim.h"
 
 int main(int argc, const char* argv[]) {
   int cpu_flags = TestCpuFlag(-1);
   int has_arm = TestCpuFlag(kCpuHasARM);
   int has_mips = TestCpuFlag(kCpuHasMIPS);
   int has_x86 = TestCpuFlag(kCpuHasX86);
-  int has_loongarch = TestCpuFlag(kCpuHasLOONGARCH);
   (void)argc;
   (void)argv;
 
@@ -66,7 +64,6 @@ int main(int argc, const char* argv[]) {
   printf("Has ARM %x\n", has_arm);
   printf("Has MIPS %x\n", has_mips);
   printf("Has X86 %x\n", has_x86);
-  printf("Has LOONGARCH %x\n", has_loongarch);
   if (has_arm) {
     int has_neon = TestCpuFlag(kCpuHasNEON);
     printf("Has NEON %x\n", has_neon);
@@ -74,12 +71,6 @@ int main(int argc, const char* argv[]) {
   if (has_mips) {
     int has_msa = TestCpuFlag(kCpuHasMSA);
     printf("Has MSA %x\n", has_msa);
-  }
-  if (has_loongarch) {
-    int has_lsx  = TestCpuFlag(kCpuHasLSX);
-    printf("Has LSX %x\n", has_lsx);
-    int has_lasx = TestCpuFlag(kCpuHasLASX);
-    printf("Has LASX %x\n", has_lasx);
   }
   if (has_x86) {
     int has_sse2 = TestCpuFlag(kCpuHasSSE2);
@@ -90,11 +81,10 @@ int main(int argc, const char* argv[]) {
     int has_avx2 = TestCpuFlag(kCpuHasAVX2);
     int has_erms = TestCpuFlag(kCpuHasERMS);
     int has_fma3 = TestCpuFlag(kCpuHasFMA3);
-    int has_f16c = TestCpuFlag(kCpuHasF16C);
+    int has_f16c = TestCpuFlag(kCpuHasF16C); 
     int has_gfni = TestCpuFlag(kCpuHasGFNI);
     int has_avx512bw = TestCpuFlag(kCpuHasAVX512BW);
     int has_avx512vl = TestCpuFlag(kCpuHasAVX512VL);
-    int has_avx512vnni = TestCpuFlag(kCpuHasAVX512VNNI);
     int has_avx512vbmi = TestCpuFlag(kCpuHasAVX512VBMI);
     int has_avx512vbmi2 = TestCpuFlag(kCpuHasAVX512VBMI2);
     int has_avx512vbitalg = TestCpuFlag(kCpuHasAVX512VBITALG);
@@ -111,7 +101,6 @@ int main(int argc, const char* argv[]) {
     printf("Has GFNI %x\n", has_gfni);
     printf("Has AVX512BW %x\n", has_avx512bw);
     printf("Has AVX512VL %x\n", has_avx512vl);
-    printf("Has AVX512VNNI %x\n", has_avx512vnni);
     printf("Has AVX512VBMI %x\n", has_avx512vbmi);
     printf("Has AVX512VBMI2 %x\n", has_avx512vbmi2);
     printf("Has AVX512VBITALG %x\n", has_avx512vbitalg);

@@ -31,7 +31,6 @@ LOCAL_OBJ_FILES = \
 	source/scale_any.o\
 	source/scale_argb.o\
 	source/scale_common.o\
-	source/scale_uv.o\
 	source/video_common.o
 
 .cc.o:

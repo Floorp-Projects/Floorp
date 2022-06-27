@@ -18,10 +18,10 @@ extern "C" {
 #endif
 
 // Helper function to scan for EOI marker (0xff 0xd9).
-static LIBYUV_BOOL ScanEOI(const uint8_t* src_mjpg, size_t src_size_mjpg) {
-  if (src_size_mjpg >= 2) {
-    const uint8_t* end = src_mjpg + src_size_mjpg - 1;
-    const uint8_t* it = src_mjpg;
+static LIBYUV_BOOL ScanEOI(const uint8_t* sample, size_t sample_size) {
+  if (sample_size >= 2) {
+    const uint8_t* end = sample + sample_size - 1;
+    const uint8_t* it = sample;
     while (it < end) {
       // TODO(fbarchard): scan for 0xd9 instead.
       it = (const uint8_t*)(memchr(it, 0xff, end - it));
@@ -34,35 +34,34 @@ static LIBYUV_BOOL ScanEOI(const uint8_t* src_mjpg, size_t src_size_mjpg) {
       ++it;  // Skip over current 0xff.
     }
   }
-  // ERROR: Invalid jpeg end code not found. Size src_size_mjpg
+  // ERROR: Invalid jpeg end code not found. Size sample_size
   return LIBYUV_FALSE;
 }
 
 // Helper function to validate the jpeg appears intact.
-LIBYUV_BOOL ValidateJpeg(const uint8_t* src_mjpg, size_t src_size_mjpg) {
+LIBYUV_BOOL ValidateJpeg(const uint8_t* sample, size_t sample_size) {
   // Maximum size that ValidateJpeg will consider valid.
   const size_t kMaxJpegSize = 0x7fffffffull;
   const size_t kBackSearchSize = 1024;
-  if (src_size_mjpg < 64 || src_size_mjpg > kMaxJpegSize || !src_mjpg) {
-    // ERROR: Invalid jpeg size: src_size_mjpg
+  if (sample_size < 64 || sample_size > kMaxJpegSize || !sample) {
+    // ERROR: Invalid jpeg size: sample_size
     return LIBYUV_FALSE;
   }
-  // SOI marker
-  if (src_mjpg[0] != 0xff || src_mjpg[1] != 0xd8 || src_mjpg[2] != 0xff) {
+  if (sample[0] != 0xff || sample[1] != 0xd8) {  // SOI marker
     // ERROR: Invalid jpeg initial start code
     return LIBYUV_FALSE;
   }
 
   // Look for the End Of Image (EOI) marker near the end of the buffer.
-  if (src_size_mjpg > kBackSearchSize) {
-    if (ScanEOI(src_mjpg + src_size_mjpg - kBackSearchSize, kBackSearchSize)) {
+  if (sample_size > kBackSearchSize) {
+    if (ScanEOI(sample + sample_size - kBackSearchSize, kBackSearchSize)) {
       return LIBYUV_TRUE;  // Success: Valid jpeg.
     }
     // Reduce search size for forward search.
-    src_size_mjpg = src_size_mjpg - kBackSearchSize + 1;
+    sample_size = sample_size - kBackSearchSize + 1;
   }
   // Step over SOI marker and scan for EOI.
-  return ScanEOI(src_mjpg + 2, src_size_mjpg - 2);
+  return ScanEOI(sample + 2, sample_size - 2);
 }
 
 #ifdef __cplusplus

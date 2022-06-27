@@ -20,10 +20,10 @@ extern void* _kCoefficientsRgbY;
 #endif
 
 __declspec(naked)
-void FastConvertYUVToRGB32Row_SSE(const uint8_t* y_buf,
-                                  const uint8_t* u_buf,
-                                  const uint8_t* v_buf,
-                                  uint8_t* rgb_buf,
+void FastConvertYUVToRGB32Row_SSE(const uint8* y_buf,
+                                  const uint8* u_buf,
+                                  const uint8* v_buf,
+                                  uint8* rgb_buf,
                                   int width) {
   __asm {
     pushad
@@ -78,10 +78,10 @@ void FastConvertYUVToRGB32Row_SSE(const uint8_t* y_buf,
 }
 
 __declspec(naked)
-void ConvertYUVToRGB32Row_SSE(const uint8_t* y_buf,
-                              const uint8_t* u_buf,
-                              const uint8_t* v_buf,
-                              uint8_t* rgb_buf,
+void ConvertYUVToRGB32Row_SSE(const uint8* y_buf,
+                              const uint8* u_buf,
+                              const uint8* v_buf,
+                              uint8* rgb_buf,
                               int width,
                               int step) {
   __asm {
@@ -139,10 +139,10 @@ void ConvertYUVToRGB32Row_SSE(const uint8_t* y_buf,
 }
 
 __declspec(naked)
-void RotateConvertYUVToRGB32Row_SSE(const uint8_t* y_buf,
-                                    const uint8_t* u_buf,
-                                    const uint8_t* v_buf,
-                                    uint8_t* rgb_buf,
+void RotateConvertYUVToRGB32Row_SSE(const uint8* y_buf,
+                                    const uint8* u_buf,
+                                    const uint8* v_buf,
+                                    uint8* rgb_buf,
                                     int width,
                                     int ystep,
                                     int uvstep) {
@@ -202,10 +202,10 @@ void RotateConvertYUVToRGB32Row_SSE(const uint8_t* y_buf,
 }
 
 __declspec(naked)
-void DoubleYUVToRGB32Row_SSE(const uint8_t* y_buf,
-                             const uint8_t* u_buf,
-                             const uint8_t* v_buf,
-                             uint8_t* rgb_buf,
+void DoubleYUVToRGB32Row_SSE(const uint8* y_buf,
+                             const uint8* u_buf,
+                             const uint8* v_buf,
+                             uint8* rgb_buf,
                              int width) {
   __asm {
     pushad
@@ -274,10 +274,10 @@ void DoubleYUVToRGB32Row_SSE(const uint8_t* y_buf,
 // For performance the chroma is under-sampled, reducing cost of a 3x
 // 1080p scale from 8.4 ms to 5.4 ms.
 __declspec(naked)
-void ScaleYUVToRGB32Row_SSE(const uint8_t* y_buf,
-                            const uint8_t* u_buf,
-                            const uint8_t* v_buf,
-                            uint8_t* rgb_buf,
+void ScaleYUVToRGB32Row_SSE(const uint8* y_buf,
+                            const uint8* u_buf,
+                            const uint8* v_buf,
+                            uint8* rgb_buf,
                             int width,
                             int source_dx) {
   __asm {
@@ -347,10 +347,10 @@ void ScaleYUVToRGB32Row_SSE(const uint8_t* y_buf,
 }
 
 __declspec(naked)
-void LinearScaleYUVToRGB32Row_SSE(const uint8_t* y_buf,
-                                  const uint8_t* u_buf,
-                                  const uint8_t* v_buf,
-                                  uint8_t* rgb_buf,
+void LinearScaleYUVToRGB32Row_SSE(const uint8* y_buf,
+                                  const uint8* u_buf,
+                                  const uint8* v_buf,
+                                  uint8* rgb_buf,
                                   int width,
                                   int source_dx) {
   __asm {
@@ -454,10 +454,10 @@ lscalelastpixel:
 }
 #endif // if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_M_IX86)
 
-void FastConvertYUVToRGB32Row(const uint8_t* y_buf,
-                              const uint8_t* u_buf,
-                              const uint8_t* v_buf,
-                              uint8_t* rgb_buf,
+void FastConvertYUVToRGB32Row(const uint8* y_buf,
+                              const uint8* u_buf,
+                              const uint8* v_buf,
+                              uint8* rgb_buf,
                               int width) {
 #if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_M_IX86)
   if (mozilla::supports_sse()) {
@@ -469,10 +469,10 @@ void FastConvertYUVToRGB32Row(const uint8_t* y_buf,
   FastConvertYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf, width, 1);
 }
 
-void ScaleYUVToRGB32Row(const uint8_t* y_buf,
-                        const uint8_t* u_buf,
-                        const uint8_t* v_buf,
-                        uint8_t* rgb_buf,
+void ScaleYUVToRGB32Row(const uint8* y_buf,
+                        const uint8* u_buf,
+                        const uint8* v_buf,
+                        uint8* rgb_buf,
                         int width,
                         int source_dx) {
 
@@ -486,10 +486,10 @@ void ScaleYUVToRGB32Row(const uint8_t* y_buf,
   ScaleYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf, width, source_dx);
 }
 
-void LinearScaleYUVToRGB32Row(const uint8_t* y_buf,
-                              const uint8_t* u_buf,
-                              const uint8_t* v_buf,
-                              uint8_t* rgb_buf,
+void LinearScaleYUVToRGB32Row(const uint8* y_buf,
+                              const uint8* u_buf,
+                              const uint8* v_buf,
+                              uint8* rgb_buf,
                               int width,
                               int source_dx) {
 #if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_M_IX86)

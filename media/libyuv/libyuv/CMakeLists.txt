@@ -59,11 +59,7 @@ if(TEST)
   endif()
 
   add_executable(libyuv_unittest ${ly_unittest_sources})
-  target_link_libraries(libyuv_unittest ${ly_lib_name} ${GTEST_LIBRARY})
-  find_library(PTHREAD_LIBRARY pthread)
-  if(NOT PTHREAD_LIBRARY STREQUAL "PTHREAD_LIBRARY-NOTFOUND")
-    target_link_libraries(libyuv_unittest pthread)
-  endif()
+  target_link_libraries(libyuv_unittest ${ly_lib_name} ${GTEST_LIBRARY} pthread)
   if (JPEG_FOUND)
     target_link_libraries(libyuv_unittest ${JPEG_LIBRARY})
   endif()
@@ -71,13 +67,15 @@ if(TEST)
   if(NACL AND NACL_LIBC STREQUAL "newlib")
     target_link_libraries(libyuv_unittest glibc-compat)
   endif()
+
+  target_link_libraries(libyuv_unittest gflags)
 endif()
 
 
 # install the conversion tool, .so, .a, and all the header files
 INSTALL ( PROGRAMS ${CMAKE_BINARY_DIR}/yuvconvert			DESTINATION bin )
 INSTALL ( TARGETS ${ly_lib_static}						DESTINATION lib )
-INSTALL ( TARGETS ${ly_lib_shared} LIBRARY				DESTINATION lib RUNTIME DESTINATION bin )
+INSTALL ( TARGETS ${ly_lib_shared} LIBRARY				DESTINATION lib )
 INSTALL ( DIRECTORY ${PROJECT_SOURCE_DIR}/include/		DESTINATION include )
 
 # create the .deb and .rpm packages using cpack

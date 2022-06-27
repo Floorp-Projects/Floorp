@@ -11,10 +11,6 @@ import("//build/dotfile_settings.gni")
 # The location of the build configuration file.
 buildconfig = "//build/config/BUILDCONFIG.gn"
 
-# The python interpreter to use by default. On Windows, this will look
-# for python3.exe and python3.bat.
-script_executable = "python3"
-
 # The secondary source root is a parallel directory tree where
 # GN build files are placed when they can not be placed directly
 # in the source tree, e.g. for third party source trees.
@@ -33,8 +29,11 @@ exec_script_whitelist = build_dotfile_settings.exec_script_whitelist +
                         [ "//build_overrides/build.gni" ]
 
 default_args = {
-  mac_sdk_min = "10.12"
+  mac_sdk_min = "10.11"
 
-  # https://bugs.chromium.org/p/libyuv/issues/detail?id=826
-  ios_deployment_target = "10.0"
+  # LibYUV does not want to switch to C++14 yet.
+  use_cxx11 = true
+
+  # LibYUV relies on Chromium's Android test infrastructure.
+  use_cxx11_on_android = false
 }
