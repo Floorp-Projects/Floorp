@@ -36,6 +36,7 @@ import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.feature.autofill.AutofillUseCases
 import mozilla.components.feature.search.ext.buildSearchUrl
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
+import mozilla.components.feature.top.sites.TopSitesFrecencyConfig
 import mozilla.components.feature.top.sites.TopSitesProviderConfig
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
@@ -71,6 +72,7 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.ext.containsQueryParameters
 import org.mozilla.fenix.ext.isCustomEngine
 import org.mozilla.fenix.ext.isKnownSearchDomain
 import org.mozilla.fenix.ext.settings
@@ -262,7 +264,9 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         // we can prevent with this.
                         components.core.topSitesStorage.getTopSites(
                             totalSites = components.settings.topSitesMaxLimit,
-                            frecencyConfig = FrecencyThresholdOption.SKIP_ONE_TIME_PAGES,
+                            frecencyConfig = TopSitesFrecencyConfig(
+                                FrecencyThresholdOption.SKIP_ONE_TIME_PAGES
+                            ) { !it.containsQueryParameters(components.settings.frecencyFilterQuery) },
                             providerConfig = TopSitesProviderConfig(
                                 showProviderTopSites = components.settings.showContileFeature,
                                 maxThreshold = TOP_SITES_PROVIDER_MAX_THRESHOLD

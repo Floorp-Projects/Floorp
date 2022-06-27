@@ -6,6 +6,8 @@ package org.mozilla.fenix.ext
 
 import mozilla.components.feature.top.sites.TopSite
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -113,5 +115,44 @@ class TopSiteTest {
         )
 
         assertEquals(topSites.sort(), expected)
+    }
+
+    @Test
+    fun `WHEN containsQueryParameters is invoked THEN the result should be true only if the url contains the search parameters`() {
+        var searchParameters = ""
+        val querySite = TopSite.Frecent(
+            id = 1L,
+            title = "Search",
+            url = "test.com/?q=value",
+            createdAt = 0
+        )
+        val blankQuerySite = TopSite.Frecent(
+            id = 1L,
+            title = "BlankSearch",
+            url = "test.com/?q=",
+            createdAt = 0
+        )
+
+        assertFalse(defaultGoogleTopSite.containsQueryParameters(searchParameters))
+        assertFalse(querySite.containsQueryParameters(searchParameters))
+        assertFalse(blankQuerySite.containsQueryParameters(searchParameters))
+
+        searchParameters = "q"
+
+        assertFalse(defaultGoogleTopSite.containsQueryParameters(searchParameters))
+        assertFalse(querySite.containsQueryParameters(searchParameters))
+        assertTrue(blankQuerySite.containsQueryParameters(searchParameters))
+
+        searchParameters = "q="
+
+        assertFalse(defaultGoogleTopSite.containsQueryParameters(searchParameters))
+        assertFalse(querySite.containsQueryParameters(searchParameters))
+        assertTrue(blankQuerySite.containsQueryParameters(searchParameters))
+
+        searchParameters = "q=value"
+
+        assertFalse(defaultGoogleTopSite.containsQueryParameters(searchParameters))
+        assertTrue(querySite.containsQueryParameters(searchParameters))
+        assertFalse(blankQuerySite.containsQueryParameters(searchParameters))
     }
 }

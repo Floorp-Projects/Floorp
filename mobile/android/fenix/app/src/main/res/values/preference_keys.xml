@@ -218,6 +218,8 @@
     <string name="pref_key_enable_contile" translatable="false">pref_key_enable_contile</string>
     <!-- Whether or not the Task Continuity enhancements are shown -->
     <string name="pref_key_enable_task_continuity" translatable="false">pref_key_enable_task_continuity</string>
+    <!-- Query containing the search parameters to be hidden from the top frecent sites  -->
+    <string name="pref_key_frecency_filter_query" translatable="false">pref_key_frecency_filter_query</string>
 
     <!-- A value  of `true` means the PWA dialog has been showed or user already has PWAs installed -->
     <string name="pref_key_user_knows_about_pwa" translatable="false">pref_key_user_knows_about_pwa</string>

@@ -1137,6 +1137,18 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_installed_addons_list),
         default = ""
     )
+    /**
+     *  URLs from the user's history that contain this search param will be hidden
+     * from the top sites. The value is a string with one of the following forms:
+     * - "" (empty) - Disable this feature
+     * - "key" - Search param named "key" with any or no value
+     * - "key=" - Search param named "key" with no value
+     * - "key=value" - Search param named "key" with value "value"
+     */
+    val frecencyFilterQuery by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_frecency_filter_query),
+        default = "mfadid=adm"
+    )
 
     /**
      * Storing number of enabled add-ons for telemetry purposes
