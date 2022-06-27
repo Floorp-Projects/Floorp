@@ -26,6 +26,7 @@
 
 #include "zydis/Zydis/Internal/FormatterIntel.h"
 #include "zydis/Zydis/Utils.h"
+#include "zydis/Zycore/Format.h"
 
 /* ============================================================================================== */
 /* Constants                                                                                      */
@@ -162,8 +163,18 @@ ZyanStatus ZydisFormatterIntelFormatInstruction(const ZydisFormatter* formatter,
                 }
             } else
             {
-                if ((i == (context->instruction->operand_count - 1)) ||
-                    (context->instruction->operands[i + 1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE))
+                ZyanBool decorate_operand = ZYAN_FALSE;
+                if (i == (context->instruction->operand_count - 1))
+                {
+                    decorate_operand = operand->type != ZYDIS_OPERAND_TYPE_IMMEDIATE;
+                }
+                else
+                {
+                    decorate_operand =
+                        (context->instruction->operands[i + 1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE) ||
+                        (context->instruction->operands[i + 1].visibility == ZYDIS_OPERAND_VISIBILITY_HIDDEN);
+                }
+                if (decorate_operand)
                 {
                     if (context->instruction->encoding == ZYDIS_INSTRUCTION_ENCODING_MVEX)
                     {
@@ -210,14 +221,17 @@ ZyanStatus ZydisFormatterIntelFormatOperandMEM(const ZydisFormatter* formatter,
         ZYAN_CHECK(formatter->func_print_address_abs(formatter, buffer, context));
     } else
     {
+        const ZyanBool should_print_reg = context->operand->mem.base != ZYDIS_REGISTER_NONE;
+        const ZyanBool should_print_idx = context->operand->mem.index != ZYDIS_REGISTER_NONE;
+        const ZyanBool neither_reg_nor_idx = !should_print_reg && !should_print_idx;
+
         // Regular memory operand
-        if (context->operand->mem.base != ZYDIS_REGISTER_NONE)
+        if (should_print_reg)
         {
             ZYAN_CHECK(formatter->func_print_register(formatter, buffer, context,
                 context->operand->mem.base));
         }
-        if ((context->operand->mem.index != ZYDIS_REGISTER_NONE) &&
-            (context->operand->mem.type  != ZYDIS_MEMOP_TYPE_MIB))
+        if (should_print_idx)
         {
             if (context->operand->mem.base != ZYDIS_REGISTER_NONE)
             {
@@ -225,7 +239,9 @@ ZyanStatus ZydisFormatterIntelFormatOperandMEM(const ZydisFormatter* formatter,
             }
             ZYAN_CHECK(formatter->func_print_register(formatter, buffer, context,
                 context->operand->mem.index));
-            if (context->operand->mem.scale)
+            if (context->operand->mem.scale &&
+                (context->operand->mem.type != ZYDIS_MEMOP_TYPE_MIB) &&
+                ((context->operand->mem.scale > 1) || formatter->force_memory_scale))
             {
                 ZYDIS_BUFFER_APPEND(buffer, MUL);
                 ZYDIS_BUFFER_APPEND_TOKEN(buffer, ZYDIS_TOKEN_IMMEDIATE);
@@ -233,7 +249,10 @@ ZyanStatus ZydisFormatterIntelFormatOperandMEM(const ZydisFormatter* formatter,
                     ZYAN_NULL, ZYAN_NULL));
             }
         }
-        if (context->operand->mem.disp.has_displacement && context->operand->mem.disp.value)
+        if (neither_reg_nor_idx)
+        {
+            ZYAN_CHECK(formatter->func_print_address_abs(formatter, buffer, context));
+        } else if (context->operand->mem.disp.has_displacement && context->operand->mem.disp.value)
         {
             ZYAN_CHECK(formatter->func_print_disp(formatter, buffer, context));
         }
@@ -324,7 +343,7 @@ ZyanStatus ZydisFormatterIntelPrintDISP(const ZydisFormatter* formatter,
             }
             ZYDIS_BUFFER_APPEND_TOKEN(buffer, ZYDIS_TOKEN_DISPLACEMENT);
             ZYDIS_STRING_APPEND_NUM_U(formatter, formatter->disp_base, &buffer->string,
-                -context->operand->mem.disp.value, formatter->disp_padding);
+                ZyanAbsI64(context->operand->mem.disp.value), formatter->disp_padding);
             break;
         }
         ZYAN_FALLTHROUGH;

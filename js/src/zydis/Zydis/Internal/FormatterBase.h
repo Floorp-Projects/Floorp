@@ -26,7 +26,7 @@
 
 /**
  * @file
- * @brief   Provides formatter functions that are shared between the different formatters.
+ * Provides formatter functions that are shared between the different formatters.
  */
 
 #ifndef ZYDIS_FORMATTER_BASE_H
@@ -48,7 +48,7 @@ extern "C" {
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Appends an unsigned numeric value to the given string.
+ * Appends an unsigned numeric value to the given string.
  *
  * @param   formatter       A pointer to the `ZydisFormatter` instance.
  * @param   base            The numeric base.
@@ -75,7 +75,7 @@ extern "C" {
     }
 
 /**
- * @brief   Appends a signed numeric value to the given string.
+ * Appends a signed numeric value to the given string.
  *
  * @param   formatter       A pointer to the `ZydisFormatter` instance.
  * @param   base            The numeric base.
@@ -107,8 +107,8 @@ extern "C" {
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Invokes the `ZydisFormatterBufferAppend` routine, if tokenization is enabled for the
- *          current pass.
+ * Invokes the `ZydisFormatterBufferAppend` routine, if tokenization is enabled for the
+ * current pass.
  *
  * @param   buffer  A pointer to the `ZydisFormatterBuffer` struct.
  * @param   type    The token type.
@@ -123,7 +123,7 @@ extern "C" {
     }
 
 /**
- * @brief   Returns a snapshot of the buffer-state.
+ * Returns a snapshot of the buffer-state.
  *
  * @param   buffer  A pointer to the `ZydisFormatterBuffer` struct.
  * @param   state   Receives a snapshot of the buffer-state.
@@ -141,10 +141,10 @@ extern "C" {
     }
 
 /**
- * @brief   Appends a string (`STR_`-prefix) or a predefined token-list (`TOK_`-prefix).
+ * Appends a string (`STR_`-prefix) or a predefined token-list (`TOK_`-prefix).
  *
- * @brief   buffer  A pointer to the `ZydisFormatterBuffer` struct.
- * @brief   name    The base name (without prefix) of the string- or token.
+ * @param   buffer  A pointer to the `ZydisFormatterBuffer` struct.
+ * @param   name    The base name (without prefix) of the string- or token.
  */
 #define ZYDIS_BUFFER_APPEND(buffer, name) \
     if ((buffer)->is_token_list) \
@@ -158,11 +158,11 @@ extern "C" {
 // TODO: Implement `letter_case` for predefined tokens
 
 /**
- * @brief   Appends a string (`STR_`-prefix) or a predefined token-list (`TOK_`-prefix).
+ * Appends a string (`STR_`-prefix) or a predefined token-list (`TOK_`-prefix).
  *
- * @brief   buffer      A pointer to the `ZydisFormatterBuffer` struct.
- * @brief   name        The base name (without prefix) of the string- or token.
- * @brief   letter-case The desired letter-case.
+ * @param   buffer      A pointer to the `ZydisFormatterBuffer` struct.
+ * @param   name        The base name (without prefix) of the string- or token.
+ * @param   letter-case The desired letter-case.
  */
 #define ZYDIS_BUFFER_APPEND_CASE(buffer, name, letter_case) \
     if ((buffer)->is_token_list) \
@@ -205,7 +205,7 @@ typedef struct ZydisPredefinedToken_
 #endif
 
 /**
- * @brief   Appends a predefined token-list to the `buffer`.
+ * Appends a predefined token-list to the `buffer`.
  *
  * @param   buffer  A pointer to the `ZydisFormatterBuffer` struct.
  * @param   data    A pointer to the `ZydisPredefinedToken` struct.
@@ -247,8 +247,8 @@ ZYAN_INLINE ZyanStatus ZydisFormatterBufferAppendPredefined(ZydisFormatterBuffer
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Returns the size to be used as explicit size suffix (`AT&T`) or explicit typecast
- *          (`INTEL`), if required.
+ * Returns the size to be used as explicit size suffix (`AT&T`) or explicit typecast
+ * (`INTEL`), if required.
  *
  * @param   formatter   A pointer to the `ZydisFormatter` instance.
  * @param   context     A pointer to the `ZydisFormatterContext` struct.

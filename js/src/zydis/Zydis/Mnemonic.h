@@ -26,7 +26,7 @@
 
 /**
  * @file
- * @brief   Mnemonic constant definitions and helper functions.
+ * Mnemonic constant definitions and helper functions.
  */
 
 #ifndef ZYDIS_MNEMONIC_H
@@ -51,12 +51,12 @@ extern "C" {
 
 /**
  * @addtogroup mnemonic Mnemonic
- * @brief Functions for retrieving mnemonic names.
+ * Functions for retrieving mnemonic names.
  * @{
  */
 
 /**
- * @brief   Returns the specified instruction mnemonic string.
+ * Returns the specified instruction mnemonic string.
  *
  * @param   mnemonic    The mnemonic.
  *
@@ -65,7 +65,7 @@ extern "C" {
 ZYDIS_EXPORT const char* ZydisMnemonicGetString(ZydisMnemonic mnemonic);
 
 /**
- * @brief   Returns the specified instruction mnemonic as `ZydisShortString`.
+ * Returns the specified instruction mnemonic as `ZydisShortString`.
  *
  * @param   mnemonic    The mnemonic.
  *

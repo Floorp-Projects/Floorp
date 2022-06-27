@@ -37,55 +37,56 @@
 /* ============================================================================================== */
 
 /**
- * @brief   Defines the `ZydisRegisterMapItem` struct.
+ * Defines the `ZydisRegisterMapItem` struct.
  */
 typedef struct ZydisRegisterMapItem_
 {
     /**
-     * @brief   The register class.
+     * The register class.
      */
     ZydisRegisterClass class;
     /**
-     * @brief   The lowest register of the current class.
+     * The lowest register of the current class.
      */
     ZydisRegister lo;
     /**
-     * @brief   The highest register of the current class.
+     * The highest register of the current class.
      */
     ZydisRegister hi;
     /**
-     * @brief   The width of registers of the current class in 16- and 32-bit mode.
+     * The width of registers of the current class in 16- and 32-bit mode.
      */
     ZydisRegisterWidth width;
     /**
-     * @brief   The width of registers of the current class in 64-bit mode.
+     * The width of registers of the current class in 64-bit mode.
      */
     ZydisRegisterWidth width64;
 } ZydisRegisterMapItem;
 
 /**
- * @brief   Provides register to register-class and register-class + id to register mappings.
+ * Provides register to register-class and register-class + id to register mappings.
  */
 static const ZydisRegisterMapItem REGISTER_MAP[] =
 {
-    { ZYDIS_REGCLASS_INVALID  , ZYDIS_REGISTER_NONE   , ZYDIS_REGISTER_NONE   ,   0   ,   0 },
-    { ZYDIS_REGCLASS_GPR8     , ZYDIS_REGISTER_AL     , ZYDIS_REGISTER_R15B   ,   8   ,   8 },
-    { ZYDIS_REGCLASS_GPR16    , ZYDIS_REGISTER_AX     , ZYDIS_REGISTER_R15W   ,  16   ,  16 },
-    { ZYDIS_REGCLASS_GPR32    , ZYDIS_REGISTER_EAX    , ZYDIS_REGISTER_R15D   ,  32   ,  32 },
-    { ZYDIS_REGCLASS_GPR64    , ZYDIS_REGISTER_RAX    , ZYDIS_REGISTER_R15    ,   0   ,  64 },
-    { ZYDIS_REGCLASS_X87      , ZYDIS_REGISTER_ST0    , ZYDIS_REGISTER_ST7    ,  80   ,  80 },
-    { ZYDIS_REGCLASS_MMX      , ZYDIS_REGISTER_MM0    , ZYDIS_REGISTER_MM7    ,  64   ,  64 },
-    { ZYDIS_REGCLASS_XMM      , ZYDIS_REGISTER_XMM0   , ZYDIS_REGISTER_XMM31  , 128   , 128 },
-    { ZYDIS_REGCLASS_YMM      , ZYDIS_REGISTER_YMM0   , ZYDIS_REGISTER_YMM31  , 256   , 256 },
-    { ZYDIS_REGCLASS_ZMM      , ZYDIS_REGISTER_ZMM0   , ZYDIS_REGISTER_ZMM31  , 512   , 512 },
-    { ZYDIS_REGCLASS_FLAGS    , ZYDIS_REGISTER_FLAGS  , ZYDIS_REGISTER_RFLAGS ,   0   ,   0 },
-    { ZYDIS_REGCLASS_IP       , ZYDIS_REGISTER_IP     , ZYDIS_REGISTER_RIP    ,   0   ,   0 },
-    { ZYDIS_REGCLASS_SEGMENT  , ZYDIS_REGISTER_ES     , ZYDIS_REGISTER_GS     ,  16   ,  16 },
-    { ZYDIS_REGCLASS_TEST     , ZYDIS_REGISTER_TR0    , ZYDIS_REGISTER_TR7    ,  32   ,  32 },
-    { ZYDIS_REGCLASS_CONTROL  , ZYDIS_REGISTER_CR0    , ZYDIS_REGISTER_CR15   ,  32   ,  64 },
-    { ZYDIS_REGCLASS_DEBUG    , ZYDIS_REGISTER_DR0    , ZYDIS_REGISTER_DR15   ,  32   ,  64 },
-    { ZYDIS_REGCLASS_MASK     , ZYDIS_REGISTER_K0     , ZYDIS_REGISTER_K7     ,   0   ,   0 },
-    { ZYDIS_REGCLASS_BOUND    , ZYDIS_REGISTER_BND0   , ZYDIS_REGISTER_BND3   , 128   , 128 }
+    { ZYDIS_REGCLASS_INVALID  , ZYDIS_REGISTER_NONE   , ZYDIS_REGISTER_NONE   ,    0   ,    0 },
+    { ZYDIS_REGCLASS_GPR8     , ZYDIS_REGISTER_AL     , ZYDIS_REGISTER_R15B   ,    8   ,    8 },
+    { ZYDIS_REGCLASS_GPR16    , ZYDIS_REGISTER_AX     , ZYDIS_REGISTER_R15W   ,   16   ,   16 },
+    { ZYDIS_REGCLASS_GPR32    , ZYDIS_REGISTER_EAX    , ZYDIS_REGISTER_R15D   ,   32   ,   32 },
+    { ZYDIS_REGCLASS_GPR64    , ZYDIS_REGISTER_RAX    , ZYDIS_REGISTER_R15    ,    0   ,   64 },
+    { ZYDIS_REGCLASS_X87      , ZYDIS_REGISTER_ST0    , ZYDIS_REGISTER_ST7    ,   80   ,   80 },
+    { ZYDIS_REGCLASS_MMX      , ZYDIS_REGISTER_MM0    , ZYDIS_REGISTER_MM7    ,   64   ,   64 },
+    { ZYDIS_REGCLASS_XMM      , ZYDIS_REGISTER_XMM0   , ZYDIS_REGISTER_XMM31  ,  128   ,  128 },
+    { ZYDIS_REGCLASS_YMM      , ZYDIS_REGISTER_YMM0   , ZYDIS_REGISTER_YMM31  ,  256   ,  256 },
+    { ZYDIS_REGCLASS_ZMM      , ZYDIS_REGISTER_ZMM0   , ZYDIS_REGISTER_ZMM31  ,  512   ,  512 },
+    { ZYDIS_REGCLASS_TMM      , ZYDIS_REGISTER_TMM0   , ZYDIS_REGISTER_TMM7   , 8192   , 8192 },
+    { ZYDIS_REGCLASS_FLAGS    , ZYDIS_REGISTER_FLAGS  , ZYDIS_REGISTER_RFLAGS ,    0   ,    0 },
+    { ZYDIS_REGCLASS_IP       , ZYDIS_REGISTER_IP     , ZYDIS_REGISTER_RIP    ,    0   ,    0 },
+    { ZYDIS_REGCLASS_SEGMENT  , ZYDIS_REGISTER_ES     , ZYDIS_REGISTER_GS     ,   16   ,   16 },
+    { ZYDIS_REGCLASS_TEST     , ZYDIS_REGISTER_TR0    , ZYDIS_REGISTER_TR7    ,   32   ,   32 },
+    { ZYDIS_REGCLASS_CONTROL  , ZYDIS_REGISTER_CR0    , ZYDIS_REGISTER_CR15   ,   32   ,   64 },
+    { ZYDIS_REGCLASS_DEBUG    , ZYDIS_REGISTER_DR0    , ZYDIS_REGISTER_DR15   ,   32   ,   64 },
+    { ZYDIS_REGCLASS_MASK     , ZYDIS_REGISTER_K0     , ZYDIS_REGISTER_K7     ,    0   ,    0 },
+    { ZYDIS_REGCLASS_BOUND    , ZYDIS_REGISTER_BND0   , ZYDIS_REGISTER_BND3   ,  128   ,  128 }
 };
 
 /* ============================================================================================== */
@@ -188,8 +189,7 @@ ZydisRegisterWidth ZydisRegisterGetWidth(ZydisMachineMode mode, ZydisRegister re
     return 0;
 }
 
-ZydisRegister ZydisRegisterGetLargestEnclosing(ZydisMachineMode mode,
-    ZydisRegister reg)
+ZydisRegister ZydisRegisterGetLargestEnclosing(ZydisMachineMode mode, ZydisRegister reg)
 {
     static const ZyanU8 GPR8_MAPPING[20] =
     {

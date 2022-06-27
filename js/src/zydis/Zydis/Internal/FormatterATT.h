@@ -26,7 +26,7 @@
 
 /**
  * @file
- * @brief   Implements the `AT&T` style instruction-formatter.
+ * Implements the `AT&T` style instruction-formatter.
  */
 
 #ifndef ZYDIS_FORMATTER_ATT_H
@@ -68,6 +68,9 @@ ZyanStatus ZydisFormatterATTPrintMnemonic(const ZydisFormatter* formatter,
 ZyanStatus ZydisFormatterATTPrintRegister(const ZydisFormatter* formatter,
     ZydisFormatterBuffer* buffer, ZydisFormatterContext* context, ZydisRegister reg);
 
+ZyanStatus ZydisFormatterATTPrintAddressABS(const ZydisFormatter* formatter,
+    ZydisFormatterBuffer* buffer, ZydisFormatterContext* context);
+
 ZyanStatus ZydisFormatterATTPrintDISP(const ZydisFormatter* formatter,
     ZydisFormatterBuffer* buffer, ZydisFormatterContext* context);
 
@@ -85,13 +88,14 @@ ZyanStatus ZydisFormatterATTPrintIMM(const ZydisFormatter* formatter,
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   The default formatter configuration for `AT&T` style disassembly.
+ * The default formatter configuration for `AT&T` style disassembly.
  */
 static const ZydisFormatter FORMATTER_ATT =
 {
     /* style                   */ ZYDIS_FORMATTER_STYLE_ATT,
     /* force_memory_size       */ ZYAN_FALSE,
     /* force_memory_seg        */ ZYAN_FALSE,
+    /* force_memory_scale      */ ZYAN_TRUE,
     /* force_relative_branches */ ZYAN_FALSE,
     /* force_relative_riprel   */ ZYAN_FALSE,
     /* print_branch_size       */ ZYAN_FALSE,
@@ -157,7 +161,7 @@ static const ZydisFormatter FORMATTER_ATT =
     /* func_format_operand_imm */ &ZydisFormatterBaseFormatOperandIMM,
     /* func_print_mnemonic     */ &ZydisFormatterATTPrintMnemonic,
     /* func_print_register     */ &ZydisFormatterATTPrintRegister,
-    /* func_print_address_abs  */ &ZydisFormatterBasePrintAddressABS,
+    /* func_print_address_abs  */ &ZydisFormatterATTPrintAddressABS,
     /* func_print_address_rel  */ &ZydisFormatterBasePrintAddressREL,
     /* func_print_disp         */ &ZydisFormatterATTPrintDISP,
     /* func_print_imm          */ &ZydisFormatterATTPrintIMM,

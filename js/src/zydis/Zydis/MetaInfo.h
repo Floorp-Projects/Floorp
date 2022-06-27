@@ -53,7 +53,7 @@ extern "C" {
 /* ============================================================================================== */
 
  /**
- * @brief   Returns the specified instruction category string.
+ * Returns the specified instruction category string.
  *
  * @param   category    The instruction category.
  *
@@ -62,7 +62,7 @@ extern "C" {
 ZYDIS_EXPORT const char* ZydisCategoryGetString(ZydisInstructionCategory category);
 
 /**
- * @brief   Returns the specified isa-set string.
+ * Returns the specified isa-set string.
  *
  * @param   isa_set The isa-set.
  *
@@ -71,7 +71,7 @@ ZYDIS_EXPORT const char* ZydisCategoryGetString(ZydisInstructionCategory categor
 ZYDIS_EXPORT const char* ZydisISASetGetString(ZydisISASet isa_set);
 
 /**
- * @brief   Returns the specified isa-extension string.
+ * Returns the specified isa-extension string.
  *
  * @param   isa_ext The isa-extension.
  *
