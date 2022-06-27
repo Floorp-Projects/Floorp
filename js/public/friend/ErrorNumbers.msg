@@ -178,6 +178,7 @@ MSG_DEF(JSMSG_TOO_MANY_ARGUMENTS,      0, JSEXN_RANGEERR, "too many arguments pr
 MSG_DEF(JSMSG_CSP_BLOCKED_EVAL,        0, JSEXN_EVALERR, "call to eval() blocked by CSP")
 MSG_DEF(JSMSG_CSP_BLOCKED_FUNCTION,    0, JSEXN_EVALERR, "call to Function() blocked by CSP")
 MSG_DEF(JSMSG_CSP_BLOCKED_WASM,        1, JSEXN_WASMCOMPILEERROR, "call to {0}() blocked by CSP")
+MSG_DEF(JSMSG_CSP_BLOCKED_SHADOWREALM,    0, JSEXN_EVALERR, "call to ShadowRealm.prototype.evaluate blocked by CSP")
 
 // Wrappers
 MSG_DEF(JSMSG_ACCESSOR_DEF_DENIED,     1, JSEXN_ERR, "Permission denied to define accessor property {0}")
@@ -780,5 +781,18 @@ MSG_DEF(JSMSG_RECORD_NO_SYMBOL_KEY,                      0, JSEXN_TYPEERR, "Symb
 MSG_DEF(JSMSG_BAD_TUPLE_INDEX,        0, JSEXN_RANGEERR, "index out of range for tuple")
 MSG_DEF(JSMSG_BAD_TUPLE_OBJECT, 0, JSEXN_TYPEERR, "value of TupleObject must be a Tuple")
 MSG_DEF(JSMSG_RECORD_TUPLE_TO_NUMBER,        0, JSEXN_TYPEERR, "can't convert Record or Tuple to number")
+
+
+// Shadow Realms
+MSG_DEF(JSMSG_NOT_SHADOW_REALM,                    0, JSEXN_TYPEERR, "Object is not a ShadowRealm")
+MSG_DEF(JSMSG_SHADOW_REALM_EVALUATE_NOT_STRING,    0, JSEXN_TYPEERR, "a ShadowRealm can only evaluate a string")
+MSG_DEF(JSMSG_SHADOW_REALM_INVALID_RETURN,    0, JSEXN_TYPEERR, "return value not primitive or callable")
+MSG_DEF(JSMSG_SHADOW_REALM_WRAP_FAILURE,    0, JSEXN_TYPEERR, "unable to wrap callable return object")
+MSG_DEF(JSMSG_SHADOW_REALM_EVALUATE_FAILURE,    0, JSEXN_TYPEERR, "evaluate failed")
+MSG_DEF(JSMSG_SHADOW_REALM_WRAPPED_EXECUTION_FAILURE,    0, JSEXN_TYPEERR, "wrapped function threw")
+MSG_DEF(JSMSG_SHADOW_REALM_GENERIC_SYNTAX,    0, JSEXN_SYNTAXERR, "Couldn't compile string")
+
+MSG_DEF(JSMSG_SHADOW_REALM_IMPORTVALUE_NOT_IMPLEMENTED, 0, JSEXN_TYPEERR, "importValue not yet implemented")
+
 
 //clang-format on
