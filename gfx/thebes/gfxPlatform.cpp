@@ -2811,13 +2811,19 @@ void gfxPlatform::InitWebGLConfig() {
   }
 
   if (kIsWayland || kIsX11) {
-    // Disable EGL_MESA_image_dma_buf_export on mesa/radeonsi due to
-    // https://gitlab.freedesktop.org/mesa/mesa/-/issues/6666
-    nsString adapterDriverVendor;
-    gfxInfo->GetAdapterDriverVendor(adapterDriverVendor);
-    if (adapterDriverVendor.Find("mesa") != -1 &&
-        adapterDriverVendor.Find("radeonsi") != -1) {
+    nsCString discardFailureId;
+    int32_t status;
+    FeatureState& feature =
+        gfxConfig::GetFeature(Feature::DMABUF_SURFACE_EXPORT);
+    if (NS_FAILED(
+            gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DMABUF_SURFACE_EXPORT,
+                                      discardFailureId, &status)) ||
+        status != nsIGfxInfo::FEATURE_STATUS_OK) {
+      feature.DisableByDefault(FeatureStatus::Blocked, "Blocklisted by gfxInfo",
+                               discardFailureId);
       gfxVars::SetUseDMABufSurfaceExport(false);
+    } else {
+      feature.EnableByDefault();
     }
   }
 }
