@@ -107,7 +107,7 @@ class QSTestUtils {
   }
 
   get SCALARS() {
-    return UrlbarProviderQuickSuggest.telemetryScalars;
+    return UrlbarProviderQuickSuggest.TELEMETRY_SCALARS;
   }
 
   get TELEMETRY_EVENT_CATEGORY() {
@@ -619,20 +619,20 @@ class QSTestUtils {
    *   }
    */
   assertTimestampsReplaced(result, urls) {
-    let { timestampTemplate, timestampLength } = UrlbarProviderQuickSuggest;
+    let { TIMESTAMP_TEMPLATE, TIMESTAMP_LENGTH } = UrlbarProviderQuickSuggest;
 
     // Parse the timestamp strings from each payload property and save them in
     // `urls[key].timestamp`.
     urls = { ...urls };
     for (let [key, url] of Object.entries(urls)) {
-      let index = url.indexOf(timestampTemplate);
+      let index = url.indexOf(TIMESTAMP_TEMPLATE);
       this.Assert.ok(
         index >= 0,
-        `Timestamp template ${timestampTemplate} is in URL ${url} for key ${key}`
+        `Timestamp template ${TIMESTAMP_TEMPLATE} is in URL ${url} for key ${key}`
       );
       let value = result.payload[key];
       this.Assert.ok(value, "Key is in result payload: " + key);
-      let timestamp = value.substring(index, index + timestampLength);
+      let timestamp = value.substring(index, index + TIMESTAMP_LENGTH);
 
       // Set `urls[key]` to an object that's helpful in the logged info message
       // below.
