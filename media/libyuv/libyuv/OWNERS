@@ -1,8 +1,10 @@
+mbonadei@chromium.org
 fbarchard@chromium.org
 magjed@chromium.org
+wtc@google.com
 
-per-file *.gn=phoglund@chromium.org
+per-file *.gn=mbonadei@chromium.org
 per-file .gitignore=*
 per-file AUTHORS=*
 per-file DEPS=*
-per-file PRESUBMIT.py=phoglund@chromium.org
+per-file PRESUBMIT.py=mbonadei@chromium.org
