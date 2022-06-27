@@ -571,18 +571,13 @@ def DOMClass(descriptor):
     else:
         wrapperCacheGetter = "nullptr"
 
-    if descriptor.hasOrdinaryObjectPrototype:
-        getProto = "JS::GetRealmObjectPrototypeHandle"
-    else:
-        getProto = "GetProtoObjectHandle"
-
     return fill(
         """
           { ${protoChain} },
           std::is_base_of_v<nsISupports, ${nativeType}>,
           ${hooks},
           FindAssociatedGlobalForNative<${nativeType}>::Get,
-          ${getProto},
+          GetProtoObjectHandle,
           GetCCParticipant<${nativeType}>::Get(),
           ${serializer},
           ${wrapperCacheGetter}
@@ -592,7 +587,6 @@ def DOMClass(descriptor):
         hooks=NativePropertyHooks(descriptor),
         serializer=serializer,
         wrapperCacheGetter=wrapperCacheGetter,
-        getProto=getProto,
     )
 
 
@@ -3889,11 +3883,9 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             unforgeableHolderSetup = None
 
-        # FIXME Unclear whether this is needed for hasOrdinaryObjectPrototype
         if (
             self.descriptor.interface.isOnGlobalProtoChain()
             and needInterfacePrototypeObject
-            and not self.descriptor.hasOrdinaryObjectPrototype
         ):
             makeProtoPrototypeImmutable = CGGeneric(
                 fill(
@@ -4802,17 +4794,13 @@ class CGWrapGlobalMethod(CGAbstractMethod):
         else:
             unforgeable = ""
 
-        if self.descriptor.hasOrdinaryObjectPrototype:
-            getProto = "JS::GetRealmObjectPrototypeHandle"
-        else:
-            getProto = "GetProtoObjectHandle"
         return fill(
             """
             $*{assertions}
             MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),
                        "nsISupports must be on our primary inheritance chain");
 
-            if (!CreateGlobal<${nativeType}, ${getProto}>(aCx,
+            if (!CreateGlobal<${nativeType}, GetProtoObjectHandle>(aCx,
                                              aObject,
                                              aCache,
                                              sClass.ToJSClass(),
@@ -4838,7 +4826,6 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             """,
             assertions=AssertInheritanceChain(self.descriptor),
             nativeType=self.descriptor.nativeType,
-            getProto=getProto,
             properties=properties,
             chromeProperties=chromeProperties,
             failureCode=failureCode,
@@ -16533,10 +16520,7 @@ class CGDescriptor(CGThing):
 
         # CGGetProtoObjectMethod and CGGetConstructorObjectMethod need
         # to come after CGCreateInterfaceObjectsMethod.
-        if (
-            descriptor.interface.hasInterfacePrototypeObject()
-            and not descriptor.hasOrdinaryObjectPrototype
-        ):
+        if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGGetProtoObjectHandleMethod(descriptor))
             if descriptor.interface.hasChildInterfaces():
                 cgThings.append(CGGetProtoObjectMethod(descriptor))
@@ -17752,38 +17736,6 @@ class CGRegisterWorkletBindings(CGAbstractMethod):
     def definition_body(self):
         descriptors = self.config.getDescriptors(
             hasInterfaceObject=True, isExposedInAnyWorklet=True, register=True
-        )
-        conditions = []
-        for desc in descriptors:
-            bindingNS = toBindingNamespace(desc.name)
-            condition = "!%s::GetConstructorObject(aCx)" % bindingNS
-            if desc.isExposedConditionally():
-                condition = (
-                    "%s::ConstructorEnabled(aCx, aObj) && " % bindingNS + condition
-                )
-            conditions.append(condition)
-        lines = [
-            CGIfWrapper(CGGeneric("return false;\n"), condition)
-            for condition in conditions
-        ]
-        lines.append(CGGeneric("return true;\n"))
-        return CGList(lines, "\n").define()
-
-
-class CGRegisterShadowRealmBindings(CGAbstractMethod):
-    def __init__(self, config):
-        CGAbstractMethod.__init__(
-            self,
-            None,
-            "RegisterShadowRealmBindings",
-            "bool",
-            [Argument("JSContext*", "aCx"), Argument("JS::Handle<JSObject*>", "aObj")],
-        )
-        self.config = config
-
-    def definition_body(self):
-        descriptors = self.config.getDescriptors(
-            hasInterfaceObject=True, isExposedInShadowRealms=True, register=True
         )
         conditions = []
         for desc in descriptors:
@@ -23130,33 +23082,6 @@ class GlobalGenRoots:
 
         # Add include guards.
         curr = CGIncludeGuard("RegisterWorkletBindings", curr)
-
-        # Done.
-        return curr
-
-    @staticmethod
-    def RegisterShadowRealmBindings(config):
-
-        curr = CGRegisterShadowRealmBindings(config)
-
-        # Wrap all of that in our namespaces.
-        curr = CGNamespace.build(["mozilla", "dom"], CGWrapper(curr, post="\n"))
-        curr = CGWrapper(curr, post="\n")
-
-        # Add the includes
-        defineIncludes = [
-            CGHeaders.getDeclarationFilename(desc.interface)
-            for desc in config.getDescriptors(
-                hasInterfaceObject=True, register=True, isExposedInShadowRealms=True
-            )
-        ]
-
-        curr = CGHeaders(
-            [], [], [], [], [], defineIncludes, "RegisterShadowRealmBindings", curr
-        )
-
-        # Add include guards.
-        curr = CGIncludeGuard("RegisterShadowRealmBindings", curr)
 
         # Done.
         return curr

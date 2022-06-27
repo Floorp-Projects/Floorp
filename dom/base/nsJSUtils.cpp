@@ -139,7 +139,7 @@ nsresult nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
 
 /* static */
 bool nsJSUtils::IsScriptable(JS::Handle<JSObject*> aEvaluationGlobal) {
-  return xpc::Scriptability::AllowedIfExists(aEvaluationGlobal);
+  return xpc::Scriptability::Get(aEvaluationGlobal).Allowed();
 }
 
 static bool AddScopeChainItem(JSContext* aCx, nsINode* aNode,

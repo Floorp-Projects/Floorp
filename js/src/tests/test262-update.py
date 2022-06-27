@@ -31,6 +31,7 @@ UNSUPPORTED_FEATURES = set(
         "json-modules",
         "resizable-arraybuffer",
         "Temporal",
+        "ShadowRealm",
         "array-grouping",
         "regexp-v-flag",
     ]
@@ -49,7 +50,6 @@ RELEASE_OR_BETA = set(
 SHELL_OPTIONS = {
     "import-assertions": "--enable-import-assertions",
     "array-find-from-last": "--enable-array-find-last",
-    "ShadowRealm": "--enable-shadow-realms",
 }
 
 

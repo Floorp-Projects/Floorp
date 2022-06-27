@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-shadow-realms) skip-if(!xulRuntime.shell) module async -- requires shell-options
+// |reftest| skip module async -- ShadowRealm is not supported
 // Copyright (C) 2021 Rick Waldron. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
