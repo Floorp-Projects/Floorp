@@ -1,63 +1,110 @@
 ---
 root:
   items:
+    - type: clip
+      id: 100
+      complex:
+        - rect: [20, 20, 100, 100]
+          radius: [32, 16]
+    - type: clip-chain
+      id: 200
+      clips: [100]
     - type: rect
       bounds: [20, 20, 100, 100]
       color: red
-      complex-clip:
-        rect: [20, 20, 100, 100]
-        radius: [32, 16]
+      clip-chain: 200
 
+    - type: clip
+      id: 101
+      complex:
+        - rect: [130, 20, 100, 100]
+          radius: [32, 16]
+          clip-mode: clip-out
+    - type: clip-chain
+      id: 201
+      clips: [101]
     - type: rect
       bounds: [130, 20, 100, 100]
       color: green
-      complex-clip:
-        rect: [130, 20, 100, 100]
-        radius: [32, 16]
-        clip-mode: clip-out
+      clip-chain: 201
 
+    - type: clip
+      id: 102
+      complex:
+        - rect: [20, 130, 100, 100]
+          radius: [16, 32]
+    - type: clip-chain
+      id: 202
+      clips: [102]
     - type: rect
       bounds: [20, 130, 100, 100]
       color: red
-      complex-clip:
-        rect: [20, 130, 100, 100]
-        radius: [16, 32]
+      clip-chain: 202
 
+    - type: clip
+      id: 103
+      complex:
+        - rect: [130, 130, 100, 100]
+          radius: [16, 32]
+          clip-mode: clip-out
+    - type: clip-chain
+      id: 203
+      clips: [103]
     - type: rect
       bounds: [130, 130, 100, 100]
       color: green
-      complex-clip:
-        rect: [130, 130, 100, 100]
-        radius: [16, 32]
-        clip-mode: clip-out
+      clip-chain: 203
 
+    - type: clip
+      id: 104
+      complex:
+        - rect: [20, 240, 100, 100]
+          radius: [128, 32]
+    - type: clip-chain
+      id: 204
+      clips: [104]
     - type: rect
       bounds: [20, 240, 100, 100]
       color: red
-      complex-clip:
-        rect: [20, 240, 100, 100]
-        radius: [128, 32]
+      clip-chain: 204
 
+    - type: clip
+      id: 105
+      complex:
+        - rect: [130, 240, 100, 100]
+          radius: [128, 32]
+          clip-mode: clip-out
+    - type: clip-chain
+      id: 205
+      clips: [105]
     - type: rect
       bounds: [130, 240, 100, 100]
       color: green
-      complex-clip:
-        rect: [130, 240, 100, 100]
-        radius: [128, 32]
-        clip-mode: clip-out
+      clip-chain: 205
 
+    - type: clip
+      id: 106
+      complex:
+        - rect: [20, 350, 100, 100]
+          radius: [32, 128]
+    - type: clip-chain
+      id: 206
+      clips: [106]
     - type: rect
       bounds: [20, 350, 100, 100]
       color: red
-      complex-clip:
-        rect: [20, 350, 100, 100]
-        radius: [32, 128]
+      clip-chain: 206
 
+    - type: clip
+      id: 107
+      complex:
+        - rect: [130, 350, 100, 100]
+          radius: [32, 128]
+          clip-mode: clip-out
+    - type: clip-chain
+      id: 207
+      clips: [107]
     - type: rect
       bounds: [130, 350, 100, 100]
       color: green
-      complex-clip:
-        rect: [130, 350, 100, 100]
-        radius: [32, 128]
-        clip-mode: clip-out
-
+      clip-chain: 207

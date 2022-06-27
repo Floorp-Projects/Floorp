@@ -9,12 +9,18 @@ root:
         items:
           - image: checkerboard(0, 128, 16);
             bounds: 400 400 2048 2048
+          - type: clip
+            id: 101
+            complex:
+              - rect: [512, 512, 1024, 1024]
+                radius: [256, 256]
+          - type: clip-chain
+            id: 201
+            clips: [101]
           - type: "stacking-context"
             bounds: [0, 0, 2048, 2048]
             mix-blend-mode: difference
-            complex-clip:
-              rect: [512, 512, 1024, 1024]
-              radius: [256, 256]
+            clip-chain: 201
             items:
               - image: checkerboard(0, 1024, 2);
                 bounds: [0, 0, 2048, 2048]

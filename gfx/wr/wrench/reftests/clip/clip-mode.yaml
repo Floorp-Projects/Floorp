@@ -1,17 +1,31 @@
 ---
 root:
   items:
+    - type: clip
+      id: 2
+      bounds: [20, 20, 100, 100]
+      complex:
+        - rect: [20, 20, 100, 100]
+          radius: 32
+    - type: clip-chain
+      id: 12
+      clips: [2]
     - type: rect
       bounds: [20, 20, 100, 100]
       color: red
-      complex-clip:
-        rect: [20, 20, 100, 100]
-        radius: 32
+      clip-chain: 12
 
+    - type: clip
+      id: 3
+      bounds: [130, 20, 100, 100]
+      complex:
+        - rect: [130, 20, 100, 100]
+          radius: 32
+          clip-mode: clip-out
+    - type: clip-chain
+      id: 13
+      clips: [3]
     - type: rect
       bounds: [130, 20, 100, 100]
       color: green
-      complex-clip:
-        rect: [130, 20, 100, 100]
-        radius: 32
-        clip-mode: clip-out
+      clip-chain: 13
