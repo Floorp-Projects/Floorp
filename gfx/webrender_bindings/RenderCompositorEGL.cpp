@@ -58,7 +58,10 @@ EGLSurface RenderCompositorEGL::CreateEGLSurface() {
   surface = gl::GLContextEGL::CreateEGLSurfaceForCompositorWidget(
       mWidget, gl::GLContextEGL::Cast(gl())->mConfig);
   if (surface == EGL_NO_SURFACE) {
-    gfxCriticalNote << "Failed to create EGLSurface";
+    const auto* renderThread = RenderThread::Get();
+    gfxCriticalNote << "Failed to create EGLSurface. "
+                    << renderThread->RendererCount() << " renderers, "
+                    << renderThread->ActiveRendererCount() << " active.";
   }
   return surface;
 }
