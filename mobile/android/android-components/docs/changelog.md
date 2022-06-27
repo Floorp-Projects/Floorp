@@ -4,12 +4,19 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 103.0.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v102.0.0...main)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/150?closed=1)
+# 104.0.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v103.0.0...main)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/151?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
+
+# 103.0.0
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v102.0.0...v103.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/150?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/v103.0.0/main/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/v103.0.0/main/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/v103.0.0/main/.config.yml)
 
 * **site-permission-feature**
   * 🆕 [issue #12345](https://github.com/mozilla-mobile/android-components/issues/12345) 
