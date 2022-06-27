@@ -36,7 +36,7 @@ export const setSymbols = memoizeableAction("setSymbols", {
     }
 
     const symbols = getSymbols(getState(), source);
-    if (!symbols || symbols.loading) {
+    if (!symbols) {
       return null;
     }
 

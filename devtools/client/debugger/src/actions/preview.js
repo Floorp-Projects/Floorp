@@ -31,7 +31,7 @@ function findExpressionMatch(state, codeMirror, tokenPos) {
   const symbols = getSymbols(state, source);
 
   let match;
-  if (!symbols || symbols.loading) {
+  if (!symbols) {
     match = getExpressionFromCoords(codeMirror, tokenPos);
   } else {
     match = findBestMatchExpression(symbols, tokenPos);

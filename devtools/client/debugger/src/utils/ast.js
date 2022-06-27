@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 export function findBestMatchExpression(symbols, tokenPos) {
-  if (symbols.loading) {
+  if (!symbols) {
     return null;
   }
 
@@ -81,7 +81,7 @@ function findClosestofSymbol(declarations, location) {
 }
 
 export function findClosestFunction(symbols, location) {
-  if (!symbols || symbols.loading) {
+  if (!symbols) {
     return null;
   }
 
@@ -89,7 +89,7 @@ export function findClosestFunction(symbols, location) {
 }
 
 export function findClosestClass(symbols, location) {
-  if (!symbols || symbols.loading) {
+  if (!symbols) {
     return null;
   }
 

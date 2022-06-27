@@ -76,7 +76,6 @@ Object {
   ],
   "imports": Array [],
   "literals": Array [],
-  "loading": false,
   "memberExpressions": Array [],
   "objectProperties": Array [],
 }

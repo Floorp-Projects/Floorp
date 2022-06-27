@@ -13,22 +13,11 @@ export function getSymbols(state, source) {
 }
 
 export function hasSymbols(state, source) {
-  const symbols = getSymbols(state, source);
-
-  if (!symbols) {
-    return false;
-  }
-
-  return !symbols.loading;
+  return !!getSymbols(state, source);
 }
 
 export function isSymbolsLoading(state, source) {
-  const symbols = getSymbols(state, source);
-  if (!symbols) {
-    return false;
-  }
-
-  return symbols.loading;
+  return !getSymbols(state, source);
 }
 
 export function getInScopeLines(state, location) {

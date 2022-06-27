@@ -500,7 +500,7 @@ export function getSourceClassnames(source, symbols) {
     return "blackBox";
   }
 
-  if (symbols && !symbols.loading && symbols.framework) {
+  if (symbols && symbols.framework) {
     return symbols.framework.toLowerCase();
   }
 
