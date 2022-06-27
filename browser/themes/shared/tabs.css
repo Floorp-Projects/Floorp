@@ -586,7 +586,7 @@
 
 @media not (prefers-contrast) {
   #TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon:-moz-lwtheme,
-  .tab-background[selected]:-moz-lwtheme {
+  .tab-background[selected]:not([multiselected=true]):-moz-lwtheme {
     outline: 1px solid var(--lwt-tab-line-color, var(--lwt-tabs-border-color, currentColor));
     outline-offset: -1px;
   }
@@ -595,7 +595,7 @@
 /* Add a focus outline on top of the multiselected tabs, with the currently selected
    tab getting a slightly thicker outline. */
 .tab-background[multiselected=true] {
-  outline: 1px solid color-mix(in srgb, var(--focus-outline-color, currentColor) 40%, transparent);
+  outline: 1px solid var(--focus-outline-color);
   outline-offset: -1px;
 }
 
