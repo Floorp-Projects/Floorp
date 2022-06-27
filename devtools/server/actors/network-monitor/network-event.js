@@ -73,6 +73,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       blockedReason: this._blockedReason,
       blockingExtension: this._blockingExtension,
       channelId: this._channelId,
+      chromeContext: this._isFromSystemPrincipal,
     };
   },
 
@@ -116,7 +117,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._referrerPolicy = networkEvent.referrerPolicy;
     this._priority = networkEvent.priority;
     this._channelId = networkEvent.channelId;
-
+    this._isFromSystemPrincipal = networkEvent.isFromSystemPrincipal;
     // Stack trace info isn't sent automatically. The client
     // needs to request it explicitly using getStackTrace
     // packet. NetmonitorActor may pass just a boolean instead of the stack

@@ -67,6 +67,7 @@ module.exports = async function({
           actor.cause.type == "websocket"
             ? actor.url.replace(/^http/, "ws")
             : actor.channelId,
+        chromeContext: actor.chromeContext,
       },
     ]);
   }
