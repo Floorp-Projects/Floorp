@@ -1274,6 +1274,10 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
       });
     }
 
+    if (aEntry) {
+      aEntry->SetWireframe(Nothing());
+    }
+
     // ReplacedBy will swap the entry back.
     aBrowsingContext->SetActiveSessionHistoryEntry(aEntry);
     loadingBC->SetActiveSessionHistoryEntry(nullptr);

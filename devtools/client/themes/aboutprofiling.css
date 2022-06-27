@@ -80,26 +80,18 @@ h2 {
   line-height: 1.8;
 }
 
-.perf-settings-label {
-  height: 30px;
-  min-width: 140px;
-}
-
-.perf-settings-value {
-  display: flex;
-  flex: 1;
+.perf-settings-range-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 90px;
+  align-items: center;
+  min-height: 30px;
 }
 
 .perf-settings-range-input {
-  flex: 1;
-}
-
-.perf-settings-range-input-el {
-  width: 100%;
+  margin: 0;
 }
 
 .perf-settings-range-value {
-  min-width: 90px;
   text-align: end;
 }
 

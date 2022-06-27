@@ -11,10 +11,16 @@ root:
           type: "stacking-context"
           transform: rotate-x(-60) rotate-y(-120)
           items:
+            - type: clip
+              id: 101
+              complex:
+                - rect: [128, 128, 256, 256]
+                  radius: [64, 32]
+            - type: clip-chain
+              id: 201
+              clips: [101]
             -
               bounds: [128, 128, 256, 256]
               type: rect
               color: blue
-              complex-clip:
-                rect: [128, 128, 256, 256]
-                radius: [64, 32]
+              clip-chain: 201

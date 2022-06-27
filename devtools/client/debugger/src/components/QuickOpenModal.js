@@ -20,7 +20,6 @@ import {
   getSourceContent,
   getSymbols,
   getTabs,
-  isSymbolsLoading,
   getContext,
 } from "../selectors";
 import { memoizeLast } from "../utils/memoizeLast";
@@ -442,6 +441,7 @@ function mapStateToProps(state) {
   const selectedSource = getSelectedSource(state);
   const displayedSources = getDisplayedSourcesList(state);
   const tabs = getTabs(state);
+  const symbols = getSymbols(state, selectedSource);
 
   return {
     cx: getContext(state),
@@ -451,8 +451,8 @@ function mapStateToProps(state) {
     selectedContentLoaded: selectedSource
       ? !!getSourceContent(state, selectedSource.id)
       : undefined,
-    symbols: formatSymbols(getSymbols(state, selectedSource)),
-    symbolsLoading: isSymbolsLoading(state, selectedSource),
+    symbols: formatSymbols(symbols),
+    symbolsLoading: !symbols,
     query: getQuickOpenQuery(state),
     searchType: getQuickOpenType(state),
     tabs,

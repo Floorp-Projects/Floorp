@@ -62,13 +62,30 @@ void ZydisFormatterBufferInit(ZydisFormatterBuffer* buffer, char* user_buffer,
     ZYAN_ASSERT(user_buffer);
     ZYAN_ASSERT(length);
 
-    buffer->is_token_list              = ZYAN_FALSE;
-    buffer->string.flags               = ZYAN_STRING_HAS_FIXED_CAPACITY;
-    buffer->string.vector.allocator    = ZYAN_NULL;
-    buffer->string.vector.element_size = sizeof(char);
-    buffer->string.vector.size         = 1;
-    buffer->string.vector.capacity     = length;
-    buffer->string.vector.data         = user_buffer;
+    buffer->is_token_list                   = ZYAN_FALSE;
+    buffer->capacity                        = 0;
+    buffer->string.flags                    = ZYAN_STRING_HAS_FIXED_CAPACITY;
+    buffer->string.vector.allocator         = ZYAN_NULL;
+#if defined(ZYAN_NO_LIBC) // no-libc correlates quite well with kernel environments
+    // We can't use floats in kernel. Initialize them via memcpy hack.
+    // Note: this is only required in the backported version for Zydis v3.0.
+    // Newer version depend on a version of zycore that got rid of the floats.
+
+    ZYAN_STATIC_ASSERT(sizeof(buffer->string.vector.growth_factor) == 4);
+    ZYAN_STATIC_ASSERT(sizeof(buffer->string.vector.shrink_threshold) == 4);
+
+    ZYAN_MEMCPY(&buffer->string.vector.growth_factor, "\x00\x00\x80\x3F", 4);
+    ZYAN_MEMCPY(&buffer->string.vector.shrink_threshold, "\x00\x00\x00\x00", 4);
+#else
+    buffer->string.vector.growth_factor     = 1.0f;
+    buffer->string.vector.shrink_threshold  = 0.0f;
+#endif
+    buffer->string.vector.destructor        = ZYAN_NULL;
+    buffer->string.vector.element_size      = sizeof(char);
+    buffer->string.vector.size              = 1;
+    buffer->string.vector.capacity          = length;
+    buffer->string.vector.data              = user_buffer;
+
     *user_buffer = '\0';
 }
 
@@ -87,14 +104,30 @@ void ZydisFormatterBufferInitTokenized(ZydisFormatterBuffer* buffer,
     user_buffer = (ZyanU8*)user_buffer + sizeof(ZydisFormatterToken);
     length -= sizeof(ZydisFormatterToken);
 
-    buffer->is_token_list              = ZYAN_TRUE;
-    buffer->capacity                   = length;
-    buffer->string.flags               = ZYAN_STRING_HAS_FIXED_CAPACITY;
-    buffer->string.vector.allocator    = ZYAN_NULL;
-    buffer->string.vector.element_size = sizeof(char);
-    buffer->string.vector.size         = 1;
-    buffer->string.vector.capacity     = length;
-    buffer->string.vector.data         = user_buffer;
+    buffer->is_token_list                  = ZYAN_TRUE;
+    buffer->capacity                       = length;
+    buffer->string.flags                   = ZYAN_STRING_HAS_FIXED_CAPACITY;
+    buffer->string.vector.allocator        = ZYAN_NULL;
+#if defined(ZYAN_NO_LIBC) // no-libc correlates quite well with kernel environments
+    // We can't use floats in kernel. Initialize them via memcpy hack.
+    // Note: this is only required in the backported version for Zydis v3.0.
+    // Newer version depend on a version of zycore that got rid of the floats.
+
+    ZYAN_STATIC_ASSERT(sizeof(buffer->string.vector.growth_factor) == 4);
+    ZYAN_STATIC_ASSERT(sizeof(buffer->string.vector.shrink_threshold) == 4);
+
+    ZYAN_MEMCPY(&buffer->string.vector.growth_factor, "\x00\x00\x80\x3F", 4);
+    ZYAN_MEMCPY(&buffer->string.vector.shrink_threshold, "\x00\x00\x00\x00", 4);
+#else
+    buffer->string.vector.growth_factor     = 1.0f;
+    buffer->string.vector.shrink_threshold  = 0.0f;
+#endif
+    buffer->string.vector.destructor       = ZYAN_NULL;
+    buffer->string.vector.element_size     = sizeof(char);
+    buffer->string.vector.size             = 1;
+    buffer->string.vector.capacity         = length;
+    buffer->string.vector.data             = user_buffer;
+
     *(char*)user_buffer = '\0';
 }
 
@@ -110,7 +143,7 @@ void ZydisFormatterBufferInitTokenized(ZydisFormatterBuffer* buffer,
 
 ZyanStatus ZydisFormatterInit(ZydisFormatter* formatter, ZydisFormatterStyle style)
 {
-    if (!formatter || (style > ZYDIS_FORMATTER_STYLE_MAX_VALUE))
+    if (!formatter || ((ZyanUSize)style > ZYDIS_FORMATTER_STYLE_MAX_VALUE))
     {
         return ZYAN_STATUS_INVALID_ARGUMENT;
     }
@@ -147,6 +180,11 @@ ZyanStatus ZydisFormatterSetProperty(ZydisFormatter* formatter, ZydisFormatterPr
         formatter->force_memory_segment = (value) ? ZYAN_TRUE : ZYAN_FALSE;
         break;
     }
+    case ZYDIS_FORMATTER_PROP_FORCE_SCALE_ONE:
+    {
+        formatter->force_memory_scale = (value) ? ZYAN_TRUE : ZYAN_FALSE;
+        break;
+    }
     case ZYDIS_FORMATTER_PROP_FORCE_RELATIVE_BRANCHES:
     {
         formatter->force_relative_branches = (value) ? ZYAN_TRUE : ZYAN_FALSE;
@@ -169,7 +207,7 @@ ZyanStatus ZydisFormatterSetProperty(ZydisFormatter* formatter, ZydisFormatterPr
     }
     case ZYDIS_FORMATTER_PROP_ADDR_BASE:
     {
-        if ((ZydisNumericBase)value > ZYDIS_NUMERIC_BASE_MAX_VALUE)
+        if (value > ZYDIS_NUMERIC_BASE_MAX_VALUE)
         {
             return ZYAN_STATUS_INVALID_ARGUMENT;
         }
@@ -178,7 +216,7 @@ ZyanStatus ZydisFormatterSetProperty(ZydisFormatter* formatter, ZydisFormatterPr
     }
     case ZYDIS_FORMATTER_PROP_ADDR_SIGNEDNESS:
     {
-        if ((ZydisSignedness)value > ZYDIS_SIGNEDNESS_MAX_VALUE)
+        if (value > ZYDIS_SIGNEDNESS_MAX_VALUE)
         {
             return ZYAN_STATUS_INVALID_ARGUMENT;
         }
@@ -187,17 +225,27 @@ ZyanStatus ZydisFormatterSetProperty(ZydisFormatter* formatter, ZydisFormatterPr
     }
     case ZYDIS_FORMATTER_PROP_ADDR_PADDING_ABSOLUTE:
     {
+        if (((ZydisPadding)value != ZYDIS_PADDING_AUTO) &&
+            (value > 0xFF))
+        {
+            return ZYAN_STATUS_INVALID_ARGUMENT;
+        }
         formatter->addr_padding_absolute = (ZydisPadding)value;
         break;
     }
     case ZYDIS_FORMATTER_PROP_ADDR_PADDING_RELATIVE:
     {
+        if (((ZydisPadding)value != ZYDIS_PADDING_AUTO) &&
+            (value > 0xFF))
+        {
+            return ZYAN_STATUS_INVALID_ARGUMENT;
+        }
         formatter->addr_padding_relative = (ZydisPadding)value;
         break;
     }
     case ZYDIS_FORMATTER_PROP_DISP_BASE:
     {
-        if ((ZydisNumericBase)value > ZYDIS_NUMERIC_BASE_MAX_VALUE)
+        if (value > ZYDIS_NUMERIC_BASE_MAX_VALUE)
         {
             return ZYAN_STATUS_INVALID_ARGUMENT;
         }
@@ -206,7 +254,7 @@ ZyanStatus ZydisFormatterSetProperty(ZydisFormatter* formatter, ZydisFormatterPr
     }
     case ZYDIS_FORMATTER_PROP_DISP_SIGNEDNESS:
     {
-        if ((ZydisSignedness)value > ZYDIS_SIGNEDNESS_MAX_VALUE)
+        if (value > ZYDIS_SIGNEDNESS_MAX_VALUE)
         {
             return ZYAN_STATUS_INVALID_ARGUMENT;
         }
@@ -217,18 +265,22 @@ ZyanStatus ZydisFormatterSetProperty(ZydisFormatter* formatter, ZydisFormatterPr
     {
         if ((ZydisPadding)value == ZYDIS_PADDING_AUTO)
         {
-            if (formatter->style > ZYDIS_FORMATTER_STYLE_MAX_VALUE)
+            if ((ZyanUSize)formatter->style > ZYDIS_FORMATTER_STYLE_MAX_VALUE)
             {
                 return ZYAN_STATUS_INVALID_ARGUMENT;
             }
             formatter->disp_padding = FORMATTER_PRESETS[formatter->style]->disp_padding;
+        }
+        else if (value > 0xFF)
+        {
+            return ZYAN_STATUS_INVALID_ARGUMENT;
         }
         formatter->disp_padding = (ZydisPadding)value;
         break;
     }
     case ZYDIS_FORMATTER_PROP_IMM_BASE:
     {
-        if ((ZydisNumericBase)value > ZYDIS_NUMERIC_BASE_MAX_VALUE)
+        if (value > ZYDIS_NUMERIC_BASE_MAX_VALUE)
         {
             return ZYAN_STATUS_INVALID_ARGUMENT;
         }
@@ -237,7 +289,7 @@ ZyanStatus ZydisFormatterSetProperty(ZydisFormatter* formatter, ZydisFormatterPr
     }
     case ZYDIS_FORMATTER_PROP_IMM_SIGNEDNESS:
     {
-        if ((ZydisSignedness)value  > ZYDIS_SIGNEDNESS_MAX_VALUE)
+        if (value > ZYDIS_SIGNEDNESS_MAX_VALUE)
         {
             return ZYAN_STATUS_INVALID_ARGUMENT;
         }
@@ -248,11 +300,15 @@ ZyanStatus ZydisFormatterSetProperty(ZydisFormatter* formatter, ZydisFormatterPr
     {
         if ((ZydisPadding)value == ZYDIS_PADDING_AUTO)
         {
-            if (formatter->style > ZYDIS_FORMATTER_STYLE_MAX_VALUE)
+            if ((ZyanUSize)formatter->style > ZYDIS_FORMATTER_STYLE_MAX_VALUE)
             {
                 return ZYAN_STATUS_INVALID_ARGUMENT;
             }
             formatter->imm_padding = FORMATTER_PRESETS[formatter->style]->imm_padding;
+        }
+        else if (value > 0xFF)
+        {
+            return ZYAN_STATUS_INVALID_ARGUMENT;
         }
         formatter->imm_padding = (ZydisPadding)value;
         break;
@@ -344,7 +400,7 @@ ZyanStatus ZydisFormatterSetProperty(ZydisFormatter* formatter, ZydisFormatterPr
 ZyanStatus ZydisFormatterSetHook(ZydisFormatter* formatter, ZydisFormatterFunction type,
     const void** callback)
 {
-    if (!formatter || !callback || (type > ZYDIS_FORMATTER_FUNC_MAX_VALUE))
+    if (!formatter || !callback || ((ZyanUSize)type > ZYDIS_FORMATTER_FUNC_MAX_VALUE))
     {
         return ZYAN_STATUS_INVALID_ARGUMENT;
     }

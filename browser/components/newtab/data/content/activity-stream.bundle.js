@@ -14137,6 +14137,8 @@ class ContentSection extends (external_React_default()).PureComponent {
       highlightsEnabled,
       showSponsoredTopSitesEnabled,
       showSponsoredPocketEnabled,
+      showRecentSavesEnabled,
+      recentSavesExperiment,
       topSitesRowsCount
     } = this.props.enabledSections;
     return /*#__PURE__*/external_React_default().createElement("div", {
@@ -14260,6 +14262,22 @@ class ContentSection extends (external_React_default()).PureComponent {
       className: "sponsored",
       htmlFor: "sponsored-pocket",
       "data-l10n-id": "newtab-custom-pocket-sponsored"
+    })), recentSavesExperiment && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "check-wrapper",
+      role: "presentation"
+    }, /*#__PURE__*/external_React_default().createElement("input", {
+      id: "recent-saves-pocket",
+      className: "sponsored-checkbox",
+      disabled: !pocketEnabled,
+      checked: showRecentSavesEnabled,
+      type: "checkbox",
+      onChange: this.onPreferenceSelect,
+      preference: "showRecentSaves",
+      eventSource: "POCKET_RECENT_SAVES"
+    }), /*#__PURE__*/external_React_default().createElement("label", {
+      className: "sponsored",
+      htmlFor: "recent-saves-pocket",
+      "data-l10n-id": "newtab-custom-pocket-show-recent-saves"
     })))))), /*#__PURE__*/external_React_default().createElement("div", {
       id: "recent-section",
       className: "section"
@@ -14773,6 +14791,8 @@ class BaseContent extends (external_React_default()).PureComponent {
       highlightsEnabled: prefs["feeds.section.highlights"],
       showSponsoredTopSitesEnabled: prefs.showSponsoredTopSites,
       showSponsoredPocketEnabled: prefs.showSponsored,
+      recentSavesExperiment: prefs["discoverystream.recentSaves.enabled"],
+      showRecentSavesEnabled: prefs.showRecentSaves,
       topSitesRowsCount: prefs.topSitesRows
     };
     const pocketRegion = prefs["feeds.system.topstories"];

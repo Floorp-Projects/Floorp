@@ -7,6 +7,9 @@ root:
       bounds: [0, 0, 128, 128]
       type: clip
       id: 2
+    - type: clip-chain
+      id: 12
+      clips: [2]
     - type: stacking-context
       blend-container: true
       items:
@@ -21,7 +24,7 @@ root:
               clip-and-scroll: [3, 2]
             - type: stacking-context
               mix-blend-mode: lighten
-              clip-node: 2
+              clip-chain: 12
               items:
                 - image: checkerboard(0, 16, 16, 8, 16)
                   bounds: [0, 0, 128, 256]

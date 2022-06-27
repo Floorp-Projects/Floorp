@@ -15,11 +15,16 @@ root:
               bounds: [0, 0, 100, 100]
               type: rect
               color: red
+            - type: clip
+              id: 101
+              complex:
+                - rect: [0, 0, 100, 100]
+                  radius: 16
+            - type: clip-chain
+              id: 201
+              clips: [101]
             -
               bounds: [0, 0, 100, 100]
               type: rect
               color: green
-              complex-clip:
-                rect: [0, 0, 100, 100]
-                radius: 16
-
+              clip-chain: 201

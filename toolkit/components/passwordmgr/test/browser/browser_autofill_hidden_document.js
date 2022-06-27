@@ -56,8 +56,8 @@ add_setup(async function() {
 
   Services.logins.removeAllUserFacingLogins();
   let login = LoginTestUtils.testData.formLogin({
-    origin: "http://example.org",
-    formActionOrigin: "http://example.org",
+    origin: "https://example.org",
+    formActionOrigin: "https://example.org",
     username: "user1",
     password: "pass1",
   });

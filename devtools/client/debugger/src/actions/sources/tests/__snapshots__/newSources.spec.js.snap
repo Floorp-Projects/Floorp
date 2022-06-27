@@ -1,9 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`sources - new sources sources - sources with querystrings should find two sources when same source with
-      querystring 1`] = `
-Array [
-  "http://localhost:8000/examples/base.js?v=1",
-  "http://localhost:8000/examples/base.js?v=2",
-]
-`;

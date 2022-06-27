@@ -10,8 +10,8 @@ add_setup(async function() {
   Services.logins.addLogin(login);
 
   login = LoginTestUtils.testData.formLogin({
-    origin: "http://example.org",
-    formActionOrigin: "http://example.org",
+    origin: "https://example.org",
+    formActionOrigin: "https://example.org",
     username: "username2",
     password: "password2",
   });
@@ -28,7 +28,7 @@ add_task(async function test_warningForLocalIP() {
     },
     {
       top: "http://192.168.0.0",
-      iframe: "http://example.org",
+      iframe: "https://example.org",
       expected: `[type="insecureWarning"]`,
     },
     {

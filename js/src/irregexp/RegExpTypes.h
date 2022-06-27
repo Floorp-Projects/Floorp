@@ -44,6 +44,21 @@ struct InputOutputData {
         inputEnd(inputEnd),
         startIndex(startIndex),
         matches(matches) {}
+
+  // Note: return int32_t instead of size_t to prevent signed => unsigned
+  // conversions in caller functions.
+  static constexpr int32_t offsetOfInputStart() {
+    return int32_t(offsetof(InputOutputData, inputStart));
+  }
+  static constexpr int32_t offsetOfInputEnd() {
+    return int32_t(offsetof(InputOutputData, inputEnd));
+  }
+  static constexpr int32_t offsetOfStartIndex() {
+    return int32_t(offsetof(InputOutputData, startIndex));
+  }
+  static constexpr int32_t offsetOfMatches() {
+    return int32_t(offsetof(InputOutputData, matches));
+  }
 };
 
 }  // namespace internal

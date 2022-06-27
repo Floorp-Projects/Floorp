@@ -85,8 +85,6 @@ hasJsx: false
 
 hasTypes: false
 
-loading: false
-
 framework: undefined"
 `;
 
@@ -153,8 +151,6 @@ hasJsx: false
 
 hasTypes: false
 
-loading: false
-
 framework: undefined"
 `;
 
@@ -200,8 +196,6 @@ literals:
 hasJsx: false
 
 hasTypes: false
-
-loading: false
 
 framework: undefined"
 `;
@@ -270,8 +264,6 @@ literals:
 hasJsx: false
 
 hasTypes: false
-
-loading: false
 
 framework: undefined"
 `;
@@ -435,8 +427,6 @@ hasJsx: true
 
 hasTypes: false
 
-loading: false
-
 framework: undefined"
 `;
 
@@ -526,8 +516,6 @@ hasJsx: false
 
 hasTypes: false
 
-loading: false
-
 framework: undefined"
 `;
 
@@ -565,8 +553,6 @@ literals:
 hasJsx: false
 
 hasTypes: false
-
-loading: false
 
 framework: undefined"
 `;
@@ -749,8 +735,6 @@ hasJsx: false
 
 hasTypes: false
 
-loading: false
-
 framework: undefined"
 `;
 
@@ -831,8 +815,6 @@ hasJsx: false
 
 hasTypes: false
 
-loading: false
-
 framework: undefined"
 `;
 
@@ -872,8 +854,6 @@ literals:
 hasJsx: false
 
 hasTypes: true
-
-loading: false
 
 framework: undefined"
 `;
@@ -957,8 +937,6 @@ literals:
 hasJsx: false
 
 hasTypes: false
-
-loading: false
 
 framework: undefined"
 `;
@@ -1085,8 +1063,6 @@ hasJsx: false
 
 hasTypes: false
 
-loading: false
-
 framework: undefined"
 `;
 
@@ -1124,8 +1100,6 @@ literals:
 hasJsx: true
 
 hasTypes: false
-
-loading: false
 
 framework: undefined"
 `;
@@ -1179,8 +1153,6 @@ literals:
 hasJsx: false
 
 hasTypes: false
-
-loading: false
 
 framework: undefined"
 `;
@@ -1264,8 +1236,6 @@ hasJsx: false
 
 hasTypes: false
 
-loading: false
-
 framework: undefined"
 `;
 
@@ -1307,8 +1277,6 @@ literals:
 hasJsx: false
 
 hasTypes: false
-
-loading: false
 
 framework: undefined"
 `;
@@ -1385,8 +1353,6 @@ hasJsx: false
 
 hasTypes: false
 
-loading: false
-
 framework: undefined"
 `;
 
@@ -1446,8 +1412,6 @@ hasJsx: false
 
 hasTypes: false
 
-loading: false
-
 framework: undefined"
 `;
 
@@ -1485,8 +1449,6 @@ literals:
 hasJsx: false
 
 hasTypes: false
-
-loading: false
 
 framework: React"
 `;
@@ -1555,8 +1517,6 @@ literals:
 hasJsx: false
 
 hasTypes: false
-
-loading: false
 
 framework: undefined"
 `;

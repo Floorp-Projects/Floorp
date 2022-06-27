@@ -54,7 +54,7 @@ extern "C" {
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisSemanticOperandType` enum.
+ * Defines the `ZydisSemanticOperandType` enum.
  */
 typedef enum ZydisSemanticOperandType_
 {
@@ -75,6 +75,7 @@ typedef enum ZydisSemanticOperandType_
     ZYDIS_SEMANTIC_OPTYPE_XMM,
     ZYDIS_SEMANTIC_OPTYPE_YMM,
     ZYDIS_SEMANTIC_OPTYPE_ZMM,
+    ZYDIS_SEMANTIC_OPTYPE_TMM,
     ZYDIS_SEMANTIC_OPTYPE_BND,
     ZYDIS_SEMANTIC_OPTYPE_SREG,
     ZYDIS_SEMANTIC_OPTYPE_CR,
@@ -92,11 +93,11 @@ typedef enum ZydisSemanticOperandType_
     ZYDIS_SEMANTIC_OPTYPE_MIB,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_SEMANTIC_OPTYPE_MAX_VALUE = ZYDIS_SEMANTIC_OPTYPE_MIB,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_SEMANTIC_OPTYPE_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_SEMANTIC_OPTYPE_MAX_VALUE)
 } ZydisSemanticOperandType;
@@ -104,7 +105,7 @@ typedef enum ZydisSemanticOperandType_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisInternalElementType` enum.
+ * Defines the `ZydisInternalElementType` enum.
  */
 typedef enum ZydisInternalElementType_
 {
@@ -125,6 +126,7 @@ typedef enum ZydisInternalElementType_
     ZYDIS_IELEMENT_TYPE_UINT128,
     ZYDIS_IELEMENT_TYPE_UINT256,
     ZYDIS_IELEMENT_TYPE_FLOAT16,
+    ZYDIS_IELEMENT_TYPE_FLOAT16X2,
     ZYDIS_IELEMENT_TYPE_FLOAT32,
     ZYDIS_IELEMENT_TYPE_FLOAT64,
     ZYDIS_IELEMENT_TYPE_FLOAT80,
@@ -133,11 +135,11 @@ typedef enum ZydisInternalElementType_
     ZYDIS_IELEMENT_TYPE_CC5,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_IELEMENT_TYPE_MAX_VALUE = ZYDIS_IELEMENT_TYPE_CC5,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_IELEMENT_TYPE_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_IELEMENT_TYPE_MAX_VALUE)
 } ZydisInternalElementType;
@@ -145,7 +147,7 @@ typedef enum ZydisInternalElementType_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisImplicitRegisterType` enum.
+ * Defines the `ZydisImplicitRegisterType` enum.
  */
 typedef enum ZydisImplicitRegisterType_
 {
@@ -158,11 +160,11 @@ typedef enum ZydisImplicitRegisterType_
     ZYDIS_IMPLREG_TYPE_FLAGS_SSZ,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_IMPLREG_TYPE_MAX_VALUE = ZYDIS_IMPLREG_TYPE_FLAGS_SSZ,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_IMPLREG_TYPE_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_IMPLREG_TYPE_MAX_VALUE)
 } ZydisImplicitRegisterType;
@@ -170,7 +172,7 @@ typedef enum ZydisImplicitRegisterType_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisImplicitMemBase` enum.
+ * Defines the `ZydisImplicitMemBase` enum.
  */
 typedef enum ZydisImplicitMemBase_
 {
@@ -179,17 +181,17 @@ typedef enum ZydisImplicitMemBase_
     ZYDIS_IMPLMEM_BASE_AAX,
     ZYDIS_IMPLMEM_BASE_ADX,
     ZYDIS_IMPLMEM_BASE_ABX,
-    ZYDIS_IMPLMEM_BASE_ASP,
-    ZYDIS_IMPLMEM_BASE_ABP,
     ZYDIS_IMPLMEM_BASE_ASI,
     ZYDIS_IMPLMEM_BASE_ADI,
+    ZYDIS_IMPLMEM_BASE_SSP,
+    ZYDIS_IMPLMEM_BASE_SBP,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
-    ZYDIS_IMPLMEM_BASE_MAX_VALUE = ZYDIS_IMPLMEM_BASE_ADI,
+    ZYDIS_IMPLMEM_BASE_MAX_VALUE = ZYDIS_IMPLMEM_BASE_SBP,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_IMPLMEM_BASE_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_IMPLMEM_BASE_MAX_VALUE)
 } ZydisImplicitMemBase;
@@ -208,7 +210,7 @@ ZYAN_STATIC_ASSERT(ZYDIS_REGISTER_REQUIRED_BITS            <= 16);
 ZYAN_STATIC_ASSERT(ZYDIS_IMPLMEM_BASE_REQUIRED_BITS        <=  8);
 
 /**
- * @brief   Defines the `ZydisOperandDefinition` struct.
+ * Defines the `ZydisOperandDefinition` struct.
  */
 typedef struct ZydisOperandDefinition_
 {
@@ -235,6 +237,8 @@ typedef struct ZydisOperandDefinition_
             ZyanU8 base                    ZYAN_BITFIELD(ZYDIS_IMPLMEM_BASE_REQUIRED_BITS);
         } mem;
     } op;
+    ZyanBool is_multisource4               ZYAN_BITFIELD(1);
+    ZyanBool ignore_seg_override           ZYAN_BITFIELD(1);
 } ZydisOperandDefinition;
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -242,7 +246,7 @@ typedef struct ZydisOperandDefinition_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisReadWriteAction` enum.
+ * Defines the `ZydisReadWriteAction` enum.
  */
 typedef enum ZydisReadWriteAction_
 {
@@ -252,11 +256,11 @@ typedef enum ZydisReadWriteAction_
     ZYDIS_RW_ACTION_READWRITE,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_RW_ACTION_MAX_VALUE = ZYDIS_RW_ACTION_READWRITE,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_RW_ACTION_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_RW_ACTION_MAX_VALUE)
 } ZydisReadWriteAction;
@@ -264,7 +268,7 @@ typedef enum ZydisReadWriteAction_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisRegisterConstraint` enum.
+ * Defines the `ZydisRegisterConstraint` enum.
  */
 typedef enum ZydisRegisterConstraint_
 {
@@ -278,13 +282,14 @@ typedef enum ZydisRegisterConstraint_
     ZYDIS_REG_CONSTRAINTS_MASK,
     ZYDIS_REG_CONSTRAINTS_BND,
     ZYDIS_REG_CONSTRAINTS_VSIB,
+    ZYDIS_REG_CONSTRAINTS_NO_REL,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
-    ZYDIS_REG_CONSTRAINTS_MAX_VALUE = ZYDIS_REG_CONSTRAINTS_VSIB,
+    ZYDIS_REG_CONSTRAINTS_MAX_VALUE = ZYDIS_REG_CONSTRAINTS_NO_REL,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_REG_CONSTRAINTS_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_REG_CONSTRAINTS_MAX_VALUE)
 } ZydisRegisterConstraint;
@@ -292,7 +297,7 @@ typedef enum ZydisRegisterConstraint_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisInternalVectorLength` enum.
+ * Defines the `ZydisInternalVectorLength` enum.
  */
 typedef enum ZydisInternalVectorLength_
 {
@@ -302,11 +307,11 @@ typedef enum ZydisInternalVectorLength_
     ZYDIS_IVECTOR_LENGTH_FIXED_512,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_IVECTOR_LENGTH_MAX_VALUE = ZYDIS_IVECTOR_LENGTH_FIXED_512,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_IVECTOR_LENGTH_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_IVECTOR_LENGTH_MAX_VALUE)
 } ZydisInternalVectorLength;
@@ -314,7 +319,7 @@ typedef enum ZydisInternalVectorLength_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisInternalElementSize` enum.
+ * Defines the `ZydisInternalElementSize` enum.
  */
 typedef enum ZydisInternalElementSize_
 {
@@ -326,11 +331,11 @@ typedef enum ZydisInternalElementSize_
     ZYDIS_IELEMENT_SIZE_128,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_IELEMENT_SIZE_MAX_VALUE = ZYDIS_IELEMENT_SIZE_128,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_IELEMENT_SIZE_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_IELEMENT_SIZE_MAX_VALUE)
 } ZydisInternalElementSize;
@@ -338,30 +343,30 @@ typedef enum ZydisInternalElementSize_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisEVEXFunctionality` enum.
+ * Defines the `ZydisEVEXFunctionality` enum.
  */
 typedef enum ZydisEVEXFunctionality_
 {
     ZYDIS_EVEX_FUNC_INVALID,
     /**
-     * @brief   `EVEX.b` enables broadcast functionality.
+     * `EVEX.b` enables broadcast functionality.
      */
     ZYDIS_EVEX_FUNC_BC,
     /**
-     * @brief   `EVEX.b` enables embedded-rounding functionality.
+     * `EVEX.b` enables embedded-rounding functionality.
      */
     ZYDIS_EVEX_FUNC_RC,
     /**
-     * @brief   `EVEX.b` enables sae functionality.
+     * `EVEX.b` enables sae functionality.
      */
     ZYDIS_EVEX_FUNC_SAE,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_EVEX_FUNC_MAX_VALUE = ZYDIS_EVEX_FUNC_SAE,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_EVEX_FUNC_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_EVEX_FUNC_MAX_VALUE)
 } ZydisEVEXFunctionality;
@@ -369,78 +374,82 @@ typedef enum ZydisEVEXFunctionality_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisEVEXTupleType` enum.
+ * Defines the `ZydisEVEXTupleType` enum.
  */
 typedef enum ZydisEVEXTupleType_
 {
     ZYDIS_TUPLETYPE_INVALID,
     /**
-     * @brief   Full Vector
+     * Full Vector
      */
     ZYDIS_TUPLETYPE_FV,
     /**
-     * @brief   Half Vector
+     * Half Vector
      */
     ZYDIS_TUPLETYPE_HV,
     /**
-     * @brief   Full Vector Mem
+     * Full Vector Mem
      */
     ZYDIS_TUPLETYPE_FVM,
     /**
-     * @brief   Tuple1 Scalar
+     * Tuple1 Scalar
      */
     ZYDIS_TUPLETYPE_T1S,
     /**
-     * @brief   Tuple1 Fixed
+     * Tuple1 Fixed
      */
     ZYDIS_TUPLETYPE_T1F,
     /**
-     * @brief   Tuple1 4x32
+     * Tuple1 4x32
      */
     ZYDIS_TUPLETYPE_T1_4X,
     /**
-     * @brief   Gather / Scatter
+     * Gather / Scatter
      */
     ZYDIS_TUPLETYPE_GSCAT,
     /**
-     * @brief   Tuple2
+     * Tuple2
      */
     ZYDIS_TUPLETYPE_T2,
     /**
-     * @brief   Tuple4
+     * Tuple4
      */
     ZYDIS_TUPLETYPE_T4,
     /**
-     * @brief   Tuple8
+     * Tuple8
      */
     ZYDIS_TUPLETYPE_T8,
     /**
-     * @brief   Half Mem
+     * Half Mem
      */
     ZYDIS_TUPLETYPE_HVM,
     /**
-     * @brief   QuarterMem
+     * QuarterMem
      */
     ZYDIS_TUPLETYPE_QVM,
     /**
-     * @brief   OctMem
+     * OctMem
      */
     ZYDIS_TUPLETYPE_OVM,
     /**
-     * @brief   Mem128
+     * Mem128
      */
     ZYDIS_TUPLETYPE_M128,
     /**
-     * @brief   MOVDDUP
+     * MOVDDUP
      */
     ZYDIS_TUPLETYPE_DUP,
+    /**
+     * Quarter of the vector-length.
+     */
+     ZYDIS_TUPLETYPE_QUARTER,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
-    ZYDIS_TUPLETYPE_MAX_VALUE = ZYDIS_TUPLETYPE_DUP,
+    ZYDIS_TUPLETYPE_MAX_VALUE = ZYDIS_TUPLETYPE_QUARTER,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_TUPLETYPE_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_TUPLETYPE_MAX_VALUE)
 } ZydisEVEXTupleType;
@@ -448,121 +457,121 @@ typedef enum ZydisEVEXTupleType_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisMVEXFunctionality` enum.
+ * Defines the `ZydisMVEXFunctionality` enum.
  */
 typedef enum ZydisMVEXFunctionality_
 {
     /**
-     * @brief   The `MVEX.SSS` value is ignored.
+     * The `MVEX.SSS` value is ignored.
      */
     ZYDIS_MVEX_FUNC_IGNORED,
     /**
-     * @brief   `MVEX.SSS` must be `000b`.
+     * `MVEX.SSS` must be `000b`.
      */
     ZYDIS_MVEX_FUNC_INVALID,
     /**
-     * @brief   `MVEX.SSS` controls embedded-rounding functionality.
+     * `MVEX.SSS` controls embedded-rounding functionality.
      */
     ZYDIS_MVEX_FUNC_RC,
     /**
-     * @brief   `MVEX.SSS` controls sae functionality.
+     * `MVEX.SSS` controls sae functionality.
      */
     ZYDIS_MVEX_FUNC_SAE,
     /**
-     * @brief   No special operation (32bit float elements).
+     * No special operation (32bit float elements).
      */
     ZYDIS_MVEX_FUNC_F_32,
     /**
-     * @brief   No special operation (32bit uint elements).
+     * No special operation (32bit uint elements).
      */
     ZYDIS_MVEX_FUNC_I_32,
     /**
-     * @brief   No special operation (64bit float elements).
+     * No special operation (64bit float elements).
      */
     ZYDIS_MVEX_FUNC_F_64,
     /**
-     * @brief   No special operation (64bit uint elements).
+     * No special operation (64bit uint elements).
      */
     ZYDIS_MVEX_FUNC_I_64,
     /**
-     * @brief   Sf32(reg) or Si32(reg).
+     * Sf32(reg) or Si32(reg).
      */
     ZYDIS_MVEX_FUNC_SWIZZLE_32,
     /**
-     * @brief   Sf64(reg) or Si64(reg).
+     * Sf64(reg) or Si64(reg).
      */
     ZYDIS_MVEX_FUNC_SWIZZLE_64,
     /**
-     * @brief   Sf32(mem).
+     * Sf32(mem).
      */
     ZYDIS_MVEX_FUNC_SF_32,
     /**
-     * @brief   Sf32(mem) broadcast only.
+     * Sf32(mem) broadcast only.
      */
     ZYDIS_MVEX_FUNC_SF_32_BCST,
     /**
-     * @brief   Sf32(mem) broadcast 4to16 only.
+     * Sf32(mem) broadcast 4to16 only.
      */
     ZYDIS_MVEX_FUNC_SF_32_BCST_4TO16,
     /**
-     * @brief   Sf64(mem).
+     * Sf64(mem).
      */
     ZYDIS_MVEX_FUNC_SF_64,
     /**
-     * @brief   Si32(mem).
+     * Si32(mem).
      */
     ZYDIS_MVEX_FUNC_SI_32,
     /**
-     * @brief   Si32(mem) broadcast only.
+     * Si32(mem) broadcast only.
      */
     ZYDIS_MVEX_FUNC_SI_32_BCST,
     /**
-     * @brief   Si32(mem) broadcast 4to16 only.
+     * Si32(mem) broadcast 4to16 only.
      */
     ZYDIS_MVEX_FUNC_SI_32_BCST_4TO16,
     /**
-     * @brief   Si64(mem).
+     * Si64(mem).
      */
     ZYDIS_MVEX_FUNC_SI_64,
     /**
-     * @brief   Uf32.
+     * Uf32.
      */
     ZYDIS_MVEX_FUNC_UF_32,
     /**
-     * @brief   Uf64.
+     * Uf64.
      */
     ZYDIS_MVEX_FUNC_UF_64,
     /**
-     * @brief   Ui32.
+     * Ui32.
      */
     ZYDIS_MVEX_FUNC_UI_32,
     /**
-     * @brief   Ui64.
+     * Ui64.
      */
     ZYDIS_MVEX_FUNC_UI_64,
     /**
-     * @brief   Df32.
+     * Df32.
      */
     ZYDIS_MVEX_FUNC_DF_32,
     /**
-     * @brief   Df64.
+     * Df64.
      */
     ZYDIS_MVEX_FUNC_DF_64,
     /**
-     * @brief   Di32.
+     * Di32.
      */
     ZYDIS_MVEX_FUNC_DI_32,
     /**
-     * @brief   Di64.
+     * Di64.
      */
     ZYDIS_MVEX_FUNC_DI_64,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_MVEX_FUNC_MAX_VALUE = ZYDIS_MVEX_FUNC_DI_64,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_MVEX_FUNC_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_MVEX_FUNC_MAX_VALUE)
 } ZydisMVEXFunctionality;
@@ -570,7 +579,7 @@ typedef enum ZydisMVEXFunctionality_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisVEXStaticBroadcast` enum.
+ * Defines the `ZydisVEXStaticBroadcast` enum.
  */
 typedef enum ZydisVEXStaticBroadcast
 {
@@ -583,11 +592,11 @@ typedef enum ZydisVEXStaticBroadcast
     ZYDIS_VEX_STATIC_BROADCAST_2_TO_4,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_VEX_STATIC_BROADCAST_MAX_VALUE = ZYDIS_VEX_STATIC_BROADCAST_2_TO_4,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_VEX_STATIC_BROADCAST_REQUIRED_BITS =
         ZYAN_BITS_TO_REPRESENT(ZYDIS_VEX_STATIC_BROADCAST_MAX_VALUE)
@@ -596,7 +605,7 @@ typedef enum ZydisVEXStaticBroadcast
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisEVEXStaticBroadcast` enum.
+ * Defines the `ZydisEVEXStaticBroadcast` enum.
  */
 typedef enum ZydisEVEXStaticBroadcast_
 {
@@ -615,11 +624,11 @@ typedef enum ZydisEVEXStaticBroadcast_
     ZYDIS_EVEX_STATIC_BROADCAST_8_TO_16,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_EVEX_STATIC_BROADCAST_MAX_VALUE = ZYDIS_EVEX_STATIC_BROADCAST_8_TO_16,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_EVEX_STATIC_BROADCAST_REQUIRED_BITS =
         ZYAN_BITS_TO_REPRESENT(ZYDIS_EVEX_STATIC_BROADCAST_MAX_VALUE)
@@ -628,7 +637,7 @@ typedef enum ZydisEVEXStaticBroadcast_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisMVEXStaticBroadcast` enum.
+ * Defines the `ZydisMVEXStaticBroadcast` enum.
  */
 typedef enum ZydisMVEXStaticBroadcast_
 {
@@ -639,11 +648,11 @@ typedef enum ZydisMVEXStaticBroadcast_
     ZYDIS_MVEX_STATIC_BROADCAST_4_TO_16,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_MVEX_STATIC_BROADCAST_MAX_VALUE = ZYDIS_MVEX_STATIC_BROADCAST_4_TO_16,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_MVEX_STATIC_BROADCAST_REQUIRED_BITS =
         ZYAN_BITS_TO_REPRESENT(ZYDIS_MVEX_STATIC_BROADCAST_MAX_VALUE)
@@ -652,31 +661,31 @@ typedef enum ZydisMVEXStaticBroadcast_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisMaskPolicy` enum.
+ * Defines the `ZydisMaskPolicy` enum.
  */
 typedef enum ZydisMaskPolicy_
 {
     ZYDIS_MASK_POLICY_INVALID,
     /**
-     * @brief   The instruction accepts mask-registers other than the default-mask (K0), but
+     * The instruction accepts mask-registers other than the default-mask (K0), but
      *          does not require them.
      */
     ZYDIS_MASK_POLICY_ALLOWED,
     /**
-     * @brief   The instruction requires a mask-register other than the default-mask (K0).
+     * The instruction requires a mask-register other than the default-mask (K0).
      */
     ZYDIS_MASK_POLICY_REQUIRED,
     /**
-     * @brief   The instruction does not allow a mask-register other than the default-mask (K0).
+     * The instruction does not allow a mask-register other than the default-mask (K0).
      */
     ZYDIS_MASK_POLICY_FORBIDDEN,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_MASK_POLICY_MAX_VALUE = ZYDIS_MASK_POLICY_FORBIDDEN,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_MASK_POLICY_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_MASK_POLICY_MAX_VALUE)
 } ZydisMaskPolicy;
@@ -684,7 +693,7 @@ typedef enum ZydisMaskPolicy_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisMaskOverride` enum.
+ * Defines the `ZydisMaskOverride` enum.
  */
 typedef enum ZydisMaskOverride_
 {
@@ -693,11 +702,11 @@ typedef enum ZydisMaskOverride_
     ZYDIS_MASK_OVERRIDE_CONTROL,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_MASK_OVERRIDE_MAX_VALUE = ZYDIS_MASK_OVERRIDE_CONTROL,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_MASK_OVERRIDE_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_MASK_OVERRIDE_MAX_VALUE)
 } ZydisMaskOverride;
@@ -724,6 +733,7 @@ ZYAN_STATIC_ASSERT(ZYDIS_RW_ACTION_REQUIRED_BITS       <=  8);
         ZyanU8 address_size_map                ZYAN_BITFIELD( 2); \
         ZyanU8 flags_reference                 ZYAN_BITFIELD( 7); \
         ZyanBool requires_protected_mode       ZYAN_BITFIELD( 1); \
+        ZyanBool no_compat_mode                ZYAN_BITFIELD( 1); \
         ZyanU8 category                        ZYAN_BITFIELD(ZYDIS_CATEGORY_REQUIRED_BITS); \
         ZyanU8 isa_set                         ZYAN_BITFIELD(ZYDIS_ISA_SET_REQUIRED_BITS); \
         ZyanU8 isa_ext                         ZYAN_BITFIELD(ZYDIS_ISA_EXT_REQUIRED_BITS); \
@@ -733,7 +743,8 @@ ZYAN_STATIC_ASSERT(ZYDIS_RW_ACTION_REQUIRED_BITS       <=  8);
         ZyanU8 constr_RM                       ZYAN_BITFIELD(ZYDIS_REG_CONSTRAINTS_REQUIRED_BITS); \
         ZyanU8 cpu_state                       ZYAN_BITFIELD(ZYDIS_RW_ACTION_REQUIRED_BITS); \
         ZyanU8 fpu_state                       ZYAN_BITFIELD(ZYDIS_RW_ACTION_REQUIRED_BITS); \
-        ZyanU8 xmm_state                       ZYAN_BITFIELD(ZYDIS_RW_ACTION_REQUIRED_BITS)
+        ZyanU8 xmm_state                       ZYAN_BITFIELD(ZYDIS_RW_ACTION_REQUIRED_BITS); \
+        ZyanBool accepts_segment               ZYAN_BITFIELD( 1)
 #else
 #   define ZYDIS_INSTRUCTION_DEFINITION_BASE \
         ZyanU16 mnemonic                       ZYAN_BITFIELD(ZYDIS_MNEMONIC_REQUIRED_BITS); \
@@ -750,10 +761,11 @@ ZYAN_STATIC_ASSERT(ZYDIS_RW_ACTION_REQUIRED_BITS       <=  8);
 
 #define ZYDIS_INSTRUCTION_DEFINITION_BASE_VECTOR_INTEL \
     ZYDIS_INSTRUCTION_DEFINITION_BASE_VECTOR; \
-    ZyanBool is_gather                     ZYAN_BITFIELD( 1)
+    ZyanBool is_gather                     ZYAN_BITFIELD( 1); \
+    ZyanBool no_source_dest_match          ZYAN_BITFIELD( 1)
 
 /**
- * @brief   Defines the `ZydisInstructionDefinition` struct.
+ * Defines the `ZydisInstructionDefinition` struct.
  */
 typedef struct ZydisInstructionDefinition_
 {
@@ -761,7 +773,7 @@ typedef struct ZydisInstructionDefinition_
 } ZydisInstructionDefinition;
 
 /**
- * @brief   Defines the `ZydisInstructionDefinitionLEGACY` struct.
+ * Defines the `ZydisInstructionDefinitionLEGACY` struct.
  */
 typedef struct ZydisInstructionDefinitionLEGACY_
 {
@@ -777,14 +789,14 @@ typedef struct ZydisInstructionDefinitionLEGACY_
     ZyanBool accepts_BOUND                 ZYAN_BITFIELD( 1);
     ZyanBool accepts_XACQUIRE              ZYAN_BITFIELD( 1);
     ZyanBool accepts_XRELEASE              ZYAN_BITFIELD( 1);
+    ZyanBool accepts_NOTRACK               ZYAN_BITFIELD( 1);
     ZyanBool accepts_hle_without_lock      ZYAN_BITFIELD( 1);
     ZyanBool accepts_branch_hints          ZYAN_BITFIELD( 1);
-    ZyanBool accepts_segment               ZYAN_BITFIELD( 1);
 #endif
 } ZydisInstructionDefinitionLEGACY;
 
 /**
- * @brief   Defines the `ZydisInstructionDefinition3DNOW` struct.
+ * Defines the `ZydisInstructionDefinition3DNOW` struct.
  */
 typedef struct ZydisInstructionDefinition3DNOW_
 {
@@ -792,7 +804,7 @@ typedef struct ZydisInstructionDefinition3DNOW_
 } ZydisInstructionDefinition3DNOW;
 
 /**
- * @brief   Defines the `ZydisInstructionDefinitionXOP` struct.
+ * Defines the `ZydisInstructionDefinitionXOP` struct.
  */
 typedef struct ZydisInstructionDefinitionXOP_
 {
@@ -804,7 +816,7 @@ typedef struct ZydisInstructionDefinitionXOP_
 ZYAN_STATIC_ASSERT(ZYDIS_VEX_STATIC_BROADCAST_REQUIRED_BITS  <=  8);
 
 /**
- * @brief   Defines the `ZydisInstructionDefinitionVEX` struct.
+ * Defines the `ZydisInstructionDefinitionVEX` struct.
  */
 typedef struct ZydisInstructionDefinitionVEX_
 {
@@ -827,7 +839,7 @@ ZYAN_STATIC_ASSERT(ZYDIS_MASK_OVERRIDE_REQUIRED_BITS         <=  8);
 ZYAN_STATIC_ASSERT(ZYDIS_EVEX_STATIC_BROADCAST_REQUIRED_BITS <=  8);
 
 /**
- * @brief   Defines the `ZydisInstructionDefinitionEVEX` struct.
+ * Defines the `ZydisInstructionDefinitionEVEX` struct.
  */
 typedef struct ZydisInstructionDefinitionEVEX_
 {
@@ -856,7 +868,7 @@ ZYAN_STATIC_ASSERT(ZYDIS_MASK_POLICY_REQUIRED_BITS           <=  8);
 ZYAN_STATIC_ASSERT(ZYDIS_MVEX_STATIC_BROADCAST_REQUIRED_BITS <=  8);
 
 /**
- * @brief   Defines the `ZydisInstructionDefinitionMVEX` struct.
+ * Defines the `ZydisInstructionDefinitionMVEX` struct.
  */
 typedef struct ZydisInstructionDefinitionMVEX_
 {
@@ -877,6 +889,10 @@ typedef struct ZydisInstructionDefinitionMVEX_
 typedef struct ZydisAccessedFlags_
 {
     ZydisCPUFlagAction action[ZYDIS_CPUFLAG_MAX_VALUE + 1];
+    ZyanU32 cpu_flags_read      ZYAN_BITFIELD(22);
+    ZyanU32 cpu_flags_written   ZYAN_BITFIELD(22);
+    ZyanU8 fpu_flags_read       ZYAN_BITFIELD( 4);
+    ZyanU8 fpu_flags_written    ZYAN_BITFIELD( 4);
 } ZydisAccessedFlags;
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -896,7 +912,7 @@ typedef struct ZydisAccessedFlags_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Returns the instruction-definition with the given `encoding` and `id`.
+ * Returns the instruction-definition with the given `encoding` and `id`.
  *
  * @param   encoding    The instruction-encoding.
  * @param   id          The definition-id.
@@ -912,7 +928,7 @@ ZYDIS_NO_EXPORT void ZydisGetInstructionDefinition(ZydisInstructionEncoding enco
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Returns the the operand-definitions for the given instruction-`definition`.
+ * Returns the the operand-definitions for the given instruction-`definition`.
  *
  * @param   definition  A pointer to the instruction-definition.
  * @param   operand     A pointer to the variable that receives a pointer to the first operand-
@@ -930,7 +946,7 @@ ZYDIS_NO_EXPORT ZyanU8 ZydisGetOperandDefinitions(const ZydisInstructionDefiniti
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Returns the actual type and size of an internal element-type.
+ * Returns the actual type and size of an internal element-type.
  *
  * @param   element The internal element type.
  * @param   type    The actual element type.
@@ -946,7 +962,7 @@ ZYDIS_NO_EXPORT void ZydisGetElementInfo(ZydisInternalElementType element, Zydis
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Returns the the operand-definitions for the given instruction-`definition`.
+ * Returns the the operand-definitions for the given instruction-`definition`.
  *
  * @param   definition  A pointer to the instruction-definition.
  * @param   flags       A pointer to the variable that receives the `ZydisAccessedFlags` struct.

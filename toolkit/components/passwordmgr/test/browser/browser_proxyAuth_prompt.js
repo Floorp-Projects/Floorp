@@ -46,7 +46,7 @@ function initProxy() {
     let pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
     let channel = Services.io.newChannel(
-      "http://example.com",
+      "https://example.com",
       null,
       null,
       null, // aLoadingNode

@@ -1,4 +1,3 @@
-
 @media (max-height: 701px) {
   .personalize-button {
     position: absolute;
@@ -250,10 +249,10 @@
     .more-info-pocket-wrapper {
       margin-inline-start: -2px;
       overflow: hidden;
-      transition: max-height 250ms $customize-menu-expand-bezier;
+      transition: height 250ms $customize-menu-expand-bezier;
 
       &.shrink {
-        max-height: 0;
+        height: 0;
       }
 
       .more-information {
@@ -268,8 +267,6 @@
     }
 
     .more-info-top-wrapper {
-      max-height: 78px;
-
       .more-information {
         top: -77px;
       }
@@ -280,8 +277,6 @@
     }
 
     .more-info-pocket-wrapper {
-      max-height: 35px;
-
       .more-information {
         top: -35px;
       }

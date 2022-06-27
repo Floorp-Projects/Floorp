@@ -128,7 +128,6 @@ function spinEventLoop() {
 }
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", true]]});
   listenForUnexpectedPopupShown();
 });
 
