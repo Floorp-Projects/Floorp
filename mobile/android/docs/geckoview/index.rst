@@ -3,13 +3,6 @@
 GeckoView
 =========
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   consumer/index
-   contributor/index
-
 Android offers a built-in WebView, which applications can hook into in order to display web pages within the context of their app. However, Android's WebView is not really intended for building browsers, and hence, many advanced Web APIs are disabled. Furthermore, it is also a moving target: different phones might have different versions of WebView, all of which your app has to support.
 
 That is where GeckoView comes in. GeckoView is:
@@ -19,19 +12,17 @@ That is where GeckoView comes in. GeckoView is:
 - **Self-Contained**: Because GeckoView is a standalone library that you bundle with your application, you can be confident that the code you test is the code that will actually run.
 - **Standards Compliant**: Like Firefox, GeckoView offers excellent support for modern Web standards.
 
-=================
-Using GeckoView
-=================
+=============
+Documentation
+=============
 
-* `Quick Start Guide <consumer/geckoview-quick-start.html>`_
-* `Usage Documentation <consumer/index.html>`_
+.. toctree::
+   :titlesonly:
 
-=================
-API Documentation
-=================
-
-* `Changelog <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/doc-files/CHANGELOG>`_
-* `API <https://mozilla.github.io/geckoview/javadoc/mozilla-central/index.html>`_
+   consumer/index
+   contributor/index
+   Changelog <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/doc-files/CHANGELOG>
+   API Javadoc <https://mozilla.github.io/geckoview/javadoc/mozilla-central/index.html>
 
 =================
 More information

@@ -1,8 +1,8 @@
 .. -*- Mode: rst; fill-column: 80; -*-
 
-======================
-GeckoView architecture
-======================
+=====================
+Architecture overview
+=====================
 
 .. contents:: Table of Contents
    :depth: 2
