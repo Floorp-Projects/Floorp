@@ -7,9 +7,6 @@ let nsLoginInfo = Components.Constructor(
   "init"
 );
 
-const PREF_INSECURE_FIELD_WARNING_ENABLED =
-  "security.insecure_field_warning.contextual.enabled";
-
 const PREF_SCHEME_UPGRADES = "signon.schemeUpgrades";
 
 let matchingLogins = [];
@@ -102,7 +99,6 @@ add_task(async function test_all_patterns() {
 
   let expectedResults = [
     {
-      insecureFieldWarningEnabled: true,
       isSecure: true,
       hasBeenTypePassword: false,
       matchingLogins,
@@ -155,7 +151,6 @@ add_task(async function test_all_patterns() {
       ],
     },
     {
-      insecureFieldWarningEnabled: true,
       isSecure: false,
       hasBeenTypePassword: false,
       matchingLogins: [],
@@ -179,7 +174,6 @@ add_task(async function test_all_patterns() {
       ],
     },
     {
-      insecureFieldWarningEnabled: true,
       isSecure: false,
       hasBeenTypePassword: false,
       matchingLogins,
@@ -236,7 +230,6 @@ add_task(async function test_all_patterns() {
       ],
     },
     {
-      insecureFieldWarningEnabled: true,
       isSecure: true,
       hasBeenTypePassword: true,
       matchingLogins,
@@ -286,7 +279,6 @@ add_task(async function test_all_patterns() {
       ],
     },
     {
-      insecureFieldWarningEnabled: true,
       isSecure: false,
       hasBeenTypePassword: true,
       matchingLogins,
@@ -343,7 +335,6 @@ add_task(async function test_all_patterns() {
       ],
     },
     {
-      insecureFieldWarningEnabled: false,
       isSecure: true,
       hasBeenTypePassword: false,
       matchingLogins,
@@ -393,435 +384,6 @@ add_task(async function test_all_patterns() {
       ],
     },
     {
-      insecureFieldWarningEnabled: false,
-      isSecure: false,
-      hasBeenTypePassword: false,
-      matchingLogins,
-      items: [
-        {
-          value: "",
-          label: LABEL_NO_USERNAME,
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "tempuser1",
-          label: "tempuser1",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "testuser2",
-          label: "testuser2",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "zzzuser4",
-          label: "zzzuser4",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "httpuser",
-          label: "httpuser",
-          style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
-        },
-        {
-          value: "testuser3",
-          label: "testuser3",
-          style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
-        },
-        {
-          value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: false,
-      isSecure: true,
-      hasBeenTypePassword: true,
-      matchingLogins,
-      items: [
-        {
-          value: "emptypass1",
-          label: LABEL_NO_USERNAME,
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "temppass1",
-          label: "tempuser1",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "testpass2",
-          label: "testuser2",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "zzzpass4",
-          label: "zzzuser4",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "httppass",
-          label: "httpuser",
-          style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
-        },
-        {
-          value: "testpass3",
-          label: "testuser3",
-          style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
-        },
-        {
-          value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: false,
-      isSecure: false,
-      hasBeenTypePassword: true,
-      matchingLogins,
-      items: [
-        {
-          value: "emptypass1",
-          label: LABEL_NO_USERNAME,
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "temppass1",
-          label: "tempuser1",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "testpass2",
-          label: "testuser2",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "zzzpass4",
-          label: "zzzuser4",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "httppass",
-          label: "httpuser",
-          style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
-        },
-        {
-          value: "testpass3",
-          label: "testuser3",
-          style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
-        },
-        {
-          value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: true,
-      isSecure: true,
-      hasBeenTypePassword: false,
-      matchingLogins,
-      items: [
-        {
-          value: "",
-          label: LABEL_NO_USERNAME,
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "tempuser1",
-          label: "tempuser1",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "testuser2",
-          label: "testuser2",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "zzzuser4",
-          label: "zzzuser4",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "httpuser",
-          label: "httpuser",
-          style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
-        },
-        {
-          value: "testuser3",
-          label: "testuser3",
-          style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
-        },
-        {
-          value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: true,
-      isSecure: false,
-      hasBeenTypePassword: false,
-      matchingLogins,
-      items: [
-        {
-          value: "",
-          label:
-            "This connection is not secure. Logins entered here could be compromised. Learn More",
-          style: "insecureWarning",
-          comment: "",
-        },
-        {
-          value: "",
-          label: LABEL_NO_USERNAME,
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "tempuser1",
-          label: "tempuser1",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "testuser2",
-          label: "testuser2",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "zzzuser4",
-          label: "zzzuser4",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "httpuser",
-          label: "httpuser",
-          style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
-        },
-        {
-          value: "testuser3",
-          label: "testuser3",
-          style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
-        },
-        {
-          value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: true,
-      isSecure: true,
-      hasBeenTypePassword: true,
-      matchingLogins,
-      items: [
-        {
-          value: "emptypass1",
-          label: LABEL_NO_USERNAME,
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "temppass1",
-          label: "tempuser1",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "testpass2",
-          label: "testuser2",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "zzzpass4",
-          label: "zzzuser4",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "httppass",
-          label: "httpuser",
-          style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
-        },
-        {
-          value: "testpass3",
-          label: "testuser3",
-          style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
-        },
-        {
-          value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: true,
-      isSecure: false,
-      hasBeenTypePassword: true,
-      matchingLogins,
-      items: [
-        {
-          value: "",
-          label:
-            "This connection is not secure. Logins entered here could be compromised. Learn More",
-          style: "insecureWarning",
-          comment: "",
-        },
-        {
-          value: "emptypass1",
-          label: LABEL_NO_USERNAME,
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "temppass1",
-          label: "tempuser1",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "testpass2",
-          label: "testuser2",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "zzzpass4",
-          label: "zzzuser4",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "httppass",
-          label: "httpuser",
-          style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
-        },
-        {
-          value: "testpass3",
-          label: "testuser3",
-          style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
-        },
-        {
-          value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: false,
-      isSecure: true,
-      hasBeenTypePassword: false,
-      matchingLogins,
-      items: [
-        {
-          value: "",
-          label: LABEL_NO_USERNAME,
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "tempuser1",
-          label: "tempuser1",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "testuser2",
-          label: "testuser2",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "zzzuser4",
-          label: "zzzuser4",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "httpuser",
-          label: "httpuser",
-          style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
-        },
-        {
-          value: "testuser3",
-          label: "testuser3",
-          style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
-        },
-        {
-          value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: false,
-      isSecure: false,
-      hasBeenTypePassword: false,
-      matchingLogins: [],
-      items: [
-        {
-          value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: false,
       isSecure: false,
       hasBeenTypePassword: false,
       matchingLogins: [],
@@ -829,53 +391,10 @@ add_task(async function test_all_patterns() {
       items: [
         {
           value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: false,
-      isSecure: false,
-      hasBeenTypePassword: false,
-      matchingLogins,
-      items: [
-        {
-          value: "",
-          label: LABEL_NO_USERNAME,
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "tempuser1",
-          label: "tempuser1",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "testuser2",
-          label: "testuser2",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "zzzuser4",
-          label: "zzzuser4",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "httpuser",
-          label: "httpuser",
-          style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
-        },
-        {
-          value: "testuser3",
-          label: "testuser3",
-          style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
+          label:
+            "This connection is not secure. Logins entered here could be compromised. Learn More",
+          style: "insecureWarning",
+          comment: "",
         },
         {
           value: "",
@@ -886,107 +405,6 @@ add_task(async function test_all_patterns() {
       ],
     },
     {
-      insecureFieldWarningEnabled: false,
-      isSecure: true,
-      hasBeenTypePassword: true,
-      matchingLogins,
-      items: [
-        {
-          value: "emptypass1",
-          label: LABEL_NO_USERNAME,
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "temppass1",
-          label: "tempuser1",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "testpass2",
-          label: "testuser2",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "zzzpass4",
-          label: "zzzuser4",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "httppass",
-          label: "httpuser",
-          style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
-        },
-        {
-          value: "testpass3",
-          label: "testuser3",
-          style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
-        },
-        {
-          value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: false,
-      isSecure: false,
-      hasBeenTypePassword: true,
-      matchingLogins,
-      items: [
-        {
-          value: "emptypass1",
-          label: LABEL_NO_USERNAME,
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "temppass1",
-          label: "tempuser1",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "testpass2",
-          label: "testuser2",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "zzzpass4",
-          label: "zzzuser4",
-          style: "loginWithOrigin",
-          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
-        },
-        {
-          value: "httppass",
-          label: "httpuser",
-          style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
-        },
-        {
-          value: "testpass3",
-          label: "testuser3",
-          style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
-        },
-        {
-          value: "",
-          label: "View Saved Logins",
-          style: "loginsFooter",
-          comment: { formHostname: "mochi.test" },
-        },
-      ],
-    },
-    {
-      insecureFieldWarningEnabled: true,
       isSecure: true,
       hasBeenTypePassword: true,
       matchingLogins: [],
@@ -1000,7 +418,6 @@ add_task(async function test_all_patterns() {
       ],
     },
     {
-      insecureFieldWarningEnabled: true,
       isSecure: true,
       hasBeenTypePassword: true,
       matchingLogins: [],
@@ -1009,7 +426,6 @@ add_task(async function test_all_patterns() {
     },
     {
       generatedPassword: "9ljgfd4shyktb45",
-      insecureFieldWarningEnabled: true,
       isSecure: true,
       hasBeenTypePassword: true,
       matchingLogins: [],
@@ -1036,7 +452,6 @@ add_task(async function test_all_patterns() {
         "willAutoSaveGeneratedPassword should propagate to the comment",
       generatedPassword: "9ljgfd4shyktb45",
       willAutoSaveGeneratedPassword: true,
-      insecureFieldWarningEnabled: true,
       isSecure: true,
       hasBeenTypePassword: true,
       matchingLogins: [],
@@ -1062,7 +477,6 @@ add_task(async function test_all_patterns() {
       description:
         "If a generated password is passed then show it even if there is a search string. This handles when forcing the generation option from the context menu of a non-empty field",
       generatedPassword: "9ljgfd4shyktb45",
-      insecureFieldWarningEnabled: true,
       isSecure: true,
       hasBeenTypePassword: true,
       matchingLogins: [],
@@ -1088,7 +502,6 @@ add_task(async function test_all_patterns() {
     {
       description: "secure username field on sub.mochi.test",
       formOrigin: "https://sub.mochi.test:8888",
-      insecureFieldWarningEnabled: true,
       isSecure: true,
       hasBeenTypePassword: false,
       matchingLogins,
@@ -1140,7 +553,6 @@ add_task(async function test_all_patterns() {
     {
       description: "secure password field on sub.mochi.test",
       formOrigin: "https://sub.mochi.test:8888",
-      insecureFieldWarningEnabled: true,
       isSecure: true,
       hasBeenTypePassword: true,
       matchingLogins,
@@ -1250,10 +662,6 @@ add_task(async function test_all_patterns() {
   expectedResults.forEach((pattern, testIndex) => {
     info(`expectedResults[${testIndex}]`);
     info(JSON.stringify(pattern, null, 2));
-    Services.prefs.setBoolPref(
-      PREF_INSECURE_FIELD_WARNING_ENABLED,
-      pattern.insecureFieldWarningEnabled
-    );
     Services.prefs.setBoolPref(
       PREF_SCHEME_UPGRADES,
       "schemeUpgrades" in pattern ? pattern.schemeUpgrades : true

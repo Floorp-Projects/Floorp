@@ -1719,7 +1719,6 @@ var Policies = {
         "security.default_personal_cert",
         "security.insecure_connection_text.enabled",
         "security.insecure_connection_text.pbmode.enabled",
-        "security.insecure_field_warning.contextual.enabled",
         "security.mixed_content.block_active_content",
         "security.osclientcerts.autoload",
         "security.ssl.errorReporting.enabled",
