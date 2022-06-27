@@ -134,6 +134,26 @@ class PopupWindowTest {
         verify(popupWindow).showAtLocation(anchor, Gravity.START or Gravity.TOP, 0, 10)
     }
 
+    @Test
+    fun `WHEN displaying force up popup from bottom left THEN show popup up and to the left`() {
+        anchor = createMockViewWith(x = 0, y = 190, false)
+        doReturn(300).`when`(menuContentView).measuredHeight
+
+        popupWindow.displayPopup(menuContentView, anchor, Orientation.UP, true)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeftBottom, popupWindow.animationStyle)
+        verify(popupWindow).showAsDropDown(anchor, 0, -300)
+    }
+
+    @Test
+    fun `WHEN displaying force down popup from top left THEN show popup down and to the right`() {
+        anchor = createMockViewWith(x = 0, y = 0, false)
+        doReturn(300).`when`(menuContentView).measuredHeight
+
+        popupWindow.displayPopup(menuContentView, anchor, Orientation.DOWN, true)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeftTop, popupWindow.animationStyle)
+        verify(popupWindow).showAsDropDown(anchor, 0, 0)
+    }
+
     private fun createMockViewWith(x: Int, y: Int, isRTL: Boolean): View {
         val view = spy(View(testContext))
         doAnswer { invocation ->

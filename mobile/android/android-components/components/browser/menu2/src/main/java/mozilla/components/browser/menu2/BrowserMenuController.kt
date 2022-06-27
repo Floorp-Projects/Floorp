@@ -40,10 +40,13 @@ class BrowserMenuController(
     /**
      * @param anchor The view on which to pin the popup window.
      * @param orientation The preferred orientation to show the popup window.
+     * @param forceOrientation When set to true, the orientation will be respected even when the
+     * menu doesn't fully fit.
      */
     override fun show(
         anchor: View,
-        orientation: Orientation?
+        orientation: Orientation?,
+        forceOrientation: Boolean,
     ): PopupWindow {
         val view = MenuView(anchor.context).apply {
             // Show nested list if present, or the standard menu candidates list.
@@ -56,7 +59,11 @@ class BrowserMenuController(
             view.onDismiss = ::dismiss
             view.onReopenMenu = ::reopenMenu
             setOnDismissListener(menuDismissListener)
-            displayPopup(view, anchor, orientation)
+            displayPopup(view, anchor, orientation, forceOrientation)
+
+            if (orientation == Orientation.UP && forceOrientation) {
+                view.scrollOnceToTheBottom()
+            }
         }.also {
             currentPopupInfo = PopupMenuInfo(
                 window = it,

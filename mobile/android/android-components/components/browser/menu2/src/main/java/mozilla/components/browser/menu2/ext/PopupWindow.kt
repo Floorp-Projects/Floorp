@@ -16,6 +16,7 @@ internal fun PopupWindow.displayPopup(
     containerView: View,
     anchor: View,
     preferredOrientation: Orientation? = null,
+    forceOrientation: Boolean = false,
 ) {
     // Measure menu
     val spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -34,9 +35,9 @@ internal fun PopupWindow.displayPopup(
 
     // Try to use the preferred orientation, if doesn't fit fallback to the best fit.
     when {
-        preferredOrientation == Orientation.DOWN && fitsDown ->
+        preferredOrientation == Orientation.DOWN && (fitsDown || forceOrientation) ->
             showPopupWithDownOrientation(anchor, reversed)
-        preferredOrientation == Orientation.UP && fitsUp ->
+        preferredOrientation == Orientation.UP && (fitsUp || forceOrientation) ->
             showPopupWithUpOrientation(anchor, containerHeight, reversed)
         else -> {
             showPopupWhereBestFits(
