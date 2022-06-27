@@ -16,6 +16,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
+#include "mozJSComponentLoader.h"
 #include "js/Object.h"              // JS::GetCompartment
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "js/RealmIterators.h"

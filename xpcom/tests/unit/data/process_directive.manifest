@@ -1,2 +1,5 @@
-category directives-test main-process @mozilla.org/supports-cstring;1 process=main
-category directives-test content-process @mozilla.org/supports-cstring;1 process=content
+component {9b6f4160-45be-11e4-916c-0800200c9a66} main_process_directive_service.js process=main
+contract @mozilla.org/xpcom/tests/MainProcessDirectiveTest;1 {9b6f4160-45be-11e4-916c-0800200c9a66} process=main
+
+component {4bd1ba60-45c4-11e4-916c-0800200c9a66} child_process_directive_service.js process=content
+contract @mozilla.org/xpcom/tests/ChildProcessDirectiveTest;1 {4bd1ba60-45c4-11e4-916c-0800200c9a66} process=content

@@ -6,7 +6,7 @@
 
 #include "mozJSSubScriptLoader.h"
 #include "js/experimental/JSStencil.h"
-#include "mozJSModuleLoader.h"
+#include "mozJSComponentLoader.h"
 #include "mozJSLoaderUtils.h"
 
 #include "nsIURI.h"
@@ -161,7 +161,7 @@ static bool EvalStencil(JSContext* cx, HandleObject targetObj,
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       JSObject* targetGlobal = JS::GetNonCCWObjectGlobal(targetObj);
       MOZ_DIAGNOSTIC_ASSERT(
-          !mozJSModuleLoader::Get()->IsLoaderGlobal(targetGlobal),
+          !mozJSComponentLoader::Get()->IsLoaderGlobal(targetGlobal),
           "Don't load subscript into target in a shared-global JSM");
 #endif
       if (!JS_ExecuteScript(cx, envChain, script, retval)) {
@@ -320,7 +320,7 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
   nsresult rv = NS_OK;
   RootedObject targetObj(cx);
   RootedObject loadScope(cx);
-  mozJSModuleLoader* loader = mozJSModuleLoader::Get();
+  mozJSComponentLoader* loader = mozJSComponentLoader::Get();
   loader->FindTargetObject(cx, &loadScope);
 
   if (options.target) {

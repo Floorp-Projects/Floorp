@@ -754,7 +754,7 @@ def gen_substs(manifests):
                     value, process = entry
                 else:
                     value, process = entry, 0
-                categories[category].append(({"name": key}, value, process))
+                categories[category].append((key, value, process))
 
     cids = set()
     contracts = []

@@ -25,21 +25,6 @@ NS_IMPL_ISUPPORTS(ContentHandlerService, nsIHandlerService)
 
 ContentHandlerService::ContentHandlerService() {}
 
-/* static */ already_AddRefed<nsIHandlerService>
-ContentHandlerService::Create() {
-  if (XRE_IsContentProcess()) {
-    RefPtr service = new ContentHandlerService();
-    if (NS_SUCCEEDED(service->Init())) {
-      return service.forget();
-    }
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIHandlerService> service =
-      do_GetService("@mozilla.org/uriloader/handler-service-parent;1");
-  return service.forget();
-}
-
 nsresult ContentHandlerService::Init() {
   if (!XRE_IsContentProcess()) {
     return NS_ERROR_FAILURE;

@@ -1,0 +1,4 @@
+component {bb7c5199-c0f7-4976-9f6d-1306e32c5591} PushServiceHandler.js
+contract @mozilla.org/dom/push/test/PushServiceHandler;1 {bb7c5199-c0f7-4976-9f6d-1306e32c5591}
+
+category push chrome://test-scope @mozilla.org/dom/push/test/PushServiceHandler;1

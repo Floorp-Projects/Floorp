@@ -15,7 +15,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozJSModuleLoader.h"
+#include "mozJSComponentLoader.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
 #include "nsContentUtils.h"
@@ -128,9 +128,9 @@ static nsresult ConstructJSMOrESMComponent(const nsACString& aURI,
   JS::Rooted<JSObject*> exports(cx);
   if constexpr (type == ComponentType::JSM) {
     JS::Rooted<JSObject*> global(cx);
-    MOZ_TRY(mozJSModuleLoader::Get()->Import(cx, aURI, &global, &exports));
+    MOZ_TRY(mozJSComponentLoader::Get()->Import(cx, aURI, &global, &exports));
   } else {
-    MOZ_TRY(mozJSModuleLoader::Get()->ImportESModule(cx, aURI, &exports));
+    MOZ_TRY(mozJSComponentLoader::Get()->ImportESModule(cx, aURI, &exports));
   }
 
   JS::Rooted<JS::Value> ctor(cx);

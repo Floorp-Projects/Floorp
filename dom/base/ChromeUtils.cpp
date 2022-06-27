@@ -52,7 +52,7 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "IOActivityMonitor.h"
 #include "nsThreadUtils.h"
-#include "mozJSModuleLoader.h"
+#include "mozJSComponentLoader.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "nsIException.h"
@@ -534,7 +534,7 @@ void ChromeUtils::Import(const GlobalObject& aGlobal,
                          const Optional<JS::Handle<JSObject*>>& aTargetObj,
                          JS::MutableHandle<JSObject*> aRetval,
                          ErrorResult& aRv) {
-  RefPtr moduleloader = mozJSModuleLoader::Get();
+  RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
   MOZ_ASSERT(moduleloader);
 
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE("ChromeUtils::Import",
@@ -576,7 +576,7 @@ void ChromeUtils::ImportESModule(const GlobalObject& aGlobal,
                                  const nsAString& aResourceURI,
                                  JS::MutableHandle<JSObject*> aRetval,
                                  ErrorResult& aRv) {
-  RefPtr moduleloader = mozJSModuleLoader::Get();
+  RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
   MOZ_ASSERT(moduleloader);
 
   NS_ConvertUTF16toUTF8 registryLocation(aResourceURI);
@@ -648,7 +648,7 @@ static bool ModuleGetterImpl(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   }
   nsDependentCString uri(bytes.get());
 
-  RefPtr moduleloader = mozJSModuleLoader::Get();
+  RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
   MOZ_ASSERT(moduleloader);
 
   JS::Rooted<JS::Value> value(aCx);

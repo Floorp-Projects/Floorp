@@ -35,20 +35,13 @@ var MockRegistrar = Object.freeze({
    * @return           The CID of the mock.
    */
   register(contractID, mock, args) {
-    let originalCID;
-    let originalFactory;
-    try {
-      originalCID = this._originalCIDs.get(contractID);
-      if (!originalCID) {
-        originalCID = this.registrar.contractIDToCID(contractID);
-        this._originalCIDs.set(contractID, originalCID);
-      }
-
-      originalFactory = Cm.getClassObject(originalCID, Ci.nsIFactory);
-    } catch (e) {
-      // There's no original factory. Ignore and just register the new
-      // one.
+    let originalCID = this._originalCIDs.get(contractID);
+    if (!originalCID) {
+      originalCID = this.registrar.contractIDToCID(contractID);
+      this._originalCIDs.set(contractID, originalCID);
     }
+
+    let originalFactory = Cm.getClassObject(originalCID, Ci.nsIFactory);
 
     let cid = Services.uuid.generateUUID();
 
@@ -58,19 +51,15 @@ var MockRegistrar = Object.freeze({
         if (mock.prototype && mock.prototype.constructor) {
           wrappedMock = Object.create(mock.prototype);
           mock.apply(wrappedMock, args);
-        } else if (typeof mock == "function") {
-          wrappedMock = mock();
         } else {
           wrappedMock = mock;
         }
 
-        if (originalFactory) {
-          try {
-            let genuine = originalFactory.createInstance(iid);
-            wrappedMock._genuine = genuine;
-          } catch (ex) {
-            logger.info("Creating original instance failed", ex);
-          }
+        try {
+          let genuine = originalFactory.createInstance(iid);
+          wrappedMock._genuine = genuine;
+        } catch (ex) {
+          logger.info("Creating original instance failed", ex);
         }
 
         return wrappedMock.QueryInterface(iid);
@@ -92,13 +81,6 @@ var MockRegistrar = Object.freeze({
     });
 
     return cid;
-  },
-
-  registerJSM(contractID, jsm, symbol) {
-    return this.register(contractID, () => {
-      let exports = ChromeUtils.import(jsm);
-      return new exports[symbol]();
-    });
   },
 
   /**

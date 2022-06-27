@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["StartupRecorder"];
-
 const Cm = Components.manager;
 Cm.QueryInterface(Ci.nsIServiceManager);
 
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -52,15 +53,15 @@ let afterPaintListener = () => {
 };
 
 /**
- * The StartupRecorder component observes notifications at various stages of
- * startup and records the set of JS modules that were already loaded at
- * each of these points.
+ * The startupRecorder component observes notifications at various stages of
+ * startup and records the set of JS components and modules that were already
+ * loaded at each of these points.
  * The records are meant to be used by startup tests in
  * browser/base/content/test/performance
  * This component only exists in nightly and debug builds, it doesn't ship in
  * our release builds.
  */
-function StartupRecorder() {
+function startupRecorder() {
   this.wrappedJSObject = this;
   this.data = {
     images: {
@@ -75,12 +76,15 @@ function StartupRecorder() {
     this._resolve = resolve;
   });
 }
-StartupRecorder.prototype = {
+startupRecorder.prototype = {
+  classID: Components.ID("{11c095b2-e42e-4bdf-9dd0-aed87595f6a4}"),
+
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   record(name) {
     ChromeUtils.addProfilerMarker("startupRecorder:" + name);
     this.data.code[name] = {
+      components: Cu.loadedComponents,
       modules: Cu.loadedModules,
       services: Object.keys(Cc).filter(c => {
         try {
@@ -96,12 +100,7 @@ StartupRecorder.prototype = {
   },
 
   observe(subject, topic, data) {
-    if (topic == "app-startup" || topic == "content-process-ready-for-script") {
-      // Don't do anything in xpcshell.
-      if (Services.appinfo.ID != "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}") {
-        return;
-      }
-
+    if (topic == "app-startup") {
       if (
         !Services.prefs.getBoolPref("browser.startup.record", false) &&
         !Services.prefs.getBoolPref("browser.startup.recordImages", false)
@@ -233,3 +232,5 @@ StartupRecorder.prototype = {
     }
   },
 };
+
+this.NSGetFactory = ComponentUtils.generateNSGetFactory([startupRecorder]);

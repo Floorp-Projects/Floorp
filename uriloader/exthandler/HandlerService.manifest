@@ -1,0 +1,2 @@
+component {220cc253-b60f-41f6-b9cf-fdcb325f970f} HandlerService.js
+contract @mozilla.org/uriloader/handler-service;1 {220cc253-b60f-41f6-b9cf-fdcb325f970f} process=main

@@ -4,10 +4,6 @@
 
 // This file tests the Vacuum Manager.
 
-const { MockRegistrar } = ChromeUtils.import(
-  "resource://testing-common/MockRegistrar.jsm"
-);
-
 /**
  * Loads a test component that will register as a vacuum-participant.
  * If other participants are found they will be unregistered, to avoid conflicts
@@ -15,28 +11,27 @@ const { MockRegistrar } = ChromeUtils.import(
  */
 function load_test_vacuum_component() {
   const CATEGORY_NAME = "vacuum-participant";
-  const CONTRACT_ID = "@unit.test.com/test-vacuum-participant;1";
 
-  MockRegistrar.registerJSM(
-    CONTRACT_ID,
-    "resource://test/VacuumParticipant.jsm",
-    "VacuumParticipant"
-  );
+  do_load_manifest("vacuumParticipant.manifest");
 
+  // This is a lazy check, there could be more participants than just this test
+  // we just mind that the test exists though.
+  const EXPECTED_ENTRIES = ["vacuumParticipant"];
   let { catMan } = Services;
-  // Temporary unregister other participants for this test.
+  let found = false;
   for (let { data: entry } of catMan.enumerateCategory(CATEGORY_NAME)) {
     print("Check if the found category entry (" + entry + ") is expected.");
-    catMan.deleteCategoryEntry("vacuum-participant", entry, false);
+    if (EXPECTED_ENTRIES.includes(entry)) {
+      print("Check that only one test entry exists.");
+      Assert.ok(!found);
+      found = true;
+    } else {
+      // Temporary unregister other participants for this test.
+      catMan.deleteCategoryEntry("vacuum-participant", entry, false);
+    }
   }
-  catMan.addCategoryEntry(
-    CATEGORY_NAME,
-    "vacuumParticipant",
-    CONTRACT_ID,
-    false,
-    false
-  );
   print("Check the test entry exists.");
+  Assert.ok(found);
 }
 
 /**

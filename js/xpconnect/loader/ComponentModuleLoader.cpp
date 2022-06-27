@@ -9,7 +9,7 @@
 #include "nsISupportsImpl.h"
 
 #include "js/loader/ModuleLoadRequest.h"
-#include "mozJSModuleLoader.h"
+#include "mozJSComponentLoader.h"
 
 using namespace JS::loader;
 
@@ -84,7 +84,7 @@ already_AddRefed<ModuleLoadRequest> ComponentModuleLoader::CreateDynamicImport(
 
 bool ComponentModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
                                          nsresult* aRvOut) {
-  return mozJSModuleLoader::IsTrustedScheme(aRequest->mURI);
+  return mozJSComponentLoader::IsTrustedScheme(aRequest->mURI);
 }
 
 nsresult ComponentModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
@@ -93,7 +93,7 @@ nsresult ComponentModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   aRequest->mBaseURL = aRequest->mURI;
 
   // Loading script source and compilation are intertwined in
-  // mozJSModuleLoader. Perform both operations here but only report load
+  // mozJSComponentLoader. Perform both operations here but only report load
   // failures. Compilation failure is reported in CompileFetchedModule.
 
   dom::AutoJSAPI jsapi;
@@ -104,7 +104,7 @@ nsresult ComponentModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   JSContext* cx = jsapi.cx();
   RootedScript script(cx);
   nsresult rv =
-      mozJSModuleLoader::LoadSingleModuleScript(cx, aRequest->mURI, &script);
+      mozJSComponentLoader::LoadSingleModuleScript(cx, aRequest->mURI, &script);
   MOZ_ASSERT_IF(jsapi.HasException(), NS_FAILED(rv));
   MOZ_ASSERT(bool(script) == NS_SUCCEEDED(rv));
 
