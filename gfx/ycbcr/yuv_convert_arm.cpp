@@ -21,20 +21,20 @@ void __attribute((noinline))
 #  else
 void __attribute((noinline,optimize("-fomit-frame-pointer")))
 #  endif
-    yuv42x_to_rgb565_row_neon(uint16_t *dst,
-                              const uint8_t *y,
-                              const uint8_t *u,
-                              const uint8_t *v,
+    yuv42x_to_rgb565_row_neon(uint16 *dst,
+                              const uint8 *y,
+                              const uint8 *u,
+                              const uint8 *v,
                               int n,
                               int oddflag)
 {
-    static __attribute__((aligned(16))) uint16_t acc_r[8] = {
+    static __attribute__((aligned(16))) uint16 acc_r[8] = {
         22840, 22840, 22840, 22840, 22840, 22840, 22840, 22840,
     };
-    static __attribute__((aligned(16))) uint16_t acc_g[8] = {
+    static __attribute__((aligned(16))) uint16 acc_g[8] = {
         17312, 17312, 17312, 17312, 17312, 17312, 17312, 17312,
     };
-    static __attribute__((aligned(16))) uint16_t acc_b[8] = {
+    static __attribute__((aligned(16))) uint16 acc_b[8] = {
         28832, 28832, 28832, 28832, 28832, 28832, 28832, 28832,
     };
     /*

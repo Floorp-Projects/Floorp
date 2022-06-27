@@ -8,15 +8,15 @@ extern "C" {
 
 // x64 compiler doesn't support MMX and inline assembler.  Use SSE2 intrinsics.
 
-#define kCoefficientsRgbU (reinterpret_cast<const uint8_t*>(kCoefficientsRgbY) + 2048)
-#define kCoefficientsRgbV (reinterpret_cast<const uint8_t*>(kCoefficientsRgbY) + 4096)
+#define kCoefficientsRgbU (reinterpret_cast<const uint8*>(kCoefficientsRgbY) + 2048)
+#define kCoefficientsRgbV (reinterpret_cast<const uint8*>(kCoefficientsRgbY) + 4096)
 
 #include <emmintrin.h>
 
-static void FastConvertYUVToRGB32Row_SSE2(const uint8_t* y_buf,
-                                          const uint8_t* u_buf,
-                                          const uint8_t* v_buf,
-                                          uint8_t* rgb_buf,
+static void FastConvertYUVToRGB32Row_SSE2(const uint8* y_buf,
+                                          const uint8* u_buf,
+                                          const uint8* v_buf,
+                                          uint8* rgb_buf,
                                           int width) {
   __m128i xmm0, xmmY1, xmmY2;
   __m128  xmmY;
@@ -25,10 +25,10 @@ static void FastConvertYUVToRGB32Row_SSE2(const uint8_t* y_buf,
     xmm0 = _mm_adds_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbU + 8 * *u_buf++)),
                           _mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbV + 8 * *v_buf++)));
 
-    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8_t*>(kCoefficientsRgbY) + 8 * *y_buf++));
+    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8*>(kCoefficientsRgbY) + 8 * *y_buf++));
     xmmY1 = _mm_adds_epi16(xmmY1, xmm0);
 
-    xmmY2 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8_t*>(kCoefficientsRgbY) + 8 * *y_buf++));
+    xmmY2 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8*>(kCoefficientsRgbY) + 8 * *y_buf++));
     xmmY2 = _mm_adds_epi16(xmmY2, xmm0);
 
     xmmY = _mm_shuffle_ps(_mm_castsi128_ps(xmmY1), _mm_castsi128_ps(xmmY2),
@@ -44,23 +44,23 @@ static void FastConvertYUVToRGB32Row_SSE2(const uint8_t* y_buf,
   if (width) {
     xmm0 = _mm_adds_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbU + 8 * *u_buf)),
                           _mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbV + 8 * *v_buf)));
-    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8_t*>(kCoefficientsRgbY) + 8 * *y_buf));
+    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8*>(kCoefficientsRgbY) + 8 * *y_buf));
     xmmY1 = _mm_adds_epi16(xmmY1, xmm0);
     xmmY1 = _mm_srai_epi16(xmmY1, 6);
     xmmY1 = _mm_packus_epi16(xmmY1, xmmY1);
-    *reinterpret_cast<uint32_t*>(rgb_buf) = _mm_cvtsi128_si32(xmmY1);
+    *reinterpret_cast<uint32*>(rgb_buf) = _mm_cvtsi128_si32(xmmY1);
   }
 }
 
-static void ScaleYUVToRGB32Row_SSE2(const uint8_t* y_buf,
-                                    const uint8_t* u_buf,
-                                    const uint8_t* v_buf,
-                                    uint8_t* rgb_buf,
+static void ScaleYUVToRGB32Row_SSE2(const uint8* y_buf,
+                                    const uint8* u_buf,
+                                    const uint8* v_buf,
+                                    uint8* rgb_buf,
                                     int width,
                                     int source_dx) {
   __m128i xmm0, xmmY1, xmmY2;
   __m128  xmmY;
-  uint8_t u, v, y;
+  uint8 u, v, y;
   int x = 0;
 
   while (width >= 2) {
@@ -71,13 +71,13 @@ static void ScaleYUVToRGB32Row_SSE2(const uint8_t* y_buf,
 
     xmm0 = _mm_adds_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbU + 8 * u)),
                           _mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbV + 8 * v)));
-    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8_t*>(kCoefficientsRgbY) + 8 * y));
+    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8*>(kCoefficientsRgbY) + 8 * y));
     xmmY1 = _mm_adds_epi16(xmmY1, xmm0);
 
     y = y_buf[x >> 16];
     x += source_dx;
 
-    xmmY2 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8_t*>(kCoefficientsRgbY) + 8 * y));
+    xmmY2 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8*>(kCoefficientsRgbY) + 8 * y));
     xmmY2 = _mm_adds_epi16(xmmY2, xmm0);
 
     xmmY = _mm_shuffle_ps(_mm_castsi128_ps(xmmY1), _mm_castsi128_ps(xmmY2),
@@ -97,24 +97,24 @@ static void ScaleYUVToRGB32Row_SSE2(const uint8_t* y_buf,
 
     xmm0 = _mm_adds_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbU + 8 * u)),
                           _mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbV + 8 * v)));
-    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8_t*>(kCoefficientsRgbY) + 8 * y));
+    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8*>(kCoefficientsRgbY) + 8 * y));
     xmmY1 = _mm_adds_epi16(xmmY1, xmm0);
     xmmY1 = _mm_srai_epi16(xmmY1, 6);
     xmmY1 = _mm_packus_epi16(xmmY1, xmmY1);
-    *reinterpret_cast<uint32_t*>(rgb_buf) = _mm_cvtsi128_si32(xmmY1);
+    *reinterpret_cast<uint32*>(rgb_buf) = _mm_cvtsi128_si32(xmmY1);
   }
 }
 
-static void LinearScaleYUVToRGB32Row_SSE2(const uint8_t* y_buf,
-                                          const uint8_t* u_buf,
-                                          const uint8_t* v_buf,
-                                          uint8_t* rgb_buf,
+static void LinearScaleYUVToRGB32Row_SSE2(const uint8* y_buf,
+                                          const uint8* u_buf,
+                                          const uint8* v_buf,
+                                          uint8* rgb_buf,
                                           int width,
                                           int source_dx) {
   __m128i xmm0, xmmY1, xmmY2;
   __m128  xmmY;
-  uint8_t u0, u1, v0, v1, y0, y1;
-  uint32_t uv_frac, y_frac, u, v, y;
+  uint8 u0, u1, v0, v1, y0, y1;
+  uint32 uv_frac, y_frac, u, v, y;
   int x = 0;
 
   if (source_dx >= 0x20000) {
@@ -137,7 +137,7 @@ static void LinearScaleYUVToRGB32Row_SSE2(const uint8_t* y_buf,
 
     xmm0 = _mm_adds_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbU + 8 * u)),
                           _mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbV + 8 * v)));
-    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8_t*>(kCoefficientsRgbY) + 8 * y));
+    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8*>(kCoefficientsRgbY) + 8 * y));
     xmmY1 = _mm_adds_epi16(xmmY1, xmm0);
 
     y0 = y_buf[x >> 16];
@@ -146,7 +146,7 @@ static void LinearScaleYUVToRGB32Row_SSE2(const uint8_t* y_buf,
     y = (y_frac * y1 + (y_frac ^ 0xffff) * y0) >> 16;
     x += source_dx;
 
-    xmmY2 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8_t*>(kCoefficientsRgbY) + 8 * y));
+    xmmY2 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8*>(kCoefficientsRgbY) + 8 * y));
     xmmY2 = _mm_adds_epi16(xmmY2, xmm0);
 
     xmmY = _mm_shuffle_ps(_mm_castsi128_ps(xmmY1), _mm_castsi128_ps(xmmY2),
@@ -166,36 +166,36 @@ static void LinearScaleYUVToRGB32Row_SSE2(const uint8_t* y_buf,
 
     xmm0 = _mm_adds_epi16(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbU + 8 * u)),
                           _mm_loadl_epi64(reinterpret_cast<const __m128i*>(kCoefficientsRgbV + 8 * v)));
-    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8_t*>(kCoefficientsRgbY) + 8 * y));
+    xmmY1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(reinterpret_cast<const uint8*>(kCoefficientsRgbY) + 8 * y));
 
     xmmY1 = _mm_adds_epi16(xmmY1, xmm0);
     xmmY1 = _mm_srai_epi16(xmmY1, 6);
     xmmY1 = _mm_packus_epi16(xmmY1, xmmY1);
-    *reinterpret_cast<uint32_t*>(rgb_buf) = _mm_cvtsi128_si32(xmmY1);
+    *reinterpret_cast<uint32*>(rgb_buf) = _mm_cvtsi128_si32(xmmY1);
   }
 }
 
-void FastConvertYUVToRGB32Row(const uint8_t* y_buf,
-                              const uint8_t* u_buf,
-                              const uint8_t* v_buf,
-                              uint8_t* rgb_buf,
+void FastConvertYUVToRGB32Row(const uint8* y_buf,
+                              const uint8* u_buf,
+                              const uint8* v_buf,
+                              uint8* rgb_buf,
                               int width) {
   FastConvertYUVToRGB32Row_SSE2(y_buf, u_buf, v_buf, rgb_buf, width);
 }
 
-void ScaleYUVToRGB32Row(const uint8_t* y_buf,
-                        const uint8_t* u_buf,
-                        const uint8_t* v_buf,
-                        uint8_t* rgb_buf,
+void ScaleYUVToRGB32Row(const uint8* y_buf,
+                        const uint8* u_buf,
+                        const uint8* v_buf,
+                        uint8* rgb_buf,
                         int width,
                         int source_dx) {
   ScaleYUVToRGB32Row_SSE2(y_buf, u_buf, v_buf, rgb_buf, width, source_dx);
 }
 
-void LinearScaleYUVToRGB32Row(const uint8_t* y_buf,
-                              const uint8_t* u_buf,
-                              const uint8_t* v_buf,
-                              uint8_t* rgb_buf,
+void LinearScaleYUVToRGB32Row(const uint8* y_buf,
+                              const uint8* u_buf,
+                              const uint8* v_buf,
+                              uint8* rgb_buf,
                               int width,
                               int source_dx) {
   LinearScaleYUVToRGB32Row_SSE2(y_buf, u_buf, v_buf, rgb_buf, width,

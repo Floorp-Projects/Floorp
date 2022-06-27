@@ -1,0 +1,59 @@
+diff --git a/media/libyuv/libyuv/include/libyuv/compare_row.h b/media/libyuv/libyuv/include/libyuv/compare_row.h
+--- a/media/libyuv/libyuv/include/libyuv/compare_row.h
++++ b/media/libyuv/libyuv/include/libyuv/compare_row.h
+@@ -40,32 +40,26 @@ extern "C" {
+ 
+ // clang >= 3.4.0 required for AVX2.
+ #if defined(__clang__) && (defined(__x86_64__) || defined(__i386__))
+ #if (__clang_major__ > 3) || (__clang_major__ == 3 && (__clang_minor__ >= 4))
+ #define CLANG_HAS_AVX2 1
+ #endif  // clang >= 3.4
+ #endif  // __clang__
+ 
+-// The following are available for Visual C:
+-#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && \
+-    (defined(VISUALC_HAS_AVX2) || defined(CLANG_HAS_AVX2))
+-#define HAS_HASHDJB2_AVX2
+-#endif
+-
+ // The following are available for Visual C and GCC:
+ #if !defined(LIBYUV_DISABLE_X86) && \
+     (defined(__x86_64__) || defined(__i386__) || defined(_M_IX86))
+ #define HAS_HASHDJB2_SSE41
+ #define HAS_SUMSQUAREERROR_SSE2
+ #define HAS_HAMMINGDISTANCE_SSE42
+ #endif
+ 
+ // The following are available for Visual C and clangcl 32 bit:
+-#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && \
++#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && defined(_MSC_VER) && \
+     (defined(VISUALC_HAS_AVX2) || defined(CLANG_HAS_AVX2))
+ #define HAS_HASHDJB2_AVX2
+ #define HAS_SUMSQUAREERROR_AVX2
+ #endif
+ 
+ // The following are available for GCC and clangcl 64 bit:
+ #if !defined(LIBYUV_DISABLE_X86) && \
+     (defined(__x86_64__) || (defined(__i386__) && !defined(_MSC_VER)))
+diff --git a/media/libyuv/libyuv/include/libyuv/row.h b/media/libyuv/libyuv/include/libyuv/row.h
+--- a/media/libyuv/libyuv/include/libyuv/row.h
++++ b/media/libyuv/libyuv/include/libyuv/row.h
+@@ -227,17 +227,17 @@ extern "C" {
+ // TODO(fbarchard): fix build error on android_full_debug=1
+ // https://code.google.com/p/libyuv/issues/detail?id=517
+ #define HAS_I422ALPHATOARGBROW_AVX2
+ #endif
+ #endif
+ 
+ // The following are available for AVX2 Visual C and clangcl 32 bit:
+ // TODO(fbarchard): Port to gcc.
+-#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && \
++#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && defined(_MSC_VER) && \
+     (defined(VISUALC_HAS_AVX2) || defined(CLANG_HAS_AVX2))
+ #define HAS_ARGB1555TOARGBROW_AVX2
+ #define HAS_ARGB4444TOARGBROW_AVX2
+ #define HAS_ARGBTOARGB1555ROW_AVX2
+ #define HAS_ARGBTOARGB4444ROW_AVX2
+ #define HAS_ARGBTORGB565ROW_AVX2
+ #define HAS_J400TOARGBROW_AVX2
+ #define HAS_RGB565TOARGBROW_AVX2

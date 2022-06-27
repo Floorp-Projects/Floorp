@@ -22,9 +22,8 @@ namespace libyuv {
 extern "C" {
 #endif
 
-// This module is for 32 bit Visual C x86
-#if !defined(LIBYUV_DISABLE_X86) && defined(_MSC_VER) && \
-    !defined(__clang__) && defined(_M_IX86)
+// This module is for 32 bit Visual C x86 and clangcl
+#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && defined(_MSC_VER)
 
 uint32_t HammingDistance_SSE42(const uint8_t* src_a,
                                const uint8_t* src_b,
@@ -78,7 +77,8 @@ __declspec(naked) uint32_t
   }
 }
 
-#ifdef HAS_SUMSQUAREERROR_AVX2
+// Visual C 2012 required for AVX2.
+#if _MSC_VER >= 1700
 // C4752: found Intel(R) Advanced Vector Extensions; consider using /arch:AVX.
 #pragma warning(disable : 4752)
 __declspec(naked) uint32_t
@@ -118,7 +118,7 @@ __declspec(naked) uint32_t
     ret
   }
 }
-#endif  // HAS_SUMSQUAREERROR_AVX2
+#endif  // _MSC_VER >= 1700
 
 uvec32 kHash16x33 = {0x92d9e201, 0, 0, 0};  // 33 ^ 16
 uvec32 kHashMul0 = {
@@ -196,7 +196,7 @@ __declspec(naked) uint32_t
 }
 
 // Visual C 2012 required for AVX2.
-#ifdef HAS_HASHDJB2_AVX2
+#if _MSC_VER >= 1700
 __declspec(naked) uint32_t
     HashDjb2_AVX2(const uint8_t* src, int count, uint32_t seed) {
   __asm {
@@ -231,7 +231,7 @@ __declspec(naked) uint32_t
     ret
   }
 }
-#endif  // HAS_HASHDJB2_AVX2
+#endif  // _MSC_VER >= 1700
 
 #endif  // !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86)
 

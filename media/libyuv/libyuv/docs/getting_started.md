@@ -27,7 +27,7 @@ Then you'll get a .gclient file like:
       },
     ];
 
-For iOS add `;target_os=['ios'];` to your OSX .gclient and run `gclient sync.`
+For iOS add `;target_os=['ios'];` to your OSX .gclient and run `GYP_DEFINES="OS=ios" gclient sync.`
 
 Browse the Git reprository: https://chromium.googlesource.com/libyuv/libyuv/+/master
 
@@ -48,7 +48,10 @@ For Android add `;target_os=['android'];` to your Linux .gclient
 
 Then run:
 
+    export GYP_DEFINES="OS=android"
     gclient sync
+
+The sync will generate native build files for your environment using gyp (Windows: Visual Studio, OSX: XCode, Linux: make). This generation can also be forced manually: `gclient runhooks`
 
 To get just the source (not buildable):
 
@@ -95,14 +98,10 @@ arm64
 
 ios simulator
 
-    gn gen out/Release "--args=is_debug=false target_os=\"ios\" ios_enable_code_signing=false use_xcode_clang=true target_cpu=\"x86\""
-    gn gen out/Debug "--args=is_debug=true target_os=\"ios\" ios_enable_code_signing=false use_xcode_clang=true target_cpu=\"x86\""
+    gn gen out/Release "--args=is_debug=false target_os=\"ios\" ios_enable_code_signing=false target_cpu=\"x86\""
+    gn gen out/Debug "--args=is_debug=true target_os=\"ios\" ios_enable_code_signing=false target_cpu=\"x86\""
     ninja -v -C out/Debug libyuv_unittest
     ninja -v -C out/Release libyuv_unittest
-
-ios disassembly
-
-    otool -tV ./out/Release/obj/libyuv_neon/row_neon64.o >row_neon64.txt
 
 ### Android
 https://code.google.com/p/chromium/wiki/AndroidBuildInstructions
@@ -132,8 +131,8 @@ ia32
 
 mips
 
-    gn gen out/Release "--args=is_debug=false target_os=\"android\" target_cpu=\"mips64el\" mips_arch_variant=\"r6\" mips_use_msa=true is_component_build=true"
-    gn gen out/Debug "--args=is_debug=true target_os=\"android\" target_cpu=\"mips64el\" mips_arch_variant=\"r6\" mips_use_msa=true is_component_build=true"
+    gn gen out/Release "--args=is_debug=false target_os=\"android\" target_cpu=\"mips64el\" mips_arch_variant=\"r6\" mips_use_msa=true is_component_build=true is_clang=true"
+    gn gen out/Debug "--args=is_debug=true target_os=\"android\" target_cpu=\"mips64el\" mips_arch_variant=\"r6\" mips_use_msa=true is_component_build=true is_clang=true"
     ninja -v -C out/Debug libyuv_unittest
     ninja -v -C out/Release libyuv_unittest
 
@@ -145,19 +144,17 @@ arm disassembly:
 
     third_party/android_ndk/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64/bin/aarch64-linux-android-objdump -d ./out/Release/obj/libyuv_neon/row_neon64.o >row_neon64.txt
 
-    Caveat: Disassembly may require optimize_max be disabled in BUILD.gn
-
 Running tests:
 
-    out/Release/bin/run_libyuv_unittest -vv --gtest_filter=*
+    build/android/test_runner.py gtest -s libyuv_unittest -t 7200 --verbose --release --gtest_filter=*
 
 Running test as benchmark:
 
-    out/Release/bin/run_libyuv_unittest -vv --gtest_filter=* --libyuv_width=1280 --libyuv_height=720 --libyuv_repeat=999 --libyuv_flags=-1  --libyuv_cpu_info=-1
+    build/android/test_runner.py gtest -s libyuv_unittest -t 7200 --verbose --release --gtest_filter=* -a "--libyuv_width=1280 --libyuv_height=720 --libyuv_repeat=999 --libyuv_flags=-1  --libyuv_cpu_info=-1"
 
 Running test with C code:
 
-    out/Release/bin/run_libyuv_unittest -vv --gtest_filter=* --libyuv_width=1280 --libyuv_height=720 --libyuv_repeat=999 --libyuv_flags=1 --libyuv_cpu_info=1
+    build/android/test_runner.py gtest -s libyuv_unittest -t 7200 --verbose --release --gtest_filter=* -a "--libyuv_width=1280 --libyuv_height=720 --libyuv_repeat=999 --libyuv_flags=1 --libyuv_cpu_info=1"
 
 ### Build targets
 
@@ -165,7 +162,6 @@ Running test with C code:
     ninja -C out/Debug libyuv_unittest
     ninja -C out/Debug compare
     ninja -C out/Debug yuvconvert
-    ninja -C out/Debug yuvconstants
     ninja -C out/Debug psnr
     ninja -C out/Debug cpuid
 
@@ -176,22 +172,13 @@ Running test with C code:
     ninja -v -C out/Debug libyuv_unittest
     ninja -v -C out/Release libyuv_unittest
 
-### MIPS Linux
-
-mips
-
-   gn gen out/Release "--args=is_debug=false target_os=\"linux\" target_cpu=\"mips64el\" mips_arch_variant=\"loongson3\" is_component_build=false use_sysroot=false use_gold=false"
-   gn gen out/Debug "--args=is_debug=true target_os=\"linux\" target_cpu=\"mips64el\" mips_arch_variant=\"loongson3\" is_component_build=false use_sysroot=false use_gold=false"
-   ninja -v -C out/Debug libyuv_unittest
-   ninja -v -C out/Release libyuv_unittest
-
 ## Building the Library with make
 
 ### Linux
 
     make V=1 -f linux.mk
     make V=1 -f linux.mk clean
-    make V=1 -f linux.mk CXX=clang++ CC=clang
+    make V=1 -f linux.mk CXX=clang++
 
 ## Building the library with cmake
 
