@@ -1,1 +1,2 @@
-category l10n-registry 0-toolkit resource://gre/localization/{locale}/
+category l10n-registry 0-toolkit resource://gre/localization/{locale}/ backgroundtask=0
+category l10n-registry 0-toolkit resource://gre/localization/{locale}/ backgroundtask=1

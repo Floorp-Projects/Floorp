@@ -33,8 +33,7 @@ ChromeUtils.defineModuleGetter(
 
 const PREF_SECURITY_DELAY = "security.notification_enable_delay";
 
-// Stores the browser and actor that has the active popup, used by formfill
-let currentBrowserWeakRef = null;
+// Stores the actor that has the active popup, used by formfill
 let currentActor = null;
 
 let autoCompleteListeners = new Set();
@@ -177,10 +176,6 @@ class AutoCompleteParent extends JSWindowActorParent {
     return currentActor;
   }
 
-  static getCurrentBrowser() {
-    return currentBrowserWeakRef ? currentBrowserWeakRef.get() : null;
-  }
-
   static addPopupStateListener(listener) {
     autoCompleteListeners.add(listener);
   }
@@ -216,7 +211,6 @@ class AutoCompleteParent extends JSWindowActorParent {
         // large list, and then open on a small one.
         this.openedPopup.adjustHeight();
         this.openedPopup = null;
-        currentBrowserWeakRef = null;
         currentActor = null;
         evt.target.removeEventListener("popuphidden", this);
         evt.target.removeEventListener("popupshowing", this);
@@ -247,7 +241,6 @@ class AutoCompleteParent extends JSWindowActorParent {
 
     // Non-empty result styles
     let resultStyles = new Set(results.map(r => r.style).filter(r => !!r));
-    currentBrowserWeakRef = Cu.getWeakReference(browser);
     currentActor = this;
     this.openedPopup = browser.autoCompletePopup;
     // the layout varies according to different result type
@@ -454,15 +447,6 @@ class AutoCompleteParent extends JSWindowActorParent {
 
       case "FormAutoComplete:ClosePopup": {
         this.closePopup();
-        break;
-      }
-
-      case "FormAutoComplete:Disconnect": {
-        // The controller stopped controlling the current input, so clear
-        // any cached data.  This is necessary cause otherwise we'd clear data
-        // only when starting a new search, but the next input could not support
-        // autocomplete and it would end up inheriting the existing data.
-        AutoCompleteResultView.clearResults();
         break;
       }
     }
