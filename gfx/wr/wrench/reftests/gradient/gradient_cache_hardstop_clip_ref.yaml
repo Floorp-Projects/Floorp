@@ -1,6 +1,14 @@
 ---
 root:
   items:
+    - type: clip
+      id: 101
+      complex:
+        - rect: [100, 100, 760, 340]
+          radius: [32, 32]
+    - type: clip-chain
+      id: 201
+      clips: [101]
     - type: gradient
       bounds: 0 0 480 540
       start: 0 0
@@ -11,9 +19,16 @@ root:
               0.5, green,
               0.75, yellow,
               1.0, green]
-      complex-clip:
-        rect: [100, 100, 760, 340]
-        radius: [32, 32]
+      clip-chain: 201
+
+    - type: clip
+      id: 102
+      complex:
+        - rect: [100, 100, 760, 340]
+          radius: [32, 32]
+    - type: clip-chain
+      id: 202
+      clips: [102]
     - type: gradient
       bounds: 480 0 480 540
       start: 0 0
@@ -23,6 +38,4 @@ root:
               0.5, blue,
               0.5, white,
               1.0, [100,200,50,1]]
-      complex-clip:
-        rect: [100, 100, 760, 340]
-        radius: [32, 32]
+      clip-chain: 202
