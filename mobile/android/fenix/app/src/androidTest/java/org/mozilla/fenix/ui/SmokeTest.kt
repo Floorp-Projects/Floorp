@@ -730,9 +730,6 @@ class SmokeTest {
             verifyCloseTabsButton(website.title)
             verifyOpenedTabThumbnail()
             verifyPrivateBrowsingNewTabButton()
-        }.openTab(website.title) {
-            verifyUrl(website.url.toString())
-            verifyTabCounter("1")
         }
     }
 
