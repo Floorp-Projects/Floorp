@@ -14574,7 +14574,7 @@ bool Document::PopFullscreenElement(UpdateViewport aUpdateViewport) {
   }
 
   MOZ_ASSERT(removedElement->State().HasState(ElementState::FULLSCREEN));
-  removedElement->RemoveStates(ElementState::FULLSCREEN | ElementState::MODAL);
+  removedElement->RemoveStates(ElementState::FULLSCREEN);
   NotifyFullScreenChangedForMediaElement(*removedElement);
   // Reset iframe fullscreen flag.
   if (auto* iframe = HTMLIFrameElement::FromNode(removedElement)) {
@@ -14587,18 +14587,23 @@ bool Document::PopFullscreenElement(UpdateViewport aUpdateViewport) {
 }
 
 void Document::SetFullscreenElement(Element& aElement) {
-  ElementState statesToAdd = ElementState::FULLSCREEN;
-  if (StaticPrefs::dom_fullscreen_modal()) {
-    statesToAdd |= ElementState::MODAL;
-  }
-  aElement.AddStates(statesToAdd);
+  aElement.AddStates(ElementState::FULLSCREEN);
   TopLayerPush(aElement);
   NotifyFullScreenChangedForMediaElement(aElement);
   UpdateViewportScrollbarOverrideForFullscreen(this);
 }
 
+static ElementState TopLayerModalStates() {
+  ElementState modalStates = ElementState::MODAL_DIALOG;
+  if (StaticPrefs::dom_fullscreen_modal()) {
+    modalStates |= ElementState::FULLSCREEN;
+  }
+  return modalStates;
+}
+
 void Document::TopLayerPush(Element& aElement) {
-  const bool modal = aElement.State().HasState(ElementState::MODAL);
+  const bool modal =
+      aElement.State().HasAtLeastOneOfStates(TopLayerModalStates());
 
   auto predictFunc = [&aElement](Element* element) {
     return element == &aElement;
@@ -14635,7 +14640,7 @@ void Document::TopLayerPush(Element& aElement) {
 }
 
 void Document::AddModalDialog(HTMLDialogElement& aDialogElement) {
-  aDialogElement.AddStates(ElementState::MODAL);
+  aDialogElement.AddStates(ElementState::MODAL_DIALOG);
   TopLayerPush(aDialogElement);
 }
 
@@ -14645,7 +14650,7 @@ void Document::RemoveModalDialog(HTMLDialogElement& aDialogElement) {
   };
   DebugOnly<Element*> removedElement = TopLayerPop(predicate);
   MOZ_ASSERT(removedElement == &aDialogElement);
-  aDialogElement.RemoveStates(ElementState::MODAL);
+  aDialogElement.RemoveStates(ElementState::MODAL_DIALOG);
 }
 
 Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicate) {
@@ -14686,14 +14691,15 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicate) {
     return nullptr;
   }
 
-  const bool modal = removedElement->State().HasState(ElementState::MODAL);
+  const ElementState modalStates = TopLayerModalStates();
+  const bool modal = removedElement->State().HasAtLeastOneOfStates(modalStates);
 
   if (modal) {
     removedElement->RemoveStates(ElementState::TOPMOST_MODAL);
     bool foundExistingModalElement = false;
     for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
       nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
-      if (element && element->State().HasState(ElementState::MODAL)) {
+      if (element && element->State().HasAtLeastOneOfStates(modalStates)) {
         element->AddStates(ElementState::TOPMOST_MODAL);
         foundExistingModalElement = true;
         break;
