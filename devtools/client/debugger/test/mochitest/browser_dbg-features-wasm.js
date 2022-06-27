@@ -109,7 +109,7 @@ add_task(async function() {
     dbg.wasmOffsetToLine(binarySource.id, virtualBinaryLine) + 1;
 
   // We can't use selectSource here because binary source won't have symbols loaded
-  // (hasSymbols(source) selector will be false)
+  // (getSymbols(source) selector will be false)
   await dbg.actions.selectLocation(
     getContext(dbg),
     { sourceId: binarySource.id },

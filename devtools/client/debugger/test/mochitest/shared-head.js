@@ -199,7 +199,7 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
   const {
     getSelectedSource,
     getSelectedSourceTextContent,
-    hasSymbols,
+    getSymbols,
     getBreakableLines,
   } = dbg.selectors;
 
@@ -224,7 +224,7 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
         }
       }
 
-      return hasSymbols(source) && getBreakableLines(source.id);
+      return getSymbols(source) && getBreakableLines(source.id);
     },
     "selected source"
   );

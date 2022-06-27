@@ -12,14 +12,6 @@ export function getSymbols(state, source) {
   return state.ast.symbols[source.id] || null;
 }
 
-export function hasSymbols(state, source) {
-  return !!getSymbols(state, source);
-}
-
-export function isSymbolsLoading(state, source) {
-  return !getSymbols(state, source);
-}
-
 export function getInScopeLines(state, location) {
   return state.ast.inScopeLines[makeBreakpointId(location)];
 }
