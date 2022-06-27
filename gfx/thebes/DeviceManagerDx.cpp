@@ -33,6 +33,7 @@
 #include <d3d11.h>
 #include <dcomp.h>
 #include <ddraw.h>
+#include <dxgi.h>
 
 namespace mozilla {
 namespace gfx {
@@ -494,20 +495,37 @@ IDXGIAdapter1* DeviceManagerDx::GetDXGIAdapter() {
   decltype(CreateDXGIFactory1)* createDXGIFactory1 =
       (decltype(CreateDXGIFactory1)*)GetProcAddress(dxgiModule,
                                                     "CreateDXGIFactory1");
-
   if (!createDXGIFactory1) {
     return nullptr;
   }
+  static const auto fCreateDXGIFactory2 =
+      (decltype(CreateDXGIFactory2)*)GetProcAddress(dxgiModule,
+                                                    "CreateDXGIFactory2");
 
   // Try to use a DXGI 1.1 adapter in order to share resources
   // across processes.
   RefPtr<IDXGIFactory1> factory1;
-  HRESULT hr =
-      createDXGIFactory1(__uuidof(IDXGIFactory1), getter_AddRefs(factory1));
-  if (FAILED(hr) || !factory1) {
-    // This seems to happen with some people running the iZ3D driver.
-    // They won't get acceleration.
-    return nullptr;
+  if (StaticPrefs::gfx_direct3d11_enable_debug_layer_AtStartup()) {
+    RefPtr<IDXGIFactory2> factory2;
+    if (fCreateDXGIFactory2) {
+      auto hr = fCreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG,
+                                    __uuidof(IDXGIFactory2),
+                                    getter_AddRefs(factory2));
+      MOZ_ALWAYS_TRUE(!FAILED(hr));
+    } else {
+      NS_WARNING(
+          "fCreateDXGIFactory2 not loaded, cannot create debug IDXGIFactory2.");
+    }
+    factory1 = factory2;
+  }
+  if (!factory1) {
+    HRESULT hr =
+        createDXGIFactory1(__uuidof(IDXGIFactory1), getter_AddRefs(factory1));
+    if (FAILED(hr) || !factory1) {
+      // This seems to happen with some people running the iZ3D driver.
+      // They won't get acceleration.
+      return nullptr;
+    }
   }
 
   if (!mDeviceStatus) {
