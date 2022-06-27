@@ -8,6 +8,8 @@
 
 "use strict";
 
+const { maybeGetMemberPropertyName } = require("../helpers");
+
 const privilegedGlobals = Object.keys(
   require("../environments/privileged.js").globals
 );
@@ -16,46 +18,17 @@ const privilegedGlobals = Object.keys(
 // Rule Definition
 // -----------------------------------------------------------------------------
 
-function isOSFile(expr) {
-  if (expr.type !== "MemberExpression") {
-    return false;
-  }
-
-  if (expr.property.type !== "Identifier" || expr.property.name !== "File") {
-    return isOSFile(expr.object);
-  }
-
-  if (expr.object.type === "Identifier" && expr.object.name === "OS") {
-    return true;
-  }
-
-  if (
-    expr.object.type === "MemberExpression" &&
-    expr.object.object.type === "Identifier" &&
-    expr.object.object.name === "lazy" &&
-    expr.object.property.type === "Identifier" &&
-    expr.object.property.name === "OS"
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
 function pointsToDOMInterface(expression) {
-  if (isOSFile(expression)) {
+  if (
+    expression.type === "MemberExpression" &&
+    maybeGetMemberPropertyName(expression.object) === "OS" &&
+    expression.property.name === "File"
+  ) {
     // OS.File is an exception that is not a DOM interface
     return false;
   }
-
-  let referee = expression;
-  while (referee.type === "MemberExpression") {
-    referee = referee.property;
-  }
-  if (referee.type === "Identifier") {
-    return privilegedGlobals.includes(referee.name);
-  }
-  return false;
+  // For `win.Foo`, `iframe.contentWindow.Foo`, or such.
+  return privilegedGlobals.includes(maybeGetMemberPropertyName(expression));
 }
 
 module.exports = {

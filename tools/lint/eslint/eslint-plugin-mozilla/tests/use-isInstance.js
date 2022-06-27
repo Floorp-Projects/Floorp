@@ -34,6 +34,7 @@ ruleTester.run("use-isInstance", rule, {
     "file instanceof OS.File.Error;",
     "file instanceof lazy.OS.File;",
     "file instanceof lazy.OS.File.Error;",
+    "file instanceof lazy.lazy.OS.File;",
   ],
   invalid: [
     {
@@ -49,6 +50,21 @@ ruleTester.run("use-isInstance", rule, {
     {
       code: "target instanceof this.contentWindow.HTMLAudioElement",
       output: "this.contentWindow.HTMLAudioElement.isInstance(target)",
+      errors,
+    },
+    {
+      code: "target instanceof File",
+      output: "File.isInstance(target)",
+      errors,
+    },
+    {
+      code: "target instanceof win.File",
+      output: "win.File.isInstance(target)",
+      errors,
+    },
+    {
+      code: "window.arguments[0] instanceof window.XULElement",
+      output: "window.XULElement.isInstance(window.arguments[0])",
       errors,
     },
   ],
