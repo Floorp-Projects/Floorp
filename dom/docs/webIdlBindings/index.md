@@ -2261,10 +2261,6 @@ Here's an example JS implementation of the above interface. The
 usable by the doNothing() method.
 
 ``` js
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
 function MyNumberInner() {
   this.value = 111;
   this.invisibleValue = 12345;
@@ -2272,9 +2268,8 @@ function MyNumberInner() {
 
 MyNumberInner.prototype = {
   classDescription: "Get my number XPCOM Component",
-  classID: Components.ID("{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}"), // dummy UUID
   contractID: "@mozilla.org/my-number;1",
-  QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsISupports]),
+  QueryInterface: ChromeUtils.generateQI([]),
   doNothing: function() {},
   get otherValue() { return this.invisibleValue - 4; },
   __init: function(firstNumber) {
@@ -2283,9 +2278,6 @@ MyNumberInner.prototype = {
     }
   }
 }
-
-var components = [MyNumberInner];
-var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 ```
 
 Finally, add a component and a contract and whatever other manifest
@@ -2403,7 +2395,7 @@ function MyEventTargetImpl() {
 }
 MyEventTargetImpl.prototype = {
   // QI to nsIDOMGlobalPropertyInitializer so we get init() called on us.
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
+  QueryInterface: ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]),
 
   init: function(contentWindow) {
     this.contentWindow = contentWindow;
