@@ -17,6 +17,12 @@ with Files("*ocationProvider*"):
 with Files("windows/*LocationProvider*"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
+with Files("IOUtils*"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
+with Files("PathUtils*"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
 with Files("mac/*LocationProvider*"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
@@ -35,11 +41,18 @@ with Files("tests/chrome.ini"):
 with Files("tests/*constants*"):
     BUG_COMPONENT = ("Toolkit", "OS.File")
 
+with Files("tests/ioutils/**"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
 with Files("tests/mochitest.ini"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
+with Files("test/*pathutils*"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
 with Files("tests/*1197901*"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
 
 toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
 
