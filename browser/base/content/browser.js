@@ -537,6 +537,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gPrivateBrowsingNewIndicatorEnabled",
+  "browser.privatebrowsing.enable-new-indicator",
+  false
+);
+
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
     "chrome://browser/content/translation-notification.js",
@@ -8573,6 +8580,13 @@ var gPrivateBrowsingUI = {
       "privatebrowsingmode",
       PrivateBrowsingUtils.permanentPrivateBrowsing ? "permanent" : "temporary"
     );
+    // If enabled, show the new private browsing indicator with label.
+    // This will hide the old indicator.
+    docElement.toggleAttribute(
+      "privatebrowsingnewindicator",
+      gPrivateBrowsingNewIndicatorEnabled
+    );
+
     gBrowser.updateTitlebar();
 
     if (PrivateBrowsingUtils.permanentPrivateBrowsing) {

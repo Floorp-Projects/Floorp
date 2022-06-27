@@ -344,8 +344,24 @@ menupopup::part(drop-indicator) {
   background-image: url("chrome://global/skin/icons/indicator-private-browsing.svg");
 }
 
+/* New Private Browsing Indicator */
+
+#private-browsing-indicator-with-label {
+  -moz-box-align: center;
+  margin-inline: 7px;
+}
+
+.private-browsing-indicator-icon {
+  list-style-image: url("chrome://global/skin/icons/indicator-private-browsing.svg");
+  width: 16px;
+  height: 16px;
+}
+
 :root:not([accessibilitymode]) .accessibility-indicator,
-:root:not([privatebrowsingmode=temporary]) .private-browsing-indicator {
+:root:not([privatebrowsingmode=temporary]) .private-browsing-indicator,
+:root[privatebrowsingnewindicator] .private-browsing-indicator,
+:root:not([privatebrowsingnewindicator]) #private-browsing-indicator-with-label,
+:root:not([privatebrowsingmode=temporary]) #private-browsing-indicator-with-label {
   display: none;
 }
 
