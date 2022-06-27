@@ -2636,14 +2636,15 @@ void nsFocusManager::Focus(
 
     aWindow->SetFocusedElement(aElement, focusMethod, false);
 
-    // if the focused element changed, scroll it into view
-    if (aElement && aFocusChanged) {
-      ScrollIntoView(presShell, aElement, aFlags);
-    }
     const RefPtr<nsPresContext> presContext = presShell->GetPresContext();
     if (sendFocusEvent) {
       NotifyFocusStateChange(aElement, nullptr, aFlags,
                              /* aGettingFocus = */ true, shouldShowFocusRing);
+
+      // If the focused element changed, scroll it into view
+      if (aFocusChanged) {
+        ScrollIntoView(presShell, aElement, aFlags);
+      }
 
       // If this is a remote browser, focus its widget and activate remote
       // content.  Note that we might no longer be in the same document,
