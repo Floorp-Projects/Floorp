@@ -456,15 +456,6 @@ class AutoCompleteParent extends JSWindowActorParent {
         this.closePopup();
         break;
       }
-
-      case "FormAutoComplete:Disconnect": {
-        // The controller stopped controlling the current input, so clear
-        // any cached data.  This is necessary cause otherwise we'd clear data
-        // only when starting a new search, but the next input could not support
-        // autocomplete and it would end up inheriting the existing data.
-        AutoCompleteResultView.clearResults();
-        break;
-      }
     }
     // Returning false to pacify ESLint, but this return value is
     // ignored by the messaging infrastructure.
