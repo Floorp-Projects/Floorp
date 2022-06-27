@@ -208,8 +208,6 @@ class nsDMABufDevice {
   bool mUseWebGLDmabufBackend;
 
  private:
-  bool IsDMABufEnabled();
-
   GbmFormat mXRGBFormat;
   GbmFormat mARGBFormat;
 
