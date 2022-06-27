@@ -22,46 +22,37 @@ import {
   getCurrentThread,
 } from "../../selectors";
 
-function isDocumentReady(location, sourceTextContent) {
-  return location && sourceTextContent && hasDocument(location.sourceId);
-}
-
 export class DebugLine extends PureComponent {
   debugExpression;
 
   static get propTypes() {
     return {
       location: PropTypes.object,
-      sourceTextContent: PropTypes.object,
       why: PropTypes.object,
     };
   }
 
   componentDidMount() {
-    const { why, location, sourceTextContent } = this.props;
-    this.setDebugLine(why, location, sourceTextContent);
+    const { why, location } = this.props;
+    this.setDebugLine(why, location);
   }
 
   componentWillUnmount() {
-    const { why, location, sourceTextContent } = this.props;
-    this.clearDebugLine(why, location, sourceTextContent);
+    const { why, location } = this.props;
+    this.clearDebugLine(why, location);
   }
 
   componentDidUpdate(prevProps) {
-    const { why, location, sourceTextContent } = this.props;
+    const { why, location } = this.props;
 
     startOperation();
-    this.clearDebugLine(
-      prevProps.why,
-      prevProps.location,
-      prevProps.sourceTextContent
-    );
-    this.setDebugLine(why, location, sourceTextContent);
+    this.clearDebugLine(prevProps.why, prevProps.location);
+    this.setDebugLine(why, location);
     endOperation();
   }
 
-  setDebugLine(why, location, sourceTextContent) {
-    if (!location || !isDocumentReady(location, sourceTextContent)) {
+  setDebugLine(why, location) {
+    if (!location) {
       return;
     }
     const { sourceId } = location;
@@ -89,8 +80,10 @@ export class DebugLine extends PureComponent {
     );
   }
 
-  clearDebugLine(why, location, sourceTextContent) {
-    if (!location || !isDocumentReady(location, sourceTextContent)) {
+  clearDebugLine(why, location) {
+    // Avoid clearing the line if we didn't set a debug line before,
+    // or, if the document is no longer available
+    if (!location || !hasDocument(location.sourceId)) {
       return;
     }
 
@@ -120,13 +113,24 @@ export class DebugLine extends PureComponent {
   }
 }
 
+function isDocumentReady(location, sourceTextContent) {
+  return location && sourceTextContent && hasDocument(location.sourceId);
+}
+
 const mapStateToProps = state => {
+  // Avoid unecessary intermediate updates when there is no location
+  // or the source text content isn't yet fully loaded
   const frame = getVisibleSelectedFrame(state);
   const location = frame?.location;
+  if (!location) {
+    return {};
+  }
+  const sourceTextContent = getSourceTextContent(state, location.sourceId);
+  if (!isDocumentReady(location, sourceTextContent)) {
+    return {};
+  }
   return {
     location,
-    sourceTextContent:
-      location && getSourceTextContent(state, location.sourceId),
     why: getPauseReason(state, getCurrentThread(state)),
   };
 };
