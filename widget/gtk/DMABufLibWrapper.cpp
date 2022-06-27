@@ -122,9 +122,7 @@ bool nsGbmLib::Load() {
   return sLoaded;
 }
 
-gbm_device* nsDMABufDevice::GetGbmDevice() {
-  return IsDMABufEnabled() ? mGbmDevice : nullptr;
-}
+gbm_device* nsDMABufDevice::GetGbmDevice() { return mGbmDevice; }
 
 static void dmabuf_modifiers(void* data,
                              struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
@@ -263,18 +261,9 @@ bool nsDMABufDevice::Configure(nsACString& aFailureId) {
   return true;
 }
 
-bool nsDMABufDevice::IsDMABufEnabled() {
-  if (!mInitialized) {
-    MOZ_ASSERT(!XRE_IsParentProcess());
-    nsCString failureId;
-    return Configure(failureId);
-  }
-  return !!mGbmDevice;
-}
-
 #ifdef NIGHTLY_BUILD
 bool nsDMABufDevice::IsDMABufTexturesEnabled() {
-  return gfx::gfxVars::UseDMABuf() && IsDMABufEnabled() &&
+  return gfx::gfxVars::UseDMABuf() &&
          StaticPrefs::widget_dmabuf_textures_enabled();
 }
 #else
@@ -292,13 +281,13 @@ bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
 }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
   LOGDMABUF(
-      ("nsDMABufDevice::IsDMABufWebGLEnabled: EGL %d mUseWebGLDmabufBackend %d "
-       "DMABufEnabled %d  "
+      ("nsDMABufDevice::IsDMABufWebGLEnabled: UseDMABuf %d "
+       "mUseWebGLDmabufBackend %d "
        "widget_dmabuf_webgl_enabled %d\n",
-       gfx::gfxVars::UseEGL(), mUseWebGLDmabufBackend, IsDMABufEnabled(),
+       gfx::gfxVars::UseDMABuf(), mUseWebGLDmabufBackend,
        StaticPrefs::widget_dmabuf_webgl_enabled()));
   return gfx::gfxVars::UseDMABuf() && mUseWebGLDmabufBackend &&
-         IsDMABufEnabled() && StaticPrefs::widget_dmabuf_webgl_enabled();
+         StaticPrefs::widget_dmabuf_webgl_enabled();
 }
 
 void nsDMABufDevice::DisableDMABufWebGL() { mUseWebGLDmabufBackend = false; }
