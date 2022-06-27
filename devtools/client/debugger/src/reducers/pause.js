@@ -28,7 +28,6 @@ export function initialPauseState(thread = "UnknownThread") {
       thread,
       pauseCounter: 0,
     },
-    previewLocation: null,
     highlightedCalls: null,
     threads: {},
     skipPausing: prefs.skipPausing,
@@ -107,7 +106,6 @@ function update(state = initialPauseState(), action) {
       const { thread, frame, why } = action;
       state = {
         ...state,
-        previewLocation: null,
         threadcx: {
           ...state.threadcx,
           pauseCounter: state.threadcx.pauseCounter + 1,
@@ -142,14 +140,6 @@ function update(state = initialPauseState(), action) {
         }
       }
       return updateThreadState({ frames, framesLoading: false });
-    }
-
-    case "PREVIEW_PAUSED_LOCATION": {
-      return { ...state, previewLocation: action.location };
-    }
-
-    case "CLEAR_PREVIEW_PAUSED_LOCATION": {
-      return { ...state, previewLocation: null };
     }
 
     case "MAP_FRAMES": {
