@@ -52,8 +52,6 @@ def apply_patches(base):
         'allow_disabling_asm_avx2.patch',
         # add H444ToARGB() variant
         'add_H444ToARGB.patch',
-        # fix the x86 mingw-clang build
-        'bug_1491848.patch',
     ]
 
     for patch in patches:
