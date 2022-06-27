@@ -214,6 +214,12 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  bool getShadowRealmsEnabled() const { return shadowRealms_; }
+  RealmCreationOptions& setShadowRealmsEnabled(bool flag) {
+    shadowRealms_ = flag;
+    return *this;
+  }
+
 #ifdef NIGHTLY_BUILD
   bool getArrayGroupingEnabled() const { return arrayGrouping_; }
   RealmCreationOptions& setArrayGroupingEnabled(bool flag) {
@@ -274,6 +280,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool propertyErrorMessageFix_ = false;
   bool iteratorHelpers_ = false;
   bool arrayFindLast_ = false;
+  bool shadowRealms_ = false;
 #ifdef NIGHTLY_BUILD
   bool arrayGrouping_ = true;
 #endif
