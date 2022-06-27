@@ -87,6 +87,7 @@ class EarlyHintPreloader final : public nsIStreamListener,
                        nsIReferrerInfo* aReferrerInfo,
                        nsICookieJarSettings* aCookieJarSettings);
 
+  static void CollectResourcesTypeTelemetry(ASDestination aASDestination);
   // keep opening uri to not preload cross origins on redirects for now
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIChannel> mChannel;

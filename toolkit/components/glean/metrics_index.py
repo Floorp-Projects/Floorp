@@ -19,6 +19,7 @@ metrics_yamls = [
     "browser/modules/metrics.yaml",
     "dom/media/metrics.yaml",
     "dom/metrics.yaml",
+    "netwerk/protocol/http/metrics.yaml",
     "gfx/metrics.yaml",
     "toolkit/components/extensions/metrics.yaml",
     "toolkit/components/glean/metrics.yaml",
