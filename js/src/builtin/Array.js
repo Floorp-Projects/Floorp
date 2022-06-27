@@ -233,7 +233,7 @@ function ArrayFilter(callbackfn/*, thisArg*/) {
 //
 // Array.prototype.groupBy
 // https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupby
-function ArrayGroup(callbackfn/*, thisArg*/) {
+function ArrayGroupBy(callbackfn/*, thisArg*/) {
     /* Step 1. Let O be ? ToObject(this value). */
     var O = ToObject(this);
 
@@ -295,9 +295,9 @@ function ArrayGroup(callbackfn/*, thisArg*/) {
 
 // Array Grouping proposal
 //
-// Array.prototype.groupToMap
+// Array.prototype.groupByToMap
 // https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupbymap
-function ArrayGroupToMap(callbackfn/*, thisArg*/) {
+function ArrayGroupByToMap(callbackfn/*, thisArg*/) {
 
     /* Step 1. Let O be ? ToObject(this value). */
     var O = ToObject(this);
