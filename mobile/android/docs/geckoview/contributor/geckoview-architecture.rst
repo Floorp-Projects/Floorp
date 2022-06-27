@@ -235,6 +235,61 @@ batched to avoid calling this API too frequently.
 Apps can use ``onSessionStateChange`` to store the serialized state to
 disk to support restoring the session at a later time.
 
+Third-party root certificates
+-----------------------------
+
+Gecko maintains its own Certificate Authority store and does not use the
+platform's CA store. GeckoView follows the same policy and will not, by
+default, read Android's CA store to determine root certificates.
+
+However, GeckoView provides a way to import all third-party CA roots added to
+the Android CA store by setting the `enterpriseRootsEnabled
+<https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntimeSettings.Builder.html#enterpriseRootsEnabled(boolean)>`_
+runtime setting to ``true``, this feature is implemented in `EnterpriseRoots
+<https://searchfox.org/mozilla-central/rev/26a6a38fb515dbab0bb459c40ec4b877477eefef/mobile/android/geckoview/src/main/java/org/mozilla/gecko/EnterpriseRoots.java>`_
+
+There is not currently any API for an app to manually specify additional CA
+roots, although this might change with `Bug 1522162
+<https://bugzilla.mozilla.org/show_bug.cgi?id=1522162>`_.
+
+Light and Omni builds
+---------------------
+
+A variation of the default GeckoView build, dubbed `Omni` in the codebase,
+provides additional libraries that can be helpful when building a browser app.
+Currently, the `Glean
+<https://docs.telemetry.mozilla.org/concepts/glean/glean.html>`_ library is
+included in the ``geckoview-omni`` package.  The default build ``geckoview``,
+which does not contain such libraries, is similarly dubbed `Light` in the
+codebase.
+
+The additional libraries in the Omni package are directly built into Gecko's
+main ``.so`` file, ``libxul.so``. These libraries are then declared in the
+``.module`` package inside the ``maven`` repository, e.g. see the ``.module``
+file for `geckoview-omni
+<https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-omni/102.0.20220623063721/geckoview-omni-102.0.20220623063721.module>`_:
+
+.. code-block:: json
+
+      "capabilities": [
+        {
+          "group": "org.mozilla.geckoview",
+          "name": "geckoview-omni",
+          "version": "102.0.20220623063721"
+        },
+        {
+          "group": "org.mozilla.telemetry",
+          "name": "glean-native",
+          "version": "44.1.1"
+        }
+      ]
+
+Notice the ``org.mozilla.telemetry:glean-native`` capability is declared
+alongside ``org.mozilla.geckoview``.
+
+The main Glean library then depends on ``glean-native`` which is either
+provided in a standalone package (for apps that do not include GeckoView) or by
+the GeckoView capability above.
 
 Extensions
 ----------
