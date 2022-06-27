@@ -21,10 +21,7 @@ function update(state = initialASTState(), action) {
     case "SET_SYMBOLS": {
       const { sourceId } = action;
       if (action.status === "start") {
-        return {
-          ...state,
-          symbols: { ...state.symbols, [sourceId]: { loading: true } },
-        };
+        return state;
       }
 
       const value = action.value;
