@@ -21,6 +21,7 @@ Documentation
 
    consumer/index
    contributor/index
+   design/index
    Changelog <https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/doc-files/CHANGELOG>
    API Javadoc <https://mozilla.github.io/geckoview/javadoc/mozilla-central/index.html>
 
