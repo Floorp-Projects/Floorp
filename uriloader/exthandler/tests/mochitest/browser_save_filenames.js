@@ -456,10 +456,12 @@ add_task(async function saveas_files() {
           let list = await Downloads.getList(Downloads.PUBLIC);
           let downloadFinishedPromise = promiseDownloadFinished(list);
 
-          await BrowserTestUtils.openNewForegroundTab(
+          await BrowserTestUtils.openNewForegroundTab({
             gBrowser,
-            expectedItems[idx].url
-          );
+            opening: expectedItems[idx].url,
+            waitForLoad: false,
+            waitForStateStop: true,
+          });
 
           let download = await downloadFinishedPromise;
 
@@ -482,10 +484,12 @@ add_task(async function saveas_files() {
           continue;
         }
 
-        await BrowserTestUtils.openNewForegroundTab(
+        await BrowserTestUtils.openNewForegroundTab({
           gBrowser,
-          expectedItems[idx].url
-        );
+          opening: expectedItems[idx].url,
+          waitForLoad: false,
+          waitForStateStop: true,
+        });
       }
 
       let filename = await new Promise(resolve => {
