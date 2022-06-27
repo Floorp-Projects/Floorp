@@ -2384,7 +2384,7 @@
 # This matches other browsers but historically not Gecko.
 - name: dom.fullscreen.modal
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether the Gamepad API is enabled

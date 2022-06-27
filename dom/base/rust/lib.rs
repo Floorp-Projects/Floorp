@@ -107,9 +107,9 @@ bitflags! {
         const AUTOFILL = 1u64 << 40;
         /// Non-standard & undocumented.
         const AUTOFILL_PREVIEW = 1u64 << 41;
-        /// State that dialog element is modal, for centered alignment
-        /// <https://html.spec.whatwg.org/multipage/#centered-alignment>
-        const MODAL_DIALOG = 1u64 << 42;
+        /// State for modal elements:
+        /// <https://drafts.csswg.org/selectors-4/#modal-state>
+        const MODAL = 1u64 << 42;
         /// <https://html.spec.whatwg.org/multipage/#inert-subtrees>
         const INERT = 1u64 << 43;
         /// State for the topmost modal element in top layer
@@ -164,7 +164,7 @@ bitflags! {
             Self::FULLSCREEN.bits |
             Self::HOVER.bits |
             Self::URLTARGET.bits |
-            Self::MODAL_DIALOG.bits |
+            Self::MODAL.bits |
             Self::INERT.bits |
             Self::TOPMOST_MODAL.bits |
             Self::REVEALED.bits;
