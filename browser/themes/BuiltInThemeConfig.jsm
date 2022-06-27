@@ -415,6 +415,8 @@ const ColorwayCollections = [
       title: "colorway-collection-independent-voices",
       description: "colorway-collection-independent-voices-description",
     },
+    cardImagePath:
+      "chrome://browser/content/colorways/colorway-collection-independent-voices.avif",
   },
 ];
 
