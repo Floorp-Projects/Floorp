@@ -1,8 +1,8 @@
 .. -*- Mode: rst; fill-column: 80; -*-
 
-===========================
-GeckoView Contributor Guide
-===========================
+=================
+Contributor Guide
+=================
 
 Table of contents
 =================
