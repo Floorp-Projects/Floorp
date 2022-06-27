@@ -32,9 +32,15 @@ const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";
 const TIMESTAMP_LENGTH = 10;
 const TIMESTAMP_REGEXP = /^\d{10}$/;
 
-const MERINO_ENDPOINT_PARAM_QUERY = "q";
-const MERINO_ENDPOINT_PARAM_CLIENT_VARIANTS = "client_variants";
-const MERINO_ENDPOINT_PARAM_PROVIDERS = "providers";
+const MERINO_PARAMS = {
+  CLIENT_VARIANTS: "client_variants",
+  PROVIDERS: "providers",
+  QUERY: "q",
+  SEQUENCE_NUMBER: "seq",
+  SESSION_ID: "sid",
+};
+
+const MERINO_SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 const IMPRESSION_COUNTERS_RESET_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
@@ -152,19 +158,29 @@ class ProviderQuickSuggest extends UrlbarProvider {
   /**
    * @returns {string} The timestamp template string used in quick suggest URLs.
    */
-  get timestampTemplate() {
+  get TIMESTAMP_TEMPLATE() {
     return TIMESTAMP_TEMPLATE;
   }
 
   /**
    * @returns {number} The length of the timestamp in quick suggest URLs.
    */
-  get timestampLength() {
+  get TIMESTAMP_LENGTH() {
     return TIMESTAMP_LENGTH;
   }
 
-  get telemetryScalars() {
+  /**
+   * @returns {object} An object mapping from mnemonics to scalar names.
+   */
+  get TELEMETRY_SCALARS() {
     return { ...TELEMETRY_SCALARS };
+  }
+
+  /**
+   * @returns {object} An object mapping from mnemonics to Merino search params.
+   */
+  get MERINO_PARAMS() {
+    return { ...MERINO_PARAMS };
   }
 
   /**
@@ -462,15 +478,20 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   it describes the search string and picked result.
    */
   onEngagement(isPrivate, state, queryContext, details) {
-    if (!this._resultFromLastQuery) {
-      return;
-    }
     let result = this._resultFromLastQuery;
     this._resultFromLastQuery = null;
 
+    // Reset the Merino session ID when an engagement ends. Per spec, for the
+    // user's privacy, we don't keep it around between engagements. It wouldn't
+    // hurt to do this on start too, it's just not necessary if we always do it
+    // on end.
+    if (this._merinoSessionID && state != "start") {
+      this._resetMerinoSessionID();
+    }
+
     // Per spec, we count impressions only when the user picks a result, i.e.,
     // when `state` is "engagement".
-    if (state == "engagement") {
+    if (result && state == "engagement") {
       this._recordEngagementTelemetry(
         result,
         isPrivate,
@@ -820,6 +841,22 @@ class ProviderQuickSuggest extends UrlbarProvider {
   async _fetchMerinoSuggestions(queryContext, searchString) {
     let instance = this.queryInstance;
 
+    // Set up the Merino session ID and related state.
+    if (!this._merinoSessionID) {
+      this._merinoSessionID = Services.uuid.generateUUID();
+      this._merinoSequenceNumber = 0;
+      this._merinoSessionTimer?.cancel();
+
+      // Per spec, for the user's privacy, the session should time out and a new
+      // session ID should be used if the engagement does not end soon.
+      this._merinoSessionTimer = new SkippableTimer({
+        name: "Merino session timeout",
+        time: this._merinoSessionTimeoutMs,
+        logger: this.logger,
+        callback: () => this._resetMerinoSessionID(),
+      });
+    }
+
     // Get the endpoint URL. It's empty by default when running tests so they
     // don't hit the network.
     let endpointString = UrlbarPrefs.get("merino.endpointURL");
@@ -833,26 +870,28 @@ class ProviderQuickSuggest extends UrlbarProvider {
       this.logger.error("Could not make Merino endpoint URL: " + error);
       return null;
     }
-    url.searchParams.set(MERINO_ENDPOINT_PARAM_QUERY, searchString);
+    url.searchParams.set(MERINO_PARAMS.QUERY, searchString);
+    url.searchParams.set(MERINO_PARAMS.SESSION_ID, this._merinoSessionID);
+    url.searchParams.set(
+      MERINO_PARAMS.SEQUENCE_NUMBER,
+      this._merinoSequenceNumber
+    );
 
     let clientVariants = UrlbarPrefs.get("merino.clientVariants");
     if (clientVariants) {
-      url.searchParams.set(
-        MERINO_ENDPOINT_PARAM_CLIENT_VARIANTS,
-        clientVariants
-      );
+      url.searchParams.set(MERINO_PARAMS.CLIENT_VARIANTS, clientVariants);
     }
 
     let providers = UrlbarPrefs.get("merino.providers");
     if (providers) {
-      url.searchParams.set(MERINO_ENDPOINT_PARAM_PROVIDERS, providers);
+      url.searchParams.set(MERINO_PARAMS.PROVIDERS, providers);
     } else if (
       !UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") &&
       !UrlbarPrefs.get("suggest.quicksuggest.sponsored")
     ) {
-      // Data collection is enabled but suggestions are not. Set the `providers`
+      // Data collection is enabled but suggestions are not. Set the providers
       // param to an empty string to tell Merino not to fetch any suggestions.
-      url.searchParams.set(MERINO_ENDPOINT_PARAM_PROVIDERS, "");
+      url.searchParams.set(MERINO_PARAMS.PROVIDERS, "");
     }
 
     let responseHistogram = Services.telemetry.getHistogramById(
@@ -904,6 +943,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
           response = await fetch(url, { signal: controller.signal });
           TelemetryStopwatch.finish(TELEMETRY_MERINO_LATENCY, queryContext);
           maybeRecordResponse(response.ok ? "success" : "http_error");
+
+          // Increment the sequence number only after the fetch successfully
+          // completes. It should not be incremented if the fetch is aborted or
+          // fails due to a network error. The server should not see gaps in
+          // sequence numbers for searches it never received. In particular, as
+          // the user quickly types a search string and we start a search after
+          // each new character, some of those searches may cancel previous ones
+          // before their fetches complete or even start.
+          this._merinoSequenceNumber++;
         } catch (error) {
           TelemetryStopwatch.cancel(TELEMETRY_MERINO_LATENCY, queryContext);
           if (error.name != "AbortError") {
@@ -954,6 +1002,16 @@ class ProviderQuickSuggest extends UrlbarProvider {
       request_id,
       source: QUICK_SUGGEST_SOURCE.MERINO,
     }));
+  }
+
+  /**
+   * Resets the Merino session ID and related state.
+   */
+  _resetMerinoSessionID() {
+    this._merinoSessionID = null;
+    this._merinoSequenceNumber = 0;
+    this._merinoSessionTimer?.cancel();
+    this._merinoSessionTimer = null;
   }
 
   /**
@@ -1560,6 +1618,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
   // Whether blocked digests are currently being updated.
   _updatingBlockedDigests = false;
+
+  // State related to the current Merino session.
+  _merinoSessionID = null;
+  _merinoSequenceNumber = 0;
+  _merinoSessionTimer = null;
+  _merinoSessionTimeoutMs = MERINO_SESSION_TIMEOUT_MS;
 }
 
 var UrlbarProviderQuickSuggest = new ProviderQuickSuggest();

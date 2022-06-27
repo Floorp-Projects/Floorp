@@ -1017,10 +1017,10 @@ add_task(async function timestamps() {
   // Set up the Merino response with template URLs.
   let resp = setMerinoResponse();
   let suggestion = resp.body.suggestions[0];
-  let { timestampTemplate } = UrlbarProviderQuickSuggest;
+  let { TIMESTAMP_TEMPLATE } = UrlbarProviderQuickSuggest;
 
-  suggestion.url = `http://example.com/time-${timestampTemplate}`;
-  suggestion.click_url = `http://example.com/time-${timestampTemplate}-foo`;
+  suggestion.url = `http://example.com/time-${TIMESTAMP_TEMPLATE}`;
+  suggestion.click_url = `http://example.com/time-${TIMESTAMP_TEMPLATE}-foo`;
 
   // Do a search.
   let context = createContext("test", {
