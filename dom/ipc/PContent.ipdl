@@ -1012,7 +1012,7 @@ child:
                                       nsID aChangeID);
 
     async GetLayoutHistoryState(MaybeDiscardedBrowsingContext aContext)
-        returns (nsILayoutHistoryState aState);
+        returns (nsILayoutHistoryState aState, Wireframe? aWireframe);
 
     async DispatchLocationChangeEvent(MaybeDiscardedBrowsingContext aContext);
 

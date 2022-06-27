@@ -4366,12 +4366,16 @@ mozilla::ipc::IPCResult ContentChild::RecvGetLayoutHistoryState(
     GetLayoutHistoryStateResolver&& aResolver) {
   nsCOMPtr<nsILayoutHistoryState> state;
   nsIDocShell* docShell;
+  mozilla::Maybe<mozilla::dom::Wireframe> wireframe;
   if (!aContext.IsNullOrDiscarded() &&
       (docShell = aContext.get()->GetDocShell())) {
     docShell->PersistLayoutHistoryState();
     docShell->GetLayoutHistoryState(getter_AddRefs(state));
+    wireframe = static_cast<nsDocShell*>(docShell)->GetWireframe();
   }
-  aResolver(state);
+  aResolver(Tuple<nsILayoutHistoryState*, const mozilla::Maybe<Wireframe>&>(
+      state, wireframe));
+
   return IPC_OK();
 }
 
