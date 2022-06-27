@@ -7,11 +7,18 @@ object StringsHelper {
     const val FR_ENGLISH_LOCALE = "English (United States)"
     const val FR_LANGUAGE_MENU = "Langue"
     const val FR_SETTINGS = "Paramètres"
-    const val FR_HELP = "Aide"
     const val FR_GENERAL_HEADING = "Général"
     const val FR_LANGUAGE_SYSTEM_DEFAULT = "Valeur par défaut du système"
+
     const val EN_LANGUAGE_MENU_HEADING = "Language"
-    const val EN_FRENCH_LOCALE = "Français"
+    const val EN_AFRIKAANS_LOCALE = "Afrikaans"
+
+    const val AF_LANGUAGE_MENU = "Taal"
+    const val AF_SETTINGS = "Instellings"
+    const val AF_HELP = "Hulp"
+    const val AF_GENERAL_HEADING = "Algemeen"
+    const val AF_LANGUAGE_SYSTEM_DEFAULT = "System default"
+
     // App package names
     const val GMAIL_APP = "com.google.android.gm"
     const val PHONE_APP = "com.android.dialer"

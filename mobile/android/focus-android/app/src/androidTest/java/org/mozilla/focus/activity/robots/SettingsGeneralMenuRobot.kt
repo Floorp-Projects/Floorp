@@ -79,13 +79,24 @@ class SettingsGeneralMenuRobot {
     fun openLanguageSelectionMenu(localizedText: String = "Language"): ViewInteraction =
         languageMenuButton(localizedText).perform(click())
 
-    fun verifyLanguageSelected(value: String) {
-        assertTrue(languageMenu.getChild(UiSelector().text(value)).isChecked)
+    fun verifySystemLocaleSelected(localizedText: String = "System default") {
+        assertTrue(
+            languageMenu.getChild(
+                UiSelector()
+                    .text(localizedText)
+                    .index(1)
+            ).getFromParent(
+                UiSelector().index(0)
+            ).isChecked
+        )
     }
 
     fun selectLanguage(language: String) {
-        languageMenu.scrollTextIntoView(language)
-        onView(withText(language)).perform(click())
+        // Due to scrolling issues on Compose LazyList, avoid setting a language that is under the fold.
+        // see https://github.com/mozilla-mobile/focus-android/issues/7282
+        languageMenu
+            .getChildByText(UiSelector().text(language), language, true)
+            .click()
     }
 
     fun verifyThemesList() {

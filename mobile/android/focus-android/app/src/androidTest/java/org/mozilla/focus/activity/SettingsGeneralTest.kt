@@ -17,11 +17,15 @@ import org.junit.runner.Description
 import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
-import org.mozilla.focus.helpers.StringsHelper.EN_FRENCH_LOCALE
+import org.mozilla.focus.helpers.StringsHelper.AF_GENERAL_HEADING
+import org.mozilla.focus.helpers.StringsHelper.AF_HELP
+import org.mozilla.focus.helpers.StringsHelper.AF_LANGUAGE_MENU
+import org.mozilla.focus.helpers.StringsHelper.AF_LANGUAGE_SYSTEM_DEFAULT
+import org.mozilla.focus.helpers.StringsHelper.AF_SETTINGS
+import org.mozilla.focus.helpers.StringsHelper.EN_AFRIKAANS_LOCALE
 import org.mozilla.focus.helpers.StringsHelper.EN_LANGUAGE_MENU_HEADING
 import org.mozilla.focus.helpers.StringsHelper.FR_ENGLISH_LOCALE
 import org.mozilla.focus.helpers.StringsHelper.FR_GENERAL_HEADING
-import org.mozilla.focus.helpers.StringsHelper.FR_HELP
 import org.mozilla.focus.helpers.StringsHelper.FR_LANGUAGE_MENU
 import org.mozilla.focus.helpers.StringsHelper.FR_LANGUAGE_SYSTEM_DEFAULT
 import org.mozilla.focus.helpers.StringsHelper.FR_SETTINGS
@@ -67,7 +71,6 @@ class SettingsGeneralTest {
         }
     }
 
-    @Ignore("Failing after refactoring Locale Screen #5293")
     @Test
     fun englishSystemLocaleTest() {
         /* Go to Settings and change language to French*/
@@ -76,21 +79,21 @@ class SettingsGeneralTest {
         }.openSettings {
         }.openGeneralSettingsMenu {
             openLanguageSelectionMenu()
-            verifyLanguageSelected("System default")
-            selectLanguage(EN_FRENCH_LOCALE)
-            verifyTranslatedTextExists(FR_LANGUAGE_MENU)
+            verifySystemLocaleSelected()
+            selectLanguage(EN_AFRIKAANS_LOCALE)
+            verifyTranslatedTextExists(AF_LANGUAGE_MENU)
             exitToTop()
         }
         /* Exit to main and see the UI is in French as well */
         homeScreen {
         }.openMainMenu {
-            verifyTranslatedTextExists(FR_SETTINGS)
-            verifyTranslatedTextExists(FR_HELP)
+            verifyTranslatedTextExists(AF_SETTINGS)
+            verifyTranslatedTextExists(AF_HELP)
             /* change back to system locale, verify the locale is changed */
-        }.openSettings(FR_SETTINGS) {
-        }.openGeneralSettingsMenu(FR_GENERAL_HEADING) {
-            openLanguageSelectionMenu(FR_LANGUAGE_MENU)
-            selectLanguage(FR_LANGUAGE_SYSTEM_DEFAULT)
+        }.openSettings(AF_SETTINGS) {
+        }.openGeneralSettingsMenu(AF_GENERAL_HEADING) {
+            openLanguageSelectionMenu(AF_LANGUAGE_MENU)
+            selectLanguage(AF_LANGUAGE_SYSTEM_DEFAULT)
             verifyTranslatedTextExists(EN_LANGUAGE_MENU_HEADING)
             exitToTop()
         }
@@ -110,7 +113,7 @@ class SettingsGeneralTest {
         }.openSettings(FR_SETTINGS) {
         }.openGeneralSettingsMenu(FR_GENERAL_HEADING) {
             openLanguageSelectionMenu(FR_LANGUAGE_MENU)
-            verifyLanguageSelected(FR_LANGUAGE_SYSTEM_DEFAULT)
+            verifySystemLocaleSelected(FR_LANGUAGE_SYSTEM_DEFAULT)
             /* change locale to English, verify the locale is changed */
             selectLanguage(FR_ENGLISH_LOCALE)
             verifyTranslatedTextExists(EN_LANGUAGE_MENU_HEADING)
