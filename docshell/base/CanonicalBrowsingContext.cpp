@@ -2276,10 +2276,14 @@ void CanonicalBrowsingContext::SynchronizeLayoutHistoryState() {
     } else if (ContentParent* cp = GetContentParent()) {
       cp->SendGetLayoutHistoryState(this)->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [activeEntry =
-               mActiveEntry](const RefPtr<nsILayoutHistoryState>& aState) {
-            if (aState) {
-              activeEntry->SetLayoutHistoryState(aState);
+          [activeEntry = mActiveEntry](
+              const Tuple<RefPtr<nsILayoutHistoryState>, Maybe<Wireframe>>&
+                  aResult) {
+            if (mozilla::Get<0>(aResult)) {
+              activeEntry->SetLayoutHistoryState(mozilla::Get<0>(aResult));
+            }
+            if (mozilla::Get<1>(aResult)) {
+              activeEntry->SetWireframe(mozilla::Get<1>(aResult));
             }
           },
           []() {});
