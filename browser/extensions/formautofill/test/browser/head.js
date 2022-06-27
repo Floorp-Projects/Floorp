@@ -340,7 +340,7 @@ async function focusUpdateSubmitForm(target, args, submit = true) {
 
     for (const [selector, value] of Object.entries(obj.newValues)) {
       element = form.querySelector(selector);
-      if (element instanceof content.HTMLInputElement) {
+      if (content.HTMLInputElement.isInstance(element)) {
         element.setUserInput(value);
       } else {
         element.value = value;
@@ -420,7 +420,7 @@ async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
 
   // If a browsing context was supplied, focus its parent frame as well.
   if (
-    browserOrContext instanceof BrowsingContext &&
+    BrowsingContext.isInstance(browserOrContext) &&
     browserOrContext.parent != browserOrContext
   ) {
     await SpecialPowers.spawn(

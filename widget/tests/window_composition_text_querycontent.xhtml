@@ -754,7 +754,7 @@ function checkInputEvent(aEvent, aIsComposing, aInputType, aData, aTargetRanges,
   if (aEvent.type !== "input" && aEvent.type !== "beforeinput") {
     throw new Error(`${aDescription}: "${aEvent.type}" is not InputEvent`);
   }
-  ok(aEvent instanceof InputEvent, `"${aEvent.type}" event should be dispatched with InputEvent interface: ${aDescription}`);
+  ok(InputEvent.isInstance(aEvent), `"${aEvent.type}" event should be dispatched with InputEvent interface: ${aDescription}`);
   let cancelable = aEvent.type === "beforeinput" &&
                    aInputType !== "insertCompositionText" &&
                    aInputType !== "deleteCompositionText";

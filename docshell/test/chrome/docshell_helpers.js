@@ -432,7 +432,7 @@ function promisePageEvents(params) {
  */
 function pageEventListener(
   event,
-  originalTargetIsHTMLDocument = event.originalTarget instanceof HTMLDocument
+  originalTargetIsHTMLDocument = HTMLDocument.isInstance(event.originalTarget)
 ) {
   try {
     dump(

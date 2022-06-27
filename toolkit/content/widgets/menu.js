@@ -33,7 +33,7 @@
       get control() {
         var parent = this.parentNode;
         // Return the parent if it is a menu or menulist.
-        if (parent && parent.parentNode instanceof XULMenuElement) {
+        if (parent && XULMenuElement.isInstance(parent.parentNode)) {
           return parent.parentNode;
         }
         return null;
@@ -42,7 +42,7 @@
       // nsIDOMXULContainerItemElement
       get parentContainer() {
         for (var parent = this.parentNode; parent; parent = parent.parentNode) {
-          if (parent instanceof XULMenuElement) {
+          if (XULMenuElement.isInstance(parent)) {
             return parent;
           }
         }

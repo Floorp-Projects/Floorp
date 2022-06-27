@@ -64,7 +64,7 @@ function checkInputEvent(aEvent, aCancelable, aIsComposing, aInputType, aData, a
   if (aEvent.type !== "input" && aEvent.type !== "beforeinput") {
     throw new Error(`${aDescription}"${aEvent.type}" is not InputEvent`);
   }
-  ok(aEvent instanceof InputEvent, `${aDescription}"${aEvent.type}" event should be dispatched with InputEvent interface`);
+  ok(InputEvent.isInstance(aEvent), `${aDescription}"${aEvent.type}" event should be dispatched with InputEvent interface`);
   is(aEvent.cancelable, aCancelable, `${aDescription}"${aEvent.type}" event should ${aCancelable ? "be" : "not be"} cancelable`);
   is(aEvent.bubbles, true, `${aDescription}"${aEvent.type}" event should always bubble`);
   is(aEvent.isComposing, aIsComposing, `${aDescription}isComposing of "${aEvent.type}" event should be ${aIsComposing}`);
