@@ -129,23 +129,27 @@ void LinkStyle::SetStyleSheet(StyleSheet* aStyleSheet) {
 void LinkStyle::GetCharset(nsAString& aCharset) { aCharset.Truncate(); }
 
 static uint32_t ToLinkMask(const nsAString& aLink) {
-  // Keep this in sync with sRelValues in HTMLLinkElement.cpp
-  if (aLink.EqualsLiteral("prefetch"))
-    return LinkStyle::ePREFETCH;
-  else if (aLink.EqualsLiteral("dns-prefetch"))
-    return LinkStyle::eDNS_PREFETCH;
-  else if (aLink.EqualsLiteral("stylesheet"))
-    return LinkStyle::eSTYLESHEET;
-  else if (aLink.EqualsLiteral("next"))
-    return LinkStyle::eNEXT;
-  else if (aLink.EqualsLiteral("alternate"))
-    return LinkStyle::eALTERNATE;
-  else if (aLink.EqualsLiteral("preconnect"))
-    return LinkStyle::ePRECONNECT;
-  else if (aLink.EqualsLiteral("preload"))
-    return LinkStyle::ePRELOAD;
-  else
-    return 0;
+  // Keep this in sync with sSupportedRelValues in HTMLLinkElement.cpp
+  uint32_t mask = 0;
+  if (aLink.EqualsLiteral("prefetch")) {
+    mask = LinkStyle::ePREFETCH;
+  } else if (aLink.EqualsLiteral("dns-prefetch")) {
+    mask = LinkStyle::eDNS_PREFETCH;
+  } else if (aLink.EqualsLiteral("stylesheet")) {
+    mask = LinkStyle::eSTYLESHEET;
+  } else if (aLink.EqualsLiteral("next")) {
+    mask = LinkStyle::eNEXT;
+  } else if (aLink.EqualsLiteral("alternate")) {
+    mask = LinkStyle::eALTERNATE;
+  } else if (aLink.EqualsLiteral("preconnect")) {
+    mask = LinkStyle::ePRECONNECT;
+  } else if (aLink.EqualsLiteral("preload")) {
+    mask = LinkStyle::ePRELOAD;
+  } else if (aLink.EqualsLiteral("modulepreload")) {
+    mask = LinkStyle::eMODULE_PRELOAD;
+  }
+
+  return mask;
 }
 
 uint32_t LinkStyle::ParseLinkTypes(const nsAString& aTypes) {
