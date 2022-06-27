@@ -18,17 +18,60 @@ const privilegedGlobals = Object.keys(
 // Rule Definition
 // -----------------------------------------------------------------------------
 
-function pointsToDOMInterface(expression) {
-  if (
-    expression.type === "MemberExpression" &&
-    maybeGetMemberPropertyName(expression.object) === "OS" &&
-    expression.property.name === "File"
-  ) {
-    // OS.File is an exception that is not a DOM interface
+/**
+ * Whether an identifier is defined by eslint configuration.
+ * `env: { browser: true }` or `globals: []` for example.
+ * @param {import("eslint-scope").Scope} currentScope
+ * @param {import("estree").Identifier} id
+ */
+function refersToEnvironmentGlobals(currentScope, id) {
+  const reference = currentScope.references.find(ref => ref.identifier === id);
+  const { resolved } = reference || {};
+  if (!resolved) {
     return false;
   }
-  // For `win.Foo`, `iframe.contentWindow.Foo`, or such.
-  return privilegedGlobals.includes(maybeGetMemberPropertyName(expression));
+
+  // No definition in script files; defined via .eslintrc
+  return resolved.scope.type === "global" && resolved.defs.length === 0;
+}
+
+/**
+ * Whether a node points to a DOM interface.
+ * Includes direct references to interfaces objects and also indirect references
+ * via property access.
+ * OS.File and lazy.(Foo) are explicitly excluded.
+ *
+ * @example HTMLElement
+ * @example win.HTMLElement
+ * @example iframe.contentWindow.HTMLElement
+ * @example foo.HTMLElement
+ *
+ * @param {import("eslint-scope").Scope} currentScope
+ * @param {import("estree").Node} node
+ */
+function pointsToDOMInterface(currentScope, node) {
+  if (node.type === "MemberExpression") {
+    const objectName = maybeGetMemberPropertyName(node.object);
+    if (objectName === "lazy") {
+      // lazy.Foo is probably a non-IDL import.
+      return false;
+    }
+    if (objectName === "OS" && node.property.name === "File") {
+      // OS.File is an exception that is not a Web IDL interface
+      return false;
+    }
+    // For `win.Foo`, `iframe.contentWindow.Foo`, or such.
+    return privilegedGlobals.includes(node.property.name);
+  }
+
+  if (
+    node.type === "Identifier" &&
+    refersToEnvironmentGlobals(currentScope, node)
+  ) {
+    return privilegedGlobals.includes(node.name);
+  }
+
+  return false;
 }
 
 module.exports = {
@@ -41,11 +84,17 @@ module.exports = {
     schema: [],
     type: "problem",
   },
+  /**
+   * @param {import("eslint").Rule.RuleContext} context
+   */
   create(context) {
     return {
       BinaryExpression(node) {
         const { operator, right } = node;
-        if (operator === "instanceof" && pointsToDOMInterface(right)) {
+        if (
+          operator === "instanceof" &&
+          pointsToDOMInterface(context.getScope(), right)
+        ) {
           context.report({
             node,
             message:

@@ -25,21 +25,41 @@ const errors = [
   },
 ];
 
+const env = { browser: true };
+
+/**
+ * A test case boilerplate simulating chrome privileged script.
+ * @param {string} code
+ */
+function mockChromeScript(code) {
+  return {
+    code,
+    env,
+  };
+}
+
 ruleTester.run("use-isInstance", rule, {
   valid: [
-    "(() => {}) instanceof Function;",
-    "({}) instanceof Object;",
-    "Node instanceof Object;",
-    "file instanceof OS.File;",
-    "file instanceof OS.File.Error;",
-    "file instanceof lazy.OS.File;",
-    "file instanceof lazy.OS.File.Error;",
-    "file instanceof lazy.lazy.OS.File;",
+    mockChromeScript("(() => {}) instanceof Function;"),
+    mockChromeScript("({}) instanceof Object;"),
+    mockChromeScript("Node instanceof Object;"),
+    mockChromeScript("node instanceof lazy.Node;"),
+    mockChromeScript("var Node;node instanceof Node;"),
+    mockChromeScript("file instanceof lazy.File;"),
+    mockChromeScript("file instanceof OS.File;"),
+    mockChromeScript("file instanceof OS.File.Error;"),
+    mockChromeScript("file instanceof lazy.OS.File;"),
+    mockChromeScript("file instanceof lazy.OS.File.Error;"),
+    mockChromeScript("file instanceof lazy.lazy.OS.File;"),
+    mockChromeScript("var File;file instanceof File;"),
+    mockChromeScript("foo instanceof RandomGlobalThing;"),
+    mockChromeScript("foo instanceof lazy.RandomGlobalThing;"),
   ],
   invalid: [
     {
       code: "node instanceof Node",
       output: "Node.isInstance(node)",
+      env,
       errors,
     },
     {
@@ -55,6 +75,7 @@ ruleTester.run("use-isInstance", rule, {
     {
       code: "target instanceof File",
       output: "File.isInstance(target)",
+      env,
       errors,
     },
     {
