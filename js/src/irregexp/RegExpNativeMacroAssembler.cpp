@@ -12,8 +12,12 @@
 #include "irregexp/imported/regexp-stack.h"
 #include "irregexp/imported/special-case.h"
 #include "jit/Linker.h"
+#include "jit/PerfSpewer.h"
 #include "vm/MatchPairs.h"
 #include "vm/Realm.h"
+#ifdef MOZ_VTUNE
+#  include "vtune/VTuneWrapper.h"
+#endif
 
 #include "jit/ABIFunctionList-inl.h"
 #include "jit/MacroAssembler-inl.h"
@@ -885,6 +889,13 @@ Handle<HeapObject> SMRegExpMacroAssembler::GetCode(Handle<String> source) {
                                        ImmPtr(code->raw() + lp.labelOffset_),
                                        ImmPtr(nullptr));
   }
+
+#ifdef JS_ION_PERF
+  writePerfSpewerJitCodeProfile(code, "RegExp");
+#endif
+#ifdef MOZ_VTUNE
+  js::vtune::MarkStub(code, "RegExp");
+#endif
 
   return Handle<HeapObject>(JS::PrivateGCThingValue(code), isolate());
 }
