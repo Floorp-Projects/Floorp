@@ -777,7 +777,6 @@ static mozilla::Atomic<bool> sWeakRefsEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsExposeCleanupSome(false);
 static mozilla::Atomic<bool> sIteratorHelpersEnabled(false);
 static mozilla::Atomic<bool> sArrayFindLastEnabled(false);
-static mozilla::Atomic<bool> sShadowRealmsEnabled(false);
 #ifdef NIGHTLY_BUILD
 static mozilla::Atomic<bool> sArrayGroupingEnabled(true);
 #endif
@@ -803,7 +802,6 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setPropertyErrorMessageFixEnabled(sPropertyErrorMessageFixEnabled)
       .setWeakRefsEnabled(GetWeakRefsEnabled())
       .setIteratorHelpersEnabled(sIteratorHelpersEnabled)
-      .setShadowRealmsEnabled(sShadowRealmsEnabled)
 #ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(sArrayGroupingEnabled)
 #endif
@@ -1008,8 +1006,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sArrayFindLastEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.array_find_last");
 
-  sShadowRealmsEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.shadow_realms");
 #ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");

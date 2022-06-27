@@ -4557,16 +4557,6 @@ JS_PUBLIC_API void JS::SetOutOfMemoryCallback(JSContext* cx,
   cx->runtime()->oomCallbackData = data;
 }
 
-JS_PUBLIC_API void JS::SetShadowRealmInitializeGlobalCallback(
-    JSContext* cx, JS::GlobalInitializeCallback callback) {
-  cx->runtime()->shadowRealmInitializeGlobalCallback = callback;
-}
-
-JS_PUBLIC_API void JS::SetShadowRealmGlobalCreationCallback(
-    JSContext* cx, JS::GlobalCreationCallback callback) {
-  cx->runtime()->shadowRealmGlobalCreationCallback = callback;
-}
-
 JS::FirstSubsumedFrame::FirstSubsumedFrame(
     JSContext* cx, bool ignoreSelfHostedFrames /* = true */)
     : JS::FirstSubsumedFrame(cx, cx->realm()->principals(),

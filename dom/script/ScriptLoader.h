@@ -210,7 +210,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   ModuleLoader* GetModuleLoader() { return mModuleLoader; }
 
   void RegisterContentScriptModuleLoader(ModuleLoader* aLoader);
-  void RegisterShadowRealmModuleLoader(ModuleLoader* aLoader);
 
   /**
    *  Check whether to speculatively OMT parse scripts as soon as
@@ -741,7 +740,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   RefPtr<ModuleLoader> mModuleLoader;
   nsTArray<RefPtr<ModuleLoader>> mWebExtModuleLoaders;
-  nsTArray<RefPtr<ModuleLoader>> mShadowRealmModuleLoaders;
 
   // Logging
  public:

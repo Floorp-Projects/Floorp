@@ -31,7 +31,6 @@
 #include "builtin/Object.h"
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
-#include "builtin/ShadowRealm.h"
 #include "builtin/Stream.h"
 #include "builtin/streams/QueueingStrategies.h"  // js::{ByteLength,Count}QueueingStrategy
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
@@ -209,9 +208,6 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_Iterator:
     case JSProto_AsyncIterator:
       return !cx->realm()->creationOptions().getIteratorHelpersEnabled();
-
-    case JSProto_ShadowRealm:
-      return !cx->realm()->creationOptions().getShadowRealmsEnabled();
 
     default:
       MOZ_CRASH("unexpected JSProtoKey");
