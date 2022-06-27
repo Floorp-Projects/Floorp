@@ -34,7 +34,7 @@ const TPSProcessScript = {
       }
     }
 
-    let factory = ComponentUtils._getFactory(TabSwitchAboutModule);
+    let factory = ComponentUtils.generateSingletonFactory(TabSwitchAboutModule);
     this._factory = factory;
 
     Registrar.registerFactory(

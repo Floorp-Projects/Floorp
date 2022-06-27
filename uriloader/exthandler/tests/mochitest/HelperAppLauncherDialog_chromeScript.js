@@ -77,7 +77,7 @@ registrar.registerFactory(
   FAKE_CID,
   "",
   HELPERAPP_DIALOG_CONTRACT,
-  ComponentUtils._getFactory(HelperAppLauncherDialog)
+  ComponentUtils.generateSingletonFactory(HelperAppLauncherDialog)
 );
 
 addMessageListener("unregister", async function() {

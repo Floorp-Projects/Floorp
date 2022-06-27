@@ -3996,7 +3996,6 @@ UpdateService.prototype = {
 
   classID: UPDATESERVICE_CID,
 
-  _xpcom_factory: UpdateServiceFactory,
   QueryInterface: ChromeUtils.generateQI([
     "nsIApplicationUpdateService",
     "nsIUpdateCheckListener",

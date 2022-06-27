@@ -212,11 +212,6 @@ setupPrototype(GlobalPCList, {
     "nsISupportsWeakReference",
   ]),
   classID: PC_MANAGER_CID,
-  _xpcom_factory: {
-    createInstance(iid) {
-      return _globalPCList.QueryInterface(iid);
-    },
-  },
 });
 
 var _globalPCList = new GlobalPCList();

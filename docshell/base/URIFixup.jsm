@@ -18,9 +18,6 @@
 
 var EXPORTED_SYMBOLS = ["URIFixup", "URIFixupInfo"];
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -525,7 +522,6 @@ URIFixup.prototype = {
   isDomainKnown,
 
   classID: Components.ID("{c6cf88b7-452e-47eb-bdc9-86e3561648ef}"),
-  _xpcom_factory: ComponentUtils.generateSingletonFactory(URIFixup),
   QueryInterface: ChromeUtils.generateQI(["nsIURIFixup"]),
 };
 
