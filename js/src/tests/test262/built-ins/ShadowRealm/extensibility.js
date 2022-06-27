@@ -1,4 +1,4 @@
-// |reftest| skip -- ShadowRealm is not supported
+// |reftest| shell-option(--enable-shadow-realms) skip-if(!xulRuntime.shell) -- requires shell-options
 // Copyright (C) 2021 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
