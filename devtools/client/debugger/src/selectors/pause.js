@@ -260,7 +260,3 @@ export function getSelectedInlinePreviews(state) {
 export function getLastExpandedScopes(state, thread) {
   return getThreadPauseState(state.pause, thread).lastExpandedScopes;
 }
-
-export function getPausePreviewLocation(state) {
-  return state.pause.previewLocation;
-}

@@ -20,7 +20,6 @@ import {
   getPauseReason,
   getSourceTextContent,
   getCurrentThread,
-  getPausePreviewLocation,
 } from "../../selectors";
 
 function isDocumentReady(location, sourceTextContent) {
@@ -123,10 +122,8 @@ export class DebugLine extends PureComponent {
 
 const mapStateToProps = state => {
   const frame = getVisibleSelectedFrame(state);
-  const previewLocation = getPausePreviewLocation(state);
-  const location = previewLocation || frame?.location;
+  const location = frame?.location;
   return {
-    frame,
     location,
     sourceTextContent:
       location && getSourceTextContent(state, location.sourceId),
