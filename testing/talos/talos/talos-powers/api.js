@@ -44,7 +44,7 @@ function TalosPowersService() {
 }
 
 TalosPowersService.prototype = {
-  factory: ComponentUtils._getFactory(TalosPowersService),
+  factory: ComponentUtils.generateSingletonFactory(TalosPowersService),
   classDescription: "Talos Powers",
   classID: Components.ID("{f5d53443-d58d-4a2f-8df0-98525d4f91ad}"),
   contractID: "@mozilla.org/talos/talos-powers-service;1",

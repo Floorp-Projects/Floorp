@@ -13,9 +13,6 @@ const CORRUPT_DB_RETAIN_DAYS = 14;
 // Seconds between maintenance runs.
 const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -1493,9 +1490,6 @@ PlacesDBUtilsIdleMaintenance.prototype = {
         throw new Error("Trying to handle an unknown category.");
     }
   },
-  _xpcom_factory: ComponentUtils.generateSingletonFactory(
-    PlacesDBUtilsIdleMaintenance
-  ),
   classID: Components.ID("d38926e0-29c1-11eb-8588-0800200c9a66"),
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 };
