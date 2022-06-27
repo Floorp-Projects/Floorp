@@ -689,7 +689,7 @@
         get(target, prop, receiver) {
           let propOrMethod = target[prop];
           if (typeof propOrMethod == "function") {
-            if (propOrMethod instanceof MozQueryInterface) {
+            if (MozQueryInterface.isInstance(propOrMethod)) {
               return Reflect.get(target, prop, receiver);
             }
             return function(...args) {

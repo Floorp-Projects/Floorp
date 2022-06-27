@@ -371,7 +371,7 @@ function frecencyForUrl(aURI) {
   let url = aURI;
   if (aURI instanceof Ci.nsIURI) {
     url = aURI.spec;
-  } else if (aURI instanceof URL) {
+  } else if (URL.isInstance(aURI)) {
     url = aURI.href;
   }
   let stmt = DBConn().createStatement(

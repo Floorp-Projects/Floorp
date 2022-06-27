@@ -757,7 +757,7 @@ add_task(async function testMinimalExtension() {
   checkLabel(row, "author");
   let text = row.lastChild;
   is(text.textContent, "I made it", "The author is set");
-  ok(text instanceof Text, "The author is a text node");
+  ok(Text.isInstance(text), "The author is a text node");
 
   is(rows.length, 0, "There are no more rows");
 

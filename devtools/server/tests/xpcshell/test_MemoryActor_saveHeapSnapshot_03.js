@@ -16,7 +16,7 @@ add_task(async () => {
   );
   const snapshot = ChromeUtils.readHeapSnapshot(snapshotFilePath);
   ok(
-    snapshot instanceof HeapSnapshot,
+    HeapSnapshot.isInstance(snapshot),
     "And we should be able to read a HeapSnapshot instance from the file"
   );
 });

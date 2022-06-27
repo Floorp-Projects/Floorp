@@ -643,7 +643,7 @@ var FullZoom = {
     const XUL_NS =
       "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     if (
-      target instanceof window.XULElement &&
+      window.XULElement.isInstance(target) &&
       target.localName == "browser" &&
       target.namespaceURI == XUL_NS
     ) {

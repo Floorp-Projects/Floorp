@@ -13,7 +13,7 @@ self.onmessage = e => {
 
     const dominatorTree = snapshot.computeDominatorTree();
     ok(dominatorTree);
-    ok(dominatorTree instanceof DominatorTree);
+    ok(DominatorTree.isInstance(dominatorTree));
 
     let threw = false;
     try {

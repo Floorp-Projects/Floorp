@@ -86,8 +86,8 @@ class AutofillEditDialog {
       }
       case "contextmenu": {
         if (
-          !(event.target instanceof HTMLInputElement) &&
-          !(event.target instanceof HTMLTextAreaElement)
+          !HTMLInputElement.isInstance(event.target) &&
+          !HTMLTextAreaElement.isInstance(event.target)
         ) {
           event.preventDefault();
         }

@@ -41,10 +41,9 @@ CONTENT_WIN.addEventListener("DOMContentLoaded", function onDCL(evt) {
 
           case "childList": {
             // We really only care about elements appending inside pages.
-            let parent =
-              mutation.target instanceof HTMLDocument
-                ? mutation.target.documentElement
-                : mutation.target;
+            let parent = HTMLDocument.isInstance(mutation.target)
+              ? mutation.target.documentElement
+              : mutation.target;
             if (!mutation.addedNodes || !parent.closest(".page")) {
               break;
             }
