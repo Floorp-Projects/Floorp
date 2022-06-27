@@ -254,6 +254,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT:
       name = BLOCKLIST_PREF_BRANCH "webrender.partial-present";
       break;
+    case nsIGfxInfo::FEATURE_DMABUF_SURFACE_EXPORT:
+      name = BLOCKLIST_PREF_BRANCH "dmabuf.surface-export";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;
