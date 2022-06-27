@@ -61,6 +61,12 @@ cairo_quartz_surface_create_for_data (unsigned char *data,
                                       unsigned int height,
                                       unsigned int stride);
 
+cairo_public cairo_surface_t *
+cairo_quartz_surface_create_cg_layer (cairo_surface_t *surface,
+                                      cairo_content_t content,
+                                      unsigned int width,
+                                      unsigned int height);
+
 cairo_public CGContextRef
 cairo_quartz_surface_get_cg_context (cairo_surface_t *surface);
 
