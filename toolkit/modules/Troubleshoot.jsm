@@ -36,6 +36,7 @@ const PREFS_FOR_DISPLAY = [
   "browser.download.lastDir.savePerSite",
   "browser.download.manager.addToRecentDocs",
   "browser.download.manager.resumeOnWakeDelay",
+  "browser.download.open_pdf_attachments_inline",
   "browser.download.preferred.",
   "browser.download.skipConfirmLaunchExecutable",
   "browser.download.start_downloads_in_tmp_dir",

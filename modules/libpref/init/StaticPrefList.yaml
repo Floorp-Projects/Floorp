@@ -1244,6 +1244,12 @@
   value: false
   mirror: always
 
+# See bug 1772569
+- name: browser.download.open_pdf_attachments_inline
+  type: bool
+  value: false
+  mirror: always
+
 - name: browser.download.sanitize_non_media_extensions
   type: bool
   value: true

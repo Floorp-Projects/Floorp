@@ -138,6 +138,7 @@ add_task(async function test_pdf_saveas_customname() {
       ["browser.helperApps.showOpenOptionForViewableInternally", true],
       ["browser.download.improvements_to_download_panel", true],
       ["browser.download.always_ask_before_handling_new_types", false],
+      ["browser.download.open_pdf_attachments_inline", true],
     ],
   });
   await BrowserTestUtils.withNewTab(
