@@ -43,6 +43,15 @@ struct MatchPair final {
     MOZ_ASSERT_IF(limit < 0, limit == NoMatch);
     return true;
   }
+
+  // Note: return int32_t instead of size_t to prevent signed => unsigned
+  // conversions in caller functions.
+  static constexpr int32_t offsetOfStart() {
+    return int32_t(offsetof(MatchPair, start));
+  }
+  static constexpr int32_t offsetOfLimit() {
+    return int32_t(offsetof(MatchPair, limit));
+  }
 };
 
 // MachPairs is used as base class for VectorMatchPairs but can also be
@@ -87,8 +96,14 @@ class MatchPairs {
     return pairCount_;
   }
 
-  static size_t offsetOfPairs() { return offsetof(MatchPairs, pairs_); }
-  static size_t offsetOfPairCount() { return offsetof(MatchPairs, pairCount_); }
+  // Note: return int32_t instead of size_t to prevent signed => unsigned
+  // conversions in caller functions.
+  static constexpr int32_t offsetOfPairs() {
+    return int32_t(offsetof(MatchPairs, pairs_));
+  }
+  static constexpr int32_t offsetOfPairCount() {
+    return int32_t(offsetof(MatchPairs, pairCount_));
+  }
 
   int32_t* pairsRaw() { return reinterpret_cast<int32_t*>(pairs_); }
 
