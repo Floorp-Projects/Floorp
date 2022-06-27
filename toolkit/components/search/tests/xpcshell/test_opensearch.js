@@ -60,7 +60,6 @@ const tests = [
 ];
 
 add_task(async function setup() {
-  Services.fog.initializeFOG();
   useHttpServer("opensearch");
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();
@@ -142,19 +141,3 @@ for (const test of tests) {
     }
   });
 }
-
-add_task(async function test_telemetry_reporting() {
-  // Use an engine from the previous tests.
-  let engine = Services.search.getEngineByName("simple");
-  Services.search.defaultEngine = engine;
-
-  await assertGleanDefaultEngine({
-    normal: {
-      engineId: "other-simple",
-      displayName: "simple",
-      loadPath: "[http]localhost/simple.xml",
-      submissionUrl: "blank:",
-      verified: "verified",
-    },
-  });
-});
