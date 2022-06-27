@@ -20,7 +20,7 @@ index 856cd732d517..d51de53f5acc 100644
 -    get_target_flags_for_arch(${arch} target_cflags)
 -    if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
 -      get_compiler_rt_target(${arch} target)
--      set(target_cflags "--target=${target} ${target_cflags}")
+-      set(target_cflags --target=${target} ${target_cflags})
 +    if(${arch} MATCHES "i386")
 +      set(EMULATION_ARGUMENT "-m" "elf_i386")
 +    else()
