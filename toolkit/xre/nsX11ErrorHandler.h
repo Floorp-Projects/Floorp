@@ -14,5 +14,7 @@
  **/
 void InstallX11ErrorHandler();
 
+void CleanupX11ErrorHandler();
+
 extern "C" int X11Error(Display* display, XErrorEvent* event);
 #endif

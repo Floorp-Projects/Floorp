@@ -973,6 +973,8 @@ void XRE_InstallX11ErrorHandler() {
   // libraries that might also override the handler.
   InstallX11ErrorHandler();
 }
+
+void XRE_CleanupX11ErrorHandler() { CleanupX11ErrorHandler(); }
 #endif
 
 #ifdef MOZ_ENABLE_FORKSERVER
