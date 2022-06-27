@@ -455,6 +455,7 @@ XRE_API(bool, XRE_SendTestShellCommand,
 XRE_API(bool, XRE_ShutdownTestShell, ())
 
 XRE_API(void, XRE_InstallX11ErrorHandler, ())
+XRE_API(void, XRE_CleanupX11ErrorHandler, ())
 
 XRE_API(void, XRE_TelemetryAccumulate, (int aID, uint32_t aSample))
 
