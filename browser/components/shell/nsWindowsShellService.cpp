@@ -32,6 +32,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/intl/Localization.h"
 #include "WindowsDefaultBrowser.h"
 #include "WindowsUserChoice.h"
 #include "nsLocalFile.h"
@@ -95,6 +96,7 @@ PSSTDAPI PropVariantToString(REFPROPVARIANT propvar, PWSTR psz, UINT cch);
 
 using mozilla::IsWin8OrLater;
 using namespace mozilla;
+using mozilla::intl::Localization;
 
 struct SysFreeStringDeleter {
   void operator()(BSTR aPtr) { ::SysFreeString(aPtr); }
@@ -893,7 +895,12 @@ nsWindowsShellService::CreateShortcut(
 
 // Constructs a path to an installer-created shortcut, under a directory
 // specified by a CSIDL.
-static nsresult GetShortcutPath(int aCSIDL, bool aPrivateBrowsing,
+// Earlier versions of this code generated the shortcut name themselves.
+// This is no longer possible because the Private Browsing shortcut name
+// is localized, the Localization class does not work off main thread,
+// and this code is called off main thread in some contexts -- therefore
+// it must be passed through by any callers.
+static nsresult GetShortcutPath(int aCSIDL, const nsAString& aShortcutName,
                                 /* out */ nsAutoString& aPath) {
   wchar_t folderPath[MAX_PATH] = {};
   HRESULT hr = SHGetFolderPathW(nullptr, aCSIDL, nullptr, SHGFP_TYPE_CURRENT,
@@ -909,36 +916,7 @@ static nsresult GetShortcutPath(int aCSIDL, bool aPrivateBrowsing,
   if (aPath[aPath.Length() - 1] != '\\') {
     aPath.AppendLiteral("\\");
   }
-  // NOTE: In the installer, non-private shortcuts are named
-  // "${BrandShortName}.lnk". This is set from MOZ_APP_DISPLAYNAME in
-  // defines.nsi.in. (Except in dev edition where it's explicitly set to
-  // "Firefox Developer Edition" in branding.nsi, which matches
-  // MOZ_APP_DISPLAYNAME in aurora/configure.sh.)
-  //
-  // If this changes, we could expand this to check shortcuts_log.ini,
-  // which records the name of the shortcuts as created by the installer.
-  //
-  // Private shortcuts are not created by the installer (they're created
-  // upon user request, ultimately by CreateShortcutImpl, and recorded in
-  // a separate shortcuts log. As with non-private shortcuts they have a known
-  // name - so there's no need to look through logs to find them.
-  if (aPrivateBrowsing) {
-    // This is explicitly not localized until we finalize the English string.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1758961 tracks following
-    // up on this before it becomes user visible.
-    /*nsTArray<nsCString> resIds{
-        "branding/brand.ftl"_ns,
-        "browser/browser.ftl"_ns,
-    };
-    RefPtr<Localization> l10n = Localization::Create(resIds, true);
-    nsAutoCString pbStr;
-    IgnoredErrorResult rv;
-    l10n->FormatValueSync("private-browsing-shortcut-text"_ns, {}, pbStr, rv);
-    aPath.Append(NS_ConvertUTF8toUTF16(pbStr));*/
-    aPath.AppendLiteral(MOZ_APP_DISPLAYNAME " Private Browsing.lnk");
-  } else {
-    aPath.AppendLiteral(MOZ_APP_DISPLAYNAME ".lnk");
-  }
+  aPath.Append(aShortcutName);
 
   return NS_OK;
 }
@@ -959,6 +937,8 @@ static nsresult GetShortcutPath(int aCSIDL, bool aPrivateBrowsing,
 // aAUMID   the AUMID to check for
 // aExePath the target exe path to check for, should be a long path where
 //          possible
+// aShortcutName the filename portion (excluding extension) of the shortcut
+//               to look for.
 // aShortcutPath outparam, set to matching shortcut path if NS_OK is returned.
 //
 // Returns
@@ -969,12 +949,12 @@ static nsresult GetShortcutPath(int aCSIDL, bool aPrivateBrowsing,
 //   NS_OK if the shortcut matches
 static nsresult GetMatchingShortcut(int aCSIDL, const nsAString& aAUMID,
                                     const wchar_t aExePath[MAXPATHLEN],
-                                    bool aPrivateBrowsing,
+                                    const nsAString& aShortcutName,
                                     /* out */ nsAutoString& aShortcutPath) {
   nsresult result = NS_ERROR_FAILURE;
 
   nsAutoString path;
-  nsresult rv = GetShortcutPath(aCSIDL, aPrivateBrowsing, path);
+  nsresult rv = GetShortcutPath(aCSIDL, aShortcutName, path);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return result;
   }
@@ -1050,7 +1030,7 @@ static nsresult GetMatchingShortcut(int aCSIDL, const nsAString& aAUMID,
 }
 
 static nsresult FindMatchingShortcut(const nsAString& aAppUserModelId,
-                                     const bool aPrivateBrowsing,
+                                     const nsAString& aShortcutName,
                                      nsAutoString& aShortcutPath) {
   wchar_t exePath[MAXPATHLEN] = {};
   if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
@@ -1065,7 +1045,7 @@ static nsresult FindMatchingShortcut(const nsAString& aAppUserModelId,
     // if it refers to the same file. This should be rare, and the worst
     // outcome would be failure to pin, so the risk is acceptable.
     nsresult rv = GetMatchingShortcut(shortcutCSIDL, aAppUserModelId, exePath,
-                                      aPrivateBrowsing, aShortcutPath);
+                                      aShortcutName, aShortcutPath);
     if (NS_SUCCEEDED(rv)) {
       return NS_OK;
     }
@@ -1078,9 +1058,38 @@ NS_IMETHODIMP
 nsWindowsShellService::HasMatchingShortcut(const nsAString& aAppUserModelId,
                                            const bool aPrivateBrowsing,
                                            bool* aHasMatch) {
+  // NOTE: In the installer, non-private shortcuts are named
+  // "${BrandShortName}.lnk". This is set from MOZ_APP_DISPLAYNAME in
+  // defines.nsi.in. (Except in dev edition where it's explicitly set to
+  // "Firefox Developer Edition" in branding.nsi, which matches
+  // MOZ_APP_DISPLAYNAME in aurora/configure.sh.)
+  //
+  // If this changes, we could expand this to check shortcuts_log.ini,
+  // which records the name of the shortcuts as created by the installer.
+  //
+  // Private shortcuts are not created by the installer (they're created
+  // upon user request, ultimately by CreateShortcutImpl, and recorded in
+  // a separate shortcuts log. As with non-private shortcuts they have a known
+  // name - so there's no need to look through logs to find them.
+  nsAutoString shortcutName;
+  if (aPrivateBrowsing) {
+    nsTArray<nsCString> resIds = {
+        "branding/brand.ftl"_ns,
+        "browser/browser.ftl"_ns,
+    };
+    RefPtr<Localization> l10n = Localization::Create(resIds, true);
+    nsAutoCString pbStr;
+    IgnoredErrorResult rv;
+    l10n->FormatValueSync("private-browsing-shortcut-text"_ns, {}, pbStr, rv);
+    shortcutName.Append(NS_ConvertUTF8toUTF16(pbStr));
+    shortcutName.AppendLiteral(".lnk");
+  } else {
+    shortcutName.AppendLiteral(MOZ_APP_DISPLAYNAME ".lnk");
+  }
+
   nsAutoString shortcutPath;
   nsresult rv =
-      FindMatchingShortcut(aAppUserModelId, aPrivateBrowsing, shortcutPath);
+      FindMatchingShortcut(aAppUserModelId, shortcutName, shortcutPath);
   if (SUCCEEDED(rv)) {
     *aHasMatch = true;
   } else {
@@ -1293,14 +1302,15 @@ static nsresult PinCurrentAppToTaskbarWin10(bool aCheckOnly,
 
 static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
                                            bool aPrivateBrowsing,
-                                           const nsAString& aAppUserModelId) {
+                                           const nsAString& aAppUserModelId,
+                                           const nsAString& aShortcutName) {
   MOZ_DIAGNOSTIC_ASSERT(
       !NS_IsMainThread(),
       "PinCurrentAppToTaskbarImpl should be called off main thread only");
 
   nsAutoString shortcutPath;
   nsresult rv =
-      FindMatchingShortcut(aAppUserModelId, aPrivateBrowsing, shortcutPath);
+      FindMatchingShortcut(aAppUserModelId, aShortcutName, shortcutPath);
   if (NS_FAILED(rv)) {
     shortcutPath.Truncate();
   }
@@ -1312,32 +1322,15 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
       return NS_OK;
     }
 
-    nsAutoString desc;
     nsTArray<nsString> arguments;
 
     if (aPrivateBrowsing) {
       nsAutoString arg;
-      // Localization disabled until we finalize the English string.
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1758961 tracks following
-      // up on this before it becomes user visible.
-      /*nsAutoCString pbStr;
-      IgnoredErrorResult rv;
-      nsTArray<nsCString> resIds{
-          "branding/brand.ftl"_ns,
-          "browser/browser.ftl"_ns,
-      };
-      RefPtr<Localization> l10n = Localization::Create(resIds, true);
-      l10n->FormatValueSync("private-browsing-shortcut-text"_ns, {}, pbStr, rv);
-      desc.Assign(NS_ConvertUTF8toUTF16(pbStr));*/
-
-      desc.AssignLiteral(MOZ_APP_DISPLAYNAME " Private Browsing");
       arg.AssignLiteral("-private-window");
       arguments.AppendElement(arg);
-    } else {
-      desc.AssignLiteral(MOZ_APP_DISPLAYNAME);
     }
 
-    nsAutoString linkName(desc);
+    nsAutoString linkName(aShortcutName);
     linkName.AppendLiteral(".lnk");
 
     wchar_t exePath[MAXPATHLEN] = {};
@@ -1358,9 +1351,9 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
     // needs an index.
     iconIndex--;
 
-    rv = CreateShortcutImpl(exeFile, arguments, desc, exeFile, iconIndex,
-                            aAppUserModelId, FOLDERID_Programs, linkName,
-                            shortcutPath);
+    rv = CreateShortcutImpl(exeFile, arguments, aShortcutName, exeFile,
+                            iconIndex, aAppUserModelId, FOLDERID_Programs,
+                            linkName, shortcutPath);
     if (!NS_SUCCEEDED(rv)) {
       return NS_ERROR_FILE_NOT_FOUND;
     }
@@ -1400,20 +1393,49 @@ static nsresult PinCurrentAppToTaskbarAsyncImpl(bool aCheckOnly,
     return NS_ERROR_FAILURE;
   }
 
+  // NOTE: In the installer, non-private shortcuts are named
+  // "${BrandShortName}.lnk". This is set from MOZ_APP_DISPLAYNAME in
+  // defines.nsi.in. (Except in dev edition where it's explicitly set to
+  // "Firefox Developer Edition" in branding.nsi, which matches
+  // MOZ_APP_DISPLAYNAME in aurora/configure.sh.)
+  //
+  // If this changes, we could expand this to check shortcuts_log.ini,
+  // which records the name of the shortcuts as created by the installer.
+  //
+  // Private shortcuts are not created by the installer (they're created
+  // upon user request, ultimately by CreateShortcutImpl, and recorded in
+  // a separate shortcuts log. As with non-private shortcuts they have a known
+  // name - so there's no need to look through logs to find them.
+  nsAutoString shortcutName;
+  if (aPrivateBrowsing) {
+    nsTArray<nsCString> resIds = {
+        "branding/brand.ftl"_ns,
+        "browser/browser.ftl"_ns,
+    };
+    RefPtr<Localization> l10n = Localization::Create(resIds, true);
+    nsAutoCString pbStr;
+    IgnoredErrorResult rv;
+    l10n->FormatValueSync("private-browsing-shortcut-text"_ns, {}, pbStr, rv);
+    shortcutName.Append(NS_ConvertUTF8toUTF16(pbStr));
+    shortcutName.AppendLiteral(".lnk");
+  } else {
+    shortcutName.AppendLiteral(MOZ_APP_DISPLAYNAME ".lnk");
+  }
+
   auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
       "CheckPinCurrentAppToTaskbarAsync promise", promise);
 
   NS_DispatchBackgroundTask(
       NS_NewRunnableFunction(
           "CheckPinCurrentAppToTaskbarAsync",
-          [aCheckOnly, aPrivateBrowsing, aumid = nsString{aumid},
+          [aCheckOnly, aPrivateBrowsing, shortcutName, aumid = nsString{aumid},
            promiseHolder = std::move(promiseHolder)] {
             nsresult rv = NS_ERROR_FAILURE;
             HRESULT hr = CoInitialize(nullptr);
 
             if (SUCCEEDED(hr)) {
               rv = PinCurrentAppToTaskbarImpl(aCheckOnly, aPrivateBrowsing,
-                                              aumid);
+                                              aumid, shortcutName);
               CoUninitialize();
             }
 
@@ -1439,15 +1461,15 @@ NS_IMETHODIMP
 nsWindowsShellService::PinCurrentAppToTaskbarAsync(bool aPrivateBrowsing,
                                                    JSContext* aCx,
                                                    dom::Promise** aPromise) {
-  return PinCurrentAppToTaskbarAsyncImpl(/* aCheckOnly */ false,
-                                         aPrivateBrowsing, aCx, aPromise);
+  return PinCurrentAppToTaskbarAsyncImpl(
+      /* aCheckOnly */ false, aPrivateBrowsing, aCx, aPromise);
 }
 
 NS_IMETHODIMP
 nsWindowsShellService::CheckPinCurrentAppToTaskbarAsync(
     bool aPrivateBrowsing, JSContext* aCx, dom::Promise** aPromise) {
-  return PinCurrentAppToTaskbarAsyncImpl(/* aCheckOnly = */ true,
-                                         aPrivateBrowsing, aCx, aPromise);
+  return PinCurrentAppToTaskbarAsyncImpl(
+      /* aCheckOnly = */ true, aPrivateBrowsing, aCx, aPromise);
 }
 
 static bool IsCurrentAppPinnedToTaskbarSync(const nsAutoString& aumid) {
@@ -1652,10 +1674,16 @@ nsWindowsShellService::ClassifyShortcut(const nsAString& aPath,
     if (wcsnicmp(shortcutPath.get(), knownPath.get(), knownPath.Length()) ==
         0) {
       aResult.Assign(folders[i].classification);
-      // This is explicitly not localized until we finalize the English string.
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1758961 tracks following
-      // up on this before it becomes user visible.
-      if (wcsstr(shortcutPath.get(), L"Private Browsing")) {
+      nsTArray<nsCString> resIds = {
+          "branding/brand.ftl"_ns,
+          "browser/browser.ftl"_ns,
+      };
+      RefPtr<Localization> l10n = Localization::Create(resIds, true);
+      nsAutoCString pbStr;
+      IgnoredErrorResult rv;
+      l10n->FormatValueSync("private-browsing-shortcut-text"_ns, {}, pbStr, rv);
+      NS_ConvertUTF8toUTF16 widePbStr(pbStr);
+      if (wcsstr(shortcutPath.get(), widePbStr.get())) {
         aResult.AppendLiteral("Private");
       }
       return NS_OK;
