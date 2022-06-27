@@ -1790,12 +1790,6 @@ const LoginHelper = {
   },
 };
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  LoginHelper,
-  "showInsecureFieldWarning",
-  "security.insecure_field_warning.contextual.enabled"
-);
-
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let processName =
     Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT

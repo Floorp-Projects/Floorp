@@ -35,8 +35,6 @@ let password = document.getElementById("pword");
 add_task(async function setup() {
   ok(readyPromise, "check promise is available");
   await readyPromise;
-
-  await SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", true]]});
 });
 
 add_task(async function test_field_highlight_on_pw_field_autocomplete_insecureWarning() {
