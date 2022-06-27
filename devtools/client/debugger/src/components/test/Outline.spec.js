@@ -81,15 +81,6 @@ describe("Outline", () => {
         });
         expect(component).toMatchSnapshot();
       });
-
-      it("if symbols are loading", () => {
-        const { component } = render({
-          symbols: {
-            loading: true,
-          },
-        });
-        expect(component).toMatchSnapshot();
-      });
     });
 
     it("renders ignore anonymous functions", async () => {

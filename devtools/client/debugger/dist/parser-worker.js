@@ -14695,7 +14695,6 @@ function extractSymbols(sourceId) {
     literals: [],
     hasJsx: false,
     hasTypes: false,
-    loading: false,
     framework: undefined
   };
   const state = {

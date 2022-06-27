@@ -1850,22 +1850,24 @@ void CodeGenerator::visitRegExp(LRegExp* lir) {
   masm.bind(ool->rejoin());
 }
 
-static const size_t InputOutputDataSize = sizeof(irregexp::InputOutputData);
+static constexpr size_t InputOutputDataSize = sizeof(irregexp::InputOutputData);
 
 // Amount of space to reserve on the stack when executing RegExps inline.
-static const size_t RegExpReservedStack =
+static constexpr size_t RegExpReservedStack =
     InputOutputDataSize + sizeof(MatchPairs) +
     RegExpObject::MaxPairCount * sizeof(MatchPair);
 
-static size_t RegExpPairsVectorStartOffset(size_t inputOutputDataStartOffset) {
-  return inputOutputDataStartOffset + InputOutputDataSize + sizeof(MatchPairs);
+static constexpr int32_t RegExpPairsVectorStartOffset(
+    int32_t inputOutputDataStartOffset) {
+  return inputOutputDataStartOffset + int32_t(InputOutputDataSize) +
+         int32_t(sizeof(MatchPairs));
 }
 
 static Address RegExpPairCountAddress(MacroAssembler& masm,
-                                      size_t inputOutputDataStartOffset) {
-  return Address(masm.getStackPointer(), inputOutputDataStartOffset +
-                                             InputOutputDataSize +
-                                             MatchPairs::offsetOfPairCount());
+                                      int32_t inputOutputDataStartOffset) {
+  return Address(FramePointer, inputOutputDataStartOffset +
+                                   int32_t(InputOutputDataSize) +
+                                   MatchPairs::offsetOfPairCount());
 }
 
 // When the unicode flag is set, if lastIndex points to a trail
@@ -1992,11 +1994,14 @@ static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
 // allocated for on the stack, and try to execute a RegExp on a string input.
 // If the RegExp was successfully executed and matched the input, fallthrough.
 // Otherwise, jump to notFound or failure.
+//
+// inputOutputDataStartOffset is the offset relative to the frame pointer
+// register. This offset is negative for the RegExpTester stub.
 static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
                                     Register regexp, Register input,
                                     Register lastIndex, Register temp1,
                                     Register temp2, Register temp3,
-                                    size_t inputOutputDataStartOffset,
+                                    int32_t inputOutputDataStartOffset,
                                     gc::InitialHeap initialStringHeap,
                                     Label* notFound, Label* failure) {
   JitSpew(JitSpew_Codegen, "# Emitting PrepareAndExecuteRegExp");
@@ -2038,28 +2043,28 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
    *                                    +---------------+
    */
 
-  size_t ioOffset = inputOutputDataStartOffset;
-  size_t matchPairsOffset = ioOffset + sizeof(InputOutputData);
-  size_t pairsArrayOffset = matchPairsOffset + sizeof(MatchPairs);
+  int32_t ioOffset = inputOutputDataStartOffset;
+  int32_t matchPairsOffset = ioOffset + int32_t(sizeof(InputOutputData));
+  int32_t pairsArrayOffset = matchPairsOffset + int32_t(sizeof(MatchPairs));
 
-  Address inputStartAddress(masm.getStackPointer(),
-                            ioOffset + offsetof(InputOutputData, inputStart));
-  Address inputEndAddress(masm.getStackPointer(),
-                          ioOffset + offsetof(InputOutputData, inputEnd));
-  Address startIndexAddress(masm.getStackPointer(),
-                            ioOffset + offsetof(InputOutputData, startIndex));
-  Address matchesAddress(masm.getStackPointer(),
-                         ioOffset + offsetof(InputOutputData, matches));
+  Address inputStartAddress(FramePointer,
+                            ioOffset + InputOutputData::offsetOfInputStart());
+  Address inputEndAddress(FramePointer,
+                          ioOffset + InputOutputData::offsetOfInputEnd());
+  Address startIndexAddress(FramePointer,
+                            ioOffset + InputOutputData::offsetOfStartIndex());
+  Address matchesAddress(FramePointer,
+                         ioOffset + InputOutputData::offsetOfMatches());
 
-  Address matchPairsAddress(masm.getStackPointer(), matchPairsOffset);
-  Address pairCountAddress(masm.getStackPointer(),
+  Address matchPairsAddress(FramePointer, matchPairsOffset);
+  Address pairCountAddress(FramePointer,
                            matchPairsOffset + MatchPairs::offsetOfPairCount());
-  Address pairsPointerAddress(masm.getStackPointer(),
+  Address pairsPointerAddress(FramePointer,
                               matchPairsOffset + MatchPairs::offsetOfPairs());
 
-  Address pairsArrayAddress(masm.getStackPointer(), pairsArrayOffset);
-  Address firstMatchStartAddress(masm.getStackPointer(),
-                                 pairsArrayOffset + offsetof(MatchPair, start));
+  Address pairsArrayAddress(FramePointer, pairsArrayOffset);
+  Address firstMatchStartAddress(FramePointer,
+                                 pairsArrayOffset + MatchPair::offsetOfStart());
 
   // First, fill in a skeletal MatchPairs instance on the stack. This will be
   // passed to the OOL stub in the caller if we aren't able to execute the
@@ -2196,7 +2201,7 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
 
   // Execute the RegExp.
   masm.computeEffectiveAddress(
-      Address(masm.getStackPointer(), inputOutputDataStartOffset), temp2);
+      Address(FramePointer, inputOutputDataStartOffset), temp2);
   masm.PushRegsInMask(volatileRegs);
   masm.setupUnalignedABICall(temp3);
   masm.passABIArg(temp2);
@@ -2374,17 +2379,15 @@ void CreateDependentString::generate(MacroAssembler& masm,
     masm.push(string_);
     masm.push(base);
 
-    // Adjust the start index address for the above pushes.
-    MOZ_ASSERT(startIndexAddress.base == masm.getStackPointer());
-    BaseIndex newStartIndexAddress = startIndexAddress;
-    newStartIndexAddress.offset += 2 * sizeof(void*);
+    MOZ_ASSERT(startIndexAddress.base == FramePointer,
+               "startIndexAddress is still valid after stack pushes");
 
     // Load chars pointer for the new string.
     masm.loadInlineStringCharsForStore(string_, string_);
 
     // Load the source characters pointer.
     masm.loadStringChars(base, temp2_, encoding_);
-    masm.load32(newStartIndexAddress, base);
+    masm.load32(startIndexAddress, base);
     masm.addToCharPtr(temp2_, base, encoding_);
 
     CopyStringChars(masm, string_, temp2_, temp1_, base, encoding_);
@@ -2568,9 +2571,12 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
 #endif
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
 
-  // The InputOutputData is placed above the return address on the stack.
-  size_t inputOutputDataStartOffset = sizeof(void*);
+  // The InputOutputData is placed above the frame pointer and return address on
+  // the stack.
+  int32_t inputOutputDataStartOffset = 2 * sizeof(void*);
 
   Label notFound, oolEntry;
   if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, temp1, temp2,
@@ -2629,6 +2635,8 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
     * [SMDOC] Stack layout for the RegExpMatcher stub
     *
     *                                    +---------------+
+    *               FramePointer +-----> |Caller-FramePtr|
+    *                                    +---------------+
     *                                    |Return-Address |
     *                                    +---------------+
     * inputOutputDataStartOffset +-----> +---------------+
@@ -2663,7 +2671,7 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   Address pairCountAddress =
       RegExpPairCountAddress(masm, inputOutputDataStartOffset);
 
-  size_t pairsVectorStartOffset =
+  int32_t pairsVectorStartOffset =
       RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
 
   // Incremented by one below for each match pair.
@@ -2675,10 +2683,10 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   BaseObjectElementIndex objectMatchElement(object, matchIndex, elementsOffset);
 
   // The current match pair's "start" and "limit" member.
-  BaseIndex matchPairStart(masm.getStackPointer(), matchIndex, TimesEight,
-                           pairsVectorStartOffset + offsetof(MatchPair, start));
-  BaseIndex matchPairLimit(masm.getStackPointer(), matchIndex, TimesEight,
-                           pairsVectorStartOffset + offsetof(MatchPair, limit));
+  BaseIndex matchPairStart(FramePointer, matchIndex, TimesEight,
+                           pairsVectorStartOffset + MatchPair::offsetOfStart());
+  BaseIndex matchPairLimit(FramePointer, matchIndex, TimesEight,
+                           pairsVectorStartOffset + MatchPair::offsetOfLimit());
 
   Label* depStrFailure = &oolEntry;
   Label restoreRegExpAndLastIndex;
@@ -2691,14 +2699,6 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
     // as a temporary. We restore its value at |restoreRegExpAndLastIndex|.
     masm.push(regexp);
     temp4 = regexp;
-
-    // Adjust offsets for the push.
-    MOZ_ASSERT(pairCountAddress.base == masm.getStackPointer());
-    MOZ_ASSERT(matchPairStart.base == masm.getStackPointer());
-    MOZ_ASSERT(matchPairLimit.base == masm.getStackPointer());
-    pairCountAddress.offset += sizeof(void*);
-    matchPairStart.offset += sizeof(void*);
-    matchPairLimit.offset += sizeof(void*);
   } else {
     temp4 = maybeTemp4;
   }
@@ -2711,22 +2711,11 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
     // as a temporary. We restore its value at |restoreRegExpAndLastIndex|.
     masm.push(lastIndex);
     temp5 = lastIndex;
-
-    // Adjust offsets for the push.
-    MOZ_ASSERT(pairCountAddress.base == masm.getStackPointer());
-    MOZ_ASSERT(matchPairStart.base == masm.getStackPointer());
-    MOZ_ASSERT(matchPairLimit.base == masm.getStackPointer());
-    pairCountAddress.offset += sizeof(void*);
-    matchPairStart.offset += sizeof(void*);
-    matchPairLimit.offset += sizeof(void*);
   } else {
     temp5 = maybeTemp5;
   }
 
   auto maybeRestoreRegExpAndLastIndex = [&]() {
-    // NOTE: pairCountAddress, matchPairStart, and matchPairLimit offsets
-    // aren't restored, because we don't read them after the loop.
-
     if (maybeTemp5 == InvalidReg) {
       masm.pop(lastIndex);
     }
@@ -2799,8 +2788,7 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
       Address(object, elementsOffset + ObjectElements::offsetOfLength()));
 
   Address firstMatchPairStartAddress(
-      masm.getStackPointer(),
-      pairsVectorStartOffset + offsetof(MatchPair, start));
+      FramePointer, pairsVectorStartOffset + MatchPair::offsetOfStart());
 
   masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
 
@@ -2812,10 +2800,12 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
 
   // All done!
   masm.tagValue(JSVAL_TYPE_OBJECT, object, result);
+  masm.pop(FramePointer);
   masm.ret();
 
   masm.bind(&notFound);
   masm.moveValue(NullValue(), result);
+  masm.pop(FramePointer);
   masm.ret();
 
   // Fallback paths for CreateDependentString.
@@ -2836,6 +2826,7 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   // be called.
   masm.bind(&oolEntry);
   masm.moveValue(UndefinedValue(), result);
+  masm.pop(FramePointer);
   masm.ret();
 
   Linker linker(masm);
@@ -2959,9 +2950,12 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
 #endif
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
 
-  // The InputOutputData is placed above the return address on the stack.
-  size_t inputOutputDataStartOffset = sizeof(void*);
+  // The InputOutputData is placed above the frame pointer and return address on
+  // the stack.
+  int32_t inputOutputDataStartOffset = 2 * sizeof(void*);
 
   Label notFound, oolEntry;
   if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, temp1, temp2,
@@ -2974,6 +2968,8 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
     /*
      * [SMDOC] Stack layout for the RegExpSearcher stub
      *
+     *                                    +---------------+
+     *               FramePointer +-----> |Caller-FramePtr|
      *                                    +---------------+
      *                                    |Return-Address |
      *                                    +---------------+
@@ -3002,25 +2998,28 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
      */
   // clang-format on
 
-  size_t pairsVectorStartOffset =
+  int32_t pairsVectorStartOffset =
       RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
-  Address matchPairStart(masm.getStackPointer(),
-                         pairsVectorStartOffset + offsetof(MatchPair, start));
-  Address matchPairLimit(masm.getStackPointer(),
-                         pairsVectorStartOffset + offsetof(MatchPair, limit));
+  Address matchPairStart(FramePointer,
+                         pairsVectorStartOffset + MatchPair::offsetOfStart());
+  Address matchPairLimit(FramePointer,
+                         pairsVectorStartOffset + MatchPair::offsetOfLimit());
 
   masm.load32(matchPairStart, result);
   masm.load32(matchPairLimit, input);
   masm.lshiftPtr(Imm32(15), input);
   masm.or32(input, result);
+  masm.pop(FramePointer);
   masm.ret();
 
   masm.bind(&notFound);
   masm.move32(Imm32(RegExpSearcherResultNotFound), result);
+  masm.pop(FramePointer);
   masm.ret();
 
   masm.bind(&oolEntry);
   masm.move32(Imm32(RegExpSearcherResultFailed), result);
+  masm.pop(FramePointer);
   masm.ret();
 
   Linker linker(masm);
@@ -3124,6 +3123,8 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
 #endif
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
 
   // We are free to clobber all registers, as LRegExpTester is a call
   // instruction.
@@ -3138,24 +3139,31 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
 
   masm.reserveStack(RegExpReservedStack);
 
+  // In visitRegExpMatcher and visitRegExpSearcher, we reserve stack space
+  // before calling the stub. For RegExpTester we call the stub before reserving
+  // stack space, so the offset of the InputOutputData relative to the frame
+  // pointer is negative.
+  constexpr int32_t inputOutputDataStartOffset = -int32_t(RegExpReservedStack);
+
+  // On ARM64, load/store instructions can encode an immediate offset in the
+  // range [-256, 4095]. If we ever fail this assertion, it would be more
+  // efficient to store the data above the frame pointer similar to
+  // RegExpMatcher and RegExpSearcher.
+  static_assert(inputOutputDataStartOffset >= -256);
+
   Label notFound, oolEntry;
   if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, temp1, temp2,
-                               temp3, 0, initialStringHeap, &notFound,
-                               &oolEntry)) {
+                               temp3, inputOutputDataStartOffset,
+                               initialStringHeap, &notFound, &oolEntry)) {
     return nullptr;
   }
 
   Label done;
 
-  // In visitRegExpMatcher and visitRegExpSearcher, we reserve stack space
-  // before calling the stub. For RegExpTester we call the stub before reserving
-  // stack space, so the offset of the InputOutputData is 0.
-  size_t inputOutputDataStartOffset = 0;
-
-  size_t pairsVectorStartOffset =
+  int32_t pairsVectorStartOffset =
       RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
-  Address matchPairLimit(masm.getStackPointer(),
-                         pairsVectorStartOffset + offsetof(MatchPair, limit));
+  Address matchPairLimit(FramePointer,
+                         pairsVectorStartOffset + MatchPair::offsetOfLimit());
 
   // RegExpTester returns the end index of the match to update lastIndex.
   masm.load32(matchPairLimit, result);
@@ -3170,6 +3178,7 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
 
   masm.bind(&done);
   masm.freeStack(RegExpReservedStack);
+  masm.pop(FramePointer);
   masm.ret();
 
   Linker linker(masm);

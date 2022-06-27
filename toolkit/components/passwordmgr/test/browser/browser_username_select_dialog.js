@@ -37,8 +37,8 @@ let nsLoginInfo = new Components.Constructor(
   "init"
 );
 let login1 = new nsLoginInfo(
-  "http://example.com",
-  "http://example.com",
+  "https://example.com",
+  "https://example.com",
   null,
   "notifyu1",
   "notifyp1",
@@ -46,8 +46,8 @@ let login1 = new nsLoginInfo(
   "pass"
 );
 let login1B = new nsLoginInfo(
-  "http://example.com",
-  "http://example.com",
+  "https://example.com",
+  "https://example.com",
   null,
   "notifyu1B",
   "notifyp1B",

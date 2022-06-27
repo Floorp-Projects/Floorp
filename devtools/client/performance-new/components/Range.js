@@ -48,7 +48,7 @@ class Range extends PureComponent {
     const rangeValue = scale.fromValueToFraction(value) * max;
 
     return div(
-      { className: "perf-settings-row" },
+      { className: "perf-settings-range-row" },
       label(
         {
           className: "perf-settings-label",
@@ -56,25 +56,19 @@ class Range extends PureComponent {
         },
         labelText
       ),
-      div(
-        { className: "perf-settings-value" },
-        div(
-          { className: "perf-settings-range-input" },
-          input({
-            type: "range",
-            className: `perf-settings-range-input-el`,
-            min,
-            "aria-valuemin": scale.fromFractionToValue(0),
-            max,
-            "aria-valuemax": scale.fromFractionToValue(1),
-            value: rangeValue,
-            "aria-valuenow": value,
-            onChange: this.handleInput,
-            id,
-          })
-        ),
-        div({ className: `perf-settings-range-value` }, display(value))
-      )
+      input({
+        type: "range",
+        className: `perf-settings-range-input`,
+        min,
+        "aria-valuemin": scale.fromFractionToValue(0),
+        max,
+        "aria-valuemax": scale.fromFractionToValue(1),
+        value: rangeValue,
+        "aria-valuenow": value,
+        onChange: this.handleInput,
+        id,
+      }),
+      div({ className: `perf-settings-range-value` }, display(value))
     );
   }
 }

@@ -19,7 +19,6 @@ CompiledModules(
     "mapScopes.js",
     "paused.js",
     "pauseOnExceptions.js",
-    "previewPausedLocation.js",
     "resumed.js",
     "selectFrame.js",
     "highlightCalls.js",

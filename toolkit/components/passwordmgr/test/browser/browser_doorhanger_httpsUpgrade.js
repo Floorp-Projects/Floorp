@@ -173,23 +173,24 @@ add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
   info("Capture a new HTTP login which matches a stored HTTPS one.");
   Services.logins.addLogin(login1HTTPS);
 
-  await testSubmittingLoginForm("subtst_notifications_1.html", async function(
-    fieldValues
-  ) {
-    is(fieldValues.username, "notifyu1", "Checking submitted username");
-    is(fieldValues.password, "notifyp1", "Checking submitted password");
-    let notif = await getCaptureDoorhangerThatMayOpen("password-save");
-    ok(notif, "got notification popup");
+  await testSubmittingLoginFormHTTP(
+    "subtst_notifications_1.html",
+    async function(fieldValues) {
+      is(fieldValues.username, "notifyu1", "Checking submitted username");
+      is(fieldValues.password, "notifyp1", "Checking submitted password");
+      let notif = await getCaptureDoorhangerThatMayOpen("password-save");
+      ok(notif, "got notification popup");
 
-    is(
-      Services.logins.getAllLogins().length,
-      1,
-      "Should only have the HTTPS login"
-    );
+      is(
+        Services.logins.getAllLogins().length,
+        1,
+        "Should only have the HTTPS login"
+      );
 
-    await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
-    clickDoorhangerButton(notif, REMEMBER_BUTTON);
-  });
+      await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
+      clickDoorhangerButton(notif, REMEMBER_BUTTON);
+    }
+  );
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 2, "Should have both HTTP and HTTPS logins");
@@ -203,7 +204,7 @@ add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
   info(
     "Make sure Remember took effect and we don't prompt for an existing HTTP login"
   );
-  await testSubmittingLoginForm("subtst_notifications_1.html", function(
+  await testSubmittingLoginFormHTTP("subtst_notifications_1.html", function(
     fieldValues
   ) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");

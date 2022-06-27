@@ -1,6 +1,6 @@
 "use strict";
 
-const LOGIN_HOST = "http://example.com";
+const LOGIN_HOST = "https://example.com";
 
 function openExceptionsDialog() {
   return window.openDialog(

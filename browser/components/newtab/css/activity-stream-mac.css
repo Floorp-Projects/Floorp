@@ -1828,11 +1828,11 @@ main.has-snippet {
 .home-section .section .more-info-pocket-wrapper {
   margin-inline-start: -2px;
   overflow: hidden;
-  transition: max-height 250ms cubic-bezier(0.82, 0.085, 0.395, 0.895);
+  transition: height 250ms cubic-bezier(0.82, 0.085, 0.395, 0.895);
 }
 .home-section .section .more-info-top-wrapper.shrink,
 .home-section .section .more-info-pocket-wrapper.shrink {
-  max-height: 0;
+  height: 0;
 }
 .home-section .section .more-info-top-wrapper .more-information,
 .home-section .section .more-info-pocket-wrapper .more-information {
@@ -1844,17 +1844,11 @@ main.has-snippet {
 .home-section .section .more-info-pocket-wrapper .more-information.expand {
   top: 0;
 }
-.home-section .section .more-info-top-wrapper {
-  max-height: 78px;
-}
 .home-section .section .more-info-top-wrapper .more-information {
   top: -77px;
 }
 .home-section .section .more-info-top-wrapper .check-wrapper {
   margin-top: 10px;
-}
-.home-section .section .more-info-pocket-wrapper {
-  max-height: 35px;
 }
 .home-section .section .more-info-pocket-wrapper .more-information {
   top: -35px;

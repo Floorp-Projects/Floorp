@@ -39,110 +39,114 @@
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisDecoderContext` struct.
+ * Defines the `ZydisDecoderContext` struct.
  */
 typedef struct ZydisDecoderContext_
 {
     /**
-     * @brief   A pointer to the `ZydisDecoder` instance.
+     * A pointer to the `ZydisDecoder` instance.
      */
     const ZydisDecoder* decoder;
     /**
-     * @brief   The input buffer.
+     * The input buffer.
      */
     const ZyanU8* buffer;
     /**
-     * @brief   The input buffer length.
+     * The input buffer length.
      */
     ZyanUSize buffer_len;
     struct
     {
         /**
-         * @brief   Signals, if the instruction has a `LOCK` prefix (`F0`).
+         * Signals, if the instruction has a `LOCK` prefix (`F0`).
          *
          * This prefix originally belongs to group 1, but separating it from the other ones makes
          * parsing easier for us later.
          */
         ZyanBool has_lock;
         /**
-         * @brief   The effective prefix of group 1 (either `F2` or `F3`).
+         * The effective prefix of group 1 (either `F2` or `F3`).
          */
         ZyanU8 group1;
         /**
-         * @brief   The effective prefix of group 3 (`2E`,`36`, `3E`, `26`, `64` or `65`).
+         * The effective prefix of group 3 (`2E`,`36`, `3E`, `26`, `64` or `65`).
          */
         ZyanU8 group2;
         /**
-         * @brief   Signals, if the instruction has an operand-size override prefix (`66`).
+         * Signals, if the instruction has an operand-size override prefix (`66`).
          *
          * This is the only prefix in group 3.
          */
         // ZyanBool has_osz_override;
         /**
-         * @brief   Signals, if the instruction has an address-size override prefix (`67`).
+         * Signals, if the instruction has an address-size override prefix (`67`).
          *
          * This is the only prefix in group 4.
          */
         // ZyanBool has_asz_override;
         /**
-         * @brief   The effective segment prefix.
+         * The effective segment prefix.
          */
         ZyanU8 effective_segment;
         /**
-         * @brief   The prefix that should be treated as the mandatory-prefix, if the current
-         *          instruction needs one.
+         * The prefix that should be treated as the mandatory-prefix, if the
+         * current instruction needs one.
          *
-         * The last `F3`/`F2` prefix has precedence over previous ones and `F3`/`F2` in general
-         * have precedence over `66`.
+         * The last `F3`/`F2` prefix has precedence over previous ones and
+         * `F3`/`F2` in general have precedence over `66`.
          */
         ZyanU8 mandatory_candidate;
         /**
-         * @brief   The offset of the effective `LOCK` prefix.
+         * The offset of the effective `LOCK` prefix.
          */
         ZyanU8 offset_lock;
         /**
-         * @brief   The offset of the effective prefix in group 1.
+         * The offset of the effective prefix in group 1.
          */
         ZyanU8 offset_group1;
         /**
-         * @brief   The offset of the effective prefix in group 2.
+         * The offset of the effective prefix in group 2.
          */
         ZyanU8 offset_group2;
         /**
-         * @brief   The offset of the operand-size override prefix (`66`).
+         * The offset of the operand-size override prefix (`66`).
          *
          * This is the only prefix in group 3.
          */
         ZyanU8 offset_osz_override;
         /**
-         * @brief   The offset of the address-size override prefix (`67`).
+         * The offset of the address-size override prefix (`67`).
          *
          * This is the only prefix in group 4.
          */
         ZyanU8 offset_asz_override;
         /**
-         * @brief   The offset of the effective segment prefix.
+         * The offset of the effective segment prefix.
          */
         ZyanU8 offset_segment;
         /**
-         * @brief   The offset of the mandatory-candidate prefix.
+         * The offset of the mandatory-candidate prefix.
          */
         ZyanU8 offset_mandatory;
+        /**
+         * The offset of a possible `CET` `no-lock` prefix.
+         */
+        ZyanI8 offset_notrack;
     } prefixes;
     /**
-     * @brief   Contains the effective operand-size index.
+     * Contains the effective operand-size index.
      *
      * 0 = 16 bit, 1 = 32 bit, 2 = 64 bit
      */
     ZyanU8 eosz_index;
     /**
-     * @brief   Contains the effective address-size index.
+     * Contains the effective address-size index.
      *
      * 0 = 16 bit, 1 = 32 bit, 2 = 64 bit
      */
     ZyanU8 easz_index;
     /**
-     * @brief   Contains some cached REX/XOP/VEX/EVEX/MVEX values to provide uniform access.
+     * Contains some cached REX/XOP/VEX/EVEX/MVEX values to provide uniform access.
      */
     struct
     {
@@ -159,35 +163,35 @@ typedef struct ZydisDecoderContext_
     } cache;
 #ifndef ZYDIS_DISABLE_AVX512
     /**
-     * @brief   Internal EVEX-specific information.
+     * Internal EVEX-specific information.
      */
     struct
     {
         /**
-         * @brief   The EVEX tuple-type.
+         * The EVEX tuple-type.
          */
         ZydisEVEXTupleType tuple_type;
         /**
-         * @brief   The EVEX element-size.
+         * The EVEX element-size.
          */
         ZyanU8 element_size;
     } evex;
 #endif
 #ifndef ZYDIS_DISABLE_KNC
     /**
-     * @brief   Internal MVEX-specific information.
+     * Internal MVEX-specific information.
      */
     struct
     {
         /**
-         * @brief   The MVEX functionality.
+         * The MVEX functionality.
          */
         ZydisMVEXFunctionality functionality;
     } mvex;
 #endif
 #if !defined(ZYDIS_DISABLE_AVX512) || !defined(ZYDIS_DISABLE_KNC)
     /**
-     * @brief   The scale factor for EVEX/MVEX compressed 8-bit displacement values.
+     * The scale factor for EVEX/MVEX compressed 8-bit displacement values.
      */
     ZyanU8 cd8_scale;
 #endif
@@ -198,71 +202,71 @@ typedef struct ZydisDecoderContext_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisRegisterEncoding` enum.
+ * Defines the `ZydisRegisterEncoding` enum.
  */
 typedef enum ZydisRegisterEncoding_
 {
     ZYDIS_REG_ENCODING_INVALID,
     /**
-     * @brief   The register-id is encoded as part of the opcode.
+     * The register-id is encoded as part of the opcode.
      *
      * Possible extension by `REX/XOP/VEX/EVEX/MVEX.B`.
      */
     ZYDIS_REG_ENCODING_OPCODE,
     /**
-     * @brief   The register-id is encoded in `modrm.reg`.
+     * The register-id is encoded in `modrm.reg`.
      *
      * Possible extension by `EVEX/MVEX.R'` (vector only) and `REX/XOP/VEX/EVEX/MVEX.R`.
      */
     ZYDIS_REG_ENCODING_REG,
     /**
-     * @brief   The register-id is encoded in `XOP/VEX/EVEX/MVEX.vvvv`.
+     * The register-id is encoded in `XOP/VEX/EVEX/MVEX.vvvv`.
      *
      * Possible extension by `EVEX/MVEX.v'` (vector only).
      */
     ZYDIS_REG_ENCODING_NDSNDD,
     /**
-     * @brief   The register-id is encoded in `modrm.rm`.
+     * The register-id is encoded in `modrm.rm`.
      *
      * Possible extension by `EVEX/MVEX.X` (vector only) and `REX/XOP/VEX/EVEX/MVEX.B`.
      */
     ZYDIS_REG_ENCODING_RM,
     /**
-     * @brief   The register-id is encoded in `modrm.rm` or `sib.base` (if SIB is present).
+     * The register-id is encoded in `modrm.rm` or `sib.base` (if SIB is present).
      *
      * Possible extension by `REX/XOP/VEX/EVEX/MVEX.B`.
      */
     ZYDIS_REG_ENCODING_BASE,
     /**
-     * @brief   The register-id is encoded in `sib.index`.
+     * The register-id is encoded in `sib.index`.
      *
      * Possible extension by `REX/XOP/VEX/EVEX/MVEX.X`.
      */
     ZYDIS_REG_ENCODING_INDEX,
     /**
-     * @brief   The register-id is encoded in `sib.index`.
+     * The register-id is encoded in `sib.index`.
      *
      * Possible extension by `EVEX/MVEX.V'` (vector only) and `REX/XOP/VEX/EVEX/MVEX.X`.
      */
     ZYDIS_REG_ENCODING_VIDX,
     /**
-     * @brief   The register-id is encoded in an additional 8-bit immediate value.
+     * The register-id is encoded in an additional 8-bit immediate value.
      *
      * Bits [7:4] in 64-bit mode with possible extension by bit [3] (vector only), bits [7:5] for
      * all other modes.
      */
     ZYDIS_REG_ENCODING_IS4,
     /**
-     * @brief   The register-id is encoded in `EVEX.aaa/MVEX.kkk`.
+     * The register-id is encoded in `EVEX.aaa/MVEX.kkk`.
      */
     ZYDIS_REG_ENCODING_MASK,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_REG_ENCODING_MAX_VALUE = ZYDIS_REG_ENCODING_MASK,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_REG_ENCODING_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_REG_ENCODING_MAX_VALUE)
 } ZydisRegisterEncoding;
@@ -278,7 +282,7 @@ typedef enum ZydisRegisterEncoding_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Reads one byte from the current read-position of the input data-source.
+ * Reads one byte from the current read-position of the input data-source.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` instance.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -311,7 +315,7 @@ static ZyanStatus ZydisInputPeek(ZydisDecoderContext* context,
 }
 
 /**
- * @brief   Increases the read-position of the input data-source by one byte.
+ * Increases the read-position of the input data-source by one byte.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` instance
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -332,7 +336,7 @@ static void ZydisInputSkip(ZydisDecoderContext* context, ZydisDecodedInstruction
 }
 
 /**
- * @brief   Reads one byte from the current read-position of the input data-source and increases
+ * Reads one byte from the current read-position of the input data-source and increases
  *          the read-position by one byte afterwards.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` instance.
@@ -367,7 +371,7 @@ static ZyanStatus ZydisInputNext(ZydisDecoderContext* context,
 }
 
 /**
- * @brief   Reads a variable amount of bytes from the current read-position of the input
+ * Reads a variable amount of bytes from the current read-position of the input
  *          data-source and increases the read-position by specified amount of bytes afterwards.
  *
  * @param   context         A pointer to the `ZydisDecoderContext` instance.
@@ -411,7 +415,7 @@ static ZyanStatus ZydisInputNextBytes(ZydisDecoderContext* context,
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Decodes the `REX`-prefix.
+ * Decodes the `REX`-prefix.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -437,7 +441,7 @@ static void ZydisDecodeREX(ZydisDecoderContext* context, ZydisDecodedInstruction
 }
 
 /**
- * @brief   Decodes the `XOP`-prefix.
+ * Decodes the `XOP`-prefix.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -452,6 +456,12 @@ static ZyanStatus ZydisDecodeXOP(ZydisDecoderContext* context,
     ZYAN_ASSERT(data[0] == 0x8F);
     ZYAN_ASSERT(((data[1] >> 0) & 0x1F) >= 8);
     ZYAN_ASSERT(instruction->raw.xop.offset == instruction->length - 3);
+
+    if (context->decoder->machine_mode == ZYDIS_MACHINE_MODE_REAL_16)
+    {
+        // XOP is invalid in 16-bit real mode
+        return ZYDIS_STATUS_DECODING_ERROR;
+    }
 
     instruction->attributes |= ZYDIS_ATTRIB_HAS_XOP;
     instruction->raw.xop.R       = (data[1] >> 7) & 0x01;
@@ -483,7 +493,7 @@ static ZyanStatus ZydisDecodeXOP(ZydisDecoderContext* context,
 }
 
 /**
- * @brief   Decodes the `VEX`-prefix.
+ * Decodes the `VEX`-prefix.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -496,6 +506,12 @@ static ZyanStatus ZydisDecodeVEX(ZydisDecoderContext* context,
 {
     ZYAN_ASSERT(instruction);
     ZYAN_ASSERT((data[0] == 0xC4) || (data[0] == 0xC5));
+
+    if (context->decoder->machine_mode == ZYDIS_MACHINE_MODE_REAL_16)
+    {
+        // VEX is invalid in 16-bit real mode
+        return ZYDIS_STATUS_DECODING_ERROR;
+    }
 
     instruction->attributes |= ZYDIS_ATTRIB_HAS_VEX;
     switch (data[0])
@@ -553,7 +569,7 @@ static ZyanStatus ZydisDecodeVEX(ZydisDecoderContext* context,
 
 #ifndef ZYDIS_DISABLE_AVX512
 /**
- * @brief   Decodes the `EVEX`-prefix.
+ * Decodes the `EVEX`-prefix.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -568,21 +584,29 @@ static ZyanStatus ZydisDecodeEVEX(ZydisDecoderContext* context,
     ZYAN_ASSERT(data[0] == 0x62);
     ZYAN_ASSERT(instruction->raw.evex.offset == instruction->length - 4);
 
+    if (context->decoder->machine_mode == ZYDIS_MACHINE_MODE_REAL_16)
+    {
+        // EVEX is invalid in 16-bit real mode
+        return ZYDIS_STATUS_DECODING_ERROR;
+    }
+
     instruction->attributes |= ZYDIS_ATTRIB_HAS_EVEX;
     instruction->raw.evex.R         = (data[1] >> 7) & 0x01;
     instruction->raw.evex.X         = (data[1] >> 6) & 0x01;
     instruction->raw.evex.B         = (data[1] >> 5) & 0x01;
     instruction->raw.evex.R2        = (data[1] >> 4) & 0x01;
 
-    if (((data[1] >> 2) & 0x03) != 0x00)
+    if (data[1] & 0x08)
     {
         // Invalid according to the intel documentation
         return ZYDIS_STATUS_MALFORMED_EVEX;
     }
 
-    instruction->raw.evex.mm        = (data[1] >> 0) & 0x03;
+    instruction->raw.evex.mmm       = (data[1] >> 0) & 0x07;
 
-    if (instruction->raw.evex.mm == 0x00)
+    if ((instruction->raw.evex.mmm == 0x00) ||
+        (instruction->raw.evex.mmm == 0x04) ||
+        (instruction->raw.evex.mmm == 0x07))
     {
         // Invalid according to the intel documentation
         return ZYDIS_STATUS_INVALID_MAP;
@@ -641,7 +665,7 @@ static ZyanStatus ZydisDecodeEVEX(ZydisDecoderContext* context,
 
 #ifndef ZYDIS_DISABLE_KNC
 /**
- * @brief   Decodes the `MVEX`-prefix.
+ * Decodes the `MVEX`-prefix.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -655,6 +679,12 @@ static ZyanStatus ZydisDecodeMVEX(ZydisDecoderContext* context,
     ZYAN_ASSERT(instruction);
     ZYAN_ASSERT(data[0] == 0x62);
     ZYAN_ASSERT(instruction->raw.mvex.offset == instruction->length - 4);
+
+    if (context->decoder->machine_mode != ZYDIS_MACHINE_MODE_LONG_64)
+    {
+        // MVEX is only invalid in 64-bit mode
+        return ZYDIS_STATUS_DECODING_ERROR;
+    }
 
     instruction->attributes |= ZYDIS_ATTRIB_HAS_MVEX;
     instruction->raw.mvex.R       = (data[1] >> 7) & 0x01;
@@ -697,7 +727,7 @@ static ZyanStatus ZydisDecodeMVEX(ZydisDecoderContext* context,
 #endif
 
 /**
- * @brief   Decodes the `ModRM`-byte.
+ * Decodes the `ModRM`-byte.
  *
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
  * @param   data        The `ModRM` byte.
@@ -715,7 +745,7 @@ static void ZydisDecodeModRM(ZydisDecodedInstruction* instruction, ZyanU8 data)
 }
 
 /**
- * @brief   Decodes the `SIB`-byte.
+ * Decodes the `SIB`-byte.
  *
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct
  * @param   data        The `SIB` byte.
@@ -737,7 +767,7 @@ static void ZydisDecodeSIB(ZydisDecodedInstruction* instruction, ZyanU8 data)
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Reads a displacement value.
+ * Reads a displacement value.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -795,7 +825,7 @@ static ZyanStatus ZydisReadDisplacement(ZydisDecoderContext* context,
 }
 
 /**
- * @brief   Reads an immediate value.
+ * Reads an immediate value.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -884,12 +914,12 @@ static ZyanStatus ZydisReadImmediate(ZydisDecoderContext* context,
 }
 
 /* ---------------------------------------------------------------------------------------------- */
-/* Semantical instruction decoding                                                                */
+/* Semantic instruction decoding                                                                  */
 /* ---------------------------------------------------------------------------------------------- */
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Calculates the register-id for a specific register-encoding and register-class.
+ * Calculates the register-id for a specific register-encoding and register-class.
  *
  * @param   context         A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction     A pointer to the ` ZydisDecodedInstruction` struct.
@@ -1121,7 +1151,7 @@ static ZyanU8 ZydisCalcRegisterId(ZydisDecoderContext* context,
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Sets the operand-size and element-specific information for the given operand.
+ * Sets the operand-size and element-specific information for the given operand.
  *
  * @param   context         A pointer to the `ZydisDecoderContext` instance.
  * @param   instruction     A pointer to the `ZydisDecodedInstruction` struct.
@@ -1168,7 +1198,8 @@ static void ZydisSetOperandSizeAndElementInfo(ZydisDecoderContext* context,
                 operand->element_type = ZYDIS_ELEMENT_TYPE_INT;
             } else
             {
-                ZYAN_ASSERT(definition->size[context->eosz_index]);
+                ZYAN_ASSERT(definition->size[context->eosz_index] ||
+                    (instruction->meta.category == ZYDIS_CATEGORY_AMX_TILE));
                 operand->size = definition->size[context->eosz_index] * 8;
             }
             break;
@@ -1202,6 +1233,16 @@ static void ZydisSetOperandSizeAndElementInfo(ZydisDecoderContext* context,
                     } else
                     {
                         operand->size = (ZyanU16)instruction->avx.vector_length / 2;
+                    }
+                    break;
+                case ZYDIS_TUPLETYPE_QUARTER:
+                    if (instruction->avx.broadcast.mode)
+                    {
+                        operand->size = context->evex.element_size;
+                    }
+                    else
+                    {
+                        operand->size = (ZyanU16)instruction->avx.vector_length / 4;
                     }
                     break;
                 default:
@@ -1363,7 +1404,7 @@ static void ZydisSetOperandSizeAndElementInfo(ZydisDecoderContext* context,
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Decodes an register-operand.
+ * Decodes an register-operand.
  *
  * @param   instruction     A pointer to the `ZydisDecodedInstruction` struct.
  * @param   operand         A pointer to the `ZydisDecodedOperand` struct.
@@ -1405,7 +1446,7 @@ static ZyanStatus ZydisDecodeOperandRegister(ZydisDecodedInstruction* instructio
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Decodes a memory operand.
+ * Decodes a memory operand.
  *
  * @param   context             A pointer to the `ZydisDecoderContext` instance.
  * @param   instruction         A pointer to the `ZydisDecodedInstruction` struct.
@@ -1599,7 +1640,7 @@ static ZyanStatus ZydisDecodeOperandMemory(ZydisDecoderContext* context,
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Decodes an implicit register operand.
+ * Decodes an implicit register operand.
  *
  * @param   context         A pointer to the `ZydisDecoderContext` instance.
  * @param   instruction     A pointer to the `ZydisDecodedInstruction` struct.
@@ -1644,7 +1685,7 @@ static void ZydisDecodeOperandImplicitRegister(ZydisDecoderContext* context,
         operand->reg.value = ZydisRegisterEncode(
             (context->decoder->address_width == ZYDIS_ADDRESS_WIDTH_16) ? ZYDIS_REGCLASS_GPR16  :
             (context->decoder->address_width == ZYDIS_ADDRESS_WIDTH_32) ? ZYDIS_REGCLASS_GPR32  :
-                                                                         ZYDIS_REGCLASS_GPR64,
+                                                                          ZYDIS_REGCLASS_GPR64,
             definition->op.reg.reg.id);
         break;
     case ZYDIS_IMPLREG_TYPE_IP_ASZ:
@@ -1656,13 +1697,13 @@ static void ZydisDecodeOperandImplicitRegister(ZydisDecoderContext* context,
         operand->reg.value =
             (context->decoder->address_width == ZYDIS_ADDRESS_WIDTH_16) ? ZYDIS_REGISTER_EIP    :
             (context->decoder->address_width == ZYDIS_ADDRESS_WIDTH_32) ? ZYDIS_REGISTER_EIP    :
-                                                                         ZYDIS_REGISTER_RIP;
+                                                                          ZYDIS_REGISTER_RIP;
         break;
     case ZYDIS_IMPLREG_TYPE_FLAGS_SSZ:
         operand->reg.value =
             (context->decoder->address_width == ZYDIS_ADDRESS_WIDTH_16) ? ZYDIS_REGISTER_FLAGS  :
             (context->decoder->address_width == ZYDIS_ADDRESS_WIDTH_32) ? ZYDIS_REGISTER_EFLAGS :
-                                                                         ZYDIS_REGISTER_RFLAGS;
+                                                                          ZYDIS_REGISTER_RFLAGS;
         break;
     default:
         ZYAN_UNREACHABLE;
@@ -1672,7 +1713,7 @@ static void ZydisDecodeOperandImplicitRegister(ZydisDecoderContext* context,
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Decodes an implicit memory operand.
+ * Decodes an implicit memory operand.
  *
  * @param   context         A pointer to the `ZydisDecoderContext` instance.
  * @param   instruction     A pointer to the `ZydisDecodedInstruction` struct.
@@ -1718,17 +1759,17 @@ static void ZydisDecodeOperandImplicitMemory(ZydisDecoderContext* context,
     case ZYDIS_IMPLMEM_BASE_ABX:
         operand->mem.base = ZydisRegisterEncode(lookup[context->easz_index], 3);
         break;
-    case ZYDIS_IMPLMEM_BASE_ASP:
-        operand->mem.base = ZydisRegisterEncode(lookup[context->easz_index], 4);
-        break;
-    case ZYDIS_IMPLMEM_BASE_ABP:
-        operand->mem.base = ZydisRegisterEncode(lookup[context->easz_index], 5);
-        break;
     case ZYDIS_IMPLMEM_BASE_ASI:
         operand->mem.base = ZydisRegisterEncode(lookup[context->easz_index], 6);
         break;
     case ZYDIS_IMPLMEM_BASE_ADI:
         operand->mem.base = ZydisRegisterEncode(lookup[context->easz_index], 7);
+        break;
+    case ZYDIS_IMPLMEM_BASE_SSP:
+        operand->mem.base = ZydisRegisterEncode(lookup[context->decoder->address_width], 4);
+        break;
+    case ZYDIS_IMPLMEM_BASE_SBP:
+        operand->mem.base = ZydisRegisterEncode(lookup[context->decoder->address_width], 5);
         break;
     default:
         ZYAN_UNREACHABLE;
@@ -1747,7 +1788,7 @@ static void ZydisDecodeOperandImplicitMemory(ZydisDecoderContext* context,
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Decodes the instruction operands.
+ * Decodes the instruction operands.
  *
  * @param   context     A pointer to the`ZydisDecoderContext` struct.
  * @param   instruction A pointer to the`ZydisDecodedInstruction` struct.
@@ -1869,6 +1910,9 @@ static ZyanStatus ZydisDecodeOperands(ZydisDecoderContext* context,
         case ZYDIS_SEMANTIC_OPTYPE_ZMM:
             register_class = ZYDIS_REGCLASS_ZMM;
             break;
+        case ZYDIS_SEMANTIC_OPTYPE_TMM:
+            register_class = ZYDIS_REGCLASS_TMM;
+            break;
         case ZYDIS_SEMANTIC_OPTYPE_BND:
             register_class = ZYDIS_REGCLASS_BOUND;
             break;
@@ -1937,6 +1981,11 @@ static ZyanStatus ZydisDecodeOperands(ZydisDecoderContext* context,
                 ZYAN_UNREACHABLE;
             }
 
+            if (operand->is_multisource4)
+            {
+                instruction->operands[i].attributes |= ZYDIS_OATTRIB_IS_MULTISOURCE4;
+            }
+
             goto FinalizeOperand;
         }
 
@@ -1991,12 +2040,6 @@ static ZyanStatus ZydisDecodeOperands(ZydisDecoderContext* context,
                 ZydisDecodeOperandMemory(
                     context, instruction, &instruction->operands[i], ZYDIS_REGCLASS_INVALID));
             instruction->operands[i].mem.type = ZYDIS_MEMOP_TYPE_MIB;
-            // Relative addressing is not allowed for this type of memory-operand
-            if ((instruction->operands[i].mem.base == ZYDIS_REGISTER_EIP) ||
-                (instruction->operands[i].mem.base == ZYDIS_REGISTER_RIP))
-            {
-                return ZYDIS_STATUS_DECODING_ERROR;
-            }
             break;
         default:
             break;
@@ -2048,27 +2091,33 @@ FinalizeOperand:
         // Set segment-register for memory operands
         if (instruction->operands[i].type == ZYDIS_OPERAND_TYPE_MEMORY)
         {
-            if (instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_CS)
+            if (!operand->ignore_seg_override &&
+                instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_CS)
             {
                 instruction->operands[i].mem.segment = ZYDIS_REGISTER_CS;
             } else
-            if (instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_SS)
+            if (!operand->ignore_seg_override &&
+                instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_SS)
             {
                 instruction->operands[i].mem.segment = ZYDIS_REGISTER_SS;
             } else
-            if (instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_DS)
+            if (!operand->ignore_seg_override &&
+                instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_DS)
             {
                 instruction->operands[i].mem.segment = ZYDIS_REGISTER_DS;
             } else
-            if (instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_ES)
+            if (!operand->ignore_seg_override &&
+                instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_ES)
             {
                 instruction->operands[i].mem.segment = ZYDIS_REGISTER_ES;
             } else
-            if (instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_FS)
+            if (!operand->ignore_seg_override &&
+                instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_FS)
             {
                 instruction->operands[i].mem.segment = ZYDIS_REGISTER_FS;
             } else
-            if (instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_GS)
+            if (!operand->ignore_seg_override &&
+                instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT_GS)
             {
                 instruction->operands[i].mem.segment = ZYDIS_REGISTER_GS;
             } else
@@ -2126,7 +2175,7 @@ FinalizeOperand:
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Sets attributes for the given instruction.
+ * Sets attributes for the given instruction.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -2304,13 +2353,25 @@ static void ZydisSetAttributes(ZydisDecoderContext* context, ZydisDecodedInstruc
             default:
                 break;
             }
-        } else
+        }
+
+        if (def->accepts_NOTRACK)
         {
-            if (def->accepts_segment)
+            instruction->attributes |= ZYDIS_ATTRIB_ACCEPTS_NOTRACK;
+            if (context->decoder->decoder_mode[ZYDIS_DECODER_MODE_CET] &&
+                (context->prefixes.offset_notrack >= 0))
             {
-                instruction->attributes |= ZYDIS_ATTRIB_ACCEPTS_SEGMENT;
+                instruction->attributes |= ZYDIS_ATTRIB_HAS_NOTRACK;
+                instruction->raw.prefixes[context->prefixes.offset_notrack].type =
+                    ZYDIS_PREFIX_TYPE_EFFECTIVE;
             }
-            if (context->prefixes.effective_segment && def->accepts_segment)
+        }
+
+        if (def->accepts_segment && !def->accepts_branch_hints)
+        {
+            instruction->attributes |= ZYDIS_ATTRIB_ACCEPTS_SEGMENT;
+            if (context->prefixes.effective_segment &&
+                !(instruction->attributes & ZYDIS_ATTRIB_HAS_NOTRACK))
             {
                 switch (context->prefixes.effective_segment)
                 {
@@ -2350,30 +2411,34 @@ static void ZydisSetAttributes(ZydisDecoderContext* context, ZydisDecodedInstruc
     case ZYDIS_INSTRUCTION_ENCODING_VEX:
     case ZYDIS_INSTRUCTION_ENCODING_EVEX:
     case ZYDIS_INSTRUCTION_ENCODING_MVEX:
-        if (context->prefixes.effective_segment)
+        if (definition->accepts_segment)
         {
-            switch (context->prefixes.effective_segment)
+            instruction->attributes |= ZYDIS_ATTRIB_ACCEPTS_SEGMENT;
+            if (context->prefixes.effective_segment)
             {
-            case 0x2E:
-                instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_CS;
-                break;
-            case 0x36:
-                instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_SS;
-                break;
-            case 0x3E:
-                instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_DS;
-                break;
-            case 0x26:
-                instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_ES;
-                break;
-            case 0x64:
-                instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_FS;
-                break;
-            case 0x65:
-                instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_GS;
-                break;
-            default:
-                ZYAN_UNREACHABLE;
+                switch (context->prefixes.effective_segment)
+                {
+                case 0x2E:
+                    instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_CS;
+                    break;
+                case 0x36:
+                    instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_SS;
+                    break;
+                case 0x3E:
+                    instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_DS;
+                    break;
+                case 0x26:
+                    instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_ES;
+                    break;
+                case 0x64:
+                    instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_FS;
+                    break;
+                case 0x65:
+                    instruction->attributes |= ZYDIS_ATTRIB_HAS_SEGMENT_GS;
+                    break;
+                default:
+                    ZYAN_UNREACHABLE;
+                }
             }
             if (instruction->attributes & ZYDIS_ATTRIB_HAS_SEGMENT)
             {
@@ -2390,7 +2455,7 @@ static void ZydisSetAttributes(ZydisDecoderContext* context, ZydisDecodedInstruc
 
 #ifndef ZYDIS_MINIMAL_MODE
 /**
- * @brief   Sets AVX-specific information for the given instruction.
+ * Sets AVX-specific information for the given instruction.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -2512,29 +2577,34 @@ static void ZydisSetAVXInformation(ZydisDecoderContext* context,
             case ZYDIS_TUPLETYPE_FV:
             {
                 const ZyanU8 evex_b = instruction->raw.evex.b;
-                const ZyanU8 evex_w = context->cache.W;
                 ZYAN_ASSERT(evex_b < 2);
-                ZYAN_ASSERT(evex_w < 2);
-                ZYAN_ASSERT(!evex_b || ((!evex_w && context->evex.element_size == 32) ||
-                                        ( evex_w && context->evex.element_size == 64)));
+                ZYAN_ASSERT(!evex_b || ((!context->cache.W && (context->evex.element_size == 16 ||
+                                                               context->evex.element_size == 32)) ||
+                                        ( context->cache.W &&  context->evex.element_size == 64)));
                 ZYAN_ASSERT(!evex_b || def->functionality == ZYDIS_EVEX_FUNC_BC);
 
-                static const ZyanU8 scales[2][2][3] =
+                static const ZyanU8 scales[2][3][3] =
                 {
-                    /*B0*/ { /*W0*/ { 16, 32, 64 }, /*W1*/ { 16, 32, 64 } },
-                    /*B1*/ { /*W0*/ {  4,  4,  4 }, /*W1*/ {  8,  8,  8 } }
+                    /*B0*/ { /*16*/ { 16, 32, 64 }, /*32*/ { 16, 32, 64 }, /*64*/ { 16, 32, 64 } },
+                    /*B1*/ { /*16*/ {  2,  2,  2 }, /*32*/ {  4,  4,  4 }, /*64*/ {  8,  8,  8 } }
                 };
-                static const ZydisBroadcastMode broadcasts[2][2][3] =
+                static const ZydisBroadcastMode broadcasts[2][3][3] =
                 {
                     /*B0*/
                     {
-                        /*W0*/
+                        /*16*/
                         {
                             ZYDIS_BROADCAST_MODE_INVALID,
                             ZYDIS_BROADCAST_MODE_INVALID,
                             ZYDIS_BROADCAST_MODE_INVALID
                         },
-                        /*W1*/
+                        /*32*/
+                        {
+                            ZYDIS_BROADCAST_MODE_INVALID,
+                            ZYDIS_BROADCAST_MODE_INVALID,
+                            ZYDIS_BROADCAST_MODE_INVALID
+                        },
+                        /*64*/
                         {
                             ZYDIS_BROADCAST_MODE_INVALID,
                             ZYDIS_BROADCAST_MODE_INVALID,
@@ -2543,13 +2613,19 @@ static void ZydisSetAVXInformation(ZydisDecoderContext* context,
                     },
                     /*B1*/
                     {
-                        /*W0*/
+                        /*16*/
+                        {
+                            ZYDIS_BROADCAST_MODE_1_TO_8,
+                            ZYDIS_BROADCAST_MODE_1_TO_16,
+                            ZYDIS_BROADCAST_MODE_1_TO_32
+                        },
+                        /*32*/
                         {
                             ZYDIS_BROADCAST_MODE_1_TO_4,
                             ZYDIS_BROADCAST_MODE_1_TO_8,
                             ZYDIS_BROADCAST_MODE_1_TO_16
                         },
-                        /*W1*/
+                        /*64*/
                         {
                             ZYDIS_BROADCAST_MODE_1_TO_2,
                             ZYDIS_BROADCAST_MODE_1_TO_4,
@@ -2557,8 +2633,12 @@ static void ZydisSetAVXInformation(ZydisDecoderContext* context,
                         }
                     }
                 };
-                context->cd8_scale = scales[evex_b][evex_w][vector_length];
-                instruction->avx.broadcast.mode = broadcasts[evex_b][evex_w][vector_length];
+
+                const ZyanU8 size_index = context->evex.element_size >> 5;
+                ZYAN_ASSERT(size_index < 3);
+
+                context->cd8_scale = scales[evex_b][size_index][vector_length];
+                instruction->avx.broadcast.mode = broadcasts[evex_b][size_index][vector_length];
                 break;
             }
             case ZYDIS_TUPLETYPE_HV:
@@ -2566,31 +2646,54 @@ static void ZydisSetAVXInformation(ZydisDecoderContext* context,
                 const ZyanU8 evex_b = instruction->raw.evex.b;
                 ZYAN_ASSERT(evex_b < 2);
                 ZYAN_ASSERT(!context->cache.W);
-                ZYAN_ASSERT(context->evex.element_size == 32);
+                ZYAN_ASSERT((context->evex.element_size == 16) ||
+                            (context->evex.element_size == 32));
                 ZYAN_ASSERT(!evex_b || def->functionality == ZYDIS_EVEX_FUNC_BC);
 
-                static const ZyanU8 scales[2][3] =
+                static const ZyanU8 scales[2][2][3] =
                 {
-                    /*B0*/ {  8, 16, 32 },
-                    /*B1*/ {  4,  4,  4 }
+                    /*B0*/ { /*16*/ {  8, 16, 32 }, /*32*/ {  8, 16, 32 } },
+                    /*B1*/ { /*16*/ {  2,  2,  2 }, /*32*/ {  4,  4,  4 } }
                 };
-                static const ZydisBroadcastMode broadcasts[2][3] =
+                static const ZydisBroadcastMode broadcasts[2][2][3] =
                 {
                     /*B0*/
                     {
-                        ZYDIS_BROADCAST_MODE_INVALID,
-                        ZYDIS_BROADCAST_MODE_INVALID,
-                        ZYDIS_BROADCAST_MODE_INVALID
+                        /*16*/
+                        {
+                            ZYDIS_BROADCAST_MODE_INVALID,
+                            ZYDIS_BROADCAST_MODE_INVALID,
+                            ZYDIS_BROADCAST_MODE_INVALID
+                        },
+                        /*32*/
+                        {
+                            ZYDIS_BROADCAST_MODE_INVALID,
+                            ZYDIS_BROADCAST_MODE_INVALID,
+                            ZYDIS_BROADCAST_MODE_INVALID
+                        }
                     },
                     /*B1*/
                     {
-                        ZYDIS_BROADCAST_MODE_1_TO_2,
-                        ZYDIS_BROADCAST_MODE_1_TO_4,
-                        ZYDIS_BROADCAST_MODE_1_TO_8
+                        /*16*/
+                        {
+                            ZYDIS_BROADCAST_MODE_1_TO_4,
+                            ZYDIS_BROADCAST_MODE_1_TO_8,
+                            ZYDIS_BROADCAST_MODE_1_TO_16
+                        },
+                        /*32*/
+                        {
+                            ZYDIS_BROADCAST_MODE_1_TO_2,
+                            ZYDIS_BROADCAST_MODE_1_TO_4,
+                            ZYDIS_BROADCAST_MODE_1_TO_8
+                        }
                     }
                 };
-                context->cd8_scale = scales[evex_b][vector_length];
-                instruction->avx.broadcast.mode = broadcasts[evex_b][vector_length];
+
+                const ZyanU8 size_index = context->evex.element_size >> 5;
+                ZYAN_ASSERT(size_index < 3);
+
+                context->cd8_scale = scales[evex_b][size_index][vector_length];
+                instruction->avx.broadcast.mode = broadcasts[evex_b][size_index][vector_length];
                 break;
             }
             case ZYDIS_TUPLETYPE_FVM:
@@ -2631,18 +2734,20 @@ static void ZydisSetAVXInformation(ZydisDecoderContext* context,
                 break;
             };
             case ZYDIS_TUPLETYPE_T1F:
-                switch (context->evex.element_size)
+            {
+                static const ZyanU8 scales[3] =
                 {
-                case 32:
-                    context->cd8_scale = 4;
-                    break;
-                case 64:
-                    context->cd8_scale = 8;
-                    break;
-                default:
-                    ZYAN_UNREACHABLE;
-                }
+                    /* 16*/ 2,
+                    /* 32*/ 4,
+                    /* 64*/ 8
+                };
+
+                const ZyanU8 size_index = context->evex.element_size >> 5;
+                ZYAN_ASSERT(size_index < 3);
+
+                context->cd8_scale = scales[size_index];
                 break;
+            }    
             case ZYDIS_TUPLETYPE_T1_4X:
                 ZYAN_ASSERT(context->evex.element_size == 32);
                 ZYAN_ASSERT(context->cache.W == 0);
@@ -2728,6 +2833,38 @@ static void ZydisSetAVXInformation(ZydisDecoderContext* context,
                 context->cd8_scale = scales[vector_length];
                 break;
             }
+            case ZYDIS_TUPLETYPE_QUARTER:
+            {
+                const ZyanU8 evex_b = instruction->raw.evex.b;
+                ZYAN_ASSERT(evex_b < 2);
+                ZYAN_ASSERT(!context->cache.W);
+                ZYAN_ASSERT(context->evex.element_size == 16);
+                ZYAN_ASSERT(!evex_b || def->functionality == ZYDIS_EVEX_FUNC_BC);
+
+                static const ZyanU8 scales[2][3] =
+                {
+                    /*B0*/ {  4,  8, 16 },
+                    /*B1*/ {  2,  2,  2 }
+                };
+                static const ZydisBroadcastMode broadcasts[2][3] =
+                {
+                    /*B0*/
+                    {
+                        ZYDIS_BROADCAST_MODE_INVALID,
+                        ZYDIS_BROADCAST_MODE_INVALID,
+                        ZYDIS_BROADCAST_MODE_INVALID
+                    },
+                    /*B1*/
+                    {
+                        ZYDIS_BROADCAST_MODE_1_TO_2,
+                        ZYDIS_BROADCAST_MODE_1_TO_4,
+                        ZYDIS_BROADCAST_MODE_1_TO_8
+                    }
+                };
+                context->cd8_scale = scales[evex_b][vector_length];
+                instruction->avx.broadcast.mode = broadcasts[evex_b][vector_length];
+                break;
+            }
             default:
                 ZYAN_UNREACHABLE;
             }
@@ -2772,7 +2909,7 @@ static void ZydisSetAVXInformation(ZydisDecoderContext* context,
                 break;
             case ZYDIS_EVEX_FUNC_RC:
                 instruction->avx.rounding.mode = ZYDIS_ROUNDING_MODE_RN + context->cache.LL;
-                // Intentional fallthrough
+                ZYAN_FALLTHROUGH;
             case ZYDIS_EVEX_FUNC_SAE:
                 instruction->avx.has_sae = ZYAN_TRUE;
                 break;
@@ -2949,8 +3086,8 @@ static void ZydisSetAVXInformation(ZydisDecoderContext* context,
             // Nothing to do here
             break;
         case ZYDIS_MVEX_FUNC_RC:
-            instruction->avx.rounding.mode = ZYDIS_ROUNDING_MODE_RN + instruction->raw.mvex.SSS;
-            break;
+            instruction->avx.rounding.mode = ZYDIS_ROUNDING_MODE_RN + (instruction->raw.mvex.SSS & 3);
+            ZYAN_FALLTHROUGH;
         case ZYDIS_MVEX_FUNC_SAE:
             if (instruction->raw.mvex.SSS >= 4)
             {
@@ -3121,7 +3258,7 @@ static void ZydisSetAVXInformation(ZydisDecoderContext* context,
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Collects optional instruction prefixes.
+ * Collects optional instruction prefixes.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -3166,16 +3303,17 @@ static ZyanStatus ZydisCollectOptionalPrefixes(ZydisDecoderContext* context,
         case 0x3E:
             ZYAN_FALLTHROUGH;
         case 0x26:
-            context->prefixes.group2 = prefix_byte;
-            context->prefixes.offset_group2 = offset;
-            if ((context->decoder->machine_mode != ZYDIS_MACHINE_MODE_LONG_64) ||
-               ((context->prefixes.effective_segment != 0x64) &&
-                (context->prefixes.effective_segment != 0x65)))
+            if (context->decoder->machine_mode == ZYDIS_MACHINE_MODE_LONG_64)
             {
-                context->prefixes.effective_segment = prefix_byte;
-                context->prefixes.offset_segment = offset;
+                if ((prefix_byte == 0x3E) &&
+                    (context->prefixes.effective_segment != 0x64) &&
+                    (context->prefixes.effective_segment != 0x65))
+                {
+                    context->prefixes.offset_notrack = offset;
+                }
+                break;
             }
-            break;
+            ZYAN_FALLTHROUGH;
         case 0x64:
             ZYAN_FALLTHROUGH;
         case 0x65:
@@ -3183,6 +3321,7 @@ static ZyanStatus ZydisCollectOptionalPrefixes(ZydisDecoderContext* context,
             context->prefixes.offset_group2 = offset;
             context->prefixes.effective_segment = prefix_byte;
             context->prefixes.offset_segment = offset;
+            context->prefixes.offset_notrack = -1;
             break;
         case 0x66:
             // context->prefixes.has_osz_override = ZYAN_TRUE;
@@ -3240,13 +3379,18 @@ static ZyanStatus ZydisCollectOptionalPrefixes(ZydisDecoderContext* context,
         instruction->raw.prefixes[instruction->raw.rex.offset].type = ZYDIS_PREFIX_TYPE_EFFECTIVE;
         ZydisDecodeREX(context, instruction, rex);
     }
+    if ((context->decoder->machine_mode != ZYDIS_MACHINE_MODE_LONG_64) &&
+        (context->prefixes.group2 == 0x3E))
+    {
+        context->prefixes.offset_notrack = context->prefixes.offset_group2;
+    }
 
     return ZYAN_STATUS_SUCCESS;
 }
 
 /**
- * @brief   Decodes optional instruction parts like the ModRM byte, the SIB byte and additional
- *          displacements and/or immediate values.
+ * Decodes optional instruction parts like the ModRM byte, the SIB byte and
+ * additional displacements and/or immediate values.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -3377,7 +3521,7 @@ static ZyanStatus ZydisDecodeOptionalInstructionParts(ZydisDecoderContext* conte
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Sets the effective operand size for the given instruction.
+ * Sets the effective operand size for the given instruction.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -3531,7 +3675,7 @@ static void ZydisSetEffectiveOperandWidth(ZydisDecoderContext* context,
 }
 
 /**
- * @brief   Sets the effective address width for the given instruction.
+ * Sets the effective address width for the given instruction.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` struct.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -3665,11 +3809,11 @@ static ZyanStatus ZydisNodeHandlerEMVEX(ZydisDecodedInstruction* instruction, Zy
         break;
     case ZYDIS_INSTRUCTION_ENCODING_EVEX:
         ZYAN_ASSERT(instruction->attributes & ZYDIS_ATTRIB_HAS_EVEX);
-        *index = instruction->raw.evex.mm + (instruction->raw.evex.pp << 2) + 1;
+        *index = instruction->raw.evex.mmm + (instruction->raw.evex.pp << 3) + 1;
         break;
     case ZYDIS_INSTRUCTION_ENCODING_MVEX:
         ZYAN_ASSERT(instruction->attributes & ZYDIS_ATTRIB_HAS_MVEX);
-        *index = instruction->raw.mvex.mmmm + (instruction->raw.mvex.pp << 2) + 17;
+        *index = instruction->raw.mvex.mmmm + (instruction->raw.mvex.pp << 2) + 33;
         break;
     default:
         ZYAN_UNREACHABLE;
@@ -3790,7 +3934,7 @@ static ZyanStatus ZydisNodeHandlerOpcode(ZydisDecoderContext* context,
                             instruction->encoding = ZYDIS_INSTRUCTION_ENCODING_EVEX;
                             ZYAN_CHECK(ZydisDecodeEVEX(context, instruction, prefix_bytes));
                             instruction->opcode_map =
-                                ZYDIS_OPCODE_MAP_DEFAULT + instruction->raw.evex.mm;
+                                ZYDIS_OPCODE_MAP_DEFAULT + instruction->raw.evex.mmm;
                             break;
 #else
                             return ZYDIS_STATUS_DECODING_ERROR;
@@ -4062,7 +4206,7 @@ static ZyanStatus ZydisNodeHandlerAddressSize(ZydisDecoderContext* context,
 
     /*if (instruction->attributes & ZYDIS_ATTRIB_HAS_ADDRESSSIZE)
     {
-        instruction->raw.prefixes[context->prefixes.offset_asz_override].type = 
+        instruction->raw.prefixes[context->prefixes.offset_asz_override].type =
             ZYDIS_PREFIX_TYPE_EFFECTIVE;
     }*/
     switch (context->decoder->address_width)
@@ -4106,6 +4250,7 @@ static ZyanStatus ZydisNodeHandlerVectorLength(ZydisDecoderContext* context,
     default:
         ZYAN_UNREACHABLE;
     }
+
     *index = context->cache.LL;
     if (*index == 3)
     {
@@ -4205,7 +4350,7 @@ static ZyanStatus ZydisNodeHandlerMvexE(ZydisDecodedInstruction* instruction, Zy
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Checks for certain post-decode error-conditions.
+ * Checks for certain post-decode error-conditions.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` instance.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -4222,8 +4367,9 @@ static ZyanStatus ZydisCheckErrorConditions(ZydisDecoderContext* context,
     const ZydisRegisterConstraint constr_RM  = definition->constr_RM;
     // We set this to `NONE` instead of `UNUSED` to save up some unnecessary runtime checks
     ZydisRegisterConstraint constr_NDSNDD = ZYDIS_REG_CONSTRAINTS_NONE;
-    ZyanBool has_VSIB  = ZYAN_FALSE;
-    ZyanBool is_gather = ZYAN_FALSE;
+    ZyanBool has_VSIB             = ZYAN_FALSE;
+    ZyanBool is_gather            = ZYAN_FALSE;
+    ZyanBool no_source_dest_match = ZYAN_FALSE;
 #if !defined(ZYDIS_DISABLE_AVX512) || !defined(ZYDIS_DISABLE_KNC)
     ZydisMaskPolicy mask_policy = ZYDIS_MASK_POLICY_INVALID;
 #endif
@@ -4237,6 +4383,13 @@ static ZyanStatus ZydisCheckErrorConditions(ZydisDecoderContext* context,
 
         if (def->requires_protected_mode &&
             (context->decoder->machine_mode == ZYDIS_MACHINE_MODE_REAL_16))
+        {
+            return ZYDIS_STATUS_DECODING_ERROR;
+        }
+
+        if (def->no_compat_mode &&
+            ((context->decoder->machine_mode == ZYDIS_MACHINE_MODE_LONG_COMPAT_16) ||
+             (context->decoder->machine_mode == ZYDIS_MACHINE_MODE_LONG_COMPAT_32)))
         {
             return ZYDIS_STATUS_DECODING_ERROR;
         }
@@ -4273,6 +4426,7 @@ static ZyanStatus ZydisCheckErrorConditions(ZydisDecoderContext* context,
             (const ZydisInstructionDefinitionEVEX*)definition;
         constr_NDSNDD = def->constr_NDSNDD;
         is_gather = def->is_gather;
+        no_source_dest_match = def->no_source_dest_match;
         mask_policy = def->mask_policy;
 
         // Check for invalid zero-mask
@@ -4318,7 +4472,7 @@ static ZyanStatus ZydisCheckErrorConditions(ZydisDecoderContext* context,
             // ZYDIS_MVEX_FUNC_SWIZZLE_64
             { 1, 1, 1, 1, 1, 1, 1, 1 },
             // ZYDIS_MVEX_FUNC_SF_32
-            { 1, 1, 1, 1, 1, 1, 1, 1 },
+            { 1, 1, 1, 1, 1, 0, 1, 1 },
             // ZYDIS_MVEX_FUNC_SF_32_BCST
             { 1, 1, 1, 0, 0, 0, 0, 0 },
             // ZYDIS_MVEX_FUNC_SF_32_BCST_4TO16
@@ -4378,7 +4532,7 @@ static ZyanStatus ZydisCheckErrorConditions(ZydisDecoderContext* context,
         }
         break;
     case ZYDIS_REG_CONSTRAINTS_SR_DEST:
-        // `ZYDIS_REGISTER_CR` is not allowed as `MOV` target
+        // `ZYDIS_REGISTER_CS` is not allowed as `MOV` target
         if (instruction->raw.modrm.reg == 1)
         {
             return ZYDIS_STATUS_BAD_REGISTER;
@@ -4457,13 +4611,21 @@ static ZyanStatus ZydisCheckErrorConditions(ZydisDecoderContext* context,
     case ZYDIS_REG_CONSTRAINTS_MASK:
         break;
     case ZYDIS_REG_CONSTRAINTS_BND:
-        if (context->cache.B || context->cache.X || instruction->raw.modrm.rm > 3)
+        if (context->cache.B || instruction->raw.modrm.rm > 3)
         {
             return ZYDIS_STATUS_BAD_REGISTER;
         }
         break;
     case ZYDIS_REG_CONSTRAINTS_VSIB:
         has_VSIB = ZYAN_TRUE;
+        break;
+    case ZYDIS_REG_CONSTRAINTS_NO_REL:
+        if ((context->decoder->machine_mode == ZYDIS_MACHINE_MODE_LONG_64) &&
+            (instruction->raw.modrm.mod == 0) &&
+            (instruction->raw.modrm.rm  == 5))
+        {
+            return ZYDIS_STATUS_DECODING_ERROR;
+        }
         break;
     default:
         ZYAN_UNREACHABLE;
@@ -4513,12 +4675,12 @@ static ZyanStatus ZydisCheckErrorConditions(ZydisDecoderContext* context,
 
         ZyanU8 dest  = instruction->raw.modrm.reg;
         ZyanU8 index = instruction->raw.sib.index;
+        ZyanU8 mask  = 0xF0;
         if (context->decoder->machine_mode == ZYDIS_MACHINE_MODE_LONG_64)
         {
             dest  = dest  | (context->cache.R << 3) | (context->cache.R2 << 4);
             index = index | (context->cache.X << 3) | (context->cache.V2 << 4);
         }
-        ZyanU8 mask  = 0xF0;
 
         switch (instruction->encoding)
         {
@@ -4560,6 +4722,30 @@ static ZyanStatus ZydisCheckErrorConditions(ZydisDecoderContext* context,
         }
     }
 
+    // Check if any source register matches the destination register
+    if (no_source_dest_match)
+    {
+        ZYAN_ASSERT(instruction->encoding == ZYDIS_INSTRUCTION_ENCODING_EVEX);
+
+        ZyanU8 dest    = instruction->raw.modrm.reg;
+        ZyanU8 source1 = context->cache.v_vvvv;
+        ZyanU8 source2 = instruction->raw.modrm.rm;
+
+        if (context->decoder->machine_mode == ZYDIS_MACHINE_MODE_LONG_64)
+        {
+            dest = dest | (context->cache.R << 3) | (context->cache.R2 << 4);
+            source2 = source2 | (context->cache.B << 3) | (context->cache.X << 4);
+        } else
+        {
+            source1 = source1 & 0x07;
+        }
+
+        if ((dest == source1) || ((dest == source2) && (instruction->raw.modrm.mod == 3)))
+        {
+            return ZYDIS_STATUS_BAD_REGISTER;
+        }
+    }
+
 #if !defined(ZYDIS_DISABLE_AVX512) || !defined(ZYDIS_DISABLE_KNC)
     // Check for invalid MASK registers
     switch (mask_policy)
@@ -4591,7 +4777,7 @@ static ZyanStatus ZydisCheckErrorConditions(ZydisDecoderContext* context,
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Uses the decoder-tree to decode the current instruction.
+ * Uses the decoder-tree to decode the current instruction.
  *
  * @param   context     A pointer to the `ZydisDecoderContext` instance.
  * @param   instruction A pointer to the `ZydisDecodedInstruction` struct.
@@ -4628,7 +4814,7 @@ static ZyanStatus ZydisDecodeInstruction(ZydisDecoderContext* context,
                 }
                 if (context->prefixes.mandatory_candidate == 0x66)
                 {
-                    if (context->prefixes.offset_osz_override == 
+                    if (context->prefixes.offset_osz_override ==
                         context->prefixes.offset_mandatory)
                     {
                         instruction->raw.prefixes[context->prefixes.offset_mandatory].type =
@@ -4798,6 +4984,11 @@ static ZyanStatus ZydisDecodeInstruction(ZydisDecoderContext* context,
                                      sizeof           (flags->action             )));
                         ZYAN_MEMCPY(&instruction->accessed_flags, &flags->action,
                             sizeof(flags->action));
+
+                        instruction->cpu_flags_read = flags->cpu_flags_read;
+                        instruction->cpu_flags_written = flags->cpu_flags_written;
+                        instruction->fpu_flags_read = flags->fpu_flags_read;
+                        instruction->fpu_flags_written = flags->fpu_flags_written;
                     }
                 }
 #endif
@@ -4821,7 +5012,7 @@ static ZyanStatus ZydisDecodeInstruction(ZydisDecoderContext* context,
 ZyanStatus ZydisDecoderInit(ZydisDecoder* decoder, ZydisMachineMode machine_mode,
     ZydisAddressWidth address_width)
 {
-    static const ZyanBool decoderModes[ZYDIS_DECODER_MODE_MAX_VALUE + 1] =
+    static const ZyanBool decoder_modes[ZYDIS_DECODER_MODE_MAX_VALUE + 1] =
     {
 #ifdef ZYDIS_MINIMAL_MODE
         ZYAN_TRUE , // ZYDIS_DECODER_MODE_MINIMAL
@@ -4866,14 +5057,14 @@ ZyanStatus ZydisDecoderInit(ZydisDecoder* decoder, ZydisMachineMode machine_mode
 
     decoder->machine_mode = machine_mode;
     decoder->address_width = address_width;
-    ZYAN_MEMCPY(&decoder->decoder_mode, &decoderModes, sizeof(decoderModes));
+    ZYAN_MEMCPY(&decoder->decoder_mode, &decoder_modes, sizeof(decoder_modes));
 
     return ZYAN_STATUS_SUCCESS;
 }
 
 ZyanStatus ZydisDecoderEnableMode(ZydisDecoder* decoder, ZydisDecoderMode mode, ZyanBool enabled)
 {
-    if (!decoder || (mode > ZYDIS_DECODER_MODE_MAX_VALUE))
+    if (!decoder || ((ZyanUSize)mode > ZYDIS_DECODER_MODE_MAX_VALUE))
     {
         return ZYAN_STATUS_INVALID_ARGUMENT;
     }
@@ -4906,16 +5097,15 @@ ZyanStatus ZydisDecoderDecodeBuffer(const ZydisDecoder* decoder, const void* buf
     ZydisDecoderContext context;
     ZYAN_MEMSET(&context, 0, sizeof(context));
     context.decoder = decoder;
-    context.buffer = (ZyanU8*)buffer;
+    context.buffer = (const ZyanU8*)buffer;
     context.buffer_len = length;
+    context.prefixes.offset_notrack = -1;
 
     ZYAN_MEMSET(instruction, 0, sizeof(*instruction));
     instruction->machine_mode = decoder->machine_mode;
-    static const ZyanU8 lookup[ZYDIS_ADDRESS_WIDTH_MAX_VALUE + 1] =
-    {
-        16, 32, 64
-    };
-    instruction->stack_width = lookup[decoder->address_width];
+
+    // Calculate stack width from address width using a mapping process: [0, 1, 2] -> [16, 32, 64]
+    instruction->stack_width = 16 << decoder->address_width;
 
     ZYAN_CHECK(ZydisCollectOptionalPrefixes(&context, instruction));
     ZYAN_CHECK(ZydisDecodeInstruction(&context, instruction));

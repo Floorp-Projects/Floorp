@@ -12,7 +12,7 @@ import {
 } from "../../utils/test-head";
 
 import readFixture from "./helpers/readFixture";
-const { getSymbols, isSymbolsLoading } = selectors;
+const { getSymbols } = selectors;
 
 const mockCommandClient = {
   sourceContents: async ({ source }) => ({
@@ -52,7 +52,7 @@ describe("ast", () => {
 
         const loadedSource = selectors.getSourceFromId(getState(), base.id);
         await dispatch(actions.setSymbols({ cx, source: loadedSource }));
-        await waitForState(store, state => !isSymbolsLoading(state, base));
+        await waitForState(store, state => getSymbols(state, base));
 
         const baseSymbols = getSymbols(getState(), base);
         expect(baseSymbols).toMatchSnapshot();

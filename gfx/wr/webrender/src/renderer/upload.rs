@@ -639,7 +639,7 @@ pub struct UploadTexturePool {
     /// To keep things simple we always allocate enough memory for formats with four bytes
     /// per pixel (more than we need for alpha-only textures but it works just as well).
     temporary_buffers: Vec<Vec<mem::MaybeUninit<u8>>>,
-    used_temporary_buffers: usize,
+    min_temporary_buffers: usize,
     delay_buffer_deallocation: u64,
 }
 
@@ -650,7 +650,7 @@ impl UploadTexturePool {
             delay_texture_deallocation: [0; 3],
             current_frame: 0,
             temporary_buffers: Vec::new(),
-            used_temporary_buffers: 0,
+            min_temporary_buffers: 0,
             delay_buffer_deallocation: 0,
         }
     }
@@ -666,6 +666,7 @@ impl UploadTexturePool {
 
     pub fn begin_frame(&mut self) {
         self.current_frame += 1;
+        self.min_temporary_buffers = self.temporary_buffers.len();
     }
 
     /// Create or reuse a staging texture.
@@ -715,10 +716,11 @@ impl UploadTexturePool {
     /// Content is first written to the temporary buffer and uploaded via a single
     /// glTexSubImage2D call.
     pub fn get_temporary_buffer(&mut self) -> Vec<mem::MaybeUninit<u8>> {
-        self.used_temporary_buffers += 1;
-        self.temporary_buffers.pop().unwrap_or_else(|| {
+        let buffer = self.temporary_buffers.pop().unwrap_or_else(|| {
             vec![mem::MaybeUninit::new(0); BATCH_UPLOAD_TEXTURE_SIZE.area() as usize * 4]
-        })
+        });
+        self.min_temporary_buffers = self.min_temporary_buffers.min(self.temporary_buffers.len());
+        buffer
     }
 
     /// Return memory that was obtained from this pool via get_temporary_buffer.
@@ -769,8 +771,13 @@ impl UploadTexturePool {
             }
         }
 
-        // Similar logic for temporary CPU buffers.
-        let unused_buffers = self.temporary_buffers.len() - self.used_temporary_buffers;
+        // Similar logic for temporary CPU buffers. Our calls to get and return
+        // temporary buffers should have been balanced for this frame, but the call
+        // get_temporary_buffer will allocate a buffer if the vec is empty. Since we
+        // carry these buffers from frame to frame, we keep track of the smallest
+        // length of the temporary_buffers vec that we encountered this frame. Those
+        // buffers were not touched and we deallocate some if there are a lot of them.
+        let unused_buffers = self.min_temporary_buffers;
         if unused_buffers < 8 {
             self.delay_buffer_deallocation = self.current_frame + 120;
         }
@@ -784,7 +791,6 @@ impl UploadTexturePool {
             // of the vector.
             self.temporary_buffers.pop();
         }
-        self.used_temporary_buffers = 0;
     }
 
     pub fn report_memory_to(&self, report: &mut MemoryReport, size_op_funs: &MallocSizeOfOps) {

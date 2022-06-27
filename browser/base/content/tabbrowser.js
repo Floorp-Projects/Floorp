@@ -4740,6 +4740,10 @@
         options += "," + name + "=" + aOptions[name];
       }
 
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        options += ",private=1";
+      }
+
       // Play the tab closing animation to give immediate feedback while
       // waiting for the new window to appear.
       // content area when the docshells are swapped.
@@ -4762,7 +4766,7 @@
      * to a new browser window, unless it is (they are) already the only tab(s)
      * in the current window, in which case this will do nothing.
      */
-    replaceTabsWithWindow(contextTab, aOptions) {
+    replaceTabsWithWindow(contextTab, aOptions = {}) {
       let tabs;
       if (contextTab.multiselected) {
         tabs = this.selectedTabs;

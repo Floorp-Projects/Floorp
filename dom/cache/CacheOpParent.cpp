@@ -226,21 +226,17 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
   Maybe<mozilla::ipc::PrincipalInfo> principalInfo;
   switch (mOpArgs.type()) {
     case CacheOpArgs::TCacheMatchArgs: {
-      loadingCOEP =
-          mOpArgs.get_CacheMatchArgs().request().loadingEmbedderPolicy();
-      principalInfo = mOpArgs.get_CacheMatchArgs().request().principalInfo();
+      const auto& request = mOpArgs.get_CacheMatchArgs().request();
+      loadingCOEP = request.loadingEmbedderPolicy();
+      principalInfo = request.principalInfo();
       break;
     }
     case CacheOpArgs::TCacheMatchAllArgs: {
       if (mOpArgs.get_CacheMatchAllArgs().maybeRequest().isSome()) {
-        loadingCOEP = mOpArgs.get_CacheMatchAllArgs()
-                          .maybeRequest()
-                          .ref()
-                          .loadingEmbedderPolicy();
-        principalInfo = mOpArgs.get_CacheMatchAllArgs()
-                            .maybeRequest()
-                            .ref()
-                            .principalInfo();
+        const auto& request =
+            mOpArgs.get_CacheMatchAllArgs().maybeRequest().ref();
+        loadingCOEP = request.loadingEmbedderPolicy();
+        principalInfo = request.principalInfo();
       }
       break;
     }
@@ -266,6 +262,7 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
     }
 
     const auto& headers = it->mValue.headers();
+    const RequestCredentials credentials = it->mValue.credentials();
     const auto corpHeaderIt =
         std::find_if(headers.cbegin(), headers.cend(), [](const auto& header) {
           return header.name().EqualsLiteral("Cross-Origin-Resource-Policy");
@@ -294,11 +291,22 @@ void CacheOpParent::ProcessCrossOriginResourcePolicyHeader(
     const mozilla::ipc::ContentPrincipalInfo& responseContentPrincipalInfo =
         it->mValue.principalInfo().ref().get_ContentPrincipalInfo();
 
-    const auto& corp =
+    nsCString corp =
         corpHeaderIt == headers.cend() ? EmptyCString() : corpHeaderIt->value();
 
+    if (corp.IsEmpty()) {
+      if (loadingCOEP == nsILoadInfo::EMBEDDER_POLICY_CREDENTIALLESS) {
+        // This means the request of this request doesn't have
+        // credentials, so it's safe for us to return.
+        if (credentials == RequestCredentials::Omit) {
+          return;
+        }
+        corp = "same-origin";
+      }
+    }
+
     if (corp.EqualsLiteral("same-origin")) {
-      if (responseContentPrincipalInfo == contentPrincipalInfo) {
+      if (responseContentPrincipalInfo != contentPrincipalInfo) {
         aRv.ThrowTypeError("Response is expected from same origin.");
         return;
       }

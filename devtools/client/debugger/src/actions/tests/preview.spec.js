@@ -60,7 +60,7 @@ async function pause(store, client) {
   );
 
   await dispatch(actions.selectSource(cx, base.id));
-  await waitForState(store, state => selectors.hasSymbols(state, base));
+  await waitForState(store, state => selectors.getSymbols(state, base));
 
   const { thread } = cx;
   const frames = [makeFrame({ id: "frame1", sourceId: base.id, thread })];
@@ -85,7 +85,7 @@ describe("preview", () => {
     );
 
     await dispatch(actions.selectSource(cx, base.id));
-    await waitForState(store, state => selectors.hasSymbols(state, base));
+    await waitForState(store, state => selectors.getSymbols(state, base));
     const frames = [makeFrame({ id: "f1", sourceId: base.id })];
 
     await dispatch(

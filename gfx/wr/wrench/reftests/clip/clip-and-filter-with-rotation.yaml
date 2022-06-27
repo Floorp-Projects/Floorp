@@ -20,7 +20,7 @@ root:
             type: "clip-chain"
             id: 3
             clips: [2]
-          # note it's important that we use clip-node here; clip-and-scroll in yaml
+          # note it's important that we use clip-chain here; clip-and-scroll in yaml
           # defaults to push/pop, but we want to specifically attach this clip-chain
           # to the stacking context and not the children (as gecko does in the bug)
           -

@@ -26,8 +26,8 @@
 
 /**
  * @file
- * @brief   Defines the immutable and storage-efficient `ZydisShortString` struct, which is used to
- *          store strings in the generated tables.
+ * Defines the immutable and storage-efficient `ZydisShortString` struct, which
+ * is used to store strings in the generated tables.
  */
 
 #ifndef ZYDIS_SHORTSTRING_H
@@ -48,7 +48,7 @@ extern "C" {
 #pragma pack(push, 1)
 
 /**
- * @brief   Defines the `ZydisShortString` struct.
+ * Defines the `ZydisShortString` struct.
  *
  * This compact struct is mainly used for internal string-tables to save up some bytes.
  *
@@ -58,11 +58,11 @@ extern "C" {
 typedef struct ZydisShortString_
 {
     /**
-     * @brief   The buffer that contains the actual (null-terminated) string.
+     * The buffer that contains the actual (null-terminated) string.
     */
     const char* data;
     /**
-     * @brief   The length (number of characters) of the string (without 0-termination).
+     * The length (number of characters) of the string (without 0-termination).
     */
     ZyanU8 size;
 } ZydisShortString;
@@ -74,7 +74,7 @@ typedef struct ZydisShortString_
 /* ============================================================================================== */
 
 /**
- * @brief   Declares a `ZydisShortString` from a static C-style string.
+ * Declares a `ZydisShortString` from a static C-style string.
  *
  * @param   string  The C-string constant.
  */

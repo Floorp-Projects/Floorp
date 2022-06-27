@@ -26,7 +26,7 @@
 
 /**
  * @file
- * @brief   Master include file, including everything else.
+ * Master include file, including everything else.
  */
 
 #ifndef ZYDIS_H
@@ -64,37 +64,37 @@ extern "C" {
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   A macro that defines the zydis version.
+ * A macro that defines the zydis version.
  */
-#define ZYDIS_VERSION (ZyanU64)0x0003000000000000
+#define ZYDIS_VERSION (ZyanU64)0x0003000200010000
 
 /* ---------------------------------------------------------------------------------------------- */
 /* Helper macros                                                                                  */
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Extracts the major-part of the zydis version.
+ * Extracts the major-part of the zydis version.
  *
  * @param   version The zydis version value
  */
 #define ZYDIS_VERSION_MAJOR(version) (ZyanU16)(((version) & 0xFFFF000000000000) >> 48)
 
 /**
- * @brief   Extracts the minor-part of the zydis version.
+ * Extracts the minor-part of the zydis version.
  *
  * @param   version The zydis version value
  */
 #define ZYDIS_VERSION_MINOR(version) (ZyanU16)(((version) & 0x0000FFFF00000000) >> 32)
 
 /**
- * @brief   Extracts the patch-part of the zydis version.
+ * Extracts the patch-part of the zydis version.
  *
  * @param   version The zydis version value
  */
 #define ZYDIS_VERSION_PATCH(version) (ZyanU16)(((version) & 0x00000000FFFF0000) >> 16)
 
 /**
- * @brief   Extracts the build-part of the zydis version.
+ * Extracts the build-part of the zydis version.
  *
  * @param   version The zydis version value
  */
@@ -107,7 +107,7 @@ extern "C" {
 /* ============================================================================================== */
 
 /**
- * @brief   Defines the `ZydisFeature` enum.
+ * Defines the `ZydisFeature` enum.
  */
 typedef enum ZydisFeature_
 {
@@ -117,11 +117,11 @@ typedef enum ZydisFeature_
     ZYDIS_FEATURE_KNC,
 
     /**
-     * @brief   Maximum value of this enum.
+     * Maximum value of this enum.
      */
     ZYDIS_FEATURE_MAX_VALUE = ZYDIS_FEATURE_KNC,
     /**
-     * @brief   The minimum number of bits required to represent all values of this enum.
+     * The minimum number of bits required to represent all values of this enum.
      */
     ZYDIS_FEATURE_REQUIRED_BITS = ZYAN_BITS_TO_REPRESENT(ZYDIS_FEATURE_MAX_VALUE)
 } ZydisFeature;
@@ -132,12 +132,12 @@ typedef enum ZydisFeature_
 
 /**
  * @addtogroup version Version
- * @brief Functions for checking the library version and build options.
+ * Functions for checking the library version and build options.
  * @{
  */
 
 /**
- * @brief   Returns the zydis version.
+ * Returns the zydis version.
  *
  * @return  The zydis version.
  *
@@ -147,7 +147,7 @@ typedef enum ZydisFeature_
 ZYDIS_EXPORT ZyanU64 ZydisGetVersion(void);
 
 /**
- * @brief   Checks, if the specified feature is enabled in the current zydis library instance.
+ * Checks, if the specified feature is enabled in the current zydis library instance.
  *
  * @param   feature The feature.
  *

@@ -16,8 +16,8 @@ const nsLoginInfo = new Components.Constructor(
 );
 
 const login1 = new nsLoginInfo(
-  "http://example.com",
-  "http://example.com",
+  "https://example.com",
+  "https://example.com",
   null,
   "notifyu1",
   "notifyp1",
@@ -25,8 +25,8 @@ const login1 = new nsLoginInfo(
   "pass"
 );
 const login2 = new nsLoginInfo(
-  "http://example.com",
-  "http://example.com",
+  "https://example.com",
+  "https://example.com",
   null,
   "",
   "notifyp1",

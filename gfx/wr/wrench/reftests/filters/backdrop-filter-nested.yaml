@@ -13,6 +13,9 @@ root:
           image: solid-color(255,255,255,255,100,100)
           rect: [0, 0, 100, 100]
           repeat: false
+    - type: clip-chain
+      id: 12
+      clips: [2]
     - type: stacking-context
       filters: [identity]
       wraps-backdrop-filter: true
@@ -22,7 +25,7 @@ root:
           filters: identity
         - type: stacking-context
           wraps-backdrop-filter: true
-          clip-node: 2
+          clip-chain: 12
           items:
           - type: backdrop-filter
             bounds: 0 0 100 100

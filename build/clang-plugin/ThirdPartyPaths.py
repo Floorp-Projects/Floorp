@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
 
+import glob
 import json
+import sys
+
+# Import buildconfig if available, otherwise set has_buildconfig to False so
+# we skip the check which relies on it.
+try:
+    import buildconfig
+except ImportError:
+    has_buildconfig = False
+else:
+    has_buildconfig = True
 
 
 def generate(output, *input_paths):
@@ -11,6 +22,7 @@ def generate(output, *input_paths):
     """
     tpp_list = []
     lines = set()
+    path_found = True
 
     for path in input_paths:
         with open(path) as f:
@@ -20,7 +32,25 @@ def generate(output, *input_paths):
         line = line.strip()
         if line.endswith("/"):
             line = line[:-1]
-        tpp_list.append(line)
+
+        if has_buildconfig:
+            # Ignore lines starting with $UNVALIDATED
+            # These should only be coming from Unvalidated.txt
+            if line.startswith("$UNVALIDATED"):
+                line = line[13:]
+            elif not glob.glob(buildconfig.topsrcdir + "/" + line):
+                path_found = False
+
+        if path_found:
+            tpp_list.append(line)
+        else:
+            print(
+                "Third-party path "
+                + line
+                + " does not exist. Remove it from Generated.txt or "
+                + "ThirdPartyPaths.txt and try again."
+            )
+            sys.exit(1)
     tpp_strings = ",\n  ".join([json.dumps(tpp) for tpp in sorted(tpp_list)])
 
     output.write(

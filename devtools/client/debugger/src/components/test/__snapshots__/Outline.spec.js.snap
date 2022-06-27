@@ -384,14 +384,6 @@ exports[`Outline renders outline renders ignore anonymous functions 1`] = `
 </div>
 `;
 
-exports[`Outline renders outline renders loading if symbols are loading 1`] = `
-<div
-  className="outline-pane-info"
->
-  Loading…
-</div>
-`;
-
 exports[`Outline renders outline renders loading if symbols is not defined 1`] = `
 <div
   className="outline-pane-info"

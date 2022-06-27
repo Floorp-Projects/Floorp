@@ -81,6 +81,7 @@ class nsContentSecurityManager : public nsIContentSecurityManager,
   static nsresult CheckAllowLoadInSystemPrivilegedContext(nsIChannel* aChannel);
   static nsresult CheckAllowLoadInPrivilegedAboutContext(nsIChannel* aChannel);
   static nsresult CheckChannelHasProtocolSecurityFlag(nsIChannel* aChannel);
+  static bool CrossOriginEmbedderPolicyAllowsCredentials(nsIChannel* aChannel);
 
   virtual ~nsContentSecurityManager() = default;
 };

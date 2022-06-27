@@ -1540,14 +1540,6 @@ impl YamlFrameReader {
         );
     }
 
-    fn get_complex_clip_for_item(&mut self, yaml: &Yaml) -> Option<ComplexClipRegion> {
-        let complex_clip = &yaml["complex-clip"];
-        if complex_clip.is_badvalue() {
-            return None;
-        }
-        Some(complex_clip.as_complex_clip_region())
-    }
-
     fn get_item_type_from_yaml(item: &Yaml) -> &str {
         let shorthands = [
             "rect",
@@ -1596,26 +1588,16 @@ impl YamlFrameReader {
                 self.spatial_id_stack.push(scroll_id);
             }
 
-            let complex_clip = self.get_complex_clip_for_item(item);
             let clip_rect = item["clip-rect"].as_rect().unwrap_or(full_clip);
-
-            let pushed_clip = complex_clip.map_or(false, |complex_clip| {
-                if matches!(item_type, "clip" | "clip-chain" | "scroll-frame") {
-                    false
-                } else {
-                    let id = dl.define_clip_rounded_rect(
-                        &self.top_space_and_clip(),
-                        complex_clip,
-                    );
-                    self.clip_id_stack.push(id);
-                    true
-                }
-            });
 
             let SpaceAndClipInfo {
                 spatial_id,
-                clip_id,
+                mut clip_id,
             } = self.top_space_and_clip();
+
+            if let Some(clip_chain_id) = self.to_clip_chain_id(&item["clip-chain"]) {
+                clip_id = ClipId::ClipChain(clip_chain_id);
+            }
 
             let mut flags = PrimitiveFlags::default();
             for (key, flag) in [
@@ -1627,6 +1609,7 @@ impl YamlFrameReader {
                     flags.set(flag, value);
                 }
             }
+
 
             let mut info = CommonItemProperties {
                 clip_rect,
@@ -1663,9 +1646,6 @@ impl YamlFrameReader {
                 _ => println!("Skipping unknown item type: {:?}", item),
             }
 
-            if pushed_clip {
-                self.clip_id_stack.pop().unwrap();
-            }
             if set_clip_id.is_some() {
                 self.clip_id_stack.pop().unwrap();
             }

@@ -101,7 +101,7 @@ export class Outline extends Component {
     let classes = [];
     let functions = [];
 
-    if (symbols && !symbols.loading) {
+    if (symbols) {
       ({ classes, functions } = symbols);
     }
 
@@ -221,7 +221,7 @@ export class Outline extends Component {
   renderClassFunctions(klass, functions) {
     const { symbols } = this.props;
 
-    if (!symbols || symbols.loading || klass == null || functions.length == 0) {
+    if (!symbols || klass == null || functions.length == 0) {
       return null;
     }
 
@@ -310,7 +310,7 @@ export class Outline extends Component {
       return this.renderPlaceholder();
     }
 
-    if (!symbols || symbols.loading) {
+    if (!symbols) {
       return this.renderLoading();
     }
 

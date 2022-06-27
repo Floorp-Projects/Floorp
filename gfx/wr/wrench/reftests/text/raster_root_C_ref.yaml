@@ -13,13 +13,19 @@ root:
           - type: rect
             color: [180, 140, 120, 0.4]
             bounds: 600 600 2048 2048
+          - type: clip
+            id: 101
+            complex:
+              - rect: [480, 480, 1024, 1024]
+                radius: [512, 512]
+          - type: clip-chain
+            id: 201
+            clips: [101]
           - type: "stacking-context"
             bounds: [0, 0, 2048, 2048]
             filters: [invert(1)]
             mix-blend-mode: exclusion
-            complex-clip:
-              rect: [480, 480, 1024, 1024]
-              radius: [512, 512]
+            clip-chain: 201
             items:
               - type: "stacking-context"
                 transform: scale(6)

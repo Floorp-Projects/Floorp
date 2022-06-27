@@ -3759,8 +3759,16 @@ void NS_CycleCollectorSuspect3(void* aPtr, nsCycleCollectionParticipant* aCp,
                                bool* aShouldDelete) {
   CollectorData* data = sCollectorData.get();
 
-  // We should have started the cycle collector by now.
-  MOZ_ASSERT(data);
+  // This assertion will happen if you AddRef or Release a cycle collected
+  // object on a thread that does not have an active cycle collector.
+  // This can happen in a few situations:
+  // 1. We never cycle collect on this thread. (The cycle collector is only
+  // run on the main thread and DOM worker threads.)
+  // 2. The cycle collector hasn't been initialized on this thread yet.
+  // 3. The cycle collector has already been shut down on this thread.
+  MOZ_DIAGNOSTIC_ASSERT(
+      data,
+      "Cycle collected object used on a thread without a cycle collector.");
 
   if (MOZ_LIKELY(data->mCollector)) {
     data->mCollector->Suspect(aPtr, aCp, aRefCnt);

@@ -1380,6 +1380,7 @@ interface nsILoadInfo : nsISupports
   cenum CrossOriginEmbedderPolicy : 8 {
     EMBEDDER_POLICY_NULL = 0,
     EMBEDDER_POLICY_REQUIRE_CORP = 1,
+    EMBEDDER_POLICY_CREDENTIALLESS = 2,
   };
 
   /**

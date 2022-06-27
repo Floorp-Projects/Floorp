@@ -80,7 +80,7 @@ export function formatSymbol(symbol) {
 }
 
 export function formatSymbols(symbols) {
-  if (!symbols || symbols.loading) {
+  if (!symbols) {
     return { functions: [] };
   }
 

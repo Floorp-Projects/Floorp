@@ -17,10 +17,10 @@ const HTTP_SEARCH_STRING = "http prefix";
 const HTTPS_SEARCH_STRING = "https prefix";
 const PREFIX_SUGGESTIONS_STRIPPED_URL = "example.com/prefix-test";
 
-const { timestampTemplate, timestampLength } = UrlbarProviderQuickSuggest;
+const { TIMESTAMP_TEMPLATE, TIMESTAMP_LENGTH } = UrlbarProviderQuickSuggest;
 const TIMESTAMP_SEARCH_STRING = "timestamp";
-const TIMESTAMP_SUGGESTION_URL = `http://example.com/timestamp-${timestampTemplate}`;
-const TIMESTAMP_SUGGESTION_CLICK_URL = `http://click.reporting.test.com/timestamp-${timestampTemplate}-foo`;
+const TIMESTAMP_SUGGESTION_URL = `http://example.com/timestamp-${TIMESTAMP_TEMPLATE}`;
+const TIMESTAMP_SUGGESTION_CLICK_URL = `http://click.reporting.test.com/timestamp-${TIMESTAMP_TEMPLATE}-foo`;
 
 const REMOTE_SETTINGS_DATA = [
   {
@@ -852,7 +852,7 @@ add_task(async function dedupeAgainstURL_timestamps() {
 
   // Add a visit that will match the query below and dupe the quick suggest.
   let dupeURL = TIMESTAMP_SUGGESTION_URL.replace(
-    timestampTemplate,
+    TIMESTAMP_TEMPLATE,
     "2013051113"
   );
 
@@ -860,14 +860,14 @@ add_task(async function dedupeAgainstURL_timestamps() {
   // suggest but not quite because they have invalid timestamps.
   let badTimestamps = [
     // not numeric digits
-    "x".repeat(timestampLength),
+    "x".repeat(TIMESTAMP_LENGTH),
     // too few digits
-    "5".repeat(timestampLength - 1),
+    "5".repeat(TIMESTAMP_LENGTH - 1),
     // empty string, too few digits
     "",
   ];
   let badTimestampURLs = badTimestamps.map(str =>
-    TIMESTAMP_SUGGESTION_URL.replace(timestampTemplate, str)
+    TIMESTAMP_SUGGESTION_URL.replace(TIMESTAMP_TEMPLATE, str)
   );
 
   await PlacesTestUtils.addVisits(

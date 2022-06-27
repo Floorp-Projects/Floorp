@@ -53,7 +53,7 @@ export function highlightCalls(cx) {
 
     const symbols = getSymbols(getState(), source);
 
-    if (!symbols || symbols.loading) {
+    if (!symbols) {
       return;
     }
 
