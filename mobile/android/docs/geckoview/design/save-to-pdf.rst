@@ -199,4 +199,4 @@ Risks
 -----
 
 The API and the code that this work would be using are pretty new, currently
-prefered off in Nightly and could contain implementation bugs.
+pref'd off in Nightly and could contain implementation bugs.
