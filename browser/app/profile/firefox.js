@@ -2586,13 +2586,8 @@ pref("devtools.responsive.reloadNotification.enabled", true);
 pref("devtools.responsive.touchSimulation.enabled", false);
 // The user agent of the viewport.
 pref("devtools.responsive.userAgent", "");
-
-// Show the custom user agent input only in Nightly.
-#if defined(NIGHTLY_BUILD)
-  pref("devtools.responsive.showUserAgentInput", true);
-#else
-  pref("devtools.responsive.showUserAgentInput", false);
-#endif
+// Show the custom user agent input by default
+pref("devtools.responsive.showUserAgentInput", true);
 
 // Show tab debug targets for This Firefox (on by default for local builds).
 #ifdef MOZILLA_OFFICIAL
