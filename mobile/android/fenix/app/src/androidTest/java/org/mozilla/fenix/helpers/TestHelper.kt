@@ -43,6 +43,7 @@ import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matcher
 import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
@@ -229,7 +230,7 @@ object TestHelper {
     fun assertNativeAppOpens(appPackageName: String, url: String) {
         if (isPackageInstalled(appPackageName)) {
             mDevice.waitForIdle(waitingTimeShort)
-            intended(toPackage(appPackageName))
+            assertTrue(mDevice.findObject(UiSelector().packageName(appPackageName)).waitForExists(waitingTime))
         } else {
             BrowserRobot().verifyUrl(url)
         }
