@@ -7,5 +7,5 @@
 // This interface exists purely to register a new global as part of
 // code generation so that we can properly hook this into
 // shadow realms.
-[Global=(ShadowRealmGlobal), Exposed=ShadowRealmGlobal]
+[Global=(ShadowRealmGlobal), Exposed=ShadowRealmGlobal, LegacyNoInterfaceObject]
 interface ShadowRealmGlobalScope { };
