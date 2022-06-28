@@ -32,13 +32,15 @@
 #define GOOGLE_PROTOBUF_MAP_FIELD_LITE_H__
 
 #include <type_traits>
-#include <google/protobuf/parse_context.h>
+
 #include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/port.h>
 #include <google/protobuf/map.h>
 #include <google/protobuf/map_entry_lite.h>
-#include <google/protobuf/port.h>
+#include <google/protobuf/parse_context.h>
 #include <google/protobuf/wire_format_lite.h>
 
+// Must be included last.
 #include <google/protobuf/port_def.inc>
 
 #ifdef SWIG
@@ -49,24 +51,46 @@ namespace google {
 namespace protobuf {
 namespace internal {
 
+#ifndef NDEBUG
+void MapFieldLiteNotDestructed(void* map_field_lite);
+#endif
+
 // This class provides access to map field using generated api. It is used for
-// internal generated message implentation only. Users should never use this
+// internal generated message implementation only. Users should never use this
 // directly.
 template <typename Derived, typename Key, typename T,
           WireFormatLite::FieldType key_wire_type,
-          WireFormatLite::FieldType value_wire_type, int default_enum_value = 0>
+          WireFormatLite::FieldType value_wire_type>
 class MapFieldLite {
   // Define message type for internal repeated field.
   typedef Derived EntryType;
 
  public:
   typedef Map<Key, T> MapType;
-  typedef EntryType EntryTypeTrait;
 
-  MapFieldLite() { SetDefaultEnumValue(); }
+  constexpr MapFieldLite() : map_() {}
+  explicit MapFieldLite(Arena* arena) : map_(arena) {}
+  MapFieldLite(ArenaInitialized, Arena* arena) : MapFieldLite(arena) {}
 
-  explicit MapFieldLite(Arena* arena) : map_(arena) { SetDefaultEnumValue(); }
-
+#ifdef NDEBUG
+  void Destruct() { map_.~Map(); }
+  ~MapFieldLite() {}
+#else
+  void Destruct() {
+    // We want to destruct the map in such a way that we can verify
+    // that we've done that, but also be sure that we've deallocated
+    // everything (as opposed to leaving an allocation behind with no
+    // data in it, as would happen if a vector was resize'd to zero.
+    // Map::Swap with an empty map accomplishes that.
+    decltype(map_) swapped_map(map_.arena());
+    map_.InternalSwap(swapped_map);
+  }
+  ~MapFieldLite() {
+    if (map_.arena() == nullptr && !map_.empty()) {
+      MapFieldLiteNotDestructed(this);
+    }
+  }
+#endif
   // Accessors
   const Map<Key, T>& GetMap() const { return map_; }
   Map<Key, T>* MutableMap() { return &map_; }
@@ -81,26 +105,12 @@ class MapFieldLite {
     }
   }
   void Swap(MapFieldLite* other) { map_.swap(other->map_); }
-
-  // Set default enum value only for proto2 map field whose value is enum type.
-  void SetDefaultEnumValue() {
-    MutableMap()->SetDefaultEnumValue(default_enum_value);
-  }
+  void InternalSwap(MapFieldLite* other) { map_.InternalSwap(other->map_); }
 
   // Used in the implementation of parsing. Caller should take the ownership iff
-  // arena_ is NULL.
+  // arena_ is nullptr.
   EntryType* NewEntry() const {
-    return Arena::CreateMessage<EntryType>(map_.arena_);
-  }
-  // Used in the implementation of serializing enum value type. Caller should
-  // take the ownership iff arena_ is NULL.
-  EntryType* NewEnumEntryWrapper(const Key& key, const T t) const {
-    return EntryType::EnumWrap(key, t, map_.arena_);
-  }
-  // Used in the implementation of serializing other value types. Caller should
-  // take the ownership iff arena_ is NULL.
-  EntryType* NewEntryWrapper(const Key& key, const T& t) const {
-    return EntryType::Wrap(key, t, map_.arena_);
+    return Arena::CreateMessage<EntryType>(map_.arena());
   }
 
   const char* _InternalParse(const char* ptr, ParseContext* ctx) {
@@ -108,45 +118,48 @@ class MapFieldLite {
     return parser._InternalParse(ptr, ctx);
   }
 
-  template <typename Metadata>
+  template <typename UnknownType>
   const char* ParseWithEnumValidation(const char* ptr, ParseContext* ctx,
-                                      bool (*is_valid)(int), uint32 field_num,
-                                      Metadata* metadata) {
+                                      bool (*is_valid)(int), uint32_t field_num,
+                                      InternalMetadata* metadata) {
     typename Derived::template Parser<MapFieldLite, Map<Key, T>> parser(this);
-    return parser.ParseWithEnumValidation(ptr, ctx, is_valid, field_num,
-                                          metadata);
+    return parser.template ParseWithEnumValidation<UnknownType>(
+        ptr, ctx, is_valid, field_num, metadata);
   }
 
  private:
   typedef void DestructorSkippable_;
 
-  Map<Key, T> map_;
+  // map_ is inside an anonymous union so we can explicitly control its
+  // destruction
+  union {
+    Map<Key, T> map_;
+  };
 
   friend class ::PROTOBUF_NAMESPACE_ID::Arena;
 };
 
-template <typename T, typename Metadata>
+template <typename UnknownType, typename T>
 struct EnumParseWrapper {
   const char* _InternalParse(const char* ptr, ParseContext* ctx) {
-    return map_field->ParseWithEnumValidation(ptr, ctx, is_valid, field_num,
-                                              metadata);
+    return map_field->template ParseWithEnumValidation<UnknownType>(
+        ptr, ctx, is_valid, field_num, metadata);
   }
   T* map_field;
   bool (*is_valid)(int);
-  uint32 field_num;
-  Metadata* metadata;
+  uint32_t field_num;
+  InternalMetadata* metadata;
 };
 
 // Helper function because the typenames of maps are horrendous to print. This
 // leverages compiler type deduction, to keep all type data out of the
 // generated code
-template <typename T, typename Metadata>
-EnumParseWrapper<T, Metadata> InitEnumParseWrapper(T* map_field,
-                                                   bool (*is_valid)(int),
-                                                   uint32 field_num,
-                                                   Metadata* metadata) {
-  return EnumParseWrapper<T, Metadata>{map_field, is_valid, field_num,
-                                       metadata};
+template <typename UnknownType, typename T>
+EnumParseWrapper<UnknownType, T> InitEnumParseWrapper(
+    T* map_field, bool (*is_valid)(int), uint32_t field_num,
+    InternalMetadata* metadata) {
+  return EnumParseWrapper<UnknownType, T>{map_field, is_valid, field_num,
+                                          metadata};
 }
 
 // True if IsInitialized() is true for value field in all elements of t. T is
@@ -155,10 +168,9 @@ EnumParseWrapper<T, Metadata> InitEnumParseWrapper(T* map_field,
 // We want the C++ compiler to inline this or not as it sees fit.
 template <typename Derived, typename Key, typename T,
           WireFormatLite::FieldType key_wire_type,
-          WireFormatLite::FieldType value_wire_type, int default_enum_value>
-bool AllAreInitialized(
-    const MapFieldLite<Derived, Key, T, key_wire_type, value_wire_type,
-                       default_enum_value>& field) {
+          WireFormatLite::FieldType value_wire_type>
+bool AllAreInitialized(const MapFieldLite<Derived, Key, T, key_wire_type,
+                                          value_wire_type>& field) {
   const auto& t = field.GetMap();
   for (typename Map<Key, T>::const_iterator it = t.begin(); it != t.end();
        ++it) {
@@ -172,15 +184,21 @@ struct MapEntryToMapField : MapEntryToMapField<typename MEntry::SuperType> {};
 
 template <typename T, typename Key, typename Value,
           WireFormatLite::FieldType kKeyFieldType,
-          WireFormatLite::FieldType kValueFieldType, int default_enum_value>
-struct MapEntryToMapField<MapEntryLite<T, Key, Value, kKeyFieldType,
-                                       kValueFieldType, default_enum_value>> {
-  typedef MapFieldLite<MapEntryLite<T, Key, Value, kKeyFieldType,
-                                    kValueFieldType, default_enum_value>,
-                       Key, Value, kKeyFieldType, kValueFieldType,
-                       default_enum_value>
+          WireFormatLite::FieldType kValueFieldType>
+struct MapEntryToMapField<
+    MapEntryLite<T, Key, Value, kKeyFieldType, kValueFieldType>> {
+  typedef MapFieldLite<
+      MapEntryLite<T, Key, Value, kKeyFieldType, kValueFieldType>, Key, Value,
+      kKeyFieldType, kValueFieldType>
       MapFieldType;
 };
+
+#ifndef NDEBUG
+inline PROTOBUF_NOINLINE void MapFieldLiteNotDestructed(void* map_field_lite) {
+  bool proper_destruct = false;
+  GOOGLE_CHECK(proper_destruct) << map_field_lite;
+}
+#endif
 
 }  // namespace internal
 }  // namespace protobuf

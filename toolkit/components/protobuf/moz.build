@@ -12,11 +12,14 @@ EXPORTS.google.protobuf += [
     'src/google/protobuf/arena.h',
     'src/google/protobuf/arena_impl.h',
     'src/google/protobuf/arenastring.h',
+    'src/google/protobuf/arenaz_sampler.h',
+    'src/google/protobuf/endian.h',
+    'src/google/protobuf/explicitly_constructed.h',
     'src/google/protobuf/extension_set.h',
     'src/google/protobuf/extension_set_inl.h',
     'src/google/protobuf/generated_enum_util.h',
-    'src/google/protobuf/generated_message_table_driven.h',
-    'src/google/protobuf/generated_message_table_driven_lite.h',
+    'src/google/protobuf/generated_message_tctable_decl.h',
+    'src/google/protobuf/generated_message_tctable_impl.h',
     'src/google/protobuf/generated_message_util.h',
     'src/google/protobuf/has_bits.h',
     'src/google/protobuf/implicit_weak_message.h',
@@ -32,6 +35,7 @@ EXPORTS.google.protobuf += [
     'src/google/protobuf/port_def.inc',
     'src/google/protobuf/port_undef.inc',
     'src/google/protobuf/repeated_field.h',
+    'src/google/protobuf/repeated_ptr_field.h',
     'src/google/protobuf/wire_format_lite.h',
 ]
 
@@ -50,7 +54,6 @@ EXPORTS.google.protobuf.stubs += [
     'src/google/protobuf/stubs/callback.h',
     'src/google/protobuf/stubs/casts.h',
     'src/google/protobuf/stubs/common.h',
-    'src/google/protobuf/stubs/fastmem.h',
     'src/google/protobuf/stubs/hash.h',
     'src/google/protobuf/stubs/int128.h',
     'src/google/protobuf/stubs/logging.h',
@@ -72,9 +75,10 @@ EXPORTS.google.protobuf.stubs += [
 UNIFIED_SOURCES += [
     'src/google/protobuf/any_lite.cc',
     'src/google/protobuf/arena.cc',
+    'src/google/protobuf/arenastring.cc',
+    'src/google/protobuf/arenaz_sampler.cc',
     'src/google/protobuf/io/strtod.cc',
     'src/google/protobuf/io/zero_copy_stream.cc',
-    'src/google/protobuf/io/zero_copy_stream_impl_lite.cc',
     'src/google/protobuf/stubs/stringpiece.cc',
     'src/google/protobuf/stubs/structurally_valid.cc',
     'src/google/protobuf/stubs/strutil.cc',
@@ -83,16 +87,20 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'src/google/protobuf/extension_set.cc', # port_def conflicts
     'src/google/protobuf/generated_enum_util.cc', # port_def conflicts
-    'src/google/protobuf/generated_message_table_driven_lite.cc',
+    'src/google/protobuf/generated_message_tctable_lite.cc',
     'src/google/protobuf/generated_message_util.cc', # port_def conflicts
     'src/google/protobuf/implicit_weak_message.cc', # port_def conflicts
+    'src/google/protobuf/inlined_string_field.cc', # port_def conflicts
     'src/google/protobuf/io/coded_stream.cc', # port_def conflicts
-    'src/google/protobuf/io/gzip_stream.cc', # technically not in libprotobuf_lite_la_SOURCES but devtools/shared/heapsnapshot/HeapSnapshot.cpp uses it.
+    'src/google/protobuf/io/gzip_stream.cc', # technically not in libprotobuf-lite.cmake but devtools/shared/heapsnapshot/HeapSnapshot.cpp uses it.
     'src/google/protobuf/io/io_win32.cc', # port_def conflicts
     'src/google/protobuf/io/zero_copy_stream_impl.cc', # port_def conflicts
+    'src/google/protobuf/io/zero_copy_stream_impl_lite.cc', # port_def conflicts
+    'src/google/protobuf/map.cc', # port_def conflicts
     'src/google/protobuf/message_lite.cc', # port_def conflicts
     'src/google/protobuf/parse_context.cc', # port_def conflicts
     'src/google/protobuf/repeated_field.cc', # port_def conflicts
+    'src/google/protobuf/repeated_ptr_field.cc', # port_def conflicts
     'src/google/protobuf/stubs/bytestream.cc', # port_def conflicts
     'src/google/protobuf/stubs/common.cc', # port_def conflicts
     'src/google/protobuf/stubs/int128.cc', # port_def conflicts
