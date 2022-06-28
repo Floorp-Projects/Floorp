@@ -341,6 +341,11 @@ struct CSSPixel {
         aRect.ToNearestPixels(AppUnitsPerCSSPixel()));
   }
 
+  static CSSIntRect FromAppUnitsToInside(const nsRect& aRect) {
+    return CSSIntRect::FromUnknownRect(
+        aRect.ToInsidePixels(AppUnitsPerCSSPixel()));
+  }
+
   // Conversions to app units
 
   static nscoord ToAppUnits(CSSCoord aCoord) {
