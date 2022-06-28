@@ -2636,10 +2636,6 @@ void nsFocusManager::Focus(
 
     aWindow->SetFocusedElement(aElement, focusMethod, false);
 
-    // if the focused element changed, scroll it into view
-    if (aElement && aFocusChanged) {
-      ScrollIntoView(presShell, aElement, aFlags);
-    }
     const RefPtr<nsPresContext> presContext = presShell->GetPresContext();
     if (sendFocusEvent) {
       NotifyFocusStateChange(aElement, nullptr, aFlags,
@@ -2662,6 +2658,11 @@ void nsFocusManager::Focus(
         aWindow->UpdateCommands(u"focus"_ns, nullptr, 0);
       }
 
+      // If the focused element changed, scroll it into view
+      if (aFocusChanged) {
+        ScrollIntoView(presShell, aElement, aFlags);
+      }
+
       if (!focusInOtherContentProcess) {
         RefPtr<Document> composedDocument = aElement->GetComposedDoc();
         RefPtr<Element> relatedTargetElement =
@@ -2674,6 +2675,10 @@ void nsFocusManager::Focus(
                                      GetFocusMoveActionCause(aFlags));
       if (!aWindowRaised) {
         aWindow->UpdateCommands(u"focus"_ns, nullptr, 0);
+      }
+      if (aFocusChanged && aElement) {
+        // If the focused element changed, scroll it into view
+        ScrollIntoView(presShell, aElement, aFlags);
       }
     }
   } else {
