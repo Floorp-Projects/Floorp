@@ -72,7 +72,7 @@ class ExternalEngineStateMachine final
       dom::MediaDecoderStateMachineDebugInfo& aInfo) override {
     // This debug info doesn't fit in this scenario because most decoding
     // details are only visible inside the external engine.
-    return GenericPromise::CreateAndResolve(true, __func__);
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   void NotifyEvent(ExternalEngineEvent aEvent) {
@@ -80,12 +80,6 @@ class ExternalEngineStateMachine final
     Unused << OwnerThread()->Dispatch(NS_NewRunnableFunction(
         "ExternalEngineStateMachine::NotifyEvent",
         [self = RefPtr{this}, aEvent] { self->NotifyEventInternal(aEvent); }));
-  }
-  void NotifyError(const MediaResult& aError) {
-    // On the engine manager thread.
-    Unused << OwnerThread()->Dispatch(NS_NewRunnableFunction(
-        "ExternalEngineStateMachine::NotifyError",
-        [self = RefPtr{this}, aError] { self->NotifyErrorInternal(aError); }));
   }
 
   const char* GetStateStr() const;
@@ -145,10 +139,6 @@ class ExternalEngineStateMachine final
         mSeekJob.RejectIfExists(aCallSite);
       }
       bool IsSeeking() const { return mSeekRequest.Exists(); }
-      media::TimeUnit GetTargetTime() const {
-        return mSeekJob.mTarget ? mSeekJob.mTarget->GetTime()
-                                : media::TimeUnit::Invalid();
-      }
       // Set it to true when starting seeking, and would be set to false after
       // receiving engine's `seeked` event. Used on thhe task queue only.
       bool mWaitingEngineSeeked = false;
@@ -156,9 +146,7 @@ class ExternalEngineStateMachine final
       MozPromiseRequestHolder<MediaFormatReader::SeekPromise> mSeekRequest;
       SeekJob mSeekJob;
     };
-    struct ShutdownEngine {
-      RefPtr<ShutdownPromise> mShutdown;
-    };
+    struct ShutdownEngine {};
 
     StateObject() : mData(InitEngine()), mName(State::InitEngine){};
     explicit StateObject(ReadingMetadata&& aArg)
@@ -185,9 +173,6 @@ class ExternalEngineStateMachine final
     SeekingData* AsSeekingData() {
       return IsSeekingData() ? &mData.as<SeekingData>() : nullptr;
     }
-    ShutdownEngine* AsShutdownEngine() {
-      return IsShutdownEngine() ? &mData.as<ShutdownEngine>() : nullptr;
-    }
 
     Variant<InitEngine, ReadingMetadata, RunningEngine, SeekingData,
             ShutdownEngine>
@@ -197,9 +182,9 @@ class ExternalEngineStateMachine final
   using State = StateObject::State;
 
   void NotifyEventInternal(ExternalEngineEvent aEvent);
-  void NotifyErrorInternal(const MediaResult& aError);
 
   RefPtr<ShutdownPromise> Shutdown() override;
+  RefPtr<ShutdownPromise> ShutdownInternal();
 
   void SetPlaybackRate(double aPlaybackRate) override;
   void BufferedRangeUpdated() override;
@@ -219,7 +204,6 @@ class ExternalEngineStateMachine final
   void ReadMetadata();
   void OnMetadataRead(MetadataHolder&& aMetadata);
   void OnMetadataNotRead(const MediaResult& aError);
-  bool IsFormatSupportedByExternalEngine(const MediaInfo& aInfo);
 
   // Functions for handling external engine event.
   void OnLoadedFirstFrame();
@@ -254,17 +238,11 @@ class ExternalEngineStateMachine final
 
   void MaybeFinishWaitForData();
 
-  void SetBlankVideoToVideoContainer();
-
   UniquePtr<ExternalPlaybackEngine> mEngine;
 
   bool mHasEnoughAudio = false;
   bool mHasEnoughVideo = false;
   bool mSentPlaybackEndedEvent = false;
-
-  const RefPtr<VideoFrameContainer> mVideoFrameContainer;
-  // TODO : before implementing a video output, we use this for our image.
-  RefPtr<layers::Image> mBlankImage;
 };
 
 class ExternalPlaybackEngine {
