@@ -156,6 +156,8 @@ class Firefox(Browser):
 
         if self.platform in ("linux", "win"):
             bits = "64" if uname[4] == "x86_64" else "32"
+        elif self.platform == "macos" and uname.machine == "arm64":
+            bits = "-aarch64"
         else:
             bits = ""
 
