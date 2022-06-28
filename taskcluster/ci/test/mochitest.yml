@@ -936,6 +936,10 @@ mochitest-webgl2-deqp:
 mochitest-webgpu:
     description: "Mochitest webgpu run"
     treeherder-symbol: M(webgpu)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     loopback-video: true
