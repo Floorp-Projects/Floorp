@@ -145,6 +145,10 @@ class ExternalEngineStateMachine final
         mSeekJob.RejectIfExists(aCallSite);
       }
       bool IsSeeking() const { return mSeekRequest.Exists(); }
+      media::TimeUnit GetTargetTime() const {
+        return mSeekJob.mTarget ? mSeekJob.mTarget->GetTime()
+                                : media::TimeUnit::Invalid();
+      }
       // Set it to true when starting seeking, and would be set to false after
       // receiving engine's `seeked` event. Used on thhe task queue only.
       bool mWaitingEngineSeeked = false;
