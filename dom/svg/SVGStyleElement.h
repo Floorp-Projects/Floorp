@@ -60,6 +60,8 @@ class SVGStyleElement final : public SVGStyleElementBase,
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   // WebIDL
+  bool Disabled() const;
+  void SetDisabled(bool aDisabled);
   void GetMedia(nsAString& aMedia);
   void SetMedia(const nsAString& aMedia, ErrorResult& rv);
   void GetType(nsAString& aType);
