@@ -65,7 +65,6 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/StaticPresData.h"
 #include "nsRefreshDriver.h"
 #include "Layers.h"
@@ -207,7 +206,7 @@ void nsPresContext::ForceReflowForFontInfoUpdate(bool aNeedsReframe) {
   // If there's a user font set, discard any src:local() faces it may have
   // loaded because their font entries may no longer be valid.
   if (auto* fonts = Document()->GetFonts()) {
-    fonts->GetImpl()->ForgetLocalFaces();
+    fonts->GetUserFontSet()->ForgetLocalFaces();
   }
 
   FlushFontCache();
