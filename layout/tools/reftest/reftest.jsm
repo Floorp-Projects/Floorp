@@ -965,8 +965,13 @@ function UpdateCanvasCache(url, canvas)
 async function DoDrawWindow(ctx, x, y, w, h)
 {
     if (g.useDrawSnapshot) {
-      let image = await g.browser.drawSnapshot(x, y, w, h, 1.0, "#fff");
-      ctx.drawImage(image, x, y);
+      try {
+        let image = await g.browser.drawSnapshot(x, y, w, h, 1.0, "#fff");
+        ctx.drawImage(image, x, y);
+      } catch (ex) {
+        logger.error(g.currentURL + " | drawSnapshot failed: " + ex);
+        ++g.testResults.Exception;
+      }
       return;
     }
 
