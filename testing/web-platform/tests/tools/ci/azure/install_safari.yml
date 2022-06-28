@@ -9,8 +9,8 @@ steps:
 - ${{ if eq(parameters.channel, 'preview') }}:
   - script: |
       set -eux -o pipefail
-      export SYSTEM_VERSION_COMPAT=0
-      HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask tools/ci/azure/safari-technology-preview.rb
+      ./wpt install --channel preview --download-only -d . --rename STP safari browser
+      sudo installer -pkg STP.pkg -target LocalSystem
       # Workaround for `sudo safardriver --enable` not working on Catalina:
       # https://github.com/web-platform-tests/wpt/issues/21751
       mkdir -p ~/Library/WebDriver/
