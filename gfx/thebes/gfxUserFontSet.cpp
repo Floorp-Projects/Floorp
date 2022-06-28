@@ -254,11 +254,11 @@ gfxUserFontFamily::~gfxUserFontFamily() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-already_AddRefed<gfxFontSrcPrincipal> gfxFontFaceSrc::LoadPrincipal(
+gfxFontSrcPrincipal* gfxFontFaceSrc::LoadPrincipal(
     const gfxUserFontSet& aFontSet) const {
   MOZ_ASSERT(mSourceType == eSourceType_URL);
   if (mUseOriginPrincipal && mOriginPrincipal) {
-    return RefPtr{mOriginPrincipal}.forget();
+    return mOriginPrincipal;
   }
   return aFontSet.GetStandardFontLoadPrincipal();
 }
@@ -933,15 +933,11 @@ gfxUserFontSet::gfxUserFontSet()
   }
 }
 
-gfxUserFontSet::~gfxUserFontSet() { Destroy(); }
-
-void gfxUserFontSet::Destroy() {
+gfxUserFontSet::~gfxUserFontSet() {
   gfxPlatformFontList* fp = gfxPlatformFontList::PlatformFontList();
   if (fp) {
     fp->RemoveUserFontSet(this);
   }
-
-  mFontFamilies.Clear();
 }
 
 already_AddRefed<gfxUserFontEntry> gfxUserFontSet::FindOrCreateUserFontEntry(
@@ -1263,7 +1259,7 @@ gfxFontEntry* gfxUserFontSet::UserFontCache::GetFont(
   }
 
   // Ignore principal when looking up a data: URI.
-  RefPtr<gfxFontSrcPrincipal> principal =
+  gfxFontSrcPrincipal* principal =
       IgnorePrincipal(aSrc.mURI) ? nullptr
                                  : aSrc.LoadPrincipal(*aUserFontEntry.mFontSet);
 

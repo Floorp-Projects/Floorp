@@ -16103,7 +16103,7 @@ gfxUserFontSet* Document::GetUserFontSet() {
     return nullptr;
   }
 
-  return mFontFaceSet->GetImpl();
+  return mFontFaceSet->GetUserFontSet();
 }
 
 void Document::FlushUserFontSet() {
@@ -16122,7 +16122,8 @@ void Document::FlushUserFontSet() {
     }
 
     if (!mFontFaceSet && !rules.IsEmpty()) {
-      mFontFaceSet = FontFaceSet::CreateForDocument(this);
+      nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
+      mFontFaceSet = new FontFaceSet(window, this);
     }
 
     bool changed = false;
@@ -16154,7 +16155,8 @@ void Document::MarkUserFontSetDirty() {
 
 FontFaceSet* Document::Fonts() {
   if (!mFontFaceSet) {
-    mFontFaceSet = FontFaceSet::CreateForDocument(this);
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
+    mFontFaceSet = new FontFaceSet(window, this);
     FlushUserFontSet();
   }
   return mFontFaceSet;
