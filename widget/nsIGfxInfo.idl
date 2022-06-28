@@ -168,14 +168,16 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBRENDER_SHADER_CACHE = 35;
   /* Whether partial present is allowed with WebRender, starting in 98. */
   const long FEATURE_WEBRENDER_PARTIAL_PRESENT = 36;
+  /* Whether VA-API is supported, starting in 96. */
+  const long FEATURE_VAAPI = 37;
   /* Whether WebGPU is supported, starting in 100. */
-  const long FEATURE_WEBGPU = 37;
+  const long FEATURE_WEBGPU = 38;
   /* Whether video overlay is supported, starting in 100. */
-  const long FEATURE_VIDEO_OVERLAY = 38;
+  const long FEATURE_VIDEO_OVERLAY = 39;
   /* Whether hardware decoded video zero copy is supported, starting in 101. */
-  const long FEATURE_HW_DECODED_VIDEO_ZERO_COPY = 39;
+  const long FEATURE_HW_DECODED_VIDEO_ZERO_COPY = 40;
   /* Whether DMABUF export is supported, starting in 103. */
-  const long FEATURE_DMABUF_SURFACE_EXPORT = 40;
+  const long FEATURE_DMABUF_SURFACE_EXPORT = 41;
   /* the maximum feature value. */
   const long FEATURE_MAX_VALUE = FEATURE_HW_DECODED_VIDEO_ZERO_COPY;
 
