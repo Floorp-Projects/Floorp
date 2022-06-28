@@ -32,39 +32,29 @@ namespace dom {
  */
 class FontFaceBufferSource : public gfxFontFaceBufferSource {
  public:
-  explicit FontFaceBufferSource(FontFaceImpl* aFontFace)
-      : mFontFace(aFontFace) {}
-  virtual void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength) override;
+  FontFaceBufferSource(uint8_t* aBuffer, uint32_t aLength)
+      : mBuffer(aBuffer), mLength(aLength) {}
+
+  void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength) override {
+    MOZ_ASSERT(mBuffer,
+               "only call TakeBuffer once on a given "
+               "FontFaceBufferSource object");
+    aBuffer = mBuffer;
+    aLength = mLength;
+    mBuffer = nullptr;
+    mLength = 0;
+  }
 
  private:
-  RefPtr<FontFaceImpl> mFontFace;
-};
-
-void FontFaceBufferSource::TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength) {
-  MOZ_ASSERT(mFontFace,
-             "only call TakeBuffer once on a given "
-             "FontFaceBufferSource object");
-  mFontFace->TakeBuffer(aBuffer, aLength);
-  mFontFace = nullptr;
-}
-
-// -- Utility functions ------------------------------------------------------
-
-template <typename T>
-static void GetDataFrom(const T& aObject, uint8_t*& aBuffer,
-                        uint32_t& aLength) {
-  MOZ_ASSERT(!aBuffer);
-  aObject.ComputeState();
-  // We use malloc here rather than a FallibleTArray or fallible
-  // operator new[] since the gfxUserFontEntry will be calling free
-  // on it.
-  aBuffer = (uint8_t*)malloc(aObject.Length());
-  if (!aBuffer) {
-    return;
+  ~FontFaceBufferSource() override {
+    if (mBuffer) {
+      free(mBuffer);
+    }
   }
-  memcpy((void*)aBuffer, aObject.Data(), aObject.Length());
-  aLength = aObject.Length();
-}
+
+  uint8_t* mBuffer;
+  uint32_t mLength;
+};
 
 // -- FontFaceImpl -----------------------------------------------------------
 
@@ -72,8 +62,6 @@ FontFaceImpl::FontFaceImpl(FontFace* aOwner, FontFaceSetImpl* aFontFaceSet)
     : mOwner(aOwner),
       mStatus(FontFaceLoadStatus::Unloaded),
       mSourceType(SourceType(0)),
-      mSourceBuffer(nullptr),
-      mSourceBufferLength(0),
       mFontFaceSet(aFontFaceSet),
       mUnicodeRangeDirty(true),
       mInFontFaceSet(false) {}
@@ -84,10 +72,6 @@ FontFaceImpl::~FontFaceImpl() {
   MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
 
   SetUserFontEntry(nullptr);
-
-  if (mSourceBuffer) {
-    free(mSourceBuffer);
-  }
 }
 
 void FontFaceImpl::Destroy() {
@@ -123,32 +107,25 @@ already_AddRefed<FontFaceImpl> FontFaceImpl::CreateForRule(
   return obj.forget();
 }
 
-void FontFaceImpl::InitializeSource(
-    const UTF8StringOrArrayBufferOrArrayBufferView& aSource) {
-  if (aSource.IsUTF8String()) {
-    IgnoredErrorResult rv;
-    SetDescriptor(eCSSFontDesc_Src, aSource.GetAsUTF8String(), rv);
-    if (rv.Failed()) {
-      if (mOwner) {
-        mOwner->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
-      }
+void FontFaceImpl::InitializeSourceURL(const nsACString& aURL) {
+  MOZ_ASSERT(mOwner);
+  mSourceType = eSourceType_URLs;
 
-      SetStatus(FontFaceLoadStatus::Error);
-      return;
-    }
-
-    mSourceType = eSourceType_URLs;
-    return;
+  IgnoredErrorResult rv;
+  SetDescriptor(eCSSFontDesc_Src, aURL, rv);
+  if (rv.Failed()) {
+    mOwner->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
+    SetStatus(FontFaceLoadStatus::Error);
   }
+}
 
+void FontFaceImpl::InitializeSourceBuffer(uint8_t* aBuffer, uint32_t aLength) {
+  MOZ_ASSERT(mOwner);
+  MOZ_ASSERT(!mBufferSource);
   mSourceType = FontFaceImpl::eSourceType_Buffer;
 
-  if (aSource.IsArrayBuffer()) {
-    GetDataFrom(aSource.GetAsArrayBuffer(), mSourceBuffer, mSourceBufferLength);
-  } else {
-    MOZ_ASSERT(aSource.IsArrayBufferView());
-    GetDataFrom(aSource.GetAsArrayBufferView(), mSourceBuffer,
-                mSourceBufferLength);
+  if (aBuffer) {
+    mBufferSource = new FontFaceBufferSource(aBuffer, aLength);
   }
 
   SetStatus(FontFaceLoadStatus::Loading);
@@ -651,22 +628,12 @@ void FontFaceImpl::DisconnectFromRule() {
 }
 
 bool FontFaceImpl::HasFontData() const {
-  return mSourceType == eSourceType_Buffer && mSourceBuffer;
+  return mSourceType == eSourceType_Buffer && mBufferSource;
 }
 
-void FontFaceImpl::TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength) {
-  MOZ_ASSERT(HasFontData());
-
-  aBuffer = mSourceBuffer;
-  aLength = mSourceBufferLength;
-
-  mSourceBuffer = nullptr;
-  mSourceBufferLength = 0;
-}
-
-already_AddRefed<gfxFontFaceBufferSource> FontFaceImpl::CreateBufferSource() {
-  RefPtr<FontFaceBufferSource> bufferSource = new FontFaceBufferSource(this);
-  return bufferSource.forget();
+already_AddRefed<gfxFontFaceBufferSource> FontFaceImpl::TakeBufferSource() {
+  MOZ_ASSERT(mBufferSource);
+  return mBufferSource.forget();
 }
 
 bool FontFaceImpl::IsInFontFaceSet(FontFaceSetImpl* aFontFaceSet) const {
