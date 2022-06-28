@@ -7,6 +7,7 @@
 #include "ChannelMediaDecoder.h"
 #include "ChannelMediaResource.h"
 #include "DecoderTraits.h"
+#include "ExternalEngineStateMachine.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
 #include "BaseMediaResource.h"
@@ -210,6 +211,14 @@ MediaDecoderStateMachineBase* ChannelMediaDecoder::CreateStateMachine() {
   init.mResource = mResource;
   init.mMediaDecoderOwnerID = mOwner;
   mReader = DecoderTraits::CreateReader(ContainerType(), init);
+#ifdef MOZ_WMF
+  // TODO : Only for testing development for now. In the future this should be
+  // used for encrypted content only.
+  if (StaticPrefs::media_wmf_media_engine_enabled() &&
+      StaticPrefs::media_wmf_media_engine_channel_decoder_enabled()) {
+    return new ExternalEngineStateMachine(this, mReader);
+  }
+#endif
   return new MediaDecoderStateMachine(this, mReader);
 }
 
