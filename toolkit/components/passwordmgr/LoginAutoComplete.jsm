@@ -550,7 +550,7 @@ class LoginAutoComplete {
       // N.B. This check must occur after the `await` above for it to be
       // effective.
       if (this.#autoCompleteLookupPromise !== autoCompleteLookupPromise) {
-        lazy.log.debug("Ignoring result from previous search.");
+        lazy.log.debug("ignoring result from previous search");
         return;
       }
 

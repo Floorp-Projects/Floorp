@@ -88,9 +88,7 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
   }
 
   async searchLoginsAsync(matchData) {
-    this.log(
-      `Searching for matching saved logins for origin: ${matchData.origin}`
-    );
+    this.log("searchLoginsAsync:", matchData);
     return this._getLoginsAsync(matchData);
   }
 

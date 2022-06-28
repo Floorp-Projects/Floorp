@@ -84,7 +84,7 @@ LoginManagerCrypto_SDR.prototype = {
       plainOctet += this._utfConverter.Finish();
       cipherText = this._decoderRing.encryptString(plainOctet);
     } catch (e) {
-      this.log(`Failed to encrypt string with error ${e.name}.`);
+      this.log("Failed to encrypt string. (" + e.name + ")");
       // If the user clicks Cancel, we get NS_ERROR_FAILURE.
       // (unlike decrypting, which gets NS_ERROR_NOT_AVAILABLE).
       if (e.result == Cr.NS_ERROR_FAILURE) {
@@ -136,7 +136,7 @@ LoginManagerCrypto_SDR.prototype = {
     try {
       cipherTexts = await this._decoderRing.asyncEncryptStrings(plaintexts);
     } catch (e) {
-      this.log(`Failed to encrypt strings with error ${e.name}.`);
+      this.log("Failed to encrypt strings. (" + e.name + ")");
       // If the user clicks Cancel, we get NS_ERROR_FAILURE.
       // (unlike decrypting, which gets NS_ERROR_NOT_AVAILABLE).
       if (e.result == Cr.NS_ERROR_FAILURE) {
@@ -183,9 +183,7 @@ LoginManagerCrypto_SDR.prototype = {
       plainOctet = this._decoderRing.decryptString(cipherText);
       plainText = this._utfConverter.ConvertToUnicode(plainOctet);
     } catch (e) {
-      this.log(
-        `Failed to decrypt cipher text of length ${cipherText.length} with error ${e.name}.`
-      );
+      this.log("Failed to decrypt string: " + cipherText + " (" + e.name + ")");
 
       // In the unlikely event the converter threw, reset it.
       this._utfConverterReset();
@@ -245,7 +243,7 @@ LoginManagerCrypto_SDR.prototype = {
     try {
       plainTexts = await this._decoderRing.asyncDecryptStrings(cipherTexts);
     } catch (e) {
-      this.log(`Failed to decrypt strings with error ${e.name}.`);
+      this.log("Failed to decrypt strings. (" + e.name + ")");
       // If the user clicks Cancel, we get NS_ERROR_NOT_AVAILABLE.
       // If the cipherText is bad / wrong key, we get NS_ERROR_FAILURE
       // Wrong passwords are handled by the decoderRing reprompting;
@@ -303,7 +301,7 @@ LoginManagerCrypto_SDR.prototype = {
    * _notifyObservers
    */
   _notifyObservers(topic) {
-    this.log(`Prompted for a primary password, notifying for ${topic}`);
+    this.log("Prompted for a primary password, notifying for " + topic);
     Services.obs.notifyObservers(null, topic);
   },
 }; // end of nsLoginManagerCrypto_SDR implementation

@@ -63,7 +63,9 @@ class LoginRelatedRealmsParent extends JSWindowActorParent {
         this.onRemoteSettingsSync(event)
       );
       this._relatedDomainsList = await this._sharedCredentialsClient.get();
+      lazy.log.debug("Initialized related realms", this._relatedDomainsList);
     }
+    lazy.log.debug("this._relatedDomainsList", this._relatedDomainsList);
     return this._relatedDomainsList;
   }
 
