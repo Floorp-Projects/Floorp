@@ -1013,22 +1013,28 @@ panelview .toolbarbutton-1,
   fill: currentColor;
 }
 
-#appMenu-zoom-controls2 > .subviewbutton {
+/* Adjust the Zoom toolbaritem padding to have its height the same as other toolbarbuttons,
+ * also in compact density and touch mode. */
+#appMenu-zoom-controls {
+  padding-block: max(0px, var(--arrowpanel-menuitem-padding-block) - 4px);
+}
+
+#appMenu-zoom-controls > .subviewbutton {
   margin-inline-start: 2px;
   padding: 4px;
 }
 
 /* hover and active color changes are applied to child elements not the button itself */
-#appMenu-zoom-controls2 > .subviewbutton:not([disabled]):is(:hover, :hover:active) {
+#appMenu-zoom-controls > .subviewbutton:not([disabled]):is(:hover, :hover:active) {
   color: unset;
   background-color: unset;
 }
 
-#appMenu-zoom-controls2 > .subviewbutton:focus-visible {
+#appMenu-zoom-controls > .subviewbutton:focus-visible {
   outline: none;
 }
 
-#appMenu-zoom-controls2 > .subviewbutton-iconic:focus-visible > .toolbarbutton-icon,
+#appMenu-zoom-controls > .subviewbutton-iconic:focus-visible > .toolbarbutton-icon,
 #appMenu-zoomReset-button2:focus-visible > .toolbarbutton-text {
   outline: var(--focus-outline);
 }

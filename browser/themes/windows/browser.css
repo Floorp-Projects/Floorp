@@ -479,7 +479,8 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 panel[touchmode] .PanelUI-subView .subviewbutton,
 menupopup[touchmode] menu,
 menupopup[touchmode] menuitem {
-  padding-block: 12px;
+  --arrowpanel-menuitem-padding-block: 12px;
+  padding-block: var(--arrowpanel-menuitem-padding-block);
 }
 
 #contentAreaContextMenu[touchmode] > #context-navigation > menuitem {
