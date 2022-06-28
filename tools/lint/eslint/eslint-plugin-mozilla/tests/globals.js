@@ -149,4 +149,13 @@ class A {
 `);
     assert.deepEqual(globals, [{ name: "A", writable: true }]);
   });
+
+  it("should reflect lazy getters", function() {
+    const globals = getGlobalsForCode(`
+ChromeUtils.defineESModuleGetters(this, {
+  A: "B",
+});
+`);
+    assert.deepEqual(globals, [{ name: "A", writable: true, explicit: true }]);
+  });
 });
