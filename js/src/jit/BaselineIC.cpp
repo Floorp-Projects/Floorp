@@ -1708,26 +1708,23 @@ bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
     // the stack pushes below.
 
     // newTarget
-    uint32_t valueOffset = 0;
+    uint32_t valueOffset = BaselineStubFrameLayout::Size();
     if (isConstructing) {
-      masm.pushValue(Address(FramePointer, StubFrameSizeFromFP));
-      valueOffset++;
+      masm.pushValue(Address(FramePointer, valueOffset));
+      valueOffset += sizeof(Value);
     }
 
     // array
-    masm.pushValue(Address(FramePointer,
-                           valueOffset * sizeof(Value) + StubFrameSizeFromFP));
-    valueOffset++;
+    masm.pushValue(Address(FramePointer, valueOffset));
+    valueOffset += sizeof(Value);
 
     // this
-    masm.pushValue(Address(FramePointer,
-                           valueOffset * sizeof(Value) + StubFrameSizeFromFP));
-    valueOffset++;
+    masm.pushValue(Address(FramePointer, valueOffset));
+    valueOffset += sizeof(Value);
 
     // callee
-    masm.pushValue(Address(FramePointer,
-                           valueOffset * sizeof(Value) + StubFrameSizeFromFP));
-    valueOffset++;
+    masm.pushValue(Address(FramePointer, valueOffset));
+    valueOffset += sizeof(Value);
 
     masm.push(masm.getStackPointer());
     masm.push(ICStubReg);
