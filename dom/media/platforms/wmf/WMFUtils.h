@@ -18,35 +18,6 @@
 
 namespace mozilla {
 
-static const GUID CLSID_MSOpusDecoder = {
-    0x63e17c10,
-    0x2d43,
-    0x4c42,
-    {0x8f, 0xe3, 0x8d, 0x8b, 0x63, 0xe4, 0x6a, 0x6a}};
-
-// Media types supported by Media Foundation.
-enum class WMFStreamType {
-  Unknown,
-  H264,
-  VP8,
-  VP9,
-  AV1,
-  MP3,
-  AAC,
-  OPUS,
-  VORBIS,
-  SENTINEL
-};
-
-bool StreamTypeIsVideo(const WMFStreamType& aType);
-
-bool StreamTypeIsAudio(const WMFStreamType& aType);
-
-// Get a string representation of the stream type. Useful for logging.
-const char* StreamTypeToString(WMFStreamType aStreamType);
-
-WMFStreamType GetStreamTypeFromMimeType(const nsCString& aMimeType);
-
 // Converts from microseconds to hundreds of nanoseconds.
 // We use microseconds for our timestamps, whereas WMF uses
 // hundreds of nanoseconds.
@@ -89,15 +60,6 @@ inline bool IsFlagSet(DWORD flags, DWORD pattern) {
 nsString GetProgramW6432Path();
 
 const char* MFTMessageTypeToStr(MFT_MESSAGE_TYPE aMsg);
-
-GUID AudioMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType);
-
-GUID VideoMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType);
-
-void AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
-                                      const uint8_t* aAudioSpecConfig,
-                                      uint32_t aConfigLength,
-                                      nsTArray<BYTE>& aOutUserData);
 
 }  // namespace mozilla
 

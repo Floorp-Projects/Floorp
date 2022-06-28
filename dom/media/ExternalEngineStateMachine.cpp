@@ -7,7 +7,6 @@
 #include "PerformanceRecorder.h"
 #ifdef MOZ_WMF
 #  include "mozilla/MFMediaEngineChild.h"
-#  include "MFMediaEngineDecoderModule.h"
 #endif
 #include "mozilla/ProfilerLabels.h"
 
@@ -108,8 +107,7 @@ void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
 
 ExternalEngineStateMachine::ExternalEngineStateMachine(
     MediaDecoder* aDecoder, MediaFormatReader* aReader)
-    : MediaDecoderStateMachineBase(aDecoder, aReader),
-      mVideoFrameContainer(aDecoder->GetVideoFrameContainer()) {
+    : MediaDecoderStateMachineBase(aDecoder, aReader) {
   LOG("Created ExternalEngineStateMachine");
   MOZ_ASSERT(mState.IsInitEngine());
 #ifdef MOZ_WMF
@@ -123,6 +121,8 @@ ExternalEngineStateMachine::ExternalEngineStateMachine(
                &ExternalEngineStateMachine::OnEngineInitSuccess,
                &ExternalEngineStateMachine::OnEngineInitFailure)
         ->Track(state->mEngineInitRequest);
+  } else {
+    ShutdownInternal();
   }
 }
 
@@ -151,6 +151,7 @@ void ExternalEngineStateMachine::OnEngineInitFailure() {
   state->mInitPromise = nullptr;
   // TODO : Should fallback to the normal playback with media engine.
   DecodeError(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
+  ShutdownInternal();
 }
 
 void ExternalEngineStateMachine::ReadMetadata() {
@@ -175,14 +176,6 @@ void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
   mMediaSeekable = Info().mMediaSeekable;
   mMediaSeekableOnlyInBufferedRanges =
       Info().mMediaSeekableOnlyInBufferedRanges;
-
-  if (!IsFormatSupportedByExternalEngine(*mInfo)) {
-    // The external engine doesn't support the type, try to notify the decoder
-    // to use our own state machine again.
-    DecodeError(
-        MediaResult(NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR));
-    return;
-  }
 
   mEngine->SetMediaInfo(*mInfo);
 
@@ -213,25 +206,6 @@ void ExternalEngineStateMachine::OnMetadataNotRead(const MediaResult& aError) {
   LOGE("Decode metadata failed, shutting down decoder");
   mState.AsReadingMetadata()->mMetadataRequest.Complete();
   DecodeError(aError);
-}
-
-bool ExternalEngineStateMachine::IsFormatSupportedByExternalEngine(
-    const MediaInfo& aInfo) {
-  AssertOnTaskQueue();
-  MOZ_ASSERT(mState.IsReadingMetadata());
-#ifdef MOZ_WMF
-  const bool audioSupported =
-      !aInfo.HasAudio() ||
-      MFMediaEngineDecoderModule::SupportsConfig(aInfo.mAudio);
-  const bool videoSupported =
-      !aInfo.HasVideo() ||
-      MFMediaEngineDecoderModule::SupportsConfig(aInfo.mVideo);
-  LOG("audio=%s (supported=%d), video=%s(supported=%d)",
-      aInfo.HasAudio() ? aInfo.mAudio.mMimeType.get() : "none", audioSupported,
-      aInfo.HasVideo() ? aInfo.mVideo.mMimeType.get() : "none", videoSupported);
-  return audioSupported && videoSupported;
-#endif
-  return false;
 }
 
 RefPtr<MediaDecoder::SeekPromise> ExternalEngineStateMachine::Seek(
@@ -277,7 +251,8 @@ void ExternalEngineStateMachine::SeekReader() {
   // Reset the reader first and ask it to perform a demuxer seek.
   ResetDecode();
   state->mWaitingReaderSeeked = true;
-  LOG("Seek reader to %" PRId64, state->GetTargetTime().ToMicroseconds());
+  LOG("Seek reader to %" PRId64,
+      state->mSeekJob.mTarget->GetTime().ToMicroseconds());
   mReader->Seek(state->mSeekJob.mTarget.ref())
       ->Then(OwnerThread(), __func__, this,
              &ExternalEngineStateMachine::OnSeekResolved,
@@ -292,7 +267,7 @@ void ExternalEngineStateMachine::OnSeekResolved(const media::TimeUnit& aUnit) {
   MOZ_ASSERT(mState.IsSeekingData());
   auto* state = mState.AsSeekingData();
 
-  LOG("OnReaderSeekResolved");
+  LOG("OnSeekResolved");
   state->mSeekRequest.Complete();
   state->mWaitingReaderSeeked = false;
 
@@ -316,7 +291,7 @@ void ExternalEngineStateMachine::OnSeekRejected(
   MOZ_ASSERT(mState.IsSeekingData());
   auto* state = mState.AsSeekingData();
 
-  LOG("OnReaderSeekRejected");
+  LOG("OnSeekRejected");
   state->mSeekRequest.Complete();
   if (aReject.mError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
     LOG("OnSeekRejected reason=WAITING_FOR_DATA type=%s",
@@ -402,12 +377,14 @@ RefPtr<GenericPromise> ExternalEngineStateMachine::InvokeSetSink(
 
 RefPtr<ShutdownPromise> ExternalEngineStateMachine::Shutdown() {
   AssertOnTaskQueue();
-  if (mState.IsShutdownEngine()) {
-    LOG("Already shutdown");
-    return mState.AsShutdownEngine()->mShutdown;
-  }
-
   LOG("Shutdown");
+  return ShutdownInternal();
+}
+
+RefPtr<ShutdownPromise> ExternalEngineStateMachine::ShutdownInternal() {
+  AssertOnTaskQueue();
+
+  LOG("ShutdownInternal");
   ChangeStateTo(State::ShutdownEngine);
   ResetDecode();
 
@@ -428,14 +405,11 @@ RefPtr<ShutdownPromise> ExternalEngineStateMachine::Shutdown() {
   mMetadataManager.Disconnect();
 
   mEngine->Shutdown();
-
-  auto* state = mState.AsShutdownEngine();
-  state->mShutdown = mReader->Shutdown()->Then(
+  return mReader->Shutdown()->Then(
       OwnerThread(), __func__, [self = RefPtr{this}, this]() {
         LOG("Shutting down state machine task queue");
         return OwnerThread()->BeginShutdown();
       });
-  return state->mShutdown;
 }
 
 void ExternalEngineStateMachine::SetPlaybackRate(double aPlaybackRate) {
@@ -736,9 +710,8 @@ void ExternalEngineStateMachine::OnRequestVideo() {
                 MEDIA_PLAYBACK);
             MOZ_ASSERT(aVideo);
             RunningEngineUpdate(MediaData::Type::VIDEO_DATA);
-            // TODO : figure out the relationship between setting image and the
-            // DCOMP mode.
-            SetBlankVideoToVideoContainer();
+            // TODO : set video into video container? Will implement this when
+            // starting implementing the video output for the media engine.
           },
           [this, self](const MediaResult& aError) {
             mVideoDataRequest.Complete();
@@ -763,18 +736,6 @@ void ExternalEngineStateMachine::OnRequestVideo() {
             }
           })
       ->Track(mVideoDataRequest);
-}
-
-void ExternalEngineStateMachine::SetBlankVideoToVideoContainer() {
-  AssertOnTaskQueue();
-  MOZ_ASSERT(mState.IsRunningEngine() || mState.IsSeekingData());
-  if (!mBlankImage) {
-    mBlankImage =
-        mVideoFrameContainer->GetImageContainer()->CreatePlanarYCbCrImage();
-  }
-  MOZ_ASSERT(mInfo->HasVideo());
-  mVideoFrameContainer->SetCurrentFrame(mInfo->mVideo.mDisplay, mBlankImage,
-                                        TimeStamp::Now());
 }
 
 void ExternalEngineStateMachine::OnLoadedFirstFrame() {
@@ -810,23 +771,11 @@ void ExternalEngineStateMachine::OnPlaying() {
 
 void ExternalEngineStateMachine::OnSeeked() {
   AssertOnTaskQueue();
-  if (!mState.IsSeekingData()) {
-    LOG("Engine Seeking has been completed, ignore the event");
-    return;
-  }
   MOZ_ASSERT(mState.IsSeekingData());
-
-  const auto currentTime = mEngine->GetCurrentPosition();
   auto* state = mState.AsSeekingData();
-  LOG("OnEngineSeeked, target=%" PRId64 ", currentTime=%" PRId64,
-      state->GetTargetTime().ToMicroseconds(), currentTime.ToMicroseconds());
-  // It's possible to receive multiple seeked event if we seek the engine
-  // before the previous seeking finishes, so we would wait until the last
-  // seeking is finished.
-  if (currentTime >= state->GetTargetTime()) {
-    state->mWaitingEngineSeeked = false;
-    CheckIfSeekCompleted();
-  }
+  // Engine's event could arrive before finishing reader's seeking.
+  state->mWaitingEngineSeeked = false;
+  CheckIfSeekCompleted();
 }
 
 void ExternalEngineStateMachine::OnBufferingStarted() {
@@ -874,9 +823,6 @@ void ExternalEngineStateMachine::NotifyEventInternal(
   AUTO_PROFILER_LABEL("ExternalEngineStateMachine::NotifyEventInternal",
                       MEDIA_PLAYBACK);
   LOG("Receive event %s", ExternalEngineEventToStr(aEvent));
-  if (mState.IsShutdownEngine()) {
-    return;
-  }
   switch (aEvent) {
     case ExternalEngineEvent::LoadedMetaData:
       // We read metadata by ourselves, ignore this if there is any.
@@ -926,20 +872,6 @@ void ExternalEngineStateMachine::NotifyEventInternal(
     default:
       MOZ_ASSERT_UNREACHABLE("Undefined event!");
       break;
-  }
-}
-
-void ExternalEngineStateMachine::NotifyErrorInternal(
-    const MediaResult& aError) {
-  AssertOnTaskQueue();
-  LOG("Engine error: %s", aError.Description().get());
-  if (aError == NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR) {
-    // The external engine doesn't support the type, try to notify the decoder
-    // to use our own state machine again.
-    DecodeError(
-        MediaResult(NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR));
-  } else {
-    DecodeError(aError);
   }
 }
 
