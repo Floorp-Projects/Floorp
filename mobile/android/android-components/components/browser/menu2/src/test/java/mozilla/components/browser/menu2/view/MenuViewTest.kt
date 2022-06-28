@@ -15,6 +15,7 @@ import mozilla.components.browser.menu2.R
 import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.concept.menu.Side
 import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
+import mozilla.components.support.test.any
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -62,25 +63,25 @@ class MenuViewTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `setVisibleSide will be forwarded to scrollOnceToTheBottom on devices with Android M and below`() {
-        doNothing().`when`(menuView).scrollOnceToTheBottom()
+        doNothing().`when`(menuView).scrollOnceToTheBottom(any())
 
         menuView.setVisibleSide(Side.END)
         val layoutManager = recyclerView.layoutManager as LinearLayoutManager
 
         assertFalse(layoutManager.stackFromEnd)
-        verify(menuView).scrollOnceToTheBottom()
+        verify(menuView).scrollOnceToTheBottom(any())
     }
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.N])
     fun `setVisibleSide changes stackFromEnd on devices with Android N and above`() {
-        doNothing().`when`(menuView).scrollOnceToTheBottom()
+        doNothing().`when`(menuView).scrollOnceToTheBottom(any())
 
         menuView.setVisibleSide(Side.END)
         val layoutManager = recyclerView.layoutManager as LinearLayoutManager
 
         assertTrue(layoutManager.stackFromEnd)
-        verify(menuView, never()).scrollOnceToTheBottom()
+        verify(menuView, never()).scrollOnceToTheBottom(any())
     }
 
     @Test

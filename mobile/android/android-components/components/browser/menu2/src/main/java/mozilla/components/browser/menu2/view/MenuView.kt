@@ -11,6 +11,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
+import androidx.annotation.VisibleForTesting
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -74,7 +75,7 @@ class MenuView @JvmOverloads constructor(
             // In devices with Android 6 and below stackFromEnd is not working properly,
             // as a result, we have to provided a backwards support.
             // See: https://github.com/mozilla-mobile/android-components/issues/3211
-            if (side == Side.END) scrollOnceToTheBottom()
+            if (side == Side.END) scrollOnceToTheBottom(recyclerView)
         }
     }
 
@@ -85,10 +86,8 @@ class MenuView @JvmOverloads constructor(
         style.backgroundColor?.let { cardView.setCardBackgroundColor(it) }
     }
 
-    /**
-     * Scroll to the bottom of the menu view.
-     */
-    fun scrollOnceToTheBottom() {
+    @VisibleForTesting
+    internal fun scrollOnceToTheBottom(recyclerView: RecyclerView) {
         recyclerView.onNextGlobalLayout {
             recyclerView.adapter?.let { recyclerView.scrollToPosition(it.itemCount - 1) }
         }

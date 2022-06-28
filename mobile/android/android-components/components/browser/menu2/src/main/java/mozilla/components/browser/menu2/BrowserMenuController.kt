@@ -60,10 +60,6 @@ class BrowserMenuController(
             view.onReopenMenu = ::reopenMenu
             setOnDismissListener(menuDismissListener)
             displayPopup(view, anchor, orientation, forceOrientation)
-
-            if (orientation == Orientation.UP && forceOrientation) {
-                view.scrollOnceToTheBottom()
-            }
         }.also {
             currentPopupInfo = PopupMenuInfo(
                 window = it,
