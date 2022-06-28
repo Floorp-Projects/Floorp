@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from taskgraph.util.schema import resolve_keyed_by
 
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.scriptworker import get_release_config
-from gecko_taskgraph.util.schema import resolve_keyed_by
 
 
 transforms = TransformSequence()

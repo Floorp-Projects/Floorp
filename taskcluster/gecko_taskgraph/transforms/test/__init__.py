@@ -22,6 +22,7 @@ import logging
 from importlib import import_module
 
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
+from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from voluptuous import (
     Any,
     Optional,
@@ -32,11 +33,6 @@ from voluptuous import (
 from gecko_taskgraph.optimize.schema import OptimizationSchema
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.test.other import get_mobile_project
-from gecko_taskgraph.util.schema import (
-    optionally_keyed_by,
-    resolve_keyed_by,
-    Schema,
-)
 from gecko_taskgraph.util.chunking import manifest_loaders
 
 

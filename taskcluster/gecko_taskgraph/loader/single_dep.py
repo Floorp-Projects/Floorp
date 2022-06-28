@@ -6,9 +6,8 @@
 import copy
 
 from taskgraph.task import Task
+from taskgraph.util.schema import Schema
 from voluptuous import Required
-
-from ..util.schema import Schema
 
 schema = Schema(
     {

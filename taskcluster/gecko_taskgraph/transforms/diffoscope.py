@@ -7,6 +7,7 @@ defined in kind.yml
 """
 
 from taskgraph.util.taskcluster import get_artifact_path
+from taskgraph.util.schema import Schema
 from voluptuous import (
     Any,
     Optional,
@@ -15,7 +16,6 @@ from voluptuous import (
 
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.task import task_description_schema
-from gecko_taskgraph.util.schema import Schema
 
 index_or_string = Any(
     str,

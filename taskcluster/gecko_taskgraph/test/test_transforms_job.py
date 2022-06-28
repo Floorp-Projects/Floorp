@@ -12,6 +12,7 @@ from copy import deepcopy
 
 import pytest
 from mozunit import main
+from taskgraph.util.schema import Schema, validate_schema
 
 from gecko_taskgraph import GECKO
 from gecko_taskgraph.config import load_graph_config
@@ -20,7 +21,6 @@ from gecko_taskgraph.transforms.job import run_task  # noqa: F401
 from gecko_taskgraph.transforms.base import TransformConfig
 from gecko_taskgraph.transforms.job.common import add_cache
 from gecko_taskgraph.transforms.task import payload_builders
-from gecko_taskgraph.util.schema import Schema, validate_schema
 
 from conftest import FakeParameters
 

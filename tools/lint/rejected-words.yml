@@ -297,7 +297,7 @@ avoid-blacklist-and-whitelist:
         - taskcluster/gecko_taskgraph/target_tasks.py
         - taskcluster/gecko_taskgraph/transforms/test/other.py
         - taskcluster/gecko_taskgraph/try_option_syntax.py
-        - taskcluster/gecko_taskgraph/util/schema.py
+        - taskcluster/gecko_taskgraph/__init__.py
         - taskcluster/test/test_mach_try_auto.py
         - testing/condprofile/condprof/client.py
         - testing/condprofile/condprof/tests/profile/prefs.js

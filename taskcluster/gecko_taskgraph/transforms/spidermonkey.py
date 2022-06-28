@@ -1,10 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import copy
+
+from taskgraph.util.schema import resolve_keyed_by
 
 from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.schema import resolve_keyed_by
-import copy
 
 transforms = TransformSequence()
 

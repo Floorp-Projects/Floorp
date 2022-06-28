@@ -9,7 +9,7 @@ Support for running toolchain-building jobs via dedicated scripts
 import taskgraph
 from mozbuild.shellutil import quote as shell_quote
 
-from gecko_taskgraph.util.schema import Schema
+from taskgraph.util.schema import Schema
 from voluptuous import Optional, Required, Any
 
 from gecko_taskgraph.transforms.job import (

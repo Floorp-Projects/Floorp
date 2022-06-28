@@ -3,14 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import copy
 
-import gecko_taskgraph
 import jsone
-from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.schema import Schema, validate_schema
-from gecko_taskgraph.util.templates import merge
+from taskgraph.util.schema import Schema, validate_schema
 from taskgraph.util.treeherder import join_symbol, split_symbol
 from taskgraph.util.yaml import load_yaml
-from voluptuous import Any, Optional, Required
+from voluptuous import (
+    Any,
+    Optional,
+    Required,
+)
+
+import gecko_taskgraph
+from gecko_taskgraph.transforms.base import TransformSequence
+from gecko_taskgraph.util.templates import merge
 
 transforms = TransformSequence()
 
