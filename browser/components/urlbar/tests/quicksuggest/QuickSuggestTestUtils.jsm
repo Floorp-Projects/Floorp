@@ -49,28 +49,28 @@ const DEFAULT_PING_PAYLOADS = {
     block_id: 1,
     context_id: () => actual => !!actual,
     iab_category: "22 - Shopping",
+    improve_suggest_experience_checked: false,
     match_type: "firefox-suggest",
     request_id: null,
-    scenario: "offline",
   },
   [CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION]: {
     advertiser: "testadvertiser",
     block_id: 1,
     context_id: () => actual => !!actual,
+    improve_suggest_experience_checked: false,
     match_type: "firefox-suggest",
     reporting_url: "http://example.com/click",
     request_id: null,
-    scenario: "offline",
   },
   [CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION]: {
     advertiser: "testadvertiser",
     block_id: 1,
     context_id: () => actual => !!actual,
+    improve_suggest_experience_checked: false,
     is_clicked: false,
     match_type: "firefox-suggest",
     reporting_url: "http://example.com/impression",
     request_id: null,
-    scenario: "offline",
   },
 };
 
@@ -543,11 +543,7 @@ class QSTestUtils {
         defaultPayload,
         `Sanity check: Default payload exists for type: ${type}`
       );
-      for (let [key, value] of Object.entries(defaultPayload)) {
-        if (!(key in payload)) {
-          payload[key] = value;
-        }
-      }
+      payload = { ...defaultPayload, ...payload };
 
       // Check the endpoint URL.
       let call = calls[i];
