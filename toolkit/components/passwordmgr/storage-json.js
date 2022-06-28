@@ -83,11 +83,11 @@ class LoginManagerStorage_json {
 
       return (async () => {
         // Load the data asynchronously.
-        this.log(`Opening database at ${this._store.path}.`);
+        this.log("Opening database at", this._store.path);
         await this._store.load();
       })().catch(Cu.reportError);
     } catch (e) {
-      this.log(`Initialization failed ${e.name}.`);
+      this.log("Initialization failed:", e);
       throw new Error("Initialization failed");
     }
   }
@@ -123,7 +123,7 @@ class LoginManagerStorage_json {
       return raw ? this._crypto.decrypt(raw) : null;
     } catch (e) {
       if (e.result == Cr.NS_ERROR_FAILURE) {
-        this.log("Could not decrypt the syncID - returning null.");
+        this.log("Could not decrypt the syncID - returning null");
         return null;
       }
       // any other errors get re-thrown.
@@ -370,7 +370,7 @@ class LoginManagerStorage_json {
     // decrypt entries for caller.
     logins = this._decryptLogins(logins);
 
-    this.log(`Returning ${logins.length} logins.`);
+    this.log("getAllLogins: returning", logins.length, "logins.");
     return logins;
   }
 
@@ -411,9 +411,8 @@ class LoginManagerStorage_json {
           // Rethrow other errors (like canceling entry of a primary pw)
           if (e.result == Cr.NS_ERROR_FAILURE) {
             this.log(
-              `Could not decrypt login: ${
-                login.QueryInterface(Ci.nsILoginMetaInfo).guid
-              }.`
+              "Could not decrypt login:",
+              login.QueryInterface(Ci.nsILoginMetaInfo).guid
             );
             continue;
           }
@@ -430,7 +429,7 @@ class LoginManagerStorage_json {
   }
 
   async searchLoginsAsync(matchData) {
-    this.log(`Searching for matching logins for origin ${matchData.origin}.`);
+    this.log("searchLoginsAsync:", matchData);
     let result = this.searchLogins(lazy.LoginHelper.newPropertyBag(matchData));
     // Emulate being async:
     return Promise.resolve(result);
@@ -621,7 +620,12 @@ class LoginManagerStorage_json {
     }
 
     this.log(
-      `Returning ${foundLogins.length} logins for specified origin with options ${aOptions}`
+      "_searchLogins: returning",
+      foundLogins.length,
+      "logins for",
+      matchData,
+      "with options",
+      aOptions
     );
     return [foundLogins, foundIds];
   }
@@ -650,7 +654,7 @@ class LoginManagerStorage_json {
    */
   removeAllUserFacingLogins() {
     this._store.ensureDataReady();
-    this.log("Removing all logins.");
+    this.log("Removing all logins");
 
     let [allLogins] = this._searchLogins({});
 
@@ -693,7 +697,7 @@ class LoginManagerStorage_json {
     // Decrypt entries found for the caller.
     logins = this._decryptLogins(logins);
 
-    this.log(`Returning ${logins.length} logins.`);
+    this.log("_findLogins: returning", logins.length, "logins");
     return logins;
   }
 
@@ -713,7 +717,7 @@ class LoginManagerStorage_json {
     }
     let [logins] = this._searchLogins(matchData);
 
-    this.log(`Counted ${logins.length} logins.`);
+    this.log("_countLogins: counted logins:", logins.length);
     return logins.length;
   }
 

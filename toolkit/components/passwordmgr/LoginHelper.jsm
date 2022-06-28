@@ -95,7 +95,7 @@ class ImportRowProcessor {
       });
 
       if (existingLogins.length) {
-        lazy.log.debug("maybeImportLogins: Found existing login with GUID.");
+        lazy.log.debug("maybeImportLogins: Found existing login with GUID");
         // There should only be one `guid` match.
         let existingLogin = existingLogins[0].QueryInterface(
           Ci.nsILoginMetaInfo
@@ -465,7 +465,8 @@ const LoginHelper = {
         false
       );
       lazy.log.debug(
-        `Using pref value for testOnlyUserHasInteractedWithDocument ${this.testOnlyUserHasInteractedWithDocument}.`
+        "updateSignonPrefs, using pref value for testOnlyUserHasInteractedWithDocument",
+        this.testOnlyUserHasInteractedWithDocument
       );
     } else {
       this.testOnlyUserHasInteractedWithDocument = null;
@@ -661,9 +662,7 @@ const LoginHelper = {
     } catch (e) {
       // bug 159484 - disallow url types that don't support a hostPort.
       // (although we handle "javascript:..." as a special case above.)
-      lazy.log.warn(
-        `Couldn't parse specified uri ${uriString} with error ${e.name}`
-      );
+      lazy.log.warn("Couldn't parse origin for", uriString, e);
       realm = null;
     }
 
@@ -1067,7 +1066,8 @@ const LoginHelper = {
 
     if (!preferredOriginScheme && resolveBy.includes("scheme")) {
       lazy.log.warn(
-        "Deduping with a scheme preference but couldn't get the preferred origin scheme."
+        "dedupeLogins: Deduping with a scheme preference but couldn't " +
+          "get the preferred origin scheme."
       );
     }
 
@@ -1129,7 +1129,7 @@ const LoginHelper = {
               }
 
               return loginURI.scheme == preferredOriginScheme;
-            } catch (e) {
+            } catch (ex) {
               // Some URLs aren't valid nsIURI (e.g. chrome://FirefoxAccounts)
               lazy.log.debug(
                 "dedupeLogins/shouldReplaceExisting: Error comparing schemes:",
@@ -1137,7 +1137,7 @@ const LoginHelper = {
                 login.origin,
                 "preferredOrigin:",
                 preferredOrigin,
-                e.name
+                ex
               );
             }
             break;

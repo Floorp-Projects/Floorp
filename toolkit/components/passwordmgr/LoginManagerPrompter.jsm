@@ -136,7 +136,7 @@ class LoginManagerPrompter {
     autoFilledLoginGuid = "",
     possibleValues = undefined
   ) {
-    lazy.log.debug("Prompting user to save login.");
+    lazy.log.debug("promptToSavePassword");
     let inPrivateBrowsing = PrivateBrowsingUtils.isBrowserPrivate(aBrowser);
     let notification = LoginManagerPrompter._showLoginCaptureDoorhanger(
       aBrowser,
@@ -204,7 +204,10 @@ class LoginManagerPrompter {
     } = {}
   ) {
     lazy.log.debug(
-      `Got autoSavedLoginGuid: ${autoSavedLoginGuid} and autoFilledLoginGuid ${autoFilledLoginGuid}.`
+      `_showLoginCaptureDoorhanger, got autoSavedLoginGuid: ${autoSavedLoginGuid}`
+    );
+    lazy.log.debug(
+      `_showLoginCaptureDoorhanger, got autoFilledLoginGuid: ${autoFilledLoginGuid}`
     );
 
     let saveMsgNames = {
@@ -418,7 +421,7 @@ class LoginManagerPrompter {
       // sort exact username matches to the top
       logins.sort(l => (l.username == login.username ? -1 : 1));
 
-      lazy.log.debug(`Matched ${logins.length} logins.`);
+      lazy.log.debug(`persistData: Matched ${logins.length} logins`);
 
       let loginToRemove;
       let loginToUpdate = logins.shift();
@@ -428,7 +431,6 @@ class LoginManagerPrompter {
       }
       if (logins.length) {
         lazy.log.warn(
-          "persistData:",
           logins.length,
           "other updatable logins!",
           logins.map(l => l.guid),
@@ -461,7 +463,7 @@ class LoginManagerPrompter {
         loginToUpdate.username == login.username
       ) {
         // We only want to touch the login's use count and last used time.
-        lazy.log.debug(`Touch matched login: ${loginToUpdate.guid}.`);
+        lazy.log.debug("persistData: Touch matched login", loginToUpdate.guid);
         Services.logins.recordPasswordUse(
           loginToUpdate,
           PrivateBrowsingUtils.isBrowserPrivate(browser),
@@ -469,7 +471,7 @@ class LoginManagerPrompter {
           !!autoFilledLoginGuid
         );
       } else {
-        lazy.log.debug(`Update matched login: ${loginToUpdate.guid}.`);
+        lazy.log.debug("persistData: Update matched login", loginToUpdate.guid);
         this._updateLogin(loginToUpdate, login);
         // notify that this auto-saved login has been merged
         if (loginToRemove && loginToRemove.guid == autoSavedLoginGuid) {
@@ -481,7 +483,7 @@ class LoginManagerPrompter {
       }
 
       if (loginToRemove) {
-        lazy.log.debug(`Removing login ${loginToRemove.guid}.`);
+        lazy.log.debug("persistData: removing login", loginToRemove.guid);
         Services.logins.removeLogin(loginToRemove);
       }
     };
@@ -786,7 +788,7 @@ class LoginManagerPrompter {
 
     if (notifySaved) {
       let anchor = notification.anchorElement;
-      lazy.log.debug("Showing the ConfirmationHint.");
+      lazy.log.debug("Showing the ConfirmationHint");
       anchor.ownerGlobal.ConfirmationHint.show(anchor, "passwordSaved");
     }
 
@@ -888,7 +890,8 @@ class LoginManagerPrompter {
    */
   promptToChangePasswordWithUsernames(browser, logins, aNewLogin) {
     lazy.log.debug(
-      `Prompting user to change passowrd for username with count: ${logins.length}.`
+      "promptToChangePasswordWithUsernames with count:",
+      logins.length
     );
 
     var usernames = logins.map(
@@ -914,11 +917,11 @@ class LoginManagerPrompter {
     if (ok) {
       // Now that we know which login to use, modify its password.
       var selectedLogin = logins[selectedIndex.value];
-      lazy.log.debug(`Updating password for origin: ${aNewLogin.origin}.`);
+      lazy.log.debug("Updating password for user", selectedLogin.username);
       var newLoginWithUsername = Cc[
         "@mozilla.org/login-manager/loginInfo;1"
       ].createInstance(Ci.nsILoginInfo);
-      newLoginWithUsername.ini(
+      newLoginWithUsername.init(
         aNewLogin.origin,
         aNewLogin.formActionOrigin,
         aNewLogin.httpRealm,
@@ -992,7 +995,7 @@ class LoginManagerPrompter {
       var baseDomain = Services.eTLD.getBaseDomain(uri);
       displayHost = idnService.convertToDisplayIDN(baseDomain, {});
     } catch (e) {
-      lazy.log.warn(`Couldn't process supplied URIString: ${aURIString}`);
+      lazy.log.warn("_getShortDisplayHost couldn't process", aURIString);
     }
 
     if (!displayHost) {

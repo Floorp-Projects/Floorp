@@ -134,7 +134,7 @@ LoginManager.prototype = {
           data ? parseInt(data) : new Date().getTime()
         );
       } else {
-        lazy.log.debug(`Unexpected notification: ${topic}.`);
+        lazy.log.debug("Oops! Unexpected notification:", topic);
       }
     },
   },
@@ -417,7 +417,7 @@ LoginManager.prototype = {
    * @return {nsILoginInfo[]} - If there are no logins, the array is empty.
    */
   getAllLogins() {
-    lazy.log.debug("Getting a list of all logins.");
+    lazy.log.debug("Getting a list of all logins");
     return this._storage.getAllLogins();
   },
 
@@ -427,7 +427,7 @@ LoginManager.prototype = {
    * @return {nsILoginInfo[]} - If there are no logins, the array is empty.
    */
   async getAllLoginsAsync() {
-    lazy.log.debug("Getting a list of all logins asynchronously.");
+    lazy.log.debug("Getting a list of all logins asynchronously");
     return this._storage.getAllLoginsAsync();
   },
 
@@ -435,7 +435,7 @@ LoginManager.prototype = {
    * Get a dump of all stored logins asynchronously. Used by the login detection service.
    */
   getAllLoginsWithCallbackAsync(aCallback) {
-    lazy.log.debug("Searching a list of all logins asynchronously.");
+    lazy.log.debug("Searching a list of all logins asynchronously");
     this._storage.getAllLoginsAsync().then(logins => {
       aCallback.onSearchComplete(logins);
     });
@@ -447,7 +447,7 @@ LoginManager.prototype = {
    * This will not remove the FxA Sync key, which is stored with the rest of a user's logins.
    */
   removeAllUserFacingLogins() {
-    lazy.log.debug("Removing all user facing logins.");
+    lazy.log.debug("Removing all user facing logins");
     this._storage.removeAllUserFacingLogins();
   },
 
@@ -459,7 +459,7 @@ LoginManager.prototype = {
    * e.g. bookmarks, history, open tabs, logins and passwords, add-ons, and options
    */
   removeAllLogins() {
-    lazy.log.debug("Removing all logins from local store, including FxA key.");
+    lazy.log.debug("Removing all logins from local store, including FxA key");
     this._storage.removeAllLogins();
   },
 
@@ -472,7 +472,7 @@ LoginManager.prototype = {
    *                    the array is empty.
    */
   getAllDisabledHosts() {
-    lazy.log.debug("Getting a list of all disabled origins.");
+    lazy.log.debug("Getting a list of all disabled origins");
 
     let disabledHosts = [];
     for (let perm of Services.perms.all) {
@@ -484,7 +484,11 @@ LoginManager.prototype = {
       }
     }
 
-    lazy.log.debug(`Returning ${disabledHosts.length} disabled hosts.`);
+    lazy.log.debug(
+      "getAllDisabledHosts: returning",
+      disabledHosts.length,
+      "disabled hosts."
+    );
     return disabledHosts;
   },
 
@@ -505,9 +509,7 @@ LoginManager.prototype = {
   },
 
   async searchLoginsAsync(matchData) {
-    lazy.log.debug(
-      `Searching for matching logins for origin: ${matchData.origin}`
-    );
+    lazy.log.debug("searchLoginsAsync:", matchData);
 
     if (!matchData.origin) {
       throw new Error("searchLoginsAsync: An `origin` is required");
@@ -520,14 +522,12 @@ LoginManager.prototype = {
    * @return {nsILoginInfo[]} which are decrypted.
    */
   searchLogins(matchData) {
-    lazy.log.debug(
-      `Searching for matching logins for origin: ${matchData.origin}`
-    );
+    lazy.log.debug("Searching for logins");
 
     matchData.QueryInterface(Ci.nsIPropertyBag2);
     if (!matchData.hasKey("guid")) {
       if (!matchData.hasKey("origin")) {
-        lazy.log.warn("An `origin` field is recommended.");
+        lazy.log.warn("searchLogins: An `origin` is recommended");
       }
     }
 
@@ -539,17 +539,16 @@ LoginManager.prototype = {
    * returns only the count.
    */
   countLogins(origin, formActionOrigin, httpRealm) {
-    const loginsCount = this._storage.countLogins(
+    lazy.log.debug(
+      "Counting logins matching origin:",
       origin,
+      "formActionOrigin:",
       formActionOrigin,
+      "httpRealm:",
       httpRealm
     );
 
-    lazy.log.debug(
-      `Found ${loginsCount} matching origin: ${origin}, formActionOrigin: ${formActionOrigin} and realm: ${httpRealm}`
-    );
-
-    return loginsCount;
+    return this._storage.countLogins(origin, formActionOrigin, httpRealm);
   },
 
   /* Sync metadata functions - see nsILoginManagerStorage for details */
@@ -574,9 +573,7 @@ LoginManager.prototype = {
     if (existingSyncID == newSyncID) {
       return existingSyncID;
     }
-    lazy.log.debug(
-      `ensureCurrentSyncID: newSyncID: ${newSyncID} existingSyncID: ${existingSyncID}`
-    );
+    lazy.log.debug("Engine syncIDs: " + [newSyncID, existingSyncID]);
 
     await this.setSyncID(newSyncID);
     await this.setLastSync(0);
@@ -595,7 +592,7 @@ LoginManager.prototype = {
    * Check to see if user has disabled saving logins for the origin.
    */
   getLoginSavingEnabled(origin) {
-    lazy.log.debug(`Checking if logins to ${origin} can be saved.`);
+    lazy.log.debug("Checking if logins to", origin, "can be saved.");
     if (!lazy.LoginHelper.enabled) {
       return false;
     }
@@ -642,9 +639,7 @@ LoginManager.prototype = {
       );
     }
 
-    lazy.log.debug(
-      `Enabling login saving for ${origin} now enabled? ${enabled}.`
-    );
+    lazy.log.debug("Login saving for", origin, "now enabled?", enabled);
     lazy.LoginHelper.notifyStorageChanged(
       enabled ? "hostSavingEnabled" : "hostSavingDisabled",
       origin
