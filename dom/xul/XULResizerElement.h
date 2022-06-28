@@ -38,19 +38,6 @@ class XULResizerElement final : public nsXULElement {
 
   nsIContent* GetContentToResize() const;
 
-  /**
-   * Adjust the window position and size in a direction according to the mouse
-   * movement and the resizer direction. The minimum and maximum size is used
-   * to constrain the size.
-   *
-   * @param aPos left or top position
-   * @param aSize width or height
-   * @param aMovement the amount the mouse was moved
-   * @param aResizerDirection resizer direction returned by GetDirection
-   */
-  static void AdjustDimensions(int32_t* aPos, int32_t* aSize, int32_t aMovement,
-                               int8_t aResizerDirection);
-
   struct SizeInfo {
     nsCString width, height;
   };
@@ -63,7 +50,7 @@ class XULResizerElement final : public nsXULElement {
                                        const SizeInfo& aSizeInfo);
   static void RestoreOriginalSize(nsIContent* aContent);
 
-  LayoutDeviceIntRect mMouseDownRect;
+  nsSize mMouseDownSize;
   LayoutDeviceIntPoint mMouseDownPoint;
   bool mTrackingMouseMove = false;
 };
