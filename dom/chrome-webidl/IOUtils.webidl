@@ -253,17 +253,6 @@ namespace IOUtils {
   [NewObject]
   Promise<DOMString> createUniqueDirectory(DOMString parent, DOMString prefix, optional unsigned long permissions = 0755);
 
-  /**
-   * Compute the hash of a file as a hex digest.
-   *
-   * @param path   The absolute path of the file to hash.
-   * @param method The hashing method to use.
-   *
-   * @return A promise that resolves to the hex digest of the file's hash in lowercase.
-   */
-  [NewObject]
-  Promise<UTF8String> computeHexDigest(DOMString path, HashAlgorithm method);
-
 #if defined(XP_WIN)
   /**
    * Return the Windows-specific file attributes of the file at the given path.
@@ -589,11 +578,6 @@ dictionary FileInfo {
    */
   unsigned long permissions;
 };
-
-/**
- * The supported hash algorithms for |IOUtils.hashFile|.
- */
-enum HashAlgorithm { "sha1", "sha256", "sha384", "sha512" };
 
 #ifdef XP_WIN
 /**
