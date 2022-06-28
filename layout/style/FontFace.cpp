@@ -26,6 +26,24 @@
 namespace mozilla {
 namespace dom {
 
+// -- Utility functions ------------------------------------------------------
+
+template <typename T>
+static void GetDataFrom(const T& aObject, uint8_t*& aBuffer,
+                        uint32_t& aLength) {
+  MOZ_ASSERT(!aBuffer);
+  aObject.ComputeState();
+  // We use malloc here rather than a FallibleTArray or fallible
+  // operator new[] since the gfxUserFontEntry will be calling free
+  // on it.
+  aBuffer = (uint8_t*)malloc(aObject.Length());
+  if (!aBuffer) {
+    return;
+  }
+  memcpy((void*)aBuffer, aObject.Data(), aObject.Length());
+  aLength = aObject.Length();
+}
+
 // -- FontFace ---------------------------------------------------------------
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(FontFace)
@@ -104,8 +122,25 @@ already_AddRefed<FontFace> FontFace::Constructor(
 
   RefPtr<FontFace> obj = new FontFace(global);
   obj->mImpl = new FontFaceImpl(obj, setImpl);
-  if (obj->mImpl->SetDescriptors(aFamily, aDescriptors)) {
-    obj->mImpl->InitializeSource(aSource);
+  if (!obj->mImpl->SetDescriptors(aFamily, aDescriptors)) {
+    return obj.forget();
+  }
+
+  if (aSource.IsUTF8String()) {
+    obj->mImpl->InitializeSourceURL(aSource.GetAsUTF8String());
+  } else {
+    uint8_t* buffer = nullptr;
+    uint32_t length = 0;
+    if (aSource.IsArrayBuffer()) {
+      GetDataFrom(aSource.GetAsArrayBuffer(), buffer, length);
+    } else if (aSource.IsArrayBufferView()) {
+      GetDataFrom(aSource.GetAsArrayBufferView(), buffer, length);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unhandled source type!");
+      return nullptr;
+    }
+
+    obj->mImpl->InitializeSourceBuffer(buffer, length);
   }
 
   return obj.forget();
