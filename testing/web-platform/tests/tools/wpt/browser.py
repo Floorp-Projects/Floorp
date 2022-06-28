@@ -750,8 +750,6 @@ class ChromeChromiumBase(Browser):
         if webdriver_binary is None:
             self.logger.warning("No valid webdriver supplied to detect version.")
             return None
-        if uname[0] == "Windows":
-            return _get_fileversion(webdriver_binary, self.logger)
 
         try:
             version_string = call(webdriver_binary, "--version").strip()
