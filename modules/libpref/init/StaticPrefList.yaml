@@ -13589,10 +13589,21 @@
   value: false
   mirror: always
 
-# Whether we should use the default accent color or the theme-provided one.
-- name: widget.use-theme-accent
+# Whether we should use the default accent color or the theme-provided one for
+# content (e.g. for form controls and CSS system colors).
+#
+# Turned off on Windows, for now (we always use the default blue-ish
+# accent-color there). We might want to turn this on there, though it's worth
+# thinking on what the behavior should be for grey-ish accent colors (which are
+# a thing on Windows and can cause confusion with things like disabled form
+# controls). Maybe it's just fine.
+- name: widget.non-native-theme.use-theme-accent
   type: RelaxedAtomicBool
+#ifdef XP_WIN
+  value: false
+#else
   value: true
+#endif
   mirror: always
 
 # Whether we should try to use WebRender to render widgets.
@@ -13854,6 +13865,15 @@
 - name: widget.windows.uwp-system-colors.enabled
   type: bool
   value: true
+  mirror: always
+
+# Whether we use the accent color for highlight as some other UWP apps do.
+#
+# false for now since it can cause some contrast-with-background issues
+# specially with grey accents, see bug 1776588.
+- name: widget.windows.uwp-system-colors.highlight-accent
+  type: bool
+  value: false
   mirror: always
 
 - name: widget.windows.window_occlusion_tracking_display_state.enabled
