@@ -14,6 +14,7 @@
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/FontFaceImpl.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
 #include "mozilla/dom/FontFaceSetDocumentImpl.h"
 #include "mozilla/dom/FontFaceSetIterator.h"
