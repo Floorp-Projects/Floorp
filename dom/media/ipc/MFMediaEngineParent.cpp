@@ -223,11 +223,12 @@ MFMediaEngineStreamWrapper* MFMediaEngineParent::GetMediaEngineStream(
   MOZ_ASSERT(mMediaSource);
   if (aType == TrackType::kAudioTrack) {
     auto* stream = mMediaSource->GetAudioStream();
-    return new MFMediaEngineStreamWrapper(stream, stream->GetTaskQueue());
+    return new MFMediaEngineStreamWrapper(stream, stream->GetTaskQueue(),
+                                          aParam);
   }
   MOZ_ASSERT(aType == TrackType::kVideoTrack);
   auto* stream = mMediaSource->GetVideoStream();
-  return new MFMediaEngineStreamWrapper(stream, stream->GetTaskQueue());
+  return new MFMediaEngineStreamWrapper(stream, stream->GetTaskQueue(), aParam);
 }
 
 mozilla::ipc::IPCResult MFMediaEngineParent::RecvInitMediaEngine(
