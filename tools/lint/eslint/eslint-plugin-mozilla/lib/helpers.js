@@ -45,6 +45,8 @@ const callExpressionMultiDefinitions = [
   "XPCOMUtils.defineLazyModuleGetters(globalThis,",
   "XPCOMUtils.defineLazyServiceGetters(this,",
   "XPCOMUtils.defineLazyServiceGetters(globalThis,",
+  "ChromeUtils.defineESModuleGetters(this,",
+  "ChromeUtils.defineESModuleGetters(globalThis,",
   "loader.lazyRequireGetter(this,",
   "loader.lazyRequireGetter(globalThis,",
 ];
