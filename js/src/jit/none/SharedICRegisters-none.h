@@ -14,8 +14,6 @@
 namespace js {
 namespace jit {
 
-static constexpr Register BaselineStackReg{Registers::invalid_reg};
-
 static constexpr ValueOperand R0 = JSReturnOperand;
 static constexpr ValueOperand R1 = JSReturnOperand;
 static constexpr ValueOperand R2 = JSReturnOperand;

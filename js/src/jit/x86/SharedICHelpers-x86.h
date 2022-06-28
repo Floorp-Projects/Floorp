@@ -47,7 +47,7 @@ inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm) {
   // descriptor. Use a pop instruction to overwrite the frame descriptor
   // with the return address. Note that pop increments the stack pointer
   // before computing the address.
-  masm.Pop(Operand(BaselineStackReg, 0));
+  masm.Pop(Operand(StackPointer, 0));
 }
 
 template <typename AddrType>
