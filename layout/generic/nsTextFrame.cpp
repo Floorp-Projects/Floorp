@@ -2242,6 +2242,11 @@ static already_AddRefed<gfxTextRun> GetHyphenTextRun(nsTextFrame* aTextFrame,
   const auto& hyphenateChar = aTextFrame->StyleText()->mHyphenateCharacter;
   gfx::ShapedTextFlags flags =
       nsLayoutUtils::GetTextRunOrientFlagsForStyle(aTextFrame->Style());
+  // Make the directionality of the hyphen run (in case it is multi-char) match
+  // the text frame.
+  if (aTextFrame->GetWritingMode().IsBidiRTL()) {
+    flags |= gfx::ShapedTextFlags::TEXT_IS_RTL;
+  }
   if (hyphenateChar.IsAuto()) {
     return fontGroup->MakeHyphenTextRun(dt, flags, appPerDev);
   }
@@ -7154,10 +7159,8 @@ void nsTextFrame::DrawTextRun(Range aRange, const gfx::Point& aTextBaselinePt,
       gfx::Point p(aTextBaselinePt);
       bool vertical = GetWritingMode().IsVertical();
       // For right-to-left text runs, the soft-hyphen is positioned at the left
-      // of the text, minus its own width
-      float shift =
-          mTextRun->GetDirection() * (*aParams.advanceWidth) -
-          (mTextRun->IsRightToLeft() ? hyphenTextRun->GetAdvanceWidth() : 0);
+      // of the text.
+      float shift = mTextRun->GetDirection() * (*aParams.advanceWidth);
       if (vertical) {
         p.y += shift;
       } else {
