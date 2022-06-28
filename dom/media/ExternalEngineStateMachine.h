@@ -219,6 +219,7 @@ class ExternalEngineStateMachine final
   void ReadMetadata();
   void OnMetadataRead(MetadataHolder&& aMetadata);
   void OnMetadataNotRead(const MediaResult& aError);
+  bool IsFormatSupportedByExternalEngine(const MediaInfo& aInfo);
 
   // Functions for handling external engine event.
   void OnLoadedFirstFrame();
