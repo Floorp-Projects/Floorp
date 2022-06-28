@@ -5,12 +5,12 @@
 Transform the signing task into an actual task description.
 """
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.schema import taskref_or_string
 from voluptuous import Required, Optional
 
 from gecko_taskgraph.loader.single_dep import schema
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
     release_level,

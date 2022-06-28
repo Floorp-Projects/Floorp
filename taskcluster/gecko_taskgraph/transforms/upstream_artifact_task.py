@@ -5,9 +5,7 @@
 Find upstream artifact task.
 """
 
-
-from gecko_taskgraph.transforms.base import TransformSequence
-
+from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 

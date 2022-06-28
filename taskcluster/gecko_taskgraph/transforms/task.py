@@ -17,6 +17,7 @@ from copy import deepcopy
 
 import attr
 from mozbuild.util import memoize
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.schema import (
     Schema,
@@ -31,7 +32,6 @@ from voluptuous import Any, Required, Optional, Extra, Match, All, NotIn
 
 from gecko_taskgraph import GECKO, MAX_DEPENDENCIES
 from gecko_taskgraph.optimize.schema import OptimizationSchema
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util import docker as dockerutil
 from gecko_taskgraph.util.attributes import TRUNK_PROJECTS, is_try, release_level
 from gecko_taskgraph.util.hash import hash_path

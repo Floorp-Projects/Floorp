@@ -5,8 +5,7 @@
 This transform is used to help populate mozharness options for openh264 jobs
 """
 
-
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 

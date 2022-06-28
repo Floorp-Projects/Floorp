@@ -5,10 +5,10 @@
 Transform the beetmover-push-to-release task into a task description.
 """
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import Schema, taskref_or_string
 from voluptuous import Required, Optional
 
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.scriptworker import (
     get_beetmover_bucket_scope,
     add_scope_prefix,

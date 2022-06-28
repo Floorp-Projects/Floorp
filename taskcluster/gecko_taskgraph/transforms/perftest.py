@@ -9,6 +9,7 @@ import json
 from copy import deepcopy
 from datetime import date, timedelta
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.treeherder import join_symbol, split_symbol
 from voluptuous import (
@@ -17,7 +18,6 @@ from voluptuous import (
     Extra,
 )
 
-from gecko_taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 

@@ -6,6 +6,7 @@ This transform construct tasks to perform diffs between builds, as
 defined in kind.yml
 """
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.taskcluster import get_artifact_path
 from taskgraph.util.schema import Schema
 from voluptuous import (
@@ -14,7 +15,6 @@ from voluptuous import (
     Required,
 )
 
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.task import task_description_schema
 
 index_or_string = Any(

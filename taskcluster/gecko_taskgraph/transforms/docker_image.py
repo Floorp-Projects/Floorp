@@ -10,9 +10,9 @@ import json
 
 import mozpack.path as mozpath
 import taskgraph
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import Schema
 
-from gecko_taskgraph.transforms.base import TransformSequence
 from .. import GECKO
 from gecko_taskgraph.util.docker import (
     create_context_tar,

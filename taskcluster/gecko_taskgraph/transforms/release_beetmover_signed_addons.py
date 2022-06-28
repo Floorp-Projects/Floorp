@@ -8,12 +8,12 @@ Transform the beetmover task into an actual task description.
 import copy
 import logging
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.treeherder import inherit_treeherder_from_dep
 from voluptuous import Required, Optional
 
 from gecko_taskgraph.loader.single_dep import schema
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.beetmover import craft_release_properties
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import (

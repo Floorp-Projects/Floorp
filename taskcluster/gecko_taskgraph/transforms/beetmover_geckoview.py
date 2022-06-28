@@ -8,11 +8,11 @@ Transform the beetmover task into an actual task description.
 
 from copy import deepcopy
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
 from voluptuous import Required, Optional
 
 from gecko_taskgraph.loader.single_dep import schema
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.beetmover import (
     craft_release_properties as beetmover_craft_release_properties,
 )

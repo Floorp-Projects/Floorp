@@ -10,7 +10,8 @@ from collections import defaultdict
 import json
 import logging
 
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
+
 from gecko_taskgraph.util.partners import (
     apply_partner_priority,
     check_if_partners_enabled,

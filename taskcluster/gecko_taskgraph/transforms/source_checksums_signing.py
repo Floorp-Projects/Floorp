@@ -4,13 +4,13 @@
 Transform the checksums signing task into an actual task description.
 """
 
+from taskgraph.transforms.base import TransformSequence
+from voluptuous import Optional
 
 from gecko_taskgraph.loader.single_dep import schema
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 from gecko_taskgraph.util.scriptworker import get_signing_cert_scope
 from gecko_taskgraph.transforms.task import task_description_schema
-from voluptuous import Optional
 
 checksums_signing_description_schema = schema.extend(
     {

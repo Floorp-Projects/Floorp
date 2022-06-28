@@ -5,8 +5,7 @@
 Add dependencies to release tasks.
 """
 
-
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
 
 PHASES = ["build", "promote", "push", "ship"]
 

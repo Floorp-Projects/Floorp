@@ -10,6 +10,7 @@ import copy
 import json
 
 from mozbuild.chunkify import chunkify
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import (
     optionally_keyed_by,
     resolve_keyed_by,
@@ -24,7 +25,6 @@ from voluptuous import (
 )
 
 from gecko_taskgraph.loader.multi_dep import schema
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.job import job_description_schema
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import (
