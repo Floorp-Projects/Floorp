@@ -65,6 +65,7 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/StaticPresData.h"
 #include "nsRefreshDriver.h"
 #include "Layers.h"
