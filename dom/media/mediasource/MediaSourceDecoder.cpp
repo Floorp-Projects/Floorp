@@ -35,9 +35,15 @@ MediaSourceDecoder::MediaSourceDecoder(MediaDecoderInit& aInit)
   mExplicitDuration.emplace(UnspecifiedNaN<double>());
 }
 
-MediaDecoderStateMachineBase* MediaSourceDecoder::CreateStateMachine() {
+MediaDecoderStateMachineBase* MediaSourceDecoder::CreateStateMachine(
+    bool aDisableExternalEngine) {
   MOZ_ASSERT(NS_IsMainThread());
-  mDemuxer = new MediaSourceDemuxer(AbstractMainThread());
+  // if `mDemuxer` already exists, that means we're in the process of recreating
+  // the state machine. The track buffers are tied to the demuxer so we would
+  // need to reuse it.
+  if (!mDemuxer) {
+    mDemuxer = new MediaSourceDemuxer(AbstractMainThread());
+  }
   MediaFormatReaderInit init;
   init.mVideoFrameContainer = GetVideoFrameContainer();
   init.mKnowsCompositor = GetCompositor();
@@ -48,7 +54,8 @@ MediaDecoderStateMachineBase* MediaSourceDecoder::CreateStateMachine() {
 #ifdef MOZ_WMF
   // TODO : Only for testing development for now. In the future this should be
   // used for encrypted content only.
-  if (StaticPrefs::media_wmf_media_engine_enabled()) {
+  if (StaticPrefs::media_wmf_media_engine_enabled() &&
+      !aDisableExternalEngine) {
     return new ExternalEngineStateMachine(this, mReader);
   }
 #endif
@@ -65,15 +72,7 @@ nsresult MediaSourceDecoder::Load(nsIPrincipal* aPrincipal) {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  SetStateMachine(CreateStateMachine());
-  if (!GetStateMachine()) {
-    NS_WARNING("Failed to create state machine!");
-    return NS_ERROR_FAILURE;
-  }
-
-  GetStateMachine()->DispatchIsLiveStream(!mEnded);
-  return InitializeStateMachine();
+  return CreateAndInitStateMachine(!mEnded);
 }
 
 media::TimeIntervals MediaSourceDecoder::GetSeekable() {
