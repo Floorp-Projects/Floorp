@@ -571,13 +571,18 @@ def DOMClass(descriptor):
     else:
         wrapperCacheGetter = "nullptr"
 
+    if descriptor.hasOrdinaryObjectPrototype:
+        getProto = "JS::GetRealmObjectPrototypeHandle"
+    else:
+        getProto = "GetProtoObjectHandle"
+
     return fill(
         """
           { ${protoChain} },
           std::is_base_of_v<nsISupports, ${nativeType}>,
           ${hooks},
           FindAssociatedGlobalForNative<${nativeType}>::Get,
-          GetProtoObjectHandle,
+          ${getProto},
           GetCCParticipant<${nativeType}>::Get(),
           ${serializer},
           ${wrapperCacheGetter}
@@ -587,6 +592,7 @@ def DOMClass(descriptor):
         hooks=NativePropertyHooks(descriptor),
         serializer=serializer,
         wrapperCacheGetter=wrapperCacheGetter,
+        getProto=getProto,
     )
 
 
@@ -3883,9 +3889,11 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             unforgeableHolderSetup = None
 
+        # FIXME Unclear whether this is needed for hasOrdinaryObjectPrototype
         if (
             self.descriptor.interface.isOnGlobalProtoChain()
             and needInterfacePrototypeObject
+            and not self.descriptor.hasOrdinaryObjectPrototype
         ):
             makeProtoPrototypeImmutable = CGGeneric(
                 fill(
@@ -4794,13 +4802,17 @@ class CGWrapGlobalMethod(CGAbstractMethod):
         else:
             unforgeable = ""
 
+        if self.descriptor.hasOrdinaryObjectPrototype:
+            getProto = "JS::GetRealmObjectPrototypeHandle"
+        else:
+            getProto = "GetProtoObjectHandle"
         return fill(
             """
             $*{assertions}
             MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),
                        "nsISupports must be on our primary inheritance chain");
 
-            if (!CreateGlobal<${nativeType}, GetProtoObjectHandle>(aCx,
+            if (!CreateGlobal<${nativeType}, ${getProto}>(aCx,
                                              aObject,
                                              aCache,
                                              sClass.ToJSClass(),
@@ -4826,6 +4838,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             """,
             assertions=AssertInheritanceChain(self.descriptor),
             nativeType=self.descriptor.nativeType,
+            getProto=getProto,
             properties=properties,
             chromeProperties=chromeProperties,
             failureCode=failureCode,
@@ -16520,7 +16533,10 @@ class CGDescriptor(CGThing):
 
         # CGGetProtoObjectMethod and CGGetConstructorObjectMethod need
         # to come after CGCreateInterfaceObjectsMethod.
-        if descriptor.interface.hasInterfacePrototypeObject():
+        if (
+            descriptor.interface.hasInterfacePrototypeObject()
+            and not descriptor.hasOrdinaryObjectPrototype
+        ):
             cgThings.append(CGGetProtoObjectHandleMethod(descriptor))
             if descriptor.interface.hasChildInterfaces():
                 cgThings.append(CGGetProtoObjectMethod(descriptor))
