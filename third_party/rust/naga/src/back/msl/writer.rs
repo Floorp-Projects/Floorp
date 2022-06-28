@@ -364,6 +364,8 @@ pub struct Writer<W> {
     put_expression_stack_pointers: FastHashSet<*const ()>,
     #[cfg(test)]
     put_block_stack_pointers: FastHashSet<*const ()>,
+    /// Set of (struct type, struct field index) denoting which fields require
+    /// padding inserted **before** them (i.e. between fields at index - 1 and index)
     struct_member_pads: FastHashSet<(Handle<crate::Type>, u32)>,
 }
 
@@ -647,6 +649,8 @@ impl<W: Write> Writer<W> {
     }
 
     /// Finishes writing and returns the output.
+    // See https://github.com/rust-lang/rust-clippy/issues/4979.
+    #[allow(clippy::missing_const_for_fn)]
     pub fn finish(self) -> W {
         self.out
     }
@@ -1221,20 +1225,30 @@ impl<W: Write> Writer<W> {
         arg: Handle<crate::Expression>,
         arg1: Handle<crate::Expression>,
         size: usize,
+        context: &ExpressionContext,
     ) -> BackendResult {
+        // Write parantheses around the dot product expression to prevent operators
+        // with different precedences from applying earlier.
         write!(self.out, "(")?;
 
-        let arg0_name = &self.named_expressions[&arg];
-        let arg1_name = &self.named_expressions[&arg1];
-
-        // This will print an extra '+' at the beginning but that is fine in msl
+        // Cycle trough all the components of the vector
         for index in 0..size {
             let component = back::COMPONENTS[index];
-            write!(
-                self.out,
-                " + {}.{} * {}.{}",
-                arg0_name, component, arg1_name, component
-            )?;
+            // Write the addition to the previous product
+            // This will print an extra '+' at the beginning but that is fine in msl
+            write!(self.out, " + ")?;
+            // Write the first vector expression, this expression is marked to be
+            // cached so unless it can't be cached (for example, it's a Constant)
+            // it shouldn't produce large expressions.
+            self.put_expression(arg, context, true)?;
+            // Access the current component on the first vector
+            write!(self.out, ".{} * ", component)?;
+            // Write the second vector expression, this expression is marked to be
+            // cached so unless it can't be cached (for example, it's a Constant)
+            // it shouldn't produce large expressions.
+            self.put_expression(arg1, context, true)?;
+            // Access the current component on the second vector
+            write!(self.out, ".{}", component)?;
         }
 
         write!(self.out, ")")?;
@@ -1652,7 +1666,7 @@ impl<W: Write> Writer<W> {
                             ..
                         } => "dot",
                         crate::TypeInner::Vector { size, .. } => {
-                            return self.put_dot_product(arg, arg1.unwrap(), size as usize)
+                            return self.put_dot_product(arg, arg1.unwrap(), size as usize, context)
                         }
                         _ => unreachable!(
                             "Correct TypeInner for dot product should be already validated"
@@ -2538,14 +2552,23 @@ impl<W: Write> Writer<W> {
                 crate::Statement::Loop {
                     ref body,
                     ref continuing,
+                    break_if,
                 } => {
-                    if !continuing.is_empty() {
+                    if !continuing.is_empty() || break_if.is_some() {
                         let gate_name = self.namer.call("loop_init");
                         writeln!(self.out, "{}bool {} = true;", level, gate_name)?;
                         writeln!(self.out, "{}while(true) {{", level)?;
                         let lif = level.next();
+                        let lcontinuing = lif.next();
                         writeln!(self.out, "{}if (!{}) {{", lif, gate_name)?;
-                        self.put_block(lif.next(), continuing, context)?;
+                        self.put_block(lcontinuing, continuing, context)?;
+                        if let Some(condition) = break_if {
+                            write!(self.out, "{}if (", lcontinuing)?;
+                            self.put_expression(condition, &context.expression, true)?;
+                            writeln!(self.out, ") {{")?;
+                            writeln!(self.out, "{}break;", lcontinuing.next())?;
+                            writeln!(self.out, "{}}}", lcontinuing)?;
+                        }
                         writeln!(self.out, "{}}}", lif)?;
                         writeln!(self.out, "{}{} = false;", lif, gate_name)?;
                     } else {
@@ -3080,6 +3103,10 @@ impl<W: Write> Writer<W> {
                     };
                     write!(self.out, "constant {} {} = {{", ty_name, name,)?;
                     for (i, &sub_handle) in components.iter().enumerate() {
+                        // insert padding initialization, if needed
+                        if self.struct_member_pads.contains(&(ty, i as u32)) {
+                            write!(self.out, ", {{}}")?;
+                        }
                         let separator = if i != 0 { ", " } else { "" };
                         let coco = ConstantContext {
                             handle: sub_handle,

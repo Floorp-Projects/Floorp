@@ -760,7 +760,8 @@ impl super::PrivateCapabilities {
             | F::CLEAR_TEXTURE
             | F::TEXTURE_FORMAT_16BIT_NORM
             | F::SHADER_FLOAT16
-            | F::DEPTH32FLOAT_STENCIL8;
+            | F::DEPTH32FLOAT_STENCIL8
+            | F::MULTI_DRAW_INDIRECT;
 
         features.set(F::TEXTURE_COMPRESSION_ASTC_LDR, self.format_astc);
         features.set(F::TEXTURE_COMPRESSION_ASTC_HDR, self.format_astc_hdr);
@@ -846,6 +847,7 @@ impl super::PrivateCapabilities {
                 max_compute_workgroup_size_y: self.max_threads_per_group,
                 max_compute_workgroup_size_z: self.max_threads_per_group,
                 max_compute_workgroups_per_dimension: 0xFFFF,
+                max_buffer_size: self.max_buffer_size,
             },
             alignments: crate::Alignments {
                 buffer_copy_offset: wgt::BufferSize::new(self.buffer_alignment).unwrap(),

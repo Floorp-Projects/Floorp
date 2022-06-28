@@ -86,6 +86,8 @@ pub enum FunctionError {
     },
     #[error("Argument '{name}' at index {index} has a type that can't be passed into functions.")]
     InvalidArgumentType { index: usize, name: String },
+    #[error("The function's given return type cannot be returned from functions")]
+    NonConstructibleReturnType,
     #[error("Argument '{name}' at index {index} is a pointer of space {space:?}, which can't be passed into functions.")]
     InvalidArgumentPointerSpace {
         index: usize,
@@ -497,6 +499,7 @@ impl super::Validator {
                 S::Loop {
                     ref body,
                     ref continuing,
+                    break_if,
                 } => {
                     // special handling for block scoping is needed here,
                     // because the continuing{} block inherits the scope
@@ -518,6 +521,20 @@ impl super::Validator {
                             &context.with_abilities(ControlFlowAbility::empty()),
                         )?
                         .stages;
+
+                    if let Some(condition) = break_if {
+                        match *context.resolve_type(condition, &self.valid_expression_set)? {
+                            Ti::Scalar {
+                                kind: crate::ScalarKind::Bool,
+                                width: _,
+                            } => {}
+                            _ => {
+                                return Err(FunctionError::InvalidIfType(condition)
+                                    .with_span_handle(condition, context.expressions))
+                            }
+                        }
+                    }
+
                     for handle in self.valid_expression_list.drain(base_expression_count..) {
                         self.valid_expression_set.remove(handle.index());
                     }
@@ -891,6 +908,17 @@ impl super::Validator {
                     name: argument.name.clone().unwrap_or_default(),
                 }
                 .with_span_handle(argument.ty, &module.types));
+            }
+        }
+
+        #[cfg(feature = "validate")]
+        if let Some(ref result) = fun.result {
+            if !self.types[result.ty.index()]
+                .flags
+                .contains(super::TypeFlags::CONSTRUCTIBLE)
+            {
+                return Err(FunctionError::NonConstructibleReturnType
+                    .with_span_handle(result.ty, &module.types));
             }
         }
 

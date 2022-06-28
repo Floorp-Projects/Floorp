@@ -184,6 +184,7 @@ struct AdapterShared {
     workarounds: Workarounds,
     shading_language_version: naga::back::glsl::Version,
     max_texture_size: u32,
+    is_ext_color_buffer_float_supported: bool,
 }
 
 pub struct Adapter {
@@ -262,6 +263,7 @@ pub struct Texture {
     #[allow(unused)]
     format_desc: TextureFormatDesc,
     copy_size: crate::CopyExtent,
+    is_cubemap: bool,
 }
 
 impl Texture {
@@ -281,6 +283,7 @@ impl Texture {
                 height: 0,
                 depth: 0,
             },
+            is_cubemap: false,
         }
     }
 }
@@ -564,7 +567,7 @@ struct PrimitiveState {
     unclipped_depth: bool,
 }
 
-type InvalidatedAttachments = ArrayVec<u32, { crate::MAX_COLOR_TARGETS + 2 }>;
+type InvalidatedAttachments = ArrayVec<u32, { crate::MAX_COLOR_ATTACHMENTS + 2 }>;
 
 #[derive(Debug)]
 enum Command {
@@ -616,6 +619,7 @@ enum Command {
         dst: glow::Texture,
         dst_target: BindTarget,
         copy: crate::TextureCopy,
+        dst_is_cubemap: bool,
     },
     CopyBufferToTexture {
         src: Buffer,

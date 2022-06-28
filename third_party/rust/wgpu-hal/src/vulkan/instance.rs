@@ -132,21 +132,27 @@ impl super::Swapchain {
     }
 }
 
-impl super::Instance {
+impl super::InstanceShared {
     pub fn entry(&self) -> &ash::Entry {
-        &self.shared.entry
+        &self.entry
     }
 
     pub fn raw_instance(&self) -> &ash::Instance {
-        &self.shared.raw
+        &self.raw
     }
 
     pub fn driver_api_version(&self) -> u32 {
-        self.shared.driver_api_version
+        self.driver_api_version
     }
 
     pub fn extensions(&self) -> &[&'static CStr] {
         &self.extensions[..]
+    }
+}
+
+impl super::Instance {
+    pub fn shared_instance(&self) -> &super::InstanceShared {
+        &self.shared
     }
 
     pub fn required_extensions(
@@ -214,10 +220,13 @@ impl super::Instance {
     /// - `raw_instance` must be created respecting `driver_api_version`, `extensions` and `flags`
     /// - `extensions` must be a superset of `required_extensions()` and must be created from the
     ///   same entry, driver_api_version and flags.
+    /// - `android_sdk_version` is ignored and can be `0` for all platforms besides Android
+    #[allow(clippy::too_many_arguments)]
     pub unsafe fn from_raw(
         entry: ash::Entry,
         raw_instance: ash::Instance,
         driver_api_version: u32,
+        android_sdk_version: u32,
         extensions: Vec<&'static CStr>,
         flags: crate::InstanceFlags,
         has_nv_optimus: bool,
@@ -276,6 +285,7 @@ impl super::Instance {
         Ok(Self {
             shared: Arc::new(super::InstanceShared {
                 raw: raw_instance,
+                extensions,
                 drop_guard,
                 flags,
                 debug_utils,
@@ -283,8 +293,8 @@ impl super::Instance {
                 entry,
                 has_nv_optimus,
                 driver_api_version,
+                android_sdk_version,
             }),
-            extensions,
         })
     }
 
@@ -294,7 +304,7 @@ impl super::Instance {
         dpy: *mut vk::Display,
         window: vk::Window,
     ) -> super::Surface {
-        if !self.extensions.contains(&khr::XlibSurface::name()) {
+        if !self.shared.extensions.contains(&khr::XlibSurface::name()) {
             panic!("Vulkan driver does not support VK_KHR_XLIB_SURFACE");
         }
 
@@ -318,7 +328,7 @@ impl super::Instance {
         connection: *mut vk::xcb_connection_t,
         window: vk::xcb_window_t,
     ) -> super::Surface {
-        if !self.extensions.contains(&khr::XcbSurface::name()) {
+        if !self.shared.extensions.contains(&khr::XcbSurface::name()) {
             panic!("Vulkan driver does not support VK_KHR_XCB_SURFACE");
         }
 
@@ -342,7 +352,11 @@ impl super::Instance {
         display: *mut c_void,
         surface: *mut c_void,
     ) -> super::Surface {
-        if !self.extensions.contains(&khr::WaylandSurface::name()) {
+        if !self
+            .shared
+            .extensions
+            .contains(&khr::WaylandSurface::name())
+        {
             panic!("Vulkan driver does not support VK_KHR_WAYLAND_SURFACE");
         }
 
@@ -379,7 +393,7 @@ impl super::Instance {
         hinstance: *mut c_void,
         hwnd: *mut c_void,
     ) -> super::Surface {
-        if !self.extensions.contains(&khr::Win32Surface::name()) {
+        if !self.shared.extensions.contains(&khr::Win32Surface::name()) {
             panic!("Vulkan driver does not support VK_KHR_WIN32_SURFACE");
         }
 
@@ -557,6 +571,28 @@ impl crate::Instance<super::Api> for super::Instance {
             layers
         };
 
+        #[cfg(target_os = "android")]
+        let android_sdk_version = {
+            let properties = android_system_properties::AndroidSystemProperties::new();
+            // See: https://developer.android.com/reference/android/os/Build.VERSION_CODES
+            if let Some(val) = properties.get("ro.build.version.sdk") {
+                match val.parse::<u32>() {
+                    Ok(sdk_ver) => sdk_ver,
+                    Err(err) => {
+                        log::error!(
+                            "Couldn't parse Android's ro.build.version.sdk system property ({val}): {err}"
+                        );
+                        0
+                    }
+                }
+            } else {
+                log::error!("Couldn't read Android's ro.build.version.sdk system property");
+                0
+            }
+        };
+        #[cfg(not(target_os = "android"))]
+        let android_sdk_version = 0;
+
         let vk_instance = {
             let str_pointers = layers
                 .iter()
@@ -583,6 +619,7 @@ impl crate::Instance<super::Api> for super::Instance {
             entry,
             vk_instance,
             driver_api_version,
+            android_sdk_version,
             extensions,
             desc.flags,
             has_nv_optimus,
@@ -598,16 +635,21 @@ impl crate::Instance<super::Api> for super::Instance {
 
         match has_handle.raw_window_handle() {
             RawWindowHandle::Wayland(handle)
-                if self.extensions.contains(&khr::WaylandSurface::name()) =>
+                if self
+                    .shared
+                    .extensions
+                    .contains(&khr::WaylandSurface::name()) =>
             {
                 Ok(self.create_surface_from_wayland(handle.display, handle.surface))
             }
             RawWindowHandle::Xlib(handle)
-                if self.extensions.contains(&khr::XlibSurface::name()) =>
+                if self.shared.extensions.contains(&khr::XlibSurface::name()) =>
             {
                 Ok(self.create_surface_from_xlib(handle.display as *mut _, handle.window))
             }
-            RawWindowHandle::Xcb(handle) if self.extensions.contains(&khr::XcbSurface::name()) => {
+            RawWindowHandle::Xcb(handle)
+                if self.shared.extensions.contains(&khr::XcbSurface::name()) =>
+            {
                 Ok(self.create_surface_from_xcb(handle.connection, handle.window))
             }
             RawWindowHandle::AndroidNdk(handle) => {
@@ -622,13 +664,13 @@ impl crate::Instance<super::Api> for super::Instance {
             }
             #[cfg(target_os = "macos")]
             RawWindowHandle::AppKit(handle)
-                if self.extensions.contains(&ext::MetalSurface::name()) =>
+                if self.shared.extensions.contains(&ext::MetalSurface::name()) =>
             {
                 Ok(self.create_surface_from_view(handle.ns_view))
             }
             #[cfg(target_os = "ios")]
             RawWindowHandle::UiKit(handle)
-                if self.extensions.contains(&ext::MetalSurface::name()) =>
+                if self.shared.extensions.contains(&ext::MetalSurface::name()) =>
             {
                 Ok(self.create_surface_from_view(handle.ui_view))
             }
@@ -707,10 +749,27 @@ impl crate::Surface<super::Api> for super::Surface {
 
     unsafe fn acquire_texture(
         &mut self,
-        timeout_ms: u32,
+        timeout: Option<std::time::Duration>,
     ) -> Result<Option<crate::AcquiredSurfaceTexture<super::Api>>, crate::SurfaceError> {
         let sc = self.swapchain.as_mut().unwrap();
-        let timeout_ns = timeout_ms as u64 * super::MILLIS_TO_NANOS;
+
+        let mut timeout_ns = match timeout {
+            Some(duration) => duration.as_nanos() as u64,
+            None => u64::MAX,
+        };
+
+        // AcquireNextImageKHR on Android (prior to Android 11) doesn't support timeouts
+        // and will also log verbose warnings if tying to use a timeout.
+        //
+        // Android 10 implementation for reference:
+        // https://android.googlesource.com/platform/frameworks/native/+/refs/tags/android-mainline-10.0.0_r13/vulkan/libvulkan/swapchain.cpp#1426
+        // Android 11 implementation for reference:
+        // https://android.googlesource.com/platform/frameworks/native/+/refs/tags/android-mainline-11.0.0_r45/vulkan/libvulkan/swapchain.cpp#1438
+        //
+        // Android 11 corresponds to an SDK_INT/ro.build.version.sdk of 30
+        if cfg!(target_os = "android") && self.instance.android_sdk_version < 30 {
+            timeout_ns = u64::MAX;
+        }
 
         // will block if no image is available
         let (index, suboptimal) =

@@ -224,6 +224,8 @@ struct ActiveSubmission<A: hal::Api> {
 pub enum WaitIdleError {
     #[error(transparent)]
     Device(#[from] DeviceError),
+    #[error("Tried to wait using a submission index from the wrong device. Submission index is from device {0:?}. Called poll on device {1:?}.")]
+    WrongSubmissionIndex(id::QueueId, id::DeviceId),
     #[error("GPU got stuck :(")]
     StuckGpu,
 }
@@ -459,7 +461,7 @@ impl<A: hal::Api> LifetimeTracker<A> {
 impl<A: HalApi> LifetimeTracker<A> {
     /// Identify resources to free, according to `trackers` and `self.suspected_resources`.
     ///
-    /// Given `trackers`, the [`TrackerSet`] belonging to same [`Device`] as
+    /// Given `trackers`, the [`Tracker`] belonging to same [`Device`] as
     /// `self`, and `hub`, the [`Hub`] to which that `Device` belongs:
     ///
     /// Remove from `trackers` each resource mentioned in
