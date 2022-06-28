@@ -79,6 +79,9 @@ class ThreadLocalPointer {
  public:
   ThreadLocalPointer() : slot_() { ThreadLocalPlatform::AllocateSlot(slot_); }
 
+  ThreadLocalPointer(const ThreadLocalPointer&) = delete;
+  ThreadLocalPointer& operator=(const ThreadLocalPointer&) = delete;
+
   ~ThreadLocalPointer() { ThreadLocalPlatform::FreeSlot(slot_); }
 
   Type* Get() {
@@ -91,13 +94,15 @@ class ThreadLocalPointer {
   typedef ThreadLocalPlatform::SlotType SlotType;
 
   SlotType slot_;
-
-  DISALLOW_COPY_AND_ASSIGN(ThreadLocalPointer<Type>);
 };
 
 class ThreadLocalBoolean {
  public:
   ThreadLocalBoolean() {}
+
+  ThreadLocalBoolean(const ThreadLocalBoolean&) = delete;
+  ThreadLocalBoolean& operator=(const ThreadLocalBoolean&) = delete;
+
   ~ThreadLocalBoolean() {}
 
   bool Get() { return tlp_.Get() != NULL; }
@@ -109,8 +114,6 @@ class ThreadLocalBoolean {
 
  private:
   ThreadLocalPointer<void> tlp_;
-
-  DISALLOW_COPY_AND_ASSIGN(ThreadLocalBoolean);
 };
 
 }  // namespace base
