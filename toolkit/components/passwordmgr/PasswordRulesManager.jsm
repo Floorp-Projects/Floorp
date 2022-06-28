@@ -112,7 +112,7 @@ class PasswordRulesManagerParent extends JSWindowActorParent {
     if (currentRecord?.Domain) {
       isCustomRule = true;
       lazy.log(
-        `Password rules for origin: ${currentRecord.Domain}, ${currentRecord["password-rules"]}`
+        `Password rules for ${currentRecord.Domain}:  ${currentRecord["password-rules"]}.`
       );
       let currentRules = lazy.PasswordRulesParser.parsePasswordRules(
         currentRecord["password-rules"]
@@ -123,7 +123,9 @@ class PasswordRulesManagerParent extends JSWindowActorParent {
         .add(isCustomRule);
       return lazy.PasswordGenerator.generatePassword({ rules: mapOfRules });
     }
-    lazy.log(`No password rules for ${uri}, generating standard password.`);
+    lazy.log(
+      `No password rules for specified origin, generating standard password.`
+    );
     Services.telemetry
       .getHistogramById(IMPROVED_PASSWORD_GENERATION_HISTOGRAM)
       .add(isCustomRule);
