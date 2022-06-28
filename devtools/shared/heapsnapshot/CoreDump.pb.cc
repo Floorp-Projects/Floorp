@@ -11,229 +11,235 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
-extern PROTOBUF_INTERNAL_EXPORT_CoreDump_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Edge_CoreDump_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_CoreDump_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_StackFrame_CoreDump_2eproto;
+
+PROTOBUF_PRAGMA_INIT_SEG
+
+namespace _pb = ::PROTOBUF_NAMESPACE_ID;
+namespace _pbi = _pb::internal;
+
 namespace mozilla {
 namespace devtools {
 namespace protobuf {
-class MetadataDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Metadata> _instance;
-} _Metadata_default_instance_;
-class StackFrame_DataDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<StackFrame_Data> _instance;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr source_;
-  ::PROTOBUF_NAMESPACE_ID::uint64 sourceref_;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr functiondisplayname_;
-  ::PROTOBUF_NAMESPACE_ID::uint64 functiondisplaynameref_;
-} _StackFrame_Data_default_instance_;
-class StackFrameDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<StackFrame> _instance;
-  const ::mozilla::devtools::protobuf::StackFrame_Data* data_;
-  ::PROTOBUF_NAMESPACE_ID::uint64 ref_;
-} _StackFrame_default_instance_;
-class NodeDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Node> _instance;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr typename__;
-  ::PROTOBUF_NAMESPACE_ID::uint64 typenameref_;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr jsobjectclassname_;
-  ::PROTOBUF_NAMESPACE_ID::uint64 jsobjectclassnameref_;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr scriptfilename_;
-  ::PROTOBUF_NAMESPACE_ID::uint64 scriptfilenameref_;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr descriptivetypename_;
-  ::PROTOBUF_NAMESPACE_ID::uint64 descriptivetypenameref_;
-} _Node_default_instance_;
-class EdgeDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Edge> _instance;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
-  ::PROTOBUF_NAMESPACE_ID::uint64 nameref_;
-} _Edge_default_instance_;
+PROTOBUF_CONSTEXPR Metadata::Metadata(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.timestamp_)*/uint64_t{0u}} {}
+struct MetadataDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR MetadataDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~MetadataDefaultTypeInternal() {}
+  union {
+    Metadata _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MetadataDefaultTypeInternal _Metadata_default_instance_;
+PROTOBUF_CONSTEXPR StackFrame_Data::StackFrame_Data(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.parent_)*/nullptr
+  , /*decltype(_impl_.id_)*/uint64_t{0u}
+  , /*decltype(_impl_.line_)*/0u
+  , /*decltype(_impl_.column_)*/0u
+  , /*decltype(_impl_.issystem_)*/false
+  , /*decltype(_impl_.isselfhosted_)*/false
+  , /*decltype(_impl_.SourceOrRef_)*/{}
+  , /*decltype(_impl_.FunctionDisplayNameOrRef_)*/{}
+  , /*decltype(_impl_._oneof_case_)*/{}} {}
+struct StackFrame_DataDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR StackFrame_DataDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~StackFrame_DataDefaultTypeInternal() {}
+  union {
+    StackFrame_Data _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 StackFrame_DataDefaultTypeInternal _StackFrame_Data_default_instance_;
+PROTOBUF_CONSTEXPR StackFrame::StackFrame(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.StackFrameType_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_._oneof_case_)*/{}} {}
+struct StackFrameDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR StackFrameDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~StackFrameDefaultTypeInternal() {}
+  union {
+    StackFrame _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 StackFrameDefaultTypeInternal _StackFrame_default_instance_;
+PROTOBUF_CONSTEXPR Node::Node(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.edges_)*/{}
+  , /*decltype(_impl_.allocationstack_)*/nullptr
+  , /*decltype(_impl_.id_)*/uint64_t{0u}
+  , /*decltype(_impl_.size_)*/uint64_t{0u}
+  , /*decltype(_impl_.coarsetype_)*/0u
+  , /*decltype(_impl_.TypeNameOrRef_)*/{}
+  , /*decltype(_impl_.JSObjectClassNameOrRef_)*/{}
+  , /*decltype(_impl_.ScriptFilenameOrRef_)*/{}
+  , /*decltype(_impl_.descriptiveTypeNameOrRef_)*/{}
+  , /*decltype(_impl_._oneof_case_)*/{}} {}
+struct NodeDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR NodeDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~NodeDefaultTypeInternal() {}
+  union {
+    Node _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 NodeDefaultTypeInternal _Node_default_instance_;
+PROTOBUF_CONSTEXPR Edge::Edge(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.referent_)*/uint64_t{0u}
+  , /*decltype(_impl_.EdgeNameOrRef_)*/{}
+  , /*decltype(_impl_._oneof_case_)*/{}} {}
+struct EdgeDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR EdgeDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~EdgeDefaultTypeInternal() {}
+  union {
+    Edge _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 EdgeDefaultTypeInternal _Edge_default_instance_;
 }  // namespace protobuf
 }  // namespace devtools
 }  // namespace mozilla
-static void InitDefaultsscc_info_Edge_CoreDump_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::devtools::protobuf::_Edge_default_instance_;
-    new (ptr) ::mozilla::devtools::protobuf::Edge();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::devtools::protobuf::Edge::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Edge_CoreDump_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_Edge_CoreDump_2eproto}, {}};
-
-static void InitDefaultsscc_info_Metadata_CoreDump_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::devtools::protobuf::_Metadata_default_instance_;
-    new (ptr) ::mozilla::devtools::protobuf::Metadata();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::devtools::protobuf::Metadata::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Metadata_CoreDump_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_Metadata_CoreDump_2eproto}, {}};
-
-static void InitDefaultsscc_info_Node_CoreDump_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::devtools::protobuf::_Node_default_instance_;
-    new (ptr) ::mozilla::devtools::protobuf::Node();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::devtools::protobuf::Node::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_Node_CoreDump_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_Node_CoreDump_2eproto}, {
-      &scc_info_Edge_CoreDump_2eproto.base,
-      &scc_info_StackFrame_CoreDump_2eproto.base,}};
-
-static void InitDefaultsscc_info_StackFrame_CoreDump_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::devtools::protobuf::_StackFrame_Data_default_instance_;
-    new (ptr) ::mozilla::devtools::protobuf::StackFrame_Data();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  {
-    void* ptr = &::mozilla::devtools::protobuf::_StackFrame_default_instance_;
-    new (ptr) ::mozilla::devtools::protobuf::StackFrame();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::devtools::protobuf::StackFrame_Data::InitAsDefaultInstance();
-  ::mozilla::devtools::protobuf::StackFrame::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_StackFrame_CoreDump_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_StackFrame_CoreDump_2eproto}, {}};
-
 namespace mozilla {
 namespace devtools {
 namespace protobuf {
 
 // ===================================================================
 
-void Metadata::InitAsDefaultInstance() {
-}
 class Metadata::_Internal {
  public:
-  using HasBits = decltype(std::declval<Metadata>()._has_bits_);
+  using HasBits = decltype(std::declval<Metadata>()._impl_._has_bits_);
   static void set_has_timestamp(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
 };
 
-Metadata::Metadata()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.devtools.protobuf.Metadata)
+Metadata::Metadata(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.devtools.protobuf.Metadata)
 }
 Metadata::Metadata(const Metadata& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  timestamp_ = from.timestamp_;
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  Metadata* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.timestamp_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _this->_impl_.timestamp_ = from._impl_.timestamp_;
   // @@protoc_insertion_point(copy_constructor:mozilla.devtools.protobuf.Metadata)
 }
 
-void Metadata::SharedCtor() {
-  timestamp_ = PROTOBUF_ULONGLONG(0);
+inline void Metadata::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.timestamp_){uint64_t{0u}}
+  };
 }
 
 Metadata::~Metadata() {
   // @@protoc_insertion_point(destructor:mozilla.devtools.protobuf.Metadata)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void Metadata::SharedDtor() {
+inline void Metadata::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
 }
 
 void Metadata::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const Metadata& Metadata::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Metadata_CoreDump_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void Metadata::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.devtools.protobuf.Metadata)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  timestamp_ = PROTOBUF_ULONGLONG(0);
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_.timestamp_ = uint64_t{0u};
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* Metadata::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* Metadata::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional uint64 timeStamp = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
           _Internal::set_has_timestamp(&has_bits);
-          timestamp_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.timestamp_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Metadata::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* Metadata::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.devtools.protobuf.Metadata)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional uint64 timeStamp = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(1, this->_internal_timestamp(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(1, this->_internal_timestamp(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.devtools.protobuf.Metadata)
   return target;
@@ -243,42 +249,41 @@ size_t Metadata::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.devtools.protobuf.Metadata)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // optional uint64 timeStamp = 1;
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-        this->_internal_timestamp());
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_timestamp());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void Metadata::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const Metadata*>(
+  MergeFrom(*::_pbi::DownCast<const Metadata*>(
       &from));
 }
 
 void Metadata::MergeFrom(const Metadata& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.devtools.protobuf.Metadata)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  Metadata* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.devtools.protobuf.Metadata)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from._internal_has_timestamp()) {
-    _internal_set_timestamp(from._internal_timestamp());
+    _this->_internal_set_timestamp(from._internal_timestamp());
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void Metadata::CopyFrom(const Metadata& from) {
@@ -294,9 +299,9 @@ bool Metadata::IsInitialized() const {
 
 void Metadata::InternalSwap(Metadata* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(timestamp_, other->timestamp_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  swap(_impl_.timestamp_, other->_impl_.timestamp_);
 }
 
 std::string Metadata::GetTypeName() const {
@@ -306,13 +311,9 @@ std::string Metadata::GetTypeName() const {
 
 // ===================================================================
 
-void StackFrame_Data::InitAsDefaultInstance() {
-  ::mozilla::devtools::protobuf::_StackFrame_Data_default_instance_._instance.get_mutable()->parent_ = const_cast< ::mozilla::devtools::protobuf::StackFrame*>(
-      ::mozilla::devtools::protobuf::StackFrame::internal_default_instance());
-}
 class StackFrame_Data::_Internal {
  public:
-  using HasBits = decltype(std::declval<StackFrame_Data>()._has_bits_);
+  using HasBits = decltype(std::declval<StackFrame_Data>()._impl_._has_bits_);
   static void set_has_id(HasBits* has_bits) {
     (*has_bits)[0] |= 2u;
   }
@@ -336,34 +337,45 @@ class StackFrame_Data::_Internal {
 
 const ::mozilla::devtools::protobuf::StackFrame&
 StackFrame_Data::_Internal::parent(const StackFrame_Data* msg) {
-  return *msg->parent_;
+  return *msg->_impl_.parent_;
 }
-StackFrame_Data::StackFrame_Data()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.devtools.protobuf.StackFrame.Data)
+StackFrame_Data::StackFrame_Data(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.devtools.protobuf.StackFrame.Data)
 }
 StackFrame_Data::StackFrame_Data(const StackFrame_Data& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  StackFrame_Data* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.parent_){nullptr}
+    , decltype(_impl_.id_){}
+    , decltype(_impl_.line_){}
+    , decltype(_impl_.column_){}
+    , decltype(_impl_.issystem_){}
+    , decltype(_impl_.isselfhosted_){}
+    , decltype(_impl_.SourceOrRef_){}
+    , decltype(_impl_.FunctionDisplayNameOrRef_){}
+    , /*decltype(_impl_._oneof_case_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_parent()) {
-    parent_ = new ::mozilla::devtools::protobuf::StackFrame(*from.parent_);
-  } else {
-    parent_ = nullptr;
+    _this->_impl_.parent_ = new ::mozilla::devtools::protobuf::StackFrame(*from._impl_.parent_);
   }
-  ::memcpy(&id_, &from.id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&isselfhosted_) -
-    reinterpret_cast<char*>(&id_)) + sizeof(isselfhosted_));
+  ::memcpy(&_impl_.id_, &from._impl_.id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.isselfhosted_) -
+    reinterpret_cast<char*>(&_impl_.id_)) + sizeof(_impl_.isselfhosted_));
   clear_has_SourceOrRef();
   switch (from.SourceOrRef_case()) {
     case kSource: {
-      _internal_set_source(from._internal_source());
+      _this->_internal_set_source(from._internal_source());
       break;
     }
     case kSourceRef: {
-      _internal_set_sourceref(from._internal_sourceref());
+      _this->_internal_set_sourceref(from._internal_sourceref());
       break;
     }
     case SOURCEORREF_NOT_SET: {
@@ -373,11 +385,11 @@ StackFrame_Data::StackFrame_Data(const StackFrame_Data& from)
   clear_has_FunctionDisplayNameOrRef();
   switch (from.FunctionDisplayNameOrRef_case()) {
     case kFunctionDisplayName: {
-      _internal_set_functiondisplayname(from._internal_functiondisplayname());
+      _this->_internal_set_functiondisplayname(from._internal_functiondisplayname());
       break;
     }
     case kFunctionDisplayNameRef: {
-      _internal_set_functiondisplaynameref(from._internal_functiondisplaynameref());
+      _this->_internal_set_functiondisplaynameref(from._internal_functiondisplaynameref());
       break;
     }
     case FUNCTIONDISPLAYNAMEORREF_NOT_SET: {
@@ -387,22 +399,39 @@ StackFrame_Data::StackFrame_Data(const StackFrame_Data& from)
   // @@protoc_insertion_point(copy_constructor:mozilla.devtools.protobuf.StackFrame.Data)
 }
 
-void StackFrame_Data::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_StackFrame_CoreDump_2eproto.base);
-  ::memset(&parent_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&isselfhosted_) -
-      reinterpret_cast<char*>(&parent_)) + sizeof(isselfhosted_));
+inline void StackFrame_Data::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.parent_){nullptr}
+    , decltype(_impl_.id_){uint64_t{0u}}
+    , decltype(_impl_.line_){0u}
+    , decltype(_impl_.column_){0u}
+    , decltype(_impl_.issystem_){false}
+    , decltype(_impl_.isselfhosted_){false}
+    , decltype(_impl_.SourceOrRef_){}
+    , decltype(_impl_.FunctionDisplayNameOrRef_){}
+    , /*decltype(_impl_._oneof_case_)*/{}
+  };
   clear_has_SourceOrRef();
   clear_has_FunctionDisplayNameOrRef();
 }
 
 StackFrame_Data::~StackFrame_Data() {
   // @@protoc_insertion_point(destructor:mozilla.devtools.protobuf.StackFrame.Data)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void StackFrame_Data::SharedDtor() {
-  if (this != internal_default_instance()) delete parent_;
+inline void StackFrame_Data::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete _impl_.parent_;
   if (has_SourceOrRef()) {
     clear_SourceOrRef();
   }
@@ -412,19 +441,14 @@ void StackFrame_Data::SharedDtor() {
 }
 
 void StackFrame_Data::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const StackFrame_Data& StackFrame_Data::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_StackFrame_CoreDump_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void StackFrame_Data::clear_SourceOrRef() {
 // @@protoc_insertion_point(one_of_clear_start:mozilla.devtools.protobuf.StackFrame.Data)
   switch (SourceOrRef_case()) {
     case kSource: {
-      SourceOrRef_.source_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+      _impl_.SourceOrRef_.source_.Destroy();
       break;
     }
     case kSourceRef: {
@@ -435,14 +459,14 @@ void StackFrame_Data::clear_SourceOrRef() {
       break;
     }
   }
-  _oneof_case_[0] = SOURCEORREF_NOT_SET;
+  _impl_._oneof_case_[0] = SOURCEORREF_NOT_SET;
 }
 
 void StackFrame_Data::clear_FunctionDisplayNameOrRef() {
 // @@protoc_insertion_point(one_of_clear_start:mozilla.devtools.protobuf.StackFrame.Data)
   switch (FunctionDisplayNameOrRef_case()) {
     case kFunctionDisplayName: {
-      FunctionDisplayNameOrRef_.functiondisplayname_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+      _impl_.FunctionDisplayNameOrRef_.functiondisplayname_.Destroy();
       break;
     }
     case kFunctionDisplayNameRef: {
@@ -453,169 +477,180 @@ void StackFrame_Data::clear_FunctionDisplayNameOrRef() {
       break;
     }
   }
-  _oneof_case_[1] = FUNCTIONDISPLAYNAMEORREF_NOT_SET;
+  _impl_._oneof_case_[1] = FUNCTIONDISPLAYNAMEORREF_NOT_SET;
 }
 
 
 void StackFrame_Data::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.devtools.protobuf.StackFrame.Data)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    GOOGLE_DCHECK(parent_ != nullptr);
-    parent_->Clear();
+    GOOGLE_DCHECK(_impl_.parent_ != nullptr);
+    _impl_.parent_->Clear();
   }
   if (cached_has_bits & 0x0000003eu) {
-    ::memset(&id_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&isselfhosted_) -
-        reinterpret_cast<char*>(&id_)) + sizeof(isselfhosted_));
+    ::memset(&_impl_.id_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.isselfhosted_) -
+        reinterpret_cast<char*>(&_impl_.id_)) + sizeof(_impl_.isselfhosted_));
   }
   clear_SourceOrRef();
   clear_FunctionDisplayNameOrRef();
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* StackFrame_Data::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* StackFrame_Data::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional uint64 id = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
           _Internal::set_has_id(&has_bits);
-          id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.devtools.protobuf.StackFrame parent = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_parent(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional uint32 line = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
           _Internal::set_has_line(&has_bits);
-          line_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.line_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional uint32 column = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
           _Internal::set_has_column(&has_bits);
-          column_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.column_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional bytes source = 5;
+      // bytes source = 5;
       case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           auto str = _internal_mutable_source();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional uint64 sourceRef = 6;
+      // uint64 sourceRef = 6;
       case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 48)) {
-          _internal_set_sourceref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
+          _internal_set_sourceref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional bytes functionDisplayName = 7;
+      // bytes functionDisplayName = 7;
       case 7:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 58)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
           auto str = _internal_mutable_functiondisplayname();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional uint64 functionDisplayNameRef = 8;
+      // uint64 functionDisplayNameRef = 8;
       case 8:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 64)) {
-          _internal_set_functiondisplaynameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 64)) {
+          _internal_set_functiondisplaynameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional bool isSystem = 9;
       case 9:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 72)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 72)) {
           _Internal::set_has_issystem(&has_bits);
-          issystem_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.issystem_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional bool isSelfHosted = 10;
       case 10:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 80)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 80)) {
           _Internal::set_has_isselfhosted(&has_bits);
-          isselfhosted_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.isselfhosted_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* StackFrame_Data::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* StackFrame_Data::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.devtools.protobuf.StackFrame.Data)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional uint64 id = 1;
   if (cached_has_bits & 0x00000002u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(1, this->_internal_id(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(1, this->_internal_id(), target);
   }
 
   // optional .mozilla.devtools.protobuf.StackFrame parent = 2;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::parent(this), target, stream);
+      InternalWriteMessage(2, _Internal::parent(this),
+        _Internal::parent(this).GetCachedSize(), target, stream);
   }
 
   // optional uint32 line = 3;
   if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(3, this->_internal_line(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(3, this->_internal_line(), target);
   }
 
   // optional uint32 column = 4;
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(4, this->_internal_column(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(4, this->_internal_column(), target);
   }
 
   switch (SourceOrRef_case()) {
@@ -626,7 +661,7 @@ failure:
     }
     case kSourceRef: {
       target = stream->EnsureSpace(target);
-      target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(6, this->_internal_sourceref(), target);
+      target = ::_pbi::WireFormatLite::WriteUInt64ToArray(6, this->_internal_sourceref(), target);
       break;
     }
     default: ;
@@ -639,7 +674,7 @@ failure:
     }
     case kFunctionDisplayNameRef: {
       target = stream->EnsureSpace(target);
-      target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(8, this->_internal_functiondisplaynameref(), target);
+      target = ::_pbi::WireFormatLite::WriteUInt64ToArray(8, this->_internal_functiondisplaynameref(), target);
       break;
     }
     default: ;
@@ -647,18 +682,18 @@ failure:
   // optional bool isSystem = 9;
   if (cached_has_bits & 0x00000010u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(9, this->_internal_issystem(), target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(9, this->_internal_issystem(), target);
   }
 
   // optional bool isSelfHosted = 10;
   if (cached_has_bits & 0x00000020u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(10, this->_internal_isselfhosted(), target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(10, this->_internal_isselfhosted(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.devtools.protobuf.StackFrame.Data)
   return target;
@@ -668,38 +703,32 @@ size_t StackFrame_Data::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.devtools.protobuf.StackFrame.Data)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000003fu) {
     // optional .mozilla.devtools.protobuf.StackFrame parent = 2;
     if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *parent_);
+          *_impl_.parent_);
     }
 
     // optional uint64 id = 1;
     if (cached_has_bits & 0x00000002u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-          this->_internal_id());
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_id());
     }
 
     // optional uint32 line = 3;
     if (cached_has_bits & 0x00000004u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
-          this->_internal_line());
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_line());
     }
 
     // optional uint32 column = 4;
     if (cached_has_bits & 0x00000008u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
-          this->_internal_column());
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_column());
     }
 
     // optional bool isSystem = 9;
@@ -714,18 +743,16 @@ size_t StackFrame_Data::ByteSizeLong() const {
 
   }
   switch (SourceOrRef_case()) {
-    // optional bytes source = 5;
+    // bytes source = 5;
     case kSource: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
           this->_internal_source());
       break;
     }
-    // optional uint64 sourceRef = 6;
+    // uint64 sourceRef = 6;
     case kSourceRef: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-          this->_internal_sourceref());
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_sourceref());
       break;
     }
     case SOURCEORREF_NOT_SET: {
@@ -733,18 +760,16 @@ size_t StackFrame_Data::ByteSizeLong() const {
     }
   }
   switch (FunctionDisplayNameOrRef_case()) {
-    // optional bytes functionDisplayName = 7;
+    // bytes functionDisplayName = 7;
     case kFunctionDisplayName: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
           this->_internal_functiondisplayname());
       break;
     }
-    // optional uint64 functionDisplayNameRef = 8;
+    // uint64 functionDisplayNameRef = 8;
     case kFunctionDisplayNameRef: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-          this->_internal_functiondisplaynameref());
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_functiondisplaynameref());
       break;
     }
     case FUNCTIONDISPLAYNAMEORREF_NOT_SET: {
@@ -752,55 +777,56 @@ size_t StackFrame_Data::ByteSizeLong() const {
     }
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void StackFrame_Data::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const StackFrame_Data*>(
+  MergeFrom(*::_pbi::DownCast<const StackFrame_Data*>(
       &from));
 }
 
 void StackFrame_Data::MergeFrom(const StackFrame_Data& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.devtools.protobuf.StackFrame.Data)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  StackFrame_Data* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.devtools.protobuf.StackFrame.Data)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000003fu) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_mutable_parent()->::mozilla::devtools::protobuf::StackFrame::MergeFrom(from._internal_parent());
+      _this->_internal_mutable_parent()->::mozilla::devtools::protobuf::StackFrame::MergeFrom(
+          from._internal_parent());
     }
     if (cached_has_bits & 0x00000002u) {
-      id_ = from.id_;
+      _this->_impl_.id_ = from._impl_.id_;
     }
     if (cached_has_bits & 0x00000004u) {
-      line_ = from.line_;
+      _this->_impl_.line_ = from._impl_.line_;
     }
     if (cached_has_bits & 0x00000008u) {
-      column_ = from.column_;
+      _this->_impl_.column_ = from._impl_.column_;
     }
     if (cached_has_bits & 0x00000010u) {
-      issystem_ = from.issystem_;
+      _this->_impl_.issystem_ = from._impl_.issystem_;
     }
     if (cached_has_bits & 0x00000020u) {
-      isselfhosted_ = from.isselfhosted_;
+      _this->_impl_.isselfhosted_ = from._impl_.isselfhosted_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
   switch (from.SourceOrRef_case()) {
     case kSource: {
-      _internal_set_source(from._internal_source());
+      _this->_internal_set_source(from._internal_source());
       break;
     }
     case kSourceRef: {
-      _internal_set_sourceref(from._internal_sourceref());
+      _this->_internal_set_sourceref(from._internal_sourceref());
       break;
     }
     case SOURCEORREF_NOT_SET: {
@@ -809,17 +835,18 @@ void StackFrame_Data::MergeFrom(const StackFrame_Data& from) {
   }
   switch (from.FunctionDisplayNameOrRef_case()) {
     case kFunctionDisplayName: {
-      _internal_set_functiondisplayname(from._internal_functiondisplayname());
+      _this->_internal_set_functiondisplayname(from._internal_functiondisplayname());
       break;
     }
     case kFunctionDisplayNameRef: {
-      _internal_set_functiondisplaynameref(from._internal_functiondisplaynameref());
+      _this->_internal_set_functiondisplaynameref(from._internal_functiondisplaynameref());
       break;
     }
     case FUNCTIONDISPLAYNAMEORREF_NOT_SET: {
       break;
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void StackFrame_Data::CopyFrom(const StackFrame_Data& from) {
@@ -835,18 +862,18 @@ bool StackFrame_Data::IsInitialized() const {
 
 void StackFrame_Data::InternalSwap(StackFrame_Data* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(parent_, other->parent_);
-  swap(id_, other->id_);
-  swap(line_, other->line_);
-  swap(column_, other->column_);
-  swap(issystem_, other->issystem_);
-  swap(isselfhosted_, other->isselfhosted_);
-  swap(SourceOrRef_, other->SourceOrRef_);
-  swap(FunctionDisplayNameOrRef_, other->FunctionDisplayNameOrRef_);
-  swap(_oneof_case_[0], other->_oneof_case_[0]);
-  swap(_oneof_case_[1], other->_oneof_case_[1]);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(StackFrame_Data, _impl_.isselfhosted_)
+      + sizeof(StackFrame_Data::_impl_.isselfhosted_)
+      - PROTOBUF_FIELD_OFFSET(StackFrame_Data, _impl_.parent_)>(
+          reinterpret_cast<char*>(&_impl_.parent_),
+          reinterpret_cast<char*>(&other->_impl_.parent_));
+  swap(_impl_.SourceOrRef_, other->_impl_.SourceOrRef_);
+  swap(_impl_.FunctionDisplayNameOrRef_, other->_impl_.FunctionDisplayNameOrRef_);
+  swap(_impl_._oneof_case_[0], other->_impl_._oneof_case_[0]);
+  swap(_impl_._oneof_case_[1], other->_impl_._oneof_case_[1]);
 }
 
 std::string StackFrame_Data::GetTypeName() const {
@@ -856,50 +883,54 @@ std::string StackFrame_Data::GetTypeName() const {
 
 // ===================================================================
 
-void StackFrame::InitAsDefaultInstance() {
-}
 class StackFrame::_Internal {
  public:
-  using HasBits = decltype(std::declval<StackFrame>()._has_bits_);
   static const ::mozilla::devtools::protobuf::StackFrame_Data& data(const StackFrame* msg);
 };
 
 const ::mozilla::devtools::protobuf::StackFrame_Data&
 StackFrame::_Internal::data(const StackFrame* msg) {
-  return *msg->StackFrameType_.data_;
+  return *msg->_impl_.StackFrameType_.data_;
 }
 void StackFrame::set_allocated_data(::mozilla::devtools::protobuf::StackFrame_Data* data) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaNoVirtual();
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   clear_StackFrameType();
   if (data) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena = nullptr;
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(data);
     if (message_arena != submessage_arena) {
       data = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, data, submessage_arena);
     }
     set_has_data();
-    StackFrameType_.data_ = data;
+    _impl_.StackFrameType_.data_ = data;
   }
   // @@protoc_insertion_point(field_set_allocated:mozilla.devtools.protobuf.StackFrame.data)
 }
-StackFrame::StackFrame()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.devtools.protobuf.StackFrame)
+StackFrame::StackFrame(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.devtools.protobuf.StackFrame)
 }
 StackFrame::StackFrame(const StackFrame& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  StackFrame* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.StackFrameType_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , /*decltype(_impl_._oneof_case_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   clear_has_StackFrameType();
   switch (from.StackFrameType_case()) {
     case kData: {
-      _internal_mutable_data()->::mozilla::devtools::protobuf::StackFrame_Data::MergeFrom(from._internal_data());
+      _this->_internal_mutable_data()->::mozilla::devtools::protobuf::StackFrame_Data::MergeFrom(
+          from._internal_data());
       break;
     }
     case kRef: {
-      _internal_set_ref(from._internal_ref());
+      _this->_internal_set_ref(from._internal_ref());
       break;
     }
     case STACKFRAMETYPE_NOT_SET: {
@@ -909,36 +940,45 @@ StackFrame::StackFrame(const StackFrame& from)
   // @@protoc_insertion_point(copy_constructor:mozilla.devtools.protobuf.StackFrame)
 }
 
-void StackFrame::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_StackFrame_CoreDump_2eproto.base);
+inline void StackFrame::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.StackFrameType_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , /*decltype(_impl_._oneof_case_)*/{}
+  };
   clear_has_StackFrameType();
 }
 
 StackFrame::~StackFrame() {
   // @@protoc_insertion_point(destructor:mozilla.devtools.protobuf.StackFrame)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void StackFrame::SharedDtor() {
+inline void StackFrame::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
   if (has_StackFrameType()) {
     clear_StackFrameType();
   }
 }
 
 void StackFrame::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const StackFrame& StackFrame::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_StackFrame_CoreDump_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void StackFrame::clear_StackFrameType() {
 // @@protoc_insertion_point(one_of_clear_start:mozilla.devtools.protobuf.StackFrame)
   switch (StackFrameType_case()) {
     case kData: {
-      delete StackFrameType_.data_;
+      if (GetArenaForAllocation() == nullptr) {
+        delete _impl_.StackFrameType_.data_;
+      }
       break;
     }
     case kRef: {
@@ -949,86 +989,88 @@ void StackFrame::clear_StackFrameType() {
       break;
     }
   }
-  _oneof_case_[0] = STACKFRAMETYPE_NOT_SET;
+  _impl_._oneof_case_[0] = STACKFRAMETYPE_NOT_SET;
 }
 
 
 void StackFrame::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.devtools.protobuf.StackFrame)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   clear_StackFrameType();
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* StackFrame::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* StackFrame::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // optional .mozilla.devtools.protobuf.StackFrame.Data data = 1;
+      // .mozilla.devtools.protobuf.StackFrame.Data data = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr = ctx->ParseMessage(_internal_mutable_data(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional uint64 ref = 2;
+      // uint64 ref = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          _internal_set_ref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _internal_set_ref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* StackFrame::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* StackFrame::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.devtools.protobuf.StackFrame)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   switch (StackFrameType_case()) {
     case kData: {
-      target = stream->EnsureSpace(target);
       target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-        InternalWriteMessage(
-          1, _Internal::data(this), target, stream);
+        InternalWriteMessage(1, _Internal::data(this),
+          _Internal::data(this).GetCachedSize(), target, stream);
       break;
     }
     case kRef: {
       target = stream->EnsureSpace(target);
-      target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(2, this->_internal_ref(), target);
+      target = ::_pbi::WireFormatLite::WriteUInt64ToArray(2, this->_internal_ref(), target);
       break;
     }
     default: ;
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.devtools.protobuf.StackFrame)
   return target;
@@ -1038,23 +1080,21 @@ size_t StackFrame::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.devtools.protobuf.StackFrame)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   switch (StackFrameType_case()) {
-    // optional .mozilla.devtools.protobuf.StackFrame.Data data = 1;
+    // .mozilla.devtools.protobuf.StackFrame.Data data = 1;
     case kData: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *StackFrameType_.data_);
+          *_impl_.StackFrameType_.data_);
       break;
     }
-    // optional uint64 ref = 2;
+    // uint64 ref = 2;
     case kRef: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-          this->_internal_ref());
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_ref());
       break;
     }
     case STACKFRAMETYPE_NOT_SET: {
@@ -1062,39 +1102,41 @@ size_t StackFrame::ByteSizeLong() const {
     }
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void StackFrame::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const StackFrame*>(
+  MergeFrom(*::_pbi::DownCast<const StackFrame*>(
       &from));
 }
 
 void StackFrame::MergeFrom(const StackFrame& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.devtools.protobuf.StackFrame)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  StackFrame* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.devtools.protobuf.StackFrame)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   switch (from.StackFrameType_case()) {
     case kData: {
-      _internal_mutable_data()->::mozilla::devtools::protobuf::StackFrame_Data::MergeFrom(from._internal_data());
+      _this->_internal_mutable_data()->::mozilla::devtools::protobuf::StackFrame_Data::MergeFrom(
+          from._internal_data());
       break;
     }
     case kRef: {
-      _internal_set_ref(from._internal_ref());
+      _this->_internal_set_ref(from._internal_ref());
       break;
     }
     case STACKFRAMETYPE_NOT_SET: {
       break;
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void StackFrame::CopyFrom(const StackFrame& from) {
@@ -1110,10 +1152,9 @@ bool StackFrame::IsInitialized() const {
 
 void StackFrame::InternalSwap(StackFrame* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(StackFrameType_, other->StackFrameType_);
-  swap(_oneof_case_[0], other->_oneof_case_[0]);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_.StackFrameType_, other->_impl_.StackFrameType_);
+  swap(_impl_._oneof_case_[0], other->_impl_._oneof_case_[0]);
 }
 
 std::string StackFrame::GetTypeName() const {
@@ -1123,13 +1164,9 @@ std::string StackFrame::GetTypeName() const {
 
 // ===================================================================
 
-void Node::InitAsDefaultInstance() {
-  ::mozilla::devtools::protobuf::_Node_default_instance_._instance.get_mutable()->allocationstack_ = const_cast< ::mozilla::devtools::protobuf::StackFrame*>(
-      ::mozilla::devtools::protobuf::StackFrame::internal_default_instance());
-}
 class Node::_Internal {
  public:
-  using HasBits = decltype(std::declval<Node>()._has_bits_);
+  using HasBits = decltype(std::declval<Node>()._impl_._has_bits_);
   static void set_has_id(HasBits* has_bits) {
     (*has_bits)[0] |= 2u;
   }
@@ -1147,35 +1184,46 @@ class Node::_Internal {
 
 const ::mozilla::devtools::protobuf::StackFrame&
 Node::_Internal::allocationstack(const Node* msg) {
-  return *msg->allocationstack_;
+  return *msg->_impl_.allocationstack_;
 }
-Node::Node()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.devtools.protobuf.Node)
+Node::Node(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.devtools.protobuf.Node)
 }
 Node::Node(const Node& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      edges_(from.edges_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  Node* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.edges_){from._impl_.edges_}
+    , decltype(_impl_.allocationstack_){nullptr}
+    , decltype(_impl_.id_){}
+    , decltype(_impl_.size_){}
+    , decltype(_impl_.coarsetype_){}
+    , decltype(_impl_.TypeNameOrRef_){}
+    , decltype(_impl_.JSObjectClassNameOrRef_){}
+    , decltype(_impl_.ScriptFilenameOrRef_){}
+    , decltype(_impl_.descriptiveTypeNameOrRef_){}
+    , /*decltype(_impl_._oneof_case_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_allocationstack()) {
-    allocationstack_ = new ::mozilla::devtools::protobuf::StackFrame(*from.allocationstack_);
-  } else {
-    allocationstack_ = nullptr;
+    _this->_impl_.allocationstack_ = new ::mozilla::devtools::protobuf::StackFrame(*from._impl_.allocationstack_);
   }
-  ::memcpy(&id_, &from.id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&coarsetype_) -
-    reinterpret_cast<char*>(&id_)) + sizeof(coarsetype_));
+  ::memcpy(&_impl_.id_, &from._impl_.id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.coarsetype_) -
+    reinterpret_cast<char*>(&_impl_.id_)) + sizeof(_impl_.coarsetype_));
   clear_has_TypeNameOrRef();
   switch (from.TypeNameOrRef_case()) {
     case kTypeName: {
-      _internal_set_typename_(from._internal_typename_());
+      _this->_internal_set_typename_(from._internal_typename_());
       break;
     }
     case kTypeNameRef: {
-      _internal_set_typenameref(from._internal_typenameref());
+      _this->_internal_set_typenameref(from._internal_typenameref());
       break;
     }
     case TYPENAMEORREF_NOT_SET: {
@@ -1185,11 +1233,11 @@ Node::Node(const Node& from)
   clear_has_JSObjectClassNameOrRef();
   switch (from.JSObjectClassNameOrRef_case()) {
     case kJsObjectClassName: {
-      _internal_set_jsobjectclassname(from._internal_jsobjectclassname());
+      _this->_internal_set_jsobjectclassname(from._internal_jsobjectclassname());
       break;
     }
     case kJsObjectClassNameRef: {
-      _internal_set_jsobjectclassnameref(from._internal_jsobjectclassnameref());
+      _this->_internal_set_jsobjectclassnameref(from._internal_jsobjectclassnameref());
       break;
     }
     case JSOBJECTCLASSNAMEORREF_NOT_SET: {
@@ -1199,11 +1247,11 @@ Node::Node(const Node& from)
   clear_has_ScriptFilenameOrRef();
   switch (from.ScriptFilenameOrRef_case()) {
     case kScriptFilename: {
-      _internal_set_scriptfilename(from._internal_scriptfilename());
+      _this->_internal_set_scriptfilename(from._internal_scriptfilename());
       break;
     }
     case kScriptFilenameRef: {
-      _internal_set_scriptfilenameref(from._internal_scriptfilenameref());
+      _this->_internal_set_scriptfilenameref(from._internal_scriptfilenameref());
       break;
     }
     case SCRIPTFILENAMEORREF_NOT_SET: {
@@ -1213,11 +1261,11 @@ Node::Node(const Node& from)
   clear_has_descriptiveTypeNameOrRef();
   switch (from.descriptiveTypeNameOrRef_case()) {
     case kDescriptiveTypeName: {
-      _internal_set_descriptivetypename(from._internal_descriptivetypename());
+      _this->_internal_set_descriptivetypename(from._internal_descriptivetypename());
       break;
     }
     case kDescriptiveTypeNameRef: {
-      _internal_set_descriptivetypenameref(from._internal_descriptivetypenameref());
+      _this->_internal_set_descriptivetypenameref(from._internal_descriptivetypenameref());
       break;
     }
     case DESCRIPTIVETYPENAMEORREF_NOT_SET: {
@@ -1227,11 +1275,24 @@ Node::Node(const Node& from)
   // @@protoc_insertion_point(copy_constructor:mozilla.devtools.protobuf.Node)
 }
 
-void Node::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_Node_CoreDump_2eproto.base);
-  ::memset(&allocationstack_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&coarsetype_) -
-      reinterpret_cast<char*>(&allocationstack_)) + sizeof(coarsetype_));
+inline void Node::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.edges_){arena}
+    , decltype(_impl_.allocationstack_){nullptr}
+    , decltype(_impl_.id_){uint64_t{0u}}
+    , decltype(_impl_.size_){uint64_t{0u}}
+    , decltype(_impl_.coarsetype_){0u}
+    , decltype(_impl_.TypeNameOrRef_){}
+    , decltype(_impl_.JSObjectClassNameOrRef_){}
+    , decltype(_impl_.ScriptFilenameOrRef_){}
+    , decltype(_impl_.descriptiveTypeNameOrRef_){}
+    , /*decltype(_impl_._oneof_case_)*/{}
+  };
   clear_has_TypeNameOrRef();
   clear_has_JSObjectClassNameOrRef();
   clear_has_ScriptFilenameOrRef();
@@ -1240,11 +1301,17 @@ void Node::SharedCtor() {
 
 Node::~Node() {
   // @@protoc_insertion_point(destructor:mozilla.devtools.protobuf.Node)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void Node::SharedDtor() {
-  if (this != internal_default_instance()) delete allocationstack_;
+inline void Node::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.edges_.~RepeatedPtrField();
+  if (this != internal_default_instance()) delete _impl_.allocationstack_;
   if (has_TypeNameOrRef()) {
     clear_TypeNameOrRef();
   }
@@ -1260,19 +1327,14 @@ void Node::SharedDtor() {
 }
 
 void Node::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const Node& Node::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Node_CoreDump_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void Node::clear_TypeNameOrRef() {
 // @@protoc_insertion_point(one_of_clear_start:mozilla.devtools.protobuf.Node)
   switch (TypeNameOrRef_case()) {
     case kTypeName: {
-      TypeNameOrRef_.typename__.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+      _impl_.TypeNameOrRef_.typename__.Destroy();
       break;
     }
     case kTypeNameRef: {
@@ -1283,14 +1345,14 @@ void Node::clear_TypeNameOrRef() {
       break;
     }
   }
-  _oneof_case_[0] = TYPENAMEORREF_NOT_SET;
+  _impl_._oneof_case_[0] = TYPENAMEORREF_NOT_SET;
 }
 
 void Node::clear_JSObjectClassNameOrRef() {
 // @@protoc_insertion_point(one_of_clear_start:mozilla.devtools.protobuf.Node)
   switch (JSObjectClassNameOrRef_case()) {
     case kJsObjectClassName: {
-      JSObjectClassNameOrRef_.jsobjectclassname_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+      _impl_.JSObjectClassNameOrRef_.jsobjectclassname_.Destroy();
       break;
     }
     case kJsObjectClassNameRef: {
@@ -1301,14 +1363,14 @@ void Node::clear_JSObjectClassNameOrRef() {
       break;
     }
   }
-  _oneof_case_[1] = JSOBJECTCLASSNAMEORREF_NOT_SET;
+  _impl_._oneof_case_[1] = JSOBJECTCLASSNAMEORREF_NOT_SET;
 }
 
 void Node::clear_ScriptFilenameOrRef() {
 // @@protoc_insertion_point(one_of_clear_start:mozilla.devtools.protobuf.Node)
   switch (ScriptFilenameOrRef_case()) {
     case kScriptFilename: {
-      ScriptFilenameOrRef_.scriptfilename_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+      _impl_.ScriptFilenameOrRef_.scriptfilename_.Destroy();
       break;
     }
     case kScriptFilenameRef: {
@@ -1319,14 +1381,14 @@ void Node::clear_ScriptFilenameOrRef() {
       break;
     }
   }
-  _oneof_case_[2] = SCRIPTFILENAMEORREF_NOT_SET;
+  _impl_._oneof_case_[2] = SCRIPTFILENAMEORREF_NOT_SET;
 }
 
 void Node::clear_descriptiveTypeNameOrRef() {
 // @@protoc_insertion_point(one_of_clear_start:mozilla.devtools.protobuf.Node)
   switch (descriptiveTypeNameOrRef_case()) {
     case kDescriptiveTypeName: {
-      descriptiveTypeNameOrRef_.descriptivetypename_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+      _impl_.descriptiveTypeNameOrRef_.descriptivetypename_.Destroy();
       break;
     }
     case kDescriptiveTypeNameRef: {
@@ -1337,77 +1399,80 @@ void Node::clear_descriptiveTypeNameOrRef() {
       break;
     }
   }
-  _oneof_case_[3] = DESCRIPTIVETYPENAMEORREF_NOT_SET;
+  _impl_._oneof_case_[3] = DESCRIPTIVETYPENAMEORREF_NOT_SET;
 }
 
 
 void Node::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.devtools.protobuf.Node)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  edges_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.edges_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    GOOGLE_DCHECK(allocationstack_ != nullptr);
-    allocationstack_->Clear();
+    GOOGLE_DCHECK(_impl_.allocationstack_ != nullptr);
+    _impl_.allocationstack_->Clear();
   }
   if (cached_has_bits & 0x0000000eu) {
-    ::memset(&id_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&coarsetype_) -
-        reinterpret_cast<char*>(&id_)) + sizeof(coarsetype_));
+    ::memset(&_impl_.id_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.coarsetype_) -
+        reinterpret_cast<char*>(&_impl_.id_)) + sizeof(_impl_.coarsetype_));
   }
   clear_TypeNameOrRef();
   clear_JSObjectClassNameOrRef();
   clear_ScriptFilenameOrRef();
   clear_descriptiveTypeNameOrRef();
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* Node::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* Node::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional uint64 id = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
           _Internal::set_has_id(&has_bits);
-          id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional bytes typeName = 2;
+      // bytes typeName = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_typename_();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional uint64 typeNameRef = 3;
+      // uint64 typeNameRef = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
-          _internal_set_typenameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _internal_set_typenameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional uint64 size = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
           _Internal::set_has_size(&has_bits);
-          size_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.size_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // repeated .mozilla.devtools.protobuf.Edge edges = 5;
       case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -1415,100 +1480,112 @@ const char* Node::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inter
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<42>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.devtools.protobuf.StackFrame allocationStack = 6;
       case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 50)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
           ptr = ctx->ParseMessage(_internal_mutable_allocationstack(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional bytes jsObjectClassName = 7;
+      // bytes jsObjectClassName = 7;
       case 7:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 58)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
           auto str = _internal_mutable_jsobjectclassname();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional uint64 jsObjectClassNameRef = 8;
+      // uint64 jsObjectClassNameRef = 8;
       case 8:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 64)) {
-          _internal_set_jsobjectclassnameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 64)) {
+          _internal_set_jsobjectclassnameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional uint32 coarseType = 9 [default = 0];
       case 9:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 72)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 72)) {
           _Internal::set_has_coarsetype(&has_bits);
-          coarsetype_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.coarsetype_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional bytes scriptFilename = 10;
+      // bytes scriptFilename = 10;
       case 10:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 82)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 82)) {
           auto str = _internal_mutable_scriptfilename();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional uint64 scriptFilenameRef = 11;
+      // uint64 scriptFilenameRef = 11;
       case 11:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 88)) {
-          _internal_set_scriptfilenameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 88)) {
+          _internal_set_scriptfilenameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional bytes descriptiveTypeName = 12;
+      // bytes descriptiveTypeName = 12;
       case 12:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 98)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 98)) {
           auto str = _internal_mutable_descriptivetypename();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional uint64 descriptiveTypeNameRef = 13;
+      // uint64 descriptiveTypeNameRef = 13;
       case 13:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 104)) {
-          _internal_set_descriptivetypenameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 104)) {
+          _internal_set_descriptivetypenameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Node::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* Node::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.devtools.protobuf.Node)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional uint64 id = 1;
   if (cached_has_bits & 0x00000002u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(1, this->_internal_id(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(1, this->_internal_id(), target);
   }
 
   switch (TypeNameOrRef_case()) {
@@ -1519,7 +1596,7 @@ failure:
     }
     case kTypeNameRef: {
       target = stream->EnsureSpace(target);
-      target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(3, this->_internal_typenameref(), target);
+      target = ::_pbi::WireFormatLite::WriteUInt64ToArray(3, this->_internal_typenameref(), target);
       break;
     }
     default: ;
@@ -1527,23 +1604,22 @@ failure:
   // optional uint64 size = 4;
   if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(4, this->_internal_size(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(4, this->_internal_size(), target);
   }
 
   // repeated .mozilla.devtools.protobuf.Edge edges = 5;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_edges_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_edges_size()); i < n; i++) {
+    const auto& repfield = this->_internal_edges(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(5, this->_internal_edges(i), target, stream);
+        InternalWriteMessage(5, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.devtools.protobuf.StackFrame allocationStack = 6;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        6, _Internal::allocationstack(this), target, stream);
+      InternalWriteMessage(6, _Internal::allocationstack(this),
+        _Internal::allocationstack(this).GetCachedSize(), target, stream);
   }
 
   switch (JSObjectClassNameOrRef_case()) {
@@ -1554,7 +1630,7 @@ failure:
     }
     case kJsObjectClassNameRef: {
       target = stream->EnsureSpace(target);
-      target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(8, this->_internal_jsobjectclassnameref(), target);
+      target = ::_pbi::WireFormatLite::WriteUInt64ToArray(8, this->_internal_jsobjectclassnameref(), target);
       break;
     }
     default: ;
@@ -1562,7 +1638,7 @@ failure:
   // optional uint32 coarseType = 9 [default = 0];
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(9, this->_internal_coarsetype(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(9, this->_internal_coarsetype(), target);
   }
 
   switch (ScriptFilenameOrRef_case()) {
@@ -1573,7 +1649,7 @@ failure:
     }
     case kScriptFilenameRef: {
       target = stream->EnsureSpace(target);
-      target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(11, this->_internal_scriptfilenameref(), target);
+      target = ::_pbi::WireFormatLite::WriteUInt64ToArray(11, this->_internal_scriptfilenameref(), target);
       break;
     }
     default: ;
@@ -1586,14 +1662,14 @@ failure:
     }
     case kDescriptiveTypeNameRef: {
       target = stream->EnsureSpace(target);
-      target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(13, this->_internal_descriptivetypenameref(), target);
+      target = ::_pbi::WireFormatLite::WriteUInt64ToArray(13, this->_internal_descriptivetypenameref(), target);
       break;
     }
     default: ;
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.devtools.protobuf.Node)
   return target;
@@ -1603,61 +1679,53 @@ size_t Node::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.devtools.protobuf.Node)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated .mozilla.devtools.protobuf.Edge edges = 5;
   total_size += 1UL * this->_internal_edges_size();
-  for (const auto& msg : this->edges_) {
+  for (const auto& msg : this->_impl_.edges_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000000fu) {
     // optional .mozilla.devtools.protobuf.StackFrame allocationStack = 6;
     if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *allocationstack_);
+          *_impl_.allocationstack_);
     }
 
     // optional uint64 id = 1;
     if (cached_has_bits & 0x00000002u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-          this->_internal_id());
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_id());
     }
 
     // optional uint64 size = 4;
     if (cached_has_bits & 0x00000004u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-          this->_internal_size());
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_size());
     }
 
     // optional uint32 coarseType = 9 [default = 0];
     if (cached_has_bits & 0x00000008u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
-          this->_internal_coarsetype());
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_coarsetype());
     }
 
   }
   switch (TypeNameOrRef_case()) {
-    // optional bytes typeName = 2;
+    // bytes typeName = 2;
     case kTypeName: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
           this->_internal_typename_());
       break;
     }
-    // optional uint64 typeNameRef = 3;
+    // uint64 typeNameRef = 3;
     case kTypeNameRef: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-          this->_internal_typenameref());
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_typenameref());
       break;
     }
     case TYPENAMEORREF_NOT_SET: {
@@ -1665,18 +1733,16 @@ size_t Node::ByteSizeLong() const {
     }
   }
   switch (JSObjectClassNameOrRef_case()) {
-    // optional bytes jsObjectClassName = 7;
+    // bytes jsObjectClassName = 7;
     case kJsObjectClassName: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
           this->_internal_jsobjectclassname());
       break;
     }
-    // optional uint64 jsObjectClassNameRef = 8;
+    // uint64 jsObjectClassNameRef = 8;
     case kJsObjectClassNameRef: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-          this->_internal_jsobjectclassnameref());
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_jsobjectclassnameref());
       break;
     }
     case JSOBJECTCLASSNAMEORREF_NOT_SET: {
@@ -1684,18 +1750,16 @@ size_t Node::ByteSizeLong() const {
     }
   }
   switch (ScriptFilenameOrRef_case()) {
-    // optional bytes scriptFilename = 10;
+    // bytes scriptFilename = 10;
     case kScriptFilename: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
           this->_internal_scriptfilename());
       break;
     }
-    // optional uint64 scriptFilenameRef = 11;
+    // uint64 scriptFilenameRef = 11;
     case kScriptFilenameRef: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-          this->_internal_scriptfilenameref());
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_scriptfilenameref());
       break;
     }
     case SCRIPTFILENAMEORREF_NOT_SET: {
@@ -1703,18 +1767,16 @@ size_t Node::ByteSizeLong() const {
     }
   }
   switch (descriptiveTypeNameOrRef_case()) {
-    // optional bytes descriptiveTypeName = 12;
+    // bytes descriptiveTypeName = 12;
     case kDescriptiveTypeName: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
           this->_internal_descriptivetypename());
       break;
     }
-    // optional uint64 descriptiveTypeNameRef = 13;
+    // uint64 descriptiveTypeNameRef = 13;
     case kDescriptiveTypeNameRef: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-          this->_internal_descriptivetypenameref());
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_descriptivetypenameref());
       break;
     }
     case DESCRIPTIVETYPENAMEORREF_NOT_SET: {
@@ -1722,50 +1784,51 @@ size_t Node::ByteSizeLong() const {
     }
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void Node::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const Node*>(
+  MergeFrom(*::_pbi::DownCast<const Node*>(
       &from));
 }
 
 void Node::MergeFrom(const Node& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.devtools.protobuf.Node)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  Node* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.devtools.protobuf.Node)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  edges_.MergeFrom(from.edges_);
-  cached_has_bits = from._has_bits_[0];
+  _this->_impl_.edges_.MergeFrom(from._impl_.edges_);
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000000fu) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_mutable_allocationstack()->::mozilla::devtools::protobuf::StackFrame::MergeFrom(from._internal_allocationstack());
+      _this->_internal_mutable_allocationstack()->::mozilla::devtools::protobuf::StackFrame::MergeFrom(
+          from._internal_allocationstack());
     }
     if (cached_has_bits & 0x00000002u) {
-      id_ = from.id_;
+      _this->_impl_.id_ = from._impl_.id_;
     }
     if (cached_has_bits & 0x00000004u) {
-      size_ = from.size_;
+      _this->_impl_.size_ = from._impl_.size_;
     }
     if (cached_has_bits & 0x00000008u) {
-      coarsetype_ = from.coarsetype_;
+      _this->_impl_.coarsetype_ = from._impl_.coarsetype_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
   switch (from.TypeNameOrRef_case()) {
     case kTypeName: {
-      _internal_set_typename_(from._internal_typename_());
+      _this->_internal_set_typename_(from._internal_typename_());
       break;
     }
     case kTypeNameRef: {
-      _internal_set_typenameref(from._internal_typenameref());
+      _this->_internal_set_typenameref(from._internal_typenameref());
       break;
     }
     case TYPENAMEORREF_NOT_SET: {
@@ -1774,11 +1837,11 @@ void Node::MergeFrom(const Node& from) {
   }
   switch (from.JSObjectClassNameOrRef_case()) {
     case kJsObjectClassName: {
-      _internal_set_jsobjectclassname(from._internal_jsobjectclassname());
+      _this->_internal_set_jsobjectclassname(from._internal_jsobjectclassname());
       break;
     }
     case kJsObjectClassNameRef: {
-      _internal_set_jsobjectclassnameref(from._internal_jsobjectclassnameref());
+      _this->_internal_set_jsobjectclassnameref(from._internal_jsobjectclassnameref());
       break;
     }
     case JSOBJECTCLASSNAMEORREF_NOT_SET: {
@@ -1787,11 +1850,11 @@ void Node::MergeFrom(const Node& from) {
   }
   switch (from.ScriptFilenameOrRef_case()) {
     case kScriptFilename: {
-      _internal_set_scriptfilename(from._internal_scriptfilename());
+      _this->_internal_set_scriptfilename(from._internal_scriptfilename());
       break;
     }
     case kScriptFilenameRef: {
-      _internal_set_scriptfilenameref(from._internal_scriptfilenameref());
+      _this->_internal_set_scriptfilenameref(from._internal_scriptfilenameref());
       break;
     }
     case SCRIPTFILENAMEORREF_NOT_SET: {
@@ -1800,17 +1863,18 @@ void Node::MergeFrom(const Node& from) {
   }
   switch (from.descriptiveTypeNameOrRef_case()) {
     case kDescriptiveTypeName: {
-      _internal_set_descriptivetypename(from._internal_descriptivetypename());
+      _this->_internal_set_descriptivetypename(from._internal_descriptivetypename());
       break;
     }
     case kDescriptiveTypeNameRef: {
-      _internal_set_descriptivetypenameref(from._internal_descriptivetypenameref());
+      _this->_internal_set_descriptivetypenameref(from._internal_descriptivetypenameref());
       break;
     }
     case DESCRIPTIVETYPENAMEORREF_NOT_SET: {
       break;
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void Node::CopyFrom(const Node& from) {
@@ -1826,21 +1890,23 @@ bool Node::IsInitialized() const {
 
 void Node::InternalSwap(Node* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  edges_.InternalSwap(&other->edges_);
-  swap(allocationstack_, other->allocationstack_);
-  swap(id_, other->id_);
-  swap(size_, other->size_);
-  swap(coarsetype_, other->coarsetype_);
-  swap(TypeNameOrRef_, other->TypeNameOrRef_);
-  swap(JSObjectClassNameOrRef_, other->JSObjectClassNameOrRef_);
-  swap(ScriptFilenameOrRef_, other->ScriptFilenameOrRef_);
-  swap(descriptiveTypeNameOrRef_, other->descriptiveTypeNameOrRef_);
-  swap(_oneof_case_[0], other->_oneof_case_[0]);
-  swap(_oneof_case_[1], other->_oneof_case_[1]);
-  swap(_oneof_case_[2], other->_oneof_case_[2]);
-  swap(_oneof_case_[3], other->_oneof_case_[3]);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.edges_.InternalSwap(&other->_impl_.edges_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(Node, _impl_.coarsetype_)
+      + sizeof(Node::_impl_.coarsetype_)
+      - PROTOBUF_FIELD_OFFSET(Node, _impl_.allocationstack_)>(
+          reinterpret_cast<char*>(&_impl_.allocationstack_),
+          reinterpret_cast<char*>(&other->_impl_.allocationstack_));
+  swap(_impl_.TypeNameOrRef_, other->_impl_.TypeNameOrRef_);
+  swap(_impl_.JSObjectClassNameOrRef_, other->_impl_.JSObjectClassNameOrRef_);
+  swap(_impl_.ScriptFilenameOrRef_, other->_impl_.ScriptFilenameOrRef_);
+  swap(_impl_.descriptiveTypeNameOrRef_, other->_impl_.descriptiveTypeNameOrRef_);
+  swap(_impl_._oneof_case_[0], other->_impl_._oneof_case_[0]);
+  swap(_impl_._oneof_case_[1], other->_impl_._oneof_case_[1]);
+  swap(_impl_._oneof_case_[2], other->_impl_._oneof_case_[2]);
+  swap(_impl_._oneof_case_[3], other->_impl_._oneof_case_[3]);
 }
 
 std::string Node::GetTypeName() const {
@@ -1850,35 +1916,40 @@ std::string Node::GetTypeName() const {
 
 // ===================================================================
 
-void Edge::InitAsDefaultInstance() {
-}
 class Edge::_Internal {
  public:
-  using HasBits = decltype(std::declval<Edge>()._has_bits_);
+  using HasBits = decltype(std::declval<Edge>()._impl_._has_bits_);
   static void set_has_referent(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
 };
 
-Edge::Edge()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.devtools.protobuf.Edge)
+Edge::Edge(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.devtools.protobuf.Edge)
 }
 Edge::Edge(const Edge& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  referent_ = from.referent_;
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  Edge* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.referent_){}
+    , decltype(_impl_.EdgeNameOrRef_){}
+    , /*decltype(_impl_._oneof_case_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _this->_impl_.referent_ = from._impl_.referent_;
   clear_has_EdgeNameOrRef();
   switch (from.EdgeNameOrRef_case()) {
     case kName: {
-      _internal_set_name(from._internal_name());
+      _this->_internal_set_name(from._internal_name());
       break;
     }
     case kNameRef: {
-      _internal_set_nameref(from._internal_nameref());
+      _this->_internal_set_nameref(from._internal_nameref());
       break;
     }
     case EDGENAMEORREF_NOT_SET: {
@@ -1888,37 +1959,45 @@ Edge::Edge(const Edge& from)
   // @@protoc_insertion_point(copy_constructor:mozilla.devtools.protobuf.Edge)
 }
 
-void Edge::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_Edge_CoreDump_2eproto.base);
-  referent_ = PROTOBUF_ULONGLONG(0);
+inline void Edge::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.referent_){uint64_t{0u}}
+    , decltype(_impl_.EdgeNameOrRef_){}
+    , /*decltype(_impl_._oneof_case_)*/{}
+  };
   clear_has_EdgeNameOrRef();
 }
 
 Edge::~Edge() {
   // @@protoc_insertion_point(destructor:mozilla.devtools.protobuf.Edge)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void Edge::SharedDtor() {
+inline void Edge::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
   if (has_EdgeNameOrRef()) {
     clear_EdgeNameOrRef();
   }
 }
 
 void Edge::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const Edge& Edge::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Edge_CoreDump_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void Edge::clear_EdgeNameOrRef() {
 // @@protoc_insertion_point(one_of_clear_start:mozilla.devtools.protobuf.Edge)
   switch (EdgeNameOrRef_case()) {
     case kName: {
-      EdgeNameOrRef_.name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+      _impl_.EdgeNameOrRef_.name_.Destroy();
       break;
     }
     case kNameRef: {
@@ -1929,85 +2008,90 @@ void Edge::clear_EdgeNameOrRef() {
       break;
     }
   }
-  _oneof_case_[0] = EDGENAMEORREF_NOT_SET;
+  _impl_._oneof_case_[0] = EDGENAMEORREF_NOT_SET;
 }
 
 
 void Edge::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.devtools.protobuf.Edge)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  referent_ = PROTOBUF_ULONGLONG(0);
+  _impl_.referent_ = uint64_t{0u};
   clear_EdgeNameOrRef();
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* Edge::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* Edge::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional uint64 referent = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
           _Internal::set_has_referent(&has_bits);
-          referent_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.referent_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional bytes name = 2;
+      // bytes name = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_name();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      // optional uint64 nameRef = 3;
+      // uint64 nameRef = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
-          _internal_set_nameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _internal_set_nameref(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr));
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Edge::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* Edge::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.devtools.protobuf.Edge)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional uint64 referent = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(1, this->_internal_referent(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(1, this->_internal_referent(), target);
   }
 
   switch (EdgeNameOrRef_case()) {
@@ -2018,14 +2102,14 @@ failure:
     }
     case kNameRef: {
       target = stream->EnsureSpace(target);
-      target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(3, this->_internal_nameref(), target);
+      target = ::_pbi::WireFormatLite::WriteUInt64ToArray(3, this->_internal_nameref(), target);
       break;
     }
     default: ;
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.devtools.protobuf.Edge)
   return target;
@@ -2035,31 +2119,27 @@ size_t Edge::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.devtools.protobuf.Edge)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // optional uint64 referent = 1;
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-        this->_internal_referent());
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_referent());
   }
 
   switch (EdgeNameOrRef_case()) {
-    // optional bytes name = 2;
+    // bytes name = 2;
     case kName: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
           this->_internal_name());
       break;
     }
-    // optional uint64 nameRef = 3;
+    // uint64 nameRef = 3;
     case kNameRef: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
-          this->_internal_nameref());
+      total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_nameref());
       break;
     }
     case EDGENAMEORREF_NOT_SET: {
@@ -2067,42 +2147,43 @@ size_t Edge::ByteSizeLong() const {
     }
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void Edge::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const Edge*>(
+  MergeFrom(*::_pbi::DownCast<const Edge*>(
       &from));
 }
 
 void Edge::MergeFrom(const Edge& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.devtools.protobuf.Edge)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  Edge* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.devtools.protobuf.Edge)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from._internal_has_referent()) {
-    _internal_set_referent(from._internal_referent());
+    _this->_internal_set_referent(from._internal_referent());
   }
   switch (from.EdgeNameOrRef_case()) {
     case kName: {
-      _internal_set_name(from._internal_name());
+      _this->_internal_set_name(from._internal_name());
       break;
     }
     case kNameRef: {
-      _internal_set_nameref(from._internal_nameref());
+      _this->_internal_set_nameref(from._internal_nameref());
       break;
     }
     case EDGENAMEORREF_NOT_SET: {
       break;
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void Edge::CopyFrom(const Edge& from) {
@@ -2118,11 +2199,11 @@ bool Edge::IsInitialized() const {
 
 void Edge::InternalSwap(Edge* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(referent_, other->referent_);
-  swap(EdgeNameOrRef_, other->EdgeNameOrRef_);
-  swap(_oneof_case_[0], other->_oneof_case_[0]);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  swap(_impl_.referent_, other->_impl_.referent_);
+  swap(_impl_.EdgeNameOrRef_, other->_impl_.EdgeNameOrRef_);
+  swap(_impl_._oneof_case_[0], other->_impl_._oneof_case_[0]);
 }
 
 std::string Edge::GetTypeName() const {
@@ -2135,20 +2216,25 @@ std::string Edge::GetTypeName() const {
 }  // namespace devtools
 }  // namespace mozilla
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::mozilla::devtools::protobuf::Metadata* Arena::CreateMaybeMessage< ::mozilla::devtools::protobuf::Metadata >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::devtools::protobuf::Metadata >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::devtools::protobuf::Metadata*
+Arena::CreateMaybeMessage< ::mozilla::devtools::protobuf::Metadata >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::devtools::protobuf::Metadata >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::devtools::protobuf::StackFrame_Data* Arena::CreateMaybeMessage< ::mozilla::devtools::protobuf::StackFrame_Data >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::devtools::protobuf::StackFrame_Data >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::devtools::protobuf::StackFrame_Data*
+Arena::CreateMaybeMessage< ::mozilla::devtools::protobuf::StackFrame_Data >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::devtools::protobuf::StackFrame_Data >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::devtools::protobuf::StackFrame* Arena::CreateMaybeMessage< ::mozilla::devtools::protobuf::StackFrame >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::devtools::protobuf::StackFrame >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::devtools::protobuf::StackFrame*
+Arena::CreateMaybeMessage< ::mozilla::devtools::protobuf::StackFrame >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::devtools::protobuf::StackFrame >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::devtools::protobuf::Node* Arena::CreateMaybeMessage< ::mozilla::devtools::protobuf::Node >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::devtools::protobuf::Node >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::devtools::protobuf::Node*
+Arena::CreateMaybeMessage< ::mozilla::devtools::protobuf::Node >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::devtools::protobuf::Node >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::devtools::protobuf::Edge* Arena::CreateMaybeMessage< ::mozilla::devtools::protobuf::Edge >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::devtools::protobuf::Edge >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::devtools::protobuf::Edge*
+Arena::CreateMaybeMessage< ::mozilla::devtools::protobuf::Edge >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::devtools::protobuf::Edge >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

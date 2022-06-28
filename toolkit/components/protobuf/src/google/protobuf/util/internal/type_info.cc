@@ -35,11 +35,12 @@
 
 #include <google/protobuf/stubs/common.h>
 #include <google/protobuf/type.pb.h>
-#include <google/protobuf/util/internal/utility.h>
-#include <google/protobuf/stubs/strutil.h>
-#include <google/protobuf/stubs/map_util.h>
 #include <google/protobuf/stubs/status.h>
 #include <google/protobuf/stubs/statusor.h>
+#include <google/protobuf/stubs/strutil.h>
+#include <google/protobuf/util/internal/utility.h>
+#include <google/protobuf/stubs/map_util.h>
+#include <google/protobuf/stubs/status.h>
 
 namespace google {
 namespace protobuf {
@@ -53,7 +54,7 @@ class TypeInfoForTypeResolver : public TypeInfo {
   explicit TypeInfoForTypeResolver(TypeResolver* type_resolver)
       : type_resolver_(type_resolver) {}
 
-  virtual ~TypeInfoForTypeResolver() {
+  ~TypeInfoForTypeResolver() override {
     DeleteCachedTypes(&cached_types_);
     DeleteCachedTypes(&cached_enums_);
   }
@@ -81,7 +82,7 @@ class TypeInfoForTypeResolver : public TypeInfo {
   const google::protobuf::Type* GetTypeByTypeUrl(
       StringPiece type_url) const override {
     StatusOrType result = ResolveTypeUrl(type_url);
-    return result.ok() ? result.ValueOrDie() : NULL;
+    return result.ok() ? result.value() : NULL;
   }
 
   const google::protobuf::Enum* GetEnumByTypeUrl(
@@ -89,7 +90,7 @@ class TypeInfoForTypeResolver : public TypeInfo {
     std::map<StringPiece, StatusOrEnum>::iterator it =
         cached_enums_.find(type_url);
     if (it != cached_enums_.end()) {
-      return it->second.ok() ? it->second.ValueOrDie() : NULL;
+      return it->second.ok() ? it->second.value() : NULL;
     }
     // Stores the string value so it can be referenced using StringPiece in the
     // cached_enums_ map.
@@ -102,7 +103,7 @@ class TypeInfoForTypeResolver : public TypeInfo {
     StatusOrEnum result =
         status.ok() ? StatusOrEnum(enum_type.release()) : StatusOrEnum(status);
     cached_enums_[string_type_url] = result;
-    return result.ok() ? result.ValueOrDie() : NULL;
+    return result.ok() ? result.value() : NULL;
   }
 
   const google::protobuf::Field* FindField(
@@ -134,7 +135,7 @@ class TypeInfoForTypeResolver : public TypeInfo {
              cached_types->begin();
          it != cached_types->end(); ++it) {
       if (it->second.ok()) {
-        delete it->second.ValueOrDie();
+        delete it->second.value();
       }
     }
   }

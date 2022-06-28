@@ -242,7 +242,7 @@
     if (!element.isConnected) {
       return;
     }
-    if (element.previousSibling instanceof Text) {
+    if (Text.isInstance(element.previousSibling)) {
       element.previousSibling.appendData(element.textContent);
     } else {
       element.parentNode.insertBefore(element.firstChild, element);

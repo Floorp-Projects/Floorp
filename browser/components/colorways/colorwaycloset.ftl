@@ -12,6 +12,9 @@ colorway-intensity-soft = Soft
 colorway-intensity-balanced = Balanced
 colorway-intensity-bold = Bold
 
+# Subheading for colorway collection card in about:addons
+colorway-collection-independent-voices-subheading2 = Colors that change culture.
+
 # Label for the button to start using the selected colorway in the browser
 set-colorway-button = Set Colorway
 colorway-collection-expiry-date-span = Expires { DATETIME($expiryDate, month: "long", day: "numeric") }

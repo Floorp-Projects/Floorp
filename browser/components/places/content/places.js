@@ -750,8 +750,8 @@ var PlacesOrganizer = {
     if (gEditItemOverlay.itemId != -1) {
       var focusedElement = document.commandDispatcher.focusedElement;
       if (
-        (focusedElement instanceof HTMLInputElement ||
-          focusedElement instanceof HTMLTextAreaElement) &&
+        (HTMLInputElement.isInstance(focusedElement) ||
+          HTMLTextAreaElement.isInstance(focusedElement)) &&
         /^editBMPanel.*/.test(focusedElement.parentNode.parentNode.id)
       ) {
         focusedElement.blur();

@@ -638,7 +638,7 @@ add_task(async function test_telemetryCleanFHRDatabase() {
     try {
       await IOUtils.read(dbFilePath);
     } catch (e) {
-      Assert.ok(e instanceof DOMException);
+      Assert.ok(DOMException.isInstance(e));
       Assert.equal(
         e.name,
         "NotFoundError",
@@ -670,7 +670,7 @@ add_task(async function test_telemetryCleanFHRDatabase() {
     try {
       await IOUtils.read(dbFilePath);
     } catch (e) {
-      Assert.ok(e instanceof DOMException);
+      Assert.ok(DOMException.isInstance(e));
       Assert.equal(
         e.name,
         "NotFoundError",

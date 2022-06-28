@@ -6,9 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["PlacesPreviews", "PlacesPreviewsHelperService"];
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
@@ -454,9 +451,6 @@ function PlacesPreviewsHelperService() {}
 PlacesPreviewsHelperService.prototype = {
   classID: Components.ID("{bd0a4d3b-ff26-4d4d-9a62-a513e1c1bf92}"),
   QueryInterface: ChromeUtils.generateQI(["nsIPlacesPreviewsHelperService"]),
-  _xpcom_factory: ComponentUtils.generateSingletonFactory(
-    PlacesPreviewsHelperService
-  ),
 
   getFilePathForURL(url) {
     return PlacesPreviews.getPathForUrl(url);

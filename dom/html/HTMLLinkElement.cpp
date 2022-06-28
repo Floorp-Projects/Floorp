@@ -18,6 +18,7 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLLinkElementBinding.h"
 #include "mozilla/dom/HTMLDNSPrefetch.h"
+#include "mozilla/dom/ScriptLoader.h"
 #include "nsContentUtils.h"
 #include "nsDOMTokenList.h"
 #include "nsGenericHTMLElement.h"
@@ -313,8 +314,9 @@ static const DOMTokenListSupportedToken sSupportedRelValues[] = {
     // Keep this and the one below in sync with ToLinkMask in
     // LinkStyle.cpp.
     // "preload" must come first because it can be disabled.
-    "preload",   "prefetch",   "dns-prefetch", "stylesheet", "next",
-    "alternate", "preconnect", "icon",         "search",     nullptr};
+    "preload", "prefetch",      "dns-prefetch", "stylesheet",
+    "next",    "alternate",     "preconnect",   "icon",
+    "search",  "modulepreload", nullptr};
 
 static const DOMTokenListSupportedToken sSupportedRelValuesWithManifest[] = {
     // Keep this in sync with ToLinkMask in LinkStyle.cpp.
@@ -484,6 +486,15 @@ void HTMLLinkElement::
       StartPreload(policyType);
       return;
     }
+  }
+
+  if (linkTypes & eMODULE_PRELOAD) {
+    // https://wicg.github.io/import-maps/#wait-for-import-maps
+    // Step 1.2: Set document’s acquiring import maps to false.
+    // When fetch a modulepreload module script graph.
+    OwnerDoc()->ScriptLoader()->GetModuleLoader()->SetAcquiringImportMaps(
+        false);
+    return;
   }
 
   if (linkTypes & ePRECONNECT) {

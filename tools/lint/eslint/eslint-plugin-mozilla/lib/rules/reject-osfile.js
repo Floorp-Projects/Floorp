@@ -9,28 +9,17 @@
 
 "use strict";
 
+const { maybeGetMemberPropertyName } = require("../helpers");
+
 function isIdentifier(node, id) {
   return node && node.type === "Identifier" && node.name === id;
 }
 
 function isOSProp(expr, prop) {
-  if (!isIdentifier(expr.property, prop)) {
-    return false;
-  }
-
-  if (isIdentifier(expr.object, "OS")) {
-    return true;
-  }
-
-  if (
-    expr.object.type === "MemberExpression" &&
-    isIdentifier(expr.object.object, "lazy") &&
-    isIdentifier(expr.object.property, "OS")
-  ) {
-    return true;
-  }
-
-  return false;
+  return (
+    maybeGetMemberPropertyName(expr.object) === "OS" &&
+    isIdentifier(expr.property, prop)
+  );
 }
 
 module.exports = {

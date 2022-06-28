@@ -45,7 +45,7 @@ function step2() {
   setTimeout(step3, 0);
 }
 
-function step3() {
+async function step3() {
   is(
     gBrowser.selectedTab,
     tab1,
@@ -57,18 +57,28 @@ function step3() {
     "2nd click on selected tab1 does not activate tab"
   );
 
-  ok(true, "focusing URLBar then sending 2 Shift+Tab.");
+  info("focusing URLBar then sending 3 Shift+Tab.");
   gURLBar.focus();
-  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
-  is(document.activeElement.id, "home-button", "Focus is now on Home button");
-  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
-  is(
-    document.activeElement.id,
-    "tabs-newtab-button",
-    "Focus is now on the new tab button"
+
+  let focused = BrowserTestUtils.waitForEvent(
+    document.getElementById("home-button"),
+    "focus"
   );
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
+  await focused;
+  info("Focus is now on Home button");
 
+  focused = BrowserTestUtils.waitForEvent(
+    document.getElementById("tabs-newtab-button"),
+    "focus"
+  );
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
+  await focused;
+  info("Focus is now on the new tab button");
+
+  focused = BrowserTestUtils.waitForEvent(tab1, "focus");
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
+  await focused;
   is(gBrowser.selectedTab, tab1, "tab key to selected tab1 keeps tab selected");
   is(document.activeElement, tab1, "tab key to selected tab1 activates tab");
 

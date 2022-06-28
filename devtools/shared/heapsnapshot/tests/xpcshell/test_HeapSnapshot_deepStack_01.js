@@ -50,7 +50,7 @@ function run_test() {
 
   const snapshot = ChromeUtils.readHeapSnapshot(filePath);
   ok(snapshot, "Should be able to read a heap snapshot");
-  ok(snapshot instanceof HeapSnapshot, "Should be an instanceof HeapSnapshot");
+  ok(HeapSnapshot.isInstance(snapshot), "Should be an instanceof HeapSnapshot");
 
   const report = snapshot.takeCensus({
     breakdown: {

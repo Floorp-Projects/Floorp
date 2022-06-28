@@ -48,8 +48,6 @@ const MSG_ADDON_EVENT = "WebAPIAddonEvent";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var gSingleton = null;
-
 var AddonManager, AddonManagerPrivate;
 function amManager() {
   ({ AddonManager, AddonManagerPrivate } = ChromeUtils.import(
@@ -325,14 +323,6 @@ amManager.prototype = {
   },
 
   classID: Components.ID("{4399533d-08d1-458c-a87a-235f74451cfa}"),
-  _xpcom_factory: {
-    createInstance(aIid) {
-      if (!gSingleton) {
-        gSingleton = new amManager();
-      }
-      return gSingleton.QueryInterface(aIid);
-    },
-  },
   QueryInterface: ChromeUtils.generateQI([
     "amIAddonManager",
     "nsITimerCallback",

@@ -8,12 +8,11 @@
 :root {
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
-  --grey-90-a30: rgba(12, 12, 13, 0.3);
-  --grey-90-a80: rgba(12, 12, 13, 0.8);
   --grey-30: #d7d7db;
-  --blue-40: #45a1ff;
-  --blue-40-a30: rgba(69, 161, 255, 0.3);
-  --blue-60: #0060df;
+  --light-background: #fff;
+  --light-foreground: rgb(21, 20, 26);
+  --dark-background: rgb(28, 27, 34);
+  --dark-foreground: rgb(251, 251, 254);
   --body-padding: 64px;
   --font-size: 12;
   --content-width: 22em;
@@ -21,70 +20,70 @@
 }
 
 body {
-  --main-background: #fff;
-  --main-foreground: #333;
-  --font-color: #000000;
-  --primary-color: #0B83FF;
+  --main-background: var(--light-background);
+  --main-foreground: var(--light-foreground);
+  --primary-color: rgb(0, 97, 224);
   --toolbar-border: var(--grey-90-a20);
   --toolbar-transparent-border: transparent;
   --toolbar-box-shadow: var(--grey-90-a10);
   --toolbar-button-background: transparent;
-  --toolbar-button-background-hover: var(--grey-90-a10);
-  --toolbar-button-foreground-hover: var(--font-color);
-  --toolbar-button-background-active: var(--grey-90-a20);
+  --toolbar-button-background-hover: rgba(207, 207, 216, 0.66);
+  --toolbar-button-foreground-hover: var(--icon-fill);
+  --toolbar-button-background-active: rgb(207, 207, 216);
   --toolbar-button-foreground-active: var(--primary-color);
   --toolbar-button-border: transparent;
-  --toolbar-button-border-hover: transparent;
-  --toolbar-button-border-active: transparent;
-  --tooltip-background: var(--grey-90-a80);
-  --tooltip-foreground: white;
+  --tooltip-background: var(--toolbar-button-background-active);
+  --tooltip-foreground: var(--icon-fill);
   --tooltip-border: transparent;
-  --popup-background: white;
+  --popup-background: #fff;
   --popup-border: rgba(0, 0, 0, 0.12);
-  --opaque-popup-border: #e0e0e0;
+  --opaque-popup-border: rgb(224, 224, 224);
   --popup-line: var(--grey-30);
   --popup-shadow: rgba(49, 49, 49, 0.3);
-  --popup-button-background: #edecf0;
-  --popup-button-background-hover: hsla(0,0%,70%,.4);
-  --popup-button-foreground-hover: var(--font-color);
-  --popup-button-background-active: hsla(240,5%,5%,.15);
-  --selected-background: var(--blue-40-a30);
-  --selected-border: var(--blue-40);
+  --popup-button-background: rgba(207, 207, 216, 0.33);
+  --popup-button-foreground: var(--main-foreground);
+  --popup-button-background-hover: var(--toolbar-button-background-hover);
+  --popup-button-foreground-hover: var(--main-foreground);
+  --popup-button-background-active: var(--toolbar-button-background-active);
+  --popup-button-border: var(--popup-border);
+  --selected-background: rgba(0, 97, 224, 0.3);
+  --selected-border: var(--primary-color);
+  --font-value-background: rgb(240, 240, 244);
   --font-value-border: var(--grey-30);
-  --icon-fill: #3b3b3c;
-  --icon-disabled-fill: #8080807F;
-  --link-foreground: var(--blue-60);
+  --icon-fill: rgb(91, 91, 102);
+  --icon-disabled-fill: rgba(91, 91, 102, 0.4);
+  --link-foreground: rgb(5, 62, 148);
   --link-selected-foreground: #333;
   --visited-link-foreground: #b5007f;
   /* light colours */
 }
 
 body.sepia {
-  --main-background: #f4ecd8;
-  --main-foreground: #5b4636;
-  --toolbar-border: #5b4636;
+  --main-background: rgb(244, 236, 216);
+  --main-foreground: rgb(91, 70, 54);
+  --toolbar-border: var(--main-foreground);
+  --icon-fill: var(--main-foreground);
+  --icon-disabled-fill: rgba(91, 70, 54, 0.4);
 }
 
 body.dark {
-  --main-background: rgb(28, 27, 34);
-  --main-foreground: #eee;
-  --font-color: #fff;
-  --toolbar-border: #4a4a4b;
+  --main-background: var(--dark-background);
+  --main-foreground: var(--dark-foreground);
+  --primary-color: rgb(0, 221, 255);
+  --toolbar-border: rgba(249, 249, 250, 0.2);
   --toolbar-box-shadow: black;
-  --toolbar-button-background-hover: var(--grey-90-a30);
-  --toolbar-button-background-active: var(--grey-90-a80);
-  --tooltip-background: black;
-  --tooltip-foreground: white;
-  --popup-background: rgb(66,65,77);
+  --toolbar-button-background-hover: rgb(82, 82, 94);
+  --toolbar-button-background-active: rgb(91, 91, 102);
+  --popup-background: rgb(66, 65, 77);
   --opaque-popup-border: #434146;
-  --popup-line: rgb(82, 82, 94);
-  --popup-button-background: #5c5c61;
-  --popup-button-background-active: hsla(0,0%,70%,.6);
-  --selected-background: #3E6D9A;
+  --popup-line: rgba(249, 249, 250, 0.1);
+  --popup-button-background: rgb(43, 42, 51);
+  --selected-background: rgba(0, 221, 255, 0.3);
+  --font-value-background: rgba(249, 249, 250, 0.15);
   --font-value-border: #656468;
-  --icon-fill: #fff;
-  --icon-disabled-fill: #ffffff66;
-  --link-foreground: #45a1ff;
+  --icon-fill: rgb(251, 251, 254);
+  --icon-disabled-fill: rgba(251, 251, 254, 0.4);
+  --link-foreground: rgb(0, 97, 224);
   --link-selected-foreground: #fff;
   --visited-link-foreground: #e675fd;
   /* dark colours */
@@ -93,7 +92,6 @@ body.dark {
 body.hcm {
   --main-background: Canvas;
   --main-foreground: CanvasText;
-  --font-color: CanvasText;
   --primary-color: SelectedItem;
   --toolbar-border: CanvasText;
    /* We need a true transparent but in HCM this would compute to an actual color,
@@ -106,8 +104,6 @@ body.hcm {
   --toolbar-button-background-active: SelectedItem;
   --toolbar-button-foreground-active: SelectedItemText;
   --toolbar-button-border: ButtonText;
-  --toolbar-button-border-hover: ButtonText;
-  --toolbar-button-border-active: ButtonText;
   --tooltip-background: Canvas;
   --tooltip-foreground: CanvasText;
   --tooltip-border: CanvasText;
@@ -116,11 +112,13 @@ body.hcm {
   --opaque-popup-border: CanvasText;
   --popup-line: CanvasText;
   --popup-button-background: ButtonFace;
+  --popup-button-foreground: ButtonText;
   --popup-button-background-hover: ButtonText;
   --popup-button-foreground-hover: ButtonFace;
   --popup-button-background-active: ButtonText;
+  --popup-button-border: ButtonText;
   --selected-background: Canvas;
-  --selected-border: SelectedItem;
+  --font-value-background: Canvas;
   --font-value-border: CanvasText;
   --icon-fill: ButtonText;
   --icon-disabled-fill: GrayText;
@@ -160,61 +158,35 @@ body.serif .remove-button {
 
 /* Override some controls and content styles based on color scheme */
 
-body.light > .container > .header > .domain {
-  border-bottom-color: #333333 !important;
+.container > .header > .domain {
+  border-bottom-color: var(--main-foreground) !important;
 }
 
-body.sepia > .container > .header > .domain {
-  border-bottom-color: #5b4636 !important;
+blockquote {
+  border-inline-start: 2px solid var(--main-foreground) !important;
 }
 
-body.dark > .container > .header > .domain {
-  border-bottom-color: #eeeeee !important;
+.light-button,
+.auto-button {
+  color: var(--light-foreground);
+  background-color: var(--light-background);
 }
 
-body.light blockquote {
-  border-inline-start: 2px solid #333333 !important;
-}
-
-body.sepia blockquote {
-  border-inline-start: 2px solid #5b4636 !important;
-}
-
-body.dark blockquote {
-  border-inline-start: 2px solid #eeeeee !important;
-}
-
-.light-button {
-  color: #333333;
-  background-color: #ffffff;
+@media (prefers-color-scheme: dark) {
+  .auto-button {
+    color: var(--dark-foreground);
+    background-color: var(--dark-background);
+  }
 }
 
 .dark-button {
-  color: #eeeeee;
-  background-color: #1c1b22;
+  color: var(--dark-foreground);
+  background-color: var(--dark-background);
 }
 
 .sepia-button {
   color: #5b4636;
   background-color: #f4ecd8;
-}
-
-.auto-button {
-  text-align: center;
-}
-
-@media (prefers-color-scheme: dark) {
-  .auto-button {
-    background-color: #1c1b22;
-    color: #eeeeee;
-  }
-}
-
-@media not (prefers-color-scheme: dark) {
-  .auto-button {
-    background-color: #ffffff;
-    color: #333333;
-  }
 }
 
 /* Loading/error message */
@@ -323,6 +295,10 @@ body.dark blockquote {
   font-family: Helvetica, Arial, sans-serif;
   list-style: none;
   user-select: none;
+
+  /* Set focus oulines to the primary color without having to specify it
+   * per each element. */
+  accent-color: var(--primary-color);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -336,12 +312,12 @@ body.dark blockquote {
     transition-duration: 250ms;
   }
 
-  .toolbar-container.scrolled .toolbar:not(:hover, :focus-within) {
+  .toolbar-container.scrolled > .toolbar:not(:hover, :focus-within) {
     border-color: var(--toolbar-transparent-border);
     box-shadow: 0 2px 8px transparent;
   }
 
-  .toolbar-container.scrolled .toolbar:not(:hover, :focus-within) .toolbar-button {
+  .toolbar-container.scrolled > .toolbar:not(:hover, :focus-within) > .reader-controls:not(.dropdown-open) .toolbar-button {
     opacity: 0.6;
   }
 
@@ -368,12 +344,13 @@ body.dark blockquote {
 
 button {
   -moz-context-properties: fill;
-  color: var(--font-color);
+  color: var(--main-foreground);
   fill: var(--icon-fill);
 }
 
 button:disabled {
-  fill: var(--icon-disabled-fill);
+  /* !important to override other uses of `fill` where the specificity there is greater. */
+  fill: var(--icon-disabled-fill) !important;
 }
 
 .toolbar button::-moz-focus-inner {
@@ -397,21 +374,18 @@ button:disabled {
 .toolbar-button:hover,
 .toolbar-button:focus-visible {
   background-color: var(--toolbar-button-background-hover);
-  border-color: var(--toolbar-button-border-hover);
   fill: var(--toolbar-button-foreground-hover);
 }
 
 .open .toolbar-button,
 .toolbar-button:hover:active {
   background-color: var(--toolbar-button-background-active);
-  border-color: var(--toolbar-button-border-active);
   color: var(--toolbar-button-foreground-active);
   fill: var(--toolbar-button-foreground-active);
 }
 
 .hover-label {
-  position: absolute;
-  top: 4px;
+  position: relative;
   inset-inline-start: 36px;
   line-height: 16px;
   white-space: pre; /* make sure we don't wrap */
@@ -521,7 +495,7 @@ button:disabled {
   margin: auto;
   border-radius: 10px;
   border: 1px solid var(--font-value-border);
-  background-color: var(--popup-button-background);
+  background-color: var(--font-value-background);
 }
 
 .buttonrow > button {
@@ -531,17 +505,21 @@ button:disabled {
   background-color: transparent;
   background-repeat: no-repeat;
   background-position: center;
+  fill: var(--popup-button-foreground);
 }
 
 .buttonrow > button:enabled:hover,
 .buttonrow > button:enabled:focus-visible {
   background-color: var(--popup-button-background-hover);
-  color: var(--popup-button-foreground-hover);
   fill: var(--popup-button-foreground-hover);
 }
 
 .buttonrow > button:enabled:hover:active {
   background-color: var(--popup-button-background-active);
+}
+
+.buttonrow > button:enabled:focus-visible {
+  outline-offset: -2px;
 }
 
 .radiorow:not(:last-child),
@@ -558,7 +536,7 @@ body.hcm .buttonrow.line-height-buttons {
   position: relative;
   box-sizing: border-box;
   border-radius: 2px;
-  border: 2px solid var(--popup-border);
+  border: 2px solid var(--popup-button-border);
 }
 
 .radiorow > label[checked] {
@@ -576,6 +554,7 @@ body.hcm .buttonrow.line-height-buttons {
   content: "";
   display: block;
   border-bottom: 2px solid var(--selected-border);
+  border-radius: 4px;
   width: calc(100% + 4px);
   position: absolute;
   /* to skip the 2 * 2px border + 2px spacing. */
@@ -595,6 +574,7 @@ body.hcm .buttonrow.line-height-buttons {
   background-repeat: no-repeat;
   background-position: center 18px;
   background-color: var(--popup-button-background);
+  color: var(--popup-button-foreground);
   fill: currentColor;
   -moz-context-properties: fill;
   /* This mostly matches baselines, but because of differences in font
@@ -903,7 +883,7 @@ table {
 
 pre code {
   background-color: var(--main-background);
-  border: 1px solid var(--font-color);
+  border: 1px solid var(--main-foreground);
   display: block;
   overflow: auto;
 }

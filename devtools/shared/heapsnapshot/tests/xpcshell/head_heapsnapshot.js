@@ -143,7 +143,7 @@ function readHeapSnapshot(filePath) {
   const snapshot = ChromeUtils.readHeapSnapshot(filePath);
   ok(snapshot, "Should have read a heap snapshot back from " + filePath);
   ok(
-    snapshot instanceof HeapSnapshot,
+    HeapSnapshot.isInstance(snapshot),
     "snapshot should be an instance of HeapSnapshot"
   );
   return snapshot;
@@ -207,7 +207,7 @@ function saveHeapSnapshotAndComputeDominatorTree(dbg = null) {
 
   ok(dominatorTree, "Should be able to compute a dominator tree");
   ok(
-    dominatorTree instanceof DominatorTree,
+    DominatorTree.isInstance(dominatorTree),
     "Should be an instance of DominatorTree"
   );
 

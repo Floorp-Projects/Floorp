@@ -11,10 +11,6 @@
  * relevant telemetry histograms.
  */
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -42,10 +38,6 @@ var HISTOGRAMS = {
 
 nsTerminatorTelemetry.prototype = {
   classID: Components.ID("{3f78ada1-cba2-442a-82dd-d5fb300ddea7}"),
-
-  _xpcom_factory: ComponentUtils.generateSingletonFactory(
-    nsTerminatorTelemetry
-  ),
 
   // nsISupports
 

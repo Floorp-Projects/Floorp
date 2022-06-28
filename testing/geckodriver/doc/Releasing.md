@@ -147,6 +147,13 @@ and run the following command to publish the crate:
 Note that if a crate has an in-tree dependency make sure to first
 change the dependency information.
 
+We also publish audit information for the crates, and that must be
+updated for each release. To do that run:
+
+    % cargo vet certify <version>
+
+where `<version>` is the version of the crate that was published.
+
 ## Export to GitHub
 
 The canonical GitHub repository is

@@ -268,7 +268,8 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
 
   LOG(("  forceExternalHandling: %s", forceExternalHandling ? "yes" : "no"));
 
-  if (forceExternalHandling) {
+  if (forceExternalHandling &&
+      StaticPrefs::browser_download_open_pdf_attachments_inline()) {
     // Check if this is a PDF which should be opened internally. We also handle
     // octet-streams that look like they might be PDFs based on their extension.
     bool isPDF = mContentType.LowerCaseEqualsASCII(APPLICATION_PDF);
@@ -288,13 +289,12 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
       }
     }
 
-    // For a PDF, check if it will be handled internally. If so, treat it as a
-    // non-attachment by clearing 'forceExternalHandling' again. This allows it
-    // open a PDF directly instead of downloading it first. It may still
-    // end up being handled by a helper app depending anyway on the later
-    // checks.
-    if (isPDF &&
-        StaticPrefs::browser_download_improvements_to_download_panel()) {
+    // For a PDF, check if the preference is set that forces attachments to be
+    // opened inline. If so, treat it as a non-attachment by clearing
+    // 'forceExternalHandling' again. This allows it open a PDF directly
+    // instead of downloading it first. It may still end up being handled by
+    // a helper app depending anyway on the later checks.
+    if (isPDF) {
       nsCOMPtr<nsILoadInfo> loadInfo;
       aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
 

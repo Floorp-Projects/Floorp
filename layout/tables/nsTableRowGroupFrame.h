@@ -334,8 +334,6 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
 
   void DidResizeRows(ReflowOutput& aDesiredSize);
 
-  void SlideChild(TableRowGroupReflowInput& aReflowInput, nsIFrame* aKidFrame);
-
   /**
    * Reflow the frames we've already created
    *

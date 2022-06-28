@@ -5941,6 +5941,10 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   // run!
   rv = XRE_mainRun();
 
+#ifdef MOZ_X11
+  XRE_CleanupX11ErrorHandler();
+#endif
+
 #if defined(XP_WIN)
   bool wantAudio = true;
 #  ifdef MOZ_BACKGROUNDTASKS

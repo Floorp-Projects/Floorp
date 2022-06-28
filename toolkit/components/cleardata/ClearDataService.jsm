@@ -4,9 +4,6 @@
 
 "use strict";
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -1506,7 +1503,6 @@ function ClearDataService() {
 ClearDataService.prototype = Object.freeze({
   classID: Components.ID("{0c06583d-7dd8-4293-b1a5-912205f779aa}"),
   QueryInterface: ChromeUtils.generateQI(["nsIClearDataService"]),
-  _xpcom_factory: ComponentUtils.generateSingletonFactory(ClearDataService),
 
   _initialize() {
     // Let's start all the service we need to cleanup data.
