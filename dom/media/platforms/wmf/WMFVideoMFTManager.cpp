@@ -128,8 +128,7 @@ WMFVideoMFTManager::WMFVideoMFTManager(
     const CreateDecoderParams::OptionSet& aOptions, bool aDXVAEnabled)
     : mVideoInfo(aConfig),
       mImageSize(aConfig.mImage),
-      mStreamType(
-          WMFDecoderModule::GetStreamTypeFromMimeType(aConfig.mMimeType)),
+      mStreamType(GetStreamTypeFromMimeType(aConfig.mMimeType)),
       mDecodedImageSize(aConfig.mImage),
       mVideoStride(0),
       mColorSpace(aConfig.mColorSpace),
@@ -161,7 +160,7 @@ WMFVideoMFTManager::~WMFVideoMFTManager() {
 
 /* static */
 const GUID& WMFVideoMFTManager::GetMediaSubtypeGUID() {
-  MOZ_ASSERT(WMFDecoderModule::StreamTypeIsVideo(mStreamType));
+  MOZ_ASSERT(StreamTypeIsVideo(mStreamType));
   switch (mStreamType) {
     case WMFStreamType::H264:
       return MFVideoFormat_H264;
@@ -233,7 +232,7 @@ bool WMFVideoMFTManager::InitializeDXVA() {
 }
 
 MediaResult WMFVideoMFTManager::ValidateVideoInfo() {
-  NS_ENSURE_TRUE(WMFDecoderModule::StreamTypeIsVideo(mStreamType),
+  NS_ENSURE_TRUE(StreamTypeIsVideo(mStreamType),
                  MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                              RESULT_DETAIL("Invalid stream type")));
   switch (mStreamType) {
@@ -998,7 +997,7 @@ nsCString WMFVideoMFTManager::GetDescriptionName() const {
   }();
 
   return nsPrintfCString("wmf %s codec %s video decoder - %s, %s",
-                         WMFDecoderModule::StreamTypeToString(mStreamType),
+                         StreamTypeToString(mStreamType),
                          hw ? "hardware" : "software", dxvaName, formatName);
 }
 
