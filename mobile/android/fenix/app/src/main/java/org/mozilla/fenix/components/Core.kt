@@ -88,6 +88,7 @@ import org.mozilla.fenix.historymetadata.DefaultHistoryMetadataService
 import org.mozilla.fenix.historymetadata.HistoryMetadataMiddleware
 import org.mozilla.fenix.historymetadata.HistoryMetadataService
 import org.mozilla.fenix.media.MediaSessionService
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.settings.SupportUtils
@@ -224,6 +225,8 @@ class Core(
      * The [BrowserStore] holds the global [BrowserState].
      */
     val store by lazyMonitored {
+        val tabsPrioritizationEnable =
+            FxNimbus.features.engineSettings.value().tabsPrioritizationEnabled
         val middlewareList =
             mutableListOf(
                 LastAccessMiddleware(),
@@ -244,9 +247,12 @@ class Core(
                 AdsTelemetryMiddleware(adsTelemetry),
                 LastMediaAccessMiddleware(),
                 HistoryMetadataMiddleware(historyMetadataService),
-                SearchTermTabGroupMiddleware(),
-                SessionPrioritizationMiddleware()
-            )
+                SearchTermTabGroupMiddleware()
+            ) + if (tabsPrioritizationEnable) {
+                listOf(SessionPrioritizationMiddleware())
+            } else {
+                emptyList()
+            }
 
         BrowserStore(
             initialState = BrowserState(

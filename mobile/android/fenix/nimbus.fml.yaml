@@ -203,6 +203,14 @@ features:
         value:
           enabled: true
 
+  engine-settings:
+    description: Contains a set of settings for controlling the web engine configurations.
+    variables:
+      tabs-prioritization-enabled:
+        description: If true, enables tabs prioritization feature.
+        type: Boolean
+        default: true
+
 types:
   objects:
     MessageData:
