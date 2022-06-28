@@ -292,6 +292,31 @@ function setUpContentBlockingWarnings() {
   }
 }
 
+function initTCPStandardSection() {
+  document
+    .getElementById("tcp-learn-more-link")
+    .setAttribute(
+      "href",
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+        Services.prefs.getStringPref(
+          "privacy.restrict3rdpartystorage.preferences.learnMoreURLSuffix"
+        )
+    );
+
+  let cookieBehaviorPref = Preferences.get("network.cookie.cookieBehavior");
+  let updateTCPSectionVisibilityState = () => {
+    document.getElementById("etpStandardTCPBox").hidden =
+      // Hide this section if we show the rollout section already.
+      !document.getElementById("etpStandardTCPRolloutBox").hidden ||
+      cookieBehaviorPref.value !=
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+  };
+
+  cookieBehaviorPref.on("change", updateTCPSectionVisibilityState);
+
+  updateTCPSectionVisibilityState();
+}
+
 function initTCPRolloutSection() {
   document
     .getElementById("tcp-rollout-learn-more-link")
@@ -954,6 +979,7 @@ var gPrivacyPane = {
     setUpContentBlockingWarnings();
 
     initTCPRolloutSection();
+    initTCPStandardSection();
   },
 
   populateCategoryContents() {
