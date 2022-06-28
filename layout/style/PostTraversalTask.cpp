@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/FontFace.h"
 #include "mozilla/dom/FontFaceSet.h"
-#include "mozilla/dom/FontFaceSetImpl.h"
 #include "gfxPlatformFontList.h"
 #include "gfxTextRun.h"
 #include "ServoStyleSet.h"
@@ -21,11 +20,11 @@ using namespace dom;
 void PostTraversalTask::Run() {
   switch (mType) {
     case Type::ResolveFontFaceLoadedPromise:
-      static_cast<FontFace*>(mTarget)->MaybeResolve();
+      static_cast<FontFace*>(mTarget)->DoResolve();
       break;
 
     case Type::RejectFontFaceLoadedPromise:
-      static_cast<FontFace*>(mTarget)->MaybeReject(mResult);
+      static_cast<FontFace*>(mTarget)->DoReject(mResult);
       break;
 
     case Type::DispatchLoadingEventAndReplaceReadyPromise:
@@ -34,7 +33,7 @@ void PostTraversalTask::Run() {
       break;
 
     case Type::DispatchFontFaceSetCheckLoadingFinishedAfterDelay:
-      static_cast<FontFaceSetImpl*>(mTarget)
+      static_cast<FontFaceSet*>(mTarget)
           ->DispatchCheckLoadingFinishedAfterDelay();
       break;
 

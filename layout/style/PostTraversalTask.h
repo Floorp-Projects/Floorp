@@ -16,7 +16,6 @@ class ServoStyleSet;
 namespace dom {
 class FontFace;
 class FontFaceSet;
-class FontFaceSetImpl;
 }  // namespace dom
 namespace fontlist {
 struct Family;
@@ -60,7 +59,7 @@ class PostTraversalTask {
   }
 
   static PostTraversalTask DispatchFontFaceSetCheckLoadingFinishedAfterDelay(
-      dom::FontFaceSetImpl* aFontFaceSet) {
+      dom::FontFaceSet* aFontFaceSet) {
     auto task = PostTraversalTask(
         Type::DispatchFontFaceSetCheckLoadingFinishedAfterDelay);
     task.mTarget = aFontFaceSet;
@@ -102,7 +101,7 @@ class PostTraversalTask {
     // mTarget (FontFaceSet*)
     DispatchLoadingEventAndReplaceReadyPromise,
 
-    // mTarget (FontFaceSetImpl*)
+    // mTarget (FontFaceSet*)
     DispatchFontFaceSetCheckLoadingFinishedAfterDelay,
 
     // mTarget (gfxUserFontEntry*)

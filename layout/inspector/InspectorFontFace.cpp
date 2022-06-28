@@ -69,10 +69,13 @@ CSSFontFaceRule* InspectorFontFace::GetRule() {
     // in the relevant font group's user font set
     RawServoFontFaceRule* rule = nullptr;
     if (mFontEntry->IsUserFont()) {
-      auto* fontFaceSet =
-          static_cast<FontFaceSetImpl*>(mFontGroup->GetUserFontSet());
-      if (fontFaceSet) {
-        rule = fontFaceSet->FindRuleForEntry(mFontEntry);
+      FontFaceSet::UserFontSet* fontSet =
+          static_cast<FontFaceSet::UserFontSet*>(mFontGroup->GetUserFontSet());
+      if (fontSet) {
+        FontFaceSet* fontFaceSet = fontSet->GetFontFaceSet();
+        if (fontFaceSet) {
+          rule = fontFaceSet->FindRuleForEntry(mFontEntry);
+        }
       }
     }
     if (rule) {
