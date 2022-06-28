@@ -49,11 +49,32 @@ using MFMediaEngineError = MF_MEDIA_ENGINE_ERR;
 #endif
 
 const char* MediaEventTypeToStr(MediaEventType aType);
+const char* MediaEngineEventToStr(MF_MEDIA_ENGINE_EVENT aEvent);
+const char* MFMediaEngineErrorToStr(MFMediaEngineError aError);
 const char* GUIDToStr(GUID aGUID);
 const char* MFVideoRotationFormatToStr(MFVideoRotationFormat aFormat);
 const char* MFVideoTransferFunctionToStr(MFVideoTransferFunction aFunc);
 const char* MFVideoPrimariesToStr(MFVideoPrimaries aPrimaries);
 
 }  // namespace mozilla
+
+namespace IPC {
+
+template <>
+struct ParamTraits<mozilla::MFMediaEngineError>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::MFMediaEngineError,
+          mozilla::MFMediaEngineError::MF_MEDIA_ENGINE_ERR_ABORTED,
+          mozilla::MFMediaEngineError::MF_MEDIA_ENGINE_ERR_ENCRYPTED> {};
+
+template <>
+struct ParamTraits<mozilla::MFMediaEngineEvent>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::MFMediaEngineEvent,
+          mozilla::MFMediaEngineEvent::MF_MEDIA_ENGINE_EVENT_LOADSTART,
+          mozilla::MFMediaEngineEvent::
+              MF_MEDIA_ENGINE_EVENT_AUDIOENDPOINTCHANGE> {};
+
+}  // namespace IPC
 
 #endif  // DOM_MEDIA_IPC_MFMEDIAENGINECHILD_H_
