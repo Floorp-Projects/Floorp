@@ -12,7 +12,7 @@ extend_parameters_schema(
     {
         Required("pull_request_number"): Any(All(int, Range(min=1)), None),
         Required("release_type", default=""): str,
-        Optional("shipping_phase"): Any("build", "ship", None),
+        Optional("shipping_phase"): Any("build", "promote", "ship", None),
         Required("version", default=""): str,
         Required("next_version", default=""): Any(None, str),
     }

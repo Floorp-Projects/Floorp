@@ -22,6 +22,8 @@ only-for-build-types:
     - nightly
 
 job-template:
+    attributes:
+        shipping_phase: promote     # APKs are sent to testing tracks
     description: Publish Fenix
     worker-type: push-apk
     worker:

@@ -21,6 +21,8 @@ only-for-build-types:
     - release
 
 job-template:
+    attributes:
+        shipping_phase: ship
     description: Fenix version bump/tag
     worker-type: tree
     worker:

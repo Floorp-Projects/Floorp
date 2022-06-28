@@ -113,5 +113,7 @@ scriptworker:
 
 release-promotion:
     flavors:
+        promote:
+            target-tasks-method: promote
         ship:
             target-tasks-method: ship

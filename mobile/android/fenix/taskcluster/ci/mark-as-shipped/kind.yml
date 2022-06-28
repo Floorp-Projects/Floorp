@@ -10,6 +10,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
+    - beetmover
     - push-apk
 
 primary-dependency: push-apk
@@ -21,6 +22,8 @@ only-for-build-types:
     - release
 
 job-template:
+    attributes:
+        shipping_phase: ship
     description: Mark Fenix as shipped in ship-it
     worker-type: ship-it
     scopes:

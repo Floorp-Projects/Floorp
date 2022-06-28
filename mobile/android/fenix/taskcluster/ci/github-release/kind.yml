@@ -21,6 +21,8 @@ only-for-build-types:
     - release
 
 job-template:
+    attributes:
+        shipping_phase: ship
     description: Create/Update Github release and upload APKs
     worker-type: github
     worker:

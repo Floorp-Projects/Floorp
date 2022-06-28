@@ -166,6 +166,7 @@ jobs:
     beta:
         attributes:
             release-type: beta
+            shipping_phase: promote
         include-release-version: true
         include-shippable-secrets: true
         filter-incomplete-translations: true
@@ -180,6 +181,7 @@ jobs:
             github-name: 'fenix-mozillaonline-{version}-{abi}.apk'
         attributes:
             release-type: beta
+            shipping_phase: promote
         include-release-version: true
         include-shippable-secrets: true
         filter-incomplete-translations: true
@@ -193,6 +195,7 @@ jobs:
     release:
         attributes:
             release-type: release
+            shipping_phase: promote
         include-release-version: true
         include-shippable-secrets: true
         filter-incomplete-translations: true
@@ -207,6 +210,7 @@ jobs:
             github-name: 'fenix-mozillaonline-{version}-{abi}.apk'
         attributes:
             release-type: release
+            shipping_phase: promote
         include-release-version: true
         include-shippable-secrets: true
         filter-incomplete-translations: true

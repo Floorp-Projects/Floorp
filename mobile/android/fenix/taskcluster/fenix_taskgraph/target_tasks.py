@@ -20,12 +20,36 @@ def index_exists(index_path, reason=""):
         return False
 
 
-@_target_task("ship")
-def target_tasks_default(full_task_graph, parameters, graph_config):
-
-    # TODO Use shipping-phase
+@_target_task("promote")
+def target_tasks_promote(full_task_graph, parameters, graph_config):
     def filter(task, parameters):
-        return task.attributes.get("release-type", "") == parameters["release_type"]
+        if (
+            task.attributes.get("release-type") == parameters["release_type"]
+            and task.attributes.get("shipping_phase") == "promote"
+        ):
+            return True
+
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
+
+
+@_target_task("ship")
+def target_tasks_ship(full_task_graph, parameters, graph_config):
+    filtered_for_candidates = target_tasks_promote(
+        full_task_graph,
+        parameters,
+        graph_config,
+    )
+
+    def filter(task, parameters):
+        # Include promotion tasks; these will be optimized out
+        if task.label in filtered_for_candidates:
+            return True
+
+        if (
+            task.attributes.get("release-type") == parameters["release_type"]
+            and task.attributes.get("shipping_phase") == "ship"
+        ):
+            return True
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
