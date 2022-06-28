@@ -313,9 +313,10 @@ add_task(async function test_gifft_labeled_boolean() {
     Glean.testOnly.mirrorsForLabeledBools.__other__.testGetValue()
   );
   Glean.testOnly.mirrorsForLabeledBools.InvalidLabel.set(true);
-  Assert.equal(
-    true,
-    Glean.testOnly.mirrorsForLabeledBools.__other__.testGetValue()
+  Assert.throws(
+    () => Glean.testOnly.mirrorsForLabeledBools.__other__.testGetValue(),
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    "Should throw because of a recording error."
   );
 
   // In Telemetry there is no invalid label

@@ -12,6 +12,7 @@
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
+#include "Common.h"
 
 namespace mozilla::glean {
 
@@ -34,6 +35,10 @@ void BooleanMetric::Set(bool aValue) const {
 
 Result<Maybe<bool>, nsCString> BooleanMetric::TestGetValue(
     const nsACString& aPingName) const {
+  nsCString err;
+  if (fog_boolean_test_get_error(mId, &aPingName, &err)) {
+    return Err(err);
+  }
   if (!fog_boolean_test_has_value(mId, &aPingName)) {
     return Maybe<bool>();
   }
@@ -54,13 +59,18 @@ GleanBoolean::Set(bool aValue) {
 NS_IMETHODIMP
 GleanBoolean::TestGetValue(const nsACString& aStorageName,
                            JS::MutableHandleValue aResult) {
-  // Unchecked unwrap is safe because BooleanMetric::TestGetValue() always
-  // returns Ok. (`boolean` has no error return).
-  auto result = mBoolean.TestGetValue(aStorageName).unwrap();
-  if (result.isNothing()) {
+  auto result = mBoolean.TestGetValue(aStorageName);
+  if (result.isErr()) {
+    aResult.set(JS::UndefinedValue());
+    LogToBrowserConsole(nsIScriptError::errorFlag,
+                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
+    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+  }
+  auto optresult = result.unwrap();
+  if (optresult.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
-    aResult.set(JS::BooleanValue(result.value()));
+    aResult.set(JS::BooleanValue(optresult.value()));
   }
   return NS_OK;
 }
