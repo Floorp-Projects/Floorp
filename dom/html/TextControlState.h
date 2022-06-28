@@ -537,19 +537,6 @@ class TextControlState final : public SupportsWeakPtr {
                                       // the frame
   bool mSelectionCached : 1;          // Whether mSelectionProperties is valid
 
-  /**
-   * For avoiding allocation cost of the instance, we should reuse instances
-   * as far as possible.
-   *
-   * FYI: `25` is just a magic number considered without enough investigation,
-   *      but at least, this value must not make damage for footprint.
-   *      Feel free to change it if you find better number.
-   */
-  static const size_t kMaxCountOfCacheToReuse = 25;
-  static AutoTArray<TextControlState*, kMaxCountOfCacheToReuse>*
-      sReleasedInstances;
-  static bool sHasShutDown;
-
   friend class AutoTextControlHandlingState;
   friend class PrepareEditorEvent;
   friend class RestoreSelectionState;
