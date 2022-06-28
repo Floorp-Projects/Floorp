@@ -38,6 +38,10 @@ crashtest:
     description: "Crashtest run"
     schedules-component: crashtest
     treeherder-symbol: R(C)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     chunks:
         by-test-platform:
             android-em-7.*: 1
@@ -107,6 +111,10 @@ jsreftest:
     description: "JS Reftest run"
     schedules-component: jsreftest
     treeherder-symbol: R(J)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     instance-size: default
     chunks:
         by-test-platform:
@@ -147,6 +155,10 @@ jsreftest:
 reftest:
     description: "Reftest run"
     treeherder-symbol: R(R)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
@@ -245,6 +257,10 @@ reftest-qr:
 
 reftest-snapshot:
     description: "Reftest snapshot"
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     treeherder-symbol: R(Rs)
     virtualization: virtual
     run-on-projects:
