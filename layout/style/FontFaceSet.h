@@ -11,13 +11,9 @@
 #include "mozilla/dom/FontFaceSetBinding.h"
 #include "mozilla/dom/FontFaceSetImpl.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "gfxUserFontSet.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsIDOMEventListener.h"
 
-struct gfxFontFaceSrc;
-class gfxFontSrcPrincipal;
-class gfxUserFontEntry;
 class nsFontFaceLoader;
 class nsIPrincipal;
 class nsPIDOMWindowInner;
@@ -37,8 +33,6 @@ class FontFaceSet final : public DOMEventTargetHelper {
   friend class mozilla::PostTraversalTask;
 
  public:
-  using UserFontSet = FontFaceSetImpl::UserFontSet;
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FontFaceSet, DOMEventTargetHelper)
 
@@ -66,8 +60,6 @@ class FontFaceSet final : public DOMEventTargetHelper {
   void RefreshStandardFontLoadPrincipal();
 
   void CopyNonRuleFacesTo(FontFaceSet* aFontFaceSet) const;
-
-  UserFontSet* GetUserFontSet() const { return mImpl->GetUserFontSet(); }
 
   void CacheFontLoadability() { mImpl->CacheFontLoadability(); }
 
