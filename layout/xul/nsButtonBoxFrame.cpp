@@ -197,12 +197,10 @@ void nsButtonBoxFrame::MouseClicked(WidgetGUIEvent* aEvent) {
   nsCOMPtr<nsIContent> content = mContent;
   WidgetInputEvent* inputEvent = aEvent->AsInputEvent();
   WidgetMouseEventBase* mouseEvent = aEvent->AsMouseEventBase();
-  WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
   nsContentUtils::DispatchXULCommand(
       content, aEvent->IsTrusted(), nullptr, presShell, inputEvent->IsControl(),
       inputEvent->IsAlt(), inputEvent->IsShift(), inputEvent->IsMeta(),
       mouseEvent ? mouseEvent->mInputSource
-                 : (keyEvent ? MouseEvent_Binding::MOZ_SOURCE_KEYBOARD
-                             : MouseEvent_Binding::MOZ_SOURCE_UNKNOWN),
+                 : MouseEvent_Binding::MOZ_SOURCE_UNKNOWN,
       mouseEvent ? mouseEvent->mButton : 0);
 }
