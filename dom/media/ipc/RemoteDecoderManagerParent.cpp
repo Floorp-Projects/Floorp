@@ -226,7 +226,7 @@ bool RemoteDecoderManagerParent::DeallocPRemoteDecoderParent(
 
 PMFMediaEngineParent* RemoteDecoderManagerParent::AllocPMFMediaEngineParent() {
 #ifdef MOZ_WMF
-  return new MFMediaEngineParent(this, sRemoteDecoderManagerParentThread);
+  return new MFMediaEngineParent(this);
 #else
   return nullptr;
 #endif

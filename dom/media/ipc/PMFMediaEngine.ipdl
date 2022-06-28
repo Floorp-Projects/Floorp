@@ -10,8 +10,6 @@ using mozilla::AudioInfo from "MediaInfo.h";
 using mozilla::VideoInfo from "MediaInfo.h";
 using mozilla::MediaResult from "MediaResult.h";
 using mozilla::TrackInfo::TrackType from "MediaInfo.h";
-using mozilla::MFMediaEngineError from "MFMediaEngineUtils.h";
-using mozilla::MFMediaEngineEvent from "MFMediaEngineUtils.h";
 
 namespace mozilla {
 
@@ -45,10 +43,8 @@ parent:
   async __delete__();
 
 child:
-  async NotifyEvent(MFMediaEngineEvent event);
-  async NotifyError(MediaResult error);
   async UpdateCurrentTime(double currentTimeInSecond);
-  async RequestSample(TrackType type, bool isEnough);
+  async RequestSample(TrackType type);
 };
 
 } // namespace mozilla
