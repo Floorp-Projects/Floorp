@@ -41,8 +41,11 @@
 #include "nsIDirectoryEnumerator.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
+#include "nsIInputStream.h"
 #include "nsISupports.h"
 #include "nsLocalFile.h"
+#include "nsNetUtil.h"
+#include "nsNSSComponent.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -54,6 +57,8 @@
 #include "prio.h"
 #include "prtime.h"
 #include "prtypes.h"
+#include "ScopedNSSTypes.h"
+#include "secoidt.h"
 
 #if defined(XP_UNIX) && !defined(ANDROID)
 #  include "nsSystemInfo.h"
@@ -804,6 +809,32 @@ already_AddRefed<Promise> IOUtils::CreateUnique(GlobalObject& aGlobal,
             [file = std::move(file), aPermissions, aFileType]() {
               return CreateUniqueSync(file, aFileType, aPermissions);
             });
+      });
+}
+
+/* static */
+already_AddRefed<Promise> IOUtils::ComputeHexDigest(
+    GlobalObject& aGlobal, const nsAString& aPath,
+    const HashAlgorithm aAlgorithm, ErrorResult& aError) {
+  const bool nssInitialized = EnsureNSSInitializedChromeOrContent();
+
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        if (!nssInitialized) {
+          RejectJSPromise(promise,
+                          IOError(NS_ERROR_UNEXPECTED)
+                              .WithMessage("Could not initialize NSS"));
+          return;
+        }
+
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+        DispatchAndResolve<nsCString>(state->mEventQueue, promise,
+                                      [file = std::move(file), aAlgorithm]() {
+                                        return ComputeHexDigestSync(file,
+                                                                    aAlgorithm);
+                                      });
       });
 }
 
@@ -1717,6 +1748,86 @@ Result<nsString, IOUtils::IOError> IOUtils::CreateUniqueSync(
   MOZ_ALWAYS_SUCCEEDS(aFile->GetPath(path));
 
   return path;
+}
+
+/* static */
+Result<nsCString, IOUtils::IOError> IOUtils::ComputeHexDigestSync(
+    nsIFile* aFile, const HashAlgorithm aAlgorithm) {
+  static constexpr size_t BUFFER_SIZE = 8192;
+
+  SECOidTag alg;
+  switch (aAlgorithm) {
+    case HashAlgorithm::Sha1:
+      alg = SEC_OID_SHA1;
+      break;
+
+    case HashAlgorithm::Sha256:
+      alg = SEC_OID_SHA256;
+      break;
+
+    case HashAlgorithm::Sha384:
+      alg = SEC_OID_SHA384;
+      break;
+
+    case HashAlgorithm::Sha512:
+      alg = SEC_OID_SHA512;
+      break;
+
+    default:
+      MOZ_RELEASE_ASSERT(false, "Unexpected HashAlgorithm");
+  }
+
+  Digest digest;
+  if (nsresult rv = digest.Begin(alg); NS_FAILED(rv)) {
+    return Err(IOError(rv).WithMessage("Could not hash file at %s",
+                                       aFile->HumanReadablePath().get()));
+  }
+
+  RefPtr<nsIInputStream> stream;
+  if (nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), aFile);
+      NS_FAILED(rv)) {
+    return Err(IOError(rv).WithMessage("Could not open the file at %s",
+                                       aFile->HumanReadablePath().get()));
+  }
+
+  char buffer[BUFFER_SIZE];
+  uint32_t read = 0;
+  for (;;) {
+    if (nsresult rv = stream->Read(buffer, BUFFER_SIZE, &read); NS_FAILED(rv)) {
+      return Err(IOError(rv).WithMessage(
+          "Encountered an unexpected error while reading file(%s)",
+          aFile->HumanReadablePath().get()));
+    }
+    if (read == 0) {
+      break;
+    }
+
+    if (nsresult rv =
+            digest.Update(reinterpret_cast<unsigned char*>(buffer), read);
+        NS_FAILED(rv)) {
+      return Err(IOError(rv).WithMessage("Could not hash file at %s",
+                                         aFile->HumanReadablePath().get()));
+    }
+  }
+
+  AutoTArray<uint8_t, SHA512_LENGTH> rawDigest;
+  if (nsresult rv = digest.End(rawDigest); NS_FAILED(rv)) {
+    return Err(IOError(rv).WithMessage("Could not hash file at %s",
+                                       aFile->HumanReadablePath().get()));
+  }
+
+  nsCString hexDigest;
+  if (!hexDigest.SetCapacity(2 * rawDigest.Length(), fallible)) {
+    return Err(IOError(NS_ERROR_OUT_OF_MEMORY));
+  }
+
+  const char HEX[] = "0123456789abcdef";
+  for (uint8_t b : rawDigest) {
+    hexDigest.Append(HEX[(b >> 4) & 0xF]);
+    hexDigest.Append(HEX[b & 0xF]);
+  }
+
+  return hexDigest;
 }
 
 #if defined(XP_WIN)
