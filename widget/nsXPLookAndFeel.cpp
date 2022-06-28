@@ -456,7 +456,15 @@ static constexpr struct {
       widget::ThemeChangeKind::MediaQueriesOnly;
 } kMediaQueryPrefs[] = {
     {"browser.display.windows.native_menus"_ns},
-    {"widget.use-theme-accent"_ns, widget::ThemeChangeKind::Style},
+    // Affects whether standins are used for the accent color.
+    {"widget.non-native-theme.use-theme-accent"_ns,
+     widget::ThemeChangeKind::Style},
+    // These two affect system colors on Windows.
+    {"widget.windows.uwp-system-colors.enabled"_ns,
+     widget::ThemeChangeKind::Style},
+    // These two affect system colors on Windows.
+    {"widget.windows.uwp-system-colors.highlight-accent"_ns,
+     widget::ThemeChangeKind::Style},
     // Affects env().
     {"layout.css.prefers-color-scheme.content-override"_ns,
      widget::ThemeChangeKind::Style},
@@ -907,14 +915,7 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID, ColorScheme aScheme,
 Maybe<nscolor> nsXPLookAndFeel::GetUncachedColor(ColorID aID,
                                                  ColorScheme aScheme,
                                                  UseStandins aUseStandins) {
-  const bool useStandins = [&] {
-    if (aUseStandins == UseStandins::Yes) {
-      return true;
-    }
-    return !StaticPrefs::widget_use_theme_accent() &&
-           (aID == ColorID::Accentcolor || aID == ColorID::Accentcolortext);
-  }();
-  if (useStandins) {
+  if (aUseStandins == UseStandins::Yes) {
     return Some(GetStandinForNativeColor(aID, aScheme));
   }
   nscolor r;
@@ -1176,10 +1177,18 @@ static constexpr std::bitset<size_t(ColorID::End)> sNonNativeThemeStandinColors{
 static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
     const dom::Document& aDoc, LookAndFeel::ColorID aColor,
     const PreferenceSheet::Prefs& aPrefs) {
-  if (!sNonNativeThemeStandinColors[size_t(aColor)]) {
-    return false;
-  }
-  return aDoc.ShouldAvoidNativeTheme() &&
+  const bool shouldUseStandinsForColor = [&] {
+    if (sNonNativeThemeStandinColors[size_t(aColor)]) {
+      return true;
+    }
+    // There are platforms where we want the content-exposed accent color to be
+    // the windows blue rather than the system accent color, for now.
+    return StaticPrefs::widget_non_native_theme_use_theme_accent() &&
+           (aColor == LookAndFeel::ColorID::Accentcolor ||
+            aColor == LookAndFeel::ColorID::Accentcolortext);
+  }();
+
+  return shouldUseStandinsForColor && aDoc.ShouldAvoidNativeTheme() &&
          !aPrefs.NonNativeThemeShouldBeHighContrast();
 }
 
