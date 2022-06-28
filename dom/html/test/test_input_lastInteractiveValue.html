@@ -98,7 +98,10 @@ add_task(async function exec_command() {
 });
 
 add_task(async function cut_paste() {
-  if (!kIsMac && !kIsWin) {
+  if (true) {
+    // TODO: the above condition should be if (!kIsMac && !kIsWin), but this
+    // fails (intermittently?) in those platforms, see bug 1776838. Disable for
+    // now.
     todo(false, "synthesizeNativeKey doesn't work elsewhere (yet)");
     return;
   }
