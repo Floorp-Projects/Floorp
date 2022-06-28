@@ -9,13 +9,28 @@
 
 namespace mozilla {
 
+class MFMediaSource;
+
 class MFMediaEngineVideoStream final : public MFMediaEngineStream {
  public:
-  explicit MFMediaEngineVideoStream(const CreateDecoderParams& aParam) {}
+  MFMediaEngineVideoStream() = default;
 
-  RefPtr<InitPromise> Init() override;
-  nsCString GetDescriptionName() const override;
-  ConversionRequired NeedsConversion() const override;
+  static MFMediaEngineVideoStream* Create(uint64_t aStreamId,
+                                          const TrackInfo& aInfo,
+                                          MFMediaSource* aParentSource);
+  nsCString GetDescriptionName() const override {
+    return "media engine video stream"_ns;
+  }
+
+  TrackInfo::TrackType TrackType() override {
+    return TrackInfo::TrackType::kVideoTrack;
+  }
+
+ private:
+  HRESULT CreateMediaType(const TrackInfo& aInfo,
+                          IMFMediaType** aMediaType) override;
+
+  bool HasEnoughRawData() const override;
 };
 
 }  // namespace mozilla
