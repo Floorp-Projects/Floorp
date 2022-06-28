@@ -20,7 +20,7 @@ def index_exists(index_path, reason=""):
         return False
 
 
-@_target_task("release")
+@_target_task("ship")
 def target_tasks_default(full_task_graph, parameters, graph_config):
 
     # TODO Use shipping-phase

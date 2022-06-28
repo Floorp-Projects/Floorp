@@ -53,6 +53,6 @@ pushlog_id: '0'
 release_type: release
 repository_type: git
 shipping_phase: ship
-target_tasks_method: release
+target_tasks_method: ship
 tasks_for: action
 version: 98.0.0
