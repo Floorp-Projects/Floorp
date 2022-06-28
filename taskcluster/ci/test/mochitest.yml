@@ -431,6 +431,11 @@ mochitest-plain-gpu:
     description: "Mochitest plain GPU run"
     suite:
         name: mochitest-plain-gpu
+    worker-type:
+        by-test-platform:
+            linux.*64-[at]san(-qr)?/opt: t-linux-xlarge-gcp
+            linux.*: t-linux-large-gcp
+            default: default
     treeherder-symbol: M(gpu)
     schedules-component: mochitest-plain
     loopback-video: true
@@ -491,6 +496,11 @@ mochitest-chrome-gpu:
     description: "Mochitest chrome GPU run"
     suite:
         name: mochitest-chrome-gpu
+    worker-type:
+        by-test-platform:
+            linux.*64-[at]san(-qr)?/opt: t-linux-xlarge-gcp
+            linux.*: t-linux-large-gcp
+            default: default
     treeherder-symbol: M(gpu-c)
     loopback-video: true
     virtualization: virtual-with-gpu
