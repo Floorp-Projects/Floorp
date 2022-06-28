@@ -72,7 +72,7 @@ CSSFontFaceRule* InspectorFontFace::GetRule() {
       FontFaceSet::UserFontSet* fontSet =
           static_cast<FontFaceSet::UserFontSet*>(mFontGroup->GetUserFontSet());
       if (fontSet) {
-        FontFaceSet* fontFaceSet = fontSet->GetFontFaceSet();
+        FontFaceSetImpl* fontFaceSet = fontSet->GetFontFaceSet();
         if (fontFaceSet) {
           rule = fontFaceSet->FindRuleForEntry(mFontEntry);
         }
