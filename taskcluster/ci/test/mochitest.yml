@@ -536,6 +536,11 @@ mochitest-media:
     description: "Mochitest media run"
     treeherder-symbol: M(mda)
     schedules-component: mochitest-plain
+    worker-type:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: t-linux-xlarge-gcp  # runs out of memory on default/m3.large
+            linux.*: t-linux-large-gcp
+            default: default
     max-run-time:
         by-test-platform:
             windows10-64-2004-ccov.*/.*: 7200
@@ -610,10 +615,6 @@ mochitest-media:
                     windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     default: built-projects
     loopback-video: true
-    instance-size:
-        by-test-platform:
-            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
-            default: large
     chunks:
         by-test-platform:
             android-em-7.*: 1
