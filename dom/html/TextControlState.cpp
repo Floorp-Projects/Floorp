@@ -1493,6 +1493,7 @@ void TextControlState::DeleteOrCacheForReuse() {
     // Prepare for reuse, unlink and release any refcountable objects.
     UnlinkInternal();
     mValue.SetIsVoid(true);
+    mLastInteractiveValue.SetIsVoid(true);
     mTextCtrlElement = nullptr;
 
     // Put this instance to the cache.  Note that now, the array may be full,
