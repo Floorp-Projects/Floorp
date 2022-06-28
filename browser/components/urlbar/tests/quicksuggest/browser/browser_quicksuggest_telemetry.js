@@ -97,7 +97,7 @@ add_suggestions_task(async function impression_offline_dataCollectionDisabled(
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
   await doImpressionTest({
     suggestion,
-    scenario: "offline",
+    improve_suggest_experience_checked: false,
   });
 });
 
@@ -112,7 +112,7 @@ add_suggestions_task(async function impression_offline_dataCollectionEnabled(
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
   await doImpressionTest({
     suggestion,
-    scenario: "offline",
+    improve_suggest_experience_checked: true,
   });
 });
 
@@ -129,7 +129,7 @@ add_suggestions_task(async function impression_online_dataCollectionDisabled(
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await doImpressionTest({
     suggestion,
-    scenario: "online",
+    improve_suggest_experience_checked: false,
   });
 });
 
@@ -146,7 +146,7 @@ add_suggestions_task(async function impression_online_dataCollectionEnabled(
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await doImpressionTest({
     suggestion,
-    scenario: "online",
+    improve_suggest_experience_checked: true,
   });
 });
 
@@ -157,13 +157,17 @@ add_suggestions_task(async function impression_bestMatch(suggestion) {
   UrlbarPrefs.set("bestMatch.enabled", true);
   await doImpressionTest({
     suggestion,
-    scenario: "offline",
+    improve_suggest_experience_checked: false,
     isBestMatch: true,
   });
   UrlbarPrefs.clear("bestMatch.enabled");
 });
 
-async function doImpressionTest({ scenario, suggestion, isBestMatch = false }) {
+async function doImpressionTest({
+  improve_suggest_experience_checked,
+  suggestion,
+  isBestMatch = false,
+}) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     Services.telemetry.clearEvents();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -223,7 +227,7 @@ async function doImpressionTest({ scenario, suggestion, isBestMatch = false }) {
       {
         type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
         payload: {
-          scenario,
+          improve_suggest_experience_checked,
           block_id: suggestion.id,
           is_clicked: false,
           match_type: isBestMatch ? "best-match" : "firefox-suggest",
@@ -296,8 +300,8 @@ add_suggestions_task(
     UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
     await doClickTest({
       suggestion,
+      improve_suggest_experience_checked: false,
       useKeyboard: true,
-      scenario: "offline",
     });
   }
 );
@@ -312,8 +316,8 @@ add_suggestions_task(
     UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
     await doClickTest({
       suggestion,
+      improve_suggest_experience_checked: true,
       useKeyboard: true,
-      scenario: "offline",
     });
   }
 );
@@ -330,8 +334,8 @@ add_suggestions_task(
     UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
     await doClickTest({
       suggestion,
+      improve_suggest_experience_checked: false,
       useKeyboard: true,
-      scenario: "online",
     });
   }
 );
@@ -349,8 +353,8 @@ add_suggestions_task(async function click_keyboard_online_dataCollectionEnabled(
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await doClickTest({
     suggestion,
+    improve_suggest_experience_checked: true,
     useKeyboard: true,
-    scenario: "online",
   });
 });
 
@@ -365,8 +369,8 @@ add_suggestions_task(async function click_mouse_offline_dataCollectionDisabled(
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
   await doClickTest({
     suggestion,
+    improve_suggest_experience_checked: false,
     useKeyboard: false,
-    scenario: "offline",
   });
 });
 
@@ -381,8 +385,8 @@ add_suggestions_task(async function click_mouse_offline_dataCollectionEnabled(
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
   await doClickTest({
     suggestion,
+    improve_suggest_experience_checked: true,
     useKeyboard: false,
-    scenario: "offline",
   });
 });
 
@@ -399,8 +403,8 @@ add_suggestions_task(async function click_mouse_online_dataCollectionDisabled(
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await doClickTest({
     suggestion,
+    improve_suggest_experience_checked: false,
     useKeyboard: false,
-    scenario: "online",
   });
 });
 
@@ -417,8 +421,8 @@ add_suggestions_task(async function click_mouse_online_dataCollectionEnabled(
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await doClickTest({
     suggestion,
+    improve_suggest_experience_checked: true,
     useKeyboard: false,
-    scenario: "online",
   });
 });
 
@@ -429,8 +433,8 @@ add_suggestions_task(async function click_keyboard_bestMatch(suggestion) {
   UrlbarPrefs.set("bestMatch.enabled", true);
   await doClickTest({
     suggestion,
+    improve_suggest_experience_checked: false,
     useKeyboard: true,
-    scenario: "offline",
     isBestMatch: true,
   });
   UrlbarPrefs.clear("bestMatch.enabled");
@@ -443,16 +447,16 @@ add_suggestions_task(async function click_mouse_bestMatch(suggestion) {
   UrlbarPrefs.set("bestMatch.enabled", true);
   await doClickTest({
     suggestion,
-    scenario: "offline",
+    improve_suggest_experience_checked: false,
     isBestMatch: true,
   });
   UrlbarPrefs.clear("bestMatch.enabled");
 });
 
 async function doClickTest({
+  improve_suggest_experience_checked,
   suggestion,
   useKeyboard,
-  scenario,
   isBestMatch = false,
 }) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
@@ -522,8 +526,8 @@ async function doClickTest({
       {
         type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
         payload: {
+          improve_suggest_experience_checked,
           match_type,
-          scenario,
           is_clicked: true,
           block_id: suggestion.id,
           position: index + 1,
@@ -532,8 +536,8 @@ async function doClickTest({
       {
         type: CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
         payload: {
+          improve_suggest_experience_checked,
           match_type,
-          scenario,
           block_id: suggestion.id,
           position: index + 1,
         },
