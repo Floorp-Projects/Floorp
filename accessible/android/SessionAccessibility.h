@@ -104,9 +104,7 @@ class SessionAccessibility final
 
   void UpdateAccessibleFocusBoundaries(Accessible* aFirst, Accessible* aLast);
 
-  Accessible* GetAccessibleByID(int32_t aID) const {
-    return mIDToAccessibleMap.Get(aID);
-  }
+  Accessible* GetAccessibleByID(int32_t aID) const;
 
   static const int32_t kNoID = -1;
   static const int32_t kUnsetID = 0;
