@@ -15,7 +15,7 @@ Front-end       |       Status       | Feature | Notes |
 --------------- | ------------------ | ------- | ----- |
 SPIR-V (binary) | :white_check_mark: | spv-in  |       |
 WGSL            | :white_check_mark: | wgsl-in | Fully validated |
-GLSL            | :ok:               | glsl-in | GLSL 440+ |
+GLSL            | :ok:               | glsl-in | GLSL 440+ and Vulkan semantics only |
 
 Back-end        |       Status       | Feature  | Notes |
 --------------- | ------------------ | -------- | ----- |
@@ -81,5 +81,7 @@ make validate-msl # for Metal shaders, requires XCode command-line tools install
 make validate-glsl # for OpenGL shaders, requires GLSLang installed
 make validate-dot # for dot files, requires GraphViz installed
 make validate-wgsl # for WGSL shaders
-make validate-hlsl # for HLSL shaders. Note: this Make target makes use of the "sh" shell. This is not the default shell in Windows.
+make validate-hlsl-dxc # for HLSL shaders via DXC
+make validate-hlsl-fxc # for HLSL shaders via FXC
+# Note: HLSL Make targets make use of the "sh" shell. This is not the default shell in Windows.
 ```

@@ -7,7 +7,7 @@ Frontend for [WGSL][wgsl] (WebGPU Shading Language).
 mod construction;
 mod conv;
 mod lexer;
-mod number_literals;
+mod number;
 #[cfg(test)]
 mod tests;
 
@@ -16,31 +16,24 @@ use crate::{
     proc::{
         ensure_block_returns, Alignment, Layouter, ResolveContext, ResolveError, TypeResolution,
     },
+    span::SourceLocation,
     span::Span as NagaSpan,
-    Bytes, ConstantInner, FastHashMap, ScalarValue,
+    ConstantInner, FastHashMap, ScalarValue,
 };
 
-use self::{
-    lexer::Lexer,
-    number_literals::{
-        get_f32_literal, get_i32_literal, get_u32_literal, parse_generic_non_negative_int_literal,
-        parse_non_negative_sint_literal,
-    },
-};
+use self::{lexer::Lexer, number::Number};
 use codespan_reporting::{
     diagnostic::{Diagnostic, Label},
-    files::{Files, SimpleFile},
+    files::SimpleFile,
     term::{
         self,
         termcolor::{ColorChoice, ColorSpec, StandardStream, WriteColor},
     },
 };
-use hexf_parse::ParseHexfError;
 use std::{
     borrow::Cow,
     convert::TryFrom,
     io::{self, Write},
-    num::{NonZeroU32, ParseFloatError, ParseIntError},
     ops,
 };
 use thiserror::Error;
@@ -49,18 +42,11 @@ type Span = ops::Range<usize>;
 type TokenSpan<'a> = (Token<'a>, Span);
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum NumberType {
-    Sint,
-    Uint,
-    Float,
-}
-
-#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Token<'a> {
     Separator(char),
     Paren(char),
     Attribute,
-    Number { value: &'a str, ty: NumberType },
+    Number(Result<Number, NumberError>),
     Word(&'a str),
     Operation(char),
     LogicalOperation(char),
@@ -75,13 +61,17 @@ pub enum Token<'a> {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+pub enum NumberType {
+    I32,
+    U32,
+    F32,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ExpectedToken<'a> {
     Token(Token<'a>),
     Identifier,
-    Number {
-        ty: Option<NumberType>,
-        width: Option<Bytes>,
-    },
+    Number(NumberType),
     Integer,
     Constant,
     /// Expected: constant, parenthesized expression, identifier
@@ -100,36 +90,25 @@ pub enum ExpectedToken<'a> {
     GlobalItem,
 }
 
-#[derive(Clone, Debug, Error)]
-pub enum BadIntError {
-    #[error(transparent)]
-    ParseIntError(#[from] ParseIntError),
-    #[error("non-hex negative zero integer literals are not allowed")]
-    NegativeZero,
-    #[error("leading zeros for non-hex integer literals are not allowed")]
-    LeadingZeros,
-}
-
-#[derive(Clone, Debug, Error)]
-pub enum BadFloatError {
-    #[error(transparent)]
-    ParseFloatError(#[from] ParseFloatError),
-    #[error(transparent)]
-    ParseHexfError(#[from] ParseHexfError),
+#[derive(Clone, Copy, Debug, Error, PartialEq)]
+pub enum NumberError {
+    #[error("invalid numeric literal format")]
+    Invalid,
+    #[error("numeric literal not representable by target type")]
+    NotRepresentable,
+    #[error("unimplemented f16 type")]
+    UnimplementedF16,
 }
 
 #[derive(Clone, Debug)]
 pub enum Error<'a> {
     Unexpected(TokenSpan<'a>, ExpectedToken<'a>),
     UnexpectedComponents(Span),
-    BadU32(Span, BadIntError),
-    BadI32(Span, BadIntError),
+    BadNumber(Span, NumberError),
     /// A negative signed integer literal where both signed and unsigned,
     /// but only non-negative literals are allowed.
     NegativeInt(Span),
-    BadFloat(Span, BadFloatError),
     BadU32Constant(Span),
-    BadScalarWidth(Span, Bytes),
     BadMatrixScalarKind(Span, crate::ScalarKind, u8),
     BadAccessor(Span),
     BadTexture(Span),
@@ -146,7 +125,9 @@ pub enum Error<'a> {
     BadIncrDecrReferenceType(Span),
     InvalidResolve(ResolveError),
     InvalidForInitializer(Span),
-    InvalidGatherComponent(Span, i32),
+    /// A break if appeared outside of a continuing block
+    InvalidBreakIf(Span),
+    InvalidGatherComponent(Span, u32),
     InvalidConstructorComponentType(Span, i32),
     InvalidIdentifierUnderscore(Span),
     ReservedIdentifierPrefix(Span),
@@ -160,7 +141,9 @@ pub enum Error<'a> {
     UnknownType(Span),
     UnknownStorageFormat(Span),
     UnknownConservativeDepth(Span),
-    ZeroSizeOrAlign(Span),
+    SizeAttributeTooLow(Span, u32),
+    AlignAttributeTooLow(Span, Alignment),
+    NonPowerOfTwoAlignAttribute(Span),
     InconsistentBinding(Span),
     UnknownLocalFunction(Span),
     TypeNotConstructible(Span),
@@ -191,9 +174,7 @@ impl<'a> Error<'a> {
                                 Token::Separator(c) => format!("'{}'", c),
                                 Token::Paren(c) => format!("'{}'", c),
                                 Token::Attribute => "@".to_string(),
-                                Token::Number { value, .. } => {
-                                    format!("number ({})", value)
-                                }
+                                Token::Number(_) => "number".to_string(),
                                 Token::Word(s) => s.to_string(),
                                 Token::Operation(c) => format!("operation ('{}')", c),
                                 Token::LogicalOperation(c) => format!("logical operation ('{}')", c),
@@ -209,25 +190,12 @@ impl<'a> Error<'a> {
                             }
                         }
                         ExpectedToken::Identifier => "identifier".to_string(),
-                        ExpectedToken::Number { ty, width } => {
-                            let literal_ty_str = match ty {
-                                Some(NumberType::Float) => "floating-point",
-                                Some(NumberType::Uint) => "unsigned integer",
-                                Some(NumberType::Sint) => "signed integer",
-                                None => "arbitrary number",
-                            };
-                            if let Some(width) = width {
-                                format!(
-                                    "{} literal of {}-bit width",
-                                    literal_ty_str,
-                                    width as u32 * 8,
-                                )
-                            } else {
-                                format!(
-                                    "{} literal of arbitrary width",
-                                    literal_ty_str,
-                                )
-                            }
+                        ExpectedToken::Number(ty) => {
+                            match ty {
+                                NumberType::I32 => "32-bit signed integer literal",
+                                NumberType::U32 => "32-bit unsigned integer literal",
+                                NumberType::F32 => "32-bit floating-point literal",
+                            }.to_string()
                         },
                         ExpectedToken::Integer => "unsigned/signed integer literal".to_string(),
                         ExpectedToken::Constant => "constant".to_string(),
@@ -257,21 +225,13 @@ impl<'a> Error<'a> {
                 labels: vec![(bad_span.clone(), "unexpected components".into())],
                 notes: vec![],
             },
-            Error::BadU32(ref bad_span, ref err) => ParseError {
+            Error::BadNumber(ref bad_span, ref err) => ParseError {
                 message: format!(
-                    "expected unsigned integer literal, found `{}`",
-                    &source[bad_span.clone()],
+                    "{}: `{}`",
+                    err,&source[bad_span.clone()],
                 ),
-                labels: vec![(bad_span.clone(), "expected unsigned integer".into())],
-                notes: vec![err.to_string()],
-            },
-            Error::BadI32(ref bad_span, ref err) => ParseError {
-                message: format!(
-                    "expected integer literal, found `{}`",
-                    &source[bad_span.clone()],
-                ),
-                labels: vec![(bad_span.clone(), "expected signed integer".into())],
-                notes: vec![err.to_string()],
+                labels: vec![(bad_span.clone(), err.to_string().into())],
+                notes: vec![],
             },
             Error::NegativeInt(ref bad_span) => ParseError {
                 message: format!(
@@ -281,14 +241,6 @@ impl<'a> Error<'a> {
                 labels: vec![(bad_span.clone(), "expected non-negative integer".into())],
                 notes: vec![],
             },
-            Error::BadFloat(ref bad_span, ref err) => ParseError {
-                message: format!(
-                    "expected floating-point literal, found `{}`",
-                    &source[bad_span.clone()],
-                ),
-                labels: vec![(bad_span.clone(), "expected floating-point literal".into())],
-                notes: vec![err.to_string()],
-            },
             Error::BadU32Constant(ref bad_span) => ParseError {
                 message: format!(
                     "expected unsigned integer constant expression, found `{}`",
@@ -296,11 +248,6 @@ impl<'a> Error<'a> {
                 ),
                 labels: vec![(bad_span.clone(), "expected unsigned integer".into())],
                 notes: vec![],
-            },
-            Error::BadScalarWidth(ref bad_span, width) => ParseError {
-                message: format!("invalid width of `{}` bits for literal", width as u32 * 8,),
-                labels: vec![(bad_span.clone(), "invalid width".into())],
-                notes: vec!["the only valid width is 32 for now".to_string()],
             },
             Error::BadMatrixScalarKind(
                 ref span,
@@ -360,6 +307,11 @@ impl<'a> Error<'a> {
             Error::InvalidForInitializer(ref bad_span) => ParseError {
                 message: format!("for(;;) initializer is not an assignment or a function call: '{}'", &source[bad_span.clone()]),
                 labels: vec![(bad_span.clone(), "not an assignment or function call".into())],
+                notes: vec![],
+            },
+            Error::InvalidBreakIf(ref bad_span) => ParseError {
+                message: "A break if is only allowed in a continuing block".to_string(),
+                labels: vec![(bad_span.clone(), "not in a continuing block".into())],
                 notes: vec![],
             },
             Error::InvalidGatherComponent(ref bad_span, component) => ParseError {
@@ -422,9 +374,19 @@ impl<'a> Error<'a> {
                 labels: vec![(bad_span.clone(), "unknown type".into())],
                 notes: vec![],
             },
-            Error::ZeroSizeOrAlign(ref bad_span) => ParseError {
-                message: "struct member size or alignment must not be 0".to_string(),
-                labels: vec![(bad_span.clone(), "struct member size or alignment must not be 0".into())],
+            Error::SizeAttributeTooLow(ref bad_span, min_size) => ParseError {
+                message: format!("struct member size must be at least {}", min_size),
+                labels: vec![(bad_span.clone(), format!("must be at least {}", min_size).into())],
+                notes: vec![],
+            },
+            Error::AlignAttributeTooLow(ref bad_span, min_align) => ParseError {
+                message: format!("struct member alignment must be at least {}", min_align),
+                labels: vec![(bad_span.clone(), format!("must be at least {}", min_align).into())],
+                notes: vec![],
+            },
+            Error::NonPowerOfTwoAlignAttribute(ref bad_span) => ParseError {
+                message: "struct member alignment must be a power of 2".to_string(),
+                labels: vec![(bad_span.clone(), "must be a power of 2".into())],
                 notes: vec![],
             },
             Error::InconsistentBinding(ref span) => ParseError {
@@ -1193,8 +1155,8 @@ impl Composition {
 #[derive(Default)]
 struct TypeAttributes {
     // Although WGSL nas no type attributes at the moment, it had them in the past
-// (`[[stride]]`) and may as well acquire some again in the future.
-// Therefore, we are leaving the plumbing in for now.
+    // (`[[stride]]`) and may as well acquire some again in the future.
+    // Therefore, we are leaving the plumbing in for now.
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -1234,7 +1196,7 @@ impl BindingParser {
         match name {
             "location" => {
                 lexer.expect(Token::Paren('('))?;
-                self.location = Some(parse_non_negative_sint_literal(lexer, 4)?);
+                self.location = Some(Parser::parse_non_negative_i32_literal(lexer)?);
                 lexer.expect(Token::Paren(')'))?;
             }
             "builtin" => {
@@ -1365,19 +1327,11 @@ impl ParseError {
         writer.into_string()
     }
 
-    /// Returns the 1-based line number and column of the first label in the
-    /// error message.
-    pub fn location(&self, source: &str) -> (usize, usize) {
-        let files = SimpleFile::new("wgsl", source);
-        match self.labels.get(0) {
-            Some(label) => {
-                let location = files
-                    .location((), label.0.start)
-                    .expect("invalid span location");
-                (location.line_number, location.column_number)
-            }
-            None => (1, 1),
-        }
+    /// Returns a [`SourceLocation`] for the first label in the error message.
+    pub fn location(&self, source: &str) -> Option<SourceLocation> {
+        self.labels
+            .get(0)
+            .map(|label| NagaSpan::new(label.0.start as u32, label.0.end as u32).location(source))
     }
 }
 
@@ -1431,38 +1385,45 @@ impl Parser {
         lexer.span_from(initial)
     }
 
-    fn get_constant_inner<'a>(
-        word: &'a str,
-        ty: NumberType,
-        token_span: TokenSpan<'a>,
-    ) -> Result<ConstantInner, Error<'a>> {
-        let span = token_span.1;
-
-        let value = match ty {
-            NumberType::Sint => {
-                get_i32_literal(word, span).map(|val| crate::ScalarValue::Sint(val as i64))?
-            }
-            NumberType::Uint => {
-                get_u32_literal(word, span).map(|val| crate::ScalarValue::Uint(val as u64))?
-            }
-            NumberType::Float => {
-                get_f32_literal(word, span).map(|val| crate::ScalarValue::Float(val as f64))?
-            }
-        };
-
-        Ok(crate::ConstantInner::Scalar { value, width: 4 })
-    }
-
     fn parse_switch_value<'a>(lexer: &mut Lexer<'a>, uint: bool) -> Result<i32, Error<'a>> {
         let token_span = lexer.next();
-        let word = match token_span.0 {
-            Token::Number { value, .. } => value,
-            _ => return Err(Error::Unexpected(token_span, ExpectedToken::Integer)),
-        };
+        match token_span.0 {
+            Token::Number(Ok(Number::U32(num))) if uint => Ok(num as i32),
+            Token::Number(Ok(Number::I32(num))) if !uint => Ok(num),
+            Token::Number(Err(e)) => Err(Error::BadNumber(token_span.1, e)),
+            _ => Err(Error::Unexpected(token_span, ExpectedToken::Integer)),
+        }
+    }
 
-        match uint {
-            true => get_u32_literal(word, token_span.1).map(|v| v as i32),
-            false => get_i32_literal(word, token_span.1),
+    /// Parse a non-negative signed integer literal.
+    /// This is for attributes like `size`, `location` and others.
+    fn parse_non_negative_i32_literal<'a>(lexer: &mut Lexer<'a>) -> Result<u32, Error<'a>> {
+        match lexer.next() {
+            (Token::Number(Ok(Number::I32(num))), span) => {
+                u32::try_from(num).map_err(|_| Error::NegativeInt(span))
+            }
+            (Token::Number(Err(e)), span) => Err(Error::BadNumber(span, e)),
+            other => Err(Error::Unexpected(
+                other,
+                ExpectedToken::Number(NumberType::I32),
+            )),
+        }
+    }
+
+    /// Parse a non-negative integer literal that may be either signed or unsigned.
+    /// This is for the `workgroup_size` attribute and array lengths.
+    /// Note: these values should be no larger than [`i32::MAX`], but this is not checked here.
+    fn parse_generic_non_negative_int_literal<'a>(lexer: &mut Lexer<'a>) -> Result<u32, Error<'a>> {
+        match lexer.next() {
+            (Token::Number(Ok(Number::I32(num))), span) => {
+                u32::try_from(num).map_err(|_| Error::NegativeInt(span))
+            }
+            (Token::Number(Ok(Number::U32(num))), _) => Ok(num),
+            (Token::Number(Err(e)), span) => Err(Error::BadNumber(span, e)),
+            other => Err(Error::Unexpected(
+                other,
+                ExpectedToken::Number(NumberType::I32),
+            )),
         }
     }
 
@@ -1615,7 +1576,7 @@ impl Parser {
                 "bitcast" => {
                     let _ = lexer.next();
                     lexer.expect_generic_paren('<')?;
-                    let ((ty, _access), type_span) = lexer.capture_span(|lexer| {
+                    let (ty, type_span) = lexer.capture_span(|lexer| {
                         self.parse_type_decl(lexer, None, ctx.types, ctx.constants)
                     })?;
                     lexer.expect_generic_paren('>')?;
@@ -2006,17 +1967,9 @@ impl Parser {
                 "textureGather" => {
                     let _ = lexer.next();
                     lexer.open_arguments()?;
-                    let component = if let (
-                        Token::Number {
-                            value,
-                            ty: NumberType::Sint,
-                        },
-                        span,
-                    ) = lexer.peek()
-                    {
-                        let _ = lexer.next();
+                    let component = if let (Token::Number(..), span) = lexer.peek() {
+                        let index = Self::parse_non_negative_i32_literal(lexer)?;
                         lexer.expect(Token::Separator(','))?;
-                        let index = get_i32_literal(value, span.clone())?;
                         *crate::SwizzleComponent::XYZW
                             .get(index as usize)
                             .ok_or(Error::InvalidGatherComponent(span, index))?
@@ -2219,9 +2172,22 @@ impl Parser {
         let inner = match first_token_span {
             (Token::Word("true"), _) => crate::ConstantInner::boolean(true),
             (Token::Word("false"), _) => crate::ConstantInner::boolean(false),
-            (Token::Number { value, ty }, _) => {
-                Self::get_constant_inner(value, ty, first_token_span)?
-            }
+            (Token::Number(num), _) => match num {
+                Ok(Number::I32(num)) => crate::ConstantInner::Scalar {
+                    value: crate::ScalarValue::Sint(num as i64),
+                    width: 4,
+                },
+                Ok(Number::U32(num)) => crate::ConstantInner::Scalar {
+                    value: crate::ScalarValue::Uint(num as u64),
+                    width: 4,
+                },
+                Ok(Number::F32(num)) => crate::ConstantInner::Scalar {
+                    value: crate::ScalarValue::Float(num as f64),
+                    width: 4,
+                },
+                Ok(Number::AbstractInt(_) | Number::AbstractFloat(_)) => unreachable!(),
+                Err(e) => return Err(Error::BadNumber(first_token_span.1, e)),
+            },
             (Token::Word(name), name_span) => {
                 // look for an existing constant first
                 for (handle, var) in const_arena.iter() {
@@ -2312,10 +2278,8 @@ impl Parser {
                 self.pop_scope(lexer);
                 expr
             }
-            token @ (Token::Word("true" | "false") | Token::Number { .. }, _) => {
-                let _ = lexer.next();
-                let const_handle =
-                    self.parse_const_expression_impl(token, lexer, None, ctx.types, ctx.constants)?;
+            (Token::Word("true" | "false") | Token::Number(..), _) => {
+                let const_handle = self.parse_const_expression(lexer, ctx.types, ctx.constants)?;
                 let span = NagaSpan::from(self.pop_scope(lexer));
                 TypedExpression::non_reference(
                     ctx.interrupt_emitter(crate::Expression::Constant(const_handle), span),
@@ -2781,11 +2745,11 @@ impl Parser {
         lexer: &mut Lexer<'a>,
         type_arena: &mut UniqueArena<crate::Type>,
         const_arena: &mut Arena<crate::Constant>,
-    ) -> Result<(&'a str, Span, Handle<crate::Type>, crate::StorageAccess), Error<'a>> {
+    ) -> Result<(&'a str, Span, Handle<crate::Type>), Error<'a>> {
         let (name, name_span) = lexer.next_ident_with_span()?;
         lexer.expect(Token::Separator(':'))?;
-        let (ty, access) = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
-        Ok((name, name_span, ty, access))
+        let ty = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
+        Ok((name, name_span, ty))
     }
 
     fn parse_variable_decl<'a>(
@@ -2815,7 +2779,7 @@ impl Parser {
         }
         let name = lexer.next_ident()?;
         lexer.expect(Token::Separator(':'))?;
-        let (ty, _access) = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
+        let ty = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
 
         let init = if lexer.skip(Token::Operation('=')) {
             let handle = self.parse_const_expression(lexer, type_arena, const_arena)?;
@@ -2841,7 +2805,7 @@ impl Parser {
         const_arena: &mut Arena<crate::Constant>,
     ) -> Result<(Vec<crate::StructMember>, u32), Error<'a>> {
         let mut offset = 0;
-        let mut alignment = Alignment::new(1).unwrap();
+        let mut struct_alignment = Alignment::ONE;
         let mut members = Vec::new();
 
         lexer.expect(Token::Paren('{'))?;
@@ -2853,30 +2817,32 @@ impl Parser {
                     ExpectedToken::Token(Token::Separator(',')),
                 ));
             }
-            let (mut size, mut align) = (None, None);
+            let (mut size_attr, mut align_attr) = (None, None);
             self.push_scope(Scope::Attribute, lexer);
             let mut bind_parser = BindingParser::default();
             while lexer.skip(Token::Attribute) {
                 match lexer.next_ident_with_span()? {
                     ("size", _) => {
                         lexer.expect(Token::Paren('('))?;
-                        let (value, span) = lexer
-                            .capture_span(|lexer| parse_non_negative_sint_literal(lexer, 4))?;
+                        let (value, span) =
+                            lexer.capture_span(Self::parse_non_negative_i32_literal)?;
                         lexer.expect(Token::Paren(')'))?;
-                        size = Some(NonZeroU32::new(value).ok_or(Error::ZeroSizeOrAlign(span))?);
+                        size_attr = Some((value, span));
                     }
                     ("align", _) => {
                         lexer.expect(Token::Paren('('))?;
-                        let (value, span) = lexer
-                            .capture_span(|lexer| parse_non_negative_sint_literal(lexer, 4))?;
+                        let (value, span) =
+                            lexer.capture_span(Self::parse_non_negative_i32_literal)?;
                         lexer.expect(Token::Paren(')'))?;
-                        align = Some(NonZeroU32::new(value).ok_or(Error::ZeroSizeOrAlign(span))?);
+                        align_attr = Some((value, span));
                     }
                     (word, word_span) => bind_parser.parse(lexer, word, word_span)?,
                 }
             }
 
             let bind_span = self.pop_scope(lexer);
+            let mut binding = bind_parser.finish(bind_span)?;
+
             let (name, span) = match lexer.next() {
                 (Token::Word(word), span) => (word, span),
                 other => return Err(Error::Unexpected(other, ExpectedToken::FieldName)),
@@ -2885,29 +2851,57 @@ impl Parser {
                 return Err(Error::ReservedKeyword(span));
             }
             lexer.expect(Token::Separator(':'))?;
-            let (ty, _access) = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
+            let ty = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
             ready = lexer.skip(Token::Separator(','));
 
             self.layouter.update(type_arena, const_arena).unwrap();
 
-            let (range, align) = self.layouter.member_placement(offset, ty, align, size);
-            alignment = alignment.max(align);
-            offset = range.end;
+            let member_min_size = self.layouter[ty].size;
+            let member_min_alignment = self.layouter[ty].alignment;
 
-            let mut binding = bind_parser.finish(bind_span)?;
+            let member_size = if let Some((size, span)) = size_attr {
+                if size < member_min_size {
+                    return Err(Error::SizeAttributeTooLow(span, member_min_size));
+                } else {
+                    size
+                }
+            } else {
+                member_min_size
+            };
+
+            let member_alignment = if let Some((align, span)) = align_attr {
+                if let Some(alignment) = Alignment::new(align) {
+                    if alignment < member_min_alignment {
+                        return Err(Error::AlignAttributeTooLow(span, member_min_alignment));
+                    } else {
+                        alignment
+                    }
+                } else {
+                    return Err(Error::NonPowerOfTwoAlignAttribute(span));
+                }
+            } else {
+                member_min_alignment
+            };
+
+            offset = member_alignment.round_up(offset);
+            struct_alignment = struct_alignment.max(member_alignment);
+
             if let Some(ref mut binding) = binding {
                 binding.apply_default_interpolation(&type_arena[ty].inner);
             }
+
             members.push(crate::StructMember {
                 name: Some(name.to_owned()),
                 ty,
                 binding,
-                offset: range.start,
+                offset,
             });
+
+            offset += member_size;
         }
 
-        let span = Layouter::round_up(alignment, offset);
-        Ok((members, span))
+        let struct_size = struct_alignment.round_up(offset);
+        Ok((members, struct_size))
     }
 
     fn parse_matrix_scalar_type<'a>(
@@ -3012,7 +3006,7 @@ impl Parser {
                 let (ident, span) = lexer.next_ident_with_span()?;
                 let mut space = conv::map_address_space(ident, span)?;
                 lexer.expect(Token::Separator(','))?;
-                let (base, _access) = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
+                let base = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
                 if let crate::AddressSpace::Storage { ref mut access } = space {
                     *access = if lexer.skip(Token::Separator(',')) {
                         lexer.next_storage_access()?
@@ -3025,7 +3019,7 @@ impl Parser {
             }
             "array" => {
                 lexer.expect_generic_paren('<')?;
-                let (base, _access) = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
+                let base = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
                 let size = if lexer.skip(Token::Separator(',')) {
                     let const_handle =
                         self.parse_const_expression(lexer, type_arena, const_arena)?;
@@ -3043,7 +3037,7 @@ impl Parser {
             }
             "binding_array" => {
                 lexer.expect_generic_paren('<')?;
-                let (base, _access) = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
+                let base = self.parse_type_decl(lexer, None, type_arena, const_arena)?;
                 let size = if lexer.skip(Token::Separator(',')) {
                     let const_handle =
                         self.parse_const_expression(lexer, type_arena, const_arena)?;
@@ -3258,7 +3252,7 @@ impl Parser {
         debug_name: Option<&'a str>,
         type_arena: &mut UniqueArena<crate::Type>,
         const_arena: &mut Arena<crate::Constant>,
-    ) -> Result<(Handle<crate::Type>, crate::StorageAccess), Error<'a>> {
+    ) -> Result<Handle<crate::Type>, Error<'a>> {
         self.push_scope(Scope::TypeDecl, lexer);
         let attribute = TypeAttributes::default();
 
@@ -3267,7 +3261,6 @@ impl Parser {
             return Err(Error::Unexpected(other, ExpectedToken::TypeAttribute));
         }
 
-        let storage_access = crate::StorageAccess::default();
         let (name, name_span) = lexer.next_ident_with_span()?;
         let handle = self.parse_type_decl_name(
             lexer,
@@ -3282,7 +3275,7 @@ impl Parser {
         // Only set span if it's the first occurrence of the type.
         // Type spans therefore should only be used for errors in type declarations;
         // use variable spans/expression spans/etc. otherwise
-        Ok((handle, storage_access))
+        Ok(handle)
     }
 
     /// Parse an assignment statement (will also parse increment and decrement statements)
@@ -3510,7 +3503,7 @@ impl Parser {
                             return Err(Error::ReservedKeyword(name_span));
                         }
                         let given_ty = if lexer.skip(Token::Separator(':')) {
-                            let (ty, _access) = self.parse_type_decl(
+                            let ty = self.parse_type_decl(
                                 lexer,
                                 None,
                                 context.types,
@@ -3571,7 +3564,7 @@ impl Parser {
                             return Err(Error::ReservedKeyword(name_span));
                         }
                         let given_ty = if lexer.skip(Token::Separator(':')) {
-                            let (ty, _access) = self.parse_type_decl(
+                            let ty = self.parse_type_decl(
                                 lexer,
                                 None,
                                 context.types,
@@ -3825,26 +3818,7 @@ impl Parser {
 
                         Some(crate::Statement::Switch { selector, cases })
                     }
-                    "loop" => {
-                        let _ = lexer.next();
-                        let mut body = crate::Block::new();
-                        let mut continuing = crate::Block::new();
-                        lexer.expect(Token::Paren('{'))?;
-
-                        loop {
-                            if lexer.skip(Token::Word("continuing")) {
-                                continuing = self.parse_block(lexer, context.reborrow(), false)?;
-                                lexer.expect(Token::Paren('}'))?;
-                                break;
-                            }
-                            if lexer.skip(Token::Paren('}')) {
-                                break;
-                            }
-                            self.parse_statement(lexer, context.reborrow(), &mut body, false)?;
-                        }
-
-                        Some(crate::Statement::Loop { body, continuing })
-                    }
+                    "loop" => Some(self.parse_loop(lexer, context.reborrow(), &mut emitter)?),
                     "while" => {
                         let _ = lexer.next();
                         let mut body = crate::Block::new();
@@ -3877,6 +3851,7 @@ impl Parser {
                         Some(crate::Statement::Loop {
                             body,
                             continuing: crate::Block::new(),
+                            break_if: None,
                         })
                     }
                     "for" => {
@@ -3949,10 +3924,22 @@ impl Parser {
                             self.parse_statement(lexer, context.reborrow(), &mut body, false)?;
                         }
 
-                        Some(crate::Statement::Loop { body, continuing })
+                        Some(crate::Statement::Loop {
+                            body,
+                            continuing,
+                            break_if: None,
+                        })
                     }
                     "break" => {
-                        let _ = lexer.next();
+                        let (_, mut span) = lexer.next();
+                        // Check if the next token is an `if`, this indicates
+                        // that the user tried to type out a `break if` which
+                        // is illegal in this position.
+                        let (peeked_token, peeked_span) = lexer.peek();
+                        if let Token::Word("if") = peeked_token {
+                            span.end = peeked_span.end;
+                            return Err(Error::InvalidBreakIf(span));
+                        }
                         Some(crate::Statement::Break)
                     }
                     "continue" => {
@@ -4055,6 +4042,84 @@ impl Parser {
         Ok(())
     }
 
+    fn parse_loop<'a>(
+        &mut self,
+        lexer: &mut Lexer<'a>,
+        mut context: StatementContext<'a, '_, '_>,
+        emitter: &mut super::Emitter,
+    ) -> Result<crate::Statement, Error<'a>> {
+        let _ = lexer.next();
+        let mut body = crate::Block::new();
+        let mut continuing = crate::Block::new();
+        let mut break_if = None;
+        lexer.expect(Token::Paren('{'))?;
+
+        loop {
+            if lexer.skip(Token::Word("continuing")) {
+                // Branch for the `continuing` block, this must be
+                // the last thing in the loop body
+
+                // Expect a opening brace to start the continuing block
+                lexer.expect(Token::Paren('{'))?;
+                loop {
+                    if lexer.skip(Token::Word("break")) {
+                        // Branch for the `break if` statement, this statement
+                        // has the form `break if <expr>;` and must be the last
+                        // statement in a continuing block
+
+                        // The break must be followed by an `if` to form
+                        // the break if
+                        lexer.expect(Token::Word("if"))?;
+
+                        // Start the emitter to begin parsing an expression
+                        emitter.start(context.expressions);
+                        let condition = self.parse_general_expression(
+                            lexer,
+                            context.as_expression(&mut body, emitter),
+                        )?;
+                        // Add all emits to the continuing body
+                        continuing.extend(emitter.finish(context.expressions));
+                        // Set the condition of the break if to the newly parsed
+                        // expression
+                        break_if = Some(condition);
+
+                        // Expext a semicolon to close the statement
+                        lexer.expect(Token::Separator(';'))?;
+                        // Expect a closing brace to close the continuing block,
+                        // since the break if must be the last statement
+                        lexer.expect(Token::Paren('}'))?;
+                        // Stop parsing the continuing block
+                        break;
+                    } else if lexer.skip(Token::Paren('}')) {
+                        // If we encounter a closing brace it means we have reached
+                        // the end of the continuing block and should stop processing
+                        break;
+                    } else {
+                        // Otherwise try to parse a statement
+                        self.parse_statement(lexer, context.reborrow(), &mut continuing, false)?;
+                    }
+                }
+                // Since the continuing block must be the last part of the loop body,
+                // we expect to see a closing brace to end the loop body
+                lexer.expect(Token::Paren('}'))?;
+                break;
+            }
+            if lexer.skip(Token::Paren('}')) {
+                // If we encounter a closing brace it means we have reached
+                // the end of the loop body and should stop processing
+                break;
+            }
+            // Otherwise try to parse a statement
+            self.parse_statement(lexer, context.reborrow(), &mut body, false)?;
+        }
+
+        Ok(crate::Statement::Loop {
+            body,
+            continuing,
+            break_if,
+        })
+    }
+
     fn parse_block<'a>(
         &mut self,
         lexer: &mut Lexer<'a>,
@@ -4146,7 +4211,7 @@ impl Parser {
                 ));
             }
             let mut binding = self.parse_varying_binding(lexer)?;
-            let (param_name, param_name_span, param_type, _access) =
+            let (param_name, param_name_span, param_type) =
                 self.parse_variable_ident_decl(lexer, &mut module.types, &mut module.constants)?;
             if crate::keywords::wgsl::RESERVED.contains(&param_name) {
                 return Err(Error::ReservedKeyword(param_name_span));
@@ -4176,8 +4241,7 @@ impl Parser {
         // read return type
         let result = if lexer.skip(Token::Arrow) && !lexer.skip(Token::Word("void")) {
             let mut binding = self.parse_varying_binding(lexer)?;
-            let (ty, _access) =
-                self.parse_type_decl(lexer, None, &mut module.types, &mut module.constants)?;
+            let ty = self.parse_type_decl(lexer, None, &mut module.types, &mut module.constants)?;
             if let Some(ref mut binding) = binding {
                 binding.apply_default_interpolation(&module.types[ty].inner);
             }
@@ -4244,12 +4308,12 @@ impl Parser {
             match lexer.next_ident_with_span()? {
                 ("binding", _) => {
                     lexer.expect(Token::Paren('('))?;
-                    bind_index = Some(parse_non_negative_sint_literal(lexer, 4)?);
+                    bind_index = Some(Self::parse_non_negative_i32_literal(lexer)?);
                     lexer.expect(Token::Paren(')'))?;
                 }
                 ("group", _) => {
                     lexer.expect(Token::Paren('('))?;
-                    bind_group = Some(parse_non_negative_sint_literal(lexer, 4)?);
+                    bind_group = Some(Self::parse_non_negative_i32_literal(lexer)?);
                     lexer.expect(Token::Paren(')'))?;
                 }
                 ("vertex", _) => {
@@ -4263,8 +4327,9 @@ impl Parser {
                 }
                 ("workgroup_size", _) => {
                     lexer.expect(Token::Paren('('))?;
+                    workgroup_size = [1u32; 3];
                     for (i, size) in workgroup_size.iter_mut().enumerate() {
-                        *size = parse_generic_non_negative_int_literal(lexer, 4)?;
+                        *size = Self::parse_generic_non_negative_int_literal(lexer)?;
                         match lexer.next() {
                             (Token::Paren(')'), _) => break,
                             (Token::Separator(','), _) if i != 2 => (),
@@ -4274,11 +4339,6 @@ impl Parser {
                                     ExpectedToken::WorkgroupSizeSeparator,
                                 ))
                             }
-                        }
-                    }
-                    for size in workgroup_size.iter_mut() {
-                        if *size == 0 {
-                            *size = 1;
                         }
                     }
                 }
@@ -4334,7 +4394,7 @@ impl Parser {
             (Token::Word("type"), _) => {
                 let name = lexer.next_ident()?;
                 lexer.expect(Token::Operation('='))?;
-                let (ty, _access) = self.parse_type_decl(
+                let ty = self.parse_type_decl(
                     lexer,
                     Some(name),
                     &mut module.types,
@@ -4358,7 +4418,7 @@ impl Parser {
                     });
                 }
                 let given_ty = if lexer.skip(Token::Separator(':')) {
-                    let (ty, _access) = self.parse_type_decl(
+                    let ty = self.parse_type_decl(
                         lexer,
                         None,
                         &mut module.types,

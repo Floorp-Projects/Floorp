@@ -1556,7 +1556,7 @@ fn inject_common_builtin(
                 };
                 declaration.overloads.push(module.add_builtin(
                     vec![ty(), ty(), base_ty()],
-                    MacroCall::MathFunction(MathFunction::SmoothStep),
+                    MacroCall::SmoothStep { splatted: size },
                 ))
             }
         }
@@ -1604,6 +1604,12 @@ pub enum MacroCall {
     BitCast(Sk),
     Derivate(DerivativeAxis),
     Barrier,
+    /// SmoothStep needs a separate variant because it might need it's inputs
+    /// to be splatted depending on the overload
+    SmoothStep {
+        /// The size of the splat operation if some
+        splatted: Option<VectorSize>,
+    },
 }
 
 impl MacroCall {
@@ -2072,6 +2078,22 @@ impl MacroCall {
                 body.push(crate::Statement::Barrier(crate::Barrier::all()), meta);
                 return Ok(None);
             }
+            MacroCall::SmoothStep { splatted } => {
+                ctx.implicit_splat(parser, &mut args[0], meta, splatted)?;
+                ctx.implicit_splat(parser, &mut args[1], meta, splatted)?;
+
+                ctx.add_expression(
+                    Expression::Math {
+                        fun: MathFunction::SmoothStep,
+                        arg: args[0],
+                        arg1: args.get(1).copied(),
+                        arg2: args.get(2).copied(),
+                        arg3: None,
+                    },
+                    Span::default(),
+                    body,
+                )
+            }
         }))
     }
 }
@@ -2237,20 +2259,26 @@ pub fn sampled_to_depth(
     meta: Span,
     errors: &mut Vec<Error>,
 ) {
+    // Get the a mutable type handle of the underlying image storage
     let ty = match ctx[image] {
         Expression::GlobalVariable(handle) => &mut module.global_variables.get_mut(handle).ty,
         Expression::FunctionArgument(i) => {
+            // Mark the function argument as carrying a depth texture
             ctx.parameters_info[i as usize].depth = true;
+            // NOTE: We need to later also change the parameter type
             &mut ctx.arguments[i as usize].ty
         }
         _ => {
+            // Only globals and function arguments are allowed to carry an image
             return errors.push(Error {
                 kind: ErrorKind::SemanticError("Not a valid texture expression".into()),
                 meta,
-            })
+            });
         }
     };
+
     match module.types[*ty].inner {
+        // Update the image class to depth in case it already isn't
         TypeInner::Image {
             class,
             dim,
@@ -2270,6 +2298,7 @@ pub fn sampled_to_depth(
                 )
             }
             ImageClass::Depth { .. } => {}
+            // Other image classes aren't allowed to be transformed to depth
             _ => errors.push(Error {
                 kind: ErrorKind::SemanticError("Not a texture".into()),
                 meta,
@@ -2280,6 +2309,15 @@ pub fn sampled_to_depth(
             meta,
         }),
     };
+
+    // Copy the handle to allow borrowing the `ctx` again
+    let ty = *ty;
+
+    // If the image was passed trough a function argument we also need to change
+    // the corresponding parameter
+    if let Expression::FunctionArgument(i) = ctx[image] {
+        ctx.parameters[i as usize] = ty;
+    }
 }
 
 bitflags::bitflags! {

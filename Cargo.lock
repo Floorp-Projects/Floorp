@@ -69,6 +69,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "android_system_properties"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a20ae67ce26261f218e2b3f2f0d01887a9818283ca6fb260fa7c67e253d61c92"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3587,7 +3596,7 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 [[package]]
 name = "naga"
 version = "0.8.0"
-source = "git+https://github.com/gfx-rs/naga?rev=571302e#571302e3ff09cb856f63a3683da308159872b7cc"
+source = "git+https://github.com/gfx-rs/naga?rev=27d38aae#27d38aae33fdbfa72197847038cb470720594cb1"
 dependencies = [
  "bit-set",
  "bitflags",
@@ -6095,7 +6104,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.12.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=32af4f56#32af4f56079fd2203c46c9c452cfe33fd60a5721"
+source = "git+https://github.com/gfx-rs/wgpu?rev=b370b990#b370b990e543bd8c74c895a0f856604368806e5c"
 dependencies = [
  "arrayvec",
  "bit-vec",
@@ -6112,6 +6121,7 @@ dependencies = [
  "serde",
  "smallvec",
  "thiserror",
+ "web-sys",
  "wgpu-hal",
  "wgpu-types",
 ]
@@ -6119,8 +6129,9 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.12.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=32af4f56#32af4f56079fd2203c46c9c452cfe33fd60a5721"
+source = "git+https://github.com/gfx-rs/wgpu?rev=b370b990#b370b990e543bd8c74c895a0f856604368806e5c"
 dependencies = [
+ "android_system_properties",
  "arrayvec",
  "ash",
  "bit-set",
@@ -6156,7 +6167,7 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.12.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=32af4f56#32af4f56079fd2203c46c9c452cfe33fd60a5721"
+source = "git+https://github.com/gfx-rs/wgpu?rev=b370b990#b370b990e543bd8c74c895a0f856604368806e5c"
 dependencies = [
  "bitflags",
  "bitflags_serde_shim",
