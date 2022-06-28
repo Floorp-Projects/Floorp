@@ -17,10 +17,10 @@ namespace gfx {
 
 #ifdef HAVE_YCBCR_TO_RGB565
 // Convert a frame of YUV to 16 bit RGB565.
-void ConvertYCbCrToRGB565(const uint8* yplane,
-                                   const uint8* uplane,
-                                   const uint8* vplane,
-                                   uint8* rgbframe,
+void ConvertYCbCrToRGB565(const uint8_t* yplane,
+                                   const uint8_t* uplane,
+                                   const uint8_t* vplane,
+                                   uint8_t* rgbframe,
                                    int pic_x,
                                    int pic_y,
                                    int pic_width,

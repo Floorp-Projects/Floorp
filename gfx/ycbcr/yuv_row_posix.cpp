@@ -14,10 +14,10 @@ extern "C" {
 // We don't need CPUID guards here, since x86-64 implies SSE2.
 
 // AMD64 ABI uses register paremters.
-void FastConvertYUVToRGB32Row(const uint8* y_buf,  // rdi
-                              const uint8* u_buf,  // rsi
-                              const uint8* v_buf,  // rdx
-                              uint8* rgb_buf,      // rcx
+void FastConvertYUVToRGB32Row(const uint8_t* y_buf,  // rdi
+                              const uint8_t* u_buf,  // rsi
+                              const uint8_t* v_buf,  // rdx
+                              uint8_t* rgb_buf,      // rcx
                               int width) {         // r8
   asm volatile(
   "jmp    1f\n"
@@ -71,10 +71,10 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,  // rdi
 );
 }
 
-void ScaleYUVToRGB32Row(const uint8* y_buf,  // rdi
-                        const uint8* u_buf,  // rsi
-                        const uint8* v_buf,  // rdx
-                        uint8* rgb_buf,      // rcx
+void ScaleYUVToRGB32Row(const uint8_t* y_buf,  // rdi
+                        const uint8_t* u_buf,  // rsi
+                        const uint8_t* v_buf,  // rdx
+                        uint8_t* rgb_buf,      // rcx
                         int width,           // r8
                         int source_dx) {     // r9
   asm volatile(
@@ -139,10 +139,10 @@ void ScaleYUVToRGB32Row(const uint8* y_buf,  // rdi
 );
 }
 
-void LinearScaleYUVToRGB32Row(const uint8* y_buf,
-                              const uint8* u_buf,
-                              const uint8* v_buf,
-                              uint8* rgb_buf,
+void LinearScaleYUVToRGB32Row(const uint8_t* y_buf,
+                              const uint8_t* u_buf,
+                              const uint8_t* v_buf,
+                              uint8_t* rgb_buf,
                               int width,
                               int source_dx) {
   asm volatile(
@@ -259,10 +259,10 @@ void LinearScaleYUVToRGB32Row(const uint8* y_buf,
 
 // PIC version is slower because less registers are available, so
 // non-PIC is used on platforms where it is possible.
-void FastConvertYUVToRGB32Row_SSE(const uint8* y_buf,
-                                  const uint8* u_buf,
-                                  const uint8* v_buf,
-                                  uint8* rgb_buf,
+void FastConvertYUVToRGB32Row_SSE(const uint8_t* y_buf,
+                                  const uint8_t* u_buf,
+                                  const uint8_t* v_buf,
+                                  uint8_t* rgb_buf,
                                   int width);
   asm(
   ".text\n"
@@ -321,10 +321,10 @@ void FastConvertYUVToRGB32Row_SSE(const uint8* y_buf,
 #endif
 );
 
-void FastConvertYUVToRGB32Row(const uint8* y_buf,
-                              const uint8* u_buf,
-                              const uint8* v_buf,
-                              uint8* rgb_buf,
+void FastConvertYUVToRGB32Row(const uint8_t* y_buf,
+                              const uint8_t* u_buf,
+                              const uint8_t* v_buf,
+                              uint8_t* rgb_buf,
                               int width)
 {
   if (mozilla::supports_sse()) {
@@ -336,10 +336,10 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,
 }
 
 
-void ScaleYUVToRGB32Row_SSE(const uint8* y_buf,
-                            const uint8* u_buf,
-                            const uint8* v_buf,
-                            uint8* rgb_buf,
+void ScaleYUVToRGB32Row_SSE(const uint8_t* y_buf,
+                            const uint8_t* u_buf,
+                            const uint8_t* v_buf,
+                            uint8_t* rgb_buf,
                             int width,
                             int source_dx);
   asm(
@@ -414,10 +414,10 @@ void ScaleYUVToRGB32Row_SSE(const uint8* y_buf,
 #endif
 );
 
-void ScaleYUVToRGB32Row(const uint8* y_buf,
-                        const uint8* u_buf,
-                        const uint8* v_buf,
-                        uint8* rgb_buf,
+void ScaleYUVToRGB32Row(const uint8_t* y_buf,
+                        const uint8_t* u_buf,
+                        const uint8_t* v_buf,
+                        uint8_t* rgb_buf,
                         int width,
                         int source_dx)
 {
@@ -431,10 +431,10 @@ void ScaleYUVToRGB32Row(const uint8* y_buf,
                        width, source_dx);
 }
 
-void LinearScaleYUVToRGB32Row_SSE(const uint8* y_buf,
-                                  const uint8* u_buf,
-                                  const uint8* v_buf,
-                                  uint8* rgb_buf,
+void LinearScaleYUVToRGB32Row_SSE(const uint8_t* y_buf,
+                                  const uint8_t* u_buf,
+                                  const uint8_t* v_buf,
+                                  uint8_t* rgb_buf,
                                   int width,
                                   int source_dx);
   asm(
@@ -546,10 +546,10 @@ void LinearScaleYUVToRGB32Row_SSE(const uint8* y_buf,
 #endif
 );
 
-void LinearScaleYUVToRGB32Row(const uint8* y_buf,
-                              const uint8* u_buf,
-                              const uint8* v_buf,
-                              uint8* rgb_buf,
+void LinearScaleYUVToRGB32Row(const uint8_t* y_buf,
+                              const uint8_t* u_buf,
+                              const uint8_t* v_buf,
+                              uint8_t* rgb_buf,
                               int width,
                               int source_dx)
 {
@@ -565,12 +565,12 @@ void LinearScaleYUVToRGB32Row(const uint8* y_buf,
 
 #elif defined(MOZILLA_MAY_SUPPORT_SSE) && defined(ARCH_CPU_X86_32) && defined(__PIC__)
 
-void PICConvertYUVToRGB32Row_SSE(const uint8* y_buf,
-                                 const uint8* u_buf,
-                                 const uint8* v_buf,
-                                 uint8* rgb_buf,
+void PICConvertYUVToRGB32Row_SSE(const uint8_t* y_buf,
+                                 const uint8_t* u_buf,
+                                 const uint8_t* v_buf,
+                                 uint8_t* rgb_buf,
                                  int width,
-                                 const int16 *kCoefficientsRgbY);
+                                 const int16_t *kCoefficientsRgbY);
 
   asm(
   ".text\n"
@@ -632,10 +632,10 @@ void PICConvertYUVToRGB32Row_SSE(const uint8* y_buf,
 #endif
 );
 
-void FastConvertYUVToRGB32Row(const uint8* y_buf,
-                              const uint8* u_buf,
-                              const uint8* v_buf,
-                              uint8* rgb_buf,
+void FastConvertYUVToRGB32Row(const uint8_t* y_buf,
+                              const uint8_t* u_buf,
+                              const uint8_t* v_buf,
+                              uint8_t* rgb_buf,
                               int width)
 {
   if (mozilla::supports_sse()) {
@@ -647,13 +647,13 @@ void FastConvertYUVToRGB32Row(const uint8* y_buf,
   FastConvertYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf, width, 1);
 }
 
-void PICScaleYUVToRGB32Row_SSE(const uint8* y_buf,
-                               const uint8* u_buf,
-                               const uint8* v_buf,
-                               uint8* rgb_buf,
+void PICScaleYUVToRGB32Row_SSE(const uint8_t* y_buf,
+                               const uint8_t* u_buf,
+                               const uint8_t* v_buf,
+                               uint8_t* rgb_buf,
                                int width,
                                int source_dx,
-                               const int16 *kCoefficientsRgbY);
+                               const int16_t *kCoefficientsRgbY);
 
   asm(
   ".text\n"
@@ -729,10 +729,10 @@ void PICScaleYUVToRGB32Row_SSE(const uint8* y_buf,
 #endif
 );
 
-void ScaleYUVToRGB32Row(const uint8* y_buf,
-                        const uint8* u_buf,
-                        const uint8* v_buf,
-                        uint8* rgb_buf,
+void ScaleYUVToRGB32Row(const uint8_t* y_buf,
+                        const uint8_t* u_buf,
+                        const uint8_t* v_buf,
+                        uint8_t* rgb_buf,
                         int width,
                         int source_dx)
 {
@@ -745,13 +745,13 @@ void ScaleYUVToRGB32Row(const uint8* y_buf,
   ScaleYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf, width, source_dx);
 }
 
-void PICLinearScaleYUVToRGB32Row_SSE(const uint8* y_buf,
-                                     const uint8* u_buf,
-                                     const uint8* v_buf,
-                                     uint8* rgb_buf,
+void PICLinearScaleYUVToRGB32Row_SSE(const uint8_t* y_buf,
+                                     const uint8_t* u_buf,
+                                     const uint8_t* v_buf,
+                                     uint8_t* rgb_buf,
                                      int width,
                                      int source_dx,
-                                     const int16 *kCoefficientsRgbY);
+                                     const int16_t *kCoefficientsRgbY);
 
   asm(
   ".text\n"
@@ -868,10 +868,10 @@ void PICLinearScaleYUVToRGB32Row_SSE(const uint8* y_buf,
 );
 
 
-void LinearScaleYUVToRGB32Row(const uint8* y_buf,
-                              const uint8* u_buf,
-                              const uint8* v_buf,
-                              uint8* rgb_buf,
+void LinearScaleYUVToRGB32Row(const uint8_t* y_buf,
+                              const uint8_t* u_buf,
+                              const uint8_t* v_buf,
+                              uint8_t* rgb_buf,
                               int width,
                               int source_dx)
 {
@@ -884,27 +884,27 @@ void LinearScaleYUVToRGB32Row(const uint8* y_buf,
   LinearScaleYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf, width, source_dx);
 }
 #else
-void FastConvertYUVToRGB32Row(const uint8* y_buf,
-                              const uint8* u_buf,
-                              const uint8* v_buf,
-                              uint8* rgb_buf,
+void FastConvertYUVToRGB32Row(const uint8_t* y_buf,
+                              const uint8_t* u_buf,
+                              const uint8_t* v_buf,
+                              uint8_t* rgb_buf,
                               int width) {
   FastConvertYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf, width, 1);
 }
 
-void ScaleYUVToRGB32Row(const uint8* y_buf,
-                        const uint8* u_buf,
-                        const uint8* v_buf,
-                        uint8* rgb_buf,
+void ScaleYUVToRGB32Row(const uint8_t* y_buf,
+                        const uint8_t* u_buf,
+                        const uint8_t* v_buf,
+                        uint8_t* rgb_buf,
                         int width,
                         int source_dx) {
   ScaleYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf, width, source_dx);
 }
 
-void LinearScaleYUVToRGB32Row(const uint8* y_buf,
-                              const uint8* u_buf,
-                              const uint8* v_buf,
-                              uint8* rgb_buf,
+void LinearScaleYUVToRGB32Row(const uint8_t* y_buf,
+                              const uint8_t* u_buf,
+                              const uint8_t* v_buf,
+                              uint8_t* rgb_buf,
                               int width,
                               int source_dx) {
   LinearScaleYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf, width, source_dx);
