@@ -314,7 +314,7 @@ urlbar.picked.*
   - ``visiturl``
     The user typed string can be directly visited.
 
-  .. _adaptive history autofill document: https://docs.google.com/document/d/1upZWNuoYBPAMQKyatJjXtolG9DNCmXzJ4N-DNQZmQu4/edit#bookmark=id.4o9bn8258563
+  .. _adaptive history autofill document: https://docs.google.com/document/d/e/2PACX-1vRBLr_2dxus-aYhZRUkW9Q3B1K0uC-a0qQyE3kQDTU3pcNpDHb36-Pfo9fbETk89e7Jz4nkrqwRhi4j/pub
   .. _origin: https://html.spec.whatwg.org/multipage/origin.html#origin
   .. _preloaded site: https://searchfox.org/mozilla-central/source/browser/components/urlbar/UrlbarProviderPreloadedSites.jsm
 
