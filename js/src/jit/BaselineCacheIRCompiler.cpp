@@ -2411,7 +2411,7 @@ void BaselineCacheIRCompiler::pushArrayArguments(Register argcReg,
 
   // Push newTarget, if necessary
   if (isConstructing) {
-    masm.pushValue(Address(FramePointer, StubFrameSizeFromFP));
+    masm.pushValue(Address(FramePointer, BaselineStubFrameLayout::Size()));
   }
 
   // Push arguments: set up endReg to point to &array[argc]
@@ -2430,15 +2430,15 @@ void BaselineCacheIRCompiler::pushArrayArguments(Register argcReg,
   masm.bind(&copyDone);
 
   // Push |this|.
-  masm.pushValue(
-      Address(FramePointer,
-              StubFrameSizeFromFP + (1 + isConstructing) * sizeof(Value)));
+  size_t thisvOffset =
+      BaselineStubFrameLayout::Size() + (1 + isConstructing) * sizeof(Value);
+  masm.pushValue(Address(FramePointer, thisvOffset));
 
   // Push |callee| if needed.
   if (!isJitCall) {
-    masm.pushValue(
-        Address(FramePointer,
-                StubFrameSizeFromFP + (2 + isConstructing) * sizeof(Value)));
+    size_t calleeOffset =
+        BaselineStubFrameLayout::Size() + (2 + isConstructing) * sizeof(Value);
+    masm.pushValue(Address(FramePointer, calleeOffset));
   }
 }
 
@@ -2546,7 +2546,8 @@ void BaselineCacheIRCompiler::pushFunApplyArgsObj(Register argcReg,
   masm.bind(&done);
 
   // Push arg0 as |this| for call
-  masm.pushValue(Address(FramePointer, StubFrameSizeFromFP + sizeof(Value)));
+  masm.pushValue(
+      Address(FramePointer, BaselineStubFrameLayout::Size() + sizeof(Value)));
 
   // Push |callee| if needed.
   if (!isJitCall) {
