@@ -2302,7 +2302,8 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
   }
 
   // We've set up |newobj|, so we make it own the native by setting its reserved
-  // slot and nulling out the reserved slot of |obj|.
+  // slot and nulling out the reserved slot of |obj|. Update the wrapper cache
+  // to keep everything consistent in case GC moves newobj.
   //
   // NB: It's important to do this _after_ copying the properties to
   // propertyHolder. Otherwise, an object with |foo.x === foo| will
@@ -2311,15 +2312,21 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
   JS::SetReservedSlot(newobj, DOM_OBJECT_SLOT,
                       JS::GetReservedSlot(aObj, DOM_OBJECT_SLOT));
   JS::SetReservedSlot(aObj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
+  nsWrapperCache* cache = nullptr;
+  CallQueryInterface(native, &cache);
+  cache->UpdateWrapperForNewGlobal(native, newobj);
 
   aObj = xpc::TransplantObjectRetainingXrayExpandos(aCx, aObj, newobj);
   if (!aObj) {
     MOZ_CRASH();
   }
 
-  nsWrapperCache* cache = nullptr;
-  CallQueryInterface(native, &cache);
-  cache->UpdateWrapperForNewGlobal(native, aObj);
+  // Update the wrapper cache again if transplanting didn't use newobj but
+  // returned some other object.
+  if (aObj != newobj) {
+    MOZ_ASSERT(UnwrapDOMObjectToISupports(aObj) == native);
+    cache->UpdateWrapperForNewGlobal(native, aObj);
+  }
 
   if (propertyHolder) {
     JS::Rooted<JSObject*> copyTo(aCx);
