@@ -59,9 +59,6 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   masm.store32(scratch, frameSizeAddr);
 #endif
 
-  // Note: when making changes here, don't forget to update StubFrameSize if
-  // needed.
-
   // Push frame descriptor and return address.
   masm.PushFrameDescriptor(FrameType::BaselineJS);
   masm.Push(ICTailCallReg);

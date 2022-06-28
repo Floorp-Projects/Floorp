@@ -556,8 +556,10 @@ void FallbackICCodeCompiler::assumeStubFrame() {
   entersStubFrame_ = true;
 
   // |framePushed| isn't tracked precisely in ICStubs, so simply assume it to
-  // be StubFrameSize so that assertions don't fail in leaveStubFrame.
-  framePushedAtEnterStubFrame_ = StubFrameSize;
+  // be the stub frame layout and the pushed ICStub* so that assertions don't
+  // fail in leaveStubFrame
+  framePushedAtEnterStubFrame_ =
+      BaselineStubFrameLayout::Size() + sizeof(ICStub*);
 #endif
 }
 

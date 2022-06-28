@@ -57,9 +57,6 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   masm.store32(scratch, frameSizeAddr);
 #endif
 
-  // Note: when making changes here,  don't forget to update StubFrameSize
-  // if needed.
-
   // Push the return address that's currently on top of the stack.
   masm.Push(Operand(StackPointer, 0));
 
