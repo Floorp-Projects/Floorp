@@ -67,7 +67,7 @@ class SettingsRobot {
     fun verifySetAsDefaultBrowserButton() = assertSetAsDefaultBrowserButton()
     fun verifyTabsButton() = assertTabsButton()
     fun verifyHomepageButton() = assertHomepageButton()
-    fun verifyCreditCardsButton() = assertCreditCardsButton()
+    fun verifyAutofillButton() = assertAutofillButton()
     fun verifyLanguageButton() = assertLanguageButton()
     fun verifyDefaultBrowserIsDisabled() = assertDefaultBrowserIsDisabled()
     fun clickDefaultBrowserSwitch() = toggleDefaultBrowserSwitch()
@@ -344,8 +344,8 @@ private fun assertSearchButton() {
 private fun assertHomepageButton() =
     onView(withText(R.string.preferences_home_2)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertCreditCardsButton() =
-    onView(withText(R.string.preferences_credit_cards)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertAutofillButton() =
+    onView(withText(R.string.preferences_autofill)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertLanguageButton() =
     onView(withText(R.string.preferences_language)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))

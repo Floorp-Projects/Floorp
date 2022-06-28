@@ -27,6 +27,7 @@ import mozilla.components.support.ktx.android.content.intPreference
 import mozilla.components.support.ktx.android.content.longPreference
 import mozilla.components.support.ktx.android.content.stringPreference
 import mozilla.components.support.ktx.android.content.stringSetPreference
+import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
@@ -1194,9 +1195,22 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var addressFeature by featureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_address_feature),
-        default = false,
-        featureFlag = FeatureFlags.addressesFeature
+        default = true,
+        featureFlag = isAddressFeatureEnabled(appContext)
     )
+
+    /**
+     * Show the Addresses autofill feature.
+     */
+    private fun isAddressFeatureEnabled(context: Context): Boolean {
+        val langTag = LocaleManager.getCurrentLocale(context)
+            ?.toLanguageTag() ?: LocaleManager.getSystemDefault().toLanguageTag()
+        return listOf(
+            "en-US",
+            "en-CA",
+            "fr-CA"
+        ).contains(langTag) && Config.channel.isNightlyOrDebug
+    }
 
     private var isHistoryMetadataEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),

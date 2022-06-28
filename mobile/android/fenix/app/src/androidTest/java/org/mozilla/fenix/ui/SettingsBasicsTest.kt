@@ -71,7 +71,7 @@ class SettingsBasicsTest {
             verifyHomepageButton()
             verifyCustomizeButton()
             verifyLoginsAndPasswordsButton()
-            verifyCreditCardsButton()
+            verifyAutofillButton()
             verifyAccessibilityButton()
             verifyLanguageButton()
             verifySetAsDefaultBrowserButton()

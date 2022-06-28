@@ -602,7 +602,7 @@ abstract class BaseBrowserFragment :
                     context.settings().shouldAutofillCreditCardDetails
                 },
                 isAddressAutofillEnabled = {
-                    context.settings().shouldAutofillAddressDetails && FeatureFlags.addressesFeature
+                    context.settings().addressFeature && context.settings().shouldAutofillAddressDetails
                 },
                 loginExceptionStorage = context.components.core.loginExceptionStorage,
                 shareDelegate = object : ShareDelegate {

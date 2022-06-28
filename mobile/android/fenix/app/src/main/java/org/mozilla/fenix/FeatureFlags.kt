@@ -19,9 +19,9 @@ object FeatureFlags {
     val pullToRefreshEnabled = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables the Addresses autofill feature.
+     * Enables the Sync Addresses feature.
      */
-    val addressesFeature = Config.channel.isNightlyOrDebug
+    const val syncAddressesFeature = false
 
     /**
      * Enables the "recent" tabs feature in the home screen.
