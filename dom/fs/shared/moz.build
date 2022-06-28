@@ -4,11 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    "api",
-    "child",
-    "parent",
-    "shared",
+EXPORTS.mozilla.dom += [
+    "FileSystemTypes.h",
 ]
 
-TEST_DIRS += ["test"]
+FINAL_LIBRARY = "xul"
+
+IPDL_SOURCES += [
+    "PBackgroundFileSystem.ipdl",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
