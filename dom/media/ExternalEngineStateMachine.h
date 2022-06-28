@@ -81,6 +81,12 @@ class ExternalEngineStateMachine final
         "ExternalEngineStateMachine::NotifyEvent",
         [self = RefPtr{this}, aEvent] { self->NotifyEventInternal(aEvent); }));
   }
+  void NotifyError(const MediaResult& aError) {
+    // On the engine manager thread.
+    Unused << OwnerThread()->Dispatch(NS_NewRunnableFunction(
+        "ExternalEngineStateMachine::NotifyError",
+        [self = RefPtr{this}, aError] { self->DecodeError(aError); }));
+  }
 
   const char* GetStateStr() const;
 
