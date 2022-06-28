@@ -42,7 +42,7 @@ promise_test(async t => {
 
   const resultPromise = new Promise(resolve => {
       window.addEventListener('message', function handler(evt) {
-        if (evt.source === frame.contentWindow) {
+        if (evt.source === frame.contentWindow && evt.data.type == 'spc_result') {
           window.removeEventListener('message', handler);
           document.body.removeChild(frame);
           resolve(evt.data);
@@ -91,7 +91,7 @@ promise_test(async t => {
 
   const resultPromise = new Promise(resolve => {
       window.addEventListener('message', function handler(evt) {
-        if (evt.source === frame.contentWindow) {
+        if (evt.source === frame.contentWindow && evt.data.type == 'spc_result') {
           window.removeEventListener('message', handler);
           document.body.removeChild(frame);
           resolve(evt.data);
@@ -141,7 +141,7 @@ promise_test(async t => {
 
   const resultPromise = new Promise(resolve => {
       window.addEventListener('message', function handler(evt) {
-        if (evt.source === frame.contentWindow) {
+        if (evt.source === frame.contentWindow && evt.data.type == 'spc_result') {
           window.removeEventListener('message', handler);
           document.body.removeChild(frame);
           resolve(evt.data);
