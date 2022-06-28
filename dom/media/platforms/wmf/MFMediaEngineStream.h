@@ -10,6 +10,7 @@
 
 #include <queue>
 
+#include "BlankDecoderModule.h"
 #include "MediaQueue.h"
 #include "PlatformDecoderModule.h"
 #include "mozilla/Atomics.h"
@@ -152,10 +153,14 @@ class MFMediaEngineStream
 class MFMediaEngineStreamWrapper : public MediaDataDecoder {
  public:
   MFMediaEngineStreamWrapper(MFMediaEngineStream* aStream,
-                             TaskQueue* aTaskQueue)
-      : mStream(aStream), mTaskQueue(aTaskQueue) {
+                             TaskQueue* aTaskQueue,
+                             const CreateDecoderParams& aParams)
+      : mStream(aStream),
+        mTaskQueue(aTaskQueue),
+        mFakeDataCreator(new FakeDecodedDataCreator(aParams)) {
     MOZ_ASSERT(mStream);
     MOZ_ASSERT(mTaskQueue);
+    MOZ_ASSERT(mFakeDataCreator);
   }
 
   // Methods for MediaDataDecoder, they are all called on the remote
@@ -169,7 +174,43 @@ class MFMediaEngineStreamWrapper : public MediaDataDecoder {
 
  private:
   Microsoft::WRL::ComPtr<MFMediaEngineStream> mStream;
+  // We use this to generate fake decoded outputs, as the real data is handled
+  // inside the media engine. Audio output is not possible to get, the video
+  // output would be output via DCOMP.
+  class FakeDecodedDataCreator final {
+   public:
+    explicit FakeDecodedDataCreator(const CreateDecoderParams& aParams) {
+      if (aParams.mConfig.IsVideo()) {
+        const VideoInfo& config = aParams.VideoConfig();
+        mDummyDecoder = new DummyMediaDataDecoder(
+            MakeUnique<BlankVideoDataCreator>(config.mDisplay.width,
+                                              config.mDisplay.height,
+                                              aParams.mImageContainer),
+            "blank video data decoder for media engine"_ns, aParams);
+        mType = TrackInfo::TrackType::kVideoTrack;
+      } else if (aParams.mConfig.IsAudio()) {
+        const AudioInfo& config = aParams.AudioConfig();
+        mDummyDecoder = new DummyMediaDataDecoder(
+            MakeUnique<BlankAudioDataCreator>(config.mChannels, config.mRate),
+            "blank audio data decoder for media engine"_ns, aParams);
+        mType = TrackInfo::TrackType::kAudioTrack;
+      } else {
+        MOZ_ASSERT_UNREACHABLE("unexpected config type");
+      }
+    }
+    RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample) {
+      return mDummyDecoder->Decode(aSample);
+    }
+    void Flush() { Unused << mDummyDecoder->Flush(); }
+
+    TrackInfo::TrackType Type() const { return mType; }
+
+   private:
+    RefPtr<MediaDataDecoder> mDummyDecoder;
+    TrackInfo::TrackType mType;
+  };
   RefPtr<TaskQueue> mTaskQueue;
+  UniquePtr<FakeDecodedDataCreator> mFakeDataCreator;
 };
 
 }  // namespace mozilla
