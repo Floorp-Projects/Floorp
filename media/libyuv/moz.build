@@ -21,6 +21,7 @@ elif CONFIG['MOZ_TSAN']:
 libyuv_non_unified_sources = [
     'libyuv/source/convert.cc',
     'libyuv/source/convert_from.cc',
+    'libyuv/source/convert_from_argb.cc',  
     'libyuv/source/mjpeg_decoder.cc',
     'libyuv/source/rotate_argb.cc',
     'libyuv/source/row_common.cc',
