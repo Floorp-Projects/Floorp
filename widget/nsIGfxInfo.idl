@@ -178,8 +178,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_HW_DECODED_VIDEO_ZERO_COPY = 40;
   /* Whether DMABUF export is supported, starting in 103. */
   const long FEATURE_DMABUF_SURFACE_EXPORT = 41;
+  /* Whether reuse decoder device is supported, starting in 104. */
+  const long FEATURE_REUSE_DECODER_DEVICE = 42;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_HW_DECODED_VIDEO_ZERO_COPY;
+  const long FEATURE_MAX_VALUE = FEATURE_REUSE_DECODER_DEVICE;
 
   /*
    * A set of return values from GetFeatureStatus

@@ -2692,6 +2692,43 @@ void gfxPlatform::InitWebRenderConfig() {
     gfxVars::SetHwDecodedVideoZeroCopy(true);
   }
 
+  bool reuseDecoderDevice = false;
+  if (StaticPrefs::gfx_direct3d11_reuse_decoder_device_AtStartup()) {
+    reuseDecoderDevice = true;
+
+    if (reuseDecoderDevice &&
+        !StaticPrefs::
+            gfx_direct3d11_reuse_decoder_device_force_enabled_AtStartup()) {
+      nsCString failureId;
+      int32_t status;
+      const nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+      if (NS_FAILED(gfxInfo->GetFeatureStatus(
+              nsIGfxInfo::FEATURE_REUSE_DECODER_DEVICE, failureId, &status))) {
+        FeatureState& feature =
+            gfxConfig::GetFeature(Feature::REUSE_DECODER_DEVICE);
+        feature.DisableByDefault(FeatureStatus::BlockedNoGfxInfo,
+                                 "gfxInfo is broken",
+                                 "FEATURE_FAILURE_WR_NO_GFX_INFO"_ns);
+        reuseDecoderDevice = false;
+      } else {
+        if (status != nsIGfxInfo::FEATURE_ALLOW_ALWAYS) {
+          FeatureState& feature =
+              gfxConfig::GetFeature(Feature::REUSE_DECODER_DEVICE);
+          feature.DisableByDefault(FeatureStatus::Blocked,
+                                   "Blocklisted by gfxInfo", failureId);
+          reuseDecoderDevice = false;
+        }
+      }
+    }
+  }
+
+  if (reuseDecoderDevice) {
+    FeatureState& feature =
+        gfxConfig::GetFeature(Feature::REUSE_DECODER_DEVICE);
+    feature.EnableByDefault();
+    gfxVars::SetReuseDecoderDevice(true);
+  }
+
   if (Preferences::GetBool("gfx.webrender.flip-sequential", false)) {
     if (UseWebRender() && gfxVars::UseWebRenderANGLE()) {
       gfxVars::SetUseWebRenderFlipSequentialWin(true);
