@@ -85,7 +85,7 @@ class ExternalEngineStateMachine final
     // On the engine manager thread.
     Unused << OwnerThread()->Dispatch(NS_NewRunnableFunction(
         "ExternalEngineStateMachine::NotifyError",
-        [self = RefPtr{this}, aError] { self->DecodeError(aError); }));
+        [self = RefPtr{this}, aError] { self->NotifyErrorInternal(aError); }));
   }
 
   const char* GetStateStr() const;
@@ -197,6 +197,7 @@ class ExternalEngineStateMachine final
   using State = StateObject::State;
 
   void NotifyEventInternal(ExternalEngineEvent aEvent);
+  void NotifyErrorInternal(const MediaResult& aError);
 
   RefPtr<ShutdownPromise> Shutdown() override;
 

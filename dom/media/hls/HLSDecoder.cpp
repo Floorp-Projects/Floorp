@@ -131,7 +131,8 @@ HLSDecoder::~HLSDecoder() {
   HLS_DEBUG("HLSDecoder", "~HLSDecoder(): allocated=%zu", sAllocatedInstances);
 }
 
-MediaDecoderStateMachineBase* HLSDecoder::CreateStateMachine() {
+MediaDecoderStateMachineBase* HLSDecoder::CreateStateMachine(
+    bool aDisableExternalEngine) {
   MOZ_ASSERT(NS_IsMainThread());
 
   MediaFormatReaderInit init;
@@ -178,13 +179,7 @@ nsresult HLSDecoder::Load(nsIChannel* aChannel) {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  SetStateMachine(CreateStateMachine());
-  NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
-
-  GetStateMachine()->DispatchIsLiveStream(false);
-
-  return InitializeStateMachine();
+  return CreateAndInitStateMachine(false);
 }
 
 void HLSDecoder::AddSizeOfResources(ResourceSizes* aSizes) {

@@ -135,9 +135,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // the seek target.
   void Seek(double aTime, SeekTarget::Type aSeekType);
 
-  // Initialize state machine and schedule it.
-  nsresult InitializeStateMachine();
-
   // Start playback of a video. 'Load' must have previously been
   // called.
   virtual void Play();
@@ -405,7 +402,20 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   virtual void FirstFrameLoaded(UniquePtr<MediaInfo> aInfo,
                                 MediaDecoderEventVisibility aEventVisibility);
 
+  // Return error if fail to init the state machine.
+  nsresult CreateAndInitStateMachine(bool aIsLiveStream,
+                                     bool aDisableExternalEngine = false);
+
+  // Always return a state machine. If the decoder supports using external
+  // engine, `aDisableExternalEngine` can disable the external engine if needed.
+  virtual MediaDecoderStateMachineBase* CreateStateMachine(
+      bool aDisableExternalEngine) MOZ_NONNULL_RETURN = 0;
+
   void SetStateMachineParameters();
+
+  // Disconnect any events before shutting down the state machine.
+  void DisconnectEvents();
+  RefPtr<ShutdownPromise> ShutdownStateMachine();
 
   // Called when MediaDecoder shutdown is finished. Subclasses use this to clean
   // up internal structures, and unregister potential shutdown blockers when
