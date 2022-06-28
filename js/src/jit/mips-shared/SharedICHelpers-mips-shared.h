@@ -48,7 +48,7 @@ inline void EmitCallIC(MacroAssembler& masm, CodeOffset* callOffset) {
 inline void EmitReturnFromIC(MacroAssembler& masm) { masm.branch(ra); }
 
 inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm) {
-  masm.movePtr(FramePointer, BaselineStackReg);
+  masm.movePtr(FramePointer, StackPointer);
 
   masm.loadPtr(Address(StackPointer, offsetof(BaselineStubFrame, savedFrame)),
                FramePointer);
