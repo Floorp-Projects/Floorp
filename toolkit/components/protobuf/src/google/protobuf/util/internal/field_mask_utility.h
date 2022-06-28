@@ -30,14 +30,15 @@
 
 // FieldMask related utility methods.
 
-#ifndef GOOGLE_PROTOBUF_UTIL_CONVERTER_FIELD_MASK_UTILITY_H__
-#define GOOGLE_PROTOBUF_UTIL_CONVERTER_FIELD_MASK_UTILITY_H__
+#ifndef GOOGLE_PROTOBUF_UTIL_INTERNAL_FIELD_MASK_UTILITY_H__
+#define GOOGLE_PROTOBUF_UTIL_INTERNAL_FIELD_MASK_UTILITY_H__
 
 #include <functional>
 #include <stack>
 
 #include <google/protobuf/stubs/callback.h>
 #include <google/protobuf/stubs/common.h>
+#include <google/protobuf/stubs/status.h>
 #include <google/protobuf/stubs/strutil.h>
 #include <google/protobuf/stubs/status.h>
 
@@ -63,11 +64,11 @@ std::string ConvertFieldMaskPath(const StringPiece path,
 // Note that we also support Apiary style FieldMask form. The above example in
 // the Apiary style will look like "a.b,a.c(d,e)".
 util::Status DecodeCompactFieldMaskPaths(StringPiece paths,
-                                           PathSinkCallback path_sink);
+                                         PathSinkCallback path_sink);
 
 }  // namespace converter
 }  // namespace util
 }  // namespace protobuf
 }  // namespace google
 
-#endif  // GOOGLE_PROTOBUF_UTIL_CONVERTER_FIELD_MASK_UTILITY_H__
+#endif  // GOOGLE_PROTOBUF_UTIL_INTERNAL_FIELD_MASK_UTILITY_H__

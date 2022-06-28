@@ -33,7 +33,7 @@
 //  Sanjay Ghemawat, Jeff Dean, and others.
 //
 // DEPRECATED:  This module declares the abstract interfaces underlying proto2
-// RPC services.  These are intented to be independent of any particular RPC
+// RPC services.  These are intended to be independent of any particular RPC
 // implementation, so that proto2 services can be used on top of a variety
 // of implementations.  Starting with version 2.3.0, RPC implementations should
 // not try to build on these, but should instead provide code generator plugins
@@ -100,6 +100,7 @@
 #ifndef GOOGLE_PROTOBUF_SERVICE_H__
 #define GOOGLE_PROTOBUF_SERVICE_H__
 
+
 #include <string>
 #include <google/protobuf/stubs/callback.h>
 #include <google/protobuf/stubs/common.h>
@@ -108,6 +109,7 @@
 #error "You cannot SWIG proto headers"
 #endif
 
+// Must be included last.
 #include <google/protobuf/port_def.inc>
 
 namespace google {
