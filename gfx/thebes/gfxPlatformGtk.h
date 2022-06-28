@@ -17,6 +17,8 @@ typedef struct _XDisplay Display;
 #endif  // MOZ_X11
 
 class gfxPlatformGtk final : public gfxPlatform {
+  friend class gfxPlatform;
+
  public:
   gfxPlatformGtk();
   virtual ~gfxPlatformGtk();
@@ -66,7 +68,7 @@ class gfxPlatformGtk final : public gfxPlatform {
  protected:
   void InitX11EGLConfig();
   void InitDmabufConfig();
-  void InitVAAPIConfig();
+  bool InitVAAPIConfig(bool aEnabledByPlatform);
   void InitPlatformGPUProcessPrefs() override;
   void InitWebRenderConfig() override;
   bool CheckVariationFontSupport() override;
