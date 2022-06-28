@@ -84,10 +84,12 @@ struct ColorPalette {
 };
 
 static nscolor GetAccentColor(bool aBackground, ColorScheme aScheme) {
+  auto useStandins = LookAndFeel::UseStandins(
+      !StaticPrefs::widget_non_native_theme_use_theme_accent());
   return ColorPalette::EnsureOpaque(
       LookAndFeel::Color(aBackground ? LookAndFeel::ColorID::Accentcolor
                                      : LookAndFeel::ColorID::Accentcolortext,
-                         aScheme, LookAndFeel::UseStandins::No));
+                         aScheme, useStandins));
 }
 
 static ColorPalette sDefaultLightPalette = ColorPalette::Default();
