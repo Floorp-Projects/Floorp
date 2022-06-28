@@ -20,7 +20,7 @@ Goals
   shared across the stack, per-process.
 - The rust library should be able to call and be called by other rust libraries
   or rust code in Gecko directly (i.e. without a C FFI layer)
-- A built-time assurance that all components in the stack compile against the
+- A build-time assurance that all components in the stack compile against the
   same version of the rust library
 - Painless, quick and automated updates. Should be able to produce chemspill
   updates for the rust library in under 24h with little manual intervention
@@ -62,15 +62,18 @@ Proposal
       <version>33.1.2</version>
       <scope>compile</scope>
     </dependency>
+
   It will also exclude the org.mozilla.telemetry.glean dependency to
   librustcomponents.so, as the native code is now included in libxul.so as part
   of step (2). Presumably Glean will discover where its native code lives by
   either trying librustcomponents.so or libxul.so (or some other better methods,
   suggestions welcome).
+
 7. Android Components and Fenix will remove their explicit dependency on Glean,
    Nimbus and all other libraries provided by GeckoView, and instead consume the
    one provided by GeckoView (this step is optional, note that any version
    conflict would cause a build error).
+
 
 The good
 --------
