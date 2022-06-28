@@ -353,12 +353,292 @@ static bool ShadowRealm_evaluate(JSContext* cx, unsigned argc, Value* vp) {
                                 args.rval());
 }
 
+// MG:XXX: Cribbed/Overlapping with StartDynamicModuleImport; may need to
+// refactor to share.
+// https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue
+static JSObject* ShadowRealmImportValue(JSContext* cx,
+                                        HandleString specifierString,
+                                        HandleString exportName,
+                                        Realm* callerRealm, Realm* evalRealm) {
+  // Step 1. Assert: evalContext is an execution context associated to a
+  // ShadowRealm instance's [[ExecutionContext]].
+
+  // Step 2. Let innerCapability be ! NewPromiseCapability(%Promise%).
+  RootedObject promiseConstructor(cx, JS::GetPromiseConstructor(cx));
+  if (!promiseConstructor) {
+    return nullptr;
+  }
+
+  RootedObject promiseObject(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promiseObject) {
+    return nullptr;
+  }
+
+  Handle<PromiseObject*> promise = promiseObject.as<PromiseObject>();
+
+  JS::ModuleDynamicImportHook importHook =
+      cx->runtime()->moduleDynamicImportHook;
+
+  if (!importHook) {
+    // Dynamic import can be disabled by a pref and is not supported in all
+    // contexts (e.g. web workers).
+    JS_ReportErrorASCII(
+        cx,
+        "Dynamic module import is disabled or not supported in this context");
+    if (!RejectPromiseWithPendingError(cx, promise)) {
+      return nullptr;
+    }
+    return promise;
+  }
+
+  {
+    // Step 3. Let runningContext be the running execution context. (Implicit)
+    // Step 4. If runningContext is not already suspended, suspend
+    //         runningContext. (Implicit)
+    // Step 5. Push evalContext onto the execution context stack; evalContext is
+    //         now the running execution context. (Implicit)
+    Rooted<GlobalObject*> evalRealmGlobal(cx, evalRealm->maybeGlobal());
+    AutoRealm ar(cx, evalRealmGlobal);
+
+    // Not Speced: Get referencing private to pass to importHook.
+    RootedScript script(cx);
+    const char* filename;
+    unsigned lineno;
+    uint32_t pcOffset;
+    bool mutedErrors;
+    DescribeScriptedCallerForCompilation(cx, &script, &filename, &lineno,
+                                         &pcOffset, &mutedErrors);
+
+    MOZ_ASSERT(script);
+
+    RootedValue referencingPrivate(cx, script->sourceObject()->getPrivate());
+    cx->runtime()->addRefScriptPrivate(referencingPrivate);
+
+    Rooted<JSAtom*> specifierAtom(cx, AtomizeString(cx, specifierString));
+    if (!specifierAtom) {
+      if (!RejectPromiseWithPendingError(cx, promise)) {
+        return nullptr;
+      }
+      return promise;
+    }
+
+    Rooted<ArrayObject*> assertionArray(cx);
+    RootedObject moduleRequest(
+        cx, ModuleRequestObject::create(cx, specifierAtom, assertionArray));
+    if (!moduleRequest) {
+      if (!RejectPromiseWithPendingError(cx, promise)) {
+        return nullptr;
+      }
+      return promise;
+    }
+
+    // Step 6. Perform ! HostImportModuleDynamically(null, specifierString,
+    // innerCapability).
+    //
+    // By specification, this is supposed to take ReferencingScriptOrModule as
+    // null, see first parameter above. However, if we do that, we don't end up
+    // with a script reference, which is used to figure out what the base-URI
+    // should be So then we end up using the default one for the module loader;
+    // which because of the way we set the parent module loader up, means we end
+    // up having the incorrect base URI, as the module loader ends up just using
+    // the document's base URI.
+    //
+    // I have filed https://github.com/tc39/proposal-shadowrealm/issues/363 to
+    // discuss this.
+    if (!importHook(cx, referencingPrivate, moduleRequest, promise)) {
+      cx->runtime()->releaseScriptPrivate(referencingPrivate);
+
+      // If there's no exception pending then the script is terminating
+      // anyway, so just return nullptr.
+      if (!cx->isExceptionPending() ||
+          !RejectPromiseWithPendingError(cx, promise)) {
+        return nullptr;
+      }
+      return promise;
+    }
+
+    // Step 7. Suspend evalContext and remove it from the execution context
+    //         stack. (Implicit)
+    // Step 8. Resume the context that is now on the top of the execution
+    //         context stack as the running execution context (Implicit)
+  }
+
+  // Step 9.  Let steps be the steps of an ExportGetter function as described
+  //          below.
+  // Step 10. Let onFulfilled be ! CreateBuiltinFunction(steps, 1, "", «
+  //          [[ExportNameString]] », callerRealm).
+
+  // The handler can only hold onto a single object, so we pack that into a new
+  // JS Object, and store there.
+  RootedObject handlerObject(cx, JS_NewPlainObject(cx));
+  if (!handlerObject) {
+    return nullptr;
+  }
+
+  RootedValue calleeRealmValue(cx, PrivateValue(callerRealm));
+  if (!JS_DefineProperty(cx, handlerObject, "calleeRealm", calleeRealmValue,
+                         JSPROP_READONLY)) {
+    return nullptr;
+  }
+
+  if (!JS_DefineProperty(cx, handlerObject, "exportNameString", exportName,
+                         JSPROP_READONLY)) {
+    return nullptr;
+  }
+
+  RootedValue handlerValue(cx, ObjectValue(*handlerObject));
+  RootedFunction onFulfilled(
+      cx,
+      NewHandlerWithExtraValue(
+          cx,
+          [](JSContext* cx, unsigned argc, Value* vp) {
+            // This is the export getter function from
+            // https://tc39.es/proposal-shadowrealm/#sec-shadowrealmimportvalue
+            CallArgs args = CallArgsFromVp(argc, vp);
+            MOZ_ASSERT(args.length() == 1);
+
+            RootedObject handlerObject(cx,
+                                       &ExtraValueFromHandler(args).toObject());
+
+            RootedValue realmValue(cx);
+            RootedValue exportNameValue(cx);
+            MOZ_ALWAYS_TRUE(
+                JS_GetProperty(cx, handlerObject, "calleeRealm", &realmValue));
+            MOZ_ALWAYS_TRUE(JS_GetProperty(
+                cx, handlerObject, "exportNameString", &exportNameValue));
+
+            // Step 1. Assert: exports is a module namespace exotic object.
+            RootedValue exportsValue(cx, args.get(0));
+            MOZ_ASSERT(exportsValue.isObject() &&
+                       exportsValue.toObject().is<ModuleNamespaceObject>());
+
+            Rooted<ModuleNamespaceObject*> exports(
+                cx, &exportsValue.toObject().as<ModuleNamespaceObject>());
+
+            // Step 2. Let f be the active function object. (not implemented
+            // this way)
+            //
+            // Step 3. Let string be f.[[ExportNameString]]. Step 4.
+            // Assert: Type(string) is String.
+            MOZ_ASSERT(exportNameValue.isString());
+
+            RootedString string(cx, exportNameValue.toString());
+            RootedId stringId(cx);
+            if (!JS_StringToId(cx, string, &stringId)) {
+              return false;
+            }
+
+            // Step 5. Let hasOwn be ? HasOwnProperty(exports, string).
+            bool hasOwn = false;
+            if (!HasOwnProperty(cx, exports, stringId, &hasOwn)) {
+              return false;
+            }
+
+            // Step 6. If hasOwn is false, throw a TypeError exception.
+            if (!hasOwn) {
+              JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                        JSMSG_SHADOW_REALM_VALUE_NOT_EXPORTED);
+              return false;
+            }
+
+            // Step 7. Let value be ? Get(exports, string).
+            RootedValue value(cx);
+            if (!JS_GetPropertyById(cx, exports, stringId, &value)) {
+              return false;
+            }
+
+            // Step 8. Let realm be f.[[Realm]].
+            Realm* callerRealm = static_cast<Realm*>(realmValue.toPrivate());
+
+            // Step 9. Return ? GetWrappedValue(realm, value).
+            return GetWrappedValue(cx, callerRealm, value, args.rval());
+          },
+          promise, handlerValue));
+  if (!onFulfilled) {
+    return nullptr;
+  }
+
+  RootedFunction onRejected(cx,
+                            NewHandler(
+                                cx,
+                                [](JSContext* cx, unsigned argc, Value* vp) {
+                                  JS_ReportErrorNumberASCII(
+                                      cx, GetErrorMessage, nullptr,
+                                      JSMSG_SHADOW_REALM_IMPORTVALUE_FAILED);
+                                  return false;
+                                },
+                                promise));
+  if (!onFulfilled) {
+    return nullptr;
+  }
+
+  // Step 11. Set onFulfilled.[[ExportNameString]] to exportNameString.
+  // Step 12. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+  // Step 13. Return ! PerformPromiseThen(innerCapability.[[Promise]],
+  //           onFulfilled, callerRealm.[[Intrinsics]].[[%ThrowTypeError%]],
+  //           promiseCapability).
+  return JS::CallOriginalPromiseThen(cx, promise, onFulfilled, onRejected);
+}
+
 //  ShadowRealm.prototype.importValue ( specifier, exportName )
 // https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype.importvalue
 static bool ShadowRealm_importValue(JSContext* cx, unsigned argc, Value* vp) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_SHADOW_REALM_IMPORTVALUE_NOT_IMPLEMENTED);
-  return false;
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1. Let O be this value (implicit ToObject)
+  RootedObject obj(cx, ToObject(cx, args.thisv()));
+  if (!obj) {
+    return false;
+  }
+
+  // Step 2. Perform ? ValidateShadowRealmObject(O).
+  Rooted<ShadowRealmObject*> shadowRealm(cx,
+                                         ValidateShadowRealmObject(cx, obj));
+  if (!shadowRealm) {
+    return false;
+  }
+
+  // Step 3. Let specifierString be ? ToString(specifier).
+  RootedString specifierString(cx, ToString<CanGC>(cx, args.get(0)));
+  if (!specifierString) {
+    return false;
+  }
+
+  // Step 4. If Type(exportName) is not String, throw a TypeError exception.
+  if (!args.get(1).isString()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SHADOW_REALM_EXPORT_NOT_STRING);
+    return false;
+  }
+
+  RootedString exportName(cx, args.get(1).toString());
+  if (!exportName) {
+    return false;
+  }
+
+  // Step 5. Let callerRealm be the current Realm Record.
+  Realm* callerRealm = cx->realm();
+
+  // Step 6. Let evalRealm be O.[[ShadowRealm]].
+  Realm* evalRealm = shadowRealm->getShadowRealm();
+
+  // Step 7. Let evalContext be O.[[ExecutionContext]]
+  // (we dont' pass this explicitly, instead using the realm+global to
+  // represent)
+
+  // Step 8. Return ?
+  // ShadowRealmImportValue(specifierString, exportName,
+  //                                         callerRealm, evalRealm,
+  //                                         evalContext).
+
+  RootedObject res(cx, ShadowRealmImportValue(cx, specifierString, exportName,
+                                              callerRealm, evalRealm));
+  if (!res) {
+    return false;
+  }
+
+  args.rval().set(ObjectValue(*res));
+  return true;
 }
 
 static const JSFunctionSpec shadowrealm_methods[] = {
