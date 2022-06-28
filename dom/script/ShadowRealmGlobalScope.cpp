@@ -119,4 +119,8 @@ ModuleLoaderBase* ShadowRealmGlobalScope::GetModuleLoader(JSContext* aCx) {
   return mModuleLoader;
 }
 
+bool IsShadowRealmGlobal(JSObject* aObject) {
+  return IS_INSTANCE_OF(ShadowRealmGlobalScope, aObject);
+}
+
 }  // namespace mozilla::dom
