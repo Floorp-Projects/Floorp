@@ -1798,8 +1798,11 @@ pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
 // Total Cookie Protection (dFPI) in standard mode.
 pref("privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard", false);
 
-// Target URL for the learn more link of the TCP in standard mode section.
+// Target URL for the learn more link of the TCP in standard mode rollout section.
 pref("privacy.restrict3rdpartystorage.rollout.preferences.learnMoreURLSuffix", "total-cookie-protection");
+
+// Target URL for the learn more link of the TCP in standard mode section.
+pref("privacy.restrict3rdpartystorage.preferences.learnMoreURLSuffix", "total-cookie-protection");
 
 // Enable Dynamic First-Party Isolation in the private browsing mode.
 pref("network.cookie.cookieBehavior.pbmode", 5 /* BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN */);

@@ -273,3 +273,19 @@ function createObserveAllPromise(observances) {
     Services.obs.addObserver(permObserver, "perm-changed");
   });
 }
+
+/**
+ * Waits for preference to be set and asserts the value.
+ * @param {string} pref - Preference key.
+ * @param {*} expectedValue - Expected value of the preference.
+ * @param {string} message - Assertion message.
+ */
+async function waitForAndAssertPrefState(pref, expectedValue, message) {
+  await TestUtils.waitForPrefChange(pref, value => {
+    if (value != expectedValue) {
+      return false;
+    }
+    is(value, expectedValue, message);
+    return true;
+  });
+}
