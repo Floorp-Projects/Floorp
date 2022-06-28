@@ -259,6 +259,7 @@ FormAutofillPreferences.prototype = {
         reauthCheckboxGroup.classList.add("indent");
         reauthLearnMore.classList.add("learnMore");
         reauthCheckbox.classList.add("tail-with-learn-more");
+        reauthCheckbox.setAttribute("flex", "1");
         reauthCheckbox.disabled = !FormAutofill.isAutofillCreditCardsEnabled;
 
         reauth.id = "creditCardReauthenticate";
