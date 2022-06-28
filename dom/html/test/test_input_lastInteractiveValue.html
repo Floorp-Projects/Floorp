@@ -1,0 +1,131 @@
+<!doctype html>
+<title>Test for HTMLInputElement.lastInteractiveValue</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/NativeKeyCodes.js"></script>
+<link href="/tests/SimpleTest/test.css"/>
+<body>
+<script>
+const kIsMac = navigator.platform.indexOf("Mac") > -1;
+const kIsWin = navigator.platform.indexOf("Win") > -1;
+
+function getFreshInput() {
+  let input = document.body.appendChild(document.createElement("input"));
+  input.focus();
+  return input;
+}
+
+// XXX This should be add_setup, but bug 1776589
+add_task(async function ensure_focus() {
+  await SimpleTest.promiseFocus(window);
+});
+
+add_task(async function simple() {
+  let input = getFreshInput();
+
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "", "Initial state");
+
+  sendString("abc");
+
+  is(input.value, "abc", ".value after interactive edit");
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "abc", ".lastInteractiveValue after interactive edit");
+
+  input.value = "muahahaha";
+  is(input.value, "muahahaha", ".value after script edit");
+
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "abc", ".lastInteractiveValue after script edit");
+});
+
+add_task(async function test_default_value() {
+  let input = getFreshInput();
+  input.defaultValue = "default value";
+
+  is(input.value, "default value", ".defaultValue affects .value");
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "", "Default value is not interactive");
+
+  sendString("abc");
+
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "default valueabc", "After interaction with default value");
+});
+
+// This happens in imdb.com login form.
+add_task(async function clone_after_interactive_edit() {
+  let input = getFreshInput();
+
+  sendString("abc");
+
+  is(input.value, "abc", ".value after interactive edit");
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "abc", ".lastInteractiveValue after interactive edit");
+
+  let clone = input.cloneNode(true);
+  is(clone.value, "abc", ".value after clone");
+  is(SpecialPowers.wrap(clone).lastInteractiveValue, "abc", ".lastInteractiveValue after clone");
+
+  clone.type = "hidden";
+
+  clone.value = "something random";
+  is(SpecialPowers.wrap(clone).lastInteractiveValue, "", ".lastInteractiveValue after clone in non-text-input");
+});
+
+add_task(async function set_user_input() {
+  let input = getFreshInput();
+
+  input.value = "";
+
+  SpecialPowers.wrap(input).setUserInput("abc");
+
+  is(input.value, "abc", ".value after setUserInput edit");
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "abc", ".lastInteractiveValue after setUserInput");
+
+  input.value = "foobar";
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "abc", ".lastInteractiveValue after script edit after setUserInput");
+});
+
+
+// TODO(emilio): Maybe execCommand shouldn't be considered interactive, but it
+// matches pre-existing behavior effectively.
+add_task(async function exec_command() {
+  let input = getFreshInput();
+
+  document.execCommand("insertText", false, "a");
+
+  is(input.value, "a", ".value after execCommand edit");
+
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "a", ".lastInteractiveValue after execCommand");
+
+  input.value = "foobar";
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "a", ".lastInteractiveValue after script edit after execCommand");
+});
+
+add_task(async function cut_paste() {
+  if (!kIsMac && !kIsWin) {
+    todo(false, "synthesizeNativeKey doesn't work elsewhere (yet)");
+    return;
+  }
+
+  function doSynthesizeNativeKey(keyCode, modifiers, chars) {
+    return new Promise((resolve, reject) => {
+      if (!synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, keyCode, modifiers, chars, chars, resolve)) {
+        reject(new Error("Couldn't synthesize native key"));
+      }
+    });
+  }
+
+  let input = getFreshInput();
+
+  sendString("abc");
+
+  input.select();
+
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "abc", ".lastInteractiveValue before cut");
+
+  await doSynthesizeNativeKey(kIsMac ? MAC_VK_ANSI_X : WIN_VK_X, { accelKey: true }, "x");
+
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "", ".lastInteractiveValue after cut");
+
+  await doSynthesizeNativeKey(kIsMac ? MAC_VK_ANSI_V : WIN_VK_V, { accelKey: true }, "v");
+
+  is(SpecialPowers.wrap(input).lastInteractiveValue, "abc", ".lastInteractiveValue after paste");
+});
+
+</script>

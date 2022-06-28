@@ -185,6 +185,12 @@ partial interface HTMLInputElement {
   [ChromeOnly]
   attribute DOMString previewValue;
 
+  // Last value entered by the user, not by a script.
+  // NOTE(emilio): As of right now some execCommand triggered changes might be
+  // considered interactive.
+  [ChromeOnly]
+  readonly attribute DOMString lastInteractiveValue;
+
   [ChromeOnly]
   // This function will return null if @autocomplete is not defined for the
   // current @type

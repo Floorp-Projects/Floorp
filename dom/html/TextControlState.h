@@ -306,6 +306,13 @@ class TextControlState final : public SupportsWeakPtr {
   }
   bool IsEmpty() const { return mValue.IsEmpty(); }
 
+  const nsAString& LastInteractiveValueIfLastChangeWasNonInteractive() const {
+    return mLastInteractiveValue;
+  }
+  // When an interactive value change happens, we clear mLastInteractiveValue
+  // because it's not needed (mValue is the new interactive value).
+  void ClearLastInteractiveValue() { mLastInteractiveValue.SetIsVoid(true); }
+
   Element* GetRootNode();
   Element* GetPreviewNode();
 
@@ -515,7 +522,12 @@ class TextControlState final : public SupportsWeakPtr {
   RefPtr<TextInputListener> mTextListener;
   UniquePtr<PasswordMaskData> mPasswordMaskData;
 
-  nsString mValue { VoidString() };  // Void if there's no value.
+  nsString mValue{VoidString()};  // Void if there's no value.
+
+  // If our input's last value change was not interactive (as in, the value
+  // change was caused by a ValueChangeKind::UserInteraction), this is the value
+  // that the last interaction had.
+  nsString mLastInteractiveValue{VoidString()};
 
   SelectionProperties mSelectionProperties;
 

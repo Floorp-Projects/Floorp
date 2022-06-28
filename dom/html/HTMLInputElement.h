@@ -169,6 +169,13 @@ class HTMLInputElement final : public TextControlElement,
                       const nsAString& aValue,
                       nsIPrincipal* aMaybeScriptedPrincipal,
                       nsAttrValue& aResult) override;
+
+  bool LastValueChangeWasInteractive() const {
+    return mLastValueChangeWasInteractive;
+  }
+
+  void GetLastInteractiveValue(nsAString&);
+
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       int32_t aModType) const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
