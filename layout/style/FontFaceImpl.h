@@ -133,10 +133,10 @@ class FontFaceImpl final {
   bool HasFontData() const;
 
   /**
-   * Creates a gfxFontFaceBufferSource to represent the font data
+   * Takes the gfxFontFaceBufferSource to represent the font data
    * in this object.
    */
-  already_AddRefed<gfxFontFaceBufferSource> CreateBufferSource();
+  already_AddRefed<gfxFontFaceBufferSource> TakeBufferSource();
 
   /**
    * Gets a pointer to and the length of the font data stored in the
@@ -184,7 +184,8 @@ class FontFaceImpl final {
 
   FontFaceImpl(FontFace* aOwner, FontFaceSetImpl* aFontFaceSet);
 
-  void InitializeSource(const UTF8StringOrArrayBufferOrArrayBufferView&);
+  void InitializeSourceURL(const nsACString& aURL);
+  void InitializeSourceBuffer(uint8_t* aBuffer, uint32_t aLength);
 
   /**
    * Sets all of the descriptor values in mDescriptors using values passed
@@ -256,8 +257,7 @@ class FontFaceImpl final {
 
   // If the FontFace was constructed with an ArrayBuffer(View), this is a
   // copy of the data from it.
-  uint8_t* mSourceBuffer;
-  uint32_t mSourceBufferLength;
+  RefPtr<FontFaceBufferSource> mBufferSource;
 
   // The values corresponding to the font face descriptors, if we are not
   // a rule backed FontFace object.  For rule backed objects, we use
