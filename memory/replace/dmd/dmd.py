@@ -21,6 +21,7 @@ import sys
 import tempfile
 from bisect import bisect_right
 from functools import cmp_to_key
+from typing import Callable
 
 # The DMD output version this script handles.
 outputVersion = 5
@@ -234,8 +235,12 @@ variable is used to find breakpad symbols for stack fixing.
     )
 
     p.add_argument(
-        "--allocation-filter",
-        help="Only print entries that have a stack that matches the filter",
+        "--filter",
+        default=[],
+        action="append",
+        help="Only print entries that have a stack that matches the filter. "
+        "A filter may be negated by prefixing it with `!`. "
+        "If multiple filters are specified, all of them must match.",
     )
 
     p.add_argument("input_file", help="a file produced by DMD")
@@ -622,15 +627,23 @@ def printDigest(args, digest):
         kindUsableSize = 0
         maxRecord = 1000
 
-        if args.allocation_filter:
-            sortedRecords = list(
-                filter(
-                    lambda x: any(
-                        map(lambda y: args.allocation_filter in y, x.allocatedAtDesc)
-                    ),
-                    sortedRecords,
-                )
-            )
+        def is_match(rec: Record, key: str):
+            return any(key in desc for desc in rec.allocatedAtDesc)
+
+        for arg in args.filter:
+            key: str
+            cond: Callable[[Record], bool]
+            if arg.startswith("\\"):
+                # just in case you really need to start a filter with '!' (or '\')
+                key = arg[1:]
+                cond = is_match
+            elif arg.startswith("!"):
+                key = arg[1:]
+                cond = lambda rec, key: not is_match(rec, key)  # noqa: E731
+            else:
+                key = arg
+                cond = is_match
+            sortedRecords = [rec for rec in sortedRecords if cond(rec, key)]
 
         # First iteration: get totals, etc.
         for record in sortedRecords:
