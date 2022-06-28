@@ -399,7 +399,7 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Opne lenker i appar</string>
     <!-- Preference for open download with an external download manager app -->
-    <string name="preferences_external_download_manager">Ekstern nedlastingshandterar</string>
+    <string name="preferences_external_download_manager">Ekstern nedlastingshandsamar</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Tillegg</string>
 
@@ -1129,7 +1129,7 @@
     <string name="preference_accessibility_auto_size_2">Automatisk skriftstorleik</string>
 
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">Skriftstorleik vil samsvare med Android-innstillingane dine. Slå av for å handtere skriftstorleik her.</string>
+    <string name="preference_accessibility_auto_size_summary">Skriftstorleik vil samsvare med Android-innstillingane dine. Slå av for å handsame skriftstorleik her.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Slett nettlesardata</string>
@@ -1530,7 +1530,7 @@
     <string name="preferences_credit_cards_add_credit_card">Legg til betalingskort</string>
 
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Handter lagra kort</string>
+    <string name="preferences_credit_cards_manage_saved_cards">Handsam lagra kort</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Legg til adresse</string>
     <!-- Preference option for managing saved addresses -->
