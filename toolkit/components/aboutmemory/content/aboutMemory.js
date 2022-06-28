@@ -381,6 +381,8 @@ window.onload = function() {
     "opsRowLabel",
     "Show memory reports"
   );
+  labelDiv1.setAttribute("role", "heading");
+  labelDiv1.setAttribute("aria-level", "1");
   let label1 = appendElementWithText(labelDiv1, "label", "");
   gVerbose = appendElement(label1, "input", "");
   gVerbose.type = "checkbox";
@@ -400,6 +402,8 @@ window.onload = function() {
     "opsRowLabel",
     "Save memory reports"
   );
+  labelDiv2.setAttribute("role", "heading");
+  labelDiv2.setAttribute("aria-level", "1");
   appendButton(row2, SvDesc, saveReportsToFile, "Measure and save…");
 
   // XXX: this isn't a great place for this checkbox, but I can't think of
@@ -411,14 +415,28 @@ window.onload = function() {
 
   let row3 = appendElement(ops, "div", "opsRow");
 
-  appendElementWithText(row3, "div", "opsRowLabel", "Free memory");
+  let labelDiv3 = appendElementWithText(
+    row3,
+    "div",
+    "opsRowLabel",
+    "Free memory"
+  );
+  labelDiv3.setAttribute("role", "heading");
+  labelDiv3.setAttribute("aria-level", "1");
   appendButton(row3, GCDesc, doGC, "GC");
   appendButton(row3, CCDesc, doCC, "CC");
   appendButton(row3, MMDesc, doMMU, "Minimize memory usage");
 
   let row4 = appendElement(ops, "div", "opsRow");
 
-  appendElementWithText(row4, "div", "opsRowLabel", "Save GC & CC logs");
+  let labelDiv4 = appendElementWithText(
+    row4,
+    "div",
+    "opsRowLabel",
+    "Save GC & CC logs"
+  );
+  labelDiv4.setAttribute("role", "heading");
+  labelDiv4.setAttribute("aria-level", "1");
   appendButton(
     row4,
     GCAndCCLogDesc,
@@ -441,7 +459,14 @@ window.onload = function() {
   if (gMgr.isDMDEnabled) {
     let row5 = appendElement(ops, "div", "opsRow");
 
-    appendElementWithText(row5, "div", "opsRowLabel", "Save DMD output");
+    let labelDiv5 = appendElementWithText(
+      row5,
+      "div",
+      "opsRowLabel",
+      "Save DMD output"
+    );
+    labelDiv5.setAttribute("role", "heading");
+    labelDiv5.setAttribute("aria-level", "1");
     let enableButtons = gMgr.isDMDRunning;
 
     let dmdButton = appendButton(
@@ -462,6 +487,7 @@ window.onload = function() {
   // Generate the footer.  It's hidden at first.
 
   gFooter = appendElement(document.body, "div", "ancillary hidden");
+  gFooter.setAttribute("role", "contentinfo");
 
   let a = appendElementWithText(
     gFooter,
@@ -1349,6 +1375,7 @@ function appendAboutMemoryMain(
 
     // Generate the main process sections.
     let sections = newElement("div", "sections");
+    sections.setAttribute("role", "main");
 
     for (let [i, process] of processes.entries()) {
       let pcolls = pcollsByProcess[process];
@@ -1406,6 +1433,7 @@ function appendAboutMemoryMain(
     outputContainer.appendChild(sections);
 
     let sidebar = appendElement(outputContainer, "div", "sidebar");
+    sidebar.setAttribute("role", "navigation");
     let sidebarContents = appendElement(sidebar, "div", "sidebarContents");
 
     // Generate the filter input and checkbox.
@@ -2144,8 +2172,12 @@ function toggle(aEvent) {
   // right nodes.  And the span containing the children of this line must
   // immediately follow.  Assertions check this.
 
-  // |aEvent.target| will be one of the spans.  Get the outer span.
-  let outerSpan = aEvent.target.parentNode;
+  // We want the outer span. |aEvent.target| will normally be one of the inner
+  // spans. However, if the click was dispatched via a11y, it might be the outer
+  // span because some of the inner spans are pruned from the a11y tree.
+  let outerSpan = aEvent.target.classList.contains("hasKids")
+    ? aEvent.target
+    : aEvent.target.parentNode;
   assertClassListContains(outerSpan, "hasKids");
 
   // Toggle the '++'/'--' separator.
@@ -2155,9 +2187,11 @@ function toggle(aEvent) {
   if (sepSpan.textContent === kHideKidsSep) {
     isExpansion = true;
     sepSpan.textContent = kShowKidsSep;
+    outerSpan.setAttribute("aria-expanded", "true");
   } else if (sepSpan.textContent === kShowKidsSep) {
     isExpansion = false;
     sepSpan.textContent = kHideKidsSep;
+    outerSpan.setAttribute("aria-expanded", "false");
   } else {
     assert(false, "bad sepSpan textContent");
   }
@@ -2186,7 +2220,8 @@ function expandPathToThisElement(aElement) {
     let sepSpan = aElement.childNodes[2];
     assertClassListContains(sepSpan, "mrSep");
     sepSpan.textContent = kShowKidsSep;
-    expandPathToThisElement(aElement.parentNode); // kids or pre.entries
+    aElement.setAttribute("aria-expanded", "true");
+    expandPathToThisElement(aElement.parentNode.parentNode); // kids or pre.entries
   } else {
     assertClassListContains(aElement, "entries");
   }
@@ -2246,6 +2281,12 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
       return aS;
     }
 
+    // The entire entry including children needs to be treated as a list item
+    // for a11y purposes.
+    let p = document.createElement("span");
+    p.setAttribute("role", "listitem");
+    aP.appendChild(p);
+
     // The tree line.  Indent more if this entry is narrower than its parent.
     let valueText = aT.toString();
     let extraTlLength = Math.max(aParentStringLength - valueText.length, 0);
@@ -2253,7 +2294,8 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
       aTlThis = appendN(aTlThis, "─", extraTlLength);
       aTlKids = appendN(aTlKids, " ", extraTlLength);
     }
-    appendElementWithText(aP, "span", "treeline", aTlThis);
+    let treeLine = appendElementWithText(p, "span", "treeline", aTlThis);
+    treeLine.setAttribute("aria-hidden", "true");
 
     // Detect and record invalid values.  But not if gIsDiff is true, because
     // we expect negative values in that case.
@@ -2286,14 +2328,16 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
       if (gShowSubtreesBySafeTreeId[safeTreeId] !== undefined) {
         showSubtrees = gShowSubtreesBySafeTreeId[safeTreeId];
       }
-      d = appendElement(aP, "span", "hasKids");
+      d = appendElement(p, "span", "hasKids");
       d.id = safeTreeId;
       d.onclick = toggle;
+      d.setAttribute("role", "button");
       sep = showSubtrees ? kShowKidsSep : kHideKidsSep;
+      d.setAttribute("aria-expanded", showSubtrees ? "true" : "false");
     } else {
       assert(!aT._hideKids, "leaf node with _hideKids set");
       sep = kNoKidsSep;
-      d = aP;
+      d = p;
     }
 
     // The value.
@@ -2326,13 +2370,14 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
     // In non-verbose mode, invalid nodes can be hidden in collapsed sub-trees.
     // But it's good to always see them, so force this.
     if (!gVerbose.checked && tIsInvalid) {
-      expandPathToThisElement(d);
+      expandPathToThisElement(aT._kids ? d : aP);
     }
 
     // Recurse over children.
     if (aT._kids) {
       // The 'kids' class is just used for sanity checking in toggle().
-      d = appendElement(aP, "span", showSubtrees ? "kids" : "kids hidden");
+      d = appendElement(p, "span", showSubtrees ? "kids" : "kids hidden");
+      d.setAttribute("role", "list");
 
       let tlThisForMost, tlKidsForMost;
       if (aT._kids.length > 1) {
@@ -2377,7 +2422,9 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText) {
 
 function appendSectionHeader(aP, aText) {
   appendElementWithText(aP, "h2", "", aText + "\n");
-  return appendElement(aP, "pre", "entries");
+  let entries = appendElement(aP, "pre", "entries");
+  entries.setAttribute("role", "list");
+  return entries;
 }
 
 // ---------------------------------------------------------------------------
