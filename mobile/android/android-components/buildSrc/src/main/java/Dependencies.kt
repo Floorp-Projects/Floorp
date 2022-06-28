@@ -11,7 +11,7 @@ object Versions {
     const val coroutines = "1.6.1"
 
     const val junit = "4.12"
-    const val robolectric = "4.7.3"
+    const val robolectric = "4.8.1"
     const val mockito = "3.11.2"
     const val maven_ant_tasks = "2.1.3"
 
