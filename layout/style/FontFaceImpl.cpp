@@ -517,10 +517,9 @@ void FontFaceImpl::SetUserFontEntry(gfxUserFontEntry* aEntry) {
   if (mUserFontEntry) {
     mUserFontEntry->mFontFaces.AppendElement(this);
 
-    MOZ_ASSERT(
-        mUserFontEntry->GetUserFontSet() == mFontFaceSet->GetUserFontSet(),
-        "user font entry must be associated with the same user font set "
-        "as the FontFace");
+    MOZ_ASSERT(mUserFontEntry->GetUserFontSet() == mFontFaceSet,
+               "user font entry must be associated with the same user font set "
+               "as the FontFace");
 
     // Our newly assigned user font entry might be in the process of or
     // finished loading, so set our status accordingly.  But only do so
@@ -744,10 +743,10 @@ void FontFaceImpl::Entry::GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult) {
 
   for (FontFaceImpl* f : mFontFaces) {
     if (f->mInFontFaceSet) {
-      aResult.AppendElement(f->mFontFaceSet->GetUserFontSet());
+      aResult.AppendElement(f->mFontFaceSet);
     }
     for (FontFaceSetImpl* s : f->mOtherFontFaceSets) {
-      aResult.AppendElement(s->GetUserFontSet());
+      aResult.AppendElement(s);
     }
   }
 
