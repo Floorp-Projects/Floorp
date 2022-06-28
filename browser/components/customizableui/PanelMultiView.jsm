@@ -573,9 +573,7 @@ var PanelMultiView = class extends AssociatedToNode {
           options &&
           typeof options == "object" &&
           options.triggerEvent &&
-          (options.triggerEvent.type == "keypress" ||
-            options.triggerEvent?.inputSource ==
-              MouseEvent.MOZ_SOURCE_KEYBOARD) &&
+          options.triggerEvent.type == "keypress" &&
           this.openViews.length
         ) {
           // This was opened via the keyboard, so focus the first item.
