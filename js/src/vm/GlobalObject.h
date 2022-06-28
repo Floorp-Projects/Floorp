@@ -348,6 +348,16 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(key);
   }
 
+  static JS::Handle<JSObject*> getOrCreatePrototypeHandle(JSContext* cx,
+                                                          JSProtoKey key) {
+    MOZ_ASSERT(key != JSProto_Null);
+    Handle<GlobalObject*> global = cx->global();
+    if (!GlobalObject::ensureConstructor(cx, global, key)) {
+      return nullptr;
+    }
+    return global->getPrototypeHandle(key);
+  }
+
   JSObject* maybeGetConstructor(JSProtoKey protoKey) const {
     MOZ_ASSERT(JSProto_Null < protoKey);
     MOZ_ASSERT(protoKey < JSProto_LIMIT);
@@ -375,6 +385,14 @@ class GlobalObject : public NativeObject {
   JSObject& getPrototype(JSProtoKey key) const {
     MOZ_ASSERT(hasPrototype(key));
     return *maybeGetPrototype(key);
+  }
+
+  JS::Handle<JSObject*> getPrototypeHandle(JSProtoKey protoKey) const {
+    MOZ_ASSERT(hasPrototype(protoKey));
+    MOZ_ASSERT(JSProto_Null < protoKey);
+    MOZ_ASSERT(protoKey < JSProto_LIMIT);
+    return Handle<JSObject*>::fromMarkedLocation(
+        &data().builtinConstructors[protoKey].prototype.get());
   }
 
   void setPrototype(JSProtoKey key, JSObject* obj) {
@@ -469,6 +487,16 @@ class GlobalObject : public NativeObject {
       }
     }
     return &global->getPrototype(JSProto_Object);
+  }
+
+  static Handle<JSObject*> getOrCreateObjectPrototypeHandle(
+      JSContext* cx, Handle<GlobalObject*> global) {
+    if (!global->functionObjectClassesInitialized()) {
+      if (!ensureConstructor(cx, global, JSProto_Object)) {
+        return nullptr;
+      }
+    }
+    return global->getPrototypeHandle(JSProto_Object);
   }
 
   static JSObject* getOrCreateFunctionConstructor(
