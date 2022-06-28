@@ -207,7 +207,7 @@ void nsPresContext::ForceReflowForFontInfoUpdate(bool aNeedsReframe) {
   // If there's a user font set, discard any src:local() faces it may have
   // loaded because their font entries may no longer be valid.
   if (auto* fonts = Document()->GetFonts()) {
-    fonts->GetUserFontSet()->ForgetLocalFaces();
+    fonts->GetImpl()->ForgetLocalFaces();
   }
 
   FlushFontCache();
