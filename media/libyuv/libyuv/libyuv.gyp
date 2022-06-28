@@ -26,8 +26,6 @@
     'clang%': 0,
     # Link-Time Optimizations.
     'use_lto%': 0,
-    'yuv_disable_asm%': 0,
-    'yuv_disable_avx2%': 0,
     'mips_msa%': 0,  # Default to msa off.
     'build_neon': 0,
     'build_msa': 0,
@@ -102,19 +100,6 @@
             'LIBYUV_MSA',
           ],
         }],
-        [ 'yuv_disable_asm != 0', {
-          'defines': [
-            # Enable the following 3 macros to turn off assembly for specified CPU.
-            'LIBYUV_DISABLE_X86',
-            'LIBYUV_DISABLE_NEON',
-            'LIBYUV_DISABLE_DSPR2',
-          ],
-        }],
-        [ 'yuv_disable_avx2 == 1', {
-          'defines': [
-            'LIBYUV_DISABLE_AVX2',
-          ]
-        }],
         ['build_with_mozilla == 1', {
           'defines': [
             'HAVE_JPEG'
@@ -152,8 +137,7 @@
         # Enable the following 3 macros to turn off assembly for specified CPU.
         # 'LIBYUV_DISABLE_X86',
         # 'LIBYUV_DISABLE_NEON',
-        # This disables AVX2 (Haswell) support, overriding compiler checks
-        # 'LIBYUV_DISABLE_AVX2',
+        # 'LIBYUV_DISABLE_DSPR2',
         # Enable the following macro to build libyuv as a shared library (dll).
         # 'LIBYUV_USING_SHARED_LIBRARY',
         # TODO(fbarchard): Make these into gyp defines.

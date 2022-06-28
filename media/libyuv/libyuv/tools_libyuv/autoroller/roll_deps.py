@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env vpython3
+
 # Copyright 2017 The LibYuv Project Authors. All rights reserved.
 #
 # Use of this source code is governed by a BSD-style license
@@ -8,9 +9,8 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 # This is a modified copy of the script in
-# https://chromium.googlesource.com/external/webrtc/+/master/tools-webrtc/autoroller/roll_deps.py
+# https://webrtc.googlesource.com/src/+/master/tools_webrtc/autoroller/roll_deps.py
 # customized for libyuv.
-
 
 """Script to automatically roll dependencies in the libyuv DEPS file."""
 
@@ -22,7 +22,7 @@ import os
 import re
 import subprocess
 import sys
-import urllib
+import urllib.request
 
 
 # Skip these dependencies (list without solution name prefix).
@@ -37,7 +37,7 @@ CHROMIUM_LOG_TEMPLATE = CHROMIUM_SRC_URL + '/+log/%s'
 CHROMIUM_FILE_TEMPLATE = CHROMIUM_SRC_URL + '/+/%s/%s'
 
 COMMIT_POSITION_RE = re.compile('^Cr-Commit-Position: .*#([0-9]+).*$')
-CLANG_REVISION_RE = re.compile(r'^CLANG_REVISION = \'(\d+)\'$')
+CLANG_REVISION_RE = re.compile(r'^CLANG_REVISION = \'([0-9a-z-]+)\'$')
 ROLL_BRANCH_NAME = 'roll_chromium_revision'
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -46,7 +46,7 @@ CHECKOUT_SRC_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, os.pardir,
 CHECKOUT_ROOT_DIR = os.path.realpath(os.path.join(CHECKOUT_SRC_DIR, os.pardir))
 
 sys.path.append(os.path.join(CHECKOUT_SRC_DIR, 'build'))
-import find_depot_tools
+import find_depot_tools  # pylint: disable=wrong-import-position
 find_depot_tools.add_depot_tools_to_path()
 
 CLANG_UPDATE_SCRIPT_URL_PATH = 'tools/clang/scripts/update.py'
@@ -69,6 +69,7 @@ def ParseDepsDict(deps_content):
   local_scope = {}
   global_scope = {
     'Var': VarLookup(local_scope),
+    'Str': lambda s: s,
     'deps_os': {},
   }
   exec(deps_content, global_scope, local_scope)
@@ -77,7 +78,7 @@ def ParseDepsDict(deps_content):
 
 def ParseLocalDepsFile(filename):
   with open(filename, 'rb') as f:
-    deps_content = f.read()
+    deps_content = f.read().decode('utf-8')
   return ParseDepsDict(deps_content)
 
 
@@ -90,14 +91,14 @@ def ParseCommitPosition(commit_message):
   for line in reversed(commit_message.splitlines()):
     m = COMMIT_POSITION_RE.match(line.strip())
     if m:
-      return m.group(1)
+      return int(m.group(1))
   logging.error('Failed to parse commit position id from:\n%s\n',
                 commit_message)
   sys.exit(-1)
 
 
 def _RunCommand(command, working_dir=None, ignore_exit_code=False,
-                extra_env=None):
+                extra_env=None, input_data=None):
   """Runs a command and returns the output from that command.
 
   If the command fails (exit code != 0), the function will exit the process.
@@ -109,15 +110,17 @@ def _RunCommand(command, working_dir=None, ignore_exit_code=False,
   logging.debug('CMD: %s CWD: %s', ' '.join(command), working_dir)
   env = os.environ.copy()
   if extra_env:
-    assert all(type(value) == str for value in extra_env.values())
+    assert all(isinstance(value, str) for value in extra_env.values())
     logging.debug('extra env: %s', extra_env)
     env.update(extra_env)
-  p = subprocess.Popen(command, stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE, env=env,
-                       cwd=working_dir, universal_newlines=True)
-  std_output = p.stdout.read()
-  err_output = p.stderr.read()
-  p.wait()
+  p = subprocess.Popen(command,
+                       stdin=subprocess.PIPE,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE,
+                       env=env,
+                       cwd=working_dir,
+                       universal_newlines=True)
+  std_output, err_output = p.communicate(input_data)
   p.stdout.close()
   p.stderr.close()
   if not ignore_exit_code and p.returncode != 0:
@@ -153,7 +156,7 @@ def _ReadGitilesContent(url):
   # Download and decode BASE64 content until
   # https://code.google.com/p/gitiles/issues/detail?id=7 is fixed.
   base64_content = ReadUrlContent(url + '?format=TEXT')
-  return base64.b64decode(base64_content[0])
+  return base64.b64decode(base64_content[0]).decode('utf-8')
 
 
 def ReadRemoteCrFile(path_below_src, revision):
@@ -169,7 +172,7 @@ def ReadRemoteCrCommit(revision):
 
 def ReadUrlContent(url):
   """Connect to a remote host and read the contents. Returns a list of lines."""
-  conn = urllib.urlopen(url)
+  conn = urllib.request.urlopen(url)
   try:
     return conn.readlines()
   except IOError as e:
@@ -192,7 +195,7 @@ def GetMatchingDepsEntries(depsentry_dict, dir_path):
     A list of DepsEntry objects.
   """
   result = []
-  for path, depsentry in depsentry_dict.iteritems():
+  for path, depsentry in depsentry_dict.items():
     if path == dir_path:
       result.append(depsentry)
     else:
@@ -202,24 +205,24 @@ def GetMatchingDepsEntries(depsentry_dict, dir_path):
         result.append(depsentry)
   return result
 
-
 def BuildDepsentryDict(deps_dict):
-  """Builds a dict of paths to DepsEntry objects from a raw parsed deps dict."""
+  """Builds a dict of paths to DepsEntry objects from a raw deps dict."""
   result = {}
+
   def AddDepsEntries(deps_subdict):
-    for path, deps_url_spec in deps_subdict.iteritems():
-      # The deps url is either an URL and a condition, or just the URL.
+    for path, deps_url_spec in deps_subdict.items():
       if isinstance(deps_url_spec, dict):
+        if deps_url_spec.get('dep_type') == 'cipd':
+          continue
         deps_url = deps_url_spec['url']
       else:
         deps_url = deps_url_spec
-
-      if not result.has_key(path):
+      if not path in result:
         url, revision = deps_url.split('@') if deps_url else (None, None)
         result[path] = DepsEntry(path, url, revision)
 
   AddDepsEntries(deps_dict['deps'])
-  for deps_os in ['win', 'mac', 'unix', 'android', 'ios', 'unix']:
+  for deps_os in ['win', 'mac', 'linux', 'android', 'ios', 'unix']:
     AddDepsEntries(deps_dict.get('deps_os', {}).get(deps_os, {}))
   return result
 
@@ -242,7 +245,7 @@ def CalculateChangedDeps(libyuv_deps, new_cr_deps):
   result = []
   libyuv_entries = BuildDepsentryDict(libyuv_deps)
   new_cr_entries = BuildDepsentryDict(new_cr_deps)
-  for path, libyuv_deps_entry in libyuv_entries.iteritems():
+  for path, libyuv_deps_entry in libyuv_entries.items():
     if path in DONT_AUTOROLL_THESE:
       continue
     cr_deps_entry = new_cr_entries.get(path)
@@ -272,9 +275,9 @@ def CalculateChangedClang(new_cr_rev):
       match = CLANG_REVISION_RE.match(line)
       if match:
         return match.group(1)
-    raise RollError('Could not parse Clang revision!')
+    raise RollError('Could not parse Clang revision from:\n' + '\n'.join('  ' + l for l in lines))
 
-  with open(CLANG_UPDATE_SCRIPT_LOCAL_PATH, 'rb') as f:
+  with open(CLANG_UPDATE_SCRIPT_LOCAL_PATH, 'r') as f:
     current_lines = f.readlines()
   current_rev = GetClangRev(current_lines)
 
@@ -296,9 +299,6 @@ def GenerateCommitMessage(current_cr_rev, new_cr_rev, current_commit_pos,
   commit_msg.append('Change log: %s' % (CHROMIUM_LOG_TEMPLATE % rev_interval))
   commit_msg.append('Full diff: %s\n' % (CHROMIUM_COMMIT_TEMPLATE %
                                          rev_interval))
-  # TBR field will be empty unless in some custom cases, where some engineers
-  # are added.
-  tbr_authors = ''
   if changed_deps_list:
     commit_msg.append('Changed dependencies:')
 
@@ -320,7 +320,11 @@ def GenerateCommitMessage(current_cr_rev, new_cr_rev, current_commit_pos,
   else:
     commit_msg.append('No update to Clang.\n')
 
-  commit_msg.append('TBR=%s' % tbr_authors)
+  # TBR needs to be non-empty for Gerrit to process it.
+  git_author = _RunCommand(['git', 'config', 'user.email'],
+                           working_dir=CHECKOUT_SRC_DIR)[0].strip()
+  commit_msg.append('TBR=%s' % git_author)
+
   commit_msg.append('BUG=None')
   return '\n'.join(commit_msg)
 
@@ -331,10 +335,10 @@ def UpdateDepsFile(deps_filename, old_cr_revision, new_cr_revision,
 
   # Update the chromium_revision variable.
   with open(deps_filename, 'rb') as deps_file:
-    deps_content = deps_file.read()
+    deps_content = deps_file.read().decode('utf-8')
   deps_content = deps_content.replace(old_cr_revision, new_cr_revision)
   with open(deps_filename, 'wb') as deps_file:
-    deps_file.write(deps_content)
+    deps_file.write(deps_content.encode('utf-8'))
 
   # Update each individual DEPS entry.
   for dep in changed_deps:
@@ -345,11 +349,9 @@ def UpdateDepsFile(deps_filename, old_cr_revision, new_cr_revision,
           'contains all platforms in the target_os list, i.e.\n'
           'target_os = ["android", "unix", "mac", "ios", "win"];\n'
           'Then run "gclient sync" again.' % local_dep_dir)
-    _, stderr = _RunCommand(
-      ['roll-dep-svn', '--no-verify-revision', dep.path, dep.new_rev],
-      working_dir=CHECKOUT_SRC_DIR, ignore_exit_code=True)
-    if stderr:
-      logging.warning('roll-dep-svn: %s', stderr)
+    _RunCommand(
+      ['gclient', 'setdep', '--revision', '%s@%s' % (dep.path, dep.new_rev)],
+      working_dir=CHECKOUT_SRC_DIR)
 
 
 def _IsTreeClean():
@@ -364,12 +366,12 @@ def _IsTreeClean():
 def _EnsureUpdatedMasterBranch(dry_run):
   current_branch = _RunCommand(
       ['git', 'rev-parse', '--abbrev-ref', 'HEAD'])[0].splitlines()[0]
-  if current_branch != 'master':
-    logging.error('Please checkout the master branch and re-run this script.')
+  if current_branch != 'main':
+    logging.error('Please checkout the main branch and re-run this script.')
     if not dry_run:
       sys.exit(-1)
 
-  logging.info('Updating master branch...')
+  logging.info('Updating main branch...')
   _RunCommand(['git', 'pull'])
 
 
@@ -382,7 +384,7 @@ def _CreateRollBranch(dry_run):
 def _RemovePreviousRollBranch(dry_run):
   active_branch, branches = _GetBranches()
   if active_branch == ROLL_BRANCH_NAME:
-    active_branch = 'master'
+    active_branch = 'main'
   if ROLL_BRANCH_NAME in branches:
     logging.info('Removing previous roll branch (%s)', ROLL_BRANCH_NAME)
     if not dry_run:
@@ -397,20 +399,37 @@ def _LocalCommit(commit_msg, dry_run):
     _RunCommand(['git', 'commit', '-m', commit_msg])
 
 
-def _UploadCL(dry_run, rietveld_email=None):
-  logging.info('Uploading CL...')
-  if not dry_run:
-    cmd = ['git', 'cl', 'upload', '-f']
-    if rietveld_email:
-      cmd.append('--email=%s' % rietveld_email)
-    _RunCommand(cmd, extra_env={'EDITOR': 'true'})
+def ChooseCQMode(skip_cq, cq_over, current_commit_pos, new_commit_pos):
+  if skip_cq:
+    return 0
+  if (new_commit_pos - current_commit_pos) < cq_over:
+    return 1
+  return 2
 
 
-def _SendToCQ(dry_run, skip_cq):
-  logging.info('Sending the CL to the CQ...')
-  if not dry_run and not skip_cq:
-    _RunCommand(['git', 'cl', 'set_commit'])
-    logging.info('Sent the CL to the CQ.')
+def _UploadCL(commit_queue_mode):
+  """Upload the committed changes as a changelist to Gerrit.
+
+  commit_queue_mode:
+    - 2: Submit to commit queue.
+    - 1: Run trybots but do not submit to CQ.
+    - 0: Skip CQ, upload only.
+  """
+  cmd = ['git', 'cl', 'upload', '--force', '--bypass-hooks', '--send-mail']
+  if commit_queue_mode >= 2:
+    logging.info('Sending the CL to the CQ...')
+    cmd.extend(['-o', 'label=Bot-Commit+1'])
+    cmd.extend(['-o', 'label=Commit-Queue+2'])
+  elif commit_queue_mode >= 1:
+    logging.info('Starting CQ dry run...')
+    cmd.extend(['-o', 'label=Commit-Queue+1'])
+  extra_env = {
+      'EDITOR': 'true',
+      'SKIP_GCE_AUTH_FOR_GIT': '1',
+  }
+  stdout, stderr = _RunCommand(cmd, extra_env=extra_env)
+  logging.debug('Output from "git cl upload":\nstdout:\n%s\n\nstderr:\n%s',
+      stdout, stderr)
 
 
 def main():
@@ -420,20 +439,20 @@ def main():
   p.add_argument('-r', '--revision',
                  help=('Chromium Git revision to roll to. Defaults to the '
                        'Chromium HEAD revision if omitted.'))
-  p.add_argument('-u', '--rietveld-email',
-                 help=('E-mail address to use for creating the CL at Rietveld'
-                       'If omitted a previously cached one will be used or an '
-                       'error will be thrown during upload.'))
   p.add_argument('--dry-run', action='store_true', default=False,
                  help=('Calculate changes and modify DEPS, but don\'t create '
                        'any local branch, commit, upload CL or send any '
                        'tryjobs.'))
   p.add_argument('-i', '--ignore-unclean-workdir', action='store_true',
                  default=False,
-                 help=('Ignore if the current branch is not master or if there '
+                 help=('Ignore if the current branch is not main or if there '
                        'are uncommitted changes (default: %(default)s).'))
-  p.add_argument('--skip-cq', action='store_true', default=False,
-                 help='Skip sending the CL to the CQ (default: %(default)s)')
+  grp = p.add_mutually_exclusive_group()
+  grp.add_argument('--skip-cq', action='store_true', default=False,
+                   help='Skip sending the CL to the CQ (default: %(default)s)')
+  grp.add_argument('--cq-over', type=int, default=1,
+                   help=('Commit queue dry run if the revision difference '
+                         'is below this number (default: %(default)s)'))
   p.add_argument('-v', '--verbose', action='store_true', default=False,
                  help='Be extra verbose in printing of log messages.')
   opts = p.parse_args()
@@ -478,8 +497,11 @@ def main():
   _CreateRollBranch(opts.dry_run)
   UpdateDepsFile(deps_filename, current_cr_rev, new_cr_rev, changed_deps)
   _LocalCommit(commit_msg, opts.dry_run)
-  _UploadCL(opts.dry_run, opts.rietveld_email)
-  _SendToCQ(opts.dry_run, opts.skip_cq)
+  commit_queue_mode = ChooseCQMode(opts.skip_cq, opts.cq_over,
+                                   current_commit_pos, new_commit_pos)
+  logging.info('Uploading CL...')
+  if not opts.dry_run:
+    _UploadCL(commit_queue_mode)
   return 0
 
 
