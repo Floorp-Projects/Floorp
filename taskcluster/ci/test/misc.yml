@@ -4,6 +4,10 @@
 ---
 job-defaults:
     test-manifest-loader: null  # don't load tests in the taskgraph
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
 
 geckoview-junit:
     description: "Geckoview junit run"
