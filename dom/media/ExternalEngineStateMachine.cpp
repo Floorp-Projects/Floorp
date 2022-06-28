@@ -7,6 +7,7 @@
 #include "PerformanceRecorder.h"
 #ifdef MOZ_WMF
 #  include "mozilla/MFMediaEngineChild.h"
+#  include "MFMediaEngineDecoderModule.h"
 #endif
 #include "mozilla/ProfilerLabels.h"
 
@@ -175,6 +176,14 @@ void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
   mMediaSeekableOnlyInBufferedRanges =
       Info().mMediaSeekableOnlyInBufferedRanges;
 
+  if (!IsFormatSupportedByExternalEngine(*mInfo)) {
+    // The external engine doesn't support the type, try to notify the decoder
+    // to use our own state machine again.
+    DecodeError(
+        MediaResult(NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR));
+    return;
+  }
+
   mEngine->SetMediaInfo(*mInfo);
 
   if (Info().mMetadataDuration.isSome()) {
@@ -204,6 +213,25 @@ void ExternalEngineStateMachine::OnMetadataNotRead(const MediaResult& aError) {
   LOGE("Decode metadata failed, shutting down decoder");
   mState.AsReadingMetadata()->mMetadataRequest.Complete();
   DecodeError(aError);
+}
+
+bool ExternalEngineStateMachine::IsFormatSupportedByExternalEngine(
+    const MediaInfo& aInfo) {
+  AssertOnTaskQueue();
+  MOZ_ASSERT(mState.IsReadingMetadata());
+#ifdef MOZ_WMF
+  const bool audioSupported =
+      !aInfo.HasAudio() ||
+      MFMediaEngineDecoderModule::SupportsConfig(aInfo.mAudio);
+  const bool videoSupported =
+      !aInfo.HasVideo() ||
+      MFMediaEngineDecoderModule::SupportsConfig(aInfo.mVideo);
+  LOG("audio=%s (supported=%d), video=%s(supported=%d)",
+      aInfo.HasAudio() ? aInfo.mAudio.mMimeType.get() : "none", audioSupported,
+      aInfo.HasVideo() ? aInfo.mVideo.mMimeType.get() : "none", videoSupported);
+  return audioSupported && videoSupported;
+#endif
+  return false;
 }
 
 RefPtr<MediaDecoder::SeekPromise> ExternalEngineStateMachine::Seek(
