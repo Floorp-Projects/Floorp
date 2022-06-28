@@ -359,13 +359,14 @@ body > main > aside {
       "first third";
 }
 
-.synced-tab-li {
+.synced-tab-li,
+.synced-tab-li-placeholder {
   box-sizing: border-box;
   border: 1px solid #CFCFD8;
   border-radius: 8px;
   padding: 10px;
   display: grid;
-  grid-template-columns: min-content repeat(3, 1fr);
+  grid-template-columns: min-content repeat(2, 1fr) minmax(min-content, auto);
   grid-template-rows: auto auto;
   grid-template-areas:
   "favicon title title title"
@@ -390,6 +391,38 @@ body > main > aside {
   .synced-tab-li:not(:first-child) > .synced-tab-li-time {
     display: none;
   }
+}
+
+.synced-tab-li-placeholder {
+  padding-top: 15px;
+}
+
+.li-placeholder-favicon {
+  grid-area: favicon;
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 10px;
+}
+
+.li-placeholder-title {
+  grid-area: title;
+  height: 12px;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.li-placeholder-domain {
+  grid-area: url-device;
+  height: 8px;
+  width: 100%;
+}
+
+.li-placeholder-favicon,
+.li-placeholder-title,
+.li-placeholder-domain {
+  display: inline-block;
+  background-color: currentColor; opacity: 0.08;
+  border-radius: 4px;
 }
 
 .synced-tab-li:first-child {
