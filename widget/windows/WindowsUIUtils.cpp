@@ -436,15 +436,24 @@ Maybe<nscolor> WindowsUIUtils::GetSystemColor(ColorScheme aScheme,
 
   // https://docs.microsoft.com/en-us/windows/apps/design/style/color
   // Is a useful resource to see which values have decent contrast.
-  if (aSysColor == COLOR_HIGHLIGHT) {
-    int tone = aScheme == ColorScheme::Light ? 0 : -1;
-    if (auto c = GetAccentColor(tone)) {
-      return c;
+  if (StaticPrefs::widget_windows_uwp_system_colors_highlight_accent()) {
+    if (aSysColor == COLOR_HIGHLIGHT) {
+      int tone = aScheme == ColorScheme::Light ? 0 : -1;
+      if (auto c = GetAccentColor(tone)) {
+        return c;
+      }
+    }
+    if (aSysColor == COLOR_HIGHLIGHTTEXT && GetAccentColor()) {
+      return Some(NS_RGBA(255, 255, 255, 255));
     }
   }
-  if (aSysColor == COLOR_HIGHLIGHTTEXT && GetAccentColor()) {
-    return Some(NS_RGBA(255, 255, 255, 255));
+
+  if (aScheme == ColorScheme::Dark) {
+    // There are no explicitly dark colors in UWP, other than the highlight
+    // colors above.
+    return Nothing();
   }
+
   auto knownType = [&]() -> Maybe<UIElementType> {
 #  define MAP(_win32, _uwp) \
     case COLOR_##_win32:    \
