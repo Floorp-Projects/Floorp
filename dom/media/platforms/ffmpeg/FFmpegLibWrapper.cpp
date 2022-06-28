@@ -12,6 +12,7 @@
 #include "PlatformDecoderModule.h"
 #include "prlink.h"
 #ifdef MOZ_WAYLAND
+#  include "mozilla/gfx/gfxVars.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
 #endif
 
@@ -284,7 +285,7 @@ void FFmpegLibWrapper::Unlink() {
 
 #ifdef MOZ_WAYLAND
 void FFmpegLibWrapper::LinkVAAPILibs() {
-  if (!widget::GetDMABufDevice()->IsDMABufVAAPIEnabled()) {
+  if (!gfx::gfxVars::CanUseHardwareVideoDecoding() || !XRE_IsRDDProcess()) {
     return;
   }
 
