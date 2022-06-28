@@ -1083,7 +1083,13 @@ void TextInputListener::HandleValueChanged() {
   }
 
   if (!mSettingValue) {
+    // NOTE(emilio): execCommand might get here even though it might not be a
+    // "proper" user-interactive change. Might be worth reconsidering which
+    // ValueChangeKind are we passing down.
     mTxtCtrlElement->OnValueChanged(ValueChangeKind::UserInteraction);
+    if (mTextControlState) {
+      mTextControlState->ClearLastInteractiveValue();
+    }
   }
 }
 
@@ -2643,6 +2649,27 @@ bool TextControlState::SetValue(const nsAString& aValue,
     return false;
   }
 
+  const auto changeKind = [&] {
+    if (aOptions.contains(ValueSetterOption::ByInternalAPI)) {
+      return ValueChangeKind::Internal;
+    }
+    if (aOptions.contains(ValueSetterOption::BySetUserInputAPI)) {
+      return ValueChangeKind::UserInteraction;
+    }
+    return ValueChangeKind::Script;
+  }();
+
+  if (changeKind == ValueChangeKind::Script) {
+    // This value change will not be interactive. If we're an input that was
+    // interactively edited, save the last interactive value now before it goes
+    // away.
+    if (auto* input = HTMLInputElement::FromNode(mTextCtrlElement)) {
+      if (input->LastValueChangeWasInteractive()) {
+        GetValue(mLastInteractiveValue, /* aIgnoreWrap = */ true);
+      }
+    }
+  }
+
   // Note that if this may be called during reframe of the editor.  In such
   // case, we shouldn't commit composition.  Therefore, when this is called
   // for internal processing, we shouldn't commit the composition.
@@ -2723,11 +2750,6 @@ bool TextControlState::SetValue(const nsAString& aValue,
   // If we were handling SetValue() before, don't update the DOM state twice,
   // just let the outer call do so.
   if (!wasHandlingSetValue) {
-    // TODO(emilio): It seems wrong to pass ValueChangeKind::Script if
-    // BySetUserInput is in aOptions.
-    auto changeKind = aOptions.contains(ValueSetterOption::ByInternalAPI)
-                          ? ValueChangeKind::Internal
-                          : ValueChangeKind::Script;
     handlingSetValue.GetTextControlElement()->OnValueChanged(changeKind);
   }
   return true;
@@ -2991,6 +3013,8 @@ bool TextControlState::SetValueWithoutTextEditor(
       // listeners like `EditorBase::NotifyEditorObservers()`.
       aHandlingSetValue.GetTextControlElement()->OnValueChanged(
           ValueChangeKind::UserInteraction);
+
+      ClearLastInteractiveValue();
 
       MOZ_ASSERT(!aHandlingSetValue.GetSettingValue().IsVoid());
       DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
