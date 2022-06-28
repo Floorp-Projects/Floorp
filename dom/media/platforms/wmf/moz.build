@@ -8,6 +8,7 @@ EXPORTS += [
     "DXVA2Manager.h",
     "MFMediaEngineAudioStream.h",
     "MFMediaEngineDecoderModule.h",
+    "MFMediaEngineExtra.h",
     "MFMediaEngineStream.h",
     "MFMediaEngineVideoStream.h",
     "MFTDecoder.h",
