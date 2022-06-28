@@ -107,7 +107,8 @@ void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
 
 ExternalEngineStateMachine::ExternalEngineStateMachine(
     MediaDecoder* aDecoder, MediaFormatReader* aReader)
-    : MediaDecoderStateMachineBase(aDecoder, aReader) {
+    : MediaDecoderStateMachineBase(aDecoder, aReader),
+      mVideoFrameContainer(aDecoder->GetVideoFrameContainer()) {
   LOG("Created ExternalEngineStateMachine");
   MOZ_ASSERT(mState.IsInitEngine());
 #ifdef MOZ_WMF
@@ -707,8 +708,9 @@ void ExternalEngineStateMachine::OnRequestVideo() {
                 MEDIA_PLAYBACK);
             MOZ_ASSERT(aVideo);
             RunningEngineUpdate(MediaData::Type::VIDEO_DATA);
-            // TODO : set video into video container? Will implement this when
-            // starting implementing the video output for the media engine.
+            // TODO : figure out the relationship between setting image and the
+            // DCOMP mode.
+            SetBlankVideoToVideoContainer();
           },
           [this, self](const MediaResult& aError) {
             mVideoDataRequest.Complete();
@@ -733,6 +735,18 @@ void ExternalEngineStateMachine::OnRequestVideo() {
             }
           })
       ->Track(mVideoDataRequest);
+}
+
+void ExternalEngineStateMachine::SetBlankVideoToVideoContainer() {
+  AssertOnTaskQueue();
+  MOZ_ASSERT(mState.IsRunningEngine() || mState.IsSeekingData());
+  if (!mBlankImage) {
+    mBlankImage =
+        mVideoFrameContainer->GetImageContainer()->CreatePlanarYCbCrImage();
+  }
+  MOZ_ASSERT(mInfo->HasVideo());
+  mVideoFrameContainer->SetCurrentFrame(mInfo->mVideo.mDisplay, mBlankImage,
+                                        TimeStamp::Now());
 }
 
 void ExternalEngineStateMachine::OnLoadedFirstFrame() {
