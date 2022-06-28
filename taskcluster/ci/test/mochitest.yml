@@ -661,6 +661,10 @@ mochitest-webgl1-core:
     description: "Mochitest webgl1-core run"
     treeherder-symbol: M(gl1c)
     schedules-component: mochitest-plain
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     virtualization: virtual-with-gpu
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
@@ -719,6 +723,10 @@ mochitest-webgl1-core:
 mochitest-webgl1-ext:
     description: "Mochitest webgl1-ext run"
     treeherder-symbol: M(gl1e)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     chunks:
@@ -780,6 +788,10 @@ mochitest-webgl1-ext:
 mochitest-webgl2-core:
     description: "Mochitest webgl2-core run"
     treeherder-symbol: M(gl2c)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     chunks:
@@ -839,6 +851,10 @@ mochitest-webgl2-core:
 mochitest-webgl2-ext:
     description: "Mochitest webgl2-ext run"
     treeherder-symbol: M(gl2e)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     variants:
@@ -894,6 +910,10 @@ mochitest-webgl2-ext:
 mochitest-webgl2-deqp:
     description: "Mochitest webgl2-deqp run"
     treeherder-symbol: M(gl2d)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     variants:
@@ -958,6 +978,10 @@ mochitest-remote:
     description: "Mochitest for the remote agent (/remote folder)"
     suite:
         name: mochitest-remote
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     treeherder-symbol: M(remote)
     loopback-video: true
     variants:
