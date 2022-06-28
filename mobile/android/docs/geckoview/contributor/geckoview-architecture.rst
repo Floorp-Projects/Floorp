@@ -1,8 +1,8 @@
 .. -*- Mode: rst; fill-column: 80; -*-
 
-======================
-GeckoView architecture
-======================
+=====================
+Architecture overview
+=====================
 
 .. contents:: Table of Contents
    :depth: 2
@@ -103,6 +103,8 @@ The most important delegates are:
 - ``WebExtension.MessageDelegate`` Used by the embedder to exchange messages
   with built-in extensions. See also `Interacting with Web Content <../consumer/web-extensions.html>`_.
 
+
+.. _GeckoDisplay:
 
 GeckoDisplay
 ------------
@@ -235,6 +237,61 @@ batched to avoid calling this API too frequently.
 Apps can use ``onSessionStateChange`` to store the serialized state to
 disk to support restoring the session at a later time.
 
+Third-party root certificates
+-----------------------------
+
+Gecko maintains its own Certificate Authority store and does not use the
+platform's CA store. GeckoView follows the same policy and will not, by
+default, read Android's CA store to determine root certificates.
+
+However, GeckoView provides a way to import all third-party CA roots added to
+the Android CA store by setting the `enterpriseRootsEnabled
+<https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoRuntimeSettings.Builder.html#enterpriseRootsEnabled(boolean)>`_
+runtime setting to ``true``, this feature is implemented in `EnterpriseRoots
+<https://searchfox.org/mozilla-central/rev/26a6a38fb515dbab0bb459c40ec4b877477eefef/mobile/android/geckoview/src/main/java/org/mozilla/gecko/EnterpriseRoots.java>`_
+
+There is not currently any API for an app to manually specify additional CA
+roots, although this might change with `Bug 1522162
+<https://bugzilla.mozilla.org/show_bug.cgi?id=1522162>`_.
+
+Light and Omni builds
+---------------------
+
+A variation of the default GeckoView build, dubbed `Omni` in the codebase,
+provides additional libraries that can be helpful when building a browser app.
+Currently, the `Glean
+<https://docs.telemetry.mozilla.org/concepts/glean/glean.html>`_ library is
+included in the ``geckoview-omni`` package.  The default build ``geckoview``,
+which does not contain such libraries, is similarly dubbed `Light` in the
+codebase.
+
+The additional libraries in the Omni package are directly built into Gecko's
+main ``.so`` file, ``libxul.so``. These libraries are then declared in the
+``.module`` package inside the ``maven`` repository, e.g. see the ``.module``
+file for `geckoview-omni
+<https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-omni/102.0.20220623063721/geckoview-omni-102.0.20220623063721.module>`_:
+
+.. code-block:: json
+
+      "capabilities": [
+        {
+          "group": "org.mozilla.geckoview",
+          "name": "geckoview-omni",
+          "version": "102.0.20220623063721"
+        },
+        {
+          "group": "org.mozilla.telemetry",
+          "name": "glean-native",
+          "version": "44.1.1"
+        }
+      ]
+
+Notice the ``org.mozilla.telemetry:glean-native`` capability is declared
+alongside ``org.mozilla.geckoview``.
+
+The main Glean library then depends on ``glean-native`` which is either
+provided in a standalone package (for apps that do not include GeckoView) or by
+the GeckoView capability above.
 
 Extensions
 ----------
@@ -347,6 +404,41 @@ the main process alive.
 
 It is therefore very important that Gecko is able to recover from process
 disappearing at any moment at runtime.
+
+Priority Hint
+~~~~~~~~~~~~~
+
+Internally, GeckoView ties the lifetime of the ``Surface`` associated to a
+``GeckoSession`` and the process priority of the process where the session
+lives.
+
+The underlying assumption is that a session that is not visible doesn't have a
+surface associated to it and it's not being used by the user so it shouldn't
+receive high priority status.
+
+The way this is implemented is `by setting
+<https://searchfox.org/mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/GeckoView.java#114,123>`_
+the ``active`` property on the ``browser`` object to ``false``, which causes
+Gecko to de-prioritize the process, assuming that no other windows in the same
+process have ``active=true``. See also `GeckoDisplay`_.
+
+However, there are use cases where just looking at the surface is not enough.
+For instance, when the user opens the settings menu, the currently selected tab
+becomes invisible, but the user will still expect the browser to retain that
+tab state with a higher priority than all the other tabs. Similarly, when the
+browser is put in the background, the surface associated to the current tab
+gets destroyed, but the current tab is still more important than the other
+tabs, but because it doesn't have a surface associated to it, we have no way to
+differentiate it from all the other tabs.
+
+To solve the above problem, we expose an API for consumers to *boost* a session
+priority, `setPriorityHint
+<https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.html#setPriorityHint(int)>`_.
+The priority hint is taken into consideration when calculating the
+priority of a process.  Any process that contains either an active session or a
+session with the priority hint `is boosted
+<https://searchfox.org/mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0/dom/ipc/BrowserParent.cpp#3593>`_
+to the highest priority.
 
 Shutdown
 --------

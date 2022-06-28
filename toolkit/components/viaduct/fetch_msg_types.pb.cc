@@ -11,88 +11,81 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
-extern PROTOBUF_INTERNAL_EXPORT_fetch_5fmsg_5ftypes_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Request_HeadersEntry_DoNotUse_fetch_5fmsg_5ftypes_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_fetch_5fmsg_5ftypes_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Response_HeadersEntry_DoNotUse_fetch_5fmsg_5ftypes_2eproto;
+
+PROTOBUF_PRAGMA_INIT_SEG
+
+namespace _pb = ::PROTOBUF_NAMESPACE_ID;
+namespace _pbi = _pb::internal;
+
 namespace mozilla {
 namespace appservices {
 namespace httpconfig {
 namespace protobuf {
-class Request_HeadersEntry_DoNotUseDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Request_HeadersEntry_DoNotUse> _instance;
-} _Request_HeadersEntry_DoNotUse_default_instance_;
-class RequestDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Request> _instance;
-} _Request_default_instance_;
-class Response_HeadersEntry_DoNotUseDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Response_HeadersEntry_DoNotUse> _instance;
-} _Response_HeadersEntry_DoNotUse_default_instance_;
-class ResponseDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Response> _instance;
-} _Response_default_instance_;
+PROTOBUF_CONSTEXPR Request_HeadersEntry_DoNotUse::Request_HeadersEntry_DoNotUse(
+    ::_pbi::ConstantInitialized) {}
+struct Request_HeadersEntry_DoNotUseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR Request_HeadersEntry_DoNotUseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~Request_HeadersEntry_DoNotUseDefaultTypeInternal() {}
+  union {
+    Request_HeadersEntry_DoNotUse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 Request_HeadersEntry_DoNotUseDefaultTypeInternal _Request_HeadersEntry_DoNotUse_default_instance_;
+PROTOBUF_CONSTEXPR Request::Request(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.headers_)*/{}
+  , /*decltype(_impl_.url_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.body_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.method_)*/0
+  , /*decltype(_impl_.follow_redirects_)*/false
+  , /*decltype(_impl_.use_caches_)*/false
+  , /*decltype(_impl_.connect_timeout_secs_)*/0
+  , /*decltype(_impl_.read_timeout_secs_)*/0} {}
+struct RequestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR RequestDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~RequestDefaultTypeInternal() {}
+  union {
+    Request _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 RequestDefaultTypeInternal _Request_default_instance_;
+PROTOBUF_CONSTEXPR Response_HeadersEntry_DoNotUse::Response_HeadersEntry_DoNotUse(
+    ::_pbi::ConstantInitialized) {}
+struct Response_HeadersEntry_DoNotUseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR Response_HeadersEntry_DoNotUseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~Response_HeadersEntry_DoNotUseDefaultTypeInternal() {}
+  union {
+    Response_HeadersEntry_DoNotUse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 Response_HeadersEntry_DoNotUseDefaultTypeInternal _Response_HeadersEntry_DoNotUse_default_instance_;
+PROTOBUF_CONSTEXPR Response::Response(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.headers_)*/{}
+  , /*decltype(_impl_.exception_message_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.url_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.body_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.status_)*/0} {}
+struct ResponseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ResponseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ResponseDefaultTypeInternal() {}
+  union {
+    Response _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ResponseDefaultTypeInternal _Response_default_instance_;
 }  // namespace protobuf
 }  // namespace httpconfig
 }  // namespace appservices
 }  // namespace mozilla
-static void InitDefaultsscc_info_Request_fetch_5fmsg_5ftypes_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::appservices::httpconfig::protobuf::_Request_default_instance_;
-    new (ptr) ::mozilla::appservices::httpconfig::protobuf::Request();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::appservices::httpconfig::protobuf::Request::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_Request_fetch_5fmsg_5ftypes_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_Request_fetch_5fmsg_5ftypes_2eproto}, {
-      &scc_info_Request_HeadersEntry_DoNotUse_fetch_5fmsg_5ftypes_2eproto.base,}};
-
-static void InitDefaultsscc_info_Request_HeadersEntry_DoNotUse_fetch_5fmsg_5ftypes_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::appservices::httpconfig::protobuf::_Request_HeadersEntry_DoNotUse_default_instance_;
-    new (ptr) ::mozilla::appservices::httpconfig::protobuf::Request_HeadersEntry_DoNotUse();
-  }
-  ::mozilla::appservices::httpconfig::protobuf::Request_HeadersEntry_DoNotUse::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Request_HeadersEntry_DoNotUse_fetch_5fmsg_5ftypes_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_Request_HeadersEntry_DoNotUse_fetch_5fmsg_5ftypes_2eproto}, {}};
-
-static void InitDefaultsscc_info_Response_fetch_5fmsg_5ftypes_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::appservices::httpconfig::protobuf::_Response_default_instance_;
-    new (ptr) ::mozilla::appservices::httpconfig::protobuf::Response();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::appservices::httpconfig::protobuf::Response::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_Response_fetch_5fmsg_5ftypes_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_Response_fetch_5fmsg_5ftypes_2eproto}, {
-      &scc_info_Response_HeadersEntry_DoNotUse_fetch_5fmsg_5ftypes_2eproto.base,}};
-
-static void InitDefaultsscc_info_Response_HeadersEntry_DoNotUse_fetch_5fmsg_5ftypes_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::appservices::httpconfig::protobuf::_Response_HeadersEntry_DoNotUse_default_instance_;
-    new (ptr) ::mozilla::appservices::httpconfig::protobuf::Response_HeadersEntry_DoNotUse();
-  }
-  ::mozilla::appservices::httpconfig::protobuf::Response_HeadersEntry_DoNotUse::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Response_HeadersEntry_DoNotUse_fetch_5fmsg_5ftypes_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_Response_HeadersEntry_DoNotUse_fetch_5fmsg_5ftypes_2eproto}, {}};
-
 namespace mozilla {
 namespace appservices {
 namespace httpconfig {
@@ -167,7 +160,7 @@ const std::string& Request_Method_Name(
                      Request_Method_strings[idx].get();
 }
 bool Request_Method_Parse(
-    const std::string& name, Request_Method* value) {
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, Request_Method* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
       Request_Method_entries, 9, name, &int_value);
@@ -176,7 +169,7 @@ bool Request_Method_Parse(
   }
   return success;
 }
-#if (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 constexpr Request_Method Request::GET;
 constexpr Request_Method Request::HEAD;
 constexpr Request_Method Request::POST;
@@ -189,7 +182,7 @@ constexpr Request_Method Request::PATCH;
 constexpr Request_Method Request::Method_MIN;
 constexpr Request_Method Request::Method_MAX;
 constexpr int Request::Method_ARRAYSIZE;
-#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
 // ===================================================================
 
@@ -202,11 +195,9 @@ void Request_HeadersEntry_DoNotUse::MergeFrom(const Request_HeadersEntry_DoNotUs
 
 // ===================================================================
 
-void Request::InitAsDefaultInstance() {
-}
 class Request::_Internal {
  public:
-  using HasBits = decltype(std::declval<Request>()._has_bits_);
+  using HasBits = decltype(std::declval<Request>()._impl_._has_bits_);
   static void set_has_method(HasBits* has_bits) {
     (*has_bits)[0] |= 4u;
   }
@@ -228,198 +219,250 @@ class Request::_Internal {
   static void set_has_read_timeout_secs(HasBits* has_bits) {
     (*has_bits)[0] |= 64u;
   }
+  static bool MissingRequiredFields(const HasBits& has_bits) {
+    return ((has_bits[0] & 0x0000007d) ^ 0x0000007d) != 0;
+  }
 };
 
-Request::Request()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.appservices.httpconfig.protobuf.Request)
+Request::Request(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.appservices.httpconfig.protobuf.Request)
 }
 Request::Request(const Request& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  headers_.MergeFrom(from.headers_);
-  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  Request* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , /*decltype(_impl_.headers_)*/{}
+    , decltype(_impl_.url_){}
+    , decltype(_impl_.body_){}
+    , decltype(_impl_.method_){}
+    , decltype(_impl_.follow_redirects_){}
+    , decltype(_impl_.use_caches_){}
+    , decltype(_impl_.connect_timeout_secs_){}
+    , decltype(_impl_.read_timeout_secs_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _this->_impl_.headers_.MergeFrom(from._impl_.headers_);
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_url()) {
-    url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
+    _this->_impl_.url_.Set(from._internal_url(), 
+      _this->GetArenaForAllocation());
   }
-  body_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.body_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.body_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_body()) {
-    body_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.body_);
+    _this->_impl_.body_.Set(from._internal_body(), 
+      _this->GetArenaForAllocation());
   }
-  ::memcpy(&method_, &from.method_,
-    static_cast<size_t>(reinterpret_cast<char*>(&read_timeout_secs_) -
-    reinterpret_cast<char*>(&method_)) + sizeof(read_timeout_secs_));
+  ::memcpy(&_impl_.method_, &from._impl_.method_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.read_timeout_secs_) -
+    reinterpret_cast<char*>(&_impl_.method_)) + sizeof(_impl_.read_timeout_secs_));
   // @@protoc_insertion_point(copy_constructor:mozilla.appservices.httpconfig.protobuf.Request)
 }
 
-void Request::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_Request_fetch_5fmsg_5ftypes_2eproto.base);
-  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  body_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  ::memset(&method_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&read_timeout_secs_) -
-      reinterpret_cast<char*>(&method_)) + sizeof(read_timeout_secs_));
+inline void Request::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , /*decltype(_impl_.headers_)*/{::_pbi::ArenaInitialized(), arena}
+    , decltype(_impl_.url_){}
+    , decltype(_impl_.body_){}
+    , decltype(_impl_.method_){0}
+    , decltype(_impl_.follow_redirects_){false}
+    , decltype(_impl_.use_caches_){false}
+    , decltype(_impl_.connect_timeout_secs_){0}
+    , decltype(_impl_.read_timeout_secs_){0}
+  };
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.body_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.body_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 Request::~Request() {
   // @@protoc_insertion_point(destructor:mozilla.appservices.httpconfig.protobuf.Request)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void Request::SharedDtor() {
-  url_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  body_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void Request::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.headers_.Destruct();
+  _impl_.headers_.~MapFieldLite();
+  _impl_.url_.Destroy();
+  _impl_.body_.Destroy();
 }
 
 void Request::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const Request& Request::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Request_fetch_5fmsg_5ftypes_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void Request::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.appservices.httpconfig.protobuf.Request)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  headers_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.headers_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      url_.ClearNonDefaultToEmptyNoArena();
+      _impl_.url_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      body_.ClearNonDefaultToEmptyNoArena();
+      _impl_.body_.ClearNonDefaultToEmpty();
     }
   }
   if (cached_has_bits & 0x0000007cu) {
-    ::memset(&method_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&read_timeout_secs_) -
-        reinterpret_cast<char*>(&method_)) + sizeof(read_timeout_secs_));
+    ::memset(&_impl_.method_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.read_timeout_secs_) -
+        reinterpret_cast<char*>(&_impl_.method_)) + sizeof(_impl_.read_timeout_secs_));
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* Request::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* Request::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // required .mozilla.appservices.httpconfig.protobuf.Request.Method method = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::appservices::httpconfig::protobuf::Request_Method_IsValid(val))) {
             _internal_set_method(static_cast<::mozilla::appservices::httpconfig::protobuf::Request_Method>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(1, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // required string url = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_url();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional bytes body = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           auto str = _internal_mutable_body();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // map<string, string> headers = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr -= 1;
           do {
             ptr += 1;
-            ptr = ctx->ParseMessage(&headers_, ptr);
+            ptr = ctx->ParseMessage(&_impl_.headers_, ptr);
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<34>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // required bool follow_redirects = 5;
       case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
           _Internal::set_has_follow_redirects(&has_bits);
-          follow_redirects_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.follow_redirects_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // required bool use_caches = 6;
       case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 48)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
           _Internal::set_has_use_caches(&has_bits);
-          use_caches_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.use_caches_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // required int32 connect_timeout_secs = 7;
       case 7:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 56)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 56)) {
           _Internal::set_has_connect_timeout_secs(&has_bits);
-          connect_timeout_secs_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.connect_timeout_secs_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // required int32 read_timeout_secs = 8;
       case 8:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 64)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 64)) {
           _Internal::set_has_read_timeout_secs(&has_bits);
-          read_timeout_secs_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.read_timeout_secs_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Request::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* Request::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.appservices.httpconfig.protobuf.Request)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // required .mozilla.appservices.httpconfig.protobuf.Request.Method method = 1;
   if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       1, this->_internal_method(), target);
   }
 
@@ -437,37 +480,22 @@ failure:
 
   // map<string, string> headers = 4;
   if (!this->_internal_headers().empty()) {
-    typedef ::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_pointer
-        ConstPtr;
-    typedef ConstPtr SortItem;
-    typedef ::PROTOBUF_NAMESPACE_ID::internal::CompareByDerefFirst<SortItem> Less;
-    struct Utf8Check {
-      static void Check(ConstPtr p) {
-      }
+    using MapType = ::_pb::Map<std::string, std::string>;
+    using WireHelper = Request_HeadersEntry_DoNotUse::Funcs;
+    const auto& map_field = this->_internal_headers();
+    auto check_utf8 = [](const MapType::value_type& entry) {
+      (void)entry;
     };
 
-    if (stream->IsSerializationDeterministic() &&
-        this->_internal_headers().size() > 1) {
-      ::std::unique_ptr<SortItem[]> items(
-          new SortItem[this->_internal_headers().size()]);
-      typedef ::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::size_type size_type;
-      size_type n = 0;
-      for (::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_iterator
-          it = this->_internal_headers().begin();
-          it != this->_internal_headers().end(); ++it, ++n) {
-        items[static_cast<ptrdiff_t>(n)] = SortItem(&*it);
-      }
-      ::std::sort(&items[0], &items[static_cast<ptrdiff_t>(n)], Less());
-      for (size_type i = 0; i < n; i++) {
-        target = Request_HeadersEntry_DoNotUse::Funcs::InternalSerialize(4, items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second, target, stream);
-        Utf8Check::Check(&(*items[static_cast<ptrdiff_t>(i)]));
+    if (stream->IsSerializationDeterministic() && map_field.size() > 1) {
+      for (const auto& entry : ::_pbi::MapSorterPtr<MapType>(map_field)) {
+        target = WireHelper::InternalSerialize(4, entry.first, entry.second, target, stream);
+        check_utf8(entry);
       }
     } else {
-      for (::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_iterator
-          it = this->_internal_headers().begin();
-          it != this->_internal_headers().end(); ++it) {
-        target = Request_HeadersEntry_DoNotUse::Funcs::InternalSerialize(4, it->first, it->second, target, stream);
-        Utf8Check::Check(&(*it));
+      for (const auto& entry : map_field) {
+        target = WireHelper::InternalSerialize(4, entry.first, entry.second, target, stream);
+        check_utf8(entry);
       }
     }
   }
@@ -475,30 +503,30 @@ failure:
   // required bool follow_redirects = 5;
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(5, this->_internal_follow_redirects(), target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(5, this->_internal_follow_redirects(), target);
   }
 
   // required bool use_caches = 6;
   if (cached_has_bits & 0x00000010u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(6, this->_internal_use_caches(), target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(6, this->_internal_use_caches(), target);
   }
 
   // required int32 connect_timeout_secs = 7;
   if (cached_has_bits & 0x00000020u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(7, this->_internal_connect_timeout_secs(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(7, this->_internal_connect_timeout_secs(), target);
   }
 
   // required int32 read_timeout_secs = 8;
   if (cached_has_bits & 0x00000040u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(8, this->_internal_read_timeout_secs(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(8, this->_internal_read_timeout_secs(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.appservices.httpconfig.protobuf.Request)
   return target;
@@ -518,7 +546,7 @@ size_t Request::RequiredFieldsByteSizeFallback() const {
   if (_internal_has_method()) {
     // required .mozilla.appservices.httpconfig.protobuf.Request.Method method = 1;
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_method());
+      ::_pbi::WireFormatLite::EnumSize(this->_internal_method());
   }
 
   if (_internal_has_follow_redirects()) {
@@ -533,16 +561,12 @@ size_t Request::RequiredFieldsByteSizeFallback() const {
 
   if (_internal_has_connect_timeout_secs()) {
     // required int32 connect_timeout_secs = 7;
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-        this->_internal_connect_timeout_secs());
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_connect_timeout_secs());
   }
 
   if (_internal_has_read_timeout_secs()) {
     // required int32 read_timeout_secs = 8;
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-        this->_internal_read_timeout_secs());
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_read_timeout_secs());
   }
 
   return total_size;
@@ -551,7 +575,7 @@ size_t Request::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.appservices.httpconfig.protobuf.Request)
   size_t total_size = 0;
 
-  if (((_has_bits_[0] & 0x0000007d) ^ 0x0000007d) == 0) {  // All required fields are present.
+  if (((_impl_._has_bits_[0] & 0x0000007d) ^ 0x0000007d) == 0) {  // All required fields are present.
     // required string url = 2;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
@@ -559,7 +583,7 @@ size_t Request::ByteSizeLong() const {
 
     // required .mozilla.appservices.httpconfig.protobuf.Request.Method method = 1;
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_method());
+      ::_pbi::WireFormatLite::EnumSize(this->_internal_method());
 
     // required bool follow_redirects = 5;
     total_size += 1 + 1;
@@ -568,19 +592,15 @@ size_t Request::ByteSizeLong() const {
     total_size += 1 + 1;
 
     // required int32 connect_timeout_secs = 7;
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-        this->_internal_connect_timeout_secs());
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_connect_timeout_secs());
 
     // required int32 read_timeout_secs = 8;
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-        this->_internal_read_timeout_secs());
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_read_timeout_secs());
 
   } else {
     total_size += RequiredFieldsByteSizeFallback();
   }
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -594,7 +614,7 @@ size_t Request::ByteSizeLong() const {
   }
 
   // optional bytes body = 3;
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000002u) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
@@ -602,54 +622,53 @@ size_t Request::ByteSizeLong() const {
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void Request::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const Request*>(
+  MergeFrom(*::_pbi::DownCast<const Request*>(
       &from));
 }
 
 void Request::MergeFrom(const Request& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.appservices.httpconfig.protobuf.Request)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  Request* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.appservices.httpconfig.protobuf.Request)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  headers_.MergeFrom(from.headers_);
-  cached_has_bits = from._has_bits_[0];
+  _this->_impl_.headers_.MergeFrom(from._impl_.headers_);
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000007fu) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
+      _this->_internal_set_url(from._internal_url());
     }
     if (cached_has_bits & 0x00000002u) {
-      _has_bits_[0] |= 0x00000002u;
-      body_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.body_);
+      _this->_internal_set_body(from._internal_body());
     }
     if (cached_has_bits & 0x00000004u) {
-      method_ = from.method_;
+      _this->_impl_.method_ = from._impl_.method_;
     }
     if (cached_has_bits & 0x00000008u) {
-      follow_redirects_ = from.follow_redirects_;
+      _this->_impl_.follow_redirects_ = from._impl_.follow_redirects_;
     }
     if (cached_has_bits & 0x00000010u) {
-      use_caches_ = from.use_caches_;
+      _this->_impl_.use_caches_ = from._impl_.use_caches_;
     }
     if (cached_has_bits & 0x00000020u) {
-      connect_timeout_secs_ = from.connect_timeout_secs_;
+      _this->_impl_.connect_timeout_secs_ = from._impl_.connect_timeout_secs_;
     }
     if (cached_has_bits & 0x00000040u) {
-      read_timeout_secs_ = from.read_timeout_secs_;
+      _this->_impl_.read_timeout_secs_ = from._impl_.read_timeout_secs_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void Request::CopyFrom(const Request& from) {
@@ -660,24 +679,31 @@ void Request::CopyFrom(const Request& from) {
 }
 
 bool Request::IsInitialized() const {
-  if ((_has_bits_[0] & 0x0000007d) != 0x0000007d) return false;
+  if (_Internal::MissingRequiredFields(_impl_._has_bits_)) return false;
   return true;
 }
 
 void Request::InternalSwap(Request* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  headers_.Swap(&other->headers_);
-  url_.Swap(&other->url_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  body_.Swap(&other->body_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(method_, other->method_);
-  swap(follow_redirects_, other->follow_redirects_);
-  swap(use_caches_, other->use_caches_);
-  swap(connect_timeout_secs_, other->connect_timeout_secs_);
-  swap(read_timeout_secs_, other->read_timeout_secs_);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.headers_.InternalSwap(&other->_impl_.headers_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.url_, lhs_arena,
+      &other->_impl_.url_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.body_, lhs_arena,
+      &other->_impl_.body_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(Request, _impl_.read_timeout_secs_)
+      + sizeof(Request::_impl_.read_timeout_secs_)
+      - PROTOBUF_FIELD_OFFSET(Request, _impl_.method_)>(
+          reinterpret_cast<char*>(&_impl_.method_),
+          reinterpret_cast<char*>(&other->_impl_.method_));
 }
 
 std::string Request::GetTypeName() const {
@@ -696,11 +722,9 @@ void Response_HeadersEntry_DoNotUse::MergeFrom(const Response_HeadersEntry_DoNot
 
 // ===================================================================
 
-void Response::InitAsDefaultInstance() {
-}
 class Response::_Internal {
  public:
-  using HasBits = decltype(std::declval<Response>()._has_bits_);
+  using HasBits = decltype(std::declval<Response>()._impl_._has_bits_);
   static void set_has_exception_message(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
@@ -715,165 +739,214 @@ class Response::_Internal {
   }
 };
 
-Response::Response()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.appservices.httpconfig.protobuf.Response)
+Response::Response(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.appservices.httpconfig.protobuf.Response)
 }
 Response::Response(const Response& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  headers_.MergeFrom(from.headers_);
-  exception_message_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  Response* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , /*decltype(_impl_.headers_)*/{}
+    , decltype(_impl_.exception_message_){}
+    , decltype(_impl_.url_){}
+    , decltype(_impl_.body_){}
+    , decltype(_impl_.status_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _this->_impl_.headers_.MergeFrom(from._impl_.headers_);
+  _impl_.exception_message_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.exception_message_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_exception_message()) {
-    exception_message_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.exception_message_);
+    _this->_impl_.exception_message_.Set(from._internal_exception_message(), 
+      _this->GetArenaForAllocation());
   }
-  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_url()) {
-    url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
+    _this->_impl_.url_.Set(from._internal_url(), 
+      _this->GetArenaForAllocation());
   }
-  body_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.body_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.body_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_body()) {
-    body_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.body_);
+    _this->_impl_.body_.Set(from._internal_body(), 
+      _this->GetArenaForAllocation());
   }
-  status_ = from.status_;
+  _this->_impl_.status_ = from._impl_.status_;
   // @@protoc_insertion_point(copy_constructor:mozilla.appservices.httpconfig.protobuf.Response)
 }
 
-void Response::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_Response_fetch_5fmsg_5ftypes_2eproto.base);
-  exception_message_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  body_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  status_ = 0;
+inline void Response::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , /*decltype(_impl_.headers_)*/{::_pbi::ArenaInitialized(), arena}
+    , decltype(_impl_.exception_message_){}
+    , decltype(_impl_.url_){}
+    , decltype(_impl_.body_){}
+    , decltype(_impl_.status_){0}
+  };
+  _impl_.exception_message_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.exception_message_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.body_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.body_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 Response::~Response() {
   // @@protoc_insertion_point(destructor:mozilla.appservices.httpconfig.protobuf.Response)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void Response::SharedDtor() {
-  exception_message_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  url_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  body_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void Response::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.headers_.Destruct();
+  _impl_.headers_.~MapFieldLite();
+  _impl_.exception_message_.Destroy();
+  _impl_.url_.Destroy();
+  _impl_.body_.Destroy();
 }
 
 void Response::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const Response& Response::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Response_fetch_5fmsg_5ftypes_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void Response::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.appservices.httpconfig.protobuf.Response)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  headers_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.headers_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      exception_message_.ClearNonDefaultToEmptyNoArena();
+      _impl_.exception_message_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      url_.ClearNonDefaultToEmptyNoArena();
+      _impl_.url_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000004u) {
-      body_.ClearNonDefaultToEmptyNoArena();
+      _impl_.body_.ClearNonDefaultToEmpty();
     }
   }
-  status_ = 0;
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_.status_ = 0;
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* Response::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* Response::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional string exception_message = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_exception_message();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional string url = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_url();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional int32 status = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
           _Internal::set_has_status(&has_bits);
-          status_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.status_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional bytes body = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           auto str = _internal_mutable_body();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // map<string, string> headers = 5;
       case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           ptr -= 1;
           do {
             ptr += 1;
-            ptr = ctx->ParseMessage(&headers_, ptr);
+            ptr = ctx->ParseMessage(&_impl_.headers_, ptr);
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<42>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Response::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* Response::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.appservices.httpconfig.protobuf.Response)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional string exception_message = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->WriteStringMaybeAliased(
@@ -889,7 +962,7 @@ failure:
   // optional int32 status = 3;
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_status(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_status(), target);
   }
 
   // optional bytes body = 4;
@@ -900,44 +973,29 @@ failure:
 
   // map<string, string> headers = 5;
   if (!this->_internal_headers().empty()) {
-    typedef ::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_pointer
-        ConstPtr;
-    typedef ConstPtr SortItem;
-    typedef ::PROTOBUF_NAMESPACE_ID::internal::CompareByDerefFirst<SortItem> Less;
-    struct Utf8Check {
-      static void Check(ConstPtr p) {
-      }
+    using MapType = ::_pb::Map<std::string, std::string>;
+    using WireHelper = Response_HeadersEntry_DoNotUse::Funcs;
+    const auto& map_field = this->_internal_headers();
+    auto check_utf8 = [](const MapType::value_type& entry) {
+      (void)entry;
     };
 
-    if (stream->IsSerializationDeterministic() &&
-        this->_internal_headers().size() > 1) {
-      ::std::unique_ptr<SortItem[]> items(
-          new SortItem[this->_internal_headers().size()]);
-      typedef ::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::size_type size_type;
-      size_type n = 0;
-      for (::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_iterator
-          it = this->_internal_headers().begin();
-          it != this->_internal_headers().end(); ++it, ++n) {
-        items[static_cast<ptrdiff_t>(n)] = SortItem(&*it);
-      }
-      ::std::sort(&items[0], &items[static_cast<ptrdiff_t>(n)], Less());
-      for (size_type i = 0; i < n; i++) {
-        target = Response_HeadersEntry_DoNotUse::Funcs::InternalSerialize(5, items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second, target, stream);
-        Utf8Check::Check(&(*items[static_cast<ptrdiff_t>(i)]));
+    if (stream->IsSerializationDeterministic() && map_field.size() > 1) {
+      for (const auto& entry : ::_pbi::MapSorterPtr<MapType>(map_field)) {
+        target = WireHelper::InternalSerialize(5, entry.first, entry.second, target, stream);
+        check_utf8(entry);
       }
     } else {
-      for (::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_iterator
-          it = this->_internal_headers().begin();
-          it != this->_internal_headers().end(); ++it) {
-        target = Response_HeadersEntry_DoNotUse::Funcs::InternalSerialize(5, it->first, it->second, target, stream);
-        Utf8Check::Check(&(*it));
+      for (const auto& entry : map_field) {
+        target = WireHelper::InternalSerialize(5, entry.first, entry.second, target, stream);
+        check_utf8(entry);
       }
     }
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.appservices.httpconfig.protobuf.Response)
   return target;
@@ -947,7 +1005,7 @@ size_t Response::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.appservices.httpconfig.protobuf.Response)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -960,7 +1018,7 @@ size_t Response::ByteSizeLong() const {
     total_size += Response_HeadersEntry_DoNotUse::Funcs::ByteSizeLong(it->first, it->second);
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000000fu) {
     // optional string exception_message = 1;
     if (cached_has_bits & 0x00000001u) {
@@ -985,53 +1043,49 @@ size_t Response::ByteSizeLong() const {
 
     // optional int32 status = 3;
     if (cached_has_bits & 0x00000008u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-          this->_internal_status());
+      total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_status());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void Response::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const Response*>(
+  MergeFrom(*::_pbi::DownCast<const Response*>(
       &from));
 }
 
 void Response::MergeFrom(const Response& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.appservices.httpconfig.protobuf.Response)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  Response* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.appservices.httpconfig.protobuf.Response)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  headers_.MergeFrom(from.headers_);
-  cached_has_bits = from._has_bits_[0];
+  _this->_impl_.headers_.MergeFrom(from._impl_.headers_);
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000000fu) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      exception_message_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.exception_message_);
+      _this->_internal_set_exception_message(from._internal_exception_message());
     }
     if (cached_has_bits & 0x00000002u) {
-      _has_bits_[0] |= 0x00000002u;
-      url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
+      _this->_internal_set_url(from._internal_url());
     }
     if (cached_has_bits & 0x00000004u) {
-      _has_bits_[0] |= 0x00000004u;
-      body_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.body_);
+      _this->_internal_set_body(from._internal_body());
     }
     if (cached_has_bits & 0x00000008u) {
-      status_ = from.status_;
+      _this->_impl_.status_ = from._impl_.status_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void Response::CopyFrom(const Response& from) {
@@ -1047,16 +1101,24 @@ bool Response::IsInitialized() const {
 
 void Response::InternalSwap(Response* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  headers_.Swap(&other->headers_);
-  exception_message_.Swap(&other->exception_message_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  url_.Swap(&other->url_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  body_.Swap(&other->body_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(status_, other->status_);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.headers_.InternalSwap(&other->_impl_.headers_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.exception_message_, lhs_arena,
+      &other->_impl_.exception_message_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.url_, lhs_arena,
+      &other->_impl_.url_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.body_, lhs_arena,
+      &other->_impl_.body_, rhs_arena
+  );
+  swap(_impl_.status_, other->_impl_.status_);
 }
 
 std::string Response::GetTypeName() const {
@@ -1070,17 +1132,21 @@ std::string Response::GetTypeName() const {
 }  // namespace appservices
 }  // namespace mozilla
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::mozilla::appservices::httpconfig::protobuf::Request_HeadersEntry_DoNotUse* Arena::CreateMaybeMessage< ::mozilla::appservices::httpconfig::protobuf::Request_HeadersEntry_DoNotUse >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::appservices::httpconfig::protobuf::Request_HeadersEntry_DoNotUse >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::appservices::httpconfig::protobuf::Request_HeadersEntry_DoNotUse*
+Arena::CreateMaybeMessage< ::mozilla::appservices::httpconfig::protobuf::Request_HeadersEntry_DoNotUse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::appservices::httpconfig::protobuf::Request_HeadersEntry_DoNotUse >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::appservices::httpconfig::protobuf::Request* Arena::CreateMaybeMessage< ::mozilla::appservices::httpconfig::protobuf::Request >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::appservices::httpconfig::protobuf::Request >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::appservices::httpconfig::protobuf::Request*
+Arena::CreateMaybeMessage< ::mozilla::appservices::httpconfig::protobuf::Request >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::appservices::httpconfig::protobuf::Request >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::appservices::httpconfig::protobuf::Response_HeadersEntry_DoNotUse* Arena::CreateMaybeMessage< ::mozilla::appservices::httpconfig::protobuf::Response_HeadersEntry_DoNotUse >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::appservices::httpconfig::protobuf::Response_HeadersEntry_DoNotUse >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::appservices::httpconfig::protobuf::Response_HeadersEntry_DoNotUse*
+Arena::CreateMaybeMessage< ::mozilla::appservices::httpconfig::protobuf::Response_HeadersEntry_DoNotUse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::appservices::httpconfig::protobuf::Response_HeadersEntry_DoNotUse >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::appservices::httpconfig::protobuf::Response* Arena::CreateMaybeMessage< ::mozilla::appservices::httpconfig::protobuf::Response >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::appservices::httpconfig::protobuf::Response >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::appservices::httpconfig::protobuf::Response*
+Arena::CreateMaybeMessage< ::mozilla::appservices::httpconfig::protobuf::Response >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::appservices::httpconfig::protobuf::Response >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

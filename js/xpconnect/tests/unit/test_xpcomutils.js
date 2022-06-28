@@ -246,16 +246,14 @@ add_test(function test_generateSingletonFactory()
   function XPCComponent() {}
   XPCComponent.prototype = {
     classID: XPCCOMPONENT_CID,
-    _xpcom_factory: ComponentUtils.generateSingletonFactory(XPCComponent),
     QueryInterface: ChromeUtils.generateQI([])
   };
-  let NSGetFactory = ComponentUtils.generateNSGetFactory([XPCComponent]);
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.registerFactory(
     XPCCOMPONENT_CID,
     "XPCComponent",
     XPCCOMPONENT_CONTRACTID,
-    NSGetFactory(XPCCOMPONENT_CID)
+    ComponentUtils.generateSingletonFactory(XPCComponent)
   );
 
   // First, try to instance the component.

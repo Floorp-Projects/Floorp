@@ -31,6 +31,12 @@ with Files("WebExtension*.webidl"):
 with Files("Glean*.webidl"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 
+with Files("IOUtils.webidl"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
+with Files("PathUtils.webidl"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
 PREPROCESSED_WEBIDL_FILES = [
     "ChromeUtils.webidl",
     "IOUtils.webidl",

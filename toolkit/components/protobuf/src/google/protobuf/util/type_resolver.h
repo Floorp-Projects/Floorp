@@ -38,7 +38,9 @@
 #include <google/protobuf/stubs/common.h>
 #include <google/protobuf/type.pb.h>
 #include <google/protobuf/stubs/status.h>
+#include <google/protobuf/stubs/status.h>
 
+// Must be included last.
 #include <google/protobuf/port_def.inc>
 
 namespace google {
@@ -46,7 +48,7 @@ namespace protobuf {
 class DescriptorPool;
 namespace util {
 
-// Abstract interface for a type resovler.
+// Abstract interface for a type resolver.
 //
 // Implementations of this interface must be thread-safe.
 class PROTOBUF_EXPORT TypeResolver {
@@ -60,7 +62,7 @@ class PROTOBUF_EXPORT TypeResolver {
 
   // Resolves a type url for an enum type.
   virtual util::Status ResolveEnumType(const std::string& type_url,
-                                         google::protobuf::Enum* enum_type) = 0;
+                                       google::protobuf::Enum* enum_type) = 0;
 
  private:
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(TypeResolver);

@@ -10,7 +10,6 @@
     "libtool": "{MOZ_FETCHES_DIR}/cctools/bin/x86_64-apple-darwin-libtool",
     "ld": "{MOZ_FETCHES_DIR}/clang/bin/clang",
     "patches": [
-        "clang-tidy-ci.patch",
-        "compiler-rt-cross-compile.patch"
+        "clang-tidy-ci.patch"
     ]
 }

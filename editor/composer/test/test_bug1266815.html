@@ -48,7 +48,7 @@ var helperAppDlgPromise = new Promise(function(resolve) {
     QueryInterface: ChromeUtils.generateQI(["nsIHelperAppLauncherDialog"]),
   };
 
-  mockHelperAppService = ComponentUtils._getFactory(HelperAppLauncherDialog);
+  mockHelperAppService = ComponentUtils.generateSingletonFactory(HelperAppLauncherDialog);
   registrar.registerFactory(MOCK_HELPERAPP_DIALOG_CID, "",
                             HELPERAPP_DIALOG_CONTRACT_ID,
                             mockHelperAppService);

@@ -45,6 +45,7 @@
 #error "You cannot SWIG proto headers"
 #endif
 
+// Must be included last.
 #include <google/protobuf/port_def.inc>
 
 namespace google {
@@ -66,6 +67,8 @@ class PROTOBUF_EXPORT ReflectionOps {
   static void Merge(const Message& from, Message* to);
   static void Clear(Message* message);
   static bool IsInitialized(const Message& message);
+  static bool IsInitialized(const Message& message, bool check_fields,
+                            bool check_descendants);
   static void DiscardUnknownFields(Message* message);
 
   // Finds all unset required fields in the message and adds their full

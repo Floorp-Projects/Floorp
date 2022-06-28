@@ -69,7 +69,9 @@ NewProcessSelector.prototype = {
 };
 
 let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-let selectorFactory = ComponentUtils._getFactory(NewProcessSelector);
+let selectorFactory = ComponentUtils.generateSingletonFactory(
+  NewProcessSelector
+);
 registrar.registerFactory(OUR_PROCESSSELECTOR_CID, "", null, selectorFactory);
 
 const kAboutPageRegistrationContentScript =

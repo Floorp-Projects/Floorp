@@ -41,7 +41,7 @@ add_task(async function() {
     await helper.initialize();
 
     ok(
-      helper.content instanceof content.AnonymousContent,
+      content.AnonymousContent.isInstance(helper.content),
       "The helper owns the AnonymousContent object"
     );
     ok(

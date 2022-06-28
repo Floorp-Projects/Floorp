@@ -5,7 +5,7 @@ Protocol Buffers (protobuf) source is available at:
 This code is covered under the BSD license (see COPYING.txt). Documentation is
 available at https://developers.google.com/protocol-buffers/.
 
-The tree's current version of the protobuf library is 3.4.1.
+The tree's current version of the protobuf library is 21.2.
 
 We do not include the protobuf tests or the protoc compiler.
 
@@ -21,7 +21,7 @@ We do not include the protobuf tests or the protoc compiler.
    files to the unified sources and remove old ones. Note that we only
    need:
    - files contained in the `libprotobuf_lite_la_SOURCES` target
-   (https://github.com/google/protobuf/blob/master/src/Makefile.am)
+   (https://github.com/protocolbuffers/protobuf/blob/main/src/Makefile.am)
    - the header files they need
    - gzip streams (for devtools)
 

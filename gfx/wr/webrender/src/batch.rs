@@ -850,6 +850,16 @@ impl BatchBuilder {
             }
         };
 
+        // If this primitive is a backdrop, that means that it is known to cover
+        // the entire picture cache background. In that case, the renderer will
+        // use the backdrop color as a clear color, and so we can drop this
+        // primitive and any prior primitives from the batch lists for this
+        // picture cache slice.
+        if vis_flags.contains(PrimitiveVisibilityFlags::IS_BACKDROP) {
+            self.clear_batches();
+            return;
+        }
+
         let transform_id = transforms
             .get_id(
                 prim_spatial_node_index,
@@ -863,16 +873,6 @@ impl BatchBuilder {
         let transform_kind = transform_id.transform_kind();
         let prim_info = &prim_instance.vis;
         let bounding_rect = &prim_info.clip_chain.pic_coverage_rect;
-
-        // If this primitive is a backdrop, that means that it is known to cover
-        // the entire picture cache background. In that case, the renderer will
-        // use the backdrop color as a clear color, and so we can drop this
-        // primitive and any prior primitives from the batch lists for this
-        // picture cache slice.
-        if vis_flags.contains(PrimitiveVisibilityFlags::IS_BACKDROP) {
-            self.clear_batches();
-            return;
-        }
 
         let z_id = z_generator.next();
 

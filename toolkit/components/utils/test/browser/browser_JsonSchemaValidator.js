@@ -443,7 +443,7 @@ add_task(async function test_URL_values() {
       parsedValue: new URL("https://www.example.com/foo#bar"),
     },
   });
-  Assert.ok(result.parsedValue instanceof URL, "parsedValue is a URL");
+  Assert.ok(URL.isInstance(result.parsedValue), "parsedValue is a URL");
   Assert.equal(
     result.parsedValue.origin,
     "https://www.example.com",
@@ -525,7 +525,7 @@ add_task(async function test_URLorEmpty_values() {
       parsedValue: new URL("https://www.example.com/foo#bar"),
     },
   });
-  Assert.ok(result.parsedValue instanceof URL, "parsedValue is a URL");
+  Assert.ok(URL.isInstance(result.parsedValue), "parsedValue is a URL");
   Assert.equal(
     result.parsedValue.origin,
     "https://www.example.com",
@@ -621,7 +621,7 @@ add_task(async function test_origin_values() {
       parsedValue: new URL("https://www.example.com/"),
     },
   });
-  Assert.ok(result.parsedValue instanceof URL, "parsedValue is a URL");
+  Assert.ok(URL.isInstance(result.parsedValue), "parsedValue is a URL");
   Assert.equal(
     result.parsedValue.origin,
     "https://www.example.com",
@@ -693,7 +693,7 @@ add_task(async function test_origin_file_values() {
       parsedValue: new URL("file:///foo/bar"),
     },
   });
-  Assert.ok(result.parsedValue instanceof URL, "parsedValue is a URL");
+  Assert.ok(URL.isInstance(result.parsedValue), "parsedValue is a URL");
   Assert.equal(
     result.parsedValue.href,
     "file:///foo/bar",
@@ -715,7 +715,7 @@ add_task(async function test_origin_file_values() {
       parsedValue: new URL("file:///foo/bar/foobar.html"),
     },
   });
-  Assert.ok(result.parsedValue instanceof URL, "parsedValue is a URL");
+  Assert.ok(URL.isInstance(result.parsedValue), "parsedValue is a URL");
   Assert.equal(
     result.parsedValue.href,
     "file:///foo/bar/foobar.html",
@@ -941,7 +941,7 @@ add_task(async function test_object_values() {
     },
   });
   Assert.ok(
-    result.parsedValue.url instanceof URL,
+    URL.isInstance(result.parsedValue.url),
     "types inside the object are also parsed"
   );
   Assert.equal(

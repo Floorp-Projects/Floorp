@@ -869,21 +869,10 @@ struct ReflowInput : public SizeComputationInput {
                                        const nsMargin& aComputedOffsets,
                                        nsPoint* aPosition);
 
-  void ApplyRelativePositioning(nsPoint* aPosition) const {
-    ApplyRelativePositioning(mFrame, ComputedPhysicalOffsets(), aPosition);
-  }
-
   static void ApplyRelativePositioning(
       nsIFrame* aFrame, mozilla::WritingMode aWritingMode,
       const mozilla::LogicalMargin& aComputedOffsets,
       mozilla::LogicalPoint* aPosition, const nsSize& aContainerSize);
-
-  void ApplyRelativePositioning(mozilla::LogicalPoint* aPosition,
-                                const nsSize& aContainerSize) const {
-    ApplyRelativePositioning(mFrame, mWritingMode,
-                             ComputedLogicalOffsets(mWritingMode), aPosition,
-                             aContainerSize);
-  }
 
   // Resolve any block-axis 'auto' margins (if any) for an absolutely positioned
   // frame. aMargin and aOffsets are both outparams (though we only touch

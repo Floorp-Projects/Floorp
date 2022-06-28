@@ -71,7 +71,5 @@ echo update the 'toolkit/components/protobuf/m-c-changes.patch' patch file
 echo accordingly.
 echo
 
-patch -p1 < toolkit/components/protobuf/m-c-changes.patch
-
 echo
 echo Successfully upgraded the protobuf lib!

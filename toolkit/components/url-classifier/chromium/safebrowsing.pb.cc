@@ -11,543 +11,442 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Checksum_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ChromeClientInfo_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ClientInfo_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Duration_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_FetchThreatListUpdatesResponse_ListUpdateResponse_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RawHashes_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RawIndices_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RiceDeltaEncoding_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ThreatEntry_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_ThreatEntryMetadata_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ThreatEntryMetadata_MetadataEntry_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<3> scc_info_ThreatEntrySet_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ThreatHit_ThreatSource_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ThreatHit_UserInfo_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_ThreatInfo_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ThreatListDescriptor_safebrowsing_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_safebrowsing_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<3> scc_info_ThreatMatch_safebrowsing_2eproto;
+
+PROTOBUF_PRAGMA_INIT_SEG
+
+namespace _pb = ::PROTOBUF_NAMESPACE_ID;
+namespace _pbi = _pb::internal;
+
 namespace mozilla {
 namespace safebrowsing {
-class ThreatInfoDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ThreatInfo> _instance;
-} _ThreatInfo_default_instance_;
-class ThreatMatchDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ThreatMatch> _instance;
-} _ThreatMatch_default_instance_;
-class FindThreatMatchesRequestDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FindThreatMatchesRequest> _instance;
-} _FindThreatMatchesRequest_default_instance_;
-class FindThreatMatchesResponseDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FindThreatMatchesResponse> _instance;
-} _FindThreatMatchesResponse_default_instance_;
-class FetchThreatListUpdatesRequest_ListUpdateRequest_ConstraintsDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints> _instance;
-} _FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints_default_instance_;
-class FetchThreatListUpdatesRequest_ListUpdateRequestDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FetchThreatListUpdatesRequest_ListUpdateRequest> _instance;
-} _FetchThreatListUpdatesRequest_ListUpdateRequest_default_instance_;
-class FetchThreatListUpdatesRequestDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FetchThreatListUpdatesRequest> _instance;
-} _FetchThreatListUpdatesRequest_default_instance_;
-class FetchThreatListUpdatesResponse_ListUpdateResponseDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FetchThreatListUpdatesResponse_ListUpdateResponse> _instance;
-} _FetchThreatListUpdatesResponse_ListUpdateResponse_default_instance_;
-class FetchThreatListUpdatesResponseDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FetchThreatListUpdatesResponse> _instance;
-} _FetchThreatListUpdatesResponse_default_instance_;
-class FindFullHashesRequestDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FindFullHashesRequest> _instance;
-} _FindFullHashesRequest_default_instance_;
-class FindFullHashesResponseDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FindFullHashesResponse> _instance;
-} _FindFullHashesResponse_default_instance_;
-class ThreatHit_ThreatSourceDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ThreatHit_ThreatSource> _instance;
-} _ThreatHit_ThreatSource_default_instance_;
-class ThreatHit_UserInfoDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ThreatHit_UserInfo> _instance;
-} _ThreatHit_UserInfo_default_instance_;
-class ThreatHitDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ThreatHit> _instance;
-} _ThreatHit_default_instance_;
-class ClientInfoDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ClientInfo> _instance;
-} _ClientInfo_default_instance_;
-class ChromeClientInfoDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ChromeClientInfo> _instance;
-} _ChromeClientInfo_default_instance_;
-class ChecksumDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Checksum> _instance;
-} _Checksum_default_instance_;
-class ThreatEntryDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ThreatEntry> _instance;
-} _ThreatEntry_default_instance_;
-class ThreatEntrySetDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ThreatEntrySet> _instance;
-} _ThreatEntrySet_default_instance_;
-class RawIndicesDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RawIndices> _instance;
-} _RawIndices_default_instance_;
-class RawHashesDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RawHashes> _instance;
-} _RawHashes_default_instance_;
-class RiceDeltaEncodingDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RiceDeltaEncoding> _instance;
-} _RiceDeltaEncoding_default_instance_;
-class ThreatEntryMetadata_MetadataEntryDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ThreatEntryMetadata_MetadataEntry> _instance;
-} _ThreatEntryMetadata_MetadataEntry_default_instance_;
-class ThreatEntryMetadataDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ThreatEntryMetadata> _instance;
-} _ThreatEntryMetadata_default_instance_;
-class ThreatListDescriptorDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ThreatListDescriptor> _instance;
-} _ThreatListDescriptor_default_instance_;
-class ListThreatListsResponseDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ListThreatListsResponse> _instance;
-} _ListThreatListsResponse_default_instance_;
-class DurationDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Duration> _instance;
-} _Duration_default_instance_;
+PROTOBUF_CONSTEXPR ThreatInfo::ThreatInfo(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.threat_types_)*/{}
+  , /*decltype(_impl_.platform_types_)*/{}
+  , /*decltype(_impl_.threat_entries_)*/{}
+  , /*decltype(_impl_.threat_entry_types_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct ThreatInfoDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ThreatInfoDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ThreatInfoDefaultTypeInternal() {}
+  union {
+    ThreatInfo _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ThreatInfoDefaultTypeInternal _ThreatInfo_default_instance_;
+PROTOBUF_CONSTEXPR ThreatMatch::ThreatMatch(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.threat_)*/nullptr
+  , /*decltype(_impl_.threat_entry_metadata_)*/nullptr
+  , /*decltype(_impl_.cache_duration_)*/nullptr
+  , /*decltype(_impl_.threat_type_)*/0
+  , /*decltype(_impl_.platform_type_)*/0
+  , /*decltype(_impl_.threat_entry_type_)*/0} {}
+struct ThreatMatchDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ThreatMatchDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ThreatMatchDefaultTypeInternal() {}
+  union {
+    ThreatMatch _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ThreatMatchDefaultTypeInternal _ThreatMatch_default_instance_;
+PROTOBUF_CONSTEXPR FindThreatMatchesRequest::FindThreatMatchesRequest(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.client_)*/nullptr
+  , /*decltype(_impl_.threat_info_)*/nullptr} {}
+struct FindThreatMatchesRequestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FindThreatMatchesRequestDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FindThreatMatchesRequestDefaultTypeInternal() {}
+  union {
+    FindThreatMatchesRequest _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FindThreatMatchesRequestDefaultTypeInternal _FindThreatMatchesRequest_default_instance_;
+PROTOBUF_CONSTEXPR FindThreatMatchesResponse::FindThreatMatchesResponse(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.matches_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct FindThreatMatchesResponseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FindThreatMatchesResponseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FindThreatMatchesResponseDefaultTypeInternal() {}
+  union {
+    FindThreatMatchesResponse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FindThreatMatchesResponseDefaultTypeInternal _FindThreatMatchesResponse_default_instance_;
+PROTOBUF_CONSTEXPR FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.supported_compressions_)*/{}
+  , /*decltype(_impl_.region_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.max_update_entries_)*/0
+  , /*decltype(_impl_.max_database_entries_)*/0} {}
+struct FetchThreatListUpdatesRequest_ListUpdateRequest_ConstraintsDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FetchThreatListUpdatesRequest_ListUpdateRequest_ConstraintsDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FetchThreatListUpdatesRequest_ListUpdateRequest_ConstraintsDefaultTypeInternal() {}
+  union {
+    FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FetchThreatListUpdatesRequest_ListUpdateRequest_ConstraintsDefaultTypeInternal _FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints_default_instance_;
+PROTOBUF_CONSTEXPR FetchThreatListUpdatesRequest_ListUpdateRequest::FetchThreatListUpdatesRequest_ListUpdateRequest(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.state_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.constraints_)*/nullptr
+  , /*decltype(_impl_.threat_type_)*/0
+  , /*decltype(_impl_.platform_type_)*/0
+  , /*decltype(_impl_.threat_entry_type_)*/0} {}
+struct FetchThreatListUpdatesRequest_ListUpdateRequestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FetchThreatListUpdatesRequest_ListUpdateRequestDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FetchThreatListUpdatesRequest_ListUpdateRequestDefaultTypeInternal() {}
+  union {
+    FetchThreatListUpdatesRequest_ListUpdateRequest _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FetchThreatListUpdatesRequest_ListUpdateRequestDefaultTypeInternal _FetchThreatListUpdatesRequest_ListUpdateRequest_default_instance_;
+PROTOBUF_CONSTEXPR FetchThreatListUpdatesRequest::FetchThreatListUpdatesRequest(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.list_update_requests_)*/{}
+  , /*decltype(_impl_.client_)*/nullptr
+  , /*decltype(_impl_.chrome_client_info_)*/nullptr} {}
+struct FetchThreatListUpdatesRequestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FetchThreatListUpdatesRequestDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FetchThreatListUpdatesRequestDefaultTypeInternal() {}
+  union {
+    FetchThreatListUpdatesRequest _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FetchThreatListUpdatesRequestDefaultTypeInternal _FetchThreatListUpdatesRequest_default_instance_;
+PROTOBUF_CONSTEXPR FetchThreatListUpdatesResponse_ListUpdateResponse::FetchThreatListUpdatesResponse_ListUpdateResponse(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.additions_)*/{}
+  , /*decltype(_impl_.removals_)*/{}
+  , /*decltype(_impl_.new_client_state_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.checksum_)*/nullptr
+  , /*decltype(_impl_.threat_type_)*/0
+  , /*decltype(_impl_.threat_entry_type_)*/0
+  , /*decltype(_impl_.platform_type_)*/0
+  , /*decltype(_impl_.response_type_)*/0} {}
+struct FetchThreatListUpdatesResponse_ListUpdateResponseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FetchThreatListUpdatesResponse_ListUpdateResponseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FetchThreatListUpdatesResponse_ListUpdateResponseDefaultTypeInternal() {}
+  union {
+    FetchThreatListUpdatesResponse_ListUpdateResponse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FetchThreatListUpdatesResponse_ListUpdateResponseDefaultTypeInternal _FetchThreatListUpdatesResponse_ListUpdateResponse_default_instance_;
+PROTOBUF_CONSTEXPR FetchThreatListUpdatesResponse::FetchThreatListUpdatesResponse(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.list_update_responses_)*/{}
+  , /*decltype(_impl_.minimum_wait_duration_)*/nullptr} {}
+struct FetchThreatListUpdatesResponseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FetchThreatListUpdatesResponseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FetchThreatListUpdatesResponseDefaultTypeInternal() {}
+  union {
+    FetchThreatListUpdatesResponse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FetchThreatListUpdatesResponseDefaultTypeInternal _FetchThreatListUpdatesResponse_default_instance_;
+PROTOBUF_CONSTEXPR FindFullHashesRequest::FindFullHashesRequest(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.client_states_)*/{}
+  , /*decltype(_impl_.client_)*/nullptr
+  , /*decltype(_impl_.threat_info_)*/nullptr} {}
+struct FindFullHashesRequestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FindFullHashesRequestDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FindFullHashesRequestDefaultTypeInternal() {}
+  union {
+    FindFullHashesRequest _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FindFullHashesRequestDefaultTypeInternal _FindFullHashesRequest_default_instance_;
+PROTOBUF_CONSTEXPR FindFullHashesResponse::FindFullHashesResponse(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.matches_)*/{}
+  , /*decltype(_impl_.minimum_wait_duration_)*/nullptr
+  , /*decltype(_impl_.negative_cache_duration_)*/nullptr} {}
+struct FindFullHashesResponseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FindFullHashesResponseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FindFullHashesResponseDefaultTypeInternal() {}
+  union {
+    FindFullHashesResponse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FindFullHashesResponseDefaultTypeInternal _FindFullHashesResponse_default_instance_;
+PROTOBUF_CONSTEXPR ThreatHit_ThreatSource::ThreatHit_ThreatSource(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.url_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.remote_ip_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.referrer_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.type_)*/0} {}
+struct ThreatHit_ThreatSourceDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ThreatHit_ThreatSourceDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ThreatHit_ThreatSourceDefaultTypeInternal() {}
+  union {
+    ThreatHit_ThreatSource _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ThreatHit_ThreatSourceDefaultTypeInternal _ThreatHit_ThreatSource_default_instance_;
+PROTOBUF_CONSTEXPR ThreatHit_UserInfo::ThreatHit_UserInfo(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.region_code_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.user_id_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}} {}
+struct ThreatHit_UserInfoDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ThreatHit_UserInfoDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ThreatHit_UserInfoDefaultTypeInternal() {}
+  union {
+    ThreatHit_UserInfo _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ThreatHit_UserInfoDefaultTypeInternal _ThreatHit_UserInfo_default_instance_;
+PROTOBUF_CONSTEXPR ThreatHit::ThreatHit(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.resources_)*/{}
+  , /*decltype(_impl_.entry_)*/nullptr
+  , /*decltype(_impl_.client_info_)*/nullptr
+  , /*decltype(_impl_.user_info_)*/nullptr
+  , /*decltype(_impl_.threat_type_)*/0
+  , /*decltype(_impl_.platform_type_)*/0} {}
+struct ThreatHitDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ThreatHitDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ThreatHitDefaultTypeInternal() {}
+  union {
+    ThreatHit _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ThreatHitDefaultTypeInternal _ThreatHit_default_instance_;
+PROTOBUF_CONSTEXPR ClientInfo::ClientInfo(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.client_id_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.client_version_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}} {}
+struct ClientInfoDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ClientInfoDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ClientInfoDefaultTypeInternal() {}
+  union {
+    ClientInfo _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ClientInfoDefaultTypeInternal _ClientInfo_default_instance_;
+PROTOBUF_CONSTEXPR ChromeClientInfo::ChromeClientInfo(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.reporting_population_)*/0} {}
+struct ChromeClientInfoDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ChromeClientInfoDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ChromeClientInfoDefaultTypeInternal() {}
+  union {
+    ChromeClientInfo _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ChromeClientInfoDefaultTypeInternal _ChromeClientInfo_default_instance_;
+PROTOBUF_CONSTEXPR Checksum::Checksum(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.sha256_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}} {}
+struct ChecksumDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ChecksumDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ChecksumDefaultTypeInternal() {}
+  union {
+    Checksum _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ChecksumDefaultTypeInternal _Checksum_default_instance_;
+PROTOBUF_CONSTEXPR ThreatEntry::ThreatEntry(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.hash_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.url_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}} {}
+struct ThreatEntryDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ThreatEntryDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ThreatEntryDefaultTypeInternal() {}
+  union {
+    ThreatEntry _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ThreatEntryDefaultTypeInternal _ThreatEntry_default_instance_;
+PROTOBUF_CONSTEXPR ThreatEntrySet::ThreatEntrySet(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.raw_hashes_)*/nullptr
+  , /*decltype(_impl_.raw_indices_)*/nullptr
+  , /*decltype(_impl_.rice_hashes_)*/nullptr
+  , /*decltype(_impl_.rice_indices_)*/nullptr
+  , /*decltype(_impl_.compression_type_)*/0} {}
+struct ThreatEntrySetDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ThreatEntrySetDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ThreatEntrySetDefaultTypeInternal() {}
+  union {
+    ThreatEntrySet _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ThreatEntrySetDefaultTypeInternal _ThreatEntrySet_default_instance_;
+PROTOBUF_CONSTEXPR RawIndices::RawIndices(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.indices_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct RawIndicesDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR RawIndicesDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~RawIndicesDefaultTypeInternal() {}
+  union {
+    RawIndices _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 RawIndicesDefaultTypeInternal _RawIndices_default_instance_;
+PROTOBUF_CONSTEXPR RawHashes::RawHashes(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.raw_hashes_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.prefix_size_)*/0} {}
+struct RawHashesDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR RawHashesDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~RawHashesDefaultTypeInternal() {}
+  union {
+    RawHashes _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 RawHashesDefaultTypeInternal _RawHashes_default_instance_;
+PROTOBUF_CONSTEXPR RiceDeltaEncoding::RiceDeltaEncoding(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.encoded_data_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.first_value_)*/int64_t{0}
+  , /*decltype(_impl_.rice_parameter_)*/0
+  , /*decltype(_impl_.num_entries_)*/0} {}
+struct RiceDeltaEncodingDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR RiceDeltaEncodingDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~RiceDeltaEncodingDefaultTypeInternal() {}
+  union {
+    RiceDeltaEncoding _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 RiceDeltaEncodingDefaultTypeInternal _RiceDeltaEncoding_default_instance_;
+PROTOBUF_CONSTEXPR ThreatEntryMetadata_MetadataEntry::ThreatEntryMetadata_MetadataEntry(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.key_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.value_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}} {}
+struct ThreatEntryMetadata_MetadataEntryDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ThreatEntryMetadata_MetadataEntryDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ThreatEntryMetadata_MetadataEntryDefaultTypeInternal() {}
+  union {
+    ThreatEntryMetadata_MetadataEntry _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ThreatEntryMetadata_MetadataEntryDefaultTypeInternal _ThreatEntryMetadata_MetadataEntry_default_instance_;
+PROTOBUF_CONSTEXPR ThreatEntryMetadata::ThreatEntryMetadata(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.entries_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct ThreatEntryMetadataDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ThreatEntryMetadataDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ThreatEntryMetadataDefaultTypeInternal() {}
+  union {
+    ThreatEntryMetadata _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ThreatEntryMetadataDefaultTypeInternal _ThreatEntryMetadata_default_instance_;
+PROTOBUF_CONSTEXPR ThreatListDescriptor::ThreatListDescriptor(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.threat_type_)*/0
+  , /*decltype(_impl_.platform_type_)*/0
+  , /*decltype(_impl_.threat_entry_type_)*/0} {}
+struct ThreatListDescriptorDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ThreatListDescriptorDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ThreatListDescriptorDefaultTypeInternal() {}
+  union {
+    ThreatListDescriptor _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ThreatListDescriptorDefaultTypeInternal _ThreatListDescriptor_default_instance_;
+PROTOBUF_CONSTEXPR ListThreatListsResponse::ListThreatListsResponse(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.threat_lists_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct ListThreatListsResponseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ListThreatListsResponseDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ListThreatListsResponseDefaultTypeInternal() {}
+  union {
+    ListThreatListsResponse _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ListThreatListsResponseDefaultTypeInternal _ListThreatListsResponse_default_instance_;
+PROTOBUF_CONSTEXPR Duration::Duration(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.seconds_)*/int64_t{0}
+  , /*decltype(_impl_.nanos_)*/0} {}
+struct DurationDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR DurationDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~DurationDefaultTypeInternal() {}
+  union {
+    Duration _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 DurationDefaultTypeInternal _Duration_default_instance_;
 }  // namespace safebrowsing
 }  // namespace mozilla
-static void InitDefaultsscc_info_Checksum_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_Checksum_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::Checksum();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::Checksum::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Checksum_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_Checksum_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_ChromeClientInfo_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ChromeClientInfo_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ChromeClientInfo();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ChromeClientInfo::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ChromeClientInfo_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ChromeClientInfo_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_ClientInfo_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ClientInfo_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ClientInfo();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ClientInfo::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ClientInfo_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ClientInfo_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_Duration_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_Duration_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::Duration();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::Duration::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Duration_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_Duration_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_FetchThreatListUpdatesRequest_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_FetchThreatListUpdatesRequest_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::FetchThreatListUpdatesRequest();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::FetchThreatListUpdatesRequest::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<3> scc_info_FetchThreatListUpdatesRequest_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 3, 0, InitDefaultsscc_info_FetchThreatListUpdatesRequest_safebrowsing_2eproto}, {
-      &scc_info_ClientInfo_safebrowsing_2eproto.base,
-      &scc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_safebrowsing_2eproto.base,
-      &scc_info_ChromeClientInfo_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_FetchThreatListUpdatesRequest_ListUpdateRequest_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_safebrowsing_2eproto}, {
-      &scc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_FetchThreatListUpdatesResponse_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_FetchThreatListUpdatesResponse_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::FetchThreatListUpdatesResponse();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::FetchThreatListUpdatesResponse::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_FetchThreatListUpdatesResponse_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_FetchThreatListUpdatesResponse_safebrowsing_2eproto}, {
-      &scc_info_FetchThreatListUpdatesResponse_ListUpdateResponse_safebrowsing_2eproto.base,
-      &scc_info_Duration_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_FetchThreatListUpdatesResponse_ListUpdateResponse_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_FetchThreatListUpdatesResponse_ListUpdateResponse_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::FetchThreatListUpdatesResponse_ListUpdateResponse();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::FetchThreatListUpdatesResponse_ListUpdateResponse::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_FetchThreatListUpdatesResponse_ListUpdateResponse_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_FetchThreatListUpdatesResponse_ListUpdateResponse_safebrowsing_2eproto}, {
-      &scc_info_ThreatEntrySet_safebrowsing_2eproto.base,
-      &scc_info_Checksum_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_FindFullHashesRequest_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_FindFullHashesRequest_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::FindFullHashesRequest();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::FindFullHashesRequest::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_FindFullHashesRequest_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_FindFullHashesRequest_safebrowsing_2eproto}, {
-      &scc_info_ClientInfo_safebrowsing_2eproto.base,
-      &scc_info_ThreatInfo_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_FindFullHashesResponse_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_FindFullHashesResponse_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::FindFullHashesResponse();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::FindFullHashesResponse::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_FindFullHashesResponse_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_FindFullHashesResponse_safebrowsing_2eproto}, {
-      &scc_info_ThreatMatch_safebrowsing_2eproto.base,
-      &scc_info_Duration_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_FindThreatMatchesRequest_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_FindThreatMatchesRequest_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::FindThreatMatchesRequest();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::FindThreatMatchesRequest::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_FindThreatMatchesRequest_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_FindThreatMatchesRequest_safebrowsing_2eproto}, {
-      &scc_info_ClientInfo_safebrowsing_2eproto.base,
-      &scc_info_ThreatInfo_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_FindThreatMatchesResponse_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_FindThreatMatchesResponse_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::FindThreatMatchesResponse();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::FindThreatMatchesResponse::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_FindThreatMatchesResponse_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_FindThreatMatchesResponse_safebrowsing_2eproto}, {
-      &scc_info_ThreatMatch_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_ListThreatListsResponse_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ListThreatListsResponse_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ListThreatListsResponse();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ListThreatListsResponse::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_ListThreatListsResponse_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_ListThreatListsResponse_safebrowsing_2eproto}, {
-      &scc_info_ThreatListDescriptor_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_RawHashes_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_RawHashes_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::RawHashes();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::RawHashes::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RawHashes_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RawHashes_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_RawIndices_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_RawIndices_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::RawIndices();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::RawIndices::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RawIndices_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RawIndices_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_RiceDeltaEncoding_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_RiceDeltaEncoding_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::RiceDeltaEncoding();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::RiceDeltaEncoding::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RiceDeltaEncoding_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RiceDeltaEncoding_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_ThreatEntry_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ThreatEntry_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ThreatEntry();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ThreatEntry::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ThreatEntry_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ThreatEntry_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_ThreatEntryMetadata_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ThreatEntryMetadata_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ThreatEntryMetadata();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ThreatEntryMetadata::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_ThreatEntryMetadata_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_ThreatEntryMetadata_safebrowsing_2eproto}, {
-      &scc_info_ThreatEntryMetadata_MetadataEntry_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_ThreatEntryMetadata_MetadataEntry_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ThreatEntryMetadata_MetadataEntry_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ThreatEntryMetadata_MetadataEntry();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ThreatEntryMetadata_MetadataEntry::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ThreatEntryMetadata_MetadataEntry_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ThreatEntryMetadata_MetadataEntry_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_ThreatEntrySet_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ThreatEntrySet_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ThreatEntrySet();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ThreatEntrySet::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<3> scc_info_ThreatEntrySet_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 3, 0, InitDefaultsscc_info_ThreatEntrySet_safebrowsing_2eproto}, {
-      &scc_info_RawHashes_safebrowsing_2eproto.base,
-      &scc_info_RawIndices_safebrowsing_2eproto.base,
-      &scc_info_RiceDeltaEncoding_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_ThreatHit_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ThreatHit_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ThreatHit();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ThreatHit::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<4> scc_info_ThreatHit_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 4, 0, InitDefaultsscc_info_ThreatHit_safebrowsing_2eproto}, {
-      &scc_info_ThreatEntry_safebrowsing_2eproto.base,
-      &scc_info_ThreatHit_ThreatSource_safebrowsing_2eproto.base,
-      &scc_info_ClientInfo_safebrowsing_2eproto.base,
-      &scc_info_ThreatHit_UserInfo_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_ThreatHit_ThreatSource_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ThreatHit_ThreatSource_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ThreatHit_ThreatSource();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ThreatHit_ThreatSource::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ThreatHit_ThreatSource_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ThreatHit_ThreatSource_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_ThreatHit_UserInfo_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ThreatHit_UserInfo_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ThreatHit_UserInfo();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ThreatHit_UserInfo::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ThreatHit_UserInfo_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ThreatHit_UserInfo_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_ThreatInfo_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ThreatInfo_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ThreatInfo();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ThreatInfo::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_ThreatInfo_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_ThreatInfo_safebrowsing_2eproto}, {
-      &scc_info_ThreatEntry_safebrowsing_2eproto.base,}};
-
-static void InitDefaultsscc_info_ThreatListDescriptor_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ThreatListDescriptor_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ThreatListDescriptor();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ThreatListDescriptor::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ThreatListDescriptor_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ThreatListDescriptor_safebrowsing_2eproto}, {}};
-
-static void InitDefaultsscc_info_ThreatMatch_safebrowsing_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::mozilla::safebrowsing::_ThreatMatch_default_instance_;
-    new (ptr) ::mozilla::safebrowsing::ThreatMatch();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::mozilla::safebrowsing::ThreatMatch::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<3> scc_info_ThreatMatch_safebrowsing_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 3, 0, InitDefaultsscc_info_ThreatMatch_safebrowsing_2eproto}, {
-      &scc_info_ThreatEntry_safebrowsing_2eproto.base,
-      &scc_info_ThreatEntryMetadata_safebrowsing_2eproto.base,
-      &scc_info_Duration_safebrowsing_2eproto.base,}};
-
 namespace mozilla {
 namespace safebrowsing {
 bool FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType_IsValid(int value) {
@@ -596,7 +495,7 @@ const std::string& FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseTyp
                      FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType_strings[idx].get();
 }
 bool FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType_Parse(
-    const std::string& name, FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType* value) {
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
       FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType_entries, 3, name, &int_value);
@@ -605,14 +504,14 @@ bool FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType_Parse(
   }
   return success;
 }
-#if (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 constexpr FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType FetchThreatListUpdatesResponse_ListUpdateResponse::RESPONSE_TYPE_UNSPECIFIED;
 constexpr FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType FetchThreatListUpdatesResponse_ListUpdateResponse::PARTIAL_UPDATE;
 constexpr FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType FetchThreatListUpdatesResponse_ListUpdateResponse::FULL_UPDATE;
 constexpr FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType FetchThreatListUpdatesResponse_ListUpdateResponse::ResponseType_MIN;
 constexpr FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType FetchThreatListUpdatesResponse_ListUpdateResponse::ResponseType_MAX;
 constexpr int FetchThreatListUpdatesResponse_ListUpdateResponse::ResponseType_ARRAYSIZE;
-#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 bool ThreatHit_ThreatSourceType_IsValid(int value) {
   switch (value) {
     case 0:
@@ -667,7 +566,7 @@ const std::string& ThreatHit_ThreatSourceType_Name(
                      ThreatHit_ThreatSourceType_strings[idx].get();
 }
 bool ThreatHit_ThreatSourceType_Parse(
-    const std::string& name, ThreatHit_ThreatSourceType* value) {
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ThreatHit_ThreatSourceType* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
       ThreatHit_ThreatSourceType_entries, 5, name, &int_value);
@@ -676,7 +575,7 @@ bool ThreatHit_ThreatSourceType_Parse(
   }
   return success;
 }
-#if (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 constexpr ThreatHit_ThreatSourceType ThreatHit::THREAT_SOURCE_TYPE_UNSPECIFIED;
 constexpr ThreatHit_ThreatSourceType ThreatHit::MATCHING_URL;
 constexpr ThreatHit_ThreatSourceType ThreatHit::TAB_URL;
@@ -685,7 +584,7 @@ constexpr ThreatHit_ThreatSourceType ThreatHit::TAB_RESOURCE;
 constexpr ThreatHit_ThreatSourceType ThreatHit::ThreatSourceType_MIN;
 constexpr ThreatHit_ThreatSourceType ThreatHit::ThreatSourceType_MAX;
 constexpr int ThreatHit::ThreatSourceType_ARRAYSIZE;
-#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 bool ChromeClientInfo_SafeBrowsingReportingPopulation_IsValid(int value) {
   switch (value) {
     case 0:
@@ -736,7 +635,7 @@ const std::string& ChromeClientInfo_SafeBrowsingReportingPopulation_Name(
                      ChromeClientInfo_SafeBrowsingReportingPopulation_strings[idx].get();
 }
 bool ChromeClientInfo_SafeBrowsingReportingPopulation_Parse(
-    const std::string& name, ChromeClientInfo_SafeBrowsingReportingPopulation* value) {
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ChromeClientInfo_SafeBrowsingReportingPopulation* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
       ChromeClientInfo_SafeBrowsingReportingPopulation_entries, 4, name, &int_value);
@@ -745,7 +644,7 @@ bool ChromeClientInfo_SafeBrowsingReportingPopulation_Parse(
   }
   return success;
 }
-#if (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 constexpr ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::UNSPECIFIED;
 constexpr ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::OPT_OUT;
 constexpr ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::EXTENDED;
@@ -753,7 +652,7 @@ constexpr ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::SCO
 constexpr ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::SafeBrowsingReportingPopulation_MIN;
 constexpr ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::SafeBrowsingReportingPopulation_MAX;
 constexpr int ChromeClientInfo::SafeBrowsingReportingPopulation_ARRAYSIZE;
-#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 bool ThreatType_IsValid(int value) {
   switch (value) {
     case 0:
@@ -836,7 +735,7 @@ const std::string& ThreatType_Name(
                      ThreatType_strings[idx].get();
 }
 bool ThreatType_Parse(
-    const std::string& name, ThreatType* value) {
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ThreatType* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
       ThreatType_entries, 12, name, &int_value);
@@ -915,7 +814,7 @@ const std::string& PlatformType_Name(
                      PlatformType_strings[idx].get();
 }
 bool PlatformType_Parse(
-    const std::string& name, PlatformType* value) {
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, PlatformType* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
       PlatformType_entries, 9, name, &int_value);
@@ -970,7 +869,7 @@ const std::string& CompressionType_Name(
                      CompressionType_strings[idx].get();
 }
 bool CompressionType_Parse(
-    const std::string& name, CompressionType* value) {
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, CompressionType* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
       CompressionType_entries, 3, name, &int_value);
@@ -1041,7 +940,7 @@ const std::string& ThreatEntryType_Name(
                      ThreatEntryType_strings[idx].get();
 }
 bool ThreatEntryType_Parse(
-    const std::string& name, ThreatEntryType* value) {
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ThreatEntryType* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
       ThreatEntryType_entries, 7, name, &int_value);
@@ -1053,79 +952,90 @@ bool ThreatEntryType_Parse(
 
 // ===================================================================
 
-void ThreatInfo::InitAsDefaultInstance() {
-}
 class ThreatInfo::_Internal {
  public:
-  using HasBits = decltype(std::declval<ThreatInfo>()._has_bits_);
 };
 
-ThreatInfo::ThreatInfo()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ThreatInfo)
+ThreatInfo::ThreatInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ThreatInfo)
 }
 ThreatInfo::ThreatInfo(const ThreatInfo& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      threat_types_(from.threat_types_),
-      platform_types_(from.platform_types_),
-      threat_entries_(from.threat_entries_),
-      threat_entry_types_(from.threat_entry_types_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ThreatInfo* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.threat_types_){from._impl_.threat_types_}
+    , decltype(_impl_.platform_types_){from._impl_.platform_types_}
+    , decltype(_impl_.threat_entries_){from._impl_.threat_entries_}
+    , decltype(_impl_.threat_entry_types_){from._impl_.threat_entry_types_}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ThreatInfo)
 }
 
-void ThreatInfo::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ThreatInfo_safebrowsing_2eproto.base);
+inline void ThreatInfo::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.threat_types_){arena}
+    , decltype(_impl_.platform_types_){arena}
+    , decltype(_impl_.threat_entries_){arena}
+    , decltype(_impl_.threat_entry_types_){arena}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
 }
 
 ThreatInfo::~ThreatInfo() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ThreatInfo)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ThreatInfo::SharedDtor() {
+inline void ThreatInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.threat_types_.~RepeatedField();
+  _impl_.platform_types_.~RepeatedField();
+  _impl_.threat_entries_.~RepeatedPtrField();
+  _impl_.threat_entry_types_.~RepeatedField();
 }
 
 void ThreatInfo::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ThreatInfo& ThreatInfo::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ThreatInfo_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ThreatInfo::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ThreatInfo)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  threat_types_.Clear();
-  platform_types_.Clear();
-  threat_entries_.Clear();
-  threat_entry_types_.Clear();
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_.threat_types_.Clear();
+  _impl_.platform_types_.Clear();
+  _impl_.threat_entries_.Clear();
+  _impl_.threat_entry_types_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ThreatInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ThreatInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // repeated .mozilla.safebrowsing.ThreatType threat_types = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
           ptr -= 1;
           do {
             ptr += 1;
-            ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+            uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
             CHK_(ptr);
             if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatType_IsValid(val))) {
               _internal_add_threat_types(static_cast<::mozilla::safebrowsing::ThreatType>(val));
@@ -1134,18 +1044,19 @@ const char* ThreatInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
             }
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<8>(ptr));
-        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10) {
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser(_internal_mutable_threat_types(), ptr, ctx, ::mozilla::safebrowsing::ThreatType_IsValid, &_internal_metadata_, 1);
+        } else if (static_cast<uint8_t>(tag) == 10) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser<std::string>(_internal_mutable_threat_types(), ptr, ctx, ::mozilla::safebrowsing::ThreatType_IsValid, &_internal_metadata_, 1);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // repeated .mozilla.safebrowsing.PlatformType platform_types = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
           ptr -= 1;
           do {
             ptr += 1;
-            ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+            uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
             CHK_(ptr);
             if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::PlatformType_IsValid(val))) {
               _internal_add_platform_types(static_cast<::mozilla::safebrowsing::PlatformType>(val));
@@ -1154,14 +1065,15 @@ const char* ThreatInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
             }
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<16>(ptr));
-        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18) {
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser(_internal_mutable_platform_types(), ptr, ctx, ::mozilla::safebrowsing::PlatformType_IsValid, &_internal_metadata_, 2);
+        } else if (static_cast<uint8_t>(tag) == 18) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser<std::string>(_internal_mutable_platform_types(), ptr, ctx, ::mozilla::safebrowsing::PlatformType_IsValid, &_internal_metadata_, 2);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // repeated .mozilla.safebrowsing.ThreatEntry threat_entries = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -1169,15 +1081,16 @@ const char* ThreatInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<26>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // repeated .mozilla.safebrowsing.ThreatEntryType threat_entry_types = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
           ptr -= 1;
           do {
             ptr += 1;
-            ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+            uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
             CHK_(ptr);
             if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatEntryType_IsValid(val))) {
               _internal_add_threat_entry_types(static_cast<::mozilla::safebrowsing::ThreatEntryType>(val));
@@ -1186,69 +1099,73 @@ const char* ThreatInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID:
             }
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<32>(ptr));
-        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34) {
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser(_internal_mutable_threat_entry_types(), ptr, ctx, ::mozilla::safebrowsing::ThreatEntryType_IsValid, &_internal_metadata_, 4);
+        } else if (static_cast<uint8_t>(tag) == 34) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser<std::string>(_internal_mutable_threat_entry_types(), ptr, ctx, ::mozilla::safebrowsing::ThreatEntryType_IsValid, &_internal_metadata_, 4);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ThreatInfo::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ThreatInfo::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ThreatInfo)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.ThreatType threat_types = 1;
   for (int i = 0, n = this->_internal_threat_types_size(); i < n; i++) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
         1, this->_internal_threat_types(i), target);
   }
 
   // repeated .mozilla.safebrowsing.PlatformType platform_types = 2;
   for (int i = 0, n = this->_internal_platform_types_size(); i < n; i++) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
         2, this->_internal_platform_types(i), target);
   }
 
   // repeated .mozilla.safebrowsing.ThreatEntry threat_entries = 3;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_threat_entries_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_threat_entries_size()); i < n; i++) {
+    const auto& repfield = this->_internal_threat_entries(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(3, this->_internal_threat_entries(i), target, stream);
+        InternalWriteMessage(3, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   // repeated .mozilla.safebrowsing.ThreatEntryType threat_entry_types = 4;
   for (int i = 0, n = this->_internal_threat_entry_types_size(); i < n; i++) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
         4, this->_internal_threat_entry_types(i), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ThreatInfo)
   return target;
@@ -1258,7 +1175,7 @@ size_t ThreatInfo::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ThreatInfo)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -1266,7 +1183,7 @@ size_t ThreatInfo::ByteSizeLong() const {
   {
     size_t data_size = 0;
     unsigned int count = static_cast<unsigned int>(this->_internal_threat_types_size());for (unsigned int i = 0; i < count; i++) {
-      data_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(
+      data_size += ::_pbi::WireFormatLite::EnumSize(
         this->_internal_threat_types(static_cast<int>(i)));
     }
     total_size += (1UL * count) + data_size;
@@ -1276,7 +1193,7 @@ size_t ThreatInfo::ByteSizeLong() const {
   {
     size_t data_size = 0;
     unsigned int count = static_cast<unsigned int>(this->_internal_platform_types_size());for (unsigned int i = 0; i < count; i++) {
-      data_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(
+      data_size += ::_pbi::WireFormatLite::EnumSize(
         this->_internal_platform_types(static_cast<int>(i)));
     }
     total_size += (1UL * count) + data_size;
@@ -1284,7 +1201,7 @@ size_t ThreatInfo::ByteSizeLong() const {
 
   // repeated .mozilla.safebrowsing.ThreatEntry threat_entries = 3;
   total_size += 1UL * this->_internal_threat_entries_size();
-  for (const auto& msg : this->threat_entries_) {
+  for (const auto& msg : this->_impl_.threat_entries_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
@@ -1293,37 +1210,38 @@ size_t ThreatInfo::ByteSizeLong() const {
   {
     size_t data_size = 0;
     unsigned int count = static_cast<unsigned int>(this->_internal_threat_entry_types_size());for (unsigned int i = 0; i < count; i++) {
-      data_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(
+      data_size += ::_pbi::WireFormatLite::EnumSize(
         this->_internal_threat_entry_types(static_cast<int>(i)));
     }
     total_size += (1UL * count) + data_size;
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ThreatInfo::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ThreatInfo*>(
+  MergeFrom(*::_pbi::DownCast<const ThreatInfo*>(
       &from));
 }
 
 void ThreatInfo::MergeFrom(const ThreatInfo& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatInfo)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ThreatInfo* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatInfo)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  threat_types_.MergeFrom(from.threat_types_);
-  platform_types_.MergeFrom(from.platform_types_);
-  threat_entries_.MergeFrom(from.threat_entries_);
-  threat_entry_types_.MergeFrom(from.threat_entry_types_);
+  _this->_impl_.threat_types_.MergeFrom(from._impl_.threat_types_);
+  _this->_impl_.platform_types_.MergeFrom(from._impl_.platform_types_);
+  _this->_impl_.threat_entries_.MergeFrom(from._impl_.threat_entries_);
+  _this->_impl_.threat_entry_types_.MergeFrom(from._impl_.threat_entry_types_);
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ThreatInfo::CopyFrom(const ThreatInfo& from) {
@@ -1339,12 +1257,11 @@ bool ThreatInfo::IsInitialized() const {
 
 void ThreatInfo::InternalSwap(ThreatInfo* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  threat_types_.InternalSwap(&other->threat_types_);
-  platform_types_.InternalSwap(&other->platform_types_);
-  threat_entries_.InternalSwap(&other->threat_entries_);
-  threat_entry_types_.InternalSwap(&other->threat_entry_types_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.threat_types_.InternalSwap(&other->_impl_.threat_types_);
+  _impl_.platform_types_.InternalSwap(&other->_impl_.platform_types_);
+  _impl_.threat_entries_.InternalSwap(&other->_impl_.threat_entries_);
+  _impl_.threat_entry_types_.InternalSwap(&other->_impl_.threat_entry_types_);
 }
 
 std::string ThreatInfo::GetTypeName() const {
@@ -1354,17 +1271,9 @@ std::string ThreatInfo::GetTypeName() const {
 
 // ===================================================================
 
-void ThreatMatch::InitAsDefaultInstance() {
-  ::mozilla::safebrowsing::_ThreatMatch_default_instance_._instance.get_mutable()->threat_ = const_cast< ::mozilla::safebrowsing::ThreatEntry*>(
-      ::mozilla::safebrowsing::ThreatEntry::internal_default_instance());
-  ::mozilla::safebrowsing::_ThreatMatch_default_instance_._instance.get_mutable()->threat_entry_metadata_ = const_cast< ::mozilla::safebrowsing::ThreatEntryMetadata*>(
-      ::mozilla::safebrowsing::ThreatEntryMetadata::internal_default_instance());
-  ::mozilla::safebrowsing::_ThreatMatch_default_instance_._instance.get_mutable()->cache_duration_ = const_cast< ::mozilla::safebrowsing::Duration*>(
-      ::mozilla::safebrowsing::Duration::internal_default_instance());
-}
 class ThreatMatch::_Internal {
  public:
-  using HasBits = decltype(std::declval<ThreatMatch>()._has_bits_);
+  using HasBits = decltype(std::declval<ThreatMatch>()._impl_._has_bits_);
   static void set_has_threat_type(HasBits* has_bits) {
     (*has_bits)[0] |= 8u;
   }
@@ -1390,245 +1299,263 @@ class ThreatMatch::_Internal {
 
 const ::mozilla::safebrowsing::ThreatEntry&
 ThreatMatch::_Internal::threat(const ThreatMatch* msg) {
-  return *msg->threat_;
+  return *msg->_impl_.threat_;
 }
 const ::mozilla::safebrowsing::ThreatEntryMetadata&
 ThreatMatch::_Internal::threat_entry_metadata(const ThreatMatch* msg) {
-  return *msg->threat_entry_metadata_;
+  return *msg->_impl_.threat_entry_metadata_;
 }
 const ::mozilla::safebrowsing::Duration&
 ThreatMatch::_Internal::cache_duration(const ThreatMatch* msg) {
-  return *msg->cache_duration_;
+  return *msg->_impl_.cache_duration_;
 }
-ThreatMatch::ThreatMatch()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ThreatMatch)
+ThreatMatch::ThreatMatch(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ThreatMatch)
 }
 ThreatMatch::ThreatMatch(const ThreatMatch& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ThreatMatch* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.threat_){nullptr}
+    , decltype(_impl_.threat_entry_metadata_){nullptr}
+    , decltype(_impl_.cache_duration_){nullptr}
+    , decltype(_impl_.threat_type_){}
+    , decltype(_impl_.platform_type_){}
+    , decltype(_impl_.threat_entry_type_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_threat()) {
-    threat_ = new ::mozilla::safebrowsing::ThreatEntry(*from.threat_);
-  } else {
-    threat_ = nullptr;
+    _this->_impl_.threat_ = new ::mozilla::safebrowsing::ThreatEntry(*from._impl_.threat_);
   }
   if (from._internal_has_threat_entry_metadata()) {
-    threat_entry_metadata_ = new ::mozilla::safebrowsing::ThreatEntryMetadata(*from.threat_entry_metadata_);
-  } else {
-    threat_entry_metadata_ = nullptr;
+    _this->_impl_.threat_entry_metadata_ = new ::mozilla::safebrowsing::ThreatEntryMetadata(*from._impl_.threat_entry_metadata_);
   }
   if (from._internal_has_cache_duration()) {
-    cache_duration_ = new ::mozilla::safebrowsing::Duration(*from.cache_duration_);
-  } else {
-    cache_duration_ = nullptr;
+    _this->_impl_.cache_duration_ = new ::mozilla::safebrowsing::Duration(*from._impl_.cache_duration_);
   }
-  ::memcpy(&threat_type_, &from.threat_type_,
-    static_cast<size_t>(reinterpret_cast<char*>(&threat_entry_type_) -
-    reinterpret_cast<char*>(&threat_type_)) + sizeof(threat_entry_type_));
+  ::memcpy(&_impl_.threat_type_, &from._impl_.threat_type_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.threat_entry_type_) -
+    reinterpret_cast<char*>(&_impl_.threat_type_)) + sizeof(_impl_.threat_entry_type_));
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ThreatMatch)
 }
 
-void ThreatMatch::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ThreatMatch_safebrowsing_2eproto.base);
-  ::memset(&threat_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&threat_entry_type_) -
-      reinterpret_cast<char*>(&threat_)) + sizeof(threat_entry_type_));
+inline void ThreatMatch::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.threat_){nullptr}
+    , decltype(_impl_.threat_entry_metadata_){nullptr}
+    , decltype(_impl_.cache_duration_){nullptr}
+    , decltype(_impl_.threat_type_){0}
+    , decltype(_impl_.platform_type_){0}
+    , decltype(_impl_.threat_entry_type_){0}
+  };
 }
 
 ThreatMatch::~ThreatMatch() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ThreatMatch)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ThreatMatch::SharedDtor() {
-  if (this != internal_default_instance()) delete threat_;
-  if (this != internal_default_instance()) delete threat_entry_metadata_;
-  if (this != internal_default_instance()) delete cache_duration_;
+inline void ThreatMatch::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete _impl_.threat_;
+  if (this != internal_default_instance()) delete _impl_.threat_entry_metadata_;
+  if (this != internal_default_instance()) delete _impl_.cache_duration_;
 }
 
 void ThreatMatch::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ThreatMatch& ThreatMatch::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ThreatMatch_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ThreatMatch::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ThreatMatch)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(threat_ != nullptr);
-      threat_->Clear();
+      GOOGLE_DCHECK(_impl_.threat_ != nullptr);
+      _impl_.threat_->Clear();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(threat_entry_metadata_ != nullptr);
-      threat_entry_metadata_->Clear();
+      GOOGLE_DCHECK(_impl_.threat_entry_metadata_ != nullptr);
+      _impl_.threat_entry_metadata_->Clear();
     }
     if (cached_has_bits & 0x00000004u) {
-      GOOGLE_DCHECK(cache_duration_ != nullptr);
-      cache_duration_->Clear();
+      GOOGLE_DCHECK(_impl_.cache_duration_ != nullptr);
+      _impl_.cache_duration_->Clear();
     }
   }
   if (cached_has_bits & 0x00000038u) {
-    ::memset(&threat_type_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&threat_entry_type_) -
-        reinterpret_cast<char*>(&threat_type_)) + sizeof(threat_entry_type_));
+    ::memset(&_impl_.threat_type_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.threat_entry_type_) -
+        reinterpret_cast<char*>(&_impl_.threat_type_)) + sizeof(_impl_.threat_entry_type_));
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ThreatMatch::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ThreatMatch::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatType_IsValid(val))) {
             _internal_set_threat_type(static_cast<::mozilla::safebrowsing::ThreatType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(1, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::PlatformType_IsValid(val))) {
             _internal_set_platform_type(static_cast<::mozilla::safebrowsing::PlatformType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(2, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ThreatEntry threat = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           ptr = ctx->ParseMessage(_internal_mutable_threat(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ThreatEntryMetadata threat_entry_metadata = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_threat_entry_metadata(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.Duration cache_duration = 5;
       case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           ptr = ctx->ParseMessage(_internal_mutable_cache_duration(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 6;
       case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 48)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatEntryType_IsValid(val))) {
             _internal_set_threat_entry_type(static_cast<::mozilla::safebrowsing::ThreatEntryType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(6, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ThreatMatch::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ThreatMatch::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ThreatMatch)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       1, this->_internal_threat_type(), target);
   }
 
   // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
   if (cached_has_bits & 0x00000010u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       2, this->_internal_platform_type(), target);
   }
 
   // optional .mozilla.safebrowsing.ThreatEntry threat = 3;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        3, _Internal::threat(this), target, stream);
+      InternalWriteMessage(3, _Internal::threat(this),
+        _Internal::threat(this).GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.ThreatEntryMetadata threat_entry_metadata = 4;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        4, _Internal::threat_entry_metadata(this), target, stream);
+      InternalWriteMessage(4, _Internal::threat_entry_metadata(this),
+        _Internal::threat_entry_metadata(this).GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.Duration cache_duration = 5;
   if (cached_has_bits & 0x00000004u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        5, _Internal::cache_duration(this), target, stream);
+      InternalWriteMessage(5, _Internal::cache_duration(this),
+        _Internal::cache_duration(this).GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 6;
   if (cached_has_bits & 0x00000020u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       6, this->_internal_threat_entry_type(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ThreatMatch)
   return target;
@@ -1638,95 +1565,99 @@ size_t ThreatMatch::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ThreatMatch)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000003fu) {
     // optional .mozilla.safebrowsing.ThreatEntry threat = 3;
     if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *threat_);
+          *_impl_.threat_);
     }
 
     // optional .mozilla.safebrowsing.ThreatEntryMetadata threat_entry_metadata = 4;
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *threat_entry_metadata_);
+          *_impl_.threat_entry_metadata_);
     }
 
     // optional .mozilla.safebrowsing.Duration cache_duration = 5;
     if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *cache_duration_);
+          *_impl_.cache_duration_);
     }
 
     // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
     if (cached_has_bits & 0x00000008u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_threat_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_threat_type());
     }
 
     // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
     if (cached_has_bits & 0x00000010u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_platform_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_platform_type());
     }
 
     // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 6;
     if (cached_has_bits & 0x00000020u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_threat_entry_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_threat_entry_type());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ThreatMatch::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ThreatMatch*>(
+  MergeFrom(*::_pbi::DownCast<const ThreatMatch*>(
       &from));
 }
 
 void ThreatMatch::MergeFrom(const ThreatMatch& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatMatch)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ThreatMatch* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatMatch)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000003fu) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_mutable_threat()->::mozilla::safebrowsing::ThreatEntry::MergeFrom(from._internal_threat());
+      _this->_internal_mutable_threat()->::mozilla::safebrowsing::ThreatEntry::MergeFrom(
+          from._internal_threat());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_threat_entry_metadata()->::mozilla::safebrowsing::ThreatEntryMetadata::MergeFrom(from._internal_threat_entry_metadata());
+      _this->_internal_mutable_threat_entry_metadata()->::mozilla::safebrowsing::ThreatEntryMetadata::MergeFrom(
+          from._internal_threat_entry_metadata());
     }
     if (cached_has_bits & 0x00000004u) {
-      _internal_mutable_cache_duration()->::mozilla::safebrowsing::Duration::MergeFrom(from._internal_cache_duration());
+      _this->_internal_mutable_cache_duration()->::mozilla::safebrowsing::Duration::MergeFrom(
+          from._internal_cache_duration());
     }
     if (cached_has_bits & 0x00000008u) {
-      threat_type_ = from.threat_type_;
+      _this->_impl_.threat_type_ = from._impl_.threat_type_;
     }
     if (cached_has_bits & 0x00000010u) {
-      platform_type_ = from.platform_type_;
+      _this->_impl_.platform_type_ = from._impl_.platform_type_;
     }
     if (cached_has_bits & 0x00000020u) {
-      threat_entry_type_ = from.threat_entry_type_;
+      _this->_impl_.threat_entry_type_ = from._impl_.threat_entry_type_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ThreatMatch::CopyFrom(const ThreatMatch& from) {
@@ -1742,14 +1673,14 @@ bool ThreatMatch::IsInitialized() const {
 
 void ThreatMatch::InternalSwap(ThreatMatch* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(threat_, other->threat_);
-  swap(threat_entry_metadata_, other->threat_entry_metadata_);
-  swap(cache_duration_, other->cache_duration_);
-  swap(threat_type_, other->threat_type_);
-  swap(platform_type_, other->platform_type_);
-  swap(threat_entry_type_, other->threat_entry_type_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(ThreatMatch, _impl_.threat_entry_type_)
+      + sizeof(ThreatMatch::_impl_.threat_entry_type_)
+      - PROTOBUF_FIELD_OFFSET(ThreatMatch, _impl_.threat_)>(
+          reinterpret_cast<char*>(&_impl_.threat_),
+          reinterpret_cast<char*>(&other->_impl_.threat_));
 }
 
 std::string ThreatMatch::GetTypeName() const {
@@ -1759,15 +1690,9 @@ std::string ThreatMatch::GetTypeName() const {
 
 // ===================================================================
 
-void FindThreatMatchesRequest::InitAsDefaultInstance() {
-  ::mozilla::safebrowsing::_FindThreatMatchesRequest_default_instance_._instance.get_mutable()->client_ = const_cast< ::mozilla::safebrowsing::ClientInfo*>(
-      ::mozilla::safebrowsing::ClientInfo::internal_default_instance());
-  ::mozilla::safebrowsing::_FindThreatMatchesRequest_default_instance_._instance.get_mutable()->threat_info_ = const_cast< ::mozilla::safebrowsing::ThreatInfo*>(
-      ::mozilla::safebrowsing::ThreatInfo::internal_default_instance());
-}
 class FindThreatMatchesRequest::_Internal {
  public:
-  using HasBits = decltype(std::declval<FindThreatMatchesRequest>()._has_bits_);
+  using HasBits = decltype(std::declval<FindThreatMatchesRequest>()._impl_._has_bits_);
   static const ::mozilla::safebrowsing::ClientInfo& client(const FindThreatMatchesRequest* msg);
   static void set_has_client(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
@@ -1780,151 +1705,160 @@ class FindThreatMatchesRequest::_Internal {
 
 const ::mozilla::safebrowsing::ClientInfo&
 FindThreatMatchesRequest::_Internal::client(const FindThreatMatchesRequest* msg) {
-  return *msg->client_;
+  return *msg->_impl_.client_;
 }
 const ::mozilla::safebrowsing::ThreatInfo&
 FindThreatMatchesRequest::_Internal::threat_info(const FindThreatMatchesRequest* msg) {
-  return *msg->threat_info_;
+  return *msg->_impl_.threat_info_;
 }
-FindThreatMatchesRequest::FindThreatMatchesRequest()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.FindThreatMatchesRequest)
+FindThreatMatchesRequest::FindThreatMatchesRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.FindThreatMatchesRequest)
 }
 FindThreatMatchesRequest::FindThreatMatchesRequest(const FindThreatMatchesRequest& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  FindThreatMatchesRequest* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.client_){nullptr}
+    , decltype(_impl_.threat_info_){nullptr}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_client()) {
-    client_ = new ::mozilla::safebrowsing::ClientInfo(*from.client_);
-  } else {
-    client_ = nullptr;
+    _this->_impl_.client_ = new ::mozilla::safebrowsing::ClientInfo(*from._impl_.client_);
   }
   if (from._internal_has_threat_info()) {
-    threat_info_ = new ::mozilla::safebrowsing::ThreatInfo(*from.threat_info_);
-  } else {
-    threat_info_ = nullptr;
+    _this->_impl_.threat_info_ = new ::mozilla::safebrowsing::ThreatInfo(*from._impl_.threat_info_);
   }
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.FindThreatMatchesRequest)
 }
 
-void FindThreatMatchesRequest::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FindThreatMatchesRequest_safebrowsing_2eproto.base);
-  ::memset(&client_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&threat_info_) -
-      reinterpret_cast<char*>(&client_)) + sizeof(threat_info_));
+inline void FindThreatMatchesRequest::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.client_){nullptr}
+    , decltype(_impl_.threat_info_){nullptr}
+  };
 }
 
 FindThreatMatchesRequest::~FindThreatMatchesRequest() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.FindThreatMatchesRequest)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void FindThreatMatchesRequest::SharedDtor() {
-  if (this != internal_default_instance()) delete client_;
-  if (this != internal_default_instance()) delete threat_info_;
+inline void FindThreatMatchesRequest::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete _impl_.client_;
+  if (this != internal_default_instance()) delete _impl_.threat_info_;
 }
 
 void FindThreatMatchesRequest::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const FindThreatMatchesRequest& FindThreatMatchesRequest::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FindThreatMatchesRequest_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FindThreatMatchesRequest::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.FindThreatMatchesRequest)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(client_ != nullptr);
-      client_->Clear();
+      GOOGLE_DCHECK(_impl_.client_ != nullptr);
+      _impl_.client_->Clear();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(threat_info_ != nullptr);
-      threat_info_->Clear();
+      GOOGLE_DCHECK(_impl_.threat_info_ != nullptr);
+      _impl_.threat_info_->Clear();
     }
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* FindThreatMatchesRequest::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* FindThreatMatchesRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional .mozilla.safebrowsing.ClientInfo client = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr = ctx->ParseMessage(_internal_mutable_client(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ThreatInfo threat_info = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_threat_info(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* FindThreatMatchesRequest::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* FindThreatMatchesRequest::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.FindThreatMatchesRequest)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.ClientInfo client = 1;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        1, _Internal::client(this), target, stream);
+      InternalWriteMessage(1, _Internal::client(this),
+        _Internal::client(this).GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.ThreatInfo threat_info = 2;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::threat_info(this), target, stream);
+      InternalWriteMessage(2, _Internal::threat_info(this),
+        _Internal::threat_info(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.FindThreatMatchesRequest)
   return target;
@@ -1934,57 +1868,60 @@ size_t FindThreatMatchesRequest::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.FindThreatMatchesRequest)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     // optional .mozilla.safebrowsing.ClientInfo client = 1;
     if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *client_);
+          *_impl_.client_);
     }
 
     // optional .mozilla.safebrowsing.ThreatInfo threat_info = 2;
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *threat_info_);
+          *_impl_.threat_info_);
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void FindThreatMatchesRequest::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const FindThreatMatchesRequest*>(
+  MergeFrom(*::_pbi::DownCast<const FindThreatMatchesRequest*>(
       &from));
 }
 
 void FindThreatMatchesRequest::MergeFrom(const FindThreatMatchesRequest& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FindThreatMatchesRequest)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  FindThreatMatchesRequest* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FindThreatMatchesRequest)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_mutable_client()->::mozilla::safebrowsing::ClientInfo::MergeFrom(from._internal_client());
+      _this->_internal_mutable_client()->::mozilla::safebrowsing::ClientInfo::MergeFrom(
+          from._internal_client());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_threat_info()->::mozilla::safebrowsing::ThreatInfo::MergeFrom(from._internal_threat_info());
+      _this->_internal_mutable_threat_info()->::mozilla::safebrowsing::ThreatInfo::MergeFrom(
+          from._internal_threat_info());
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void FindThreatMatchesRequest::CopyFrom(const FindThreatMatchesRequest& from) {
@@ -2000,10 +1937,14 @@ bool FindThreatMatchesRequest::IsInitialized() const {
 
 void FindThreatMatchesRequest::InternalSwap(FindThreatMatchesRequest* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(client_, other->client_);
-  swap(threat_info_, other->threat_info_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FindThreatMatchesRequest, _impl_.threat_info_)
+      + sizeof(FindThreatMatchesRequest::_impl_.threat_info_)
+      - PROTOBUF_FIELD_OFFSET(FindThreatMatchesRequest, _impl_.client_)>(
+          reinterpret_cast<char*>(&_impl_.client_),
+          reinterpret_cast<char*>(&other->_impl_.client_));
 }
 
 std::string FindThreatMatchesRequest::GetTypeName() const {
@@ -2013,69 +1954,74 @@ std::string FindThreatMatchesRequest::GetTypeName() const {
 
 // ===================================================================
 
-void FindThreatMatchesResponse::InitAsDefaultInstance() {
-}
 class FindThreatMatchesResponse::_Internal {
  public:
-  using HasBits = decltype(std::declval<FindThreatMatchesResponse>()._has_bits_);
 };
 
-FindThreatMatchesResponse::FindThreatMatchesResponse()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.FindThreatMatchesResponse)
+FindThreatMatchesResponse::FindThreatMatchesResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.FindThreatMatchesResponse)
 }
 FindThreatMatchesResponse::FindThreatMatchesResponse(const FindThreatMatchesResponse& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      matches_(from.matches_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  FindThreatMatchesResponse* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.matches_){from._impl_.matches_}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.FindThreatMatchesResponse)
 }
 
-void FindThreatMatchesResponse::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FindThreatMatchesResponse_safebrowsing_2eproto.base);
+inline void FindThreatMatchesResponse::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.matches_){arena}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
 }
 
 FindThreatMatchesResponse::~FindThreatMatchesResponse() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.FindThreatMatchesResponse)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void FindThreatMatchesResponse::SharedDtor() {
+inline void FindThreatMatchesResponse::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.matches_.~RepeatedPtrField();
 }
 
 void FindThreatMatchesResponse::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const FindThreatMatchesResponse& FindThreatMatchesResponse::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FindThreatMatchesResponse_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FindThreatMatchesResponse::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.FindThreatMatchesResponse)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  matches_.Clear();
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_.matches_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* FindThreatMatchesResponse::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* FindThreatMatchesResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // repeated .mozilla.safebrowsing.ThreatMatch matches = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -2083,45 +2029,49 @@ const char* FindThreatMatchesResponse::_InternalParse(const char* ptr, ::PROTOBU
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* FindThreatMatchesResponse::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* FindThreatMatchesResponse::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.FindThreatMatchesResponse)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.ThreatMatch matches = 1;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_matches_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_matches_size()); i < n; i++) {
+    const auto& repfield = this->_internal_matches(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(1, this->_internal_matches(i), target, stream);
+        InternalWriteMessage(1, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.FindThreatMatchesResponse)
   return target;
@@ -2131,39 +2081,40 @@ size_t FindThreatMatchesResponse::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.FindThreatMatchesResponse)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.ThreatMatch matches = 1;
   total_size += 1UL * this->_internal_matches_size();
-  for (const auto& msg : this->matches_) {
+  for (const auto& msg : this->_impl_.matches_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void FindThreatMatchesResponse::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const FindThreatMatchesResponse*>(
+  MergeFrom(*::_pbi::DownCast<const FindThreatMatchesResponse*>(
       &from));
 }
 
 void FindThreatMatchesResponse::MergeFrom(const FindThreatMatchesResponse& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FindThreatMatchesResponse)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  FindThreatMatchesResponse* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FindThreatMatchesResponse)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  matches_.MergeFrom(from.matches_);
+  _this->_impl_.matches_.MergeFrom(from._impl_.matches_);
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void FindThreatMatchesResponse::CopyFrom(const FindThreatMatchesResponse& from) {
@@ -2179,9 +2130,8 @@ bool FindThreatMatchesResponse::IsInitialized() const {
 
 void FindThreatMatchesResponse::InternalSwap(FindThreatMatchesResponse* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  matches_.InternalSwap(&other->matches_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.matches_.InternalSwap(&other->_impl_.matches_);
 }
 
 std::string FindThreatMatchesResponse::GetTypeName() const {
@@ -2191,11 +2141,9 @@ std::string FindThreatMatchesResponse::GetTypeName() const {
 
 // ===================================================================
 
-void FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::InitAsDefaultInstance() {
-}
 class FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::_Internal {
  public:
-  using HasBits = decltype(std::declval<FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints>()._has_bits_);
+  using HasBits = decltype(std::declval<FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints>()._impl_._has_bits_);
   static void set_has_max_update_entries(HasBits* has_bits) {
     (*has_bits)[0] |= 2u;
   }
@@ -2207,112 +2155,136 @@ class FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::_Internal {
   }
 };
 
-FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints)
+FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints)
 }
 FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints(const FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      supported_compressions_(from.supported_compressions_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  region_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.supported_compressions_){from._impl_.supported_compressions_}
+    , decltype(_impl_.region_){}
+    , decltype(_impl_.max_update_entries_){}
+    , decltype(_impl_.max_database_entries_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.region_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.region_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_region()) {
-    region_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.region_);
+    _this->_impl_.region_.Set(from._internal_region(), 
+      _this->GetArenaForAllocation());
   }
-  ::memcpy(&max_update_entries_, &from.max_update_entries_,
-    static_cast<size_t>(reinterpret_cast<char*>(&max_database_entries_) -
-    reinterpret_cast<char*>(&max_update_entries_)) + sizeof(max_database_entries_));
+  ::memcpy(&_impl_.max_update_entries_, &from._impl_.max_update_entries_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.max_database_entries_) -
+    reinterpret_cast<char*>(&_impl_.max_update_entries_)) + sizeof(_impl_.max_database_entries_));
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints)
 }
 
-void FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints_safebrowsing_2eproto.base);
-  region_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  ::memset(&max_update_entries_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&max_database_entries_) -
-      reinterpret_cast<char*>(&max_update_entries_)) + sizeof(max_database_entries_));
+inline void FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.supported_compressions_){arena}
+    , decltype(_impl_.region_){}
+    , decltype(_impl_.max_update_entries_){0}
+    , decltype(_impl_.max_database_entries_){0}
+  };
+  _impl_.region_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.region_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::~FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::SharedDtor() {
-  region_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.supported_compressions_.~RepeatedField();
+  _impl_.region_.Destroy();
 }
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints& FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  supported_compressions_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.supported_compressions_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    region_.ClearNonDefaultToEmptyNoArena();
+    _impl_.region_.ClearNonDefaultToEmpty();
   }
   if (cached_has_bits & 0x00000006u) {
-    ::memset(&max_update_entries_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&max_database_entries_) -
-        reinterpret_cast<char*>(&max_update_entries_)) + sizeof(max_database_entries_));
+    ::memset(&_impl_.max_update_entries_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.max_database_entries_) -
+        reinterpret_cast<char*>(&_impl_.max_update_entries_)) + sizeof(_impl_.max_database_entries_));
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional int32 max_update_entries = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
           _Internal::set_has_max_update_entries(&has_bits);
-          max_update_entries_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.max_update_entries_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional int32 max_database_entries = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
           _Internal::set_has_max_database_entries(&has_bits);
-          max_database_entries_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.max_database_entries_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional string region = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           auto str = _internal_mutable_region();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // repeated .mozilla.safebrowsing.CompressionType supported_compressions = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
           ptr -= 1;
           do {
             ptr += 1;
-            ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+            uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
             CHK_(ptr);
             if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::CompressionType_IsValid(val))) {
               _internal_add_supported_compressions(static_cast<::mozilla::safebrowsing::CompressionType>(val));
@@ -2321,49 +2293,53 @@ const char* FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::_Intern
             }
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<32>(ptr));
-        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34) {
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser(_internal_mutable_supported_compressions(), ptr, ctx, ::mozilla::safebrowsing::CompressionType_IsValid, &_internal_metadata_, 4);
+        } else if (static_cast<uint8_t>(tag) == 34) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedEnumParser<std::string>(_internal_mutable_supported_compressions(), ptr, ctx, ::mozilla::safebrowsing::CompressionType_IsValid, &_internal_metadata_, 4);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional int32 max_update_entries = 1;
   if (cached_has_bits & 0x00000002u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_max_update_entries(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_max_update_entries(), target);
   }
 
   // optional int32 max_database_entries = 2;
   if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_max_database_entries(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_max_database_entries(), target);
   }
 
   // optional string region = 3;
@@ -2375,13 +2351,13 @@ failure:
   // repeated .mozilla.safebrowsing.CompressionType supported_compressions = 4;
   for (int i = 0, n = this->_internal_supported_compressions_size(); i < n; i++) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
         4, this->_internal_supported_compressions(i), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints)
   return target;
@@ -2391,7 +2367,7 @@ size_t FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::ByteSizeLong
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -2399,13 +2375,13 @@ size_t FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::ByteSizeLong
   {
     size_t data_size = 0;
     unsigned int count = static_cast<unsigned int>(this->_internal_supported_compressions_size());for (unsigned int i = 0; i < count; i++) {
-      data_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(
+      data_size += ::_pbi::WireFormatLite::EnumSize(
         this->_internal_supported_compressions(static_cast<int>(i)));
     }
     total_size += (1UL * count) + data_size;
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     // optional string region = 3;
     if (cached_has_bits & 0x00000001u) {
@@ -2416,55 +2392,51 @@ size_t FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::ByteSizeLong
 
     // optional int32 max_update_entries = 1;
     if (cached_has_bits & 0x00000002u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-          this->_internal_max_update_entries());
+      total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_max_update_entries());
     }
 
     // optional int32 max_database_entries = 2;
     if (cached_has_bits & 0x00000004u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-          this->_internal_max_database_entries());
+      total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_max_database_entries());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints*>(
+  MergeFrom(*::_pbi::DownCast<const FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints*>(
       &from));
 }
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::MergeFrom(const FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  supported_compressions_.MergeFrom(from.supported_compressions_);
-  cached_has_bits = from._has_bits_[0];
+  _this->_impl_.supported_compressions_.MergeFrom(from._impl_.supported_compressions_);
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      region_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.region_);
+      _this->_internal_set_region(from._internal_region());
     }
     if (cached_has_bits & 0x00000002u) {
-      max_update_entries_ = from.max_update_entries_;
+      _this->_impl_.max_update_entries_ = from._impl_.max_update_entries_;
     }
     if (cached_has_bits & 0x00000004u) {
-      max_database_entries_ = from.max_database_entries_;
+      _this->_impl_.max_database_entries_ = from._impl_.max_database_entries_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::CopyFrom(const FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints& from) {
@@ -2480,13 +2452,21 @@ bool FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::IsInitialized(
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::InternalSwap(FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  supported_compressions_.InternalSwap(&other->supported_compressions_);
-  region_.Swap(&other->region_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(max_update_entries_, other->max_update_entries_);
-  swap(max_database_entries_, other->max_database_entries_);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.supported_compressions_.InternalSwap(&other->_impl_.supported_compressions_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.region_, lhs_arena,
+      &other->_impl_.region_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints, _impl_.max_database_entries_)
+      + sizeof(FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::_impl_.max_database_entries_)
+      - PROTOBUF_FIELD_OFFSET(FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints, _impl_.max_update_entries_)>(
+          reinterpret_cast<char*>(&_impl_.max_update_entries_),
+          reinterpret_cast<char*>(&other->_impl_.max_update_entries_));
 }
 
 std::string FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::GetTypeName() const {
@@ -2496,13 +2476,9 @@ std::string FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::GetType
 
 // ===================================================================
 
-void FetchThreatListUpdatesRequest_ListUpdateRequest::InitAsDefaultInstance() {
-  ::mozilla::safebrowsing::_FetchThreatListUpdatesRequest_ListUpdateRequest_default_instance_._instance.get_mutable()->constraints_ = const_cast< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints*>(
-      ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::internal_default_instance());
-}
 class FetchThreatListUpdatesRequest_ListUpdateRequest::_Internal {
  public:
-  using HasBits = decltype(std::declval<FetchThreatListUpdatesRequest_ListUpdateRequest>()._has_bits_);
+  using HasBits = decltype(std::declval<FetchThreatListUpdatesRequest_ListUpdateRequest>()._impl_._has_bits_);
   static void set_has_threat_type(HasBits* has_bits) {
     (*has_bits)[0] |= 4u;
   }
@@ -2523,183 +2499,212 @@ class FetchThreatListUpdatesRequest_ListUpdateRequest::_Internal {
 
 const ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints&
 FetchThreatListUpdatesRequest_ListUpdateRequest::_Internal::constraints(const FetchThreatListUpdatesRequest_ListUpdateRequest* msg) {
-  return *msg->constraints_;
+  return *msg->_impl_.constraints_;
 }
-FetchThreatListUpdatesRequest_ListUpdateRequest::FetchThreatListUpdatesRequest_ListUpdateRequest()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest)
+FetchThreatListUpdatesRequest_ListUpdateRequest::FetchThreatListUpdatesRequest_ListUpdateRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest)
 }
 FetchThreatListUpdatesRequest_ListUpdateRequest::FetchThreatListUpdatesRequest_ListUpdateRequest(const FetchThreatListUpdatesRequest_ListUpdateRequest& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  state_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  FetchThreatListUpdatesRequest_ListUpdateRequest* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.state_){}
+    , decltype(_impl_.constraints_){nullptr}
+    , decltype(_impl_.threat_type_){}
+    , decltype(_impl_.platform_type_){}
+    , decltype(_impl_.threat_entry_type_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.state_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.state_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_state()) {
-    state_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.state_);
+    _this->_impl_.state_.Set(from._internal_state(), 
+      _this->GetArenaForAllocation());
   }
   if (from._internal_has_constraints()) {
-    constraints_ = new ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints(*from.constraints_);
-  } else {
-    constraints_ = nullptr;
+    _this->_impl_.constraints_ = new ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints(*from._impl_.constraints_);
   }
-  ::memcpy(&threat_type_, &from.threat_type_,
-    static_cast<size_t>(reinterpret_cast<char*>(&threat_entry_type_) -
-    reinterpret_cast<char*>(&threat_type_)) + sizeof(threat_entry_type_));
+  ::memcpy(&_impl_.threat_type_, &from._impl_.threat_type_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.threat_entry_type_) -
+    reinterpret_cast<char*>(&_impl_.threat_type_)) + sizeof(_impl_.threat_entry_type_));
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest)
 }
 
-void FetchThreatListUpdatesRequest_ListUpdateRequest::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_safebrowsing_2eproto.base);
-  state_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  ::memset(&constraints_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&threat_entry_type_) -
-      reinterpret_cast<char*>(&constraints_)) + sizeof(threat_entry_type_));
+inline void FetchThreatListUpdatesRequest_ListUpdateRequest::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.state_){}
+    , decltype(_impl_.constraints_){nullptr}
+    , decltype(_impl_.threat_type_){0}
+    , decltype(_impl_.platform_type_){0}
+    , decltype(_impl_.threat_entry_type_){0}
+  };
+  _impl_.state_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.state_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 FetchThreatListUpdatesRequest_ListUpdateRequest::~FetchThreatListUpdatesRequest_ListUpdateRequest() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void FetchThreatListUpdatesRequest_ListUpdateRequest::SharedDtor() {
-  state_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (this != internal_default_instance()) delete constraints_;
+inline void FetchThreatListUpdatesRequest_ListUpdateRequest::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.state_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.constraints_;
 }
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const FetchThreatListUpdatesRequest_ListUpdateRequest& FetchThreatListUpdatesRequest_ListUpdateRequest::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FetchThreatListUpdatesRequest_ListUpdateRequest_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      state_.ClearNonDefaultToEmptyNoArena();
+      _impl_.state_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(constraints_ != nullptr);
-      constraints_->Clear();
+      GOOGLE_DCHECK(_impl_.constraints_ != nullptr);
+      _impl_.constraints_->Clear();
     }
   }
   if (cached_has_bits & 0x0000001cu) {
-    ::memset(&threat_type_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&threat_entry_type_) -
-        reinterpret_cast<char*>(&threat_type_)) + sizeof(threat_entry_type_));
+    ::memset(&_impl_.threat_type_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.threat_entry_type_) -
+        reinterpret_cast<char*>(&_impl_.threat_type_)) + sizeof(_impl_.threat_entry_type_));
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* FetchThreatListUpdatesRequest_ListUpdateRequest::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* FetchThreatListUpdatesRequest_ListUpdateRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatType_IsValid(val))) {
             _internal_set_threat_type(static_cast<::mozilla::safebrowsing::ThreatType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(1, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::PlatformType_IsValid(val))) {
             _internal_set_platform_type(static_cast<::mozilla::safebrowsing::PlatformType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(2, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional bytes state = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           auto str = _internal_mutable_state();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints constraints = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_constraints(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 5;
       case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatEntryType_IsValid(val))) {
             _internal_set_threat_entry_type(static_cast<::mozilla::safebrowsing::ThreatEntryType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(5, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* FetchThreatListUpdatesRequest_ListUpdateRequest::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* FetchThreatListUpdatesRequest_ListUpdateRequest::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
   if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       1, this->_internal_threat_type(), target);
   }
 
   // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       2, this->_internal_platform_type(), target);
   }
 
@@ -2711,22 +2716,21 @@ failure:
 
   // optional .mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest.Constraints constraints = 4;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        4, _Internal::constraints(this), target, stream);
+      InternalWriteMessage(4, _Internal::constraints(this),
+        _Internal::constraints(this).GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 5;
   if (cached_has_bits & 0x00000010u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       5, this->_internal_threat_entry_type(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest)
   return target;
@@ -2736,11 +2740,11 @@ size_t FetchThreatListUpdatesRequest_ListUpdateRequest::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000001fu) {
     // optional bytes state = 3;
     if (cached_has_bits & 0x00000001u) {
@@ -2753,69 +2757,70 @@ size_t FetchThreatListUpdatesRequest_ListUpdateRequest::ByteSizeLong() const {
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *constraints_);
+          *_impl_.constraints_);
     }
 
     // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
     if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_threat_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_threat_type());
     }
 
     // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
     if (cached_has_bits & 0x00000008u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_platform_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_platform_type());
     }
 
     // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 5;
     if (cached_has_bits & 0x00000010u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_threat_entry_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_threat_entry_type());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const FetchThreatListUpdatesRequest_ListUpdateRequest*>(
+  MergeFrom(*::_pbi::DownCast<const FetchThreatListUpdatesRequest_ListUpdateRequest*>(
       &from));
 }
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest::MergeFrom(const FetchThreatListUpdatesRequest_ListUpdateRequest& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  FetchThreatListUpdatesRequest_ListUpdateRequest* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000001fu) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      state_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.state_);
+      _this->_internal_set_state(from._internal_state());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_constraints()->::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::MergeFrom(from._internal_constraints());
+      _this->_internal_mutable_constraints()->::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints::MergeFrom(
+          from._internal_constraints());
     }
     if (cached_has_bits & 0x00000004u) {
-      threat_type_ = from.threat_type_;
+      _this->_impl_.threat_type_ = from._impl_.threat_type_;
     }
     if (cached_has_bits & 0x00000008u) {
-      platform_type_ = from.platform_type_;
+      _this->_impl_.platform_type_ = from._impl_.platform_type_;
     }
     if (cached_has_bits & 0x00000010u) {
-      threat_entry_type_ = from.threat_entry_type_;
+      _this->_impl_.threat_entry_type_ = from._impl_.threat_entry_type_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest::CopyFrom(const FetchThreatListUpdatesRequest_ListUpdateRequest& from) {
@@ -2831,14 +2836,20 @@ bool FetchThreatListUpdatesRequest_ListUpdateRequest::IsInitialized() const {
 
 void FetchThreatListUpdatesRequest_ListUpdateRequest::InternalSwap(FetchThreatListUpdatesRequest_ListUpdateRequest* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  state_.Swap(&other->state_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(constraints_, other->constraints_);
-  swap(threat_type_, other->threat_type_);
-  swap(platform_type_, other->platform_type_);
-  swap(threat_entry_type_, other->threat_entry_type_);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.state_, lhs_arena,
+      &other->_impl_.state_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FetchThreatListUpdatesRequest_ListUpdateRequest, _impl_.threat_entry_type_)
+      + sizeof(FetchThreatListUpdatesRequest_ListUpdateRequest::_impl_.threat_entry_type_)
+      - PROTOBUF_FIELD_OFFSET(FetchThreatListUpdatesRequest_ListUpdateRequest, _impl_.constraints_)>(
+          reinterpret_cast<char*>(&_impl_.constraints_),
+          reinterpret_cast<char*>(&other->_impl_.constraints_));
 }
 
 std::string FetchThreatListUpdatesRequest_ListUpdateRequest::GetTypeName() const {
@@ -2848,15 +2859,9 @@ std::string FetchThreatListUpdatesRequest_ListUpdateRequest::GetTypeName() const
 
 // ===================================================================
 
-void FetchThreatListUpdatesRequest::InitAsDefaultInstance() {
-  ::mozilla::safebrowsing::_FetchThreatListUpdatesRequest_default_instance_._instance.get_mutable()->client_ = const_cast< ::mozilla::safebrowsing::ClientInfo*>(
-      ::mozilla::safebrowsing::ClientInfo::internal_default_instance());
-  ::mozilla::safebrowsing::_FetchThreatListUpdatesRequest_default_instance_._instance.get_mutable()->chrome_client_info_ = const_cast< ::mozilla::safebrowsing::ChromeClientInfo*>(
-      ::mozilla::safebrowsing::ChromeClientInfo::internal_default_instance());
-}
 class FetchThreatListUpdatesRequest::_Internal {
  public:
-  using HasBits = decltype(std::declval<FetchThreatListUpdatesRequest>()._has_bits_);
+  using HasBits = decltype(std::declval<FetchThreatListUpdatesRequest>()._impl_._has_bits_);
   static const ::mozilla::safebrowsing::ClientInfo& client(const FetchThreatListUpdatesRequest* msg);
   static void set_has_client(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
@@ -2869,102 +2874,111 @@ class FetchThreatListUpdatesRequest::_Internal {
 
 const ::mozilla::safebrowsing::ClientInfo&
 FetchThreatListUpdatesRequest::_Internal::client(const FetchThreatListUpdatesRequest* msg) {
-  return *msg->client_;
+  return *msg->_impl_.client_;
 }
 const ::mozilla::safebrowsing::ChromeClientInfo&
 FetchThreatListUpdatesRequest::_Internal::chrome_client_info(const FetchThreatListUpdatesRequest* msg) {
-  return *msg->chrome_client_info_;
+  return *msg->_impl_.chrome_client_info_;
 }
-FetchThreatListUpdatesRequest::FetchThreatListUpdatesRequest()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest)
+FetchThreatListUpdatesRequest::FetchThreatListUpdatesRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest)
 }
 FetchThreatListUpdatesRequest::FetchThreatListUpdatesRequest(const FetchThreatListUpdatesRequest& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      list_update_requests_(from.list_update_requests_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  FetchThreatListUpdatesRequest* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.list_update_requests_){from._impl_.list_update_requests_}
+    , decltype(_impl_.client_){nullptr}
+    , decltype(_impl_.chrome_client_info_){nullptr}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_client()) {
-    client_ = new ::mozilla::safebrowsing::ClientInfo(*from.client_);
-  } else {
-    client_ = nullptr;
+    _this->_impl_.client_ = new ::mozilla::safebrowsing::ClientInfo(*from._impl_.client_);
   }
   if (from._internal_has_chrome_client_info()) {
-    chrome_client_info_ = new ::mozilla::safebrowsing::ChromeClientInfo(*from.chrome_client_info_);
-  } else {
-    chrome_client_info_ = nullptr;
+    _this->_impl_.chrome_client_info_ = new ::mozilla::safebrowsing::ChromeClientInfo(*from._impl_.chrome_client_info_);
   }
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest)
 }
 
-void FetchThreatListUpdatesRequest::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FetchThreatListUpdatesRequest_safebrowsing_2eproto.base);
-  ::memset(&client_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&chrome_client_info_) -
-      reinterpret_cast<char*>(&client_)) + sizeof(chrome_client_info_));
+inline void FetchThreatListUpdatesRequest::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.list_update_requests_){arena}
+    , decltype(_impl_.client_){nullptr}
+    , decltype(_impl_.chrome_client_info_){nullptr}
+  };
 }
 
 FetchThreatListUpdatesRequest::~FetchThreatListUpdatesRequest() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.FetchThreatListUpdatesRequest)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void FetchThreatListUpdatesRequest::SharedDtor() {
-  if (this != internal_default_instance()) delete client_;
-  if (this != internal_default_instance()) delete chrome_client_info_;
+inline void FetchThreatListUpdatesRequest::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.list_update_requests_.~RepeatedPtrField();
+  if (this != internal_default_instance()) delete _impl_.client_;
+  if (this != internal_default_instance()) delete _impl_.chrome_client_info_;
 }
 
 void FetchThreatListUpdatesRequest::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const FetchThreatListUpdatesRequest& FetchThreatListUpdatesRequest::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FetchThreatListUpdatesRequest_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FetchThreatListUpdatesRequest::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  list_update_requests_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.list_update_requests_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(client_ != nullptr);
-      client_->Clear();
+      GOOGLE_DCHECK(_impl_.client_ != nullptr);
+      _impl_.client_->Clear();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(chrome_client_info_ != nullptr);
-      chrome_client_info_->Clear();
+      GOOGLE_DCHECK(_impl_.chrome_client_info_ != nullptr);
+      _impl_.chrome_client_info_->Clear();
     }
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* FetchThreatListUpdatesRequest::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* FetchThreatListUpdatesRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional .mozilla.safebrowsing.ClientInfo client = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr = ctx->ParseMessage(_internal_mutable_client(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // repeated .mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest list_update_requests = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -2972,70 +2986,73 @@ const char* FetchThreatListUpdatesRequest::_InternalParse(const char* ptr, ::PRO
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<26>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ChromeClientInfo chrome_client_info = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_chrome_client_info(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* FetchThreatListUpdatesRequest::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* FetchThreatListUpdatesRequest::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.ClientInfo client = 1;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        1, _Internal::client(this), target, stream);
+      InternalWriteMessage(1, _Internal::client(this),
+        _Internal::client(this).GetCachedSize(), target, stream);
   }
 
   // repeated .mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest list_update_requests = 3;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_list_update_requests_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_list_update_requests_size()); i < n; i++) {
+    const auto& repfield = this->_internal_list_update_requests(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(3, this->_internal_list_update_requests(i), target, stream);
+        InternalWriteMessage(3, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.ChromeClientInfo chrome_client_info = 4;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        4, _Internal::chrome_client_info(this), target, stream);
+      InternalWriteMessage(4, _Internal::chrome_client_info(this),
+        _Internal::chrome_client_info(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.FetchThreatListUpdatesRequest)
   return target;
@@ -3045,65 +3062,68 @@ size_t FetchThreatListUpdatesRequest::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.FetchThreatListUpdatesRequest.ListUpdateRequest list_update_requests = 3;
   total_size += 1UL * this->_internal_list_update_requests_size();
-  for (const auto& msg : this->list_update_requests_) {
+  for (const auto& msg : this->_impl_.list_update_requests_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     // optional .mozilla.safebrowsing.ClientInfo client = 1;
     if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *client_);
+          *_impl_.client_);
     }
 
     // optional .mozilla.safebrowsing.ChromeClientInfo chrome_client_info = 4;
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *chrome_client_info_);
+          *_impl_.chrome_client_info_);
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void FetchThreatListUpdatesRequest::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const FetchThreatListUpdatesRequest*>(
+  MergeFrom(*::_pbi::DownCast<const FetchThreatListUpdatesRequest*>(
       &from));
 }
 
 void FetchThreatListUpdatesRequest::MergeFrom(const FetchThreatListUpdatesRequest& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  FetchThreatListUpdatesRequest* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FetchThreatListUpdatesRequest)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  list_update_requests_.MergeFrom(from.list_update_requests_);
-  cached_has_bits = from._has_bits_[0];
+  _this->_impl_.list_update_requests_.MergeFrom(from._impl_.list_update_requests_);
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_mutable_client()->::mozilla::safebrowsing::ClientInfo::MergeFrom(from._internal_client());
+      _this->_internal_mutable_client()->::mozilla::safebrowsing::ClientInfo::MergeFrom(
+          from._internal_client());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_chrome_client_info()->::mozilla::safebrowsing::ChromeClientInfo::MergeFrom(from._internal_chrome_client_info());
+      _this->_internal_mutable_chrome_client_info()->::mozilla::safebrowsing::ChromeClientInfo::MergeFrom(
+          from._internal_chrome_client_info());
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void FetchThreatListUpdatesRequest::CopyFrom(const FetchThreatListUpdatesRequest& from) {
@@ -3119,11 +3139,15 @@ bool FetchThreatListUpdatesRequest::IsInitialized() const {
 
 void FetchThreatListUpdatesRequest::InternalSwap(FetchThreatListUpdatesRequest* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  list_update_requests_.InternalSwap(&other->list_update_requests_);
-  swap(client_, other->client_);
-  swap(chrome_client_info_, other->chrome_client_info_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.list_update_requests_.InternalSwap(&other->_impl_.list_update_requests_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FetchThreatListUpdatesRequest, _impl_.chrome_client_info_)
+      + sizeof(FetchThreatListUpdatesRequest::_impl_.chrome_client_info_)
+      - PROTOBUF_FIELD_OFFSET(FetchThreatListUpdatesRequest, _impl_.client_)>(
+          reinterpret_cast<char*>(&_impl_.client_),
+          reinterpret_cast<char*>(&other->_impl_.client_));
 }
 
 std::string FetchThreatListUpdatesRequest::GetTypeName() const {
@@ -3133,13 +3157,9 @@ std::string FetchThreatListUpdatesRequest::GetTypeName() const {
 
 // ===================================================================
 
-void FetchThreatListUpdatesResponse_ListUpdateResponse::InitAsDefaultInstance() {
-  ::mozilla::safebrowsing::_FetchThreatListUpdatesResponse_ListUpdateResponse_default_instance_._instance.get_mutable()->checksum_ = const_cast< ::mozilla::safebrowsing::Checksum*>(
-      ::mozilla::safebrowsing::Checksum::internal_default_instance());
-}
 class FetchThreatListUpdatesResponse_ListUpdateResponse::_Internal {
  public:
-  using HasBits = decltype(std::declval<FetchThreatListUpdatesResponse_ListUpdateResponse>()._has_bits_);
+  using HasBits = decltype(std::declval<FetchThreatListUpdatesResponse_ListUpdateResponse>()._impl_._has_bits_);
   static void set_has_threat_type(HasBits* has_bits) {
     (*has_bits)[0] |= 4u;
   }
@@ -3163,148 +3183,179 @@ class FetchThreatListUpdatesResponse_ListUpdateResponse::_Internal {
 
 const ::mozilla::safebrowsing::Checksum&
 FetchThreatListUpdatesResponse_ListUpdateResponse::_Internal::checksum(const FetchThreatListUpdatesResponse_ListUpdateResponse* msg) {
-  return *msg->checksum_;
+  return *msg->_impl_.checksum_;
 }
-FetchThreatListUpdatesResponse_ListUpdateResponse::FetchThreatListUpdatesResponse_ListUpdateResponse()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse)
+FetchThreatListUpdatesResponse_ListUpdateResponse::FetchThreatListUpdatesResponse_ListUpdateResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse)
 }
 FetchThreatListUpdatesResponse_ListUpdateResponse::FetchThreatListUpdatesResponse_ListUpdateResponse(const FetchThreatListUpdatesResponse_ListUpdateResponse& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      additions_(from.additions_),
-      removals_(from.removals_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  new_client_state_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  FetchThreatListUpdatesResponse_ListUpdateResponse* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.additions_){from._impl_.additions_}
+    , decltype(_impl_.removals_){from._impl_.removals_}
+    , decltype(_impl_.new_client_state_){}
+    , decltype(_impl_.checksum_){nullptr}
+    , decltype(_impl_.threat_type_){}
+    , decltype(_impl_.threat_entry_type_){}
+    , decltype(_impl_.platform_type_){}
+    , decltype(_impl_.response_type_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.new_client_state_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.new_client_state_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_new_client_state()) {
-    new_client_state_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.new_client_state_);
+    _this->_impl_.new_client_state_.Set(from._internal_new_client_state(), 
+      _this->GetArenaForAllocation());
   }
   if (from._internal_has_checksum()) {
-    checksum_ = new ::mozilla::safebrowsing::Checksum(*from.checksum_);
-  } else {
-    checksum_ = nullptr;
+    _this->_impl_.checksum_ = new ::mozilla::safebrowsing::Checksum(*from._impl_.checksum_);
   }
-  ::memcpy(&threat_type_, &from.threat_type_,
-    static_cast<size_t>(reinterpret_cast<char*>(&response_type_) -
-    reinterpret_cast<char*>(&threat_type_)) + sizeof(response_type_));
+  ::memcpy(&_impl_.threat_type_, &from._impl_.threat_type_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.response_type_) -
+    reinterpret_cast<char*>(&_impl_.threat_type_)) + sizeof(_impl_.response_type_));
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse)
 }
 
-void FetchThreatListUpdatesResponse_ListUpdateResponse::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FetchThreatListUpdatesResponse_ListUpdateResponse_safebrowsing_2eproto.base);
-  new_client_state_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  ::memset(&checksum_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&response_type_) -
-      reinterpret_cast<char*>(&checksum_)) + sizeof(response_type_));
+inline void FetchThreatListUpdatesResponse_ListUpdateResponse::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.additions_){arena}
+    , decltype(_impl_.removals_){arena}
+    , decltype(_impl_.new_client_state_){}
+    , decltype(_impl_.checksum_){nullptr}
+    , decltype(_impl_.threat_type_){0}
+    , decltype(_impl_.threat_entry_type_){0}
+    , decltype(_impl_.platform_type_){0}
+    , decltype(_impl_.response_type_){0}
+  };
+  _impl_.new_client_state_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.new_client_state_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 FetchThreatListUpdatesResponse_ListUpdateResponse::~FetchThreatListUpdatesResponse_ListUpdateResponse() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void FetchThreatListUpdatesResponse_ListUpdateResponse::SharedDtor() {
-  new_client_state_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (this != internal_default_instance()) delete checksum_;
+inline void FetchThreatListUpdatesResponse_ListUpdateResponse::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.additions_.~RepeatedPtrField();
+  _impl_.removals_.~RepeatedPtrField();
+  _impl_.new_client_state_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.checksum_;
 }
 
 void FetchThreatListUpdatesResponse_ListUpdateResponse::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const FetchThreatListUpdatesResponse_ListUpdateResponse& FetchThreatListUpdatesResponse_ListUpdateResponse::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FetchThreatListUpdatesResponse_ListUpdateResponse_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FetchThreatListUpdatesResponse_ListUpdateResponse::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  additions_.Clear();
-  removals_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.additions_.Clear();
+  _impl_.removals_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      new_client_state_.ClearNonDefaultToEmptyNoArena();
+      _impl_.new_client_state_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(checksum_ != nullptr);
-      checksum_->Clear();
+      GOOGLE_DCHECK(_impl_.checksum_ != nullptr);
+      _impl_.checksum_->Clear();
     }
   }
   if (cached_has_bits & 0x0000003cu) {
-    ::memset(&threat_type_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&response_type_) -
-        reinterpret_cast<char*>(&threat_type_)) + sizeof(response_type_));
+    ::memset(&_impl_.threat_type_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.response_type_) -
+        reinterpret_cast<char*>(&_impl_.threat_type_)) + sizeof(_impl_.response_type_));
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* FetchThreatListUpdatesResponse_ListUpdateResponse::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* FetchThreatListUpdatesResponse_ListUpdateResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatType_IsValid(val))) {
             _internal_set_threat_type(static_cast<::mozilla::safebrowsing::ThreatType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(1, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatEntryType_IsValid(val))) {
             _internal_set_threat_entry_type(static_cast<::mozilla::safebrowsing::ThreatEntryType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(2, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.PlatformType platform_type = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::PlatformType_IsValid(val))) {
             _internal_set_platform_type(static_cast<::mozilla::safebrowsing::PlatformType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(3, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse.ResponseType response_type = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType_IsValid(val))) {
             _internal_set_response_type(static_cast<::mozilla::safebrowsing::FetchThreatListUpdatesResponse_ListUpdateResponse_ResponseType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(4, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // repeated .mozilla.safebrowsing.ThreatEntrySet additions = 5;
       case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -3312,11 +3363,12 @@ const char* FetchThreatListUpdatesResponse_ListUpdateResponse::_InternalParse(co
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<42>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // repeated .mozilla.safebrowsing.ThreatEntrySet removals = 6;
       case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 50)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -3324,93 +3376,99 @@ const char* FetchThreatListUpdatesResponse_ListUpdateResponse::_InternalParse(co
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<50>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional bytes new_client_state = 7;
       case 7:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 58)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
           auto str = _internal_mutable_new_client_state();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.Checksum checksum = 8;
       case 8:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 66)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 66)) {
           ptr = ctx->ParseMessage(_internal_mutable_checksum(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* FetchThreatListUpdatesResponse_ListUpdateResponse::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* FetchThreatListUpdatesResponse_ListUpdateResponse::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
   if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       1, this->_internal_threat_type(), target);
   }
 
   // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 2;
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       2, this->_internal_threat_entry_type(), target);
   }
 
   // optional .mozilla.safebrowsing.PlatformType platform_type = 3;
   if (cached_has_bits & 0x00000010u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       3, this->_internal_platform_type(), target);
   }
 
   // optional .mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse.ResponseType response_type = 4;
   if (cached_has_bits & 0x00000020u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       4, this->_internal_response_type(), target);
   }
 
   // repeated .mozilla.safebrowsing.ThreatEntrySet additions = 5;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_additions_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_additions_size()); i < n; i++) {
+    const auto& repfield = this->_internal_additions(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(5, this->_internal_additions(i), target, stream);
+        InternalWriteMessage(5, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   // repeated .mozilla.safebrowsing.ThreatEntrySet removals = 6;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_removals_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_removals_size()); i < n; i++) {
+    const auto& repfield = this->_internal_removals(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(6, this->_internal_removals(i), target, stream);
+        InternalWriteMessage(6, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   // optional bytes new_client_state = 7;
@@ -3421,15 +3479,14 @@ failure:
 
   // optional .mozilla.safebrowsing.Checksum checksum = 8;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        8, _Internal::checksum(this), target, stream);
+      InternalWriteMessage(8, _Internal::checksum(this),
+        _Internal::checksum(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse)
   return target;
@@ -3439,25 +3496,25 @@ size_t FetchThreatListUpdatesResponse_ListUpdateResponse::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.ThreatEntrySet additions = 5;
   total_size += 1UL * this->_internal_additions_size();
-  for (const auto& msg : this->additions_) {
+  for (const auto& msg : this->_impl_.additions_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   // repeated .mozilla.safebrowsing.ThreatEntrySet removals = 6;
   total_size += 1UL * this->_internal_removals_size();
-  for (const auto& msg : this->removals_) {
+  for (const auto& msg : this->_impl_.removals_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000003fu) {
     // optional bytes new_client_state = 7;
     if (cached_has_bits & 0x00000001u) {
@@ -3470,80 +3527,81 @@ size_t FetchThreatListUpdatesResponse_ListUpdateResponse::ByteSizeLong() const {
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *checksum_);
+          *_impl_.checksum_);
     }
 
     // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
     if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_threat_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_threat_type());
     }
 
     // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 2;
     if (cached_has_bits & 0x00000008u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_threat_entry_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_threat_entry_type());
     }
 
     // optional .mozilla.safebrowsing.PlatformType platform_type = 3;
     if (cached_has_bits & 0x00000010u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_platform_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_platform_type());
     }
 
     // optional .mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse.ResponseType response_type = 4;
     if (cached_has_bits & 0x00000020u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_response_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_response_type());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void FetchThreatListUpdatesResponse_ListUpdateResponse::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const FetchThreatListUpdatesResponse_ListUpdateResponse*>(
+  MergeFrom(*::_pbi::DownCast<const FetchThreatListUpdatesResponse_ListUpdateResponse*>(
       &from));
 }
 
 void FetchThreatListUpdatesResponse_ListUpdateResponse::MergeFrom(const FetchThreatListUpdatesResponse_ListUpdateResponse& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  FetchThreatListUpdatesResponse_ListUpdateResponse* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  additions_.MergeFrom(from.additions_);
-  removals_.MergeFrom(from.removals_);
-  cached_has_bits = from._has_bits_[0];
+  _this->_impl_.additions_.MergeFrom(from._impl_.additions_);
+  _this->_impl_.removals_.MergeFrom(from._impl_.removals_);
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000003fu) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      new_client_state_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.new_client_state_);
+      _this->_internal_set_new_client_state(from._internal_new_client_state());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_checksum()->::mozilla::safebrowsing::Checksum::MergeFrom(from._internal_checksum());
+      _this->_internal_mutable_checksum()->::mozilla::safebrowsing::Checksum::MergeFrom(
+          from._internal_checksum());
     }
     if (cached_has_bits & 0x00000004u) {
-      threat_type_ = from.threat_type_;
+      _this->_impl_.threat_type_ = from._impl_.threat_type_;
     }
     if (cached_has_bits & 0x00000008u) {
-      threat_entry_type_ = from.threat_entry_type_;
+      _this->_impl_.threat_entry_type_ = from._impl_.threat_entry_type_;
     }
     if (cached_has_bits & 0x00000010u) {
-      platform_type_ = from.platform_type_;
+      _this->_impl_.platform_type_ = from._impl_.platform_type_;
     }
     if (cached_has_bits & 0x00000020u) {
-      response_type_ = from.response_type_;
+      _this->_impl_.response_type_ = from._impl_.response_type_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void FetchThreatListUpdatesResponse_ListUpdateResponse::CopyFrom(const FetchThreatListUpdatesResponse_ListUpdateResponse& from) {
@@ -3559,17 +3617,22 @@ bool FetchThreatListUpdatesResponse_ListUpdateResponse::IsInitialized() const {
 
 void FetchThreatListUpdatesResponse_ListUpdateResponse::InternalSwap(FetchThreatListUpdatesResponse_ListUpdateResponse* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  additions_.InternalSwap(&other->additions_);
-  removals_.InternalSwap(&other->removals_);
-  new_client_state_.Swap(&other->new_client_state_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(checksum_, other->checksum_);
-  swap(threat_type_, other->threat_type_);
-  swap(threat_entry_type_, other->threat_entry_type_);
-  swap(platform_type_, other->platform_type_);
-  swap(response_type_, other->response_type_);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.additions_.InternalSwap(&other->_impl_.additions_);
+  _impl_.removals_.InternalSwap(&other->_impl_.removals_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.new_client_state_, lhs_arena,
+      &other->_impl_.new_client_state_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FetchThreatListUpdatesResponse_ListUpdateResponse, _impl_.response_type_)
+      + sizeof(FetchThreatListUpdatesResponse_ListUpdateResponse::_impl_.response_type_)
+      - PROTOBUF_FIELD_OFFSET(FetchThreatListUpdatesResponse_ListUpdateResponse, _impl_.checksum_)>(
+          reinterpret_cast<char*>(&_impl_.checksum_),
+          reinterpret_cast<char*>(&other->_impl_.checksum_));
 }
 
 std::string FetchThreatListUpdatesResponse_ListUpdateResponse::GetTypeName() const {
@@ -3579,13 +3642,9 @@ std::string FetchThreatListUpdatesResponse_ListUpdateResponse::GetTypeName() con
 
 // ===================================================================
 
-void FetchThreatListUpdatesResponse::InitAsDefaultInstance() {
-  ::mozilla::safebrowsing::_FetchThreatListUpdatesResponse_default_instance_._instance.get_mutable()->minimum_wait_duration_ = const_cast< ::mozilla::safebrowsing::Duration*>(
-      ::mozilla::safebrowsing::Duration::internal_default_instance());
-}
 class FetchThreatListUpdatesResponse::_Internal {
  public:
-  using HasBits = decltype(std::declval<FetchThreatListUpdatesResponse>()._has_bits_);
+  using HasBits = decltype(std::declval<FetchThreatListUpdatesResponse>()._impl_._has_bits_);
   static const ::mozilla::safebrowsing::Duration& minimum_wait_duration(const FetchThreatListUpdatesResponse* msg);
   static void set_has_minimum_wait_duration(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
@@ -3594,77 +3653,87 @@ class FetchThreatListUpdatesResponse::_Internal {
 
 const ::mozilla::safebrowsing::Duration&
 FetchThreatListUpdatesResponse::_Internal::minimum_wait_duration(const FetchThreatListUpdatesResponse* msg) {
-  return *msg->minimum_wait_duration_;
+  return *msg->_impl_.minimum_wait_duration_;
 }
-FetchThreatListUpdatesResponse::FetchThreatListUpdatesResponse()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.FetchThreatListUpdatesResponse)
+FetchThreatListUpdatesResponse::FetchThreatListUpdatesResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.FetchThreatListUpdatesResponse)
 }
 FetchThreatListUpdatesResponse::FetchThreatListUpdatesResponse(const FetchThreatListUpdatesResponse& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      list_update_responses_(from.list_update_responses_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  FetchThreatListUpdatesResponse* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.list_update_responses_){from._impl_.list_update_responses_}
+    , decltype(_impl_.minimum_wait_duration_){nullptr}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_minimum_wait_duration()) {
-    minimum_wait_duration_ = new ::mozilla::safebrowsing::Duration(*from.minimum_wait_duration_);
-  } else {
-    minimum_wait_duration_ = nullptr;
+    _this->_impl_.minimum_wait_duration_ = new ::mozilla::safebrowsing::Duration(*from._impl_.minimum_wait_duration_);
   }
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.FetchThreatListUpdatesResponse)
 }
 
-void FetchThreatListUpdatesResponse::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FetchThreatListUpdatesResponse_safebrowsing_2eproto.base);
-  minimum_wait_duration_ = nullptr;
+inline void FetchThreatListUpdatesResponse::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.list_update_responses_){arena}
+    , decltype(_impl_.minimum_wait_duration_){nullptr}
+  };
 }
 
 FetchThreatListUpdatesResponse::~FetchThreatListUpdatesResponse() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.FetchThreatListUpdatesResponse)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void FetchThreatListUpdatesResponse::SharedDtor() {
-  if (this != internal_default_instance()) delete minimum_wait_duration_;
+inline void FetchThreatListUpdatesResponse::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.list_update_responses_.~RepeatedPtrField();
+  if (this != internal_default_instance()) delete _impl_.minimum_wait_duration_;
 }
 
 void FetchThreatListUpdatesResponse::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const FetchThreatListUpdatesResponse& FetchThreatListUpdatesResponse::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FetchThreatListUpdatesResponse_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FetchThreatListUpdatesResponse::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.FetchThreatListUpdatesResponse)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  list_update_responses_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.list_update_responses_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    GOOGLE_DCHECK(minimum_wait_duration_ != nullptr);
-    minimum_wait_duration_->Clear();
+    GOOGLE_DCHECK(_impl_.minimum_wait_duration_ != nullptr);
+    _impl_.minimum_wait_duration_->Clear();
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* FetchThreatListUpdatesResponse::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* FetchThreatListUpdatesResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // repeated .mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse list_update_responses = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -3672,62 +3741,66 @@ const char* FetchThreatListUpdatesResponse::_InternalParse(const char* ptr, ::PR
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.Duration minimum_wait_duration = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_minimum_wait_duration(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* FetchThreatListUpdatesResponse::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* FetchThreatListUpdatesResponse::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.FetchThreatListUpdatesResponse)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse list_update_responses = 1;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_list_update_responses_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_list_update_responses_size()); i < n; i++) {
+    const auto& repfield = this->_internal_list_update_responses(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(1, this->_internal_list_update_responses(i), target, stream);
+        InternalWriteMessage(1, repfield, repfield.GetCachedSize(), target, stream);
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.Duration minimum_wait_duration = 2;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::minimum_wait_duration(this), target, stream);
+      InternalWriteMessage(2, _Internal::minimum_wait_duration(this),
+        _Internal::minimum_wait_duration(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.FetchThreatListUpdatesResponse)
   return target;
@@ -3737,50 +3810,52 @@ size_t FetchThreatListUpdatesResponse::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.FetchThreatListUpdatesResponse)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.FetchThreatListUpdatesResponse.ListUpdateResponse list_update_responses = 1;
   total_size += 1UL * this->_internal_list_update_responses_size();
-  for (const auto& msg : this->list_update_responses_) {
+  for (const auto& msg : this->_impl_.list_update_responses_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   // optional .mozilla.safebrowsing.Duration minimum_wait_duration = 2;
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *minimum_wait_duration_);
+        *_impl_.minimum_wait_duration_);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void FetchThreatListUpdatesResponse::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const FetchThreatListUpdatesResponse*>(
+  MergeFrom(*::_pbi::DownCast<const FetchThreatListUpdatesResponse*>(
       &from));
 }
 
 void FetchThreatListUpdatesResponse::MergeFrom(const FetchThreatListUpdatesResponse& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FetchThreatListUpdatesResponse)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  FetchThreatListUpdatesResponse* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FetchThreatListUpdatesResponse)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  list_update_responses_.MergeFrom(from.list_update_responses_);
+  _this->_impl_.list_update_responses_.MergeFrom(from._impl_.list_update_responses_);
   if (from._internal_has_minimum_wait_duration()) {
-    _internal_mutable_minimum_wait_duration()->::mozilla::safebrowsing::Duration::MergeFrom(from._internal_minimum_wait_duration());
+    _this->_internal_mutable_minimum_wait_duration()->::mozilla::safebrowsing::Duration::MergeFrom(
+        from._internal_minimum_wait_duration());
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void FetchThreatListUpdatesResponse::CopyFrom(const FetchThreatListUpdatesResponse& from) {
@@ -3796,10 +3871,10 @@ bool FetchThreatListUpdatesResponse::IsInitialized() const {
 
 void FetchThreatListUpdatesResponse::InternalSwap(FetchThreatListUpdatesResponse* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  list_update_responses_.InternalSwap(&other->list_update_responses_);
-  swap(minimum_wait_duration_, other->minimum_wait_duration_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.list_update_responses_.InternalSwap(&other->_impl_.list_update_responses_);
+  swap(_impl_.minimum_wait_duration_, other->_impl_.minimum_wait_duration_);
 }
 
 std::string FetchThreatListUpdatesResponse::GetTypeName() const {
@@ -3809,15 +3884,9 @@ std::string FetchThreatListUpdatesResponse::GetTypeName() const {
 
 // ===================================================================
 
-void FindFullHashesRequest::InitAsDefaultInstance() {
-  ::mozilla::safebrowsing::_FindFullHashesRequest_default_instance_._instance.get_mutable()->client_ = const_cast< ::mozilla::safebrowsing::ClientInfo*>(
-      ::mozilla::safebrowsing::ClientInfo::internal_default_instance());
-  ::mozilla::safebrowsing::_FindFullHashesRequest_default_instance_._instance.get_mutable()->threat_info_ = const_cast< ::mozilla::safebrowsing::ThreatInfo*>(
-      ::mozilla::safebrowsing::ThreatInfo::internal_default_instance());
-}
 class FindFullHashesRequest::_Internal {
  public:
-  using HasBits = decltype(std::declval<FindFullHashesRequest>()._has_bits_);
+  using HasBits = decltype(std::declval<FindFullHashesRequest>()._impl_._has_bits_);
   static const ::mozilla::safebrowsing::ClientInfo& client(const FindFullHashesRequest* msg);
   static void set_has_client(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
@@ -3830,153 +3899,166 @@ class FindFullHashesRequest::_Internal {
 
 const ::mozilla::safebrowsing::ClientInfo&
 FindFullHashesRequest::_Internal::client(const FindFullHashesRequest* msg) {
-  return *msg->client_;
+  return *msg->_impl_.client_;
 }
 const ::mozilla::safebrowsing::ThreatInfo&
 FindFullHashesRequest::_Internal::threat_info(const FindFullHashesRequest* msg) {
-  return *msg->threat_info_;
+  return *msg->_impl_.threat_info_;
 }
-FindFullHashesRequest::FindFullHashesRequest()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.FindFullHashesRequest)
+FindFullHashesRequest::FindFullHashesRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.FindFullHashesRequest)
 }
 FindFullHashesRequest::FindFullHashesRequest(const FindFullHashesRequest& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      client_states_(from.client_states_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  FindFullHashesRequest* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.client_states_){from._impl_.client_states_}
+    , decltype(_impl_.client_){nullptr}
+    , decltype(_impl_.threat_info_){nullptr}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_client()) {
-    client_ = new ::mozilla::safebrowsing::ClientInfo(*from.client_);
-  } else {
-    client_ = nullptr;
+    _this->_impl_.client_ = new ::mozilla::safebrowsing::ClientInfo(*from._impl_.client_);
   }
   if (from._internal_has_threat_info()) {
-    threat_info_ = new ::mozilla::safebrowsing::ThreatInfo(*from.threat_info_);
-  } else {
-    threat_info_ = nullptr;
+    _this->_impl_.threat_info_ = new ::mozilla::safebrowsing::ThreatInfo(*from._impl_.threat_info_);
   }
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.FindFullHashesRequest)
 }
 
-void FindFullHashesRequest::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FindFullHashesRequest_safebrowsing_2eproto.base);
-  ::memset(&client_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&threat_info_) -
-      reinterpret_cast<char*>(&client_)) + sizeof(threat_info_));
+inline void FindFullHashesRequest::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.client_states_){arena}
+    , decltype(_impl_.client_){nullptr}
+    , decltype(_impl_.threat_info_){nullptr}
+  };
 }
 
 FindFullHashesRequest::~FindFullHashesRequest() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.FindFullHashesRequest)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void FindFullHashesRequest::SharedDtor() {
-  if (this != internal_default_instance()) delete client_;
-  if (this != internal_default_instance()) delete threat_info_;
+inline void FindFullHashesRequest::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.client_states_.~RepeatedPtrField();
+  if (this != internal_default_instance()) delete _impl_.client_;
+  if (this != internal_default_instance()) delete _impl_.threat_info_;
 }
 
 void FindFullHashesRequest::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const FindFullHashesRequest& FindFullHashesRequest::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FindFullHashesRequest_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FindFullHashesRequest::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.FindFullHashesRequest)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  client_states_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.client_states_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(client_ != nullptr);
-      client_->Clear();
+      GOOGLE_DCHECK(_impl_.client_ != nullptr);
+      _impl_.client_->Clear();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(threat_info_ != nullptr);
-      threat_info_->Clear();
+      GOOGLE_DCHECK(_impl_.threat_info_ != nullptr);
+      _impl_.threat_info_->Clear();
     }
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* FindFullHashesRequest::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* FindFullHashesRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional .mozilla.safebrowsing.ClientInfo client = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr = ctx->ParseMessage(_internal_mutable_client(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // repeated bytes client_states = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr -= 1;
           do {
             ptr += 1;
             auto str = _internal_add_client_states();
-            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+            ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<18>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ThreatInfo threat_info = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           ptr = ctx->ParseMessage(_internal_mutable_threat_info(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* FindFullHashesRequest::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* FindFullHashesRequest::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.FindFullHashesRequest)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.ClientInfo client = 1;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        1, _Internal::client(this), target, stream);
+      InternalWriteMessage(1, _Internal::client(this),
+        _Internal::client(this).GetCachedSize(), target, stream);
   }
 
   // repeated bytes client_states = 2;
@@ -3987,15 +4069,14 @@ failure:
 
   // optional .mozilla.safebrowsing.ThreatInfo threat_info = 3;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        3, _Internal::threat_info(this), target, stream);
+      InternalWriteMessage(3, _Internal::threat_info(this),
+        _Internal::threat_info(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.FindFullHashesRequest)
   return target;
@@ -4005,66 +4086,69 @@ size_t FindFullHashesRequest::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.FindFullHashesRequest)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated bytes client_states = 2;
   total_size += 1 *
-      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(client_states_.size());
-  for (int i = 0, n = client_states_.size(); i < n; i++) {
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(_impl_.client_states_.size());
+  for (int i = 0, n = _impl_.client_states_.size(); i < n; i++) {
     total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
-      client_states_.Get(i));
+      _impl_.client_states_.Get(i));
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     // optional .mozilla.safebrowsing.ClientInfo client = 1;
     if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *client_);
+          *_impl_.client_);
     }
 
     // optional .mozilla.safebrowsing.ThreatInfo threat_info = 3;
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *threat_info_);
+          *_impl_.threat_info_);
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void FindFullHashesRequest::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const FindFullHashesRequest*>(
+  MergeFrom(*::_pbi::DownCast<const FindFullHashesRequest*>(
       &from));
 }
 
 void FindFullHashesRequest::MergeFrom(const FindFullHashesRequest& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FindFullHashesRequest)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  FindFullHashesRequest* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FindFullHashesRequest)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  client_states_.MergeFrom(from.client_states_);
-  cached_has_bits = from._has_bits_[0];
+  _this->_impl_.client_states_.MergeFrom(from._impl_.client_states_);
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_mutable_client()->::mozilla::safebrowsing::ClientInfo::MergeFrom(from._internal_client());
+      _this->_internal_mutable_client()->::mozilla::safebrowsing::ClientInfo::MergeFrom(
+          from._internal_client());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_threat_info()->::mozilla::safebrowsing::ThreatInfo::MergeFrom(from._internal_threat_info());
+      _this->_internal_mutable_threat_info()->::mozilla::safebrowsing::ThreatInfo::MergeFrom(
+          from._internal_threat_info());
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void FindFullHashesRequest::CopyFrom(const FindFullHashesRequest& from) {
@@ -4080,11 +4164,15 @@ bool FindFullHashesRequest::IsInitialized() const {
 
 void FindFullHashesRequest::InternalSwap(FindFullHashesRequest* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  client_states_.InternalSwap(&other->client_states_);
-  swap(client_, other->client_);
-  swap(threat_info_, other->threat_info_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.client_states_.InternalSwap(&other->_impl_.client_states_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FindFullHashesRequest, _impl_.threat_info_)
+      + sizeof(FindFullHashesRequest::_impl_.threat_info_)
+      - PROTOBUF_FIELD_OFFSET(FindFullHashesRequest, _impl_.client_)>(
+          reinterpret_cast<char*>(&_impl_.client_),
+          reinterpret_cast<char*>(&other->_impl_.client_));
 }
 
 std::string FindFullHashesRequest::GetTypeName() const {
@@ -4094,15 +4182,9 @@ std::string FindFullHashesRequest::GetTypeName() const {
 
 // ===================================================================
 
-void FindFullHashesResponse::InitAsDefaultInstance() {
-  ::mozilla::safebrowsing::_FindFullHashesResponse_default_instance_._instance.get_mutable()->minimum_wait_duration_ = const_cast< ::mozilla::safebrowsing::Duration*>(
-      ::mozilla::safebrowsing::Duration::internal_default_instance());
-  ::mozilla::safebrowsing::_FindFullHashesResponse_default_instance_._instance.get_mutable()->negative_cache_duration_ = const_cast< ::mozilla::safebrowsing::Duration*>(
-      ::mozilla::safebrowsing::Duration::internal_default_instance());
-}
 class FindFullHashesResponse::_Internal {
  public:
-  using HasBits = decltype(std::declval<FindFullHashesResponse>()._has_bits_);
+  using HasBits = decltype(std::declval<FindFullHashesResponse>()._impl_._has_bits_);
   static const ::mozilla::safebrowsing::Duration& minimum_wait_duration(const FindFullHashesResponse* msg);
   static void set_has_minimum_wait_duration(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
@@ -4115,95 +4197,103 @@ class FindFullHashesResponse::_Internal {
 
 const ::mozilla::safebrowsing::Duration&
 FindFullHashesResponse::_Internal::minimum_wait_duration(const FindFullHashesResponse* msg) {
-  return *msg->minimum_wait_duration_;
+  return *msg->_impl_.minimum_wait_duration_;
 }
 const ::mozilla::safebrowsing::Duration&
 FindFullHashesResponse::_Internal::negative_cache_duration(const FindFullHashesResponse* msg) {
-  return *msg->negative_cache_duration_;
+  return *msg->_impl_.negative_cache_duration_;
 }
-FindFullHashesResponse::FindFullHashesResponse()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.FindFullHashesResponse)
+FindFullHashesResponse::FindFullHashesResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.FindFullHashesResponse)
 }
 FindFullHashesResponse::FindFullHashesResponse(const FindFullHashesResponse& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      matches_(from.matches_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  FindFullHashesResponse* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.matches_){from._impl_.matches_}
+    , decltype(_impl_.minimum_wait_duration_){nullptr}
+    , decltype(_impl_.negative_cache_duration_){nullptr}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_minimum_wait_duration()) {
-    minimum_wait_duration_ = new ::mozilla::safebrowsing::Duration(*from.minimum_wait_duration_);
-  } else {
-    minimum_wait_duration_ = nullptr;
+    _this->_impl_.minimum_wait_duration_ = new ::mozilla::safebrowsing::Duration(*from._impl_.minimum_wait_duration_);
   }
   if (from._internal_has_negative_cache_duration()) {
-    negative_cache_duration_ = new ::mozilla::safebrowsing::Duration(*from.negative_cache_duration_);
-  } else {
-    negative_cache_duration_ = nullptr;
+    _this->_impl_.negative_cache_duration_ = new ::mozilla::safebrowsing::Duration(*from._impl_.negative_cache_duration_);
   }
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.FindFullHashesResponse)
 }
 
-void FindFullHashesResponse::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FindFullHashesResponse_safebrowsing_2eproto.base);
-  ::memset(&minimum_wait_duration_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&negative_cache_duration_) -
-      reinterpret_cast<char*>(&minimum_wait_duration_)) + sizeof(negative_cache_duration_));
+inline void FindFullHashesResponse::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.matches_){arena}
+    , decltype(_impl_.minimum_wait_duration_){nullptr}
+    , decltype(_impl_.negative_cache_duration_){nullptr}
+  };
 }
 
 FindFullHashesResponse::~FindFullHashesResponse() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.FindFullHashesResponse)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void FindFullHashesResponse::SharedDtor() {
-  if (this != internal_default_instance()) delete minimum_wait_duration_;
-  if (this != internal_default_instance()) delete negative_cache_duration_;
+inline void FindFullHashesResponse::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.matches_.~RepeatedPtrField();
+  if (this != internal_default_instance()) delete _impl_.minimum_wait_duration_;
+  if (this != internal_default_instance()) delete _impl_.negative_cache_duration_;
 }
 
 void FindFullHashesResponse::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const FindFullHashesResponse& FindFullHashesResponse::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FindFullHashesResponse_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void FindFullHashesResponse::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.FindFullHashesResponse)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  matches_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.matches_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(minimum_wait_duration_ != nullptr);
-      minimum_wait_duration_->Clear();
+      GOOGLE_DCHECK(_impl_.minimum_wait_duration_ != nullptr);
+      _impl_.minimum_wait_duration_->Clear();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(negative_cache_duration_ != nullptr);
-      negative_cache_duration_->Clear();
+      GOOGLE_DCHECK(_impl_.negative_cache_duration_ != nullptr);
+      _impl_.negative_cache_duration_->Clear();
     }
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* FindFullHashesResponse::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* FindFullHashesResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // repeated .mozilla.safebrowsing.ThreatMatch matches = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -4211,77 +4301,81 @@ const char* FindFullHashesResponse::_InternalParse(const char* ptr, ::PROTOBUF_N
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.Duration minimum_wait_duration = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_minimum_wait_duration(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.Duration negative_cache_duration = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           ptr = ctx->ParseMessage(_internal_mutable_negative_cache_duration(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* FindFullHashesResponse::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* FindFullHashesResponse::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.FindFullHashesResponse)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.ThreatMatch matches = 1;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_matches_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_matches_size()); i < n; i++) {
+    const auto& repfield = this->_internal_matches(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(1, this->_internal_matches(i), target, stream);
+        InternalWriteMessage(1, repfield, repfield.GetCachedSize(), target, stream);
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.Duration minimum_wait_duration = 2;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::minimum_wait_duration(this), target, stream);
+      InternalWriteMessage(2, _Internal::minimum_wait_duration(this),
+        _Internal::minimum_wait_duration(this).GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.Duration negative_cache_duration = 3;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        3, _Internal::negative_cache_duration(this), target, stream);
+      InternalWriteMessage(3, _Internal::negative_cache_duration(this),
+        _Internal::negative_cache_duration(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.FindFullHashesResponse)
   return target;
@@ -4291,65 +4385,68 @@ size_t FindFullHashesResponse::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.FindFullHashesResponse)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.ThreatMatch matches = 1;
   total_size += 1UL * this->_internal_matches_size();
-  for (const auto& msg : this->matches_) {
+  for (const auto& msg : this->_impl_.matches_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     // optional .mozilla.safebrowsing.Duration minimum_wait_duration = 2;
     if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *minimum_wait_duration_);
+          *_impl_.minimum_wait_duration_);
     }
 
     // optional .mozilla.safebrowsing.Duration negative_cache_duration = 3;
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *negative_cache_duration_);
+          *_impl_.negative_cache_duration_);
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void FindFullHashesResponse::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const FindFullHashesResponse*>(
+  MergeFrom(*::_pbi::DownCast<const FindFullHashesResponse*>(
       &from));
 }
 
 void FindFullHashesResponse::MergeFrom(const FindFullHashesResponse& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FindFullHashesResponse)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  FindFullHashesResponse* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.FindFullHashesResponse)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  matches_.MergeFrom(from.matches_);
-  cached_has_bits = from._has_bits_[0];
+  _this->_impl_.matches_.MergeFrom(from._impl_.matches_);
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_mutable_minimum_wait_duration()->::mozilla::safebrowsing::Duration::MergeFrom(from._internal_minimum_wait_duration());
+      _this->_internal_mutable_minimum_wait_duration()->::mozilla::safebrowsing::Duration::MergeFrom(
+          from._internal_minimum_wait_duration());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_negative_cache_duration()->::mozilla::safebrowsing::Duration::MergeFrom(from._internal_negative_cache_duration());
+      _this->_internal_mutable_negative_cache_duration()->::mozilla::safebrowsing::Duration::MergeFrom(
+          from._internal_negative_cache_duration());
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void FindFullHashesResponse::CopyFrom(const FindFullHashesResponse& from) {
@@ -4365,11 +4462,15 @@ bool FindFullHashesResponse::IsInitialized() const {
 
 void FindFullHashesResponse::InternalSwap(FindFullHashesResponse* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  matches_.InternalSwap(&other->matches_);
-  swap(minimum_wait_duration_, other->minimum_wait_duration_);
-  swap(negative_cache_duration_, other->negative_cache_duration_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.matches_.InternalSwap(&other->_impl_.matches_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FindFullHashesResponse, _impl_.negative_cache_duration_)
+      + sizeof(FindFullHashesResponse::_impl_.negative_cache_duration_)
+      - PROTOBUF_FIELD_OFFSET(FindFullHashesResponse, _impl_.minimum_wait_duration_)>(
+          reinterpret_cast<char*>(&_impl_.minimum_wait_duration_),
+          reinterpret_cast<char*>(&other->_impl_.minimum_wait_duration_));
 }
 
 std::string FindFullHashesResponse::GetTypeName() const {
@@ -4379,11 +4480,9 @@ std::string FindFullHashesResponse::GetTypeName() const {
 
 // ===================================================================
 
-void ThreatHit_ThreatSource::InitAsDefaultInstance() {
-}
 class ThreatHit_ThreatSource::_Internal {
  public:
-  using HasBits = decltype(std::declval<ThreatHit_ThreatSource>()._has_bits_);
+  using HasBits = decltype(std::declval<ThreatHit_ThreatSource>()._impl_._has_bits_);
   static void set_has_url(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
@@ -4398,155 +4497,199 @@ class ThreatHit_ThreatSource::_Internal {
   }
 };
 
-ThreatHit_ThreatSource::ThreatHit_ThreatSource()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ThreatHit.ThreatSource)
+ThreatHit_ThreatSource::ThreatHit_ThreatSource(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ThreatHit.ThreatSource)
 }
 ThreatHit_ThreatSource::ThreatHit_ThreatSource(const ThreatHit_ThreatSource& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ThreatHit_ThreatSource* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.url_){}
+    , decltype(_impl_.remote_ip_){}
+    , decltype(_impl_.referrer_){}
+    , decltype(_impl_.type_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_url()) {
-    url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
+    _this->_impl_.url_.Set(from._internal_url(), 
+      _this->GetArenaForAllocation());
   }
-  remote_ip_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.remote_ip_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.remote_ip_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_remote_ip()) {
-    remote_ip_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.remote_ip_);
+    _this->_impl_.remote_ip_.Set(from._internal_remote_ip(), 
+      _this->GetArenaForAllocation());
   }
-  referrer_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.referrer_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.referrer_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_referrer()) {
-    referrer_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.referrer_);
+    _this->_impl_.referrer_.Set(from._internal_referrer(), 
+      _this->GetArenaForAllocation());
   }
-  type_ = from.type_;
+  _this->_impl_.type_ = from._impl_.type_;
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ThreatHit.ThreatSource)
 }
 
-void ThreatHit_ThreatSource::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ThreatHit_ThreatSource_safebrowsing_2eproto.base);
-  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  remote_ip_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  referrer_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  type_ = 0;
+inline void ThreatHit_ThreatSource::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.url_){}
+    , decltype(_impl_.remote_ip_){}
+    , decltype(_impl_.referrer_){}
+    , decltype(_impl_.type_){0}
+  };
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.remote_ip_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.remote_ip_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.referrer_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.referrer_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 ThreatHit_ThreatSource::~ThreatHit_ThreatSource() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ThreatHit.ThreatSource)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ThreatHit_ThreatSource::SharedDtor() {
-  url_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  remote_ip_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  referrer_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void ThreatHit_ThreatSource::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.url_.Destroy();
+  _impl_.remote_ip_.Destroy();
+  _impl_.referrer_.Destroy();
 }
 
 void ThreatHit_ThreatSource::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ThreatHit_ThreatSource& ThreatHit_ThreatSource::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ThreatHit_ThreatSource_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ThreatHit_ThreatSource::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ThreatHit.ThreatSource)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      url_.ClearNonDefaultToEmptyNoArena();
+      _impl_.url_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      remote_ip_.ClearNonDefaultToEmptyNoArena();
+      _impl_.remote_ip_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000004u) {
-      referrer_.ClearNonDefaultToEmptyNoArena();
+      _impl_.referrer_.ClearNonDefaultToEmpty();
     }
   }
-  type_ = 0;
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_.type_ = 0;
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ThreatHit_ThreatSource::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ThreatHit_ThreatSource::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional string url = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_url();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ThreatHit.ThreatSourceType type = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatHit_ThreatSourceType_IsValid(val))) {
             _internal_set_type(static_cast<::mozilla::safebrowsing::ThreatHit_ThreatSourceType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(2, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional string remote_ip = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           auto str = _internal_mutable_remote_ip();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional string referrer = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           auto str = _internal_mutable_referrer();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ThreatHit_ThreatSource::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ThreatHit_ThreatSource::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ThreatHit.ThreatSource)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional string url = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->WriteStringMaybeAliased(
@@ -4556,7 +4699,7 @@ failure:
   // optional .mozilla.safebrowsing.ThreatHit.ThreatSourceType type = 2;
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       2, this->_internal_type(), target);
   }
 
@@ -4573,8 +4716,8 @@ failure:
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ThreatHit.ThreatSource)
   return target;
@@ -4584,11 +4727,11 @@ size_t ThreatHit_ThreatSource::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ThreatHit.ThreatSource)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000000fu) {
     // optional string url = 1;
     if (cached_has_bits & 0x00000001u) {
@@ -4614,50 +4757,48 @@ size_t ThreatHit_ThreatSource::ByteSizeLong() const {
     // optional .mozilla.safebrowsing.ThreatHit.ThreatSourceType type = 2;
     if (cached_has_bits & 0x00000008u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_type());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ThreatHit_ThreatSource::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ThreatHit_ThreatSource*>(
+  MergeFrom(*::_pbi::DownCast<const ThreatHit_ThreatSource*>(
       &from));
 }
 
 void ThreatHit_ThreatSource::MergeFrom(const ThreatHit_ThreatSource& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatHit.ThreatSource)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ThreatHit_ThreatSource* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatHit.ThreatSource)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000000fu) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
+      _this->_internal_set_url(from._internal_url());
     }
     if (cached_has_bits & 0x00000002u) {
-      _has_bits_[0] |= 0x00000002u;
-      remote_ip_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.remote_ip_);
+      _this->_internal_set_remote_ip(from._internal_remote_ip());
     }
     if (cached_has_bits & 0x00000004u) {
-      _has_bits_[0] |= 0x00000004u;
-      referrer_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.referrer_);
+      _this->_internal_set_referrer(from._internal_referrer());
     }
     if (cached_has_bits & 0x00000008u) {
-      type_ = from.type_;
+      _this->_impl_.type_ = from._impl_.type_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ThreatHit_ThreatSource::CopyFrom(const ThreatHit_ThreatSource& from) {
@@ -4673,15 +4814,23 @@ bool ThreatHit_ThreatSource::IsInitialized() const {
 
 void ThreatHit_ThreatSource::InternalSwap(ThreatHit_ThreatSource* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  url_.Swap(&other->url_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  remote_ip_.Swap(&other->remote_ip_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  referrer_.Swap(&other->referrer_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(type_, other->type_);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.url_, lhs_arena,
+      &other->_impl_.url_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.remote_ip_, lhs_arena,
+      &other->_impl_.remote_ip_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.referrer_, lhs_arena,
+      &other->_impl_.referrer_, rhs_arena
+  );
+  swap(_impl_.type_, other->_impl_.type_);
 }
 
 std::string ThreatHit_ThreatSource::GetTypeName() const {
@@ -4691,11 +4840,9 @@ std::string ThreatHit_ThreatSource::GetTypeName() const {
 
 // ===================================================================
 
-void ThreatHit_UserInfo::InitAsDefaultInstance() {
-}
 class ThreatHit_UserInfo::_Internal {
  public:
-  using HasBits = decltype(std::declval<ThreatHit_UserInfo>()._has_bits_);
+  using HasBits = decltype(std::declval<ThreatHit_UserInfo>()._impl_._has_bits_);
   static void set_has_region_code(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
@@ -4704,123 +4851,155 @@ class ThreatHit_UserInfo::_Internal {
   }
 };
 
-ThreatHit_UserInfo::ThreatHit_UserInfo()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ThreatHit.UserInfo)
+ThreatHit_UserInfo::ThreatHit_UserInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ThreatHit.UserInfo)
 }
 ThreatHit_UserInfo::ThreatHit_UserInfo(const ThreatHit_UserInfo& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  region_code_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ThreatHit_UserInfo* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.region_code_){}
+    , decltype(_impl_.user_id_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.region_code_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.region_code_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_region_code()) {
-    region_code_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.region_code_);
+    _this->_impl_.region_code_.Set(from._internal_region_code(), 
+      _this->GetArenaForAllocation());
   }
-  user_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.user_id_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.user_id_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_user_id()) {
-    user_id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.user_id_);
+    _this->_impl_.user_id_.Set(from._internal_user_id(), 
+      _this->GetArenaForAllocation());
   }
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ThreatHit.UserInfo)
 }
 
-void ThreatHit_UserInfo::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ThreatHit_UserInfo_safebrowsing_2eproto.base);
-  region_code_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  user_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void ThreatHit_UserInfo::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.region_code_){}
+    , decltype(_impl_.user_id_){}
+  };
+  _impl_.region_code_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.region_code_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.user_id_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.user_id_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 ThreatHit_UserInfo::~ThreatHit_UserInfo() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ThreatHit.UserInfo)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ThreatHit_UserInfo::SharedDtor() {
-  region_code_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  user_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void ThreatHit_UserInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.region_code_.Destroy();
+  _impl_.user_id_.Destroy();
 }
 
 void ThreatHit_UserInfo::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ThreatHit_UserInfo& ThreatHit_UserInfo::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ThreatHit_UserInfo_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ThreatHit_UserInfo::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ThreatHit.UserInfo)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      region_code_.ClearNonDefaultToEmptyNoArena();
+      _impl_.region_code_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      user_id_.ClearNonDefaultToEmptyNoArena();
+      _impl_.user_id_.ClearNonDefaultToEmpty();
     }
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ThreatHit_UserInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ThreatHit_UserInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional string region_code = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_region_code();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional bytes user_id = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_user_id();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ThreatHit_UserInfo::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ThreatHit_UserInfo::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ThreatHit.UserInfo)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional string region_code = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->WriteStringMaybeAliased(
@@ -4834,8 +5013,8 @@ failure:
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ThreatHit.UserInfo)
   return target;
@@ -4845,11 +5024,11 @@ size_t ThreatHit_UserInfo::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ThreatHit.UserInfo)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     // optional string region_code = 1;
     if (cached_has_bits & 0x00000001u) {
@@ -4867,37 +5046,36 @@ size_t ThreatHit_UserInfo::ByteSizeLong() const {
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ThreatHit_UserInfo::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ThreatHit_UserInfo*>(
+  MergeFrom(*::_pbi::DownCast<const ThreatHit_UserInfo*>(
       &from));
 }
 
 void ThreatHit_UserInfo::MergeFrom(const ThreatHit_UserInfo& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatHit.UserInfo)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ThreatHit_UserInfo* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatHit.UserInfo)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      region_code_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.region_code_);
+      _this->_internal_set_region_code(from._internal_region_code());
     }
     if (cached_has_bits & 0x00000002u) {
-      _has_bits_[0] |= 0x00000002u;
-      user_id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.user_id_);
+      _this->_internal_set_user_id(from._internal_user_id());
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ThreatHit_UserInfo::CopyFrom(const ThreatHit_UserInfo& from) {
@@ -4913,12 +5091,18 @@ bool ThreatHit_UserInfo::IsInitialized() const {
 
 void ThreatHit_UserInfo::InternalSwap(ThreatHit_UserInfo* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  region_code_.Swap(&other->region_code_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  user_id_.Swap(&other->user_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.region_code_, lhs_arena,
+      &other->_impl_.region_code_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.user_id_, lhs_arena,
+      &other->_impl_.user_id_, rhs_arena
+  );
 }
 
 std::string ThreatHit_UserInfo::GetTypeName() const {
@@ -4928,17 +5112,9 @@ std::string ThreatHit_UserInfo::GetTypeName() const {
 
 // ===================================================================
 
-void ThreatHit::InitAsDefaultInstance() {
-  ::mozilla::safebrowsing::_ThreatHit_default_instance_._instance.get_mutable()->entry_ = const_cast< ::mozilla::safebrowsing::ThreatEntry*>(
-      ::mozilla::safebrowsing::ThreatEntry::internal_default_instance());
-  ::mozilla::safebrowsing::_ThreatHit_default_instance_._instance.get_mutable()->client_info_ = const_cast< ::mozilla::safebrowsing::ClientInfo*>(
-      ::mozilla::safebrowsing::ClientInfo::internal_default_instance());
-  ::mozilla::safebrowsing::_ThreatHit_default_instance_._instance.get_mutable()->user_info_ = const_cast< ::mozilla::safebrowsing::ThreatHit_UserInfo*>(
-      ::mozilla::safebrowsing::ThreatHit_UserInfo::internal_default_instance());
-}
 class ThreatHit::_Internal {
  public:
-  using HasBits = decltype(std::declval<ThreatHit>()._has_bits_);
+  using HasBits = decltype(std::declval<ThreatHit>()._impl_._has_bits_);
   static void set_has_threat_type(HasBits* has_bits) {
     (*has_bits)[0] |= 8u;
   }
@@ -4961,148 +5137,163 @@ class ThreatHit::_Internal {
 
 const ::mozilla::safebrowsing::ThreatEntry&
 ThreatHit::_Internal::entry(const ThreatHit* msg) {
-  return *msg->entry_;
+  return *msg->_impl_.entry_;
 }
 const ::mozilla::safebrowsing::ClientInfo&
 ThreatHit::_Internal::client_info(const ThreatHit* msg) {
-  return *msg->client_info_;
+  return *msg->_impl_.client_info_;
 }
 const ::mozilla::safebrowsing::ThreatHit_UserInfo&
 ThreatHit::_Internal::user_info(const ThreatHit* msg) {
-  return *msg->user_info_;
+  return *msg->_impl_.user_info_;
 }
-ThreatHit::ThreatHit()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ThreatHit)
+ThreatHit::ThreatHit(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ThreatHit)
 }
 ThreatHit::ThreatHit(const ThreatHit& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      resources_(from.resources_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ThreatHit* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.resources_){from._impl_.resources_}
+    , decltype(_impl_.entry_){nullptr}
+    , decltype(_impl_.client_info_){nullptr}
+    , decltype(_impl_.user_info_){nullptr}
+    , decltype(_impl_.threat_type_){}
+    , decltype(_impl_.platform_type_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_entry()) {
-    entry_ = new ::mozilla::safebrowsing::ThreatEntry(*from.entry_);
-  } else {
-    entry_ = nullptr;
+    _this->_impl_.entry_ = new ::mozilla::safebrowsing::ThreatEntry(*from._impl_.entry_);
   }
   if (from._internal_has_client_info()) {
-    client_info_ = new ::mozilla::safebrowsing::ClientInfo(*from.client_info_);
-  } else {
-    client_info_ = nullptr;
+    _this->_impl_.client_info_ = new ::mozilla::safebrowsing::ClientInfo(*from._impl_.client_info_);
   }
   if (from._internal_has_user_info()) {
-    user_info_ = new ::mozilla::safebrowsing::ThreatHit_UserInfo(*from.user_info_);
-  } else {
-    user_info_ = nullptr;
+    _this->_impl_.user_info_ = new ::mozilla::safebrowsing::ThreatHit_UserInfo(*from._impl_.user_info_);
   }
-  ::memcpy(&threat_type_, &from.threat_type_,
-    static_cast<size_t>(reinterpret_cast<char*>(&platform_type_) -
-    reinterpret_cast<char*>(&threat_type_)) + sizeof(platform_type_));
+  ::memcpy(&_impl_.threat_type_, &from._impl_.threat_type_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.platform_type_) -
+    reinterpret_cast<char*>(&_impl_.threat_type_)) + sizeof(_impl_.platform_type_));
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ThreatHit)
 }
 
-void ThreatHit::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ThreatHit_safebrowsing_2eproto.base);
-  ::memset(&entry_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&platform_type_) -
-      reinterpret_cast<char*>(&entry_)) + sizeof(platform_type_));
+inline void ThreatHit::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.resources_){arena}
+    , decltype(_impl_.entry_){nullptr}
+    , decltype(_impl_.client_info_){nullptr}
+    , decltype(_impl_.user_info_){nullptr}
+    , decltype(_impl_.threat_type_){0}
+    , decltype(_impl_.platform_type_){0}
+  };
 }
 
 ThreatHit::~ThreatHit() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ThreatHit)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ThreatHit::SharedDtor() {
-  if (this != internal_default_instance()) delete entry_;
-  if (this != internal_default_instance()) delete client_info_;
-  if (this != internal_default_instance()) delete user_info_;
+inline void ThreatHit::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.resources_.~RepeatedPtrField();
+  if (this != internal_default_instance()) delete _impl_.entry_;
+  if (this != internal_default_instance()) delete _impl_.client_info_;
+  if (this != internal_default_instance()) delete _impl_.user_info_;
 }
 
 void ThreatHit::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ThreatHit& ThreatHit::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ThreatHit_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ThreatHit::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ThreatHit)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  resources_.Clear();
-  cached_has_bits = _has_bits_[0];
+  _impl_.resources_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(entry_ != nullptr);
-      entry_->Clear();
+      GOOGLE_DCHECK(_impl_.entry_ != nullptr);
+      _impl_.entry_->Clear();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(client_info_ != nullptr);
-      client_info_->Clear();
+      GOOGLE_DCHECK(_impl_.client_info_ != nullptr);
+      _impl_.client_info_->Clear();
     }
     if (cached_has_bits & 0x00000004u) {
-      GOOGLE_DCHECK(user_info_ != nullptr);
-      user_info_->Clear();
+      GOOGLE_DCHECK(_impl_.user_info_ != nullptr);
+      _impl_.user_info_->Clear();
     }
   }
   if (cached_has_bits & 0x00000018u) {
-    ::memset(&threat_type_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&platform_type_) -
-        reinterpret_cast<char*>(&threat_type_)) + sizeof(platform_type_));
+    ::memset(&_impl_.threat_type_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.platform_type_) -
+        reinterpret_cast<char*>(&_impl_.threat_type_)) + sizeof(_impl_.platform_type_));
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ThreatHit::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ThreatHit::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatType_IsValid(val))) {
             _internal_set_threat_type(static_cast<::mozilla::safebrowsing::ThreatType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(1, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::PlatformType_IsValid(val))) {
             _internal_set_platform_type(static_cast<::mozilla::safebrowsing::PlatformType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(2, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ThreatEntry entry = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           ptr = ctx->ParseMessage(_internal_mutable_entry(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // repeated .mozilla.safebrowsing.ThreatHit.ThreatSource resources = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -5110,99 +5301,102 @@ const char* ThreatHit::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<34>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ClientInfo client_info = 5;
       case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           ptr = ctx->ParseMessage(_internal_mutable_client_info(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ThreatHit.UserInfo user_info = 6;
       case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 50)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
           ptr = ctx->ParseMessage(_internal_mutable_user_info(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ThreatHit::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ThreatHit::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ThreatHit)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       1, this->_internal_threat_type(), target);
   }
 
   // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
   if (cached_has_bits & 0x00000010u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       2, this->_internal_platform_type(), target);
   }
 
   // optional .mozilla.safebrowsing.ThreatEntry entry = 3;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        3, _Internal::entry(this), target, stream);
+      InternalWriteMessage(3, _Internal::entry(this),
+        _Internal::entry(this).GetCachedSize(), target, stream);
   }
 
   // repeated .mozilla.safebrowsing.ThreatHit.ThreatSource resources = 4;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_resources_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_resources_size()); i < n; i++) {
+    const auto& repfield = this->_internal_resources(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(4, this->_internal_resources(i), target, stream);
+        InternalWriteMessage(4, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.ClientInfo client_info = 5;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        5, _Internal::client_info(this), target, stream);
+      InternalWriteMessage(5, _Internal::client_info(this),
+        _Internal::client_info(this).GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.ThreatHit.UserInfo user_info = 6;
   if (cached_has_bits & 0x00000004u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        6, _Internal::user_info(this), target, stream);
+      InternalWriteMessage(6, _Internal::user_info(this),
+        _Internal::user_info(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ThreatHit)
   return target;
@@ -5212,94 +5406,98 @@ size_t ThreatHit::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ThreatHit)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.ThreatHit.ThreatSource resources = 4;
   total_size += 1UL * this->_internal_resources_size();
-  for (const auto& msg : this->resources_) {
+  for (const auto& msg : this->_impl_.resources_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000001fu) {
     // optional .mozilla.safebrowsing.ThreatEntry entry = 3;
     if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *entry_);
+          *_impl_.entry_);
     }
 
     // optional .mozilla.safebrowsing.ClientInfo client_info = 5;
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *client_info_);
+          *_impl_.client_info_);
     }
 
     // optional .mozilla.safebrowsing.ThreatHit.UserInfo user_info = 6;
     if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *user_info_);
+          *_impl_.user_info_);
     }
 
     // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
     if (cached_has_bits & 0x00000008u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_threat_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_threat_type());
     }
 
     // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
     if (cached_has_bits & 0x00000010u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_platform_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_platform_type());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ThreatHit::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ThreatHit*>(
+  MergeFrom(*::_pbi::DownCast<const ThreatHit*>(
       &from));
 }
 
 void ThreatHit::MergeFrom(const ThreatHit& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatHit)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ThreatHit* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatHit)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  resources_.MergeFrom(from.resources_);
-  cached_has_bits = from._has_bits_[0];
+  _this->_impl_.resources_.MergeFrom(from._impl_.resources_);
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000001fu) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_mutable_entry()->::mozilla::safebrowsing::ThreatEntry::MergeFrom(from._internal_entry());
+      _this->_internal_mutable_entry()->::mozilla::safebrowsing::ThreatEntry::MergeFrom(
+          from._internal_entry());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_client_info()->::mozilla::safebrowsing::ClientInfo::MergeFrom(from._internal_client_info());
+      _this->_internal_mutable_client_info()->::mozilla::safebrowsing::ClientInfo::MergeFrom(
+          from._internal_client_info());
     }
     if (cached_has_bits & 0x00000004u) {
-      _internal_mutable_user_info()->::mozilla::safebrowsing::ThreatHit_UserInfo::MergeFrom(from._internal_user_info());
+      _this->_internal_mutable_user_info()->::mozilla::safebrowsing::ThreatHit_UserInfo::MergeFrom(
+          from._internal_user_info());
     }
     if (cached_has_bits & 0x00000008u) {
-      threat_type_ = from.threat_type_;
+      _this->_impl_.threat_type_ = from._impl_.threat_type_;
     }
     if (cached_has_bits & 0x00000010u) {
-      platform_type_ = from.platform_type_;
+      _this->_impl_.platform_type_ = from._impl_.platform_type_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ThreatHit::CopyFrom(const ThreatHit& from) {
@@ -5315,14 +5513,15 @@ bool ThreatHit::IsInitialized() const {
 
 void ThreatHit::InternalSwap(ThreatHit* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  resources_.InternalSwap(&other->resources_);
-  swap(entry_, other->entry_);
-  swap(client_info_, other->client_info_);
-  swap(user_info_, other->user_info_);
-  swap(threat_type_, other->threat_type_);
-  swap(platform_type_, other->platform_type_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.resources_.InternalSwap(&other->_impl_.resources_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(ThreatHit, _impl_.platform_type_)
+      + sizeof(ThreatHit::_impl_.platform_type_)
+      - PROTOBUF_FIELD_OFFSET(ThreatHit, _impl_.entry_)>(
+          reinterpret_cast<char*>(&_impl_.entry_),
+          reinterpret_cast<char*>(&other->_impl_.entry_));
 }
 
 std::string ThreatHit::GetTypeName() const {
@@ -5332,11 +5531,9 @@ std::string ThreatHit::GetTypeName() const {
 
 // ===================================================================
 
-void ClientInfo::InitAsDefaultInstance() {
-}
 class ClientInfo::_Internal {
  public:
-  using HasBits = decltype(std::declval<ClientInfo>()._has_bits_);
+  using HasBits = decltype(std::declval<ClientInfo>()._impl_._has_bits_);
   static void set_has_client_id(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
@@ -5345,123 +5542,155 @@ class ClientInfo::_Internal {
   }
 };
 
-ClientInfo::ClientInfo()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ClientInfo)
+ClientInfo::ClientInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ClientInfo)
 }
 ClientInfo::ClientInfo(const ClientInfo& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  client_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ClientInfo* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.client_id_){}
+    , decltype(_impl_.client_version_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.client_id_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.client_id_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_client_id()) {
-    client_id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.client_id_);
+    _this->_impl_.client_id_.Set(from._internal_client_id(), 
+      _this->GetArenaForAllocation());
   }
-  client_version_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.client_version_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.client_version_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_client_version()) {
-    client_version_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.client_version_);
+    _this->_impl_.client_version_.Set(from._internal_client_version(), 
+      _this->GetArenaForAllocation());
   }
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ClientInfo)
 }
 
-void ClientInfo::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ClientInfo_safebrowsing_2eproto.base);
-  client_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  client_version_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void ClientInfo::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.client_id_){}
+    , decltype(_impl_.client_version_){}
+  };
+  _impl_.client_id_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.client_id_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.client_version_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.client_version_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 ClientInfo::~ClientInfo() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ClientInfo)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ClientInfo::SharedDtor() {
-  client_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  client_version_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void ClientInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.client_id_.Destroy();
+  _impl_.client_version_.Destroy();
 }
 
 void ClientInfo::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ClientInfo& ClientInfo::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ClientInfo_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ClientInfo::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ClientInfo)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      client_id_.ClearNonDefaultToEmptyNoArena();
+      _impl_.client_id_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      client_version_.ClearNonDefaultToEmptyNoArena();
+      _impl_.client_version_.ClearNonDefaultToEmpty();
     }
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ClientInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ClientInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional string client_id = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_client_id();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional string client_version = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_client_version();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ClientInfo::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ClientInfo::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ClientInfo)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional string client_id = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->WriteStringMaybeAliased(
@@ -5475,8 +5704,8 @@ failure:
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ClientInfo)
   return target;
@@ -5486,11 +5715,11 @@ size_t ClientInfo::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ClientInfo)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     // optional string client_id = 1;
     if (cached_has_bits & 0x00000001u) {
@@ -5508,37 +5737,36 @@ size_t ClientInfo::ByteSizeLong() const {
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ClientInfo::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ClientInfo*>(
+  MergeFrom(*::_pbi::DownCast<const ClientInfo*>(
       &from));
 }
 
 void ClientInfo::MergeFrom(const ClientInfo& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ClientInfo)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ClientInfo* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ClientInfo)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      client_id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.client_id_);
+      _this->_internal_set_client_id(from._internal_client_id());
     }
     if (cached_has_bits & 0x00000002u) {
-      _has_bits_[0] |= 0x00000002u;
-      client_version_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.client_version_);
+      _this->_internal_set_client_version(from._internal_client_version());
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ClientInfo::CopyFrom(const ClientInfo& from) {
@@ -5554,12 +5782,18 @@ bool ClientInfo::IsInitialized() const {
 
 void ClientInfo::InternalSwap(ClientInfo* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  client_id_.Swap(&other->client_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  client_version_.Swap(&other->client_version_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.client_id_, lhs_arena,
+      &other->_impl_.client_id_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.client_version_, lhs_arena,
+      &other->_impl_.client_version_, rhs_arena
+  );
 }
 
 std::string ClientInfo::GetTypeName() const {
@@ -5569,120 +5803,133 @@ std::string ClientInfo::GetTypeName() const {
 
 // ===================================================================
 
-void ChromeClientInfo::InitAsDefaultInstance() {
-}
 class ChromeClientInfo::_Internal {
  public:
-  using HasBits = decltype(std::declval<ChromeClientInfo>()._has_bits_);
+  using HasBits = decltype(std::declval<ChromeClientInfo>()._impl_._has_bits_);
   static void set_has_reporting_population(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
 };
 
-ChromeClientInfo::ChromeClientInfo()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ChromeClientInfo)
+ChromeClientInfo::ChromeClientInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ChromeClientInfo)
 }
 ChromeClientInfo::ChromeClientInfo(const ChromeClientInfo& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  reporting_population_ = from.reporting_population_;
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ChromeClientInfo* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.reporting_population_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _this->_impl_.reporting_population_ = from._impl_.reporting_population_;
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ChromeClientInfo)
 }
 
-void ChromeClientInfo::SharedCtor() {
-  reporting_population_ = 0;
+inline void ChromeClientInfo::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.reporting_population_){0}
+  };
 }
 
 ChromeClientInfo::~ChromeClientInfo() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ChromeClientInfo)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ChromeClientInfo::SharedDtor() {
+inline void ChromeClientInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
 }
 
 void ChromeClientInfo::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ChromeClientInfo& ChromeClientInfo::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ChromeClientInfo_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ChromeClientInfo::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ChromeClientInfo)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  reporting_population_ = 0;
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_.reporting_population_ = 0;
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ChromeClientInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ChromeClientInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional .mozilla.safebrowsing.ChromeClientInfo.SafeBrowsingReportingPopulation reporting_population = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ChromeClientInfo_SafeBrowsingReportingPopulation_IsValid(val))) {
             _internal_set_reporting_population(static_cast<::mozilla::safebrowsing::ChromeClientInfo_SafeBrowsingReportingPopulation>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(1, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ChromeClientInfo::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ChromeClientInfo::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ChromeClientInfo)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.ChromeClientInfo.SafeBrowsingReportingPopulation reporting_population = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       1, this->_internal_reporting_population(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ChromeClientInfo)
   return target;
@@ -5692,41 +5939,42 @@ size_t ChromeClientInfo::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ChromeClientInfo)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // optional .mozilla.safebrowsing.ChromeClientInfo.SafeBrowsingReportingPopulation reporting_population = 1;
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_reporting_population());
+      ::_pbi::WireFormatLite::EnumSize(this->_internal_reporting_population());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ChromeClientInfo::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ChromeClientInfo*>(
+  MergeFrom(*::_pbi::DownCast<const ChromeClientInfo*>(
       &from));
 }
 
 void ChromeClientInfo::MergeFrom(const ChromeClientInfo& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ChromeClientInfo)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ChromeClientInfo* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ChromeClientInfo)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from._internal_has_reporting_population()) {
-    _internal_set_reporting_population(from._internal_reporting_population());
+    _this->_internal_set_reporting_population(from._internal_reporting_population());
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ChromeClientInfo::CopyFrom(const ChromeClientInfo& from) {
@@ -5742,9 +5990,9 @@ bool ChromeClientInfo::IsInitialized() const {
 
 void ChromeClientInfo::InternalSwap(ChromeClientInfo* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(reporting_population_, other->reporting_population_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  swap(_impl_.reporting_population_, other->_impl_.reporting_population_);
 }
 
 std::string ChromeClientInfo::GetTypeName() const {
@@ -5754,114 +6002,134 @@ std::string ChromeClientInfo::GetTypeName() const {
 
 // ===================================================================
 
-void Checksum::InitAsDefaultInstance() {
-}
 class Checksum::_Internal {
  public:
-  using HasBits = decltype(std::declval<Checksum>()._has_bits_);
+  using HasBits = decltype(std::declval<Checksum>()._impl_._has_bits_);
   static void set_has_sha256(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
 };
 
-Checksum::Checksum()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.Checksum)
+Checksum::Checksum(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.Checksum)
 }
 Checksum::Checksum(const Checksum& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  sha256_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  Checksum* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.sha256_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.sha256_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.sha256_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_sha256()) {
-    sha256_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.sha256_);
+    _this->_impl_.sha256_.Set(from._internal_sha256(), 
+      _this->GetArenaForAllocation());
   }
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.Checksum)
 }
 
-void Checksum::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_Checksum_safebrowsing_2eproto.base);
-  sha256_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void Checksum::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.sha256_){}
+  };
+  _impl_.sha256_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.sha256_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 Checksum::~Checksum() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.Checksum)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void Checksum::SharedDtor() {
-  sha256_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void Checksum::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.sha256_.Destroy();
 }
 
 void Checksum::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const Checksum& Checksum::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Checksum_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void Checksum::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.Checksum)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    sha256_.ClearNonDefaultToEmptyNoArena();
+    _impl_.sha256_.ClearNonDefaultToEmpty();
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* Checksum::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* Checksum::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional bytes sha256 = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_sha256();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Checksum::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* Checksum::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.Checksum)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional bytes sha256 = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->WriteBytesMaybeAliased(
@@ -5869,8 +6137,8 @@ failure:
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.Checksum)
   return target;
@@ -5880,12 +6148,12 @@ size_t Checksum::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.Checksum)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // optional bytes sha256 = 1;
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
@@ -5893,30 +6161,30 @@ size_t Checksum::ByteSizeLong() const {
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void Checksum::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const Checksum*>(
+  MergeFrom(*::_pbi::DownCast<const Checksum*>(
       &from));
 }
 
 void Checksum::MergeFrom(const Checksum& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.Checksum)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  Checksum* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.Checksum)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from._internal_has_sha256()) {
-    _has_bits_[0] |= 0x00000001u;
-    sha256_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.sha256_);
+    _this->_internal_set_sha256(from._internal_sha256());
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void Checksum::CopyFrom(const Checksum& from) {
@@ -5932,10 +6200,14 @@ bool Checksum::IsInitialized() const {
 
 void Checksum::InternalSwap(Checksum* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  sha256_.Swap(&other->sha256_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.sha256_, lhs_arena,
+      &other->_impl_.sha256_, rhs_arena
+  );
 }
 
 std::string Checksum::GetTypeName() const {
@@ -5945,11 +6217,9 @@ std::string Checksum::GetTypeName() const {
 
 // ===================================================================
 
-void ThreatEntry::InitAsDefaultInstance() {
-}
 class ThreatEntry::_Internal {
  public:
-  using HasBits = decltype(std::declval<ThreatEntry>()._has_bits_);
+  using HasBits = decltype(std::declval<ThreatEntry>()._impl_._has_bits_);
   static void set_has_hash(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
@@ -5958,123 +6228,155 @@ class ThreatEntry::_Internal {
   }
 };
 
-ThreatEntry::ThreatEntry()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ThreatEntry)
+ThreatEntry::ThreatEntry(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ThreatEntry)
 }
 ThreatEntry::ThreatEntry(const ThreatEntry& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  hash_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ThreatEntry* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.hash_){}
+    , decltype(_impl_.url_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.hash_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.hash_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_hash()) {
-    hash_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.hash_);
+    _this->_impl_.hash_.Set(from._internal_hash(), 
+      _this->GetArenaForAllocation());
   }
-  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_url()) {
-    url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
+    _this->_impl_.url_.Set(from._internal_url(), 
+      _this->GetArenaForAllocation());
   }
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ThreatEntry)
 }
 
-void ThreatEntry::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ThreatEntry_safebrowsing_2eproto.base);
-  hash_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void ThreatEntry::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.hash_){}
+    , decltype(_impl_.url_){}
+  };
+  _impl_.hash_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.hash_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.url_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.url_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 ThreatEntry::~ThreatEntry() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ThreatEntry)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ThreatEntry::SharedDtor() {
-  hash_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  url_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void ThreatEntry::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.hash_.Destroy();
+  _impl_.url_.Destroy();
 }
 
 void ThreatEntry::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ThreatEntry& ThreatEntry::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ThreatEntry_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ThreatEntry::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ThreatEntry)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      hash_.ClearNonDefaultToEmptyNoArena();
+      _impl_.hash_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      url_.ClearNonDefaultToEmptyNoArena();
+      _impl_.url_.ClearNonDefaultToEmpty();
     }
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ThreatEntry::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ThreatEntry::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional bytes hash = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_hash();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional string url = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_url();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ThreatEntry::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ThreatEntry::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ThreatEntry)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional bytes hash = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->WriteBytesMaybeAliased(
@@ -6088,8 +6390,8 @@ failure:
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ThreatEntry)
   return target;
@@ -6099,11 +6401,11 @@ size_t ThreatEntry::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ThreatEntry)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     // optional bytes hash = 1;
     if (cached_has_bits & 0x00000001u) {
@@ -6121,37 +6423,36 @@ size_t ThreatEntry::ByteSizeLong() const {
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ThreatEntry::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ThreatEntry*>(
+  MergeFrom(*::_pbi::DownCast<const ThreatEntry*>(
       &from));
 }
 
 void ThreatEntry::MergeFrom(const ThreatEntry& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatEntry)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ThreatEntry* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatEntry)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      hash_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.hash_);
+      _this->_internal_set_hash(from._internal_hash());
     }
     if (cached_has_bits & 0x00000002u) {
-      _has_bits_[0] |= 0x00000002u;
-      url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
+      _this->_internal_set_url(from._internal_url());
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ThreatEntry::CopyFrom(const ThreatEntry& from) {
@@ -6167,12 +6468,18 @@ bool ThreatEntry::IsInitialized() const {
 
 void ThreatEntry::InternalSwap(ThreatEntry* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  hash_.Swap(&other->hash_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  url_.Swap(&other->url_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.hash_, lhs_arena,
+      &other->_impl_.hash_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.url_, lhs_arena,
+      &other->_impl_.url_, rhs_arena
+  );
 }
 
 std::string ThreatEntry::GetTypeName() const {
@@ -6182,19 +6489,9 @@ std::string ThreatEntry::GetTypeName() const {
 
 // ===================================================================
 
-void ThreatEntrySet::InitAsDefaultInstance() {
-  ::mozilla::safebrowsing::_ThreatEntrySet_default_instance_._instance.get_mutable()->raw_hashes_ = const_cast< ::mozilla::safebrowsing::RawHashes*>(
-      ::mozilla::safebrowsing::RawHashes::internal_default_instance());
-  ::mozilla::safebrowsing::_ThreatEntrySet_default_instance_._instance.get_mutable()->raw_indices_ = const_cast< ::mozilla::safebrowsing::RawIndices*>(
-      ::mozilla::safebrowsing::RawIndices::internal_default_instance());
-  ::mozilla::safebrowsing::_ThreatEntrySet_default_instance_._instance.get_mutable()->rice_hashes_ = const_cast< ::mozilla::safebrowsing::RiceDeltaEncoding*>(
-      ::mozilla::safebrowsing::RiceDeltaEncoding::internal_default_instance());
-  ::mozilla::safebrowsing::_ThreatEntrySet_default_instance_._instance.get_mutable()->rice_indices_ = const_cast< ::mozilla::safebrowsing::RiceDeltaEncoding*>(
-      ::mozilla::safebrowsing::RiceDeltaEncoding::internal_default_instance());
-}
 class ThreatEntrySet::_Internal {
  public:
-  using HasBits = decltype(std::declval<ThreatEntrySet>()._has_bits_);
+  using HasBits = decltype(std::declval<ThreatEntrySet>()._impl_._has_bits_);
   static void set_has_compression_type(HasBits* has_bits) {
     (*has_bits)[0] |= 16u;
   }
@@ -6218,230 +6515,242 @@ class ThreatEntrySet::_Internal {
 
 const ::mozilla::safebrowsing::RawHashes&
 ThreatEntrySet::_Internal::raw_hashes(const ThreatEntrySet* msg) {
-  return *msg->raw_hashes_;
+  return *msg->_impl_.raw_hashes_;
 }
 const ::mozilla::safebrowsing::RawIndices&
 ThreatEntrySet::_Internal::raw_indices(const ThreatEntrySet* msg) {
-  return *msg->raw_indices_;
+  return *msg->_impl_.raw_indices_;
 }
 const ::mozilla::safebrowsing::RiceDeltaEncoding&
 ThreatEntrySet::_Internal::rice_hashes(const ThreatEntrySet* msg) {
-  return *msg->rice_hashes_;
+  return *msg->_impl_.rice_hashes_;
 }
 const ::mozilla::safebrowsing::RiceDeltaEncoding&
 ThreatEntrySet::_Internal::rice_indices(const ThreatEntrySet* msg) {
-  return *msg->rice_indices_;
+  return *msg->_impl_.rice_indices_;
 }
-ThreatEntrySet::ThreatEntrySet()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ThreatEntrySet)
+ThreatEntrySet::ThreatEntrySet(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ThreatEntrySet)
 }
 ThreatEntrySet::ThreatEntrySet(const ThreatEntrySet& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ThreatEntrySet* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.raw_hashes_){nullptr}
+    , decltype(_impl_.raw_indices_){nullptr}
+    , decltype(_impl_.rice_hashes_){nullptr}
+    , decltype(_impl_.rice_indices_){nullptr}
+    , decltype(_impl_.compression_type_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   if (from._internal_has_raw_hashes()) {
-    raw_hashes_ = new ::mozilla::safebrowsing::RawHashes(*from.raw_hashes_);
-  } else {
-    raw_hashes_ = nullptr;
+    _this->_impl_.raw_hashes_ = new ::mozilla::safebrowsing::RawHashes(*from._impl_.raw_hashes_);
   }
   if (from._internal_has_raw_indices()) {
-    raw_indices_ = new ::mozilla::safebrowsing::RawIndices(*from.raw_indices_);
-  } else {
-    raw_indices_ = nullptr;
+    _this->_impl_.raw_indices_ = new ::mozilla::safebrowsing::RawIndices(*from._impl_.raw_indices_);
   }
   if (from._internal_has_rice_hashes()) {
-    rice_hashes_ = new ::mozilla::safebrowsing::RiceDeltaEncoding(*from.rice_hashes_);
-  } else {
-    rice_hashes_ = nullptr;
+    _this->_impl_.rice_hashes_ = new ::mozilla::safebrowsing::RiceDeltaEncoding(*from._impl_.rice_hashes_);
   }
   if (from._internal_has_rice_indices()) {
-    rice_indices_ = new ::mozilla::safebrowsing::RiceDeltaEncoding(*from.rice_indices_);
-  } else {
-    rice_indices_ = nullptr;
+    _this->_impl_.rice_indices_ = new ::mozilla::safebrowsing::RiceDeltaEncoding(*from._impl_.rice_indices_);
   }
-  compression_type_ = from.compression_type_;
+  _this->_impl_.compression_type_ = from._impl_.compression_type_;
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ThreatEntrySet)
 }
 
-void ThreatEntrySet::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ThreatEntrySet_safebrowsing_2eproto.base);
-  ::memset(&raw_hashes_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&compression_type_) -
-      reinterpret_cast<char*>(&raw_hashes_)) + sizeof(compression_type_));
+inline void ThreatEntrySet::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.raw_hashes_){nullptr}
+    , decltype(_impl_.raw_indices_){nullptr}
+    , decltype(_impl_.rice_hashes_){nullptr}
+    , decltype(_impl_.rice_indices_){nullptr}
+    , decltype(_impl_.compression_type_){0}
+  };
 }
 
 ThreatEntrySet::~ThreatEntrySet() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ThreatEntrySet)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ThreatEntrySet::SharedDtor() {
-  if (this != internal_default_instance()) delete raw_hashes_;
-  if (this != internal_default_instance()) delete raw_indices_;
-  if (this != internal_default_instance()) delete rice_hashes_;
-  if (this != internal_default_instance()) delete rice_indices_;
+inline void ThreatEntrySet::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete _impl_.raw_hashes_;
+  if (this != internal_default_instance()) delete _impl_.raw_indices_;
+  if (this != internal_default_instance()) delete _impl_.rice_hashes_;
+  if (this != internal_default_instance()) delete _impl_.rice_indices_;
 }
 
 void ThreatEntrySet::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ThreatEntrySet& ThreatEntrySet::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ThreatEntrySet_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ThreatEntrySet::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ThreatEntrySet)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000000fu) {
     if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(raw_hashes_ != nullptr);
-      raw_hashes_->Clear();
+      GOOGLE_DCHECK(_impl_.raw_hashes_ != nullptr);
+      _impl_.raw_hashes_->Clear();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(raw_indices_ != nullptr);
-      raw_indices_->Clear();
+      GOOGLE_DCHECK(_impl_.raw_indices_ != nullptr);
+      _impl_.raw_indices_->Clear();
     }
     if (cached_has_bits & 0x00000004u) {
-      GOOGLE_DCHECK(rice_hashes_ != nullptr);
-      rice_hashes_->Clear();
+      GOOGLE_DCHECK(_impl_.rice_hashes_ != nullptr);
+      _impl_.rice_hashes_->Clear();
     }
     if (cached_has_bits & 0x00000008u) {
-      GOOGLE_DCHECK(rice_indices_ != nullptr);
-      rice_indices_->Clear();
+      GOOGLE_DCHECK(_impl_.rice_indices_ != nullptr);
+      _impl_.rice_indices_->Clear();
     }
   }
-  compression_type_ = 0;
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_.compression_type_ = 0;
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ThreatEntrySet::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ThreatEntrySet::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional .mozilla.safebrowsing.CompressionType compression_type = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::CompressionType_IsValid(val))) {
             _internal_set_compression_type(static_cast<::mozilla::safebrowsing::CompressionType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(1, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.RawHashes raw_hashes = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_raw_hashes(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.RawIndices raw_indices = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           ptr = ctx->ParseMessage(_internal_mutable_raw_indices(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.RiceDeltaEncoding rice_hashes = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_rice_hashes(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.RiceDeltaEncoding rice_indices = 5;
       case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           ptr = ctx->ParseMessage(_internal_mutable_rice_indices(), ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ThreatEntrySet::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ThreatEntrySet::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ThreatEntrySet)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.CompressionType compression_type = 1;
   if (cached_has_bits & 0x00000010u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       1, this->_internal_compression_type(), target);
   }
 
   // optional .mozilla.safebrowsing.RawHashes raw_hashes = 2;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::raw_hashes(this), target, stream);
+      InternalWriteMessage(2, _Internal::raw_hashes(this),
+        _Internal::raw_hashes(this).GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.RawIndices raw_indices = 3;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        3, _Internal::raw_indices(this), target, stream);
+      InternalWriteMessage(3, _Internal::raw_indices(this),
+        _Internal::raw_indices(this).GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.RiceDeltaEncoding rice_hashes = 4;
   if (cached_has_bits & 0x00000004u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        4, _Internal::rice_hashes(this), target, stream);
+      InternalWriteMessage(4, _Internal::rice_hashes(this),
+        _Internal::rice_hashes(this).GetCachedSize(), target, stream);
   }
 
   // optional .mozilla.safebrowsing.RiceDeltaEncoding rice_indices = 5;
   if (cached_has_bits & 0x00000008u) {
-    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        5, _Internal::rice_indices(this), target, stream);
+      InternalWriteMessage(5, _Internal::rice_indices(this),
+        _Internal::rice_indices(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ThreatEntrySet)
   return target;
@@ -6451,87 +6760,92 @@ size_t ThreatEntrySet::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ThreatEntrySet)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000001fu) {
     // optional .mozilla.safebrowsing.RawHashes raw_hashes = 2;
     if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *raw_hashes_);
+          *_impl_.raw_hashes_);
     }
 
     // optional .mozilla.safebrowsing.RawIndices raw_indices = 3;
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *raw_indices_);
+          *_impl_.raw_indices_);
     }
 
     // optional .mozilla.safebrowsing.RiceDeltaEncoding rice_hashes = 4;
     if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *rice_hashes_);
+          *_impl_.rice_hashes_);
     }
 
     // optional .mozilla.safebrowsing.RiceDeltaEncoding rice_indices = 5;
     if (cached_has_bits & 0x00000008u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *rice_indices_);
+          *_impl_.rice_indices_);
     }
 
     // optional .mozilla.safebrowsing.CompressionType compression_type = 1;
     if (cached_has_bits & 0x00000010u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_compression_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_compression_type());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ThreatEntrySet::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ThreatEntrySet*>(
+  MergeFrom(*::_pbi::DownCast<const ThreatEntrySet*>(
       &from));
 }
 
 void ThreatEntrySet::MergeFrom(const ThreatEntrySet& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatEntrySet)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ThreatEntrySet* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatEntrySet)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000001fu) {
     if (cached_has_bits & 0x00000001u) {
-      _internal_mutable_raw_hashes()->::mozilla::safebrowsing::RawHashes::MergeFrom(from._internal_raw_hashes());
+      _this->_internal_mutable_raw_hashes()->::mozilla::safebrowsing::RawHashes::MergeFrom(
+          from._internal_raw_hashes());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_mutable_raw_indices()->::mozilla::safebrowsing::RawIndices::MergeFrom(from._internal_raw_indices());
+      _this->_internal_mutable_raw_indices()->::mozilla::safebrowsing::RawIndices::MergeFrom(
+          from._internal_raw_indices());
     }
     if (cached_has_bits & 0x00000004u) {
-      _internal_mutable_rice_hashes()->::mozilla::safebrowsing::RiceDeltaEncoding::MergeFrom(from._internal_rice_hashes());
+      _this->_internal_mutable_rice_hashes()->::mozilla::safebrowsing::RiceDeltaEncoding::MergeFrom(
+          from._internal_rice_hashes());
     }
     if (cached_has_bits & 0x00000008u) {
-      _internal_mutable_rice_indices()->::mozilla::safebrowsing::RiceDeltaEncoding::MergeFrom(from._internal_rice_indices());
+      _this->_internal_mutable_rice_indices()->::mozilla::safebrowsing::RiceDeltaEncoding::MergeFrom(
+          from._internal_rice_indices());
     }
     if (cached_has_bits & 0x00000010u) {
-      compression_type_ = from.compression_type_;
+      _this->_impl_.compression_type_ = from._impl_.compression_type_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ThreatEntrySet::CopyFrom(const ThreatEntrySet& from) {
@@ -6547,13 +6861,14 @@ bool ThreatEntrySet::IsInitialized() const {
 
 void ThreatEntrySet::InternalSwap(ThreatEntrySet* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(raw_hashes_, other->raw_hashes_);
-  swap(raw_indices_, other->raw_indices_);
-  swap(rice_hashes_, other->rice_hashes_);
-  swap(rice_indices_, other->rice_indices_);
-  swap(compression_type_, other->compression_type_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(ThreatEntrySet, _impl_.compression_type_)
+      + sizeof(ThreatEntrySet::_impl_.compression_type_)
+      - PROTOBUF_FIELD_OFFSET(ThreatEntrySet, _impl_.raw_hashes_)>(
+          reinterpret_cast<char*>(&_impl_.raw_hashes_),
+          reinterpret_cast<char*>(&other->_impl_.raw_hashes_));
 }
 
 std::string ThreatEntrySet::GetTypeName() const {
@@ -6563,115 +6878,125 @@ std::string ThreatEntrySet::GetTypeName() const {
 
 // ===================================================================
 
-void RawIndices::InitAsDefaultInstance() {
-}
 class RawIndices::_Internal {
  public:
-  using HasBits = decltype(std::declval<RawIndices>()._has_bits_);
 };
 
-RawIndices::RawIndices()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.RawIndices)
+RawIndices::RawIndices(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.RawIndices)
 }
 RawIndices::RawIndices(const RawIndices& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      indices_(from.indices_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  RawIndices* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.indices_){from._impl_.indices_}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.RawIndices)
 }
 
-void RawIndices::SharedCtor() {
+inline void RawIndices::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.indices_){arena}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
 }
 
 RawIndices::~RawIndices() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.RawIndices)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void RawIndices::SharedDtor() {
+inline void RawIndices::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.indices_.~RepeatedField();
 }
 
 void RawIndices::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const RawIndices& RawIndices::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RawIndices_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void RawIndices::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.RawIndices)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  indices_.Clear();
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_.indices_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* RawIndices::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* RawIndices::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // repeated int32 indices = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
           ptr -= 1;
           do {
             ptr += 1;
-            _internal_add_indices(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+            _internal_add_indices(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr));
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<8>(ptr));
-        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10) {
+        } else if (static_cast<uint8_t>(tag) == 10) {
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedInt32Parser(_internal_mutable_indices(), ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* RawIndices::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* RawIndices::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.RawIndices)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // repeated int32 indices = 1;
   for (int i = 0, n = this->_internal_indices_size(); i < n; i++) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_indices(i), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_indices(i), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.RawIndices)
   return target;
@@ -6681,41 +7006,42 @@ size_t RawIndices::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.RawIndices)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated int32 indices = 1;
   {
-    size_t data_size = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      Int32Size(this->indices_);
+    size_t data_size = ::_pbi::WireFormatLite::
+      Int32Size(this->_impl_.indices_);
     total_size += 1 *
-                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_indices_size());
+                  ::_pbi::FromIntSize(this->_internal_indices_size());
     total_size += data_size;
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void RawIndices::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const RawIndices*>(
+  MergeFrom(*::_pbi::DownCast<const RawIndices*>(
       &from));
 }
 
 void RawIndices::MergeFrom(const RawIndices& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.RawIndices)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  RawIndices* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.RawIndices)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  indices_.MergeFrom(from.indices_);
+  _this->_impl_.indices_.MergeFrom(from._impl_.indices_);
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void RawIndices::CopyFrom(const RawIndices& from) {
@@ -6731,9 +7057,8 @@ bool RawIndices::IsInitialized() const {
 
 void RawIndices::InternalSwap(RawIndices* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  indices_.InternalSwap(&other->indices_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.indices_.InternalSwap(&other->_impl_.indices_);
 }
 
 std::string RawIndices::GetTypeName() const {
@@ -6743,11 +7068,9 @@ std::string RawIndices::GetTypeName() const {
 
 // ===================================================================
 
-void RawHashes::InitAsDefaultInstance() {
-}
 class RawHashes::_Internal {
  public:
-  using HasBits = decltype(std::declval<RawHashes>()._has_bits_);
+  using HasBits = decltype(std::declval<RawHashes>()._impl_._has_bits_);
   static void set_has_prefix_size(HasBits* has_bits) {
     (*has_bits)[0] |= 2u;
   }
@@ -6756,119 +7079,143 @@ class RawHashes::_Internal {
   }
 };
 
-RawHashes::RawHashes()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.RawHashes)
+RawHashes::RawHashes(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.RawHashes)
 }
 RawHashes::RawHashes(const RawHashes& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  raw_hashes_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  RawHashes* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.raw_hashes_){}
+    , decltype(_impl_.prefix_size_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.raw_hashes_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.raw_hashes_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_raw_hashes()) {
-    raw_hashes_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.raw_hashes_);
+    _this->_impl_.raw_hashes_.Set(from._internal_raw_hashes(), 
+      _this->GetArenaForAllocation());
   }
-  prefix_size_ = from.prefix_size_;
+  _this->_impl_.prefix_size_ = from._impl_.prefix_size_;
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.RawHashes)
 }
 
-void RawHashes::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_RawHashes_safebrowsing_2eproto.base);
-  raw_hashes_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  prefix_size_ = 0;
+inline void RawHashes::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.raw_hashes_){}
+    , decltype(_impl_.prefix_size_){0}
+  };
+  _impl_.raw_hashes_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.raw_hashes_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 RawHashes::~RawHashes() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.RawHashes)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void RawHashes::SharedDtor() {
-  raw_hashes_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void RawHashes::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.raw_hashes_.Destroy();
 }
 
 void RawHashes::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const RawHashes& RawHashes::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RawHashes_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void RawHashes::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.RawHashes)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    raw_hashes_.ClearNonDefaultToEmptyNoArena();
+    _impl_.raw_hashes_.ClearNonDefaultToEmpty();
   }
-  prefix_size_ = 0;
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_.prefix_size_ = 0;
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* RawHashes::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* RawHashes::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional int32 prefix_size = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
           _Internal::set_has_prefix_size(&has_bits);
-          prefix_size_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.prefix_size_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional bytes raw_hashes = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_raw_hashes();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* RawHashes::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* RawHashes::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.RawHashes)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional int32 prefix_size = 1;
   if (cached_has_bits & 0x00000002u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_prefix_size(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_prefix_size(), target);
   }
 
   // optional bytes raw_hashes = 2;
@@ -6878,8 +7225,8 @@ failure:
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.RawHashes)
   return target;
@@ -6889,11 +7236,11 @@ size_t RawHashes::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.RawHashes)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     // optional bytes raw_hashes = 2;
     if (cached_has_bits & 0x00000001u) {
@@ -6904,44 +7251,42 @@ size_t RawHashes::ByteSizeLong() const {
 
     // optional int32 prefix_size = 1;
     if (cached_has_bits & 0x00000002u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-          this->_internal_prefix_size());
+      total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_prefix_size());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void RawHashes::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const RawHashes*>(
+  MergeFrom(*::_pbi::DownCast<const RawHashes*>(
       &from));
 }
 
 void RawHashes::MergeFrom(const RawHashes& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.RawHashes)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  RawHashes* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.RawHashes)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      raw_hashes_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.raw_hashes_);
+      _this->_internal_set_raw_hashes(from._internal_raw_hashes());
     }
     if (cached_has_bits & 0x00000002u) {
-      prefix_size_ = from.prefix_size_;
+      _this->_impl_.prefix_size_ = from._impl_.prefix_size_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void RawHashes::CopyFrom(const RawHashes& from) {
@@ -6957,11 +7302,15 @@ bool RawHashes::IsInitialized() const {
 
 void RawHashes::InternalSwap(RawHashes* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  raw_hashes_.Swap(&other->raw_hashes_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(prefix_size_, other->prefix_size_);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.raw_hashes_, lhs_arena,
+      &other->_impl_.raw_hashes_, rhs_arena
+  );
+  swap(_impl_.prefix_size_, other->_impl_.prefix_size_);
 }
 
 std::string RawHashes::GetTypeName() const {
@@ -6971,11 +7320,9 @@ std::string RawHashes::GetTypeName() const {
 
 // ===================================================================
 
-void RiceDeltaEncoding::InitAsDefaultInstance() {
-}
 class RiceDeltaEncoding::_Internal {
  public:
-  using HasBits = decltype(std::declval<RiceDeltaEncoding>()._has_bits_);
+  using HasBits = decltype(std::declval<RiceDeltaEncoding>()._impl_._has_bits_);
   static void set_has_first_value(HasBits* has_bits) {
     (*has_bits)[0] |= 2u;
   }
@@ -6990,155 +7337,183 @@ class RiceDeltaEncoding::_Internal {
   }
 };
 
-RiceDeltaEncoding::RiceDeltaEncoding()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.RiceDeltaEncoding)
+RiceDeltaEncoding::RiceDeltaEncoding(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.RiceDeltaEncoding)
 }
 RiceDeltaEncoding::RiceDeltaEncoding(const RiceDeltaEncoding& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  encoded_data_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  RiceDeltaEncoding* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.encoded_data_){}
+    , decltype(_impl_.first_value_){}
+    , decltype(_impl_.rice_parameter_){}
+    , decltype(_impl_.num_entries_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.encoded_data_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.encoded_data_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_encoded_data()) {
-    encoded_data_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.encoded_data_);
+    _this->_impl_.encoded_data_.Set(from._internal_encoded_data(), 
+      _this->GetArenaForAllocation());
   }
-  ::memcpy(&first_value_, &from.first_value_,
-    static_cast<size_t>(reinterpret_cast<char*>(&num_entries_) -
-    reinterpret_cast<char*>(&first_value_)) + sizeof(num_entries_));
+  ::memcpy(&_impl_.first_value_, &from._impl_.first_value_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.num_entries_) -
+    reinterpret_cast<char*>(&_impl_.first_value_)) + sizeof(_impl_.num_entries_));
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.RiceDeltaEncoding)
 }
 
-void RiceDeltaEncoding::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_RiceDeltaEncoding_safebrowsing_2eproto.base);
-  encoded_data_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  ::memset(&first_value_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&num_entries_) -
-      reinterpret_cast<char*>(&first_value_)) + sizeof(num_entries_));
+inline void RiceDeltaEncoding::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.encoded_data_){}
+    , decltype(_impl_.first_value_){int64_t{0}}
+    , decltype(_impl_.rice_parameter_){0}
+    , decltype(_impl_.num_entries_){0}
+  };
+  _impl_.encoded_data_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.encoded_data_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 RiceDeltaEncoding::~RiceDeltaEncoding() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.RiceDeltaEncoding)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void RiceDeltaEncoding::SharedDtor() {
-  encoded_data_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void RiceDeltaEncoding::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.encoded_data_.Destroy();
 }
 
 void RiceDeltaEncoding::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const RiceDeltaEncoding& RiceDeltaEncoding::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RiceDeltaEncoding_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void RiceDeltaEncoding::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.RiceDeltaEncoding)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    encoded_data_.ClearNonDefaultToEmptyNoArena();
+    _impl_.encoded_data_.ClearNonDefaultToEmpty();
   }
   if (cached_has_bits & 0x0000000eu) {
-    ::memset(&first_value_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&num_entries_) -
-        reinterpret_cast<char*>(&first_value_)) + sizeof(num_entries_));
+    ::memset(&_impl_.first_value_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.num_entries_) -
+        reinterpret_cast<char*>(&_impl_.first_value_)) + sizeof(_impl_.num_entries_));
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* RiceDeltaEncoding::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* RiceDeltaEncoding::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional int64 first_value = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
           _Internal::set_has_first_value(&has_bits);
-          first_value_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.first_value_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional int32 rice_parameter = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
           _Internal::set_has_rice_parameter(&has_bits);
-          rice_parameter_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.rice_parameter_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional int32 num_entries = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
           _Internal::set_has_num_entries(&has_bits);
-          num_entries_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.num_entries_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional bytes encoded_data = 4;
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           auto str = _internal_mutable_encoded_data();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* RiceDeltaEncoding::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* RiceDeltaEncoding::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.RiceDeltaEncoding)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional int64 first_value = 1;
   if (cached_has_bits & 0x00000002u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(1, this->_internal_first_value(), target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_first_value(), target);
   }
 
   // optional int32 rice_parameter = 2;
   if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_rice_parameter(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_rice_parameter(), target);
   }
 
   // optional int32 num_entries = 3;
   if (cached_has_bits & 0x00000008u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_num_entries(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_num_entries(), target);
   }
 
   // optional bytes encoded_data = 4;
@@ -7148,8 +7523,8 @@ failure:
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.RiceDeltaEncoding)
   return target;
@@ -7159,11 +7534,11 @@ size_t RiceDeltaEncoding::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.RiceDeltaEncoding)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x0000000fu) {
     // optional bytes encoded_data = 4;
     if (cached_has_bits & 0x00000001u) {
@@ -7174,64 +7549,58 @@ size_t RiceDeltaEncoding::ByteSizeLong() const {
 
     // optional int64 first_value = 1;
     if (cached_has_bits & 0x00000002u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
-          this->_internal_first_value());
+      total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_first_value());
     }
 
     // optional int32 rice_parameter = 2;
     if (cached_has_bits & 0x00000004u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-          this->_internal_rice_parameter());
+      total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_rice_parameter());
     }
 
     // optional int32 num_entries = 3;
     if (cached_has_bits & 0x00000008u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-          this->_internal_num_entries());
+      total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_num_entries());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void RiceDeltaEncoding::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const RiceDeltaEncoding*>(
+  MergeFrom(*::_pbi::DownCast<const RiceDeltaEncoding*>(
       &from));
 }
 
 void RiceDeltaEncoding::MergeFrom(const RiceDeltaEncoding& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.RiceDeltaEncoding)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  RiceDeltaEncoding* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.RiceDeltaEncoding)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x0000000fu) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      encoded_data_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.encoded_data_);
+      _this->_internal_set_encoded_data(from._internal_encoded_data());
     }
     if (cached_has_bits & 0x00000002u) {
-      first_value_ = from.first_value_;
+      _this->_impl_.first_value_ = from._impl_.first_value_;
     }
     if (cached_has_bits & 0x00000004u) {
-      rice_parameter_ = from.rice_parameter_;
+      _this->_impl_.rice_parameter_ = from._impl_.rice_parameter_;
     }
     if (cached_has_bits & 0x00000008u) {
-      num_entries_ = from.num_entries_;
+      _this->_impl_.num_entries_ = from._impl_.num_entries_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void RiceDeltaEncoding::CopyFrom(const RiceDeltaEncoding& from) {
@@ -7247,13 +7616,20 @@ bool RiceDeltaEncoding::IsInitialized() const {
 
 void RiceDeltaEncoding::InternalSwap(RiceDeltaEncoding* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  encoded_data_.Swap(&other->encoded_data_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(first_value_, other->first_value_);
-  swap(rice_parameter_, other->rice_parameter_);
-  swap(num_entries_, other->num_entries_);
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.encoded_data_, lhs_arena,
+      &other->_impl_.encoded_data_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(RiceDeltaEncoding, _impl_.num_entries_)
+      + sizeof(RiceDeltaEncoding::_impl_.num_entries_)
+      - PROTOBUF_FIELD_OFFSET(RiceDeltaEncoding, _impl_.first_value_)>(
+          reinterpret_cast<char*>(&_impl_.first_value_),
+          reinterpret_cast<char*>(&other->_impl_.first_value_));
 }
 
 std::string RiceDeltaEncoding::GetTypeName() const {
@@ -7263,11 +7639,9 @@ std::string RiceDeltaEncoding::GetTypeName() const {
 
 // ===================================================================
 
-void ThreatEntryMetadata_MetadataEntry::InitAsDefaultInstance() {
-}
 class ThreatEntryMetadata_MetadataEntry::_Internal {
  public:
-  using HasBits = decltype(std::declval<ThreatEntryMetadata_MetadataEntry>()._has_bits_);
+  using HasBits = decltype(std::declval<ThreatEntryMetadata_MetadataEntry>()._impl_._has_bits_);
   static void set_has_key(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
@@ -7276,123 +7650,155 @@ class ThreatEntryMetadata_MetadataEntry::_Internal {
   }
 };
 
-ThreatEntryMetadata_MetadataEntry::ThreatEntryMetadata_MetadataEntry()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry)
+ThreatEntryMetadata_MetadataEntry::ThreatEntryMetadata_MetadataEntry(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry)
 }
 ThreatEntryMetadata_MetadataEntry::ThreatEntryMetadata_MetadataEntry(const ThreatEntryMetadata_MetadataEntry& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  key_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ThreatEntryMetadata_MetadataEntry* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.key_){}
+    , decltype(_impl_.value_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.key_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.key_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_key()) {
-    key_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.key_);
+    _this->_impl_.key_.Set(from._internal_key(), 
+      _this->GetArenaForAllocation());
   }
-  value_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  _impl_.value_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.value_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (from._internal_has_value()) {
-    value_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.value_);
+    _this->_impl_.value_.Set(from._internal_value(), 
+      _this->GetArenaForAllocation());
   }
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry)
 }
 
-void ThreatEntryMetadata_MetadataEntry::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ThreatEntryMetadata_MetadataEntry_safebrowsing_2eproto.base);
-  key_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  value_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void ThreatEntryMetadata_MetadataEntry::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.key_){}
+    , decltype(_impl_.value_){}
+  };
+  _impl_.key_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.key_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  _impl_.value_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.value_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 ThreatEntryMetadata_MetadataEntry::~ThreatEntryMetadata_MetadataEntry() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ThreatEntryMetadata_MetadataEntry::SharedDtor() {
-  key_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  value_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+inline void ThreatEntryMetadata_MetadataEntry::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.key_.Destroy();
+  _impl_.value_.Destroy();
 }
 
 void ThreatEntryMetadata_MetadataEntry::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ThreatEntryMetadata_MetadataEntry& ThreatEntryMetadata_MetadataEntry::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ThreatEntryMetadata_MetadataEntry_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ThreatEntryMetadata_MetadataEntry::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      key_.ClearNonDefaultToEmptyNoArena();
+      _impl_.key_.ClearNonDefaultToEmpty();
     }
     if (cached_has_bits & 0x00000002u) {
-      value_.ClearNonDefaultToEmptyNoArena();
+      _impl_.value_.ClearNonDefaultToEmpty();
     }
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ThreatEntryMetadata_MetadataEntry::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ThreatEntryMetadata_MetadataEntry::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional bytes key = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_key();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional bytes value = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_value();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ThreatEntryMetadata_MetadataEntry::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ThreatEntryMetadata_MetadataEntry::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional bytes key = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->WriteBytesMaybeAliased(
@@ -7406,8 +7812,8 @@ failure:
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry)
   return target;
@@ -7417,11 +7823,11 @@ size_t ThreatEntryMetadata_MetadataEntry::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     // optional bytes key = 1;
     if (cached_has_bits & 0x00000001u) {
@@ -7439,37 +7845,36 @@ size_t ThreatEntryMetadata_MetadataEntry::ByteSizeLong() const {
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ThreatEntryMetadata_MetadataEntry::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ThreatEntryMetadata_MetadataEntry*>(
+  MergeFrom(*::_pbi::DownCast<const ThreatEntryMetadata_MetadataEntry*>(
       &from));
 }
 
 void ThreatEntryMetadata_MetadataEntry::MergeFrom(const ThreatEntryMetadata_MetadataEntry& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ThreatEntryMetadata_MetadataEntry* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      _has_bits_[0] |= 0x00000001u;
-      key_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.key_);
+      _this->_internal_set_key(from._internal_key());
     }
     if (cached_has_bits & 0x00000002u) {
-      _has_bits_[0] |= 0x00000002u;
-      value_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.value_);
+      _this->_internal_set_value(from._internal_value());
     }
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ThreatEntryMetadata_MetadataEntry::CopyFrom(const ThreatEntryMetadata_MetadataEntry& from) {
@@ -7485,12 +7890,18 @@ bool ThreatEntryMetadata_MetadataEntry::IsInitialized() const {
 
 void ThreatEntryMetadata_MetadataEntry::InternalSwap(ThreatEntryMetadata_MetadataEntry* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  key_.Swap(&other->key_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  value_.Swap(&other->value_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.key_, lhs_arena,
+      &other->_impl_.key_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.value_, lhs_arena,
+      &other->_impl_.value_, rhs_arena
+  );
 }
 
 std::string ThreatEntryMetadata_MetadataEntry::GetTypeName() const {
@@ -7500,69 +7911,74 @@ std::string ThreatEntryMetadata_MetadataEntry::GetTypeName() const {
 
 // ===================================================================
 
-void ThreatEntryMetadata::InitAsDefaultInstance() {
-}
 class ThreatEntryMetadata::_Internal {
  public:
-  using HasBits = decltype(std::declval<ThreatEntryMetadata>()._has_bits_);
 };
 
-ThreatEntryMetadata::ThreatEntryMetadata()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ThreatEntryMetadata)
+ThreatEntryMetadata::ThreatEntryMetadata(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ThreatEntryMetadata)
 }
 ThreatEntryMetadata::ThreatEntryMetadata(const ThreatEntryMetadata& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      entries_(from.entries_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ThreatEntryMetadata* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.entries_){from._impl_.entries_}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ThreatEntryMetadata)
 }
 
-void ThreatEntryMetadata::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ThreatEntryMetadata_safebrowsing_2eproto.base);
+inline void ThreatEntryMetadata::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.entries_){arena}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
 }
 
 ThreatEntryMetadata::~ThreatEntryMetadata() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ThreatEntryMetadata)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ThreatEntryMetadata::SharedDtor() {
+inline void ThreatEntryMetadata::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.entries_.~RepeatedPtrField();
 }
 
 void ThreatEntryMetadata::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ThreatEntryMetadata& ThreatEntryMetadata::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ThreatEntryMetadata_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ThreatEntryMetadata::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ThreatEntryMetadata)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  entries_.Clear();
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_.entries_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ThreatEntryMetadata::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ThreatEntryMetadata::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // repeated .mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry entries = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -7570,45 +7986,49 @@ const char* ThreatEntryMetadata::_InternalParse(const char* ptr, ::PROTOBUF_NAME
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ThreatEntryMetadata::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ThreatEntryMetadata::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ThreatEntryMetadata)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry entries = 1;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_entries_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_entries_size()); i < n; i++) {
+    const auto& repfield = this->_internal_entries(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(1, this->_internal_entries(i), target, stream);
+        InternalWriteMessage(1, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ThreatEntryMetadata)
   return target;
@@ -7618,39 +8038,40 @@ size_t ThreatEntryMetadata::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ThreatEntryMetadata)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.ThreatEntryMetadata.MetadataEntry entries = 1;
   total_size += 1UL * this->_internal_entries_size();
-  for (const auto& msg : this->entries_) {
+  for (const auto& msg : this->_impl_.entries_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ThreatEntryMetadata::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ThreatEntryMetadata*>(
+  MergeFrom(*::_pbi::DownCast<const ThreatEntryMetadata*>(
       &from));
 }
 
 void ThreatEntryMetadata::MergeFrom(const ThreatEntryMetadata& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatEntryMetadata)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ThreatEntryMetadata* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatEntryMetadata)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  entries_.MergeFrom(from.entries_);
+  _this->_impl_.entries_.MergeFrom(from._impl_.entries_);
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ThreatEntryMetadata::CopyFrom(const ThreatEntryMetadata& from) {
@@ -7666,9 +8087,8 @@ bool ThreatEntryMetadata::IsInitialized() const {
 
 void ThreatEntryMetadata::InternalSwap(ThreatEntryMetadata* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  entries_.InternalSwap(&other->entries_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.entries_.InternalSwap(&other->_impl_.entries_);
 }
 
 std::string ThreatEntryMetadata::GetTypeName() const {
@@ -7678,11 +8098,9 @@ std::string ThreatEntryMetadata::GetTypeName() const {
 
 // ===================================================================
 
-void ThreatListDescriptor::InitAsDefaultInstance() {
-}
 class ThreatListDescriptor::_Internal {
  public:
-  using HasBits = decltype(std::declval<ThreatListDescriptor>()._has_bits_);
+  using HasBits = decltype(std::declval<ThreatListDescriptor>()._impl_._has_bits_);
   static void set_has_threat_type(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
@@ -7694,157 +8112,176 @@ class ThreatListDescriptor::_Internal {
   }
 };
 
-ThreatListDescriptor::ThreatListDescriptor()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ThreatListDescriptor)
+ThreatListDescriptor::ThreatListDescriptor(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ThreatListDescriptor)
 }
 ThreatListDescriptor::ThreatListDescriptor(const ThreatListDescriptor& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::memcpy(&threat_type_, &from.threat_type_,
-    static_cast<size_t>(reinterpret_cast<char*>(&threat_entry_type_) -
-    reinterpret_cast<char*>(&threat_type_)) + sizeof(threat_entry_type_));
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ThreatListDescriptor* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.threat_type_){}
+    , decltype(_impl_.platform_type_){}
+    , decltype(_impl_.threat_entry_type_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.threat_type_, &from._impl_.threat_type_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.threat_entry_type_) -
+    reinterpret_cast<char*>(&_impl_.threat_type_)) + sizeof(_impl_.threat_entry_type_));
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ThreatListDescriptor)
 }
 
-void ThreatListDescriptor::SharedCtor() {
-  ::memset(&threat_type_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&threat_entry_type_) -
-      reinterpret_cast<char*>(&threat_type_)) + sizeof(threat_entry_type_));
+inline void ThreatListDescriptor::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.threat_type_){0}
+    , decltype(_impl_.platform_type_){0}
+    , decltype(_impl_.threat_entry_type_){0}
+  };
 }
 
 ThreatListDescriptor::~ThreatListDescriptor() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ThreatListDescriptor)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ThreatListDescriptor::SharedDtor() {
+inline void ThreatListDescriptor::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
 }
 
 void ThreatListDescriptor::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ThreatListDescriptor& ThreatListDescriptor::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ThreatListDescriptor_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ThreatListDescriptor::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ThreatListDescriptor)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
-    ::memset(&threat_type_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&threat_entry_type_) -
-        reinterpret_cast<char*>(&threat_type_)) + sizeof(threat_entry_type_));
+    ::memset(&_impl_.threat_type_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.threat_entry_type_) -
+        reinterpret_cast<char*>(&_impl_.threat_type_)) + sizeof(_impl_.threat_entry_type_));
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ThreatListDescriptor::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ThreatListDescriptor::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatType_IsValid(val))) {
             _internal_set_threat_type(static_cast<::mozilla::safebrowsing::ThreatType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(1, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::PlatformType_IsValid(val))) {
             _internal_set_platform_type(static_cast<::mozilla::safebrowsing::PlatformType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(2, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
-          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
           if (PROTOBUF_PREDICT_TRUE(::mozilla::safebrowsing::ThreatEntryType_IsValid(val))) {
             _internal_set_threat_entry_type(static_cast<::mozilla::safebrowsing::ThreatEntryType>(val));
           } else {
             ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(3, val, mutable_unknown_fields());
           }
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ThreatListDescriptor::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ThreatListDescriptor::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ThreatListDescriptor)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       1, this->_internal_threat_type(), target);
   }
 
   // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
   if (cached_has_bits & 0x00000002u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       2, this->_internal_platform_type(), target);
   }
 
   // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 3;
   if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+    target = ::_pbi::WireFormatLite::WriteEnumToArray(
       3, this->_internal_threat_entry_type(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ThreatListDescriptor)
   return target;
@@ -7854,65 +8291,66 @@ size_t ThreatListDescriptor::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ThreatListDescriptor)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     // optional .mozilla.safebrowsing.ThreatType threat_type = 1;
     if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_threat_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_threat_type());
     }
 
     // optional .mozilla.safebrowsing.PlatformType platform_type = 2;
     if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_platform_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_platform_type());
     }
 
     // optional .mozilla.safebrowsing.ThreatEntryType threat_entry_type = 3;
     if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_threat_entry_type());
+        ::_pbi::WireFormatLite::EnumSize(this->_internal_threat_entry_type());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ThreatListDescriptor::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ThreatListDescriptor*>(
+  MergeFrom(*::_pbi::DownCast<const ThreatListDescriptor*>(
       &from));
 }
 
 void ThreatListDescriptor::MergeFrom(const ThreatListDescriptor& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatListDescriptor)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ThreatListDescriptor* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ThreatListDescriptor)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000007u) {
     if (cached_has_bits & 0x00000001u) {
-      threat_type_ = from.threat_type_;
+      _this->_impl_.threat_type_ = from._impl_.threat_type_;
     }
     if (cached_has_bits & 0x00000002u) {
-      platform_type_ = from.platform_type_;
+      _this->_impl_.platform_type_ = from._impl_.platform_type_;
     }
     if (cached_has_bits & 0x00000004u) {
-      threat_entry_type_ = from.threat_entry_type_;
+      _this->_impl_.threat_entry_type_ = from._impl_.threat_entry_type_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ThreatListDescriptor::CopyFrom(const ThreatListDescriptor& from) {
@@ -7928,11 +8366,14 @@ bool ThreatListDescriptor::IsInitialized() const {
 
 void ThreatListDescriptor::InternalSwap(ThreatListDescriptor* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(threat_type_, other->threat_type_);
-  swap(platform_type_, other->platform_type_);
-  swap(threat_entry_type_, other->threat_entry_type_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(ThreatListDescriptor, _impl_.threat_entry_type_)
+      + sizeof(ThreatListDescriptor::_impl_.threat_entry_type_)
+      - PROTOBUF_FIELD_OFFSET(ThreatListDescriptor, _impl_.threat_type_)>(
+          reinterpret_cast<char*>(&_impl_.threat_type_),
+          reinterpret_cast<char*>(&other->_impl_.threat_type_));
 }
 
 std::string ThreatListDescriptor::GetTypeName() const {
@@ -7942,69 +8383,74 @@ std::string ThreatListDescriptor::GetTypeName() const {
 
 // ===================================================================
 
-void ListThreatListsResponse::InitAsDefaultInstance() {
-}
 class ListThreatListsResponse::_Internal {
  public:
-  using HasBits = decltype(std::declval<ListThreatListsResponse>()._has_bits_);
 };
 
-ListThreatListsResponse::ListThreatListsResponse()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ListThreatListsResponse)
+ListThreatListsResponse::ListThreatListsResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.ListThreatListsResponse)
 }
 ListThreatListsResponse::ListThreatListsResponse(const ListThreatListsResponse& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_),
-      threat_lists_(from.threat_lists_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ListThreatListsResponse* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.threat_lists_){from._impl_.threat_lists_}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ListThreatListsResponse)
 }
 
-void ListThreatListsResponse::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ListThreatListsResponse_safebrowsing_2eproto.base);
+inline void ListThreatListsResponse::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.threat_lists_){arena}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
 }
 
 ListThreatListsResponse::~ListThreatListsResponse() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ListThreatListsResponse)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void ListThreatListsResponse::SharedDtor() {
+inline void ListThreatListsResponse::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.threat_lists_.~RepeatedPtrField();
 }
 
 void ListThreatListsResponse::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const ListThreatListsResponse& ListThreatListsResponse::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ListThreatListsResponse_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void ListThreatListsResponse::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.ListThreatListsResponse)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  threat_lists_.Clear();
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_.threat_lists_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* ListThreatListsResponse::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ListThreatListsResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // repeated .mozilla.safebrowsing.ThreatListDescriptor threat_lists = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr -= 1;
           do {
             ptr += 1;
@@ -8012,45 +8458,49 @@ const char* ListThreatListsResponse::_InternalParse(const char* ptr, ::PROTOBUF_
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
+message_done:
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* ListThreatListsResponse::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* ListThreatListsResponse::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.ListThreatListsResponse)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.ThreatListDescriptor threat_lists = 1;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_threat_lists_size()); i < n; i++) {
-    target = stream->EnsureSpace(target);
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_threat_lists_size()); i < n; i++) {
+    const auto& repfield = this->_internal_threat_lists(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(1, this->_internal_threat_lists(i), target, stream);
+        InternalWriteMessage(1, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.ListThreatListsResponse)
   return target;
@@ -8060,39 +8510,40 @@ size_t ListThreatListsResponse::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.ListThreatListsResponse)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // repeated .mozilla.safebrowsing.ThreatListDescriptor threat_lists = 1;
   total_size += 1UL * this->_internal_threat_lists_size();
-  for (const auto& msg : this->threat_lists_) {
+  for (const auto& msg : this->_impl_.threat_lists_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void ListThreatListsResponse::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const ListThreatListsResponse*>(
+  MergeFrom(*::_pbi::DownCast<const ListThreatListsResponse*>(
       &from));
 }
 
 void ListThreatListsResponse::MergeFrom(const ListThreatListsResponse& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ListThreatListsResponse)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  ListThreatListsResponse* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.ListThreatListsResponse)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  threat_lists_.MergeFrom(from.threat_lists_);
+  _this->_impl_.threat_lists_.MergeFrom(from._impl_.threat_lists_);
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void ListThreatListsResponse::CopyFrom(const ListThreatListsResponse& from) {
@@ -8108,9 +8559,8 @@ bool ListThreatListsResponse::IsInitialized() const {
 
 void ListThreatListsResponse::InternalSwap(ListThreatListsResponse* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  threat_lists_.InternalSwap(&other->threat_lists_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.threat_lists_.InternalSwap(&other->_impl_.threat_lists_);
 }
 
 std::string ListThreatListsResponse::GetTypeName() const {
@@ -8120,11 +8570,9 @@ std::string ListThreatListsResponse::GetTypeName() const {
 
 // ===================================================================
 
-void Duration::InitAsDefaultInstance() {
-}
 class Duration::_Internal {
  public:
-  using HasBits = decltype(std::declval<Duration>()._has_bits_);
+  using HasBits = decltype(std::declval<Duration>()._impl_._has_bits_);
   static void set_has_seconds(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
@@ -8133,128 +8581,144 @@ class Duration::_Internal {
   }
 };
 
-Duration::Duration()
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.Duration)
+Duration::Duration(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:mozilla.safebrowsing.Duration)
 }
 Duration::Duration(const Duration& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(),
-      _internal_metadata_(nullptr),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::memcpy(&seconds_, &from.seconds_,
-    static_cast<size_t>(reinterpret_cast<char*>(&nanos_) -
-    reinterpret_cast<char*>(&seconds_)) + sizeof(nanos_));
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  Duration* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.seconds_){}
+    , decltype(_impl_.nanos_){}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.seconds_, &from._impl_.seconds_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.nanos_) -
+    reinterpret_cast<char*>(&_impl_.seconds_)) + sizeof(_impl_.nanos_));
   // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.Duration)
 }
 
-void Duration::SharedCtor() {
-  ::memset(&seconds_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&nanos_) -
-      reinterpret_cast<char*>(&seconds_)) + sizeof(nanos_));
+inline void Duration::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.seconds_){int64_t{0}}
+    , decltype(_impl_.nanos_){0}
+  };
 }
 
 Duration::~Duration() {
   // @@protoc_insertion_point(destructor:mozilla.safebrowsing.Duration)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
   SharedDtor();
 }
 
-void Duration::SharedDtor() {
+inline void Duration::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
 }
 
 void Duration::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
+  _impl_._cached_size_.Set(size);
 }
-const Duration& Duration::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Duration_safebrowsing_2eproto.base);
-  return *internal_default_instance();
-}
-
 
 void Duration::Clear() {
 // @@protoc_insertion_point(message_clear_start:mozilla.safebrowsing.Duration)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
-    ::memset(&seconds_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&nanos_) -
-        reinterpret_cast<char*>(&seconds_)) + sizeof(nanos_));
+    ::memset(&_impl_.seconds_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&_impl_.nanos_) -
+        reinterpret_cast<char*>(&_impl_.seconds_)) + sizeof(_impl_.nanos_));
   }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<std::string>();
 }
 
-const char* Duration::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* Duration::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // optional int64 seconds = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
           _Internal::set_has_seconds(&has_bits);
-          seconds_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.seconds_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
       // optional int32 nanos = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
           _Internal::set_has_nanos(&has_bits);
-          nanos_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          _impl_.nanos_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
-        } else goto handle_unusual;
+        } else
+          goto handle_unusual;
         continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
+      default:
+        goto handle_unusual;
     }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
   }  // while
-success:
-  _has_bits_.Or(has_bits);
+message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
-  goto success;
+  goto message_done;
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Duration::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+uint8_t* Duration::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:mozilla.safebrowsing.Duration)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   // optional int64 seconds = 1;
   if (cached_has_bits & 0x00000001u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(1, this->_internal_seconds(), target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_seconds(), target);
   }
 
   // optional int32 nanos = 2;
   if (cached_has_bits & 0x00000002u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_nanos(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_nanos(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields().data(),
-        static_cast<int>(_internal_metadata_.unknown_fields().size()), target);
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:mozilla.safebrowsing.Duration)
   return target;
@@ -8264,58 +8728,55 @@ size_t Duration::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.safebrowsing.Duration)
   size_t total_size = 0;
 
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _has_bits_[0];
+  cached_has_bits = _impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     // optional int64 seconds = 1;
     if (cached_has_bits & 0x00000001u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
-          this->_internal_seconds());
+      total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_seconds());
     }
 
     // optional int32 nanos = 2;
     if (cached_has_bits & 0x00000002u) {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
-          this->_internal_nanos());
+      total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_nanos());
     }
 
   }
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields().size();
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  int cached_size = ::_pbi::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
 void Duration::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::PROTOBUF_NAMESPACE_ID::internal::DownCast<const Duration*>(
+  MergeFrom(*::_pbi::DownCast<const Duration*>(
       &from));
 }
 
 void Duration::MergeFrom(const Duration& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.Duration)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  Duration* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:mozilla.safebrowsing.Duration)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._has_bits_[0];
+  cached_has_bits = from._impl_._has_bits_[0];
   if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      seconds_ = from.seconds_;
+      _this->_impl_.seconds_ = from._impl_.seconds_;
     }
     if (cached_has_bits & 0x00000002u) {
-      nanos_ = from.nanos_;
+      _this->_impl_.nanos_ = from._impl_.nanos_;
     }
-    _has_bits_[0] |= cached_has_bits;
+    _this->_impl_._has_bits_[0] |= cached_has_bits;
   }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
 void Duration::CopyFrom(const Duration& from) {
@@ -8331,10 +8792,14 @@ bool Duration::IsInitialized() const {
 
 void Duration::InternalSwap(Duration* other) {
   using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  swap(seconds_, other->seconds_);
-  swap(nanos_, other->nanos_);
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(Duration, _impl_.nanos_)
+      + sizeof(Duration::_impl_.nanos_)
+      - PROTOBUF_FIELD_OFFSET(Duration, _impl_.seconds_)>(
+          reinterpret_cast<char*>(&_impl_.seconds_),
+          reinterpret_cast<char*>(&other->_impl_.seconds_));
 }
 
 std::string Duration::GetTypeName() const {
@@ -8346,86 +8811,113 @@ std::string Duration::GetTypeName() const {
 }  // namespace safebrowsing
 }  // namespace mozilla
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatInfo* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatInfo >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ThreatInfo >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatInfo*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ThreatInfo >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatMatch* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatMatch >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ThreatMatch >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatMatch*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatMatch >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ThreatMatch >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FindThreatMatchesRequest* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FindThreatMatchesRequest >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::FindThreatMatchesRequest >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FindThreatMatchesRequest*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FindThreatMatchesRequest >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::FindThreatMatchesRequest >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FindThreatMatchesResponse* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FindThreatMatchesResponse >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::FindThreatMatchesResponse >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FindThreatMatchesResponse*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FindThreatMatchesResponse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::FindThreatMatchesResponse >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest_ListUpdateRequest >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FetchThreatListUpdatesRequest* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FetchThreatListUpdatesRequest*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::FetchThreatListUpdatesRequest >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FetchThreatListUpdatesResponse_ListUpdateResponse* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FetchThreatListUpdatesResponse_ListUpdateResponse >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::FetchThreatListUpdatesResponse_ListUpdateResponse >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FetchThreatListUpdatesResponse_ListUpdateResponse*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FetchThreatListUpdatesResponse_ListUpdateResponse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::FetchThreatListUpdatesResponse_ListUpdateResponse >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FetchThreatListUpdatesResponse* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FetchThreatListUpdatesResponse >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::FetchThreatListUpdatesResponse >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FetchThreatListUpdatesResponse*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FetchThreatListUpdatesResponse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::FetchThreatListUpdatesResponse >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FindFullHashesRequest* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FindFullHashesRequest >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::FindFullHashesRequest >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FindFullHashesRequest*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FindFullHashesRequest >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::FindFullHashesRequest >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FindFullHashesResponse* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FindFullHashesResponse >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::FindFullHashesResponse >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::FindFullHashesResponse*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::FindFullHashesResponse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::FindFullHashesResponse >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatHit_ThreatSource* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatHit_ThreatSource >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ThreatHit_ThreatSource >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatHit_ThreatSource*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatHit_ThreatSource >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ThreatHit_ThreatSource >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatHit_UserInfo* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatHit_UserInfo >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ThreatHit_UserInfo >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatHit_UserInfo*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatHit_UserInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ThreatHit_UserInfo >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatHit* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatHit >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ThreatHit >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatHit*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatHit >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ThreatHit >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ClientInfo* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ClientInfo >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ClientInfo >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ClientInfo*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ClientInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ClientInfo >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ChromeClientInfo* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ChromeClientInfo >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ChromeClientInfo >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ChromeClientInfo*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ChromeClientInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ChromeClientInfo >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::Checksum* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::Checksum >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::Checksum >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::Checksum*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::Checksum >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::Checksum >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatEntry* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatEntry >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ThreatEntry >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatEntry*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatEntry >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ThreatEntry >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatEntrySet* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatEntrySet >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ThreatEntrySet >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatEntrySet*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatEntrySet >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ThreatEntrySet >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::RawIndices* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::RawIndices >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::RawIndices >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::RawIndices*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::RawIndices >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::RawIndices >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::RawHashes* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::RawHashes >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::RawHashes >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::RawHashes*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::RawHashes >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::RawHashes >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::RiceDeltaEncoding* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::RiceDeltaEncoding >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::RiceDeltaEncoding >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::RiceDeltaEncoding*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::RiceDeltaEncoding >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::RiceDeltaEncoding >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatEntryMetadata_MetadataEntry* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatEntryMetadata_MetadataEntry >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ThreatEntryMetadata_MetadataEntry >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatEntryMetadata_MetadataEntry*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatEntryMetadata_MetadataEntry >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ThreatEntryMetadata_MetadataEntry >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatEntryMetadata* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatEntryMetadata >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ThreatEntryMetadata >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatEntryMetadata*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatEntryMetadata >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ThreatEntryMetadata >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatListDescriptor* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatListDescriptor >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ThreatListDescriptor >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ThreatListDescriptor*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ThreatListDescriptor >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ThreatListDescriptor >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ListThreatListsResponse* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ListThreatListsResponse >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::ListThreatListsResponse >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::ListThreatListsResponse*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::ListThreatListsResponse >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::ListThreatListsResponse >(arena);
 }
-template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::Duration* Arena::CreateMaybeMessage< ::mozilla::safebrowsing::Duration >(Arena* arena) {
-  return Arena::CreateInternal< ::mozilla::safebrowsing::Duration >(arena);
+template<> PROTOBUF_NOINLINE ::mozilla::safebrowsing::Duration*
+Arena::CreateMaybeMessage< ::mozilla::safebrowsing::Duration >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::mozilla::safebrowsing::Duration >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

@@ -55,10 +55,6 @@ module.exports = {
         "mozilla/reject-global-this": "error",
         "mozilla/reject-globalThis-modification": "error",
         "mozilla/reject-top-level-await": "error",
-        // Bug 1703953: We don't have a good way to check a file runs in a
-        // privilieged context. Apply this for these files as we know those are
-        // privilieged, and then include more directories elsewhere.
-        "mozilla/use-isInstance": "error",
         // TODO: Bug 1575506 turn `builtinGlobals` on here.
         // We can enable builtinGlobals for jsms due to their scopes.
         "no-redeclare": ["error", { builtinGlobals: false }],
@@ -178,6 +174,7 @@ module.exports = {
     "mozilla/use-chromeutils-import": "error",
     "mozilla/use-default-preference-values": "error",
     "mozilla/use-includes-instead-of-indexOf": "error",
+    "mozilla/use-isInstance": "error",
     "mozilla/use-ownerGlobal": "error",
     "mozilla/use-returnValue": "error",
     "mozilla/use-services": "error",

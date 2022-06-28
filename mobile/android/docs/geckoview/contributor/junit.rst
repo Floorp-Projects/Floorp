@@ -1,8 +1,8 @@
 .. -*- Mode: rst; fill-column: 80; -*-
 
-==============================
-GeckoView junit Test Framework
-==============================
+====================
+Junit Test Framework
+====================
 
 GeckoView has `a lot
 <https://searchfox.org/mozilla-central/rev/36904ac58d2528fc59f640db57cc9429103368d3/mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/rule/GeckoSessionTestRule.java>`_

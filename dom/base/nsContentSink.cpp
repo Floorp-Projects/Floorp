@@ -327,6 +327,14 @@ nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader) {
                   aHeader.mIntegrity, aHeader.mSrcset, aHeader.mSizes,
                   aHeader.mCrossOrigin, aHeader.mReferrerPolicy);
     }
+
+    if (linkTypes & LinkStyle::eMODULE_PRELOAD) {
+      // https://wicg.github.io/import-maps/#wait-for-import-maps
+      // Step 1.2: Set document’s acquiring import maps to false.
+      // When fetch a modulepreload module script graph.
+      mDocument->ScriptLoader()->GetModuleLoader()->SetAcquiringImportMaps(
+          false);
+    }
   }
 
   // is it a stylesheet link?

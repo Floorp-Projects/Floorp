@@ -379,7 +379,7 @@
         info("== Test createRequest()");
         ok(DOMRequest, "DOMRequest object exists");
         var req = dummy.createRequest();
-        ok(req instanceof DOMRequest, "Returned a DOMRequest");
+        ok(DOMRequest.isInstance(req), "Returned a DOMRequest");
         next();
       },
       function() {

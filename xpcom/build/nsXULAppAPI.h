@@ -446,6 +446,7 @@ bool XRE_SendTestShellCommand(JSContext* aCx, JSString* aCommand,
 bool XRE_ShutdownTestShell();
 
 void XRE_InstallX11ErrorHandler();
+void XRE_CleanupX11ErrorHandler();
 
 void XRE_TelemetryAccumulate(int aID, uint32_t aSample);
 

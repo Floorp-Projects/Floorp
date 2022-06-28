@@ -1619,7 +1619,7 @@ var PlacesControllerDragHelper = {
       if (flavor != TAB_DROP_TYPE) {
         nodes = [...nodes, ...PlacesUtils.unwrapNodes(data, flavor)];
       } else if (
-        data instanceof XULElement &&
+        XULElement.isInstance(data) &&
         data.localName == "tab" &&
         data.ownerGlobal.isChromeWindow
       ) {

@@ -321,7 +321,7 @@
         }
       } else {
         if (
-          (aEvent instanceof KeyboardEvent &&
+          (KeyboardEvent.isInstance(aEvent) &&
             (aEvent.altKey || aEvent.getModifierState("AltGraph"))) ^
             newTabPref &&
           !gBrowser.selectedTab.isEmpty
@@ -329,7 +329,7 @@
           where = "tab";
         }
         if (
-          aEvent instanceof MouseEvent &&
+          MouseEvent.isInstance(aEvent) &&
           (aEvent.button == 1 || aEvent.getModifierState("Accel"))
         ) {
           where = "tab";
