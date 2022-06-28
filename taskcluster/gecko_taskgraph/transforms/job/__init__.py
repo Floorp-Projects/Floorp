@@ -15,6 +15,7 @@ import logging
 import json
 
 import mozpack.path as mozpath
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.python_path import import_sibling_modules
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.schema import Schema, validate_schema
@@ -25,7 +26,6 @@ from voluptuous import (
     Exclusive,
 )
 
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.cached_tasks import order_tasks
 from gecko_taskgraph.util.workertypes import worker_type_implementation
 from gecko_taskgraph.transforms.task import task_description_schema

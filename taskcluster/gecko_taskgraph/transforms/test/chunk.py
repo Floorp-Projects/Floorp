@@ -4,10 +4,10 @@
 import copy
 
 import taskgraph
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import keymatch
 from taskgraph.util.treeherder import join_symbol, split_symbol
 
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.attributes import is_try
 from gecko_taskgraph.util.chunking import (
     DefaultLoader,

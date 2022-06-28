@@ -5,8 +5,7 @@
 Add indexes to repackage kinds
 """
 
-
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 

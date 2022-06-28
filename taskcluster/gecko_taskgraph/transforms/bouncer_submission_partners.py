@@ -8,9 +8,9 @@ Add from parameters.yml into bouncer submission tasks.
 
 import logging
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.bouncer_submission import (
     FTP_PLATFORMS_PER_BOUNCER_PLATFORM,
     CONFIG_PER_BOUNCER_PRODUCT as CONFIG_PER_BOUNCER_PRODUCT_VANILLA,

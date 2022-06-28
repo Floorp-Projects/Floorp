@@ -8,9 +8,8 @@ Build a command to run `mach l10n-cross-channel`.
 
 from pipes import quote as shell_quote
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
-
-from gecko_taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 

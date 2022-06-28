@@ -4,6 +4,7 @@
 import copy
 
 import jsone
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import Schema, validate_schema
 from taskgraph.util.treeherder import join_symbol, split_symbol
 from taskgraph.util.yaml import load_yaml
@@ -14,7 +15,6 @@ from voluptuous import (
 )
 
 import gecko_taskgraph
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.templates import merge
 
 transforms = TransformSequence()

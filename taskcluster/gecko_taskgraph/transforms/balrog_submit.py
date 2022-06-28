@@ -5,12 +5,12 @@
 Transform the per-locale balrog task into an actual task description.
 """
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.treeherder import replace_group
 from voluptuous import Optional
 
 from gecko_taskgraph.loader.single_dep import schema
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 

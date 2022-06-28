@@ -6,8 +6,7 @@ Generate labels for tasks without names, consistently.
 Uses attributes from `primary-dependency`.
 """
 
-
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
 
 
 transforms = TransformSequence()

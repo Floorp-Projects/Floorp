@@ -5,6 +5,7 @@
 
 from copy import deepcopy
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
 from taskgraph.util.treeherder import join_symbol, split_symbol
 from voluptuous import (
@@ -13,7 +14,6 @@ from voluptuous import (
     Extra,
 )
 
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.test import test_description_schema
 
 transforms = TransformSequence()

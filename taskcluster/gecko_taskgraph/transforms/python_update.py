@@ -5,9 +5,8 @@
 Transform the repo-update task into an actual task description.
 """
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
-
-from gecko_taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 

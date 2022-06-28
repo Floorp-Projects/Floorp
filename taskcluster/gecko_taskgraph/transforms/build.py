@@ -8,10 +8,10 @@ kind.
 import logging
 
 from mozbuild.artifact_builds import JOB_CHOICES as ARTIFACT_JOBS
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.treeherder import add_suffix
 
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.attributes import RELEASE_PROJECTS, is_try, release_level
 from gecko_taskgraph.util.workertypes import worker_type_implementation
 
