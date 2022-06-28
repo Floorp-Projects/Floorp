@@ -185,6 +185,11 @@ mochitest-browser-chrome:
     suite:
         name: mochitest-browser-chrome
     treeherder-symbol: M(bc)
+    worker-type:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: t-linux-xlarge-gcp  # runs out of memory on large
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-browser-chrome
     loopback-video: true
     variants:
