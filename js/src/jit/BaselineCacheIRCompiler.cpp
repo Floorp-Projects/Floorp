@@ -2363,7 +2363,7 @@ void BaselineCacheIRCompiler::pushStandardArguments(Register argcReg,
 
   // argPtr initially points to the last argument. Skip the stub frame.
   Register argPtr = scratch2;
-  Address argAddress(masm.getStackPointer(), StubFrameSize);
+  Address argAddress(FramePointer, BaselineStubFrameLayout::Size());
   masm.computeEffectiveAddress(argAddress, argPtr);
 
   // Align the stack such that the JitFrameLayout is aligned on the
@@ -2392,9 +2392,9 @@ void BaselineCacheIRCompiler::pushArrayArguments(Register argcReg,
                                                  bool isConstructing) {
   // Pull the array off the stack before aligning.
   Register startReg = scratch;
-  masm.unboxObject(Address(masm.getStackPointer(),
-                           (isConstructing * sizeof(Value)) + StubFrameSize),
-                   startReg);
+  size_t arrayOffset =
+      (isConstructing * sizeof(Value)) + BaselineStubFrameLayout::Size();
+  masm.unboxObject(Address(FramePointer, arrayOffset), startReg);
   masm.loadPtr(Address(startReg, NativeObject::offsetOfElements()), startReg);
 
   // Align the stack such that the JitFrameLayout is aligned on the
@@ -2505,7 +2505,8 @@ void BaselineCacheIRCompiler::pushFunApplyArgsObj(Register argcReg,
                                                   bool isJitCall) {
   // Load the arguments object off the stack before aligning.
   Register argsReg = scratch;
-  masm.unboxObject(Address(masm.getStackPointer(), StubFrameSize), argsReg);
+  masm.unboxObject(Address(FramePointer, BaselineStubFrameLayout::Size()),
+                   argsReg);
 
   // Align the stack such that the JitFrameLayout is aligned on the
   // JitStackAlignment.
@@ -2746,16 +2747,17 @@ void BaselineCacheIRCompiler::storeThis(const T& newThis, Register argcReg,
                                         CallFlags flags) {
   switch (flags.getArgFormat()) {
     case CallFlags::Standard: {
-      BaseValueIndex thisAddress(masm.getStackPointer(),
-                                 argcReg,             // Arguments
-                                 1 * sizeof(Value) +  // NewTarget
-                                     StubFrameSize);  // Stub frame
+      BaseValueIndex thisAddress(
+          FramePointer,
+          argcReg,                               // Arguments
+          1 * sizeof(Value) +                    // NewTarget
+              BaselineStubFrameLayout::Size());  // Stub frame
       masm.storeValue(newThis, thisAddress);
     } break;
     case CallFlags::Spread: {
-      Address thisAddress(masm.getStackPointer(),
+      Address thisAddress(FramePointer,
                           2 * sizeof(Value) +  // Arg array, NewTarget
-                              StubFrameSize);  // Stub frame
+                              BaselineStubFrameLayout::Size());  // Stub frame
       masm.storeValue(newThis, thisAddress);
     } break;
     default:

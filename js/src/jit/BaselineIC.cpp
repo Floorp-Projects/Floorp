@@ -1657,11 +1657,11 @@ void FallbackICCodeCompiler::pushCallArguments(
 
   // argPtr initially points to the last argument.
   Register argPtr = regs.takeAny();
-  masm.moveStackPtrTo(argPtr);
+  masm.mov(FramePointer, argPtr);
 
-  // Skip 4 pointers pushed on top of the arguments: the frame descriptor,
-  // return address, old frame pointer and stub reg.
-  size_t valueOffset = StubFrameSize;
+  // Skip 3 pointers pushed on top of the arguments: the frame descriptor,
+  // return address, and old frame pointer.
+  size_t valueOffset = BaselineStubFrameLayout::Size();
 
   // We have to push |this|, callee, new.target (if constructing) and argc
   // arguments. Handle the number of Values we know statically first.
