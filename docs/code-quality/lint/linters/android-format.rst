@@ -5,7 +5,7 @@ Spotless
 for Gradle and Android.
 
 In our current configuration, Spotless includes the
-`Google Java Format plug-in https://github.com/google/google-java-format`__
+`Google Java Format plug-in <https://github.com/google/google-java-format>`__
 which formats all our Java code using the Google Java coding style guidelines.
 
 
