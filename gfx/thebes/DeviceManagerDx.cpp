@@ -892,14 +892,11 @@ RefPtr<ID3D11Device> DeviceManagerDx::CreateDecoderDevice(
   }
 
   bool reuseDevice = false;
-  if (StaticPrefs::gfx_direct3d11_reuse_decoder_device() < 0) {
-    // Use the default logic, which is to allow reuse of devices on AMD, but
-    // create separate devices everywhere else.
-    if (isAMD) {
-      reuseDevice = true;
-    }
-  } else if (StaticPrefs::gfx_direct3d11_reuse_decoder_device() > 0) {
+  if (gfxVars::ReuseDecoderDevice()) {
     reuseDevice = true;
+  } else if (isAMD) {
+    reuseDevice = true;
+    gfxCriticalNoteOnce << "Always have to reuse decoder device on AMD";
   }
 
   if (reuseDevice) {
