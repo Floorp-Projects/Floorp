@@ -1,1 +1,2 @@
-This directory contains configuration files for infra services.
+This folder contains libyuv project-wide configurations
+for chrome-infra services.
