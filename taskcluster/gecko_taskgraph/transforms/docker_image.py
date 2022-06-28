@@ -10,6 +10,7 @@ import json
 
 import mozpack.path as mozpath
 import taskgraph
+from taskgraph.util.schema import Schema
 
 from gecko_taskgraph.transforms.base import TransformSequence
 from .. import GECKO
@@ -18,7 +19,6 @@ from gecko_taskgraph.util.docker import (
     generate_context_hash,
     image_path,
 )
-from gecko_taskgraph.util.schema import Schema
 from voluptuous import (
     Optional,
     Required,

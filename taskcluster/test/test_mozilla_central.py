@@ -38,7 +38,7 @@ def test_tasks_are_scheduled(optimized_task_graph, filter_tasks, func, min_expec
 def test_test_setting(full_task_graph, filter_tasks):
     """Verify that all test tasks' ``test-setting`` object conforms to the schema."""
     from gecko_taskgraph.transforms.test.other import test_setting_description_schema
-    from gecko_taskgraph.util.schema import validate_schema
+    from taskgraph.util.schema import validate_schema
 
     tasks = filter_tasks(full_task_graph, lambda t: t.kind == "test")
 

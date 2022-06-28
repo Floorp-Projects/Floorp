@@ -12,7 +12,7 @@ import json
 
 from textwrap import dedent
 
-from gecko_taskgraph.util.schema import Schema
+from taskgraph.util.schema import Schema
 from voluptuous import Required, Optional, Any
 from voluptuous.validators import Match
 

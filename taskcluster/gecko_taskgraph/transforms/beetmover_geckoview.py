@@ -8,6 +8,9 @@ Transform the beetmover task into an actual task description.
 
 from copy import deepcopy
 
+from taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
+from voluptuous import Required, Optional
+
 from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.beetmover import (
@@ -22,9 +25,7 @@ from gecko_taskgraph.util.declarative_artifacts import (
     get_geckoview_upstream_artifacts,
     get_geckoview_artifact_id,
 )
-from gecko_taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
 from gecko_taskgraph.transforms.task import task_description_schema
-from voluptuous import Required, Optional
 
 
 beetmover_description_schema = schema.extend(
