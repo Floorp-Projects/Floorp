@@ -704,10 +704,6 @@ class BaselineStubFrameLayout : public CommonFrameLayout {
   }
 };
 
-// Size of the the stub frame described above. This can be used to skip over the
-// stub frame on the stack, to access values in the parent frame.
-static constexpr size_t StubFrameSize = 4 * sizeof(uintptr_t);
-
 // An invalidation bailout stack is at the stack pointer for the callee frame.
 class InvalidationBailoutStack {
   RegisterDump::FPUArray fpregs_;
