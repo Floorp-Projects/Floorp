@@ -48,6 +48,7 @@
 #  include "js/Proxy.h"  // For AutoEnterPolicy
 #endif
 #include "js/ScriptPrivate.h"
+#include "js/ShadowRealmCallbacks.h"
 #include "js/Stack.h"
 #include "js/Stream.h"  // JS::AbortSignalIsAborted
 #include "js/StreamConsumer.h"
@@ -1030,6 +1031,21 @@ struct JSRuntime {
   };
   ErrorInterceptionSupport errorInterception;
 #endif  // defined(NIGHTLY_BUILD)
+
+ public:
+  JS::GlobalInitializeCallback getShadowRealmInitializeGlobalCallback() {
+    return shadowRealmInitializeGlobalCallback;
+  }
+
+  JS::GlobalCreationCallback getShadowRealmGlobalCreationCallback() {
+    return shadowRealmGlobalCreationCallback;
+  }
+
+  js::MainThreadData<JS::GlobalInitializeCallback>
+      shadowRealmInitializeGlobalCallback;
+
+  js::MainThreadData<JS::GlobalCreationCallback>
+      shadowRealmGlobalCreationCallback;
 };
 
 // Context for sending telemetry to the embedder from any thread, main or

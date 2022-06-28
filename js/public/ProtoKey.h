@@ -90,6 +90,7 @@
   REAL(Set, OCLASP(Set))                                                       \
   REAL(DataView, OCLASP(DataView))                                             \
   REAL(Symbol, OCLASP(Symbol))                                                 \
+  REAL(ShadowRealm, OCLASP(ShadowRealm))                                       \
   REAL(SharedArrayBuffer, OCLASP(SharedArrayBuffer))                           \
   REAL_IF_INTL(Intl, CLASP(Intl))                                              \
   REAL_IF_INTL(Collator, OCLASP(Collator))                                     \
