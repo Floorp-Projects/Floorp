@@ -37,12 +37,6 @@
 #  undef max
 #endif
 
-// https://stackoverflow.com/questions/25759700/ms-format-tag-for-opus-codec
-#ifndef MFAudioFormat_Opus
-DEFINE_GUID(MFAudioFormat_Opus, WAVE_FORMAT_OPUS, 0x000, 0x0010, 0x80, 0x00,
-            0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-#endif
-
 namespace mozilla::wmf {
 
 // A helper class for automatically starting and shuting down the Media

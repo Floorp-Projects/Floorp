@@ -7,7 +7,6 @@
 #include "ChannelMediaDecoder.h"
 #include "ChannelMediaResource.h"
 #include "DecoderTraits.h"
-#include "ExternalEngineStateMachine.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
 #include "BaseMediaResource.h"
@@ -201,8 +200,7 @@ already_AddRefed<ChannelMediaDecoder> ChannelMediaDecoder::Clone(
   return decoder.forget();
 }
 
-MediaDecoderStateMachineBase* ChannelMediaDecoder::CreateStateMachine(
-    bool aDisableExternalEngine) {
+MediaDecoderStateMachineBase* ChannelMediaDecoder::CreateStateMachine() {
   MOZ_ASSERT(NS_IsMainThread());
   MediaFormatReaderInit init;
   init.mVideoFrameContainer = GetVideoFrameContainer();
@@ -212,16 +210,6 @@ MediaDecoderStateMachineBase* ChannelMediaDecoder::CreateStateMachine(
   init.mResource = mResource;
   init.mMediaDecoderOwnerID = mOwner;
   mReader = DecoderTraits::CreateReader(ContainerType(), init);
-
-#ifdef MOZ_WMF
-  // TODO : Only for testing development for now. In the future this should be
-  // used for encrypted content only.
-  if (StaticPrefs::media_wmf_media_engine_enabled() &&
-      StaticPrefs::media_wmf_media_engine_channel_decoder_enabled() &&
-      !aDisableExternalEngine) {
-    return new ExternalEngineStateMachine(this, mReader);
-  }
-#endif
   return new MediaDecoderStateMachine(this, mReader);
 }
 
@@ -270,7 +258,13 @@ nsresult ChannelMediaDecoder::Load(nsIChannel* aChannel,
 
   rv = mResource->Open(aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
-  return CreateAndInitStateMachine(mResource->IsLiveStream());
+
+  SetStateMachine(CreateStateMachine());
+  NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
+
+  GetStateMachine()->DispatchIsLiveStream(mResource->IsLiveStream());
+
+  return InitializeStateMachine();
 }
 
 nsresult ChannelMediaDecoder::Load(BaseMediaResource* aOriginal) {
@@ -287,7 +281,13 @@ nsresult ChannelMediaDecoder::Load(BaseMediaResource* aOriginal) {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  return CreateAndInitStateMachine(mResource->IsLiveStream());
+
+  SetStateMachine(CreateStateMachine());
+  NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
+
+  GetStateMachine()->DispatchIsLiveStream(mResource->IsLiveStream());
+
+  return InitializeStateMachine();
 }
 
 void ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus) {

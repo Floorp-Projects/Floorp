@@ -123,7 +123,12 @@ class MediaSourceTrackDemuxer
   void DetachManager();
 
  private:
-  bool OnTaskQueue() const { return mTaskQueue->IsCurrentThreadIn(); }
+  bool OnTaskQueue() const {
+    MOZ_ASSERT(mParent);
+    auto taskQueue = mParent->GetTaskQueue();
+    MOZ_ASSERT(taskQueue);
+    return taskQueue->IsCurrentThreadIn();
+  }
 
   RefPtr<SeekPromise> DoSeek(const media::TimeUnit& aTime);
   RefPtr<SamplesPromise> DoGetSamples(int32_t aNumSamples);
@@ -134,8 +139,6 @@ class MediaSourceTrackDemuxer
   media::TimeUnit GetNextRandomAccessPoint();
 
   RefPtr<MediaSourceDemuxer> mParent;
-  const RefPtr<TaskQueue> mTaskQueue;
-
   TrackInfo::TrackType mType;
   // Monitor protecting members below accessed from multiple threads.
   Monitor mMonitor MOZ_UNANNOTATED;
