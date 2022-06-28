@@ -93,37 +93,15 @@ class TabPickupList extends HTMLElement {
       return;
     }
 
-    for (let i = 0; i < this.maxTabsLength; i++) {
-      let li = null;
-      if (!syncedTabs[i]) {
-        li = this.generatePlaceholder();
-      } else {
-        li = this.generateListItem(syncedTabs[i], i);
-      }
+    for (let i = 0; i < syncedTabs.length; i++) {
+      const li = this.generateListItem(syncedTabs[i], i);
       this.tabsList.append(li);
     }
+    // TODO implement placeholder for empty li, see bug 1775469
 
     if (this.tabsList.hidden) {
       this.tabsList.hidden = false;
     }
-  }
-
-  generatePlaceholder() {
-    const li = document.createElement("li");
-    li.classList.add("synced-tab-li-placeholder");
-    li.setAttribute("role", "presentation");
-
-    const favicon = document.createElement("span");
-    favicon.classList.add("li-placeholder-favicon");
-
-    const title = document.createElement("span");
-    title.classList.add("li-placeholder-title");
-
-    const domain = document.createElement("span");
-    domain.classList.add("li-placeholder-domain");
-
-    li.append(favicon, title, domain);
-    return li;
   }
 
   generateListItem(tab, index) {
