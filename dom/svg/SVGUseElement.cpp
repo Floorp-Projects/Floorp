@@ -577,6 +577,10 @@ gfxMatrix SVGUseElement::PrependLocalTransformsTo(
 
 /* virtual */
 bool SVGUseElement::HasValidDimensions() const {
+  if (!OurWidthAndHeightAreUsed()) {
+    return true;
+  }
+
   return (!mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() ||
           mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
          (!mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() ||
