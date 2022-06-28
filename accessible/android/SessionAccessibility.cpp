@@ -987,18 +987,6 @@ void SessionAccessibility::PopulateNodeInfo(
   }
 }
 
-Accessible* SessionAccessibility::GetAccessibleByID(int32_t aID) const {
-  auto gvAccessor(mWindow.Access());
-  if (!gvAccessor || !gvAccessor->GetNsWindow() ||
-      !gvAccessor->GetNsWindow()->GetRootAccessible()) {
-    // If GeckoViewSupport is detached, closed, or does not have a root
-    // accessible, return null.
-    return nullptr;
-  }
-
-  return mIDToAccessibleMap.Get(aID);
-}
-
 void SessionAccessibility::RegisterAccessible(Accessible* aAccessible) {
   if (IPCAccessibilityActive()) {
     // Don't register accessible in content process.
