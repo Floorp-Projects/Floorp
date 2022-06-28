@@ -17754,6 +17754,38 @@ class CGRegisterWorkletBindings(CGAbstractMethod):
         return CGList(lines, "\n").define()
 
 
+class CGRegisterShadowRealmBindings(CGAbstractMethod):
+    def __init__(self, config):
+        CGAbstractMethod.__init__(
+            self,
+            None,
+            "RegisterShadowRealmBindings",
+            "bool",
+            [Argument("JSContext*", "aCx"), Argument("JS::Handle<JSObject*>", "aObj")],
+        )
+        self.config = config
+
+    def definition_body(self):
+        descriptors = self.config.getDescriptors(
+            hasInterfaceObject=True, isExposedInShadowRealms=True, register=True
+        )
+        conditions = []
+        for desc in descriptors:
+            bindingNS = toBindingNamespace(desc.name)
+            condition = "!%s::GetConstructorObject(aCx)" % bindingNS
+            if desc.isExposedConditionally():
+                condition = (
+                    "%s::ConstructorEnabled(aCx, aObj) && " % bindingNS + condition
+                )
+            conditions.append(condition)
+        lines = [
+            CGIfWrapper(CGGeneric("return false;\n"), condition)
+            for condition in conditions
+        ]
+        lines.append(CGGeneric("return true;\n"))
+        return CGList(lines, "\n").define()
+
+
 def BindingNamesOffsetEnum(name):
     return CppKeywords.checkMethodName(name.replace(" ", "_"))
 
@@ -23082,6 +23114,33 @@ class GlobalGenRoots:
 
         # Add include guards.
         curr = CGIncludeGuard("RegisterWorkletBindings", curr)
+
+        # Done.
+        return curr
+
+    @staticmethod
+    def RegisterShadowRealmBindings(config):
+
+        curr = CGRegisterShadowRealmBindings(config)
+
+        # Wrap all of that in our namespaces.
+        curr = CGNamespace.build(["mozilla", "dom"], CGWrapper(curr, post="\n"))
+        curr = CGWrapper(curr, post="\n")
+
+        # Add the includes
+        defineIncludes = [
+            CGHeaders.getDeclarationFilename(desc.interface)
+            for desc in config.getDescriptors(
+                hasInterfaceObject=True, register=True, isExposedInShadowRealms=True
+            )
+        ]
+
+        curr = CGHeaders(
+            [], [], [], [], [], defineIncludes, "RegisterShadowRealmBindings", curr
+        )
+
+        # Add include guards.
+        curr = CGIncludeGuard("RegisterShadowRealmBindings", curr)
 
         # Done.
         return curr

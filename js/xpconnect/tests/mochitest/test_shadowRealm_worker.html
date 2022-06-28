@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for ShadowRealms</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <iframe id="ifr"></iframe>
+</head>
+
+<body>
+  <p id="display"></p>
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    var promise = (async ()=> {
+      var module = await import("./shadow_realm_module.js");
+      is(module.x, 1, "import works outside worker");
+
+      var sr = new ShadowRealm();
+      await sr.importValue("./shadow_realm_module.js", 'x').then((x) => is(x,1, "imported x and got 1"));
+    })();
+
+    promise.then(() => {
+      var worker = new Worker("shadow_realm_worker.js");
+
+      var expected = 0;
+      var recieved = 0;
+
+      function test(str) {
+        worker.postMessage(str);
+        expected++;
+      }
+
+      worker.onmessage = function(e) {
+            console.log("Received Message: "+e.data);
+            recieved++;
+
+            if (e.data == "finish") {
+              is(expected, recieved, "Got the appropriate Number of messages");
+              SimpleTest.finish();
+              return;
+            }
+
+            if (e.data.startsWith("PASS")) {
+              ok(true, e.data);
+              return;
+            }
+
+            ok(false, e.data);
+          };
+
+
+      test("evaluate");
+      test("import");
+
+
+      test("finish");
+  });
+  </script>
+</body>
+
+</html>
