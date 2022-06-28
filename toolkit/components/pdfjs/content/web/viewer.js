@@ -56,10 +56,6 @@ const defaultOptions = {
     value: 0,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
-  defaultUrl: {
-    value: "compressed.tracemonkey-pldi-09.pdf",
-    kind: OptionKind.VIEWER
-  },
   defaultZoomValue: {
     value: "",
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
@@ -106,7 +102,6 @@ const defaultOptions = {
   },
   maxCanvasPixels: {
     value: 16777216,
-    compatibility: compatibilityParams.maxCanvasPixels,
     kind: OptionKind.VIEWER
   },
   pageColorsBackground: {
@@ -123,10 +118,6 @@ const defaultOptions = {
   },
   printResolution: {
     value: 150,
-    kind: OptionKind.VIEWER
-  },
-  renderer: {
-    value: "canvas",
     kind: OptionKind.VIEWER
   },
   sidebarViewOnLoad: {
@@ -240,7 +231,7 @@ class AppOptions {
     const defaultOption = defaultOptions[name];
 
     if (defaultOption !== undefined) {
-      return defaultOption.compatibility ?? defaultOption.value;
+      return compatibilityParams[name] ?? defaultOption.value;
     }
 
     return undefined;
@@ -271,7 +262,7 @@ class AppOptions {
       }
 
       const userOption = userOptions[name];
-      options[name] = userOption !== undefined ? userOption : defaultOption.compatibility ?? defaultOption.value;
+      options[name] = userOption !== undefined ? userOption : compatibilityParams[name] ?? defaultOption.value;
     }
 
     return options;
@@ -473,6 +464,7 @@ const PDFViewerApplication = {
   _wheelUnusedTicks: 0,
   _idleCallbacks: new Set(),
   _PDFBug: null,
+  _printAnnotationStoragePromise: null,
 
   async initialize(appConfig) {
     this.preferences = this.externalServices.createPreferences();
@@ -676,6 +668,9 @@ const PDFViewerApplication = {
     this.pdfScriptingManager = pdfScriptingManager;
     const container = appConfig.mainContainer,
           viewer = appConfig.viewerContainer;
+
+    const annotationEditorEnabled = _app_options.AppOptions.get("annotationEditorEnabled");
+
     const pageColors = {
       background: _app_options.AppOptions.get("pageColorsBackground"),
       foreground: _app_options.AppOptions.get("pageColorsForeground")
@@ -689,11 +684,11 @@ const PDFViewerApplication = {
       downloadManager,
       findController,
       scriptingManager: _app_options.AppOptions.get("enableScripting") && pdfScriptingManager,
-      renderer: _app_options.AppOptions.get("renderer"),
+      renderer: null,
       l10n: this.l10n,
       textLayerMode: _app_options.AppOptions.get("textLayerMode"),
       annotationMode: _app_options.AppOptions.get("annotationMode"),
-      annotationEditorEnabled: _app_options.AppOptions.get("annotationEditorEnabled"),
+      annotationEditorEnabled,
       imageResourcesPath: _app_options.AppOptions.get("imageResourcesPath"),
       enablePrintAutoRotate: _app_options.AppOptions.get("enablePrintAutoRotate"),
       useOnlyCssZoom: _app_options.AppOptions.get("useOnlyCssZoom"),
@@ -724,6 +719,12 @@ const PDFViewerApplication = {
 
     if (!this.supportsIntegratedFind) {
       this.findBar = new _pdf_find_bar.PDFFindBar(appConfig.findBar, eventBus, this.l10n);
+    }
+
+    if (annotationEditorEnabled) {
+      for (const element of [document.getElementById("editorModeButtons"), document.getElementById("editorModeSeparator")]) {
+        element.classList.remove("hidden");
+      }
     }
 
     this.pdfDocumentProperties = new _pdf_document_properties.PDFDocumentProperties(appConfig.documentProperties, this.overlayManager, eventBus, this.l10n, () => {
@@ -1230,12 +1231,6 @@ const PDFViewerApplication = {
     const openActionPromise = pdfDocument.getOpenAction().catch(function () {});
     this.toolbar.setPagesCount(pdfDocument.numPages, false);
     this.secondaryToolbar.setPagesCount(pdfDocument.numPages);
-
-    if (pdfDocument.isPureXfa) {
-      console.warn("Warning: XFA-editing is not implemented.");
-      this.toolbar.updateEditorModeButtonsState(true);
-    }
-
     let baseDocumentUrl;
     baseDocumentUrl = this.baseUrl;
     this.pdfLinkService.setDocument(pdfDocument, baseDocumentUrl);
@@ -1738,7 +1733,9 @@ const PDFViewerApplication = {
   },
 
   beforePrint() {
-    this.pdfScriptingManager.dispatchWillPrint();
+    this._printAnnotationStoragePromise = this.pdfScriptingManager.dispatchWillPrint().catch(() => {}).then(() => {
+      return this.pdfDocument?.annotationStorage.print;
+    });
 
     if (this.printService) {
       return;
@@ -1764,7 +1761,7 @@ const PDFViewerApplication = {
     const printResolution = _app_options.AppOptions.get("printResolution");
 
     const optionalContentConfigPromise = this.pdfViewer.optionalContentConfigPromise;
-    const printService = PDFPrintServiceFactory.instance.createPrintService(this.pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise, this.l10n);
+    const printService = PDFPrintServiceFactory.instance.createPrintService(this.pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise, this._printAnnotationStoragePromise, this.l10n);
     this.printService = printService;
     this.forceRendering();
     printService.layout();
@@ -1774,7 +1771,13 @@ const PDFViewerApplication = {
   },
 
   afterPrint() {
-    this.pdfScriptingManager.dispatchDidPrint();
+    if (this._printAnnotationStoragePromise) {
+      this._printAnnotationStoragePromise.then(() => {
+        this.pdfScriptingManager.dispatchDidPrint();
+      });
+
+      this._printAnnotationStoragePromise = null;
+    }
 
     if (this.printService) {
       this.printService.destroy();
@@ -2048,10 +2051,6 @@ function webViewerInitialized() {
 
   if (PDFViewerApplication.supportsIntegratedFind) {
     appConfig.toolbar.viewFind.classList.add("hidden");
-  }
-
-  if (PDFViewerApplication.pdfViewer.enableAnnotationEditor) {
-    appConfig.toolbar.editorModeButtons.classList.remove("hidden");
   }
 
   appConfig.mainContainer.addEventListener("transitionend", function (evt) {
@@ -8145,7 +8144,7 @@ class PDFScriptingManager {
     const ids = siblings ? [id, ...siblings] : [id];
 
     for (const elementId of ids) {
-      const element = document.getElementById(elementId);
+      const element = document.querySelector(`[data-element-id="${elementId}"]`);
 
       if (element) {
         element.dispatchEvent(new CustomEvent("updatefromsandbox", {
@@ -9615,7 +9614,6 @@ class BaseViewer {
   #annotationEditorMode = _pdfjsLib.AnnotationEditorType.NONE;
   #annotationEditorUIManager = null;
   #annotationMode = _pdfjsLib.AnnotationMode.ENABLE_FORMS;
-  #previousAnnotationMode = null;
   #enablePermissions = false;
   #previousContainerHeight = 0;
   #scrollModePageState = null;
@@ -9626,7 +9624,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.15.129';
+    const viewerVersion = '2.15.177';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -9642,6 +9640,7 @@ class BaseViewer {
     this.removePageBorders = options.removePageBorders || false;
     this.textLayerMode = options.textLayerMode ?? _ui_utils.TextLayerMode.ENABLE;
     this.#annotationMode = options.annotationMode ?? _pdfjsLib.AnnotationMode.ENABLE_FORMS;
+    this.#annotationEditorMode = options.annotationEditorEnabled ? _pdfjsLib.AnnotationEditorType.NONE : null;
     this.imageResourcesPath = options.imageResourcesPath || "";
     this.enablePrintAutoRotate = options.enablePrintAutoRotate || false;
     this.renderer = options.renderer || _ui_utils.RendererType.CANVAS;
@@ -9650,11 +9649,6 @@ class BaseViewer {
     this.l10n = options.l10n || _l10n_utils.NullL10n;
     this.#enablePermissions = options.enablePermissions || false;
     this.pageColors = options.pageColors || null;
-
-    if (options.annotationEditorEnabled === true) {
-      this.#annotationEditorUIManager = new _pdfjsLib.AnnotationEditorUIManager();
-    }
-
     this.defaultRenderingQueue = !options.renderingQueue;
 
     if (this.defaultRenderingQueue) {
@@ -9675,11 +9669,6 @@ class BaseViewer {
     }
 
     this.updateContainerHeightCss();
-    Promise.resolve().then(() => {
-      this.eventBus.dispatch("baseviewerinit", {
-        source: this
-      });
-    });
   }
 
   get pagesCount() {
@@ -9702,10 +9691,6 @@ class BaseViewer {
 
   get renderForms() {
     return this.#annotationMode === _pdfjsLib.AnnotationMode.ENABLE_FORMS;
-  }
-
-  get enableAnnotationEditor() {
-    return !!this.#annotationEditorUIManager;
   }
 
   get enableScripting() {
@@ -9872,20 +9857,29 @@ class BaseViewer {
   }
 
   #initializePermissions(permissions) {
+    const params = {
+      annotationEditorMode: this.#annotationEditorMode,
+      annotationMode: this.#annotationMode,
+      textLayerMode: this.textLayerMode
+    };
+
     if (!permissions) {
-      return;
+      return params;
     }
 
     if (!permissions.includes(_pdfjsLib.PermissionFlag.COPY)) {
       this.viewer.classList.add(ENABLE_PERMISSIONS_CLASS);
     }
 
-    if (!permissions.includes(_pdfjsLib.PermissionFlag.MODIFY_ANNOTATIONS) && !permissions.includes(_pdfjsLib.PermissionFlag.FILL_INTERACTIVE_FORMS)) {
-      if (this.#annotationMode === _pdfjsLib.AnnotationMode.ENABLE_FORMS) {
-        this.#previousAnnotationMode = this.#annotationMode;
-        this.#annotationMode = _pdfjsLib.AnnotationMode.ENABLE;
-      }
+    if (!permissions.includes(_pdfjsLib.PermissionFlag.MODIFY_CONTENTS)) {
+      params.annotationEditorMode = null;
     }
+
+    if (!permissions.includes(_pdfjsLib.PermissionFlag.MODIFY_ANNOTATIONS) && !permissions.includes(_pdfjsLib.PermissionFlag.FILL_INTERACTIVE_FORMS) && this.#annotationMode === _pdfjsLib.AnnotationMode.ENABLE_FORMS) {
+      params.annotationMode = _pdfjsLib.AnnotationMode.ENABLE;
+    }
+
+    return params;
   }
 
   #onePageRenderedOrForceFetch() {
@@ -9997,16 +9991,33 @@ class BaseViewer {
       this._firstPageCapability.resolve(firstPdfPage);
 
       this._optionalContentConfigPromise = optionalContentConfigPromise;
-      this.#initializePermissions(permissions);
+      const {
+        annotationEditorMode,
+        annotationMode,
+        textLayerMode
+      } = this.#initializePermissions(permissions);
+
+      if (annotationEditorMode !== null) {
+        if (isPureXfa) {
+          console.warn("Warning: XFA-editing is not implemented.");
+        } else {
+          this.eventBus.dispatch("annotationeditormodechanged", {
+            source: this,
+            mode: annotationEditorMode
+          });
+          this.#annotationEditorUIManager = new _pdfjsLib.AnnotationEditorUIManager();
+        }
+      }
+
       const viewerElement = this._scrollMode === _ui_utils.ScrollMode.PAGE ? null : this.viewer;
       const scale = this.currentScale;
       const viewport = firstPdfPage.getViewport({
         scale: scale * _pdfjsLib.PixelsPerInch.PDF_TO_CSS_UNITS
       });
-      const textLayerFactory = this.textLayerMode !== _ui_utils.TextLayerMode.DISABLE && !isPureXfa ? this : null;
-      const annotationLayerFactory = this.#annotationMode !== _pdfjsLib.AnnotationMode.DISABLE ? this : null;
+      const textLayerFactory = textLayerMode !== _ui_utils.TextLayerMode.DISABLE && !isPureXfa ? this : null;
+      const annotationLayerFactory = annotationMode !== _pdfjsLib.AnnotationMode.DISABLE ? this : null;
       const xfaLayerFactory = isPureXfa ? this : null;
-      const annotationEditorLayerFactory = this.#annotationEditorUIManager && !isPureXfa ? this : null;
+      const annotationEditorLayerFactory = this.#annotationEditorUIManager ? this : null;
 
       for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
         const pageView = new _pdf_page_view.PDFPageView({
@@ -10018,9 +10029,9 @@ class BaseViewer {
           optionalContentConfigPromise,
           renderingQueue: this.renderingQueue,
           textLayerFactory,
-          textLayerMode: this.textLayerMode,
+          textLayerMode,
           annotationLayerFactory,
-          annotationMode: this.#annotationMode,
+          annotationMode,
           xfaLayerFactory,
           annotationEditorLayerFactory,
           textHighlighterFactory: this,
@@ -10143,6 +10154,11 @@ class BaseViewer {
   }
 
   _resetView() {
+    if (this.#annotationEditorMode !== null) {
+      this.#annotationEditorMode = _pdfjsLib.AnnotationEditorType.NONE;
+    }
+
+    this.#annotationEditorUIManager = null;
     this._pages = [];
     this._currentPageNumber = 1;
     this._currentScale = _ui_utils.UNKNOWN_SCALE;
@@ -10187,11 +10203,6 @@ class BaseViewer {
 
     this.viewer.removeAttribute("lang");
     this.viewer.classList.remove(ENABLE_PERMISSIONS_CLASS);
-
-    if (this.#previousAnnotationMode !== null) {
-      this.#annotationMode = this.#previousAnnotationMode;
-      this.#previousAnnotationMode = null;
-    }
   }
 
   #ensurePageViewVisible() {
@@ -10309,7 +10320,7 @@ class BaseViewer {
       return;
     }
 
-    _ui_utils.docStyle.setProperty("--zoom-factor", newScale);
+    _ui_utils.docStyle.setProperty("--scale-factor", newScale * _pdfjsLib.PixelsPerInch.PDF_TO_CSS_UNITS);
 
     const updateArgs = {
       scale: newScale
@@ -11243,6 +11254,10 @@ class BaseViewer {
       throw new Error(`Invalid AnnotationEditor mode: ${mode}`);
     }
 
+    if (!this.pdfDocument) {
+      return;
+    }
+
     this.#annotationEditorMode = mode;
     this.eventBus.dispatch("annotationeditormodechanged", {
       source: this,
@@ -11561,9 +11576,14 @@ class AnnotationLayerBuilder {
     };
 
     if (this.div) {
+      _pdfjsLib.AnnotationLayer.setDimensions(this.div, viewport);
+
       _pdfjsLib.AnnotationLayer.update(parameters);
     } else {
       this.div = document.createElement("div");
+
+      _pdfjsLib.AnnotationLayer.setDimensions(this.div, viewport);
+
       this.div.className = "annotationLayer";
       this.pageDiv.append(this.div);
       parameters.div = this.div;
@@ -11874,7 +11894,7 @@ class PDFPageView {
     });
 
     if (this._isStandalone) {
-      _ui_utils.docStyle.setProperty("--zoom-factor", this.scale);
+      _ui_utils.docStyle.setProperty("--scale-factor", this.viewport.scale);
     }
 
     if (this.svg) {
@@ -12364,14 +12384,7 @@ class PDFPageView {
   }
 
   paintOnSvg(wrapper) {
-    return {
-      promise: Promise.reject(new Error("SVG rendering is not supported.")),
-
-      onRenderContinue(cont) {},
-
-      cancel() {}
-
-    };
+    throw new Error("Not implemented: paintOnSvg");
   }
 
   setPageLabel(label) {
@@ -13454,7 +13467,9 @@ class Toolbar {
     this._updateUIState(true);
 
     this.updateLoadingIndicatorState();
-    this.updateEditorModeButtonsState();
+    this.eventBus.dispatch("toolbarreset", {
+      source: this
+    });
   }
 
   _bindListeners(options) {
@@ -13529,13 +13544,24 @@ class Toolbar {
     editorFreeTextButton,
     editorInkButton
   }) {
-    this.eventBus._on("annotationeditormodechanged", evt => {
+    const editorModeChanged = (evt, disableButtons = false) => {
       const editorButtons = [[_pdfjsLib.AnnotationEditorType.NONE, editorNoneButton], [_pdfjsLib.AnnotationEditorType.FREETEXT, editorFreeTextButton], [_pdfjsLib.AnnotationEditorType.INK, editorInkButton]];
 
       for (const [mode, button] of editorButtons) {
         const checked = mode === evt.mode;
         button.classList.toggle("toggled", checked);
         button.setAttribute("aria-checked", checked);
+        button.disabled = disableButtons;
+      }
+    };
+
+    this.eventBus._on("annotationeditormodechanged", editorModeChanged);
+
+    this.eventBus._on("toolbarreset", evt => {
+      if (evt.source === this) {
+        editorModeChanged({
+          mode: _pdfjsLib.AnnotationEditorType.NONE
+        }, true);
       }
     });
   }
@@ -13611,17 +13637,6 @@ class Toolbar {
       pageNumber
     } = this.items;
     pageNumber.classList.toggle(PAGE_NUMBER_LOADING_INDICATOR, loading);
-  }
-
-  updateEditorModeButtonsState(disabled = false) {
-    const {
-      editorNoneButton,
-      editorFreeTextButton,
-      editorInkButton
-    } = this.items;
-    editorNoneButton.disabled = disabled;
-    editorFreeTextButton.disabled = disabled;
-    editorInkButton.disabled = disabled;
   }
 
   async #adjustScaleWidth() {
@@ -14453,7 +14468,7 @@ var _print_utils = __webpack_require__(44);
 
 var _app = __webpack_require__(2);
 
-function composePage(pdfDocument, pageNumber, size, printContainer, printResolution, optionalContentConfigPromise) {
+function composePage(pdfDocument, pageNumber, size, printContainer, printResolution, optionalContentConfigPromise, printAnnotationStoragePromise) {
   const canvas = document.createElement("canvas");
   const PRINT_UNITS = printResolution / _pdfjsLib.PixelsPerInch.PDF;
   canvas.width = Math.floor(size.width * PRINT_UNITS);
@@ -14471,7 +14486,7 @@ function composePage(pdfDocument, pageNumber, size, printContainer, printResolut
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
     let thisRenderTask = null;
-    pdfDocument.getPage(pageNumber).then(function (pdfPage) {
+    Promise.all([pdfDocument.getPage(pageNumber), printAnnotationStoragePromise]).then(function ([pdfPage, printAnnotationStorage]) {
       if (currentRenderTask) {
         currentRenderTask.cancel();
         currentRenderTask = null;
@@ -14486,7 +14501,8 @@ function composePage(pdfDocument, pageNumber, size, printContainer, printResolut
         }),
         intent: "print",
         annotationMode: _pdfjsLib.AnnotationMode.ENABLE_STORAGE,
-        optionalContentConfigPromise
+        optionalContentConfigPromise,
+        printAnnotationStorage
       };
       currentRenderTask = thisRenderTask = pdfPage.render(renderContext);
       return thisRenderTask.promise;
@@ -14515,12 +14531,13 @@ function composePage(pdfDocument, pageNumber, size, printContainer, printResolut
   };
 }
 
-function FirefoxPrintService(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise = null) {
+function FirefoxPrintService(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise = null, printAnnotationStoragePromise = null) {
   this.pdfDocument = pdfDocument;
   this.pagesOverview = pagesOverview;
   this.printContainer = printContainer;
   this._printResolution = printResolution || 150;
   this._optionalContentConfigPromise = optionalContentConfigPromise || pdfDocument.getOptionalContentConfig();
+  this._optionalContentConfigPromise = printAnnotationStoragePromise || Promise.resolve();
 }
 
 FirefoxPrintService.prototype = {
@@ -14530,7 +14547,8 @@ FirefoxPrintService.prototype = {
       pagesOverview,
       printContainer,
       _printResolution,
-      _optionalContentConfigPromise
+      _optionalContentConfigPromise,
+      _printAnnotationStoragePromise
     } = this;
     const body = document.querySelector("body");
     body.setAttribute("data-pdfjsprinting", true);
@@ -14541,7 +14559,7 @@ FirefoxPrintService.prototype = {
     }
 
     for (let i = 0, ii = pagesOverview.length; i < ii; ++i) {
-      composePage(pdfDocument, i + 1, pagesOverview[i], printContainer, _printResolution, _optionalContentConfigPromise);
+      composePage(pdfDocument, i + 1, pagesOverview[i], printContainer, _printResolution, _optionalContentConfigPromise, _printAnnotationStoragePromise);
     }
   },
 
@@ -14559,8 +14577,8 @@ _app.PDFPrintServiceFactory.instance = {
     return (0, _pdfjsLib.shadow)(this, "supportsPrinting", value);
   },
 
-  createPrintService(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise) {
-    return new FirefoxPrintService(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise);
+  createPrintService(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise, printAnnotationStoragePromise) {
+    return new FirefoxPrintService(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise, printAnnotationStoragePromise);
   }
 
 };
@@ -14659,8 +14677,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.15.129';
-const pdfjsBuild = 'be2dfe45f';
+const pdfjsVersion = '2.15.177';
+const pdfjsBuild = 'cd35b9bfa';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
@@ -14692,7 +14710,6 @@ function getViewerConfiguration() {
       viewFind: document.getElementById("viewFind"),
       openFile: null,
       print: document.getElementById("print"),
-      editorModeButtons: document.getElementById("editorModeButtons"),
       editorNoneButton: document.getElementById("editorNone"),
       editorFreeTextButton: document.getElementById("editorFreeText"),
       editorInkButton: document.getElementById("editorInk"),
