@@ -6771,6 +6771,14 @@
   value: false
   mirror: always
 
+# ShadowRealms: https://github.com/tc39/proposal-shadowrealm
+- name: javascript.options.experimental.shadow_realms
+  # Atomic, as we assert the preference, and that assertion may happen
+  # in a worker. 
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #ifdef NIGHTLY_BUILD
   # Experimental support for Iterator Helpers in JavaScript.
 -   name: javascript.options.experimental.iterator_helpers

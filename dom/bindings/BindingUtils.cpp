@@ -2809,7 +2809,8 @@ bool IsNonExposedGlobal(JSContext* aCx, JSObject* aGlobal,
                 GlobalNames::WorkerDebuggerGlobalScope |
                 GlobalNames::WorkletGlobalScope |
                 GlobalNames::AudioWorkletGlobalScope |
-                GlobalNames::PaintWorkletGlobalScope)) == 0,
+                GlobalNames::PaintWorkletGlobalScope |
+                GlobalNames::ShadowRealmGlobalScope)) == 0,
              "Unknown non-exposed global type");
 
   const char* name = JS::GetClass(aGlobal)->name;
@@ -2851,6 +2852,11 @@ bool IsNonExposedGlobal(JSContext* aCx, JSObject* aGlobal,
 
   if ((aNonExposedGlobals & GlobalNames::PaintWorkletGlobalScope) &&
       !strcmp(name, "PaintWorkletGlobalScope")) {
+    return true;
+  }
+
+  if ((aNonExposedGlobals & GlobalNames::ShadowRealmGlobalScope) &&
+      !strcmp(name, "ShadowRealmGlobalScope")) {
     return true;
   }
 

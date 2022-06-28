@@ -296,6 +296,8 @@ class Configuration(DescriptorProvider):
                 getter = lambda x: x.interface.isExposedInAnyWorklet()
             elif key == "isExposedInWindow":
                 getter = lambda x: x.interface.isExposedInWindow()
+            elif key == "isExposedInShadowRealms":
+                getter = lambda x: x.interface.isExposedInShadowRealms()
             elif key == "isSerializable":
                 getter = lambda x: x.interface.isSerializable()
             else:
