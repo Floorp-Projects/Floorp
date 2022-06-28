@@ -271,7 +271,7 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     }
   }
 
-  mFontFaceSet->GetUserFontSet()->RecordFontLoadDone(aStringLen, doneTime);
+  mFontFaceSet->RecordFontLoadDone(aStringLen, doneTime);
 
   // The userFontEntry is responsible for freeing the downloaded data
   // (aString) when finished with it; the pointer is no longer valid

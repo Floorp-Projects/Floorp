@@ -91,7 +91,8 @@ struct gfxFontFaceSrc {
 
   // The principal that should be used for the load. Should only be used for
   // URL sources.
-  gfxFontSrcPrincipal* LoadPrincipal(const gfxUserFontSet&) const;
+  already_AddRefed<gfxFontSrcPrincipal> LoadPrincipal(
+      const gfxUserFontSet&) const;
 };
 
 inline bool operator==(const gfxFontFaceSrc& a, const gfxFontFaceSrc& b) {
@@ -225,9 +226,11 @@ class gfxUserFontSet {
   typedef mozilla::WeightRange WeightRange;
   typedef gfxFontEntry::RangeFlags RangeFlags;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxUserFontSet)
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   gfxUserFontSet();
+
+  void Destroy();
 
   enum {
     // no flags ==> no hint set
@@ -300,16 +303,12 @@ class gfxUserFontSet {
   // the given name
   gfxUserFontFamily* LookupFamily(const nsACString& aName) const;
 
-  virtual gfxFontSrcPrincipal* GetStandardFontLoadPrincipal() const = 0;
+  virtual already_AddRefed<gfxFontSrcPrincipal> GetStandardFontLoadPrincipal()
+      const = 0;
   virtual nsPresContext* GetPresContext() const = 0;
 
   // check whether content policies allow the given URI to load.
   virtual bool IsFontLoadAllowed(const gfxFontFaceSrc&) = 0;
-
-  // Dispatches all of the specified runnables to the font face set's
-  // document's event queue.
-  virtual void DispatchFontLoadViolations(
-      nsTArray<nsCOMPtr<nsIRunnable>>& aViolations) = 0;
 
   // initialize the process that loads external font data, which upon
   // completion will call FontDataDownloadComplete method
