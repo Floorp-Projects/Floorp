@@ -10,7 +10,7 @@ Summary
 
 This document describes the API for setting a process to high priority by
 applying a high priority hint. Instead of deducing the priority based on the
-extension’s active priority, this will add an API to set it explicitly. 
+extension’s active priority, this will add an API to set it explicitly.
 
 Motivation
 ----------
@@ -48,7 +48,7 @@ Specified and active tabs would be ``PRIORITY_HIGH``. The default would be
   public void setPriorityHint(final @Priority int priorityHint)
 
 Listeners in ``GeckoViewContent.jsm`` will set
-``this.browser.frameLoader.remoteTab.priorityHint`` to the boolean passed in. 
+``this.browser.frameLoader.remoteTab.priorityHint`` to the boolean passed in.
 
 .. code:: java
 
