@@ -207,10 +207,10 @@
     <string name="preference_autocomplete_user_list_summary2">Slå på for å få %s til å autofullføre dei føretrekte nettadressene dine.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
-    <string name="preference_category_autocomplete_manage_sites">Handter sider</string>
+    <string name="preference_category_autocomplete_manage_sites">Handsam sider</string>
 
     <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
-    <string name="preference_autocomplete_subitem_manage_sites">Handter sider</string>
+    <string name="preference_autocomplete_subitem_manage_sites">Handsam sider</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Legg til ei tilpassa nettadresse</string>
@@ -243,7 +243,7 @@
     <string name="preference_autocomplete_learn_more">Les meir</string>
 
     <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
-    <string name="preference_autocomplete_custom_summary">Legg til og handter tilpassa autofullførte nettadressesr.</string>
+    <string name="preference_autocomplete_custom_summary">Legg til og handsam tilpassa autofullførte nettadressesr.</string>
 
     <!-- Label for the "custom autocomplete URL" input field -->
     <string name="preference_autocomplete_add_title">Nettadresse å legga til</string>
@@ -865,8 +865,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Byt til lenke i ny fane med ein gong</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">Trygg nettlesing</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Blokker potensielt farlege og villeiande nettsider</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -876,8 +874,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_https_only_title">Berre HTTPS-modus</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Vil automatisk prøve å kople til nettstadar med HTTPS for auka sikkerheit. HTTPS-tilkoplingar gir deg trygg, kryptert tilkopling til nettstadar du besøkjer.</string>
-
     <string name="preference_https_only_summary3">Prøver automatisk å kople til nettstadar ved hjelp av HTTPS-krypteringsprotokollen for auka sikkerheit.</string>
 
     <!-- Preference for exceptions tracking protection -->
