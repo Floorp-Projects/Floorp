@@ -161,6 +161,17 @@ void SVGStyleElement::SetTitle(const nsAString& aTitle, ErrorResult& rv) {
   SetAttr(nsGkAtoms::title, aTitle, rv);
 }
 
+bool SVGStyleElement::Disabled() const {
+  StyleSheet* ss = GetSheet();
+  return ss && ss->Disabled();
+}
+
+void SVGStyleElement::SetDisabled(bool aDisabled) {
+  if (StyleSheet* ss = GetSheet()) {
+    ss->SetDisabled(aDisabled);
+  }
+}
+
 //----------------------------------------------------------------------
 // nsStyleLinkElement methods
 
