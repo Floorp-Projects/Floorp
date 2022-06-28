@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "libyuv/convert_argb.h"
 #include "libyuv/cpu_id.h"
 #include "libyuv/row.h"
 #include "libyuv/scale_row.h"
