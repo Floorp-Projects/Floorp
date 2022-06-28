@@ -11,7 +11,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/dom/FontFaceSetImpl.h"
+#include "mozilla/dom/FontFaceSet.h"
 #include "nsCOMPtr.h"
 #include "nsIFontLoadCompleteCallback.h"
 #include "nsIStreamLoader.h"
@@ -29,7 +29,7 @@ class nsFontFaceLoader final : public nsIStreamLoaderObserver,
                                public nsIFontLoadCompleteCallback {
  public:
   nsFontFaceLoader(gfxUserFontEntry* aUserFontEntry, uint32_t aSrcIndex,
-                   mozilla::dom::FontFaceSetImpl* aFontFaceSet,
+                   mozilla::dom::FontFaceSet* aFontFaceSet,
                    nsIChannel* aChannel);
 
   NS_DECL_ISUPPORTS
@@ -61,7 +61,7 @@ class nsFontFaceLoader final : public nsIStreamLoaderObserver,
   RefPtr<gfxUserFontEntry> mUserFontEntry;
   nsCOMPtr<nsIURI> mFontURI;
   // Cleared in FontFaceSet::~FontFaceSet, and on cancelation and such too.
-  mozilla::dom::FontFaceSetImpl* MOZ_NON_OWNING_REF mFontFaceSet;
+  mozilla::dom::FontFaceSet* MOZ_NON_OWNING_REF mFontFaceSet;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsITimer> mLoadTimer;
   mozilla::TimeStamp mStartTime;
