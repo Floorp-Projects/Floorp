@@ -157,10 +157,6 @@ class IOUtils final {
                                                 ErrorResult& aError);
 
  public:
-  static already_AddRefed<Promise> ComputeHexDigest(
-      GlobalObject& aGlobal, const nsAString& aPath,
-      const HashAlgorithm aAlgorithm, ErrorResult& aError);
-
 #if defined(XP_WIN)
   static already_AddRefed<Promise> GetWindowsAttributes(GlobalObject& aGlobal,
                                                         const nsAString& aPath,
@@ -454,17 +450,6 @@ class IOUtils final {
    */
   static Result<nsString, IOError> CreateUniqueSync(
       nsIFile* aFile, const uint32_t aFileType, const uint32_t aPermissions);
-
-  /**
-   * Compute the hash of a file.
-   *
-   * @param aFile      The file to hash.
-   * @param aAlgorithm The hashing algorithm to use.
-   *
-   * @return The hash of the file, as a hex digest.
-   */
-  static Result<nsCString, IOError> ComputeHexDigestSync(
-      nsIFile* aFile, const HashAlgorithm aAlgorithm);
 
 #if defined(XP_WIN)
   /**

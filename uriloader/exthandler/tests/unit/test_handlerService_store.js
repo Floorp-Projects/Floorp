@@ -654,7 +654,7 @@ add_task(async function test_store_keeps_unknown_properties() {
   gHandlerService.store(handlerInfo);
 
   await unloadHandlerStore();
-  let data = await IOUtils.readJSON(jsonPath);
+  let data = JSON.parse(new TextDecoder().decode(await OS.File.read(jsonPath)));
   Assert.equal(
     data.mimeTypes["example/type.handleinternally"].unknownProperty,
     "preserved"
@@ -743,7 +743,7 @@ add_task(async function test_store_gioHandlerApp() {
     possibleApplicationHandlers: [expectedGIOMimeHandlerApp, webHandlerApp],
   });
 
-  await IOUtils.remove(dummyHandlerFile.path);
+  await OS.File.remove(dummyHandlerFile.path);
 
   // After removing dummyHandlerFile, the handler should disappear from the
   // list of possibleApplicationHandlers and preferredAppHandler should be null.

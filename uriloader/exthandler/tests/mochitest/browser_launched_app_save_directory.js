@@ -61,7 +61,7 @@ async function aDownloadLaunchedWithAppIsSavedInFolder(downloadDir) {
   );
 
   Assert.ok(
-    await IOUtils.exists(download.target.path),
+    await OS.File.exists(download.target.path),
     "The file should not have been deleted."
   );
 
