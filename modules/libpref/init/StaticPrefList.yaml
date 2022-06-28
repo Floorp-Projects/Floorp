@@ -5452,13 +5452,14 @@
   mirror: always
 
 - name: gfx.direct3d11.reuse-decoder-device
-  type: RelaxedAtomicInt32
-#if defined(EARLY_BETA_OR_EARLIER)
-  value: 1
-#else
-  value: -1
-#endif
-  mirror: always
+  type: bool
+  value: true
+  mirror: once
+# Enable reuse decoder device even when it is blocked.
+- name: gfx.direct3d11.reuse-decoder-device-force-enabled
+  type: bool
+  value: false
+  mirror: once
 
 - name: gfx.direct3d11.allow-keyed-mutex
   type: RelaxedAtomicBool
