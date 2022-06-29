@@ -692,11 +692,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
     return DONT_CARE;
   }
 
-  void SetDestroyedCallback(std::function<void()>&& aDestroyedCallback) {
-    MOZ_ASSERT(!mDestroyedCallback);
-    mDestroyedCallback = std::move(aDestroyedCallback);
-  }
-
  protected:
   virtual void ReadUnlock();
 
@@ -722,8 +717,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   uint64_t mFwdTransactionId;
   bool mReadLocked;
   wr::MaybeExternalImageId mExternalImageId;
-
-  std::function<void()> mDestroyedCallback;
 
   friend class Compositor;
   friend class TextureParent;

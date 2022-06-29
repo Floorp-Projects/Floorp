@@ -42,35 +42,17 @@ bool WebRenderCanvasRendererAsync::CreateCompositable() {
     mCanvasClient = new CanvasClient(GetForwarder(), compositableFlags);
     mCanvasClient->Connect();
   }
+
+  if (!mPipelineId) {
+    // Alloc async image pipeline id.
+    mPipelineId = Some(
+        mManager->WrBridge()->GetCompositorBridgeChild()->GetNextPipelineId());
+    mManager->AddPipelineIdForCompositable(
+        mPipelineId.ref(), mCanvasClient->GetIPCHandle(),
+        CompositableHandleOwner::WebRenderBridge);
+  }
+
   return true;
-}
-
-void WebRenderCanvasRendererAsync::EnsurePipeline(bool aIsAsync) {
-  MOZ_ASSERT(mCanvasClient);
-  if (!mCanvasClient) {
-    return;
-  }
-
-  if (mPipelineId && mIsAsync != aIsAsync) {
-    mManager->RemovePipelineIdForCompositable(mPipelineId.ref());
-    mPipelineId.reset();
-  }
-
-  if (mPipelineId) {
-    return;
-  }
-
-  if (mIsAsync != aIsAsync) {
-    GetForwarder()->EnableAsyncCompositable(mCanvasClient, aIsAsync);
-    mIsAsync = aIsAsync;
-  }
-
-  // Alloc async image pipeline id.
-  mPipelineId = Some(
-      mManager->WrBridge()->GetCompositorBridgeChild()->GetNextPipelineId());
-  mManager->AddPipelineIdForCompositable(
-      mPipelineId.ref(), mCanvasClient->GetIPCHandle(),
-      CompositableHandleOwner::WebRenderBridge);
 }
 
 void WebRenderCanvasRendererAsync::ClearCachedResources() {

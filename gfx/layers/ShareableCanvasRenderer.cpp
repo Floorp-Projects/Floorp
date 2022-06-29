@@ -131,10 +131,10 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
 
   // -
 
-  const auto fnGetExistingTc =
-      [&](const Maybe<SurfaceDescriptor>& aDesc) -> RefPtr<TextureClient> {
-    if (aDesc) {
-      return GetFrontBufferFromDesc(*aDesc, flags);
+  const auto fnGetExistingTc = [&]() -> RefPtr<TextureClient> {
+    const auto desc = context->GetFrontBuffer(nullptr);
+    if (desc) {
+      return GetFrontBufferFromDesc(*desc, flags);
     }
     if (provider) {
       if (!provider->SetKnowsCompositor(forwarder)) {
@@ -187,26 +187,8 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
   {
     FirePreTransactionCallback();
 
-    const auto desc = context->GetFrontBuffer(nullptr);
-    if (desc &&
-        desc->type() == SurfaceDescriptor::TSurfaceDescriptorRemoteTexture) {
-      const auto& forwarder = GetForwarder();
-      const auto& textureDesc = desc->get_SurfaceDescriptorRemoteTexture();
-      if (!mData.mIsAlphaPremult) {
-        flags |= TextureFlags::NON_PREMULTIPLIED;
-      }
-      EnsurePipeline(/* aIsAsync */ true);
-      forwarder->UseRemoteTexture(mCanvasClient, textureDesc.textureId(),
-                                  textureDesc.ownerId(), mData.mSize, flags);
-
-      FireDidTransactionCallback();
-      return;
-    }
-
-    EnsurePipeline(/* aIsAsync */ false);
-
-    // Let's see if we can get a no-copy TextureClient from the canvas.
-    auto tc = fnGetExistingTc(desc);
+    // First, let's see if we can get a no-copy TextureClient from the canvas.
+    auto tc = fnGetExistingTc();
     if (!tc) {
       // Otherwise, snapshot the surface and copy into a TexClient.
       tc = fnMakeTcFromSnapshot();

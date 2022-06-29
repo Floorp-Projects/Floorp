@@ -13438,16 +13438,6 @@
   value: 100000 # 100KB
   mirror: always
 
-# WebGL and Canvas2D aren't allowed to be async by spec,
-# unless they have e.g.
-# https://html.spec.whatwg.org/multipage/canvas.html#2dcontext:dom-canvasrenderingcontext2dsettings-desynchronized
-# enabled, which defaults to false.
-# This pref enables async present in cases where it is allowed.
-- name: webgl.out-of-process.async-present
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Override the blocklist to assume that GL is threadsafe.
 - name: webgl.threadsafe-gl.force-enabled
   type: bool

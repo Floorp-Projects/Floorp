@@ -21,8 +21,6 @@ using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 [MoveOnly] using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using gfxImageFormat from "gfxTypes.h";
 using mozilla::layers::MaybeVideoBridgeSource from "mozilla/layers/VideoBridgeUtils.h";
-using mozilla::layers::RemoteTextureId from "mozilla/layers/LayersTypes.h";
-using mozilla::layers::RemoteTextureOwnerId from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -171,11 +169,6 @@ namespace layers {
   int64_t textureId;
 };
 
-[Comparable] struct SurfaceDescriptorRemoteTexture {
-  RemoteTextureId textureId;
-  RemoteTextureOwnerId ownerId;
-};
-
 [Comparable] union SurfaceDescriptor {
   SurfaceDescriptorBuffer;
   SurfaceDescriptorD3D10;
@@ -188,7 +181,6 @@ namespace layers {
   SurfaceDescriptorSharedGLTexture;
   SurfaceDescriptorGPUVideo;
   SurfaceDescriptorRecorded;
-  SurfaceDescriptorRemoteTexture;
   null_t;
 };
 

@@ -88,11 +88,9 @@ enum class TextureFlags : uint32_t {
   // with WebRenderTextureHost wrapping another TextureHost which was
   // initialized with its own external image ID.
   BORROWED_EXTERNAL_ID = 1 << 19,
-  // The texture is used for remote texture.
-  REMOTE_TEXTURE = 1 << 20,
 
   // OR union of all valid bits
-  ALL_BITS = (1 << 21) - 1,
+  ALL_BITS = (1 << 20) - 1,
   // the default flags
   DEFAULT = NO_FLAGS
 };

@@ -194,11 +194,6 @@ class ImageBridgeChild final : public PImageBridgeChild,
 
   void UpdateImageClient(RefPtr<ImageContainer> aContainer);
 
-  void UpdateCompositable(const RefPtr<ImageContainer> aContainer,
-                          const RemoteTextureId aTextureId,
-                          const RemoteTextureOwnerId aOwnerId,
-                          const gfx::IntSize aSize, const TextureFlags aFlags);
-
   /**
    * Flush all Images sent to CompositableHost.
    */
@@ -245,15 +240,6 @@ class ImageBridgeChild final : public PImageBridgeChild,
    */
   void UseTextures(CompositableClient* aCompositable,
                    const nsTArray<TimedTextureClient>& aTextures) override;
-
-  void UseRemoteTexture(CompositableClient* aCompositable,
-                        const RemoteTextureId aTextureId,
-                        const RemoteTextureOwnerId aOwnerId,
-                        const gfx::IntSize aSize,
-                        const TextureFlags aFlags) override;
-
-  void EnableAsyncCompositable(CompositableClient* aCompositable,
-                               bool aEnable) override;
 
   void ReleaseCompositable(const CompositableHandle& aHandle) override;
 

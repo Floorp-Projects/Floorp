@@ -38,7 +38,6 @@ WebRenderTextureHost::WebRenderTextureHost(
     const SurfaceDescriptor& aDesc, TextureFlags aFlags, TextureHost* aTexture,
     const wr::ExternalImageId& aExternalImageId)
     : TextureHost(aFlags), mWrappedTextureHost(aTexture) {
-  MOZ_ASSERT(mWrappedTextureHost);
   // The wrapped textureHost will be used in WebRender, and the WebRender could
   // run at another thread. It's hard to control the life-time when gecko
   // receives PTextureParent destroy message. It's possible that textureHost is
@@ -46,8 +45,9 @@ WebRenderTextureHost::WebRenderTextureHost(
   // DEALLOCATE_CLIENT flag here. If the buffer deallocation is controlled by
   // parent, we could do something to make sure the wrapped textureHost is not
   // used by WebRender and then release it.
-  MOZ_ASSERT(!(aFlags & TextureFlags::DEALLOCATE_CLIENT) ||
-             (aFlags & TextureFlags::REMOTE_TEXTURE));
+  MOZ_ASSERT(!(aFlags & TextureFlags::DEALLOCATE_CLIENT));
+  MOZ_ASSERT(mWrappedTextureHost);
+
   MOZ_COUNT_CTOR(WebRenderTextureHost);
 
   mExternalImageId = Some(aExternalImageId);

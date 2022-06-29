@@ -1069,19 +1069,12 @@ void WebGLContext::EndOfFrame() {
   OnEndOfFrame();
 }
 
-gl::SwapChain* WebGLContext::GetSwapChain(WebGLFramebuffer* const xrFb,
-                                          const bool webvr) {
+Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
+    WebGLFramebuffer* const xrFb, const bool webvr) {
   auto swapChain = webvr ? &mWebVRSwapChain : &mSwapChain;
   if (xrFb) {
     swapChain = &xrFb->mSwapChain;
   }
-  return swapChain;
-}
-
-Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
-    WebGLFramebuffer* const xrFb, const bool webvr) {
-  auto* swapChain = GetSwapChain(xrFb, webvr);
-  if (!swapChain) return {};
   const auto& front = swapChain->FrontBuffer();
   if (!front) return {};
 
@@ -1092,12 +1085,6 @@ Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
     const Maybe<Range<uint8_t>> maybeDest) {
   const auto& front = mSwapChain.FrontBuffer();
   if (!front) return {};
-  return FrontBufferSnapshotInto(front, maybeDest);
-}
-
-Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
-    const std::shared_ptr<gl::SharedSurface>& front,
-    const Maybe<Range<uint8_t>> maybeDest) {
   const auto& size = front->mDesc.size;
   const auto ret = Some(*uvec2::FromSize(size));
   if (!maybeDest) return ret;
