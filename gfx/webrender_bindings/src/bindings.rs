@@ -2702,21 +2702,6 @@ pub extern "C" fn wr_dp_define_rounded_rect_clip(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_define_rounded_rect_clip_with_parent_clip_chain(
-    state: &mut WrState,
-    parent: &WrSpaceAndClipChain,
-    complex: ComplexClipRegion,
-) -> WrClipId {
-    debug_assert!(unsafe { is_in_main_thread() });
-
-    let clip_id = state
-        .frame_builder
-        .dl_builder
-        .define_clip_rounded_rect(&parent.to_webrender(state.pipeline_id), complex);
-    WrClipId::from_webrender(clip_id)
-}
-
-#[no_mangle]
 pub extern "C" fn wr_dp_define_rect_clip(state: &mut WrState, space: WrSpatialId, clip_rect: LayoutRect) -> WrClipId {
     debug_assert!(unsafe { is_in_main_thread() });
 
@@ -2729,21 +2714,6 @@ pub extern "C" fn wr_dp_define_rect_clip(state: &mut WrState, space: WrSpatialId
         .frame_builder
         .dl_builder
         .define_clip_rect(&space_and_clip, clip_rect);
-    WrClipId::from_webrender(clip_id)
-}
-
-#[no_mangle]
-pub extern "C" fn wr_dp_define_rect_clip_with_parent_clip_chain(
-    state: &mut WrState,
-    parent: &WrSpaceAndClipChain,
-    clip_rect: LayoutRect,
-) -> WrClipId {
-    debug_assert!(unsafe { is_in_main_thread() });
-
-    let clip_id = state
-        .frame_builder
-        .dl_builder
-        .define_clip_rect(&parent.to_webrender(state.pipeline_id), clip_rect);
     WrClipId::from_webrender(clip_id)
 }
 

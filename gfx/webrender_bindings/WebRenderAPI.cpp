@@ -1092,8 +1092,8 @@ wr::WrClipId DisplayListBuilder::DefineRoundedRectClip(
   if (aSpace) {
     clipId = wr_dp_define_rounded_rect_clip(mWrState, *aSpace, aComplex);
   } else {
-    clipId = wr_dp_define_rounded_rect_clip_with_parent_clip_chain(
-        mWrState, &mCurrentSpaceAndClipChain, aComplex);
+    clipId = wr_dp_define_rounded_rect_clip(
+        mWrState, mCurrentSpaceAndClipChain.space, aComplex);
   }
 
   return clipId;
@@ -1107,8 +1107,8 @@ wr::WrClipId DisplayListBuilder::DefineRectClip(Maybe<wr::WrSpatialId> aSpace,
   if (aSpace) {
     clipId = wr_dp_define_rect_clip(mWrState, *aSpace, aClipRect);
   } else {
-    clipId = wr_dp_define_rect_clip_with_parent_clip_chain(
-        mWrState, &mCurrentSpaceAndClipChain, aClipRect);
+    clipId = wr_dp_define_rect_clip(mWrState, mCurrentSpaceAndClipChain.space,
+                                    aClipRect);
   }
 
   return clipId;
