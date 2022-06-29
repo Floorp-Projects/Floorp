@@ -2141,7 +2141,7 @@ with only_when(compile_environment):
 
     @depends(target)
     def libav_fft(target):
-        return target.kernel == "WINNT" or target.cpu == "x86_64"
+        return target.kernel in ("WINNT", "Darwin") or target.cpu == "x86_64"
 
     set_config("MOZ_LIBAV_FFT", depends(when=libav_fft)(lambda: True))
     set_define("MOZ_LIBAV_FFT", depends(when=libav_fft)(lambda: True))
@@ -2172,18 +2172,20 @@ with only_when(compile_environment | artifact_builds):
                 flags = ["-DPIC", "-DWIN64"]
                 use_nasm = False
         elif target.kernel == "Darwin":
+            # 32/64-bit macosx assemblers need to prefix symbols with an
+            # underscore.
+            flags = [
+                "-DPIC",
+                "-DMACHO",
+                "-DPREFIX"
+            ]
             if target.cpu == "x86_64":
-                # 32/64-bit macosx asemblers need to prefix symbols with an
-                # underscore.
-                flags = [
+                flags += [
                     "-D__x86_64__",
-                    "-DPIC",
-                    "-DMACHO",
-                    "-DPREFIX",
                     "-Pconfig_darwin64.asm",
                 ]
-            else:
-                flac_only = True
+            elif target.cpu == "aarch64":
+                use_nasm = False
         elif target.cpu == "x86_64":
             flags = ["-D__x86_64__", "-DPIC", "-DELF", "-Pconfig_unix64.asm"]
         elif target.cpu in ("x86", "arm", "aarch64"):
