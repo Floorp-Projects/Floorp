@@ -66,7 +66,7 @@ skip-if(winWidget&&swgl) fuzzy(0-1,0-7200) == ../reftest_video.html?src=color_qu
 
 # Bug 1759557: Our vp9 support doesn't handle gbrp
 # (BTW: skip-if(!foo) == run-if(foo))
-skip-if(!(cocoaWidget||winWidget||(gtkWidget&&isCoverageBuild))) fuzzy-if(appleSilicon,255-255,360000-360000) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm ../reftest_video.html?src=none
+skip-if(!(cocoaWidget||winWidget||(gtkWidget&&isCoverageBuild))) fuzzy-if(gtkWidget&&isCoverageBuild,255-255,505-505) fuzzy-if(appleSilicon,255-255,360000-360000) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm ../reftest_video.html?src=none
 skip-if(!!(cocoaWidget||winWidget||(gtkWidget&&isCoverageBuild))) fuzzy-if(appleSilicon,255-255,360000-360000) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm ../reftest_video.html?src=timeout
 
 fuzzy-if(!swgl&&appleSilicon,1-1,3600-3600) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.gbrp.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.vp9.webm
