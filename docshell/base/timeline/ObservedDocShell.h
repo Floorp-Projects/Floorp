@@ -9,6 +9,7 @@
 
 #include "MarkersStorage.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
@@ -31,10 +32,12 @@ class ObservedDocShell : public MarkersStorage {
 
   // Main thread only.
   nsTArray<UniquePtr<AbstractTimelineMarker>> mTimelineMarkers;
-  bool mPopping;
+  bool mPopping = false;
 
   // Off the main thread only.
-  nsTArray<UniquePtr<AbstractTimelineMarker>> mOffTheMainThreadTimelineMarkers;
+  Mutex mLock;
+  nsTArray<UniquePtr<AbstractTimelineMarker>> mOffTheMainThreadTimelineMarkers
+      GUARDED_BY(mLock);
 
  public:
   explicit ObservedDocShell(nsIDocShell* aDocShell);
