@@ -398,6 +398,7 @@ class JUnitTestRunner(MochitestDesktop):
         self.log.suite_start(["geckoview-junit"])
         try:
             self.device.grant_runtime_permissions(self.options.app)
+            self.device.add_mock_location(self.options.app)
             cmd = self.build_command_line(
                 test_filters_file=test_filters_file, test_filters=test_filters
             )
