@@ -849,7 +849,8 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DesktopEnvironment::All, WindowProtocol::All, DriverVendor::MesaAll,
         DeviceFamily::All, nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
-        V(21, 0, 0, 0), "FEATURE_HARDWARE_VIDEO_DECODING_MESA", "Mesa 21.0.0.0");
+        V(21, 0, 0, 0), "FEATURE_HARDWARE_VIDEO_DECODING_MESA",
+        "Mesa 21.0.0.0");
 
     // Disable on all NVIDIA hardware
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
@@ -866,6 +867,15 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DeviceFamily::AtiAll, nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
         V(0, 0, 0, 0), "FEATURE_HARDWARE_VIDEO_DECODING_NO_LINUX_AMD", "");
+
+    // Disable on Release/late Beta
+#if !defined(EARLY_BETA_OR_EARLIER)
+    APPEND_TO_DRIVER_BLOCKLIST(OperatingSystem::Linux, DeviceFamily::All,
+                               nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
+                               nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+                               DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
+                               "FEATURE_HARDWARE_VIDEO_DECODING_DISABLE", "");
+#endif
 
     ////////////////////////////////////
     // FEATURE_WEBRENDER_PARTIAL_PRESENT
@@ -996,9 +1006,10 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     }
   }
 
-  if (aFeature == nsIGfxInfo::FEATURE_VAAPI && !mIsVAAPISupported) {
+  if (aFeature == nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING &&
+      !mIsVAAPISupported) {
     *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-    aFailureId = "FEATURE_FAILURE_VAAPI_TEST_FAILED";
+    aFailureId = "FEATURE_FAILURE_VIDEO_DECODING_TEST_FAILED";
     return NS_OK;
   }
 
