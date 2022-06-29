@@ -410,7 +410,7 @@ already_AddRefed<AccAttributes> HTMLTableAccessible::NativeAttributes() {
   RefPtr<AccAttributes> attributes = AccessibleWrap::NativeAttributes();
 
   if (mContent->IsMathMLElement(nsGkAtoms::mtable_)) {
-    GetAccService()->MarkupAttributes(mContent, attributes);
+    GetAccService()->MarkupAttributes(this, attributes);
   }
 
   if (IsProbablyLayoutTable()) {

@@ -1406,7 +1406,7 @@ already_AddRefed<AccAttributes> HyperTextAccessible::NativeAttributes() {
   }
 
   if (HasOwnContent()) {
-    GetAccService()->MarkupAttributes(mContent, attributes);
+    GetAccService()->MarkupAttributes(this, attributes);
     if (mContent->IsMathMLElement()) SetMathMLXMLRoles(attributes);
   }
 
