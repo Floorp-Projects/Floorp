@@ -41,7 +41,7 @@ object Versions {
     }
 
     object Test {
-        const val robolectric = "4.6.1"
+        const val robolectric = "4.8.1"
         const val mockito = "3.11.0"
         const val androidx_work = "2.7.1"
     }
