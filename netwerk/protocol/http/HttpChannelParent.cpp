@@ -133,7 +133,7 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
           a.bypassProxy(), a.tlsFlags(), a.loadInfo(), a.cacheKey(),
           a.requestContextID(), a.preflightArgs(), a.initialRwin(),
           a.blockAuthPrompt(), a.allowStaleCacheContent(),
-          a.preferCacheLoadOverBypass(), a.contentTypeHint(), a.corsMode(),
+          a.preferCacheLoadOverBypass(), a.contentTypeHint(), a.requestMode(),
           a.redirectMode(), a.channelId(), a.integrityMetadata(),
           a.contentWindowId(), a.preferredAlternativeTypes(),
           a.topBrowsingContextId(), a.launchServiceWorkerStart(),
@@ -371,7 +371,7 @@ bool HttpChannelParent::DoAsyncOpen(
     const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
     const uint32_t& aInitialRwin, const bool& aBlockAuthPrompt,
     const bool& aAllowStaleCacheContent, const bool& aPreferCacheLoadOverBypass,
-    const nsCString& aContentTypeHint, const uint32_t& aCorsMode,
+    const nsCString& aContentTypeHint, const dom::RequestMode& aRequestMode,
     const uint32_t& aRedirectMode, const uint64_t& aChannelId,
     const nsString& aIntegrityMetadata, const uint64_t& aContentWindowId,
     const nsTArray<PreferredAlternativeDataTypeParams>&
@@ -425,7 +425,7 @@ bool HttpChannelParent::DoAsyncOpen(
   }
 
   // Set attributes needed to create a FetchEvent from this channel.
-  httpChannel->SetCorsMode(aCorsMode);
+  httpChannel->SetRequestMode(aRequestMode);
   httpChannel->SetRedirectMode(aRedirectMode);
 
   // Set the channelId allocated in child to the parent instance
