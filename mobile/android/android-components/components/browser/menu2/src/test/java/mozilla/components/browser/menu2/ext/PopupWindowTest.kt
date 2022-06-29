@@ -161,7 +161,7 @@ class PopupWindowTest {
             locationInWindow[0] = x
             locationInWindow[1] = y
             locationInWindow
-        }.`when`(view).getLocationInWindow(any())
+        }.`when`(view).getLocationOnScreen(any())
 
         doReturn(10).`when`(view).height
         doReturn(10).`when`(view).width
