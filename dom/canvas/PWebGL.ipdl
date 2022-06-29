@@ -6,8 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PCanvasManager;
+include "mozilla/layers/LayersMessageUtils.h";
 
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::RemoteTextureId from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::RemoteTextureOwnerId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SurfaceDescriptor from "mozilla/layers/LayersTypes.h";
 using std::string from "string";
 using mozilla::uvec2 from "mozilla/dom/WebGLIpdl.h";
@@ -73,6 +76,7 @@ parent:
                                                   uint32_t attachment,
                                                   uint32_t pname) returns (double? ret);
   sync GetFrontBuffer(uint64_t fb, bool vr) returns (SurfaceDescriptor? ret);
+  async PresentFrontBufferToCompositor(uint64_t fb, RemoteTextureId textureId, RemoteTextureOwnerId ownerId);
   sync GetIndexedParameter(uint32_t target, uint32_t index) returns (double? ret);
   sync GetInternalformatParameter(uint32_t target, uint32_t internalFormat, uint32_t pname) returns (Int32Vector? ret);
   sync GetLinkResult(uint64_t id) returns (LinkResult ret);

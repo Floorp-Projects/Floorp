@@ -19,6 +19,7 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/UniquePtr.h"
 
+#include <functional>
 #include <queue>
 #include <memory>
 
@@ -56,6 +57,7 @@ class SwapChain final {
  private:
   std::queue<std::shared_ptr<SharedSurface>> mPool;
   std::shared_ptr<SharedSurface> mFrontBuffer;
+  std::function<void()> mDestroyedCallback;
 
  public:
   std::shared_ptr<SharedSurface>
@@ -68,8 +70,14 @@ class SwapChain final {
   virtual ~SwapChain();
 
   void ClearPool();
+  void StoreRecycledSurface(const std::shared_ptr<SharedSurface>& surf);
   const auto& FrontBuffer() const { return mFrontBuffer; }
   UniquePtr<SwapChainPresenter> Acquire(const gfx::IntSize&, gfx::ColorSpace2);
+
+  void SetDestroyedCallback(std::function<void()>&& aDestroyedCallback) {
+    MOZ_ASSERT(!mDestroyedCallback);
+    mDestroyedCallback = std::move(aDestroyedCallback);
+  }
 };
 
 }  // namespace gl
