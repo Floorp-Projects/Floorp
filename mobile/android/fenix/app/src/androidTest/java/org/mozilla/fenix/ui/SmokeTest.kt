@@ -10,7 +10,6 @@ import android.view.View
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.IdlingRegistry
-import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
@@ -529,43 +528,6 @@ class SmokeTest {
             viewSavedLoginDetails("test@example.com")
             revealPassword()
             verifyPasswordSaved("test") // failing here locally
-        }
-    }
-
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/25034")
-    @Test
-    @SdkSuppress(minSdkVersion = 29)
-    // Verifies that you can go to System settings and change app's permissions from inside the app
-    fun redirectToAppPermissionsSystemSettingsTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSettingsSubMenuSitePermissions {
-        }.openCamera {
-            verifyBlockedByAndroid()
-        }.goBack {
-        }.openLocation {
-            verifyBlockedByAndroid()
-        }.goBack {
-        }.openMicrophone {
-            verifyBlockedByAndroid()
-            clickGoToSettingsButton()
-            openAppSystemPermissionsSettings()
-            switchAppPermissionSystemSetting("Camera", "Allow")
-            mDevice.pressBack()
-            switchAppPermissionSystemSetting("Location", "Allow")
-            mDevice.pressBack()
-            switchAppPermissionSystemSetting("Microphone", "Allow")
-            mDevice.pressBack()
-            mDevice.pressBack()
-            mDevice.pressBack()
-            verifyUnblockedByAndroid()
-        }.goBack {
-        }.openLocation {
-            verifyUnblockedByAndroid()
-        }.goBack {
-        }.openCamera {
-            verifyUnblockedByAndroid()
         }
     }
 

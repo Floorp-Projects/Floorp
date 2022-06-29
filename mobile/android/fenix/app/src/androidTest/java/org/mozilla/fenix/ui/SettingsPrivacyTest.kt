@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui
 import android.os.Build
 import android.view.autofill.AutofillManager
 import androidx.core.net.toUri
+import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
@@ -442,6 +443,45 @@ class SettingsPrivacyTest {
         }.openBrowser {
         }.openTabDrawer {
             verifyPrivateModeSelected()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    @SdkSuppress(minSdkVersion = 29)
+    // Verifies that you can go to System settings and change app's permissions from inside the app
+    fun redirectToAppPermissionsSystemSettingsTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSettingsSubMenuSitePermissions {
+        }.openCamera {
+            verifyBlockedByAndroid()
+        }.goBack {
+        }.openLocation {
+            verifyBlockedByAndroid()
+        }.goBack {
+        }.openMicrophone {
+            verifyBlockedByAndroid()
+            clickGoToSettingsButton()
+            openAppSystemPermissionsSettings()
+            switchAppPermissionSystemSetting("Camera", "Allow")
+            goBackToSystemAppPermissionSettings()
+            verifySystemGrantedPermission("Camera")
+            switchAppPermissionSystemSetting("Location", "Allow")
+            goBackToSystemAppPermissionSettings()
+            verifySystemGrantedPermission("Location")
+            switchAppPermissionSystemSetting("Microphone", "Allow")
+            goBackToSystemAppPermissionSettings()
+            verifySystemGrantedPermission("Microphone")
+            goBackToPermissionsSettingsSubMenu()
+            verifyUnblockedByAndroid()
+        }.goBack {
+        }.openLocation {
+            verifyUnblockedByAndroid()
+        }.goBack {
+        }.openCamera {
+            verifyUnblockedByAndroid()
         }
     }
 

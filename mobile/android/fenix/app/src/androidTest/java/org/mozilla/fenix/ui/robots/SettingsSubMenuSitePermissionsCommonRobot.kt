@@ -7,17 +7,20 @@ package org.mozilla.fenix.ui.robots
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.Matchers.not
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.assertIsChecked
 import org.mozilla.fenix.helpers.click
 
@@ -106,6 +109,40 @@ class SettingsSubMenuSitePermissionsCommonRobot {
         }
     }
 
+    fun goBackToSystemAppPermissionSettings() {
+        mDevice.pressBack()
+        mDevice.waitForIdle(waitingTime)
+    }
+
+    fun goBackToPermissionsSettingsSubMenu() {
+        while (!permissionSettingMenu().waitForExists(waitingTimeShort)) {
+            mDevice.pressBack()
+            mDevice.waitForIdle(waitingTime)
+        }
+    }
+
+    fun verifySystemGrantedPermission(permissionCategory: String) {
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().className("android.widget.RelativeLayout")
+            ).getChild(
+                UiSelector()
+                    .resourceId("android:id/title")
+                    .textContains(permissionCategory)
+            ).waitForExists(waitingTime)
+        )
+
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().className("android.widget.RelativeLayout")
+            ).getChild(
+                UiSelector()
+                    .resourceId("android:id/summary")
+                    .textContains("Only while app is in use")
+            ).waitForExists(waitingTime)
+        )
+    }
+
     class Transition {
         fun goBack(interact: SettingsSubMenuSitePermissionsRobot.() -> Unit): SettingsSubMenuSitePermissionsRobot.Transition {
             goBackButton().click()
@@ -158,11 +195,27 @@ private fun assertCheckCommonRadioButtonDefault() {
     onView(withId(R.id.block_radio)).assertIsChecked(isChecked = false)
 }
 
-private fun assertBlockedByAndroid() = onView(withText(R.string.phone_feature_blocked_by_android))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertBlockedByAndroid() {
+    blockedByAndroidContainer().waitForExists(waitingTime)
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().textContains(getStringResource(R.string.phone_feature_blocked_by_android))
+        ).waitForExists(waitingTimeShort)
+    )
+}
 
-private fun assertUnblockedByAndroid() = onView(withText(R.string.phone_feature_blocked_by_android))
-    .check(matches(not(isDisplayed())))
+private fun assertUnblockedByAndroid() {
+    blockedByAndroidContainer().waitUntilGone(waitingTime)
+    assertFalse(
+        mDevice.findObject(
+            UiSelector().textContains(getStringResource(R.string.phone_feature_blocked_by_android))
+        ).waitForExists(waitingTimeShort)
+    )
+}
+
+private fun blockedByAndroidContainer() = mDevice.findObject(UiSelector().resourceId("$packageName:id/permissions_blocked_container"))
+
+private fun permissionSettingMenu() = mDevice.findObject(UiSelector().resourceId("$packageName:id/container"))
 
 private fun assertToAllowIt() = onView(withText(R.string.phone_feature_blocked_intro))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
