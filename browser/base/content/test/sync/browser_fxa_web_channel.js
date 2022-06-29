@@ -202,6 +202,57 @@ var gTests = [
       );
     },
   },
+  {
+    desc:
+      "fxa web channel - firefox_view messages should call the openFirefoxView helper",
+    async run() {
+      // pref needs to be enabled for the fxa web channel to handle this command
+      await SpecialPowers.pushPrefEnv({
+        set: [["browser.tabs.firefox-view", true]],
+      });
+      let wasCalled = false;
+      let promiseMessageHandled = new Promise((resolve, reject) => {
+        let openFirefoxView = (browser, entryPoint) => {
+          wasCalled = true;
+          Assert.ok(
+            !!browser.ownerGlobal,
+            "openFirefoxView called with a browser argument"
+          );
+          Assert.equal(
+            typeof browser.ownerGlobal.FirefoxViewHandler.openTab,
+            "function",
+            "We can reach the openTab method"
+          );
+
+          client.tearDown();
+          resolve();
+        };
+
+        let client = new FxAccountsWebChannel({
+          content_uri: TEST_HTTP_PATH,
+          channel_id: TEST_CHANNEL_ID,
+          helpers: {
+            openFirefoxView,
+          },
+        });
+      });
+
+      await BrowserTestUtils.withNewTab(
+        {
+          gBrowser,
+          url: TEST_BASE_URL + "?firefox_view",
+        },
+        async function() {
+          try {
+            await promiseMessageHandled;
+          } finally {
+            SpecialPowers.popPrefEnv();
+          }
+        }
+      );
+      Assert.ok(wasCalled, "openFirefoxView did get called");
+    },
+  },
 ]; // gTests
 
 function makeObserver(aObserveTopic, aObserveFunc) {
