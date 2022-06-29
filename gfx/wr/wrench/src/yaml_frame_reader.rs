@@ -496,7 +496,11 @@ impl YamlFrameReader {
         }
     }
 
-    fn to_clip_chain_id(&self, item: &Yaml) -> Option<ClipChainId> {
+    fn to_clip_chain_id(
+        &self,
+        item: &Yaml,
+        builder: &mut DisplayListBuilder,
+    ) -> Option<ClipChainId> {
         match *item {
             Yaml::Integer(value) => {
                 let clip_id = self.user_clip_id_map[&(value as u64)];
@@ -504,6 +508,17 @@ impl YamlFrameReader {
                     ClipId::ClipChain(id) => Some(id),
                     ClipId::Clip(..) => panic!("bug: must be a valid clip-chain id"),
                 }
+            }
+            Yaml::Array(ref array) => {
+                let clip_ids: Vec<ClipId> = array
+                    .iter()
+                    .map(|id| {
+                        let id = id.as_i64().expect("invalid clip id") as u64;
+                        self.user_clip_id_map[&id]
+                    })
+                    .collect();
+
+                Some(builder.define_clip_chain(None, clip_ids))
             }
             _ => None,
         }
@@ -1601,7 +1616,7 @@ impl YamlFrameReader {
                 mut clip_id,
             } = self.top_space_and_clip();
 
-            if let Some(clip_chain_id) = self.to_clip_chain_id(&item["clip-chain"]) {
+            if let Some(clip_chain_id) = self.to_clip_chain_id(&item["clip-chain"], dl) {
                 clip_id = ClipId::ClipChain(clip_chain_id);
             }
 
@@ -2023,7 +2038,7 @@ impl YamlFrameReader {
                 false
             };
 
-        let clip_chain_id = self.to_clip_chain_id(&yaml["clip-chain"]);
+        let clip_chain_id = self.to_clip_chain_id(&yaml["clip-chain"], dl);
 
         let transform_style = yaml["transform-style"]
             .as_transform_style()
