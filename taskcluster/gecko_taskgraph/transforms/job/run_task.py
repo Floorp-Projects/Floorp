@@ -9,10 +9,10 @@ Support for running jobs that are invoked via the `run-task` script.
 import os
 
 from mozpack import path
+from taskgraph.util.schema import Schema
 
 from gecko_taskgraph.transforms.task import taskref_or_string
 from gecko_taskgraph.transforms.job import run_job_using
-from gecko_taskgraph.util.schema import Schema
 from gecko_taskgraph.transforms.job.common import add_tooltool, support_vcs_checkout
 from voluptuous import Any, Optional, Required
 

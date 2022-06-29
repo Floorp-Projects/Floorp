@@ -17,14 +17,14 @@ pub(super) struct State {
     vertex_buffers:
         [(super::VertexBufferDesc, Option<super::BufferBinding>); crate::MAX_VERTEX_BUFFERS],
     vertex_attributes: ArrayVec<super::AttributeDesc, { super::MAX_VERTEX_ATTRIBUTES }>,
-    color_targets: ArrayVec<super::ColorTargetDesc, { crate::MAX_COLOR_TARGETS }>,
+    color_targets: ArrayVec<super::ColorTargetDesc, { crate::MAX_COLOR_ATTACHMENTS }>,
     stencil: super::StencilState,
     depth_bias: wgt::DepthBiasState,
     samplers: [Option<glow::Sampler>; super::MAX_SAMPLERS],
     texture_slots: [TextureSlotDesc; super::MAX_TEXTURE_SLOTS],
     render_size: wgt::Extent3d,
-    resolve_attachments: ArrayVec<(u32, super::TextureView), { crate::MAX_COLOR_TARGETS }>,
-    invalidate_attachments: ArrayVec<u32, { crate::MAX_COLOR_TARGETS + 2 }>,
+    resolve_attachments: ArrayVec<(u32, super::TextureView), { crate::MAX_COLOR_ATTACHMENTS }>,
+    invalidate_attachments: ArrayVec<u32, { crate::MAX_COLOR_ATTACHMENTS + 2 }>,
     has_pass_label: bool,
     instance_vbuf_mask: usize,
     dirty_vbuf_mask: usize,
@@ -327,6 +327,7 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
                 dst: dst_raw,
                 dst_target,
                 copy,
+                dst_is_cubemap: dst.is_cubemap,
             })
         }
     }
@@ -428,7 +429,8 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         match desc
             .color_attachments
             .first()
-            .map(|at| &at.target.view.inner)
+            .filter(|at| at.is_some())
+            .and_then(|at| at.as_ref().map(|at| &at.target.view.inner))
         {
             // default framebuffer (provided externally)
             Some(&super::TextureInner::DefaultRenderbuffer) => {
@@ -443,18 +445,20 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
                     .push(C::ResetFramebuffer { is_default: false });
 
                 for (i, cat) in desc.color_attachments.iter().enumerate() {
-                    let attachment = glow::COLOR_ATTACHMENT0 + i as u32;
-                    self.cmd_buffer.commands.push(C::BindAttachment {
-                        attachment,
-                        view: cat.target.view.clone(),
-                    });
-                    if let Some(ref rat) = cat.resolve_target {
-                        self.state
-                            .resolve_attachments
-                            .push((attachment, rat.view.clone()));
-                    }
-                    if !cat.ops.contains(crate::AttachmentOps::STORE) {
-                        self.state.invalidate_attachments.push(attachment);
+                    if let Some(cat) = cat.as_ref() {
+                        let attachment = glow::COLOR_ATTACHMENT0 + i as u32;
+                        self.cmd_buffer.commands.push(C::BindAttachment {
+                            attachment,
+                            view: cat.target.view.clone(),
+                        });
+                        if let Some(ref rat) = cat.resolve_target {
+                            self.state
+                                .resolve_attachments
+                                .push((attachment, rat.view.clone()));
+                        }
+                        if !cat.ops.contains(crate::AttachmentOps::STORE) {
+                            self.state.invalidate_attachments.push(attachment);
+                        }
                     }
                 }
                 if let Some(ref dsat) = desc.depth_stencil_attachment {
@@ -504,7 +508,12 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         });
 
         // issue the clears
-        for (i, cat) in desc.color_attachments.iter().enumerate() {
+        for (i, cat) in desc
+            .color_attachments
+            .iter()
+            .filter_map(|at| at.as_ref())
+            .enumerate()
+        {
             if !cat.ops.contains(crate::AttachmentOps::LOAD) {
                 let c = &cat.clear_value;
                 self.cmd_buffer

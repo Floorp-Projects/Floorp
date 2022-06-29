@@ -21,7 +21,7 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
   // We assume during this that R0 and R1 have been pushed.
   // Store frame size without VMFunction arguments for debug assertions.
   masm.movl(FramePointer, eax);
-  masm.subl(BaselineStackReg, eax);
+  masm.subl(StackPointer, eax);
   masm.subl(Imm32(argSize), eax);
   Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());
@@ -45,11 +45,11 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   // this is:
   //
   //   FramePointer
-  //   - BaselineStackReg
+  //   - StackPointer
   //   - sizeof(return address)
 
   masm.movl(FramePointer, scratch);
-  masm.subl(BaselineStackReg, scratch);
+  masm.subl(StackPointer, scratch);
   masm.subl(Imm32(sizeof(void*)), scratch);  // Return address.
 
   Address frameSizeAddr(FramePointer,
@@ -57,19 +57,16 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   masm.store32(scratch, frameSizeAddr);
 #endif
 
-  // Note: when making changes here,  don't forget to update StubFrameSize
-  // if needed.
-
   // Push the return address that's currently on top of the stack.
-  masm.Push(Operand(BaselineStackReg, 0));
+  masm.Push(Operand(StackPointer, 0));
 
   // Replace the original return address with the frame descriptor.
   masm.storePtr(ImmWord(MakeFrameDescriptor(FrameType::BaselineJS)),
-                Address(BaselineStackReg, sizeof(uintptr_t)));
+                Address(StackPointer, sizeof(uintptr_t)));
 
   // Save old frame pointer, stack pointer and stub reg.
   masm.Push(FramePointer);
-  masm.mov(BaselineStackReg, FramePointer);
+  masm.mov(StackPointer, FramePointer);
 
   masm.Push(ICStubReg);
 }

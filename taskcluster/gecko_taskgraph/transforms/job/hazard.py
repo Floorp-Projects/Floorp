@@ -6,7 +6,7 @@ Support for running hazard jobs via dedicated scripts
 """
 
 
-from gecko_taskgraph.util.schema import Schema
+from taskgraph.util.schema import Schema
 from voluptuous import Required, Optional, Any
 
 from gecko_taskgraph.transforms.job import (

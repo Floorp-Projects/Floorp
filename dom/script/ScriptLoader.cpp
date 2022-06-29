@@ -172,7 +172,7 @@ NS_IMPL_CYCLE_COLLECTION(ScriptLoader, mNonAsyncExternalScriptInsertedRequests,
                          mXSLTRequests, mParserBlockingRequest,
                          mBytecodeEncodingQueue, mPreloads,
                          mPendingChildLoaders, mModuleLoader,
-                         mWebExtModuleLoaders)
+                         mWebExtModuleLoaders, mShadowRealmModuleLoaders)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ScriptLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoader)
@@ -277,6 +277,13 @@ void ScriptLoader::RegisterContentScriptModuleLoader(ModuleLoader* aLoader) {
   MOZ_ASSERT(aLoader->GetScriptLoader() == this);
 
   mWebExtModuleLoaders.AppendElement(aLoader);
+}
+
+void ScriptLoader::RegisterShadowRealmModuleLoader(ModuleLoader* aLoader) {
+  MOZ_ASSERT(aLoader);
+  MOZ_ASSERT(aLoader->GetScriptLoader() == this);
+
+  mShadowRealmModuleLoaders.AppendElement(aLoader);
 }
 
 // Collect telemtry data about the cache information, and the kind of source
@@ -1672,6 +1679,20 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
 
+    if (ShouldApplyDelazifyStrategy(aRequest)) {
+      ApplyDelazifyStrategy(&options);
+      mTotalFullParseSize +=
+          aRequest->ScriptTextLength() > 0
+              ? static_cast<uint32_t>(aRequest->ScriptTextLength())
+              : 0;
+
+      LOG(
+          ("ScriptLoadRequest (%p): non-on-demand-only Parsing Enabled for "
+           "url=%s mTotalFullParseSize=%u",
+           aRequest, aRequest->mURI->GetSpecOrDefault().get(),
+           mTotalFullParseSize));
+    }
+
     MaybeSourceText maybeSource;
     nsresult rv = aRequest->GetScriptSource(cx, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1998,20 +2019,6 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   aOptions->borrowBuffer = true;
 
   aOptions->allocateInstantiationStorage = true;
-
-  if (ShouldApplyDelazifyStrategy(aRequest)) {
-    ApplyDelazifyStrategy(aOptions);
-    mTotalFullParseSize +=
-        aRequest->ScriptTextLength() > 0
-            ? static_cast<uint32_t>(aRequest->ScriptTextLength())
-            : 0;
-  } else {
-    // If we cannot apply the delazification strategy set in the preference, due
-    // to failure of the preconditions, then we default to the strategy which
-    // minimize the memory impact at runtime.
-    aOptions->setEagerDelazificationStrategy(
-        JS::DelazificationOption::OnDemandOnly);
-  }
 
   return NS_OK;
 }
@@ -2684,6 +2691,12 @@ bool ScriptLoader::HasPendingDynamicImports() const {
     }
   }
 
+  for (ModuleLoader* loader : mShadowRealmModuleLoaders) {
+    if (loader->HasPendingDynamicImports()) {
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -3241,26 +3254,6 @@ static bool IsInternalURIScheme(nsIURI* uri) {
 
 bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest) {
   // Full parse everything if negative.
-  if (!aRequest->IsTextSource()) {
-    // Delazification strategy is only used while processing source input, as
-    // the bytecode cache already contains delazified functions.
-    return false;
-  }
-
-  if (aRequest->IsModuleRequest()) {
-    // Module do not yet support concurrent off-thread delazification.
-    // (see Bug 1760334)
-    return false;
-  }
-
-  auto logEnabled = MakeScopeExit([&] {
-    LOG(
-        ("ScriptLoadRequest (%p): non-on-demand-only Parsing Enabled for "
-         "url=%s mTotalFullParseSize=%u",
-         aRequest, aRequest->mURI->GetSpecOrDefault().get(),
-         mTotalFullParseSize));
-  });
-
   if (StaticPrefs::dom_script_loader_delazification_max_size() < 0) {
     return true;
   }
@@ -3268,7 +3261,6 @@ bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest) {
   // Be conservative on machines with 2GB or less of memory.
   if (PhysicalSizeOfMemoryInGB() <=
       StaticPrefs::dom_script_loader_delazification_min_mem()) {
-    logEnabled.release();
     return false;
   }
 
@@ -3283,7 +3275,6 @@ bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest) {
     return true;
   }
 
-  logEnabled.release();
   if (LOG_ENABLED()) {
     nsCString url = aRequest->mURI->GetSpecOrDefault();
     LOG(
@@ -3519,6 +3510,10 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
   }
 
   for (ModuleLoader* loader : mWebExtModuleLoaders) {
+    loader->CancelAndClearDynamicImports();
+  }
+
+  for (ModuleLoader* loader : mShadowRealmModuleLoaders) {
     loader->CancelAndClearDynamicImports();
   }
 

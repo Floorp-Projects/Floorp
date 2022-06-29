@@ -7,10 +7,9 @@ import os
 import logging
 
 from taskgraph.config import GraphConfig
+from taskgraph.util.schema import Schema, optionally_keyed_by, validate_schema
 from taskgraph.util.yaml import load_yaml
 from voluptuous import Required, Optional, Any
-
-from .util.schema import validate_schema, Schema, optionally_keyed_by
 
 logger = logging.getLogger(__name__)
 

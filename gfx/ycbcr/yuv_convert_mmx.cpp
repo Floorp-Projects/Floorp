@@ -10,7 +10,7 @@ namespace gfx {
 
 // FilterRows combines two rows of the image using linear interpolation.
 // MMX version does 8 pixels at a time.
-void FilterRows_MMX(uint8* ybuf, const uint8* y0_ptr, const uint8* y1_ptr,
+void FilterRows_MMX(uint8_t* ybuf, const uint8_t* y0_ptr, const uint8_t* y1_ptr,
                     int source_width, int source_y_fraction) {
   __m64 zero = _mm_setzero_si64();
   __m64 y1_fraction = _mm_set1_pi16(source_y_fraction);

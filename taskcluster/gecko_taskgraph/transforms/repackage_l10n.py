@@ -8,7 +8,7 @@ Transform the repackage task into an actual task description.
 
 import copy
 
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 

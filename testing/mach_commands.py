@@ -973,7 +973,10 @@ def test_info_failures(
         return
 
     # get bug info
-    url = "https://bugzilla.mozilla.org/rest/bug?include_fields=summary&id=%s" % bugid
+    url = (
+        "https://bugzilla.mozilla.org/rest/bug?include_fields=summary,depends_on&id=%s"
+        % bugid
+    )
     r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
     if r.status_code != 200:
         print("%s error retrieving url: %s" % (r.status_code, url))
@@ -989,45 +992,69 @@ def test_info_failures(
         print("this query only works with single tracking bugs")
         return
 
+    # get depends_on bugs:
+    buglist = [bugid]
+    if "depends_on" in data["bugs"][0]:
+        buglist.append(data["bugs"][0]["depends_on"])
+
     testname = parts[0].strip().split(" ")[-1]
 
     # now query treeherder to get details about annotations
-    url = "https://treeherder.mozilla.org/api/failuresbybug/"
-    url += "?startday=%s&endday=%s&tree=trunk&bug=%s" % (start, end, bugid)
-    r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
-    r.raise_for_status()
+    data = []
+    for b in buglist:
+        url = "https://treeherder.mozilla.org/api/failuresbybug/"
+        url += "?startday=%s&endday=%s&tree=trunk&bug=%s" % (start, end, b)
+        r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
+        r.raise_for_status()
 
-    data = r.json()
+        bdata = r.json()
+        data.extend(bdata)
+
     if len(data) == 0:
         print("no failures were found for given bugid, please ensure bug is")
         print("accessible via: https://treeherder.mozilla.org/intermittent-failures")
         return
 
+    # query VCS to get current list of variants:
+    import yaml
+
+    url = "https://hg.mozilla.org/mozilla-central/raw-file/tip/taskcluster/ci/test/variants.yml"
+    r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
+    variants = yaml.safe_load(r.text)
+
+    print(
+        "\nQuerying data for bug %s annotated from %s to %s on trunk.\n\n"
+        % (buglist, start, end)
+    )
     jobs = {}
     lines = {}
     for failure in data:
         # config = platform/buildtype
-        # testsuite (<suite>[-variant][-fis][-e10s|1proc][-<chunk>])
+        # testsuite (<suite>[-variant][-<chunk>])
         # lines - group by patterns that contain test name
         config = "%s/%s" % (failure["platform"], failure["build_type"])
 
-        if "-e10s" in failure["test_suite"]:
-            parts = failure["test_suite"].split("-e10s")
-            sv = parts[0].split("-")
-            suite = sv[0]
-            variant = ""
-            if len(sv) > 1:
-                variant = "-%s" % "-".join(sv[1:])
-        elif "-1proc" in failure["test_suite"]:
-            parts = failure["test_suite"].split("-1proc")
-            sv = parts[0].split("-")
-            suite = sv[0]
-            variant = ""
-            if len(sv) > 1:
-                variant = "-%s" % "-".join(sv[1:])
-        else:
-            print("unable to parse test suite: %s" % failure["test_suite"])
-            print("no `-e10s` or `-1proc` found")
+        variant = ""
+        suite = ""
+        varpos = len(failure["test_suite"])
+        for v in variants.keys():
+            var = "-%s" % variants[v]["suffix"]
+            if var in failure["test_suite"]:
+                if failure["test_suite"].find(var) < varpos:
+                    variant = var
+
+        if variant:
+            suite = failure["test_suite"].split(variant)[0]
+
+        parts = failure["test_suite"].split("-")
+        try:
+            int(parts[-1])
+            suite = "-".join(parts[:-1])
+        except ValueError:
+            pass  # if this works, then the last '-X' is a number :)
+
+        if suite == "":
+            print("Error: failure to find variant in %s" % failure["test_suite"])
 
         job = "%s-%s%s" % (config, suite, variant)
         if job not in jobs.keys():

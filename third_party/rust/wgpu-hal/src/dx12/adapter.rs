@@ -41,6 +41,10 @@ impl super::Adapter {
         }
     }
 
+    pub fn raw_adapter(&self) -> &native::DxgiAdapter {
+        &self.raw
+    }
+
     #[allow(trivial_casts)]
     pub(super) fn expose(
         adapter: native::DxgiAdapter,
@@ -198,6 +202,7 @@ impl super::Adapter {
             | wgt::Features::VERTEX_WRITABLE_STORAGE
             | wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
             | wgt::Features::TIMESTAMP_QUERY
+            | wgt::Features::WRITE_TIMESTAMP_INSIDE_PASSES
             | wgt::Features::TEXTURE_COMPRESSION_BC
             | wgt::Features::CLEAR_TEXTURE
             | wgt::Features::TEXTURE_FORMAT_16BIT_NORM;
@@ -278,6 +283,7 @@ impl super::Adapter {
                     max_compute_workgroup_size_z: d3d12::D3D12_CS_THREAD_GROUP_MAX_Z,
                     max_compute_workgroups_per_dimension:
                         d3d12::D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
+                    max_buffer_size: u64::MAX,
                 },
                 alignments: crate::Alignments {
                     buffer_copy_offset: wgt::BufferSize::new(

@@ -7,6 +7,7 @@
 #ifndef DOM_FS_FILESYSTEMHANDLE_H_
 #define DOM_FS_FILESYSTEMHANDLE_H_
 
+#include "mozilla/dom/PBackgroundFileSystem.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
@@ -23,8 +24,16 @@ class DOMString;
 enum class FileSystemHandleKind : uint8_t;
 class Promise;
 
+namespace fs {
+class FileSystemRequestHandler;
+}  // namespace fs
+
 class FileSystemHandle : public nsISupports, public nsWrapperCache {
  public:
+  FileSystemHandle(nsIGlobalObject* aGlobal,
+                   const fs::FileSystemEntryMetadata& aMetadata,
+                   fs::FileSystemRequestHandler* aRequestHandler);
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileSystemHandle)
 
@@ -35,17 +44,21 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL Interface
-  virtual FileSystemHandleKind Kind() = 0;
+  virtual FileSystemHandleKind Kind() const = 0;
 
-  void GetName(DOMString& aResult);
+  void GetName(nsAString& aResult);
 
   already_AddRefed<Promise> IsSameEntry(FileSystemHandle& aOther,
-                                        ErrorResult& aError);
+                                        ErrorResult& aError) const;
 
  protected:
   virtual ~FileSystemHandle() = default;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
+
+  const fs::FileSystemEntryMetadata mMetadata;
+
+  const UniquePtr<fs::FileSystemRequestHandler> mRequestHandler;
 };
 
 }  // namespace dom

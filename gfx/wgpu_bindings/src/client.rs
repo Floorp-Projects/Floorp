@@ -114,11 +114,11 @@ impl FragmentState<'_> {
     fn to_wgpu(&self) -> wgc::pipeline::FragmentState {
         let color_targets = make_slice(self.targets, self.targets_length)
             .iter()
-            .map(|ct| wgt::ColorTargetState {
+            .map(|ct| Some(wgt::ColorTargetState {
                 format: ct.format,
                 blend: ct.blend.cloned(),
                 write_mask: ct.write_mask,
-            })
+            }))
             .collect();
         wgc::pipeline::FragmentState {
             stage: self.stage.to_wgpu(),
@@ -600,9 +600,13 @@ pub extern "C" fn wgpu_device_create_render_bundle_encoder(
     desc: &RenderBundleEncoderDescriptor,
     bb: &mut ByteBuf,
 ) -> *mut wgc::command::RenderBundleEncoder {
+    let color_formats: Vec<_> = make_slice(desc.color_formats, desc.color_formats_length)
+        .iter()
+        .map(|format| Some(format.clone()))
+        .collect();
     let descriptor = wgc::command::RenderBundleEncoderDescriptor {
         label: cow_label(&desc.label),
-        color_formats: Cow::Borrowed(make_slice(desc.color_formats, desc.color_formats_length)),
+        color_formats: Cow::Owned(color_formats),
         depth_stencil: desc
             .depth_stencil_format
             .map(|&format| wgt::RenderBundleDepthStencil {
@@ -701,14 +705,15 @@ pub unsafe extern "C" fn wgpu_command_encoder_begin_render_pass(
     encoder_id: id::CommandEncoderId,
     desc: &RenderPassDescriptor,
 ) -> *mut wgc::command::RenderPass {
+    let color_attachments: Vec<_> = make_slice(desc.color_attachments, desc.color_attachments_length)
+        .iter()
+        .map(|format| Some(format.clone()))
+        .collect();
     let pass = wgc::command::RenderPass::new(
         encoder_id,
         &wgc::command::RenderPassDescriptor {
             label: cow_label(&desc.label),
-            color_attachments: Cow::Borrowed(make_slice(
-                desc.color_attachments,
-                desc.color_attachments_length,
-            )),
+            color_attachments: Cow::Owned(color_attachments),
             depth_stencil_attachment: desc.depth_stencil_attachment.as_ref(),
         },
     );

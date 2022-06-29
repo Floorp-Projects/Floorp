@@ -12,6 +12,8 @@
 
 [Exposed=Window]
 interface SVGStyleElement : SVGElement {
+  [Pure]
+  attribute boolean disabled;
   [SetterThrows]
   attribute DOMString type;
   [SetterThrows]

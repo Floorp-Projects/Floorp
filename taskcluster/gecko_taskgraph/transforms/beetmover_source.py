@@ -5,7 +5,7 @@
 Transform the beetmover-source task to also append `build` as dependency
 """
 
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 

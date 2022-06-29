@@ -628,9 +628,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
         // Always use lowercase to make the reporting consistent
         advertiser: result.payload.sponsoredAdvertiser.toLocaleLowerCase(),
         block_id: result.payload.sponsoredBlockId,
+        improve_suggest_experience_checked: UrlbarPrefs.get(
+          "quicksuggest.dataCollection.enabled"
+        ),
         position: telemetryResultIndex,
         request_id: result.payload.requestId,
-        scenario: UrlbarPrefs.get("quicksuggest.scenario"),
       };
 
       // impression

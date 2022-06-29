@@ -71,10 +71,10 @@ typedef void (*yuv2rgb565_row_scale_nearest_func)(
 extern "C" void ScaleYCbCr42xToRGB565_BilinearY_Row_NEON(
  const yuv2rgb565_row_scale_bilinear_ctx *ctx, int dither);
 
-void __attribute((noinline)) yuv42x_to_rgb565_row_neon(uint16 *dst,
-                                                       const uint8 *y,
-                                                       const uint8 *u,
-                                                       const uint8 *v,
+void __attribute((noinline)) yuv42x_to_rgb565_row_neon(uint16_t *dst,
+                                                       const uint8_t *y,
+                                                       const uint8_t *u,
+                                                       const uint8_t *v,
                                                        int n,
                                                        int oddflag);
 
@@ -581,10 +581,10 @@ bool IsScaleYCbCrToRGB565Fast(int source_x0,
 
 
 
-void yuv_to_rgb565_row_c(uint16 *dst,
-                         const uint8 *y,
-                         const uint8 *u,
-                         const uint8 *v,
+void yuv_to_rgb565_row_c(uint16_t *dst,
+                         const uint8_t *y,
+                         const uint8_t *u,
+                         const uint8_t *v,
                          int x_shift,
                          int pic_x,
                          int pic_width)
@@ -599,10 +599,10 @@ void yuv_to_rgb565_row_c(uint16 *dst,
   }
 }
 
-void ConvertYCbCrToRGB565(const uint8* y_buf,
-                                   const uint8* u_buf,
-                                   const uint8* v_buf,
-                                   uint8* rgb_buf,
+void ConvertYCbCrToRGB565(const uint8_t* y_buf,
+                                   const uint8_t* u_buf,
+                                   const uint8_t* v_buf,
+                                   uint8_t* rgb_buf,
                                    int pic_x,
                                    int pic_y,
                                    int pic_width,
@@ -625,7 +625,7 @@ void ConvertYCbCrToRGB565(const uint8* y_buf,
       int uvoffs;
       yoffs = y_pitch * (pic_y+i) + pic_x;
       uvoffs = uv_pitch * ((pic_y+i)>>y_shift) + (pic_x>>x_shift);
-      yuv42x_to_rgb565_row_neon((uint16*)(rgb_buf + rgb_pitch * i),
+      yuv42x_to_rgb565_row_neon((uint16_t*)(rgb_buf + rgb_pitch * i),
                                 y_buf + yoffs,
                                 u_buf + uvoffs,
                                 v_buf + uvoffs,
@@ -641,7 +641,7 @@ void ConvertYCbCrToRGB565(const uint8* y_buf,
       int uvoffs;
       yoffs = y_pitch * (pic_y+i);
       uvoffs = uv_pitch * ((pic_y+i)>>y_shift);
-      yuv_to_rgb565_row_c((uint16*)(rgb_buf + rgb_pitch * i),
+      yuv_to_rgb565_row_c((uint16_t*)(rgb_buf + rgb_pitch * i),
                           y_buf + yoffs,
                           u_buf + uvoffs,
                           v_buf + uvoffs,

@@ -185,6 +185,11 @@ mochitest-browser-chrome:
     suite:
         name: mochitest-browser-chrome
     treeherder-symbol: M(bc)
+    worker-type:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: t-linux-xlarge-gcp  # runs out of memory on large
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-browser-chrome
     loopback-video: true
     variants:
@@ -426,6 +431,11 @@ mochitest-plain-gpu:
     description: "Mochitest plain GPU run"
     suite:
         name: mochitest-plain-gpu
+    worker-type:
+        by-test-platform:
+            linux.*64-[at]san(-qr)?/opt: t-linux-xlarge-gcp
+            linux.*: t-linux-large-gcp
+            default: default
     treeherder-symbol: M(gpu)
     schedules-component: mochitest-plain
     loopback-video: true
@@ -486,6 +496,11 @@ mochitest-chrome-gpu:
     description: "Mochitest chrome GPU run"
     suite:
         name: mochitest-chrome-gpu
+    worker-type:
+        by-test-platform:
+            linux.*64-[at]san(-qr)?/opt: t-linux-xlarge-gcp
+            linux.*: t-linux-large-gcp
+            default: default
     treeherder-symbol: M(gpu-c)
     loopback-video: true
     virtualization: virtual-with-gpu
@@ -531,6 +546,11 @@ mochitest-media:
     description: "Mochitest media run"
     treeherder-symbol: M(mda)
     schedules-component: mochitest-plain
+    worker-type:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: t-linux-xlarge-gcp  # runs out of memory on default/m3.large
+            linux.*: t-linux-large-gcp
+            default: default
     max-run-time:
         by-test-platform:
             windows10-64-2004-ccov.*/.*: 7200
@@ -605,10 +625,6 @@ mochitest-media:
                     windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     default: built-projects
     loopback-video: true
-    instance-size:
-        by-test-platform:
-            linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
-            default: large
     chunks:
         by-test-platform:
             android-em-7.*: 1
@@ -661,6 +677,10 @@ mochitest-webgl1-core:
     description: "Mochitest webgl1-core run"
     treeherder-symbol: M(gl1c)
     schedules-component: mochitest-plain
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     virtualization: virtual-with-gpu
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
@@ -719,6 +739,10 @@ mochitest-webgl1-core:
 mochitest-webgl1-ext:
     description: "Mochitest webgl1-ext run"
     treeherder-symbol: M(gl1e)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     chunks:
@@ -780,6 +804,10 @@ mochitest-webgl1-ext:
 mochitest-webgl2-core:
     description: "Mochitest webgl2-core run"
     treeherder-symbol: M(gl2c)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     chunks:
@@ -839,6 +867,10 @@ mochitest-webgl2-core:
 mochitest-webgl2-ext:
     description: "Mochitest webgl2-ext run"
     treeherder-symbol: M(gl2e)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     variants:
@@ -894,6 +926,10 @@ mochitest-webgl2-ext:
 mochitest-webgl2-deqp:
     description: "Mochitest webgl2-deqp run"
     treeherder-symbol: M(gl2d)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     variants:
@@ -916,6 +952,10 @@ mochitest-webgl2-deqp:
 mochitest-webgpu:
     description: "Mochitest webgpu run"
     treeherder-symbol: M(webgpu)
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     loopback-video: true
@@ -958,6 +998,10 @@ mochitest-remote:
     description: "Mochitest for the remote agent (/remote folder)"
     suite:
         name: mochitest-remote
+    worker-type:
+        by-test-platform:
+            linux.*: t-linux-large-gcp
+            default: default
     treeherder-symbol: M(remote)
     loopback-video: true
     variants:

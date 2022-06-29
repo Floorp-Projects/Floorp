@@ -772,6 +772,10 @@ payload includes the following:
   used to link to a client_id.
 :iab_category:
   The suggestion's category, either "22 - Shopping" or "5 - Education".
+:improve_suggest_experience_checked:
+  A boolean indicating whether the user has opted in to improving the Firefox
+  Suggest experience. There are two ways for the user to opt in, either in an
+  opt-in modal experiment or by toggling a switch in Firefox's settings.
 :match_type:
   "best-match" if the suggestion was a best match or "firefox-suggest" if it was
   a non-best-match suggestion.
@@ -780,14 +784,17 @@ payload includes the following:
 :request_id:
   A request identifier for each API request to Merino. This is only included for
   suggestions provided by Merino.
-:scenario:
-  The user's Suggest scenario, either "offline" or "online".
 
 Changelog
   Firefox 101.0
     Introduced. [Bug 1764669_]
 
+  Firefox 103.0
+    ``scenario`` is removed from the payload and
+    ``improve_suggest_experience_checked`` is added. [Bug 1776797_]
+
 .. _1764669: https://bugzilla.mozilla.org/show_bug.cgi?id=1764669
+.. _1776797: https://bugzilla.mozilla.org/show_bug.cgi?id=1776797
 
 Click
 ~~~~~
@@ -802,6 +809,10 @@ the following:
 :context_id:
   A UUID representing this user. Note that it's not client_id, nor can it be
   used to link to a client_id.
+:improve_suggest_experience_checked:
+  A boolean indicating whether the user has opted in to improving the Firefox
+  Suggest experience. There are two ways for the user to opt in, either in an
+  opt-in modal experiment or by toggling a switch in Firefox's settings.
 :match_type:
   "best-match" if the suggestion was a best match or "firefox-suggest" if it was
   a non-best-match suggestion.
@@ -813,8 +824,6 @@ the following:
 :request_id:
   A request identifier for each API request to Merino. This is only included for
   suggestions provided by Merino.
-:scenario:
-  The user's Suggest scenario, either "offline" or "online".
 
 Changelog
   Firefox 87.0
@@ -830,10 +839,15 @@ Changelog
   Firefox 99.0
     ``match_type`` is added to the payload. [Bug 1754622_]
 
+  Firefox 103.0
+    ``scenario`` is removed from the payload and
+    ``improve_suggest_experience_checked`` is added. [Bug 1776797_]
+
 .. _1689365: https://bugzilla.mozilla.org/show_bug.cgi?id=1689365
 .. _1729576: https://bugzilla.mozilla.org/show_bug.cgi?id=1729576
 .. _1736117: https://bugzilla.mozilla.org/show_bug.cgi?id=1736117
 .. _1754622: https://bugzilla.mozilla.org/show_bug.cgi?id=1754622
+.. _1776797: https://bugzilla.mozilla.org/show_bug.cgi?id=1776797
 
 Impression
 ~~~~~~~~~~
@@ -857,14 +871,14 @@ The impression ping payload contains the following:
 :context_id:
   A UUID representing this user. Note that it's not client_id, nor can it be
   used to link to a client_id.
+:improve_suggest_experience_checked:
+  A boolean indicating whether the user has opted in to improving the Firefox
+  Suggest experience. There are two ways for the user to opt in, either in an
+  opt-in modal experiment or by toggling a switch in Firefox's settings.
 :is_clicked:
   Whether or not the user also clicked the suggestion. When true, we will also
   send a separate click ping. When the impression ping is recorded because the
   user dismissed ("blocked") the suggestion, this will be false.
-:matched_keywords (**Removed from Firefox 97**):
-  The matched keywords that lead to the suggestion. This is only included when
-  the user has opted in to data collection and the suggestion is provided by
-  remote settings.
 :match_type:
   "best-match" if the suggestion was a best match or "firefox-suggest" if it was
   a non-best-match suggestion.
@@ -876,12 +890,6 @@ The impression ping payload contains the following:
 :request_id:
   A request identifier for each API request to Merino. This is only included for
   suggestions provided by Merino.
-:scenario:
-  The user's Suggest scenario, either "offline" or "online".
-:search_query (**Removed from Firefox 97**):
-  The exact search query typed by the user. This is only included when the user
-  has opted in to data collection and the suggestion is provided by remote
-  settings.
 
 Changelog
   Firefox 87.0
@@ -921,6 +929,10 @@ Changelog
     The impression ping is now also recorded when the user dismisses ("blocks")
     a suggestion. [Bug 1761059_]
 
+  Firefox 103.0
+    ``scenario`` is removed from the payload and
+    ``improve_suggest_experience_checked`` is added. [Bug 1776797_]
+
 .. _1689365: https://bugzilla.mozilla.org/show_bug.cgi?id=1689365
 .. _1725492: https://bugzilla.mozilla.org/show_bug.cgi?id=1725492
 .. _1728188: https://bugzilla.mozilla.org/show_bug.cgi?id=1728188
@@ -930,6 +942,7 @@ Changelog
 .. _1748348: https://bugzilla.mozilla.org/show_bug.cgi?id=1748348
 .. _1754622: https://bugzilla.mozilla.org/show_bug.cgi?id=1754622
 .. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
+.. _1776797: https://bugzilla.mozilla.org/show_bug.cgi?id=1776797
 
 Nimbus Exposure Event
 ---------------------
@@ -1020,6 +1033,21 @@ Search Query
   The user's search query typed in the address bar.
 
   API parameter name: ``q``
+
+Session ID
+  A UUID that identifies the user's current search session in the address bar.
+  This ID is unique per search session. A search session ends when the focus
+  leaves the address bar or a timeout of 5 minutes elapses, whichever comes
+  first.
+
+  API parameter name: ``sid``
+
+Sequence Number
+  A zero-based integer that is incremented after a response is received from
+  Merino. It is reset at the end of each search session along with the session
+  ID.
+
+  API parameter name: ``seq``
 
 Client Variants
   Optional. A list of experiments or rollouts that are affecting the Firefox

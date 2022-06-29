@@ -8,14 +8,14 @@ the condprof/kind.yml file
 
 from copy import deepcopy
 
+from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.schema import Schema
 from voluptuous import (
     Optional,
 )
 
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.job import job_description_schema
 from gecko_taskgraph.transforms.task import task_description_schema
-from gecko_taskgraph.util.schema import Schema
 
 diff_description_schema = Schema(
     {

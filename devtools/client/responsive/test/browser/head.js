@@ -70,7 +70,6 @@ Services.prefs.setBoolPref(
 );
 // Don't show the setting onboarding tooltip in the test suites.
 Services.prefs.setBoolPref("devtools.responsive.show-setting-tooltip", false);
-Services.prefs.setBoolPref("devtools.responsive.showUserAgentInput", true);
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref(

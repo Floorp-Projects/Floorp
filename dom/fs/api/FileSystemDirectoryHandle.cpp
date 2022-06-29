@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileSystemDirectoryHandle.h"
+#include "fs/FileSystemRequestHandler.h"
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemDirectoryHandleBinding.h"
@@ -13,6 +14,16 @@
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla::dom {
+
+FileSystemDirectoryHandle::FileSystemDirectoryHandle(
+    nsIGlobalObject* aGlobal, const fs::FileSystemEntryMetadata& aMetadata,
+    fs::FileSystemRequestHandler* aRequestHandler)
+    : FileSystemHandle(aGlobal, aMetadata, aRequestHandler) {}
+
+FileSystemDirectoryHandle::FileSystemDirectoryHandle(
+    nsIGlobalObject* aGlobal, const fs::FileSystemEntryMetadata& aMetadata)
+    : FileSystemDirectoryHandle(aGlobal, aMetadata,
+                                new fs::FileSystemRequestHandler()) {}
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(FileSystemDirectoryHandle,
                                                FileSystemHandle)
@@ -27,7 +38,7 @@ JSObject* FileSystemDirectoryHandle::WrapObject(
 
 // WebIDL Interface
 
-FileSystemHandleKind FileSystemDirectoryHandle::Kind() {
+FileSystemHandleKind FileSystemDirectoryHandle::Kind() const {
   return FileSystemHandleKind::Directory;
 }
 

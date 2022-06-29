@@ -49,11 +49,8 @@ def apply_patches(base):
         # make mjpeg printfs optional at build time
         'make_mjpeg_printfs_optional.patch',
         # allow disabling of inline ASM and AVX2 code
-        'allow_disabling_asm_avx2.patch',
-        # add H444ToARGB() variant
-        'add_H444ToARGB.patch',
-        # fix the x86 mingw-clang build
-        'bug_1491848.patch',
+        # removed as dead in 1698699
+        # 'allow_disabling_asm_avx2.patch',
     ]
 
     for patch in patches:

@@ -9,8 +9,7 @@ Build a command to run `mach release push-scriptworker-canaries`.
 from pipes import quote as shell_quote
 
 from mozrelease.scriptworker_canary import TASK_TYPES
-
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 

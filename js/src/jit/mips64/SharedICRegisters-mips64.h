@@ -14,8 +14,6 @@
 namespace js {
 namespace jit {
 
-static constexpr Register BaselineStackReg = sp;
-
 // ValueOperands R0, R1, and R2.
 // R0 == JSReturnReg, and R2 uses registers not preserved across calls. R1 value
 // should be preserved across calls.

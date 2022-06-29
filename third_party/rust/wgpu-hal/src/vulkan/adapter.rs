@@ -360,7 +360,7 @@ impl PhysicalDeviceFeatures {
             | F::ADDRESS_MODE_CLAMP_TO_BORDER
             | F::ADDRESS_MODE_CLAMP_TO_ZERO
             | F::TIMESTAMP_QUERY
-            | F::PIPELINE_STATISTICS_QUERY
+            | F::WRITE_TIMESTAMP_INSIDE_PASSES
             | F::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
             | F::CLEAR_TEXTURE;
         let mut dl_flags = Df::all();
@@ -397,8 +397,10 @@ impl PhysicalDeviceFeatures {
             F::TEXTURE_COMPRESSION_BC,
             self.core.texture_compression_bc != 0,
         );
-        //if self.core.occlusion_query_precise != 0 {
-        //if self.core.pipeline_statistics_query != 0 { //TODO
+        features.set(
+            F::PIPELINE_STATISTICS_QUERY,
+            self.core.pipeline_statistics_query != 0,
+        );
         features.set(
             F::VERTEX_WRITABLE_STORAGE,
             self.core.vertex_pipeline_stores_and_atomics != 0,
@@ -607,7 +609,11 @@ unsafe impl Send for PhysicalDeviceCapabilities {}
 unsafe impl Sync for PhysicalDeviceCapabilities {}
 
 impl PhysicalDeviceCapabilities {
-    fn supports_extension(&self, extension: &CStr) -> bool {
+    pub fn properties(&self) -> vk::PhysicalDeviceProperties {
+        self.properties
+    }
+
+    pub fn supports_extension(&self, extension: &CStr) -> bool {
         self.supported_extensions
             .iter()
             .any(|ep| unsafe { CStr::from_ptr(ep.extension_name.as_ptr()) } == extension)
@@ -763,6 +769,15 @@ impl PhysicalDeviceCapabilities {
             .min(limits.max_compute_work_group_count[1])
             .min(limits.max_compute_work_group_count[2]);
 
+        // Prevent very large buffers on mesa and most android devices.
+        let is_nvidia = self.properties.vendor_id == crate::auxil::db::nvidia::VENDOR;
+        let max_buffer_size =
+            if (cfg!(target_os = "linux") || cfg!(target_os = "android")) && !is_nvidia {
+                i32::MAX as u64
+            } else {
+                u64::MAX
+            };
+
         wgt::Limits {
             max_texture_dimension_1d: limits.max_image_dimension1_d,
             max_texture_dimension_2d: limits.max_image_dimension2_d,
@@ -803,6 +818,7 @@ impl PhysicalDeviceCapabilities {
             max_compute_workgroup_size_y: max_compute_workgroup_sizes[1],
             max_compute_workgroup_size_z: max_compute_workgroup_sizes[2],
             max_compute_workgroups_per_dimension,
+            max_buffer_size,
         }
     }
 
@@ -1043,19 +1059,17 @@ impl super::Instance {
                 || phd_capabilities.supports_extension(vk::KhrMaintenance1Fn::name()),
             imageless_framebuffers: match phd_features.vulkan_1_2 {
                 Some(features) => features.imageless_framebuffer == vk::TRUE,
-                None => match phd_features.imageless_framebuffer {
-                    Some(ref ext) => ext.imageless_framebuffer != 0,
-                    None => false,
-                },
+                None => phd_features
+                    .imageless_framebuffer
+                    .map_or(false, |ext| ext.imageless_framebuffer != 0),
             },
             image_view_usage: phd_capabilities.properties.api_version >= vk::API_VERSION_1_1
                 || phd_capabilities.supports_extension(vk::KhrMaintenance2Fn::name()),
             timeline_semaphores: match phd_features.vulkan_1_2 {
                 Some(features) => features.timeline_semaphore == vk::TRUE,
-                None => match phd_features.timeline_semaphore {
-                    Some(ref ext) => ext.timeline_semaphore != 0,
-                    None => false,
-                },
+                None => phd_features
+                    .timeline_semaphore
+                    .map_or(false, |ext| ext.timeline_semaphore != 0),
             },
             texture_d24: unsafe {
                 self.shared
@@ -1077,13 +1091,11 @@ impl super::Instance {
             robust_buffer_access: phd_features.core.robust_buffer_access != 0,
             robust_image_access: match phd_features.robustness2 {
                 Some(ref f) => f.robust_image_access2 != 0,
-                None => match phd_features.image_robustness {
-                    Some(ref f) => f.robust_image_access != 0,
-                    None => false,
-                },
+                None => phd_features
+                    .image_robustness
+                    .map_or(false, |ext| ext.robust_image_access != 0),
             },
         };
-
         let capabilities = crate::Capabilities {
             limits: phd_capabilities.to_wgpu_limits(&phd_features),
             alignments: phd_capabilities.to_hal_alignments(),
@@ -1122,6 +1134,14 @@ impl super::Instance {
 impl super::Adapter {
     pub fn raw_physical_device(&self) -> ash::vk::PhysicalDevice {
         self.raw
+    }
+
+    pub fn physical_device_capabilities(&self) -> &PhysicalDeviceCapabilities {
+        &self.phd_capabilities
+    }
+
+    pub fn shared_instance(&self) -> &super::InstanceShared {
+        &self.instance
     }
 
     pub fn required_device_extensions(&self, features: wgt::Features) -> Vec<&'static CStr> {
@@ -1237,6 +1257,10 @@ impl super::Adapter {
                 capabilities.push(spv::Capability::MultiView);
             }
 
+            if features.contains(wgt::Features::SHADER_PRIMITIVE_INDEX) {
+                capabilities.push(spv::Capability::Geometry);
+            }
+
             if features.intersects(
                 wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
                     | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
@@ -1294,6 +1318,8 @@ impl super::Adapter {
             raw: raw_device,
             handle_is_owned,
             instance: Arc::clone(&self.instance),
+            physical_device: self.raw,
+            enabled_extensions: enabled_extensions.into(),
             extension_fns: super::DeviceExtensionFunctions {
                 draw_indirect_count: indirect_count_fn,
                 timeline_semaphore: timeline_semaphore_fn,

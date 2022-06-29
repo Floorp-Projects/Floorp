@@ -16,10 +16,8 @@ namespace jit {
 
 // r15 = program-counter
 // r14 = link-register
-
 // r13 = stack-pointer
 // r11 = frame-pointer
-static constexpr Register BaselineStackReg = sp;
 
 // ValueOperands R0, R1, and R2.
 // R0 == JSReturnReg, and R2 uses registers not preserved across calls. R1 value

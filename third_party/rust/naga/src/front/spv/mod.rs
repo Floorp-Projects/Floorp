@@ -39,7 +39,7 @@ use function::*;
 
 use crate::{
     arena::{Arena, Handle, UniqueArena},
-    proc::Layouter,
+    proc::{Alignment, Layouter},
     FastHashMap, FastHashSet,
 };
 
@@ -71,6 +71,7 @@ pub const SUPPORTED_CAPABILITIES: &[spirv::Capability] = &[
     spirv::Capability::Float16,
     spirv::Capability::Float64,
     spirv::Capability::Geometry,
+    spirv::Capability::MultiView,
     // tricky ones
     spirv::Capability::UniformBufferArrayDynamicIndexing,
     spirv::Capability::StorageBufferArrayDynamicIndexing,
@@ -305,7 +306,8 @@ struct LookupExpression {
     ///
     /// Note that, while a SPIR-V result id can be used in any block dominated
     /// by its definition, a Naga `Expression` is only in scope for the rest of
-    /// its subtree. `Parser::get_expr_handle` takes care of
+    /// its subtree. `Parser::get_expr_handle` takes care of spilling the result
+    /// to a `LocalVariable` which can then be used anywhere.
     handle: Handle<crate::Expression>,
 
     /// The SPIR-V type of this result.
@@ -2391,6 +2393,34 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         },
                     );
                 }
+                Op::BitReverse | Op::BitCount => {
+                    inst.expect(4)?;
+
+                    let result_type_id = self.next()?;
+                    let result_id = self.next()?;
+                    let base_id = self.next()?;
+                    let base_lexp = self.lookup_expression.lookup(base_id)?;
+                    let base_handle = get_expr_handle!(base_id, base_lexp);
+                    let expr = crate::Expression::Math {
+                        fun: match inst.op {
+                            Op::BitReverse => crate::MathFunction::ReverseBits,
+                            Op::BitCount => crate::MathFunction::CountOneBits,
+                            _ => unreachable!(),
+                        },
+                        arg: base_handle,
+                        arg1: None,
+                        arg2: None,
+                        arg3: None,
+                    };
+                    self.lookup_expression.insert(
+                        result_id,
+                        LookupExpression {
+                            handle: ctx.expressions.append(expr, span),
+                            type_id: result_type_id,
+                            block_id,
+                        },
+                    );
+                }
                 Op::OuterProduct => {
                     inst.expect(5)?;
 
@@ -3535,6 +3565,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 S::Loop {
                     ref mut body,
                     ref mut continuing,
+                    break_if: _,
                 } => {
                     self.patch_statements(body, expressions, fun_parameter_sampling)?;
                     self.patch_statements(continuing, expressions, fun_parameter_sampling)?;
@@ -4347,7 +4378,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let mut member_lookups = Vec::with_capacity(members.capacity());
         let mut storage_access = crate::StorageAccess::empty();
         let mut span = 0;
-        let mut alignment = 1;
+        let mut alignment = Alignment::ONE;
         for i in 0..u32::from(inst.wc) - 2 {
             let type_id = self.next()?;
             let ty = self.lookup_type.lookup(type_id)?.handle;
@@ -4363,8 +4394,9 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 row_major: decor.matrix_major == Some(Majority::Row),
             });
 
-            span = crate::front::align_up(span, self.layouter[ty].alignment.get());
-            alignment = self.layouter[ty].alignment.get().max(alignment);
+            let member_alignment = self.layouter[ty].alignment;
+            span = member_alignment.round_up(span);
+            alignment = member_alignment.max(alignment);
 
             let mut binding = decor.io_binding().ok();
             if let Some(offset) = decor.offset {
@@ -4382,8 +4414,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             } = *inner
             {
                 if let Some(stride) = decor.matrix_stride {
-                    let aligned_rows = if rows > crate::VectorSize::Bi { 4 } else { 2 };
-                    let expected_stride = aligned_rows * width as u32;
+                    let expected_stride = Alignment::from(rows) * width as u32;
                     if stride.get() != expected_stride {
                         return Err(Error::UnsupportedMatrixStride {
                             stride: stride.get(),
@@ -4406,7 +4437,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             });
         }
 
-        span = crate::front::align_up(span, alignment);
+        span = alignment.round_up(span);
 
         let inner = crate::TypeInner::Struct { span, members };
 

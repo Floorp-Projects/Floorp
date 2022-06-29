@@ -8,11 +8,12 @@ Transform the beetmover task into an actual task description.
 from collections import defaultdict
 from copy import deepcopy
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.taskcluster import get_artifact_prefix
+from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
 from voluptuous import Any, Required, Optional
 
 from gecko_taskgraph.loader.single_dep import schema
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.beetmover import craft_release_properties
 from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
@@ -21,10 +22,6 @@ from gecko_taskgraph.util.attributes import (
 from gecko_taskgraph.util.partners import (
     get_partner_config_by_kind,
     apply_partner_priority,
-)
-from gecko_taskgraph.util.schema import (
-    optionally_keyed_by,
-    resolve_keyed_by,
 )
 from gecko_taskgraph.util.scriptworker import (
     add_scope_prefix,

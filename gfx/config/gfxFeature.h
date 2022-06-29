@@ -44,7 +44,8 @@ namespace gfx {
   _(HW_DECODED_VIDEO_ZERO_COPY, Feature, "Hardware decoded video zero copy") \
   _(VP8_HW_DECODE, Feature, "VP8 hardware decoding")                         \
   _(VP9_HW_DECODE, Feature, "VP9 hardware decoding")                         \
-  _(DMABUF_SURFACE_EXPORT, Feature, "WebGL DMABuf surface export")
+  _(DMABUF_SURFACE_EXPORT, Feature, "WebGL DMABuf surface export")           \
+  _(REUSE_DECODER_DEVICE, Feature, "Reuse decoder device")
 /* Add new entries above this comment */
 
 enum class Feature : uint32_t {

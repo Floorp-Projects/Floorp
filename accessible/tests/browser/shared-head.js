@@ -784,7 +784,13 @@ async function contentSpawnMutation(browser, waitFor, func, args = []) {
 }
 
 async function waitForImageMap(browser, accDoc, id = "imgmap") {
-  const acc = findAccessibleChildByID(accDoc, id);
+  let acc = findAccessibleChildByID(accDoc, id);
+
+  if (!acc) {
+    const onShow = waitForEvent(EVENT_SHOW, id);
+    acc = (await onShow).accessible;
+  }
+
   if (acc.firstChild) {
     return;
   }

@@ -6,7 +6,9 @@
      xmlns:xlink="http://www.w3.org/1999/xlink"
      style="background: red;" class="reftest-wait">
   <defs>
-    <rect fill="lime" width="100%" height="100%" id="r"/>
+    <symbol id="r">
+      <rect fill="lime" width="100%" height="100%"/>
+    </symbol>
   </defs>
   <use id="u" xlink:href="#r" width="0" />
   <script type="text/javascript">
@@ -16,13 +18,11 @@
     setTimeout(doTest, 4000); // fallback for running outside reftest
 
     function doTest() {
-        // Since the <use> does not reference an <svg> or <symbol>, the value
-        // of its 'width' attribute is ignored except to disable/enable its
-        // rendering by setting it to zero/non-zero. Setting it to a non-zero
-        // value here should show the entire referenced <rect>. See
-        // http://www.w3.org/TR/SVG11/struct.html#UseElement
+        // Setting a non-zero value for width here should show the entire
+        // referenced <rect>. See
+        // https://www.w3.org/TR/SVG2/struct.html#UseElement
         var u = document.getElementById("u");
-        u.setAttribute("width", "1");
+        u.setAttribute("width", "100%");
         document.documentElement.removeAttribute('class');
       }
 

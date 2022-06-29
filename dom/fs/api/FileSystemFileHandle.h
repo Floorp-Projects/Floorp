@@ -19,6 +19,13 @@ struct FileSystemCreateWritableOptions;
 
 class FileSystemFileHandle final : public FileSystemHandle {
  public:
+  FileSystemFileHandle(nsIGlobalObject* aGlobal,
+                       const fs::FileSystemEntryMetadata& aMetadata,
+                       fs::FileSystemRequestHandler* aRequestHandler);
+
+  FileSystemFileHandle(nsIGlobalObject* aGlobal,
+                       const fs::FileSystemEntryMetadata& aMetadata);
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemFileHandle,
                                            FileSystemHandle)
@@ -28,7 +35,7 @@ class FileSystemFileHandle final : public FileSystemHandle {
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL interface
-  FileSystemHandleKind Kind() override;
+  FileSystemHandleKind Kind() const override;
 
   already_AddRefed<Promise> GetFile(ErrorResult& aError);
 

@@ -464,7 +464,6 @@ class Field extends _pdf_object.PDFObject {
     this.required = data.required;
     this.richText = data.richText;
     this.richValue = data.richValue;
-    this.rotation = data.rotation;
     this.style = data.style;
     this.submitName = data.submitName;
     this.textFont = data.textFont;
@@ -489,6 +488,7 @@ class Field extends _pdf_object.PDFObject {
     this._kidIds = data.kidIds || null;
     this._fieldType = (0, _common.getFieldType)(this._actions);
     this._siblings = data.siblings || null;
+    this._rotation = data.rotation || 0;
     this._globalEval = data.globalEval;
     this._appObjects = data.appObjects;
   }
@@ -590,6 +590,26 @@ class Field extends _pdf_object.PDFObject {
 
   set page(_) {
     throw new Error("field.page is read-only");
+  }
+
+  get rotation() {
+    return this._rotation;
+  }
+
+  set rotation(angle) {
+    angle = Math.floor(angle);
+
+    if (angle % 90 !== 0) {
+      throw new Error("Invalid rotation: must be a multiple of 90");
+    }
+
+    angle %= 360;
+
+    if (angle < 0) {
+      angle += 360;
+    }
+
+    this._rotation = angle;
   }
 
   get textColor() {
@@ -2725,6 +2745,7 @@ class EventDispatcher {
 
         source.obj._send({
           id: source.obj._id,
+          siblings: source.obj._siblings,
           value,
           selRange: [selStart, selEnd]
         });
@@ -2732,12 +2753,14 @@ class EventDispatcher {
     } else if (!event.willCommit) {
       source.obj._send({
         id: source.obj._id,
+        siblings: source.obj._siblings,
         value: savedChange.value,
         selRange: [savedChange.selStart, savedChange.selEnd]
       });
     } else {
       source.obj._send({
         id: source.obj._id,
+        siblings: source.obj._siblings,
         value: "",
         formattedValue: null,
         selRange: [0, 0]
@@ -2754,6 +2777,7 @@ class EventDispatcher {
       if (this.runActions(source, source, event, "Format")) {
         source.obj._send({
           id: source.obj._id,
+          siblings: source.obj._siblings,
           formattedValue: event.value?.toString?.()
         });
       }
@@ -2775,6 +2799,7 @@ class EventDispatcher {
 
       source.obj._send({
         id: source.obj._id,
+        siblings: source.obj._siblings,
         value: savedValue,
         formattedValue
       });
@@ -2783,6 +2808,7 @@ class EventDispatcher {
     } else if (didValidateRun) {
       source.obj._send({
         id: source.obj._id,
+        siblings: source.obj._siblings,
         value: "",
         formattedValue: null,
         selRange: [0, 0]
@@ -2866,6 +2892,7 @@ class EventDispatcher {
 
       target.obj._send({
         id: target.obj._id,
+        siblings: target.obj._siblings,
         value: savedValue,
         formattedValue
       });
@@ -4109,6 +4136,7 @@ class Doc extends _pdf_object.PDFObject {
 
       this._send({
         id: field.obj._id,
+        siblings: field.obj._siblings,
         value: field.obj.defaultValue,
         formattedValue: null,
         selRange: [0, 0]
@@ -5040,8 +5068,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.15.129';
-const pdfjsBuild = 'be2dfe45f';
+const pdfjsVersion = '2.15.177';
+const pdfjsBuild = 'cd35b9bfa';
 })();
 
 /******/ 	return __webpack_exports__;

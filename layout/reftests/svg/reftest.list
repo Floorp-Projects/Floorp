@@ -557,6 +557,7 @@ fuzzy(0-1,0-100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-ref.svg
 pref(layout.css.devPixelsPerPx,"1.0") == svg-blurry-with-subpixel-position.html svg-blurry-with-subpixel-position-ref.html
 
 == use-01.svg pass.svg
+== use-02.svg pass.svg
 == use-01-extref.svg pass.svg
 == use-02-extref.svg use-02-extref-ref.svg
 == use-extref-dataURI-01.svg pass.svg

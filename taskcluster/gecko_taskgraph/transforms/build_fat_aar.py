@@ -5,9 +5,9 @@
 
 import copy
 
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.taskcluster import get_artifact_prefix
 
-from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.declarative_artifacts import get_geckoview_upstream_artifacts
 
 

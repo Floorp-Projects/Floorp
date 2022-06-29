@@ -24,6 +24,9 @@ const SUBMIT_FORM_SUBMIT = 1;
 const SUBMIT_PAGE_NAVIGATION = 2;
 const SUBMIT_FORM_IS_REMOVED = 3;
 
+const LOG_MESSAGE_FORM_SUBMISSION = "form submission";
+const LOG_MESSAGE_FIELD_EDIT = "field edit";
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -142,14 +145,11 @@ const observer = {
     // Don't handle history navigation, reload, or pushState not triggered via chrome UI.
     // e.g. history.go(-1), location.reload(), history.replaceState()
     if (!(aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_NORMAL)) {
-      lazy.log(
-        "onStateChange: loadType isn't LOAD_CMD_NORMAL:",
-        aWebProgress.loadType
-      );
+      lazy.log(`loadType isn't LOAD_CMD_NORMAL: ${aWebProgress.loadType}.`);
       return;
     }
 
-    lazy.log("onStateChange handled:", channel);
+    lazy.log(`Handled channel: ${channel}`);
     loginManagerChild()._onNavigation(window.document);
   },
 
@@ -217,7 +217,7 @@ const observer = {
         let formLikeRoot = lazy.FormLikeFactory.findRootForField(field);
         if (!docState.fieldModificationsByRootElement.get(formLikeRoot)) {
           lazy.log(
-            "Ignoring change event on form that hasn't been user-modified"
+            "Ignoring change event on form that hasn't been user-modified."
           );
           if (field.hasBeenTypePassword) {
             // Send notification that the password field has not been changed.
@@ -291,7 +291,7 @@ const observer = {
         if (!alreadyModified && isAutofillInput) {
           if (isPasswordType && filledLogin.password == field.value) {
             lazy.log(
-              "Ignoring password input event that doesn't change autofilled values"
+              "Ignoring password input event that doesn't change autofilled values."
             );
             break;
           }
@@ -301,7 +301,7 @@ const observer = {
             filledLogin.username == field.value
           ) {
             lazy.log(
-              "Ignoring username input event that doesn't change autofilled values"
+              "Ignoring username input event that doesn't change autofilled values."
             );
             break;
           }
@@ -595,7 +595,6 @@ class LoginFormState {
       );
     }
 
-    lazy.log("#isLoginAlreadyFilled: existingLoginForm", existingLoginForm);
     let { login: filledLogin } =
       this.fillsByRootElement.get(formLikeRoot) || {};
     if (!filledLogin) {
@@ -625,7 +624,7 @@ class LoginFormState {
 
     if (passwordField.type != "password") {
       // The type may have been changed by the website.
-      lazy.log("_togglePasswordFieldMasking: Field isn't type=password");
+      lazy.log("Field isn't type=password.");
       return;
     }
 
@@ -681,7 +680,9 @@ class LoginFormState {
         this.captureLoginTimeStamp != doc.lastUserGestureTimeStamp;
     }
 
-    lazy.log("_formHasModifiedFields, userHasInteracted:", userHasInteracted);
+    lazy.log(
+      `_formHasModifiedFields: userHasInteracted: ${userHasInteracted}.`
+    );
 
     // Skip if user didn't interact with the page since last call or ever
     if (!userHasInteracted) {
@@ -703,8 +704,6 @@ class LoginFormState {
   }
 
   _stopTreatingAsGeneratedPasswordField(passwordField) {
-    lazy.log("_stopTreatingAsGeneratedPasswordField");
-
     this.generatedPasswordFields.delete(passwordField);
 
     // Remove all the event listeners added in _passwordEditedOrGenerated
@@ -744,7 +743,7 @@ class LoginFormState {
     }
 
     if (this.#isLoginAlreadyFilled(focusedField)) {
-      lazy.log("#onUsernameFocus: Already filled");
+      lazy.log("Login already filled.");
       return;
     }
 
@@ -761,14 +760,12 @@ class LoginFormState {
     let timeDiff = Date.now() - gLastRightClickTimeStamp;
     if (timeDiff < AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS) {
       lazy.log(
-        "Not opening autocomplete after focus since a context menu was opened within",
-        timeDiff,
-        "ms"
+        `Not opening autocomplete after focus since a context menu was opened within ${timeDiff}ms.`
       );
       return;
     }
 
-    lazy.log("maybeOpenAutocompleteAfterFocus: Opening the autocomplete popup");
+    lazy.log("Opening the autocomplete popup.");
     lazy.gFormFillService.showPopup();
   }
 
@@ -895,11 +892,7 @@ class LoginFormState {
         element.matches(fieldOverrideRecipe.notPasswordSelector)
       ) {
         lazy.log(
-          "skipping password field (id/name is",
-          element.id,
-          " / ",
-          element.name + ") due to recipe:",
-          fieldOverrideRecipe
+          `Skipping password field with id: ${element.id}, name: ${element.name} due to recipe ${fieldOverrideRecipe}.`
         );
         continue;
       }
@@ -912,11 +905,7 @@ class LoginFormState {
         element.value.trim().length < minPasswordLength
       ) {
         lazy.log(
-          "skipping password field (id/name is",
-          element.id,
-          " / ",
-          element.name + ") as value is too short:",
-          element.value.trim().length
+          `Skipping password field with id: ${element.id}, name: ${element.name} as value is too short.`
         );
         continue; // Ignore empty or too-short passwords fields
       }
@@ -929,16 +918,12 @@ class LoginFormState {
 
     // If too few or too many fields, bail out.
     if (!pwFields.length) {
-      lazy.log("(form ignored -- no password fields.)");
+      lazy.log("Form ignored, no password fields.");
       return null;
     }
 
     if (pwFields.length > 5) {
-      lazy.log(
-        "(form ignored -- too many password fields. [ got ",
-        pwFields.length,
-        "])"
-      );
+      lazy.log(`Form ignored, too many password fields:  ${pwFields.length}.`);
       return null;
     }
 
@@ -982,7 +967,7 @@ class LoginFormState {
           triggeredByFillingGenerated
       ) {
         lazy.log(
-          "compareAndUpdatePreviouslySentValues: values are equivalent, returning true"
+          "compareAndUpdatePreviouslySentValues: values are equivalent, returning true."
         );
         return true;
       }
@@ -997,7 +982,7 @@ class LoginFormState {
       triggeredByFillingGenerated,
     });
     lazy.log(
-      "compareAndUpdatePreviouslySentValues: values not equivalent, returning false"
+      "compareAndUpdatePreviouslySentValues: values not equivalent, returning false."
     );
     return false;
   }
@@ -1022,9 +1007,7 @@ class LoginFormState {
       inp => inp !== passwordField && this.generatedPasswordFields.has(inp)
     );
     if (previousGeneratedPasswordField) {
-      lazy.log(
-        "fillConfirmFieldWithGeneratedPassword, previously-filled generated password input found"
-      );
+      lazy.log("Previously-filled generated password input found.");
       return;
     }
 
@@ -1114,13 +1097,13 @@ class LoginFormState {
       form
     );
     if (fieldOverrideRecipe) {
-      lazy.log("Has fieldOverrideRecipe", fieldOverrideRecipe);
+      lazy.log("fieldOverrideRecipe found ", fieldOverrideRecipe);
       let pwOverrideField = lazy.LoginRecipesContent.queryLoginField(
         form,
         fieldOverrideRecipe.passwordSelector
       );
       if (pwOverrideField) {
-        lazy.log("Has pwOverrideField", pwOverrideField);
+        lazy.log("pwOverrideField found ", pwOverrideField);
         // The field from the password override may be in a different LoginForm.
         let formLike = lazy.LoginFormFactory.createFromField(pwOverrideField);
         pwFields = [
@@ -1165,17 +1148,7 @@ class LoginFormState {
       );
 
       if (usernameField) {
-        let acFieldName = usernameField.getAutocompleteInfo().fieldName;
-        lazy.log(
-          "Username field ",
-          usernameField,
-          "has name/value/autocomplete:",
-          usernameField.name,
-          "/",
-          usernameField.value,
-          "/",
-          acFieldName
-        );
+        lazy.log(`Found username field with name: ${usernameField.name}.`);
       }
 
       return {
@@ -1230,19 +1203,9 @@ class LoginFormState {
     }
 
     if (!usernameField) {
-      lazy.log("(form -- no username field found)");
+      lazy.log("No username field found.");
     } else {
-      let acFieldName = usernameField.getAutocompleteInfo().fieldName;
-      lazy.log(
-        "Username field ",
-        usernameField,
-        "has name/value/autocomplete:",
-        usernameField.name,
-        "/",
-        usernameField.value,
-        "/",
-        acFieldName
-      );
+      lazy.log(`Found username field with name: ${usernameField.name}.`);
     }
 
     let pwGeneratedFields = pwFields.filter(pwField =>
@@ -1275,12 +1238,7 @@ class LoginFormState {
     // just assume the first password field is the one to be filled in.
     if (!isSubmission || pwFields.length == 1) {
       let passwordField = pwFields[0].element;
-      lazy.log(
-        "Password field",
-        passwordField,
-        "has name: ",
-        passwordField.name
-      );
+      lazy.log(`Found Password field with name: ${passwordField.name}.`);
       return {
         ...emptyResult,
         usernameField,
@@ -1314,7 +1272,7 @@ class LoginFormState {
         oldPasswordField = pwFields[1].element;
       } else {
         // We can't tell which of the 3 passwords should be saved.
-        lazy.log("(form ignored -- all 3 pw fields differ)");
+        lazy.log(`Form ignored -- all 3 pw fields differ.`);
         return emptyResult;
       }
     } else if (pw1 == pw2) {
@@ -1329,21 +1287,14 @@ class LoginFormState {
     }
 
     lazy.log(
-      "Password field (new) id/name is: ",
-      newPasswordField.id,
-      " / ",
-      newPasswordField.name
+      `New Password field id: ${newPasswordField.id}, name: ${newPasswordField.name}.`
     );
-    if (oldPasswordField) {
-      lazy.log(
-        "Password field (old) id/name is: ",
-        oldPasswordField.id,
-        " / ",
-        oldPasswordField.name
-      );
-    } else {
-      lazy.log("Password field (old):", oldPasswordField);
-    }
+
+    lazy.log(
+      oldPasswordField
+        ? `Old Password field id: ${oldPasswordField.id}, name: ${oldPasswordField.name}.`
+        : "No Old password field."
+    );
     return {
       ...emptyResult,
       usernameField,
@@ -1542,7 +1493,7 @@ class LoginManagerChild extends JSWindowActorChild {
     }
 
     if (inputElement != lazy.gFormFillService.focusedInput) {
-      lazy.log("Could not open popup on input that's no longer focused");
+      lazy.log("Could not open popup on input that's no longer focused.");
       return;
     }
 
@@ -1688,10 +1639,7 @@ class LoginManagerChild extends JSWindowActorChild {
     );
 
     lazy.log(
-      "onDOMDocFetchSuccess: modificationsByRootElement approx size:",
-      weakModificationsRootElements.length,
-      "document:",
-      document
+      `modificationsByRootElement approx size: ${weakModificationsRootElements.length}.`
     );
     // Start to listen to form/password removed event after receiving a fetch/xhr
     // complete event.
@@ -1721,10 +1669,7 @@ class LoginManagerChild extends JSWindowActorChild {
     );
 
     lazy.log(
-      "onDOMDocFetchSuccess: formlessModifiedPasswordFields approx size:",
-      weakFormlessModifiedPasswordFields.length,
-      "document:",
-      document
+      `formlessModifiedPasswordFields approx size: ${weakFormlessModifiedPasswordFields.length}.`
     );
     for (let passwordField of weakFormlessModifiedPasswordFields) {
       let formLike = lazy.LoginFormFactory.createFromField(passwordField);
@@ -1759,7 +1704,7 @@ class LoginManagerChild extends JSWindowActorChild {
       return;
     }
 
-    lazy.log("form is removed");
+    lazy.log("Form is removed.");
     this._onFormSubmit(formLike, SUBMIT_FORM_IS_REMOVED);
 
     docState.formLikeByObservedNode.delete(event.target);
@@ -1787,7 +1732,6 @@ class LoginManagerChild extends JSWindowActorChild {
 
     // We're invoked before the content's |submit| event handlers, so we
     // can grab form data before it might be modified (see bug 257781).
-    lazy.log("notified before form submission");
     let formLike = lazy.LoginFormFactory.createFromForm(event.target);
     this._onFormSubmit(formLike, SUBMIT_FORM_SUBMIT);
   }
@@ -1802,7 +1746,7 @@ class LoginManagerChild extends JSWindowActorChild {
       return;
     }
     for (let task of onVisibleTasks) {
-      lazy.log("onDocumentVisibilityChange, executing queued task");
+      lazy.log("onDocumentVisibilityChange: executing queued task.");
       task();
     }
     this.#visibleTasksByDocument.delete(document);
@@ -1810,12 +1754,12 @@ class LoginManagerChild extends JSWindowActorChild {
 
   _deferHandlingEventUntilDocumentVisible(event, document, fn) {
     lazy.log(
-      `document.visibilityState: ${document.visibilityState}, defer handling ${event.type}`
+      `Defer handling event, document.visibilityState: ${document.visibilityState}, defer handling ${event.type}.`
     );
     let onVisibleTasks = this.#visibleTasksByDocument.get(document);
     if (!onVisibleTasks) {
       lazy.log(
-        `deferHandling, first queued event, register the visibilitychange handler`
+        "Defer handling first queued event and register the visibilitychange handler."
       );
       onVisibleTasks = [];
       this.#visibleTasksByDocument.set(document, onVisibleTasks);
@@ -1845,10 +1789,7 @@ class LoginManagerChild extends JSWindowActorChild {
     // Showing the MP modal as soon as possible minimizes its interference with tab interactions
     // See bug 1539091 and bug 1538460.
     lazy.log(
-      "onDOMFormHasPassword, visibilityState:",
-      document.visibilityState,
-      "isPrimaryPasswordSet:",
-      isPrimaryPasswordSet
+      `#onDOMFormHasPassword: visibilityState: ${document.visibilityState}, isPrimaryPasswordSet: ${isPrimaryPasswordSet}.`
     );
 
     if (document.visibilityState == "visible" || isPrimaryPasswordSet) {
@@ -1864,7 +1805,6 @@ class LoginManagerChild extends JSWindowActorChild {
   _processDOMFormHasPasswordEvent(event) {
     let form = event.target;
     let formLike = lazy.LoginFormFactory.createFromForm(form);
-    lazy.log("_processDOMFormHasPasswordEvent:", form, formLike);
     this._fetchLoginsFromParentAndFillForm(formLike);
   }
 
@@ -1876,10 +1816,7 @@ class LoginManagerChild extends JSWindowActorChild {
     let document = event.target.ownerDocument;
 
     lazy.log(
-      "onDOMFormHasPossibleUsername, visibilityState:",
-      document.visibilityState,
-      "isPrimaryPasswordSet:",
-      isPrimaryPasswordSet
+      `#onDOMFormHasPossibleUsername: visibilityState: ${document.visibilityState}, isPrimaryPasswordSet: ${isPrimaryPasswordSet}.`
     );
 
     // For simplicity, the result of the telemetry is stacked. This means if a
@@ -1912,7 +1849,6 @@ class LoginManagerChild extends JSWindowActorChild {
   _processDOMFormHasPossibleUsernameEvent(event) {
     let form = event.target;
     let formLike = lazy.LoginFormFactory.createFromForm(form);
-    lazy.log("_processDOMFormHasPossibleUsernameEvent:", form, formLike);
 
     // If the form contains a passoword field, `getUsernameFieldFromUsernameOnlyForm` returns
     // null, so we don't trigger autofill for those forms here. In this function,
@@ -1926,9 +1862,7 @@ class LoginManagerChild extends JSWindowActorChild {
     let usernameField = docState.getUsernameFieldFromUsernameOnlyForm(form, {});
     if (usernameField) {
       // Autofill the username-only form.
-      lazy.log(
-        "_processDOMFormHasPossibleUsernameEvent: A username-only form is found"
-      );
+      lazy.log("A username-only form is found.");
       this._fetchLoginsFromParentAndFillForm(formLike);
     }
 
@@ -1953,10 +1887,7 @@ class LoginManagerChild extends JSWindowActorChild {
     let document = pwField.ownerDocument;
     const isPrimaryPasswordSet = this.#getIsPrimaryPasswordSet();
     lazy.log(
-      "onDOMInputPasswordAdded, visibilityState:",
-      document.visibilityState,
-      "isPrimaryPasswordSet:",
-      isPrimaryPasswordSet
+      `#onDOMInputPasswordAdded, visibilityState: ${document.visibilityState}, isPrimaryPasswordSet: ${isPrimaryPasswordSet}.`
     );
 
     // don't attempt to defer handling when a primary password is set
@@ -1975,14 +1906,13 @@ class LoginManagerChild extends JSWindowActorChild {
   _processDOMInputPasswordAddedEvent(event) {
     let pwField = event.originalTarget;
     let formLike = lazy.LoginFormFactory.createFromField(pwField);
-    lazy.log(" _processDOMInputPasswordAddedEvent:", pwField, formLike);
 
     let deferredTask = this.#deferredPasswordAddedTasksByRootElement.get(
       formLike.rootElement
     );
     if (!deferredTask) {
       lazy.log(
-        "Creating a DeferredTask to call _fetchLoginsFromParentAndFillForm soon"
+        "Creating a DeferredTask to call _fetchLoginsFromParentAndFillForm soon."
       );
       lazy.LoginFormFactory.setForRootElement(formLike.rootElement, formLike);
 
@@ -1993,10 +1923,7 @@ class LoginManagerChild extends JSWindowActorChild {
           let formLike2 = lazy.LoginFormFactory.getForRootElement(
             formLike.rootElement
           );
-          lazy.log(
-            "Running deferred processing of onDOMInputPasswordAdded",
-            formLike2
-          );
+          lazy.log("Running deferred processing of onDOMInputPasswordAdded.");
           this.#deferredPasswordAddedTasksByRootElement.delete(
             formLike2.rootElement
           );
@@ -2014,7 +1941,7 @@ class LoginManagerChild extends JSWindowActorChild {
 
     let window = pwField.ownerGlobal;
     if (deferredTask.isArmed) {
-      lazy.log("DeferredTask is already armed so just updating the LoginForm");
+      lazy.log("DeferredTask is already armed so just updating the LoginForm.");
       // We update the LoginForm so it (most important .elements) is fresh when the task eventually
       // runs since changes to the elements could affect our field heuristics.
       lazy.LoginFormFactory.setForRootElement(formLike.rootElement, formLike);
@@ -2022,7 +1949,7 @@ class LoginManagerChild extends JSWindowActorChild {
       ["interactive", "complete"].includes(window.document.readyState)
     ) {
       lazy.log(
-        "Arming the DeferredTask we just created since document.readyState == 'interactive' or 'complete'"
+        "Arming the DeferredTask we just created since document.readyState == 'interactive' or 'complete'."
       );
       deferredTask.arm();
     } else {
@@ -2030,7 +1957,7 @@ class LoginManagerChild extends JSWindowActorChild {
         "DOMContentLoaded",
         function() {
           lazy.log(
-            "Arming the onDOMInputPasswordAdded DeferredTask due to DOMContentLoaded"
+            "Arming the onDOMInputPasswordAdded DeferredTask due to DOMContentLoaded."
           );
           deferredTask.arm();
         },
@@ -2114,15 +2041,13 @@ class LoginManagerChild extends JSWindowActorChild {
     style,
   }) {
     if (!inputElementIdentifier) {
-      lazy.log("fillForm: No input element specified");
+      lazy.log("No input element specified.");
       return;
     }
 
     let inputElement = lazy.ContentDOMReference.resolve(inputElementIdentifier);
     if (!inputElement) {
-      lazy.log(
-        "fillForm: Could not resolve inputElementIdentifier to a living element."
-      );
+      lazy.log("Could not resolve inputElementIdentifier to a living element.");
       return;
     }
 
@@ -2133,7 +2058,7 @@ class LoginManagerChild extends JSWindowActorChild {
         ) != loginFormOrigin
       ) {
         lazy.log(
-          "fillForm: The requested origin doesn't match the one from the",
+          "The requested origin doesn't match the one from the",
           "document. This may mean we navigated to a document from a different",
           "site before we had a chance to indicate this change in the user",
           "interface."
@@ -2203,7 +2128,7 @@ class LoginManagerChild extends JSWindowActorChild {
    * associated password in the password field.
    */
   onUsernameAutocompleted(acInputField, loginGUID = null) {
-    lazy.log("onUsernameAutocompleted:", acInputField);
+    lazy.log(`Autocompleting input field with name: ${acInputField.name}`);
 
     let acForm = lazy.LoginFormFactory.createFromField(acInputField);
     let doc = acForm.ownerDocument;
@@ -2281,10 +2206,7 @@ class LoginManagerChild extends JSWindowActorChild {
     );
 
     lazy.log(
-      "_onDocumentRestored: loginFormRootElements approx size:",
-      weakLoginFormRootElements.length,
-      "document:",
-      aDocument
+      `loginFormRootElements approx size: ${weakLoginFormRootElements.length}.`
     );
 
     for (let formRoot of weakLoginFormRootElements) {
@@ -2316,12 +2238,7 @@ class LoginManagerChild extends JSWindowActorChild {
       rootElsWeakSet
     );
 
-    lazy.log(
-      "_onNavigation: root elements approx size:",
-      weakLoginFormRootElements.length,
-      "document:",
-      aDocument
-    );
+    lazy.log(`root elements approx size: ${weakLoginFormRootElements.length}`);
 
     for (let formRoot of weakLoginFormRootElements) {
       if (!formRoot.isConnected) {
@@ -2342,7 +2259,7 @@ class LoginManagerChild extends JSWindowActorChild {
    * @param {LoginForm} form
    */
   _onFormSubmit(form, reason) {
-    lazy.log("_onFormSubmit", form);
+    lazy.log("Detected form submission.");
 
     this._maybeSendFormInteractionMessage(
       form,
@@ -2386,9 +2303,11 @@ class LoginManagerChild extends JSWindowActorChild {
     messageName,
     { targetField, isSubmission, triggeredByFillingGenerated, ignoreConnect }
   ) {
+    let logMessagePrefix = isSubmission
+      ? LOG_MESSAGE_FORM_SUBMISSION
+      : LOG_MESSAGE_FIELD_EDIT;
     let doc = form.ownerDocument;
     let win = doc.defaultView;
-    let logMessagePrefix = isSubmission ? "form submission" : "field edit";
     let passwordField = null;
     if (targetField?.hasBeenTypePassword) {
       passwordField = targetField;
@@ -2396,7 +2315,7 @@ class LoginManagerChild extends JSWindowActorChild {
 
     let origin = lazy.LoginHelper.getLoginOrigin(doc.documentURI);
     if (!origin) {
-      lazy.log(`(${logMessagePrefix} ignored -- invalid origin)`);
+      lazy.log(`${logMessagePrefix} ignored -- invalid origin.`);
       return;
     }
 
@@ -2422,7 +2341,7 @@ class LoginManagerChild extends JSWindowActorChild {
     if (fields.newPasswordField == null) {
       if (isSubmission && fields.usernameField) {
         lazy.log(
-          "_onFormSubmit: username-only form. Record the username field but not sending prompt"
+          "_onFormSubmit: username-only form. Record the username field but not sending prompt."
         );
         docState.mockUsernameOnlyField = {
           name: fields.usernameField.name,
@@ -2470,7 +2389,9 @@ class LoginManagerChild extends JSWindowActorChild {
       triggeredByFillingGenerated,
     }
   ) {
-    let logMessagePrefix = isSubmission ? "form submission" : "field edit";
+    let logMessagePrefix = isSubmission
+      ? LOG_MESSAGE_FORM_SUBMISSION
+      : LOG_MESSAGE_FIELD_EDIT;
     let doc = form.ownerDocument;
     let win = doc.defaultView;
     let detail = { messageSent: false };
@@ -2483,7 +2404,7 @@ class LoginManagerChild extends JSWindowActorChild {
       ) {
         // We won't do anything in private browsing mode anyway,
         // so there's no need to perform further checks.
-        lazy.log(`(${logMessagePrefix} ignored in private browsing mode)`);
+        lazy.log(`${logMessagePrefix} ignored in private browsing mode.`);
         return;
       }
 
@@ -2496,7 +2417,7 @@ class LoginManagerChild extends JSWindowActorChild {
       // Check `isSubmission` to allow munged passwords in dismissed by default doorhangers (since
       // they are initiated by the user) in case this matches their actual password.
       if (isSubmission && newPasswordField?.value.match(fullyMungedPattern)) {
-        lazy.log("new password looks munged. Not sending prompt");
+        lazy.log("New password looks munged. Not sending prompt.");
         return;
       }
 
@@ -2514,7 +2435,7 @@ class LoginManagerChild extends JSWindowActorChild {
       }
       if (usernameField?.value.match(/\.{3,}|\*{3,}|•{3,}/)) {
         lazy.log(
-          `usernameField.value "${usernameField.value}" looks munged, setting to null`
+          `usernameField with name ${usernameField.name} looks munged, setting to null.`
         );
         usernameField = null;
       }
@@ -2530,7 +2451,7 @@ class LoginManagerChild extends JSWindowActorChild {
           this._isAutocompleteDisabled(oldPasswordField)) &&
         !lazy.LoginHelper.storeWhenAutocompleteOff
       ) {
-        lazy.log(`(${logMessagePrefix} ignored -- autocomplete=off found)`);
+        lazy.log(`${logMessagePrefix} ignored -- autocomplete=off found.`);
         return;
       }
 
@@ -2570,7 +2491,7 @@ class LoginManagerChild extends JSWindowActorChild {
         }
         // we know no fields in this form had user modifications, so don't prompt
         lazy.log(
-          `(${logMessagePrefix} ignored -- submitting values that are not changed by the user)`
+          `${logMessagePrefix} ignored -- submitting values that are not changed by the user.`
         );
         return;
       }
@@ -2585,7 +2506,7 @@ class LoginManagerChild extends JSWindowActorChild {
         )
       ) {
         lazy.log(
-          `(${logMessagePrefix} ignored -- already submitted with the same username and password)`
+          `${logMessagePrefix} ignored -- already submitted with the same username and password.`
         );
         return;
       }
@@ -2680,7 +2601,9 @@ class LoginManagerChild extends JSWindowActorChild {
     passwordField,
     { triggeredByFillingGenerated = false } = {}
   ) {
-    lazy.log("_passwordEditedOrGenerated", passwordField);
+    lazy.log(
+      `Password field with name ${passwordField.name} was filled or edited.`
+    );
 
     if (!lazy.LoginHelper.enabled && triggeredByFillingGenerated) {
       throw new Error(
@@ -2803,7 +2726,7 @@ class LoginManagerChild extends JSWindowActorChild {
       throw new Error("_fillForm should only be called with LoginForm objects");
     }
 
-    lazy.log("_fillForm", form.elements);
+    lazy.log(`Found ${form.elements.length} form elements.`);
     // Will be set to one of AUTOFILL_RESULT in the `try` block.
     let autofillResult = -1;
     const AUTOFILL_RESULT = {
@@ -2866,14 +2789,14 @@ class LoginManagerChild extends JSWindowActorChild {
 
       // Need a valid password or username field to do anything.
       if (passwordField == null && usernameField == null) {
-        lazy.log("not filling form, no password and username field found");
+        lazy.log("Not filling form, no password and username field found.");
         autofillResult = AUTOFILL_RESULT.NO_PASSWORD_FIELD;
         return;
       }
 
       // If the password field is disabled or read-only, there's nothing to do.
       if (passwordField?.disabled || passwordField?.readOnly) {
-        lazy.log("not filling form, password field disabled or read-only");
+        lazy.log("Not filling form, password field disabled or read-only.");
         autofillResult = AUTOFILL_RESULT.PASSWORD_DISABLED_READONLY;
         return;
       }
@@ -2892,7 +2815,7 @@ class LoginManagerChild extends JSWindowActorChild {
         !userTriggered &&
         !form.rootElement.ownerGlobal.windowGlobalChild.sameOriginWithTop
       ) {
-        lazy.log("not filling form; it is in a cross-origin subframe");
+        lazy.log("Not filling form; it is in a cross-origin subframe.");
         autofillResult = AUTOFILL_RESULT.FORM_IN_CROSSORIGIN_SUBFRAME;
         return;
       }
@@ -2918,7 +2841,7 @@ class LoginManagerChild extends JSWindowActorChild {
         !lazy.LoginHelper.insecureAutofill &&
         !lazy.InsecurePasswordUtils.isFormSecure(form)
       ) {
-        lazy.log("not filling form since it's insecure");
+        lazy.log("Not filling form since it's insecure.");
         autofillResult = AUTOFILL_RESULT.INSECURE;
         return;
       }
@@ -2943,14 +2866,14 @@ class LoginManagerChild extends JSWindowActorChild {
           l.username.length <= maxUsernameLen &&
           l.password.length <= maxPasswordLen;
         if (!fit) {
-          lazy.log("Ignored", l.username, "login: won't fit");
+          lazy.log(`Ignored login: won't fit ${l.username.length}.`);
         }
 
         return fit;
       }, this);
 
       if (!logins.length) {
-        lazy.log("form not filled, none of the logins fit in the field");
+        lazy.log("Form not filled, none of the logins fit in the field.");
         autofillResult = AUTOFILL_RESULT.NO_LOGINS_FIT;
         return;
       }
@@ -2963,7 +2886,7 @@ class LoginManagerChild extends JSWindowActorChild {
           // We don't want to autofill (without user interaction) into a field
           // that's unmasked.
           lazy.log(
-            "not autofilling, password field isn't currently type=password"
+            "Not autofilling, password field isn't currently type=password."
           );
           autofillResult = AUTOFILL_RESULT.TYPE_NO_LONGER_PASSWORD;
           return;
@@ -2973,7 +2896,7 @@ class LoginManagerChild extends JSWindowActorChild {
         // and we're autofilling without user interaction, there's nothing to do.
         if (!userTriggered && passwordACFieldName == "new-password") {
           lazy.log(
-            "not filling form, password field has the autocomplete new-password value"
+            "Not filling form, password field has the autocomplete new-password value."
           );
           autofillResult = AUTOFILL_RESULT.PASSWORD_AUTOCOMPLETE_NEW_PASSWORD;
           return;
@@ -2981,7 +2904,7 @@ class LoginManagerChild extends JSWindowActorChild {
 
         // Don't clobber an existing password.
         if (passwordField.value && !clobberPassword) {
-          lazy.log("form not filled, the password field was already filled");
+          lazy.log("Form not filled, the password field was already filled.");
           autofillResult = AUTOFILL_RESULT.EXISTING_PASSWORD;
           return;
         }
@@ -3047,7 +2970,7 @@ class LoginManagerChild extends JSWindowActorChild {
       // We will always have a selectedLogin at this point.
 
       if (!autofillForm) {
-        lazy.log("autofillForms=false but form can be filled");
+        lazy.log("autofillForms=false but form can be filled.");
         autofillResult = AUTOFILL_RESULT.NO_AUTOFILL_FORMS;
         return;
       }
@@ -3058,7 +2981,7 @@ class LoginManagerChild extends JSWindowActorChild {
         !lazy.LoginHelper.autofillAutocompleteOff
       ) {
         lazy.log(
-          "Not autofilling the login because we're respecting autocomplete=off"
+          "Not autofilling the login because we're respecting autocomplete=off."
         );
         autofillResult = AUTOFILL_RESULT.AUTOCOMPLETE_OFF;
         return;
@@ -3162,7 +3085,7 @@ class LoginManagerChild extends JSWindowActorChild {
             ].includes(autofillResult)
           ) {
             lazy.log(
-              "_fillForm: Opening username autocomplete popup since the form wasn't autofilled"
+              "Opening username autocomplete popup since the form wasn't autofilled."
             );
             lazy.gFormFillService.showPopup();
           }
@@ -3170,7 +3093,7 @@ class LoginManagerChild extends JSWindowActorChild {
       }
 
       if (usernameField) {
-        lazy.log("_fillForm: Attaching event listeners to usernameField");
+        lazy.log("Attaching event listeners to usernameField.");
         usernameField.addEventListener("focus", observer);
         usernameField.addEventListener("mousedown", observer);
       }

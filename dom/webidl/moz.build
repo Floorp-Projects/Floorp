@@ -812,6 +812,7 @@ WEBIDL_FILES = [
     "ServiceWorkerContainer.webidl",
     "ServiceWorkerGlobalScope.webidl",
     "ServiceWorkerRegistration.webidl",
+    "ShadowRealmGlobalScope.webidl",
     "ShadowRoot.webidl",
     "SharedWorker.webidl",
     "SharedWorkerGlobalScope.webidl",

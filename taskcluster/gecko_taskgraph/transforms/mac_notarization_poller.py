@@ -5,10 +5,11 @@
 Transform the mac notarization poller task into an actual task description.
 """
 
-from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
+from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.taskcluster import get_artifact_url
 from taskgraph.util.treeherder import add_suffix, join_symbol
+
+from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 
 transforms = TransformSequence()
 
