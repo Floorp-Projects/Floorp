@@ -41,25 +41,23 @@ function getChildAtPoint(container, x, y, findDeepestChild) {
   return null;
 }
 
-function testChildAtPoint(dpr, x, y, container, child, grandChild) {
+async function testChildAtPoint(dpr, x, y, container, child, grandChild) {
   const [containerX, containerY] = Layout.getBounds(container, dpr);
   x += containerX;
   y += containerY;
-
-  CommonUtils.isObject(
-    getChildAtPoint(container, x, y, false),
+  await untilCacheIs(
+    () => getChildAtPoint(container, x, y, false),
     child,
     `Wrong direct child accessible at the point (${x}, ${y}) of ${CommonUtils.prettyName(
       container
-    )}`
+    )}, sought ${child ? roleToString(child.role) : "unknown"}`
   );
-
-  CommonUtils.isObject(
-    getChildAtPoint(container, x, y, true),
+  await untilCacheIs(
+    () => getChildAtPoint(container, x, y, true),
     grandChild,
     `Wrong deepest child accessible at the point (${x}, ${y}) of ${CommonUtils.prettyName(
       container
-    )}`
+    )}, sought ${grandChild ? roleToString(grandChild.role) : "unknown"}`
   );
 }
 
@@ -75,15 +73,18 @@ async function hitTest(browser, container, child, grandChild) {
   const x = childX + 1;
   const y = childY + 1;
 
-  CommonUtils.isObject(
-    getChildAtPoint(container, x, y, false),
+  await untilCacheIs(
+    () => getChildAtPoint(container, x, y, false),
     child,
-    `Wrong direct child of ${prettyName(container)}`
+    `Wrong direct child accessible at the point (${x}, ${y}) of ${CommonUtils.prettyName(
+      container
+    )}, sought ${child ? roleToString(child.role) : "unknown"}`
   );
-
-  CommonUtils.isObject(
-    getChildAtPoint(container, x, y, true),
+  await untilCacheIs(
+    () => getChildAtPoint(container, x, y, true),
     grandChild,
-    `Wrong deepest child of ${prettyName(container)}`
+    `Wrong deepest child accessible at the point (${x}, ${y}) of ${CommonUtils.prettyName(
+      container
+    )}, sought ${grandChild ? roleToString(grandChild.role) : "unknown"}`
   );
 }

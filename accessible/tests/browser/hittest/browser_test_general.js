@@ -8,8 +8,7 @@ async function runTests(browser, accDoc) {
   await waitForImageMap(browser, accDoc);
   const dpr = await getContentDPR(browser);
 
-  info("Not specific case, child and deepchild testing.");
-  testChildAtPoint(
+  await testChildAtPoint(
     dpr,
     3,
     3,
@@ -24,27 +23,23 @@ async function runTests(browser, accDoc) {
       "for the graphic."
   );
 
-  info(
-    "::MustPrune case (in this case childAtPoint doesn't look inside a " +
-      "textbox), point is inside of textbox."
-  );
   const txt = findAccessibleChildByID(accDoc, "txt");
-  testChildAtPoint(dpr, 1, 1, txt, txt, txt);
+  await testChildAtPoint(dpr, 1, 1, txt, txt, txt);
 
   info(
     "::MustPrune case, point is outside of textbox accessible but is in document."
   );
-  testChildAtPoint(dpr, -1, -1, txt, null, null);
+  await testChildAtPoint(dpr, -1, -1, txt, null, null);
 
   info("::MustPrune case, point is outside of root accessible.");
-  testChildAtPoint(dpr, -10000, -10000, txt, null, null);
+  await testChildAtPoint(dpr, -10000, -10000, txt, null, null);
 
   info("Not specific case, point is inside of btn accessible.");
   const btn = findAccessibleChildByID(accDoc, "btn");
-  testChildAtPoint(dpr, 1, 1, btn, btn, btn);
+  await testChildAtPoint(dpr, 1, 1, btn, btn, btn);
 
   info("Not specific case, point is outside of btn accessible.");
-  testChildAtPoint(dpr, -1, -1, btn, null, null);
+  await testChildAtPoint(dpr, -1, -1, btn, null, null);
 
   info(
     "Out of flow accessible testing, do not return out of flow accessible " +
@@ -54,7 +49,6 @@ async function runTests(browser, accDoc) {
     const { CommonUtils } = ChromeUtils.import(
       "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
     );
-
     const doc = content.document;
     const rectArea = CommonUtils.getNode("area", doc).getBoundingClientRect();
     const outOfFlow = CommonUtils.getNode("outofflow", doc);
@@ -63,7 +57,7 @@ async function runTests(browser, accDoc) {
   });
 
   const area = findAccessibleChildByID(accDoc, "area");
-  testChildAtPoint(dpr, 1, 1, area, area, area);
+  await testChildAtPoint(dpr, 1, 1, area, area, area);
 
   info("Test image maps. Their children are not in the layout tree.");
   const imgmap = findAccessibleChildByID(accDoc, "imgmap");
@@ -118,6 +112,6 @@ addAccessibleTask(
     iframe: true,
     remoteIframe: true,
     // Ensure that all hittest elements are in view.
-    iframeAttrs: { style: "width: 600px; height: 600px;" },
+    iframeAttrs: { style: "width: 600px; height: 600px; padding: 10px;" },
   }
 );
