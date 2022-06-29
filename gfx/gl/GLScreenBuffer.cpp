@@ -41,7 +41,8 @@ UniquePtr<SwapChainPresenter> SwapChain::Acquire(
       mPool = {};
     }
   }
-  if (kPoolSize && mPool.size() == kPoolSize) {
+
+  if (!mPool.empty() && (!kPoolSize || mPool.size() == kPoolSize)) {
     surf = mPool.front();
     mPool.pop();
   }
@@ -64,6 +65,11 @@ UniquePtr<SwapChainPresenter> SwapChain::Acquire(
 void SwapChain::ClearPool() {
   mPool = {};
   mPrevFrontBuffer = nullptr;
+}
+
+void SwapChain::StoreRecycledSurface(
+    const std::shared_ptr<SharedSurface>& surf) {
+  mPool.push(surf);
 }
 
 // -
@@ -121,6 +127,9 @@ SwapChain::~SwapChain() {
     (void)mPresenter->SwapBackBuffer(nullptr);
     mPresenter->mSwapChain = nullptr;
     mPresenter = nullptr;
+  }
+  if (mDestroyedCallback) {
+    mDestroyedCallback();
   }
 }
 
