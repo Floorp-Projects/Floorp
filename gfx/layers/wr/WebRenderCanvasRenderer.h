@@ -37,6 +37,7 @@ class WebRenderCanvasRendererAsync final : public WebRenderCanvasRenderer {
 
   void Initialize(const CanvasRendererData& aData) override;
   bool CreateCompositable() override;
+  void EnsurePipeline(bool aIsAsync) override;
 
   void ClearCachedResources() override;
 
@@ -46,6 +47,7 @@ class WebRenderCanvasRendererAsync final : public WebRenderCanvasRenderer {
 
  protected:
   Maybe<wr::PipelineId> mPipelineId;
+  bool mIsAsync = false;
 };
 
 }  // namespace layers

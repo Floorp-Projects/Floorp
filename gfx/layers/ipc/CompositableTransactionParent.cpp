@@ -35,12 +35,14 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
   if (!compositable) {
     return false;
   }
-  return ReceiveCompositableUpdate(aEdit.detail(), WrapNotNull(compositable));
+  return ReceiveCompositableUpdate(aEdit.detail(), WrapNotNull(compositable),
+                                   aEdit.compositable());
 }
 
 bool CompositableParentManager::ReceiveCompositableUpdate(
     const CompositableOperationDetail& aDetail,
-    NotNull<CompositableHost*> aCompositable) {
+    NotNull<CompositableHost*> aCompositable,
+    const CompositableHandle& aHandle) {
   switch (aDetail.type()) {
     case CompositableOperationDetail::TOpRemoveTexture: {
       const OpRemoveTexture& op = aDetail.get_OpRemoveTexture();
@@ -80,6 +82,24 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
             MOZ_ASSERT(texture->NumCompositableRefs() > 0);
           }
         }
+      }
+      break;
+    }
+    case CompositableOperationDetail::TOpUseRemoteTexture: {
+      const OpUseRemoteTexture& op = aDetail.get_OpUseRemoteTexture();
+      aCompositable->UseRemoteTexture(op.textureId(), op.ownerId(), aHandle,
+                                      GetChildProcessId(), op.size(),
+                                      op.textureFlags());
+      break;
+    }
+    case CompositableOperationDetail::TOpEnableAsyncCompositable: {
+      const OpEnableAsyncCompositable& op =
+          aDetail.get_OpEnableAsyncCompositable();
+      if (op.enable()) {
+        aCompositable->SetAsyncRef(
+            AsyncCompositableRef(GetChildProcessId(), aHandle));
+      } else {
+        aCompositable->SetAsyncRef(AsyncCompositableRef());
       }
       break;
     }
@@ -154,7 +174,7 @@ void CompositableParentManager::ReleaseCompositable(
   if (iter == mCompositables.end()) {
     return;
   }
-
+  iter->second->OnReleased();
   mCompositables.erase(iter);
 }
 

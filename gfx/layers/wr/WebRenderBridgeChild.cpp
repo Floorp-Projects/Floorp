@@ -361,12 +361,9 @@ void WebRenderBridgeChild::Connect(CompositableClient* aCompositable,
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aCompositable);
 
-  static uint64_t sNextID = 1;
-  uint64_t id = sNextID++;
+  CompositableHandle handle = CompositableHandle::GetNext();
+  mCompositables.InsertOrUpdate(uint64_t(handle), aCompositable);
 
-  mCompositables.InsertOrUpdate(id, aCompositable);
-
-  CompositableHandle handle(id);
   aCompositable->InitIPDL(handle);
   SendNewCompositable(handle, aCompositable->GetTextureInfo());
 }
@@ -453,6 +450,22 @@ void WebRenderBridgeChild::UseTextures(
   }
   AddWebRenderParentCommand(CompositableOperation(aCompositable->GetIPCHandle(),
                                                   OpUseTexture(textures)));
+}
+
+void WebRenderBridgeChild::UseRemoteTexture(CompositableClient* aCompositable,
+                                            const RemoteTextureId aTextureId,
+                                            const RemoteTextureOwnerId aOwnerId,
+                                            const gfx::IntSize aSize,
+                                            const TextureFlags aFlags) {
+  AddWebRenderParentCommand(CompositableOperation(
+      aCompositable->GetIPCHandle(),
+      OpUseRemoteTexture(aTextureId, aOwnerId, aSize, aFlags)));
+}
+
+void WebRenderBridgeChild::EnableAsyncCompositable(
+    CompositableClient* aCompositable, bool aEnable) {
+  AddWebRenderParentCommand(CompositableOperation(
+      aCompositable->GetIPCHandle(), OpEnableAsyncCompositable(aEnable)));
 }
 
 void WebRenderBridgeChild::UpdateFwdTransactionId() {

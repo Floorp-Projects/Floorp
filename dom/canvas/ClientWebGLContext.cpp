@@ -431,8 +431,25 @@ Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
 
   const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
+
+  bool asyncPresent = !vr && StaticPrefs::webgl_out_of_process_async_present();
+  if (asyncPresent) {
+    const auto textureId = layers::RemoteTextureId::GetNext();
+    auto& ownerId = fb ? fb->mOwnerId : mOwnerId;
+    if (!ownerId) {
+      ownerId = Some(layers::RemoteTextureOwnerId::GetNext());
+    }
+
+    if (!child->SendPresentFrontBufferToCompositor(fb ? fb->mId : 0, textureId,
+                                                   *ownerId))
+      return {};
+
+    return Some(layers::SurfaceDescriptorRemoteTexture(textureId, *ownerId));
+  }
+
   Maybe<layers::SurfaceDescriptor> ret;
   if (!child->SendGetFrontBuffer(fb ? fb->mId : 0, vr, &ret)) return {};
+
   return ret;
 }
 
