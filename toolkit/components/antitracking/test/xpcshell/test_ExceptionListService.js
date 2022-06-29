@@ -14,8 +14,6 @@ const { RemoteSettings } = ChromeUtils.import(
 const COLLECTION_NAME = "partitioning-exempt-urls";
 const PREF_NAME = "privacy.restrict3rdpartystorage.skip_list";
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["EventTarget"]);
-
 do_get_profile();
 
 class UpdateEvent extends EventTarget {}

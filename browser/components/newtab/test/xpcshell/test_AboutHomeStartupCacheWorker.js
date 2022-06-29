@@ -41,8 +41,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PromiseWorker.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
-
 const CACHE_WORKER_URL = "resource://activity-stream/lib/cache-worker.js";
 const NEWTAB_RENDER_URL =
   "resource://activity-stream/data/content/newtab-render.js";
