@@ -517,11 +517,6 @@ static IA2TextBoundaryType GetIA2TextBoundary(
 
 int32_t RemoteAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
                                         uint32_t aCoordinateType) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return RemoteAccessibleBase<RemoteAccessible>::OffsetAtPoint(
-        aX, aY, aCoordinateType);
-  }
-
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return -1;

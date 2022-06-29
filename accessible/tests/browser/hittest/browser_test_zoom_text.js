@@ -7,9 +7,9 @@
 /**
  * Test if getOffsetAtPoint returns the given text offset at given coordinates.
  */
-async function testOffsetAtPoint(hyperText, x, y, coordType, expectedOffset) {
-  await untilCacheIs(
-    () => hyperText.getOffsetAtPoint(x, y, coordType),
+function testOffsetAtPoint(hyperText, x, y, coordType, expectedOffset) {
+  is(
+    hyperText.getOffsetAtPoint(x, y, coordType),
     expectedOffset,
     `Wrong offset at given point (${x}, ${y}) for ${prettyName(hyperText)}`
   );
@@ -21,7 +21,8 @@ async function runTests(browser, accDoc) {
       "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
     );
     const hyperText = CommonUtils.getNode("paragraph", content.document);
-    return Math.floor(hyperText.textContent.length / 2);
+
+    return hyperText.textContent.length / 2;
   });
   const hyperText = findAccessibleChildByID(accDoc, "paragraph", [
     Ci.nsIAccessibleText,
@@ -33,7 +34,7 @@ async function runTests(browser, accDoc) {
     await getContentDPR(browser)
   );
 
-  await testOffsetAtPoint(
+  testOffsetAtPoint(
     hyperText,
     x + width / 2,
     y + height / 2,
@@ -55,7 +56,7 @@ async function runTests(browser, accDoc) {
     await getContentDPR(browser)
   );
 
-  await testOffsetAtPoint(
+  testOffsetAtPoint(
     hyperText,
     x + width / 2,
     y + height / 2,
@@ -65,7 +66,7 @@ async function runTests(browser, accDoc) {
 }
 
 addAccessibleTask(
-  `<p id="paragraph" style="font-family: monospace;">Болтали две сорокии</p>`,
+  `<p id="paragraph" style="font-family: monospace;">Болтали две сороки</p>`,
   runTests,
   {
     iframe: true,
