@@ -81,27 +81,9 @@ class HTMLVideoElement final : public HTMLMediaElement {
     SetUnsignedIntAttr(nsGkAtoms::height, aValue, 0, aRv);
   }
 
-  uint32_t VideoWidth() const {
-    if (mMediaInfo.HasVideo()) {
-      if (mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_90 ||
-          mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_270) {
-        return mMediaInfo.mVideo.mDisplay.height;
-      }
-      return mMediaInfo.mVideo.mDisplay.width;
-    }
-    return 0;
-  }
+  uint32_t VideoWidth();
 
-  uint32_t VideoHeight() const {
-    if (mMediaInfo.HasVideo()) {
-      if (mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_90 ||
-          mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_270) {
-        return mMediaInfo.mVideo.mDisplay.width;
-      }
-      return mMediaInfo.mVideo.mDisplay.height;
-    }
-    return 0;
-  }
+  uint32_t VideoHeight();
 
   VideoInfo::Rotation RotationDegrees() const {
     return mMediaInfo.mVideo.mRotation;
@@ -120,7 +102,7 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   uint32_t MozDecodedFrames() const;
 
-  uint32_t MozPresentedFrames() const;
+  uint32_t MozPresentedFrames();
 
   uint32_t MozPaintedFrames();
 
@@ -168,6 +150,8 @@ class HTMLVideoElement final : public HTMLMediaElement {
   bool ShouldCreateVideoWakeLock() const;
   void CreateVideoWakeLockIfNeeded();
   void ReleaseVideoWakeLockIfExists();
+
+  gfx::IntSize GetVideoIntrinsicDimensions();
 
   RefPtr<WakeLock> mScreenWakeLock;
 
