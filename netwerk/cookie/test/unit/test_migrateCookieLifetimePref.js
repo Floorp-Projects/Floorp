@@ -10,10 +10,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   - the network.cookie.lifetimePolicy is disabled afterwards.
 */
 add_task(async function migrateSanitizationPrefsClearCleaningPrefs() {
-  Services.prefs.setIntPref(
-    "network.cookie.lifetimePolicy",
-    Ci.nsICookieService.ACCEPT_SESSION
-  );
+  // Former network.cookie.lifetimePolicy values ACCEPT_SESSION/ACCEPT_NORMALLY are not available anymore
+  // 2 = ACCEPT_SESSION
+  Services.prefs.setIntPref("network.cookie.lifetimePolicy", 2);
   Services.prefs.setBoolPref("privacy.sanitize.sanitizeOnShutdown", false);
   Services.prefs.setBoolPref("privacy.clearOnShutdown.cache", false);
   Services.prefs.setBoolPref("privacy.clearOnShutdown.cookies", false);
@@ -24,12 +23,11 @@ add_task(async function migrateSanitizationPrefsClearCleaningPrefs() {
   // The migration code is called in cookieService::Init
   Services.cookies;
 
+  // Former network.cookie.lifetimePolicy values ACCEPT_SESSION/ACCEPT_NORMALLY are not available anymore
+  // 0 = ACCEPT_NORMALLY
   Assert.equal(
-    Services.prefs.getIntPref(
-      "network.cookie.lifetimePolicy",
-      Ci.nsICookieService.ACCEPT_NORMALLY
-    ),
-    Ci.nsICookieService.ACCEPT_NORMALLY,
+    Services.prefs.getIntPref("network.cookie.lifetimePolicy", 0),
+    0,
     "Cookie lifetime policy is off"
   );
 
