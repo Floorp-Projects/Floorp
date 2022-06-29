@@ -17,8 +17,12 @@ function run_test() {
     "security.allow_parent_unrestricted_js_loads",
     true
   );
+  Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+  Services.prefs.setBoolPref("security.allow_eval_in_parent_process", true);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("security.allow_parent_unrestricted_js_loads");
+    Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+    Services.prefs.clearUserPref("security.allow_eval_in_parent_process");
   });
 
   // Create a Debugger observing a debuggee's allocations.
