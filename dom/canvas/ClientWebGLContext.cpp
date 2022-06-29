@@ -865,7 +865,10 @@ ClientWebGLContext::SetContextOptions(JSContext* cx,
   }
 
   if (attributes.mColorSpace.WasPassed()) {
-    newOpts.colorSpace = Some(attributes.mColorSpace.Value());
+    newOpts.colorSpace = attributes.mColorSpace.Value();
+  }
+  if (StaticPrefs::gfx_color_management_native_srgb()) {
+    newOpts.ignoreColorSpace = false;
   }
 
   // Don't do antialiasing if we've disabled MSAA.
