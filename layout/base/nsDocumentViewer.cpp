@@ -1023,10 +1023,8 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
       }
 
       // Notify any devtools about the load.
-      RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-
-      if (timelines && timelines->HasConsumer(docShell)) {
-        timelines->AddMarkerForDocShell(
+      if (TimelineConsumers::HasConsumer(docShell)) {
+        TimelineConsumers::AddMarkerForDocShell(
             docShell, MakeUnique<DocLoadingTimelineMarker>("document::Load"));
       }
 

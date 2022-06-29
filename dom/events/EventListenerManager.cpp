@@ -1466,19 +1466,18 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             // Maybe add a marker to the docshell's timeline, but only
             // bother with all the logic if some docshell is recording.
             nsCOMPtr<nsIDocShell> docShell;
-            RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
             bool needsEndEventMarker = false;
 
             if (mIsMainThreadELM &&
                 listener->mListenerType != Listener::eNativeListener) {
               docShell = nsContentUtils::GetDocShellForEventTarget(mTarget);
               if (docShell) {
-                if (timelines && timelines->HasConsumer(docShell)) {
+                if (TimelineConsumers::HasConsumer(docShell)) {
                   needsEndEventMarker = true;
                   nsAutoString typeStr;
                   (*aDOMEvent)->GetType(typeStr);
                   uint16_t phase = (*aDOMEvent)->EventPhase();
-                  timelines->AddMarkerForDocShell(
+                  TimelineConsumers::AddMarkerForDocShell(
                       docShell, MakeUnique<EventTimelineMarker>(
                                     typeStr, phase, MarkerTracingType::START));
                 }
@@ -1516,8 +1515,8 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             aEvent->mFlags.mInPassiveListener = false;
 
             if (needsEndEventMarker) {
-              timelines->AddMarkerForDocShell(docShell, "DOMEvent",
-                                              MarkerTracingType::END);
+              TimelineConsumers::AddMarkerForDocShell(docShell, "DOMEvent",
+                                                      MarkerTracingType::END);
             }
           }
         }

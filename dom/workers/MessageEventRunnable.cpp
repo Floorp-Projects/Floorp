@@ -49,8 +49,7 @@ bool MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
 
   UniquePtr<AbstractTimelineMarker> start;
   UniquePtr<AbstractTimelineMarker> end;
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  bool isTimelineRecording = timelines && !timelines->IsEmpty();
+  bool isTimelineRecording = !TimelineConsumers::IsEmpty();
 
   if (isTimelineRecording) {
     start = MakeUnique<WorkerTimelineMarker>(
@@ -80,8 +79,8 @@ bool MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
             ? ProfileTimelineWorkerOperationType::DeserializeDataOnMainThread
             : ProfileTimelineWorkerOperationType::DeserializeDataOffMainThread,
         MarkerTracingType::END);
-    timelines->AddMarkerForAllObservedDocShells(start);
-    timelines->AddMarkerForAllObservedDocShells(end);
+    TimelineConsumers::AddMarkerForAllObservedDocShells(start);
+    TimelineConsumers::AddMarkerForAllObservedDocShells(end);
   }
 
   if (NS_WARN_IF(rv.Failed())) {

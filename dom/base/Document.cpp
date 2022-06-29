@@ -8041,11 +8041,10 @@ void Document::DispatchContentLoadedEvents() {
     MaybeResolveReadyForIdle();
   }
 
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
   nsIDocShell* docShell = this->GetDocShell();
 
-  if (timelines && timelines->HasConsumer(docShell)) {
-    timelines->AddMarkerForDocShell(
+  if (TimelineConsumers::HasConsumer(docShell)) {
+    TimelineConsumers::AddMarkerForDocShell(
         docShell,
         MakeUnique<DocLoadingTimelineMarker>("document::DOMContentLoaded"));
   }
