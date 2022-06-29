@@ -100,7 +100,9 @@
   MACRO(23, "processcpu", ProcessCPU,                                        \
         "Sample the CPU utilization of each process")                        \
                                                                              \
-  MACRO(24, "power", Power, "Sample energy meters. (Windows 11 only)")
+  MACRO(24, "power", Power,                                                  \
+        "Sample energy meters on Windows 11 and per process power use on "   \
+        "Apple Silicon")
 // *** Synchronize with lists in BaseProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {
