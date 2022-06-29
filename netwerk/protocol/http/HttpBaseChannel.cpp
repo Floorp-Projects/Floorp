@@ -40,6 +40,7 @@
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/ProcessIsolation.h"
+#include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/OpaqueResponseUtils.h"
 #include "mozilla/net/UrlClassifierCommon.h"
@@ -99,6 +100,8 @@
 #include "mozilla/net/SFVService.h"
 #include "mozilla/dom/ContentChild.h"
 #include "nsQueryObject.h"
+
+using mozilla::dom::RequestMode;
 
 namespace mozilla {
 namespace net {
@@ -204,7 +207,7 @@ HttpBaseChannel::HttpBaseChannel()
       mInitialRwin(0),
       mProxyResolveFlags(0),
       mContentDispositionHint(UINT32_MAX),
-      mCorsMode(nsIHttpChannelInternal::CORS_MODE_NO_CORS),
+      mRequestMode(RequestMode::No_cors),
       mRedirectMode(nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW),
       mLastRedirectFlags(0),
       mPriority(PRIORITY_NORMAL),
@@ -2417,9 +2420,10 @@ nsresult HttpBaseChannel::ProcessCrossOriginEmbedderPolicyHeader() {
 // https://mikewest.github.io/corpp/#corp-check
 nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
   // Fetch 4.5.9
-  uint32_t corsMode;
-  MOZ_ALWAYS_SUCCEEDS(GetCorsMode(&corsMode));
-  if (corsMode != nsIHttpChannelInternal::CORS_MODE_NO_CORS) {
+  dom::RequestMode requestMode;
+  MOZ_ALWAYS_SUCCEEDS(GetRequestMode(&requestMode));
+  // XXX this seems wrong per spec? What about navigate
+  if (requestMode != RequestMode::No_cors) {
     return NS_OK;
   }
 
@@ -3612,14 +3616,15 @@ HttpBaseChannel::SetCorsIncludeCredentials(bool aInclude) {
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetCorsMode(uint32_t* aMode) {
-  *aMode = mCorsMode;
+HttpBaseChannel::GetRequestMode(RequestMode* aMode) {
+  *aMode = mRequestMode;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SetCorsMode(uint32_t aMode) {
-  mCorsMode = aMode;
+HttpBaseChannel::SetRequestMode(RequestMode aMode) {
+  MOZ_ASSERT(aMode != RequestMode::EndGuard_);
+  mRequestMode = aMode;
   return NS_OK;
 }
 
@@ -4665,7 +4670,7 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
 
   // convey the User-Agent header value
   // since we might be setting custom user agent from DevTools.
-  if (httpInternal && mCorsMode == CORS_MODE_NO_CORS &&
+  if (httpInternal && mRequestMode == RequestMode::No_cors &&
       redirectType == ReplacementReason::Redirect) {
     nsAutoCString oldUserAgent;
     nsresult hasHeader =
@@ -4750,8 +4755,8 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
-    // Preserve CORS mode flag.
-    rv = httpInternal->SetCorsMode(mCorsMode);
+    // Preserve Request mode.
+    rv = httpInternal->SetRequestMode(mRequestMode);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // Preserve Redirect mode flag.

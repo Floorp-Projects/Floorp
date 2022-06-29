@@ -2168,7 +2168,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   EnsureRequestContextID();
   openArgs.requestContextID() = mRequestContextID;
 
-  openArgs.corsMode() = mCorsMode;
+  openArgs.requestMode() = mRequestMode;
   openArgs.redirectMode() = mRedirectMode;
 
   openArgs.channelId() = mChannelId;

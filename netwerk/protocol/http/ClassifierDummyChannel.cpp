@@ -560,12 +560,12 @@ ClassifierDummyChannel::SetCorsIncludeCredentials(
 }
 
 NS_IMETHODIMP
-ClassifierDummyChannel::GetCorsMode(uint32_t* aCorsMode) {
+ClassifierDummyChannel::GetRequestMode(dom::RequestMode* aRequestMode) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-ClassifierDummyChannel::SetCorsMode(uint32_t aCorsMode) {
+ClassifierDummyChannel::SetRequestMode(dom::RequestMode aRequestMode) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
