@@ -171,7 +171,7 @@ class Raptor(
             {
                 "dest": "browsertime",
                 "action": "store_true",
-                "default": False,
+                "default": True,
                 "help": argparse.SUPPRESS,
             },
         ],
@@ -549,6 +549,18 @@ class Raptor(
                     "help": (
                         "Clean the python virtualenv (remove, and rebuild) for "
                         "Raptor before running tests."
+                    ),
+                },
+            ],
+            [
+                ["--webext"],
+                {
+                    "action": "store_true",
+                    "dest": "webext",
+                    "default": False,
+                    "help": (
+                        "Whether to use webextension to execute pageload tests "
+                        "(WebExtension is being deprecated).",
                     ),
                 },
             ],
@@ -952,20 +964,23 @@ class Raptor(
                 ["--browser-cycles={}".format(self.config.get("browser_cycles"))]
             )
 
-        for (arg,), details in Raptor.browsertime_options:
-            # Allow overriding defaults on the `./mach raptor-test ...` command-line
-            value = self.config.get(details["dest"])
-            if value is None or value != getattr(self, details["dest"], None):
-                # Check for modifications done to the instance variables
-                value = getattr(self, details["dest"], None)
-            if value and arg not in self.config.get("raptor_cmd_line_args", []):
-                if isinstance(value, string_types):
-                    options.extend([arg, os.path.expandvars(value)])
-                elif isinstance(value, (tuple, list)):
-                    for val in value:
-                        options.extend([arg, val])
-                else:
-                    options.extend([arg])
+        if self.config.get("webext", False):
+            options.extend(["--webext"])
+        else:
+            for (arg,), details in Raptor.browsertime_options:
+                # Allow overriding defaults on the `./mach raptor-test ...` command-line
+                value = self.config.get(details["dest"])
+                if value is None or value != getattr(self, details["dest"], None):
+                    # Check for modifications done to the instance variables
+                    value = getattr(self, details["dest"], None)
+                if value and arg not in self.config.get("raptor_cmd_line_args", []):
+                    if isinstance(value, string_types):
+                        options.extend([arg, os.path.expandvars(value)])
+                    elif isinstance(value, (tuple, list)):
+                        for val in value:
+                            options.extend([arg, val])
+                    else:
+                        options.extend([arg])
 
         for key, value in kw_options.items():
             options.extend(["--%s" % key, value])

@@ -23,3 +23,5 @@ job-defaults:
                     - raptor/windows_config.py
                 default:
                     - raptor/linux_config.py
+        extra-options:
+            - --webext
