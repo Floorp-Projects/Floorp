@@ -1083,13 +1083,12 @@ void nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
   }
 
   nsIDocShell* docShell = context->GetDocShell();
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
-  if (timelines && timelines->HasConsumer(docShell)) {
-    timelines->AddMarkerForDocShell(
+  if (TimelineConsumers::HasConsumer(docShell)) {
+    TimelineConsumers::AddMarkerForDocShell(
         docShell, MakeUnique<CompositeTimelineMarker>(
                       aCompositeStart, MarkerTracingType::START));
-    timelines->AddMarkerForDocShell(
+    TimelineConsumers::AddMarkerForDocShell(
         docShell, MakeUnique<CompositeTimelineMarker>(aCompositeEnd,
                                                       MarkerTracingType::END));
   }

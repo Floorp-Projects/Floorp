@@ -2086,8 +2086,7 @@ static void GetProfileTimelineSubDocShells(nsDocShell* aRootDocShell,
     return;
   }
 
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  if (!timelines || timelines->IsEmpty()) {
+  if (TimelineConsumers::IsEmpty()) {
     return;
   }
 
@@ -2698,18 +2697,15 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
       mCompositionPayloads.Clear();
     }
 
-    RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-
     nsTArray<nsDocShell*> profilingDocShells;
     GetProfileTimelineSubDocShells(GetDocShell(mPresContext),
                                    profilingDocShells);
     for (nsDocShell* docShell : profilingDocShells) {
       // For the sake of the profile timeline's simplicity, this is flagged as
       // paint even if it includes creating display lists
-      MOZ_ASSERT(timelines);
-      MOZ_ASSERT(timelines->HasConsumer(docShell));
-      timelines->AddMarkerForDocShell(docShell, "Paint",
-                                      MarkerTracingType::START);
+      MOZ_ASSERT(TimelineConsumers::HasConsumer(docShell));
+      TimelineConsumers::AddMarkerForDocShell(docShell, "Paint",
+                                              MarkerTracingType::START);
     }
 
 #ifdef MOZ_DUMP_PAINTING
@@ -2736,10 +2732,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
 #endif
 
     for (nsDocShell* docShell : profilingDocShells) {
-      MOZ_ASSERT(timelines);
-      MOZ_ASSERT(timelines->HasConsumer(docShell));
-      timelines->AddMarkerForDocShell(docShell, "Paint",
-                                      MarkerTracingType::END);
+      MOZ_ASSERT(TimelineConsumers::HasConsumer(docShell));
+      TimelineConsumers::AddMarkerForDocShell(docShell, "Paint",
+                                              MarkerTracingType::END);
     }
 
     dispatchTasksAfterTick = true;

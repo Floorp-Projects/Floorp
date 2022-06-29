@@ -357,6 +357,14 @@ def create_parser(mach_interface=False):
         help="Name of conditioned profile to use. Prefix with `artifact:` "
         "if we should obtain the profile from CI.",
     )
+    add_arg(
+        "--webext",
+        dest="webext",
+        action="store_true",
+        default=False,
+        help="Whether to use webextension to execute pageload tests "
+        "(WebExtension is being deprecated).",
+    )
 
     # for browsertime jobs, cold page load is determined by a '--cold' cmd line argument
     add_arg(
@@ -370,7 +378,7 @@ def create_parser(mach_interface=False):
     add_arg(
         "--browsertime",
         dest="browsertime",
-        default=False,
+        default=True,
         action="store_true",
         help="Whether to use browsertime to execute pageload tests",
     )
@@ -466,6 +474,10 @@ def verify_options(parser, args):
     # Debug-mode is disabled in CI (check for attribute in case of mach_interface issues)
     if hasattr(args, "run_local") and (not args.run_local and args.debug_mode):
         parser.error("Cannot run debug mode in CI")
+
+    # If running on webextension, browsertime flag is changed (browsertime is run by default)
+    if args.webext:
+        args.browsertime = False
 
     # make sure that browsertime_video is set if visual metrics are requested
     if args.browsertime_visualmetrics and not args.browsertime_video:

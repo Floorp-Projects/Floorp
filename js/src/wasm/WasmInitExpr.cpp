@@ -118,7 +118,7 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
       }
 #ifdef ENABLE_WASM_SIMD
       case uint16_t(Op::SimdPrefix): {
-        if (!env->v128Enabled()) {
+        if (!env->simdAvailable()) {
           return d.fail("v128 not enabled");
         }
         if (op.b1 != uint32_t(SimdOp::V128Const)) {

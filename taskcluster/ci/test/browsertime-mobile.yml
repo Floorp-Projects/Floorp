@@ -52,7 +52,6 @@ job-defaults:
         config:
             - raptor/android_hw_config.py
         extra-options:
-            - --browsertime
             # Bug 1635749, disable window recorder temporarily
             - --browsertime-no-ffwindowrecorder
             - --conditioned-profile=settled
@@ -324,7 +323,6 @@ browsertime-speedometer-mobile:
     treeherder-symbol: Btime(sp)
     mozharness:
         extra-options:
-            - --browsertime
             - --test=speedometer
 
 browsertime-unity-webgl-mobile:

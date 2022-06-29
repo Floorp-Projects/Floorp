@@ -79,13 +79,6 @@ class SocketProcessParent final
 
   already_AddRefed<PAltServiceParent> AllocPAltServiceParent();
 
-  mozilla::ipc::IPCResult RecvGetTLSClientCert(
-      const nsCString& aHostName, const OriginAttributes& aOriginAttributes,
-      const int32_t& aPort, const uint32_t& aProviderFlags,
-      const uint32_t& aProviderTlsFlags, const ByteArray& aServerCert,
-      nsTArray<ByteArray>&& aCollectedCANames, bool* aSucceeded,
-      ByteArray* aOutCert, nsTArray<ByteArray>* aBuiltChain);
-
   mozilla::ipc::IPCResult RecvFindIPCClientCertObjects(
       nsTArray<IPCClientCertObject>* aObjects);
   mozilla::ipc::IPCResult RecvIPCClientCertSign(ByteArray aCert,

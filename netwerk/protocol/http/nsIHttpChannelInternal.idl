@@ -16,6 +16,9 @@ namespace net {
 class nsHttpConnectionInfo;
 class WebSocketConnectionBase;
 }
+namespace dom {
+enum class RequestMode : uint8_t;
+}
 }
 %}
 [ptr] native StringArray(nsTArray<nsCString>);
@@ -23,6 +26,7 @@ class WebSocketConnectionBase;
 [ref] native securityMessagesArray(nsCOMArray<nsISecurityConsoleMessage>);
 
 native TimeStamp(mozilla::TimeStamp);
+native RequestMode(mozilla::dom::RequestMode);
 
 interface nsIAsyncInputStream;
 interface nsIAsyncOutputStream;
@@ -305,14 +309,10 @@ interface nsIHttpChannelInternal : nsISupports
      */
     [must_use] attribute boolean corsIncludeCredentials;
 
-    const unsigned long CORS_MODE_SAME_ORIGIN = 0;
-    const unsigned long CORS_MODE_NO_CORS = 1;
-    const unsigned long CORS_MODE_CORS = 2;
-    const unsigned long CORS_MODE_NAVIGATE = 3;
     /**
      * Set by nsCORSListenerProxy to indicate CORS load type. Defaults to CORS_MODE_NO_CORS.
      */
-    [must_use] attribute unsigned long corsMode;
+    [must_use, noscript] attribute RequestMode requestMode;
 
     const unsigned long REDIRECT_MODE_FOLLOW = 0;
     const unsigned long REDIRECT_MODE_ERROR = 1;

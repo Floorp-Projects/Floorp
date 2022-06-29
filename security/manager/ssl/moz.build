@@ -90,6 +90,8 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.psm += [
     "IPCClientCertsChild.h",
     "IPCClientCertsParent.h",
+    "SelectTLSClientAuthCertChild.h",
+    "SelectTLSClientAuthCertParent.h",
     "TransportSecurityInfo.h",
     "VerifySSLServerCertChild.h",
     "VerifySSLServerCertParent.h",
@@ -110,7 +112,9 @@ UNIFIED_SOURCES += [
     "EnterpriseRoots.cpp",
     "IPCClientCertsChild.cpp",
     "IPCClientCertsParent.cpp",
+    "md4.c",
     "nsCertOverrideService.cpp",
+    "nsCertTree.cpp",
     "nsClientAuthRemember.cpp",
     "nsCryptoHash.cpp",
     "nsNSSCallbacks.cpp",
@@ -143,6 +147,7 @@ UNIFIED_SOURCES += [
     "SecretDecoderRing.cpp",
     "SharedSSLState.cpp",
     "SSLServerCertVerification.cpp",
+    "TLSClientAuthCertSelection.cpp",
     "TransportSecurityInfo.cpp",
     "VerifySSLServerCertChild.cpp",
     "VerifySSLServerCertParent.cpp",
@@ -186,13 +191,9 @@ if CONFIG["OS_ARCH"] == "WINNT":
 
 IPDL_SOURCES += [
     "PIPCClientCerts.ipdl",
+    "PSelectTLSClientAuthCert.ipdl",
     "PSMIPCTypes.ipdlh",
     "PVerifySSLServerCert.ipdl",
-]
-
-UNIFIED_SOURCES += [
-    "md4.c",
-    "nsCertTree.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

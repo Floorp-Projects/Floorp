@@ -311,7 +311,7 @@ function runContinuation(testFunction) {
       try {
         driveTest();
       } catch (ex) {
-        SimpleTest.ok(
+        ok(
           false,
           "APZ test continuation failed with exception: " + ex
         );

@@ -19,8 +19,6 @@ add_task(async function sanitizeWithExceptionsOnShutdown() {
 
   await SpecialPowers.pushPrefEnv({
     set: [
-      // clear cookies and site data is not activated
-      ["network.cookie.lifetimePolicy", Ci.nsICookieService.ACCEPT_NORMALLY],
       ["browser.sanitizer.loglevel", "All"],
       ["privacy.sanitize.sanitizeOnShutdown", true],
     ],

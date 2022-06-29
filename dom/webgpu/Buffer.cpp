@@ -43,14 +43,19 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Buffer)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize,
-               bool aMappable)
-    : ChildOf(aParent), mId(aId), mSize(aSize), mMappable(aMappable) {
+               uint32_t aUsage)
+    : ChildOf(aParent), mId(aId), mSize(aSize), mUsage(aUsage) {
   mozilla::HoldJSObjects(this);
 }
 
 Buffer::~Buffer() {
   Cleanup();
   mozilla::DropJSObjects(this);
+}
+
+bool Buffer::Mappable() const {
+  return (mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
+                    dom::GPUBufferUsage_Binding::MAP_READ)) != 0;
 }
 
 void Buffer::Cleanup() {
@@ -100,10 +105,31 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
     aRv.ThrowInvalidStateError("Unable to map a buffer that is already mapped");
     return nullptr;
   }
-  if (!mMappable) {
-    aRv.ThrowInvalidStateError("Unable to map a buffer that is not mappable");
-    return nullptr;
+
+  switch (aMode) {
+    case dom::GPUMapMode_Binding::READ:
+      if ((mUsage & dom::GPUBufferUsage_Binding::MAP_READ) == 0) {
+        promise->MaybeRejectWithOperationError(
+            "mapAsync: 'mode' is GPUMapMode.READ, \
+but GPUBuffer was not created with GPUBufferUsage.MAP_READ");
+        return promise.forget();
+      }
+      break;
+    case dom::GPUMapMode_Binding::WRITE:
+      if ((mUsage & dom::GPUBufferUsage_Binding::MAP_WRITE) == 0) {
+        promise->MaybeRejectWithOperationError(
+            "mapAsync: 'mode' is GPUMapMode.WRITE, \
+but GPUBuffer was not created with GPUBufferUsage.MAP_WRITE");
+        return promise.forget();
+      }
+      break;
+    default:
+      promise->MaybeRejectWithOperationError(
+          "GPUBuffer.mapAsync 'mode' argument \
+must be either GPUMapMode.READ or GPUMapMode.WRITE");
+      return promise.forget();
   }
+
   // Initialize with a dummy shmem, it will become real after the promise is
   // resolved.
   SetMapped(ipc::Shmem(), aMode == dom::GPUMapMode_Binding::WRITE);
@@ -195,7 +221,7 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
 
   UnmapArrayBuffers(aCx, aRv);
   mParent->UnmapBuffer(mId, std::move(mMapped->mShmem), mMapped->mWritable,
-                       mMappable);
+                       Mappable());
   mMapped.reset();
 }
 

@@ -719,10 +719,10 @@ nsresult FetchDriver::HttpFetch(
 
     nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(httpChan);
 
+    rv = internalChan->SetRequestMode(mRequest->Mode());
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     // Conversion between enumerations is safe due to static asserts in
     // dom/workers/ServiceWorkerManager.cpp
-    rv = internalChan->SetCorsMode(static_cast<uint32_t>(mRequest->Mode()));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = internalChan->SetRedirectMode(
         static_cast<uint32_t>(mRequest->GetRedirectMode()));
     MOZ_ASSERT(NS_SUCCEEDED(rv));

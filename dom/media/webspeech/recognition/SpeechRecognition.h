@@ -14,7 +14,7 @@
 #include "nsWrapperCache.h"
 #include "nsTArray.h"
 #include "js/TypeDecls.h"
-
+#include "nsProxyRelease.h"
 #include "DOMMediaStream.h"
 #include "nsITimer.h"
 #include "MediaTrackGraph.h"
@@ -150,7 +150,8 @@ class SpeechRecognition final : public DOMEventTargetHelper,
                               uint32_t aSampleCount,
                               nsTArray<RefPtr<SharedBuffer>>& aResult);
   AudioSegment* CreateAudioSegment(nsTArray<RefPtr<SharedBuffer>>& aChunks);
-  void FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
+  void FeedAudioData(nsMainThreadPtrHandle<SpeechRecognition>& aRecognition,
+                     already_AddRefed<SharedBuffer> aSamples,
                      uint32_t aDuration, MediaTrackListener* aProvider,
                      TrackRate aTrackRate);
 
@@ -276,6 +277,8 @@ class SpeechEvent : public Runnable {
  public:
   SpeechEvent(SpeechRecognition* aRecognition,
               SpeechRecognition::EventType aType);
+  SpeechEvent(nsMainThreadPtrHandle<SpeechRecognition>& aRecognition,
+              SpeechRecognition::EventType aType);
 
   ~SpeechEvent();
 
@@ -289,7 +292,7 @@ class SpeechEvent : public Runnable {
   friend class SpeechRecognition;
 
  private:
-  SpeechRecognition* mRecognition;
+  nsMainThreadPtrHandle<SpeechRecognition> mRecognition;
 
   // for AUDIO_DATA events, keep a reference to the provider
   // of the data (i.e., the SpeechTrackListener) to ensure it

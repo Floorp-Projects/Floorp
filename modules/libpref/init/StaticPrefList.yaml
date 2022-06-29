@@ -6939,13 +6939,6 @@
   value: true
   mirror: always
 
-#if defined(ENABLE_WASM_SIMD)
--   name: javascript.options.wasm_simd
-    type: bool
-    value: true
-    mirror: always
-#endif  // defined(ENABLE_WASM_SIMD)
-
 #if defined(ENABLE_WASM_RELAXED_SIMD)
 -   name: javascript.options.wasm_relaxed_simd
     type: bool
@@ -10167,16 +10160,6 @@
 - name: network.cookie.staleThreshold
   type: uint32_t
   value: 60
-  mirror: always
-
-# Cookie lifetime policy. Possible values:
-# 0 - accept all cookies
-# 1 - deprecated. don't use it.
-# 2 - accept as session cookies
-# 3 - deprecated. don't use it.
-- name: network.cookie.lifetimePolicy
-  type: RelaxedAtomicInt32
-  value: 0
   mirror: always
 
 - name: network.cookie.sameSite.laxByDefault

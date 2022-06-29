@@ -693,7 +693,7 @@ inline bool Decoder::readPackedType(uint32_t numTypes,
   switch (code) {
     case uint8_t(TypeCode::V128): {
 #ifdef ENABLE_WASM_SIMD
-      if (!features.v128) {
+      if (!features.simd) {
         return fail("v128 not enabled");
       }
       *type = T::fromNonRefTypeCode(TypeCode(code));

@@ -150,7 +150,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const uint32_t& aInitialRwin, const bool& aBlockAuthPrompt,
       const bool& aAllowStaleCacheContent,
       const bool& aPreferCacheLoadOverBypass, const nsCString& aContentTypeHint,
-      const uint32_t& aCorsMode, const uint32_t& aRedirectMode,
+      const dom::RequestMode& aRequestMode, const uint32_t& aRedirectMode,
       const uint64_t& aChannelId, const nsString& aIntegrityMetadata,
       const uint64_t& aContentWindowId,
       const nsTArray<PreferredAlternativeDataTypeParams>&

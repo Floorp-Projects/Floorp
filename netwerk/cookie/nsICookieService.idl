@@ -83,14 +83,6 @@ interface nsICookieService : nsISupports
   const uint32_t BEHAVIOR_LAST           = 5;
 
   /*
-   * Possible values for the "network.cookie.lifetimePolicy" preference.
-   */
-  const uint32_t ACCEPT_NORMALLY   = 0; // accept normally
-  // Value = 1 is considered the same as 0 (See Bug 606655).
-  const uint32_t ACCEPT_SESSION    = 2; // downgrade to session
-  // Value = 3 is considered the same as 0
-
-  /*
    * Get the complete cookie string associated with the document's principal.
    * This method is meant to be used for `document.cookie` only. Any security
    * check about storage-access permission and cookie behavior must be done by

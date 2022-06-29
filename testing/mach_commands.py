@@ -995,7 +995,7 @@ def test_info_failures(
     # get depends_on bugs:
     buglist = [bugid]
     if "depends_on" in data["bugs"][0]:
-        buglist.append(data["bugs"][0]["depends_on"])
+        buglist.extend(data["bugs"][0]["depends_on"])
 
     testname = parts[0].strip().split(" ")[-1]
 
@@ -1087,12 +1087,12 @@ def test_info_failures(
         print("%s errors with:" % (len(lines[h]["config"])))
         for l in lines[h]["lines"]:
             print(l)
-        print("")
 
         for job in jobs:
             count = len([x for x in lines[h]["config"] if x == job])
             if count > 0:
                 print("  %s: %s" % (job, count))
+        print("")
 
 
 @Command(

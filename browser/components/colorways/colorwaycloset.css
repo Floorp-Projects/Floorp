@@ -2,16 +2,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  height: 100%;
+}
+
 body {
+  height: 100%;
   display: grid;
+  grid-template-columns: 50% 50%;
+  grid-template-rows: 75px auto 60px;
   grid-template-areas:
-    "title"
-    "main";
+    "title title"
+    "figure main"
+    "footer footer";
 }
 
 body > header {
   grid-area: title;
-  margin: 2em;
+  margin: 2em 2em 0;
+}
+
+figure {
+  grid-area: figure;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+figure > img {
+  max-width: 288px;
+  max-height: 288px;
 }
 
 #collection-title {
@@ -40,6 +61,14 @@ body > header {
   padding: .2em 1em;
 }
 
+#use-fx-home-controls:not([hidden]) {
+  grid-area: footer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 2em;
+}
+
 #use-fx-home-controls:not(.success) > .success-prompt,
 #use-fx-home-controls.success > .reset-prompt {
   display: none;
@@ -56,10 +85,6 @@ body > header {
   border-radius: 15px;
   vertical-align: middle;
   margin-inline-end: 0.5em;
-}
-
-body > section {
-  grid-area: main;
 }
 
 #colorway-selector {
@@ -100,16 +125,14 @@ body > section {
 }
 
 #colorway-customization-panel {
+  grid-area: main;
   padding-inline: 24px;
-}
-
-#colorway-details {
-  margin-top: 50px;
 }
 
 #colorway-name {
   font-size: 2em;
   margin-block: 0 37px;
+  margin-top: 50px;
 }
 
 #colorway-description {
