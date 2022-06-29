@@ -1043,7 +1043,9 @@ static CspaceTransformPlan ChooseCspaceTransformPlan(
   // transform mis-translates colors if you ask VideoProcessor to resize.
   // (jgilbert's RTX 3070 machine "osiris")
   // Absent more investigation, let's avoid VP with non-YUV sources for now.
-  if (srcSpace.yuvRange) {
+  const auto cmsMode = GfxColorManagementMode();
+  const bool doColorManagement = cmsMode != CMSMode::Off;
+  if (srcSpace.yuvRange && doColorManagement) {
     const auto exactDxgiSpace = ExactDXGIColorSpace(srcSpace);
     if (exactDxgiSpace) {
       auto plan = CspaceTransformPlan::WithVideoProcessor{};
@@ -1097,6 +1099,10 @@ static CspaceTransformPlan ChooseCspaceTransformPlan(
           DXGI_FORMAT_R16G16B16A16_FLOAT,
       };
       break;
+  }
+  if (!doColorManagement) {
+    plan.dstSpace = plan.srcSpace;
+    plan.dstSpace.yuv = {};
   }
 
   return {{}, Some(plan)};
@@ -1329,10 +1335,14 @@ static Maybe<DCSurfaceSwapChain::Dest> CreateSwapChain(
       return {};
     }
 
-    hr = swapChain.swapChain->SetColorSpace1(aColorSpace);
-    if (FAILED(hr)) {
-      gfxCriticalNote << "SetColorSpace1 failed: " << gfx::hexa(hr);
-      return {};
+    const auto cmsMode = GfxColorManagementMode();
+    const bool doColorManagement = cmsMode != CMSMode::Off;
+    if (doColorManagement) {
+      hr = swapChain.swapChain->SetColorSpace1(aColorSpace);
+      if (FAILED(hr)) {
+        gfxCriticalNote << "SetColorSpace1 failed: " << gfx::hexa(hr);
+        return {};
+      }
     }
   }
 
