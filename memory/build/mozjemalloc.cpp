@@ -1296,14 +1296,16 @@ static void chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed);
 static void huge_dalloc(void* aPtr, arena_t* aArena);
 static bool malloc_init_hard();
 
-#ifdef XP_DARWIN
-#  define FORK_HOOK extern "C"
-#else
-#  define FORK_HOOK static
-#endif
+#ifndef XP_WIN
+#  ifdef XP_DARWIN
+#    define FORK_HOOK extern "C"
+#  else
+#    define FORK_HOOK static
+#  endif
 FORK_HOOK void _malloc_prefork(void);
 FORK_HOOK void _malloc_postfork_parent(void);
 FORK_HOOK void _malloc_postfork_child(void);
+#endif
 
 // End forward declarations.
 // ***************************************************************************
