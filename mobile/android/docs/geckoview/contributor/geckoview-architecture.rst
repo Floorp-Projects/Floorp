@@ -448,6 +448,30 @@ down. As explained in the section above, apps will simply be killed whenever
 the system needs to reclaim resources. This means that Gecko on Android will
 never shutdown cleanly, and that shutdown actions will never execute.
 
+.. _principals:
+
+Principals
+----------
+
+In Gecko, a *website* loaded in a session is represented by an abstraction
+called `principal
+<https://searchfox.org/mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0/caps/nsIPrincipal.idl>`_.
+Principals contain information that is used to determine what permissions have
+been granted to the website instance, what APIs are available to it, which
+container the page is loaded in, is the page in private browsing or not, etc.
+
+Principals are used throughout the Gecko codebase, GeckoView, however, does not
+expose the concept to the API. This is intentional, as exposing it would
+potentially expose the app to various security sensitive concepts, which would
+violate the "secure" requirement for the GeckoView API.
+
+The absence of principals from the API is, e.g., why GeckoView does not offer a
+way to set permissions given a URL string, as permissions are internally stored
+by principal. See also `Setting Permissions`_.
+
+To learn more about principals see `this talk by Bobby Holley
+<https://www.youtube.com/watch?v=28FPetl5Fl4>`_.
+
 Window model
 ------------
 
@@ -596,6 +620,8 @@ And finally, the Java implementation calls the session delegate.
     });
   }
 
+.. _permissions:
+
 Permissions
 -----------
 
@@ -607,10 +633,10 @@ Content permissions
 ~~~~~~~~~~~~~~~~~~~
 
 Content permissions are granted to individual web sites (more precisely,
-principals) and are managed internally using ``nsIPermissionManager``. Content
-permissions are used by Gecko to keep track which website is allowed to access
-a group of Web APIs or functionality. The Web has the concept of permissions,
-but not all Gecko permissions map to Web-exposed permissions.
+`principals`_) and are managed internally using ``nsIPermissionManager``.
+Content permissions are used by Gecko to keep track which website is allowed to
+access a group of Web APIs or functionality. The Web has the concept of
+permissions, but not all Gecko permissions map to Web-exposed permissions.
 
 For instance, the ``Notification`` permission, which allows websites to fire
 notifications to the user, is exposed to the Web through
@@ -624,7 +650,7 @@ GeckoView retains content permission data, which is an explicit violation of
 the design principle of not storing data. This is done because storing
 permissions is very complex, making a mistake when dealing with permissions
 often ends up being a security vulnerability, and because permissions depend on
-concepts that are not exposed to the GeckoView API like principals.
+concepts that are not exposed to the GeckoView API like `principals`_.
 
 Android permissions
 ~~~~~~~~~~~~~~~~~~~
@@ -662,6 +688,26 @@ the corresponding window child actor, with the exception of requests that are
 not associated with a window, which are redirected to the `current active
 window
 <https://searchfox.org/mozilla-central/rev/9dc5ffe42635b602d4ddfc9a4b8ea0befc94975a/mobile/android/actors/GeckoViewPermissionProcessParent.jsm#28-35>`_.
+
+Setting permissions
+~~~~~~~~~~~~~~~~~~~
+
+Permissions are stored in a map between a `principal <#principals>`_ and a list
+of permission (key, value) pairs. To prevent security vulnerabilities, GeckoView
+does not provide a way to set permissions given an arbitrary URL and requires
+consumers to get hold of the `ContentPermission
+<https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.PermissionDelegate.ContentPermission.html>`_
+object. The ContentPermission object is returned in `onLocationChange
+<https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.NavigationDelegate.html#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List)>`_
+upon navigation, making it unlikely to have confusion bugs whereby the
+permission is given to the wrong website.
+
+Internally, some permissions are only present when a certain override is set,
+e.g. Tracking Protection override permissions are only present when the page
+has been given a TP override. Because the only way to set the value of a
+permission is to get hold of the ``ContentPermission`` object, `we manually insert
+<https://searchfox.org/mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0/mobile/android/modules/geckoview/GeckoViewNavigation.jsm#605-625>`_
+a `trackingprotection` permission on every page load.
 
 Autofill Support
 ----------------
@@ -765,7 +811,7 @@ Testing infrastructure
 ----------------------
 
 For a detailed description of our testing infrastructure see `GeckoView junit
-Test Framework <https://gist.github.com/agi/5154509247fbe1170b2646a5b163433e>`_.
+Test Framework <junit.html>`_.
 
 .. |api-diagram| image:: ../assets/api-diagram.png
 .. |view-runtime-session| image:: ../assets/view-runtime-session.png
