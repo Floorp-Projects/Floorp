@@ -7,9 +7,9 @@ package org.mozilla.focus.topsites
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.feature.top.sites.TopSitesFrecencyConfig
 import mozilla.components.feature.top.sites.TopSitesProviderConfig
 import mozilla.components.feature.top.sites.TopSitesStorage
 import mozilla.components.support.base.observer.Observable
@@ -54,7 +54,7 @@ class DefaultTopSitesStorage(
 
     override suspend fun getTopSites(
         totalSites: Int,
-        frecencyConfig: FrecencyThresholdOption?,
+        frecencyConfig: TopSitesFrecencyConfig?,
         providerConfig: TopSitesProviderConfig?
     ): List<TopSite> = pinnedSitesStorage.getPinnedSites().take(totalSites)
 
