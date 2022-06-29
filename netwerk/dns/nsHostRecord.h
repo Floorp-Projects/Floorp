@@ -367,6 +367,7 @@ class TypeHostRecord final : public nsHostRecord,
 
  private:
   friend class nsHostResolver;
+  friend class mozilla::net::TRR;
   friend class mozilla::net::TRRQuery;
 
   explicit TypeHostRecord(const nsHostKey& key);
@@ -379,6 +380,8 @@ class TypeHostRecord final : public nsHostRecord,
 
   mozilla::net::TypeRecordResultType mResults = AsVariant(mozilla::Nothing());
   mozilla::Mutex mResultsLock MOZ_UNANNOTATED{"TypeHostRecord.mResultsLock"};
+
+  mozilla::Maybe<nsCString> mOriginHost;
 
   // When the lookups of this record started (for telemetry).
   mozilla::TimeStamp mStart;

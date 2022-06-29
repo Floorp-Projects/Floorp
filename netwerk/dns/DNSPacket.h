@@ -72,6 +72,7 @@ class DNSPacket {
       uint32_t& aTTL);
 
   DNSPacketStatus PacketStatus() const { return mStatus; }
+  void SetOriginHost(const Maybe<nsCString>& aHost) { mOriginHost = aHost; }
 
  protected:
   // Never accept larger DOH responses than this as that would indicate
@@ -101,6 +102,7 @@ class DNSPacket {
   unsigned char mResponse[MAX_SIZE]{};
   unsigned int mBodySize = 0;
   DNSPacketStatus mStatus = DNSPacketStatus::Unknown;
+  Maybe<nsCString> mOriginHost;
 };
 
 class ODoHDNSPacket final : public DNSPacket {
