@@ -537,6 +537,14 @@ const featureDescriptions = [
       "experimental.enableProcessCPUTracks()",
     experimental: true,
   },
+  {
+    name: "Power Use",
+    value: "power",
+    title:
+      "Record the value of every energy meter available on the system with " +
+      "each sample. Only available on Windows 11.",
+    experimental: true,
+  },
 ];
 
 module.exports = {
