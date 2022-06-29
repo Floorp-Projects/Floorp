@@ -137,19 +137,6 @@ bool nsAccUtils::HasDefinedARIAToken(nsIContent* aContent, nsAtom* aAtom) {
   return true;
 }
 
-nsStaticAtom* nsAccUtils::GetARIAToken(dom::Element* aElement, nsAtom* aAttr) {
-  if (!HasDefinedARIAToken(aElement, aAttr)) return nsGkAtoms::_empty;
-
-  static dom::Element::AttrValuesArray tokens[] = {
-      nsGkAtoms::_false, nsGkAtoms::_true, nsGkAtoms::mixed, nullptr};
-
-  int32_t idx =
-      aElement->FindAttrValueIn(kNameSpaceID_None, aAttr, tokens, eCaseMatters);
-  if (idx >= 0) return tokens[idx];
-
-  return nullptr;
-}
-
 nsStaticAtom* nsAccUtils::NormalizeARIAToken(dom::Element* aElement,
                                              nsAtom* aAttr) {
   if (!HasDefinedARIAToken(aElement, aAttr)) {
@@ -165,6 +152,14 @@ nsStaticAtom* nsAccUtils::NormalizeARIAToken(dom::Element* aElement,
                                             eCaseMatters);
     // If the token is present, return it, otherwise TRUE as per spec.
     return (idx >= 0) ? tokens[idx] : nsGkAtoms::_true;
+  }
+
+  static dom::Element::AttrValuesArray tokens[] = {
+      nsGkAtoms::_false, nsGkAtoms::_true, nsGkAtoms::mixed, nullptr};
+  int32_t idx =
+      aElement->FindAttrValueIn(kNameSpaceID_None, aAttr, tokens, eCaseMatters);
+  if (idx >= 0) {
+    return tokens[idx];
   }
 
   return nullptr;
