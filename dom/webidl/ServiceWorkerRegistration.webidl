@@ -9,7 +9,7 @@
  * https://notifications.spec.whatwg.org/
  */
 
-[Pref="dom.serviceWorkers.enabled",
+[Func="ServiceWorkerVisible",
  Exposed=(Window,Worker)]
 interface ServiceWorkerRegistration : EventTarget {
   readonly attribute ServiceWorker? installing;
