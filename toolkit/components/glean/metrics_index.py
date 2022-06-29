@@ -20,6 +20,7 @@ metrics_yamls = [
     "dom/media/metrics.yaml",
     "dom/metrics.yaml",
     "gfx/metrics.yaml",
+    "netwerk/protocol/http/metrics.yaml",
     "toolkit/components/extensions/metrics.yaml",
     "toolkit/components/glean/metrics.yaml",
     "toolkit/components/glean/tests/test_metrics.yaml",
