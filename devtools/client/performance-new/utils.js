@@ -542,7 +542,7 @@ const featureDescriptions = [
     value: "power",
     title:
       "Record the value of every energy meter available on the system with " +
-      "each sample. Only available on Windows 11.",
+      "each sample. Only available on Windows 11 and Apple Silicon.",
     experimental: true,
   },
 ];
