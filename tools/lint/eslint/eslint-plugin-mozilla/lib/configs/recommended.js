@@ -54,6 +54,9 @@ module.exports = {
         "mozilla/reject-eager-module-in-lazy-getter": "error",
         "mozilla/reject-global-this": "error",
         "mozilla/reject-globalThis-modification": "error",
+        // For all system modules, we expect no properties to need importing,
+        // hence reject everything.
+        "mozilla/reject-importGlobalProperties": ["error", "everything"],
         "mozilla/reject-top-level-await": "error",
         // TODO: Bug 1575506 turn `builtinGlobals` on here.
         // We can enable builtinGlobals for jsms due to their scopes.
