@@ -21,7 +21,7 @@ const MATCH_INTENSITY_FROM_ID = new RegExp(
   `-(${INTENSITY_SOFT}|${INTENSITY_BALANCED}|${INTENSITY_BOLD})-colorway@mozilla\\.org$`
 );
 
-const ColorwaySelector = {
+const ColorwayCloset = {
   // This is essentially an instant-apply dialog, but we make an effort to only
   // keep the theme change if the user hits the "Set colorway" button, and
   // otherwise revert to the previous theme upon closing the modal. However,
@@ -29,24 +29,35 @@ const ColorwaySelector = {
   // which case the theme change will be kept.
   revertToPreviousTheme: true,
 
-  colorwayRadios: document.getElementById("colorway-selector"),
-  intensityContainer: document.getElementById("colorway-intensities"),
+  el: {
+    colorwayRadios: document.getElementById("colorway-selector"),
+    intensityContainer: document.getElementById("colorway-intensities"),
+    colorwayFigure: document.getElementById("colorway-figure"),
+    colorwayName: document.getElementById("colorway-name"),
+    collectionTitle: document.getElementById("collection-title"),
+    colorwayDescription: document.getElementById("colorway-description"),
+    expiryDateSpan: document.querySelector("#collection-expiry-date > span"),
+    setColorwayButton: document.getElementById("set-colorway"),
+    cancelButton: document.getElementById("cancel"),
+    useFXHomeControls: document.getElementById("use-fx-home-controls"),
+  },
 
   init() {
     this._displayCollectionData();
+    this._displayUseFXHomeControls();
 
     AddonManager.addAddonListener(this);
     window.addEventListener("unload", this);
 
     this._initColorwayRadios();
-    this.colorwayRadios.addEventListener("change", this);
-    this.intensityContainer.addEventListener("change", this);
+    this.el.colorwayRadios.addEventListener("change", this);
+    this.el.intensityContainer.addEventListener("change", this);
 
-    document.getElementById("set-colorway").onclick = () => {
+    this.el.setColorwayButton.onclick = () => {
       this.revertToPreviousTheme = false;
       window.close();
     };
-    document.getElementById("cancel").onclick = () => {
+    this.el.cancelButton.onclick = () => {
       window.close();
     };
   },
@@ -76,7 +87,7 @@ const ColorwaySelector = {
       // TODO: this name includes the intensity, which we don't want here
       input.setAttribute("title", addon.name);
       input.style.setProperty("--colorway-icon", `url(${addon.iconURL})`);
-      this.colorwayRadios.appendChild(input);
+      this.el.colorwayRadios.appendChild(input);
     }
 
     // If the current active theme is part of our collection, make the UI reflect
@@ -89,6 +100,27 @@ const ColorwaySelector = {
     }
   },
 
+  _displayUseFXHomeControls() {
+    const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
+    this.el.useFXHomeControls.hidden = HomePage.isDefault;
+    if (!HomePage.isDefault) {
+      let homeState;
+      this.el.useFXHomeControls
+        .querySelector(".reset-prompt > button")
+        .addEventListener("click", () => {
+          homeState = HomePage.get();
+          HomePage.reset();
+          this.el.useFXHomeControls.classList.add("success");
+        });
+      this.el.useFXHomeControls
+        .querySelector(".success-prompt > button")
+        .addEventListener("click", () => {
+          HomePage.set(homeState);
+          this.el.useFXHomeControls.classList.remove("success");
+        });
+    }
+  },
+
   _displayCollectionData() {
     const collection = BuiltInThemes.findActiveColorwayCollection();
     if (!collection) {
@@ -97,11 +129,11 @@ const ColorwaySelector = {
       window.close();
     }
     document.l10n.setAttributes(
-      document.getElementById("collection-title"),
+      this.el.collectionTitle,
       collection.l10nId.title
     );
     document.l10n.setAttributes(
-      document.querySelector("#collection-expiry-date > span"),
+      this.el.expiryDateSpan,
       "colorway-collection-expiry-date-span",
       {
         expiryDate: collection.expiry.getTime(),
@@ -109,17 +141,19 @@ const ColorwaySelector = {
     );
   },
 
+  _getFigureUrl() {
+    return BuiltInThemes.builtInThemeMap.get(this.selectedColorway.id)
+      .figureUrl;
+  },
+
   _displayColorwayData() {
     // TODO bug 1770030: localize name and description with Fluent
     // TODO: this name includes the intensity, which we don't want here
-    document.getElementById(
-      "colorway-name"
-    ).innerText = this.selectedColorway.name;
-    document.getElementById(
-      "colorway-description"
-    ).innerText = this.groupIdForSelectedColorway;
+    this.el.colorwayName.innerText = this.selectedColorway.name;
+    this.el.colorwayDescription.innerText = this.groupIdForSelectedColorway;
+    this.el.colorwayFigure.src = this._getFigureUrl();
 
-    this.intensityContainer.hidden = !this.hasIntensities;
+    this.el.intensityContainer.hidden = !this.hasIntensities;
     if (this.hasIntensities) {
       let selectedIntensity = this.selectedColorway.id.match(
         MATCH_INTENSITY_FROM_ID
@@ -184,7 +218,7 @@ const ColorwaySelector = {
     this.hasIntensities = this.groupIdForSelectedColorway.endsWith(
       ID_SUFFIX_FOR_PRIMARY_INTENSITY
     );
-    for (let input of this.colorwayRadios.children) {
+    for (let input of this.el.colorwayRadios.children) {
       if (input.value == this.groupIdForSelectedColorway) {
         input.checked = true;
         this._displayColorwayData();
@@ -194,27 +228,4 @@ const ColorwaySelector = {
   },
 };
 
-function showUseFXHomeControls() {
-  const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
-  const useFXHomeControls = document.getElementById("use-fx-home-controls");
-  useFXHomeControls.hidden = HomePage.isDefault;
-  if (!HomePage.isDefault) {
-    let homeState;
-    useFXHomeControls
-      .querySelector(".reset-prompt > button")
-      .addEventListener("click", () => {
-        homeState = HomePage.get();
-        HomePage.reset();
-        useFXHomeControls.classList.add("success");
-      });
-    useFXHomeControls
-      .querySelector(".success-prompt > button")
-      .addEventListener("click", () => {
-        HomePage.set(homeState);
-        useFXHomeControls.classList.remove("success");
-      });
-  }
-}
-
-ColorwaySelector.init();
-showUseFXHomeControls();
+ColorwayCloset.init();
