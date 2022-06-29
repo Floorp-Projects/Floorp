@@ -283,29 +283,6 @@ bool CookieCommons::CheckCookiePermission(
     return false;
   }
 
-  // Here we can have any legacy permission value.
-
-  // now we need to figure out what type of accept policy we're dealing with
-  // if we accept cookies normally, just bail and return
-  if (StaticPrefs::network_cookie_lifetimePolicy() ==
-      nsICookieService::ACCEPT_NORMALLY) {
-    return true;
-  }
-
-  // declare this here since it'll be used in all of the remaining cases
-  int64_t currentTime = PR_Now() / PR_USEC_PER_SEC;
-  int64_t delta = aCookieData.expiry() - currentTime;
-
-  // We are accepting the cookie, but,
-  // if it's not a session cookie, we may have to limit its lifetime.
-  if (!aCookieData.isSession() && delta > 0) {
-    if (StaticPrefs::network_cookie_lifetimePolicy() ==
-        nsICookieService::ACCEPT_SESSION) {
-      // limit lifetime to session
-      aCookieData.isSession() = true;
-    }
-  }
-
   return true;
 }
 

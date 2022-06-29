@@ -30,11 +30,9 @@ using mozilla::net::CookieJarSettings;
  *
  * Used in the implementation of InternalStorageAllowedCheck.
  */
-static void GetCookieLifetimePolicyFromCookieJarSettings(
+static void GetCookiePermissionFromCookieJarSettings(
     nsICookieJarSettings* aCookieJarSettings, nsIPrincipal* aPrincipal,
-    uint32_t* aLifetimePolicy) {
-  *aLifetimePolicy = StaticPrefs::network_cookie_lifetimePolicy();
-
+    uint32_t* aPermission) {
   if (aCookieJarSettings) {
     uint32_t cookiePermission = 0;
     nsresult rv =
@@ -45,13 +43,13 @@ static void GetCookieLifetimePolicyFromCookieJarSettings(
 
     switch (cookiePermission) {
       case nsICookiePermission::ACCESS_ALLOW:
-        *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
+        *aPermission = nsICookieService::ACCEPT_NORMALLY;
         break;
       case nsICookiePermission::ACCESS_DENY:
-        *aLifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
+        *aPermission = nsICookieService::ACCEPT_NORMALLY;
         break;
       case nsICookiePermission::ACCESS_SESSION:
-        *aLifetimePolicy = nsICookieService::ACCEPT_SESSION;
+        *aPermission = nsICookieService::ACCEPT_SESSION;
         break;
     }
   }
@@ -125,21 +123,21 @@ static StorageAccess InternalStorageAllowedCheck(
     documentURI = document ? document->GetDocumentURI() : nullptr;
   }
 
-  uint32_t lifetimePolicy;
+  uint32_t permission;
 
   // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
   // and ACCEPT_NORMALLY as lifetimePolicy (See Bug 1406675 for rationale).
   auto policy = BasePrincipal::Cast(aPrincipal)->AddonPolicy();
 
   if (policy) {
-    lifetimePolicy = nsICookieService::ACCEPT_NORMALLY;
+    permission = nsICookieService::ACCEPT_NORMALLY;
   } else {
-    GetCookieLifetimePolicyFromCookieJarSettings(aCookieJarSettings, aPrincipal,
-                                                 &lifetimePolicy);
+    GetCookiePermissionFromCookieJarSettings(aCookieJarSettings, aPrincipal,
+                                             &permission);
   }
 
   // Check if we should only allow storage for the session, and record that fact
-  if (lifetimePolicy == nsICookieService::ACCEPT_SESSION) {
+  if (permission == nsICookieService::ACCEPT_SESSION) {
     // Storage could be StorageAccess::ePrivateBrowsing or StorageAccess::eAllow
     // so perform a std::min comparison to make sure we preserve
     // ePrivateBrowsing if it has been set.
