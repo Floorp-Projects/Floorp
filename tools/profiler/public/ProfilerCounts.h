@@ -99,15 +99,29 @@ class BaseProfilerCount {
 #  endif
   }
 
-  virtual void Sample(int64_t& aCounter, uint64_t& aNumber) {
+  struct CountSample {
+    int64_t count;
+    uint64_t number;
+    // This field indicates if the sample has already been consummed by a call
+    // to the Sample() method. This allows the profiler to discard duplicate
+    // samples if the counter sampling rate is lower than the profiler sampling
+    // rate. This can happen for example with some power meters that sample up
+    // to every 10ms.
+    // It should always be true when calling Sample() for the first time.
+    bool isSampleNew;
+  };
+  virtual CountSample Sample() {
     MOZ_ASSERT(mCanary == COUNTER_CANARY);
 
-    aCounter = *mCounter;
-    aNumber = mNumber ? *mNumber : 0;
+    CountSample result;
+    result.count = *mCounter;
+    result.number = mNumber ? *mNumber : 0;
 #  ifdef DEBUG
-    MOZ_ASSERT(aNumber >= mPrevNumber);
-    mPrevNumber = aNumber;
+    MOZ_ASSERT(result.number >= mPrevNumber);
+    mPrevNumber = result.number;
 #  endif
+    result.isSampleNew = true;
+    return result;
   }
 
   void Clear() {

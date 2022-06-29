@@ -87,6 +87,10 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
             "core/shared-libraries-macos.cc",
         ]
     elif CONFIG["OS_TARGET"] == "WINNT":
+        if CONFIG["CC_TYPE"] == "clang-cl":
+            UNIFIED_SOURCES += [
+                "core/PowerCounters-win.cpp",
+            ]
         SOURCES += [
             "core/shared-libraries-win32.cc",
         ]
