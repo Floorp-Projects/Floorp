@@ -317,7 +317,8 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
   const DrawBlitProg::YUVArgs yuvArgs = {
       SubRectMat3(clipRect, uvSize, divisors), Some(yuvColorSpace)};
 
-  const auto& prog = GetDrawBlitProg({kFragHeader_TexExt, {kFragSample_TwoPlane, kFragConvert_ColorMatrix}});
+  const auto& prog = GetDrawBlitProg(
+      {kFragHeader_TexExt, {kFragSample_TwoPlane, kFragConvert_ColorMatrix}});
   prog->Draw(baseArgs, &yuvArgs);
   return true;
 }
@@ -367,8 +368,8 @@ bool GLBlitHelper::BlitAngleYCbCr(const WindowsHandle (&handleList)[3],
   const DrawBlitProg::YUVArgs yuvArgs = {
       SubRectMat3(clipRect, uvSize, divisors), Some(colorSpace)};
 
-  const auto& prog =
-      GetDrawBlitProg({kFragHeader_TexExt, {kFragSample_ThreePlane, kFragConvert_ColorMatrix}});
+  const auto& prog = GetDrawBlitProg(
+      {kFragHeader_TexExt, {kFragSample_ThreePlane, kFragConvert_ColorMatrix}});
   prog->Draw(baseArgs, &yuvArgs);
   return true;
 }
