@@ -60,7 +60,7 @@ class D3D11TextureData final : public TextureData {
 
   static already_AddRefed<TextureClient> CreateTextureClient(
       ID3D11Texture2D* aTexture, uint32_t aIndex, gfx::IntSize aSize,
-      gfx::SurfaceFormat aFormat, gfx::YUVColorSpace aColorSpace,
+      gfx::SurfaceFormat aFormat, gfx::ColorSpace2 aColorSpace,
       gfx::ColorRange aColorRange, KnowsCompositor* aKnowsCompositor,
       RefPtr<IMFSampleUsageInfo> aUsageInfo);
 
@@ -95,10 +95,6 @@ class D3D11TextureData final : public TextureData {
   bool Serialize(SurfaceDescriptor& aOutDescrptor) override;
   void GetSubDescriptor(RemoteDecoderVideoSubDescriptor* aOutDesc) override;
 
-  gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
-  void SetYUVColorSpace(gfx::YUVColorSpace aColorSpace) {
-    mYUVColorSpace = aColorSpace;
-  }
   gfx::ColorRange GetColorRange() const { return mColorRange; }
   void SetColorRange(gfx::ColorRange aColorRange) { mColorRange = aColorRange; }
 
@@ -136,7 +132,11 @@ class D3D11TextureData final : public TextureData {
   RefPtr<gfx::DrawTarget> mDrawTarget;
   const gfx::IntSize mSize;
   const gfx::SurfaceFormat mFormat;
-  gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::Identity;
+
+ public:
+  gfx::ColorSpace2 mColorSpace = gfx::ColorSpace2::SRGB;
+
+ private:
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
   bool mNeedsClear = false;
   const bool mHasSynchronization;
@@ -349,9 +349,6 @@ class DXGITextureHostD3D11 : public TextureHost {
   void UnlockWithoutCompositor() override;
 
   gfx::IntSize GetSize() const override { return mSize; }
-  gfx::YUVColorSpace GetYUVColorSpace() const override {
-    return mYUVColorSpace;
-  }
   gfx::ColorRange GetColorRange() const override { return mColorRange; }
 
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
@@ -392,7 +389,11 @@ class DXGITextureHostD3D11 : public TextureHost {
   gfx::IntSize mSize;
   WindowsHandle mHandle;
   gfx::SurfaceFormat mFormat;
-  const gfx::YUVColorSpace mYUVColorSpace;
+
+ public:
+  const gfx::ColorSpace2 mColorSpace;
+
+ protected:
   const gfx::ColorRange mColorRange;
   bool mIsLocked;
 };
