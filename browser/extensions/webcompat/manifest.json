@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "103.0.0",
+  "version": "103.1.0",
   "applications": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -97,6 +97,7 @@
     "shims/adnexus-prebid.js",
     "shims/adsafeprotected-ima.js",
     "shims/apstag.js",
+    "shims/blogger.js",
     "shims/bmauth.js",
     "shims/branch.js",
     "shims/chartbeat.js",
