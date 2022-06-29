@@ -42,8 +42,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Seneste bogmærker</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Vis alle</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Vis alle gemte bogmærker</string>
 
@@ -185,7 +183,7 @@
     <string name="browser_menu_share">Del</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_open_in_fenix">Åbn i%1$s</string>
+    <string name="browser_menu_open_in_fenix">Åbn i %1$s</string>
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by">LEVERET AF %1$s</string>
@@ -1062,8 +1060,6 @@
     <string name="snackbar_tabs_closed">Faneblade lukket</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Bogmærker gemt!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Føjet til foretrukne websteder!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Føjet til genveje!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1678,10 +1674,6 @@
     <string name="no_site_exceptions">Ingen undtagelser for websted</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Er du sikker på, at du vil slette dette bogmærke?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Føj til foretrukne websteder</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Fjern fra foretrukne websteder</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Føj til genveje</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1756,12 +1748,8 @@
     <string name="synced_tabs_collapse_group">Sammenfold gruppe med synkroniserede faneblade</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Grænsen for foretrukne websteder er nået</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Grænsen for genveje er nået</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Fjern en webside for at erstatte den med en ny. Tryk og hold på websiden, og vælg så Fjern.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">Fjern en genvej for at erstatte den med en ny. Tryk og hold på websiden, og vælg så Fjern.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1771,8 +1759,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">Genveje</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Navn</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Navn på foretrukket websted</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Genvejsnavn</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
