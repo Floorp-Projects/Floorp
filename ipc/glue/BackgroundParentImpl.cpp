@@ -184,12 +184,14 @@ auto BackgroundParentImpl::AllocPBackgroundIDBFactoryParent(
   return AllocPBackgroundIDBFactoryParent(aLoggingInfo);
 }
 
-auto BackgroundParentImpl::AllocPBackgroundFileSystemParent()
+auto BackgroundParentImpl::AllocPBackgroundFileSystemParent(
+    const PrincipalInfo& aPrincipalInfo)
     -> already_AddRefed<PBackgroundFileSystemParent> {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  return MakeAndAddRef<mozilla::dom::BackgroundFileSystemParent>();
+  return MakeAndAddRef<mozilla::dom::BackgroundFileSystemParent>(
+      aPrincipalInfo);
 }
 
 mozilla::ipc::IPCResult

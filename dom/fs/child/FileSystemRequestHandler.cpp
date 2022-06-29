@@ -7,12 +7,15 @@
 #include "fs/FileSystemRequestHandler.h"
 #include "fs/FileSystemConstants.h"
 
+#include "nsIScriptObjectPrincipal.h"
 #include "mozilla/dom/BackgroundFileSystemChild.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemFileHandle.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 
 using namespace mozilla::ipc;
@@ -22,25 +25,66 @@ namespace mozilla::dom::fs {
 namespace {
 
 // Not static: BackgroundFileSystemChild must be owned by calling thread
-RefPtr<mozilla::dom::BackgroundFileSystemChild> GetRootProvider() {
-  mozilla::dom::BackgroundFileSystemChild* inputPtr =
-      new mozilla::dom::BackgroundFileSystemChild();
+RefPtr<mozilla::dom::BackgroundFileSystemChild> GetRootProvider(
+    nsIGlobalObject* aGlobal) {
+  // TODO: It would be nice to convert all error checks to QM_TRY some time
+  //       later.
 
-  mozilla::ipc::PBackgroundChild* bgAccessor =
-      mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
+  // TODO: It would be cleaner if we were called with a PrincipalInfo, instead
+  //       of an nsIGlobalObject, so we wouldn't have the dependency on the
+  //       workers code.
 
-  // TODO: Would be nice to convert this to QM_TRY some time later.
-  if (NS_WARN_IF(!bgAccessor)) {
+  PBackgroundChild* backgroundActor =
+      BackgroundChild::GetOrCreateForCurrentThread();
+
+  if (NS_WARN_IF(!backgroundActor)) {
     MOZ_ASSERT(false);
     return nullptr;
   }
 
-  RefPtr<mozilla::dom::BackgroundFileSystemChild> getterPtr =
-      static_cast<mozilla::dom::BackgroundFileSystemChild*>(
-          bgAccessor->SendPBackgroundFileSystemConstructor(inputPtr));
-  MOZ_ASSERT(getterPtr);
+  RefPtr<BackgroundFileSystemChild> result;
 
-  return getterPtr;
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aGlobal);
+    if (!sop) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIPrincipal> principal = sop->GetEffectiveStoragePrincipal();
+    if (!principal) {
+      return nullptr;
+    }
+
+    auto principalInfo = MakeUnique<PrincipalInfo>();
+    nsresult rv = PrincipalToPrincipalInfo(principal, principalInfo.get());
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+
+    BackgroundFileSystemChild* actor = new BackgroundFileSystemChild();
+
+    result = static_cast<BackgroundFileSystemChild*>(
+        backgroundActor->SendPBackgroundFileSystemConstructor(actor,
+                                                              *principalInfo));
+  } else {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    if (!workerPrivate) {
+      return nullptr;
+    }
+
+    const PrincipalInfo& principalInfo =
+        workerPrivate->GetEffectiveStoragePrincipalInfo();
+
+    BackgroundFileSystemChild* actor = new BackgroundFileSystemChild();
+
+    result = static_cast<BackgroundFileSystemChild*>(
+        backgroundActor->SendPBackgroundFileSystemConstructor(actor,
+                                                              principalInfo));
+  }
+
+  MOZ_ASSERT(result);
+
+  return result;
 }
 
 // TODO: This is just a dummy implementation
@@ -255,7 +299,7 @@ void FileSystemRequestHandler::GetRoot(
   // before the event queue starts to shut down.  That will cancel all
   // outstanding async requests (returns lambdas with errors).
   RefPtr<mozilla::dom::BackgroundFileSystemChild> rootProvider =
-      GetRootProvider();
+      GetRootProvider(aPromise->GetGlobalObject());
   if (!rootProvider) {
     aPromise->MaybeRejectWithUnknownError("Could not access the file system");
     return;
@@ -278,7 +322,7 @@ void FileSystemRequestHandler::GetDirectoryHandle(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  auto actor = GetRootProvider();
+  auto actor = GetRootProvider(aPromise->GetGlobalObject());
   QM_TRY(OkIf(actor), QM_VOID);
   actor->SendGetDirectoryHandle(request, std::move(onResolve),
                                 std::move(onReject));
@@ -299,7 +343,7 @@ void FileSystemRequestHandler::GetFileHandle(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  auto actor = GetRootProvider();
+  auto actor = GetRootProvider(aPromise->GetGlobalObject());
   QM_TRY(OkIf(actor), QM_VOID);
   actor->SendGetFileHandle(request, std::move(onResolve), std::move(onReject));
 }
@@ -318,7 +362,7 @@ void FileSystemRequestHandler::GetFile(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  auto actor = GetRootProvider();
+  auto actor = GetRootProvider(aPromise->GetGlobalObject());
   QM_TRY(OkIf(actor), QM_VOID);
   actor->SendGetFile(request, std::move(onResolve), std::move(onReject));
 }
@@ -345,7 +389,7 @@ void FileSystemRequestHandler::GetEntries(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  auto actor = GetRootProvider();
+  auto actor = GetRootProvider(aPromise->GetGlobalObject());
   QM_TRY(OkIf(actor), QM_VOID);
   actor->SendGetEntries(request, std::move(onResolve), std::move(onReject));
 }
@@ -364,7 +408,7 @@ void FileSystemRequestHandler::RemoveEntry(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  auto actor = GetRootProvider();
+  auto actor = GetRootProvider(aPromise->GetGlobalObject());
   QM_TRY(OkIf(actor), QM_VOID);
   actor->SendRemoveEntry(request, std::move(onResolve), std::move(onReject));
 }
