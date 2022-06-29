@@ -27,8 +27,6 @@ var { PlacesTestUtils } = ChromeUtils.import(
   "resource://testing-common/PlacesTestUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-
 ChromeUtils.defineModuleGetter(
   this,
   "FileUtils",

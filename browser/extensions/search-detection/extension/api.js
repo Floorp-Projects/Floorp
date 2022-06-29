@@ -13,6 +13,7 @@ const { WebRequest } = ChromeUtils.import(
   "resource://gre/modules/WebRequest.jsm"
 );
 
+// eslint-disable-next-line mozilla/reject-importGlobalProperties
 XPCOMUtils.defineLazyGlobalGetters(this, ["ChannelWrapper"]);
 
 XPCOMUtils.defineLazyGetter(this, "searchInitialized", () => {
