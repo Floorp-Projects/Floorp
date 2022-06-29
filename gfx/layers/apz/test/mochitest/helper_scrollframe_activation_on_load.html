@@ -11,20 +11,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-    // -------------------------------------------------------------------
-    // Infrastructure to get the test assertions to run at the right time.
-    // -------------------------------------------------------------------
-    var SimpleTest = window.opener.SimpleTest;
-    var utils = SpecialPowers.getDOMWindowUtils(window);
-
-    // --------------------------------------------------------------------
-    // The actual logic for testing bug 1151663.
-    //
     // In this test we have a simple page which is scrollable, with a
     // scrollable <div> which is also scrollable. We test that the
     // <div> does not get an initial APZC, since primary scrollable
     // frame is the page's root scroll frame.
-    // --------------------------------------------------------------------
 
     function test() {
       // Reconstruct the APZC tree structure in the last paint.
