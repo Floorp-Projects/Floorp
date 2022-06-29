@@ -62,11 +62,11 @@ class AddressManagementFragment : Fragment() {
                     AddressList(
                         addresses = addresses.value ?: emptyList(),
                         onAddressClick = {
-                            interactor::onSelectAddress
+                            interactor.onSelectAddress(it)
                             Addresses.managementAddressTapped.record(NoExtras())
                         },
                         onAddAddressButtonClick = {
-                            interactor::onAddAddressButtonClick
+                            interactor.onAddAddressButtonClick()
                             Addresses.managementAddTapped.record(NoExtras())
                         }
                     )
