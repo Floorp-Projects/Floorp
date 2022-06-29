@@ -39,7 +39,7 @@ nsIGlobalObject* GetGlobal();
 
 class MockFileSystemRequestHandler : public FileSystemRequestHandler {
  public:
-  MOCK_METHOD2(GetRoot, void(const Origin& aOrigin, RefPtr<Promise> aPromise));
+  MOCK_METHOD1(GetRoot, void(RefPtr<Promise> aPromise));
 
   MOCK_METHOD4(GetDirectoryHandle,
                void(RefPtr<FileSystemActorHolder>& aActor,

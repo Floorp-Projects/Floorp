@@ -37,7 +37,7 @@ class ArrayAppendable {};
 
 class FileSystemRequestHandler {
  public:
-  virtual void GetRoot(const Origin& aOrigin, RefPtr<Promise> aPromise);
+  virtual void GetRoot(RefPtr<Promise> aPromise);
 
   virtual void GetDirectoryHandle(RefPtr<FileSystemActorHolder>& aActor,
                                   const FileSystemChildMetadata& aDirectory,

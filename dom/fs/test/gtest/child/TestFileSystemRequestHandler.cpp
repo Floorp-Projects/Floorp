@@ -46,9 +46,8 @@ class TestFileSystemRequestHandler : public ::testing::Test {
 };
 
 TEST_F(TestFileSystemRequestHandler, isGetRootSuccessful) {
-  const Origin origin = "http://example.com"_ns;
   RefPtr<Promise> promise = GetDefaultPromise();
-  mRequestHandler->GetRoot(origin, promise);
+  mRequestHandler->GetRoot(promise);
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
 }

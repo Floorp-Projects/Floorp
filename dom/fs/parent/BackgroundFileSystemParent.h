@@ -7,7 +7,9 @@
 #ifndef DOM_FS_PARENT_BACKGROUNDFILESYSTEMPARENT_H_
 #define DOM_FS_PARENT_BACKGROUNDFILESYSTEMPARENT_H_
 
+#include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/dom/PBackgroundFileSystemParent.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsISupports.h"
 
@@ -15,8 +17,11 @@ namespace mozilla::dom {
 
 class BackgroundFileSystemParent : public PBackgroundFileSystemParent {
  public:
-  mozilla::ipc::IPCResult RecvGetRoot(const fs::Origin& aOrigin,
-                                      GetRootResolver&& aResolver);
+  explicit BackgroundFileSystemParent(
+      const mozilla::ipc::PrincipalInfo& aPrincipalInfo)
+      : mPrincipalInfo(aPrincipalInfo) {}
+
+  mozilla::ipc::IPCResult RecvGetRoot(GetRootResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvGetDirectoryHandle(
       FileSystemGetHandleRequest&& aRequest,
@@ -41,6 +46,9 @@ class BackgroundFileSystemParent : public PBackgroundFileSystemParent {
 
  protected:
   virtual ~BackgroundFileSystemParent() = default;
+
+ private:
+  mozilla::ipc::PrincipalInfo mPrincipalInfo;
 };
 
 }  // namespace mozilla::dom

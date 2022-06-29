@@ -141,6 +141,7 @@ exports.COMMAND_SYNC_PREFERENCES = "fxaccounts:sync_preferences";
 exports.COMMAND_CHANGE_PASSWORD = "fxaccounts:change_password";
 exports.COMMAND_FXA_STATUS = "fxaccounts:fxa_status";
 exports.COMMAND_PAIR_PREFERENCES = "fxaccounts:pair_preferences";
+exports.COMMAND_FIREFOX_VIEW = "fxaccounts:firefox_view";
 
 // The pref branch where any prefs which relate to a specific account should
 // be stored. This branch will be reset on account signout and signin.
