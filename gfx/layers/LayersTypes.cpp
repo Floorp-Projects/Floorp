@@ -52,5 +52,23 @@ std::ostream& operator<<(std::ostream& aStream, const LayersId& aId) {
   return aStream << nsPrintfCString("0x%" PRIx64, aId.mId).get();
 }
 
+/* static */
+CompositableHandle CompositableHandle::GetNext() {
+  static std::atomic<uint64_t> sCounter = 0;
+  return CompositableHandle{++sCounter};
+}
+
+/* static */
+RemoteTextureId RemoteTextureId::GetNext() {
+  static std::atomic<uint64_t> sCounter = 0;
+  return RemoteTextureId{++sCounter};
+}
+
+/* static */
+RemoteTextureOwnerId RemoteTextureOwnerId::GetNext() {
+  static std::atomic<uint64_t> sCounter = 0;
+  return RemoteTextureOwnerId{++sCounter};
+}
+
 }  // namespace layers
 }  // namespace mozilla
