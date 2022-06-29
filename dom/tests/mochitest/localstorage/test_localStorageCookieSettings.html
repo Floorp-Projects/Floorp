@@ -32,9 +32,7 @@ function test1() {
     w.close();
 
     // Set cookies behavior to "reject 3rd party"
-    SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]],
-                               "clear": [["network.cookie.lifetimePolicy"]]},
-                              test2);
+    SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]], }, test2);
   }
 }
 

@@ -8,9 +8,6 @@ const {
   // cookieBehavior constants.
   BEHAVIOR_REJECT,
   BEHAVIOR_REJECT_TRACKER,
-
-  // lifetimePolicy constants.
-  ACCEPT_SESSION,
 } = Ci.nsICookieService;
 
 function createPage({ script, body = "" } = {}) {
@@ -567,109 +564,4 @@ add_task(async function test_content_script_on_cookieBehaviorReject() {
 
 add_task(function clear_cookieBehavior_pref() {
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
-});
-
-// Test that localStorage is not in session-only mode for the extension pages,
-// even when the session-only mode has been globally enabled, but that the
-// lifetime policy currently set is respected in webpage subframes embedded in
-// an extension page.
-add_task(async function test_localStorage_on_session_lifetimePolicy() {
-  // localStorage in session-only mode.
-  Services.prefs.setIntPref("network.cookie.lifetimePolicy", ACCEPT_SESSION);
-
-  function extPageScript() {
-    localStorage.setItem("test-key", "test-value");
-
-    browser.test.sendMessage("bg_localStorage_set");
-  }
-
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      permissions: ["http://example.com/*", "http://itisatracker.org/*"],
-    },
-    files: {
-      "ext.js": extPageScript,
-      "ext.html": createPage({
-        body: `<iframe src="http://example.com"></iframe>`,
-        script: "ext.js",
-      }),
-    },
-  });
-
-  await extension.startup();
-
-  let extensionPage = await ExtensionTestUtils.loadContentPage(
-    `moz-extension://${extension.uuid}/ext.html`,
-    {
-      extension,
-      remote: extension.extension.remote,
-    }
-  );
-  await extension.awaitMessage("bg_localStorage_set");
-
-  const results = await extensionPage.spawn(null, async () => {
-    const iframe = this.content.document.querySelector("iframe").contentWindow;
-    const { localStorage } = this.content;
-
-    await this.content.fetch("http://itisatracker.org/test-cookies");
-    await iframe.fetch("http://example.com/test-cookies");
-
-    return {
-      topLevel: {
-        isSessionOnly: localStorage.isSessionOnly,
-        domStorageLength: localStorage.length,
-        domStorageStoredValue: localStorage.getItem("test-key"),
-      },
-      webFrame: {
-        isSessionOnly: iframe.localStorage.isSessionOnly,
-      },
-    };
-  });
-
-  equal(
-    results.topLevel.isSessionOnly,
-    false,
-    "the extension localStorage is not set in session-only mode"
-  );
-  equal(
-    results.topLevel.domStorageLength,
-    1,
-    "the extension storage contains the expected number of keys"
-  );
-  equal(
-    results.topLevel.domStorageStoredValue,
-    "test-value",
-    "the extension storage contains the expected data"
-  );
-
-  equal(
-    results.webFrame.isSessionOnly,
-    true,
-    "the webpage sub frame localStorage is in session-only mode"
-  );
-
-  let cookies = assertCookiesForHost(
-    "http://example.com",
-    1,
-    "Got a cookie from the extension page request"
-  );
-  ok(
-    cookies[0].isSession,
-    "Got a session cookie from the extension page request"
-  );
-
-  cookies = assertCookiesForHost(
-    "http://itisatracker.org",
-    1,
-    "Got a cookie from the web page request"
-  );
-  ok(cookies[0].isSession, "Got a session cookie from the web page request");
-
-  await extensionPage.close();
-
-  await extension.unload();
-});
-
-add_task(function clear_lifetimePolicy_pref() {
-  Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
 });

@@ -186,9 +186,11 @@ public class ContentBlocking {
        *
        * @param lifetime The enforced cookie lifetime. Use one of the {@link CookieLifetime} flags.
        * @return The Builder instance.
+       * @deprecated This feature is not supported anymore.
        */
+      @Deprecated
+      @DeprecationSchedule(id = "cookie-lifetime-policy", version = 106)
       public @NonNull Builder cookieLifetime(final @CBCookieLifetime int lifetime) {
-        getSettings().setCookieLifetime(lifetime);
         return this;
       }
 
@@ -267,8 +269,6 @@ public class ContentBlocking {
     /* package */ final Pref<Integer> mCookieBehaviorPrivateMode =
         new Pref<Integer>(
             "network.cookie.cookieBehavior.pbmode", CookieBehavior.ACCEPT_NON_TRACKERS);
-    /* package */ final Pref<Integer> mCookieLifetime =
-        new Pref<Integer>("network.cookie.lifetimePolicy", CookieLifetime.NORMAL);
     /* package */ final Pref<Boolean> mCookiePurging =
         new Pref<Boolean>("privacy.purge_trackers.enabled", false);
 
@@ -572,10 +572,13 @@ public class ContentBlocking {
      * Get the assigned cookie lifetime.
      *
      * @return The assigned lifetime, as one of {@link CookieLifetime} flags.
+     * @deprecated This feature is not supported anymore. This method always returns 0.
      */
+    @Deprecated
+    @DeprecationSchedule(id = "cookie-lifetime-policy", version = 106)
     @SuppressLint("WrongConstant")
     public @CBCookieLifetime int getCookieLifetime() {
-      return mCookieLifetime.get();
+      return 0;
     }
 
     /**
@@ -583,9 +586,11 @@ public class ContentBlocking {
      *
      * @param lifetime The enforced cookie lifetime. Use one of the {@link CookieLifetime} flags.
      * @return This Settings instance.
+     * @deprecated This feature is not supported anymore.
      */
+    @Deprecated
+    @DeprecationSchedule(id = "cookie-lifetime-policy", version = 106)
     public @NonNull Settings setCookieLifetime(final @CBCookieLifetime int lifetime) {
-      mCookieLifetime.commit(lifetime);
       return this;
     }
 
@@ -1245,6 +1250,9 @@ public class ContentBlocking {
   public @interface CBCookieBehavior {}
 
   // Sync values with nsICookieService.idl.
+  // This feature is not supported anymore.
+  @Deprecated
+  @DeprecationSchedule(id = "cookie-lifetime-policy", version = 106)
   public static class CookieLifetime {
     /** Accept default cookie lifetime. */
     public static final int NORMAL = 0;
@@ -1258,8 +1266,11 @@ public class ContentBlocking {
     protected CookieLifetime() {}
   }
 
+  // This feature is not supported anymore.
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({CookieLifetime.NORMAL, CookieLifetime.RUNTIME, CookieLifetime.DAYS})
+  @Deprecated
+  @DeprecationSchedule(id = "cookie-lifetime-policy", version = 106)
   public @interface CBCookieLifetime {}
 
   @Retention(RetentionPolicy.SOURCE)

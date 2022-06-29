@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals log */
+
 "use strict";
 
 const { XPCOMUtils } = ChromeUtils.import(
@@ -530,16 +532,9 @@ var Policies = {
         });
       }
 
-      if (param.ExpireAtSessionEnd !== undefined || param.Locked) {
-        let newLifetimePolicy = Ci.nsICookieService.ACCEPT_NORMALLY;
-        if (param.ExpireAtSessionEnd) {
-          newLifetimePolicy = Ci.nsICookieService.ACCEPT_SESSION;
-        }
-
-        PoliciesUtils.setDefaultPref(
-          "network.cookie.lifetimePolicy",
-          newLifetimePolicy,
-          param.Locked
+      if (param.ExpireAtSessionEnd != undefined) {
+        log.error(
+          "'ExpireAtSessionEnd' has been deprecated and it has no effect anymore."
         );
       }
 

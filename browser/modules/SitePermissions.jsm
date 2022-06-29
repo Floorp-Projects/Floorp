@@ -1165,13 +1165,6 @@ let gPermissions = {
           return SitePermissions.BLOCK;
         }
 
-        if (
-          Services.prefs.getIntPref("network.cookie.lifetimePolicy") ==
-          Ci.nsICookieService.ACCEPT_SESSION
-        ) {
-          return SitePermissions.ALLOW_COOKIES_FOR_SESSION;
-        }
-
         return SitePermissions.ALLOW;
       },
     },
