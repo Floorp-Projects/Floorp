@@ -450,11 +450,11 @@ class PromptDelegateTest : BaseSessionTest() {
             override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 assertThat("There should be two choices", prompt.choices.size, equalTo(2))
                 prompt.setDelegate(promptInstanceDelegate)
-                return GeckoResult()
+                mainSession.evaluateJS("document.querySelector('select').blur()")
+                return result
             }
         })
 
-        mainSession.evaluateJS("document.querySelector('select').addEventListener('click', e => window.setTimeout(() => e.target.blur(), 500))")
         mainSession.synthesizeTap(10, 10)
         sessionRule.waitForResult(result)
     }
