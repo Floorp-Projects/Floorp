@@ -214,9 +214,15 @@ const ContentProcessTargetActor = TargetActorMixin(
     },
 
     destroy: function() {
-      if (this.isDestroyed()) {
+      // Avoid reentrancy. We will destroy the Transport when emitting "destroyed",
+      // which will force destroying all actors.
+      if (this.destroying) {
         return;
       }
+      this.destroying = true;
+
+      // Unregistering watchers first is important
+      // otherwise you might have leaks reported when running browser_browser_toolbox_netmonitor.js in debug builds
       Resources.unwatchAllResources(this);
 
       this.emit("destroyed");
