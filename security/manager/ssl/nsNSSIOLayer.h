@@ -110,7 +110,6 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   }
 
   bool GetJoined() { return mJoined; }
-  void SetSentClientCert() { mSentClientCert = true; }
 
   uint32_t GetProviderTlsFlags() const { return mProviderTlsFlags; }
 
@@ -125,6 +124,10 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   void SetCertVerificationWaiting();
   // Use errorCode == 0 to indicate success;
   void SetCertVerificationResult(PRErrorCode errorCode) override;
+
+  void ClientAuthCertificateSelected(
+      nsTArray<uint8_t>& certBytes,
+      nsTArray<nsTArray<uint8_t>>& certChainBytes);
 
   // for logging only
   PRBool IsWaitingForCertVerification() const {
@@ -181,10 +184,6 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   void SetSharedOwningReference(mozilla::psm::SharedSSLState* ref);
 
   nsresult SetResumptionTokenFromExternalCache();
-
-  void SetClientCertChain(mozilla::UniqueCERTCertList&& clientCertChain) {
-    mClientCertChain = std::move(clientCertChain);
-  }
 
  protected:
   virtual ~nsNSSSocketInfo();

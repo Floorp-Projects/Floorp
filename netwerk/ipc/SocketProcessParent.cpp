@@ -262,54 +262,6 @@ SocketProcessParent::AllocPAltServiceParent() {
   return actor.forget();
 }
 
-mozilla::ipc::IPCResult SocketProcessParent::RecvGetTLSClientCert(
-    const nsCString& aHostName, const OriginAttributes& aOriginAttributes,
-    const int32_t& aPort, const uint32_t& aProviderFlags,
-    const uint32_t& aProviderTlsFlags, const ByteArray& aServerCert,
-    nsTArray<ByteArray>&& aCollectedCANames, bool* aSucceeded,
-    ByteArray* aOutCert, nsTArray<ByteArray>* aBuiltChain) {
-  *aSucceeded = false;
-
-  SECItem serverCertItem = {
-      siBuffer, const_cast<uint8_t*>(aServerCert.data().Elements()),
-      static_cast<unsigned int>(aServerCert.data().Length())};
-  UniqueCERTCertificate serverCert(CERT_NewTempCertificate(
-      CERT_GetDefaultCertDB(), &serverCertItem, nullptr, false, true));
-  if (!serverCert) {
-    return IPC_OK();
-  }
-
-  ClientAuthInfo info(aHostName, aOriginAttributes, aPort, aProviderFlags,
-                      aProviderTlsFlags);
-  nsTArray<nsTArray<uint8_t>> collectedCANames;
-  for (auto& name : aCollectedCANames) {
-    collectedCANames.AppendElement(std::move(name.data()));
-  }
-
-  UniqueCERTCertificate cert;
-  UniqueCERTCertList builtChain;
-  SECStatus status =
-      DoGetClientAuthData(std::move(info), serverCert,
-                          std::move(collectedCANames), cert, builtChain);
-  if (status != SECSuccess) {
-    return IPC_OK();
-  }
-
-  aOutCert->data().AppendElements(cert->derCert.data, cert->derCert.len);
-
-  if (builtChain) {
-    for (CERTCertListNode* n = CERT_LIST_HEAD(builtChain);
-         !CERT_LIST_END(n, builtChain); n = CERT_LIST_NEXT(n)) {
-      ByteArray array;
-      array.data().AppendElements(n->cert->derCert.data, n->cert->derCert.len);
-      aBuiltChain->AppendElement(std::move(array));
-    }
-  }
-
-  *aSucceeded = true;
-  return IPC_OK();
-}
-
 already_AddRefed<PProxyConfigLookupParent>
 SocketProcessParent::AllocPProxyConfigLookupParent(
     nsIURI* aURI, const uint32_t& aProxyResolveFlags) {
