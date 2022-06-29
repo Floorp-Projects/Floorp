@@ -7,7 +7,6 @@ include protocol PBackground;
 using mozilla::dom::fs::ContentType from "mozilla/dom/FileSystemTypes.h";
 using mozilla::dom::fs::EntryId from "mozilla/dom/FileSystemTypes.h";
 using mozilla::dom::fs::Name from "mozilla/dom/FileSystemTypes.h";
-using mozilla::dom::fs::Origin from "mozilla/dom/FileSystemTypes.h";
 using mozilla::dom::fs::PageNumber from "mozilla/dom/FileSystemTypes.h";
 using mozilla::dom::fs::TimeStamp from "mozilla/dom/FileSystemTypes.h";
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
@@ -181,11 +180,9 @@ async protocol PBackgroundFileSystem
    * the file system's root level. On first call, may conduct initialization
    * activities.
    *
-   * @param[in] origin of the file system
-   *
    * @returns error or entry handle
    */
-  async GetRoot(Origin origin) returns(FileSystemGetHandleResponse handle);
+  async GetRoot() returns(FileSystemGetHandleResponse handle);
 
   /**
    * Initiates an asynchronous request for the handle of

@@ -11,8 +11,7 @@ using IPCResult = mozilla::ipc::IPCResult;
 
 namespace mozilla::dom {
 
-IPCResult BackgroundFileSystemParent::RecvGetRoot(const fs::Origin& aOrigin,
-                                                  GetRootResolver&& aResolver) {
+IPCResult BackgroundFileSystemParent::RecvGetRoot(GetRootResolver&& aResolver) {
   FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
