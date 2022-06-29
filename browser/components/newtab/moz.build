@@ -13,6 +13,12 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 TESTING_JS_MODULES += [
+    "content-src/asrouter/templates/CFR/templates/ExtensionDoorhanger.schema.json",
+    "content-src/asrouter/templates/OnboardingMessage/Spotlight.schema.json",
+    "content-src/asrouter/templates/OnboardingMessage/ToolbarBadgeMessage.schema.json",
+    "content-src/asrouter/templates/OnboardingMessage/UpdateAction.schema.json",
+    "content-src/asrouter/templates/OnboardingMessage/WhatsNewMessage.schema.json",
+    "content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json",
     "test/RemoteImagesTestUtils.jsm",
 ]
 

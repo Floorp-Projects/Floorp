@@ -1,0 +1,2045 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "resource://activity-stream/schemas/MessagingExperiment.schema.json",
+  "title": "Messaging Experiment",
+  "description": "A Firefox Messaging System message.",
+  "allOf": [
+    {
+      "type": "object",
+      "properties": {
+        "template": {
+          "type": "string",
+          "enum": [
+            "cfr_urlbar_chiclet",
+            "cfr_doorhanger",
+            "milestone_message",
+            "infobar",
+            "pb_newtab",
+            "spotlight",
+            "toolbar_badge",
+            "update_action",
+            "whatsnew_panel_message"
+          ]
+        }
+      },
+      "required": [
+        "template"
+      ]
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "cfr_urlbar_chiclet"
+            ]
+          }
+        },
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/CFRUrlbarChiclet"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "cfr_doorhanger",
+              "milestone_message"
+            ]
+          }
+        },
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/ExtensionDoorhanger"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "infobar"
+            ]
+          }
+        },
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/InfoBar"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "pb_newtab"
+            ]
+          }
+        },
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/NewtabPromoMessage"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "spotlight"
+            ]
+          }
+        },
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/Spotlight"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "toolbar_badge"
+            ]
+          }
+        },
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/ToolbarBadgeMessage"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "update_action"
+            ]
+          }
+        },
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/UpdateAction"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "whatsnew_panel_message"
+            ]
+          }
+        },
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "#/$defs/WhatsNewMessage"
+      }
+    }
+  ],
+  "$defs": {
+    "CFRUrlbarChiclet": {
+      "$schema": "https://json-schema.org/draft/2019-09/schema",
+      "$id": "file:///CFRUrlbarChiclet.schema.json",
+      "title": "CFRUrlbarChiclet",
+      "description": "A template with a chiclet button with text.",
+      "version": "1.0.0",
+      "type": "object",
+      "definitions": {
+        "plainText": {
+          "description": "Plain text (no HTML allowed)",
+          "type": "string"
+        },
+        "linkUrl": {
+          "description": "Target for links or buttons",
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Message identifier"
+        },
+        "groups": {
+          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Preference name"
+          }
+        },
+        "content": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Attribute used for different groups of messages from the same provider"
+            },
+            "layout": {
+              "type": "string",
+              "description": "Describes how content should be displayed.",
+              "enum": [
+                "chiclet_open_url"
+              ]
+            },
+            "bucket_id": {
+              "type": "string",
+              "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
+            },
+            "notification_text": {
+              "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string.",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "Message shown in the location bar notification."
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "string_id": {
+                      "type": "string",
+                      "description": "Id of localized string for the location bar notification."
+                    }
+                  },
+                  "required": [
+                    "string_id"
+                  ]
+                }
+              ]
+            },
+            "active_color": {
+              "type": "string",
+              "description": "Background color of the button"
+            },
+            "action": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "description": "The page to open when the button is clicked.",
+                  "allOf": [
+                    {
+                      "$ref": "#/definitions/linkUrl"
+                    },
+                    {
+                      "description": "Icon associated with the message"
+                    }
+                  ]
+                },
+                "where": {
+                  "description": "Should it open in a new tab or the current tab",
+                  "enum": [
+                    "current",
+                    "tabshifted"
+                  ]
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "url",
+                "where"
+              ]
+            }
+          },
+          "additionalProperties": true,
+          "required": [
+            "layout",
+            "category",
+            "bucket_id",
+            "notification_text",
+            "action"
+          ]
+        },
+        "priority": {
+          "type": "integer"
+        },
+        "targeting": {
+          "type": "string",
+          "description": "A JEXL expression representing targeting information"
+        },
+        "template": {
+          "type": "string",
+          "const": "cfr_urlbar_chiclet"
+        },
+        "trigger": {
+          "type": "object",
+          "description": "An action to trigger potentially showing the message",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "A string identifying the trigger action"
+            },
+            "params": {
+              "type": "array",
+              "description": "An optional array of string parameters for the trigger action",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "content",
+        "targeting",
+        "template",
+        "trigger"
+      ]
+    },
+    "ExtensionDoorhanger": {
+      "$schema": "https://json-schema.org/draft/2019-09/schema",
+      "$id": "file:///ExtensionDoorhanger.schema.json",
+      "title": "ExtensionDoorhanger",
+      "description": "A template with a heading, addon icon, title and description. No markup allowed.",
+      "version": "1.0.0",
+      "type": "object",
+      "definitions": {
+        "plainText": {
+          "description": "Plain text (no HTML allowed)",
+          "type": "string"
+        },
+        "linkUrl": {
+          "description": "Target for links or buttons",
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Message identifier"
+        },
+        "groups": {
+          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Preference name"
+          }
+        },
+        "content": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Attribute used for different groups of messages from the same provider"
+            },
+            "layout": {
+              "type": "string",
+              "description": "Attribute used for different groups of messages from the same provider",
+              "enum": [
+                "short_message",
+                "icon_and_message",
+                "addon_recommendation"
+              ]
+            },
+            "anchor_id": {
+              "type": "string",
+              "description": "A DOM element ID that the pop-over will be anchored."
+            },
+            "bucket_id": {
+              "type": "string",
+              "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
+            },
+            "skip_address_bar_notifier": {
+              "type": "boolean",
+              "description": "Skip the 'Recommend' notifier and show directly."
+            },
+            "persistent_doorhanger": {
+              "type": "boolean",
+              "description": "Prevent the doorhanger from being dismissed if user interacts with the page or switches between applications."
+            },
+            "notification_text": {
+              "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string.",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "Message shown in the location bar notification."
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "string_id": {
+                      "type": "string",
+                      "description": "Id of localized string for the location bar notification."
+                    }
+                  },
+                  "required": [
+                    "string_id"
+                  ]
+                }
+              ]
+            },
+            "info_icon": {
+              "type": "object",
+              "description": "The small icon displayed in the top right corner of the pop-over. Should be 19x19px, svg or png. Defaults to a small question mark.",
+              "properties": {
+                "label": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "attributes": {
+                          "type": "object",
+                          "properties": {
+                            "tooltiptext": {
+                              "oneOf": [
+                                {
+                                  "type": "string",
+                                  "description": "Text for button tooltip used to provide information about the doorhanger."
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "string_id": {
+                                      "type": "string",
+                                      "description": "Id of localized string for the tooltip."
+                                    }
+                                  },
+                                  "required": [
+                                    "string_id"
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "tooltiptext"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "attributes"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "string_id": {
+                          "type": "string",
+                          "description": "Id of localized string used to provide information about the doorhanger."
+                        }
+                      },
+                      "required": [
+                        "string_id"
+                      ]
+                    }
+                  ]
+                },
+                "sumo_path": {
+                  "type": "string",
+                  "description": "Last part of the path in the URL to the support page with the information about the doorhanger.",
+                  "examples": [
+                    "extensionpromotions",
+                    "extensionrecommendations"
+                  ]
+                }
+              }
+            },
+            "learn_more": {
+              "type": "string",
+              "description": "Last part of the path in the SUMO URL to the support page with the information about the doorhanger.",
+              "examples": [
+                "extensionpromotions",
+                "extensionrecommendations"
+              ]
+            },
+            "heading_text": {
+              "description": "The larger heading text displayed in the pop-over. This can be a reference to a localized string in Firefox or just a plain string.",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "The message displayed in the title of the extension doorhanger"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "string_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "string_id"
+                  ],
+                  "description": "Id of localized string for extension doorhanger title"
+                }
+              ]
+            },
+            "icon": {
+              "description": "The icon displayed in the pop-over. Should be 32x32px or 64x64px and png/svg.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/linkUrl"
+                },
+                {
+                  "description": "Icon associated with the message"
+                }
+              ]
+            },
+            "icon_dark_theme": {
+              "type": "string",
+              "description": "Pop-over icon, dark theme variant. Should be 32x32px or 64x64px and png/svg."
+            },
+            "icon_class": {
+              "type": "string",
+              "description": "CSS class of the pop-over icon."
+            },
+            "addon": {
+              "description": "Addon information including AMO URL.",
+              "type": "object",
+              "properties": {
+                "id": {
+                  "allOf": [
+                    {
+                      "$ref": "#/definitions/plainText"
+                    },
+                    {
+                      "description": "Unique addon ID"
+                    }
+                  ]
+                },
+                "title": {
+                  "allOf": [
+                    {
+                      "$ref": "#/definitions/plainText"
+                    },
+                    {
+                      "description": "Addon name"
+                    }
+                  ]
+                },
+                "author": {
+                  "allOf": [
+                    {
+                      "$ref": "#/definitions/plainText"
+                    },
+                    {
+                      "description": "Addon author"
+                    }
+                  ]
+                },
+                "icon": {
+                  "description": "The icon displayed in the pop-over. Should be 64x64px and png/svg.",
+                  "allOf": [
+                    {
+                      "$ref": "#/definitions/linkUrl"
+                    },
+                    {
+                      "description": "Addon icon"
+                    }
+                  ]
+                },
+                "rating": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 5,
+                  "description": "Star rating"
+                },
+                "users": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Installed users"
+                },
+                "amo_url": {
+                  "allOf": [
+                    {
+                      "$ref": "#/definitions/linkUrl"
+                    },
+                    {
+                      "description": "Link that offers more information related to the addon."
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "title",
+                "author",
+                "icon",
+                "amo_url"
+              ]
+            },
+            "text": {
+              "description": "The body text displayed in the pop-over. This can be a reference to a localized string in Firefox or just a plain string.",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "Description message of the addon."
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "string_id": {
+                      "type": "string",
+                      "description": "Id of string to localized addon description"
+                    }
+                  },
+                  "required": [
+                    "string_id"
+                  ]
+                }
+              ]
+            },
+            "descriptionDetails": {
+              "description": "Additional information and steps on how to use",
+              "type": "object",
+              "properties": {
+                "steps": {
+                  "description": "Array of messages or string_ids",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "string_id": {
+                        "type": "string",
+                        "description": "Id of string to localized addon description"
+                      }
+                    },
+                    "required": [
+                      "string_id"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "steps"
+              ]
+            },
+            "buttons": {
+              "description": "The label and functionality for the buttons in the pop-over.",
+              "type": "object",
+              "properties": {
+                "primary": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "value": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/definitions/plainText"
+                                },
+                                {
+                                  "description": "Button label override used when a localized version is not available."
+                                }
+                              ]
+                            },
+                            "attributes": {
+                              "type": "object",
+                              "properties": {
+                                "accesskey": {
+                                  "type": "string",
+                                  "description": "A single character to be used as a shortcut key for the secondary button. This should be one of the characters that appears in the button label."
+                                }
+                              },
+                              "required": [
+                                "accesskey"
+                              ],
+                              "description": "Button attributes."
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "attributes"
+                          ]
+                        },
+                        {
+                          "properties": {
+                            "string_id": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/definitions/plainText"
+                                },
+                                {
+                                  "description": "Id of localized string for button"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "string_id"
+                          ]
+                        }
+                      ],
+                      "description": "Id of localized string or message override."
+                    },
+                    "action": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "description": "Action dispatched by the button."
+                        },
+                        "data": {
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "$comment": "This is dynamically generated from the addon.id. See CFRPageActions.jsm",
+                              "description": "URL used in combination with the primary action dispatched."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "secondary": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "object",
+                        "oneOf": [
+                          {
+                            "properties": {
+                              "value": {
+                                "allOf": [
+                                  {
+                                    "$ref": "#/definitions/plainText"
+                                  },
+                                  {
+                                    "description": "Button label override used when a localized version is not available."
+                                  }
+                                ]
+                              },
+                              "attributes": {
+                                "type": "object",
+                                "properties": {
+                                  "accesskey": {
+                                    "type": "string",
+                                    "description": "A single character to be used as a shortcut key for the secondary button. This should be one of the characters that appears in the button label."
+                                  }
+                                },
+                                "required": [
+                                  "accesskey"
+                                ],
+                                "description": "Button attributes."
+                              }
+                            },
+                            "required": [
+                              "value",
+                              "attributes"
+                            ]
+                          },
+                          {
+                            "properties": {
+                              "string_id": {
+                                "allOf": [
+                                  {
+                                    "$ref": "#/definitions/plainText"
+                                  },
+                                  {
+                                    "description": "Id of localized string for button"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "string_id"
+                            ]
+                          }
+                        ],
+                        "description": "Id of localized string or message override."
+                      },
+                      "action": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "description": "Action dispatched by the button."
+                          },
+                          "data": {
+                            "properties": {
+                              "url": {
+                                "allOf": [
+                                  {
+                                    "$ref": "#/definitions/linkUrl"
+                                  },
+                                  {
+                                    "description": "URL used in combination with the primary action dispatched."
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "additionalProperties": true,
+          "required": [
+            "layout",
+            "bucket_id",
+            "heading_text",
+            "text",
+            "buttons"
+          ],
+          "if": {
+            "properties": {
+              "skip_address_bar_notifier": {
+                "anyOf": [
+                  {
+                    "const": "false"
+                  },
+                  {
+                    "const": null
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "category",
+              "notification_text"
+            ]
+          }
+        },
+        "priority": {
+          "type": "integer"
+        },
+        "targeting": {
+          "type": "string",
+          "description": "A JEXL expression representing targeting information"
+        },
+        "template": {
+          "type": "string",
+          "enum": [
+            "cfr_doorhanger",
+            "milestone_message"
+          ]
+        },
+        "trigger": {
+          "type": "object",
+          "description": "An action to trigger potentially showing the message",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "A string identifying the trigger action"
+            },
+            "params": {
+              "type": "array",
+              "description": "An optional array of string parameters for the trigger action",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "content",
+        "targeting",
+        "template",
+        "trigger"
+      ]
+    },
+    "InfoBar": {
+      "$schema": "https://json-schema.org/draft/2019-09/schema",
+      "$id": "file:///InfoBar.schema.json",
+      "title": "InfoBar",
+      "description": "A template with an image, test and buttons.",
+      "version": "1.0.0",
+      "type": "object",
+      "definitions": {
+        "plainText": {
+          "description": "Plain text (no HTML allowed)",
+          "type": "string"
+        },
+        "linkUrl": {
+          "description": "Target for links or buttons",
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Message identifier"
+        },
+        "groups": {
+          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Preference name"
+          }
+        },
+        "content": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Should the message be global (persisted across tabs) or local (disappear when switching to a different tab).",
+              "enum": [
+                "global",
+                "tab"
+              ]
+            },
+            "text": {
+              "description": "The text show in the notification box.",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "Message shown in the location bar notification."
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "string_id": {
+                      "type": "string",
+                      "description": "Id of localized string for the location bar notification."
+                    }
+                  },
+                  "required": [
+                    "string_id"
+                  ]
+                }
+              ]
+            },
+            "priority": {
+              "description": "Infobar priority level https://searchfox.org/mozilla-central/rev/3aef835f6cb12e607154d56d68726767172571e4/toolkit/content/widgets/notificationbox.js#387",
+              "type": "number",
+              "minumum": 0,
+              "exclusiveMaximum": 10
+            },
+            "buttons": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "description": "The text label of the button.",
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "description": "Message content for the button."
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "string_id": {
+                            "type": "string",
+                            "description": "Id of localized string for the button."
+                          }
+                        },
+                        "required": [
+                          "string_id"
+                        ]
+                      }
+                    ]
+                  },
+                  "primary": {
+                    "type": "boolean",
+                    "description": "Is this the primary button?"
+                  },
+                  "accessKey": {
+                    "type": "string",
+                    "description": "Keyboard shortcut letter."
+                  },
+                  "action": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "description": "Action dispatched by the button."
+                      },
+                      "data": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": true
+                  },
+                  "supportPage": {
+                    "type": "string",
+                    "description": "A page title on SUMO to link to"
+                  }
+                },
+                "required": [
+                  "label",
+                  "action"
+                ],
+                "additionalProperties": true
+              }
+            }
+          },
+          "additionalProperties": true,
+          "required": [
+            "text",
+            "buttons"
+          ]
+        },
+        "frequency": {
+          "type": "object",
+          "description": "An object containing frequency cap information for a message.",
+          "properties": {
+            "lifetime": {
+              "type": "integer",
+              "description": "The maximum lifetime impressions for a message.",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "custom": {
+              "type": "array",
+              "description": "An array of custom frequency cap definitions.",
+              "items": {
+                "description": "A frequency cap definition containing time and max impression information",
+                "type": "object",
+                "properties": {
+                  "period": {
+                    "oneOf": [
+                      {
+                        "type": "integer",
+                        "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
+                      },
+                      {
+                        "type": "string",
+                        "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
+                        "enum": [
+                          "daily"
+                        ]
+                      }
+                    ]
+                  },
+                  "cap": {
+                    "type": "integer",
+                    "description": "The maximum impressions for the message within the defined period.",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "period",
+                  "cap"
+                ]
+              }
+            }
+          }
+        },
+        "priority": {
+          "type": "integer"
+        },
+        "targeting": {
+          "type": "string",
+          "description": "A JEXL expression representing targeting information"
+        },
+        "template": {
+          "type": "string",
+          "const": "infobar"
+        },
+        "trigger": {
+          "type": "object",
+          "description": "An action to trigger potentially showing the message",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "A string identifying the trigger action"
+            },
+            "params": {
+              "type": "array",
+              "description": "An optional array of string parameters for the trigger action",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "content",
+        "targeting",
+        "template",
+        "trigger"
+      ]
+    },
+    "NewtabPromoMessage": {
+      "$schema": "https://json-schema.org/draft/2019-09/schema",
+      "$id": "file:///NewtabPromoMessage.schema.json",
+      "title": "PBNewtabPromoMessage",
+      "description": "Message shown on the private browsing newtab page.",
+      "version": "1.0.0",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Message identifier"
+        },
+        "groups": {
+          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Preference name"
+          }
+        },
+        "content": {
+          "type": "object",
+          "properties": {
+            "hideDefault": {
+              "type": "boolean",
+              "description": "Should we hide the default promo after the experiment promo is dismissed."
+            },
+            "infoEnabled": {
+              "type": "boolean",
+              "description": "Should we show the info section."
+            },
+            "infoIcon": {
+              "type": "string",
+              "description": "Icon shown in the left side of the info section. Default is the private browsing icon."
+            },
+            "infoTitle": {
+              "type": "string",
+              "description": "Is the title in the info section enabled."
+            },
+            "infoTitleEnabled": {
+              "type": "boolean",
+              "description": "Is the title in the info section enabled."
+            },
+            "infoBody": {
+              "type": "string",
+              "description": "Text content in the info section."
+            },
+            "infoLinkText": {
+              "type": "string",
+              "description": "Text for the link in the info section."
+            },
+            "infoLinkUrl": {
+              "type": "string",
+              "description": "URL for the info section link.",
+              "format": "moz-url-format"
+            },
+            "promoEnabled": {
+              "type": "boolean",
+              "description": "Should we show the promo section."
+            },
+            "promoType": {
+              "type": "string",
+              "description": "Promo type used to determine if promo should show to a given user",
+              "enum": [
+                "FOCUS",
+                "RALLY",
+                "VPN"
+              ]
+            },
+            "promoSectionStyle": {
+              "type": "string",
+              "description": "Sets the position of the promo section. Possible values are: top, below-search, bottom. Default bottom.",
+              "enum": [
+                "top",
+                "below-search",
+                "bottom"
+              ]
+            },
+            "promoTitle": {
+              "type": "string",
+              "description": "The text content of the promo section."
+            },
+            "promoTitleEnabled": {
+              "type": "boolean",
+              "description": "Should we show text content in the promo section."
+            },
+            "promoLinkText": {
+              "type": "string",
+              "description": "The text of the link in the promo box."
+            },
+            "promoHeader": {
+              "type": "string",
+              "description": "The title of the promo section."
+            },
+            "promoButton": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Action dispatched by the button."
+                    },
+                    "data": {
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "action"
+              ]
+            },
+            "promoLinkType": {
+              "type": "string",
+              "description": "Type of promo link type. Possible values: link, button. Default is link.",
+              "enum": [
+                "link",
+                "button"
+              ]
+            },
+            "promoImageLarge": {
+              "type": "string",
+              "description": "URL for image used on the left side of the promo box, larger, showcases some feature. Default off.",
+              "format": "uri"
+            },
+            "promoImageSmall": {
+              "type": "string",
+              "description": "URL for image used on the right side of the promo box, smaller, usually a logo. Default off.",
+              "format": "uri"
+            }
+          },
+          "additionalProperties": true,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "promoEnabled": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "promoEnabled"
+                ]
+              },
+              "then": {
+                "required": [
+                  "promoButton"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "infoEnabled": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "infoEnabled"
+                ]
+              },
+              "then": {
+                "required": [
+                  "infoLinkText"
+                ],
+                "if": {
+                  "properties": {
+                    "infoTitleEnabled": {
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "infoTitleEnabled"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "infoTitle"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "priority": {
+          "type": "integer"
+        },
+        "targeting": {
+          "type": "string",
+          "description": "A JEXL expression represetning targeting information"
+        },
+        "template": {
+          "type": "string",
+          "const": "pb_newtab"
+        }
+      },
+      "required": [
+        "id",
+        "content",
+        "targeting",
+        "template"
+      ],
+      "additionalProperties": true
+    },
+    "Spotlight": {
+      "$schema": "https://json-schema.org/draft/2019-09/schema",
+      "$id": "file:///Spotlight.schema.json",
+      "title": "Spotlight",
+      "description": "A template with an image, title, content and two buttons.",
+      "version": "1.1.0",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Message identifier"
+        },
+        "groups": {
+          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Preference name"
+          }
+        },
+        "content": {
+          "type": "object",
+          "properties": {
+            "template": {
+              "type": "string",
+              "description": "Specify the layout template for the Spotlight",
+              "enum": [
+                "logo-and-content",
+                "multistage"
+              ]
+            },
+            "backdrop": {
+              "type": "string",
+              "description": "Background css behind modal content"
+            },
+            "logoImageURL": {
+              "type": "string",
+              "format": "uri",
+              "description": "(Deprecated by logo.imageURL)"
+            },
+            "logo": {
+              "type": "object",
+              "properties": {
+                "imageURL": {
+                  "type": "string",
+                  "description": "URL for image to use with the content"
+                },
+                "imageId": {
+                  "type": "string",
+                  "description": "The ID for a remotely hosted image"
+                },
+                "size": {
+                  "type": "string",
+                  "description": "The logo size."
+                }
+              },
+              "additionalProperties": true
+            },
+            "body": {
+              "properties": {
+                "title": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "description": "The title shown in the Spotlight message",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "description": "Message shown in the header element"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "string_id": {
+                              "type": "string",
+                              "description": "Id of localized string for the header element"
+                            }
+                          },
+                          "required": [
+                            "string_id"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "label"
+                  ]
+                },
+                "text": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "description": "The content shown in the Spotlight message",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "description": "Message shown in the paragraph element"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "string_id": {
+                              "type": "string",
+                              "description": "Id of localized string for the paragraph element"
+                            }
+                          },
+                          "required": [
+                            "string_id"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "label"
+                  ]
+                },
+                "primary": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "description": "The label for the primary button",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "description": "Message shown in the button element"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "string_id": {
+                              "type": "string",
+                              "description": "Id of localized string for the button element"
+                            }
+                          },
+                          "required": [
+                            "string_id"
+                          ]
+                        }
+                      ]
+                    },
+                    "action": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "description": "Action dispatched by the button."
+                        },
+                        "data": {
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "action"
+                  ]
+                },
+                "secondary": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "description": "The label for the secondary button",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "description": "Message shown in the button element"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "string_id": {
+                              "type": "string",
+                              "description": "Id of localized string for the button element"
+                            }
+                          },
+                          "required": [
+                            "string_id"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "action"
+                  ]
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "title",
+                "text",
+                "primary",
+                "secondary"
+              ]
+            },
+            "extra": {
+              "properties": {
+                "expanded": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "description": "The label for the secondary button",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "description": "Message shown in the button element"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "string_id": {
+                              "type": "string",
+                              "description": "Id of localized string for the button element"
+                            }
+                          },
+                          "required": [
+                            "string_id"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "label"
+                  ]
+                }
+              },
+              "additionalProperties": true
+            },
+            "screens": {
+              "type": "array",
+              "description": "Collection of individual screen content"
+            },
+            "transitions": {
+              "type": "boolean",
+              "description": "Show transitions within and between screens"
+            }
+          },
+          "additionalProperties": true,
+          "if": {
+            "properties": {
+              "logoImageURL": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "logo": {
+                "oneOf": [
+                  {
+                    "required": [
+                      "imageURL"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "imageId"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "template"
+          ]
+        },
+        "frequency": {
+          "type": "object",
+          "description": "An object containing frequency cap information for a message.",
+          "properties": {
+            "lifetime": {
+              "type": "integer",
+              "description": "The maximum lifetime impressions for a message.",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "custom": {
+              "type": "array",
+              "description": "An array of custom frequency cap definitions.",
+              "items": {
+                "description": "A frequency cap definition containing time and max impression information",
+                "type": "object",
+                "properties": {
+                  "period": {
+                    "oneOf": [
+                      {
+                        "type": "integer",
+                        "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
+                      },
+                      {
+                        "type": "string",
+                        "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
+                        "enum": [
+                          "daily"
+                        ]
+                      }
+                    ]
+                  },
+                  "cap": {
+                    "type": "integer",
+                    "description": "The maximum impressions for the message within the defined period.",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "period",
+                  "cap"
+                ]
+              }
+            }
+          }
+        },
+        "priority": {
+          "type": "integer"
+        },
+        "targeting": {
+          "type": "string",
+          "description": "A JEXL expression representing targeting information"
+        },
+        "template": {
+          "type": "string",
+          "const": "spotlight"
+        },
+        "trigger": {
+          "type": "object",
+          "description": "An action to trigger potentially showing the message",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "A string identifying the trigger action"
+            },
+            "params": {
+              "type": "array",
+              "description": "An optional array of string parameters for the trigger action",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "content",
+        "targeting",
+        "template"
+      ]
+    },
+    "ToolbarBadgeMessage": {
+      "$schema": "https://json-schema.org/draft/2019-09/schema",
+      "$id": "file:///ToolbarBadgeMessage.schema.json",
+      "title": "ToolbarBadgeMessage",
+      "description": "A template that specifies to which element in the browser toolbar to add a notification.",
+      "version": "1.1.0",
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string"
+            },
+            "action": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "id"
+              ],
+              "description": "Optional action to take in addition to showing the notification"
+            },
+            "delay": {
+              "type": "number",
+              "description": "Optional delay in ms after which to show the notification"
+            },
+            "badgeDescription": {
+              "type": "object",
+              "description": "This is used in combination with the badged button to offer a text based alternative to the visual badging. Example 'New Feature: What's New'",
+              "properties": {
+                "string_id": {
+                  "type": "string",
+                  "description": "Fluent string id"
+                }
+              },
+              "required": [
+                "string_id"
+              ]
+            }
+          },
+          "additionalProperties": true,
+          "required": [
+            "target"
+          ]
+        },
+        "targeting": {
+          "type": "string"
+        },
+        "template": {
+          "type": "string",
+          "const": "toolbar_badge"
+        }
+      },
+      "additionalProperties": true,
+      "required": [
+        "content",
+        "targeting",
+        "template"
+      ]
+    },
+    "UpdateAction": {
+      "$schema": "https://json-schema.org/draft/2019-09/schema",
+      "$id": "file:///UpdateAction.schema.json",
+      "title": "UpdateActionMessage",
+      "description": "A template for messages that execute predetermined actions.",
+      "version": "1.0.0",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Message identifier"
+        },
+        "groups": {
+          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Preference name"
+          }
+        },
+        "content": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "description": "Additional data provided as argument when executing the action",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "URL data to be used as argument to the action"
+                    },
+                    "expireDelta": {
+                      "type": "number",
+                      "description": "Expiration timestamp to be used as argument to the action"
+                    }
+                  }
+                }
+              },
+              "additionalProperties": true,
+              "description": "Optional action to take in addition to showing the notification",
+              "required": [
+                "id",
+                "data"
+              ]
+            }
+          },
+          "additionalProperties": true,
+          "required": [
+            "action"
+          ]
+        },
+        "targeting": {
+          "type": "string",
+          "description": "A JEXL expression representing targeting information"
+        },
+        "template": {
+          "type": "string",
+          "const": "update_action"
+        },
+        "trigger": {
+          "type": "object",
+          "description": "An action to trigger potentially showing the message",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "A string identifying the trigger action"
+            },
+            "params": {
+              "type": "array",
+              "description": "An optional array of string parameters for the trigger action",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "content",
+        "targeting",
+        "template"
+      ]
+    },
+    "WhatsNewMessage": {
+      "$schema": "https://json-schema.org/draft/2019-09/schema",
+      "$id": "file:///WhatsNewMessage.schema.json",
+      "title": "WhatsNewMessage",
+      "description": "A template for the messages that appear in the What's New panel.",
+      "version": "1.2.0",
+      "type": "object",
+      "definitions": {
+        "localizableText": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "The string to be rendered."
+            },
+            {
+              "type": "object",
+              "properties": {
+                "string_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "string_id"
+              ],
+              "description": "Id of localized string to be rendered."
+            }
+          ]
+        }
+      },
+      "properties": {
+        "content": {
+          "type": "object",
+          "properties": {
+            "layout": {
+              "description": "Different message layouts",
+              "enum": [
+                "tracking-protections"
+              ]
+            },
+            "layout_title_content_variable": {
+              "description": "Select what profile specific value to show for the current layout.",
+              "type": "string"
+            },
+            "bucket_id": {
+              "type": "string",
+              "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
+            },
+            "published_date": {
+              "type": "integer",
+              "description": "The date/time (number of milliseconds elapsed since January 1, 1970 00:00:00 UTC) the message was published."
+            },
+            "title": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/localizableText"
+                },
+                {
+                  "description": "Id of localized string or message override of What's New message title"
+                }
+              ]
+            },
+            "subtitle": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/localizableText"
+                },
+                {
+                  "description": "Id of localized string or message override of What's New message subtitle"
+                }
+              ]
+            },
+            "body": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/localizableText"
+                },
+                {
+                  "description": "Id of localized string or message override of What's New message body"
+                }
+              ]
+            },
+            "link_text": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/localizableText"
+                },
+                {
+                  "description": "(optional) Id of localized string or message override of What's New message link text"
+                }
+              ]
+            },
+            "cta_url": {
+              "description": "Target URL for the What's New message.",
+              "type": "string",
+              "format": "moz-url-format"
+            },
+            "cta_type": {
+              "description": "Type of url open action",
+              "enum": [
+                "OPEN_URL",
+                "OPEN_ABOUT_PAGE",
+                "OPEN_PROTECTION_REPORT"
+              ]
+            },
+            "cta_where": {
+              "description": "How to open the cta: new window, tab, focused, unfocused.",
+              "enum": [
+                "current",
+                "tabshifted",
+                "tab",
+                "save",
+                "window"
+              ]
+            },
+            "icon_url": {
+              "description": "(optional) URL for the What's New message icon.",
+              "type": "string",
+              "format": "uri"
+            },
+            "icon_alt": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/localizableText"
+                },
+                {
+                  "description": "Alt text for image."
+                }
+              ]
+            }
+          },
+          "additionalProperties": true,
+          "required": [
+            "published_date",
+            "title",
+            "body",
+            "cta_url",
+            "bucket_id"
+          ],
+          "dependencies": {
+            "layout": [
+              "layout_title_content_variable"
+            ]
+          }
+        },
+        "order": {
+          "type": "integer"
+        },
+        "template": {
+          "type": "string",
+          "const": "whatsnew_panel_message"
+        }
+      },
+      "required": [
+        "content",
+        "order",
+        "template"
+      ],
+      "additionalProperties": true
+    }
+  }
+}

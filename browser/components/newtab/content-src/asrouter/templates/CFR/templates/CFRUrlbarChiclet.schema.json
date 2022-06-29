@@ -1,4 +1,6 @@
 {
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "file:///CFRUrlbarChiclet.schema.json",
   "title": "CFRUrlbarChiclet",
   "description": "A template with a chiclet button with text.",
   "version": "1.0.0",
@@ -102,7 +104,8 @@
       "description": "A JEXL expression representing targeting information"
     },
     "template": {
-      "type": "string"
+      "type": "string",
+      "const": "cfr_urlbar_chiclet"
     },
     "trigger": {
       "type": "object",
@@ -123,5 +126,5 @@
       "required": ["id"]
     }
   },
-  "required": ["id", "groups", "content", "targeting", "template", "trigger"]
+  "required": ["id", "content", "targeting", "template", "trigger"]
 }

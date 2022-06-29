@@ -1,88 +1,188 @@
 {
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "file:///NewtabPromoMessage.schema.json",
   "title": "PBNewtabPromoMessage",
   "description": "Message shown on the private browsing newtab page.",
   "version": "1.0.0",
   "type": "object",
   "properties": {
-    "infoEnabled": {
-      "type": "boolean",
-      "description": "Should we show the info section."
-    },
-    "infoIcon": {
+    "id": {
       "type": "string",
-      "description": "Icon shown in the left side of the info section. Default is the private browsing icon."
+      "description": "Message identifier"
     },
-    "infoTitle": {
+    "groups": {
+      "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Preference name"
+      }
+    },
+    "content": {
+      "type": "object",
+      "properties": {
+        "hideDefault": {
+          "type": "boolean",
+          "description": "Should we hide the default promo after the experiment promo is dismissed."
+        },
+        "infoEnabled": {
+          "type": "boolean",
+          "description": "Should we show the info section."
+        },
+        "infoIcon": {
+          "type": "string",
+          "description": "Icon shown in the left side of the info section. Default is the private browsing icon."
+        },
+        "infoTitle": {
+          "type": "string",
+          "description": "Is the title in the info section enabled."
+        },
+        "infoTitleEnabled": {
+          "type": "boolean",
+          "description": "Is the title in the info section enabled."
+        },
+        "infoBody": {
+          "type": "string",
+          "description": "Text content in the info section."
+        },
+        "infoLinkText": {
+          "type": "string",
+          "description": "Text for the link in the info section."
+        },
+        "infoLinkUrl": {
+          "type": "string",
+          "description": "URL for the info section link.",
+          "format": "moz-url-format"
+        },
+        "promoEnabled": {
+          "type": "boolean",
+          "description": "Should we show the promo section."
+        },
+        "promoType": {
+          "type": "string",
+          "description": "Promo type used to determine if promo should show to a given user",
+          "enum": [
+            "FOCUS",
+            "RALLY",
+            "VPN"
+          ]
+        },
+        "promoSectionStyle": {
+          "type": "string",
+          "description": "Sets the position of the promo section. Possible values are: top, below-search, bottom. Default bottom.",
+          "enum": [
+            "top",
+            "below-search",
+            "bottom"
+          ]
+        },
+        "promoTitle": {
+          "type": "string",
+          "description": "The text content of the promo section."
+        },
+        "promoTitleEnabled": {
+          "type": "boolean",
+          "description": "Should we show text content in the promo section."
+        },
+        "promoLinkText": {
+          "type": "string",
+          "description": "The text of the link in the promo box."
+        },
+        "promoHeader": {
+          "type": "string",
+          "description": "The title of the promo section."
+        },
+        "promoButton": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Action dispatched by the button."
+                },
+                "data": {
+                  "type": "object"
+                }
+              },
+              "required": ["type"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["action"]
+        },
+        "promoLinkType": {
+          "type": "string",
+          "description": "Type of promo link type. Possible values: link, button. Default is link.",
+          "enum": [
+            "link",
+            "button"
+          ]
+        },
+        "promoImageLarge": {
+          "type": "string",
+          "description": "URL for image used on the left side of the promo box, larger, showcases some feature. Default off.",
+          "format": "uri"
+        },
+        "promoImageSmall": {
+          "type": "string",
+          "description": "URL for image used on the right side of the promo box, smaller, usually a logo. Default off.",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "promoEnabled": { "const": true }
+            },
+            "required": ["promoEnabled"]
+          },
+          "then": {
+            "required": ["promoButton"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "infoEnabled": { "const": true }
+            },
+            "required": ["infoEnabled"]
+          },
+          "then": {
+            "required": ["infoLinkText"],
+            "if": {
+              "properties": {
+                "infoTitleEnabled": { "const": true }
+              },
+              "required": ["infoTitleEnabled"]
+            },
+            "then": {
+              "required": ["infoTitle"]
+            }
+          }
+        }
+      ]
+    },
+    "priority": {
+      "type": "integer"
+    },
+    "targeting": {
       "type": "string",
-      "description": "Is the title in the info section enabled."
+      "description": "A JEXL expression represetning targeting information"
     },
-    "infoTitleEnabled": {
-      "type": "boolean",
-      "description": "Is the title in the info section enabled."
-    },
-    "infoBody": {
+    "template": {
       "type": "string",
-      "description": "Text content in the info section."
-    },
-    "infoLinkText": {
-      "type": "string",
-      "description": "Text for the link in the info section."
-    },
-    "infoLinkUrl": {
-      "type": "string",
-      "description": "URL for the info section link.",
-      "format": "moz-url-format"
-    },
-    "promoEnabled": {
-      "type": "boolean",
-      "description": "Should we show the promo section."
-    },
-    "promoType": {
-      "type": "string",
-      "description": "Promo type used to determine if promo should show to a given user",
-      "enum": ["FOCUS", "RALLY", "VPN"]
-    },
-    "promoSectionStyle": {
-      "type": "string",
-      "description": "Sets the position of the promo section. Possible values are: top, below-search, bottom. Default bottom.",
-      "enum": ["top", "below-search", "bottom"]
-    },
-    "promoTitle": {
-      "type": "string",
-      "description": "The text content of the promo section."
-    },
-    "promoTitleEnabled": {
-      "type": "boolean",
-      "description": "Should we show text content in the promo section."
-    },
-    "promoLinkText": {
-      "type": "string",
-      "description": "The text of the link in the promo box."
-    },
-    "promoHeader": {
-      "type": "string",
-      "description": "The title of the promo section."
-    },
-    "promoLinkUrl": {
-      "type": "string",
-      "description": "URL for link in the promo box.",
-      "format": "moz-url-format"
-    },
-    "promoLinkType": {
-      "type": "string",
-      "description": "Type of promo link type. Possible values: link, button. Default is link.",
-      "enum": ["link", "button"]
-    },
-    "promoImageLarge": {
-      "type": "string",
-      "description": "URL for image used on the left side of the promo box, larger, showcases some feature. Default off.",
-      "format": "uri"
-    },
-    "promoImageSmall": {
-      "type": "string",
-      "description": "URL for image used on the right side of the promo box, smaller, usually a logo. Default off.",
-      "format": "uri"
+      "const": "pb_newtab"
     }
   },
+  "required": [
+    "id",
+    "content",
+    "targeting",
+    "template"
+  ],
   "additionalProperties": true
 }
