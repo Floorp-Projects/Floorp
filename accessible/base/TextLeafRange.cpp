@@ -1403,7 +1403,7 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(nsDirection aDirection,
 
 LayoutDeviceIntRect TextLeafPoint::CharBounds() {
   if (mAcc && !mAcc->IsText()) {
-    // If we're dealing with an empty container, return the
+    // If we're dealing with an empty embedded object, return the
     // accessible's non-text bounds.
     return mAcc->Bounds();
   }
@@ -1424,16 +1424,6 @@ LayoutDeviceIntRect TextLeafPoint::CharBounds() {
   }
 
   return LayoutDeviceIntRect();
-}
-
-bool TextLeafPoint::ContainsPoint(int32_t aX, int32_t aY) {
-  if (mAcc && !mAcc->IsText()) {
-    // If we're dealing with an empty embedded object, use the
-    // accessible's non-text bounds.
-    return mAcc->Bounds().Contains(aX, aY);
-  }
-
-  return CharBounds().Contains(aX, aY);
 }
 
 }  // namespace mozilla::a11y

@@ -309,12 +309,6 @@ LayoutDeviceIntRect RemoteAccessible::CharBounds(int32_t aOffset,
 
 int32_t RemoteAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
                                         uint32_t aCoordType) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    MOZ_ASSERT(IsHyperText(), "is not hypertext?");
-    return RemoteAccessibleBase<RemoteAccessible>::OffsetAtPoint(aX, aY,
-                                                                 aCoordType);
-  }
-
   int32_t retVal = -1;
   Unused << mDoc->SendOffsetAtPoint(mID, aX, aY, aCoordType, &retVal);
   return retVal;

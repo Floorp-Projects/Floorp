@@ -116,11 +116,6 @@ class HyperTextAccessibleBase {
                                          uint32_t aCoordType);
 
   /**
-   * Return the offset of the char that contains the given coordinates.
-   */
-  virtual int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
-
-  /**
    * Get a TextLeafPoint for a given offset in this HyperTextAccessible.
    * If the offset points to an embedded object and aDescendToEnd is true,
    * the point right at the end of this subtree will be returned instead of the

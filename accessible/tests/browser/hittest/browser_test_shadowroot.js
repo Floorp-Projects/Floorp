@@ -7,7 +7,7 @@
 async function runTests(browser, accDoc) {
   const dpr = await getContentDPR(browser);
   let componentAcc = findAccessibleChildByID(accDoc, "component1");
-  await testChildAtPoint(
+  testChildAtPoint(
     dpr,
     1,
     1,
@@ -17,7 +17,7 @@ async function runTests(browser, accDoc) {
   );
 
   componentAcc = findAccessibleChildByID(accDoc, "component2");
-  await testChildAtPoint(
+  testChildAtPoint(
     dpr,
     1,
     1,
