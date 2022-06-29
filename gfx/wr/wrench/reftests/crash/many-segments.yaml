@@ -123,6 +123,6 @@ root:
     -
       bounds: [128, 128, 632, 632]
       clip-rect: [128, 128, 632, 632]
-      clip-and-scroll: [root-scroll-node, 1024]
+      clip-chain: 1024
       type: rect
       color: 0 255 0 1

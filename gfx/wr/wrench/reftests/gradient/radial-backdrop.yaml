@@ -10,7 +10,7 @@ root:
       id: 2
     - type: radial-gradient
       bounds: 0 0 800 450
-      "clip-and-scroll": 2
+      spatial-id: 2
       center: 400 225
       radius: 200 200
       stops: [ 0.0, [255, 255, 255, 1], 1.0, [0,0,0,1] ]
