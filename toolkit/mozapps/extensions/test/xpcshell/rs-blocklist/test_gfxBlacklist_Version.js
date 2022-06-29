@@ -160,7 +160,15 @@ async function run_test() {
       Ci.nsIGfxInfo.FEATURE_HARDWARE_VIDEO_DECODING,
       failureId
     );
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+    if (OS == "Linux" && status != Ci.nsIGfxInfo.FEATURE_STATUS_OK) {
+      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DEVICE);
+      Assert.equal(
+        failureId.value,
+        "FEATURE_FAILURE_VIDEO_DECODING_TEST_FAILED"
+      );
+    } else {
+      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+    }
 
     status = gfxInfo.getFeatureStatus(
       Ci.nsIGfxInfo.FEATURE_DIRECT3D_11_ANGLE,
