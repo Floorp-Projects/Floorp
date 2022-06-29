@@ -818,36 +818,31 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
       attributes->SetAttribute(nsGkAtoms::layout_guess, layoutGuess);
     }
 
-    GetAccService()->MarkupAttributes(this, attributes);
+    if (auto ariaAttrs = GetCachedARIAAttributes()) {
+      ariaAttrs->CopyTo(attributes);
+    }
 
-    const nsRoleMapEntry* roleMap = ARIARoleMap();
     nsAutoString role;
     mCachedFields->GetAttribute(nsGkAtoms::role, role);
     if (role.IsEmpty()) {
-      if (roleMap && roleMap->roleAtom != nsGkAtoms::_empty) {
-        // Single, known role.
-        attributes->SetAttribute(nsGkAtoms::xmlroles, roleMap->roleAtom);
-      } else if (nsAtom* landmark = LandmarkRole()) {
-        // Landmark role from markup; e.g. HTML <main>.
-        attributes->SetAttribute(nsGkAtoms::xmlroles, landmark);
+      bool found = false;
+      if (const nsRoleMapEntry* roleMap = ARIARoleMap()) {
+        if (roleMap->roleAtom != nsGkAtoms::_empty) {
+          // Single, known role.
+          attributes->SetAttribute(nsGkAtoms::xmlroles, roleMap->roleAtom);
+          found = true;
+        }
+      }
+      if (!found) {
+        if (nsAtom* landmark = LandmarkRole()) {
+          // Landmark role from markup; e.g. HTML <main>.
+          attributes->SetAttribute(nsGkAtoms::xmlroles, landmark);
+        }
       }
     } else {
       // Unknown role or multiple roles.
       attributes->SetAttribute(nsGkAtoms::xmlroles, std::move(role));
     }
-
-    if (roleMap) {
-      nsAutoString live;
-      if (nsAccUtils::GetLiveAttrValue(roleMap->liveAttRule, live)) {
-        attributes->SetAttribute(nsGkAtoms::aria_live, std::move(live));
-      }
-    }
-
-    if (auto ariaAttrs = GetCachedARIAAttributes()) {
-      ariaAttrs->CopyTo(attributes);
-    }
-
-    nsAccUtils::SetLiveContainerAttributes(attributes, this);
   }
 
   nsAutoString name;
@@ -891,34 +886,6 @@ Maybe<float> RemoteAccessibleBase<Derived>::Opacity() const {
   }
 
   return Nothing();
-}
-
-template <class Derived>
-void RemoteAccessibleBase<Derived>::LiveRegionAttributes(
-    nsAString* aLive, nsAString* aRelevant, Maybe<bool>* aAtomic,
-    nsAString* aBusy) const {
-  if (!mCachedFields) {
-    return;
-  }
-  RefPtr<const AccAttributes> attrs = GetCachedARIAAttributes();
-  if (!attrs) {
-    return;
-  }
-  if (aLive) {
-    attrs->GetAttribute(nsGkAtoms::aria_live, *aLive);
-  }
-  if (aRelevant) {
-    attrs->GetAttribute(nsGkAtoms::aria_relevant, *aRelevant);
-  }
-  if (aAtomic) {
-    if (auto value =
-            attrs->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::aria_atomic)) {
-      *aAtomic = Some(*value == nsGkAtoms::_true);
-    }
-  }
-  if (aBusy) {
-    attrs->GetAttribute(nsGkAtoms::aria_busy, *aBusy);
-  }
 }
 
 template <class Derived>

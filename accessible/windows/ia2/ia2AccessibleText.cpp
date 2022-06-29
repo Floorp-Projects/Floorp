@@ -17,7 +17,7 @@
 
 using namespace mozilla::a11y;
 
-HyperTextAccessibleBase* ia2AccessibleText::sLastTextChangeAcc = nullptr;
+StaticRefPtr<HyperTextAccessibleWrap> ia2AccessibleText::sLastTextChangeAcc;
 StaticAutoPtr<nsString> ia2AccessibleText::sLastTextChangeString;
 uint32_t ia2AccessibleText::sLastTextChangeStart = 0;
 uint32_t ia2AccessibleText::sLastTextChangeEnd = 0;
@@ -464,10 +464,11 @@ AccessibleTextBoundary ia2AccessibleText::GetGeckoTextBoundary(
 }
 
 void ia2AccessibleText::InitTextChangeData() {
+  ClearOnShutdown(&sLastTextChangeAcc);
   ClearOnShutdown(&sLastTextChangeString);
 }
 
-void ia2AccessibleText::UpdateTextChangeData(HyperTextAccessibleBase* aAcc,
+void ia2AccessibleText::UpdateTextChangeData(HyperTextAccessibleWrap* aAcc,
                                              bool aInsert, const nsString& aStr,
                                              int32_t aStart, uint32_t aLen) {
   if (!sLastTextChangeString) sLastTextChangeString = new nsString();

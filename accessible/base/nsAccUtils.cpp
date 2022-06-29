@@ -70,54 +70,71 @@ int32_t nsAccUtils::GetLevelForXULContainerItem(nsIContent* aContent) {
 }
 
 void nsAccUtils::SetLiveContainerAttributes(AccAttributes* aAttributes,
-                                            Accessible* aStartAcc) {
+                                            nsIContent* aStartContent) {
   nsAutoString live, relevant, busy;
-  nsStaticAtom* role = nullptr;
-  Maybe<bool> atomic;
-  for (Accessible* acc = aStartAcc; acc; acc = acc->Parent()) {
-    // We only want the nearest value for each attribute. If we already got a
-    // value, don't bother fetching it from further ancestors.
-    const bool wasLiveEmpty = live.IsEmpty();
-    acc->LiveRegionAttributes(wasLiveEmpty ? &live : nullptr,
-                              relevant.IsEmpty() ? &relevant : nullptr,
-                              atomic ? nullptr : &atomic,
-                              busy.IsEmpty() ? &busy : nullptr);
-    if (wasLiveEmpty) {
-      const nsRoleMapEntry* roleMap = acc->ARIARoleMap();
-      if (live.IsEmpty()) {
-        // aria-live wasn't explicitly set. See if an aria-live value is implied
-        // by an ARIA role or markup element.
-        if (roleMap) {
-          GetLiveAttrValue(roleMap->liveAttRule, live);
-        } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(
-                       acc, nsGkAtoms::aria_live)) {
-          value->ToString(live);
+  dom::Document* doc = aStartContent->GetComposedDoc();
+  if (!doc) {
+    return;
+  }
+  dom::Element* topEl = doc->GetRootElement();
+  nsIContent* ancestor = aStartContent;
+  while (ancestor) {
+    // container-relevant attribute
+    if (relevant.IsEmpty() &&
+        HasDefinedARIAToken(ancestor, nsGkAtoms::aria_relevant) &&
+        ancestor->AsElement()->GetAttr(kNameSpaceID_None,
+                                       nsGkAtoms::aria_relevant, relevant)) {
+      aAttributes->SetAttributeStringCopy(nsGkAtoms::containerRelevant,
+                                          relevant);
+    }
+
+    // container-live, and container-live-role attributes
+    if (live.IsEmpty()) {
+      const nsRoleMapEntry* role = nullptr;
+      if (ancestor->IsElement()) {
+        role = aria::GetRoleMap(ancestor->AsElement());
+      }
+      if (HasDefinedARIAToken(ancestor, nsGkAtoms::aria_live)) {
+        ancestor->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_live,
+                                       live);
+      } else if (role) {
+        GetLiveAttrValue(role->liveAttRule, live);
+      } else if (nsStaticAtom* value = GetAccService()->MarkupAttribute(
+                     ancestor, nsGkAtoms::aria_live)) {
+        value->ToString(live);
+      }
+
+      if (!live.IsEmpty()) {
+        aAttributes->SetAttributeStringCopy(nsGkAtoms::containerLive, live);
+        if (role) {
+          aAttributes->SetAttribute(nsGkAtoms::containerLiveRole,
+                                    role->roleAtom);
         }
       }
-      if (!live.IsEmpty() && roleMap &&
-          roleMap->roleAtom != nsGkAtoms::_empty) {
-        role = roleMap->roleAtom;
-      }
     }
-    if (acc->IsDoc()) {
+
+    // container-atomic attribute
+    if (ancestor->IsElement() && ancestor->AsElement()->AttrValueIs(
+                                     kNameSpaceID_None, nsGkAtoms::aria_atomic,
+                                     nsGkAtoms::_true, eCaseMatters)) {
+      aAttributes->SetAttribute(nsGkAtoms::containerAtomic, true);
+    }
+
+    // container-busy attribute
+    if (busy.IsEmpty() && HasDefinedARIAToken(ancestor, nsGkAtoms::aria_busy) &&
+        ancestor->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_busy,
+                                       busy)) {
+      aAttributes->SetAttributeStringCopy(nsGkAtoms::containerBusy, busy);
+    }
+
+    if (ancestor == topEl) {
       break;
     }
-  }
-  if (!live.IsEmpty()) {
-    aAttributes->SetAttribute(nsGkAtoms::containerLive, std::move(live));
-  }
-  if (role) {
-    aAttributes->SetAttribute(nsGkAtoms::containerLiveRole, std::move(role));
-  }
-  if (!relevant.IsEmpty()) {
-    aAttributes->SetAttribute(nsGkAtoms::containerRelevant,
-                              std::move(relevant));
-  }
-  if (atomic) {
-    aAttributes->SetAttribute(nsGkAtoms::containerAtomic, *atomic);
-  }
-  if (!busy.IsEmpty()) {
-    aAttributes->SetAttribute(nsGkAtoms::containerBusy, std::move(busy));
+
+    ancestor = ancestor->GetParent();
+    if (!ancestor) {
+      ancestor = topEl;  // Use <body>/<frameset>
+    }
   }
 }
 
@@ -137,6 +154,19 @@ bool nsAccUtils::HasDefinedARIAToken(nsIContent* aContent, nsAtom* aAtom) {
   return true;
 }
 
+nsStaticAtom* nsAccUtils::GetARIAToken(dom::Element* aElement, nsAtom* aAttr) {
+  if (!HasDefinedARIAToken(aElement, aAttr)) return nsGkAtoms::_empty;
+
+  static dom::Element::AttrValuesArray tokens[] = {
+      nsGkAtoms::_false, nsGkAtoms::_true, nsGkAtoms::mixed, nullptr};
+
+  int32_t idx =
+      aElement->FindAttrValueIn(kNameSpaceID_None, aAttr, tokens, eCaseMatters);
+  if (idx >= 0) return tokens[idx];
+
+  return nullptr;
+}
+
 nsStaticAtom* nsAccUtils::NormalizeARIAToken(dom::Element* aElement,
                                              nsAtom* aAttr) {
   if (!HasDefinedARIAToken(aElement, aAttr)) {
@@ -152,14 +182,6 @@ nsStaticAtom* nsAccUtils::NormalizeARIAToken(dom::Element* aElement,
                                             eCaseMatters);
     // If the token is present, return it, otherwise TRUE as per spec.
     return (idx >= 0) ? tokens[idx] : nsGkAtoms::_true;
-  }
-
-  static dom::Element::AttrValuesArray tokens[] = {
-      nsGkAtoms::_false, nsGkAtoms::_true, nsGkAtoms::mixed, nullptr};
-  int32_t idx =
-      aElement->FindAttrValueIn(kNameSpaceID_None, aAttr, tokens, eCaseMatters);
-  if (idx >= 0) {
-    return tokens[idx];
   }
 
   return nullptr;

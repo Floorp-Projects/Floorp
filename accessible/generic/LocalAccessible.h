@@ -792,10 +792,6 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   virtual void DOMNodeID(nsString& aID) const override;
 
-  virtual void LiveRegionAttributes(nsAString* aLive, nsAString* aRelevant,
-                                    Maybe<bool>* aAtomic,
-                                    nsAString* aBusy) const override;
-
  protected:
   virtual ~LocalAccessible();
 
