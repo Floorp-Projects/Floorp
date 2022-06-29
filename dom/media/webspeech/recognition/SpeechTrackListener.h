@@ -37,7 +37,7 @@ class SpeechTrackListener : public MediaTrackListener {
   void ConvertAndDispatchAudioChunk(int aDuration, float aVolume,
                                     SampleFormatType* aData,
                                     TrackRate aTrackRate);
-  RefPtr<SpeechRecognition> mRecognition;
+  nsMainThreadPtrHandle<SpeechRecognition> mRecognition;
   MozPromiseHolder<GenericNonExclusivePromise> mRemovedHolder;
 
  public:

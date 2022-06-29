@@ -1051,10 +1051,10 @@ AudioSegment* SpeechRecognition::CreateAudioSegment(
   return segment;
 }
 
-void SpeechRecognition::FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
-                                      uint32_t aDuration,
-                                      MediaTrackListener* aProvider,
-                                      TrackRate aTrackRate) {
+void SpeechRecognition::FeedAudioData(
+    nsMainThreadPtrHandle<SpeechRecognition>& aRecognition,
+    already_AddRefed<SharedBuffer> aSamples, uint32_t aDuration,
+    MediaTrackListener* aProvider, TrackRate aTrackRate) {
   NS_ASSERTION(!NS_IsMainThread(),
                "FeedAudioData should not be called in the main thread");
 
@@ -1098,7 +1098,7 @@ void SpeechRecognition::FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
   }
 
   AudioSegment* segment = CreateAudioSegment(chunksToSend);
-  RefPtr<SpeechEvent> event = new SpeechEvent(this, EVENT_AUDIO_DATA);
+  RefPtr<SpeechEvent> event = new SpeechEvent(aRecognition, EVENT_AUDIO_DATA);
   event->mAudioSegment = segment;
   event->mProvider = aProvider;
   event->mTrackRate = aTrackRate;
@@ -1139,6 +1139,17 @@ TaskQueue* SpeechRecognition::GetTaskQueueForEncoding() const {
 }
 
 SpeechEvent::SpeechEvent(SpeechRecognition* aRecognition,
+                         SpeechRecognition::EventType aType)
+    : Runnable("dom::SpeechEvent"),
+      mAudioSegment(nullptr),
+      mRecognitionResultList(nullptr),
+      mError(nullptr),
+      mRecognition(new nsMainThreadPtrHolder<SpeechRecognition>(
+          "SpeechEvent::SpeechEvent", aRecognition)),
+      mType(aType),
+      mTrackRate(0) {}
+
+SpeechEvent::SpeechEvent(nsMainThreadPtrHandle<SpeechRecognition>& aRecognition,
                          SpeechRecognition::EventType aType)
     : Runnable("dom::SpeechEvent"),
       mAudioSegment(nullptr),
