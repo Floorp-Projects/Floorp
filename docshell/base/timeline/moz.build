@@ -34,7 +34,6 @@ UNIFIED_SOURCES += [
     "AutoGlobalTimelineMarker.cpp",
     "AutoRestyleTimelineMarker.cpp",
     "AutoTimelineMarker.cpp",
-    "MarkersStorage.cpp",
     "ObservedDocShell.cpp",
     "TimelineConsumers.cpp",
     "TimelineMarker.cpp",
