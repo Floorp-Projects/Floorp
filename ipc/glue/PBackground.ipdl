@@ -41,6 +41,7 @@ include protocol PLockManager;
 include protocol PMIDIManager;
 include protocol PMIDIPort;
 include protocol PQuota;
+include protocol PSelectTLSClientAuthCert;
 include protocol PServiceWorker;
 include protocol PServiceWorkerContainer;
 include protocol PServiceWorkerManager;
@@ -120,6 +121,7 @@ sync protocol PBackground
   manages PMIDIManager;
   manages PMIDIPort;
   manages PQuota;
+  manages PSelectTLSClientAuthCert;
   manages PServiceWorker;
   manages PServiceWorkerContainer;
   manages PServiceWorkerManager;
@@ -268,6 +270,14 @@ parent:
   async PIdleScheduler();
 
   async PMediaTransport();
+
+  async PSelectTLSClientAuthCert(nsCString aHostName,
+                                 OriginAttributes aOriginAttributes,
+                                 int32_t aPort,
+                                 uint32_t aProviderFlags,
+                                 uint32_t aProviderTlsFlags,
+                                 ByteArray aServerCertBytes,
+                                 ByteArray[] aCANames);
 
   async PVerifySSLServerCert(ByteArray[] aPeerCertChain,
                              nsCString aHostName,

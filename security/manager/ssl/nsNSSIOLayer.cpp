@@ -17,7 +17,6 @@
 #include "ScopedNSSTypes.h"
 #include "SharedSSLState.h"
 #include "TLSClientAuthCertSelection.h"
-#include "cert_storage/src/cert_storage.h"
 #include "keyhi.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
@@ -424,8 +423,12 @@ void nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode) {
 
   if (mFd) {
     SECStatus rv = SSL_AuthCertificateComplete(mFd, errorCode);
-    // Only replace errorCode if there was originally no error
-    if (rv != SECSuccess && errorCode == 0) {
+    // Only replace errorCode if there was originally no error.
+    // SSL_AuthCertificateComplete will return SECFailure with the error code
+    // set to PR_WOULD_BLOCK_ERROR if there is a pending event to select a
+    // client authentication certificate. This is not an error.
+    if (rv != SECSuccess && PR_GetError() != PR_WOULD_BLOCK_ERROR &&
+        errorCode == 0) {
       errorCode = PR_GetError();
       if (errorCode == 0) {
         NS_ERROR("SSL_AuthCertificateComplete didn't set error code");
@@ -445,6 +448,57 @@ void nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode) {
   }
 
   mCertVerificationState = after_cert_verification;
+}
+
+void nsNSSSocketInfo::ClientAuthCertificateSelected(
+    nsTArray<uint8_t>& certBytes, nsTArray<nsTArray<uint8_t>>& certChainBytes) {
+  MOZ_ASSERT(mFd);
+  if (!mFd) {
+    return;
+  }
+  SECItem certItem = {
+      siBuffer,
+      const_cast<uint8_t*>(certBytes.Elements()),
+      static_cast<unsigned int>(certBytes.Length()),
+  };
+  UniqueCERTCertificate cert(CERT_NewTempCertificate(
+      CERT_GetDefaultCertDB(), &certItem, nullptr, false, true));
+  UniqueSECKEYPrivateKey key;
+  if (cert) {
+    key.reset(PK11_FindKeyByAnyCert(cert.get(), nullptr));
+    mClientCertChain.reset(CERT_NewCertList());
+    if (key && mClientCertChain) {
+      for (const auto& certBytes : certChainBytes) {
+        SECItem certItem = {
+            siBuffer,
+            const_cast<uint8_t*>(certBytes.Elements()),
+            static_cast<unsigned int>(certBytes.Length()),
+        };
+        UniqueCERTCertificate cert(CERT_NewTempCertificate(
+            CERT_GetDefaultCertDB(), &certItem, nullptr, false, true));
+        if (cert) {
+          if (CERT_AddCertToListTail(mClientCertChain.get(), cert.get()) ==
+              SECSuccess) {
+            Unused << cert.release();
+          }
+        }
+      }
+    }
+  }
+
+  bool sendingClientAuthCert = cert && key;
+  if (sendingClientAuthCert) {
+    mSentClientCert = true;
+    if (GetSSLVersionUsed() == nsISSLSocketControl::TLS_VERSION_1_3) {
+      Telemetry::Accumulate(Telemetry::TLS_1_3_CLIENT_AUTH_USES_PHA,
+                            IsHandshakeCompleted());
+    }
+  }
+
+  Unused << SSL_ClientCertCallbackComplete(
+      mFd, sendingClientAuthCert ? SECSuccess : SECFailure,
+      sendingClientAuthCert ? key.release() : nullptr,
+      sendingClientAuthCert ? cert.release() : nullptr);
 }
 
 SharedSSLState& nsNSSSocketInfo::SharedState() { return mSharedState; }
@@ -1786,8 +1840,7 @@ static PRFileDesc* nsSSLIOLayerImportFD(PRFileDesc* fd,
       !(flags & nsISocketProvider::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT)) {
     SSL_GetClientAuthDataHook(sslSock, nullptr, infoObject);
   } else {
-    SSL_GetClientAuthDataHook(
-        sslSock, (SSLGetClientAuthData)nsNSS_SSLGetClientAuthData, infoObject);
+    SSL_GetClientAuthDataHook(sslSock, SSLGetClientAuthDataHook, infoObject);
   }
 
   if (SECSuccess !=

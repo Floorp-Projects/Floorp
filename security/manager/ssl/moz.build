@@ -90,6 +90,8 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.psm += [
     "IPCClientCertsChild.h",
     "IPCClientCertsParent.h",
+    "SelectTLSClientAuthCertChild.h",
+    "SelectTLSClientAuthCertParent.h",
     "TransportSecurityInfo.h",
     "VerifySSLServerCertChild.h",
     "VerifySSLServerCertParent.h",
@@ -189,6 +191,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
 
 IPDL_SOURCES += [
     "PIPCClientCerts.ipdl",
+    "PSelectTLSClientAuthCert.ipdl",
     "PSMIPCTypes.ipdlh",
     "PVerifySSLServerCert.ipdl",
 ]
