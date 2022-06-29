@@ -280,9 +280,7 @@ mozilla::ipc::RejectCallback GetRejectCallback(
 }  // namespace
 
 void FileSystemRequestHandler::GetRoot(
-    const Origin& aOrigin,
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
-  MOZ_ASSERT(!aOrigin.IsEmpty());
   MOZ_ASSERT(aPromise);
 
   RefPtr<FileSystemActorHolder> dummyActor =
@@ -304,7 +302,7 @@ void FileSystemRequestHandler::GetRoot(
     aPromise->MaybeRejectWithUnknownError("Could not access the file system");
     return;
   }
-  rootProvider->SendGetRoot(aOrigin, std::move(onResolve), std::move(onReject));
+  rootProvider->SendGetRoot(std::move(onResolve), std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetDirectoryHandle(

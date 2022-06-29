@@ -21,8 +21,7 @@ class BackgroundFileSystemParent : public PBackgroundFileSystemParent {
       const mozilla::ipc::PrincipalInfo& aPrincipalInfo)
       : mPrincipalInfo(aPrincipalInfo) {}
 
-  mozilla::ipc::IPCResult RecvGetRoot(const fs::Origin& aOrigin,
-                                      GetRootResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvGetRoot(GetRootResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvGetDirectoryHandle(
       FileSystemGetHandleRequest&& aRequest,
