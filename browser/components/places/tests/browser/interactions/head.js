@@ -37,10 +37,13 @@ add_setup(async function global_setup() {
 /**
  * Ensures that a list of interactions have been permanently stored.
  * @param {Array} expected list of interactions to be found.
+ * @param {boolean} [dontFlush] Avoid flushing pending data.
  */
-async function assertDatabaseValues(expected) {
+async function assertDatabaseValues(expected, { dontFlush = false } = {}) {
   await Interactions.interactionUpdatePromise;
-  await Interactions.store.flush();
+  if (!dontFlush) {
+    await Interactions.store.flush();
+  }
 
   let interactions = await PlacesUtils.withConnectionWrapper(
     "head.js::assertDatabaseValues",
