@@ -22,17 +22,6 @@ var smoothness_prefs = [
   ["general.smoothScroll.lines.durationMinMS", 1500]
 ];
 
-var bug1756529_prefs= [
-  // Increase distance of line scroll (units here are "number of lines") so
-  // that a smooth scroll animation reliably takes multiple frames.
-  ["toolkit.scrollbox.verticalScrollDistance", 5],
-  // The test performs a single-tap gesture between test cases to cancel the
-  // animation from the previous test case. For test cases that run fast (e.g.
-  // instant scrolling), two single-taps could occur close enough in succession
-  // that they get interpreted as a double-tap.
-  ["apz.allow_double_tap_zooming", false]
-];
-
 var subtests = [
   {"file": "helper_key_scroll.html", prefs: [["apz.test.logging_enabled", true],
                                              ["test.events.async.enabled", true]]},
@@ -46,12 +35,6 @@ var subtests = [
   {"file": "helper_relative_scroll_smoothness.html?input-type=native-key&scroll-method=scrollTop",
     prefs: smoothness_prefs },
   {"file": "helper_bug1695598.html"},
-  // Run helper_bug1756529.html twice, first exercising the main-thread keyboard
-  // scrolling codepaths (e.g. PresShell::ScrollPage()), and once exercising the
-  // APZ keyboard scrolling codepaths.
-  {"file": "helper_bug1756529.html", prefs: bug1756529_prefs},
-  {"file": "helper_bug1756529.html", prefs: [...bug1756529_prefs,
-                                             ["test.events.async.enabled", true]]},
   {"file": "helper_scroll_snap_on_page_down_scroll.html"},
   {"file": "helper_scroll_snap_on_page_down_scroll.html",
     prefs: [["test.events.async.enabled", true]]},
