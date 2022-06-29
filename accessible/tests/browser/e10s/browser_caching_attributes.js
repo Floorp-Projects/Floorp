@@ -381,12 +381,9 @@ addAccessibleTask(
 <div id="emptyRole" role="">emptyRole</div>
 <div id="unknownRole" role="foo">unknownRole</div>
 <div id="multiRole" role="foo main">multiRole</div>
-<main id="landmarkMarkup">landmarkMarkup</main>
-<main id="landmarkMarkupWithRole" role="banner">landmarkMarkupWithRole</main>
-<main id="landmarkMarkupWithEmptyRole" role="">landmarkMarkupWithEmptyRole</main>
-<article id="markup">markup</article>
-<article id="markupWithRole" role="banner">markupWithRole</article>
-<article id="markupWithEmptyRole" role="">markupWithEmptyRole</article>
+<main id="markup">markup</main>
+<main id="markupWithRole" role="banner">markupWithRole</main>
+<main id="markupWithEmptyRole" role="">markupWithEmptyRole</main>
   `,
   async function(browser, docAcc) {
     const knownRole = findAccessibleChildByID(docAcc, "knownRole");
@@ -397,92 +394,15 @@ addAccessibleTask(
     testAttrs(unknownRole, { "xml-roles": "foo" }, true);
     const multiRole = findAccessibleChildByID(docAcc, "multiRole");
     testAttrs(multiRole, { "xml-roles": "foo main" }, true);
-    const landmarkMarkup = findAccessibleChildByID(docAcc, "landmarkMarkup");
-    testAttrs(landmarkMarkup, { "xml-roles": "main" }, true);
-    const landmarkMarkupWithRole = findAccessibleChildByID(
-      docAcc,
-      "landmarkMarkupWithRole"
-    );
-    testAttrs(landmarkMarkupWithRole, { "xml-roles": "banner" }, true);
-    const landmarkMarkupWithEmptyRole = findAccessibleChildByID(
-      docAcc,
-      "landmarkMarkupWithEmptyRole"
-    );
-    testAttrs(landmarkMarkupWithEmptyRole, { "xml-roles": "main" }, true);
     const markup = findAccessibleChildByID(docAcc, "markup");
-    testAttrs(markup, { "xml-roles": "article" }, true);
+    testAttrs(markup, { "xml-roles": "main" }, true);
     const markupWithRole = findAccessibleChildByID(docAcc, "markupWithRole");
     testAttrs(markupWithRole, { "xml-roles": "banner" }, true);
     const markupWithEmptyRole = findAccessibleChildByID(
       docAcc,
       "markupWithEmptyRole"
     );
-    testAttrs(markupWithEmptyRole, { "xml-roles": "article" }, true);
-  },
-  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
-);
-
-/**
- * Test lie region attributes.
- */
-addAccessibleTask(
-  `
-<div id="noLive"><p>noLive</p></div>
-<output id="liveMarkup"><p>liveMarkup</p></output>
-<div id="ariaLive" aria-live="polite"><p>ariaLive</p></div>
-<div id="liveRole" role="log"><p>liveRole</p></div>
-<div id="nonLiveRole" role="group"><p>nonLiveRole</p></div>
-<div id="other" aria-atomic="true" aria-busy="true" aria-relevant="additions"><p>other</p></div>
-  `,
-  async function(browser, docAcc) {
-    const noLive = findAccessibleChildByID(docAcc, "noLive");
-    for (const acc of [noLive, noLive.firstChild]) {
-      testAbsentAttrs(acc, {
-        live: "",
-        "container-live": "",
-        "container-live-role": "",
-        atomic: "",
-        "container-atomic": "",
-        busy: "",
-        "container-busy": "",
-        relevant: "",
-        "container-relevant": "",
-      });
-    }
-    const liveMarkup = findAccessibleChildByID(docAcc, "liveMarkup");
-    testAttrs(liveMarkup, { live: "polite" }, true);
-    testAttrs(liveMarkup.firstChild, { "container-live": "polite" }, true);
-    const ariaLive = findAccessibleChildByID(docAcc, "ariaLive");
-    testAttrs(ariaLive, { live: "polite" }, true);
-    testAttrs(ariaLive.firstChild, { "container-live": "polite" }, true);
-    const liveRole = findAccessibleChildByID(docAcc, "liveRole");
-    testAttrs(liveRole, { live: "polite" }, true);
-    testAttrs(
-      liveRole.firstChild,
-      { "container-live": "polite", "container-live-role": "log" },
-      true
-    );
-    const nonLiveRole = findAccessibleChildByID(docAcc, "nonLiveRole");
-    testAbsentAttrs(nonLiveRole, { live: "" });
-    testAbsentAttrs(nonLiveRole.firstChild, {
-      "container-live": "",
-      "container-live-role": "",
-    });
-    const other = findAccessibleChildByID(docAcc, "other");
-    testAttrs(
-      other,
-      { atomic: "true", busy: "true", relevant: "additions" },
-      true
-    );
-    testAttrs(
-      other.firstChild,
-      {
-        "container-atomic": "true",
-        "container-busy": "true",
-        "container-relevant": "additions",
-      },
-      true
-    );
+    testAttrs(markupWithEmptyRole, { "xml-roles": "main" }, true);
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );

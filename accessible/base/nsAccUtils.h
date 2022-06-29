@@ -46,10 +46,10 @@ class nsAccUtils {
    * Set container-foo live region attributes for the given node.
    *
    * @param aAttributes    where to store the attributes
-   * @param aStartAcc  Accessible to start from
+   * @param aStartContent  node to start from
    */
   static void SetLiveContainerAttributes(AccAttributes* aAttributes,
-                                         Accessible* aStartAcc);
+                                         nsIContent* aStartContent);
 
   /**
    * Any ARIA property of type boolean or NMTOKEN is undefined if the ARIA
@@ -59,6 +59,12 @@ class nsAccUtils {
    * Return true if the ARIA property is defined, otherwise false
    */
   static bool HasDefinedARIAToken(nsIContent* aContent, nsAtom* aAtom);
+
+  /**
+   * Return atomic value of ARIA attribute of boolean or NMTOKEN type.
+   */
+  static nsStaticAtom* GetARIAToken(mozilla::dom::Element* aElement,
+                                    nsAtom* aAttr);
 
   /**
    * If the given ARIA attribute has a specific known token value, return it.

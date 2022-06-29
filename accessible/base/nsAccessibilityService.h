@@ -36,7 +36,6 @@ class Element;
 namespace a11y {
 
 class AccAttributes;
-class Accessible;
 class ApplicationAccessible;
 class xpcAccessibleApplication;
 
@@ -266,19 +265,18 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
 
   mozilla::a11y::role MarkupRole(const nsIContent* aContent) const {
     const mozilla::a11y::MarkupMapInfo* markupMap =
-        GetMarkupMapInfoFor(aContent);
+        GetMarkupMapInfoForNode(aContent);
     return markupMap ? markupMap->role : mozilla::a11y::roles::NOTHING;
   }
 
   /**
    * Return the associated value for a given attribute if
-   * it appears in the MarkupMap. Otherwise, it returns null. This can be
-   * called with either an nsIContent or an Accessible.
+   * it appears in the MarkupMap. Otherwise, it returns null.
    */
-  template <typename T>
-  nsStaticAtom* MarkupAttribute(T aSource, nsStaticAtom* aAtom) const {
+  nsStaticAtom* MarkupAttribute(const nsIContent* aContent,
+                                nsStaticAtom* aAtom) const {
     const mozilla::a11y::MarkupMapInfo* markupMap =
-        GetMarkupMapInfoFor(aSource);
+        GetMarkupMapInfoForNode(aContent);
     if (markupMap) {
       for (size_t i = 0; i < mozilla::ArrayLength(markupMap->attrs); i++) {
         const mozilla::a11y::MarkupAttrInfo* info = markupMap->attrs + i;
@@ -293,7 +291,7 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   /**
    * Set the object attribute defined by markup for the given element.
    */
-  void MarkupAttributes(mozilla::a11y::Accessible* aAcc,
+  void MarkupAttributes(const nsIContent* aContent,
                         mozilla::a11y::AccAttributes* aAttributes) const;
 
   /**
@@ -383,7 +381,7 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   MarkupMap mHTMLMarkupMap;
   MarkupMap mMathMLMarkupMap;
 
-  const mozilla::a11y::MarkupMapInfo* GetMarkupMapInfoFor(
+  const mozilla::a11y::MarkupMapInfo* GetMarkupMapInfoForNode(
       const nsIContent* aContent) const {
     if (aContent->IsHTMLElement()) {
       return mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
@@ -396,9 +394,6 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
     // with nsAccUtils::SetLiveContainerAttributes.
     return nullptr;
   }
-
-  const mozilla::a11y::MarkupMapInfo* GetMarkupMapInfoFor(
-      mozilla::a11y::Accessible* aAcc) const;
 
   nsTHashMap<nsPtrHashKey<const nsAtom>, const mozilla::a11y::XULMarkupMapInfo*>
       mXULMarkupMap;
