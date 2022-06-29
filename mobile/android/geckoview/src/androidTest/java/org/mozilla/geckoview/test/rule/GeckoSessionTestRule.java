@@ -12,6 +12,9 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Pair;
@@ -2065,6 +2068,65 @@ public class GeckoSessionTestRule implements TestRule {
             InputDevice.SOURCE_MOUSE,
             0);
     session.getPanZoomController().onTouchEvent(moveEvent);
+  }
+
+  /**
+   * Adds a mock location provider that can have locations manually set. NB: Likely also need to set
+   * geo.provider.testing to false to prevent network geolocation from interfering.
+   *
+   * @param locationManager location manager to accept the locations
+   * @param mockproviderName unique name of the location provider
+   */
+  public void addMockLocationProvider(LocationManager locationManager, String mockproviderName) {
+    // Ensures that only one location provider with this name exists
+    removeMockLocationProvider(locationManager, mockproviderName);
+    locationManager.addTestProvider(
+        mockproviderName,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        Criteria.POWER_LOW,
+        Criteria.ACCURACY_FINE);
+    locationManager.setTestProviderEnabled(mockproviderName, true);
+  }
+
+  /**
+   * Removes the location provider.
+   *
+   * @param locationManager location manager to accept the locations
+   * @param mockproviderName unique name of the location provider to remove
+   */
+  public void removeMockLocationProvider(LocationManager locationManager, String mockproviderName) {
+    try {
+      locationManager.removeTestProvider(mockproviderName);
+    } catch (Exception e) {
+      // Throws an exception if there is no provider with that name
+    }
+  }
+
+  /**
+   * Sets the mock location on a given location provider. NB: The system may still prioritize other
+   * location providers, accuracy determines preference.
+   *
+   * @param locationManager location manager to accept the locations
+   * @param mockproviderName location provider that will use this location
+   * @param latitude latitude in degrees to mock
+   * @param longitude longitude in degrees to mock
+   */
+  public void setMockLocation(
+      LocationManager locationManager, String mockproviderName, double latitude, double longitude) {
+    Location location = new Location(mockproviderName);
+    // Closer accuracy helps ensure the mock location provider is prioritized
+    location.setAccuracy(.000001f);
+    location.setLatitude(latitude);
+    location.setLongitude(longitude);
+    location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+    location.setTime(System.currentTimeMillis());
+    locationManager.setTestProviderLocation(mockproviderName, location);
   }
 
   Map<GeckoSession, WebExtension.Port> mPorts = new HashMap<>();
