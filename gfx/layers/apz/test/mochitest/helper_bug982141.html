@@ -11,22 +11,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-    // -------------------------------------------------------------------
-    // Infrastructure to get the test assertions to run at the right time.
-    // -------------------------------------------------------------------
     var SimpleTest = window.opener.SimpleTest;
 
-    waitUntilApzStable().then(forceLayerTreeToCompositor).then(testBug982141);
-
-    // --------------------------------------------------------------------
-    // The actual logic for testing bug 982141.
-    //
     // In this test we have a simple page with a scrollable <div> which has
     // enough content to make it scrollable. We test that this <div> got
     // a displayport.
-    // --------------------------------------------------------------------
 
-    function testBug982141() {
+    function test() {
       // Get the content- and compositor-side test data from nsIDOMWindowUtils.
       var utils = SpecialPowers.getDOMWindowUtils(window);
       var contentTestData = utils.getContentAPZTestData();
@@ -68,9 +59,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
       SimpleTest.ok(subframe.clientHeight > 0, "Expected a non-zero clientHeight, got: " + subframe.clientHeight);
       SimpleTest.ok(dp.width >= subframe.clientWidth && dp.height >= subframe.clientHeight,
                     "expected a displayport at least as large as the scrollable element, got " + JSON.stringify(dp));
-
-      window.opener.finishTest();
     }
+
+    waitUntilApzStable()
+    .then(forceLayerTreeToCompositor)
+    .then(test)
+    .then(subtestDone, subtestFailed);
+
   </script>
 </head>
 <body style="overflow: hidden;"><!-- This combined with the user-scalable=no ensures the root frame is not scrollable -->
