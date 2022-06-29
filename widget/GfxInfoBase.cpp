@@ -236,9 +236,6 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_DMABUF:
       name = BLOCKLIST_PREF_BRANCH "dmabuf";
       break;
-    case nsIGfxInfo::FEATURE_VAAPI:
-      name = BLOCKLIST_PREF_BRANCH "vaapi";
-      break;
     case nsIGfxInfo::FEATURE_WEBGPU:
       name = BLOCKLIST_PREF_BRANCH "webgpu";
       break;
@@ -509,9 +506,6 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
   }
   if (aFeature.EqualsLiteral("DMABUF")) {
     return nsIGfxInfo::FEATURE_DMABUF;
-  }
-  if (aFeature.EqualsLiteral("VAAPI")) {
-    return nsIGfxInfo::FEATURE_VAAPI;
   }
   if (aFeature.EqualsLiteral("WEBGPU")) {
     return nsIGfxInfo::FEATURE_WEBGPU;
@@ -1405,7 +1399,6 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
                         nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS,
                         nsIGfxInfo::FEATURE_X11_EGL,
                         nsIGfxInfo::FEATURE_DMABUF,
-                        nsIGfxInfo::FEATURE_VAAPI,
                         nsIGfxInfo::FEATURE_WEBGPU,
                         nsIGfxInfo::FEATURE_VIDEO_OVERLAY,
                         nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY,

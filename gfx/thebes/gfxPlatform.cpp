@@ -2379,10 +2379,19 @@ void gfxPlatform::InitAcceleration() {
           gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
                                     discardFailureId, &status))) {
     if (status == nsIGfxInfo::FEATURE_STATUS_OK ||
+#ifdef MOZ_WAYLAND
+        StaticPrefs::media_ffmpeg_vaapi_enabled() ||
+#endif
         StaticPrefs::media_hardware_video_decoding_force_enabled_AtStartup()) {
       sLayersSupportsHardwareVideoDecoding = true;
     }
   }
+
+#ifdef MOZ_WAYLAND
+  sLayersSupportsHardwareVideoDecoding =
+      gfxPlatformGtk::GetPlatform()->InitVAAPIConfig(
+          sLayersSupportsHardwareVideoDecoding);
+#endif
 
   sLayersAccelerationPrefsInitialized = true;
 
