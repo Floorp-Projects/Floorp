@@ -6,7 +6,7 @@ Add soft dependencies and configuration to code-review tasks.
 """
 
 
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 

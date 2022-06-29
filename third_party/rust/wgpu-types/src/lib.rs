@@ -173,6 +173,12 @@ bitflags::bitflags! {
     #[repr(transparent)]
     #[derive(Default)]
     pub struct Features: u64 {
+        //
+        // ---- Start numbering at 1 << 0 ----
+        //
+        // WebGPU features:
+        //
+
         /// By default, polygon depth is clipped to 0-1 range before/during rasterization.
         /// Anything outside of that range is rejected, and respective fragments are not touched.
         ///
@@ -299,6 +305,13 @@ bitflags::bitflags! {
         ///
         /// This is a web and native feature.
         const SHADER_FLOAT16 = 1 << 9;
+
+        //
+        // ---- Restart Numbering for Native Features ---
+        //
+        // Native Features:
+        //
+
         /// Webgpu only allows the MAP_READ and MAP_WRITE buffer usage to be matched with
         /// COPY_DST and COPY_SRC respectively. This removes this requirement.
         ///
@@ -422,6 +435,7 @@ bitflags::bitflags! {
         /// Supported platforms:
         /// - DX12
         /// - Vulkan
+        /// - Metal (Emulated on top of `draw_indirect` and `draw_indexed_indirect`)
         ///
         /// This is a native only feature.
         const MULTI_DRAW_INDIRECT = 1 << 23;
@@ -592,11 +606,29 @@ bitflags::bitflags! {
         ///
         /// This is a native only feature.
         const ADDRESS_MODE_CLAMP_TO_ZERO = 1 << 39;
+        /// Enables ASTC HDR family of compressed textures.
+        ///
+        /// Compressed textures sacrifice some quality in exchange for significantly reduced
+        /// bandwidth usage.
+        ///
+        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for BCn formats.
+        /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
+        ///
         /// Supported Platforms:
         /// - Metal
         ///
         /// This is a native-only feature.
         const TEXTURE_COMPRESSION_ASTC_HDR = 1 << 40;
+        /// Allows for timestamp queries inside renderpasses. Metal does not allow this
+        /// on Apple GPUs.
+        ///
+        /// Implies [`Features::TIMESTAMP_QUERIES`] is supported.
+        ///
+        /// Supported platforms:
+        /// - Vulkan
+        /// - DX12
+        /// - Metal (Intel and AMD GPUs)
+        const WRITE_TIMESTAMP_INSIDE_PASSES = 1 << 41;
     }
 }
 
@@ -736,6 +768,11 @@ pub struct Limits {
     /// The maximum value for each dimension of a `ComputePass::dispatch(x, y, z)` operation.
     /// Defaults to 65535.
     pub max_compute_workgroups_per_dimension: u32,
+    /// A limit above which buffer allocations are guaranteed to fail.
+    ///
+    /// Buffer allocations below the maximum buffer size may not succed depending on available memory,
+    /// fragmentation and other factors.
+    pub max_buffer_size: u64,
 }
 
 impl Default for Limits {
@@ -768,6 +805,7 @@ impl Default for Limits {
             max_compute_workgroup_size_y: 256,
             max_compute_workgroup_size_z: 64,
             max_compute_workgroups_per_dimension: 65535,
+            max_buffer_size: 1 << 30,
         }
     }
 }
@@ -803,6 +841,7 @@ impl Limits {
             max_compute_workgroup_size_y: 256,
             max_compute_workgroup_size_z: 64,
             max_compute_workgroups_per_dimension: 65535,
+            max_buffer_size: 1 << 28,
         }
     }
 
@@ -875,7 +914,7 @@ impl Limits {
         &self,
         allowed: &Self,
         fatal: bool,
-        mut fail_fn: impl FnMut(&'static str, u32, u32),
+        mut fail_fn: impl FnMut(&'static str, u64, u64),
     ) {
         use std::cmp::Ordering;
 
@@ -884,7 +923,7 @@ impl Limits {
                 match self.$name.cmp(&allowed.$name) {
                     Ordering::$ordering | Ordering::Equal => (),
                     _ => {
-                        fail_fn(stringify!($name), self.$name, allowed.$name);
+                        fail_fn(stringify!($name), self.$name as u64, allowed.$name as u64);
                         if fatal {
                             return;
                         }
@@ -920,6 +959,7 @@ impl Limits {
         compare!(max_compute_workgroup_size_y, Less);
         compare!(max_compute_workgroup_size_z, Less);
         compare!(max_compute_workgroups_per_dimension, Less);
+        compare!(max_buffer_size, Less);
     }
 }
 
@@ -1026,6 +1066,15 @@ bitflags::bitflags! {
         ///
         /// GLES/WebGL don't support this.
         const DEPTH_TEXTURE_AND_BUFFER_COPIES = 1 << 13;
+
+        /// Supports all the texture usages described in WebGPU. If this isn't supported, you
+        /// should call `get_texture_format_features` to get how you can use textures of a given format
+        const WEBGPU_TEXTURE_FORMAT_SUPPORT = 1 << 14;
+
+        /// Supports buffer bindings with sizes that aren't a multiple of 16.
+        ///
+        /// WebGL doesn't support this.
+        const BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED = 1 << 15;
     }
 }
 
@@ -2287,6 +2336,43 @@ impl Default for ColorWrites {
     }
 }
 
+/// Passed to `Device::poll` to control how and if it should block.
+#[derive(Clone)]
+pub enum Maintain<T> {
+    /// On native backends, block until the given submission has
+    /// completed execution, and any callbacks have been invoked.
+    ///
+    /// On the web, this has no effect. Callbacks are invoked from the
+    /// window event loop.
+    WaitForSubmissionIndex(T),
+    /// Same as WaitForSubmissionIndex but waits for the most recent submission.
+    Wait,
+    /// Check the device for a single time without blocking.
+    Poll,
+}
+
+impl<T> Maintain<T> {
+    /// This maintain represents a wait of some kind.
+    pub fn is_wait(&self) -> bool {
+        match *self {
+            Self::WaitForSubmissionIndex(..) | Self::Wait => true,
+            Self::Poll => false,
+        }
+    }
+
+    /// Map on the wait index type.
+    pub fn map_index<U, F>(self, func: F) -> Maintain<U>
+    where
+        F: FnOnce(T) -> U,
+    {
+        match self {
+            Self::WaitForSubmissionIndex(i) => Maintain::WaitForSubmissionIndex(func(i)),
+            Self::Wait => Maintain::Wait,
+            Self::Poll => Maintain::Poll,
+        }
+    }
+}
+
 /// State of the stencil operation (fixed-pipeline stage).
 ///
 /// For use in [`DepthStencilState`].
@@ -2381,9 +2467,20 @@ impl DepthStencilState {
     pub fn is_depth_enabled(&self) -> bool {
         self.depth_compare != CompareFunction::Always || self.depth_write_enabled
     }
+
+    /// Returns true if the state doesn't mutate the depth buffer.
+    pub fn is_depth_read_only(&self) -> bool {
+        !self.depth_write_enabled
+    }
+
+    /// Returns true if the state doesn't mutate the stencil.
+    pub fn is_stencil_read_only(&self) -> bool {
+        self.stencil.is_read_only()
+    }
+
     /// Returns true if the state doesn't mutate either depth or stencil of the target.
     pub fn is_read_only(&self) -> bool {
-        !self.depth_write_enabled && self.stencil.is_read_only()
+        self.is_depth_read_only() && self.is_stencil_read_only()
     }
 }
 
@@ -3257,6 +3354,7 @@ pub struct TextureDescriptor<L> {
     pub format: TextureFormat,
     /// Allowed usages of the texture. If used in other ways, the operation will panic.
     pub usage: TextureUsages,
+    // TODO: missing view_formats https://www.w3.org/TR/webgpu/#dom-gputexturedescriptor-viewformats
 }
 
 impl<L> TextureDescriptor<L> {

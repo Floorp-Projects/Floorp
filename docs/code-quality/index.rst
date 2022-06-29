@@ -132,6 +132,21 @@ In this document, we try to list these all tools.
      - :ref:`clippy`
      - https://github.com/rust-lang/rust-clippy
 
+.. list-table:: Java
+   :widths: 20 20 20 20 20
+   :header-rows: 1
+
+   * - Tools
+     - Has autofixes
+     - Meta bug
+     - More info
+     - Upstream
+   * - Spotless
+     - Yes
+     - `bug 1571899 <https://bugzilla.mozilla.org/show_bug.cgi?id=1571899>`__
+     - :ref:`Spotless`
+     - https://github.com/diffplug/spotless
+
 .. list-table:: Others
    :widths: 20 20 20 20 20
    :header-rows: 1

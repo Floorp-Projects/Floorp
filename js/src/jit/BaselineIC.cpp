@@ -112,19 +112,15 @@ AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs) {
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
   MOZ_ASSERT(!regs.has(FramePointer));
 #if defined(JS_CODEGEN_ARM)
-  MOZ_ASSERT(!regs.has(BaselineStackReg));
   MOZ_ASSERT(!regs.has(ICTailCallReg));
   regs.take(BaselineSecondScratchReg);
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-  MOZ_ASSERT(!regs.has(BaselineStackReg));
   MOZ_ASSERT(!regs.has(ICTailCallReg));
   MOZ_ASSERT(!regs.has(BaselineSecondScratchReg));
 #elif defined(JS_CODEGEN_ARM64)
   MOZ_ASSERT(!regs.has(PseudoStackPointer));
   MOZ_ASSERT(!regs.has(RealStackPointer));
   MOZ_ASSERT(!regs.has(ICTailCallReg));
-#else
-  MOZ_ASSERT(!regs.has(BaselineStackReg));
 #endif
   regs.take(ICStubReg);
 
@@ -560,8 +556,10 @@ void FallbackICCodeCompiler::assumeStubFrame() {
   entersStubFrame_ = true;
 
   // |framePushed| isn't tracked precisely in ICStubs, so simply assume it to
-  // be StubFrameSize so that assertions don't fail in leaveStubFrame.
-  framePushedAtEnterStubFrame_ = StubFrameSize;
+  // be the stub frame layout and the pushed ICStub* so that assertions don't
+  // fail in leaveStubFrame
+  framePushedAtEnterStubFrame_ =
+      BaselineStubFrameLayout::Size() + sizeof(ICStub*);
 #endif
 }
 
@@ -1661,11 +1659,11 @@ void FallbackICCodeCompiler::pushCallArguments(
 
   // argPtr initially points to the last argument.
   Register argPtr = regs.takeAny();
-  masm.moveStackPtrTo(argPtr);
+  masm.mov(FramePointer, argPtr);
 
-  // Skip 4 pointers pushed on top of the arguments: the frame descriptor,
-  // return address, old frame pointer and stub reg.
-  size_t valueOffset = StubFrameSize;
+  // Skip 3 pointers pushed on top of the arguments: the frame descriptor,
+  // return address, and old frame pointer.
+  size_t valueOffset = BaselineStubFrameLayout::Size();
 
   // We have to push |this|, callee, new.target (if constructing) and argc
   // arguments. Handle the number of Values we know statically first.
@@ -1708,31 +1706,27 @@ bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
     // Push a stub frame so that we can perform a non-tail call.
     enterStubFrame(masm, R1.scratchReg());
 
-    // Use FramePointer instead of BaselineStackReg, because
-    // FramePointer and BaselineStackReg hold the same value just after
-    // calling enterStubFrame.
+    // Use FramePointer instead of StackPointer because it's not affected by
+    // the stack pushes below.
 
     // newTarget
-    uint32_t valueOffset = 0;
+    uint32_t valueOffset = BaselineStubFrameLayout::Size();
     if (isConstructing) {
-      masm.pushValue(Address(FramePointer, StubFrameSizeFromFP));
-      valueOffset++;
+      masm.pushValue(Address(FramePointer, valueOffset));
+      valueOffset += sizeof(Value);
     }
 
     // array
-    masm.pushValue(Address(FramePointer,
-                           valueOffset * sizeof(Value) + StubFrameSizeFromFP));
-    valueOffset++;
+    masm.pushValue(Address(FramePointer, valueOffset));
+    valueOffset += sizeof(Value);
 
     // this
-    masm.pushValue(Address(FramePointer,
-                           valueOffset * sizeof(Value) + StubFrameSizeFromFP));
-    valueOffset++;
+    masm.pushValue(Address(FramePointer, valueOffset));
+    valueOffset += sizeof(Value);
 
     // callee
-    masm.pushValue(Address(FramePointer,
-                           valueOffset * sizeof(Value) + StubFrameSizeFromFP));
-    valueOffset++;
+    masm.pushValue(Address(FramePointer, valueOffset));
+    valueOffset += sizeof(Value);
 
     masm.push(masm.getStackPointer());
     masm.push(ICStubReg);

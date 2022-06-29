@@ -6,8 +6,7 @@ Transform the upload-generated-files task description template,
 taskcluster/ci/upload-generated-sources/kind.yml, into an actual task description.
 """
 
-
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
 
 
 transforms = TransformSequence()

@@ -102,6 +102,8 @@ extern JS_PUBLIC_API bool MaybeFreezeCtorAndPrototype(JSContext* cx,
  */
 
 extern JS_PUBLIC_API JSObject* GetRealmObjectPrototype(JSContext* cx);
+extern JS_PUBLIC_API JS::Handle<JSObject*> GetRealmObjectPrototypeHandle(
+    JSContext* cx);
 
 extern JS_PUBLIC_API JSObject* GetRealmFunctionPrototype(JSContext* cx);
 

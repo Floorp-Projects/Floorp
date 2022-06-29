@@ -4,7 +4,9 @@ Formats (FOURCC) supported by libyuv are detailed here.
 
 # Core Formats
 
-There are 2 core formats supported by libyuv - I420 and ARGB.  All YUV formats can be converted to/from I420.  All RGB formats can be converted to/from ARGB.
+There are 2 core formats supported by libyuv - I420 and ARGB.
+  All YUV formats can be converted to/from I420.
+  All RGB formats can be converted to/from ARGB.
 
 Filtering functions such as scaling and planar functions work on I420 and/or ARGB.
 
@@ -36,7 +38,7 @@ This is how OSX formats map to libyuv
 
 The following is extracted from video_common.h as a complete list of formats supported by libyuv.
     enum FourCC {
-      // 9 Primary YUV formats: 5 planar, 2 biplanar, 2 packed.
+      // 10 Primary YUV formats: 5 planar, 2 biplanar, 2 packed.
       FOURCC_I420 = FOURCC('I', '4', '2', '0'),
       FOURCC_I422 = FOURCC('I', '4', '2', '2'),
       FOURCC_I444 = FOURCC('I', '4', '4', '4'),
@@ -46,16 +48,20 @@ The following is extracted from video_common.h as a complete list of formats sup
       FOURCC_YUY2 = FOURCC('Y', 'U', 'Y', '2'),
       FOURCC_UYVY = FOURCC('U', 'Y', 'V', 'Y'),
       FOURCC_H010 = FOURCC('H', '0', '1', '0'),  // unofficial fourcc. 10 bit lsb
+      FOURCC_U010 = FOURCC('U', '0', '1', '0'),  // bt.2020, unofficial fourcc.
+                                                 // 10 bit lsb
 
       // 1 Secondary YUV format: row biplanar.
-      FOURCC_M420 = FOURCC('M', '4', '2', '0'),
+      FOURCC_M420 = FOURCC('M', '4', '2', '0'),  // deprecated.
 
-      // 11 Primary RGB formats: 4 32 bpp, 2 24 bpp, 3 16 bpp, 1 10 bpc
+      // 13 Primary RGB formats: 4 32 bpp, 2 24 bpp, 3 16 bpp, 1 10 bpc, 2 64 bpp
       FOURCC_ARGB = FOURCC('A', 'R', 'G', 'B'),
       FOURCC_BGRA = FOURCC('B', 'G', 'R', 'A'),
       FOURCC_ABGR = FOURCC('A', 'B', 'G', 'R'),
       FOURCC_AR30 = FOURCC('A', 'R', '3', '0'),  // 10 bit per channel. 2101010.
       FOURCC_AB30 = FOURCC('A', 'B', '3', '0'),  // ABGR version of 10 bit
+      FOURCC_AR64 = FOURCC('A', 'R', '6', '4'),  // 16 bit per channel.
+      FOURCC_AB64 = FOURCC('A', 'B', '6', '4'),  // ABGR version of 16 bit
       FOURCC_24BG = FOURCC('2', '4', 'B', 'G'),
       FOURCC_RAW = FOURCC('r', 'a', 'w', ' '),
       FOURCC_RGBA = FOURCC('R', 'G', 'B', 'A'),
@@ -66,7 +72,7 @@ The following is extracted from video_common.h as a complete list of formats sup
       // 1 Primary Compressed YUV format.
       FOURCC_MJPG = FOURCC('M', 'J', 'P', 'G'),
 
-      // 7 Auxiliary YUV variations: 3 with U and V planes are swapped, 1 Alias.
+      // 11 Auxiliary YUV variations: 3 with U and V planes are swapped, 1 Alias.
       FOURCC_YV12 = FOURCC('Y', 'V', '1', '2'),
       FOURCC_YV16 = FOURCC('Y', 'V', '1', '6'),
       FOURCC_YV24 = FOURCC('Y', 'V', '2', '4'),
@@ -74,6 +80,10 @@ The following is extracted from video_common.h as a complete list of formats sup
       FOURCC_J420 = FOURCC('J', '4', '2', '0'),
       FOURCC_J400 = FOURCC('J', '4', '0', '0'),  // unofficial fourcc
       FOURCC_H420 = FOURCC('H', '4', '2', '0'),  // unofficial fourcc
+      FOURCC_H422 = FOURCC('H', '4', '2', '2'),  // unofficial fourcc
+      FOURCC_U420 = FOURCC('U', '4', '2', '0'),  // bt.2020, unofficial fourcc
+      FOURCC_U422 = FOURCC('U', '4', '2', '2'),  // bt.2020, unofficial fourcc
+      FOURCC_U444 = FOURCC('U', '4', '4', '4'),  // bt.2020, unofficial fourcc
 
       // 14 Auxiliary aliases.  CanonicalFourCC() maps these to canonical fourcc.
       FOURCC_IYUV = FOURCC('I', 'Y', 'U', 'V'),  // Alias for I420.
@@ -102,6 +112,27 @@ The following is extracted from video_common.h as a complete list of formats sup
         I422, NV16 and NV61 are half width, full height
         I444, NV24 and NV42 are full width, full height
         I400 and J400 have no chroma channel.
+
+# Color space
+      The YUV formats start with a letter to specify the color space. e.g. I420
+        I = BT.601 limited range
+        J = BT.601 full range     (J = JPEG that uses this)
+        H = BT.709 limited range  (H for HD)
+        F = BT.709 full range     (F for Full range)
+        U = BT.2020 limited range (U for UHD)
+        V = BT.2020 full range
+        For YUV to RGB conversions, a matrix can be passed.  See also convert_argh.h
+
+# HDR formats
+      Planar formats with 10 or 12 bits use the following fourcc:
+        I010, I012, P010, P012 are half width, half height
+        I210, I212, P210, P212 are half width, full height
+        I410, I412, P410, P412 are full width, full height
+      where
+        I is the color space (see above) and 3 planes: Y, U and V.
+        P is a biplanar format, similar to NV12 but 16 bits, with the valid bits in the high bits.  There is a Y plane and a UV plane.
+        0, 2 or 4 is the last digit of subsampling: 4:2:0, 4:2:2, or 4:4:4
+        10 or 12 is the bits per channel.  The bits are in the low bits of a 16 bit channel.
 
 # The ARGB FOURCC
 
@@ -151,6 +182,13 @@ The 2 bit alpha has 4 values.  Here are the comparable 8 bit alpha values.
 The 10 bit RGB values range from 0 to 1023.
 XR30 is the same as AR30 but with no alpha channel.
 
+# AB64 and AR64
+
+AB64 is similar to ABGR, with 16 bit (2 bytes) per channel. Each channel stores an unsigned short.
+In memory R is the lowest and A is the highest.
+Each channel has value ranges from 0 to 65535.
+AR64 is similar to ARGB.
+
 # NV12 and NV21
 
 NV12 is a biplanar format with a full sized Y plane followed by a single
@@ -160,3 +198,11 @@ The 12 in NV12 refers to 12 bits per pixel.  NV12 has a half width and half
 height chroma channel, and therefore is a 420 subsampling.
 NV16 is 16 bits per pixel, with half width and full height.  aka 422.
 NV24 is 24 bits per pixel with full sized chroma channel. aka 444.
+Most NV12 functions allow the destination Y pointer to be NULL.
+
+# YUY2 and UYVY
+
+YUY2 is a packed YUV format with half width, full height.
+
+YUY2 is YUYV in memory
+UYVY is UYVY in memory

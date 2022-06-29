@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Testing that 'use' with zero width/height is displayed when
+         not referencing svg or symbol elements</title>
+  <defs>
+    <rect id="to-cover" x="2" y="2" height="96" width="96" fill="red"/>
+    <rect id="r" x="0" y="0" height="100" width="100" fill="lime"/>
+  </defs>
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <use href="#to-cover"/>
+  <use x="110" href="#to-cover"/>
+  <use y="110" href="#to-cover"/>
+
+  <use href="#r" width="0" height="0" />
+  <use x="110" href="#r" width="0" />
+  <use y="110" href="#r" height="0" />
+</svg>

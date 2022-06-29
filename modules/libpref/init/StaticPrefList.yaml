@@ -3183,7 +3183,7 @@
 # Reporting API.
 - name: dom.reporting.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 - name: dom.reporting.testing.enabled
@@ -5452,13 +5452,14 @@
   mirror: always
 
 - name: gfx.direct3d11.reuse-decoder-device
-  type: RelaxedAtomicInt32
-#if defined(EARLY_BETA_OR_EARLIER)
-  value: 1
-#else
-  value: -1
-#endif
-  mirror: always
+  type: bool
+  value: true
+  mirror: once
+# Enable reuse decoder device even when it is blocked.
+- name: gfx.direct3d11.reuse-decoder-device-force-enabled
+  type: bool
+  value: false
+  mirror: once
 
 - name: gfx.direct3d11.allow-keyed-mutex
   type: RelaxedAtomicBool
@@ -6767,6 +6768,14 @@
 # Whether to expose the FinalizationRegistry.prototype.cleanupSome method.
 - name: javascript.options.experimental.weakrefs.expose_cleanupSome
   type: bool
+  value: false
+  mirror: always
+
+# ShadowRealms: https://github.com/tc39/proposal-shadowrealm
+- name: javascript.options.experimental.shadow_realms
+  # Atomic, as we assert the preference, and that assertion may happen
+  # in a worker. 
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
@@ -13589,10 +13598,21 @@
   value: false
   mirror: always
 
-# Whether we should use the default accent color or the theme-provided one.
-- name: widget.use-theme-accent
+# Whether we should use the default accent color or the theme-provided one for
+# content (e.g. for form controls and CSS system colors).
+#
+# Turned off on Windows, for now (we always use the default blue-ish
+# accent-color there). We might want to turn this on there, though it's worth
+# thinking on what the behavior should be for grey-ish accent colors (which are
+# a thing on Windows and can cause confusion with things like disabled form
+# controls). Maybe it's just fine.
+- name: widget.non-native-theme.use-theme-accent
   type: RelaxedAtomicBool
+#ifdef XP_WIN
+  value: false
+#else
   value: true
+#endif
   mirror: always
 
 # Whether we should try to use WebRender to render widgets.
@@ -13854,6 +13874,15 @@
 - name: widget.windows.uwp-system-colors.enabled
   type: bool
   value: true
+  mirror: always
+
+# Whether we use the accent color for highlight as some other UWP apps do.
+#
+# false for now since it can cause some contrast-with-background issues
+# specially with grey accents, see bug 1776588.
+- name: widget.windows.uwp-system-colors.highlight-accent
+  type: bool
+  value: false
   mirror: always
 
 - name: widget.windows.window_occlusion_tracking_display_state.enabled

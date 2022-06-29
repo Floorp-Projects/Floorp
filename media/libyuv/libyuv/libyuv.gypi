@@ -27,7 +27,9 @@
       'include/libyuv/row.h',
       'include/libyuv/scale.h',
       'include/libyuv/scale_argb.h',
+      'include/libyuv/scale_rgb.h',
       'include/libyuv/scale_row.h',
+      'include/libyuv/scale_uv.h',
       'include/libyuv/version.h',
       'include/libyuv/video_common.h',
 
@@ -74,6 +76,8 @@
       'source/scale_msa.cc',
       'source/scale_neon.cc',
       'source/scale_neon64.cc',
+      'source/scale_rgb.cc',
+      'source/scale_uv.cc',
       'source/scale_win.cc',
       'source/video_common.cc',
     ],

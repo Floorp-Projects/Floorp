@@ -5,27 +5,27 @@
 #include "yuv_row.h"
 
 extern "C" {
-void FastConvertYUVToRGB32Row(const uint8* y_buf,
-                              const uint8* u_buf,
-                              const uint8* v_buf,
-                              uint8* rgb_buf,
+void FastConvertYUVToRGB32Row(const uint8_t* y_buf,
+                              const uint8_t* u_buf,
+                              const uint8_t* v_buf,
+                              uint8_t* rgb_buf,
                               int width) {
   FastConvertYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf, width, 1);
 }
 
-void ScaleYUVToRGB32Row(const uint8* y_buf,
-                        const uint8* u_buf,
-                        const uint8* v_buf,
-                        uint8* rgb_buf,
+void ScaleYUVToRGB32Row(const uint8_t* y_buf,
+                        const uint8_t* u_buf,
+                        const uint8_t* v_buf,
+                        uint8_t* rgb_buf,
                         int width,
                         int source_dx) {
   ScaleYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf, width, source_dx);
 }
 
-void LinearScaleYUVToRGB32Row(const uint8* y_buf,
-                              const uint8* u_buf,
-                              const uint8* v_buf,
-                              uint8* rgb_buf,
+void LinearScaleYUVToRGB32Row(const uint8_t* y_buf,
+                              const uint8_t* u_buf,
+                              const uint8_t* v_buf,
+                              uint8_t* rgb_buf,
                               int width,
                               int source_dx) {
   LinearScaleYUVToRGB32Row_C(y_buf, u_buf, v_buf, rgb_buf, width, source_dx);

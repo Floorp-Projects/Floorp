@@ -1083,7 +1083,13 @@ void TextInputListener::HandleValueChanged() {
   }
 
   if (!mSettingValue) {
+    // NOTE(emilio): execCommand might get here even though it might not be a
+    // "proper" user-interactive change. Might be worth reconsidering which
+    // ValueChangeKind are we passing down.
     mTxtCtrlElement->OnValueChanged(ValueChangeKind::UserInteraction);
+    if (mTextControlState) {
+      mTextControlState->ClearLastInteractiveValue();
+    }
   }
 }
 
@@ -1116,7 +1122,6 @@ nsresult TextInputListener::UpdateTextInputCommands(
  *****************************************************************************/
 
 enum class TextControlAction {
-  CacheForReuse,
   CommitComposition,
   Destructor,
   PrepareEditor,
@@ -1205,8 +1210,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
   }
 
   void OnDestroyTextControlState() {
-    if (IsHandling(TextControlAction::Destructor) ||
-        IsHandling(TextControlAction::CacheForReuse)) {
+    if (IsHandling(TextControlAction::Destructor)) {
       // Do nothing since mTextContrlState.DeleteOrCacheForReuse() has
       // already been called.
       return;
@@ -1409,9 +1413,17 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
  * mozilla::TextControlState
  *****************************************************************************/
 
-AutoTArray<TextControlState*, TextControlState::kMaxCountOfCacheToReuse>*
-    TextControlState::sReleasedInstances = nullptr;
-bool TextControlState::sHasShutDown = false;
+/**
+ * For avoiding allocation cost of the instance, we should reuse instances
+ * as far as possible.
+ *
+ * FYI: `25` is just a magic number considered without enough investigation,
+ *      but at least, this value must not make damage for footprint.
+ *      Feel free to change it if you find better number.
+ */
+static constexpr size_t kMaxCountOfCacheToReuse = 25;
+static AutoTArray<void*, kMaxCountOfCacheToReuse>* sReleasedInstances = nullptr;
+static bool sHasShutDown = false;
 
 TextControlState::TextControlState(TextControlElement* aOwningElement)
     : mTextCtrlElement(aOwningElement),
@@ -1429,21 +1441,14 @@ TextControlState::TextControlState(TextControlElement* aOwningElement)
 
 TextControlState* TextControlState::Construct(
     TextControlElement* aOwningElement) {
+  void* mem;
   if (sReleasedInstances && !sReleasedInstances->IsEmpty()) {
-    TextControlState* state = sReleasedInstances->PopLastElement();
-    state->mTextCtrlElement = aOwningElement;
-    state->mBoundFrame = nullptr;
-    state->mSelectionProperties = SelectionProperties();
-    state->mEverInited = false;
-    state->mEditorInitialized = false;
-    state->mValueTransferInProgress = false;
-    state->mSelectionCached = true;
-    // When adding more member variable initializations here, add the same
-    // also to the constructor.
-    return state;
+    mem = sReleasedInstances->PopLastElement();
+  } else {
+    mem = moz_xmalloc(sizeof(TextControlState));
   }
 
-  return new TextControlState(aOwningElement);
+  return new (mem) TextControlState(aOwningElement);
 }
 
 TextControlState::~TextControlState() {
@@ -1457,8 +1462,8 @@ TextControlState::~TextControlState() {
 void TextControlState::Shutdown() {
   sHasShutDown = true;
   if (sReleasedInstances) {
-    for (TextControlState* textControlState : *sReleasedInstances) {
-      textControlState->DeleteOrCacheForReuse();
+    for (void* mem : *sReleasedInstances) {
+      free(mem);
     }
     delete sReleasedInstances;
   }
@@ -1478,29 +1483,22 @@ void TextControlState::Destroy() {
 void TextControlState::DeleteOrCacheForReuse() {
   MOZ_ASSERT(!IsBusy());
 
+  void* mem = this;
+  this->~TextControlState();
+
   // If we can cache this instance, we should do it instead of deleting it.
   if (!sHasShutDown && (!sReleasedInstances || sReleasedInstances->Length() <
                                                    kMaxCountOfCacheToReuse)) {
-    AutoTextControlHandlingState handlingCacheForReuse(
-        *this, TextControlAction::CacheForReuse);
-
-    // Prepare for reuse, unlink and release any refcountable objects.
-    UnlinkInternal();
-    mValue.SetIsVoid(true);
-    mTextCtrlElement = nullptr;
-
     // Put this instance to the cache.  Note that now, the array may be full,
     // but it's not problem to cache more instances than kMaxCountOfCacheToReuse
     // because it just requires reallocation cost of the array buffer.
     if (!sReleasedInstances) {
-      sReleasedInstances =
-          new AutoTArray<TextControlState*, kMaxCountOfCacheToReuse>;
+      sReleasedInstances = new AutoTArray<void*, kMaxCountOfCacheToReuse>;
     }
-    sReleasedInstances->AppendElement(this);
-
-    return;
+    sReleasedInstances->AppendElement(mem);
+  } else {
+    free(mem);
   }
-  delete this;
 }
 
 nsresult TextControlState::OnEditActionHandled() {
@@ -1518,7 +1516,6 @@ Element* TextControlState::GetPreviewNode() {
 void TextControlState::Clear() {
   MOZ_ASSERT(mHandlingState);
   MOZ_ASSERT(mHandlingState->Is(TextControlAction::Destructor) ||
-             mHandlingState->Is(TextControlAction::CacheForReuse) ||
              mHandlingState->Is(TextControlAction::Unlink));
   if (mTextEditor) {
     mTextEditor->SetTextInputListener(nullptr);
@@ -1547,8 +1544,7 @@ void TextControlState::Unlink() {
 
 void TextControlState::UnlinkInternal() {
   MOZ_ASSERT(mHandlingState);
-  MOZ_ASSERT(mHandlingState->Is(TextControlAction::Unlink) ||
-             mHandlingState->Is(TextControlAction::CacheForReuse));
+  MOZ_ASSERT(mHandlingState->Is(TextControlAction::Unlink));
   TextControlState* tmp = this;
   tmp->Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelCon)
@@ -2643,6 +2639,27 @@ bool TextControlState::SetValue(const nsAString& aValue,
     return false;
   }
 
+  const auto changeKind = [&] {
+    if (aOptions.contains(ValueSetterOption::ByInternalAPI)) {
+      return ValueChangeKind::Internal;
+    }
+    if (aOptions.contains(ValueSetterOption::BySetUserInputAPI)) {
+      return ValueChangeKind::UserInteraction;
+    }
+    return ValueChangeKind::Script;
+  }();
+
+  if (changeKind == ValueChangeKind::Script) {
+    // This value change will not be interactive. If we're an input that was
+    // interactively edited, save the last interactive value now before it goes
+    // away.
+    if (auto* input = HTMLInputElement::FromNode(mTextCtrlElement)) {
+      if (input->LastValueChangeWasInteractive()) {
+        GetValue(mLastInteractiveValue, /* aIgnoreWrap = */ true);
+      }
+    }
+  }
+
   // Note that if this may be called during reframe of the editor.  In such
   // case, we shouldn't commit composition.  Therefore, when this is called
   // for internal processing, we shouldn't commit the composition.
@@ -2723,11 +2740,6 @@ bool TextControlState::SetValue(const nsAString& aValue,
   // If we were handling SetValue() before, don't update the DOM state twice,
   // just let the outer call do so.
   if (!wasHandlingSetValue) {
-    // TODO(emilio): It seems wrong to pass ValueChangeKind::Script if
-    // BySetUserInput is in aOptions.
-    auto changeKind = aOptions.contains(ValueSetterOption::ByInternalAPI)
-                          ? ValueChangeKind::Internal
-                          : ValueChangeKind::Script;
     handlingSetValue.GetTextControlElement()->OnValueChanged(changeKind);
   }
   return true;
@@ -2991,6 +3003,8 @@ bool TextControlState::SetValueWithoutTextEditor(
       // listeners like `EditorBase::NotifyEditorObservers()`.
       aHandlingSetValue.GetTextControlElement()->OnValueChanged(
           ValueChangeKind::UserInteraction);
+
+      ClearLastInteractiveValue();
 
       MOZ_ASSERT(!aHandlingSetValue.GetSettingValue().IsVoid());
       DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(

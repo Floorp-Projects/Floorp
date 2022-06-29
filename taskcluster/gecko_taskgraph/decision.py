@@ -16,6 +16,7 @@ from redo import retry
 from taskgraph.parameters import Parameters
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.python_path import find_object
+from taskgraph.util.schema import Schema, validate_schema
 from taskgraph.util.taskcluster import get_artifact
 from taskgraph.util.yaml import load_yaml
 from voluptuous import Required, Optional, Any
@@ -31,7 +32,6 @@ from .util.bugbug import push_schedules
 from .util.chunking import resolver
 from .util.hg import get_hg_revision_branch, get_hg_commit_message
 from .util.partials import populate_release_history
-from .util.schema import validate_schema, Schema
 from .util.taskcluster import insert_index
 from .util.taskgraph import find_decision_task, find_existing_tasks_from_previous_kinds
 

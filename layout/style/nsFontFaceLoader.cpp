@@ -45,7 +45,7 @@ static uint32_t GetShortFallbackDelay() {
 
 nsFontFaceLoader::nsFontFaceLoader(gfxUserFontEntry* aUserFontEntry,
                                    uint32_t aSrcIndex,
-                                   FontFaceSet* aFontFaceSet,
+                                   FontFaceSetImpl* aFontFaceSet,
                                    nsIChannel* aChannel)
     : mUserFontEntry(aUserFontEntry),
       mFontFaceSet(aFontFaceSet),
@@ -187,7 +187,7 @@ void nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure) {
     nsTArray<gfxUserFontSet*> fontSets;
     ufe->GetUserFontSets(fontSets);
     for (gfxUserFontSet* fontSet : fontSets) {
-      nsPresContext* ctx = FontFaceSet::GetPresContextFor(fontSet);
+      nsPresContext* ctx = FontFaceSetImpl::GetPresContextFor(fontSet);
       if (ctx) {
         fontSet->IncrementGeneration();
         ctx->UserFontSetUpdated(ufe);
@@ -271,7 +271,7 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     }
   }
 
-  mFontFaceSet->GetUserFontSet()->RecordFontLoadDone(aStringLen, doneTime);
+  mFontFaceSet->RecordFontLoadDone(aStringLen, doneTime);
 
   // The userFontEntry is responsible for freeing the downloaded data
   // (aString) when finished with it; the pointer is no longer valid
@@ -299,7 +299,7 @@ nsresult nsFontFaceLoader::FontLoadComplete() {
   nsTArray<gfxUserFontSet*> fontSets;
   mUserFontEntry->GetUserFontSets(fontSets);
   for (gfxUserFontSet* fontSet : fontSets) {
-    nsPresContext* ctx = FontFaceSet::GetPresContextFor(fontSet);
+    nsPresContext* ctx = FontFaceSetImpl::GetPresContextFor(fontSet);
     if (ctx) {
       // Update layout for the presence of the new font.  Since this is
       // asynchronous, reflows will coalesce.

@@ -46,6 +46,9 @@ const ColorwaySelector = {
       this.revertToPreviousTheme = false;
       window.close();
     };
+    document.getElementById("cancel").onclick = () => {
+      window.close();
+    };
   },
 
   async _initColorwayRadios() {

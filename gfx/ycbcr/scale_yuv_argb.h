@@ -21,13 +21,13 @@ namespace libyuv {
 extern "C" {
 #endif
 
-int YUVToARGBScale(const uint8* src_y, int src_stride_y,
-                   const uint8* src_u, int src_stride_u,
-                   const uint8* src_v, int src_stride_v,
-                   uint32 src_fourcc,
+int YUVToARGBScale(const uint8_t* src_y, int src_stride_y,
+                   const uint8_t* src_u, int src_stride_u,
+                   const uint8_t* src_v, int src_stride_v,
+                   uint32_t src_fourcc,
                    mozilla::gfx::YUVColorSpace yuv_color_space,
                    int src_width, int src_height,
-                   uint8* dst_argb, int dst_stride_argb,
+                   uint8_t* dst_argb, int dst_stride_argb,
                    int dst_width, int dst_height,
                    enum FilterMode filtering);
 

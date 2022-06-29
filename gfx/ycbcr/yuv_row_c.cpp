@@ -13,10 +13,10 @@ extern "C" {
 #define paddsw(x, y) (((x) + (y)) < -32768 ? -32768 : \
     (((x) + (y)) > 32767 ? 32767 : ((x) + (y))))
 
-static inline void YuvPixel(uint8 y,
-                            uint8 u,
-                            uint8 v,
-                            uint8* rgb_buf) {
+static inline void YuvPixel(uint8_t y,
+                            uint8_t u,
+                            uint8_t v,
+                            uint8_t* rgb_buf) {
 
   int b = kCoefficientsRgbY[256+u][0];
   int g = kCoefficientsRgbY[256+u][1];
@@ -38,25 +38,25 @@ static inline void YuvPixel(uint8 y,
   r >>= 6;
   a >>= 6;
 
-  *reinterpret_cast<uint32*>(rgb_buf) = (packuswb(b)) |
-                                        (packuswb(g) << 8) |
-                                        (packuswb(r) << 16) |
-                                        (packuswb(a) << 24);
+  *reinterpret_cast<uint32_t*>(rgb_buf) = (packuswb(b)) |
+                                          (packuswb(g) << 8) |
+                                          (packuswb(r) << 16) |
+                                          (packuswb(a) << 24);
 }
 
-void FastConvertYUVToRGB32Row_C(const uint8* y_buf,
-                                const uint8* u_buf,
-                                const uint8* v_buf,
-                                uint8* rgb_buf,
+void FastConvertYUVToRGB32Row_C(const uint8_t* y_buf,
+                                const uint8_t* u_buf,
+                                const uint8_t* v_buf,
+                                uint8_t* rgb_buf,
                                 int width,
                                 unsigned int x_shift) {
   for (int x = 0; x < width; x += 2) {
-    uint8 u = u_buf[x >> x_shift];
-    uint8 v = v_buf[x >> x_shift];
-    uint8 y0 = y_buf[x];
+    uint8_t u = u_buf[x >> x_shift];
+    uint8_t v = v_buf[x >> x_shift];
+    uint8_t y0 = y_buf[x];
     YuvPixel(y0, u, v, rgb_buf);
     if ((x + 1) < width) {
-      uint8 y1 = y_buf[x + 1];
+      uint8_t y1 = y_buf[x + 1];
       if (x_shift == 0) {
         u = u_buf[x + 1];
         v = v_buf[x + 1];
@@ -71,10 +71,10 @@ void FastConvertYUVToRGB32Row_C(const uint8* y_buf,
 // A shift by 17 is used to further subsample the chrominence channels.
 // & 0xffff isolates the fixed point fraction.  >> 2 to get the upper 2 bits,
 // for 1/65536 pixel accurate interpolation.
-void ScaleYUVToRGB32Row_C(const uint8* y_buf,
-                          const uint8* u_buf,
-                          const uint8* v_buf,
-                          uint8* rgb_buf,
+void ScaleYUVToRGB32Row_C(const uint8_t* y_buf,
+                          const uint8_t* u_buf,
+                          const uint8_t* v_buf,
+                          uint8_t* rgb_buf,
                           int width,
                           int source_dx) {
   int x = 0;
@@ -93,10 +93,10 @@ void ScaleYUVToRGB32Row_C(const uint8* y_buf,
   }
 }
 
-void LinearScaleYUVToRGB32Row_C(const uint8* y_buf,
-                                const uint8* u_buf,
-                                const uint8* v_buf,
-                                uint8* rgb_buf,
+void LinearScaleYUVToRGB32Row_C(const uint8_t* y_buf,
+                                const uint8_t* u_buf,
+                                const uint8_t* v_buf,
+                                uint8_t* rgb_buf,
                                 int width,
                                 int source_dx) {
   int x = 0;

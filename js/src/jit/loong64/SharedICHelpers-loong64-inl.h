@@ -22,7 +22,7 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
 
   // Compute frame size.
   masm.movePtr(FramePointer, scratch);
-  masm.subPtr(BaselineStackReg, scratch);
+  masm.subPtr(StackPointer, scratch);
 
   // Store frame size without VMFunction arguments for debug assertions.
   masm.subPtr(Imm32(argSize), scratch);
@@ -57,7 +57,7 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
 #ifdef DEBUG
   // Compute frame size.
   masm.movePtr(FramePointer, scratch);
-  masm.subPtr(BaselineStackReg, scratch);
+  masm.subPtr(StackPointer, scratch);
 
   Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());
@@ -73,7 +73,7 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
 
   // Save old frame pointer, stack pointer and stub reg.
   masm.Push(FramePointer);
-  masm.movePtr(BaselineStackReg, FramePointer);
+  masm.movePtr(StackPointer, FramePointer);
   masm.Push(ICStubReg);
 
   // Stack should remain aligned.

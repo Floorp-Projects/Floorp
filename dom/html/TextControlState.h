@@ -306,6 +306,13 @@ class TextControlState final : public SupportsWeakPtr {
   }
   bool IsEmpty() const { return mValue.IsEmpty(); }
 
+  const nsAString& LastInteractiveValueIfLastChangeWasNonInteractive() const {
+    return mLastInteractiveValue;
+  }
+  // When an interactive value change happens, we clear mLastInteractiveValue
+  // because it's not needed (mValue is the new interactive value).
+  void ClearLastInteractiveValue() { mLastInteractiveValue.SetIsVoid(true); }
+
   Element* GetRootNode();
   Element* GetPreviewNode();
 
@@ -515,7 +522,12 @@ class TextControlState final : public SupportsWeakPtr {
   RefPtr<TextInputListener> mTextListener;
   UniquePtr<PasswordMaskData> mPasswordMaskData;
 
-  nsString mValue { VoidString() };  // Void if there's no value.
+  nsString mValue{VoidString()};  // Void if there's no value.
+
+  // If our input's last value change was not interactive (as in, the value
+  // change was caused by a ValueChangeKind::UserInteraction), this is the value
+  // that the last interaction had.
+  nsString mLastInteractiveValue{VoidString()};
 
   SelectionProperties mSelectionProperties;
 
@@ -524,19 +536,6 @@ class TextControlState final : public SupportsWeakPtr {
   bool mValueTransferInProgress : 1;  // Whether a value is being transferred to
                                       // the frame
   bool mSelectionCached : 1;          // Whether mSelectionProperties is valid
-
-  /**
-   * For avoiding allocation cost of the instance, we should reuse instances
-   * as far as possible.
-   *
-   * FYI: `25` is just a magic number considered without enough investigation,
-   *      but at least, this value must not make damage for footprint.
-   *      Feel free to change it if you find better number.
-   */
-  static const size_t kMaxCountOfCacheToReuse = 25;
-  static AutoTArray<TextControlState*, kMaxCountOfCacheToReuse>*
-      sReleasedInstances;
-  static bool sHasShutDown;
 
   friend class AutoTextControlHandlingState;
   friend class PrepareEditorEvent;

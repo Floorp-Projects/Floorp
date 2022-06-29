@@ -112,7 +112,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
   // XXX we'll want to use context.obtainStyledAttributes on the java side to
   // get all of these; see TextView.java for a good example.
   auto UseNativeAccent = [this] {
-    return mSystemColors.colorAccent && StaticPrefs::widget_use_theme_accent();
+    return mSystemColors.colorAccent &&
+           StaticPrefs::widget_non_native_theme_use_theme_accent();
   };
 
   switch (aID) {

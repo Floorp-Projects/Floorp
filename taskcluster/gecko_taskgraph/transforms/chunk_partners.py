@@ -9,7 +9,8 @@ Chunk the partner repack tasks by subpartner and locale
 import copy
 
 from mozbuild.chunkify import chunkify
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
+
 from gecko_taskgraph.util.partners import (
     get_repack_ids_by_platform,
     apply_partner_priority,

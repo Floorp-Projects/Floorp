@@ -52,15 +52,15 @@ pub enum HostMap {
 #[derive(Clone, Debug, Hash, PartialEq)]
 #[cfg_attr(feature = "serial-pass", derive(serde::Deserialize, serde::Serialize))]
 pub(crate) struct AttachmentData<T> {
-    pub colors: ArrayVec<T, { hal::MAX_COLOR_TARGETS }>,
-    pub resolves: ArrayVec<T, { hal::MAX_COLOR_TARGETS }>,
+    pub colors: ArrayVec<Option<T>, { hal::MAX_COLOR_ATTACHMENTS }>,
+    pub resolves: ArrayVec<T, { hal::MAX_COLOR_ATTACHMENTS }>,
     pub depth_stencil: Option<T>,
 }
 impl<T: PartialEq> Eq for AttachmentData<T> {}
 impl<T> AttachmentData<T> {
     pub(crate) fn map<U, F: Fn(&T) -> U>(&self, fun: F) -> AttachmentData<U> {
         AttachmentData {
-            colors: self.colors.iter().map(&fun).collect(),
+            colors: self.colors.iter().map(|c| c.as_ref().map(&fun)).collect(),
             resolves: self.resolves.iter().map(&fun).collect(),
             depth_stencil: self.depth_stencil.as_ref().map(&fun),
         }
@@ -78,8 +78,8 @@ pub(crate) struct RenderPassContext {
 pub enum RenderPassCompatibilityError {
     #[error("Incompatible color attachment: the renderpass expected {0:?} but was given {1:?}")]
     IncompatibleColorAttachment(
-        ArrayVec<TextureFormat, { hal::MAX_COLOR_TARGETS }>,
-        ArrayVec<TextureFormat, { hal::MAX_COLOR_TARGETS }>,
+        ArrayVec<Option<TextureFormat>, { hal::MAX_COLOR_ATTACHMENTS }>,
+        ArrayVec<Option<TextureFormat>, { hal::MAX_COLOR_ATTACHMENTS }>,
     ),
     #[error(
         "Incompatible depth-stencil attachment: the renderpass expected {0:?} but was given {1:?}"
@@ -428,6 +428,9 @@ impl<A: HalApi> Device<A> {
 
     /// Check this device for completed commands.
     ///
+    /// The `maintain` argument tells how the maintence function should behave, either
+    /// blocking or just polling the current state of the gpu.
+    ///
     /// Return a pair `(closures, queue_empty)`, where:
     ///
     /// - `closures` is a list of actions to take: mapping buffers, notifying the user
@@ -439,7 +442,7 @@ impl<A: HalApi> Device<A> {
     fn maintain<'this, 'token: 'this, G: GlobalIdentityHandlerFactory>(
         &'this self,
         hub: &Hub<A, G>,
-        force_wait: bool,
+        maintain: wgt::Maintain<queue::WrappedSubmissionIndex>,
         token: &mut Token<'token, Self>,
     ) -> Result<(UserClosures, bool), WaitIdleError> {
         profiling::scope!("maintain", "Device");
@@ -463,14 +466,21 @@ impl<A: HalApi> Device<A> {
         );
         life_tracker.triage_mapped(hub, token);
 
-        let last_done_index = if force_wait {
-            let current_index = self.active_submission_index;
+        let last_done_index = if maintain.is_wait() {
+            let index_to_wait_for = match maintain {
+                wgt::Maintain::WaitForSubmissionIndex(submission_index) => {
+                    // We don't need to check to see if the queue id matches
+                    // as we already checked this from inside the poll call.
+                    submission_index.index
+                }
+                _ => self.active_submission_index,
+            };
             unsafe {
                 self.raw
-                    .wait(&self.fence, current_index, CLEANUP_WAIT_MS)
+                    .wait(&self.fence, index_to_wait_for, CLEANUP_WAIT_MS)
                     .map_err(DeviceError::from)?
             };
-            current_index
+            index_to_wait_for
         } else {
             unsafe {
                 self.raw
@@ -566,6 +576,14 @@ impl<A: HalApi> Device<A> {
         transient: bool,
     ) -> Result<resource::Buffer<A>, resource::CreateBufferError> {
         debug_assert_eq!(self_id.backend(), A::VARIANT);
+
+        if desc.size > self.limits.max_buffer_size {
+            return Err(resource::CreateBufferError::MaxBufferSize {
+                requested: desc.size,
+                maximum: self.limits.max_buffer_size,
+            });
+        }
+
         let mut usage = conv::map_buffer_usage(desc.usage);
 
         if desc.usage.is_empty() {
@@ -668,47 +686,10 @@ impl<A: HalApi> Device<A> {
         adapter: &crate::instance::Adapter<A>,
         desc: &resource::TextureDescriptor,
     ) -> Result<resource::Texture<A>, resource::CreateTextureError> {
-        let format_desc = desc.format.describe();
-
-        if desc.dimension != wgt::TextureDimension::D2 {
-            // Depth textures can only be 2D
-            if format_desc.sample_type == wgt::TextureSampleType::Depth {
-                return Err(resource::CreateTextureError::InvalidDepthDimension(
-                    desc.dimension,
-                    desc.format,
-                ));
-            }
-            // Renderable textures can only be 2D
-            if desc.usage.contains(wgt::TextureUsages::RENDER_ATTACHMENT) {
-                return Err(resource::CreateTextureError::InvalidDimensionUsages(
-                    wgt::TextureUsages::RENDER_ATTACHMENT,
-                    desc.dimension,
-                ));
-            }
-
-            // Compressed textures can only be 2D
-            if format_desc.is_compressed() {
-                return Err(resource::CreateTextureError::InvalidCompressedDimension(
-                    desc.dimension,
-                    desc.format,
-                ));
-            }
-        }
-
-        let format_features = self
-            .describe_format_features(adapter, desc.format)
-            .map_err(|error| resource::CreateTextureError::MissingFeatures(desc.format, error))?;
+        use resource::{CreateTextureError, TextureDimensionError};
 
         if desc.usage.is_empty() {
-            return Err(resource::CreateTextureError::EmptyUsage);
-        }
-
-        let missing_allowed_usages = desc.usage - format_features.allowed_usages;
-        if !missing_allowed_usages.is_empty() {
-            return Err(resource::CreateTextureError::InvalidFormatUsages(
-                missing_allowed_usages,
-                desc.format,
-            ));
+            return Err(CreateTextureError::EmptyUsage);
         }
 
         conv::check_texture_dimension_size(
@@ -718,14 +699,113 @@ impl<A: HalApi> Device<A> {
             &self.limits,
         )?;
 
+        let format_desc = desc.format.describe();
+
+        if desc.dimension != wgt::TextureDimension::D2 {
+            // Depth textures can only be 2D
+            if format_desc.sample_type == wgt::TextureSampleType::Depth {
+                return Err(CreateTextureError::InvalidDepthDimension(
+                    desc.dimension,
+                    desc.format,
+                ));
+            }
+            // Renderable textures can only be 2D
+            if desc.usage.contains(wgt::TextureUsages::RENDER_ATTACHMENT) {
+                return Err(CreateTextureError::InvalidDimensionUsages(
+                    wgt::TextureUsages::RENDER_ATTACHMENT,
+                    desc.dimension,
+                ));
+            }
+
+            // Compressed textures can only be 2D
+            if format_desc.is_compressed() {
+                return Err(CreateTextureError::InvalidCompressedDimension(
+                    desc.dimension,
+                    desc.format,
+                ));
+            }
+        }
+
+        if format_desc.is_compressed() {
+            let block_width = format_desc.block_dimensions.0 as u32;
+            let block_height = format_desc.block_dimensions.1 as u32;
+
+            if desc.size.width % block_width != 0 {
+                return Err(CreateTextureError::InvalidDimension(
+                    TextureDimensionError::NotMultipleOfBlockWidth {
+                        width: desc.size.width,
+                        block_width,
+                        format: desc.format,
+                    },
+                ));
+            }
+
+            if desc.size.height % block_height != 0 {
+                return Err(CreateTextureError::InvalidDimension(
+                    TextureDimensionError::NotMultipleOfBlockHeight {
+                        height: desc.size.height,
+                        block_height,
+                        format: desc.format,
+                    },
+                ));
+            }
+        }
+
+        if desc.sample_count > 1 {
+            if desc.mip_level_count != 1 {
+                return Err(CreateTextureError::InvalidMipLevelCount {
+                    requested: desc.mip_level_count,
+                    maximum: 1,
+                });
+            }
+
+            if desc.size.depth_or_array_layers != 1 {
+                return Err(CreateTextureError::InvalidDimension(
+                    TextureDimensionError::MultisampledDepthOrArrayLayer(
+                        desc.size.depth_or_array_layers,
+                    ),
+                ));
+            }
+
+            if desc.usage.contains(wgt::TextureUsages::STORAGE_BINDING) {
+                return Err(CreateTextureError::InvalidMultisampledStorageBinding);
+            }
+
+            if !desc.usage.contains(wgt::TextureUsages::RENDER_ATTACHMENT) {
+                return Err(CreateTextureError::MultisampledNotRenderAttachment);
+            }
+
+            if !format_desc
+                .guaranteed_format_features
+                .flags
+                .contains(wgt::TextureFormatFeatureFlags::MULTISAMPLE)
+            {
+                return Err(CreateTextureError::InvalidMultisampledFormat(desc.format));
+            }
+        }
+
         let mips = desc.mip_level_count;
         let max_levels_allowed = desc.size.max_mips(desc.dimension).min(hal::MAX_MIP_LEVELS);
         if mips == 0 || mips > max_levels_allowed {
-            return Err(resource::CreateTextureError::InvalidMipLevelCount {
+            return Err(CreateTextureError::InvalidMipLevelCount {
                 requested: mips,
                 maximum: max_levels_allowed,
             });
         }
+
+        let format_features = self
+            .describe_format_features(adapter, desc.format)
+            .map_err(|error| CreateTextureError::MissingFeatures(desc.format, error))?;
+
+        let missing_allowed_usages = desc.usage - format_features.allowed_usages;
+        if !missing_allowed_usages.is_empty() {
+            return Err(CreateTextureError::InvalidFormatUsages(
+                missing_allowed_usages,
+                desc.format,
+            ));
+        }
+
+        // TODO: validate missing TextureDescriptor::view_formats.
 
         // Enforce having COPY_DST/DEPTH_STENCIL_WRIT/COLOR_TARGET otherwise we wouldn't be able to initialize the texture.
         let hal_usage = conv::map_texture_usage(desc.usage, desc.format.into())
@@ -1117,6 +1197,18 @@ impl<A: HalApi> Device<A> {
             }
             pipeline::ShaderModuleSource::Naga(module) => (module, String::new()),
         };
+        for (_, var) in module.global_variables.iter() {
+            match var.binding {
+                Some(ref br) if br.group >= self.limits.max_bind_groups => {
+                    return Err(pipeline::CreateShaderModuleError::InvalidGroupIndex {
+                        bind: br.clone(),
+                        group: br.group,
+                        limit: self.limits.max_bind_groups,
+                    });
+                }
+                _ => continue,
+            };
+        }
 
         use naga::valid::Capabilities as Caps;
         profiling::scope!("naga::validate");
@@ -1367,6 +1459,20 @@ impl<A: HalApi> Device<A> {
                                 binding: entry.binding,
                                 error: binding_model::BindGroupLayoutEntryError::StorageTextureCube,
                             })
+                        }
+                        _ => (),
+                    }
+                    match access {
+                        wgt::StorageTextureAccess::ReadOnly
+                        | wgt::StorageTextureAccess::ReadWrite
+                            if !self.features.contains(
+                                wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
+                            ) =>
+                        {
+                            return Err(binding_model::CreateBindGroupLayoutError::Entry {
+                                binding: entry.binding,
+                                error: binding_model::BindGroupLayoutEntryError::StorageTextureReadWrite,
+                            });
                         }
                         _ => (),
                     }
@@ -2359,9 +2465,11 @@ impl<A: HalApi> Device<A> {
             .map_or(&[][..], |fragment| &fragment.targets);
         let depth_stencil_state = desc.depth_stencil.as_ref();
 
-        if !color_targets.is_empty() && {
-            let first = &color_targets[0];
-            color_targets[1..]
+        let cts: ArrayVec<_, { hal::MAX_COLOR_ATTACHMENTS }> =
+            color_targets.iter().filter_map(|x| x.as_ref()).collect();
+        if !cts.is_empty() && {
+            let first = &cts[0];
+            cts[1..]
                 .iter()
                 .any(|ct| ct.write_mask != first.write_mask || ct.blend != first.blend)
         } {
@@ -2372,13 +2480,14 @@ impl<A: HalApi> Device<A> {
         let mut io = validation::StageIo::default();
         let mut validated_stages = wgt::ShaderStages::empty();
 
-        let mut vertex_strides = Vec::with_capacity(desc.vertex.buffers.len());
+        let mut vertex_steps = Vec::with_capacity(desc.vertex.buffers.len());
         let mut vertex_buffers = Vec::with_capacity(desc.vertex.buffers.len());
         let mut total_attributes = 0;
         for (i, vb_state) in desc.vertex.buffers.iter().enumerate() {
-            vertex_strides
-                .alloc()
-                .init((vb_state.array_stride, vb_state.step_mode));
+            vertex_steps.alloc().init(pipeline::VertexStep {
+                stride: vb_state.array_stride,
+                mode: vb_state.step_mode,
+            });
             if vb_state.attributes.is_empty() {
                 continue;
             }
@@ -2473,29 +2582,32 @@ impl<A: HalApi> Device<A> {
         }
 
         for (i, cs) in color_targets.iter().enumerate() {
-            let error = loop {
-                let format_features = self.describe_format_features(adapter, cs.format)?;
-                if !format_features
-                    .allowed_usages
-                    .contains(wgt::TextureUsages::RENDER_ATTACHMENT)
-                {
-                    break Some(pipeline::ColorStateError::FormatNotRenderable(cs.format));
-                }
-                if cs.blend.is_some() && !format_features.flags.contains(Tfff::FILTERABLE) {
-                    break Some(pipeline::ColorStateError::FormatNotBlendable(cs.format));
-                }
-                if !hal::FormatAspects::from(cs.format).contains(hal::FormatAspects::COLOR) {
-                    break Some(pipeline::ColorStateError::FormatNotColor(cs.format));
-                }
-                if desc.multisample.count > 1 && !format_features.flags.contains(Tfff::MULTISAMPLE)
-                {
-                    break Some(pipeline::ColorStateError::FormatNotMultisampled(cs.format));
-                }
+            if let Some(cs) = cs.as_ref() {
+                let error = loop {
+                    let format_features = self.describe_format_features(adapter, cs.format)?;
+                    if !format_features
+                        .allowed_usages
+                        .contains(wgt::TextureUsages::RENDER_ATTACHMENT)
+                    {
+                        break Some(pipeline::ColorStateError::FormatNotRenderable(cs.format));
+                    }
+                    if cs.blend.is_some() && !format_features.flags.contains(Tfff::FILTERABLE) {
+                        break Some(pipeline::ColorStateError::FormatNotBlendable(cs.format));
+                    }
+                    if !hal::FormatAspects::from(cs.format).contains(hal::FormatAspects::COLOR) {
+                        break Some(pipeline::ColorStateError::FormatNotColor(cs.format));
+                    }
+                    if desc.multisample.count > 1
+                        && !format_features.flags.contains(Tfff::MULTISAMPLE)
+                    {
+                        break Some(pipeline::ColorStateError::FormatNotMultisampled(cs.format));
+                    }
 
-                break None;
-            };
-            if let Some(e) = error {
-                return Err(pipeline::CreateRenderPipelineError::ColorState(i as u8, e));
+                    break None;
+                };
+                if let Some(e) = error {
+                    return Err(pipeline::CreateRenderPipelineError::ColorState(i as u8, e));
+                }
             }
         }
 
@@ -2647,13 +2759,13 @@ impl<A: HalApi> Device<A> {
         };
 
         if validated_stages.contains(wgt::ShaderStages::FRAGMENT) {
-            for (i, state) in color_targets.iter().enumerate() {
-                match io.get(&(i as wgt::ShaderLocation)) {
-                    Some(output) => {
+            for (i, output) in io.iter() {
+                match color_targets.get(*i as usize) {
+                    Some(&Some(ref state)) => {
                         validation::check_texture_format(state.format, &output.ty).map_err(
                             |pipeline| {
                                 pipeline::CreateRenderPipelineError::ColorState(
-                                    i as u8,
+                                    *i as u8,
                                     pipeline::ColorStateError::IncompatibleFormat {
                                         pipeline,
                                         shader: output.ty,
@@ -2662,11 +2774,14 @@ impl<A: HalApi> Device<A> {
                             },
                         )?;
                     }
-                    None if state.write_mask.is_empty() => {}
-                    None => {
-                        log::warn!("Missing fragment output[{}], expected {:?}", i, state,);
+                    Some(&None) => {
+                        return Err(
+                            pipeline::CreateRenderPipelineError::InvalidFragmentOutputLocation(*i),
+                        );
+                    }
+                    _ => {
                         return Err(pipeline::CreateRenderPipelineError::ColorState(
-                            i as u8,
+                            *i as u8,
                             pipeline::ColorStateError::Missing,
                         ));
                     }
@@ -2698,6 +2813,14 @@ impl<A: HalApi> Device<A> {
         // Multiview is only supported if the feature is enabled
         if desc.multiview.is_some() {
             self.require_features(wgt::Features::MULTIVIEW)?;
+        }
+
+        for size in shader_binding_sizes.values() {
+            if size.get() % 16 != 0 {
+                self.require_downlevel_flags(
+                    wgt::DownlevelFlags::BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED,
+                )?;
+            }
         }
 
         let late_sized_buffer_groups =
@@ -2735,7 +2858,10 @@ impl<A: HalApi> Device<A> {
 
         let pass_context = RenderPassContext {
             attachments: AttachmentData {
-                colors: color_targets.iter().map(|state| state.format).collect(),
+                colors: color_targets
+                    .iter()
+                    .map(|state| state.as_ref().map(|s| s.format))
+                    .collect(),
                 resolves: ArrayVec::new(),
                 depth_stencil: depth_stencil_state.as_ref().map(|state| state.format),
             },
@@ -2744,7 +2870,7 @@ impl<A: HalApi> Device<A> {
         };
 
         let mut flags = pipeline::PipelineFlags::empty();
-        for state in color_targets.iter() {
+        for state in color_targets.iter().filter_map(|s| s.as_ref()) {
             if let Some(ref bs) = state.blend {
                 if bs.color.uses_constant() | bs.alpha.uses_constant() {
                     flags |= pipeline::PipelineFlags::BLEND_CONSTANT;
@@ -2755,8 +2881,11 @@ impl<A: HalApi> Device<A> {
             if ds.stencil.is_enabled() && ds.stencil.needs_ref_value() {
                 flags |= pipeline::PipelineFlags::STENCIL_REFERENCE;
             }
-            if !ds.is_read_only() {
-                flags |= pipeline::PipelineFlags::WRITES_DEPTH_STENCIL;
+            if !ds.is_depth_read_only() {
+                flags |= pipeline::PipelineFlags::WRITES_DEPTH;
+            }
+            if !ds.is_stencil_read_only() {
+                flags |= pipeline::PipelineFlags::WRITES_STENCIL;
             }
         }
 
@@ -2773,7 +2902,7 @@ impl<A: HalApi> Device<A> {
             pass_context,
             flags,
             strip_index_format: desc.primitive.strip_index_format,
-            vertex_strides,
+            vertex_steps,
             late_sized_buffer_groups,
             life_guard: LifeGuard::new(desc.label.borrow_or_default()),
         };
@@ -3003,12 +3132,12 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             .map_err(|_| instance::IsSurfaceSupportedError::InvalidSurface)?;
         Ok(adapter.is_surface_supported(surface))
     }
-    pub fn surface_get_preferred_format<A: HalApi>(
+    pub fn surface_get_supported_formats<A: HalApi>(
         &self,
         surface_id: id::SurfaceId,
         adapter_id: id::AdapterId,
-    ) -> Result<TextureFormat, instance::GetSurfacePreferredFormatError> {
-        profiling::scope!("surface_get_preferred_format");
+    ) -> Result<Vec<TextureFormat>, instance::GetSurfacePreferredFormatError> {
+        profiling::scope!("Surface::get_supported_formats");
         let hub = A::hub(self);
         let mut token = Token::root();
 
@@ -3021,7 +3150,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             .get(surface_id)
             .map_err(|_| instance::GetSurfacePreferredFormatError::InvalidSurface)?;
 
-        surface.get_preferred_format(adapter)
+        surface.get_supported_formats(adapter)
     }
 
     pub fn device_features<A: HalApi>(
@@ -3216,6 +3345,18 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         let hub = A::hub(self);
         let mut token = Token::root();
         let fid = hub.buffers.prepare(id_in);
+
+        let (_, mut token) = hub.devices.read(&mut token);
+        fid.assign_error(label.borrow_or_default(), &mut token);
+    }
+
+    /// Assign `id_in` an error with the given `label`.
+    ///
+    /// See `create_buffer_error` for more context and explaination.
+    pub fn create_texture_error<A: HalApi>(&self, id_in: Input<G, id::TextureId>, label: Label) {
+        let hub = A::hub(self);
+        let mut token = Token::root();
+        let fid = hub.textures.prepare(id_in);
 
         let (_, mut token) = hub.devices.read(&mut token);
         fid.assign_error(label.borrow_or_default(), &mut token);
@@ -4368,7 +4509,8 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                     desc: trace::new_render_bundle_encoder_descriptor(
                         desc.label.clone(),
                         &bundle_encoder.context,
-                        bundle_encoder.is_ds_read_only,
+                        bundle_encoder.is_depth_read_only,
+                        bundle_encoder.is_stencil_read_only,
                     ),
                     base: bundle_encoder.to_base_pass(),
                 });
@@ -4957,16 +5099,25 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
     pub fn device_poll<A: HalApi>(
         &self,
         device_id: id::DeviceId,
-        force_wait: bool,
+        maintain: wgt::Maintain<queue::WrappedSubmissionIndex>,
     ) -> Result<bool, WaitIdleError> {
         let (closures, queue_empty) = {
+            if let wgt::Maintain::WaitForSubmissionIndex(submission_index) = maintain {
+                if submission_index.queue_id != device_id {
+                    return Err(WaitIdleError::WrongSubmissionIndex(
+                        submission_index.queue_id,
+                        device_id,
+                    ));
+                }
+            }
+
             let hub = A::hub(self);
             let mut token = Token::root();
             let (device_guard, mut token) = hub.devices.read(&mut token);
             device_guard
                 .get(device_id)
                 .map_err(|_| DeviceError::Invalid)?
-                .maintain(hub, force_wait, &mut token)?
+                .maintain(hub, maintain, &mut token)?
         };
 
         closures.fire();
@@ -4994,7 +5145,12 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             let (device_guard, mut token) = hub.devices.read(&mut token);
 
             for (id, device) in device_guard.iter(A::VARIANT) {
-                let (cbs, queue_empty) = device.maintain(hub, force_wait, &mut token)?;
+                let maintain = if force_wait {
+                    wgt::Maintain::Wait
+                } else {
+                    wgt::Maintain::Poll
+                };
+                let (cbs, queue_empty) = device.maintain(hub, maintain, &mut token)?;
                 all_queue_empty = all_queue_empty && queue_empty;
 
                 // If the device's own `RefCount` clone is the only one left, and

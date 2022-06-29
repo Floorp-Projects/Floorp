@@ -24,29 +24,22 @@ add_task(function test_recoverEmptyHomepage() {
 });
 
 add_task(function test_findActiveColorwayCollection() {
-  const collections = [
-    {
-      id: 1,
-      expiry: new Date("2012-01-01"),
-    },
-    {
-      id: 2,
-      expiry: new Date("2012-02-01"),
-    },
-    {
-      id: 3,
-      expiry: new Date("2012-03-01"),
-    },
-    {
-      id: 4,
-      expiry: new Date("2012-04-01"),
-    },
-    {
-      id: 5,
-      expiry: new Date("2012-04-02"),
-    },
-  ];
-  _applyColorwayConfig(collections);
+  // get valid collection name from config
+  const id = BuiltInThemeConfig.entries().next().value[1].collection;
+  let collectionsList = [
+    new Date("2012-01-01"),
+    new Date("2012-02-01"),
+    new Date("2012-03-01"),
+    new Date("2012-04-01"),
+    new Date("2012-04-02"),
+  ].map((expiry, i) => ({ id, expiry, test_id: i + 1 }));
+  // set all other collection names as expired
+  for (const [, { collection }] of BuiltInThemeConfig.entries()) {
+    if (collection != id) {
+      collectionsList.push({ id: collection, expiry: new Date(0) });
+    }
+  }
+  _applyColorwayConfig(collectionsList);
   Assert.ok(
     BuiltInThemeConfig.findActiveColorwayCollection(new Date("2010-01-01")),
     "Found active collection"
@@ -57,22 +50,26 @@ add_task(function test_findActiveColorwayCollection() {
     "Found no active collection"
   );
   Assert.equal(
-    BuiltInThemeConfig.findActiveColorwayCollection(new Date("2011-12-31")).id,
+    BuiltInThemeConfig.findActiveColorwayCollection(new Date("2011-12-31"))
+      .test_id,
     1,
     "First collection is active"
   );
   Assert.equal(
-    BuiltInThemeConfig.findActiveColorwayCollection(new Date("2012-02-03")).id,
+    BuiltInThemeConfig.findActiveColorwayCollection(new Date("2012-02-03"))
+      .test_id,
     3,
     "Middle collection is active"
   );
   Assert.equal(
-    BuiltInThemeConfig.findActiveColorwayCollection(new Date("2012-04-02")).id,
+    BuiltInThemeConfig.findActiveColorwayCollection(new Date("2012-04-02"))
+      .test_id,
     5,
     "Last collection is active"
   );
   Assert.equal(
-    BuiltInThemeConfig.findActiveColorwayCollection(new Date("2012-01-02")).id,
+    BuiltInThemeConfig.findActiveColorwayCollection(new Date("2012-01-02"))
+      .test_id,
     2,
     "Second collection is active"
   );

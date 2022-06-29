@@ -6,9 +6,10 @@ Support for running mach python-test tasks (via run-task)
 """
 
 
-from gecko_taskgraph.transforms.job import run_job_using, configure_taskdesc_for_run
-from gecko_taskgraph.util.schema import Schema
+from taskgraph.util.schema import Schema
 from voluptuous import Required, Optional
+
+from gecko_taskgraph.transforms.job import run_job_using, configure_taskdesc_for_run
 
 python_test_schema = Schema(
     {

@@ -17,7 +17,7 @@ use crate::{
     hub::{Global, GlobalIdentityHandlerFactory, HalApi, Storage, Token},
     id,
     init_tracker::{MemoryInitKind, TextureInitRange, TextureInitTrackerAction},
-    pipeline::PipelineFlags,
+    pipeline::{self, PipelineFlags},
     resource::{self, Buffer, Texture, TextureView},
     track::{TextureSelector, UsageConflict, UsageScope},
     validation::{
@@ -131,20 +131,40 @@ pub struct RenderPassDepthStencilAttachment {
 }
 
 impl RenderPassDepthStencilAttachment {
-    fn is_read_only(&self, aspects: hal::FormatAspects) -> Result<bool, RenderPassErrorInner> {
-        if aspects.contains(hal::FormatAspects::DEPTH) && !self.depth.read_only {
-            return Ok(false);
+    /// Validate the given aspects' read-only flags against their load
+    /// and store ops.
+    ///
+    /// When an aspect is read-only, its load and store ops must be
+    /// `LoadOp::Load` and `StoreOp::Store`.
+    ///
+    /// On success, return a pair `(depth, stencil)` indicating
+    /// whether the depth and stencil passes are read-only.
+    fn depth_stencil_read_only(
+        &self,
+        aspects: hal::FormatAspects,
+    ) -> Result<(bool, bool), RenderPassErrorInner> {
+        let mut depth_read_only = true;
+        let mut stencil_read_only = true;
+
+        if aspects.contains(hal::FormatAspects::DEPTH) {
+            if self.depth.read_only
+                && (self.depth.load_op, self.depth.store_op) != (LoadOp::Load, StoreOp::Store)
+            {
+                return Err(RenderPassErrorInner::InvalidDepthOps);
+            }
+            depth_read_only = self.depth.read_only;
         }
-        if (self.depth.load_op, self.depth.store_op) != (LoadOp::Load, StoreOp::Store) {
-            return Err(RenderPassErrorInner::InvalidDepthOps);
+
+        if aspects.contains(hal::FormatAspects::STENCIL) {
+            if self.stencil.read_only
+                && (self.stencil.load_op, self.stencil.store_op) != (LoadOp::Load, StoreOp::Store)
+            {
+                return Err(RenderPassErrorInner::InvalidStencilOps);
+            }
+            stencil_read_only = self.stencil.read_only;
         }
-        if aspects.contains(hal::FormatAspects::STENCIL) && !self.stencil.read_only {
-            return Ok(false);
-        }
-        if (self.stencil.load_op, self.stencil.store_op) != (LoadOp::Load, StoreOp::Store) {
-            return Err(RenderPassErrorInner::InvalidStencilOps);
-        }
-        Ok(true)
+
+        Ok((depth_read_only, stencil_read_only))
     }
 }
 
@@ -153,7 +173,7 @@ impl RenderPassDepthStencilAttachment {
 pub struct RenderPassDescriptor<'a> {
     pub label: Label<'a>,
     /// The color attachments of the render pass.
-    pub color_attachments: Cow<'a, [RenderPassColorAttachment]>,
+    pub color_attachments: Cow<'a, [Option<RenderPassColorAttachment>]>,
     /// The depth and stencil attachment of the render pass, if any.
     pub depth_stencil_attachment: Option<&'a RenderPassDepthStencilAttachment>,
 }
@@ -162,7 +182,7 @@ pub struct RenderPassDescriptor<'a> {
 pub struct RenderPass {
     base: BasePass<RenderCommand>,
     parent_id: id::CommandEncoderId,
-    color_targets: ArrayVec<RenderPassColorAttachment, { hal::MAX_COLOR_TARGETS }>,
+    color_targets: ArrayVec<Option<RenderPassColorAttachment>, { hal::MAX_COLOR_ATTACHMENTS }>,
     depth_stencil_target: Option<RenderPassDepthStencilAttachment>,
 
     // Resource binding dedupe state.
@@ -278,16 +298,17 @@ impl IndexState {
 #[derive(Clone, Copy, Debug)]
 struct VertexBufferState {
     total_size: BufferAddress,
-    stride: BufferAddress,
-    rate: VertexStepMode,
+    step: pipeline::VertexStep,
     bound: bool,
 }
 
 impl VertexBufferState {
     const EMPTY: Self = Self {
         total_size: 0,
-        stride: 0,
-        rate: VertexStepMode::Vertex,
+        step: pipeline::VertexStep {
+            stride: 0,
+            mode: VertexStepMode::Vertex,
+        },
         bound: false,
     };
 }
@@ -312,11 +333,11 @@ impl VertexState {
         self.vertex_limit = u32::MAX;
         self.instance_limit = u32::MAX;
         for (idx, vbs) in self.inputs.iter().enumerate() {
-            if vbs.stride == 0 || !vbs.bound {
+            if vbs.step.stride == 0 || !vbs.bound {
                 continue;
             }
-            let limit = (vbs.total_size / vbs.stride) as u32;
-            match vbs.rate {
+            let limit = (vbs.total_size / vbs.step.stride) as u32;
+            match vbs.step.mode {
                 VertexStepMode::Vertex => {
                     if limit < self.vertex_limit {
                         self.vertex_limit = limit;
@@ -420,7 +441,7 @@ pub enum RenderPassErrorInner {
     InvalidDepthStencilAttachmentFormat(wgt::TextureFormat),
     #[error("attachment format {0:?} can not be resolved")]
     UnsupportedResolveTargetFormat(wgt::TextureFormat),
-    #[error("necessary attachments are missing")]
+    #[error("missing color or depth_stencil attachments, at least one is required.")]
     MissingAttachments,
     #[error("attachments have differing sizes: {previous:?} is followed by {mismatch:?}")]
     AttachmentsDimensionMismatch {
@@ -474,8 +495,18 @@ pub enum RenderPassErrorInner {
     ResourceUsageConflict(#[from] UsageConflict),
     #[error("render bundle has incompatible targets, {0}")]
     IncompatibleBundleTargets(#[from] RenderPassCompatibilityError),
-    #[error("render bundle has an incompatible read-only depth/stencil flag: bundle is {bundle}, while the pass is {pass}")]
-    IncompatibleBundleRods { pass: bool, bundle: bool },
+    #[error(
+        "render bundle has incompatible read-only flags: \
+             bundle has flags depth = {bundle_depth} and stencil = {bundle_stencil}, \
+             while the pass has flags depth = {pass_depth} and stencil = {pass_stencil}. \
+             Read-only renderpasses are only compatible with read-only bundles for that aspect."
+    )]
+    IncompatibleBundleRods {
+        pass_depth: bool,
+        pass_stencil: bool,
+        bundle_depth: bool,
+        bundle_stencil: bool,
+    },
     #[error(transparent)]
     RenderCommand(#[from] RenderCommandError),
     #[error(transparent)]
@@ -558,14 +589,15 @@ impl<A: hal::Api> TextureView<A> {
     }
 }
 
-const MAX_TOTAL_ATTACHMENTS: usize = hal::MAX_COLOR_TARGETS + hal::MAX_COLOR_TARGETS + 1;
+const MAX_TOTAL_ATTACHMENTS: usize = hal::MAX_COLOR_ATTACHMENTS + hal::MAX_COLOR_ATTACHMENTS + 1;
 type AttachmentDataVec<T> = ArrayVec<T, MAX_TOTAL_ATTACHMENTS>;
 
 struct RenderPassInfo<'a, A: HalApi> {
     context: RenderPassContext,
     usage_scope: UsageScope<A>,
     render_attachments: AttachmentDataVec<RenderAttachment<'a>>, // All render attachments, including depth/stencil
-    is_ds_read_only: bool,
+    is_depth_read_only: bool,
+    is_stencil_read_only: bool,
     extent: wgt::Extent3d,
     _phantom: PhantomData<A>,
 
@@ -614,7 +646,7 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
     fn start(
         device: &Device<A>,
         label: Option<&str>,
-        color_attachments: &[RenderPassColorAttachment],
+        color_attachments: &[Option<RenderPassColorAttachment>],
         depth_stencil_attachment: Option<&RenderPassDepthStencilAttachment>,
         cmd_buf: &mut CommandBuffer<A>,
         view_guard: &'a Storage<TextureView<A>, id::TextureViewId>,
@@ -626,7 +658,8 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
         // We default to false intentionally, even if depth-stencil isn't used at all.
         // This allows us to use the primary raw pipeline in `RenderPipeline`,
         // instead of the special read-only one, which would be `None`.
-        let mut is_ds_read_only = false;
+        let mut is_depth_read_only = false;
+        let mut is_stencil_read_only = false;
 
         let mut render_attachments = AttachmentDataVec::<RenderAttachment>::new();
         let mut discarded_surfaces = AttachmentDataVec::new();
@@ -689,15 +722,19 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
                     expected: sample_count,
                 });
             }
+            if sample_count != 1 && sample_count != 4 {
+                return Err(RenderPassErrorInner::InvalidSampleCount(sample_count));
+            }
             attachment_type_name = type_name;
             Ok(())
         };
 
-        let mut colors = ArrayVec::<hal::ColorAttachment<A>, { hal::MAX_COLOR_TARGETS }>::new();
+        let mut colors =
+            ArrayVec::<Option<hal::ColorAttachment<A>>, { hal::MAX_COLOR_ATTACHMENTS }>::new();
         let mut depth_stencil = None;
 
         if let Some(at) = depth_stencil_attachment {
-            let view = cmd_buf
+            let view: &TextureView<A> = cmd_buf
                 .trackers
                 .views
                 .add_single(&*view_guard, at.view)
@@ -786,8 +823,9 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
                 }
             }
 
-            let usage = if at.is_read_only(ds_aspects)? {
-                is_ds_read_only = true;
+            (is_depth_read_only, is_stencil_read_only) = at.depth_stencil_read_only(ds_aspects)?;
+
+            let usage = if is_depth_read_only && is_stencil_read_only {
                 hal::TextureUses::DEPTH_STENCIL_READ | hal::TextureUses::RESOURCE
             } else {
                 hal::TextureUses::DEPTH_STENCIL_WRITE
@@ -806,7 +844,13 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
         }
 
         for at in color_attachments {
-            let color_view = cmd_buf
+            let at = if let Some(attachment) = at.as_ref() {
+                attachment
+            } else {
+                colors.push(None);
+                continue;
+            };
+            let color_view: &TextureView<A> = cmd_buf
                 .trackers
                 .views
                 .add_single(&*view_guard, at.view)
@@ -836,7 +880,7 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
 
             let mut hal_resolve_target = None;
             if let Some(resolve_target) = at.resolve_target {
-                let resolve_view = cmd_buf
+                let resolve_view: &TextureView<A> = cmd_buf
                     .trackers
                     .views
                     .add_single(&*view_guard, resolve_target)
@@ -885,7 +929,7 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
                 });
             }
 
-            colors.push(hal::ColorAttachment {
+            colors.push(Some(hal::ColorAttachment {
                 target: hal::Attachment {
                     view: &color_view.raw,
                     usage: hal::TextureUses::COLOR_TARGET,
@@ -893,28 +937,30 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
                 resolve_target: hal_resolve_target,
                 ops: at.channel.hal_ops(),
                 clear_value: at.channel.clear_value,
-            });
+            }));
         }
 
-        if sample_count != 1 && sample_count != 4 {
-            return Err(RenderPassErrorInner::InvalidSampleCount(sample_count));
-        }
+        let extent = extent.ok_or(RenderPassErrorInner::MissingAttachments)?;
+        let multiview = detected_multiview.expect("Multiview was not detected, no attachments");
 
         let view_data = AttachmentData {
             colors: color_attachments
                 .iter()
-                .map(|at| view_guard.get(at.view).unwrap())
+                .map(|at| at.as_ref().map(|at| view_guard.get(at.view).unwrap()))
                 .collect(),
             resolves: color_attachments
                 .iter()
-                .filter_map(|at| at.resolve_target)
-                .map(|attachment| view_guard.get(attachment).unwrap())
+                .filter_map(|at| match *at {
+                    Some(RenderPassColorAttachment {
+                        resolve_target: Some(resolve),
+                        ..
+                    }) => Some(view_guard.get(resolve).unwrap()),
+                    _ => None,
+                })
                 .collect(),
             depth_stencil: depth_stencil_attachment.map(|at| view_guard.get(at.view).unwrap()),
         };
-        let extent = extent.ok_or(RenderPassErrorInner::MissingAttachments)?;
 
-        let multiview = detected_multiview.expect("Multiview was not detected, no attachments");
         let context = RenderPassContext {
             attachments: view_data.map(|view| view.desc.format),
             sample_count,
@@ -937,7 +983,8 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
             context,
             usage_scope: UsageScope::new(buffer_guard, texture_guard),
             render_attachments,
-            is_ds_read_only,
+            is_depth_read_only,
+            is_stencil_read_only,
             extent,
             _phantom: PhantomData,
             pending_discard_init_fixups,
@@ -1041,7 +1088,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         &self,
         encoder_id: id::CommandEncoderId,
         base: BasePassRef<RenderCommand>,
-        color_attachments: &[RenderPassColorAttachment],
+        color_attachments: &[Option<RenderPassColorAttachment>],
         depth_stencil_attachment: Option<&RenderPassDepthStencilAttachment>,
     ) -> Result<(), RenderPassError> {
         profiling::scope!("run_render_pass", "CommandEncoder");
@@ -1156,7 +1203,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                         );
                         dynamic_offset_count += num_dynamic_offsets as usize;
 
-                        let bind_group = cmd_buf
+                        let bind_group: &crate::binding_model::BindGroup<A> = cmd_buf
                             .trackers
                             .bind_groups
                             .add_single(&*bind_group_guard, bind_group_id)
@@ -1220,7 +1267,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                         let scope = PassErrorScope::SetPipelineRender(pipeline_id);
                         state.pipeline = Some(pipeline_id);
 
-                        let pipeline = cmd_buf
+                        let pipeline: &pipeline::RenderPipeline<A> = cmd_buf
                             .trackers
                             .render_pipelines
                             .add_single(&*render_pipeline_guard, pipeline_id)
@@ -1234,8 +1281,10 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
 
                         state.pipeline_flags = pipeline.flags;
 
-                        if pipeline.flags.contains(PipelineFlags::WRITES_DEPTH_STENCIL)
-                            && info.is_ds_read_only
+                        if (pipeline.flags.contains(PipelineFlags::WRITES_DEPTH)
+                            && info.is_depth_read_only)
+                            || (pipeline.flags.contains(PipelineFlags::WRITES_STENCIL)
+                                && info.is_stencil_read_only)
                         {
                             return Err(RenderCommandError::IncompatiblePipelineRods)
                                 .map_pass_err(scope);
@@ -1304,24 +1353,25 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
 
                         state.index.pipeline_format = pipeline.strip_index_format;
 
-                        let vertex_strides_len = pipeline.vertex_strides.len();
-                        state.vertex.buffers_required = vertex_strides_len as u32;
+                        let vertex_steps_len = pipeline.vertex_steps.len();
+                        state.vertex.buffers_required = vertex_steps_len as u32;
 
-                        while state.vertex.inputs.len() < vertex_strides_len {
+                        // Initialize each `vertex.inputs[i].step` from
+                        // `pipeline.vertex_steps[i]`.  Enlarge `vertex.inputs`
+                        // as necessary to accomodate all slots in the
+                        // pipeline. If `vertex.inputs` is longer, fill the
+                        // extra entries with default `VertexStep`s.
+                        while state.vertex.inputs.len() < vertex_steps_len {
                             state.vertex.inputs.push(VertexBufferState::EMPTY);
                         }
 
-                        // Update vertex buffer limits
-                        for (vbs, &(stride, rate)) in
-                            state.vertex.inputs.iter_mut().zip(&pipeline.vertex_strides)
-                        {
-                            vbs.stride = stride;
-                            vbs.rate = rate;
+                        // This is worse as a `zip`, but it's close.
+                        let mut steps = pipeline.vertex_steps.iter();
+                        for input in state.vertex.inputs.iter_mut() {
+                            input.step = steps.next().cloned().unwrap_or_default();
                         }
-                        for vbs in state.vertex.inputs.iter_mut().skip(vertex_strides_len) {
-                            vbs.stride = 0;
-                            vbs.rate = VertexStepMode::Vertex;
-                        }
+
+                        // Update vertex buffer limits.
                         state.vertex.update_limits();
                     }
                     RenderCommand::SetIndexBuffer {
@@ -1451,14 +1501,17 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                         depth_max,
                     } => {
                         let scope = PassErrorScope::SetViewport;
-                        if rect.w <= 0.0
-                            || rect.h <= 0.0
-                            || depth_min < 0.0
-                            || depth_min > 1.0
-                            || depth_max < 0.0
-                            || depth_max > 1.0
-                        {
-                            return Err(RenderCommandError::InvalidViewport).map_pass_err(scope);
+                        if rect.w <= 0.0 || rect.h <= 0.0 {
+                            return Err(RenderCommandError::InvalidViewportDimension(
+                                rect.w, rect.h,
+                            ))
+                            .map_pass_err(scope);
+                        }
+                        if !(0.0..=1.0).contains(&depth_min) || !(0.0..=1.0).contains(&depth_max) {
+                            return Err(RenderCommandError::InvalidViewportDepth(
+                                depth_min, depth_max,
+                            ))
+                            .map_pass_err(scope);
                         }
                         let r = hal::Rect {
                             x: rect.x,
@@ -1510,7 +1563,8 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                             || rect.x + rect.w > info.extent.width
                             || rect.y + rect.h > info.extent.height
                         {
-                            return Err(RenderCommandError::InvalidScissorRect).map_pass_err(scope);
+                            return Err(RenderCommandError::InvalidScissorRect(*rect, info.extent))
+                                .map_pass_err(scope);
                         }
                         let r = hal::Rect {
                             x: rect.x,
@@ -1827,6 +1881,10 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                     } => {
                         let scope = PassErrorScope::WriteTimestamp;
 
+                        device
+                            .require_features(wgt::Features::WRITE_TIMESTAMP_INSIDE_PASSES)
+                            .map_pass_err(scope)?;
+
                         let query_set: &resource::QuerySet<A> = cmd_buf
                             .trackers
                             .query_sets
@@ -1886,10 +1944,14 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                             .map_err(RenderPassErrorInner::IncompatibleBundleTargets)
                             .map_pass_err(scope)?;
 
-                        if info.is_ds_read_only != bundle.is_ds_read_only {
+                        if (info.is_depth_read_only && !bundle.is_depth_read_only)
+                            || (info.is_stencil_read_only && !bundle.is_stencil_read_only)
+                        {
                             return Err(RenderPassErrorInner::IncompatibleBundleRods {
-                                pass: info.is_ds_read_only,
-                                bundle: bundle.is_ds_read_only,
+                                pass_depth: info.is_depth_read_only,
+                                pass_stencil: info.is_stencil_read_only,
+                                bundle_depth: bundle.is_depth_read_only,
+                                bundle_stencil: bundle.is_stencil_read_only,
                             })
                             .map_pass_err(scope);
                         }

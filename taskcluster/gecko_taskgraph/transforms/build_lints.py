@@ -6,8 +6,7 @@ Apply some defaults and minor modifications to the jobs defined in the build
 kind.
 """
 
-
-from gecko_taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.base import TransformSequence
 
 transforms = TransformSequence()
 

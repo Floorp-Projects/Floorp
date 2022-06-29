@@ -156,6 +156,7 @@ class WebIDLCodegenManager(LoggingMixin):
         "GeneratedEventList.h",
         "PrototypeList.h",
         "RegisterBindings.h",
+        "RegisterShadowRealmBindings.h",
         "RegisterWorkerBindings.h",
         "RegisterWorkerDebuggerBindings.h",
         "RegisterWorkletBindings.h",
@@ -169,6 +170,7 @@ class WebIDLCodegenManager(LoggingMixin):
     GLOBAL_DEFINE_FILES = {
         "BindingNames.cpp",
         "RegisterBindings.cpp",
+        "RegisterShadowRealmBindings.cpp",
         "RegisterWorkerBindings.cpp",
         "RegisterWorkerDebuggerBindings.cpp",
         "RegisterWorkletBindings.cpp",

@@ -1200,9 +1200,21 @@ static NSString* NSStringForOSType(OSType type) {
 
 bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
   MOZ_ASSERT([mContentCALayer isKindOfClass:[AVSampleBufferDisplayLayer class]]);
+  AVSampleBufferDisplayLayer* videoLayer = (AVSampleBufferDisplayLayer*)mContentCALayer;
+
+  if (@available(macOS 11.0, iOS 14.0, *)) {
+    if (videoLayer.requiresFlushToResumeDecoding) {
+      [videoLayer flush];
+    }
+  }
 
   // If the layer can't handle a new sample, early exit.
-  if (!((AVSampleBufferDisplayLayer*)mContentCALayer).readyForMoreMediaData) {
+  if (!videoLayer.readyForMoreMediaData) {
+#ifdef NIGHTLY_BUILD
+    if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
+      NSLog(@"VIDEO_LOG: EnqueueSurface failed on readyForMoreMediaData.");
+    }
+#endif
     return false;
   }
 
@@ -1212,6 +1224,11 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
       CVPixelBufferCreateWithIOSurface(kCFAllocatorDefault, aSurfaceRef, nullptr, &pixelBuffer);
   if (cvValue != kCVReturnSuccess) {
     MOZ_ASSERT(pixelBuffer == nullptr, "Failed call shouldn't allocate memory.");
+#ifdef NIGHTLY_BUILD
+    if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
+      NSLog(@"VIDEO_LOG: EnqueueSurface failed on allocating pixel buffer.");
+    }
+#endif
     return false;
   }
 
@@ -1250,6 +1267,11 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
                                                                   &formatDescription);
   if (osValue != noErr) {
     MOZ_ASSERT(formatDescription == nullptr, "Failed call shouldn't allocate memory.");
+#ifdef NIGHTLY_BUILD
+    if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
+      NSLog(@"VIDEO_LOG: EnqueueSurface failed on allocating format description.");
+    }
+#endif
     return false;
   }
   CFTypeRefPtr<CMVideoFormatDescriptionRef> formatDescriptionDeallocator =
@@ -1280,6 +1302,11 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
                                                      formatDescription, &timingInfo, &sampleBuffer);
   if (osValue != noErr) {
     MOZ_ASSERT(sampleBuffer == nullptr, "Failed call shouldn't allocate memory.");
+#ifdef NIGHTLY_BUILD
+    if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
+      NSLog(@"VIDEO_LOG: EnqueueSurface failed on allocating sample buffer.");
+    }
+#endif
     return false;
   }
   CFTypeRefPtr<CMSampleBufferRef> sampleBufferDeallocator =
@@ -1299,7 +1326,7 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
                          kCFBooleanTrue);
   }
 
-  [(AVSampleBufferDisplayLayer*)mContentCALayer enqueueSampleBuffer:sampleBuffer];
+  [videoLayer enqueueSampleBuffer:sampleBuffer];
 
   return true;
 }
@@ -1329,6 +1356,15 @@ bool NativeLayerCA::Representation::ApplyChanges(
 
       if (updateSucceeded) {
         mMutatedFrontSurface = false;
+      } else {
+        // Set mMutatedSpecializeVideo, which will ensure that the next update
+        // will rebuild the video layer.
+        mMutatedSpecializeVideo = true;
+#ifdef NIGHTLY_BUILD
+        if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
+          NSLog(@"VIDEO_LOG: EnqueueSurface failed in OnlyVideo update.");
+        }
+#endif
       }
     }
 
@@ -1490,19 +1526,6 @@ bool NativeLayerCA::Representation::ApplyChanges(
     }
   }
 
-  if (mMutatedFrontSurface) {
-    bool isEnqueued = false;
-    IOSurfaceRef surface = aFrontSurface.get();
-    if (aSpecializeVideo) {
-      // Attempt to enqueue this as a video frame. If we fail, we'll fall back to image case.
-      isEnqueued = EnqueueSurface(surface);
-    }
-
-    if (!isEnqueued) {
-      mContentCALayer.contents = (id)surface;
-    }
-  }
-
   if (mContentCALayer && (mMutatedSamplingFilter || layerNeedsInitialization)) {
     if (aSamplingFilter == gfx::SamplingFilter::POINT) {
       mContentCALayer.minificationFilter = kCAFilterNearest;
@@ -1510,6 +1533,32 @@ bool NativeLayerCA::Representation::ApplyChanges(
     } else {
       mContentCALayer.minificationFilter = kCAFilterLinear;
       mContentCALayer.magnificationFilter = kCAFilterLinear;
+    }
+  }
+
+  if (mMutatedFrontSurface) {
+    // This is handled last because a video update could fail, causing us to
+    // early exit, leaving the mutation bits untouched. We do this so that the
+    // *next* update will clear the video layer and setup a regular layer.
+
+    IOSurfaceRef surface = aFrontSurface.get();
+    if (aSpecializeVideo) {
+      // Attempt to enqueue this as a video frame. If we fail, we'll rebuild
+      // our video layer in the next update.
+      bool isEnqueued = EnqueueSurface(surface);
+      if (!isEnqueued) {
+        // Set mMutatedSpecializeVideo, which will ensure that the next update
+        // will rebuild the video layer.
+        mMutatedSpecializeVideo = true;
+#ifdef NIGHTLY_BUILD
+        if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
+          NSLog(@"VIDEO_LOG: EnqueueSurface failed in All update.");
+        }
+#endif
+        return false;
+      }
+    } else {
+      mContentCALayer.contents = (id)surface;
     }
   }
 
