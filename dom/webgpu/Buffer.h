@@ -45,7 +45,8 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(Buffer)
   GPU_DECL_JS_WRAP(Buffer)
 
-  Buffer(Device* const aParent, RawId aId, BufferAddress aSize, bool aMappable);
+  Buffer(Device* const aParent, RawId aId, BufferAddress aSize,
+         uint32_t aUsage);
   void SetMapped(ipc::Shmem&& aShmem, bool aWritable);
 
   const RawId mId;
@@ -54,12 +55,13 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   virtual ~Buffer();
   void Cleanup();
   void UnmapArrayBuffers(JSContext* aCx, ErrorResult& aRv);
+  bool Mappable() const;
 
   // Note: we can't map a buffer with the size that don't fit into `size_t`
   // (which may be smaller than `BufferAddress`), but general not all buffers
   // are mapped.
   const BufferAddress mSize;
-  const bool mMappable;
+  const uint32_t mUsage;
   nsString mLabel;
   // Information about the currently active mapping.
   Maybe<MappedInfo> mMapped;
