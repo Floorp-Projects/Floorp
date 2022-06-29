@@ -740,6 +740,21 @@ const AVAILABLE_SHIMS = [
     ],
     onlyIfBlockedByETP: true,
   },
+  {
+    id: "Blogger",
+    platform: "all",
+    name: "Blogger",
+    bug: "1776869",
+    contentScripts: [
+      {
+        js: "blogger.js",
+        matches: ["*://www.blogger.com/comment/frame/*"],
+        runAt: "document_start",
+        allFrames: true,
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
 ];
 
 module.exports = AVAILABLE_SHIMS;
