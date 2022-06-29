@@ -21,8 +21,7 @@ async function runTests(browser, accDoc) {
       "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
     );
     const hyperText = CommonUtils.getNode("paragraph", content.document);
-
-    return hyperText.textContent.length / 2;
+    return Math.floor(hyperText.textContent.length / 2);
   });
   const hyperText = findAccessibleChildByID(accDoc, "paragraph", [
     Ci.nsIAccessibleText,
@@ -66,7 +65,7 @@ async function runTests(browser, accDoc) {
 }
 
 addAccessibleTask(
-  `<p id="paragraph" style="font-family: monospace;">Болтали две сороки</p>`,
+  `<p id="paragraph" style="font-family: monospace;">Болтали две сорокии</p>`,
   runTests,
   {
     iframe: true,

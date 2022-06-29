@@ -17,7 +17,10 @@ const Layout = {
    */
   zoomDocument(doc, zoom) {
     const bc = BrowsingContext.getFromWindow(doc.defaultView);
-    bc.fullZoom = zoom;
+    // To mirror the behaviour of the UI, we set the zoom
+    // value on the top level browsing context. This value automatically
+    // propagates down to iframes.
+    bc.top.fullZoom = zoom;
   },
 
   /**
