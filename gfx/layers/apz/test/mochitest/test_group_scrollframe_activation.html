@@ -6,7 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
 
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 1151663</title>
+  <title>Tests related to scrollframe activation</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
@@ -14,12 +14,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
   <script type="application/javascript">
     if (isApzEnabled()) {
       SimpleTest.waitForExplicitFinish();
-      var subtests = [{
-        file: "helper_scrollframe_activation_on_load.html",
-        prefs: [
-          ["apz.test.logging_enabled", true]
-        ]
-      },
+
+      let prefs = [
+        ["apz.test.logging_enabled", true]
+      ];
+
+      var subtests = [
+        { file: "helper_scrollframe_activation_on_load.html", prefs },
+        { file: "helper_bug982141.html", prefs },
       ];
 
       if (getPlatform() != "android") {
@@ -28,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
         // leads to very large display ports (larger than even the bad case
         // below), not sure why.
         subtests.push(
-          { file: "helper_check_dp_size.html", prefs: [["apz.test.logging_enabled", true]] }
+          { file: "helper_check_dp_size.html", prefs }
         );
       }
 

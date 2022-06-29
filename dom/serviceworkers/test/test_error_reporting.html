@@ -72,17 +72,11 @@ add_task(async function register_bad_mime_type() {
 });
 
 async function notAllowStorageAccess() {
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["network.cookie.lifetimePolicy",
-     SpecialPowers.Ci.nsICookieService.ACCEPT_SESSION],
-  ]});
+  throw new Error("Storage permissions should be used when bug 1774860 overhauls this test.");
 }
 
 async function allowStorageAccess() {
-  return SpecialPowers.pushPrefEnv({"set": [
-    ["network.cookie.lifetimePolicy",
-     SpecialPowers.Ci.nsICookieService.ACCEPT_NORMALLY],
-  ]});
+  throw new Error("Storage permissions should be used when bug 1774860 overhauls this test.");
 }
 
 /**

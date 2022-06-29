@@ -41,6 +41,7 @@ job-defaults:
             # Bug 1626522: Temporarily enable extension logging for
             # an easier investigation of intermittents on mobile devices
             - --setpref=extensions.logging.enabled=true
+            - --webext
     fetches:
         fetch:
             by-app:

@@ -216,6 +216,19 @@ class BackgroundParentImpl : public PBackgroundParent {
       const uint32_t& aProviderFlags,
       const uint32_t& aCertVerifierFlags) override;
 
+  virtual already_AddRefed<mozilla::psm::PSelectTLSClientAuthCertParent>
+  AllocPSelectTLSClientAuthCertParent(
+      const nsCString& aHostName, const OriginAttributes& aOriginAttributes,
+      const int32_t& aPort, const uint32_t& aProviderFlags,
+      const uint32_t& aProviderTlsFlags, const ByteArray& aServerCertBytes,
+      const nsTArray<ByteArray>& aCANames) override;
+  virtual mozilla::ipc::IPCResult RecvPSelectTLSClientAuthCertConstructor(
+      PSelectTLSClientAuthCertParent* actor, const nsCString& aHostName,
+      const OriginAttributes& aOriginAttributes, const int32_t& aPort,
+      const uint32_t& aProviderFlags, const uint32_t& aProviderTlsFlags,
+      const ByteArray& aServerCertBytes,
+      nsTArray<ByteArray>&& aCANames) override;
+
   PBroadcastChannelParent* AllocPBroadcastChannelParent(
       const PrincipalInfo& aPrincipalInfo, const nsCString& aOrigin,
       const nsString& aChannel) override;

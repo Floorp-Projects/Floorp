@@ -11,22 +11,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-    // -------------------------------------------------------------------
-    // Infrastructure to get the test assertions to run at the right time.
-    // -------------------------------------------------------------------
-    var SimpleTest = window.opener.SimpleTest;
-
-    waitUntilApzStable().then(forceLayerTreeToCompositor).then(testBug982141);
-
-    // --------------------------------------------------------------------
-    // The actual logic for testing bug 982141.
-    //
     // In this test we have a simple page with a scrollable <div> which has
     // enough content to make it scrollable. We test that this <div> got
     // a displayport.
-    // --------------------------------------------------------------------
 
-    function testBug982141() {
+    function test() {
       // Get the content- and compositor-side test data from nsIDOMWindowUtils.
       var utils = SpecialPowers.getDOMWindowUtils(window);
       var contentTestData = utils.getContentAPZTestData();
@@ -35,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
       // Get the sequence number of the last paint on the compositor side.
       // We do this before converting the APZ test data because the conversion
       // loses the order of the paints.
-      SimpleTest.ok(compositorTestData.paints.length > 0,
+      ok(compositorTestData.paints.length > 0,
                     "expected at least one paint in compositor test data");
       var lastCompositorPaint = compositorTestData.paints[compositorTestData.paints.length - 1];
       var lastCompositorPaintSeqNo = lastCompositorPaint.sequenceNumber;
@@ -51,12 +40,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
       // the RCD node (the child is for scrollable <div>). Note that in e10s/B2G
       // cases the RCD will be the root of the tree but on Fennec it will not.
       var rcd = findRcdNode(apzcTree);
-      SimpleTest.ok(rcd != null, "found the RCD node");
-      SimpleTest.is(rcd.children.length, 1, "expected a single child APZC");
+      ok(rcd != null, "found the RCD node");
+      is(rcd.children.length, 1, "expected a single child APZC");
       var childScrollId = rcd.children[0].scrollId;
 
       // We should have content-side data for the same paint.
-      SimpleTest.ok(lastCompositorPaintSeqNo in contentTestData.paints,
+      ok(lastCompositorPaintSeqNo in contentTestData.paints,
                     "expected a content paint with sequence number" + lastCompositorPaintSeqNo);
       var correspondingContentPaint = contentTestData.paints[lastCompositorPaintSeqNo];
 
@@ -64,13 +53,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
       var subframe = document.getElementById("subframe");
       // The clientWidth and clientHeight may be less than 50 if there are scrollbars showing.
       // In general they will be (50 - <scrollbarwidth>, 50 - <scrollbarheight>).
-      SimpleTest.ok(subframe.clientWidth > 0, "Expected a non-zero clientWidth, got: " + subframe.clientWidth);
-      SimpleTest.ok(subframe.clientHeight > 0, "Expected a non-zero clientHeight, got: " + subframe.clientHeight);
-      SimpleTest.ok(dp.width >= subframe.clientWidth && dp.height >= subframe.clientHeight,
+      ok(subframe.clientWidth > 0, "Expected a non-zero clientWidth, got: " + subframe.clientWidth);
+      ok(subframe.clientHeight > 0, "Expected a non-zero clientHeight, got: " + subframe.clientHeight);
+      ok(dp.width >= subframe.clientWidth && dp.height >= subframe.clientHeight,
                     "expected a displayport at least as large as the scrollable element, got " + JSON.stringify(dp));
-
-      window.opener.finishTest();
     }
+
+    waitUntilApzStable()
+    .then(forceLayerTreeToCompositor)
+    .then(test)
+    .then(subtestDone, subtestFailed);
+
   </script>
 </head>
 <body style="overflow: hidden;"><!-- This combined with the user-scalable=no ensures the root frame is not scrollable -->

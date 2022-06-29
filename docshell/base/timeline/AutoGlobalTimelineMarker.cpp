@@ -17,25 +17,23 @@ AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(
     : mName(aName), mStackRequest(aStackRequest) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  if (!timelines || timelines->IsEmpty()) {
+  if (TimelineConsumers::IsEmpty()) {
     return;
   }
 
-  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::START,
-                                              mStackRequest);
+  TimelineConsumers::AddMarkerForAllObservedDocShells(
+      mName, MarkerTracingType::START, mStackRequest);
 }
 
 AutoGlobalTimelineMarker::~AutoGlobalTimelineMarker() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  if (!timelines || timelines->IsEmpty()) {
+  if (TimelineConsumers::IsEmpty()) {
     return;
   }
 
-  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::END,
-                                              mStackRequest);
+  TimelineConsumers::AddMarkerForAllObservedDocShells(
+      mName, MarkerTracingType::END, mStackRequest);
 }
 
 }  // namespace mozilla

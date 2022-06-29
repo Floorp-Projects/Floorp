@@ -93,7 +93,9 @@ async function deleteOnShutdown(opt) {
 
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["network.cookie.lifetimePolicy", opt.lifetimePolicy],
+      ["privacy.sanitize.sanitizeOnShutdown", opt.sanitize],
+      ["privacy.clearOnShutdown.cookies", opt.sanitize],
+      ["privacy.clearOnShutdown.offlineApps", opt.sanitize],
       ["browser.sanitizer.loglevel", "All"],
     ],
   });
@@ -183,7 +185,7 @@ function runAllCookiePermissionTests(originAttributes) {
           originAttributes.name
       );
       await deleteOnShutdown({
-        lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
+        sanitize: true,
         createData: methods.createData,
         checkData: methods.checkData,
         originAttributes: originAttributes.oa,
@@ -205,7 +207,7 @@ function runAllCookiePermissionTests(originAttributes) {
           originAttributes.name
       );
       await deleteOnShutdown({
-        lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
+        sanitize: true,
         createData: methods.createData,
         checkData: methods.checkData,
         originAttributes: originAttributes.oa,
@@ -227,7 +229,7 @@ function runAllCookiePermissionTests(originAttributes) {
           originAttributes.name
       );
       await deleteOnShutdown({
-        lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
+        sanitize: true,
         createData: methods.createData,
         checkData: methods.checkData,
         originAttributes: originAttributes.oa,
@@ -249,7 +251,7 @@ function runAllCookiePermissionTests(originAttributes) {
           originAttributes.name
       );
       await deleteOnShutdown({
-        lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
+        sanitize: true,
         createData: methods.createData,
         checkData: methods.checkData,
         originAttributes: originAttributes.oa,
@@ -271,7 +273,7 @@ function runAllCookiePermissionTests(originAttributes) {
           originAttributes.name
       );
       await deleteOnShutdown({
-        lifetimePolicy: Ci.nsICookieService.ACCEPT_NORMALLY,
+        sanitize: false,
         createData: methods.createData,
         checkData: methods.checkData,
         originAttributes: originAttributes.oa,
@@ -295,7 +297,7 @@ function runAllCookiePermissionTests(originAttributes) {
           originAttributes.name
       );
       await deleteOnShutdown({
-        lifetimePolicy: Ci.nsICookieService.ACCEPT_NORMALLY,
+        sanitize: false,
         createData: methods.createData,
         checkData: methods.checkData,
         originAttributes: originAttributes.oa,
@@ -317,7 +319,7 @@ function runAllCookiePermissionTests(originAttributes) {
           originAttributes.name
       );
       await deleteOnShutdown({
-        lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
+        sanitize: true,
         createData: methods.createData,
         checkData: methods.checkData,
         originAttributes: originAttributes.oa,

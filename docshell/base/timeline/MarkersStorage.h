@@ -8,7 +8,7 @@
 #define mozilla_MarkersStorage_h_
 
 #include "TimelineMarkerEnums.h"  // for MarkerReleaseRequest
-#include "mozilla/Mutex.h"
+#include "MainThreadUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/LinkedList.h"
 #include "nsTArray.h"
@@ -21,26 +21,18 @@ struct ProfileTimelineMarker;
 }
 
 class MarkersStorage : public LinkedListElement<MarkersStorage> {
- private:
-  MarkersStorage() = delete;
+ public:
+  MarkersStorage() { MOZ_ASSERT(NS_IsMainThread()); }
+  virtual ~MarkersStorage() { MOZ_ASSERT(NS_IsMainThread()); }
+
   MarkersStorage(const MarkersStorage& aOther) = delete;
   void operator=(const MarkersStorage& aOther) = delete;
-
- public:
-  explicit MarkersStorage(const char* aMutexName);
-  virtual ~MarkersStorage();
 
   virtual void AddMarker(UniquePtr<AbstractTimelineMarker>&& aMarker) = 0;
   virtual void AddOTMTMarker(UniquePtr<AbstractTimelineMarker>&& aMarker) = 0;
   virtual void ClearMarkers() = 0;
   virtual void PopMarkers(JSContext* aCx,
                           nsTArray<dom::ProfileTimelineMarker>& aStore) = 0;
-
- protected:
-  Mutex& GetLock();
-
- private:
-  Mutex mLock MOZ_UNANNOTATED;
 };
 
 }  // namespace mozilla

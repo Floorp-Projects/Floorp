@@ -92,7 +92,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1756529
       const scrollOrigin = data.scrollOrigin;
       const smooth = data.smooth;
       const msdPhysics = data.prefs[2][1];
-      var SimpleTest = window.opener.SimpleTest;
       let destination = 0;
       let key = "";
       switch (scrollOrigin){
@@ -112,7 +111,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1756529
           key = "KEY_ArrowDown";
       }
       await SpecialPowers.pushPrefEnv({ set: data.prefs });
-      SimpleTest.info(`Testing Scrolling preferences. [origin: ${scrollOrigin}; smooth: ${smooth}; msdPhysics: ${msdPhysics}; ${destination}]`);
+      info(`Testing Scrolling preferences. [origin: ${scrollOrigin}; smooth: ${smooth}; msdPhysics: ${msdPhysics}; ${destination}]`);
 
       // Send the synthesized key event, and wait until it arrives in the
       // content process.
@@ -165,17 +164,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1756529
         prevScrollPos = scrollPos;
       }
 
-      SimpleTest.info(`Scrolled to ${window.scrollY}`);
+      info(`Scrolled to ${window.scrollY}`);
 
       // Relinquish control of the refresh driver.
       utils.restoreNormalRefresh();
 
-      SimpleTest.ok(window.scrollY >= destination, `The page did not scroll [origin: ${scrollOrigin}, smooth: ${smooth}]`);
+      ok(window.scrollY >= destination, `The page did not scroll [origin: ${scrollOrigin}, smooth: ${smooth}]`);
       if (smooth)
-        SimpleTest.ok(scrollCount > 1,
+        ok(scrollCount > 1,
         `Scrolled only once, but expecting a smooth transtion [origin: ${scrollOrigin}; msdPhysics: ${msdPhysics}]`);
       else
-        SimpleTest.is(scrollCount, 1,
+        is(scrollCount, 1,
         `Scrolled more than once, but expecting an instant scroll [origin: ${scrollOrigin}; msdPhysics: ${msdPhysics}]`);
 
       // Synthesize a touch tap to cancel the animation if it's still in-progress.
@@ -190,7 +189,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1756529
       // Reset scroll position for next case.
       window.scrollTo(0, 0);
       await promiseApzFlushedRepaints();
-      SimpleTest.is(0, window.scrollY, `Expected to be scrolled to origin, actually scrolled to ${window.scrollY}`)
+      is(0, window.scrollY, `Expected to be scrolled to origin, actually scrolled to ${window.scrollY}`)
     }
 
     async function runTests() {
@@ -202,7 +201,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1756529
     if (getPlatform() == "linux") {
       // FIXME(bug 1760731): On Linux, this test frequently hangs at
       // "await touchStartPromise", so we skip it.
-      SimpleTest.ok(true, "Test is disabled on Linux, skipping");
+      ok(true, "Test is disabled on Linux, skipping");
       subtestDone();
     } else {
       waitUntilApzStable()

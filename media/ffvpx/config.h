@@ -39,7 +39,11 @@
 #      define HAVE_LIBC_MSVCRT 0
 #    endif
 #  elif defined(XP_DARWIN)
-#    include "config_darwin64.h"
+#    if defined(__aarch64__)
+#      include "config_darwin_aarch64.h"
+#    else
+#      include "config_darwin64.h"
+#    endif
 #  elif defined(XP_UNIX)
 #    if defined(HAVE_64BIT_BUILD)
 #      include "config_unix64.h"

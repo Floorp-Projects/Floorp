@@ -4416,8 +4416,7 @@ void WorkerPrivate::PostMessageToParent(
 
   UniquePtr<AbstractTimelineMarker> start;
   UniquePtr<AbstractTimelineMarker> end;
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  bool isTimelineRecording = timelines && !timelines->IsEmpty();
+  bool isTimelineRecording = !TimelineConsumers::IsEmpty();
 
   if (isTimelineRecording) {
     start = MakeUnique<WorkerTimelineMarker>(
@@ -4444,8 +4443,8 @@ void WorkerPrivate::PostMessageToParent(
             ? ProfileTimelineWorkerOperationType::SerializeDataOnMainThread
             : ProfileTimelineWorkerOperationType::SerializeDataOffMainThread,
         MarkerTracingType::END);
-    timelines->AddMarkerForAllObservedDocShells(start);
-    timelines->AddMarkerForAllObservedDocShells(end);
+    TimelineConsumers::AddMarkerForAllObservedDocShells(start);
+    TimelineConsumers::AddMarkerForAllObservedDocShells(end);
   }
 
   if (NS_WARN_IF(aRv.Failed())) {

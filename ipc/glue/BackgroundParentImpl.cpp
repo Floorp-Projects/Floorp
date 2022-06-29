@@ -66,6 +66,7 @@
 #include "mozilla/net/HttpConnectionMgrParent.h"
 #include "mozilla/net/WebSocketConnectionParent.h"
 #include "mozilla/psm/IPCClientCertsParent.h"
+#include "mozilla/psm/SelectTLSClientAuthCertParent.h"
 #include "mozilla/psm/VerifySSLServerCertParent.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIPrincipal.h"
@@ -778,6 +779,33 @@ BackgroundParentImpl::RecvPVerifySSLServerCertConstructor(
                           aOriginAttributes, aStapledOCSPResponse,
                           aSctsFromTLSExtension, aDcInfo, aProviderFlags,
                           aCertVerifierFlags)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+already_AddRefed<mozilla::psm::PSelectTLSClientAuthCertParent>
+BackgroundParentImpl::AllocPSelectTLSClientAuthCertParent(
+    const nsCString& aHostName, const OriginAttributes& aOriginAttributes,
+    const int32_t& aPort, const uint32_t& aProviderFlags,
+    const uint32_t& aProviderTlsFlags, const ByteArray& aServerCertBytes,
+    const nsTArray<ByteArray>& aCANames) {
+  RefPtr<mozilla::psm::SelectTLSClientAuthCertParent> parent =
+      new mozilla::psm::SelectTLSClientAuthCertParent();
+  return parent.forget();
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPSelectTLSClientAuthCertConstructor(
+    PSelectTLSClientAuthCertParent* actor, const nsCString& aHostName,
+    const OriginAttributes& aOriginAttributes, const int32_t& aPort,
+    const uint32_t& aProviderFlags, const uint32_t& aProviderTlsFlags,
+    const ByteArray& aServerCertBytes, nsTArray<ByteArray>&& aCANames) {
+  mozilla::psm::SelectTLSClientAuthCertParent* selectTLSClientAuthCertParent =
+      static_cast<mozilla::psm::SelectTLSClientAuthCertParent*>(actor);
+  if (!selectTLSClientAuthCertParent->Dispatch(
+          aHostName, aOriginAttributes, aPort, aProviderFlags,
+          aProviderTlsFlags, aServerCertBytes, std::move(aCANames))) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

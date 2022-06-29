@@ -892,12 +892,12 @@ bool nsHostResolver::TRRServiceEnabledForRecord(nsHostRecord* aRec) {
     return false;
   }
 
-  if (!TRRService::Get()->IsConfirmed()) {
+  bool isConfirmed = TRRService::Get()->IsConfirmed();
+  if (!isConfirmed) {
     aRec->RecordReason(TRRSkippedReason::TRR_NOT_CONFIRMED);
-    return false;
   }
 
-  return false;
+  return isConfirmed;
 }
 
 // returns error if no TRR resolve is issued

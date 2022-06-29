@@ -17,9 +17,7 @@
 namespace mozilla {
 
 ObservedDocShell::ObservedDocShell(nsIDocShell* aDocShell)
-    : MarkersStorage("ObservedDocShellMutex"),
-      mDocShell(aDocShell),
-      mPopping(false) {
+    : mDocShell(aDocShell), mLock("ObservedDocShellMutex") {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -42,13 +40,13 @@ void ObservedDocShell::AddOTMTMarker(
   // avoid dealing with multithreading scenarios until all the markers are
   // actually cleared or popped in `ClearMarkers` or `PopMarkers`.
   MOZ_ASSERT(!NS_IsMainThread());
-  MutexAutoLock lock(GetLock());  // for `mOffTheMainThreadTimelineMarkers`.
+  MutexAutoLock lock(mLock);  // for `mOffTheMainThreadTimelineMarkers`.
   mOffTheMainThreadTimelineMarkers.AppendElement(std::move(aMarker));
 }
 
 void ObservedDocShell::ClearMarkers() {
   MOZ_ASSERT(NS_IsMainThread());
-  MutexAutoLock lock(GetLock());  // for `mOffTheMainThreadTimelineMarkers`.
+  MutexAutoLock lock(mLock);  // for `mOffTheMainThreadTimelineMarkers`.
   mTimelineMarkers.Clear();
   mOffTheMainThreadTimelineMarkers.Clear();
 }
@@ -56,16 +54,20 @@ void ObservedDocShell::ClearMarkers() {
 void ObservedDocShell::PopMarkers(
     JSContext* aCx, nsTArray<dom::ProfileTimelineMarker>& aStore) {
   MOZ_ASSERT(NS_IsMainThread());
-  MutexAutoLock lock(GetLock());  // for `mOffTheMainThreadTimelineMarkers`.
 
   MOZ_RELEASE_ASSERT(!mPopping);
   AutoRestore<bool> resetPopping(mPopping);
   mPopping = true;
 
-  // First, move all of our markers into a single array. We'll chose
-  // the `mTimelineMarkers` store because that's where we expect most of
-  // our markers to be.
-  mTimelineMarkers.AppendElements(std::move(mOffTheMainThreadTimelineMarkers));
+  {
+    MutexAutoLock lock(mLock);  // for `mOffTheMainThreadTimelineMarkers`.
+
+    // First, move all of our markers into a single array. We'll chose
+    // the `mTimelineMarkers` store because that's where we expect most of
+    // our markers to be, and we can access it without holding the lock.
+    mTimelineMarkers.AppendElements(
+        std::move(mOffTheMainThreadTimelineMarkers));
+  }
 
   // If we see an unpaired START, we keep it around for the next call
   // to ObservedDocShell::PopMarkers. We store the kept START objects here.

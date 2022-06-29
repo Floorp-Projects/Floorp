@@ -83,7 +83,6 @@ rebased over the commits for the other.
 .. toctree::
    :maxdepth: 1
 
-   graph
    commits
    content
    repositories

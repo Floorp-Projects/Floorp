@@ -22,43 +22,42 @@
     <h1 id="collection-title"></h1>
     <span id="collection-expiry-date"><span></span></span>
   </header>
-  <main>
-    <section id="colorway-customization-panel">
-      <fieldset id="colorway-selector"></fieldset>
-      <div id="colorway-details">
-        <h2 id="colorway-name"></h2>
-        <p id="colorway-description"></p>
-        <fieldset id="colorway-intensities">
-          <legend data-l10n-id="colorway-intensity-selector-label"></legend>
-          <div id="colorway-intensity-radios">
-            <label>
-              <input type="radio" name="intensity" class="colorway-intensity-radio" data-intensity="soft">
-              <span data-l10n-id="colorway-intensity-soft"></span>
-            </label>
-            <label>
-              <input type="radio" name="intensity" class="colorway-intensity-radio" data-intensity="balanced">
-              <span data-l10n-id="colorway-intensity-balanced"></span>
-            </label>
-            <label>
-              <input type="radio" name="intensity" class="colorway-intensity-radio" data-intensity="bold">
-              <span data-l10n-id="colorway-intensity-bold"></span>
-            </label>
-          </div>
-        </fieldset>
-        <button id="set-colorway" data-l10n-id="colorway-closet-set-colorway-button" class="primary"></button>
-        <button id="cancel" data-l10n-id="colorway-closet-cancel-button"></button>
+  <figure>
+    <img id="colorway-figure">
+  </figure>
+  <main id="colorway-customization-panel">
+    <fieldset id="colorway-selector"></fieldset>
+    <h2 id="colorway-name"></h2>
+    <p id="colorway-description"></p>
+    <fieldset id="colorway-intensities">
+      <legend data-l10n-id="colorway-intensity-selector-label"></legend>
+      <div id="colorway-intensity-radios">
+        <label>
+          <input type="radio" name="intensity" class="colorway-intensity-radio" data-intensity="soft">
+          <span data-l10n-id="colorway-intensity-soft"></span>
+        </label>
+        <label>
+          <input type="radio" name="intensity" class="colorway-intensity-radio" data-intensity="balanced">
+          <span data-l10n-id="colorway-intensity-balanced"></span>
+        </label>
+        <label>
+          <input type="radio" name="intensity" class="colorway-intensity-radio" data-intensity="bold">
+          <span data-l10n-id="colorway-intensity-bold"></span>
+        </label>
       </div>
-    </section>
-    <section id="use-fx-home-controls" hidden>
-      <div class="reset-prompt">
-        <span data-l10n-id="colorway-fx-home-link"></span>
-        <button data-l10n-id="colorway-fx-home-apply-button"></button>
-      </div>
-      <div class="success-prompt">
-        <span data-l10n-id="colorway-fx-home-link-success"></span>
-        <button data-l10n-id="colorway-fx-home-undo-button"></button>
-      </div>
-    </section>
+    </fieldset>
+    <button id="set-colorway" data-l10n-id="colorway-closet-set-colorway-button" class="primary"></button>
+    <button id="cancel" data-l10n-id="colorway-closet-cancel-button"></button>
   </main>
+  <footer id="use-fx-home-controls" hidden>
+    <div class="reset-prompt">
+      <span data-l10n-id="colorway-fx-home-link"></span>
+      <button data-l10n-id="colorway-fx-home-apply-button"></button>
+    </div>
+    <div class="success-prompt">
+      <span data-l10n-id="colorway-fx-home-link-success"></span>
+      <button data-l10n-id="colorway-fx-home-undo-button"></button>
+    </div>
+  </footer>
 </body>
 </html>

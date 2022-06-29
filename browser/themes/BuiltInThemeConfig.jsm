@@ -245,6 +245,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022playmaker/soft/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-playmaker.avif",
       collection: "independent-voices",
     },
   ],
@@ -253,6 +255,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022playmaker/balanced/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-playmaker.avif",
       collection: "independent-voices",
     },
   ],
@@ -261,6 +265,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022playmaker/bold/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-playmaker.avif",
       collection: "independent-voices",
     },
   ],
@@ -269,6 +275,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022expressionist/soft/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-expressionist.avif",
       collection: "independent-voices",
     },
   ],
@@ -277,6 +285,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022expressionist/balanced/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-expressionist.avif",
       collection: "independent-voices",
     },
   ],
@@ -285,6 +295,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022expressionist/bold/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-expressionist.avif",
       collection: "independent-voices",
     },
   ],
@@ -293,6 +305,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022visionary/soft/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-visionary.avif",
       collection: "independent-voices",
     },
   ],
@@ -301,6 +315,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022visionary/balanced/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-visionary.avif",
       collection: "independent-voices",
     },
   ],
@@ -309,6 +325,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022visionary/bold/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-visionary.avif",
       collection: "independent-voices",
     },
   ],
@@ -317,6 +335,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022activist/soft/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-activist.avif",
       collection: "independent-voices",
     },
   ],
@@ -325,6 +345,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022activist/balanced/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-activist.avif",
       collection: "independent-voices",
     },
   ],
@@ -333,6 +355,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022activist/bold/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-activist.avif",
       collection: "independent-voices",
     },
   ],
@@ -341,6 +365,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022dreamer/soft/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-dreamer.avif",
       collection: "independent-voices",
     },
   ],
@@ -349,6 +375,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022dreamer/balanced/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-dreamer.avif",
       collection: "independent-voices",
     },
   ],
@@ -357,6 +385,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022dreamer/bold/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-dreamer.avif",
       collection: "independent-voices",
     },
   ],
@@ -365,6 +395,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022innovator/soft/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-innovator.avif",
       collection: "independent-voices",
     },
   ],
@@ -373,6 +405,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022innovator/balanced/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-innovator.avif",
       collection: "independent-voices",
     },
   ],
@@ -381,6 +415,8 @@ const BuiltInThemeConfig = new Map([
     {
       version: "1.1",
       path: "resource://builtin-themes/colorways/2022innovator/bold/",
+      figureUrl:
+        "chrome://browser/content/colorways/independent-voices-innovator.avif",
       collection: "independent-voices",
     },
   ],

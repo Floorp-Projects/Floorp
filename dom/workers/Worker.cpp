@@ -111,8 +111,7 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   UniquePtr<AbstractTimelineMarker> start;
   UniquePtr<AbstractTimelineMarker> end;
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  bool isTimelineRecording = timelines && !timelines->IsEmpty();
+  bool isTimelineRecording = !TimelineConsumers::IsEmpty();
 
   if (isTimelineRecording) {
     start = MakeUnique<WorkerTimelineMarker>(
@@ -146,8 +145,8 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
             ? ProfileTimelineWorkerOperationType::SerializeDataOnMainThread
             : ProfileTimelineWorkerOperationType::SerializeDataOffMainThread,
         MarkerTracingType::END);
-    timelines->AddMarkerForAllObservedDocShells(start);
-    timelines->AddMarkerForAllObservedDocShells(end);
+    TimelineConsumers::AddMarkerForAllObservedDocShells(start);
+    TimelineConsumers::AddMarkerForAllObservedDocShells(end);
   }
 
   if (NS_WARN_IF(aRv.Failed())) {

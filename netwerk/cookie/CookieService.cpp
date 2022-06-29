@@ -54,8 +54,9 @@ uint32_t MakeCookieBehavior(uint32_t aCookieBehavior) {
  network.cookie.lifetimePolicy
 */
 void MigrateCookieLifetimePrefs() {
-  if (mozilla::Preferences::GetInt("network.cookie.lifetimePolicy") !=
-      nsICookieService::ACCEPT_SESSION) {
+  // Former network.cookie.lifetimePolicy values ACCEPT_SESSION/ACCEPT_NORMALLY
+  // are not available anymore 2 = ACCEPT_SESSION
+  if (mozilla::Preferences::GetInt("network.cookie.lifetimePolicy") != 2) {
     return;
   }
   if (!mozilla::Preferences::GetBool("privacy.sanitize.sanitizeOnShutdown")) {

@@ -646,7 +646,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 
 #ifdef ENABLE_WASM_SIMD
       case uint16_t(Op::SimdPrefix): {
-        if (!env.v128Enabled()) {
+        if (!env.simdAvailable()) {
           return iter.unrecognizedOpcode(&op);
         }
         uint32_t noIndex;

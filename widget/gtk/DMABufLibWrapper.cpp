@@ -269,16 +269,6 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() {
 #else
 bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 #endif
-bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
-  LOGDMABUF(
-      ("nsDMABufDevice::IsDMABufVAAPIEnabled: EGL %d "
-       "media_ffmpeg_vaapi_enabled %d CanUseHardwareVideoDecoding %d "
-       "XRE_IsRDDProcess %d\n",
-       gfx::gfxVars::UseEGL(), StaticPrefs::media_ffmpeg_vaapi_enabled(),
-       gfx::gfxVars::CanUseHardwareVideoDecoding(), XRE_IsRDDProcess()));
-  return gfx::gfxVars::UseVAAPI() && XRE_IsRDDProcess() &&
-         gfx::gfxVars::CanUseHardwareVideoDecoding();
-}
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
   LOGDMABUF(
       ("nsDMABufDevice::IsDMABufWebGLEnabled: UseDMABuf %d "

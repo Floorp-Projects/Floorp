@@ -1812,7 +1812,10 @@ void ProfileBuffer::StreamCountersToJSON(
             // or next sample; Always write the first and last samples.
             if (i == 0 || i == size - 1 ||
                 samples[i].mNumber != previousNumber ||
-                samples[i].mCount != previousCount) {
+                samples[i].mCount != previousCount ||
+                // Ensure we ouput the first 0 before skipping samples.
+                (i >= 2 && (samples[i - 2].mNumber != previousNumber ||
+                            samples[i - 2].mCount != previousCount))) {
               if (i != 0 && samples[i].mTime >= samples[i - 1].mTime) {
                 MOZ_LOG(sFuzzyfoxLog, mozilla::LogLevel::Error,
                         ("Fuzzyfox Profiler Assertion: %f >= %f",

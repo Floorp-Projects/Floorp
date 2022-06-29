@@ -1,12 +1,12 @@
 .. _slow:
 
-============================
-Why the Build System is Slow
-============================
+==================================
+Why the Build System might be slow
+==================================
 
-A common complaint about the build system is that it's slow. There are
-many reasons contributing to its slowness. We will attempt to document
-them here.
+A common complaint about the build system is that it can be slow. There are
+many reasons contributing to its slowness.
+However, on modern hardware, Firefox can be built in less than 10 minutes.
 
 First, it is important to distinguish between a :term:`clobber build`
 and an :term:`incremental build`. The reasons for why each are slow can
@@ -34,10 +34,6 @@ have in your machine and the more total MHz in your machine, the better.
 cores.** Please note the *physical* in this sentence. Hyperthreaded
 cores (an Intel Core i7 will report 8 CPU cores but only 4 are physical
 for example) only yield at most a 1.25x speedup per core.
-
-We also recommend using the most modern CPU model possible. Haswell
-chips deliver much more performance per CPU cycle than say Sandy Bridge
-CPUs.
 
 This cause impacts both clobber and incremental builds.
 
@@ -106,29 +102,9 @@ symlink support. On systems that support symlinks, we can generate a
 file into a staging area then symlink it into the final directory very
 quickly. On Windows, we have to perform a full file copy. This incurs
 much more I/O. And if done poorly, can muck with file modification
-times, messing up build dependencies. As of the summer of 2013, the
-impact of symlinks is being mitigated through the use
-of an :term:`install manifest`.
+times, messing up build dependencies.
 
 These issues impact both clobber and incremental builds.
-
-Recursive make traversal is slow
-================================
-
-The build system has traditionally been built by employing recursive
-make. Recursive make involves make iterating through directories / make
-files sequentially and executing each in turn. This is inefficient for
-directories containing few targets/tasks because make could be *starved*
-for work when processing these directories. Any time make is starved,
-the build isn't using all available CPU cycles and the build is slower
-as a result.
-
-Work has started in bug 907365 to fix this issue by changing the way
-make traverses all the make files.
-
-The impact of slow recursive make traversal is mostly felt on
-incremental builds. Traditionally, most of the wall time during a
-no-op build is spent in make traversal.
 
 make is inefficient
 ===================

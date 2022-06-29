@@ -2379,10 +2379,19 @@ void gfxPlatform::InitAcceleration() {
           gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
                                     discardFailureId, &status))) {
     if (status == nsIGfxInfo::FEATURE_STATUS_OK ||
+#ifdef MOZ_WAYLAND
+        StaticPrefs::media_ffmpeg_vaapi_enabled() ||
+#endif
         StaticPrefs::media_hardware_video_decoding_force_enabled_AtStartup()) {
       sLayersSupportsHardwareVideoDecoding = true;
     }
   }
+
+#ifdef MOZ_WAYLAND
+  sLayersSupportsHardwareVideoDecoding =
+      gfxPlatformGtk::GetPlatform()->InitVAAPIConfig(
+          sLayersSupportsHardwareVideoDecoding);
+#endif
 
   sLayersAccelerationPrefsInitialized = true;
 
@@ -2778,7 +2787,9 @@ void gfxPlatform::InitHardwareVideoConfig() {
   nsCString failureId;
 
   FeatureState& featureVP8 = gfxConfig::GetFeature(Feature::VP8_HW_DECODE);
+#ifndef MOZ_WIDGET_GTK
   featureVP8.EnableByDefault();
+#endif
 
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_VP8_HW_DECODE, &message,
                            failureId)) {
@@ -2788,8 +2799,9 @@ void gfxPlatform::InitHardwareVideoConfig() {
   gfxVars::SetUseVP8HwDecode(featureVP8.IsEnabled());
 
   FeatureState& featureVP9 = gfxConfig::GetFeature(Feature::VP9_HW_DECODE);
+#ifndef MOZ_WIDGET_GTK
   featureVP9.EnableByDefault();
-
+#endif
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_VP9_HW_DECODE, &message,
                            failureId)) {
     featureVP9.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
