@@ -6174,7 +6174,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       // SIMD operations
 #ifdef ENABLE_WASM_SIMD
       case uint16_t(Op::SimdPrefix): {
-        if (!f.moduleEnv().v128Enabled()) {
+        if (!f.moduleEnv().simdAvailable()) {
           return f.iter().unrecognizedOpcode(&op);
         }
         switch (op.b1) {

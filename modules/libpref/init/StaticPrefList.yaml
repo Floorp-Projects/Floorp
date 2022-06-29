@@ -6939,13 +6939,6 @@
   value: true
   mirror: always
 
-#if defined(ENABLE_WASM_SIMD)
--   name: javascript.options.wasm_simd
-    type: bool
-    value: true
-    mirror: always
-#endif  // defined(ENABLE_WASM_SIMD)
-
 #if defined(ENABLE_WASM_RELAXED_SIMD)
 -   name: javascript.options.wasm_relaxed_simd
     type: bool

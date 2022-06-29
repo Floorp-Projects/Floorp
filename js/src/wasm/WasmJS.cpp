@@ -324,11 +324,11 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
   bool testSerialization = WasmTestSerializationFlag(cx);
   bool functionReferences = WasmFunctionReferencesFlag(cx);
   bool gc = WasmGcFlag(cx);
-#ifdef JS_CODEGEN_ARM64
   // Cranelift aarch64 has full SIMD support.
+#if !defined(ENABLE_WASM_SIMD) || defined(JS_CODEGEN_ARM64)
   bool simdOnNonAarch64 = false;
 #else
-  bool simdOnNonAarch64 = WasmSimdFlag(cx);
+  bool simdOnNonAarch64 = true;
 #endif
   bool exn = WasmExceptionsFlag(cx);
   if (reason) {
@@ -385,17 +385,14 @@ bool wasm::IsSimdPrivilegedContext(JSContext* cx) {
          cx->realm()->principals()->isSystemOrAddonPrincipal();
 }
 
+bool wasm::SimdAvailable(JSContext* cx) {
+  return js::jit::JitSupportsWasmSimd();
+}
+
 bool wasm::SimdWormholeAvailable(JSContext* cx) {
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
   // The #ifdef ensures that we only enable the wormhole on hardware that
   // supports it and if SIMD support is compiled in.
-  //
-  // Next we must check that the CPU supports SIMD; it might not, even if SIMD
-  // is available.  Do this directly, not via WasmSimdFlag().
-  //
-  // Do not go via WasmSimdFlag() because we do not want to gate on
-  // j.o.wasm_simd.  If the wormhole is available, requesting it will
-  // force-enable SIMD.
   return js::jit::JitSupportsWasmSimd() &&
          (WasmSimdWormholeFlag(cx) || IsSimdPrivilegedContext(cx)) &&
          (IonAvailable(cx) || BaselineAvailable(cx)) && !CraneliftAvailable(cx);

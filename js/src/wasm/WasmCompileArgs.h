@@ -90,6 +90,7 @@ struct FeatureArgs {
         JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
             sharedMemory(Shareable::False),
+        simd(false),
         simdWormhole(false),
         intrinsics(false) {
   }
@@ -104,6 +105,7 @@ struct FeatureArgs {
 #undef WASM_FEATURE
 
   Shareable sharedMemory;
+  bool simd;
   bool simdWormhole;
   bool intrinsics;
 };
