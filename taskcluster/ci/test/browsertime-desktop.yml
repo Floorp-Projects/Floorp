@@ -33,7 +33,6 @@ job-defaults:
                 default:
                     - raptor/linux_config.py
         extra-options:
-            - --browsertime
             - --conditioned-profile=settled
 
 browsertime-tp6:
@@ -52,12 +51,10 @@ browsertime-tp6:
                 by-test-platform:
                     windows10-64.*shippable.*-qr.*:
                         - --chimera
-                        - --browsertime
                         - --browsertime-no-ffwindowrecorder
                         - --conditioned-profile=settled
                     default:
                         - --chimera
-                        - --browsertime
                         - --conditioned-profile=settled
         run-on-projects:
             by-subtest:
@@ -130,12 +127,10 @@ browsertime-responsiveness:
             by-test-platform:
                 windows10-.*:
                     - --cold
-                    - --browsertime
                     - --browsertime-no-ffwindowrecorder
                     - --conditioned-profile=settled
                 default:
                     - --cold
-                    - --browsertime
                     - --conditioned-profile=settled
     run-on-projects:
         by-app:
