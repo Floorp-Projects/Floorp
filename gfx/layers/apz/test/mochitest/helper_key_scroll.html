@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
           if (window.scrollY < window.scrollMaxY) {
             return;
           }
-          SimpleTest.info("Reached final scroll position of sync KEY_End scroll");
+          info("Reached final scroll position of sync KEY_End scroll");
           window.removeEventListener("scroll", checkBottom);
           resolve();
         };
@@ -67,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
           if (window.scrollY > 0) {
             return;
           }
-          SimpleTest.info("Reached final scroll position of async KEY_Home scroll");
+          info("Reached final scroll position of async KEY_Home scroll");
           window.removeEventListener("scroll", checkTop);
           resolve();
         };
@@ -91,7 +91,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
         return rcd.hasAsyncKeyScrolled === "1";
       }
 
-      SimpleTest.info("Last paint rcd is null");
+      info("Last paint rcd is null");
       return false;
     }
 
