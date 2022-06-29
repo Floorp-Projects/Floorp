@@ -44,7 +44,7 @@ async function test() {
   // Subframe hit testing of overscrolled APZCs does not yet work with WebRender
   // (bug 1701831), so bail out early.
   if (true) {
-    SimpleTest.todo(false, "This test does not currently pass with WebRender");
+    todo(false, "This test does not currently pass with WebRender");
     return;
   }
 
