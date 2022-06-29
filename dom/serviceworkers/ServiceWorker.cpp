@@ -50,10 +50,12 @@ bool ServiceWorkersEnabled(JSContext* aCx, JSObject* aGlobal) {
     return false;
   }
 
-  if (const nsCOMPtr<nsIGlobalObject> global =
-          xpc::CurrentNativeGlobal(aCx)) {
-    if (global->GetStorageAccess() == StorageAccess::ePrivateBrowsing) {
-      return false;
+  if (StaticPrefs::dom_serviceWorkers_hide_in_pbmode_enabled()) {
+    if (const nsCOMPtr<nsIGlobalObject> global =
+            xpc::CurrentNativeGlobal(aCx)) {
+      if (global->GetStorageAccess() == StorageAccess::ePrivateBrowsing) {
+        return false;
+      }
     }
   }
 
