@@ -37,7 +37,6 @@ if CONFIG["OS_TARGET"] == "Darwin" and (
     CONFIG["MOZ_REPLACE_MALLOC"] or CONFIG["MOZ_MEMORY"]
 ):
     SOURCES += [
-        "Mutex.cpp",
         "zone.c",
     ]
 
