@@ -1171,7 +1171,7 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
   // container with the live region attribute. Inner nodes override outer nodes
   // within the same document. The inner nodes can be used to override live
   // region behavior on more general outer nodes.
-  nsAccUtils::SetLiveContainerAttributes(attributes, mContent);
+  nsAccUtils::SetLiveContainerAttributes(attributes, this);
 
   if (!mContent->IsElement()) return attributes.forget();
 
@@ -3744,6 +3744,33 @@ void LocalAccessible::DOMNodeID(nsString& aID) const {
     if (nsAtom* id = mContent->GetID()) {
       id->ToString(aID);
     }
+  }
+}
+
+void LocalAccessible::LiveRegionAttributes(nsAString* aLive,
+                                           nsAString* aRelevant,
+                                           Maybe<bool>* aAtomic,
+                                           nsAString* aBusy) const {
+  dom::Element* el = Elm();
+  if (!el) {
+    return;
+  }
+  if (aLive) {
+    el->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_live, *aLive);
+  }
+  if (aRelevant) {
+    el->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_relevant, *aRelevant);
+  }
+  if (aAtomic) {
+    // XXX We ignore aria-atomic="false", but this probably doesn't conform to
+    // the spec.
+    if (el->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_atomic,
+                        nsGkAtoms::_true, eCaseMatters)) {
+      *aAtomic = Some(true);
+    }
+  }
+  if (aBusy) {
+    el->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_busy, *aBusy);
   }
 }
 

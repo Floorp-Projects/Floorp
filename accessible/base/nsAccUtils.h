@@ -46,10 +46,10 @@ class nsAccUtils {
    * Set container-foo live region attributes for the given node.
    *
    * @param aAttributes    where to store the attributes
-   * @param aStartContent  node to start from
+   * @param aStartAcc  Accessible to start from
    */
   static void SetLiveContainerAttributes(AccAttributes* aAttributes,
-                                         nsIContent* aStartContent);
+                                         Accessible* aStartAcc);
 
   /**
    * Any ARIA property of type boolean or NMTOKEN is undefined if the ARIA
