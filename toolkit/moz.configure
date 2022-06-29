@@ -2174,11 +2174,7 @@ with only_when(compile_environment | artifact_builds):
         elif target.kernel == "Darwin":
             # 32/64-bit macosx assemblers need to prefix symbols with an
             # underscore.
-            flags = [
-                "-DPIC",
-                "-DMACHO",
-                "-DPREFIX"
-            ]
+            flags = ["-DPIC", "-DMACHO", "-DPREFIX"]
             if target.cpu == "x86_64":
                 flags += [
                     "-D__x86_64__",
