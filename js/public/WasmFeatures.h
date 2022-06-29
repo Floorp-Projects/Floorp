@@ -93,14 +93,6 @@
 
 // clang-format off
 #define JS_FOR_WASM_FEATURES(DEFAULT, TENTATIVE, EXPERIMENTAL)                \
-  DEFAULT(/* capitalized name   */ Simd,                                      \
-          /* lower case name    */ v128,                                      \
-          /* compile predicate  */ WASM_SIMD_ENABLED,                         \
-          /* compiler predicate */ AnyCompilerAvailable(cx),                  \
-          /* flag predicate     */ !IsFuzzingCranelift(cx) &&                 \
-              js::jit::JitSupportsWasmSimd(),                                 \
-          /* shell flag         */ "simd",                                    \
-          /* preference name    */ "simd")                                    \
   EXPERIMENTAL(/* capitalized name   */ ExtendedConst,                        \
                /* lower case name    */ extendedConst,                        \
                /* compile predicate  */ WASM_EXTENDED_CONST_ENABLED,          \
@@ -135,7 +127,8 @@
             /* lower case name    */ v128Relaxed,                             \
             /* compile predicate  */ WASM_RELAXED_SIMD_ENABLED,               \
             /* compiler predicate */ AnyCompilerAvailable(cx),                \
-            /* flag predicate     */ WasmSimdFlag(cx),                        \
+            /* flag predicate     */ !IsFuzzingCranelift(cx) &&               \
+                js::jit::JitSupportsWasmSimd(),                               \
             /* shell flag         */ "relaxed-simd",                          \
             /* preference name    */ "relaxed_simd")                          \
   TENTATIVE(                                                                  \

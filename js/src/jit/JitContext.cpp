@@ -149,7 +149,7 @@ bool jit::JitSupportsWasmSimd() {
 #if defined(ENABLE_WASM_SIMD)
   return js::jit::MacroAssembler::SupportsWasmSimd();
 #else
-  MOZ_CRASH("Do not call");
+  return false;
 #endif
 }
 

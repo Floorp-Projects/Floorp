@@ -909,6 +909,12 @@ static bool WasmThreadsEnabled(JSContext* cx, unsigned argc, Value* vp) {
 JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE);
 #undef WASM_FEATURE
 
+static bool WasmSimdEnabled(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(wasm::SimdAvailable(cx));
+  return true;
+}
+
 static bool WasmSimdWormholeEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(wasm::SimdWormholeAvailable(cx));
@@ -8421,6 +8427,11 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 "wasmThreadsEnabled()",
 "  Returns a boolean indicating whether the WebAssembly threads proposal is\n"
 "  supported on the current device."),
+
+    JS_FN_HELP("wasmSimdEnabled", WasmSimdEnabled, 0, 0,
+"wasmSimdEnabled()",
+"  Returns a boolean indicating whether WebAssembly SIMD proposal is\n"
+"  supported by the current device."),
 
     JS_FN_HELP("wasmSimdWormholeEnabled", WasmSimdWormholeEnabled, 0, 0,
 "wasmSimdWormholeEnabled()",

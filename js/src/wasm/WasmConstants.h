@@ -815,8 +815,8 @@ enum class SimdOp {
   //   - In all browsers, if the content passing the options bag is privileged
   //     (in a way that is TBD).
   //
-  // - As per normal, wasm SIMD can be enabled by setting `j.o.wasm_simd` to
-  //   true, but in that case the wormhole functionality will not be enabled.
+  // - Wasm SIMD can be absent, and in that case the wormhole functionality
+  //   will not be enabled.
   //   Note that `j.o.wasm_simd_wormhole` does not enable the wormhole
   //   functionality directly; it must be enabled by passing an options bag as
   //   described above.
