@@ -2258,9 +2258,6 @@ var gProtectionsHandler = {
     body += `${ThirdPartyCookies.prefEnabled}: ${Services.prefs.getIntPref(
       ThirdPartyCookies.prefEnabled
     )}\n`;
-    body += `network.cookie.lifetimePolicy: ${Services.prefs.getIntPref(
-      "network.cookie.lifetimePolicy"
-    )}\n`;
     body += `privacy.annotate_channels.strict_list.enabled: ${Services.prefs.getBoolPref(
       "privacy.annotate_channels.strict_list.enabled"
     )}\n`;

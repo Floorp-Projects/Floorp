@@ -1451,24 +1451,6 @@ privacy:
       - main
 
 datasanitization:
-  network_cookie_lifetimePolicy:
-    bug_numbers:
-      - 1589753
-      - 1617241
-      - 1645089
-      - 1678210
-    description: >
-      This scalar reports the value of the network.cookie.lifetimePolicy pref.
-    expires: never
-    kind: uint
-    notification_emails:
-      - pbz@mozilla.com
-      - seceng-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
   privacy_sanitize_sanitizeOnShutdown:
     bug_numbers:
       - 1589753

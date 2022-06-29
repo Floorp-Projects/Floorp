@@ -38,12 +38,6 @@ function log(msg) {
 // Used as unique id for pending sanitizations.
 var gPendingSanitizationSerial = 0;
 
-/**
- * Cookie lifetime policy is currently used to cleanup on shutdown other
- * components such as QuotaManager, localStorage, ServiceWorkers.
- */
-const PREF_COOKIE_LIFETIME = "network.cookie.lifetimePolicy";
-
 var Sanitizer = {
   /**
    * Whether we should sanitize on shutdown.
@@ -799,9 +793,6 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
 async function sanitizeOnShutdown(progress) {
   log("Sanitizing on shutdown");
   progress.sanitizationPrefs = {
-    network_cookie_lifetimePolicy: Services.prefs.getIntPref(
-      "network.cookie.lifetimePolicy"
-    ),
     privacy_sanitize_sanitizeOnShutdown: Services.prefs.getBoolPref(
       "privacy.sanitize.sanitizeOnShutdown"
     ),
@@ -860,52 +851,9 @@ async function sanitizeOnShutdown(progress) {
     Services.prefs.savePrefFile(null);
   }
 
+  // In case the user has not activated sanitizeOnShutdown but has explicitely set exceptions
+  // to always clear particular origins, we clear those here
   let principalsCollector = new lazy.PrincipalsCollector();
-
-  // Clear out QuotaManager storage for principals that have been marked as
-  // session only.  The cookie service has special logic that avoids writing
-  // such cookies to disk, but QuotaManager always touches disk, so we need to
-  // wipe the data on shutdown (or startup if we failed to wipe it at
-  // shutdown).  (Note that some session cookies do survive Firefox restarts
-  // because the Session Store that remembers your tabs between sessions takes
-  // on the responsibility for persisting them through restarts.)
-  //
-  // The default value is determined by the "Browser Privacy" preference tab's
-  // "Cookies and Site Data" "Accept cookies and site data from websites...Keep
-  // until" setting.  The default is "They expire" (ACCEPT_NORMALLY), but it
-  // can also be set to "PRODUCT is closed" (ACCEPT_SESSION).  A permission can
-  // also be explicitly set on a per-origin basis from the Page Info's "Set
-  // Cookies" row.
-  //
-  // We can think of there being two groups that might need to be wiped.
-  // First, when the default is set to ACCEPT_SESSION, then all origins that
-  // use QuotaManager storage but don't have a specific permission set to
-  // ACCEPT_NORMALLY need to be wiped.  Second, the set of origins that have
-  // the permission explicitly set to ACCEPT_SESSION need to be wiped.  There
-  // are also other ways to think about and accomplish this, but this is what
-  // the logic below currently does!
-  if (
-    Services.prefs.getIntPref(
-      PREF_COOKIE_LIFETIME,
-      Ci.nsICookieService.ACCEPT_NORMALLY
-    ) == Ci.nsICookieService.ACCEPT_SESSION
-  ) {
-    log("Session-only configuration detected");
-    progress.advancement = "session-only";
-
-    let principals = await principalsCollector.getAllPrincipals(progress);
-    await maybeSanitizeSessionPrincipals(
-      progress,
-      principals,
-      Ci.nsIClearDataService.CLEAR_ALL_CACHES |
-        Ci.nsIClearDataService.CLEAR_COOKIES |
-        Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-        Ci.nsIClearDataService.CLEAR_EME
-    );
-
-    progress.advancement = "done";
-    return;
-  }
 
   progress.advancement = "session-permission";
 

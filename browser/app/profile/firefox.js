@@ -1404,7 +1404,6 @@ pref("services.sync.prefs.sync.media.autoplay.default", true);
 pref("services.sync.prefs.sync.media.eme.enabled", true);
 pref("services.sync.prefs.sync.media.videocontrols.picture-in-picture.video-toggle.enabled", true);
 pref("services.sync.prefs.sync.network.cookie.cookieBehavior", true);
-pref("services.sync.prefs.sync.network.cookie.lifetimePolicy", true);
 pref("services.sync.prefs.sync.network.cookie.thirdparty.sessionOnly", true);
 pref("services.sync.prefs.sync.permissions.default.image", true);
 pref("services.sync.prefs.sync.pref.downloads.disable_button.edit_actions", true);

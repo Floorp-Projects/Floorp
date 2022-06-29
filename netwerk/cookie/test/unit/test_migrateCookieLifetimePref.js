@@ -25,7 +25,10 @@ add_task(async function migrateSanitizationPrefsClearCleaningPrefs() {
   Services.cookies;
 
   Assert.equal(
-    Services.prefs.getIntPref("network.cookie.lifetimePolicy"),
+    Services.prefs.getIntPref(
+      "network.cookie.lifetimePolicy",
+      Ci.nsICookieService.ACCEPT_NORMALLY
+    ),
     Ci.nsICookieService.ACCEPT_NORMALLY,
     "Cookie lifetime policy is off"
   );

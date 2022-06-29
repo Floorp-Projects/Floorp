@@ -454,7 +454,7 @@ package org.mozilla.geckoview {
   @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBCookieBehavior {
   }
 
-  @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBCookieLifetime {
+  @Retention(value=RetentionPolicy.SOURCE) @Deprecated @DeprecationSchedule(id="cookie-lifetime-policy",version=106) public static interface ContentBlocking.CBCookieLifetime {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlocking.CBEtpLevel {
@@ -473,7 +473,7 @@ package org.mozilla.geckoview {
     field public static final int ACCEPT_VISITED = 3;
   }
 
-  public static class ContentBlocking.CookieLifetime {
+  @Deprecated @DeprecationSchedule(id="cookie-lifetime-policy",version=106) public static class ContentBlocking.CookieLifetime {
     ctor protected CookieLifetime();
     field public static final int DAYS = 3;
     field public static final int NORMAL = 0;
@@ -539,7 +539,7 @@ package org.mozilla.geckoview {
     method public int getAntiTrackingCategories();
     method public int getCookieBehavior();
     method public int getCookieBehaviorPrivateMode();
-    method public int getCookieLifetime();
+    method @Deprecated @DeprecationSchedule(id="cookie-lifetime-policy",version=106) public int getCookieLifetime();
     method public boolean getCookiePurging();
     method public int getEnhancedTrackingProtectionLevel();
     method public int getSafeBrowsingCategories();
@@ -550,7 +550,7 @@ package org.mozilla.geckoview {
     method @NonNull public ContentBlocking.Settings setAntiTracking(int);
     method @NonNull public ContentBlocking.Settings setCookieBehavior(int);
     method @NonNull public ContentBlocking.Settings setCookieBehaviorPrivateMode(int);
-    method @NonNull public ContentBlocking.Settings setCookieLifetime(int);
+    method @Deprecated @DeprecationSchedule(id="cookie-lifetime-policy",version=106) @NonNull public ContentBlocking.Settings setCookieLifetime(int);
     method @NonNull public ContentBlocking.Settings setCookiePurging(boolean);
     method @NonNull public ContentBlocking.Settings setEnhancedTrackingProtectionLevel(int);
     method @NonNull public ContentBlocking.Settings setSafeBrowsing(int);
@@ -566,7 +566,7 @@ package org.mozilla.geckoview {
     method @NonNull public ContentBlocking.Settings.Builder antiTracking(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieBehavior(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieBehaviorPrivateMode(int);
-    method @NonNull public ContentBlocking.Settings.Builder cookieLifetime(int);
+    method @Deprecated @DeprecationSchedule(id="cookie-lifetime-policy",version=106) @NonNull public ContentBlocking.Settings.Builder cookieLifetime(int);
     method @NonNull public ContentBlocking.Settings.Builder cookiePurging(boolean);
     method @NonNull public ContentBlocking.Settings.Builder enhancedTrackingProtectionLevel(int);
     method @NonNull public ContentBlocking.Settings.Builder safeBrowsing(int);

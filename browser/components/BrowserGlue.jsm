@@ -1908,10 +1908,6 @@ BrowserGlue.prototype = {
 
   _recordDataSanitizationPrefs() {
     Services.telemetry.scalarSet(
-      "datasanitization.network_cookie_lifetimePolicy",
-      Services.prefs.getIntPref("network.cookie.lifetimePolicy")
-    );
-    Services.telemetry.scalarSet(
       "datasanitization.privacy_sanitize_sanitizeOnShutdown",
       Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown")
     );
