@@ -27,6 +27,9 @@
       case "delete":
         test_delete();
         break;
+      case "firefox_view":
+        test_firefox_view();
+        break;
     }
   };
 
@@ -127,6 +130,23 @@
             uid: "uid",
           },
           messageId: 4,
+        },
+      }),
+    });
+
+    window.dispatchEvent(event);
+  }
+
+  function test_firefox_view() {
+    var event = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: JSON.stringify({
+        id: webChannelId,
+        message: {
+          command: "fxaccounts:firefox_view",
+          data: {
+            uid: "uid",
+          },
+          messageId: 5,
         },
       }),
     });

@@ -92,6 +92,7 @@ class VRLayerChild;
 namespace gl {
 class GLScreenBuffer;
 class MozFramebuffer;
+class SharedSurface;
 class Texture;
 }  // namespace gl
 
@@ -509,7 +510,11 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   // appropriately.
   void EndOfFrame();
   RefPtr<gfx::DataSourceSurface> GetFrontBufferSnapshot();
-  Maybe<uvec2> FrontBufferSnapshotInto(Maybe<Range<uint8_t>>);
+  Maybe<uvec2> FrontBufferSnapshotInto(const Maybe<Range<uint8_t>>);
+  Maybe<uvec2> FrontBufferSnapshotInto(
+      const std::shared_ptr<gl::SharedSurface>& front,
+      const Maybe<Range<uint8_t>>);
+  gl::SwapChain* GetSwapChain(WebGLFramebuffer*, const bool webvr);
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*,
                                                   const bool webvr);
 

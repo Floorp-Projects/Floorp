@@ -82,6 +82,15 @@ class CompositableForwarder : public KnowsCompositor {
   virtual void UseTextures(CompositableClient* aCompositable,
                            const nsTArray<TimedTextureClient>& aTextures) = 0;
 
+  virtual void UseRemoteTexture(CompositableClient* aCompositable,
+                                const RemoteTextureId aTextureId,
+                                const RemoteTextureOwnerId aOwnerId,
+                                const gfx::IntSize aSize,
+                                const TextureFlags aFlags) = 0;
+
+  virtual void EnableAsyncCompositable(CompositableClient* aCompositable,
+                                       bool aEnable) = 0;
+
   virtual void UpdateFwdTransactionId() = 0;
   virtual uint64_t GetFwdTransactionId() = 0;
 

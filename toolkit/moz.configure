@@ -981,7 +981,6 @@ set_config("MOZ_GPSD", depends_if(system_gpsd)(lambda _: True))
 
 check_prog("TAR", ("gnutar", "gtar", "tar"))
 check_prog("UNZIP", ("unzip",))
-check_prog("GN", ("gn",), allow_missing=True)
 
 # Key files
 # ==============================================================

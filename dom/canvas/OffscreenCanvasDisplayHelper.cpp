@@ -135,12 +135,20 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
   Maybe<layers::SurfaceDescriptor> desc =
       aContext->PresentFrontBuffer(nullptr, aTextureType);
   if (desc) {
-    RefPtr<layers::TextureClient> texture =
-        layers::SharedSurfaceTextureData::CreateTextureClient(
-            *desc, format, mData.mSize, flags, imageBridge);
-    if (texture) {
-      image = new layers::TextureWrapperImage(
-          texture, gfx::IntRect(gfx::IntPoint(0, 0), mData.mSize));
+    if (desc->type() ==
+        layers::SurfaceDescriptor::TSurfaceDescriptorRemoteTexture) {
+      const auto& textureDesc = desc->get_SurfaceDescriptorRemoteTexture();
+      imageBridge->UpdateCompositable(mImageContainer, textureDesc.textureId(),
+                                      textureDesc.ownerId(), mData.mSize,
+                                      flags);
+    } else {
+      RefPtr<layers::TextureClient> texture =
+          layers::SharedSurfaceTextureData::CreateTextureClient(
+              *desc, format, mData.mSize, flags, imageBridge);
+      if (texture) {
+        image = new layers::TextureWrapperImage(
+            texture, gfx::IntRect(gfx::IntPoint(0, 0), mData.mSize));
+      }
     }
   } else {
     surface = aContext->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
@@ -173,11 +181,13 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
     imageList.AppendElement(layers::ImageContainer::NonOwningImage(
         image, TimeStamp(), mLastFrameID++, mImageProducerID));
     mImageContainer->SetCurrentImages(imageList);
-  } else {
+  } else if (!desc ||
+             desc->type() !=
+                 layers::SurfaceDescriptor::TSurfaceDescriptorRemoteTexture) {
     mImageContainer->ClearAllImages();
   }
 
-  // We save the current surface because we might need it in GetSnapshot. If we
+  // We save any current surface because we might need it in GetSnapshot. If we
   // are on a worker thread and not WebGL, then this will be the only way we can
   // access the pixel data on the main thread.
   mFrontBufferSurface = surface;

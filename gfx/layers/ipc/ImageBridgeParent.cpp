@@ -200,7 +200,8 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvUpdate(
     RefPtr<CompositableHost> compositable =
         FindCompositable(edit.compositable());
     if (!compositable ||
-        !ReceiveCompositableUpdate(edit.detail(), WrapNotNull(compositable))) {
+        !ReceiveCompositableUpdate(edit.detail(), WrapNotNull(compositable),
+                                   edit.compositable())) {
       return IPC_FAIL_NO_REASON(this);
     }
     uint32_t dropped = compositable->GetDroppedFrames();

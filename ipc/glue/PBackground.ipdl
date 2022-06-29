@@ -134,7 +134,7 @@ parent:
   // Only called at startup during mochitests to check the basic infrastructure.
   async PBackgroundTest(nsCString testArg);
 
-  async PBackgroundFileSystem();
+  async PBackgroundFileSystem(PrincipalInfo principalInfo);
 
   async PBackgroundDataBridge(uint64_t channelID);
 
