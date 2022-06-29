@@ -1,4 +1,6 @@
 {
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "file:///InfoBar.schema.json",
   "title": "InfoBar",
   "description": "A template with an image, test and buttons.",
   "version": "1.0.0",
@@ -169,7 +171,8 @@
       "description": "A JEXL expression representing targeting information"
     },
     "template": {
-      "type": "string"
+      "type": "string",
+      "const": "infobar"
     },
     "trigger": {
       "type": "object",
@@ -191,5 +194,5 @@
     }
   },
   "additionalProperties": true,
-  "required": ["id", "groups", "content", "targeting", "template", "trigger"]
+  "required": ["id", "content", "targeting", "template", "trigger"]
 }

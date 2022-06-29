@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "file:///UpdateAction.schema.json",
   "title": "UpdateActionMessage",
   "description": "A template for messages that execute predetermined actions.",
   "version": "1.0.0",
@@ -54,7 +55,8 @@
       "description": "A JEXL expression representing targeting information"
     },
     "template": {
-      "type": "string"
+      "type": "string",
+      "const": "update_action"
     },
     "trigger": {
       "type": "object",
@@ -74,5 +76,6 @@
       },
       "required": ["id"]
     }
-  }
+  },
+  "required": ["id", "content", "targeting", "template"]
 }
