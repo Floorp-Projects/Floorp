@@ -13,10 +13,13 @@
 #if defined(GP_OS_windows)
 class PowerMeterDevice;
 #endif
+#if defined(GP_PLAT_arm64_darwin)
+class ProcessPower;
+#endif
 
 class PowerCounters {
  public:
-#if defined(GP_OS_windows)
+#if defined(GP_OS_windows) || defined(GP_PLAT_arm64_darwin)
   explicit PowerCounters();
   ~PowerCounters();
   void Sample();
@@ -34,6 +37,9 @@ class PowerCounters {
 
 #if defined(GP_OS_windows)
   mozilla::Vector<mozilla::UniquePtr<PowerMeterDevice>> mPowerMeterDevices;
+#endif
+#if defined(GP_PLAT_arm64_darwin)
+  mozilla::UniquePtr<ProcessPower> mProcessPower;
 #endif
 };
 
