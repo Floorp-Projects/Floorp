@@ -44,6 +44,8 @@ _DEBUGGER_INFO = {
     "windbg.exe": {
         "interactive": True,
     },
+    # Pernosco support -- this way you don't have to go out of your way to use pernosco-submit
+    "rr": {"interactive": True, "args": ["record", "--disable-avx-512"]},
 }
 
 # Maps each OS platform to the preferred debugger programs found in _DEBUGGER_INFO.
