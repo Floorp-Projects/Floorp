@@ -27,31 +27,11 @@
 
 SimpleTest.waitForExplicitFinish();
 
-add_task(async function test_button()
+function test_button()
 {
-  await SimpleTest.promiseFocus();
-
-  // Click on the button.
-  let commandPromise = new Promise(resolve => {
-    addEventListener("command", event => resolve(event), { once: true });
-  });
-
-  synthesizeMouseAtCenter($("one"), {});
-  let event = await commandPromise;
-  is(event.button, 0, "button for mouse");
-  is(event.inputSource, MouseEvent.MOZ_SOURCE_MOUSE, "input source for mouse");
-
-  // Press space while to button is focused.
-  commandPromise = new Promise(resolve => {
-    addEventListener("command", event => resolve(event), { once: true });
-  });
-
+  synthesizeMouseExpectEvent($("one"), 2, 2, {}, $("one"), "command", "button press");
   $("one").focus();
-  synthesizeKey("VK_SPACE", { });
-  event = await commandPromise;
-  is(event.button, 0, "button for keyboard");
-  is(event.inputSource, MouseEvent.MOZ_SOURCE_KEYBOARD, "input source for keyboard");
-
+  synthesizeKeyExpectEvent("VK_SPACE", { }, $("one"), "command", "key press");
   $("two").disabled = true;
   synthesizeMouseExpectEvent($("two"), 2, 2, {}, $("two"), "!command", "button press command when disabled");
   synthesizeMouseExpectEvent($("two"), 2, 2, {}, $("two"), "click", "button press click when disabled");
@@ -73,7 +53,11 @@ add_task(async function test_button()
 
   $("two").focus();
   ok(document.activeElement != $("two"), "focus disabled button");
-});
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(test_button);
 
 ]]>
 </script>

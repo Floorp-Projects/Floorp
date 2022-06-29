@@ -100,7 +100,11 @@ async function test_clickData({ manifest_version, persistent }) {
 
       let keypressEventData = {};
       keypressEventData[modifier] = true;
-      await triggerBrowserActionWithKeyboard(extension, " ", keypressEventData);
+      await triggerBrowserActionWithKeyboard(
+        extension,
+        "KEY_Enter",
+        keypressEventData
+      );
       let info = await extension.awaitMessage("onClick");
 
       is(info.button, 0, `Key command emulates left click`);
@@ -204,7 +208,7 @@ async function test_clickData_reset({ manifest_version }) {
 
   await clickBrowserActionWithModifiers();
 
-  await triggerBrowserActionWithKeyboard(extension, " ");
+  await triggerBrowserActionWithKeyboard(extension, "KEY_Enter");
   assertInfoReset(await extension.awaitMessage("onClick"));
 
   await clickBrowserActionWithModifiers();
