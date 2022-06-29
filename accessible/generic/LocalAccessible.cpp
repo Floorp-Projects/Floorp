@@ -958,9 +958,11 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           AccTextChangeEvent* event = downcast_accEvent(aEvent);
           const nsString& text = event->ModifiedText();
 #if defined(XP_WIN)
-          // On Windows, events for live region updates containing embedded
-          // objects require us to dispatch synchronous events.
-          bool sync = text.Contains(L'\xfffc') &&
+          // On Windows with the cache disabled, events for live region updates
+          // containing embedded objects require us to dispatch synchronous
+          // events.
+          bool sync = !StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+                      text.Contains(L'\xfffc') &&
                       nsAccUtils::IsARIALive(aEvent->GetAccessible());
 #endif
           ipcDoc->SendTextChangeEvent(id, text, event->GetStartOffset(),
