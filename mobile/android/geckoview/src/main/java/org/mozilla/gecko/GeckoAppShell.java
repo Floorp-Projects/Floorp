@@ -179,6 +179,8 @@ public class GeckoAppShell {
   }
 
   private static volatile boolean locationHighAccuracyEnabled;
+  private static volatile boolean locationListeningRequested = false;
+  private static volatile boolean locationPaused = false;
 
   // See also HardwareUtils.LOW_MEMORY_THRESHOLD_MB.
   private static final int HIGH_MEMORY_DEVICE_THRESHOLD_MB = 768;
@@ -309,16 +311,32 @@ public class GeckoAppShell {
     return lastKnownLocation;
   }
 
+  // Toggles the location listeners on/off, which will then provide/stop location information
   @WrapForJNI(calledFrom = "gecko")
+  private static synchronized boolean enableLocationUpdates(final boolean enable) {
+    locationListeningRequested = enable;
+    final boolean canListen = updateLocationListeners();
+    if (!canListen && locationListeningRequested) {
+      // Didn't successfully start listener when requested
+      locationListeningRequested = false;
+    }
+    return canListen;
+  }
+
   // Permissions are explicitly checked when requesting content permission.
   @SuppressLint("MissingPermission")
-  private static synchronized boolean enableLocation(final boolean enable) {
+  private static synchronized boolean updateLocationListeners() {
+    final boolean shouldListen = locationListeningRequested && !locationPaused;
     final LocationManager lm = getLocationManager(getApplicationContext());
     if (lm == null) {
       return false;
     }
 
-    if (!enable) {
+    if (!shouldListen) {
+      // Could not complete request, because paused
+      if (locationListeningRequested) {
+        return false;
+      }
       lm.removeUpdates(sAndroidListeners);
       return true;
     }
@@ -355,6 +373,16 @@ public class GeckoAppShell {
     final Looper l = Looper.getMainLooper();
     lm.requestLocationUpdates(provider, 100, 0.5f, sAndroidListeners, l);
     return true;
+  }
+
+  public static void pauseLocation() {
+    locationPaused = true;
+    updateLocationListeners();
+  }
+
+  public static void resumeLocation() {
+    locationPaused = false;
+    updateLocationListeners();
   }
 
   private static LocationManager getLocationManager(final Context context) {

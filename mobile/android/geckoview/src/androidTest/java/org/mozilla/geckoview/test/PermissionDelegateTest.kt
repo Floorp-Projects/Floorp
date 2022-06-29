@@ -18,8 +18,13 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseExcep
 import org.mozilla.geckoview.test.TrackingPermissionService.TrackingPermissionInstance;
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Criteria
+import android.location.Location
+import android.location.LocationManager
 import android.os.Build
+import android.os.SystemClock
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -169,6 +174,14 @@ class PermissionDelegateTest : BaseSessionTest() {
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
+        // Set location for test
+        sessionRule.setPrefsUntilTestEnd(mapOf("geo.provider.testing" to false))
+        var context = InstrumentationRegistry.getInstrumentation().targetContext
+        var locManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        var locProvider = "permissionsLocationProvider";
+        sessionRule.addMockLocationProvider(locManager, locProvider)
+        sessionRule.setMockLocation(locManager, locProvider, 1.1111, 2.2222)
+
         mainSession.delegateDuringNextWait(object : PermissionDelegate {
             // Ensure the content permission is asked first, before the Android permission.
             @AssertCalled(count = 1, order = [1])
@@ -233,6 +246,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         })
         mainSession.reload()
         mainSession.waitForPageStop()
+        sessionRule.removeMockLocationProvider(locManager, locProvider)
     }
 
     @Test fun geolocation_reject() {
