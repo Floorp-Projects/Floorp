@@ -11237,7 +11237,7 @@
 # Whether to enable echconfig.
 - name: network.dns.echconfig.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # Whether to enable echconfig for http3.
