@@ -121,7 +121,7 @@ dom::Promise* Device::GetLost(ErrorResult& aRv) {
 already_AddRefed<Buffer> Device::CreateBuffer(
     const dom::GPUBufferDescriptor& aDesc, ErrorResult& aRv) {
   if (!mBridge->CanSend()) {
-    RefPtr<Buffer> buffer = new Buffer(this, 0, aDesc.mSize, false);
+    RefPtr<Buffer> buffer = new Buffer(this, 0, aDesc.mSize, 0);
     return buffer.forget();
   }
 
@@ -151,7 +151,7 @@ already_AddRefed<Buffer> Device::CreateBuffer(
   // If the buffer is not mapped at creation, and it has Shmem, we send it
   // to the GPU process. Otherwise, we keep it.
   RawId id = mBridge->DeviceCreateBuffer(mId, aDesc);
-  RefPtr<Buffer> buffer = new Buffer(this, id, aDesc.mSize, hasMapFlags);
+  RefPtr<Buffer> buffer = new Buffer(this, id, aDesc.mSize, aDesc.mUsage);
   if (aDesc.mMappedAtCreation) {
     buffer->SetMapped(std::move(shmem),
                       !(aDesc.mUsage & dom::GPUBufferUsage_Binding::MAP_READ));
@@ -174,9 +174,7 @@ RefPtr<MappingPromise> Device::MapBufferAsync(RawId aId, uint32_t aMode,
       mode = ffi::WGPUHostMap_Write;
       break;
     default:
-      aRv.ThrowInvalidAccessError(
-          nsPrintfCString("Invalid map flag %u", aMode));
-      return nullptr;
+      MOZ_CRASH("should have checked aMode in Buffer::MapAsync");
   }
 
   const CheckedInt<uint64_t> offset(aOffset);
