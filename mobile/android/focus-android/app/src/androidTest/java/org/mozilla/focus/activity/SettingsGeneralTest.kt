@@ -7,8 +7,9 @@ package org.mozilla.focus.activity
 import android.content.res.Configuration
 import android.os.Build
 import androidx.test.platform.app.InstrumentationRegistry
+import mozilla.components.support.locale.LocaleManager
+import mozilla.components.support.locale.LocaleUseCases
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -16,6 +17,7 @@ import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.homeScreen
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
 import org.mozilla.focus.helpers.StringsHelper.AF_GENERAL_HEADING
 import org.mozilla.focus.helpers.StringsHelper.AF_HELP
@@ -31,8 +33,9 @@ import org.mozilla.focus.helpers.StringsHelper.FR_LANGUAGE_SYSTEM_DEFAULT
 import org.mozilla.focus.helpers.StringsHelper.FR_SETTINGS
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.verifyTranslatedTextExists
+import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.testAnnotations.SmokeTest
-import java.util.Locale
+import org.mozilla.gecko.util.ThreadUtils.runOnUiThread
 
 // Tests for the General settings sub-menu: changing theme, locale and default browser
 class SettingsGeneralTest {
@@ -104,7 +107,6 @@ class SettingsGeneralTest {
         }
     }
 
-    @Ignore("Failing, see https://github.com/mozilla-mobile/focus-android/issues/4851")
     @Test
     fun frenchLocaleTest() {
         /* Go to Settings */
@@ -152,20 +154,15 @@ class SettingsGeneralTest {
         }
     }
 
-    companion object {
-        @Suppress("Deprecation")
-        fun changeLocale(locale: String?) {
-            val context = InstrumentationRegistry.getInstrumentation()
-                .targetContext
-            val res = context.applicationContext.resources
-            val config = res.configuration
-            config.setLocale(Locale(locale!!))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                context.createConfigurationContext(config)
-            } else {
-                res.updateConfiguration(config, res.displayMetrics)
-            }
-        }
+    fun changeLocale(languageTag: String?) {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val locale = Locales.parseLocaleCode(languageTag)
+        LocaleManager.setNewLocale(
+            mActivityTestRule.activity,
+            LocaleUseCases(context.components.store),
+            locale
+        )
+        runOnUiThread { mActivityTestRule.activity.recreate() }
     }
 
     private fun getUiTheme(): Boolean {
