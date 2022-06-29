@@ -219,11 +219,7 @@ class MOZ_RAII AutoProfilerStats {
           "Discover and profile unregistered threads -- beware: expensive!")   \
                                                                                \
     MACRO(23, "processcpu", ProcessCPU,                                        \
-          "Sample the CPU utilization of each process")                        \
-                                                                               \
-    MACRO(24, "power", Power,                                                  \
-          "Sample energy meters on Windows 11 and per process power use on "   \
-          "Apple Silicon")
+          "Sample the CPU utilization of each process")
 // *** Synchronize with lists in ProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {

@@ -47,7 +47,6 @@
           "markersallthreads",
           "unregisteredthreads",
           "processcpu",
-          "power",
           "responsiveness"
         ]
       },
