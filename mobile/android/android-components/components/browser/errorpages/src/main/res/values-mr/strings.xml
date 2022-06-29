@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">पृष्ठ दाखल करण्यात समस्या</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">पुन्हा प्रयत्न करा</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">मागे जा</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">विनंती पूर्ण करू शकत नाही</string>
@@ -168,12 +163,9 @@
     <!-- In the example, the two URLs in markup do not need to be translated. -->
     <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>पुरवलेल्या पत्त्याचा होस्ट सर्व्हर ब्राउझरला सापडला नाही.</p>
       <ul>
-
         <li>अशा टाइपिंग चुकांसाठी पत्ता तपासा
           <strong>www</strong>.example.com
-
-          च्याऐवजी <strong>ww</strong>.example.com
-
+          च्याऐवजी <strong>ww</strong>.example.com</li>
         <li>आपण कोणतीही पृष्ठे लोड करू शकत नसल्यास आपल्या डिव्हाइसचा डेटा किंवा वायफाय कनेक्शन तपासा.</li>
       </ul>]]></string>
 
@@ -269,4 +261,5 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">भ्रामक साइट समस्या</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>%1$s वरील संकेतस्थळ फसवे म्हणून घोषीत केले गेले आहे व सुरक्षा प्राधान्यक्रम कारणास्तव रोखले गेले आहे.</p>]]></string>
-</resources>
+
+    </resources>

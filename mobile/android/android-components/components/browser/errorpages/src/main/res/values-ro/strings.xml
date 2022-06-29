@@ -131,8 +131,7 @@
       <ul>
         <li>Te rugăm să contactezi proprietarii site-ului să-i informezi despre problemă.</li>
       </ul>
-    
-      </ul>]]></string>
+]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Eroare de codificare a conținutului</string>
@@ -237,4 +236,5 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problemă de site înșelător</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Această pagină web de la %1$s a fost raportată ca site înșelător și a fost blocată pe baza preferințelor tale de securitate.</p>]]></string>
-</resources>
+
+    </resources>

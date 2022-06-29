@@ -25,7 +25,7 @@
     <string name="mozac_browser_errorpages_security_bad_cert_title">پەیوەندی پارێزراو سەرکەوتوو نەبوو</string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_advanced">پێشکەوتوو...</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">پێشکەوتوو…</string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">بڕۆ دواوە (پێشنیارکراوە)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -146,4 +146,5 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">گرفتی ماڵپەڕی فێڵاوی</string>
+
     </resources>

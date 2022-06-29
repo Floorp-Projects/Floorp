@@ -42,6 +42,26 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">危険性を承知の上で使用する</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">このウェブサイトには安全な接続が必要です。</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[<ul>
+  <li>このウェブサイトには安全な接続が必要なため、閲覧しようとしているページを表示できません。</li>
+  <li>この問題はウェブサイト側に原因がある可能性が高く、解決するためにあなたにできることはありません。</li>
+  <li>この問題について、ウェブサイトの管理者に知らせてください。</li>
+</ul>
+]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">詳細情報...</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
+  <label> <b>%1$s</b> には HTTP Strict Transport Security (HSTS) と呼ばれるセキュリティポリシーが設定されており、<b>%2$s</b> は安全な接続でしか通信できません。そのため、このサイトを例外に追加することはできません。
+]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">戻る</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">接続が中断されました</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->

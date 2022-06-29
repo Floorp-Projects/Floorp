@@ -47,6 +47,14 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">ຍອມຮັບຄວາມສ່ຽງ ແລະ ດຳເນີນການຕໍ່</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">ເວັບໄຊທນີ້ຕ້ອງການການເຊື່ອມຕໍ່ທີ່ປອດໄພ.</string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ຂັ້ນສູງ…</string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">ກັບຄືນ</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">ການເຊື່ອມຕໍ່ຖືກລົບກວນ</string>
 
@@ -96,7 +104,8 @@
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
-      <p>ບຣາວເຊີໄດ້ຢຸດພະຍາຍາມໃນການຮ້ອງຂໍລາຍການ. ເວັບໄຊທໄດ້ປ່ຽນເສັ້ນທາງຄຳຮ້ອງຂໍໄປໃນທາງທີ່ບໍມີການສີ້ນສຸດ.      <ul>
+      <p>ບຣາວເຊີໄດ້ຢຸດພະຍາຍາມໃນການຮ້ອງຂໍລາຍການ. ເວັບໄຊທໄດ້ປ່ຽນເສັ້ນທາງຄຳຮ້ອງຂໍໄປໃນທາງທີ່ບໍມີການສີ້ນສຸດ. </p>
+     <ul>
         <li>ທ່ານໄດ້ປິດ ຫລື ບັອກຄຸກກີ້ທີ່ຕ້ອງການໂດຍເວັບໄຊທນີ້ບໍ?</li>
         <li>ຖ້າວ່າການຍອມຮັບຄຸກກີ້ຂອງເວັບໄຊທບໍ່ໄດ້ແກ້ໄຂບັນຫາ ມັນອາດຈະເປັນນຳບັນຫາໃນການຕັ້ງຄ່າເຊີເວີ ແລະ ບໍ່ໄດ້ເປັນນຳຄອມພິວເຕີຂອງທ່ານ.</li>
       </ul>
@@ -252,4 +261,11 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>ຫນ້າເວັບນີ້ທີ່ %1$s ໄດ້ຖືກລາຍງານວ່າເປັນເວັບປອມແປງ ແລະ ໄດ້ຖືກບັອກໂດຍອີງຈາກການຕັ້ງຄ່າຄວາມປອດໄພຂອງທ່ານ.</p>
     ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">ເວັບໄຊທທີ່ປອດໄພຍັງບໍ່ພ້ອມໃຫ້ໃຊ້ງານ</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[ທ່ານ​ໄດ້​ເປີດ​ໃຊ້​ງານໂຫມດ HTTPS-Only ເພື່ອ​ຄວາມ​ປອດ​ໄພ​ທີ່​ຫຼາຍຂື້ນ ແລະ HTTPS ເວີ​ຊັນ <em>%1$s</em> ຍັງບໍພ້ອມໃຫ້ໃຊ້ງານ.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">ສືບຕໍ່ໄປຫາເວັບໄຊທທີ່ນຳໃຊ້ HTTP</string>
 </resources>

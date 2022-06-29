@@ -3,7 +3,7 @@
     <!-- Title of the notification shown while we upgrade Fennec to Fenix. -->
     <string name="mozac_support_migration_ongoing_notification_title">نوێکردنەوە لە کاردایە</string>
     <!-- Text of the notification shown while we upgrade Fennec to Fenix. -->
-    <string name="mozac_support_migration_ongoing_notification_text">فایەرفۆکس ئامادەدەبێت کەمێکی تر...</string>
+    <string name="mozac_support_migration_ongoing_notification_text">فایەرفۆکس ئامادەدەبێت کەمێکی تر…</string>
     <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
     <string name="mozac_support_migration_complete_notification_title">نوێکردنەوە تەواو بوو</string>
     <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->

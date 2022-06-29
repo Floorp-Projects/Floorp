@@ -13,8 +13,7 @@
     <string name="mozac_browser_errorpages_security_ssl_title">Conescion segua no riescia</string>
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
-
-A pagina che ti veu vedde a no peu ese mostrâ perché no l\'é poscibile verificâ l’aotenticitæ di dæti riçevui.</li>
+        <li>A pagina che ti veu vedde a no peu ese mostrâ perché no l\'é poscibile verificâ l’aotenticitæ di dæti riçevui.</li>
         <li>Ciamma o responsabile do scito web pe informalo do problema.</li>
       </ul>]]></string>
 
@@ -239,4 +238,5 @@ A pagina che ti veu vedde a no peu ese mostrâ perché no l\'é poscibile verifi
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Scito inganevole</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>A pagina %1$s a l\'é segnalâ comme \'n scito inganevole a l\'é stæta blocâ da-e teu preferense de seguessa.</p>]]></string>
-</resources>
+
+    </resources>

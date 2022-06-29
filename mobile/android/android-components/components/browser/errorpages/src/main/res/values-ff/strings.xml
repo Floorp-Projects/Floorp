@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Loowgol hello waɗii caɗeele</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Fuɗɗito</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Rutto</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Horiima Timminde Ɗaɓɓitannde</string>
@@ -57,7 +52,8 @@
 
     <!-- The error message shown when a website took long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Lowre ɗaɓɓitaande ndee jaabaaki ɗaɓɓitaande ceŋol etee wanngorde ndee dartiima fadde jaabtol.</p>
-      <ul>Mbar sarworde ndee wonaa heewraande walla ena taƴi oo sahaa?  Fuɗɗito so ɓooyii.</li>
+      <ul>
+        <li>Mbar sarworde ndee wonaa heewraande walla ena taƴi oo sahaa?  Fuɗɗito so ɓooyii.</li>
         <li>A horiima naatde e lowe goɗɗe? Ƴeewto ceŋol laylaytol masiŋel ngel. </li>
         <li>Mbar ordinateer maa suuraaki caggal ɓalal-jaynge walla proxy?  Teelɗe ɗe peewaani ena mbaawi haɗde peeragol e geese.</li>
         <li>Haa jonni ena waɗi caɗeele? Jokkondir e jiiloowo laylaytol maa walla jeeyoowo ceŋol maa ngam ɗaɓɓude ballal.</li>
@@ -92,7 +88,8 @@
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Wanngorde ndee woni ko e mbayka ceŋtol etee waawaa seŋaade e temre ɗaɓɓitaande ndee.</p>
       <ul>
-        <li>Mbar kaɓirgal maa ena seŋii e laylaytol caasngol?</li>Ñoƴƴu "eto kadi" ngam artirde a mbayka ceŋol, kesɗitinaa hello ngoo.</li>
+        <li>Mbar kaɓirgal maa ena seŋii e laylaytol caasngol?</li>
+        <li>Ñoƴƴu “eto kadi” ngam artirde a mbayka ceŋol, kesɗitinaa hello ngoo.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
@@ -173,4 +170,5 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Caɗe lowre fuuntoore</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Ndee lowre to %1$s jaŋtaama wonde ko lowre fuuntoore etee koko daaƴaa e cuɓoraaɗe kisal maa.</p>]]></string>
-</resources>
+
+    </resources>

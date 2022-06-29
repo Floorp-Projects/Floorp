@@ -3,7 +3,7 @@
     <!-- Title of the notification shown while we upgrade Fennec to Fenix. -->
     <string name="mozac_support_migration_ongoing_notification_title">ᱦᱟᱹᱞᱤᱭᱟᱜ ᱞᱟᱦᱟᱜ ᱠᱟᱱᱟ</string>
     <!-- Text of the notification shown while we upgrade Fennec to Fenix. -->
-    <string name="mozac_support_migration_ongoing_notification_text">ᱢᱤᱫ ᱜᱷᱟᱹᱬᱤᱡ ᱨᱮ Firefox ᱛᱮᱭᱟᱨᱚᱜ-ᱟ ...</string>
+    <string name="mozac_support_migration_ongoing_notification_text">ᱢᱤᱫ ᱜᱷᱟᱹᱬᱤᱡ ᱨᱮ Firefox ᱛᱮᱭᱟᱨᱚᱜ-ᱟ …</string>
     <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
     <string name="mozac_support_migration_complete_notification_title">ᱦᱟᱹᱞᱤᱭᱟᱜ ᱯᱩᱨᱟᱹᱣᱮᱱᱟ</string>
     <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->

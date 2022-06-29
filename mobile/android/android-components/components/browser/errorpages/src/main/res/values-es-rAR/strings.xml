@@ -43,6 +43,26 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Aceptar el riesgo y continuar</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Este sitio web requiere una conexión segura.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>La página que intentás ver no se puede mostrar porque este sitio web requiere una conexión segura.</li>
+         <li>Lo más probable es que el problema esté relacionado con el sitio web y no hay nada que puedas hacer para resolverlo.</li>
+         <li>Podés avisarle al administrador del sitio web sobre el problema.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avanzadas…</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
+        <label> <b>%1$s</b> tiene una política de seguridad llamada HTTP Strict Transport Security (HSTS), lo que se traduce en que <b>%2$s</b> solo puede conectarse de forma segura. No podés añadir una excepción para visitar este sitio.
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Retroceder</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Se interrumpió la conexión </string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->

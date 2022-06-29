@@ -122,20 +122,18 @@ la eraro povas esti tempa kaj vi povos klopodi denove poste.</li>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">La enhavo paneis</string>
 
-    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[]]></string>
-
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Eraro de enkodigo de enhavo</string>
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>La paĝo, kiun vi klopodas vidi, ne povas esti montrita ĉar ĝi uzas nevalidan aŭ nesubtenatan kompaktigon.</p>
       <ul>
-<li>Bonvolu kontakti la posedantojn de la retejo por raporti al ili tiun ĉi problemon.</li></ul>
+<li>Bonvolu kontakti la posedantojn de la retejo por raporti al ili tiun ĉi problemon.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Adreso ne trovita</string>
 
     <!-- In the example, the two URLs in markup do not need to be translated. -->
-    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p><p>La retumilo ne povis trovi la servilon asociata al la adreso indikita.</p>
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>La retumilo ne povis trovi la servilon asociata al la adreso indikita.</p>
       <ul>
         <li>Kontrolu la adreson por vidi ĉu estas tajperaro, ekzemple
           <strong>ww</strong>.example.com anstataŭ

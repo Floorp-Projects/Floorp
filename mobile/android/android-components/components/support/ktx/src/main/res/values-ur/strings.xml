@@ -3,7 +3,7 @@
     <!-- Text displayed when choosing which app to call with after selecting a phone number-->
     <string name="mozac_support_ktx_menu_call_with">اس کے ذریعہ کال کریں…</string>
     <!-- Text displayed when choosing which app to email with after selecting an email address-->
-    <string name="mozac_support_ktx_menu_email_with">اس کے ذریعہ ای میل بھیجیں...</string>
+    <string name="mozac_support_ktx_menu_email_with">اس کے ذریعہ ای میل بھیجیں…</string>
     <string name="mozac_support_ktx_menu_share_with">… کے ساتھ شیئر کریں</string>
     <string name="mozac_support_ktx_share_dialog_title">کے زریعے شیئر کریں</string>
 </resources>

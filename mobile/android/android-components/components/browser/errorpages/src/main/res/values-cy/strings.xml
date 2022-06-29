@@ -43,6 +43,27 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Derbyn y Perygl a Pharhau</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Mae angen cysylltiad diogel ar y wefan hon.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Nid oes modd dangos y dudalen rydych yn ceisio ei gweld oherwydd bod angen cysylltiad diogel ar y wefan hon.</li>
+         <li>Mae’r broblem yn fwyaf tebygol gyda’r wefan, a does dim byd y gallwch chi ei wneud i’w ddatrys.</li>
+         <li>Gallwch roi gwybod i weinyddwr y wefan am y broblem.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Uwch…</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
+        Mae gan <label> <b>%1$s</b> bolisi diogelwch o’r enw HTTP Strict Transport Security (HSTS), sy’n golygu mai dim ond yn ddiogel y gall <b>%2$s</b> gysylltu ag ef. Ni allwch ychwanegu eithriad i ymweld â’r wefan hon.
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Ewch Nôl</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Cafodd y cysylltiad ei darfu</string>
 

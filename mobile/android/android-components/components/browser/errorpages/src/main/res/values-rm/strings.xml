@@ -37,6 +37,26 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Acceptar la ristga e cuntinuar</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Questa website pretenda ina connexiun segirada.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>La pagina che ti emprovas da visitar na po betg vegnir mussada perquai che questa website pretenda ina connexiun segirada.</li>
+         <li>I sa tracta probablamain dad in problem da la website e ti na pos far nagut per al schliar.</li>
+         <li>Ti pos dentant infurmar l\'administratur da la website davart il problem.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avanzà…</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
+        <label> <b>%1$s</b> ha ina directiva da segirezza che sa numna HTTP Strict Transport Security (HSTS). Quai munta che <b>%2$s</b> po mo connectar a moda segirada. I n\'è betg pussaivel dad agiuntar ina excepziun per visitar questa website.
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Turnar</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">La connexiun è interrutta</string>
 
@@ -173,7 +193,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protocol nunenconuschent</string>
 
-    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>L\'adressa inditgescha in protocol (per exempel <q>wxyz://</q>) ch\'il navigatur n\'enconuscha betg. Perquai na po il navigatur betg connectar correctamain cun la website.</p></p>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>L\'adressa inditgescha in protocol (per exempel <q>wxyz://</q>) ch\'il navigatur n\'enconuscha betg. Perquai na po il navigatur betg connectar correctamain cun la website.</p>
       <ul>
         <li>Emprovas ti dad acceder a multimedia u auters servetschs betg textuals? Controllescha sche la website pretenda premissas spezialas.</li>
         <li>Tscherts protocols dovran software da terzs u plug-ins per ch\'il navigatur als reconuschia.</li>

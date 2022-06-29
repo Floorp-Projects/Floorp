@@ -49,7 +49,7 @@
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Tilgang til nettlesarhistorikken</string>
     <!-- Description for management permission. -->
-    <string name="mozac_feature_addons_permissions_management_description">Overvake bruk av utvidingar og handtere tema</string>
+    <string name="mozac_feature_addons_permissions_management_description">Overvake bruk av utvidingar og handsame tema</string>
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">Utveksle meldingar med andre appar enn denne</string>
     <!-- Description for notifications permission. -->
@@ -127,7 +127,7 @@
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Tillegg</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
-    <string name="mozac_feature_addons_addons_manager">Utvidingshandterar</string>
+    <string name="mozac_feature_addons_addons_manager">Utvidingshandsamar</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Tillat</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->

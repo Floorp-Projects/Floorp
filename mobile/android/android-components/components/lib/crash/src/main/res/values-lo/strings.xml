@@ -15,6 +15,9 @@
     <!-- Name of the "notification channel" used for displaying a notification when the app crashed and we can't show a prompt. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_lib_crash_channel">ການຂັດຂ້ອງ</string>
 
+    <!-- Title of the crash reporter notification for background process crashes. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_background_process_notification_title">ຂໍ​ອະໄພ. ໄດ້ມີບັນຫາເກີດຂື້ນໃນ %1$s.</string>
+
     <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
     <string name="mozac_lib_crash_notification_action_report">ລາຍງານ</string>
 

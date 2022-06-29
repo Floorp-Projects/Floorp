@@ -45,6 +45,24 @@ kdo se snaží vydávat za server.</li>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Beru na vědomí a chci pokračovat</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Tento web vyžaduje zabezpečené připojení.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Stránka, kterou se snažíte načíst, nemůže být zobrazena, protože vyžaduje zabezpečené připojení.</li>
+         <li>Příčina tohoto problému je pravděpodobně na straně serveru a vy ji bohužel nemůžete odstranit.</li>
+         <li>O problému můžete informovat správce webu.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Rozšířené…</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[Server <label> <b>%1$s</b> má nastaveno bezpečnostní pravidlo HTTP Strict Transport Security (HSTS), které od aplikace <b>%2$s</b> vyžaduje používání pouze zabezpečeného spojení. Pro připojení k této stránce nelze udělit výjimku.]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Zpátky</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Spojení bylo přerušeno</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->

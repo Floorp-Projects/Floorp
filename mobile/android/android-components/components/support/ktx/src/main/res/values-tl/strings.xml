@@ -3,7 +3,7 @@
     <!-- Text displayed when choosing which app to call with after selecting a phone number-->
     <string name="mozac_support_ktx_menu_call_with">Tumawag gamit ang…</string>
     <!-- Text displayed when choosing which app to email with after selecting an email address-->
-    <string name="mozac_support_ktx_menu_email_with">i-Email kasama...</string>
+    <string name="mozac_support_ktx_menu_email_with">i-Email kasama…</string>
     <string name="mozac_support_ktx_menu_share_with">Ibahagi sa…</string>
     <string name="mozac_support_ktx_share_dialog_title">Ibahagi sa pamamagitan ng</string>
 </resources>

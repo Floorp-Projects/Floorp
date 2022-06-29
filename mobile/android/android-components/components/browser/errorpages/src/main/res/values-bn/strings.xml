@@ -31,7 +31,7 @@
     ]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_advanced">উন্নতপর্যায়ের...</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">উন্নতপর্যায়ের…</string>
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
         <label> কেউ সাইটটি ছদ্মবেশ তৈরি করার চেষ্টা করছেন এবং আপনার চালিয়ে যাওয়া উচিত নয় </label>
@@ -131,4 +131,5 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">বিভ্রান্তিকর সাইটের সমস্যা</string>
+
     </resources>

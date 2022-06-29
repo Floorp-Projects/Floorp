@@ -13,7 +13,7 @@
     <string name="mozac_browser_errorpages_security_ssl_title">Xq\'ate\' ri Ütz Okem</string>
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
-        Man tikirel ta nik\'ut pe ri ruxaq natojtob\'ej najäq ruma man tikirel ta nijikib\'äx nitz\'et chi e qitzij ri taq tzij.</li>
+        <li>Man tikirel ta nik\'ut pe ri ruxaq natojtob\'ej najäq ruma man tikirel ta nijikib\'äx nitz\'et chi e qitzij ri taq tzij.</li>
         <li>Tab\'ana\' utzil, taya\' rutzijol chi rij re k\'ayewal re\' chi ke ri rajaw ruxaq k\'amaya\'l.</li>
       </ul>]]></string>
 

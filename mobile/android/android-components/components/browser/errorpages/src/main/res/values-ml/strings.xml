@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">പേജ് ലോഡുചെയ്യുന്നതിൽ പ്രശ്‌നമുണ്ട്</string>
-
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">വീണ്ടും ശ്രമിക്കുക</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">തിരികെ പോകുക</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">അഭ്യർത്ഥന പൂർത്തിയാക്കാൻ കഴിയില്ല</string>
@@ -33,7 +27,7 @@
       </ul>]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_advanced">സങ്കീർണ്ണമായവ...</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">സങ്കീർണ്ണമായവ…</string>
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>ആരോ ആൾമാറാട്ടം നടത്താൻ ശ്രമിക്കുന്നതിനാൽ നിങ്ങൾ പോജിൽ തുടരരുത്.</label>
         <br><br>
@@ -220,4 +214,5 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">തെറ്റിദ്ധരിപ്പിക്കുന്ന സൈറ്റ്</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[</p>%1$s എന്നിടത്തുള്ള സൈറ്റ് ഒരു തെറ്റിദ്ധരിപ്പിക്കുന്ന സൈറ്റാണ് എന്ന് രേഖപ്പെടുത്തിയിട്ടുള്ളതിനാൽ താങ്കളുടെ സുരക്ഷാ ക്രമീകരണങ്ങളനുസരിച്ച് തടയപ്പെട്ടിരിക്കുന്നു.</p>]]></string>
-</resources>
+
+    </resources>

@@ -56,6 +56,8 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avancé…</string>
 
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[<label> <b>%1$s</b> a recours à une stratégie de sécurité HTTP Strict Transport Security (HSTS), ce qui signifie que <b>%2$s</b> doit impérativement établir une connexion sécurisée pour y accéder. Vous ne pouvez pas ajouter d’exception pour accéder à ce site.]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Retour</string>
 

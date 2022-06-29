@@ -40,13 +40,21 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Emoneĩ mbyaikuaa ha eku’ejey</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Ko ñanduti renda oikotevẽ jeikekatu.</string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Opanungáva…</string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Guevijey</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Pe jeike ojejokóma</string>
 
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Pe kundahára oike hekopete, hákatu osẽ ñandutígui ombahasakuévo marandu. Eha’ãjey.</p>
       <ul>
-        <li>Pe tenda ikatu ndoikói sapy’ami térã ojepurueterei. Eha’ãjey ag̃amieve.</p>
+        <li>Pe tenda ikatu ndoikói sapy’ami térã ojepurueterei. Eha’ãjey ag̃amieve.</li>
         <li>Ndaikatúiramo emyanyhẽ kuatiarogue, ehecha oikópa nde wifi térã mba’ekuaarã ne pumbyry pegua.</li>
       </ul>]]></string>
 
@@ -56,7 +64,7 @@
     <!-- The error message shown when a website took long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Pe tenda ejeruréva nombohovái pe jerure jeike rehegua ha pe kundahára noha’ãrõvéima ñembohovái.</p>
       <ul>
-        <li>¿Ikatu pe mohendahavusu ojepurueterei térã peteĩ ñekytĩ ndahi’aréitava? Eha’ãjey ag̃amieve.
+        <li>¿Ikatu pe mohendahavusu ojepurueterei térã peteĩ ñekytĩ ndahi’aréitava? Eha’ãjey ag̃amieve.</li>
         <li>Ndaikatúi eikundaha ambue tenda rupi? Ehechajey ne mohendaha oĩpa ñandutípe.</li>
         <li>Ne ñanduti térã ne mohendaha omo’ã chupe peteĩ firewall térã proxy? Peteĩ ñemboheko oiko’ỹva ikatu omboykese ne ñekundaha ñandutípe.</li>
         <li>Oĩ gueteri apañuãi? Eporandu ne ñanduti ñangarekohára térã ne ñanduti me’ẽhárape nepytyvõ hag̃ua.</li>
@@ -81,7 +89,7 @@
     <string name="mozac_browser_errorpages_redirect_loop_title">Ko kuatiarogue ndoguerahajeýi hekoitépe</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Kundahára opytáma orujeysehápe mba’epuru jerurepyre. Pe tenda oguerahajeýta nde jerurepyre ysaja araka’eve noĩmbamo’ãiva rehegua.</li>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Kundahára opytáma orujeysehápe mba’epuru jerurepyre. Pe tenda oguerahajeýta nde jerurepyre ysaja araka’eve noĩmbamo’ãiva rehegua.</p>
       <ul>
         <li>Erekópa mboguehápe térã jokohápe kookie oikotevẽva ko tenda.</li>
         <li>Emboajérõ jepe kookie tenda pegua nomyatyrõi apañuãi, ikatuhína apañuãi mohendahavusu ñemboheko ha ndaha’éi ne mohendaha rehegua.</li>
@@ -108,7 +116,8 @@
 
     <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Pe juajuha ñandutigua ndoikói oñeñe’ẽ aja jeikerã rehe. Eha’ãjey ag̃ave.</p>
-      <ul>Pe tenda ikatu ndoikói hína sapy’ami térã ojepurueterei. Eha’ãjey ag̃amieve.</li>
+      <ul>
+        <li>Pe tenda ikatu ndoikói hína sapy’ami térã ojepurueterei. Eha’ãjey ag̃amieve.</li>
         <li>Ndaikatúiramo emyanyhẽ mavave kuatiarogue, ehecha oikópa nde Wi-Fi térã mba’ekuaarã ne pumbyry pegua.</li>
       </ul>]]></string>
 
@@ -152,7 +161,7 @@
     <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Kundahára ndojuhúi mohendahavusu pe kundaharapépe g̃uarã.</p>
       <ul>
         <li>Ehechajey kundaharapépa ndojavýi, techapyrã,
-          <strong>ww</strong>.ejemplo.com.</li>
+          <strong>ww</strong>.ejemplo.com.
           <strong>www</strong>.ejemplo.com. rendaguépe.</li>
         <li>Ndaikatúiramo emyanyhẽ mavave kuatiarogue, ehecha oikópa Wi-Fi térã pumbyry mba’ekuaarã.</li>
       </ul>]]></string>

@@ -229,7 +229,7 @@
     <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p> El browser el xe configurà par uxare on server proxy, ma el proxy no el xe stà riƚevà. </p>
 	<ul>
 		<li> Ƚa configurasion proxy de el browser ƚa xe coreta? Controƚare ƚe inpostasioni e riprovare. </li>
-		<li> El computer el xe coƚ</p>egà a na rete funsionante? </li>
+		<li> El computer el xe coƚegà a na rete funsionante? </li>
 		<li> Se riscontra ancora problemi? Consultare l’aministradore de rete o el provider Internet par risevere asistensa. </li>
 	</ul>]]></string>
 
@@ -256,4 +256,5 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema co sito inganevoƚe</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>El sito web %1$s el xe stà segnalà cofà sito inganevoƚe e el xe stà blocà so ƚa baxe de ƚe inpostasion de sicuresa.</p>]]></string>
-</resources>
+
+    </resources>

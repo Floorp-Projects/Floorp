@@ -40,6 +40,20 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Прихватите ризик и наставите</string>
 
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Страница коју покушавате отворити не може бити приказана јер она захтева безбедну везу.</li>
+         <li>Проблем се вероватно налази на самој страници и не можете га решити самостално.</li>
+         <li>Можете обавестити администратора веб странице о овом проблему.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Напредно…</string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Иди назад</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Веза је прекинута</string>
 
@@ -243,7 +257,7 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Страница на %1$s је пријављена као обманљива и блокирана је на основу ваших сигурносних подешавања.</p>]]></string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
-    <string name="mozac_browser_errorpages_httpsonly_title">Безбедан сајт није доступан</string>
+    <string name="mozac_browser_errorpages_httpsonly_title">Безбедна страница није доступна</string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">Настави на HTTP сајт</string>
 </resources>

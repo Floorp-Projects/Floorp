@@ -46,7 +46,7 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">ଏହି ପୃଷ୍ଠାଟି ସଠିକ ଭାବରେ ପୁନଃପ୍ରେରଣ କରିପାରୁନାହିଁ</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>ବ୍ରାଉଜର ଅନୁରୋଧ କରାଯାଇଥିବା ବସ୍ତୁକୁ କାଢ଼ିବା ବନ୍ଦ କରିଛି। ସାଇଟ ସେହି ଅନୁରୋଧକୁ କଦାପି ସମ୍ପୂର୍ଣ୍ଣ ହେଉନଥିବା ଉପାୟରେ ଦିଗ ପରିବର୍ତ୍ତନ କରୁଅଛି।</p><ul><li>ଆପଣ ଏହି ସାଇଟ ଦ୍ୱାରା ଆବଶ୍ୟକ କୁକିଗୁଡ଼ିକୁ ନିଷ୍କ୍ରିୟ କରିଛନ୍ତି ଅଥବା ଅଟକ ରଖିଛନ୍ତି?</li><li><em>NOTE</em>: ଯଦି ସାଇଟର କୁକିଗୁଡ଼ିକୁ ଗ୍ରହଣ କରିବା ଦ୍ୱାରା ତାହା ସମସ୍ୟାର ସମାଧାନ କରିନଥାଏ, ତେବେ ଏହା ହୁଏତଃ ଆପଣଙ୍କ କମ୍ପୁଟର ପରିବର୍ତ୍ତେ ସର୍ଭର ସଂରଚନା  ସମସ୍ୟା ହୋଇପାରେ।</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>ବ୍ରାଉଜର ଅନୁରୋଧ କରାଯାଇଥିବା ବସ୍ତୁକୁ କାଢ଼ିବା ବନ୍ଦ କରିଛି। ସାଇଟ ସେହି ଅନୁରୋଧକୁ କଦାପି ସମ୍ପୂର୍ଣ୍ଣ ହେଉନଥିବା ଉପାୟରେ ଦିଗ ପରିବର୍ତ୍ତନ କରୁଅଛି।</p><ul><li>ଆପଣ ଏହି ସାଇଟ ଦ୍ୱାରା ଆବଶ୍ୟକ କୁକିଗୁଡ଼ିକୁ ନିଷ୍କ୍ରିୟ କରିଛନ୍ତି ଅଥବା ଅଟକ ରଖିଛନ୍ତି?</li><li>ଯଦି ସାଇଟର କୁକିଗୁଡ଼ିକୁ ଗ୍ରହଣ କରିବା ଦ୍ୱାରା ତାହା ସମସ୍ୟାର ସମାଧାନ କରିନଥାଏ, ତେବେ ଏହା ହୁଏତଃ ଆପଣଙ୍କ କମ୍ପୁଟର ପରିବର୍ତ୍ତେ ସର୍ଭର ସଂରଚନା  ସମସ୍ୟା ହୋଇପାରେ।</li></ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">ଅଫଲାଇନ ଅବସ୍ଥା</string>

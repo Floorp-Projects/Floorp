@@ -88,8 +88,6 @@
     <string name="mozac_feature_addons_permissions_dialog_cancel">Haaytu</string>
     <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description">Aaf Ɓeyditere</string>
-    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
-    <string name="mozac_feature_addons_user_rating_count">Huutorɓe: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
@@ -117,7 +115,7 @@
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Ɓeydu ɗe e %1$s</string>
     <!-- This is the caption for the add-on installation progress overlay -->
-    <string name="mozac_add_on_install_progress_caption">Aawtogol e ƴeewtogol ɓeyditte...</string>
+    <string name="mozac_add_on_install_progress_caption">Aawtogol e ƴeewtogol ɓeyditte…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
     <string name="mozac_feature_addons_failed_to_query_add_ons">Horiima naamnaade Ɓeyditte!</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->

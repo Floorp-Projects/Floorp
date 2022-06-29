@@ -23,7 +23,7 @@
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
       <ul>
-        Eyi môkọt ire ufialek mèlek onineen̄ òbeme-etip. Môkọt si ire enw okisa lek ifafiaan̄ irọ kubọk ọmọ ore achubọk òbeme-etip ya.</li>
+        <li>Eyi môkọt ire ufialek mèlek onineen̄ òbeme-etip. Môkọt si ire enw okisa lek ifafiaan̄ irọ kubọk ọmọ ore achubọk òbeme-etip ya.</li>
         <li>Ire owuulek irak itibi itet me lek òbeme-etip yi me mgbọ òraraka, ufialek yi ìbokup mgbidim mgbọ gaalek; owu môkọt igwu ikom inisa me mgbidim mgbọ.</li>
       </ul>
     ]]></string>
