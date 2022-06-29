@@ -509,16 +509,17 @@ impl YamlFrameReader {
         }
     }
 
-    fn to_spatial_id(&self, item: &Yaml, pipeline_id: PipelineId) -> SpatialId {
+    fn to_spatial_id(&self, item: &Yaml, pipeline_id: PipelineId) -> Option<SpatialId> {
         match *item {
-            Yaml::Integer(value) => self.user_spatial_id_map[&(value as u64)],
+            Yaml::Integer(value) => Some(self.user_spatial_id_map[&(value as u64)]),
             Yaml::String(ref id_string) if id_string == "root-reference-frame" =>
-                SpatialId::root_reference_frame(pipeline_id),
+                Some(SpatialId::root_reference_frame(pipeline_id)),
             Yaml::String(ref id_string) if id_string == "root-scroll-node" =>
-                SpatialId::root_scroll_node(pipeline_id),
+                Some(SpatialId::root_scroll_node(pipeline_id)),
+            Yaml::BadValue => None,
             _ => {
                 println!("Unable to parse SpatialId {:?}", item);
-                SpatialId::root_reference_frame(pipeline_id)
+                None
             }
         }
     }
@@ -546,7 +547,7 @@ impl YamlFrameReader {
         match *item {
             Yaml::BadValue => (None, None),
             Yaml::Array(ref array) if array.len() == 2 => {
-                let scroll_id = self.to_spatial_id(&array[0], pipeline_id);
+                let scroll_id = self.to_spatial_id(&array[0], pipeline_id).expect("unknown spatial id");
                 let clip_id = self.to_clip_id(&array[1], pipeline_id);
                 (clip_id, Some(scroll_id))
             }
@@ -1577,10 +1578,15 @@ impl YamlFrameReader {
         for item in yaml_items {
             let item_type = Self::get_item_type_from_yaml(item);
 
-            let (set_clip_id, set_scroll_id) = self.to_clip_and_scroll_info(
+            let (set_clip_id, mut set_scroll_id) = self.to_clip_and_scroll_info(
                 &item["clip-and-scroll"],
                 dl.pipeline_id
             );
+
+            if let Some(id) = self.to_spatial_id(&item["spatial-id"], dl.pipeline_id) {
+                set_scroll_id = Some(id);
+            }
+
             if let Some(clip_id) = set_clip_id {
                 self.clip_id_stack.push(clip_id);
             }

@@ -11,10 +11,13 @@ root:
           bounds: [0, 0, 50, 80]
           type: clip
           id: 2
+        - type: clip-chain
+          id: 12
+          clips: [2]
     - type: rect
       bounds: [10, 10, 100, 100]
       color: red
-      clip-and-scroll: 2
+      clip-chain: 12
 
   id: [0, 0]
 pipelines: []

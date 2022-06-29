@@ -14,7 +14,6 @@ root:
     -
       bounds: [10, 10, 100, 100]
       clip-rect: [10, 10, 100, 100]
-      clip-and-scroll: 2
       type: clip
       id: 3
       "content-size": [800, 1000]
@@ -27,6 +26,6 @@ root:
     -
       bounds: [0, 0, 200, 200]
       clip-rect: [0, 0, 200, 200]
-      clip-and-scroll: [root-scroll-node, 10]
+      clip-chain: 10
       type: rect
       color: 0 255 0 1

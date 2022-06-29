@@ -25,4 +25,4 @@ root:
         - type: rect
           bounds: 0 0 256 256
           color: green
-          clip-and-scroll: [root-scroll-node, 5]
+          clip-chain: 5

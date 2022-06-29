@@ -4,7 +4,6 @@ root:
     -
       bounds: [0, 0, 0, 0]
       "clip-rect": [0, 0, 0, 0]
-      "clip-and-scroll": "root-scroll-node"
       "backface-visible": true
       type: "stacking-context"
       "transform-style": flat
@@ -14,14 +13,12 @@ root:
         -
           bounds: [0, 148, 1368, 588]
           "clip-rect": [0, 148, 1368, 588]
-          "clip-and-scroll": "root-scroll-node"
           "backface-visible": true
           type: clip
           id: 2
         -
           bounds: [0, 0, 0, 0]
           "clip-rect": [0, 0, 0, 0]
-          "clip-and-scroll": "root-scroll-node"
           "backface-visible": true
           type: "clip-chain"
           id: 3
@@ -29,7 +26,7 @@ root:
         -
           bounds: [16, 164, 16200, 200]
           "clip-rect": [40, 188, 1328, 216]
-          "clip-and-scroll": [2, 3]
+          clip-chain: 3
           "backface-visible": true
           type: "box-shadow"
           "box-bounds": [16, 164, 16200, 200]
@@ -46,7 +43,6 @@ root:
         -
           bounds: [16, 164, 1352, 200]
           "clip-rect": [16, 164, 1352, 200]
-          "clip-and-scroll": "root-scroll-node"
           "backface-visible": true
           type: clip
           id: 4
@@ -62,7 +58,7 @@ root:
         -
           bounds: [0, 0, 0, 0]
           "clip-rect": [0, 0, 0, 0]
-          "clip-and-scroll": [2, 3]
+          clip-chain: 3
           "backface-visible": true
           type: "clip-chain"
           id: 5
@@ -71,14 +67,14 @@ root:
         -
           bounds: [16, 164, 16200, 200]
           "clip-rect": [16, 164, 16200, 200]
-          "clip-and-scroll": [4, 5]
+          clip-chain: 5
           "backface-visible": true
           type: rect
           color: 255 0 255 1.0000
         -
           bounds: [16, 402, 200, 200]
           "clip-rect": [40, 426, 216, 216]
-          "clip-and-scroll": [2, 3]
+          clip-chain: 3
           "backface-visible": true
           type: "box-shadow"
           "box-bounds": [16, 402, 200, 200]
@@ -95,7 +91,6 @@ root:
         -
           bounds: [16, 402, 200, 200]
           "clip-rect": [16, 402, 200, 200]
-          "clip-and-scroll": "root-scroll-node"
           "backface-visible": true
           type: clip
           id: 6
@@ -111,7 +106,6 @@ root:
         -
           bounds: [0, 0, 0, 0]
           "clip-rect": [0, 0, 0, 0]
-          "clip-and-scroll": [2, 3]
           "backface-visible": true
           type: "clip-chain"
           id: 7
@@ -120,7 +114,7 @@ root:
         -
           bounds: [16, 402, 200, 200]
           "clip-rect": [16, 402, 200, 200]
-          "clip-and-scroll": [6, 7]
+          clip-chain: 7
           "backface-visible": true
           type: rect
           color: 0 128 0 1.0000

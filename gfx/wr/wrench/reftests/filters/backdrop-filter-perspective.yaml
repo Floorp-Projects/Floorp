@@ -20,10 +20,13 @@ root:
           id: 2
           bounds: 0 0 100 100
           clip-rect: 0 0 100 100
+        - type: clip-chain
+          id: 12
+          clips: [2]
         - type: stacking-context
           bounds: 0 0 0 0
           items:
           - type: backdrop-filter
             bounds: 0 0 100 100
-            clip-and-scroll: 2
+            clip-chain: 12
             filters: invert(1)

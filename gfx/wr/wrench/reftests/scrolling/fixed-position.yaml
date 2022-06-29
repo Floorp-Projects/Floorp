@@ -9,7 +9,7 @@ root:
         - type: rect
           bounds: [0, 0, 50, 50]
           color: green
-          clip-and-scroll: root-reference-frame
+          spatial-id: root-reference-frame
     - type: stacking-context
       bounds: [0, 0, 50, 50]
       transform: translate(60, 100)
@@ -25,7 +25,6 @@ root:
             - type: rect
               bounds: [0, 0, 50, 50]
               color: green
-              clip-and-scroll: 100
     - type: stacking-context
       bounds: [120, 0, 50, 200]
       transform: translate(0, 0)
@@ -39,7 +38,6 @@ root:
             - type: rect
               bounds: [0, 100, 50, 50]
               color: green
-              clip-and-scroll: 101
     - type: stacking-context
       bounds: [180, 0, 50, 200]
       perspective: 1
@@ -52,4 +50,3 @@ root:
             - type: rect
               bounds: [0, 100, 50, 50]
               color: green
-              clip-and-scroll: 102

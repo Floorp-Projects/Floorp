@@ -11,9 +11,12 @@ root:
           rect: [10, 10, 938, 200]
           radius: [97, 97]
           "clip-mode": clip
+    - type: clip-chain
+      id: 3
+      clips: [2]
     -
       bounds: [10, 10, 100, 200]
-      clip-and-scroll: 2
+      clip-chain: 3
       type: border
       width: [100, 50, 100, 50]
       border-type: normal

@@ -11,7 +11,7 @@ root:
     - type: rect
       bounds: [0, 0, 50, 50]
       color: red
-      clip-and-scroll: 123
+      spatial-id: 123
     - type: scroll-frame
       bounds: [50, 0, 50, 50]
       content-size: [50, 50]
@@ -21,7 +21,7 @@ root:
     - type: rect
       bounds: [50, 0, 50, 50]
       color: green
-      clip-and-scroll: 456
+      spatial-id: 456
     - type: scroll-frame
       bounds: [100, 0, 50, 50]
       content-size: [50, 50]
@@ -31,5 +31,5 @@ root:
     - type: rect
       bounds: [100, 0, 50, 50]
       color: blue
-      clip-and-scroll: 789
+      spatial-id: 789
 
