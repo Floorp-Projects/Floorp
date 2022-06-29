@@ -33,7 +33,6 @@ using hal::ScreenOrientation from "mozilla/HalIPCUtils.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::CSSPoint from "Units.h";
 using mozilla::CSSRect from "Units.h";
-using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
 using mozilla::LayerMargin from "Units.h";
 using mozilla::LayerPoint from "Units.h";
 using mozilla::LayerCoord from "Units.h";
@@ -42,7 +41,6 @@ using mozilla::LayerRect from "Units.h";
 using mozilla::LayerIntSize from "Units.h";
 using mozilla::LayerIntRect from "Units.h";
 using mozilla::LayerIntRegion from "Units.h";
-using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 using mozilla::ParentLayerIntRect from "Units.h";
 using mozilla::ParentLayerRect from "Units.h";
 using mozilla::LayoutDeviceIntRect from "Units.h";
@@ -60,8 +58,6 @@ using mozilla::layers::CompositionPayload from "mozilla/layers/LayersTypes.h";
 [MoveOnly] using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
-using mozilla::layers::RemoteTextureId from "mozilla/layers/LayersTypes.h";
-using mozilla::layers::RemoteTextureOwnerId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 using mozilla::LengthPercentage from "mozilla/ServoStyleConsts.h";
 using mozilla::RayReferenceData from "mozilla/MotionPathUtils.h";
@@ -286,17 +282,6 @@ struct OpUseTexture {
   TimedTexture[] textures;
 };
 
-struct OpUseRemoteTexture {
-  RemoteTextureId textureId;
-  RemoteTextureOwnerId ownerId;
-  IntSize size;
-  TextureFlags textureFlags;
-};
-
-struct OpEnableAsyncCompositable {
-  bool enable;
-};
-
 struct OpNotifyNotUsed {
   uint64_t TextureId;
   uint64_t fwdTransactionId;
@@ -318,10 +303,6 @@ union CompositableOperationDetail {
   OpRemoveTexture;
 
   OpUseTexture;
-
-  OpUseRemoteTexture;
-
-  OpEnableAsyncCompositable;
 
   OpDeliverAcquireFence;
 };

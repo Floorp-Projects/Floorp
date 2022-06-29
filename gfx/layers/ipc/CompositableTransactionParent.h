@@ -45,8 +45,7 @@ class CompositableParentManager : public HostIPCAllocator {
    */
   bool ReceiveCompositableUpdate(const CompositableOperation& aEdit);
   bool ReceiveCompositableUpdate(const CompositableOperationDetail& aDetail,
-                                 NotNull<CompositableHost*> aCompositable,
-                                 const CompositableHandle& aHandle);
+                                 NotNull<CompositableHost*> aCompositable);
 
   void ReleaseCompositable(const CompositableHandle& aHandle);
 

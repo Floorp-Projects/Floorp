@@ -93,7 +93,8 @@ class WebRenderTextureHost : public TextureHost {
 
   void MaybeNotifyForUse(wr::TransactionBuilder& aTxn);
 
-  const RefPtr<TextureHost> mWrappedTextureHost;
+ protected:
+  RefPtr<TextureHost> mWrappedTextureHost;
 };
 
 }  // namespace layers

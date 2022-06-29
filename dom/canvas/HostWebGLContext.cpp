@@ -91,11 +91,6 @@ void HostWebGLContext::JsWarning(const std::string& text) const {
   (void)mOwnerData.outOfProcess->SendJsWarning(text);
 }
 
-gl::SwapChain* HostWebGLContext::GetSwapChain(const ObjectId xrFb,
-                                              const bool webvr) const {
-  return mContext->GetSwapChain(AutoResolve(xrFb), webvr);
-}
-
 Maybe<layers::SurfaceDescriptor> HostWebGLContext::GetFrontBuffer(
     const ObjectId xrFb, const bool webvr) const {
   return mContext->GetFrontBuffer(AutoResolve(xrFb), webvr);

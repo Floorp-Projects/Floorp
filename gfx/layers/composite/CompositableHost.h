@@ -86,12 +86,6 @@ class CompositableHost {
     int32_t mProducerID;
   };
   virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures);
-  virtual void UseRemoteTexture(const RemoteTextureId aTextureId,
-                                const RemoteTextureOwnerId aOwnerId,
-                                const CompositableHandle& aHandle,
-                                const base::ProcessId aForPid,
-                                const gfx::IntSize aSize,
-                                const TextureFlags aFlags) = 0;
   virtual void RemoveTextureHost(TextureHost* aTexture);
 
   uint64_t GetCompositorBridgeID() const { return mCompositorBridgeID; }
@@ -105,8 +99,6 @@ class CompositableHost {
   /// This is a good place to clear all potential gpu resources before the
   /// widget is is destroyed.
   virtual void CleanupResources() {}
-
-  virtual void OnReleased() {}
 
   virtual uint32_t GetDroppedFrames() { return 0; }
 

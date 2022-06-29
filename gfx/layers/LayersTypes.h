@@ -302,19 +302,13 @@ class CompositableHandle final {
   friend struct IPC::ParamTraits<mozilla::layers::CompositableHandle>;
 
  public:
-  static CompositableHandle GetNext();
-
   CompositableHandle() : mHandle(0) {}
   CompositableHandle(const CompositableHandle& aOther) = default;
   explicit CompositableHandle(uint64_t aHandle) : mHandle(aHandle) {}
   bool IsValid() const { return mHandle != 0; }
   explicit operator bool() const { return IsValid(); }
-  explicit operator uint64_t() const { return mHandle; }
   bool operator==(const CompositableHandle& aOther) const {
     return mHandle == aOther.mHandle;
-  }
-  bool operator!=(const CompositableHandle& aOther) const {
-    return !(*this == aOther);
   }
   uint64_t Value() const { return mHandle; }
 
@@ -326,80 +320,6 @@ enum class CompositableHandleOwner : uint8_t {
   WebRenderBridge,
   ImageBridge,
   InProcessManager,
-};
-
-struct RemoteTextureId {
-  uint64_t mId = 0;
-
-  static RemoteTextureId GetNext();
-
-  bool IsValid() const { return mId != 0; }
-
-  // Allow explicit cast to a uint64_t for now
-  explicit operator uint64_t() const { return mId; }
-
-  // Implement some operators so this class can be used as a key in
-  // stdlib classes.
-  bool operator<(const RemoteTextureId& aOther) const {
-    return mId < aOther.mId;
-  }
-
-  bool operator>(const RemoteTextureId& aOther) const {
-    return mId > aOther.mId;
-  }
-
-  bool operator==(const RemoteTextureId& aOther) const {
-    return mId == aOther.mId;
-  }
-
-  bool operator!=(const RemoteTextureId& aOther) const {
-    return !(*this == aOther);
-  }
-
-  // Helper struct that allow this class to be used as a key in
-  // std::unordered_map like so:
-  //   std::unordered_map<RemoteTextureId, ValueType, RemoteTextureId::HashFn>
-  //   myMap;
-  struct HashFn {
-    std::size_t operator()(const RemoteTextureId aKey) const {
-      return std::hash<uint64_t>{}(aKey.mId);
-    }
-  };
-};
-
-struct RemoteTextureOwnerId {
-  uint64_t mId = 0;
-
-  static RemoteTextureOwnerId GetNext();
-
-  bool IsValid() const { return mId != 0; }
-
-  // Allow explicit cast to a uint64_t for now
-  explicit operator uint64_t() const { return mId; }
-
-  // Implement some operators so this class can be used as a key in
-  // stdlib classes.
-  bool operator<(const RemoteTextureOwnerId& aOther) const {
-    return mId < aOther.mId;
-  }
-
-  bool operator==(const RemoteTextureOwnerId& aOther) const {
-    return mId == aOther.mId;
-  }
-
-  bool operator!=(const RemoteTextureOwnerId& aOther) const {
-    return !(*this == aOther);
-  }
-
-  // Helper struct that allow this class to be used as a key in
-  // std::unordered_map like so:
-  //   std::unordered_map<RemoteTextureOwnerId, ValueType,
-  //   RemoteTextureOwnerId::HashFn> myMap;
-  struct HashFn {
-    std::size_t operator()(const RemoteTextureOwnerId aKey) const {
-      return std::hash<uint64_t>{}(aKey.mId);
-    }
-  };
 };
 
 // clang-format off

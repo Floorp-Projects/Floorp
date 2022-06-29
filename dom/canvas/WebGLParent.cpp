@@ -6,13 +6,9 @@
 #include "WebGLParent.h"
 
 #include "WebGLChild.h"
-#include "mozilla/gfx/Swizzle.h"
-#include "mozilla/layers/BufferTexture.h"
-#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "ImageContainer.h"
 #include "HostWebGLContext.h"
-#include "SharedSurface.h"
 #include "WebGLMethodDispatcher.h"
 
 namespace mozilla::dom {
@@ -100,12 +96,7 @@ mozilla::ipc::IPCResult WebGLParent::Recv__delete__() {
   return IPC_OK();
 }
 
-void WebGLParent::ActorDestroy(ActorDestroyReason aWhy) {
-  if (mRemoteTextureOwner) {
-    mRemoteTextureOwner->UnregisterAllTextureOwners();
-  }
-  mHost = nullptr;
-}
+void WebGLParent::ActorDestroy(ActorDestroyReason aWhy) { mHost = nullptr; }
 
 // -
 
@@ -311,100 +302,6 @@ IPCResult WebGLParent::RecvGetFrontBuffer(
   }
 
   *ret = mHost->GetFrontBuffer(fb, vr);
-  return IPC_OK();
-}
-
-IPCResult WebGLParent::RecvPresentFrontBufferToCompositor(
-    uint64_t fb, layers::RemoteTextureId textureId,
-    layers::RemoteTextureOwnerId ownerId) {
-  if (!mHost) {
-    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
-  }
-
-  auto* swapChain = mHost->GetSwapChain(fb, /* vr */ false);
-  if (!swapChain) {
-    return IPC_OK();
-  }
-
-  auto front = swapChain->FrontBuffer();
-  if (!front) {
-    gfxCriticalNoteOnce << "Swap chain front buffer does not exist";
-    return IPC_OK();
-  }
-
-  const auto& size = front->mDesc.size;
-  const auto& options = mHost->GetWebGLContext()->Options();
-  const auto surfaceFormat = options.alpha ? gfx::SurfaceFormat::B8G8R8A8
-                                           : gfx::SurfaceFormat::B8G8R8X8;
-  if (!mRemoteTextureOwner) {
-    mRemoteTextureOwner =
-        MakeRefPtr<layers::RemoteTextureOwnerClient>(OtherPid());
-  }
-
-  if (!mRemoteTextureOwner->IsRegistered(ownerId)) {
-    RefPtr<layers::RemoteTextureOwnerClient> textureOwner = mRemoteTextureOwner;
-    auto destroyedCallback = [textureOwner, ownerId]() {
-      textureOwner->UnregisterTextureOwner(ownerId);
-    };
-
-    swapChain->SetDestroyedCallback(destroyedCallback);
-    mRemoteTextureOwner->RegisterTextureOwner(ownerId);
-  }
-
-  Maybe<layers::SurfaceDescriptor> desc = front->ToSurfaceDescriptor();
-  if (!desc) {
-    auto data = mRemoteTextureOwner->CreateOrRecycleBufferTextureData(
-        ownerId, size, surfaceFormat);
-    if (!data) {
-      gfxCriticalNoteOnce << "Failed to allocate BufferTextureData";
-      return IPC_OK();
-    }
-
-    layers::MappedTextureData mappedData;
-    if (!data->BorrowMappedData(mappedData)) {
-      return IPC_OK();
-    }
-
-    const auto stride = CheckedInt<size_t>(mappedData.size.width) * 4;
-    const auto byteSize = stride * mappedData.size.height;
-    MOZ_RELEASE_ASSERT(byteSize.isValid());
-    MOZ_RELEASE_ASSERT(mappedData.stride ==
-                       static_cast<int64_t>(stride.value()));
-    auto range = Range<uint8_t>{mappedData.data, byteSize.value()};
-
-    if (!mHost->FrontBufferSnapshotInto(front, Some(range))) {
-      return IPC_OK();
-    }
-
-    bool rv = gfx::SwizzleData(mappedData.data, mappedData.stride,
-                               gfx::SurfaceFormat::R8G8B8A8, mappedData.data,
-                               mappedData.stride, gfx::SurfaceFormat::B8G8R8A8,
-                               mappedData.size);
-    MOZ_RELEASE_ASSERT(rv, "SwizzleData failed!");
-
-    mRemoteTextureOwner->PushTexure(textureId, ownerId, std::move(data),
-                                    /* aSharedSurface */ nullptr);
-    return IPC_OK();
-  }
-
-  // SharedSurfaces of SurfaceDescriptorD3D10 and SurfaceDescriptorMacIOSurface
-  // need to be kept alive. They will be recycled by
-  // RemoteTextureOwnerClient::GetRecycledSharedSurface() when their usages are
-  // ended.
-  std::shared_ptr<gl::SharedSurface> sharedSurface;
-  if ((*desc).type() == SurfaceDescriptor::TSurfaceDescriptorD3D10 ||
-      (*desc).type() == SurfaceDescriptor::TSurfaceDescriptorMacIOSurface) {
-    sharedSurface = front;
-  }
-
-  auto data =
-      MakeUnique<layers::SharedSurfaceTextureData>(*desc, surfaceFormat, size);
-  mRemoteTextureOwner->PushTexure(textureId, ownerId, std::move(data),
-                                  sharedSurface);
-  auto recycledSurface = mRemoteTextureOwner->GetRecycledSharedSurface(ownerId);
-  if (recycledSurface) {
-    swapChain->StoreRecycledSurface(recycledSurface);
-  }
   return IPC_OK();
 }
 
