@@ -98,7 +98,9 @@
         "Discover and profile unregistered threads -- beware: expensive!")   \
                                                                              \
   MACRO(23, "processcpu", ProcessCPU,                                        \
-        "Sample the CPU utilization of each process")
+        "Sample the CPU utilization of each process")                        \
+                                                                             \
+  MACRO(24, "power", Power, "Sample energy meters. (Windows 11 only)")
 // *** Synchronize with lists in BaseProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {
