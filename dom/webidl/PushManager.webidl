@@ -26,7 +26,7 @@ interface PushManagerImpl {
   Promise<PermissionState> permissionState(optional PushSubscriptionOptionsInit options = {});
 };
 
-[Exposed=(Window,Worker), Pref="dom.push.enabled"]
+[Exposed=(Window,Worker), Func="PushManager::IsEnabled"]
 interface PushManager {
   [Throws, ChromeOnly]
   constructor(DOMString scope);
