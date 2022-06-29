@@ -1175,11 +1175,10 @@ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  if (timelines && !timelines->IsEmpty()) {
+  if (!TimelineConsumers::IsEmpty()) {
     UniquePtr<AbstractTimelineMarker> abstractMarker(
         MakeUnique<MinorGCMarker>(aProgress, aReason));
-    timelines->AddMarkerForAllObservedDocShells(abstractMarker);
+    TimelineConsumers::AddMarkerForAllObservedDocShells(abstractMarker);
   }
 
   if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START) {

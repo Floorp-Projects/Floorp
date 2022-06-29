@@ -22,13 +22,12 @@ AutoRestyleTimelineMarker::AutoRestyleTimelineMarker(nsIDocShell* aDocShell,
     return;
   }
 
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  if (!timelines || !timelines->HasConsumer(aDocShell)) {
+  if (!TimelineConsumers::HasConsumer(aDocShell)) {
     return;
   }
 
   mDocShell = aDocShell;
-  timelines->AddMarkerForDocShell(
+  TimelineConsumers::AddMarkerForDocShell(
       mDocShell, MakeUnique<RestyleTimelineMarker>(mIsAnimationOnly,
                                                    MarkerTracingType::START));
 }
@@ -40,12 +39,11 @@ AutoRestyleTimelineMarker::~AutoRestyleTimelineMarker() {
     return;
   }
 
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  if (!timelines || !timelines->HasConsumer(mDocShell)) {
+  if (!TimelineConsumers::HasConsumer(mDocShell)) {
     return;
   }
 
-  timelines->AddMarkerForDocShell(
+  TimelineConsumers::AddMarkerForDocShell(
       mDocShell, MakeUnique<RestyleTimelineMarker>(mIsAnimationOnly,
                                                    MarkerTracingType::END));
 }

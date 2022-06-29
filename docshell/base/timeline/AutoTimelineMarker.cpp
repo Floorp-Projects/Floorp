@@ -21,13 +21,13 @@ AutoTimelineMarker::AutoTimelineMarker(nsIDocShell* aDocShell,
     return;
   }
 
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  if (!timelines || !timelines->HasConsumer(aDocShell)) {
+  if (!TimelineConsumers::HasConsumer(aDocShell)) {
     return;
   }
 
   mDocShell = aDocShell;
-  timelines->AddMarkerForDocShell(mDocShell, mName, MarkerTracingType::START);
+  TimelineConsumers::AddMarkerForDocShell(mDocShell, mName,
+                                          MarkerTracingType::START);
 }
 
 AutoTimelineMarker::~AutoTimelineMarker() {
@@ -37,12 +37,12 @@ AutoTimelineMarker::~AutoTimelineMarker() {
     return;
   }
 
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  if (!timelines || !timelines->HasConsumer(mDocShell)) {
+  if (!TimelineConsumers::HasConsumer(mDocShell)) {
     return;
   }
 
-  timelines->AddMarkerForDocShell(mDocShell, mName, MarkerTracingType::END);
+  TimelineConsumers::AddMarkerForDocShell(mDocShell, mName,
+                                          MarkerTracingType::END);
 }
 
 }  // namespace mozilla

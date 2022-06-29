@@ -2599,8 +2599,7 @@ bool Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
     *aTimeStamp = performance->Now();
 
     nsDocShell* docShell = static_cast<nsDocShell*>(win->GetDocShell());
-    RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-    bool isTimelineRecording = timelines && timelines->HasConsumer(docShell);
+    bool isTimelineRecording = TimelineConsumers::HasConsumer(docShell);
 
     // The 'timeStamp' recordings do not need an argument; use empty string
     // if no arguments passed in.
@@ -2617,8 +2616,8 @@ bool Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
         return false;
       }
 
-      timelines->AddMarkerForDocShell(docShell,
-                                      MakeUnique<TimestampTimelineMarker>(key));
+      TimelineConsumers::AddMarkerForDocShell(
+          docShell, MakeUnique<TimestampTimelineMarker>(key));
     }
     // For `console.time(foo)` and `console.timeEnd(foo)`.
     else if (isTimelineRecording && aData.Length() == 1) {
@@ -2633,7 +2632,7 @@ bool Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
         return false;
       }
 
-      timelines->AddMarkerForDocShell(
+      TimelineConsumers::AddMarkerForDocShell(
           docShell,
           MakeUnique<ConsoleTimelineMarker>(key, aMethodName == MethodTime
                                                      ? MarkerTracingType::START

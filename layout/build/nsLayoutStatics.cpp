@@ -234,8 +234,6 @@ nsresult nsLayoutStatics::Initialize() {
   PointerEventHandler::InitializeStatics();
   TouchManager::InitializeStatics();
 
-  TimelineConsumers::Init();
-
   nsWindowMemoryReporter::Init();
 
   SVGElementFactory::Init();
