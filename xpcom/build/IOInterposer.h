@@ -210,10 +210,13 @@ bool IsObservedOperation(IOInterposeObserver::Operation aOp);
  * Register IOInterposeObserver, the observer object will receive all
  * observations for the given operation aOp.
  *
- * Remark: Init() must be called before observers are registered.
+ * Remarks:
+ * - Init() must be called before observers are registered.
+ * - The IOInterposeObserver object should be static, because it could still be
+ *   used on another thread shortly after Unregister().
  */
 void Register(IOInterposeObserver::Operation aOp,
-              IOInterposeObserver* aObserver);
+              IOInterposeObserver* aStaticObserver);
 
 /**
  * Unregister an IOInterposeObserver for a given operation
@@ -221,10 +224,13 @@ void Register(IOInterposeObserver::Operation aOp,
  * didn't register for them all.
  * I.e. IOInterposer::Unregister(IOInterposeObserver::OpAll, aObserver)
  *
- * Remark: Init() must be called before observers are unregistered.
+ * Remarks:
+ * - Init() must be called before observers are registered.
+ * - The IOInterposeObserver object should be static, because it could still be
+ *   used on another thread shortly after this Unregister() call.
  */
 void Unregister(IOInterposeObserver::Operation aOp,
-                IOInterposeObserver* aObserver);
+                IOInterposeObserver* aStaticObserver);
 
 /**
  * Registers the current thread with the IOInterposer. This must be done to
