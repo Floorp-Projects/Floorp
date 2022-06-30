@@ -42,12 +42,11 @@ html|input {
 
 /* ::::: icons ::::: */
 
-.textbox-search-clear {
-  list-style-image: url(resource://content-accessible/searchfield-cancel.svg);
+html|*.textbox-search-clear {
   margin-bottom: 1px;
 }
 
-.textbox-search-clear:not([disabled]) {
+html|*.textbox-search-clear:not([disabled]) {
   cursor: default;
 }
 

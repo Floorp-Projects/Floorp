@@ -919,7 +919,7 @@ input::-moz-reveal {
   max-height: 100%;
   max-width: 100%;
   margin-inline-start: 1px;
-  background-image: url("resource://content-accessible/searchfield-cancel.svg");
+  background-image: url("resource://gre-resources/searchfield-cancel.svg");
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
