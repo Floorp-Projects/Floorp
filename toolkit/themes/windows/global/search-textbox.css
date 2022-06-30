@@ -66,7 +66,11 @@ html|input {
   cursor: pointer;
 }
 
-html|*.textbox-search-clear:not([disabled]) {
+.textbox-search-clear {
+  list-style-image: url(resource://content-accessible/searchfield-cancel.svg);
+}
+
+.textbox-search-clear:not([disabled]) {
   cursor: default;
 }
 
