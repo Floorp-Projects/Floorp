@@ -69,9 +69,9 @@ partial interface mixin WindowOrWorkerGlobalScope {
 
 // http://w3c.github.io/IndexedDB/#factory-interface
 partial interface mixin WindowOrWorkerGlobalScope {
-   // readonly attribute IDBFactory indexedDB;
-   [Throws]
-   readonly attribute IDBFactory? indexedDB;
+  // readonly attribute IDBFactory indexedDB; // bug 1776789
+  [Throws, Func="IDBFactory::IsEnabled"]
+  readonly attribute IDBFactory? indexedDB;
 };
 
 // https://w3c.github.io/ServiceWorker/#self-caches
