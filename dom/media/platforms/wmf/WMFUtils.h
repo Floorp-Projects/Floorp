@@ -18,6 +18,18 @@
 
 namespace mozilla {
 
+// Media types supported by Media Foundation.
+enum class WMFStreamType { Unknown, H264, VP8, VP9, AV1, MP3, AAC, SENTINEL };
+
+bool StreamTypeIsVideo(const WMFStreamType& aType);
+
+bool StreamTypeIsAudio(const WMFStreamType& aType);
+
+// Get a string representation of the stream type. Useful for logging.
+const char* StreamTypeToString(WMFStreamType aStreamType);
+
+WMFStreamType GetStreamTypeFromMimeType(const nsCString& aMimeType);
+
 // Converts from microseconds to hundreds of nanoseconds.
 // We use microseconds for our timestamps, whereas WMF uses
 // hundreds of nanoseconds.

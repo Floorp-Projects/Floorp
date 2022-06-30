@@ -302,33 +302,6 @@ bool WMFDecoderModule::CanCreateMFTDecoder(const WMFStreamType& aType) {
   return sSupportedTypes.contains(aType);
 }
 
-/* static */
-WMFStreamType WMFDecoderModule::GetStreamTypeFromMimeType(
-    const nsCString& aMimeType) {
-  if (MP4Decoder::IsH264(aMimeType)) {
-    return WMFStreamType::H264;
-  }
-  if (VPXDecoder::IsVP8(aMimeType)) {
-    return WMFStreamType::VP8;
-  }
-  if (VPXDecoder::IsVP9(aMimeType)) {
-    return WMFStreamType::VP9;
-  }
-#ifdef MOZ_AV1
-  if (AOMDecoder::IsAV1(aMimeType)) {
-    return WMFStreamType::AV1;
-  }
-#endif
-  if (aMimeType.EqualsLiteral("audio/mp4a-latm") ||
-      aMimeType.EqualsLiteral("audio/mp4")) {
-    return WMFStreamType::AAC;
-  }
-  if (aMimeType.EqualsLiteral("audio/mpeg")) {
-    return WMFStreamType::MP3;
-  }
-  return WMFStreamType::Unknown;
-}
-
 bool WMFDecoderModule::SupportsColorDepth(
     gfx::ColorDepth aColorDepth, DecoderDoctorDiagnostics* aDiagnostics) const {
   // Color depth support can be determined by creating DX decoders.
