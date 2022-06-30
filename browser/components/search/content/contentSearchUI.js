@@ -620,10 +620,6 @@ this.ContentSearchUIController = (function() {
         );
         this._table.hidden = false;
         this.input.setAttribute("aria-expanded", "true");
-        this._originalDefaultEngine = {
-          name: this.defaultEngine.name,
-          icon: this.defaultEngine.icon,
-        };
       }
     },
 

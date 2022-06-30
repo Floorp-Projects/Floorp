@@ -27,9 +27,9 @@ add_task(async function test_searchDefaultEngineUS() {
     "Should have the expected engine as default."
   );
   Assert.equal(
-    Services.search.originalDefaultEngine.name,
+    Services.search.appDefaultEngine.name,
     "Test search engine",
-    "Should have the expected engine as the original"
+    "Should have the expected engine as the app default"
   );
 
   // First with the pref off to check using the existing values.
@@ -44,9 +44,9 @@ add_task(async function test_searchDefaultEngineUS() {
     "Should have the normal default engine when separate private browsing is off."
   );
   Assert.equal(
-    Services.search.originalPrivateDefaultEngine.name,
-    Services.search.originalDefaultEngine.name,
-    "Should have the normal original engine when separate private browsing is off."
+    Services.search.appPrivateDefaultEngine.name,
+    Services.search.appDefaultEngine.name,
+    "Should have the normal app engine when separate private browsing is off."
   );
 
   // Then with the pref on.
@@ -61,9 +61,9 @@ add_task(async function test_searchDefaultEngineUS() {
     "Should have the private default engine when separate private browsing is on."
   );
   Assert.equal(
-    Services.search.originalPrivateDefaultEngine.name,
+    Services.search.appPrivateDefaultEngine.name,
     "engine-pref",
-    "Should have the original private engine set correctly when separate private browsing is on."
+    "Should have the app private engine set correctly when separate private browsing is on."
   );
 
   Services.prefs.clearUserPref("browser.search.region");

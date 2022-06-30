@@ -267,9 +267,9 @@ interface nsISearchService : nsISupports
   Promise runBackgroundChecks();
 
   /**
-   * Resets the default engine to its original value.
+   * Resets the default engine to its app default engine value.
    */
-  Promise resetToOriginalDefaultEngine();
+  Promise resetToAppDefaultEngine();
 
   /**
    * Adds a new Open Search engine from the file at the supplied URI.
@@ -441,23 +441,23 @@ interface nsISearchService : nsISupports
   Promise removeWebExtensionEngine(in AString id);
 
   /**
-   * The original Engine object that is the default for this region,
+   * The Application Default Engine object that is the default for this region,
    * ignoring changes the user may have subsequently made.
    */
-  readonly attribute nsISearchEngine originalDefaultEngine;
+  readonly attribute nsISearchEngine appDefaultEngine;
 
   /**
-   * The original Engine object that is the default for this region when in
+   * The Application Default Engine object that is the default for this region when in
    * private browsing mode, ignoring changes the user may have subsequently made.
    */
-  readonly attribute nsISearchEngine originalPrivateDefaultEngine;
+  readonly attribute nsISearchEngine appPrivateDefaultEngine;
 
   /**
    * The currently active search engine.
    * Unless the application doesn't ship any search plugin, this should never
    * be null. If the currently active engine is removed, this attribute will
-   * fallback first to the original default engine if it's not hidden, then to
-   * the first visible engine, and as a last resort it will unhide the original
+   * fallback first to the application default engine if it's not hidden, then to
+   * the first visible engine, and as a last resort it will unhide the app
    * default engine.
    */
   attribute nsISearchEngine defaultEngine;

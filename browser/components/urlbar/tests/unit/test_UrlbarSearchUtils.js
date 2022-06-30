@@ -15,7 +15,7 @@ add_task(async function() {
   Services.prefs.setCharPref("browser.search.region", "US");
 
   Services.search.restoreDefaultEngines();
-  Services.search.resetToOriginalDefaultEngine();
+  Services.search.resetToAppDefaultEngine();
 });
 
 add_task(async function search_engine_match() {

@@ -375,7 +375,7 @@ class SearchConfigTest {
    */
   _assertDefaultEngines(region, locale) {
     this._assertEngineRules(
-      [Services.search.originalDefaultEngine],
+      [Services.search.appDefaultEngine],
       region,
       locale,
       "default"
@@ -383,7 +383,7 @@ class SearchConfigTest {
     // At the moment, this uses the same section as the normal default, as
     // we don't set this differently for any region/locale.
     this._assertEngineRules(
-      [Services.search.originalPrivateDefaultEngine],
+      [Services.search.appPrivateDefaultEngine],
       region,
       locale,
       "default"

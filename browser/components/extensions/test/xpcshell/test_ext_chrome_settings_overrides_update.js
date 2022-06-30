@@ -582,7 +582,7 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
   // for the scenario covered by the current test case.
   let initialEngine;
   if (builtinAsInitialDefault) {
-    initialEngine = Services.search.originalDefaultEngine;
+    initialEngine = Services.search.appDefaultEngine;
   } else {
     initialEngine = Services.search.getEngineByName(
       extensionInfo.manifest.chrome_settings_overrides.search_provider.name
@@ -628,7 +628,7 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
     tabHideNotification: {},
     default_search: {
       defaultSearch: {
-        initialValue: Services.search.originalDefaultEngine.name,
+        initialValue: Services.search.appDefaultEngine.name,
         precedenceList: [
           {
             id: EXTENSION_ID2,
@@ -747,8 +747,8 @@ async function test_default_search_on_updating_addons_installed_before_bug175776
   // we said no.
   equal(
     (await Services.search.getDefault()).name,
-    Services.search.originalDefaultEngine.name,
-    `Default engine should be set to the original default after disabling/enabling ${EXTENSION_ID}.`
+    Services.search.appDefaultEngine.name,
+    `Default engine should be set to the app default after disabling/enabling ${EXTENSION_ID}.`
   );
 
   await withHandlingDefaultSearchPrompt(

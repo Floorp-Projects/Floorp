@@ -41,7 +41,7 @@ add_task(async function test_persistAcrossRestarts() {
   Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
 
   // Cleanup (set the engine back to default).
-  Services.search.resetToOriginalDefaultEngine();
+  Services.search.resetToAppDefaultEngine();
   Assert.equal(Services.search.defaultEngine.name, kDefaultEngineName);
 });
 
@@ -98,7 +98,7 @@ add_task(async function test_resetToOriginalDefaultEngine() {
   Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
   await promiseAfterSettings();
 
-  Services.search.resetToOriginalDefaultEngine();
+  Services.search.resetToAppDefaultEngine();
   Assert.equal(Services.search.defaultEngine.name, kDefaultEngineName);
   await promiseAfterSettings();
 });

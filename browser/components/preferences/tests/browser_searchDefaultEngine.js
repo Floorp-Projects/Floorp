@@ -19,12 +19,12 @@ add_setup(async function() {
     search_url_get_params: "search={searchTerms}",
   });
 
-  const originalDefault = await Services.search.getDefault();
-  const originalDefaultPrivate = await Services.search.getDefaultPrivate();
+  const defaultEngine = await Services.search.getDefault();
+  const defaultPrivateEngine = await Services.search.getDefaultPrivate();
 
   registerCleanupFunction(async () => {
-    await Services.search.setDefault(originalDefault);
-    await Services.search.setDefaultPrivate(originalDefaultPrivate);
+    await Services.search.setDefault(defaultEngine);
+    await Services.search.setDefaultPrivate(defaultPrivateEngine);
   });
 });
 
