@@ -271,7 +271,6 @@ RESOURCE_FILES += [
 CONTENT_ACCESSIBLE_FILES += [
     "ImageDocument.css",
     "res/plaintext.css",
-    "res/searchfield-cancel.svg",
     "res/viewsource.css",
     "TopLevelImageDocument.css",
     "TopLevelVideoDocument.css",

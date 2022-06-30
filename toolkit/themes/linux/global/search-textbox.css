@@ -57,12 +57,8 @@ html|input {
   list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
 }
 
-.textbox-search-clear {
-  list-style-image: url(resource://content-accessible/searchfield-cancel.svg);
-}
-
 :host([searchbutton]) .textbox-search-icon:not([disabled]),
-.textbox-search-clear:not([disabled]) {
+html|*.textbox-search-clear:not([disabled]) {
   cursor: pointer;
 }
 

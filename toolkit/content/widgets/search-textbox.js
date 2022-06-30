@@ -91,9 +91,9 @@
       searchBtn.className = "textbox-search-icon";
       searchBtn.addEventListener("click", e => this._iconClick(e));
 
-      const clearBtn = document.createXULElement("image");
+      const clearBtn = document.createElement("img");
       clearBtn.className = "textbox-search-clear";
-      clearBtn.part = "clear-icon";
+      clearBtn.src = "resource://gre-resources/searchfield-cancel.svg";
       clearBtn.setAttribute("role", "button");
       document.l10n.setAttributes(
         clearBtn,
