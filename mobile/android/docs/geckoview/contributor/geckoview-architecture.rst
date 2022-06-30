@@ -254,7 +254,7 @@ There is not currently any API for an app to manually specify additional CA
 roots, although this might change with `Bug 1522162
 <https://bugzilla.mozilla.org/show_bug.cgi?id=1522162>`_.
 
-Light and Omni builds
+Lite and Omni builds
 ---------------------
 
 A variation of the default GeckoView build, dubbed `Omni` in the codebase,
@@ -262,7 +262,7 @@ provides additional libraries that can be helpful when building a browser app.
 Currently, the `Glean
 <https://docs.telemetry.mozilla.org/concepts/glean/glean.html>`_ library is
 included in the ``geckoview-omni`` package.  The default build ``geckoview``,
-which does not contain such libraries, is similarly dubbed `Light` in the
+which does not contain such libraries, is similarly dubbed `Lite` in the
 codebase.
 
 The additional libraries in the Omni package are directly built into Gecko's
@@ -292,6 +292,13 @@ alongside ``org.mozilla.geckoview``.
 The main Glean library then depends on ``glean-native`` which is either
 provided in a standalone package (for apps that do not include GeckoView) or by
 the GeckoView capability above.
+
+In Treeherder, the Lite build is denoted with ``Lite``, while the Omni builds
+don't have extra denominations as they are the default build, so e.g. for
+``x86_64`` the platorm names would be:
+
+- ``Android 7.0 x86-64`` for the Omni build
+- ``Android 7.0 x86-64 Lite`` for the Lite build
 
 Extensions
 ----------
