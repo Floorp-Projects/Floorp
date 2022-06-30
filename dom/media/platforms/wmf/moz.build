@@ -27,6 +27,8 @@ UNIFIED_SOURCES += [
     "DXVA2Manager.cpp",
     "MFMediaEngineAudioStream.cpp",
     "MFMediaEngineDecoderModule.cpp",
+    "MFMediaEngineExtension.cpp",
+    "MFMediaEngineNotify.cpp",
     "MFMediaEngineStream.cpp",
     "MFMediaEngineVideoStream.cpp",
     "MFMediaSource.cpp",

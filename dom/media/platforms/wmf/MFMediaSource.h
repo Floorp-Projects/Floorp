@@ -83,7 +83,6 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
           self->NotifyEndOfStreamInternal(aType);
         }));
   }
-  void NotifyEndOfStreamInternal(TrackInfo::TrackType aType);
 
   // Called from the MF stream to indicate that the stream has provided last
   // encoded sample to the media engine.
@@ -101,6 +100,8 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
  private:
   void AssertOnTaskQueue() const;
   void AssertOnMFThreadPool() const;
+
+  void NotifyEndOfStreamInternal(TrackInfo::TrackType aType);
 
   bool IsSeekable() const;
   MFMediaEngineStream* GetStreamByDescriptorId(DWORD aId) const;
@@ -120,12 +121,18 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
   MediaEventListener mAudioStreamEndedListener;
   MediaEventListener mVideoStreamEndedListener;
 
+  // This class would be run on two threads, MF thread pool and the source's
+  // task queue. Following members would be used across both threads so they
+  // need to be thread-safe.
+
   // True if the playback is ended. Use and modify on both task queue and MF
   // thread pool.
   Atomic<bool> mPresentationEnded;
 
-  // TODO : atomic
-  State mState;
+  // Modify on MF thread pool, read on any threads.
+  Atomic<State> mState;
+
+  // Thread-safe members END
 };
 
 }  // namespace mozilla
