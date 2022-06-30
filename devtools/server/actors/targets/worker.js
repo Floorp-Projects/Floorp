@@ -66,6 +66,12 @@ exports.WorkerTargetActor = TargetActorMixin(
       this.manage(this._consoleActor);
     },
 
+    // Expose the worker URL to the thread actor.
+    // so that it can easily know what is the base URL of all worker scripts.
+    get workerUrl() {
+      return this._workerDebuggerData.url;
+    },
+
     form() {
       return {
         actor: this.actorID,

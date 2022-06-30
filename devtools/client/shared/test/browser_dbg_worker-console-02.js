@@ -23,6 +23,8 @@ add_task(async function testWhilePaused() {
     selectors: { getIsWaitingOnBreak, getCurrentThread },
   } = dbg;
 
+  await waitForSourcesInSourceTree(dbg, [WORKER_URL]);
+
   // Execute some basic math to make sure evaluations are working.
   const hud = await getSplitConsole(toolbox);
   await executeAndWaitForMessage(hud, "10000+1", "10001");

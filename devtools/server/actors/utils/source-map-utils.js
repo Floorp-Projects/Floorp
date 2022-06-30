@@ -4,17 +4,6 @@
 
 "use strict";
 
-exports.resolveSourceURL = resolveSourceURL;
-function resolveSourceURL(sourceURL, global) {
-  if (sourceURL) {
-    try {
-      return new URL(sourceURL, global?.location?.href || undefined).href;
-    } catch (err) {}
-  }
-
-  return null;
-}
-
 exports.getSourcemapBaseURL = getSourcemapBaseURL;
 function getSourcemapBaseURL(url, global) {
   let sourceMapBaseURL = null;

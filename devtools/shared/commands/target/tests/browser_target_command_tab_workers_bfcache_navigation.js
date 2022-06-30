@@ -12,7 +12,7 @@
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 const WORKER_FILE = "test_worker.js";
 const WORKER_URL = URL_ROOT_SSL + WORKER_FILE;
-const IFRAME_WORKER_URL = WORKER_FILE;
+const IFRAME_WORKER_URL = URL_ROOT_ORG_SSL + WORKER_FILE;
 
 add_task(async function() {
   // Disable the preloaded process as it creates processes intermittently
