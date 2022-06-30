@@ -94,6 +94,11 @@ GUID AudioMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType);
 
 GUID VideoMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType);
 
+void AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
+                                      const uint8_t* aAudioSpecConfig,
+                                      uint32_t aConfigLength,
+                                      nsTArray<BYTE>& aOutUserData);
+
 }  // namespace mozilla
 
 #endif

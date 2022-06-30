@@ -45,6 +45,20 @@ HRESULT MFMediaEngineAudioStream::CreateMediaType(const TrackInfo& aInfo,
       mediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, info.mRate));
   uint64_t bitDepth = info.mBitDepth != 0 ? info.mBitDepth : 16;
   RETURN_IF_FAILED(mediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, bitDepth));
+  if (subType == MFAudioFormat_AAC) {
+    if (mAACUserData.IsEmpty()) {
+      MOZ_ASSERT(info.mCodecSpecificConfig.is<AacCodecSpecificData>());
+      const auto& blob = info.mCodecSpecificConfig.as<AacCodecSpecificData>()
+                             .mDecoderConfigDescriptorBinaryBlob;
+      AACAudioSpecificConfigToUserData(info.mExtendedProfile, blob->Elements(),
+                                       blob->Length(), mAACUserData);
+      LOGV("Generated AAC user data");
+    }
+    RETURN_IF_FAILED(
+        mediaType->SetUINT32(MF_MT_AAC_PAYLOAD_TYPE, 0x0));  // Raw AAC packet
+    RETURN_IF_FAILED(mediaType->SetBlob(
+        MF_MT_USER_DATA, mAACUserData.Elements(), mAACUserData.Length()));
+  }
   LOGV("Created audio type, subtype=%s, channel=%" PRIu32 ", rate=%" PRIu32
        ", bitDepth=%" PRIu64,
        GUIDToStr(subType), info.mChannels, info.mRate, bitDepth);
