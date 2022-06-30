@@ -61,6 +61,7 @@ if CONFIG["MOZ_WMF"]:
     SOURCES += [
         "MFMediaEngineChild.cpp",
         "MFMediaEngineParent.cpp",
+        "MFMediaEngineUtils.cpp",
     ]
     EXPORTS.mozilla += [
         "MFMediaEngineChild.h",
