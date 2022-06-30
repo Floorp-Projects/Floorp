@@ -32,6 +32,9 @@ class MFMediaEngineAudioStream final : public MFMediaEngineStream {
                           IMFMediaType** aMediaType) override;
 
   bool HasEnoughRawData() const override;
+
+  // For MF_MT_USER_DATA. Currently only used for AAC.
+  nsTArray<BYTE> mAACUserData;
 };
 
 }  // namespace mozilla

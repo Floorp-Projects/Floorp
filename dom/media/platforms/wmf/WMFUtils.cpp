@@ -328,6 +328,67 @@ GUID VideoMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType) {
   return GUID_NULL;
 }
 
+void AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
+                                      const uint8_t* aAudioSpecConfig,
+                                      uint32_t aConfigLength,
+                                      nsTArray<BYTE>& aOutUserData) {
+  MOZ_ASSERT(aOutUserData.IsEmpty());
+
+  // The MF_MT_USER_DATA for AAC is defined here:
+  // http://msdn.microsoft.com/en-us/library/windows/desktop/dd742784%28v=vs.85%29.aspx
+  //
+  // For MFAudioFormat_AAC, MF_MT_USER_DATA contains the portion of
+  // the HEAACWAVEINFO structure that appears after the WAVEFORMATEX
+  // structure (that is, after the wfx member). This is followed by
+  // the AudioSpecificConfig() data, as defined by ISO/IEC 14496-3.
+  // [...]
+  // The length of the AudioSpecificConfig() data is 2 bytes for AAC-LC
+  // or HE-AAC with implicit signaling of SBR/PS. It is more than 2 bytes
+  // for HE-AAC with explicit signaling of SBR/PS.
+  //
+  // The value of audioObjectType as defined in AudioSpecificConfig()
+  // must be 2, indicating AAC-LC. The value of extensionAudioObjectType
+  // must be 5 for SBR or 29 for PS.
+  //
+  // HEAACWAVEINFO structure:
+  //    typedef struct heaacwaveinfo_tag {
+  //      WAVEFORMATEX wfx;
+  //      WORD         wPayloadType;
+  //      WORD         wAudioProfileLevelIndication;
+  //      WORD         wStructType;
+  //      WORD         wReserved1;
+  //      DWORD        dwReserved2;
+  //    }
+  const UINT32 heeInfoLen = 4 * sizeof(WORD) + sizeof(DWORD);
+
+  // The HEAACWAVEINFO must have payload and profile set,
+  // the rest can be all 0x00.
+  BYTE heeInfo[heeInfoLen] = {0};
+  WORD* w = (WORD*)heeInfo;
+  w[0] = 0x0;  // Payload type raw AAC packet
+  w[1] = aAACProfileLevelIndication;
+
+  aOutUserData.AppendElements(heeInfo, heeInfoLen);
+
+  if (aAACProfileLevelIndication == 2 && aConfigLength > 2) {
+    // The AudioSpecificConfig is TTTTTFFF|FCCCCGGG
+    // (T=ObjectType, F=Frequency, C=Channel, G=GASpecificConfig)
+    // If frequency = 0xf, then the frequency is explicitly defined on 24 bits.
+    int8_t frequency =
+        (aAudioSpecConfig[0] & 0x7) << 1 | (aAudioSpecConfig[1] & 0x80) >> 7;
+    int8_t channels = (aAudioSpecConfig[1] & 0x78) >> 3;
+    int8_t gasc = aAudioSpecConfig[1] & 0x7;
+    if (frequency != 0xf && channels && !gasc) {
+      // We enter this condition if the AudioSpecificConfig should theorically
+      // be 2 bytes long but it's not.
+      // The WMF AAC decoder will error if unknown extensions are found,
+      // so remove them.
+      aConfigLength = 2;
+    }
+  }
+  aOutUserData.AppendElements(aAudioSpecConfig, aConfigLength);
+}
+
 namespace wmf {
 
 static const wchar_t* sDLLs[] = {
