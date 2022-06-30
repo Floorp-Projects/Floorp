@@ -130,10 +130,10 @@ class ImageBitmap final : public nsISupports, public nsWrapperCache {
       const nsTArray<RefPtr<gfx::DataSourceSurface>>& aClonedSurfaces,
       uint32_t aIndex);
 
-  static bool WriteStructuredClone(
+  static void WriteStructuredClone(
       JSStructuredCloneWriter* aWriter,
       nsTArray<RefPtr<gfx::DataSourceSurface>>& aClonedSurfaces,
-      ImageBitmap* aImageBitmap);
+      ImageBitmap* aImageBitmap, ErrorResult& aRv);
 
   friend CreateImageBitmapFromBlob;
   friend CreateImageBitmapFromBlobTask;
