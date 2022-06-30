@@ -86,7 +86,7 @@ class SearchSelectorToolbarActionTest {
 
         assertNotNull(UnifiedSearch.searchMenuTapped.testGetValue())
         verify {
-            menu.menuController.show(view, Orientation.DOWN)
+            menu.menuController.show(view, Orientation.DOWN, true)
         }
 
         every { settings.shouldUseBottomToolbar } returns true
@@ -94,7 +94,7 @@ class SearchSelectorToolbarActionTest {
 
         assertNotNull(UnifiedSearch.searchMenuTapped.testGetValue())
         verify {
-            menu.menuController.show(view, Orientation.UP)
+            menu.menuController.show(view, Orientation.UP, true)
         }
     }
 

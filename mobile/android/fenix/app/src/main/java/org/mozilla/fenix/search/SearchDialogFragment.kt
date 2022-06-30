@@ -724,12 +724,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 }
             } + searchSelectorMenu.menuItems()
 
-        if (requireContext().settings().shouldUseBottomToolbar) {
-            searchSelectorMenu.menuController.submitList(searchEngineList.reversed())
-        } else {
-            searchSelectorMenu.menuController.submitList(searchEngineList)
-        }
-
+        searchSelectorMenu.menuController.submitList(searchEngineList)
         toolbarView.view.invalidateActions()
     }
 

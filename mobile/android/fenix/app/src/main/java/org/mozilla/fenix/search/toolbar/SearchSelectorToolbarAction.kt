@@ -52,7 +52,7 @@ class SearchSelectorToolbarAction(
                 }
 
                 UnifiedSearch.searchMenuTapped.record(NoExtras())
-                menu.menuController.show(anchor = it, orientation = orientation)
+                menu.menuController.show(anchor = it, orientation = orientation, forceOrientation = true)
             }
 
             setBackgroundResource(
