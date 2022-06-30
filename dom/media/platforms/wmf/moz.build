@@ -6,12 +6,6 @@
 
 EXPORTS += [
     "DXVA2Manager.h",
-    "MFMediaEngineAudioStream.h",
-    "MFMediaEngineDecoderModule.h",
-    "MFMediaEngineExtra.h",
-    "MFMediaEngineStream.h",
-    "MFMediaEngineVideoStream.h",
-    "MFMediaSource.h",
     "MFTDecoder.h",
     "WMF.h",
     "WMFAudioMFTManager.h",
@@ -23,15 +17,27 @@ EXPORTS += [
     "WMFVideoMFTManager.h",
 ]
 
+if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
+    EXPORTS += [
+        "MFMediaEngineAudioStream.h",
+        "MFMediaEngineDecoderModule.h",
+        "MFMediaEngineExtra.h",
+        "MFMediaEngineStream.h",
+        "MFMediaEngineVideoStream.h",
+        "MFMediaSource.h",
+    ]
+    UNIFIED_SOURCES += [
+        "MFMediaEngineAudioStream.cpp",
+        "MFMediaEngineDecoderModule.cpp",
+        "MFMediaEngineExtension.cpp",
+        "MFMediaEngineNotify.cpp",
+        "MFMediaEngineStream.cpp",
+        "MFMediaEngineVideoStream.cpp",
+        "MFMediaSource.cpp",
+    ]
+
 UNIFIED_SOURCES += [
     "DXVA2Manager.cpp",
-    "MFMediaEngineAudioStream.cpp",
-    "MFMediaEngineDecoderModule.cpp",
-    "MFMediaEngineExtension.cpp",
-    "MFMediaEngineNotify.cpp",
-    "MFMediaEngineStream.cpp",
-    "MFMediaEngineVideoStream.cpp",
-    "MFMediaSource.cpp",
     "MFTDecoder.cpp",
     "MFTEncoder.cpp",
     "WMFAudioMFTManager.cpp",

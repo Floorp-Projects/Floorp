@@ -5,7 +5,7 @@
 #include "ExternalEngineStateMachine.h"
 
 #include "PerformanceRecorder.h"
-#ifdef MOZ_WMF
+#ifdef MOZ_WMF_MEDIA_ENGINE
 #  include "mozilla/MFMediaEngineChild.h"
 #  include "MFMediaEngineDecoderModule.h"
 #endif
@@ -112,7 +112,7 @@ ExternalEngineStateMachine::ExternalEngineStateMachine(
       mVideoFrameContainer(aDecoder->GetVideoFrameContainer()) {
   LOG("Created ExternalEngineStateMachine");
   MOZ_ASSERT(mState.IsInitEngine());
-#ifdef MOZ_WMF
+#ifdef MOZ_WMF_MEDIA_ENGINE
   mEngine.reset(new MFMediaEngineWrapper(this));
 #endif
   if (mEngine) {
@@ -219,7 +219,7 @@ bool ExternalEngineStateMachine::IsFormatSupportedByExternalEngine(
     const MediaInfo& aInfo) {
   AssertOnTaskQueue();
   MOZ_ASSERT(mState.IsReadingMetadata());
-#ifdef MOZ_WMF
+#ifdef MOZ_WMF_MEDIA_ENGINE
   const bool audioSupported =
       !aInfo.HasAudio() ||
       MFMediaEngineDecoderModule::SupportsConfig(aInfo.mAudio);

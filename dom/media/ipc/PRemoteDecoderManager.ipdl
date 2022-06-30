@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef MOZ_WMF
+#ifdef MOZ_WMF_MEDIA_ENGINE
   include protocol PMFMediaEngine;
 #endif
 include protocol PTexture;
@@ -37,12 +37,12 @@ union RemoteDecoderInfoIPDL
 sync protocol PRemoteDecoderManager
 {
   manages PRemoteDecoder;
-#ifdef MOZ_WMF
+#ifdef MOZ_WMF_MEDIA_ENGINE
   manages PMFMediaEngine;
 #endif
 
 parent:
-#ifdef MOZ_WMF
+#ifdef MOZ_WMF_MEDIA_ENGINE
   async PMFMediaEngine();
 #endif
   async PRemoteDecoder(RemoteDecoderInfoIPDL info,

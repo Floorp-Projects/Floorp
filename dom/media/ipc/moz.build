@@ -54,7 +54,7 @@ SOURCES += [
     "RemoteVideoDecoder.cpp",
 ]
 
-if CONFIG["MOZ_WMF"]:
+if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
     IPDL_SOURCES += [
         "PMFMediaEngine.ipdl",
     ]
