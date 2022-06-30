@@ -777,7 +777,13 @@ nsDOMWindowUtils::SendWheelEvent(float aX, float aY, double aDeltaX,
   wheelEvent.mRefPoint =
       nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
 
-  widget->DispatchInputEvent(&wheelEvent);
+  if (StaticPrefs::test_events_async_enabled()) {
+    widget->DispatchInputEvent(&wheelEvent);
+  } else {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsresult rv = widget->DispatchEvent(&wheelEvent, status);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   if (widget->AsyncPanZoomEnabled()) {
     // Computing overflow deltas is not compatible with APZ, so if APZ is
