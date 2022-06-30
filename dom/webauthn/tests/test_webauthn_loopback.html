@@ -50,7 +50,6 @@ function() {
        - response : AuthenticatorAttestationResponse : AuthenticatorResponse
          - attestationObject: CBOR object
          - clientDataJSON: serialized JSON
-       - clientExtensionResults: (not yet supported)
     */
 
     is(aCredInfo.type, "public-key", "Credential type must be public-key")
@@ -66,12 +65,7 @@ function() {
     let clientData = JSON.parse(buffer2string(aCredInfo.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gCredentialChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
-    is(clientData.hashAlgorithm, "SHA-256", "Hash algorithm is correct");
     is(clientData.type, "webauthn.create", "Type is correct");
-
-    let extensions = aCredInfo.getClientExtensionResults();
-    is(extensions.appid, undefined, "appid extension wasn't used");
-    is(clientData.clientExtensions.appid, undefined, "appid extension wasn't sent");
 
     return webAuthnDecodeCBORAttestation(aCredInfo.response.attestationObject)
     .then(function(aAttestationObj) {
@@ -118,13 +112,11 @@ function() {
     ok(aAssertion.response.signature === aAssertion.response.signature, "AuthenticatorAssertionResponse.Signature is SameObject");
     ok(aAssertion.response.signature instanceof ArrayBuffer, "AuthenticatorAssertionResponse.Signature is an ArrayBuffer");
     ok(aAssertion.response.userHandle === null, "AuthenticatorAssertionResponse.UserHandle is null for u2f authenticators");
-    isDeeply(aAssertion.getClientExtensionResults(), {}, "No extensions should be reported");
 
     ok(aAssertion.response.authenticatorData.byteLength > 0, "Authenticator data exists");
     let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gAssertionChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
-    is(clientData.hashAlgorithm, "SHA-256", "Hash algorithm is correct");
     is(clientData.type, "webauthn.get", "Type is correct");
 
     return webAuthnDecodeAuthDataArray(aAssertion.response.authenticatorData)
