@@ -53,9 +53,12 @@ bool ServiceWorkersEnabled(JSContext* aCx, JSObject* aGlobal) {
   // xpc::CurrentNativeGlobal below requires rooting
   JS::Rooted<JSObject*> global(aCx, aGlobal);
 
-  if (const nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx)) {
-    if (global->GetStorageAccess() == StorageAccess::ePrivateBrowsing) {
-      return false;
+  if (StaticPrefs::dom_serviceWorkers_hide_in_pbmode_enabled()) {
+    if (const nsCOMPtr<nsIGlobalObject> global =
+            xpc::CurrentNativeGlobal(aCx)) {
+      if (global->GetStorageAccess() == StorageAccess::ePrivateBrowsing) {
+        return false;
+      }
     }
   }
 

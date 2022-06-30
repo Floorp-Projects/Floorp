@@ -97,6 +97,8 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   static bool AllowedForPrincipal(nsIPrincipal* aPrincipal,
                                   bool* aIsSystemPrincipal = nullptr);
 
+  static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
+
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(IDBFactory); }
 
   nsISerialEventTarget* EventTarget() const {
