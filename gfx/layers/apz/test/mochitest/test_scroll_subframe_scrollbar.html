@@ -105,8 +105,7 @@ SimpleTest.waitForExplicitFinish();
 
 pushPrefs([["general.smoothScroll", false],
            ["mousewheel.transaction.timeout", 0],
-           ["mousewheel.transaction.ignoremovedelay", 0],
-           ["test.events.async.enabled", true]])
+           ["mousewheel.transaction.ignoremovedelay", 0]])
 .then(waitUntilApzStable)
 .then(test)
 .then(SimpleTest.finish, SimpleTest.finishWithFailure);
