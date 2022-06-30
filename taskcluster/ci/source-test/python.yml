@@ -412,11 +412,11 @@ mozperftest:
         toolchain:
             by-platform:
                 linux1804-64/opt:
-                    - linux64-node
+                    - linux64-node-12
                 macosx1015-64/opt:
-                    - macosx64-node
+                    - macosx64-node-12
                 windows10-64/opt:
-                    - win64-node
+                    - win64-node-12
     when:
         files-changed:
             - 'testing/performance/**'
@@ -469,9 +469,9 @@ featuregates:
         toolchain:
             by-platform:
                 linux1804-64/opt:
-                    - linux64-node
+                    - linux64-node-12
                 windows10-64/opt:
-                    - win64-node
+                    - win64-node-12
     when:
         files-changed:
             - 'toolkit/components/featuregates/**'
@@ -544,11 +544,11 @@ telemetry-python:
         toolchain:
             by-platform:
                 linux1804-64/opt:
-                    - linux64-node
+                    - linux64-node-12
                 macosx1015-64/opt:
-                    - macosx64-node
+                    - macosx64-node-12
                 windows10-64/opt:
-                    - win64-node
+                    - win64-node-12
     when:
         files-changed:
             - 'toolkit/components/telemetry/**'

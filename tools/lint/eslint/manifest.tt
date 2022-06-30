@@ -1,10 +1,10 @@
 [
   {
-    "filename": "eslint.tar.gz",
-    "size": 24632176,
     "algorithm": "sha512",
-    "digest": "7078a16acc1d0ba3b0c59e7b2d415bfe1bfd90f627cfb5f52cfc1df596021de8ad0b5a0224bdf7cdf0ecf447dc444ef63f204f7023df2958f518637c0723030f",
+    "visibility": "public",
+    "filename": "eslint.tar.gz",
     "unpack": true,
-    "visibility": "public"
+    "digest": "33c65b3ed3831ed32601915b6ec03a02203e16781646f890e161808026bdedf7a1527b28d281ca64feccff7046440d07dda374f006e2588a23839f5b0cac0cca",
+    "size": 11761049
   }
 ]

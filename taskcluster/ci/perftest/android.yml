@@ -6,7 +6,7 @@
 job-defaults:
     fetches:
         toolchain:
-            - linux64-node
+            - linux64-node-12
             - linux64-geckodriver
     run:
         sparse-profile: perftest
