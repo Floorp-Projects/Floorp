@@ -57,6 +57,8 @@ bool StreamTypeIsAudio(const WMFStreamType& aType) {
   switch (aType) {
     case WMFStreamType::MP3:
     case WMFStreamType::AAC:
+    case WMFStreamType::OPUS:
+    case WMFStreamType::VORBIS:
       return true;
     default:
       return false;
@@ -78,6 +80,10 @@ const char* StreamTypeToString(WMFStreamType aStreamType) {
       return "MP3";
     case WMFStreamType::AAC:
       return "AAC";
+    case WMFStreamType::OPUS:
+      return "OPUS";
+    case WMFStreamType::VORBIS:
+      return "VORBIS";
     default:
       MOZ_ASSERT(aStreamType == WMFStreamType::Unknown);
       return "Unknown";
@@ -105,6 +111,12 @@ WMFStreamType GetStreamTypeFromMimeType(const nsCString& aMimeType) {
   }
   if (aMimeType.EqualsLiteral("audio/mpeg")) {
     return WMFStreamType::MP3;
+  }
+  if (OpusDataDecoder::IsOpus(aMimeType)) {
+    return WMFStreamType::OPUS;
+  }
+  if (VorbisDataDecoder::IsVorbis(aMimeType)) {
+    return WMFStreamType::VORBIS;
   }
   return WMFStreamType::Unknown;
 }
