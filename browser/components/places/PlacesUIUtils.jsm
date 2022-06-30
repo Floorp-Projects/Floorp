@@ -521,7 +521,6 @@ var PlacesUIUtils = {
         false
       )
     ) {
-
       // Set the transaction manager into batching mode.
       let topUndoEntry = lazy.PlacesTransactions.topUndoEntry;
       let batchBlockingDeferred = lazy.PromiseUtils.defer();
