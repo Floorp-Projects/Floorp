@@ -261,6 +261,8 @@ def accept_raptor_android_build(platform):
         return True
     if "g5" in platform:
         return True
+    if "a51" in platform:
+        return True
 
 
 def filter_unsupported_artifact_builds(task, parameters):

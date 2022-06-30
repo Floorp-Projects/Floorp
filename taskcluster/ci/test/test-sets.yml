@@ -451,7 +451,7 @@ android-hw-browsertime-a51:
     - browsertime-youtube-playback-mobile
     - browsertime-unity-webgl-mobile
     - browsertime-tp6m
-    # - browsertime-tp6m-live
+    - browsertime-tp6m-live
 
 android-hw-browsertime-g5:
     - browsertime-tp6m-g5  # second half of tests
