@@ -310,11 +310,24 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvPause() {
 mozilla::ipc::IPCResult MFMediaEngineParent::RecvSeek(
     double aTargetTimeInSecond) {
   AssertOnManagerThread();
-  if (mMediaEngine) {
-    LOG("Seek to %f", aTargetTimeInSecond);
-    NS_ENSURE_TRUE(SUCCEEDED(mMediaEngine->SetCurrentTime(aTargetTimeInSecond)),
-                   IPC_OK());
+  if (!mMediaEngine) {
+    return IPC_OK();
   }
+
+  // If the target time is already equal to the current time, the media engine
+  // doesn't perform seek internally so we won't be able to receive `seeked`
+  // event. Therefore, we simply return `seeked` here because we're already in
+  // the target time.
+  const auto currentTimeInSeconds = mMediaEngine->GetCurrentTime();
+  if (currentTimeInSeconds == aTargetTimeInSecond) {
+    Unused << SendNotifyEvent(MF_MEDIA_ENGINE_EVENT_SEEKED);
+    return IPC_OK();
+  }
+
+  LOG("Seek to %f", aTargetTimeInSecond);
+  NS_ENSURE_TRUE(SUCCEEDED(mMediaEngine->SetCurrentTime(aTargetTimeInSecond)),
+                 IPC_OK());
+
   return IPC_OK();
 }
 
