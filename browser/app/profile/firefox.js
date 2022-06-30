@@ -507,7 +507,7 @@ pref("browser.urlbar.extension.timeout", 400);
 // searched for. If the string is resolved as a valid host, show a
 // "Did you mean to go to 'host'" prompt.
 // 0 - never resolve; 1 - use heuristics (default); 2 - always resolve
-pref("browser.urlbar.dnsResolveSingleWordsAfterSearch", 1);
+pref("browser.urlbar.dnsResolveSingleWordsAfterSearch", 0);
 
 // Whether the results panel should be kept open during IME composition.
 // The default value is false because some IME open a picker panel, and we end

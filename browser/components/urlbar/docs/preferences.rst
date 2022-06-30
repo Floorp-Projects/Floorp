@@ -101,11 +101,11 @@ browser.urlbar.delay (number, default: 50)
   it will instead make it access the disk more heavily, and potentially make it
   slower. Certain results, like the heuristic, always skip this timer anyway.
 
-browser.urlbar.dnsResolveSingleWordsAfterSearch (number, default: 1)
+browser.urlbar.dnsResolveSingleWordsAfterSearch (number, default: 0)
   Controls when to DNS resolve single word search strings, after they were
   searched for. If the string is resolved as a valid host, show a
   "Did you mean to go to 'host'" prompt.
-  Set to 0. Never resolve, 1: Use heuristics, 2. Always resolve.
+  Set to 0. 0: Never resolve, 1: Use heuristics, 2. Always resolve.
 
 browser.urlbar.eventTelemetry.enabled (boolean, default: false)
   Whether telemetry events should be recorded. This is expensive and should only
