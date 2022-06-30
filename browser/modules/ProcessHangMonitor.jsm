@@ -558,7 +558,12 @@ var ProcessHangMonitor = {
       return;
     }
 
-    if (AppConstants.MOZ_DEV_EDITION) {
+    // Show the "debug script" button unconditionally if we are in Developer edition,
+    // or, if DevTools are opened on the slow tab.
+    if (
+      AppConstants.MOZ_DEV_EDITION ||
+      report.scriptBrowser.browsingContext.watchedByDevTools
+    ) {
       buttons.push({
         label: bundle.getString("processHang.button_debug.label"),
         accessKey: bundle.getString("processHang.button_debug.accessKey"),
