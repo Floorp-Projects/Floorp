@@ -3666,16 +3666,14 @@ void CodeGenerator::visitParameter(LParameter* lir) {}
 
 void CodeGenerator::visitCallee(LCallee* lir) {
   Register callee = ToRegister(lir->output());
-  Address ptr(masm.getStackPointer(),
-              frameSize() + JitFrameLayout::offsetOfCalleeToken());
+  Address ptr(FramePointer, JitFrameLayout::offsetOfCalleeToken());
 
   masm.loadFunctionFromCalleeToken(ptr, callee);
 }
 
 void CodeGenerator::visitIsConstructing(LIsConstructing* lir) {
   Register output = ToRegister(lir->output());
-  Address calleeToken(masm.getStackPointer(),
-                      frameSize() + JitFrameLayout::offsetOfCalleeToken());
+  Address calleeToken(FramePointer, JitFrameLayout::offsetOfCalleeToken());
   masm.loadPtr(calleeToken, output);
 
   // We must be inside a function.
@@ -11783,10 +11781,8 @@ void CodeGenerator::visitFrameArgumentsSlice(LFrameArgumentsSlice* lir) {
     Register index = temp;
     masm.move32(Imm32(0), index);
 
-    size_t argvOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
-    argvOffset += masm.PushRegsInMaskSizeInBytes(liveRegs);
-
-    BaseValueIndex argPtr(masm.getStackPointer(), argIndex, argvOffset);
+    size_t argvOffset = JitFrameLayout::offsetOfActualArgs();
+    BaseValueIndex argPtr(FramePointer, argIndex, argvOffset);
 
     Label loop;
     masm.bind(&loop);
@@ -12138,15 +12134,15 @@ void CodeGenerator::visitArgumentsLength(LArgumentsLength* lir) {
 void CodeGenerator::visitGetFrameArgument(LGetFrameArgument* lir) {
   ValueOperand result = ToOutValue(lir);
   const LAllocation* index = lir->index();
-  size_t argvOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
+  size_t argvOffset = JitFrameLayout::offsetOfActualArgs();
 
   if (index->isConstant()) {
     int32_t i = index->toConstant()->toInt32();
-    Address argPtr(masm.getStackPointer(), sizeof(Value) * i + argvOffset);
+    Address argPtr(FramePointer, sizeof(Value) * i + argvOffset);
     masm.loadValue(argPtr, result);
   } else {
     Register i = ToRegister(index);
-    BaseValueIndex argPtr(masm.getStackPointer(), i, argvOffset);
+    BaseValueIndex argPtr(FramePointer, i, argvOffset);
     masm.loadValue(argPtr, result);
   }
 }
@@ -12156,12 +12152,12 @@ void CodeGenerator::visitGetFrameArgumentHole(LGetFrameArgumentHole* lir) {
   Register index = ToRegister(lir->index());
   Register length = ToRegister(lir->length());
   Register spectreTemp = ToTempRegisterOrInvalid(lir->temp0());
-  size_t argvOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
+  size_t argvOffset = JitFrameLayout::offsetOfActualArgs();
 
   Label outOfBounds, done;
   masm.spectreBoundsCheck32(index, length, spectreTemp, &outOfBounds);
 
-  BaseValueIndex argPtr(masm.getStackPointer(), index, argvOffset);
+  BaseValueIndex argPtr(FramePointer, index, argvOffset);
   masm.loadValue(argPtr, result);
   masm.jump(&done);
 
@@ -12203,8 +12199,8 @@ void CodeGenerator::visitRest(LRest* lir) {
     masm.movePtr(ImmPtr(nullptr), temp2);
   }
 
-  size_t actualsOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
-  masm.moveStackPtrTo(temp1);
+  size_t actualsOffset = JitFrameLayout::offsetOfActualArgs();
+  masm.mov(FramePointer, temp1);
 
   // Compute numActuals - numFormals.
   if (numFormals) {
@@ -15729,8 +15725,7 @@ void CodeGenerator::visitNewTarget(LNewTarget* ins) {
 
   // if (isConstructing) output = argv[Max(numActualArgs, numFormalArgs)]
   Label notConstructing, done;
-  Address calleeToken(masm.getStackPointer(),
-                      frameSize() + JitFrameLayout::offsetOfCalleeToken());
+  Address calleeToken(FramePointer, JitFrameLayout::offsetOfCalleeToken());
   masm.branchTestPtr(Assembler::Zero, calleeToken,
                      Imm32(CalleeToken_FunctionConstructing), &notConstructing);
 
@@ -15742,9 +15737,9 @@ void CodeGenerator::visitNewTarget(LNewTarget* ins) {
   size_t numFormalArgs = ins->mirRaw()->block()->info().nargs();
   masm.branchPtr(Assembler::Below, argvLen, Imm32(numFormalArgs), &useNFormals);
 
-  size_t argsOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
+  size_t argsOffset = JitFrameLayout::offsetOfActualArgs();
   {
-    BaseValueIndex newTarget(masm.getStackPointer(), argvLen, argsOffset);
+    BaseValueIndex newTarget(FramePointer, argvLen, argsOffset);
     masm.loadValue(newTarget, output);
     masm.jump(&done);
   }
@@ -15752,7 +15747,7 @@ void CodeGenerator::visitNewTarget(LNewTarget* ins) {
   masm.bind(&useNFormals);
 
   {
-    Address newTarget(masm.getStackPointer(),
+    Address newTarget(FramePointer,
                       argsOffset + (numFormalArgs * sizeof(Value)));
     masm.loadValue(newTarget, output);
     masm.jump(&done);
