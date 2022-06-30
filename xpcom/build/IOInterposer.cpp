@@ -90,7 +90,7 @@ class PerThreadData {
 
     mIsHandlingObservation = true;
     // Decide which list of observers to inform
-    std::vector<mozilla::IOInterposeObserver*>* observers = nullptr;
+    const std::vector<mozilla::IOInterposeObserver*>* observers = nullptr;
     switch (aObservation.ObservedOperation()) {
       case mozilla::IOInterposeObserver::OpCreateOrOpen:
         observers = &mObserverLists->mCreateObservers;
@@ -135,7 +135,7 @@ class PerThreadData {
   inline bool IsMainThread() const { return mIsMainThread; }
 
   inline void SetObserverLists(uint32_t aNewGeneration,
-                               RefPtr<ObserverLists>& aNewLists) {
+                               RefPtr<const ObserverLists>& aNewLists) {
     mCurrentGeneration = aNewGeneration;
     mObserverLists = aNewLists;
   }
@@ -151,7 +151,7 @@ class PerThreadData {
   bool mIsMainThread;
   bool mIsHandlingObservation;
   uint32_t mCurrentGeneration;
-  RefPtr<ObserverLists> mObserverLists;
+  RefPtr<const ObserverLists> mObserverLists;
 };
 
 // Thread-safe list of observers, from which `PerThreadData` sources its own
@@ -170,7 +170,7 @@ class SourceList {
   inline void Enable() { mIsEnabled = true; }
 
   void Register(mozilla::IOInterposeObserver::Operation aOp,
-                mozilla::IOInterposeObserver* aObserver) {
+                mozilla::IOInterposeObserver* aStaticObserver) {
     mozilla::IOInterposer::AutoLock lock(mLock);
 
     ObserverLists* newLists = nullptr;
@@ -182,32 +182,32 @@ class SourceList {
     // You can register to observe multiple types of observations
     // but you'll never be registered twice for the same observations.
     if (aOp & mozilla::IOInterposeObserver::OpCreateOrOpen &&
-        !VectorContains(newLists->mCreateObservers, aObserver)) {
-      newLists->mCreateObservers.push_back(aObserver);
+        !VectorContains(newLists->mCreateObservers, aStaticObserver)) {
+      newLists->mCreateObservers.push_back(aStaticObserver);
     }
     if (aOp & mozilla::IOInterposeObserver::OpRead &&
-        !VectorContains(newLists->mReadObservers, aObserver)) {
-      newLists->mReadObservers.push_back(aObserver);
+        !VectorContains(newLists->mReadObservers, aStaticObserver)) {
+      newLists->mReadObservers.push_back(aStaticObserver);
     }
     if (aOp & mozilla::IOInterposeObserver::OpWrite &&
-        !VectorContains(newLists->mWriteObservers, aObserver)) {
-      newLists->mWriteObservers.push_back(aObserver);
+        !VectorContains(newLists->mWriteObservers, aStaticObserver)) {
+      newLists->mWriteObservers.push_back(aStaticObserver);
     }
     if (aOp & mozilla::IOInterposeObserver::OpFSync &&
-        !VectorContains(newLists->mFSyncObservers, aObserver)) {
-      newLists->mFSyncObservers.push_back(aObserver);
+        !VectorContains(newLists->mFSyncObservers, aStaticObserver)) {
+      newLists->mFSyncObservers.push_back(aStaticObserver);
     }
     if (aOp & mozilla::IOInterposeObserver::OpStat &&
-        !VectorContains(newLists->mStatObservers, aObserver)) {
-      newLists->mStatObservers.push_back(aObserver);
+        !VectorContains(newLists->mStatObservers, aStaticObserver)) {
+      newLists->mStatObservers.push_back(aStaticObserver);
     }
     if (aOp & mozilla::IOInterposeObserver::OpClose &&
-        !VectorContains(newLists->mCloseObservers, aObserver)) {
-      newLists->mCloseObservers.push_back(aObserver);
+        !VectorContains(newLists->mCloseObservers, aStaticObserver)) {
+      newLists->mCloseObservers.push_back(aStaticObserver);
     }
     if (aOp & mozilla::IOInterposeObserver::OpNextStage &&
-        !VectorContains(newLists->mStageObservers, aObserver)) {
-      newLists->mStageObservers.push_back(aObserver);
+        !VectorContains(newLists->mStageObservers, aStaticObserver)) {
+      newLists->mStageObservers.push_back(aStaticObserver);
     }
     mObserverLists = newLists;
     mObservedOperations =
@@ -217,7 +217,7 @@ class SourceList {
   }
 
   void Unregister(mozilla::IOInterposeObserver::Operation aOp,
-                  mozilla::IOInterposeObserver* aObserver) {
+                  mozilla::IOInterposeObserver* aStaticObserver) {
     mozilla::IOInterposer::AutoLock lock(mLock);
 
     ObserverLists* newLists = nullptr;
@@ -228,7 +228,7 @@ class SourceList {
     }
 
     if (aOp & mozilla::IOInterposeObserver::OpCreateOrOpen) {
-      VectorRemove(newLists->mCreateObservers, aObserver);
+      VectorRemove(newLists->mCreateObservers, aStaticObserver);
       if (newLists->mCreateObservers.empty()) {
         mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
             mObservedOperations &
@@ -236,42 +236,42 @@ class SourceList {
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpRead) {
-      VectorRemove(newLists->mReadObservers, aObserver);
+      VectorRemove(newLists->mReadObservers, aStaticObserver);
       if (newLists->mReadObservers.empty()) {
         mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
             mObservedOperations & ~mozilla::IOInterposeObserver::OpRead);
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpWrite) {
-      VectorRemove(newLists->mWriteObservers, aObserver);
+      VectorRemove(newLists->mWriteObservers, aStaticObserver);
       if (newLists->mWriteObservers.empty()) {
         mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
             mObservedOperations & ~mozilla::IOInterposeObserver::OpWrite);
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpFSync) {
-      VectorRemove(newLists->mFSyncObservers, aObserver);
+      VectorRemove(newLists->mFSyncObservers, aStaticObserver);
       if (newLists->mFSyncObservers.empty()) {
         mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
             mObservedOperations & ~mozilla::IOInterposeObserver::OpFSync);
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpStat) {
-      VectorRemove(newLists->mStatObservers, aObserver);
+      VectorRemove(newLists->mStatObservers, aStaticObserver);
       if (newLists->mStatObservers.empty()) {
         mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
             mObservedOperations & ~mozilla::IOInterposeObserver::OpStat);
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpClose) {
-      VectorRemove(newLists->mCloseObservers, aObserver);
+      VectorRemove(newLists->mCloseObservers, aStaticObserver);
       if (newLists->mCloseObservers.empty()) {
         mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
             mObservedOperations & ~mozilla::IOInterposeObserver::OpClose);
       }
     }
     if (aOp & mozilla::IOInterposeObserver::OpNextStage) {
-      VectorRemove(newLists->mStageObservers, aObserver);
+      VectorRemove(newLists->mStageObservers, aStaticObserver);
       if (newLists->mStageObservers.empty()) {
         mObservedOperations = (mozilla::IOInterposeObserver::Operation)(
             mObservedOperations & ~mozilla::IOInterposeObserver::OpNextStage);
@@ -300,7 +300,7 @@ class SourceList {
   }
 
  private:
-  RefPtr<ObserverLists> mObserverLists GUARDED_BY(mLock);
+  RefPtr<const ObserverLists> mObserverLists GUARDED_BY(mLock);
   // Note, we cannot use mozilla::Mutex here as the ObserverLists may be leaked
   // (We want to monitor IO during shutdown). Furthermore, as we may have to
   // unregister observers during shutdown an OffTheBooksMutex is not an option
@@ -484,22 +484,22 @@ bool IOInterposer::IsObservedOperation(IOInterposeObserver::Operation aOp) {
 }
 
 void IOInterposer::Register(IOInterposeObserver::Operation aOp,
-                            IOInterposeObserver* aObserver) {
-  MOZ_ASSERT(aObserver);
-  if (!sSourceList || !aObserver) {
+                            IOInterposeObserver* aStaticObserver) {
+  MOZ_ASSERT(aStaticObserver);
+  if (!sSourceList || !aStaticObserver) {
     return;
   }
 
-  sSourceList->Register(aOp, aObserver);
+  sSourceList->Register(aOp, aStaticObserver);
 }
 
 void IOInterposer::Unregister(IOInterposeObserver::Operation aOp,
-                              IOInterposeObserver* aObserver) {
+                              IOInterposeObserver* aStaticObserver) {
   if (!sSourceList) {
     return;
   }
 
-  sSourceList->Unregister(aOp, aObserver);
+  sSourceList->Unregister(aOp, aStaticObserver);
 }
 
 void IOInterposer::RegisterCurrentThread(bool aIsMainThread) {

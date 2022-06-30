@@ -431,6 +431,17 @@ class JS::Realm : public JS::shadow::Realm {
   // This prevents us from creating new wrappers for the compartment.
   bool nukedIncomingWrappers = false;
 
+  // Enable async stack capturing for this realm even if
+  // JS::ContextOptions::asyncStackCaptureDebuggeeOnly_ is true.
+  //
+  // No-op when JS::ContextOptions::asyncStack_ is false, or
+  // JS::ContextOptions::asyncStackCaptureDebuggeeOnly_ is false.
+  //
+  // This can be used as a lightweight alternative for making the global
+  // debuggee, if the async stack capturing is necessary but no other debugging
+  // features are used.
+  bool isAsyncStackCapturingEnabled = false;
+
  private:
   void updateDebuggerObservesFlag(unsigned flag);
 

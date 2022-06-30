@@ -49,8 +49,10 @@ def run(command_context, ide, args):
         return 1
 
     if ide == "vscode":
+        from .clangd import find_vscode_cmd
+
         # Check if platform has VSCode installed
-        vscode_cmd = find_vscode_cmd(command_context)
+        vscode_cmd = find_vscode_cmd()
         if vscode_cmd is None:
             choice = prompt_bool(
                 "VSCode cannot be found, and may not be installed. Proceed?"
@@ -124,74 +126,6 @@ def get_visualstudio_workspace_path(command_context):
     return os.path.normpath(
         os.path.join(command_context.topobjdir, "msvc", "mozilla.sln")
     )
-
-
-def find_vscode_cmd(command_context):
-    import shutil
-
-    # Try to look up the `code` binary on $PATH, and use it if present. This
-    # should catch cases like being run from within a vscode-remote shell,
-    # even if vscode itself is also installed on the remote host.
-    path = shutil.which("code")
-    if path is not None:
-        return [path]
-
-    # If the binary wasn't on $PATH, try to find it in a variety of other
-    # well-known install locations based on the current platform.
-    if "linux" in command_context.platform[0]:
-        cmd_and_path = [
-            {"path": "/usr/local/bin/code", "cmd": ["/usr/local/bin/code"]},
-            {"path": "/snap/bin/code", "cmd": ["/snap/bin/code"]},
-            {"path": "/usr/bin/code", "cmd": ["/usr/bin/code"]},
-            {"path": "/usr/bin/code-insiders", "cmd": ["/usr/bin/code-insiders"]},
-        ]
-    elif "macos" in command_context.platform[0]:
-        cmd_and_path = [
-            {"path": "/usr/local/bin/code", "cmd": ["/usr/local/bin/code"]},
-            {
-                "path": "/Applications/Visual Studio Code.app",
-                "cmd": ["open", "/Applications/Visual Studio Code.app", "--args"],
-            },
-            {
-                "path": "/Applications/Visual Studio Code - Insiders.app",
-                "cmd": [
-                    "open",
-                    "/Applications/Visual Studio Code - Insiders.app",
-                    "--args",
-                ],
-            },
-        ]
-    elif "win64" in command_context.platform[0]:
-        from pathlib import Path
-
-        vscode_path = mozpath.join(
-            str(Path.home()),
-            "AppData",
-            "Local",
-            "Programs",
-            "Microsoft VS Code",
-            "Code.exe",
-        )
-        vscode_insiders_path = mozpath.join(
-            str(Path.home()),
-            "AppData",
-            "Local",
-            "Programs",
-            "Microsoft VS Code Insiders",
-            "Code - Insiders.exe",
-        )
-        cmd_and_path = [
-            {"path": vscode_path, "cmd": [vscode_path]},
-            {"path": vscode_insiders_path, "cmd": [vscode_insiders_path]},
-        ]
-
-    # Did we guess the path?
-    for element in cmd_and_path:
-        if os.path.exists(element["path"]):
-            return element["cmd"]
-
-    # Path cannot be found
-    return None
 
 
 def setup_vscode(command_context, vscode_cmd):

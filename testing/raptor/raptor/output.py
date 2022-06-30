@@ -1494,7 +1494,9 @@ class BrowsertimeOutput(PerftestOutput):
         def _process(subtest):
             if test["type"] == "power":
                 subtest["value"] = filters.mean(subtest["replicates"])
-            elif subtest["name"] in VISUAL_METRICS:
+            elif subtest["name"] in VISUAL_METRICS or subtest["name"].startswith(
+                "perfstat"
+            ):
                 subtest["value"] = filters.median(subtest["replicates"])
             else:
                 subtest["value"] = filters.median(

@@ -55,8 +55,6 @@ GCSchedulingTunables::GCSchedulingTunables()
       highFrequencyLargeHeapGrowth_(
           TuningDefaults::HighFrequencyLargeHeapGrowth),
       lowFrequencyHeapGrowth_(TuningDefaults::LowFrequencyHeapGrowth),
-      minEmptyChunkCount_(TuningDefaults::MinEmptyChunkCount),
-      maxEmptyChunkCount_(TuningDefaults::MaxEmptyChunkCount),
       nurseryFreeThresholdForIdleCollection_(
           TuningDefaults::NurseryFreeThresholdForIdleCollection),
       nurseryFreeThresholdForIdleCollectionFraction_(
@@ -73,8 +71,7 @@ GCSchedulingTunables::GCSchedulingTunables()
       mallocThresholdBase_(TuningDefaults::MallocThresholdBase),
       urgentThresholdBytes_(TuningDefaults::UrgentThresholdBytes) {}
 
-bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
-                                        const AutoLockGC& lock) {
+bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
   // Limit various parameters to reasonable levels to catch errors.
   const double MaxHeapGrowthFactor = 100;
   const size_t MaxNurseryBytesParam = 128 * 1024 * 1024;
@@ -170,12 +167,6 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       largeHeapIncrementalLimit_ = newFactor;
       break;
     }
-    case JSGC_MIN_EMPTY_CHUNK_COUNT:
-      setMinEmptyChunkCount(value);
-      break;
-    case JSGC_MAX_EMPTY_CHUNK_COUNT:
-      setMaxEmptyChunkCount(value);
-      break;
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
       if (value > gcMaxNurseryBytes()) {
         value = gcMaxNurseryBytes();
@@ -318,24 +309,7 @@ void GCSchedulingTunables::setLowFrequencyHeapGrowth(double value) {
   MOZ_ASSERT(lowFrequencyHeapGrowth_ >= MinHeapGrowthFactor);
 }
 
-void GCSchedulingTunables::setMinEmptyChunkCount(uint32_t value) {
-  minEmptyChunkCount_ = value;
-  if (minEmptyChunkCount_ > maxEmptyChunkCount_) {
-    maxEmptyChunkCount_ = minEmptyChunkCount_;
-  }
-  MOZ_ASSERT(maxEmptyChunkCount_ >= minEmptyChunkCount_);
-}
-
-void GCSchedulingTunables::setMaxEmptyChunkCount(uint32_t value) {
-  maxEmptyChunkCount_ = value;
-  if (minEmptyChunkCount_ > maxEmptyChunkCount_) {
-    minEmptyChunkCount_ = maxEmptyChunkCount_;
-  }
-  MOZ_ASSERT(maxEmptyChunkCount_ >= minEmptyChunkCount_);
-}
-
-void GCSchedulingTunables::resetParameter(JSGCParamKey key,
-                                          const AutoLockGC& lock) {
+void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
   switch (key) {
     case JSGC_MAX_BYTES:
       gcMaxBytes_ = TuningDefaults::GCMaxBytes;
@@ -375,12 +349,6 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
       break;
     case JSGC_LARGE_HEAP_INCREMENTAL_LIMIT:
       largeHeapIncrementalLimit_ = TuningDefaults::LargeHeapIncrementalLimit;
-      break;
-    case JSGC_MIN_EMPTY_CHUNK_COUNT:
-      setMinEmptyChunkCount(TuningDefaults::MinEmptyChunkCount);
-      break;
-    case JSGC_MAX_EMPTY_CHUNK_COUNT:
-      setMaxEmptyChunkCount(TuningDefaults::MaxEmptyChunkCount);
       break;
     case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
       nurseryFreeThresholdForIdleCollection_ =
@@ -563,8 +531,8 @@ double HeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
 
 /* static */
 size_t GCHeapThreshold::computeZoneTriggerBytes(
-    double growthFactor, size_t lastBytes, const GCSchedulingTunables& tunables,
-    const AutoLockGC& lock) {
+    double growthFactor, size_t lastBytes,
+    const GCSchedulingTunables& tunables) {
   size_t base = std::max(lastBytes, tunables.gcZoneAllocThresholdBase());
   double trigger = double(base) * growthFactor;
   double triggerMax =
@@ -575,13 +543,11 @@ size_t GCHeapThreshold::computeZoneTriggerBytes(
 void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
                                            const GCSchedulingTunables& tunables,
                                            const GCSchedulingState& state,
-                                           bool isAtomsZone,
-                                           const AutoLockGC& lock) {
+                                           bool isAtomsZone) {
   double growthFactor =
       computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
 
-  startBytes_ =
-      computeZoneTriggerBytes(growthFactor, lastBytes, tunables, lock);
+  startBytes_ = computeZoneTriggerBytes(growthFactor, lastBytes, tunables);
 
   setIncrementalLimitFromStartBytes(lastBytes, tunables);
 }
@@ -589,19 +555,18 @@ void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
 /* static */
 size_t MallocHeapThreshold::computeZoneTriggerBytes(double growthFactor,
                                                     size_t lastBytes,
-                                                    size_t baseBytes,
-                                                    const AutoLockGC& lock) {
+                                                    size_t baseBytes) {
   return ToClampedSize(double(std::max(lastBytes, baseBytes)) * growthFactor);
 }
 
 void MallocHeapThreshold::updateStartThreshold(
     size_t lastBytes, const GCSchedulingTunables& tunables,
-    const GCSchedulingState& state, const AutoLockGC& lock) {
+    const GCSchedulingState& state) {
   double growthFactor =
       computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
 
   startBytes_ = computeZoneTriggerBytes(growthFactor, lastBytes,
-                                        tunables.mallocThresholdBase(), lock);
+                                        tunables.mallocThresholdBase());
 
   setIncrementalLimitFromStartBytes(lastBytes, tunables);
 }

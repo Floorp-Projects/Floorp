@@ -16,6 +16,7 @@
 #include "mozilla/dom/PushSubscriptionOptionsBinding.h"
 #include "mozilla/dom/PushUtil.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 
@@ -407,6 +408,10 @@ already_AddRefed<PushManager> PushManager::Constructor(GlobalObject& aGlobal,
   RefPtr<PushManager> ret = new PushManager(global, impl);
 
   return ret.forget();
+}
+
+bool PushManager::IsEnabled(JSContext* aCx, JSObject* aGlobal) {
+  return StaticPrefs::dom_push_enabled() && ServiceWorkerVisible(aCx, aGlobal);
 }
 
 already_AddRefed<Promise> PushManager::Subscribe(

@@ -15,7 +15,6 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "libcurl-devel",
         "libpulse-devel",
         "rpmconf",
-        "watchman",
         "which",
     ]
 

@@ -44,6 +44,7 @@ class PerftestResultsHandler(object):
         cold=False,
         chimera=False,
         fission=True,
+        perfstats=False,
         **kwargs
     ):
         self.gecko_profile = gecko_profile
@@ -62,6 +63,7 @@ class PerftestResultsHandler(object):
         self.browser_name = None
         self.cold = cold
         self.chimera = chimera
+        self.perfstats = perfstats
 
     @abstractmethod
     def add(self, new_result_json):
@@ -620,6 +622,13 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     bt_result["statistics"][bt] = _get_raptor_val(
                         raw_result["statistics"]["timings"], raptor, retval={}
                     )
+
+                if self.perfstats:
+                    for cycle in raw_result["geckoPerfStats"]:
+                        for metric in cycle:
+                            bt_result["measurements"].setdefault(
+                                "perfstat-" + metric, []
+                            ).append(cycle[metric])
 
                 if self.browsertime_visualmetrics:
                     for cycle in raw_result["visualMetrics"]:

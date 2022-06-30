@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ScopeExit.h"
 
+#include "jit/Assembler.h"  // jit::FramePointer
 #include "jit/BaselineJIT.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
@@ -61,6 +62,7 @@ BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
     : machine_(bailout->machineState()), activation_(nullptr) {
   uint8_t* sp = bailout->parentStackPointer();
   framePointer_ = sp + bailout->frameSize();
+  MOZ_RELEASE_ASSERT(uintptr_t(framePointer_) == machine_.read(FramePointer));
 
   JSScript* script =
       ScriptFromCalleeToken(((JitFrameLayout*)framePointer_)->calleeToken());
@@ -74,6 +76,8 @@ BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
                                    InvalidationBailoutStack* bailout)
     : machine_(bailout->machine()), activation_(nullptr) {
   framePointer_ = (uint8_t*)bailout->fp();
+  MOZ_RELEASE_ASSERT(uintptr_t(framePointer_) == machine_.read(FramePointer));
+
   topIonScript_ = bailout->ionScript();
   attachOnJitActivation(activations);
 
