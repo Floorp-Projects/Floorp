@@ -4,24 +4,33 @@
 
 package org.mozilla.fenix.ui
 
+import android.content.Context
+import android.hardware.camera2.CameraManager
+import android.os.Build
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
+import androidx.test.filters.SdkSuppress
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.feature.search.ext.createSearchEngine
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
+import org.mozilla.fenix.helpers.Constants.PackageName.ANDROID_SETTINGS
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
+import org.mozilla.fenix.helpers.TestHelper.denyPermission
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestHelper.grantPermission
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.setCustomSearchEngine
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -75,16 +84,40 @@ class SearchTest {
         }
     }
 
+    @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.P, codeName = "P")
     @SmokeTest
-    @Ignore("This test cannot run on virtual devices due to camera permissions being required")
     @Test
-    fun scanButtonTest() {
+    fun scanButtonDenyPermissionTest() {
+        val cameraManager = appContext.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        assumeTrue(cameraManager.cameraIdList.isNotEmpty())
+
         homeScreen {
         }.openSearch {
             clickScanButton()
-            clickDenyPermission()
+            denyPermission()
             clickScanButton()
-            clickAllowPermission()
+            clickDismissPermissionRequiredDialog()
+        }
+        homeScreen {
+        }.openSearch {
+            clickScanButton()
+            clickGoToPermissionsSettings()
+            assertNativeAppOpens(ANDROID_SETTINGS)
+        }
+    }
+
+    @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.P, codeName = "P")
+    @SmokeTest
+    @Test
+    fun scanButtonAllowPermissionTest() {
+        val cameraManager = appContext.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        assumeTrue(cameraManager.cameraIdList.isNotEmpty())
+
+        homeScreen {
+        }.openSearch {
+            clickScanButton()
+            grantPermission()
+            verifyScannerOpen()
         }
     }
 

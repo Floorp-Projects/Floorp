@@ -4,14 +4,20 @@
 
 package org.mozilla.fenix.ui
 
+import android.os.Build
 import androidx.core.net.toUri
+import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.permission.PermissionRequester
 import androidx.test.uiautomator.UiDevice
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestRule
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
@@ -38,6 +44,22 @@ class DownloadTest {
 
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule()
+
+    @get: Rule
+    // Making sure to grant storage access for this test running on API 28
+    var watcher: TestRule = object : TestWatcher() {
+        override fun starting(description: Description) {
+            if (description.methodName == "pauseResumeCancelDownloadTest") {
+                PermissionRequester().apply {
+                    addPermissions(
+                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        android.Manifest.permission.READ_EXTERNAL_STORAGE
+                    )
+                    requestPermissions()
+                }
+            }
+        }
+    }
 
     @Before
     fun setUp() {
@@ -112,7 +134,7 @@ class DownloadTest {
         }
     }
 
-    @Ignore("Intermittent: https://github.com/mozilla-mobile/fenix/issues/23434")
+    @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.P, codeName = "P")
     @SmokeTest
     @Test
     fun pauseResumeCancelDownloadTest() {

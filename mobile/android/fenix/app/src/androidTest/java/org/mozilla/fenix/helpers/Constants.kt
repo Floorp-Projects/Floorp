@@ -14,6 +14,7 @@ object Constants {
         const val YOUTUBE_APP = "com.google.android.youtube"
         const val GMAIL_APP = "com.google.android.gm"
         const val PHONE_APP = "com.android.dialer"
+        const val ANDROID_SETTINGS = "com.android.settings"
     }
 
     const val SPEECH_RECOGNITION = "android.speech.action.RECOGNIZE_SPEECH"

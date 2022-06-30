@@ -20,7 +20,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -35,7 +34,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
@@ -130,15 +128,25 @@ class SearchRobot {
     }
 
     fun clickScanButton() {
-        scanButton().perform(click())
+        scanButton.waitForExists(waitingTime)
+        scanButton.click()
     }
 
-    fun clickDenyPermission() {
-        denyPermissionButton().click()
+    fun clickDismissPermissionRequiredDialog() {
+        dismissPermissionButton.waitForExists(waitingTime)
+        dismissPermissionButton.click()
     }
 
-    fun clickAllowPermission() {
-        allowPermissionButton().click()
+    fun clickGoToPermissionsSettings() {
+        goToPermissionsSettingsButton.waitForExists(waitingTime)
+        goToPermissionsSettingsButton.click()
+    }
+
+    fun verifyScannerOpen() {
+        assertTrue(
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/view_finder"))
+                .waitForExists(waitingTime)
+        )
     }
 
     fun typeSearch(searchTerm: String) {
@@ -281,20 +289,14 @@ class SearchRobot {
 private fun browserToolbarEditView() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
 
-private fun denyPermissionButton(): UiObject {
-    mDevice.waitNotNull(Until.findObjects(By.text("Deny")), waitingTime)
-    return mDevice.findObject(UiSelector().text("Deny"))
-}
+private val dismissPermissionButton =
+    mDevice.findObject(UiSelector().text("DISMISS"))
 
-private fun allowPermissionButton(): UiObject {
-    mDevice.waitNotNull(Until.findObjects(By.text("Allow")), waitingTime)
-    return mDevice.findObject(UiSelector().text("Allow"))
-}
+private val goToPermissionsSettingsButton =
+    mDevice.findObject(UiSelector().text("GO TO SETTINGS"))
 
-private fun scanButton(): ViewInteraction {
-    mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/search_scan_button")), waitingTime)
-    return onView(allOf(withId(R.id.qr_scan_button)))
-}
+private val scanButton =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/qr_scan_button"))
 
 private fun clearButton() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_clear_view"))
@@ -348,9 +350,7 @@ private fun assertBrowserToolbarEditView() =
 
 private fun assertScanButton() =
     assertTrue(
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/qr_scan_button")
-        ).waitForExists(waitingTime)
+        scanButton.waitForExists(waitingTime)
     )
 
 private fun assertSearchButton() =

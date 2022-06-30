@@ -55,6 +55,7 @@ import org.mozilla.fenix.ui.robots.BrowserRobot
 import org.mozilla.fenix.ui.robots.mDevice
 import org.mozilla.fenix.utils.IntentUtils
 import java.util.regex.Pattern
+import org.junit.Assert.assertTrue
 
 object TestHelper {
 
@@ -227,10 +228,13 @@ object TestHelper {
         }
     }
 
-    fun assertNativeAppOpens(appPackageName: String, url: String) {
+    fun assertNativeAppOpens(appPackageName: String, url: String = "") {
         if (isPackageInstalled(appPackageName)) {
             mDevice.waitForIdle(waitingTimeShort)
-            assertTrue(mDevice.findObject(UiSelector().packageName(appPackageName)).waitForExists(waitingTime))
+            assertTrue(
+                mDevice.findObject(UiSelector().packageName(appPackageName))
+                    .waitForExists(waitingTime)
+            )
         } else {
             BrowserRobot().verifyUrl(url)
         }

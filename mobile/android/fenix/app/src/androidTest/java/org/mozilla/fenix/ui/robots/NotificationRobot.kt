@@ -17,6 +17,7 @@ import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import java.lang.AssertionError
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 
 class NotificationRobot {
 
@@ -73,9 +74,13 @@ class NotificationRobot {
     }
 
     fun clickDownloadNotificationControlButton(action: String) {
-        assertTrue(downloadSystemNotificationButton(action).waitForExists(waitingTime))
-        downloadSystemNotificationButton(action).click()
+        try {
+            assertTrue(downloadSystemNotificationButton(action).waitForExists(waitingTimeShort))
+        } catch (e: AssertionError) {
+            notificationTray().flingToEnd(1)
+        }
 
+        downloadSystemNotificationButton(action).click()
         // API 30 Bug? Sometimes a click doesn't register, try again
         try {
             assertTrue(downloadSystemNotificationButton(action).waitUntilGone(waitingTime))
@@ -86,10 +91,6 @@ class NotificationRobot {
 
     fun verifyMediaSystemNotificationButtonState(action: String) {
         assertTrue(mediaSystemNotificationButton(action).waitForExists(waitingTime))
-    }
-
-    fun verifyDownloadSystemNotificationButtonState(action: String) {
-        assertTrue(downloadSystemNotificationButton(action).waitForExists(waitingTime))
     }
 
     fun expandNotificationMessage() {
