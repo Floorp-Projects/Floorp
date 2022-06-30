@@ -70,9 +70,9 @@ const BlackboxingActor = ActorClassWithSpec(blackboxingSpec, {
    */
   unblackbox(url, ranges) {
     if (ranges.length == 0) {
-      const existingRanges = this.watcherActor
-        .getSessionDataForType(BLACKBOXING)
-        .filter(entry => entry.url == url);
+      const existingRanges = (
+        this.watcherActor.getSessionDataForType(BLACKBOXING) || []
+      ).filter(entry => entry.url == url);
 
       return this.watcherActor.removeDataEntry(BLACKBOXING, existingRanges);
     }

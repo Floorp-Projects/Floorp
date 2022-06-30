@@ -123,7 +123,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
     for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
       const { targets, connectionPrefix, sessionContext } = sessionData;
       if (
-        targets.includes("worker") &&
+        targets?.includes("worker") &&
         lazy.isWindowGlobalPartOfContext(this.manager, sessionContext, {
           acceptInitialDocument: true,
           forceAcceptTopLevelTarget: true,

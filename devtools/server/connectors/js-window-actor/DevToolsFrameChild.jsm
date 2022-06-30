@@ -109,7 +109,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       const forceAcceptTopLevelTarget =
         isBFCache && this.isBfcacheInParentEnabled;
       if (
-        sessionData.targets.includes("frame") &&
+        sessionData.targets?.includes("frame") &&
         lazy.isWindowGlobalPartOfContext(this.manager, sessionContext, {
           forceAcceptTopLevelTarget,
         })

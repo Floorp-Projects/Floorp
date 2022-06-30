@@ -36,6 +36,7 @@ const { SessionDataHelpers } = ChromeUtils.import(
   "resource://devtools/server/actors/watcher/SessionDataHelpers.jsm"
 );
 const { SUPPORTED_DATA } = SessionDataHelpers;
+const SUPPORTED_DATA_TYPES = Object.values(SUPPORTED_DATA);
 
 // Define the Map that will be saved in `sharedData`.
 // It is keyed by WatcherActor ID and values contains following attributes:
@@ -85,7 +86,7 @@ const WatcherRegistry = {
    */
   isWatchingTargets(watcher, targetType) {
     const sessionData = this.getSessionData(watcher);
-    return sessionData && sessionData.targets.includes(targetType);
+    return !!sessionData?.targets?.includes(targetType);
   },
 
   /**
@@ -115,10 +116,6 @@ const WatcherRegistry = {
         // The DevToolsServerConnection prefix will be used to compute actor IDs created in the content process
         connectionPrefix: watcher.conn.prefix,
       };
-      // Define empty default array for all data
-      for (const name of Object.values(SUPPORTED_DATA)) {
-        sessionData[name] = [];
-      }
       sessionDataByWatcherActor.set(watcherActorID, sessionData);
       watcherActors.set(watcherActorID, watcher);
     }
@@ -172,7 +169,7 @@ const WatcherRegistry = {
       createData: true,
     });
 
-    if (!(type in sessionData)) {
+    if (!SUPPORTED_DATA_TYPES.includes(type)) {
       throw new Error(`Unsupported session data type: ${type}`);
     }
 
@@ -198,7 +195,7 @@ const WatcherRegistry = {
       return false;
     }
 
-    if (!(type in sessionData)) {
+    if (!SUPPORTED_DATA_TYPES.includes(type)) {
       throw new Error(`Unsupported session data type: ${type}`);
     }
 
@@ -208,8 +205,8 @@ const WatcherRegistry = {
       return false;
     }
 
-    const isWatchingSomething = Object.values(SUPPORTED_DATA).some(
-      dataType => sessionData[dataType].length > 0
+    const isWatchingSomething = SUPPORTED_DATA_TYPES.some(
+      dataType => sessionData[dataType] && sessionData[dataType].length > 0
     );
     if (!isWatchingSomething) {
       sessionDataByWatcherActor.delete(watcher.actorID);
