@@ -72,6 +72,7 @@ export class _CustomizeMenu extends React.PureComponent {
               mayHaveSponsoredStories={
                 this.props.DiscoveryStream.config.show_spocs
               }
+              mayHaveRecentSaves={this.props.DiscoveryStream.recentSavesEnabled}
               dispatch={this.props.dispatch}
             />
           </div>
