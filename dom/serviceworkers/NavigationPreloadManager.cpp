@@ -7,13 +7,13 @@
 #include "NavigationPreloadManager.h"
 #include "ServiceWorkerUtils.h"
 #include "nsNetUtil.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/NavigationPreloadManagerBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/ipc/MessageChannel.h"
 
 namespace mozilla::dom {
-
-using mozilla::ipc::ResponseRejectReason;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(NavigationPreloadManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(NavigationPreloadManager)
@@ -28,6 +28,11 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(NavigationPreloadManager, mGlobal)
 /* static */
 bool NavigationPreloadManager::IsValidHeader(const nsACString& aHeader) {
   return NS_IsReasonableHTTPHeaderValue(aHeader);
+}
+
+bool NavigationPreloadManager::IsEnabled(JSContext* aCx, JSObject* aGlobal) {
+  return StaticPrefs::dom_serviceWorkers_navigationPreload_enabled() &&
+         ServiceWorkerVisible(aCx, aGlobal);
 }
 
 NavigationPreloadManager::NavigationPreloadManager(
