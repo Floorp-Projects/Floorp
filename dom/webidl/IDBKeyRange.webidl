@@ -9,7 +9,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
 interface IDBKeyRange {
   [Throws]
   readonly attribute any     lower;
