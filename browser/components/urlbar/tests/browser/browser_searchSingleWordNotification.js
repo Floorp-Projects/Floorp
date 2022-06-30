@@ -245,10 +245,31 @@ function get_test_function_for_localhost_with_hostname(
       win = window;
     }
 
-    // Remove the domain from the whitelist, the notification sould appear,
-    // unless we are in private browsing mode.
+    // Remove the domain from the whitelist
     Services.prefs.setBoolPref(pref, false);
 
+    // The notification should not appear because the default value of
+    // browser.urlbar.dnsResolveSingleWordsAfterSearch is 0
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser: win.gBrowser,
+        url: "about:blank",
+      },
+      browser =>
+        runURLBarSearchTest({
+          valueToOpen: hostName,
+          expectSearch: true,
+          expectNotification: false,
+          expectDNSResolve: false,
+          aWindow: win,
+        })
+    );
+
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.dnsResolveSingleWordsAfterSearch", 1]],
+    });
+
+    // The notification should appear, unless we are in private browsing mode.
     await BrowserTestUtils.withNewTab(
       {
         gBrowser: win.gBrowser,
@@ -290,6 +311,8 @@ function get_test_function_for_localhost_with_hostname(
       await BrowserTestUtils.closeWindow(win);
       await SimpleTest.promiseFocus(window);
     }
+
+    await SpecialPowers.popPrefEnv();
   };
 }
 

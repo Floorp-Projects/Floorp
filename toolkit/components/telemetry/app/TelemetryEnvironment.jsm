@@ -261,6 +261,10 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
     { what: RECORD_DEFAULTPREF_VALUE },
   ],
   [
+    "browser.urlbar.dnsResolveSingleWordsAfterSearch",
+    { what: RECORD_DEFAULTPREF_VALUE },
+  ],
+  [
     "browser.urlbar.quicksuggest.onboardingDialogChoice",
     { what: RECORD_DEFAULTPREF_VALUE },
   ],
