@@ -227,13 +227,7 @@ def get_env_debug_info(env_exe, debug_script, app_data, env):
     # noinspection PyBroadException
     try:
         if code != 0:
-            if out:
-                result = literal_eval(out)
-            else:
-                if code == 2 and "file" in err:
-                    # Re-raise FileNotFoundError from `run_cmd()`
-                    raise OSError(err)
-                raise Exception(err)
+            result = literal_eval(out)
         else:
             result = json.loads(out)
         if err:

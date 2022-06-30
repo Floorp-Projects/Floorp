@@ -25,10 +25,10 @@ class _CountedFileLock(FileLock):
         self.count = 0
         self.thread_safe = RLock()
 
-    def acquire(self, timeout=None, poll_interval=0.05):
+    def acquire(self, timeout=None, poll_intervall=0.05):
         with self.thread_safe:
             if self.count == 0:
-                super(_CountedFileLock, self).acquire(timeout, poll_interval)
+                super(_CountedFileLock, self).acquire(timeout=timeout, poll_intervall=poll_intervall)
             self.count += 1
 
     def release(self, force=False):
@@ -90,8 +90,8 @@ class ReentrantFileLock(PathLockBase):
 
     @staticmethod
     def _del_lock(lock):
-        if lock is not None:
-            with _store_lock:
+        with _store_lock:
+            if lock is not None:
                 with lock.thread_safe:
                     if lock.count == 0:
                         _lock_store.pop(lock.lock_file, None)
@@ -105,8 +105,6 @@ class ReentrantFileLock(PathLockBase):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._release(self._lock)
-        self._del_lock(self._lock)
-        self._lock = None
 
     def _lock_file(self, lock, no_block=False):
         # multiple processes might be trying to get a first lock... so we cannot check if this directory exist without
@@ -140,7 +138,6 @@ class ReentrantFileLock(PathLockBase):
                 self._release(lock)
         finally:
             self._del_lock(lock)
-            lock = None
 
     @contextmanager
     def non_reentrant_lock_for_key(self, name):

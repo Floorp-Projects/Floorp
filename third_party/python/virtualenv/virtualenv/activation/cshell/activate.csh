@@ -18,7 +18,7 @@ setenv PATH "$VIRTUAL_ENV:q/__BIN_NAME__:$PATH:q"
 
 
 if ('__VIRTUAL_PROMPT__' != "") then
-    set env_name = '(__VIRTUAL_PROMPT__) '
+    set env_name = '__VIRTUAL_PROMPT__'
 else
     set env_name = '('"$VIRTUAL_ENV:t:q"') '
 endif
