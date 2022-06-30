@@ -88,10 +88,11 @@
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
 @BINPATH@/defaults/settings/last_modified.json
-@BINPATH@/defaults/settings/blocklists/addons.json
 ; TODO bug 1639050: addons-bloomfilters should be used instead of addons.json
-@BINPATH@/defaults/settings/security-state/onecrl.json
+@BINPATH@/defaults/settings/blocklists/addons.json
+@BINPATH@/defaults/settings/blocklists/gfx.json
 @BINPATH@/defaults/settings/main/password-recipes.json
+@BINPATH@/defaults/settings/security-state/onecrl.json
 
 ; [Components]
 @BINPATH@/components/components.manifest
