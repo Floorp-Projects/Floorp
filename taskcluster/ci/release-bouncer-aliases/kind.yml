@@ -68,12 +68,14 @@ jobs:
                     firefox-esr-latest-ssl: installer-ssl
                     firefox-esr-latest: installer
                     firefox-esr-msi-latest-ssl: msi
+                    # firefox-esr-msix-latest-ssl: msix  # uncomment when esr102 replaces esr91
                     firefox-esr-pkg-latest-ssl: pkg
                 mozilla-esr102:
                     # ... these point to the newer branch
                     firefox-esr-next-latest-ssl: installer-ssl
                     firefox-esr-next-latest: installer
                     firefox-esr-next-msi-latest-ssl: msi
+                    firefox-esr-next-msix-latest-ssl: msix
                     firefox-esr-next-pkg-latest-ssl: pkg
                 birch:
                     firefox-latest-ssl: installer-ssl
