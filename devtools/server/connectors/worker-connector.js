@@ -98,6 +98,12 @@ function connectToWorker(connection, dbg, forwardingPrefix, options) {
       return;
     }
 
+    // WorkerDebugger.url isn't always an absolute URL.
+    // Use the related document URL in order to make it absolute.
+    const absoluteURL = dbg.window?.location?.href
+      ? new URL(dbg.url, dbg.window.location.href).href
+      : dbg.url;
+
     // Step 2: Send a connect request to the worker debugger.
     dbg.postMessage(
       JSON.stringify({
@@ -107,7 +113,7 @@ function connectToWorker(connection, dbg, forwardingPrefix, options) {
         workerDebuggerData: {
           id: dbg.id,
           type: dbg.type,
-          url: dbg.url,
+          url: absoluteURL,
         },
       })
     );

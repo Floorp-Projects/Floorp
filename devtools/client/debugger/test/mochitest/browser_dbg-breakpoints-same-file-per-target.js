@@ -79,7 +79,7 @@ add_task(async function() {
   const workerSource = findSourceInThread(
     dbg,
     "same-script.js",
-    "same-script.js"
+    EXAMPLE_URL + "same-script.js"
   );
 
   is(

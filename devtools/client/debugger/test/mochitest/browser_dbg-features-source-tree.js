@@ -288,7 +288,7 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
   const workerSameUrlSource = findSourceInThread(
     dbg,
     "same-url.sjs",
-    "same-url.sjs"
+    testServer.urlFor("same-url.sjs")
   );
   ok(workerSameUrlSource, "Found same-url.js in the worker thread");
   is(

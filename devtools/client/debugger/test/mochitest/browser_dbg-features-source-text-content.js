@@ -188,7 +188,7 @@ add_task(async function testSourceTextContent() {
   const workerSameUrlSource = findSourceInThread(
     dbg,
     "same-url.js",
-    "same-url.js"
+    BASE_URL + "same-url.js"
   );
   await selectSource(dbg, workerSameUrlSource);
   is(
