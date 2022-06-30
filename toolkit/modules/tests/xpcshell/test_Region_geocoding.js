@@ -1,6 +1,5 @@
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Region } = ChromeUtils.import("resource://gre/modules/Region.jsm");
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 const { TestUtils } = ChromeUtils.import(
@@ -11,12 +10,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RegionTestUtils: "resource://testing-common/RegionTestUtils.jsm",
 });
 
-async function readFile(file) {
-  let decoder = new TextDecoder();
-  let data = await OS.File.read(file.path);
-  return decoder.decode(data);
-}
-
 function setLocation(location) {
   Services.prefs.setCharPref(
     "geo.provider.network.url",
@@ -25,7 +18,7 @@ function setLocation(location) {
 }
 
 async function stubMap(obj, path, fun) {
-  let map = await readFile(do_get_file(path));
+  let map = await IOUtils.readUTF8(do_get_file(path).path);
   sinon.stub(obj, fun).resolves(JSON.parse(map));
 }
 
@@ -60,7 +53,9 @@ add_task(async function test_local_basic() {
 });
 
 add_task(async function test_mls_results() {
-  let data = await readFile(do_get_file("regions/mls-lookup-results.csv"));
+  let data = await IOUtils.readUTF8(
+    do_get_file("regions/mls-lookup-results.csv").path
+  );
   for (const row of data.split("\n")) {
     let [lat, lng, expectedRegion] = row.split(",");
     setLocation({ lng: parseFloat(lng), lat: parseFloat(lat) });
