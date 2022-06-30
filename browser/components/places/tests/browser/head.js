@@ -552,7 +552,6 @@ async function createAndRemoveDefaultFolder() {
   await PlacesUtils.bookmarks.remove(tempFolder);
 }
 
-registerCleanupFunction(async () => {
+registerCleanupFunction(() => {
   Services.prefs.clearUserPref("browser.bookmarks.defaultLocation");
-  await PlacesTransactions.clearTransactionsHistory(true, true);
 });
