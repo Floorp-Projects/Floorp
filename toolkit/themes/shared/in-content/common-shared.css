@@ -50,7 +50,11 @@
   --in-content-danger-button-background: #e22850;
   --in-content-danger-button-background-hover: #c50042;
   --in-content-danger-button-background-active: #810220;
-  --in-content-focus-outline-color: var(--in-content-primary-button-background);
+  --focus-outline-color: var(--in-content-primary-button-background);
+  --focus-outline-width: 2px;
+  --focus-outline-offset: 2px;
+  --focus-outline-inset: calc(-1 * var(--focus-outline-width));
+  --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
 
   --in-content-table-background: #f8f8fa;
   --in-content-table-border-color: var(--in-content-box-border-color);
@@ -391,8 +395,8 @@ xul|checkbox:not([native]):-moz-focusring > .checkbox-check, /* :not([native]) t
 xul|radio[focused="true"] > .radio-check,
 xul|tab:-moz-focusring > .tab-middle > .tab-text {
   box-shadow: none;
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: 2px;
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 
 html|select:not([size], [multiple]) {
@@ -492,7 +496,7 @@ xul|button.primary:not([disabled="true"]):hover:active {
   --in-content-primary-button-background: var(--in-content-danger-button-background);
   --in-content-primary-button-background-hover: var(--in-content-danger-button-background-hover);
   --in-content-primary-button-background-active: var(--in-content-danger-button-background-active);
-  --in-content-focus-outline-color: var(--in-content-danger-button-background);
+  --focus-outline-color: var(--in-content-danger-button-background);
 }
 
 html|button.ghost-button {
@@ -625,7 +629,7 @@ xul|search-textbox[focused],
 xul|tree:focus-visible,
 xul|richlistbox:focus-visible {
   border-color: transparent;
-  outline: 2px solid var(--in-content-focus-outline-color);
+  outline: var(--focus-outline);
   outline-offset: -1px; /* Prevents antialising around the corners */
 }
 
@@ -670,7 +674,7 @@ button.text-link:is(:not([disabled="true"]), :enabled):hover:active {
 
 html|a:-moz-focusring,
 .text-link:-moz-focusring {
-  outline: 2px solid var(--in-content-focus-outline-color);
+  outline: var(--focus-outline);
   outline-offset: 1px;
   border-radius: 4px;
 }
@@ -937,8 +941,8 @@ html|*#categories > html|*.category:dir(rtl) {
 
 #categories[keyboard-navigation="true"]:-moz-focusring > .category[current],
 #categories > .category:-moz-focusring {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: -2px;
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
 }
 
 html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring {
@@ -1079,11 +1083,11 @@ xul|richlistbox:not(#categories) > xul|richlistitem[selected] {
   --in-content-button-text-color: var(--in-content-item-selected-text);
   --in-content-button-text-color-hover: var(--in-content-item-selected-text);
   --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
-  --in-content-focus-outline-color: var(--in-content-item-selected-text);
+  --focus-outline-color: var(--in-content-item-selected-text);
 }
 
 xul|richlistitem[selected] xul|menulist:focus-visible {
-  outline-offset: -2px;
+  outline-offset: var(--focus-outline-inset);
 }
 
 /* Use a 2px border so that selected row highlight is still visible behind
@@ -1310,8 +1314,8 @@ xul|*.sidebar-footer-link {
 }
 
 .sidebar-footer-link:-moz-focusring {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: -2px;
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-inset);
 }
 
 .sidebar-footer-icon {
