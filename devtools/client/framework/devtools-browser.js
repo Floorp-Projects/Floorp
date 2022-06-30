@@ -12,7 +12,6 @@
  * browser window is ready (i.e. fired browser-delayed-startup-finished event)
  **/
 
-const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const {
@@ -466,83 +465,6 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
   },
 
   /**
-   * Hook the JS debugger tool to the "Debug Script" button of the slow script
-   * dialog.
-   */
-  setSlowScriptDebugHandler() {
-    const debugService = Cc["@mozilla.org/dom/slow-script-debug;1"].getService(
-      Ci.nsISlowScriptDebug
-    );
-
-    async function slowScriptDebugHandler(tab, callback) {
-      const toolbox = await gDevTools.showToolboxForTab(tab, {
-        toolId: "jsdebugger",
-      });
-      const threadFront = toolbox.threadFront;
-
-      // Break in place, which means resuming the debuggee thread and pausing
-      // right before the next step happens.
-      switch (threadFront.state) {
-        case "paused":
-          // When the debugger is already paused.
-          threadFront.resumeThenPause();
-          break;
-        case "attached":
-          // When the debugger is already open.
-          const onPaused = threadFront.once("paused");
-          threadFront.interrupt();
-          await onPaused;
-          threadFront.resumeThenPause();
-          break;
-        case "resuming":
-          // The debugger is newly opened.
-          const onResumed = threadFront.once("resumed");
-          await threadFront.interrupt();
-          await onResumed;
-          threadFront.resumeThenPause();
-          break;
-        default:
-          throw Error(
-            "invalid thread front state in slow script debug handler: " +
-              threadFront.state
-          );
-      }
-      callback();
-    }
-
-    debugService.activationHandler = function(window) {
-      const chromeWindow = window.browsingContext.topChromeWindow;
-
-      let setupFinished = false;
-      slowScriptDebugHandler(chromeWindow.gBrowser.selectedTab, () => {
-        setupFinished = true;
-      });
-
-      // Don't return from the interrupt handler until the debugger is brought
-      // up; no reason to continue executing the slow script.
-      const utils = window.windowUtils;
-      utils.enterModalState();
-      Services.tm.spinEventLoopUntil(
-        "devtools-browser.js:debugService.activationHandler",
-        () => {
-          return setupFinished;
-        }
-      );
-      utils.leaveModalState();
-    };
-
-    debugService.remoteActivationHandler = function(browser, callback) {
-      const chromeWindow = browser.ownerDocument.defaultView;
-      const tab = chromeWindow.gBrowser.getTabForBrowser(browser);
-      chromeWindow.gBrowser.selected = tab;
-
-      slowScriptDebugHandler(tab, function() {
-        callback.finishDebuggerStartup();
-      }).catch(console.error);
-    };
-  },
-
-  /**
    * Add the menuitem for a tool to all open browser windows.
    *
    * @param {object} toolDefinition
@@ -770,8 +692,6 @@ gDevTools.on("tool-registered", function(toolId) {
     gDevToolsBrowser._addToolToWindows(toolDefinition);
   }
 });
-
-gDevToolsBrowser.setSlowScriptDebugHandler();
 
 gDevTools.on("tool-unregistered", function(toolId) {
   gDevToolsBrowser._removeToolFromWindows(toolId);
