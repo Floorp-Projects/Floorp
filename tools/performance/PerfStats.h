@@ -48,7 +48,8 @@
   MACRO(JSBC_Decompression)              \
   MACRO(JSBC_IO_Read)                    \
   MACRO(JSBC_IO_Write)                   \
-  MACRO(MajorGC)
+  MACRO(MajorGC)                         \
+  MACRO(NonIdleMajorGC)
 
 namespace mozilla {
 

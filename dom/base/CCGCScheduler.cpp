@@ -233,7 +233,7 @@ void CCGCScheduler::NoteGCEnd() {
   }
 }
 
-void CCGCScheduler::NoteGCSliceEnd(TimeDuration aSliceDuration) {
+void CCGCScheduler::NoteGCSliceEnd(TimeStamp aStart, TimeStamp aEnd) {
   if (mMajorGCReason == JS::GCReason::NO_REASON) {
     // Internally-triggered GCs do not wait for the parent's permission to
     // proceed. This flag won't be checked during an incremental GC anyway,
@@ -245,8 +245,38 @@ void CCGCScheduler::NoteGCSliceEnd(TimeDuration aSliceDuration) {
   // something else that provides its own reason.
   mMajorGCReason = JS::GCReason::INTER_SLICE_GC;
 
-  mGCUnnotifiedTotalTime += aSliceDuration;
-  PerfStats::RecordMeasurement(PerfStats::Metric::MajorGC, aSliceDuration);
+  MOZ_ASSERT(aEnd >= aStart);
+  TimeDuration sliceDuration = aEnd - aStart;
+  PerfStats::RecordMeasurement(PerfStats::Metric::MajorGC, sliceDuration);
+
+  // Compute how much GC time was spent in predicted-to-be-idle time.
+  TimeDuration nonIdleDuration;
+  bool startedIdle =
+      mTriggeredGCDeadline.isSome() && !mTriggeredGCDeadline->IsNull();
+  if (!startedIdle) {
+    nonIdleDuration = sliceDuration;
+  } else {
+    if (*mTriggeredGCDeadline < aEnd) {
+      // Overran the idle deadline.
+      nonIdleDuration = aEnd - *mTriggeredGCDeadline;
+    }
+  }
+
+  PerfStats::RecordMeasurement(PerfStats::Metric::NonIdleMajorGC,
+                               nonIdleDuration);
+
+  // Note the GC_SLICE_DURING_IDLE previously had a different definition: it was
+  // a histogram of percentages of externally-triggered slices. It is now a
+  // histogram of percentages of all slices. That means that now you might have
+  // a 4ms internal slice (0% during idle) followed by a 16ms external slice
+  // (15ms during idle), whereas before this would show up as a single record of
+  // a single slice with 75% of its time during idle (15 of 20ms).
+  TimeDuration idleDuration = sliceDuration - nonIdleDuration;
+  uint32_t percent =
+      uint32_t(idleDuration.ToSeconds() / sliceDuration.ToSeconds() * 100);
+  Telemetry::Accumulate(Telemetry::GC_SLICE_DURING_IDLE, percent);
+
+  mTriggeredGCDeadline.reset();
 }
 
 void CCGCScheduler::NoteCCBegin(CCReason aReason, TimeStamp aWhen,
@@ -384,36 +414,14 @@ bool CCGCScheduler::GCRunnerFiredDoGC(TimeStamp aDeadline,
     }
   }
 
+  // Note that we are triggering the following GC slice and recording whether
+  // it started in idle time, for use in the callback at the end of the slice.
+  mTriggeredGCDeadline = Some(aDeadline);
+
   MOZ_ASSERT(mActiveIntersliceGCBudget);
   TimeStamp startTimeStamp = TimeStamp::Now();
   js::SliceBudget budget = ComputeInterSliceGCBudget(aDeadline, startTimeStamp);
-  TimeDuration duration = mGCUnnotifiedTotalTime;
   nsJSContext::RunIncrementalGCSlice(aStep.mReason, is_shrinking, budget);
-
-  mGCUnnotifiedTotalTime = TimeDuration();
-  TimeStamp now = TimeStamp::Now();
-  TimeDuration sliceDuration = now - startTimeStamp;
-  duration += sliceDuration;
-  if (duration.ToSeconds()) {
-    TimeDuration idleDuration;
-    if (!aDeadline.IsNull()) {
-      if (aDeadline < now) {
-        // This slice overflowed the idle period.
-        if (aDeadline > startTimeStamp) {
-          idleDuration = aDeadline - startTimeStamp;
-        }
-        // Otherwise the whole slice was done outside the idle period.
-      } else {
-        // Note, we don't want to use duration here, since it may contain
-        // data also from JS engine triggered GC slices.
-        idleDuration = sliceDuration;
-      }
-    }
-
-    uint32_t percent =
-        uint32_t(idleDuration.ToSeconds() / duration.ToSeconds() * 100);
-    Telemetry::Accumulate(Telemetry::GC_SLICE_DURING_IDLE, percent);
-  }
 
   // If the GC doesn't have any more work to do on the foreground thread (and
   // e.g. is waiting for background sweeping to finish) then return false to
