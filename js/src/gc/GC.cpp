@@ -1053,7 +1053,7 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
       if (!tunables.setParameter(key, value)) {
         return false;
       }
-      updateAllGCStartThresholds(lock);
+      updateAllGCStartThresholds();
   }
 
   return true;
@@ -1109,7 +1109,7 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
       break;
     default:
       tunables.resetParameter(key);
-      updateAllGCStartThresholds(lock);
+      updateAllGCStartThresholds();
   }
 }
 
@@ -2827,10 +2827,7 @@ void GCRuntime::finishCollection() {
 
   maybeStopPretenuring();
 
-  {
-    AutoLockGC lock(this);
-    updateGCThresholdsAfterCollection(lock);
-  }
+  updateGCThresholdsAfterCollection();
 
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     zone->changeGCState(Zone::Finished, Zone::NoGC);
@@ -2907,16 +2904,16 @@ void GCRuntime::maybeStopPretenuring() {
   }
 }
 
-void GCRuntime::updateGCThresholdsAfterCollection(const AutoLockGC& lock) {
+void GCRuntime::updateGCThresholdsAfterCollection() {
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     zone->clearGCSliceThresholds();
-    zone->updateGCStartThresholds(*this, lock);
+    zone->updateGCStartThresholds(*this);
   }
 }
 
-void GCRuntime::updateAllGCStartThresholds(const AutoLockGC& lock) {
+void GCRuntime::updateAllGCStartThresholds() {
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-    zone->updateGCStartThresholds(*this, lock);
+    zone->updateGCStartThresholds(*this);
   }
 }
 
@@ -4697,7 +4694,5 @@ void GCRuntime::setPerformanceHint(PerformanceHint hint) {
     return;
   }
 
-  AutoLockGC lock(this);
-  atomsZone->updateGCStartThresholds(*this, lock);
-  maybeTriggerGCAfterAlloc(atomsZone);
+  atomsZone->updateGCStartThresholds(*this);
 }

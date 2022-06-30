@@ -662,8 +662,8 @@ class GCRuntime {
   TriggerResult checkHeapThreshold(Zone* zone, const HeapSize& heapSize,
                                    const HeapThreshold& heapThreshold);
 
-  void updateGCThresholdsAfterCollection(const AutoLockGC& lock);
-  void updateAllGCStartThresholds(const AutoLockGC& lock);
+  void updateGCThresholdsAfterCollection();
+  void updateAllGCStartThresholds();
 
   // For ArenaLists::allocateFromArena()
   friend class ArenaLists;

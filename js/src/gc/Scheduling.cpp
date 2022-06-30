@@ -531,8 +531,8 @@ double HeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
 
 /* static */
 size_t GCHeapThreshold::computeZoneTriggerBytes(
-    double growthFactor, size_t lastBytes, const GCSchedulingTunables& tunables,
-    const AutoLockGC& lock) {
+    double growthFactor, size_t lastBytes,
+    const GCSchedulingTunables& tunables) {
   size_t base = std::max(lastBytes, tunables.gcZoneAllocThresholdBase());
   double trigger = double(base) * growthFactor;
   double triggerMax =
@@ -543,13 +543,11 @@ size_t GCHeapThreshold::computeZoneTriggerBytes(
 void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
                                            const GCSchedulingTunables& tunables,
                                            const GCSchedulingState& state,
-                                           bool isAtomsZone,
-                                           const AutoLockGC& lock) {
+                                           bool isAtomsZone) {
   double growthFactor =
       computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
 
-  startBytes_ =
-      computeZoneTriggerBytes(growthFactor, lastBytes, tunables, lock);
+  startBytes_ = computeZoneTriggerBytes(growthFactor, lastBytes, tunables);
 
   setIncrementalLimitFromStartBytes(lastBytes, tunables);
 }
@@ -557,19 +555,18 @@ void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
 /* static */
 size_t MallocHeapThreshold::computeZoneTriggerBytes(double growthFactor,
                                                     size_t lastBytes,
-                                                    size_t baseBytes,
-                                                    const AutoLockGC& lock) {
+                                                    size_t baseBytes) {
   return ToClampedSize(double(std::max(lastBytes, baseBytes)) * growthFactor);
 }
 
 void MallocHeapThreshold::updateStartThreshold(
     size_t lastBytes, const GCSchedulingTunables& tunables,
-    const GCSchedulingState& state, const AutoLockGC& lock) {
+    const GCSchedulingState& state) {
   double growthFactor =
       computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
 
   startBytes_ = computeZoneTriggerBytes(growthFactor, lastBytes,
-                                        tunables.mallocThresholdBase(), lock);
+                                        tunables.mallocThresholdBase());
 
   setIncrementalLimitFromStartBytes(lastBytes, tunables);
 }
