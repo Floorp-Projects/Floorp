@@ -75,8 +75,6 @@ static nsresult AssembleClientData(
   clientDataObject.mType.Assign(aType);
   clientDataObject.mChallenge.Assign(challengeBase64);
   clientDataObject.mOrigin.Assign(aOrigin);
-  clientDataObject.mHashAlgorithm.AssignLiteral(u"SHA-256");
-  clientDataObject.mClientExtensions = aExtensions;
 
   nsAutoString temp;
   if (NS_WARN_IF(!clientDataObject.ToJSON(temp))) {
