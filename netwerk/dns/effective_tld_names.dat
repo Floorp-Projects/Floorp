@@ -12111,6 +12111,7 @@ kill.jp
 kilo.jp
 kuron.jp
 littlestar.jp
+lolipopmc.jp
 lolitapunk.jp
 lomo.jp
 lovepop.jp
@@ -12378,6 +12379,11 @@ moonscale.net
 // Submitted by Hannu Aronsson <haa@iki.fi>
 iki.fi
 
+// iliad italia: https://www.iliad.it
+// Submitted by Marios Makassikis <mmakassikis@freebox.fr>
+ibxos.it
+iliadboxos.it
+
 // Impertrix Solutions : <https://impertrixcdn.com>
 // Submitted by Zhixiang Zhao <csuite@impertrix.com>
 impertrixcdn.com
@@ -12458,9 +12464,11 @@ iopsys.se
 // Submitted by Matthew Hardeman <mhardeman@ipifony.com>
 ipifony.net
 
-// IServ GmbH : https://iserv.eu
-// Submitted by Kim-Alexander Brodowski <info@iserv.eu>
+// IServ GmbH : https://iserv.de
+// Submitted by Mario Hoberg <info@iserv.de>
+iservschule.de
 mein-iserv.de
+schulplattform.de
 schulserver.de
 test-iserv.de
 iserv.dev
@@ -12781,6 +12789,10 @@ hra.health
 // Submitted by Tom Whitwell <domains@memset.com>
 miniserver.com
 memset.net
+
+// Messerli Informatik AG : https://www.messerli.ch/
+// Submitted by Ruben Schmidmeister <psl-maintainers@messerli.ch>
+messerli.app
 
 // MetaCentrum, CESNET z.s.p.o. : https://www.metacentrum.cz/en/
 // Submitted by Zdeněk Šustr <zdenek.sustr@cesnet.cz>
@@ -13394,9 +13406,9 @@ rocky.page
 
 // Salesforce.com, Inc. https://salesforce.com/
 // Submitted by Michael Biven <mbiven@salesforce.com>
-builder.code.com
-dev-builder.code.com
-stg-builder.code.com
+*.builder.code.com
+*.dev-builder.code.com
+*.stg-builder.code.com
 
 // Sandstorm Development Group, Inc. : https://sandcats.io/
 // Submitted by Asheesh Laroia <asheesh@sandstorm.io>
