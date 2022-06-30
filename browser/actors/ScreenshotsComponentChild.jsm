@@ -15,6 +15,7 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ScreenshotsOverlayChild: "resource:///modules/ScreenshotsOverlayChild.jsm",
+  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
 });
 
 class ScreenshotsComponentChild extends JSWindowActorChild {
@@ -41,6 +42,22 @@ class ScreenshotsComponentChild extends JSWindowActorChild {
         break;
       case "beforeunload":
         this.requestCancelScreenshot();
+        break;
+      case "resize":
+        if (!this._resizeTask && this._overlay?._initialized) {
+          this._resizeTask = new lazy.DeferredTask(() => {
+            this._overlay.updateScreenshotsSize("resize");
+          }, 16);
+        }
+        this._resizeTask.arm();
+        break;
+      case "scroll":
+        if (!this._scrollTask && this._overlay?._initialized) {
+          this._scrollTask = new lazy.DeferredTask(() => {
+            this._overlay.updateScreenshotsSize("scroll");
+          }, 16);
+        }
+        this._scrollTask.arm();
         break;
     }
   }
@@ -125,6 +142,8 @@ class ScreenshotsComponentChild extends JSWindowActorChild {
       ));
     this.document.addEventListener("keydown", this);
     this.document.ownerGlobal.addEventListener("beforeunload", this);
+    this.contentWindow.addEventListener("resize", this);
+    this.contentWindow.addEventListener("scroll", this);
     overlay.initialize();
     return true;
   }
@@ -138,8 +157,17 @@ class ScreenshotsComponentChild extends JSWindowActorChild {
   endScreenshotsOverlay() {
     this.document.removeEventListener("keydown", this);
     this.document.ownerGlobal.removeEventListener("beforeunload", this);
+    this.contentWindow.removeEventListener("resize", this);
+    this.contentWindow.removeEventListener("scroll", this);
     this._overlay?.tearDown();
+    this._resizeTask?.disarm();
+    this._scrollTask?.disarm();
     return true;
+  }
+
+  didDestroy() {
+    this._resizeTask?.disarm();
+    this._scrollTask?.disarm();
   }
 
   /**

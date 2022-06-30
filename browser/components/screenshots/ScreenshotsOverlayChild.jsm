@@ -69,6 +69,9 @@ class AnonymousContentOverlay {
     this.overlayFragment = null;
 
     this.overlayId = "screenshots-overlay-container";
+    this.previewId = "preview-container";
+    this.selectionId = "selection-container";
+
     this._initialized = false;
 
     this.moverIds = [
@@ -106,40 +109,49 @@ class AnonymousContentOverlay {
       } catch {
         // The method fails if the url is already loaded.
       }
+      // Inject markup for the overlay UI
+      this.overlayFragment = this.buildOverlay();
     }
-
-    // Inject markup for the overlay UI
-    this.overlayFragment = this.overlayFragment
-      ? this.overlayFragment
-      : this.buildOverlay();
 
     this._content = document.insertAnonymousContent(
       this.overlayFragment.children[0]
     );
 
-    let height = this.contentDocument.documentElement.clientHeight;
-    let width = this.contentDocument.documentElement.clientWidth;
-    this.Box = new Box(this._content, width, height);
-
     this.addEventListeners();
 
-    this.stateHandler = new StateHandler(this.Box, this);
+    this.previewLayer = new PreviewLayer(this.previewId, this.content);
+    this.selectionLayer = new SelectionLayer(this.selectionId, this.content);
+
+    this.screenshotsContainer = new ScreenshotsContainerLayer(
+      this.overlayId,
+      this.content,
+      this.previewLayer,
+      this.selectionLayer
+    );
+
+    this.stateHandler = new StateHandler(this.screenshotsContainer);
+
+    this.screenshotsContainer.updateSize(window);
+
     this.stateHandler.setState("crosshairs");
 
     this._initialized = true;
   }
 
   /**
-   * Returns an object with the required information to take a screenshot
-   * @returns object of the required coordinates to take a screenshot
+   * The Anonymous Content doesn't shrink when the window is resized so we need
+   * to find the largest element that isn't the Anonymous Content and we will
+   * use that width and height.
+   * Otherwise we will fallback to the documentElement scroll width and height
+   * @param eventType If "resize", we called this from a resize event so we will
+   *  try shifting the SelectionBox.
+   *  If "scroll", we called this from a scroll event so we will redraw the buttons
    */
-  getCoordinatesFromBox() {
-    return {
-      x1: this.Box.left + this.Box.xOffset,
-      y1: this.Box.top + this.Box.yOffset,
-      width: this.Box.width,
-      height: this.Box.height,
-    };
+  updateScreenshotsSize(eventType) {
+    this.stateHandler.updateScreenshotsContainerSize(
+      this.contentDocument.ownerGlobal,
+      eventType
+    );
   }
 
   /**
@@ -157,17 +169,39 @@ class AnonymousContentOverlay {
       this.screenshotsChild.requestCancelScreenshot();
     });
     this.addEventListenerForElement("copy", "click", (event, targetId) => {
-      this.Box.xOffset = event.pageX - event.clientX;
-      this.Box.yOffset = event.pageY - event.clientY;
-      this.screenshotsChild.requestCopyScreenshot(this.getCoordinatesFromBox());
-    });
-    this.addEventListenerForElement("download", "click", (event, targetId) => {
-      this.Box.xOffset = event.pageX - event.clientX;
-      this.Box.yOffset = event.pageY - event.clientY;
-      this.screenshotsChild.requestDownloadScreenshot(
-        this.getCoordinatesFromBox()
+      this.screenshotsChild.requestCopyScreenshot(
+        this.screenshotsContainer.getSelectionLayerBoxDimensions()
       );
     });
+    this.addEventListenerForElement("download", "click", (event, targetId) => {
+      this.screenshotsChild.requestDownloadScreenshot(
+        this.screenshotsContainer.getSelectionLayerBoxDimensions()
+      );
+    });
+
+    // The pointerdown event is added to the selection buttons to prevent the
+    // pointerdown event from occurring on the "screenshots-overlay-container"
+    this.addEventListenerForElement(
+      "cancel",
+      "pointerdown",
+      (event, targetId) => {
+        event.stopPropagation();
+      }
+    );
+    this.addEventListenerForElement(
+      "copy",
+      "pointerdown",
+      (event, targetId) => {
+        event.stopPropagation();
+      }
+    );
+    this.addEventListenerForElement(
+      "download",
+      "pointerdown",
+      (event, targetId) => {
+        event.stopPropagation();
+      }
+    );
 
     this.addEventListenerForElement(
       this.overlayId,
@@ -205,39 +239,6 @@ class AnonymousContentOverlay {
   }
 
   /**
-   * Shows the screenshots overlay crosshairs state
-   */
-  showOverylay() {
-    this._content.setAttributeForElement(`${this.overlayId}`, "style", "");
-  }
-
-  /**
-   * Hides the screenshots overlay crosshairs state
-   */
-  hideOverylay() {
-    this._content.setAttributeForElement(
-      `${this.overlayId}`,
-      "style",
-      `opacity:0;`
-    );
-  }
-
-  /**
-   * Draw the eyeballs facing the mouse
-   * @param clientX x pointer position
-   * @param clientY y pointer position
-   * @param width width of the window
-   * @param height height of the window
-   */
-  drawEyes(clientX, clientY, width, height) {
-    const xpos = Math.floor((10 * (clientX - width / 2)) / width);
-    const ypos = Math.floor((10 * (clientY - height / 2)) / height);
-    const move = `transform:translate(${xpos}px, ${ypos}px);`;
-    this._content.setAttributeForElement("left-eye", "style", move);
-    this._content.setAttributeForElement("right-eye", "style", move);
-  }
-
-  /**
    * Removes all event listeners and removes the overlay from the Anonymous Content
    */
   tearDown() {
@@ -272,52 +273,56 @@ class AnonymousContentOverlay {
 
     const htmlString = `
     <div id="screenshots-component">
-     <div id="${this.overlayId}">
-       <div class="fixed-container">
-        <div class="face-container">
-          <div class="eye left"><div id="left-eye" class="eyeball"></div></div>
-          <div class="eye right"><div id="right-eye" class="eyeball"></div></div>
-          <div class="face"></div>
+      <div id="${this.overlayId}">
+        <div id="${this.previewId}">
+          <div class="fixed-container">
+            <div class="face-container">
+              <div class="eye left"><div id="left-eye" class="eyeball"></div></div>
+              <div class="eye right"><div id="right-eye" class="eyeball"></div></div>
+              <div class="face"></div>
+            </div>
+            <div class="preview-instructions" data-l10n-id="screenshots-instructions">${instrustions.value}</div>
+            <div class="cancel-shot" id="screenshots-cancel-button" data-l10n-id="screenshots-overlay-cancel-button">${cancel.value}</div>
+          </div>
         </div>
-        <div class="preview-instructions" data-l10n-id="screenshots-instructions">${instrustions.value}</div>
-        <div class="cancel-shot" id="screenshots-cancel-button" data-l10n-id="screenshots-overlay-cancel-button">${cancel.value}</div>
-       </div>
-     </div>
-     <div id="bgTop" class="bghighlight" style="display:none;"></div>
-     <div id="bgBottom" class="bghighlight" style="display:none;"></div>
-     <div id="bgLeft" class="bghighlight" style="display:none;"></div>
-     <div id="bgRight" class="bghighlight" style="display:none;"></div>
-     <div id="highlight" class="highlight" style="display:none;">
-      <div id="mover-topLeft" class="mover-target direction-topLeft">
-       <div class="mover"></div>
+        <div id="${this.selectionId}" style="display:none;">
+          <div id="bgTop" class="bghighlight" style="display:none;"></div>
+          <div id="bgBottom" class="bghighlight" style="display:none;"></div>
+          <div id="bgLeft" class="bghighlight" style="display:none;"></div>
+          <div id="bgRight" class="bghighlight" style="display:none;"></div>
+          <div id="highlight" class="highlight" style="display:none;">
+            <div id="mover-topLeft" class="mover-target direction-topLeft">
+              <div class="mover"></div>
+            </div>
+            <div id="mover-top" class="mover-target direction-top">
+              <div class="mover"></div>
+            </div>
+            <div id="mover-topRight" class="mover-target direction-topRight">
+              <div class="mover"></div>
+            </div>
+            <div id="mover-left" class="mover-target direction-left">
+              <div class="mover"></div>
+            </div>
+            <div id="mover-right" class="mover-target direction-right">
+              <div class="mover"></div>
+            </div>
+            <div id="mover-bottomLeft" class="mover-target direction-bottomLeft">
+              <div class="mover"></div>
+            </div>
+            <div id="mover-bottom" class="mover-target direction-bottom">
+              <div class="mover"></div>
+            </div>
+            <div id="mover-bottomRight" class="mover-target direction-bottomRight">
+              <div class="mover"></div>
+            </div>
+          </div>
+          <div id="buttons" style="display:none;">
+            <button id="cancel" class="screenshots-button" title="${cancel.value}" aria-label="${cancel.value}"><img/></button>
+            <button id="copy" class="screenshots-button" title="${copy.value}" aria-label="${copy.value}"><img/>${copy.value}</button>
+            <button id="download" class="screenshots-button" title="${download.value}" aria-label="${download.value}"><img/>${download.value}</button>
+          </div>
+        </div>
       </div>
-      <div id="mover-top" class="mover-target direction-top">
-       <div class="mover"></div>
-      </div>
-      <div id="mover-topRight" class="mover-target direction-topRight">
-       <div class="mover"></div>
-      </div>
-      <div id="mover-left" class="mover-target direction-left">
-       <div class="mover"></div>
-      </div>
-      <div id="mover-right" class="mover-target direction-right">
-       <div class="mover"></div>
-      </div>
-      <div id="mover-bottomLeft" class="mover-target direction-bottomLeft">
-       <div class="mover"></div>
-      </div>
-      <div id="mover-bottom" class="mover-target direction-bottom">
-       <div class="mover"></div>
-      </div>
-      <div id="mover-bottomRight" class="mover-target direction-bottomRight">
-       <div class="mover"></div>
-      </div>
-     </div>
-     <div id="buttons" style="display:none;">
-      <button id="cancel" class="screenshots-button" title="${cancel.value}" aria-label="${cancel.value}"><img/></button>
-      <button id="copy" class="screenshots-button" title="${copy.value}" aria-label="${copy.value}"><img/>${copy.value}</button>
-      <button id="download" class="screenshots-button" title="${download.value}" aria-label="${download.value}"><img/>${download.value}</button>
-     </div>
     </div>`;
 
     const parser = new this.contentDocument.ownerGlobal.DOMParser();
@@ -457,15 +462,29 @@ class AnonymousContentOverlay {
     this.listeners.clear();
   }
 
-  // Event handler that call the state handler to handle the events
+  /**
+   * Pass the pointer down event to the state handler
+   * @param event The pointer down event
+   * @param targetId The target element id
+   */
   dragStart(event, targetId) {
     this.stateHandler.dragStart(event, targetId);
   }
 
+  /**
+   * Pass the pointer move event to the state handler
+   * @param event The pointer move event
+   * @param targetId The target element id
+   */
   drag(event, targetId) {
     this.stateHandler.drag(event);
   }
 
+  /**
+   * Pass the pointer up event to the state handler
+   * @param event The pointer up event
+   * @param targetId The target element id
+   */
   dragEnd(event, targetId) {
     this.stateHandler.dragEnd(event);
   }
@@ -480,18 +499,17 @@ var ScreenshotsOverlayChild = {
  */
 class StateHandler {
   #state;
-  #box;
-  #anonymousContentOverlay;
   #lastBox;
   #moverId;
   #lastX;
   #lastY;
+  #screenshotsContainer;
 
-  constructor(box, anonContent) {
+  constructor(screenshotsContainer) {
     this.#state = "crosshairs";
-    this.#box = box;
-    this.#anonymousContentOverlay = anonContent;
     this.#lastBox = {};
+
+    this.#screenshotsContainer = screenshotsContainer;
   }
 
   setState(newState) {
@@ -533,11 +551,8 @@ class StateHandler {
    * @returns object containing the x and y coordinates of the mouse
    */
   getCoordinates(event) {
-    this.#box.windowHeight = event.explicitOriginalTarget.clientHeight;
-    this.#box.windowWidth = event.explicitOriginalTarget.clientWidth;
-
-    let clientX = event.clientX;
-    let clientY = event.clientY;
+    let clientX = event.pageX;
+    let clientY = event.pageY;
 
     return { clientX, clientY };
   }
@@ -572,12 +587,7 @@ class StateHandler {
 
     switch (this.#state) {
       case "crosshairs": {
-        this.crosshairsMove(
-          clientX,
-          clientY,
-          event.explicitOriginalTarget.clientWidth,
-          event.explicitOriginalTarget.clientHeight
-        );
+        this.crosshairsMove(clientX, clientY);
         break;
       }
       case "draggingReady": {
@@ -623,33 +633,38 @@ class StateHandler {
    * Hide the box and highlighter and show the overlay at the start of crosshairs state
    */
   crosshairsStart() {
-    this.#box.hideAll();
-    this.#anonymousContentOverlay.showOverylay();
+    this.#screenshotsContainer.hideSelectionLayer();
+    this.#screenshotsContainer.showPreviewLayer();
   }
 
   /**
    * Hide the overlay and draw the box at the start of dragging state
    */
   draggingStart() {
-    this.#anonymousContentOverlay.hideOverylay();
-    this.#box.drawBox();
+    this.#screenshotsContainer.hidePreviewLayer();
+    this.#screenshotsContainer.hideButtonsLayer();
+    this.#screenshotsContainer.drawSelectionBox();
   }
 
   /**
    * Show the buttons at the start of the selected state
    */
   selectedStart() {
-    this.#box.showButtons();
+    this.#screenshotsContainer.drawButtonsLayer();
   }
 
   /**
    * Hide the buttons and store width and height of box at the start of the resizing state
    */
   resizingStart() {
-    this.#box.hideButtons();
+    this.#screenshotsContainer.hideButtonsLayer();
+    let {
+      width,
+      height,
+    } = this.#screenshotsContainer.getSelectionLayerBoxDimensions();
     this.#lastBox = {
-      width: this.#box.width,
-      height: this.#box.height,
+      width,
+      height,
     };
   }
 
@@ -659,10 +674,12 @@ class StateHandler {
    * @param clientY y coordinate
    */
   crosshairsDragStart(clientX, clientY) {
-    this.#box.top = clientY;
-    this.#box.left = clientX;
-    this.#box.bottom = clientY;
-    this.#box.right = clientX;
+    this.#screenshotsContainer.setSelectionBoxDimensions({
+      left: clientX,
+      top: clientY,
+      right: clientX,
+      bottom: clientY,
+    });
 
     this.setState("draggingReady");
   }
@@ -675,7 +692,7 @@ class StateHandler {
    * @param targetId The id of the event target
    */
   selectedDragStart(clientX, clientY, targetId) {
-    if (targetId === this.#anonymousContentOverlay.overlayId) {
+    if (targetId === this.#screenshotsContainer.id) {
       this.setState("crosshairs");
       return;
     }
@@ -690,11 +707,9 @@ class StateHandler {
    * Handles the pointer move for the crosshairs state
    * @param clientX x pointer position
    * @param clientY y pointer position
-   * @param width width of the window
-   * @param height height of the window
    */
-  crosshairsMove(clientX, clientY, width, height) {
-    this.#anonymousContentOverlay.drawEyes(clientX, clientY, width, height);
+  crosshairsMove(clientX, clientY) {
+    this.#screenshotsContainer.drawPreviewEyes(clientX, clientY);
   }
 
   /**
@@ -703,10 +718,12 @@ class StateHandler {
    * @param clientY y coordinate
    */
   draggingDrag(clientX, clientY) {
-    this.#box.bottom = clientY;
-    this.#box.right = clientX;
+    this.#screenshotsContainer.setSelectionBoxDimensions({
+      right: clientX,
+      bottom: clientY,
+    });
 
-    this.#box.drawBox();
+    this.#screenshotsContainer.drawSelectionBox();
   }
 
   /**
@@ -715,13 +732,12 @@ class StateHandler {
    * @param clientY y coordinate
    */
   draggingReadyDrag(clientX, clientY) {
-    this.#box.bottom = clientY;
-    this.#box.right = clientX;
+    this.#screenshotsContainer.setSelectionBoxDimensions({
+      right: clientX,
+      bottom: clientY,
+    });
 
-    if (
-      Math.sqrt(Math.pow(this.#box.width, 2) + Math.pow(this.#box.height, 2)) >
-      40
-    ) {
+    if (this.#screenshotsContainer.selectionBoxDistance() > 40) {
       this.setState("dragging");
     }
   }
@@ -734,39 +750,51 @@ class StateHandler {
   resizingDrag(clientX, clientY) {
     switch (this.#moverId) {
       case "mover-topLeft": {
-        this.#box.top = clientY;
-        this.#box.left = clientX;
+        this.#screenshotsContainer.setSelectionBoxDimensions({
+          left: clientX,
+          top: clientY,
+        });
         break;
       }
       case "mover-top": {
-        this.#box.top = clientY;
+        this.#screenshotsContainer.setSelectionBoxDimensions({ top: clientY });
         break;
       }
       case "mover-topRight": {
-        this.#box.top = clientY;
-        this.#box.right = clientX;
+        this.#screenshotsContainer.setSelectionBoxDimensions({
+          top: clientY,
+          right: clientX,
+        });
         break;
       }
       case "mover-right": {
-        this.#box.right = clientX;
+        this.#screenshotsContainer.setSelectionBoxDimensions({
+          right: clientX,
+        });
         break;
       }
       case "mover-bottomRight": {
-        this.#box.bottom = clientY;
-        this.#box.right = clientX;
+        this.#screenshotsContainer.setSelectionBoxDimensions({
+          right: clientX,
+          bottom: clientY,
+        });
         break;
       }
       case "mover-bottom": {
-        this.#box.bottom = clientY;
+        this.#screenshotsContainer.setSelectionBoxDimensions({
+          bottom: clientY,
+        });
         break;
       }
       case "mover-bottomLeft": {
-        this.#box.bottom = clientY;
-        this.#box.left = clientX;
+        this.#screenshotsContainer.setSelectionBoxDimensions({
+          left: clientX,
+          bottom: clientY,
+        });
         break;
       }
       case "mover-left": {
-        this.#box.left = clientX;
+        this.#screenshotsContainer.setSelectionBoxDimensions({ left: clientX });
         break;
       }
       case "highlight": {
@@ -779,49 +807,56 @@ class StateHandler {
         let newTop;
         let newBottom;
 
+        // Unpack SelectionBox dimensions to use here
+        let {
+          boxLeft,
+          boxTop,
+          boxRight,
+          boxBottom,
+          boxWidth,
+          boxHeight,
+          scrollWidth,
+          scrollHeight,
+        } = this.#screenshotsContainer.getSelectionLayerDimensions();
+
         // wait until all 4 if elses have completed before setting box dimensions
-
-        if (this.#box.width <= lastBox.width && this.#box.left === 0) {
-          newLeft = this.#box.right - lastBox.width;
+        if (boxWidth <= lastBox.width && boxLeft === 0) {
+          newLeft = boxRight - lastBox.width;
         } else {
-          newLeft = this.#box.left;
+          newLeft = boxLeft;
         }
 
-        if (
-          this.#box.width <= lastBox.width &&
-          this.#box.right === this.#box.windowWidth
-        ) {
-          newRight = this.#box.left + lastBox.width;
+        if (boxWidth <= lastBox.width && boxRight === scrollWidth) {
+          newRight = boxLeft + lastBox.width;
         } else {
-          newRight = this.#box.right;
+          newRight = boxRight;
         }
 
-        if (this.#box.height <= lastBox.height && this.#box.top === 0) {
-          newTop = this.#box.bottom - lastBox.height;
+        if (boxHeight <= lastBox.height && boxTop === 0) {
+          newTop = boxBottom - lastBox.height;
         } else {
-          newTop = this.#box.top;
+          newTop = boxTop;
         }
 
-        if (
-          this.#box.height <= lastBox.height &&
-          this.#box.bottom === this.#box.windowHeight
-        ) {
-          newBottom = this.#box.top + lastBox.height;
+        if (boxHeight <= lastBox.height && boxBottom === scrollHeight) {
+          newBottom = boxTop + lastBox.height;
         } else {
-          newBottom = this.#box.bottom;
+          newBottom = boxBottom;
         }
 
-        this.#box.top = newTop - diffY;
-        this.#box.bottom = newBottom - diffY;
-        this.#box.left = newLeft - diffX;
-        this.#box.right = newRight - diffX;
+        this.#screenshotsContainer.setSelectionBoxDimensions({
+          left: newLeft - diffX,
+          top: newTop - diffY,
+          right: newRight - diffX,
+          bottom: newBottom - diffY,
+        });
 
         this.#lastX = clientX;
         this.#lastY = clientY;
         break;
       }
     }
-    this.#box.drawBox();
+    this.#screenshotsContainer.drawSelectionBox();
   }
 
   /**
@@ -837,9 +872,11 @@ class StateHandler {
    * @param clientY y coordinate
    */
   draggingDragEnd(clientX, clientY) {
-    this.#box.bottom = clientY;
-    this.#box.right = clientX;
-    this.#box.sortCoords();
+    this.#screenshotsContainer.setSelectionBoxDimensions({
+      right: clientX,
+      bottom: clientY,
+    });
+    this.#screenshotsContainer.sortSelectionLayerBoxCoords();
     this.setState("selected");
   }
 
@@ -850,30 +887,260 @@ class StateHandler {
    */
   resizingDragEnd(clientX, clientY, targetId) {
     this.resizingDrag(clientX, clientY, targetId);
-    this.#box.sortCoords();
+    this.#screenshotsContainer.sortSelectionLayerBoxCoords();
     this.setState("selected");
+  }
+
+  /**
+   * The page was resized or scrolled. We need to update the
+   * ScreenshotsContainer size so we don't draw outside the window bounds
+   * If the current state is "selected" and this was called from a resize event
+   * then we need to maybe shift the SelectionBox
+   * @param win The window object of the page
+   * @param eventType If this was called from a resize event
+   */
+  updateScreenshotsContainerSize(win, eventType) {
+    this.#screenshotsContainer.updateSize(win);
+
+    if (this.#state === "selected" && eventType === "resize") {
+      this.#screenshotsContainer.shiftSelectionLayerBox();
+    } else if (this.#state && eventType === "scroll") {
+      this.#screenshotsContainer.drawButtonsLayer();
+    }
+  }
+}
+
+class AnonLayer {
+  id;
+  content;
+
+  constructor(id, content) {
+    this.id = id;
+    this.content = content;
+  }
+
+  /**
+   * Show element with id this.id
+   */
+  show() {
+    this.content.removeAttributeForElement(this.id, "style");
+  }
+
+  /**
+   * Hide element with id this.id
+   */
+  hide() {
+    this.content.setAttributeForElement(this.id, "style", "display:none;");
+  }
+}
+
+class SelectionLayer extends AnonLayer {
+  #selectionBox;
+  #buttons;
+  #hidden;
+  /**
+   * the documentDimensions follows the below structure
+   * {
+   *    scrollWidth: the total document width
+   *    scrollHeight: the total document height
+   *    scrollX: the x scrolled offset
+   *    scrollY: the y scrolled offset
+   *    innerWidth: the viewport width
+   *    innerHeight: the viewport height
+   * }
+   */
+  #documentDimensions;
+
+  constructor(id, content) {
+    super(id, content);
+    this.#selectionBox = new SelectionBox(content, this);
+    this.#buttons = new ButtonsLayer("buttons", content, this);
+
+    this.#hidden = true;
+    this.#documentDimensions = {};
+  }
+
+  /**
+   * Hide the buttons layer
+   */
+  hideButtons() {
+    this.#buttons.hide();
+  }
+
+  /**
+   * Call
+   */
+  drawButtonsLayer() {
+    this.#buttons.show();
+  }
+
+  /**
+   * Hide the selection-container element
+   */
+  hide() {
+    super.hide();
+    this.#hidden = true;
+  }
+
+  /**
+   * Draw the SelectionBox
+   */
+  drawSelectionBox() {
+    if (this.#hidden) {
+      this.show();
+      this.#hidden = false;
+    }
+    this.#selectionBox.show();
+  }
+
+  /**
+   * Sort the SelectionBox coordinates
+   */
+  sortSelectionBoxCoords() {
+    this.#selectionBox.sortCoords();
+  }
+
+  /**
+   * Sets the SelectionBox dimensions
+   * @param {Object} dims The new box dimensions
+   *  {
+   *    left: new left dimension value or undefined
+   *    top: new top dimension value or undefined
+   *    right: new right dimension value or undefined
+   *    bottom: new bottom dimension value or undefined
+   *   }
+   */
+  setSelectionBoxDimensions(dims) {
+    if (dims.left) {
+      this.#selectionBox.left = dims.left;
+    }
+    if (dims.top) {
+      this.#selectionBox.top = dims.top;
+    }
+    if (dims.right) {
+      this.#selectionBox.right = dims.right;
+    }
+    if (dims.bottom) {
+      this.#selectionBox.bottom = dims.bottom;
+    }
+  }
+
+  /**
+   * Gets the selections box dimensions
+   * @returns {Object}
+   *  {
+   *    x1: the left dimension value
+   *    y1: the top dimension value
+   *    width: the width of the selected region
+   *    height: the height of the selected region
+   *  }
+   */
+  getSelectionBoxDimensions() {
+    return this.#selectionBox.getDimensions();
+  }
+
+  /**
+   * Returns the box dimensions and the page dimensions
+   * @returns {Object}
+   *  {
+   *    boxLeft: the left position of the box
+   *    boxTop: the top position of the box
+   *    boxRight: the right position of the box
+   *    boxBottom: the bottom position of the box
+   *    scrollWidth: the total document width
+   *    scrollHeight: the total document height
+   *    scrollX: the x scrolled offset
+   *    scrollY: the y scrolled offset
+   *    innerWidth: the viewport width
+   *    innerHeight: the viewport height
+   *  }
+   */
+  getDimensions() {
+    return {
+      boxLeft: this.#selectionBox.left,
+      boxTop: this.#selectionBox.top,
+      boxRight: this.#selectionBox.right,
+      boxBottom: this.#selectionBox.bottom,
+      boxWidth: this.#selectionBox.width,
+      boxHeight: this.#selectionBox.height,
+      ...this.#documentDimensions,
+    };
+  }
+
+  /**
+   * Gets the diagonal distance of the SelectionBox
+   * @returns The diagonal distance of the SelectionBox
+   */
+  getSelectionBoxDistance() {
+    return this.#selectionBox.distance;
+  }
+
+  /**
+   * Shift the SelectionBox so that it is always within the document
+   */
+  shiftSelectionBox() {
+    this.#selectionBox.shiftBox();
+  }
+
+  get scrollWidth() {
+    return this.#documentDimensions.scrollWidth;
+  }
+  set scrollWidth(val) {
+    this.#documentDimensions.scrollWidth = val;
+  }
+
+  get scrollHeight() {
+    return this.#documentDimensions.scrollHeight;
+  }
+  set scrollHeight(val) {
+    this.#documentDimensions.scrollHeight = val;
+  }
+
+  get scrollX() {
+    return this.#documentDimensions.scrollX;
+  }
+  set scrollX(val) {
+    this.#documentDimensions.scrollX = val;
+  }
+
+  get scrollY() {
+    return this.#documentDimensions.scrollY;
+  }
+  set scrollY(val) {
+    this.#documentDimensions.scrollY = val;
+  }
+
+  get innerWidth() {
+    return this.#documentDimensions.innerWidth;
+  }
+  set innerWidth(val) {
+    this.#documentDimensions.innerWidth = val;
+  }
+
+  get innerHeight() {
+    return this.#documentDimensions.innerHeight;
+  }
+  set innerHeight(val) {
+    this.#documentDimensions.innerHeight = val;
   }
 }
 
 /**
- * The Box class handles drawing the highlight and background
- * Also handles drawing the buttons
+ * The SelectionBox class handles drawing the highlight and background
  */
-class Box {
-  #content;
+class SelectionBox extends AnonLayer {
   #x1;
   #x2;
   #y1;
   #y2;
-  #windowWidth;
-  #windowHeight;
   #xOffset;
   #yOffset;
+  #selectionLayer;
 
-  constructor(content, width, height) {
-    this.#content = content;
-    this.#windowWidth = width;
-    this.#windowHeight = height;
+  constructor(content, selectionLayer) {
+    super("", content);
+
+    this.#selectionLayer = selectionLayer;
 
     this.#x1 = 0;
     this.#x2 = 0;
@@ -884,34 +1151,34 @@ class Box {
   }
 
   /**
-   * Draw the highlight and background
+   * Draw the selected region for screenshotting
    */
-  drawBox() {
-    this.#content.setAttributeForElement(
+  show() {
+    this.content.setAttributeForElement(
       "highlight",
       "style",
       `top:${this.top}px;left:${this.left}px;height:${this.height}px;width:${this.width}px;`
     );
 
-    this.#content.setAttributeForElement(
+    this.content.setAttributeForElement(
       "bgTop",
       "style",
       `top:0px;height:${this.top}px;left:0px;width:100%;`
     );
 
-    this.#content.setAttributeForElement(
+    this.content.setAttributeForElement(
       "bgBottom",
       "style",
-      `top:${this.bottom}px;bottom:0px;left:0px;width:100%;`
+      `top:${this.bottom}px;height:calc(100% - ${this.bottom}px);left:0px;width:100%;`
     );
 
-    this.#content.setAttributeForElement(
+    this.content.setAttributeForElement(
       "bgLeft",
       "style",
       `top:${this.top}px;height:${this.height}px;left:0px;width:${this.left}px;`
     );
 
-    this.#content.setAttributeForElement(
+    this.content.setAttributeForElement(
       "bgRight",
       "style",
       `top:${this.top}px;height:${this.height}px;left:${this.right}px;width:calc(100% - ${this.right}px);`
@@ -919,44 +1186,44 @@ class Box {
   }
 
   /**
-   * Draw the buttons. Check if the box is too close the bottom or left and
-   * adjust the buttons accordingly
+   * Hide the selected region
    */
-  showButtons() {
-    let top = this.bottom;
-    let leftOrRight = `right:calc(100% - ${this.right}px);`;
-
-    if (this.#windowHeight - this.bottom < 70) {
-      top = this.bottom - 60;
-    }
-    if (this.right < 265) {
-      leftOrRight = `left:${this.left}px;`;
-    }
-
-    this.#content.setAttributeForElement(
-      "buttons",
-      "style",
-      `top:${top}px;${leftOrRight}`
-    );
+  hide() {
+    this.content.setAttributeForElement("highlight", "style", "display:none;");
+    this.content.setAttributeForElement("bgTop", "style", "display:none;");
+    this.content.setAttributeForElement("bgBottom", "style", "display:none;");
+    this.content.setAttributeForElement("bgLeft", "style", "display:none;");
+    this.content.setAttributeForElement("bgRight", "style", "display:none;");
   }
 
   /**
-   * Hide the buttons
+   * The box should never appear outside the document so the SelectionBox will
+   * be shifted if the bounds of the box are outside the documents width or height
    */
-  hideButtons() {
-    this.#content.setAttributeForElement("buttons", "style", "display:none;");
-  }
+  shiftBox() {
+    let didShift = false;
+    let xDiff = this.right - this.#selectionLayer.scrollWidth;
+    if (xDiff > 0) {
+      this.right -= xDiff;
+      this.left -= xDiff;
 
-  /**
-   * Hide the highlight, background, and buttons
-   */
-  hideAll() {
-    this.hideButtons();
-    this.#content.setAttributeForElement("highlight", "style", "display:none;");
-    this.#content.setAttributeForElement("bgTop", "style", "display:none;");
-    this.#content.setAttributeForElement("bgBottom", "style", "display:none;");
-    this.#content.setAttributeForElement("bgLeft", "style", "display:none;");
-    this.#content.setAttributeForElement("bgRight", "style", "display:none;");
+      didShift = true;
+    }
+
+    let yDiff = this.bottom - this.#selectionLayer.scrollHeight;
+    if (yDiff > 0) {
+      let curWidth = this.width;
+
+      this.bottom -= yDiff;
+      this.top = this.bottom - curWidth;
+
+      didShift = true;
+    }
+
+    if (didShift) {
+      this.show();
+      this.#selectionLayer.drawButtonsLayer();
+    }
   }
 
   /**
@@ -971,6 +1238,29 @@ class Box {
     }
   }
 
+  /**
+   * Gets the dimensions of the currently selected region
+   * @returns {Object}
+   *  {
+   *    x1: the left dimension value
+   *    y1: the top dimension value
+   *    width: the width of the selected region
+   *    height: the height of the selected region
+   *  }
+   */
+  getDimensions() {
+    return {
+      x1: this.left,
+      y1: this.top,
+      width: this.width,
+      height: this.height,
+    };
+  }
+
+  get distance() {
+    return Math.sqrt(Math.pow(this.width, 2) + Math.pow(this.height, 2));
+  }
+
   get xOffset() {
     return this.#xOffset;
   }
@@ -983,20 +1273,6 @@ class Box {
   }
   set yOffset(val) {
     this.#yOffset = val;
-  }
-
-  get windowWidth() {
-    return this.#windowWidth;
-  }
-  set windowWidth(val) {
-    this.#windowWidth = val;
-  }
-
-  get windowHeight() {
-    return this.#windowHeight;
-  }
-  set windowHeight(val) {
-    this.#windowHeight = val;
   }
 
   get top() {
@@ -1017,14 +1293,20 @@ class Box {
     return Math.max(this.#x1, this.#x2);
   }
   set right(val) {
-    this.#x2 = val > this.#windowWidth ? this.#windowWidth : val;
+    this.#x2 =
+      val > this.#selectionLayer.scrollWidth
+        ? this.#selectionLayer.scrollWidth
+        : val;
   }
 
   get bottom() {
     return Math.max(this.#y1, this.#y2);
   }
   set bottom(val) {
-    this.#y2 = val > this.#windowHeight ? this.#windowHeight : val;
+    this.#y2 =
+      val > this.#selectionLayer.scrollHeight
+        ? this.#selectionLayer.scrollHeight
+        : val;
   }
 
   get width() {
@@ -1032,5 +1314,288 @@ class Box {
   }
   get height() {
     return Math.abs(this.#y2 - this.#y1);
+  }
+}
+
+class ButtonsLayer extends AnonLayer {
+  #selectionLayer;
+
+  constructor(id, content, selectionLayer) {
+    super(id, content);
+
+    this.#selectionLayer = selectionLayer;
+  }
+
+  /**
+   * Draw the buttons. Check if the box is too near the bottom or left of the
+   * viewport and adjust the buttons accordingly
+   */
+  show() {
+    let {
+      boxLeft,
+      boxTop,
+      boxRight,
+      boxBottom,
+      scrollX,
+      scrollY,
+      innerWidth,
+      innerHeight,
+    } = this.#selectionLayer.getDimensions();
+
+    if (
+      boxTop > scrollY + innerHeight ||
+      boxBottom < scrollY ||
+      boxLeft > scrollX + innerWidth ||
+      boxRight < scrollX
+    ) {
+      // The box is offscreen so need to draw the buttons
+      return;
+    }
+
+    let top = boxBottom;
+    let leftOrRight = `right:calc(100% - ${boxRight}px);`;
+
+    if (scrollY + innerHeight - boxBottom < 70) {
+      if (boxBottom < scrollY + innerHeight) {
+        top = boxBottom - 60;
+      } else if (scrollY + innerHeight - boxTop < 70) {
+        top = boxTop - 60;
+      } else {
+        top = scrollY + innerHeight - 60;
+      }
+    }
+    if (boxRight < 265) {
+      leftOrRight = `left:${boxLeft}px;`;
+    }
+
+    this.content.setAttributeForElement(
+      "buttons",
+      "style",
+      `top:${top}px;${leftOrRight}`
+    );
+  }
+}
+
+class PreviewLayer extends AnonLayer {
+  constructor(id, content) {
+    super(id, content);
+  }
+
+  /**
+   * Draw the eyeballs facing the mouse
+   * @param clientX x pointer position
+   * @param clientY y pointer position
+   * @param width width of the viewport
+   * @param height height of the viewport
+   */
+  drawEyes(clientX, clientY, width, height) {
+    const xpos = Math.floor((10 * (clientX - width / 2)) / width);
+    const ypos = Math.floor((10 * (clientY - height / 2)) / height);
+    const move = `transform:translate(${xpos}px, ${ypos}px);`;
+    this.content.setAttributeForElement("left-eye", "style", move);
+    this.content.setAttributeForElement("right-eye", "style", move);
+  }
+}
+
+class ScreenshotsContainerLayer extends AnonLayer {
+  #width;
+  #height;
+  #previewLayer;
+  #selectionLayer;
+
+  constructor(id, content, previewLayer, selectionLayer) {
+    super(id, content);
+
+    this.#previewLayer = previewLayer;
+    this.#selectionLayer = selectionLayer;
+  }
+
+  /**
+   * Hide the SelectionLayer
+   */
+  hideSelectionLayer() {
+    this.#selectionLayer.hide();
+  }
+
+  /**
+   * Show the PreviewLayer
+   */
+  showPreviewLayer() {
+    this.#previewLayer.show();
+  }
+
+  /**
+   * Hide the PreviewLayer
+   */
+  hidePreviewLayer() {
+    this.#previewLayer.hide();
+  }
+
+  /**
+   * Show the ButtonsLayer
+   */
+  drawButtonsLayer() {
+    this.#selectionLayer.drawButtonsLayer();
+  }
+
+  /**
+   * Hide the ButtonsLayer
+   */
+  hideButtonsLayer() {
+    this.#selectionLayer.hideButtons();
+  }
+
+  /**
+   * Show the SelectionBox
+   */
+  drawSelectionBox() {
+    this.#selectionLayer.drawSelectionBox();
+  }
+
+  /**
+   * Draw the eyes in the PreviewLayer
+   * @param clientX The x mouse position
+   * @param clientY The y mouse position
+   */
+  drawPreviewEyes(clientX, clientY) {
+    this.#previewLayer.drawEyes(
+      clientX - this.#selectionLayer.scrollX,
+      clientY - this.#selectionLayer.scrollY,
+      this.#selectionLayer.innerWidth,
+      this.#selectionLayer.innerHeight
+    );
+  }
+
+  /**
+   * Get the diagonal distance of the SelectionBox
+   * @returns The diagonal distance of the currently selected region
+   */
+  selectionBoxDistance() {
+    return this.#selectionLayer.getSelectionBoxDistance();
+  }
+
+  /**
+   * Sort the coordinates of the SelectionBox
+   */
+  sortSelectionLayerBoxCoords() {
+    this.#selectionLayer.sortSelectionBoxCoords();
+  }
+
+  /**
+   * Get the SelectionLayer dimensions
+   * @returns {Object}
+   *  {
+   *    x1: the left dimension value
+   *    y1: the top dimension value
+   *    width: the width of the selected region
+   *    height: the height of the selected region
+   *  }
+   */
+  getSelectionLayerBoxDimensions() {
+    return this.#selectionLayer.getSelectionBoxDimensions();
+  }
+
+  /**
+   * Gets the SelectionBox and page dimensions
+   * @returns {Object}
+   *  {
+   *    boxLeft: the left position of the box
+   *    boxTop: the top position of the box
+   *    boxRight: the right position of the box
+   *    boxBottom: the bottom position of the box
+   *    scrollWidth: the total document width
+   *    scrollHeight: the total document height
+   *    scrollX: the x scrolled offset
+   *    scrollY: the y scrolled offset
+   *    innerWidth: the viewport width
+   *    innerHeight: the viewport height
+   *  }
+   */
+  getSelectionLayerDimensions() {
+    return this.#selectionLayer.getDimensions();
+  }
+
+  /**
+   * Shift the SelectionBox
+   */
+  shiftSelectionLayerBox() {
+    this.#selectionLayer.shiftSelectionBox();
+  }
+
+  /**
+   * Set the respective dimensions of the SelectionBox
+   * @param {Object} boxDimensionObject The new box dimensions
+   *  {
+   *    left: new left dimension value or undefined
+   *    top: new top dimension value or undefined
+   *    right: new right dimension value or undefined
+   *    bottom: new bottom dimension value or undefined
+   *   }
+   */
+  setSelectionBoxDimensions(boxDimensionObject) {
+    this.#selectionLayer.setSelectionBoxDimensions(boxDimensionObject);
+  }
+
+  /**
+   * The screenshots-overlay-container doesn't shrink with the window when the
+   * window is resized so we have to manually find the width and height of the
+   * window by looping throught the documentElement's children
+   * If the children mysteriously have a height or width of 0 then we will
+   * fallback to the scrollWidth and scrollHeight which can cause the container
+   * to be larger than the window dimensions
+   * @param win The window object
+   */
+  updateSize(win) {
+    let { innerWidth, innerHeight, scrollX, scrollY } = win;
+    this.#selectionLayer.innerWidth = innerWidth;
+    this.#selectionLayer.innerHeight = innerHeight;
+    this.#selectionLayer.scrollX = scrollX;
+    this.#selectionLayer.scrollY = scrollY;
+
+    const doc = win.document.documentElement;
+    let width = Math.max.apply(
+      null,
+      Array.from(doc.children, x => x.scrollWidth)
+    );
+    let height = Math.max.apply(
+      null,
+      Array.from(doc.children, x => x.scrollHeight)
+    );
+
+    if (width < 1) {
+      width = doc.scrollWidth;
+    }
+    if (height < 1) {
+      height = doc.scrollHeight;
+    }
+
+    this.#selectionLayer.scrollWidth = width;
+    this.#selectionLayer.scrollHeight = height;
+
+    this.#width = width;
+    this.#height = height;
+
+    this.drawScreenshotsContainer();
+  }
+
+  /**
+   * Return the dimensions of the screenshots container
+   * @returns {Object}
+   *  width: the container width
+   *  height: the container height
+   */
+  getDimension() {
+    return { width: this.#width, height: this.#height };
+  }
+
+  /**
+   * Draw the screenshots container
+   */
+  drawScreenshotsContainer() {
+    this.content.setAttributeForElement(
+      this.id,
+      "style",
+      `top:0;left:0;width:${this.#width}px;height:${this.#height}px;`
+    );
   }
 }

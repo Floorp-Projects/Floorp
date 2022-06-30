@@ -7,7 +7,6 @@
   height: 100%;
   overflow: clip;
   user-select: none;
-  position: fixed;
   pointer-events: auto;
   touch-action: none;
 }
@@ -29,13 +28,27 @@
   direction: initial;
   writing-mode: initial;
   z-index: 1;
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  position: absolute;
   pointer-events: auto;
   cursor: crosshair;
+}
+
+:-moz-native-anonymous #preview-container {
+  background-color: rgba(0, 0, 0, 0.7);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+:-moz-native-anonymous #selection-container {
+  overflow: clip;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 :-moz-native-anonymous #screenshots-overlay-container[hidden] {
@@ -82,6 +95,7 @@
   white-space: nowrap;
   margin: 0 5px;
   box-shadow: 0 0 0 1px rgba(12, 12, 13, 0.1), 0 2px 8px rgba(12, 12, 13, 0.1);
+  z-index: 6;
 }
 
 :-moz-native-anonymous .screenshots-button:hover {
@@ -94,7 +108,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 6;
 }
 
 :-moz-native-anonymous #cancel {
@@ -205,6 +218,7 @@
 :-moz-native-anonymous .bghighlight {
   background-color: rgba(0, 0, 0, 0.7);
   position: absolute;
+  overflow: clip;
 }
 
 :-moz-native-anonymous .highlight {
