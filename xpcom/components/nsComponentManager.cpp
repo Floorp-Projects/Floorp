@@ -277,7 +277,6 @@ extern const mozilla::Module kContentProcessWidgetModule;
 #if defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
 extern const mozilla::Module kWidgetModule;
 #endif
-extern const mozilla::Module kLayoutModule;
 extern const mozilla::Module kKeyValueModule;
 extern const mozilla::Module kXREModule;
 
@@ -371,7 +370,6 @@ nsresult nsComponentManagerImpl::Init() {
 #if defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
   RegisterModule(&kWidgetModule);
 #endif
-  RegisterModule(&kLayoutModule);
   RegisterModule(&kKeyValueModule);
   RegisterModule(&kXREModule);
 
