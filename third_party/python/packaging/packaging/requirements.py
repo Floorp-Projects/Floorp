@@ -1,13 +1,13 @@
 # This file is dual licensed under the terms of the Apache License, Version
 # 2.0, and the BSD License. See the LICENSE file in the root of this repository
 # for complete details.
+from __future__ import absolute_import, division, print_function
 
 import re
 import string
-import urllib.parse
-from typing import List, Optional as TOptional, Set
+import sys
 
-from pyparsing import (  # noqa
+from pyparsing import (  # noqa: N817
     Combine,
     Literal as L,
     Optional,
@@ -20,8 +20,18 @@ from pyparsing import (  # noqa
     stringStart,
 )
 
+from ._typing import TYPE_CHECKING
 from .markers import MARKER_EXPR, Marker
 from .specifiers import LegacySpecifier, Specifier, SpecifierSet
+
+if sys.version_info[0] >= 3:
+    from urllib import parse as urlparse  # pragma: no cover
+else:  # pragma: no cover
+    import urlparse
+
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing import List, Optional as TOptional, Set
 
 
 class InvalidRequirement(ValueError):
@@ -60,7 +70,7 @@ VERSION_ONE = VERSION_PEP440 ^ VERSION_LEGACY
 VERSION_MANY = Combine(
     VERSION_ONE + ZeroOrMore(COMMA + VERSION_ONE), joinString=",", adjacent=False
 )("_raw_spec")
-_VERSION_SPEC = Optional((LPAREN + VERSION_MANY + RPAREN) | VERSION_MANY)
+_VERSION_SPEC = Optional(((LPAREN + VERSION_MANY + RPAREN) | VERSION_MANY))
 _VERSION_SPEC.setParseAction(lambda s, l, t: t._raw_spec or "")
 
 VERSION_SPEC = originalTextFor(_VERSION_SPEC)("specifier")
@@ -84,7 +94,7 @@ REQUIREMENT = stringStart + NAMED_REQUIREMENT + stringEnd
 REQUIREMENT.parseString("x[]")
 
 
-class Requirement:
+class Requirement(object):
     """Parse a requirement.
 
     Parse a given requirement string into its parts, such as name, specifier,
@@ -97,50 +107,54 @@ class Requirement:
     #       the thing as well as the version? What about the markers?
     # TODO: Can we normalize the name and extra name?
 
-    def __init__(self, requirement_string: str) -> None:
+    def __init__(self, requirement_string):
+        # type: (str) -> None
         try:
             req = REQUIREMENT.parseString(requirement_string)
         except ParseException as e:
             raise InvalidRequirement(
-                f'Parse error at "{ requirement_string[e.loc : e.loc + 8]!r}": {e.msg}'
+                'Parse error at "{0!r}": {1}'.format(
+                    requirement_string[e.loc : e.loc + 8], e.msg
+                )
             )
 
-        self.name: str = req.name
+        self.name = req.name  # type: str
         if req.url:
-            parsed_url = urllib.parse.urlparse(req.url)
+            parsed_url = urlparse.urlparse(req.url)
             if parsed_url.scheme == "file":
-                if urllib.parse.urlunparse(parsed_url) != req.url:
+                if urlparse.urlunparse(parsed_url) != req.url:
                     raise InvalidRequirement("Invalid URL given")
             elif not (parsed_url.scheme and parsed_url.netloc) or (
                 not parsed_url.scheme and not parsed_url.netloc
             ):
-                raise InvalidRequirement(f"Invalid URL: {req.url}")
-            self.url: TOptional[str] = req.url
+                raise InvalidRequirement("Invalid URL: {0}".format(req.url))
+            self.url = req.url  # type: TOptional[str]
         else:
             self.url = None
-        self.extras: Set[str] = set(req.extras.asList() if req.extras else [])
-        self.specifier: SpecifierSet = SpecifierSet(req.specifier)
-        self.marker: TOptional[Marker] = req.marker if req.marker else None
+        self.extras = set(req.extras.asList() if req.extras else [])  # type: Set[str]
+        self.specifier = SpecifierSet(req.specifier)  # type: SpecifierSet
+        self.marker = req.marker if req.marker else None  # type: TOptional[Marker]
 
-    def __str__(self) -> str:
-        parts: List[str] = [self.name]
+    def __str__(self):
+        # type: () -> str
+        parts = [self.name]  # type: List[str]
 
         if self.extras:
-            formatted_extras = ",".join(sorted(self.extras))
-            parts.append(f"[{formatted_extras}]")
+            parts.append("[{0}]".format(",".join(sorted(self.extras))))
 
         if self.specifier:
             parts.append(str(self.specifier))
 
         if self.url:
-            parts.append(f"@ {self.url}")
+            parts.append("@ {0}".format(self.url))
             if self.marker:
                 parts.append(" ")
 
         if self.marker:
-            parts.append(f"; {self.marker}")
+            parts.append("; {0}".format(self.marker))
 
         return "".join(parts)
 
-    def __repr__(self) -> str:
-        return f"<Requirement('{self}')>"
+    def __repr__(self):
+        # type: () -> str
+        return "<Requirement({0!r})>".format(str(self))
