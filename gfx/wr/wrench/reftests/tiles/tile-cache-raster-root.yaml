@@ -39,3 +39,5 @@ pipelines:
                 bounds: [0, 0, 1887, 239]
                 type: rect
                 color: blue
+                clip-chain: [2, 4]
+                
