@@ -51,8 +51,6 @@ struct PRThread;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern const mozilla::Module kXPCOMModule;
-
 namespace {
 class EntryWrapper;
 }  // namespace
