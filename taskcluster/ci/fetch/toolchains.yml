@@ -362,8 +362,9 @@ clang-trunk:
         repo: https://github.com/llvm/llvm-project
         branch: main
 
-# This revision currently corresponds to rust nightly-2022-05-16,
-# which is the first nightly with the version 1.63.0,
+# This revision currently corresponds to rust nightly-2022-05-21,
+# which is the first nightly with the version 1.63.0 with a fix
+# for https://github.com/rust-lang/rust/issues/97205,
 # so it should be as close as possible to the behaviour of
 # stable-1.62.0.
 #
@@ -377,7 +378,7 @@ rust-1.63.0-dev:
         type: git
         include-dot-git: true
         repo: https://github.com/rust-lang/rust/
-        revision: 42e1761c704f074b7b8c7ff8a7433acfd65d2ee9
+        revision: e6a4afc3af2d2a53f91fc8a77bdfe94bea375b29
 
 wasi-sdk:
     description: wasi-sdk-16 source code
