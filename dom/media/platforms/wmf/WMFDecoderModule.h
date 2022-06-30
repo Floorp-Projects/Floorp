@@ -9,12 +9,11 @@
 
 #  include "PlatformDecoderModule.h"
 #  include "WMF.h"
+#  include "WMFUtils.h"
 
 namespace mozilla {
 
 class MFTDecoder;
-
-enum class WMFStreamType { Unknown, H264, VP8, VP9, AV1, MP3, AAC, SENTINEL };
 
 class WMFDecoderModule : public PlatformDecoderModule {
  public:
@@ -48,50 +47,6 @@ class WMFDecoderModule : public PlatformDecoderModule {
   static HRESULT CreateMFTDecoder(const WMFStreamType& aType,
                                   RefPtr<MFTDecoder>& aDecoder);
   static bool CanCreateMFTDecoder(const WMFStreamType& aType);
-  static WMFStreamType GetStreamTypeFromMimeType(const nsCString& aMimeType);
-
-  static inline bool StreamTypeIsVideo(const WMFStreamType& aType) {
-    switch (aType) {
-      case WMFStreamType::H264:
-      case WMFStreamType::VP8:
-      case WMFStreamType::VP9:
-      case WMFStreamType::AV1:
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  static inline bool StreamTypeIsAudio(const WMFStreamType& aType) {
-    switch (aType) {
-      case WMFStreamType::MP3:
-      case WMFStreamType::AAC:
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  // Get a string representation of the stream type. Useful for logging.
-  static inline const char* StreamTypeToString(WMFStreamType aStreamType) {
-    switch (aStreamType) {
-      case WMFStreamType::H264:
-        return "H264";
-      case WMFStreamType::VP8:
-        return "VP8";
-      case WMFStreamType::VP9:
-        return "VP9";
-      case WMFStreamType::AV1:
-        return "AV1";
-      case WMFStreamType::MP3:
-        return "MP3";
-      case WMFStreamType::AAC:
-        return "AAC";
-      default:
-        MOZ_ASSERT(aStreamType == WMFStreamType::Unknown);
-        return "Unknown";
-    }
-  }
 
  private:
   WMFDecoderModule() = default;

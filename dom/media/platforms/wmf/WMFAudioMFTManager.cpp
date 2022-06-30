@@ -85,8 +85,7 @@ WMFAudioMFTManager::WMFAudioMFTManager(const AudioInfo& aConfig)
     : mAudioChannels(aConfig.mChannels),
       mChannelsMap(AudioConfig::ChannelLayout::UNKNOWN_MAP),
       mAudioRate(aConfig.mRate),
-      mStreamType(
-          WMFDecoderModule::GetStreamTypeFromMimeType(aConfig.mMimeType)) {
+      mStreamType(GetStreamTypeFromMimeType(aConfig.mMimeType)) {
   MOZ_COUNT_CTOR(WMFAudioMFTManager);
 
   if (mStreamType == WMFStreamType::AAC) {
@@ -118,7 +117,7 @@ WMFAudioMFTManager::~WMFAudioMFTManager() {
 }
 
 const GUID& WMFAudioMFTManager::GetMediaSubtypeGUID() {
-  MOZ_ASSERT(WMFDecoderModule::StreamTypeIsAudio(mStreamType));
+  MOZ_ASSERT(StreamTypeIsAudio(mStreamType));
   switch (mStreamType) {
     case WMFStreamType::AAC:
       return MFAudioFormat_AAC;
@@ -130,7 +129,7 @@ const GUID& WMFAudioMFTManager::GetMediaSubtypeGUID() {
 }
 
 bool WMFAudioMFTManager::Init() {
-  NS_ENSURE_TRUE(WMFDecoderModule::StreamTypeIsAudio(mStreamType), false);
+  NS_ENSURE_TRUE(StreamTypeIsAudio(mStreamType), false);
 
   RefPtr<MFTDecoder> decoder(new MFTDecoder());
   // Note: MP3 MFT isn't registered as supporting Float output, but it works.
