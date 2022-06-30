@@ -942,11 +942,14 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "PublicKeyCredential" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "PushManager",
+  { name: "PushManager", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "PushSubscription",
+  { name: "PushSubscription", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "PushSubscriptionOptions",
+  {
+    name: "PushSubscriptionOptions",
+    insecureContext: true,
+  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "RadioNodeList", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1026,11 +1029,11 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Selection", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "ServiceWorker",
+  { name: "ServiceWorker", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "ServiceWorkerContainer",
+  { name: "ServiceWorkerContainer", insecureContext: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "ServiceWorkerRegistration",
+  { name: "ServiceWorkerRegistration", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ScopedCredential", insecureContext: true, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

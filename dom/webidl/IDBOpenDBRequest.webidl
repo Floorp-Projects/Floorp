@@ -7,7 +7,7 @@
  * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBOpenDBRequest
  */
 
-[Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
+[Exposed=(Window,Worker)]
 interface IDBOpenDBRequest : IDBRequest {
                 attribute EventHandler onblocked;
 

@@ -74,8 +74,6 @@ class PushManager final : public nsISupports, public nsWrapperCache {
                                                    const nsAString& aScope,
                                                    ErrorResult& aRv);
 
-  static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
-
   already_AddRefed<Promise> PerformSubscriptionActionFromWorker(
       SubscriptionAction aAction, ErrorResult& aRv);
 

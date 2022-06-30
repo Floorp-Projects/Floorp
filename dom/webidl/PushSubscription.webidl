@@ -41,7 +41,7 @@ dictionary PushSubscriptionInit
   EpochTimeStamp? expirationTime = null;
 };
 
-[Exposed=(Window,Worker), Func="ServiceWorkerVisible"]
+[Exposed=(Window,Worker), Pref="dom.push.enabled"]
 interface PushSubscription
 {
   [Throws, ChromeOnly]

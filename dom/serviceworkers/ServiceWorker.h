@@ -30,9 +30,7 @@ struct StructuredSerializeOptions;
     }                                                \
   }
 
-bool ServiceWorkersEnabled(JSContext* aCx, JSObject* aGlobal);
-
-bool ServiceWorkerVisible(JSContext* aCx, JSObject* aGlobal);
+bool ServiceWorkerVisible(JSContext* aCx, JSObject* aObj);
 
 class ServiceWorker final : public DOMEventTargetHelper {
  public:

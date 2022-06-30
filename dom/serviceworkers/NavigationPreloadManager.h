@@ -28,8 +28,6 @@ class NavigationPreloadManager final : public nsISupports,
 
   static bool IsValidHeader(const nsACString& aHeader);
 
-  static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
-
   NavigationPreloadManager(nsCOMPtr<nsIGlobalObject>&& aGlobal,
                            RefPtr<ServiceWorkerRegistration::Inner>& aInner);
 
