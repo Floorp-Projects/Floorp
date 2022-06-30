@@ -48,6 +48,7 @@
   MACRO(JSBC_Decompression)              \
   MACRO(JSBC_IO_Read)                    \
   MACRO(JSBC_IO_Write)                   \
+  MACRO(MinorGC)                         \
   MACRO(MajorGC)                         \
   MACRO(NonIdleMajorGC)
 

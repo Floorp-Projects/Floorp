@@ -74,6 +74,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebuggerOnGCRunnable.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/PerfStats.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Sprintf.h"
@@ -1181,10 +1182,16 @@ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
     TimelineConsumers::AddMarkerForAllObservedDocShells(abstractMarker);
   }
 
+  TimeStamp now = TimeStamp::Now();
   if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START) {
-    self->mLatestNurseryCollectionStart = TimeStamp::Now();
-  } else if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END &&
-             profiler_thread_is_being_profiled_for_markers()) {
+    self->mLatestNurseryCollectionStart = now;
+  } else if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END) {
+    PerfStats::RecordMeasurement(PerfStats::Metric::MinorGC,
+                                 now - self->mLatestNurseryCollectionStart);
+  }
+
+  if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END &&
+      profiler_thread_is_being_profiled_for_markers()) {
     struct GCMinorMarker {
       static constexpr mozilla::Span<const char> MarkerTypeName() {
         return mozilla::MakeStringSpan("GCMinor");
@@ -1215,7 +1222,7 @@ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
 
     profiler_add_marker(
         "GCMinor", baseprofiler::category::GCCC,
-        MarkerTiming::IntervalUntilNowFrom(self->mLatestNurseryCollectionStart),
+        MarkerTiming::Interval(self->mLatestNurseryCollectionStart, now),
         GCMinorMarker{},
         ProfilerString8View::WrapNullTerminatedString(
             JS::MinorGcToJSON(aContext).get()));
