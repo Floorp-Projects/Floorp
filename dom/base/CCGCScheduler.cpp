@@ -9,6 +9,7 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/PerfStats.h"
 #include "nsRefreshDriver.h"
 
 /*
@@ -230,6 +231,22 @@ void CCGCScheduler::NoteGCEnd() {
   if (child) {
     child->DoneGC();
   }
+}
+
+void CCGCScheduler::NoteGCSliceEnd(TimeDuration aSliceDuration) {
+  if (mMajorGCReason == JS::GCReason::NO_REASON) {
+    // Internally-triggered GCs do not wait for the parent's permission to
+    // proceed. This flag won't be checked during an incremental GC anyway,
+    // but it better reflects reality.
+    mReadyForMajorGC = true;
+  }
+
+  // Subsequent slices should be INTER_SLICE_GC unless they are triggered by
+  // something else that provides its own reason.
+  mMajorGCReason = JS::GCReason::INTER_SLICE_GC;
+
+  mGCUnnotifiedTotalTime += aSliceDuration;
+  PerfStats::RecordMeasurement(PerfStats::Metric::MajorGC, aSliceDuration);
 }
 
 void CCGCScheduler::NoteCCBegin(CCReason aReason, TimeStamp aWhen,
