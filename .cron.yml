@@ -196,6 +196,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr91
+          - mozilla-esr102
       when:
           by-project:
               # No default branch
@@ -209,6 +210,9 @@ jobs:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
               mozilla-esr91:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
+              mozilla-esr102:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
 
