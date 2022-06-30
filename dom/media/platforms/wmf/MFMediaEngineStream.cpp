@@ -110,8 +110,7 @@ MFMediaEngineStream::MFMediaEngineStream()
     : mIsShutdown(false),
       mIsSelected(false),
       mReceivedEOS(false),
-      mShouldServeSmamples(false),
-      mMutex("MFMediaEngineStream Mutex") {}
+      mShouldServeSmamples(false) {}
 
 MFMediaEngineStream::~MFMediaEngineStream() { MOZ_ASSERT(IsShutdown()); }
 
