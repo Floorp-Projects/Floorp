@@ -11,7 +11,6 @@
 #include "nsIUploadChannel.h"
 #include "nsIURI.h"
 #include "nsIUrlClassifierDBService.h"
-#include "nsIUrlClassifierRemoteSettingsService.h"
 #include "nsUrlClassifierUtils.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
@@ -113,97 +112,78 @@ void nsUrlClassifierStreamUpdater::DownloadDone() {
 nsresult nsUrlClassifierStreamUpdater::FetchUpdate(
     nsIURI* aUpdateUrl, const nsACString& aRequestPayload, bool aIsPostRequest,
     const nsACString& aStreamTable) {
-  mBeganStream = false;
+#ifdef DEBUG
+  LOG(("Fetching update %s from %s", aRequestPayload.Data(),
+       aUpdateUrl->GetSpecOrDefault().get()));
+#endif
+
+  // SafeBrowsing update request should never be classified to make sure
+  // we can recover from a bad SafeBrowsing database.
   nsresult rv;
-  // moz-sbrs is a customed scheme used by Safe Browsing. When the scheme is
-  // present in the update url, we'll fetch the data from
-  // UrlClassifierRemoteSettingsService.
-  if (aUpdateUrl->SchemeIs("moz-sbrs")) {
-#ifdef DEBUG
-    LOG(("Fetching update %s from RemoteSettings", aRequestPayload.Data()));
-#endif
-    nsCOMPtr<nsIUrlClassifierRemoteSettingsService> rsService =
-        do_GetService("@mozilla.org/url-classifier/list-service;1");
-    if (!rsService) {
-      return NS_ERROR_FAILURE;
-    }
+  uint32_t loadFlags = nsIChannel::INHIBIT_CACHING |
+                       nsIChannel::LOAD_BYPASS_CACHE |
+                       nsIChannel::LOAD_BYPASS_URL_CLASSIFIER;
+  rv = NS_NewChannel(getter_AddRefs(mChannel), aUpdateUrl,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+                     nsIContentPolicy::TYPE_OTHER,
+                     nullptr,  // nsICookieJarSettings
+                     nullptr,  // aPerformanceStorage
+                     nullptr,  // aLoadGroup
+                     this,     // aInterfaceRequestor
+                     loadFlags);
 
-    rv = rsService->FetchList(aRequestPayload, this);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else {
-#ifdef DEBUG
-    LOG(("Fetching update %s from %s", aRequestPayload.Data(),
-         aUpdateUrl->GetSpecOrDefault().get()));
-#endif
-    uint32_t loadFlags = nsIChannel::INHIBIT_CACHING |
-                         nsIChannel::LOAD_BYPASS_CACHE |
-                         nsIChannel::LOAD_BYPASS_URL_CLASSIFIER;
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // SafeBrowsing update request should never be classified to make sure
-    // we can recover from a bad SafeBrowsing database.
-    rv = NS_NewChannel(getter_AddRefs(mChannel), aUpdateUrl,
-                       nsContentUtils::GetSystemPrincipal(),
-                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-                       nsIContentPolicy::TYPE_OTHER,
-                       nullptr,  // nsICookieJarSettings
-                       nullptr,  // aPerformanceStorage
-                       nullptr,  // aLoadGroup
-                       this,     // aInterfaceRequestor
-                       loadFlags);
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+  mozilla::OriginAttributes attrs;
+  attrs.mFirstPartyDomain.AssignLiteral(NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
+  loadInfo->SetOriginAttributes(attrs);
+  // allow deprecated HTTP request from SystemPrincipal
+  loadInfo->SetAllowDeprecatedSystemRequests(true);
 
+  mBeganStream = false;
+
+  if (!aIsPostRequest) {
+    // We use POST method to send our request in v2. In v4, the request
+    // needs to be embedded to the URL and use GET method to send.
+    // However, from the Chromium source code, a extended HTTP header has
+    // to be sent along with the request to make the request succeed.
+    // The following description is from Chromium source code:
+    //
+    // "The following header informs the envelope server (which sits in
+    // front of Google's stubby server) that the received GET request should be
+    // interpreted as a POST."
+    //
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
-    mozilla::OriginAttributes attrs;
-    attrs.mFirstPartyDomain.AssignLiteral(
-        NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
-    loadInfo->SetOriginAttributes(attrs);
-    // allow deprecated HTTP request from SystemPrincipal
-    loadInfo->SetAllowDeprecatedSystemRequests(true);
-
-    if (!aIsPostRequest) {
-      // We use POST method to send our request in v2. In v4, the request
-      // needs to be embedded to the URL and use GET method to send.
-      // However, from the Chromium source code, a extended HTTP header has
-      // to be sent along with the request to make the request succeed.
-      // The following description is from Chromium source code:
-      //
-      // "The following header informs the envelope server (which sits in
-      // front of Google's stubby server) that the received GET request should
-      // be interpreted as a POST."
-      //
-      nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = httpChannel->SetRequestHeader("X-HTTP-Method-Override"_ns, "POST"_ns,
-                                         false);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else if (!aRequestPayload.IsEmpty()) {
-      rv = AddRequestBody(aRequestPayload);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // Set the appropriate content type for file/data URIs, for unit testing
-    // purposes.
-    // This is only used for testing and should be deleted.
-    if (aUpdateUrl->SchemeIs("file") || aUpdateUrl->SchemeIs("data")) {
-      mChannel->SetContentType("application/vnd.google.safebrowsing-update"_ns);
-    } else {
-      // We assume everything else is an HTTP request.
-
-      // Disable keepalive.
-      nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = httpChannel->SetRequestHeader("Connection"_ns, "close"_ns, false);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // Make the request.
-    rv = mChannel->AsyncOpen(this);
+    rv = httpChannel->SetRequestHeader("X-HTTP-Method-Override"_ns, "POST"_ns,
+                                       false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (!aRequestPayload.IsEmpty()) {
+    rv = AddRequestBody(aRequestPayload);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  // Set the appropriate content type for file/data URIs, for unit testing
+  // purposes.
+  // This is only used for testing and should be deleted.
+  if (aUpdateUrl->SchemeIs("file") || aUpdateUrl->SchemeIs("data")) {
+    mChannel->SetContentType("application/vnd.google.safebrowsing-update"_ns);
+  } else {
+    // We assume everything else is an HTTP request.
+
+    // Disable keepalive.
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = httpChannel->SetRequestHeader("Connection"_ns, "close"_ns, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Make the request.
+  rv = mChannel->AsyncOpen(this);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mTelemetryClockStart = PR_IntervalNow();
   mStreamTable = aStreamTable;
@@ -716,7 +696,6 @@ nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest* request,
     LOG(("OnStopRequest::Canceling update [this=%p]", this));
     // We began this stream and couldn't finish it.  We have to cancel the
     // update, it's not in a consistent state.
-    mDownloadError = true;
     rv = mDBService->CancelUpdate();
   } else {
     LOG(("OnStopRequest::Finishing update [this=%p]", this));

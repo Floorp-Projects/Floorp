@@ -1,3 +1,9 @@
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+
 // These tables share the same updateURL.
 const TEST_TABLE_DATA_LIST = [
   // 0:
@@ -352,4 +358,15 @@ function waitForUpdateSuccess(callback) {
     Services.obs.removeObserver(listener, "safebrowsing-update-finished");
     callback();
   }, "safebrowsing-update-finished");
+}
+
+// Construct an update from a file.
+function readFileToString(aFilename) {
+  let f = do_get_file(aFilename);
+  let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
+  stream.init(f, -1, 0, 0);
+  let buf = NetUtil.readInputStreamToString(stream, stream.available());
+  return buf;
 }
