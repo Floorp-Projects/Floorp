@@ -332,8 +332,6 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "DelayNode", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "DeprecationReportBody", insecureContext: true, nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "DeviceLightEvent", insecureContext: true, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "DeviceMotionEvent", insecureContext: true },
@@ -966,12 +964,6 @@ var interfaceNamesInGlobalScope = [
   { name: "ReadableStreamDefaultController", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ReadableStreamDefaultReader", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "Report", insecureContext: true, nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "ReportBody", insecureContext: true, nightly: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "ReportingObserver", insecureContext: true, nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Request", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
