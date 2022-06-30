@@ -31,6 +31,7 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
   void IPDLActorDestroyed();
 
   RefPtr<GenericNonExclusivePromise> Init(bool aShouldPreload);
+  void Shutdown();
 
   // Methods for PMFMediaEngineChild
   mozilla::ipc::IPCResult RecvRequestSample(TrackInfo::TrackType aType,
@@ -61,6 +62,9 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
   Atomic<uint64_t> mMediaEngineId;
 
   RefPtr<MFMediaEngineChild> mIPDLSelfRef;
+
+  MozPromiseHolder<GenericNonExclusivePromise> mInitPromiseHolder;
+  MozPromiseRequestHolder<InitMediaEnginePromise> mInitEngineRequest;
 };
 
 /**
