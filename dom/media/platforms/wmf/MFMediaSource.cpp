@@ -14,6 +14,7 @@
 #include "VideoUtils.h"
 #include "WMF.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 
 namespace mozilla {
@@ -42,14 +43,19 @@ HRESULT MFMediaSource::RuntimeClassInitialize(const Maybe<AudioInfo>& aAudio,
         mTaskQueue, this, &MFMediaSource::HandleStreamEnded);
   }
 
-  if (aVideo) {
-    mVideoStream = MFMediaEngineVideoStream::Create(streamId++, *aVideo, this);
-    if (!mVideoStream) {
-      NS_WARNING("Failed to create video stream");
+  // TODO : This is for testing. Remove this pref after finishing the video
+  // output implementation. Our first step is to make audio playback work.
+  if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
+    if (aVideo) {
+      mVideoStream =
+          MFMediaEngineVideoStream::Create(streamId++, *aVideo, this);
+      if (!mVideoStream) {
+        NS_WARNING("Failed to create video stream");
       return E_FAIL;
+      }
+      mVideoStreamEndedListener = mVideoStream->EndedEvent().Connect(
+          mTaskQueue, this, &MFMediaSource::HandleStreamEnded);
     }
-    mVideoStreamEndedListener = mVideoStream->EndedEvent().Connect(
-        mTaskQueue, this, &MFMediaSource::HandleStreamEnded);
   }
 
   RETURN_IF_FAILED(wmf::MFCreateEventQueue(&mMediaEventQueue));
@@ -316,8 +322,10 @@ void MFMediaSource::NotifyEndOfStreamInternal(TrackInfo::TrackType aType) {
     MOZ_ASSERT(mAudioStream);
     mAudioStream->NotifyEndOfStream();
   } else if (aType == TrackInfo::TrackType::kVideoTrack) {
-    MOZ_ASSERT(mVideoStream);
-    mVideoStream->NotifyEndOfStream();
+    if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
+      MOZ_ASSERT(mVideoStream);
+      mVideoStream->NotifyEndOfStream();
+    }
   }
 }
 
