@@ -90,7 +90,7 @@ class PerThreadData {
 
     mIsHandlingObservation = true;
     // Decide which list of observers to inform
-    std::vector<mozilla::IOInterposeObserver*>* observers = nullptr;
+    const std::vector<mozilla::IOInterposeObserver*>* observers = nullptr;
     switch (aObservation.ObservedOperation()) {
       case mozilla::IOInterposeObserver::OpCreateOrOpen:
         observers = &mObserverLists->mCreateObservers;
@@ -135,7 +135,7 @@ class PerThreadData {
   inline bool IsMainThread() const { return mIsMainThread; }
 
   inline void SetObserverLists(uint32_t aNewGeneration,
-                               RefPtr<ObserverLists>& aNewLists) {
+                               RefPtr<const ObserverLists>& aNewLists) {
     mCurrentGeneration = aNewGeneration;
     mObserverLists = aNewLists;
   }
@@ -151,7 +151,7 @@ class PerThreadData {
   bool mIsMainThread;
   bool mIsHandlingObservation;
   uint32_t mCurrentGeneration;
-  RefPtr<ObserverLists> mObserverLists;
+  RefPtr<const ObserverLists> mObserverLists;
 };
 
 // Thread-safe list of observers, from which `PerThreadData` sources its own
@@ -300,7 +300,7 @@ class SourceList {
   }
 
  private:
-  RefPtr<ObserverLists> mObserverLists GUARDED_BY(mLock);
+  RefPtr<const ObserverLists> mObserverLists GUARDED_BY(mLock);
   // Note, we cannot use mozilla::Mutex here as the ObserverLists may be leaked
   // (We want to monitor IO during shutdown). Furthermore, as we may have to
   // unregister observers during shutdown an OffTheBooksMutex is not an option
