@@ -83,40 +83,16 @@ add_task(async function runTest() {
     info("Waiting for debugger load");
     await gToolbox.selectTool("jsdebugger");
     const dbg = createDebuggerContext(gToolbox);
-    const window = dbg.win;
-    const document = window.document;
 
     await waitForSources(dbg, _testUrl);
 
     info("Loaded, selecting the test script to debug");
-    // First expand the main thread
-    const mainThread = [...document.querySelectorAll(".tree-node")].find(
-      node => {
-        return node.querySelector(".label").textContent.trim() == "Main Thread";
-      }
-    );
-    mainThread.querySelector(".arrow").click();
-
-    // Then expand the domain
-    const domain = [...document.querySelectorAll(".tree-node")].find(node => {
-      return node.querySelector(".label").textContent.trim() == "mozilla.org";
-    });
-    const arrow = domain.querySelector(".arrow");
-    arrow.click();
-
     const fileName = _testUrl.match(/browser-toolbox-test.*\.js/)[0];
-
-    // And finally the expected source
-    let script = [...document.querySelectorAll(".tree-node")].find(node => {
-      return node.textContent.includes(fileName);
-    });
-    script = script.querySelector(".node");
-    script.click();
-
-    const onPaused = waitForPaused(dbg);
     await selectSource(dbg, fileName);
-    await addBreakpoint(dbg, fileName, 2);
 
+    info("Add a breakpoint and wait to be paused");
+    const onPaused = waitForPaused(dbg);
+    await addBreakpoint(dbg, fileName, 2);
     await onPaused;
 
     const source = findSource(dbg, fileName);
