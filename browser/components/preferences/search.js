@@ -843,12 +843,17 @@ EngineView.prototype = {
   },
 
   isEngineSelectedAndRemovable() {
+    let defaultEngine = Services.search.defaultEngine;
+    let defaultPrivateEngine = Services.search.defaultPrivateEngine;
     // We don't allow the last remaining engine to be removed, thus the
     // `this.lastEngineIndex != 0` check.
+    // We don't allow the default engine to be removed.
     return (
       this.selectedIndex != -1 &&
       this.lastEngineIndex != 0 &&
-      !this._getLocalShortcut(this.selectedIndex)
+      !this._getLocalShortcut(this.selectedIndex) &&
+      this.selectedEngine.name != defaultEngine.name &&
+      this.selectedEngine.name != defaultPrivateEngine.name
     );
   },
 
