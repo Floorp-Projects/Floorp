@@ -44,7 +44,7 @@ add_task(async function setup() {
     },
     {
       client: BlocklistPrivate.GfxBlocklistRS._client,
-      expectHasDump: !IS_ANDROID,
+      expectHasDump: true,
     },
   ];
 
