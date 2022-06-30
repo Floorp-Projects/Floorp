@@ -445,7 +445,7 @@ int32_t H264EncoderImpl::Encode(
                         pictures_[i].iStride[0], pictures_[i].pData[1],
                         pictures_[i].iStride[1], pictures_[i].pData[2],
                         pictures_[i].iStride[2], configurations_[i].width,
-                        configurations_[i].height, libyuv::kFilterBilinear);
+                        configurations_[i].height, libyuv::kFilterBox);
     }
 
     if (!configurations_[i].sending) {
