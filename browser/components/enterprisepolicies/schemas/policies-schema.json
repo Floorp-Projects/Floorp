@@ -627,6 +627,10 @@
       }
     },
 
+    "GoToIntranetSiteForSingleWordEntryInAddressBar": {
+      "type": "boolean"
+    },
+
     "Handlers": {
       "type": ["object", "JSON"],
       "patternProperties": {
