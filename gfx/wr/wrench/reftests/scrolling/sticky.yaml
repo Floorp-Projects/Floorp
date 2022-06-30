@@ -3,6 +3,7 @@ root:
     # This is a scroll frame with an out-of-viewport rect that should be pushed into the
     # viewport by its "bottom" sticky constraint.
     - type: scroll-frame
+      id: 2
       bounds: [10, 10, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -15,8 +16,10 @@ root:
         - type: rect
           bounds: [10, 60, 50, 50]
           color: green
+          clip-chain: [2]
     # Do the same thing, but now for the "top" constraint.
     - type: scroll-frame
+      id: 3
       bounds: [70, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 50]
@@ -30,8 +33,10 @@ root:
         - type: rect
           bounds: [70, 10, 50, 50]
           color: green
+          clip-chain: [3]
     # Do the same thing, but now for the "right" constraint.
     - type: scroll-frame
+      id: 4
       bounds: [10, 70, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -44,8 +49,10 @@ root:
         - type: rect
           bounds: [60, 70, 50, 50]
           color: green
+          clip-chain: [4]
     # Do the same thing, but now for the "left" constraint.
     - type: scroll-frame
+      id: 5
       bounds: [70, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [50, 0]
@@ -59,9 +66,11 @@ root:
         - type: rect
           bounds: [70, 70, 50, 50]
           color: green
+          clip-chain: [5]
 
     # The same tests, but this time with a margin.
     - type: scroll-frame
+      id: 6
       bounds: [130, 10, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -74,8 +83,10 @@ root:
         - type: rect
           bounds: [130, 60, 50, 50]
           color: green
+          clip-chain: [6]
     # Do the same thing, but now for the "top" constraint.
     - type: scroll-frame
+      id: 7
       bounds: [190, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 50]
@@ -89,8 +100,10 @@ root:
         - type: rect
           bounds: [190, 10, 50, 50]
           color: green
+          clip-chain: [7]
     # Do the same thing, but now for the "right" constraint.
     - type: scroll-frame
+      id: 8
       bounds: [130, 70, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -103,8 +116,10 @@ root:
         - type: rect
           bounds: [180, 70, 50, 50]
           color: green
+          clip-chain: [8]
     # Do the same thing, but now for the "left" constraint.
     - type: scroll-frame
+      id: 9
       bounds: [190, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [50, 0]
@@ -118,9 +133,11 @@ root:
         - type: rect
           bounds: [190, 70, 50, 50]
           color: green
+          clip-chain: [9]
 
     # The same tests, but this time with a limit.
     - type: scroll-frame
+      id: 10
       bounds: [250, 10, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -133,8 +150,10 @@ root:
         - type: rect
           bounds: [250, 60, 50, 50]
           color: green
+          clip-chain: [10]
     # Do the same thing, but now for the "top" constraint.
     - type: scroll-frame
+      id: 11
       bounds: [310, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 50]
@@ -148,8 +167,10 @@ root:
         - type: rect
           bounds: [310, 10, 50, 50]
           color: green
+          clip-chain: [11]
     # Do the same thing, but now for the "right" constraint.
     - type: scroll-frame
+      id: 12
       bounds: [250, 70, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -162,8 +183,10 @@ root:
         - type: rect
           bounds: [300, 70, 50, 50]
           color: green
+          clip-chain: [12]
     # Do the same thing, but now for the "left" constraint.
     - type: scroll-frame
+      id: 13
       bounds: [310, 70, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -177,3 +200,4 @@ root:
         - type: rect
           bounds: [310, 70, 50, 50]
           color: green
+          clip-chain: [13]

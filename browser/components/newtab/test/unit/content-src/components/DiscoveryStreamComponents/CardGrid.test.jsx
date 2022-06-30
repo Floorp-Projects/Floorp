@@ -30,7 +30,10 @@ describe("<CardGrid>", () => {
 
   beforeEach(() => {
     wrapper = shallow(
-      <CardGrid DiscoveryStream={INITIAL_STATE.DiscoveryStream} />
+      <CardGrid
+        DiscoveryStream={INITIAL_STATE.DiscoveryStream}
+        Prefs={INITIAL_STATE.Prefs}
+      />
     );
   });
 
@@ -81,17 +84,19 @@ describe("<CardGrid>", () => {
   });
 
   it("should render sub header in the middle of the card grid for both regular and compact", () => {
+    const commonProps = {
+      essentialReadsHeader: true,
+      editorsPicksHeader: true,
+      items: 12,
+      data: {
+        recommendations: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+      },
+      DiscoveryStream: INITIAL_STATE.DiscoveryStream,
+      Prefs: INITIAL_STATE.Prefs,
+    };
     wrapper = mount(
       <WrapWithProvider>
-        <CardGrid
-          essentialReadsHeader={true}
-          editorsPicksHeader={true}
-          items={12}
-          data={{
-            recommendations: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
-          }}
-          DiscoveryStream={INITIAL_STATE.DiscoveryStream}
-        />
+        <CardGrid {...commonProps} />
       </WrapWithProvider>
     );
 
@@ -102,16 +107,7 @@ describe("<CardGrid>", () => {
     });
     wrapper = mount(
       <WrapWithProvider>
-        <CardGrid
-          essentialReadsHeader={true}
-          editorsPicksHeader={true}
-          compact={true}
-          items={12}
-          data={{
-            recommendations: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
-          }}
-          DiscoveryStream={INITIAL_STATE.DiscoveryStream}
-        />
+        <CardGrid {...commonProps} compact={true} />
       </WrapWithProvider>
     );
 

@@ -6,6 +6,7 @@ root:
       transform: scale(0.5)
       items:
         - type: scroll-frame
+          id: 2
           bounds: [100, 100, 100, 100]
           content-size: [260, 260]
           scroll-offset: [0, 60]
@@ -14,3 +15,4 @@ root:
             - type: rect
               color: green
               bounds: [100, 100, 260, 260]
+              clip-chain: [2]

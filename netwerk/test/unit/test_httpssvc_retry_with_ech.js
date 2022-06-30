@@ -320,7 +320,7 @@ async function H3ECHTest(echConfig) {
         flush: false,
         data: {
           priority: 1,
-          name: "public.example.com",
+          name: ".",
           values: [
             { key: "alpn", value: "h3-29" },
             { key: "port", value: h3Port },

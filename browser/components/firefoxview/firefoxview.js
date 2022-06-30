@@ -67,6 +67,7 @@ function showColorway({
   collectionName,
   expiry,
   l10nId,
+  iconUrl,
 }) {
   const el = {
     button: document.getElementById("colorways-button"),
@@ -109,7 +110,7 @@ function showColorway({
     document.l10n.setAttributes(el.title, l10nId.title);
     document.l10n.setAttributes(el.button, "firefoxview-try-colorways-button");
   }
-  // TODO: Uncomment when graphic is finalized document.getElementById("colorways-collection-graphic").src = "chrome://browser/content/colorway-try-colorways.svg";
+  document.getElementById("colorways-collection-graphic").src = iconUrl || "";
 }
 
 const getColorwayPromise = getColorway();

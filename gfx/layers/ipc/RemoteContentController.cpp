@@ -423,7 +423,10 @@ void RemoteContentController::NotifyScaleGestureCompleteInProcess(
   RefPtr<GeckoContentController> rootController =
       CompositorBridgeParent::GetGeckoContentControllerForRoot(aGuid.mLayersId);
   if (rootController) {
-    rootController->NotifyScaleGestureComplete(aGuid, aScale);
+    MOZ_ASSERT(rootController != this);
+    if (rootController != this) {
+      rootController->NotifyScaleGestureComplete(aGuid, aScale);
+    }
   }
 }
 

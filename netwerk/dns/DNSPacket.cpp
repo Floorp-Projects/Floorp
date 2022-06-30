@@ -745,7 +745,13 @@ nsresult DNSPacket::DecodeInternal(
             // For ServiceMode SVCB RRs, if TargetName has the value ".",
             // then the owner name of this record MUST be used as
             // the effective TargetName.
-            parsed.mSvcDomainName = qname;
+            // When the qname is port prefix name, we need to use the
+            // original host name as TargetName.
+            if (mOriginHost) {
+              parsed.mSvcDomainName = *mOriginHost;
+            } else {
+              parsed.mSvcDomainName = qname;
+            }
           }
 
           available -= (svcbIndex - index);

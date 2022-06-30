@@ -160,6 +160,7 @@ const MESSAGES = () => [
     content: {
       layout: "icon_and_message",
       category: "cfrFeatures",
+      bucket_id: "PERSONALIZED_CFR_MESSAGE",
       notification_text: "Personalized CFR Recommendation",
       heading_text: { string_id: "cfr-doorhanger-bookmark-fxa-header" },
       info_icon: {
@@ -635,8 +636,6 @@ const MESSAGES = () => [
       promoEnabled: true,
       promoType: "VPN",
       infoEnabled: true,
-      infoIcon: "",
-      infoTitle: "",
       infoBody: "fluent:about-private-browsing-info-description-private-window",
       infoLinkText: "fluent:about-private-browsing-learn-more-link",
       infoTitleEnabled: false,
@@ -647,7 +646,16 @@ const MESSAGES = () => [
       promoTitle: "fluent:about-private-browsing-hide-activity-1",
       promoTitleEnabled: true,
       promoImageLarge: "chrome://browser/content/assets/moz-vpn.svg",
+      promoButton: {
+        action: {
+          type: "OPEN_URL",
+          data: {
+            args: "https://vpn.mozilla.org/",
+          },
+        },
+      },
     },
+    groups: ["panel-test-provider"],
     targeting: "region != 'CN' && !hasActiveEnterprisePolicies",
     frequency: { lifetime: 3 },
   },

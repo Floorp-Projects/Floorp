@@ -1,4 +1,6 @@
 {
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "file:///Spotlight.schema.json",
   "title": "Spotlight",
   "description": "A template with an image, title, content and two buttons.",
   "version": "1.1.0",
@@ -282,7 +284,8 @@
       "description": "A JEXL expression representing targeting information"
     },
     "template": {
-      "type": "string"
+      "type": "string",
+      "const": "spotlight"
     },
     "trigger": {
       "type": "object",
@@ -304,5 +307,5 @@
     }
   },
   "additionalProperties": true,
-  "required": ["id", "groups", "content", "targeting", "template", "trigger"]
+  "required": ["id", "content", "targeting", "template"]
 }

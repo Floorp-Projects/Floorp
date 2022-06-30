@@ -40,7 +40,7 @@ async function renderInfo({
   infoIcon,
 } = {}) {
   const container = document.querySelector(".info");
-  if (infoEnabled === false) {
+  if (!infoEnabled) {
     container.remove();
     return;
   }

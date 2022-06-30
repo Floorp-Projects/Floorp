@@ -1,6 +1,7 @@
 root:
   items:
     - type: scroll-frame
+      id: 2
       bounds: [10, 10, 50, 50]
       content-size: [100, 100]
       clip-to-frame: true
@@ -8,7 +9,9 @@ root:
         - type: rect
           bounds: [10, 10, 500, 500]
           color: green
+          clip-chain: [2]
     - type: scroll-frame
+      id: 3
       bounds: [70, 10, 50, 50]
       content-size: [100, 100]
       clip-to-frame: true
@@ -16,3 +19,4 @@ root:
         - type: rect
           bounds: [70, 10, 100, 100]
           color: green
+          clip-chain: [3]

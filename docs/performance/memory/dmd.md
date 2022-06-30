@@ -1,4 +1,4 @@
-# DMD
+# Dark Matter Detector (DMD)
 
 DMD (short for "dark matter detector") is a heap profiler within
 Firefox. It has four modes.
@@ -35,19 +35,19 @@ running. For instance, on OSX, you can run something like:
 
     DMD=1 /Applications/Firefox\ Nightly.app/Contents/MacOS/firefox
 
-You can tell it is working by going to about:memory and looking for
+You can tell it is working by going to `about:memory` and looking for
 "Save DMD Output". If DMD has been properly enabled, the "Save"
 button won't be grayed out. Look at the "Trigger" section below to
 see the full list of ways to get a DMD report once you have it
-activated. Note that stack information you get will likely be less
+activated. Note that the stack information you get will likely be less
 detailed, due to being unable to symbolicate. You will be able to get
 function names, but not line numbers.
 
-### Desktop Firefox (Linux)
+### Desktop Firefox
 
 #### Build
 
-Build Firefox with these options:
+Build Firefox with this option added to your mozconfig:
 
     ac_add_options --enable-dmd
 
@@ -57,20 +57,40 @@ pushing.
 
 #### Launch
 
-Use `mach run --dmd`; use `--mode` to choose the mode. Add `--debug` to
-run under gdb.
+Use `mach run --dmd`; use `--mode` to choose the mode.
+
+On a Windows build done by the try server, [these
+instructions](https://bugzilla.mozilla.org/show_bug.cgi?id=936784#c69) from
+2013 may or may not be useful.
 
 #### Trigger
 
-There are three ways to trigger a DMD snapshot.
+There are a few ways to trigger a DMD snapshot. Most of these will also
+first get a memory report. When DMD is working on writing its output, it
+will print logging like this:
 
-1.  Visit about:memory and click the DMD button (depending on how old
-    your build is, it might be labelled "Save" or "Analyze reports"
-    or "DMD"). The button won't be present in non-DMD builds, and
-    will be grayed out in DMD builds if DMD isn't enabled at start-up.
+    DMD[5222] opened /tmp/dmd-1414556492-5222.json.gz for writing
+    DMD[5222] Dump 1 {
+    DMD[5222]   Constructing the heap block list...
+    DMD[5222]   Constructing the stack trace table...
+    DMD[5222]   Constructing the stack frame table...
+    DMD[5222] }
+
+You'll see separate output for each process. This step can take 10 or
+more seconds and may make Firefox freeze temporarily.
+
+If you see the "opened" line, it tells you where the file was saved.
+It's always in a temp directory, and the filenames are always of the
+form dmd-<pid>.
+
+The ways to trigger a DMD snapshot are:
+
+1.  Visit about:memory and click the "Save" button under "Save DMD output".
+    The button won't be present in non-DMD builds, and will be grayed out
+    in DMD builds if DMD isn't enabled at start-up.
 
 2.  If you wish to trigger DMD dumps from within C++ or JavaScript code,
-    you can use `nsIMemoryInfoDumper.dumpMemoryToTempDir`. For example,
+    you can use `nsIMemoryInfoDumper.dumpMemoryInfoToTempDir`. For example,
     from JavaScript code you can do the following.
 
         const Cc = Components.classes;
@@ -85,84 +105,48 @@ There are three ways to trigger a DMD snapshot.
     be anonymized; and `minimize` is a boolean that indicates if memory
     usage should be minimized first.
 
-3.  (Linux only) You can send signal 34 to the firefox process, e.g.
+3.  On Linux, you can send signal 34 to the firefox process, e.g.
     with the following command.
 
         $ killall -34 firefox
 
-Each one of these steps triggers all the memory reporters and then DMD
-analyzes the reports, printing commentary like this:
+4. The `MOZ_DMD_SHUTDOWN_LOG` environment variable, if set, triggers a DMD
+   run at shutdown; its value must be a directory where the logs will be
+   placed. This is mostly useful for debugging leaks. Which processes get
+   logged is controlled by the `MOZ_DMD_LOG_PROCESS` environment variable.
+   If this is not set, it will log all processes. It can be set to any valid
+   value of `XRE_GetProcessTypeString()` and will log only those processes.
+   For instance, if set to `default` it will only log the parent process. If
+   set to `tab`, it will log content processes only.
 
-    DMD[5222] opened /tmp/dmd-1414556492-5222.json.gz for writing
-    DMD[5222] Dump 1 {
-    DMD[5222]   Constructing the heap block list...
-    DMD[5222]   Constructing the stack trace table...
-    DMD[5222]   Constructing the stack frame table...
-    DMD[5222] }
+   For example, if you have
 
-In an e10s-enabled build, you'll see separate output for each process.
-This step can take 10 or more seconds and may make Firefox freeze
-temporarily.
+       MOZ_DMD_SHUTDOWN_LOG=~/dmdlogs/ MOZ_DMD_LOG_PROCESS=tab
 
-If you see the "opened" line, it tells you where the file was saved.
-It's always in a temp directory, and the filenames are always of the
-form dmd-<pid>.
+   then DMD will create logs at shutdown for content processes and save them to
+   `~/dmdlogs/`.
 
-### Desktop Firefox (Mac)
+**NOTE:**
 
-#### Build
+-   To dump DMD data from content processes, you'll need to disable the
+    sandbox with `MOZ_DISABLE_CONTENT_SANDBOX=1`.
+-   MOZ_DMD_SHUTDOWN_LOG must (currently) include the trailing separator
+    (\'\'/\")
 
-Build with these options:
-
-    ac_add_options --enable-dmd
-
-If building via try server, modify
-`browser/config/mozconfigs/macosx64/common-opt` or a similar file before
-pushing.
-
-#### Launch
-
-Use `mach run --dmd; `use `--mode` to choose the mode. Add `--debug` to
-run under lldb.
-
-#### Trigger
-
-Follow the [Trigger instructions for Linux](#Trigger_7). Note that on
-Mac this step can take 30+ seconds.
-
-### Desktop Firefox (Windows)
-
-#### Build
-
-Build with these options:
-
-    ac_add_options --enable-dmd
-
-If building via try server, modify
-`browser/config/mozconfigs/win32/common-opt`. Also, add this line to
-`build/mozconfig.common`:
-
-    MOZ_CRASHREPORTER_UPLOAD_FULL_SYMBOLS=1
-
-#### Launch
-
-On a local build, use `mach run --dmd`; use `--mode` to choose the mode.
-
-On a build done by the try server, follow [these
-instructions](https://bugzilla.mozilla.org/show_bug.cgi?id=936784#c69){.external
-.text} instead.
-
-#### Trigger
-
-Follow the [Trigger instructions for Linux]
 
 ### Fennec
 
-::: {.note}
+**NOTE:**
+
+You'll note from the name of this section being "Fennec" that these instructions
+are very old. Hopefully they'll be more useful than not having them.
+
+**NOTE:**
+
 In order to use DMD on Fennec you will need root access on the Android
 device. Instructions on how to root your device is outside the scope of
 this document.
-:::
+
 
 #### Build
 
@@ -256,7 +240,7 @@ information. In a local build, `dmd.py` will be located in the directory
 `$OBJDIR/dist/bin/`.
 
 Some platforms (Linux, Mac, Android) require stack fixing, which adds
-missing filename, function name and line number information. This will
+missing filenames, function names and line number information. This will
 occur automatically the first time you run `dmd.py` on the output file.
 This can take 10s of seconds or more to complete. (This will fail if
 your build does not contain symbols. However, if you have crash reporter
@@ -450,29 +434,6 @@ The options may also be put in the environment variable DMD, or set DMD
 to 1 to enable DMD with default options (dark-matter and partial
 stacks).
 
-The `MOZ_DMD_SHUTDOWN_LOG` environment variable, if set, triggers a DMD
-run at shutdown; its value must be a directory where the logs will be
-placed. Which processes get logged is controlled by the
-`MOZ_DMD_LOG_PROCESS` environment variable, which can take the following
-values.
-
--   Unset: log all processes.
--   "`default`": log the parent process only.
--   "`tab`": log content processes only.
-
-For example, if you have
-
-    MOZ_DMD_SHUTDOWN_LOG=~/dmdlogs/ MOZ_DMD_LOG_PROCESS=tab
-
-then DMD logs for content processes will be saved to `~/dmdlogs/`.
-
-**NOTE:**
-
--   To dump DMD data from Content processes, you'll need to disable the
-    sandbox
--   MOZ_DMD_SHUTDOWN_LOG must (currently) include the trailing separator
-    (\'\'/\")
-
 ### Post-processing
 
 `dmd.py` also takes options that control how it works. Run `dmd.py -h`
@@ -486,7 +447,7 @@ for documentation. The following options are the most interesting ones.
     more context. There is no single best value, but values in the range
     2..10 are often good. The maximum is 24.
 
--   `-a` / `--ignore-alloc-frames`. Many allocation stack traces start
+-   `-a` / `--ignore-alloc-fns`. Many allocation stack traces start
     with multiple frames that mention allocation wrapper functions, e.g.
     `js_calloc()` calls `replace_calloc()`. This option filters these
     out. It often helps improve the quality of the output when using a

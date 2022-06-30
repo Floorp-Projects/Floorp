@@ -469,9 +469,11 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
     // and return.  otherwise, add ourselves as first pending
     // callback, and proceed to do the lookup.
 
+    Maybe<nsCString> originHost;
     if (StaticPrefs::network_dns_port_prefixed_qname_https_rr() &&
         type == nsIDNSService::RESOLVE_TYPE_HTTPSSVC && aPort != -1 &&
         aPort != 443) {
+      originHost = Some(host);
       host = nsPrintfCString("_%d._https.%s", aPort, host.get());
       LOG(("  Using port prefixed host name [%s]", host.get()));
     }
@@ -508,6 +510,11 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
     MOZ_ASSERT(rec, "Record should not be null");
     MOZ_ASSERT((IS_ADDR_TYPE(type) && rec->IsAddrRecord() && addrRec) ||
                (IS_OTHER_TYPE(type) && !rec->IsAddrRecord()));
+
+    if (IS_OTHER_TYPE(type) && originHost) {
+      RefPtr<TypeHostRecord> typeRec = do_QueryObject(rec);
+      typeRec->mOriginHost = std::move(originHost);
+    }
 
     if (excludedFromTRR) {
       rec->RecordReason(TRRSkippedReason::TRR_EXCLUDED);

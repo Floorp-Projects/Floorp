@@ -21,3 +21,4 @@ root:
                   bounds: [0, 0, 128, 128]
                   type: rect
                   color: red
+                  clip-chain: [2]

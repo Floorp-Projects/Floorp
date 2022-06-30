@@ -496,7 +496,11 @@ impl YamlFrameReader {
         }
     }
 
-    fn to_clip_chain_id(&self, item: &Yaml) -> Option<ClipChainId> {
+    fn to_clip_chain_id(
+        &self,
+        item: &Yaml,
+        builder: &mut DisplayListBuilder,
+    ) -> Option<ClipChainId> {
         match *item {
             Yaml::Integer(value) => {
                 let clip_id = self.user_clip_id_map[&(value as u64)];
@@ -505,20 +509,32 @@ impl YamlFrameReader {
                     ClipId::Clip(..) => panic!("bug: must be a valid clip-chain id"),
                 }
             }
+            Yaml::Array(ref array) => {
+                let clip_ids: Vec<ClipId> = array
+                    .iter()
+                    .map(|id| {
+                        let id = id.as_i64().expect("invalid clip id") as u64;
+                        self.user_clip_id_map[&id]
+                    })
+                    .collect();
+
+                Some(builder.define_clip_chain(None, clip_ids))
+            }
             _ => None,
         }
     }
 
-    fn to_spatial_id(&self, item: &Yaml, pipeline_id: PipelineId) -> SpatialId {
+    fn to_spatial_id(&self, item: &Yaml, pipeline_id: PipelineId) -> Option<SpatialId> {
         match *item {
-            Yaml::Integer(value) => self.user_spatial_id_map[&(value as u64)],
+            Yaml::Integer(value) => Some(self.user_spatial_id_map[&(value as u64)]),
             Yaml::String(ref id_string) if id_string == "root-reference-frame" =>
-                SpatialId::root_reference_frame(pipeline_id),
+                Some(SpatialId::root_reference_frame(pipeline_id)),
             Yaml::String(ref id_string) if id_string == "root-scroll-node" =>
-                SpatialId::root_scroll_node(pipeline_id),
+                Some(SpatialId::root_scroll_node(pipeline_id)),
+            Yaml::BadValue => None,
             _ => {
                 println!("Unable to parse SpatialId {:?}", item);
-                SpatialId::root_reference_frame(pipeline_id)
+                None
             }
         }
     }
@@ -546,7 +562,7 @@ impl YamlFrameReader {
         match *item {
             Yaml::BadValue => (None, None),
             Yaml::Array(ref array) if array.len() == 2 => {
-                let scroll_id = self.to_spatial_id(&array[0], pipeline_id);
+                let scroll_id = self.to_spatial_id(&array[0], pipeline_id).expect("unknown spatial id");
                 let clip_id = self.to_clip_id(&array[1], pipeline_id);
                 (clip_id, Some(scroll_id))
             }
@@ -1577,10 +1593,15 @@ impl YamlFrameReader {
         for item in yaml_items {
             let item_type = Self::get_item_type_from_yaml(item);
 
-            let (set_clip_id, set_scroll_id) = self.to_clip_and_scroll_info(
+            let (set_clip_id, mut set_scroll_id) = self.to_clip_and_scroll_info(
                 &item["clip-and-scroll"],
                 dl.pipeline_id
             );
+
+            if let Some(id) = self.to_spatial_id(&item["spatial-id"], dl.pipeline_id) {
+                set_scroll_id = Some(id);
+            }
+
             if let Some(clip_id) = set_clip_id {
                 self.clip_id_stack.push(clip_id);
             }
@@ -1595,7 +1616,7 @@ impl YamlFrameReader {
                 mut clip_id,
             } = self.top_space_and_clip();
 
-            if let Some(clip_chain_id) = self.to_clip_chain_id(&item["clip-chain"]) {
+            if let Some(clip_chain_id) = self.to_clip_chain_id(&item["clip-chain"], dl) {
                 clip_id = ClipId::ClipChain(clip_chain_id);
             }
 
@@ -1708,7 +1729,10 @@ impl YamlFrameReader {
 
         let clip_id = if clip_to_frame {
             Some(dl.define_clip_rect(
-                &self.top_space_and_clip(),
+                &SpaceAndClipInfo {
+                    clip_id: ClipId::ClipChain(ClipChainId::INVALID),
+                    spatial_id: self.top_space_and_clip().spatial_id,
+                },
                 clip_rect,
             ))
         } else {
@@ -1734,13 +1758,7 @@ impl YamlFrameReader {
 
         if let Some(yaml_items) = yaml["items"].as_vec() {
             self.spatial_id_stack.push(spatial_id);
-            if let Some(clip_id) = clip_id {
-                self.clip_id_stack.push(clip_id);
-            }
             self.add_display_list_items_from_yaml(dl, wrench, yaml_items);
-            if clip_id.is_some() {
-                self.clip_id_stack.pop().unwrap();
-            }
             self.spatial_id_stack.pop().unwrap();
         }
     }
@@ -2017,7 +2035,7 @@ impl YamlFrameReader {
                 false
             };
 
-        let clip_chain_id = self.to_clip_chain_id(&yaml["clip-chain"]);
+        let clip_chain_id = self.to_clip_chain_id(&yaml["clip-chain"], dl);
 
         let transform_style = yaml["transform-style"]
             .as_transform_style()

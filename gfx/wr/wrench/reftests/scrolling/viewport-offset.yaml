@@ -8,6 +8,7 @@ root:
       bounds: 0 100 0 0
       items:
         - type: scroll-frame
+          id: 2
           bounds: 0 0 1000 1000
           clip-to-frame: true
           items:
@@ -19,3 +20,4 @@ root:
                  - type: rect
                    bounds: 0 -50 1000 100
                    color: red
+                   clip-chain: [2]
