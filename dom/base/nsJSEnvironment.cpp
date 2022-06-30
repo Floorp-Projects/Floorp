@@ -1803,8 +1803,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       break;
 
     case JS::GC_SLICE_END:
-      sScheduler.NoteGCSliceEnd(aDesc.lastSliceEnd(aCx) -
-                                aDesc.lastSliceStart(aCx));
+      sScheduler.NoteGCSliceEnd(aDesc.lastSliceStart(aCx),
+                                aDesc.lastSliceEnd(aCx));
 
       if (sShuttingDown) {
         sScheduler.KillGCRunner();

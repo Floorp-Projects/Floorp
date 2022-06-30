@@ -289,7 +289,7 @@ class CCGCScheduler {
                  mozilla::TimeDuration aMaxSliceTime);
 
   // A single slice has completed.
-  void NoteGCSliceEnd(TimeDuration aSliceDuration);
+  void NoteGCSliceEnd(TimeStamp aStart, TimeStamp aEnd);
 
   bool GCRunnerFired(TimeStamp aDeadline);
   bool GCRunnerFiredDoGC(TimeStamp aDeadline, const GCRunnerStep& aStep);
@@ -509,7 +509,10 @@ class CCGCScheduler {
 
   uint32_t mCleanupsSinceLastGC = UINT32_MAX;
 
-  TimeDuration mGCUnnotifiedTotalTime;
+  // If the GC runner triggers a GC slice, this will be set to the idle deadline
+  // or the null timestamp if non-idle. It will be Nothing at the end of an
+  // internally-triggered slice.
+  mozilla::Maybe<TimeStamp> mTriggeredGCDeadline;
 
   RefPtr<IdleTaskRunner> mGCRunner;
   RefPtr<IdleTaskRunner> mCCRunner;
