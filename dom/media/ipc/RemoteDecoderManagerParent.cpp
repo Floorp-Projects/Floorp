@@ -23,7 +23,7 @@
 #include "mozilla/layers/VideoBridgeChild.h"
 #include "mozilla/layers/VideoBridgeParent.h"
 
-#ifdef MOZ_WMF
+#ifdef MOZ_WMF_MEDIA_ENGINE
 #  include "MFMediaEngineParent.h"
 #endif
 
@@ -225,7 +225,7 @@ bool RemoteDecoderManagerParent::DeallocPRemoteDecoderParent(
 }
 
 PMFMediaEngineParent* RemoteDecoderManagerParent::AllocPMFMediaEngineParent() {
-#ifdef MOZ_WMF
+#ifdef MOZ_WMF_MEDIA_ENGINE
   return new MFMediaEngineParent(this, sRemoteDecoderManagerParentThread);
 #else
   return nullptr;
@@ -234,7 +234,7 @@ PMFMediaEngineParent* RemoteDecoderManagerParent::AllocPMFMediaEngineParent() {
 
 bool RemoteDecoderManagerParent::DeallocPMFMediaEngineParent(
     PMFMediaEngineParent* actor) {
-#ifdef MOZ_WMF
+#ifdef MOZ_WMF_MEDIA_ENGINE
   MFMediaEngineParent* parent = static_cast<MFMediaEngineParent*>(actor);
   parent->Destroy();
 #endif
