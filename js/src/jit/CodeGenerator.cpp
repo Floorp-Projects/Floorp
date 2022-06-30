@@ -12199,44 +12199,46 @@ void CodeGenerator::visitRest(LRest* lir) {
     masm.movePtr(ImmPtr(nullptr), temp2);
   }
 
+  // Set temp1 to the address of the first actual argument.
   size_t actualsOffset = JitFrameLayout::offsetOfActualArgs();
-  masm.mov(FramePointer, temp1);
+  masm.computeEffectiveAddress(Address(FramePointer, actualsOffset), temp1);
 
-  // Compute numActuals - numFormals.
+  // Compute array length: max(numActuals - numFormals, 0).
+  Register lengthReg;
   if (numFormals) {
+    lengthReg = temp0;
     Label emptyLength, joinLength;
-    masm.movePtr(numActuals, temp0);
-    masm.branch32(Assembler::LessThanOrEqual, temp0, Imm32(numFormals),
+    masm.branch32(Assembler::LessThanOrEqual, numActuals, Imm32(numFormals),
                   &emptyLength);
     {
-      masm.sub32(Imm32(numFormals), temp0);
+      masm.move32(numActuals, lengthReg);
+      masm.sub32(Imm32(numFormals), lengthReg);
 
-      // Compute actuals() + numFormals.
-      masm.addPtr(Imm32(sizeof(Value) * numFormals + actualsOffset), temp1);
+      // Skip formal arguments.
+      masm.addPtr(Imm32(sizeof(Value) * numFormals), temp1);
 
       masm.jump(&joinLength);
     }
     masm.bind(&emptyLength);
     {
-      masm.move32(Imm32(0), temp0);
+      masm.move32(Imm32(0), lengthReg);
 
-      // Point to the start of actuals() when the rest-array length is zero. We
-      // don't use |actuals() + numFormals| because |numFormals| can be any
-      // non-negative int32 value when this MRest was created from scalar
-      // replacement optimizations. And it seems questionable to compute a
-      // Value* pointer which points to who knows where.
-      masm.addPtr(Imm32(actualsOffset), temp1);
+      // Leave temp1 pointed to the start of actuals() when the rest-array
+      // length is zero. We don't use |actuals() + numFormals| because
+      // |numFormals| can be any non-negative int32 value when this MRest was
+      // created from scalar replacement optimizations. And it seems
+      // questionable to compute a Value* pointer which points to who knows
+      // where.
     }
     masm.bind(&joinLength);
   } else {
-    // Directly compute both values when there are no formals.
-    masm.addPtr(Imm32(actualsOffset), temp1);
-    masm.move32(numActuals, temp0);
+    // Use numActuals directly when there are no formals.
+    lengthReg = numActuals;
   }
 
   pushArg(temp2);
   pushArg(temp1);
-  pushArg(temp0);
+  pushArg(lengthReg);
 
   using Fn = JSObject* (*)(JSContext*, uint32_t, Value*, HandleObject);
   callVM<Fn, InitRestParameter>(lir);
