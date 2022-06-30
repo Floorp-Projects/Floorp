@@ -73,7 +73,8 @@ class MediaSourceDecoder : public MediaDecoder,
   void NotifyDataArrived();
 
  private:
-  MediaDecoderStateMachineBase* CreateStateMachine();
+  MediaDecoderStateMachineBase* CreateStateMachine(
+      bool aDisableExternalEngine) override;
   void DoSetMediaSourceDuration(double aDuration);
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);
   bool CanPlayThroughImpl() override;
