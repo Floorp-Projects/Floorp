@@ -207,15 +207,7 @@ class DiscoveryStreamFeed {
     return this._recommendationProvider;
   }
 
-  setupPrefs(isStartup = false) {
-    const pocketNewtabExperiment = lazy.ExperimentAPI.getExperiment({
-      featureId: "pocketNewtab",
-    });
-
-    let utmSource = "pocket-newtab";
-    let utmCampaign = pocketNewtabExperiment?.slug;
-    let utmContent = pocketNewtabExperiment?.branch?.slug;
-
+  setupConfig(isStartup = false) {
     // Send the initial state of the pref on our reducer
     this.store.dispatch(
       ac.BroadcastToContent({
@@ -226,6 +218,17 @@ class DiscoveryStreamFeed {
         },
       })
     );
+  }
+
+  setupPrefs(isStartup = false) {
+    const pocketNewtabExperiment = lazy.ExperimentAPI.getExperiment({
+      featureId: "pocketNewtab",
+    });
+
+    let utmSource = "pocket-newtab";
+    let utmCampaign = pocketNewtabExperiment?.slug;
+    let utmContent = pocketNewtabExperiment?.branch?.slug;
+
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.DISCOVERY_STREAM_EXPERIMENT_DATA,
@@ -239,9 +242,14 @@ class DiscoveryStreamFeed {
         },
       })
     );
+
     const nimbusConfig = this.store.getState().Prefs.values?.pocketConfig || {};
+    // We don't BroadcastToContent for this, as the changes may
+    // shift around elements on an open newtab the user is currently reading.
+    // So instead we AlsoToPreloaded so the next tab is updated.
+    // This is because setupPrefs is called by the system and not a user interaction.
     this.store.dispatch(
-      ac.BroadcastToContent({
+      ac.AlsoToPreloaded({
         type: at.DISCOVERY_STREAM_PREFS_SETUP,
         data: {
           recentSavesEnabled: nimbusConfig.recentSavesEnabled,
@@ -251,6 +259,7 @@ class DiscoveryStreamFeed {
         },
       })
     );
+
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE,
@@ -1572,6 +1581,7 @@ class DiscoveryStreamFeed {
     this.store.dispatch(
       ac.BroadcastToContent({ type: at.DISCOVERY_STREAM_LAYOUT_RESET })
     );
+    this.setupPrefs(false /* isStartup */);
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE,
@@ -1744,6 +1754,7 @@ class DiscoveryStreamFeed {
       case at.INIT:
         // During the initialization of Firefox:
         // 1. Set-up listeners and initialize the redux state for config;
+        this.setupConfig(true /* isStartup */);
         this.setupPrefs(true /* isStartup */);
         // 2. If config.enabled is true, start loading data.
         if (this.config.enabled) {
@@ -1947,7 +1958,8 @@ class DiscoveryStreamFeed {
       case at.PREF_CHANGED:
         await this.onPrefChangedAction(action);
         if (action.data.name === "pocketConfig") {
-          await this.onPocketConfigChanged(action.data.value);
+          this.onPocketConfigChanged();
+          this.setupPrefs(false /* isStartup */);
         }
         break;
     }

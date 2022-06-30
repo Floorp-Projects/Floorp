@@ -196,7 +196,9 @@ export class _CardGrid extends React.PureComponent {
   renderCards() {
     let { items } = this.props;
     const { DiscoveryStream } = this.props;
+    const prefs = this.props.Prefs.values;
     const { recentSavesEnabled } = DiscoveryStream;
+    const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
     const {
       hybridLayout,
       hideCardBackground,
@@ -322,7 +324,7 @@ export class _CardGrid extends React.PureComponent {
 
     let moreRecsHeader = "";
     // For now this is English only.
-    if (recentSavesEnabled || (essentialReadsHeader && editorsPicksHeader)) {
+    if (showRecentSaves || (essentialReadsHeader && editorsPicksHeader)) {
       let spliceAt = 6;
       // For 4 card row layouts, second row is 8 cards, and regular it is 6 cards.
       if (fourCardLayout) {
@@ -365,7 +367,7 @@ export class _CardGrid extends React.PureComponent {
             {essentialReadsCards}
           </GridContainer>
         )}
-        {recentSavesEnabled && (
+        {showRecentSaves && (
           <RecentSavesContainer
             className={className}
             dispatch={this.props.dispatch}
@@ -441,5 +443,6 @@ _CardGrid.defaultProps = {
 };
 
 export const CardGrid = connect(state => ({
+  Prefs: state.Prefs,
   DiscoveryStream: state.DiscoveryStream,
 }))(_CardGrid);
