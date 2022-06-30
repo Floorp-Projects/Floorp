@@ -10,7 +10,7 @@
 export { addToTree } from "./addToTree";
 export { collapseTree } from "./collapseTree";
 export { getDirectories, findSourceTreeNodes } from "./getDirectories";
-export { getFilenameFromPath, getURL } from "./getURL";
+export { getFilenameFromPath, getDisplayURL } from "./getURL";
 export { createTree, updateTree } from "./updateTree";
 
 export * from "./utils";

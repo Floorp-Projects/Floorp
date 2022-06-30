@@ -37,6 +37,12 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
+            "displayURL": Object {
+              "filename": "source1",
+              "group": "",
+              "path": "source1",
+              "search": "",
+            },
             "extensionName": null,
             "id": "1",
             "isBlackBoxed": false,
@@ -85,6 +91,12 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
+            "displayURL": Object {
+              "filename": "source1",
+              "group": "",
+              "path": "source1",
+              "search": "",
+            },
             "extensionName": null,
             "id": "1",
             "isBlackBoxed": false,
@@ -136,6 +148,12 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
+            "displayURL": Object {
+              "filename": "source1",
+              "group": "",
+              "path": "source1",
+              "search": "",
+            },
             "extensionName": null,
             "id": "1",
             "isBlackBoxed": false,
@@ -184,6 +202,12 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
+            "displayURL": Object {
+              "filename": "source1",
+              "group": "",
+              "path": "source1",
+              "search": "",
+            },
             "extensionName": null,
             "id": "1",
             "isBlackBoxed": false,

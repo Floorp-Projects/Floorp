@@ -2,6 +2,12 @@
 
 exports[`sources - pretty print returns a pretty source for a minified file 1`] = `
 Object {
+  "displayURL": Object {
+    "filename": "base.js:formatted",
+    "group": "localhost:8000",
+    "path": "/examples/base.js:formatted",
+    "search": "",
+  },
   "extensionName": null,
   "id": "base.js/originalSource-36c718d4bde9a75edb388ff7733efe7f",
   "isBlackBoxed": false,

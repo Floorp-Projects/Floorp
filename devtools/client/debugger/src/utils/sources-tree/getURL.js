@@ -24,32 +24,19 @@ export function getFilenameFromPath(pathname) {
 const NoDomain = "(no domain)";
 const def = { path: "", search: "", group: "", filename: "" };
 
-export function getURL(source) {
-  const { url } = source;
-  if (!url) {
-    return def;
-  }
-  return getURLInternal(url);
-}
-
 /**
  * Compute the URL which may be displayed in the Source Tree.
  *
  * @param {String} url
  *        The source absolute URL as a string
- * @param {String} defaultDomain
- *        The host of the currently debugged web page.
  * @return URL Object
  *        A URL object to represent this source.
  */
-export function getDisplayURL(url, defaultDomain = "") {
+export function getDisplayURL(url) {
   if (!url) {
     return def;
   }
-  return getURLInternal(url, defaultDomain);
-}
 
-function getURLInternal(url, defaultDomain) {
   const { pathname, search, protocol, host } = parse(url);
   const filename = getUnicodeUrlPath(getFilenameFromPath(pathname));
 
@@ -112,7 +99,7 @@ function getURLInternal(url, defaultDomain) {
           ...def,
           path: pathname,
           search,
-          group: defaultDomain || "",
+          group: "",
           filename,
         };
       }

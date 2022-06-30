@@ -178,6 +178,12 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
   openConditionalPanel={[MockFunction]}
   source={
     Object {
+      "displayURL": Object {
+        "filename": "url",
+        "group": "",
+        "path": "url",
+        "search": "",
+      },
       "extensionName": null,
       "id": "source",
       "isBlackBoxed": false,
@@ -375,6 +381,12 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
   openConditionalPanel={[MockFunction]}
   source={
     Object {
+      "displayURL": Object {
+        "filename": "url",
+        "group": "",
+        "path": "url",
+        "search": "",
+      },
       "extensionName": null,
       "id": "source",
       "isBlackBoxed": false,
@@ -572,6 +584,12 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
   openConditionalPanel={[MockFunction]}
   source={
     Object {
+      "displayURL": Object {
+        "filename": "url",
+        "group": "",
+        "path": "url",
+        "search": "",
+      },
       "extensionName": null,
       "id": "source",
       "isBlackBoxed": false,

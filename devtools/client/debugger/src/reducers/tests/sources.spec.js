@@ -8,11 +8,13 @@ import { initialThreadsState } from "../threads";
 import updateSourceActors from "../source-actors";
 import { prefs } from "../../utils/prefs";
 import { makeMockSource, mockcx, makeMockState } from "../../utils/test-mockup";
+import { getDisplayURL } from "../../utils/sources-tree/getURL";
 
 const extensionSource = {
   ...makeMockSource(),
   id: "extensionId",
   url: "http://example.com/script.js",
+  displayURL: getDisplayURL("http://example.com/script.js"),
   thread: "foo",
 };
 
@@ -20,6 +22,7 @@ const firefoxExtensionSource = {
   ...makeMockSource(),
   id: "firefoxExtension",
   url: "moz-extension://id/js/content.js",
+  displayURL: getDisplayURL("moz-extension://id/js/content.js"),
   isExtension: true,
   thread: "foo",
 };
@@ -29,6 +32,7 @@ const chromeExtensionSource = {
   id: "chromeExtension",
   isExtension: true,
   url: "chrome-extension://id/js/content.js",
+  displayURL: getDisplayURL("chrome-extension://id/js/content.js"),
   thread: "foo",
 };
 
