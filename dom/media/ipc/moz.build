@@ -54,14 +54,13 @@ SOURCES += [
     "RemoteVideoDecoder.cpp",
 ]
 
-if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
+if CONFIG["MOZ_WMF"]:
     IPDL_SOURCES += [
         "PMFMediaEngine.ipdl",
     ]
     SOURCES += [
         "MFMediaEngineChild.cpp",
         "MFMediaEngineParent.cpp",
-        "MFMediaEngineUtils.cpp",
     ]
     EXPORTS.mozilla += [
         "MFMediaEngineChild.h",

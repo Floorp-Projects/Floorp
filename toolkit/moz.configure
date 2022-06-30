@@ -635,18 +635,8 @@ def wmf(value, target):
         return True
 
 
-@depends(c_compiler, when=wmf)
-def wmfmediaengine(c_compiler):
-    # We have trouble on building media engine on MinGW because of lacking
-    # some headers support for WRL.
-    return c_compiler.type == "clang-cl"
-
-
 set_config("MOZ_WMF", wmf)
 set_define("MOZ_WMF", wmf)
-
-set_config("MOZ_WMF_MEDIA_ENGINE", True, when=wmfmediaengine)
-set_define("MOZ_WMF_MEDIA_ENGINE", True, when=wmfmediaengine)
 
 # FFmpeg H264/AAC Decoding Support
 # ==============================================================

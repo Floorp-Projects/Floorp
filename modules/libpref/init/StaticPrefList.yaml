@@ -9346,18 +9346,6 @@
     value: false
     mirror: always
 
-# Testing purpose, enable video stream for the media engine.
--   name: media.wmf.media-engine.video-output.enabled
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
-
-# Testing purpose, enable media engine on channel decoder as well.
--   name: media.wmf.media-engine.channel-decoder.enabled
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
-
 #endif  # MOZ_WMF
 
 - name: media.decoder-doctor.testing
