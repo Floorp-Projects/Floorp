@@ -832,7 +832,6 @@ add_task(async function checkAllTheFiles() {
     ".mjs",
     ".js",
     ".jsm",
-    ".mjs",
     ".json",
     ".html",
     ".xhtml",
