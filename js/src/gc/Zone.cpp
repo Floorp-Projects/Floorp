@@ -11,7 +11,6 @@
 
 #include "gc/FinalizationObservers.h"
 #include "gc/GCContext.h"
-#include "gc/GCLock.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
 #include "jit/BaselineIC.h"
@@ -64,13 +63,12 @@ void js::ZoneAllocator::updateMemoryCountersOnGCStart() {
   jitHeapSize.updateOnGCStart();
 }
 
-void js::ZoneAllocator::updateGCStartThresholds(GCRuntime& gc,
-                                                const js::AutoLockGC& lock) {
+void js::ZoneAllocator::updateGCStartThresholds(GCRuntime& gc) {
   bool isAtomsZone = JS::Zone::from(this)->isAtomsZone();
   gcHeapThreshold.updateStartThreshold(gcHeapSize.retainedBytes(), gc.tunables,
-                                       gc.schedulingState, isAtomsZone, lock);
-  mallocHeapThreshold.updateStartThreshold(
-      mallocHeapSize.retainedBytes(), gc.tunables, gc.schedulingState, lock);
+                                       gc.schedulingState, isAtomsZone);
+  mallocHeapThreshold.updateStartThreshold(mallocHeapSize.retainedBytes(),
+                                           gc.tunables, gc.schedulingState);
 }
 
 void js::ZoneAllocator::setGCSliceThresholds(GCRuntime& gc,
@@ -199,9 +197,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
              static_cast<JS::shadow::Zone*>(this));
   MOZ_ASSERT_IF(isAtomsZone(), !rt->unsafeAtomsZone());
 
-  // We can't call updateGCStartThresholds until the Zone has been constructed.
-  AutoLockGC lock(rt);
-  updateGCStartThresholds(rt->gc, lock);
+  updateGCStartThresholds(rt->gc);
 }
 
 Zone::~Zone() {

@@ -325,7 +325,6 @@
 
 namespace js {
 
-class AutoLockGC;
 class ZoneAllocator;
 
 namespace gc {
@@ -765,6 +764,9 @@ class HeapThreshold {
         sliceBytes_(SIZE_MAX) {}
 
   // The threshold at which to start a new incremental collection.
+  //
+  // This can be read off main thread during collection, for example by sweep
+  // tasks that resize tables.
   MainThreadOrGCTaskData<size_t> startBytes_;
 
   // The threshold at which start a new non-incremental collection or finish an
@@ -804,13 +806,11 @@ class GCHeapThreshold : public HeapThreshold {
  public:
   void updateStartThreshold(size_t lastBytes,
                             const GCSchedulingTunables& tunables,
-                            const GCSchedulingState& state, bool isAtomsZone,
-                            const AutoLockGC& lock);
+                            const GCSchedulingState& state, bool isAtomsZone);
 
  private:
   static size_t computeZoneTriggerBytes(double growthFactor, size_t lastBytes,
-                                        const GCSchedulingTunables& tunables,
-                                        const AutoLockGC& lock);
+                                        const GCSchedulingTunables& tunables);
 };
 
 // A heap threshold that is calculated as a constant multiple of the retained
@@ -820,13 +820,11 @@ class MallocHeapThreshold : public HeapThreshold {
  public:
   void updateStartThreshold(size_t lastBytes,
                             const GCSchedulingTunables& tunables,
-                            const GCSchedulingState& state,
-                            const AutoLockGC& lock);
+                            const GCSchedulingState& state);
 
  private:
   static size_t computeZoneTriggerBytes(double growthFactor, size_t lastBytes,
-                                        size_t baseBytes,
-                                        const AutoLockGC& lock);
+                                        size_t baseBytes);
 };
 
 // A fixed threshold that's used to determine when we need to do a zone GC based
