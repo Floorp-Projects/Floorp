@@ -604,7 +604,7 @@ bool GCRuntime::wantBackgroundAllocation(const AutoLockGC& lock) const {
   // allocation if we already have some empty chunks or when the runtime has
   // a small heap size (and therefore likely has a small growth rate).
   return allocTask.enabled() &&
-         emptyChunks(lock).count() < tunables.minEmptyChunkCount(lock) &&
+         emptyChunks(lock).count() < minEmptyChunkCount(lock) &&
          (fullChunks(lock).count() + availableChunks(lock).count()) >= 4;
 }
 
