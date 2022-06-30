@@ -183,10 +183,6 @@ add_task(async function testColorwayClosetPrefEnabled() {
 
   let win = await loadInitialView("theme");
   let doc = win.document;
-  ok(
-    doc.head.querySelector("link[href='preview/colorwaycloset.ftl']"),
-    "Expect a link to the colorwaycloset fluent resources to be found"
-  );
 
   // Add mocked fluent resources for the mocked active colorway collection.
   doc.l10n.addResourceIds(["mock-colorwaycloset.ftl"]);
