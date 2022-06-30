@@ -26,6 +26,13 @@ already_AddRefed<PlatformDecoderModule> MFMediaEngineDecoderModule::Create() {
   return module.forget();
 }
 
+/* static */
+bool MFMediaEngineDecoderModule::SupportsConfig(const TrackInfo& aConfig) {
+  RefPtr<MFMediaEngineDecoderModule> module = new MFMediaEngineDecoderModule();
+  return module->SupportInternal(SupportDecoderParams(aConfig), nullptr) !=
+         media::DecodeSupport::Unsupported;
+}
+
 already_AddRefed<MediaDataDecoder>
 MFMediaEngineDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
