@@ -1896,7 +1896,7 @@ JS_PUBLIC_API JSObject* JS::NewExternalArrayBuffer(
   CHECK_THREAD(cx);
 
   MOZ_ASSERT(data);
-  MOZ_ASSERT(nbytes > 0);
+  MOZ_ASSERT(nbytes >= 0);
 
   using BufferContents = ArrayBufferObject::BufferContents;
 
