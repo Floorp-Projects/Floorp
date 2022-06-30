@@ -225,6 +225,8 @@ const ColorwayCloset = {
         break;
       }
     }
+    this.el.setColorwayButton.disabled =
+      this.previousTheme.id == this.selectedColorway.id;
   },
 };
 
