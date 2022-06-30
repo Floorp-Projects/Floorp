@@ -51,19 +51,8 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Decode(
 
   // We don't return a real data, all data would be processed inside the media
   // engine. We return an empty data back instead.
-  DecodedData samples;
-  if (mStream->TrackType() == TrackInfo::TrackType::kAudioTrack) {
-    AudioSampleBuffer data(nullptr, 0);
-    // TODO : use a null data for audio?
-    samples.AppendElement(MakeRefPtr<AudioData>(
-        aSample->mOffset, aSample->mTime, data.Forget(), 1, 1));
-  } else {
-    // Remote video decoder parant will transfer null data to a video data.
-    MOZ_ASSERT(mStream->TrackType() == TrackInfo::TrackType::kVideoTrack);
-    samples.AppendElement(MakeRefPtr<NullData>(aSample->mOffset, aSample->mTime,
-                                               aSample->mDuration));
-  }
-  return DecodePromise::CreateAndResolve(std::move(samples), __func__);
+  MOZ_ASSERT(mFakeDataCreator->Type() == mStream->TrackType());
+  return mFakeDataCreator->Decode(aSample);
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Drain() {
@@ -84,6 +73,7 @@ RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStreamWrapper::Flush() {
         MediaResult(NS_ERROR_FAILURE, "MFMediaEngineStreamWrapper is shutdown"),
         __func__);
   }
+  mFakeDataCreator->Flush();
   return InvokeAsync(mTaskQueue, mStream.Get(), __func__,
                      &MFMediaEngineStream::Flush);
 }
@@ -99,11 +89,33 @@ RefPtr<ShutdownPromise> MFMediaEngineStreamWrapper::Shutdown() {
   }
   mStream = nullptr;
   mTaskQueue = nullptr;
+  mFakeDataCreator = nullptr;
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
 nsCString MFMediaEngineStreamWrapper::GetDescriptionName() const {
   return mStream ? mStream->GetDescriptionName() : nsLiteralCString("none");
+}
+
+MFMediaEngineStreamWrapper::FakeDecodedDataCreator::FakeDecodedDataCreator(
+    const CreateDecoderParams& aParams) {
+  if (aParams.mConfig.IsVideo()) {
+    const VideoInfo& config = aParams.VideoConfig();
+    mDummyDecoder = new DummyMediaDataDecoder(
+        MakeUnique<BlankVideoDataCreator>(config.mDisplay.width,
+                                          config.mDisplay.height,
+                                          aParams.mImageContainer),
+        "blank video data decoder for media engine"_ns, aParams);
+    mType = TrackInfo::TrackType::kVideoTrack;
+  } else if (aParams.mConfig.IsAudio()) {
+    const AudioInfo& config = aParams.AudioConfig();
+    mDummyDecoder = new DummyMediaDataDecoder(
+        MakeUnique<BlankAudioDataCreator>(config.mChannels, config.mRate),
+        "blank audio data decoder for media engine"_ns, aParams);
+    mType = TrackInfo::TrackType::kAudioTrack;
+  } else {
+    MOZ_ASSERT_UNREACHABLE("unexpected config type");
+  }
 }
 
 MFMediaEngineStream::MFMediaEngineStream()
