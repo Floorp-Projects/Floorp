@@ -23,7 +23,7 @@
 #include "nsIObserver.h"
 #include "mozilla/StaticPrefs_media.h"
 
-#ifdef MOZ_WMF_MEDIA_ENGINE
+#ifdef MOZ_WMF
 #  include "MFMediaEngineChild.h"
 #endif
 
@@ -280,7 +280,7 @@ RemoteDecoderManagerChild::CreateAudioDecoder(
 
   bool useUtilityAudioDecoding = StaticPrefs::media_utility_process_enabled() &&
                                  aLocation == RemoteDecodeIn::UtilityProcess;
-#ifdef MOZ_WMF_MEDIA_ENGINE
+#ifdef MOZ_WMF
   // If the media engine Id is specified, using the media engine in the RDD
   // process instead.
   useUtilityAudioDecoding = useUtilityAudioDecoding &&
@@ -591,7 +591,7 @@ PMFMediaEngineChild* RemoteDecoderManagerChild::AllocPMFMediaEngineChild() {
 
 bool RemoteDecoderManagerChild::DeallocPMFMediaEngineChild(
     PMFMediaEngineChild* actor) {
-#ifdef MOZ_WMF_MEDIA_ENGINE
+#ifdef MOZ_WMF
   MFMediaEngineChild* child = static_cast<MFMediaEngineChild*>(actor);
   child->IPDLActorDestroyed();
 #endif

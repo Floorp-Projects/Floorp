@@ -20,11 +20,6 @@ namespace mozilla {
           ("MFMediaEngineWrapper=%p, Id=%" PRId64 ", " msg, this, this->Id(), \
            ##__VA_ARGS__))
 
-#define WLOGV(msg, ...)                                                       \
-  MOZ_LOG(gMFMediaEngineLog, LogLevel::Verbose,                               \
-          ("MFMediaEngineWrapper=%p, Id=%" PRId64 ", " msg, this, this->Id(), \
-           ##__VA_ARGS__))
-
 using media::TimeUnit;
 
 MFMediaEngineChild::MFMediaEngineChild(MFMediaEngineWrapper* aOwner)
@@ -47,63 +42,61 @@ RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
 
   CLOG("Init");
   MOZ_ASSERT(mMediaEngineId == 0);
+  RefPtr<GenericNonExclusivePromise> p =
+      RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded();
   RefPtr<MFMediaEngineChild> self = this;
-  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded()->Then(
+  p = p->Then(
       mManagerThread, __func__,
-      [self, this, aShouldPreload](bool) {
+      [self, this, aShouldPreload](bool) -> RefPtr<GenericNonExclusivePromise> {
         RefPtr<RemoteDecoderManagerChild> manager =
             RemoteDecoderManagerChild::GetSingleton(RemoteDecodeIn::RddProcess);
         if (!manager || !manager->CanSend()) {
-          mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
-          return;
+          return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                             __func__);
         }
 
         mIPDLSelfRef = this;
         Unused << manager->SendPMFMediaEngineConstructor(this);
+
+        RefPtr<GenericNonExclusivePromise::Private> promise =
+            new GenericNonExclusivePromise::Private(__func__);
         MediaEngineInfoIPDL info(aShouldPreload);
-        SendInitMediaEngine(info)
-            ->Then(
-                mManagerThread, __func__,
-                [self, this](uint64_t aId) {
-                  mInitEngineRequest.Complete();
-                  // Id 0 is used to indicate error.
-                  if (aId == 0) {
-                    CLOG("Failed to initialize MFMediaEngineChild");
-                    mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
-                    return;
-                  }
-                  mMediaEngineId = aId;
-                  CLOG("Initialized MFMediaEngineChild");
-                  mInitPromiseHolder.Resolve(true, __func__);
-                },
-                [self,
-                 this](const mozilla::ipc::ResponseRejectReason& aReason) {
-                  mInitEngineRequest.Complete();
-                  CLOG(
-                      "Failed to initialize MFMediaEngineChild due to "
-                      "IPC failure");
-                  mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
-                })
-            ->Track(mInitEngineRequest);
+        SendInitMediaEngine(info)->Then(
+            mManagerThread, __func__,
+            [promise, self, this](uint64_t aId) {
+              // Id 0 is used to indicate error.
+              if (aId == 0) {
+                CLOG("Failed to initialize MFMediaEngineChild");
+                promise->Reject(NS_ERROR_FAILURE, __func__);
+                return;
+              }
+              mMediaEngineId = aId;
+              CLOG("Initialized MFMediaEngineChild");
+              promise->Resolve(true, __func__);
+            },
+            [promise, self,
+             this](const mozilla::ipc::ResponseRejectReason& aReason) {
+              CLOG("Failed to initialize MFMediaEngineChild");
+              promise->Reject(NS_ERROR_FAILURE, __func__);
+            });
+        return promise;
       },
-      [self](nsresult aResult) {
-        self->mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+      [](nsresult aResult) {
+        return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                           __func__);
       });
-  return mInitPromiseHolder.Ensure(__func__);
+  return p;
 }
 
-mozilla::ipc::IPCResult MFMediaEngineChild::RecvRequestSample(TrackType aType,
-                                                              bool aIsEnough) {
+mozilla::ipc::IPCResult MFMediaEngineChild::RecvRequestSample(TrackType aType) {
   AssertOnManagerThread();
   if (!mOwner) {
     return IPC_OK();
   }
   if (aType == TrackType::kVideoTrack) {
-    mOwner->NotifyEvent(aIsEnough ? ExternalEngineEvent::VideoEnough
-                                  : ExternalEngineEvent::RequestForVideo);
+    mOwner->NotifyEvent(ExternalEngineEvent::RequestForVideo);
   } else if (aType == TrackType::kAudioTrack) {
-    mOwner->NotifyEvent(aIsEnough ? ExternalEngineEvent::AudioEnough
-                                  : ExternalEngineEvent::RequestForAudio);
+    mOwner->NotifyEvent(ExternalEngineEvent::RequestForAudio);
   }
   return IPC_OK();
 }
@@ -114,50 +107,6 @@ mozilla::ipc::IPCResult MFMediaEngineChild::RecvUpdateCurrentTime(
   if (mOwner) {
     mOwner->UpdateCurrentTime(aCurrentTimeInSecond);
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyEvent(
-    MFMediaEngineEvent aEvent) {
-  AssertOnManagerThread();
-  switch (aEvent) {
-    case MF_MEDIA_ENGINE_EVENT_FIRSTFRAMEREADY:
-      mOwner->NotifyEvent(ExternalEngineEvent::LoadedFirstFrame);
-      break;
-    case MF_MEDIA_ENGINE_EVENT_LOADEDDATA:
-      mOwner->NotifyEvent(ExternalEngineEvent::LoadedData);
-      break;
-    case MF_MEDIA_ENGINE_EVENT_WAITING:
-      mOwner->NotifyEvent(ExternalEngineEvent::Waiting);
-      break;
-    case MF_MEDIA_ENGINE_EVENT_SEEKED:
-      mOwner->NotifyEvent(ExternalEngineEvent::Seeked);
-      break;
-    case MF_MEDIA_ENGINE_EVENT_BUFFERINGSTARTED:
-      mOwner->NotifyEvent(ExternalEngineEvent::BufferingStarted);
-      break;
-    case MF_MEDIA_ENGINE_EVENT_BUFFERINGENDED:
-      mOwner->NotifyEvent(ExternalEngineEvent::BufferingEnded);
-      break;
-    case MF_MEDIA_ENGINE_EVENT_ENDED:
-      mOwner->NotifyEvent(ExternalEngineEvent::Ended);
-      break;
-    case MF_MEDIA_ENGINE_EVENT_PLAYING:
-      mOwner->NotifyEvent(ExternalEngineEvent::Playing);
-      break;
-    default:
-      NS_WARNING(
-          nsPrintfCString("Unhandled event=%s", MediaEngineEventToStr(aEvent))
-              .get());
-      break;
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyError(
-    const MediaResult& aError) {
-  AssertOnManagerThread();
-  mOwner->NotifyError(aError);
   return IPC_OK();
 }
 
@@ -175,12 +124,6 @@ void MFMediaEngineChild::OwnerDestroyed() {
 void MFMediaEngineChild::IPDLActorDestroyed() {
   AssertOnManagerThread();
   mIPDLSelfRef = nullptr;
-}
-
-void MFMediaEngineChild::Shutdown() {
-  AssertOnManagerThread();
-  SendShutdown();
-  mInitEngineRequest.DisconnectIfExists();
 }
 
 MFMediaEngineWrapper::MFMediaEngineWrapper(ExternalEngineStateMachine* aOwner)
@@ -227,7 +170,7 @@ void MFMediaEngineWrapper::Shutdown() {
   WLOG("Shutdown");
   Unused << ManagerThread()->Dispatch(
       NS_NewRunnableFunction("MFMediaEngineWrapper::Shutdown",
-                             [engine = mEngine] { engine->Shutdown(); }));
+                             [engine = mEngine] { engine->SendShutdown(); }));
 }
 
 void MFMediaEngineWrapper::SetPlaybackRate(double aPlaybackRate) {
@@ -286,21 +229,15 @@ TimeUnit MFMediaEngineWrapper::GetCurrentPosition() {
 
 void MFMediaEngineWrapper::UpdateCurrentTime(double aCurrentTimeInSecond) {
   AssertOnManagerThread();
-  WLOGV("Update current time %f", aCurrentTimeInSecond);
+  WLOG("Update current time %f", aCurrentTimeInSecond);
   mCurrentTimeInSecond = aCurrentTimeInSecond;
   NotifyEvent(ExternalEngineEvent::Timeupdate);
 }
 
 void MFMediaEngineWrapper::NotifyEvent(ExternalEngineEvent aEvent) {
   AssertOnManagerThread();
-  WLOGV("Received event %s", ExternalEngineEventToStr(aEvent));
+  WLOG("Received event %s", ExternalEngineEventToStr(aEvent));
   mOwner->NotifyEvent(aEvent);
-}
-
-void MFMediaEngineWrapper::NotifyError(const MediaResult& aError) {
-  AssertOnManagerThread();
-  WLOG("Received error: %s", aError.Description().get());
-  mOwner->NotifyError(aError);
 }
 
 }  // namespace mozilla

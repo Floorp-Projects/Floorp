@@ -254,7 +254,6 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
                                                  TrackInfo::TrackType aType,
                                                  TrackBuffersManager* aManager)
     : mParent(aParent),
-      mTaskQueue(mParent->GetTaskQueue()),
       mType(aType),
       mMonitor("MediaSourceTrackDemuxer"),
       mManager(aManager),
@@ -272,10 +271,7 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
               // So we always seek 2112 frames
               ? (2112 * 1000000ULL /
                  mParent->GetTrackInfo(mType)->GetAsAudioInfo()->mRate)
-              : 0)) {
-  MOZ_ASSERT(mParent);
-  MOZ_ASSERT(mTaskQueue);
-}
+              : 0)) {}
 
 UniquePtr<TrackInfo> MediaSourceTrackDemuxer::GetInfo() const {
   return mParent->GetTrackInfo(mType)->Clone();
