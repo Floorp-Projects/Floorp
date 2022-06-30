@@ -3,6 +3,7 @@ root:
     # This is a scroll frame with an out-of-viewport rect that should be pushed into the
     # viewport by its "bottom" sticky constraint.
     - type: scroll-frame
+      id: 2
       bounds: [10, 10, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -13,14 +14,17 @@ root:
         vertical-offset-bounds: [-500, 0]
         items:
         - type: clip
+          id: 22
           bounds: [10, 60, 50, 50]
           content-size: [100, 100]
           items:
           - type: rect
             bounds: [10, 60, 50, 50]
             color: green
+            clip-chain: [2, 22]
     # Do the same thing, but now for the "top" constraint.
     - type: scroll-frame
+      id: 3
       bounds: [70, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 50]
@@ -32,14 +36,17 @@ root:
         vertical-offset-bounds: [0, 500]
         items:
         - type: clip
+          id: 23
           bounds: [70, 10, 50, 50]
           content-size: [100, 100]
           items:
           - type: rect
             bounds: [70, 10, 50, 50]
             color: green
+            clip-chain: [3, 23]
     # Do the same thing, but now for the "right" constraint.
     - type: scroll-frame
+      id: 4
       bounds: [10, 70, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -50,14 +57,17 @@ root:
         horizontal-offset-bounds: [-500, 0]
         items:
         - type: clip
+          id: 24
           bounds: [60, 70, 50, 50]
           content-size: [100, 100]
           items:
           - type: rect
             bounds: [60, 70, 50, 50]
             color: green
+            clip-chain: [4, 24]
     # Do the same thing, but now for the "left" constraint.
     - type: scroll-frame
+      id: 5
       bounds: [70, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [50, 0]
@@ -69,15 +79,18 @@ root:
         horizontal-offset-bounds: [0, 500]
         items:
         - type: clip
+          id: 25
           bounds: [70, 70, 50, 50]
           content-size: [100, 100]
           items:
           - type: rect
             bounds: [70, 70, 50, 50]
             color: green
+            clip-chain: [5, 25]
 
     # The same tests, but this time with a margin.
     - type: scroll-frame
+      id: 6
       bounds: [130, 10, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -88,14 +101,18 @@ root:
         vertical-offset-bounds: [-500, 0]
         items:
         - type: clip
+          id: 26
           bounds: [130, 60, 50, 50]
           content-size: [100, 100]
           items:
           - type: rect
             bounds: [130, 60, 50, 50]
             color: green
+            clip-chain: [6, 26]
+
     # Do the same thing, but now for the "top" constraint.
     - type: scroll-frame
+      id: 7
       bounds: [190, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 50]
@@ -107,14 +124,18 @@ root:
         vertical-offset-bounds: [0, 500]
         items:
         - type: clip
+          id: 27
           bounds: [190, 10, 50, 50]
           content-size: [100, 100]
           items:
           - type: rect
             bounds: [190, 10, 50, 50]
             color: green
+            clip-chain: [7, 27]
+
     # Do the same thing, but now for the "right" constraint.
     - type: scroll-frame
+      id: 8
       bounds: [130, 70, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -125,14 +146,18 @@ root:
         horizontal-offset-bounds: [-500, 0]
         items:
         - type: clip
+          id: 28
           bounds: [180, 70, 50, 50]
           content-size: [100, 100]
           items:
           - type: rect
             bounds: [180, 70, 50, 50]
             color: green
+            clip-chain: [8, 28]
+
     # Do the same thing, but now for the "left" constraint.
     - type: scroll-frame
+      id: 9
       bounds: [190, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [50, 0]
@@ -144,15 +169,18 @@ root:
         horizontal-offset-bounds: [0, 500]
         items:
         - type: clip
+          id: 29
           bounds: [190, 70, 50, 50]
           content-size: [100, 100]
           items:
           - type: rect
             bounds: [190, 70, 50, 50]
             color: green
+            clip-chain: [9, 29]
 
     # The same tests, but this time with a limit.
     - type: scroll-frame
+      id: 10
       bounds: [250, 10, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -163,14 +191,18 @@ root:
         vertical-offset-bounds: [-25, 0]
         items:
         - type: clip
+          id: 30
           bounds: [250, 60, 50, 50]
           content-size: [100, 100]
           items:
           - type: rect
             bounds: [250, 60, 50, 50]
             color: green
+            clip-chain: [10, 30]
+
     # Do the same thing, but now for the "top" constraint.
     - type: scroll-frame
+      id: 11
       bounds: [310, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 50]
@@ -184,12 +216,16 @@ root:
         - type: clip
           bounds: [310, 10, 50, 50]
           content-size: [100, 100]
+          id: 31
           items:
           - type: rect
             bounds: [310, 10, 50, 50]
             color: green
+            clip-chain: [11, 31]
+
     # Do the same thing, but now for the "right" constraint.
     - type: scroll-frame
+      id: 12
       bounds: [250, 70, 50, 50]
       content-size: [200, 200]
       clip-to-frame: true
@@ -200,14 +236,18 @@ root:
         horizontal-offset-bounds: [-25, 0]
         items:
         - type: clip
+          id: 32
           bounds: [300, 70, 50, 50]
           content-size: [100, 100]
           items:
           - type: rect
             bounds: [300, 70, 50, 50]
             color: green
+            clip-chain: [12, 32]
+
     # Do the same thing, but now for the "left" constraint.
     - type: scroll-frame
+      id: 13
       bounds: [310, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [50, 0]
@@ -219,9 +259,11 @@ root:
         horizontal-offset-bounds: [0, 25]
         items:
         - type: clip
+          id: 33
           bounds: [310, 70, 50, 50]
           content-size: [100, 100]
           items:
           - type: rect
             bounds: [310, 70, 50, 50]
             color: green
+            clip-chain: [13, 33]

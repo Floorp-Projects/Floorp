@@ -1729,7 +1729,10 @@ impl YamlFrameReader {
 
         let clip_id = if clip_to_frame {
             Some(dl.define_clip_rect(
-                &self.top_space_and_clip(),
+                &SpaceAndClipInfo {
+                    clip_id: ClipId::ClipChain(ClipChainId::INVALID),
+                    spatial_id: self.top_space_and_clip().spatial_id,
+                },
                 clip_rect,
             ))
         } else {
@@ -1755,13 +1758,7 @@ impl YamlFrameReader {
 
         if let Some(yaml_items) = yaml["items"].as_vec() {
             self.spatial_id_stack.push(spatial_id);
-            if let Some(clip_id) = clip_id {
-                self.clip_id_stack.push(clip_id);
-            }
             self.add_display_list_items_from_yaml(dl, wrench, yaml_items);
-            if clip_id.is_some() {
-                self.clip_id_stack.pop().unwrap();
-            }
             self.spatial_id_stack.pop().unwrap();
         }
     }

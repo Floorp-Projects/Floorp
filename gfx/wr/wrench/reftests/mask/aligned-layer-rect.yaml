@@ -2,6 +2,7 @@
 root:
   items:
     - type: scroll-frame
+      id: 2
       bounds: [9, 9, 10, 10]
       content-size: [95, 88]
       clip-to-frame: true
@@ -12,3 +13,5 @@ root:
             - type: rect
               bounds: [0, 0, 100, 100]
               color: blue
+              clip-chain: [2]
+              
