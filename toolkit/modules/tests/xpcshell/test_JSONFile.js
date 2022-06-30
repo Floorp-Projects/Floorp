@@ -20,6 +20,7 @@ ChromeUtils.defineModuleGetter(
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "JSONFile",
@@ -159,7 +160,7 @@ add_task(async function test_load_string_predefined() {
 
   let string = '{"number":123,"string":"test","object":{"prop1":1,"prop2":2}}';
 
-  await IOUtils.writeUTF8(store.path, string, {
+  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
     tmpPath: store.path + ".tmp",
   });
 
@@ -178,15 +179,15 @@ add_task(async function test_load_string_malformed() {
 
   let string = '{"number":123,"string":"test","object":{"prop1":1,';
 
-  await IOUtils.writeUTF8(store.path, string, {
+  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
     tmpPath: store.path + ".tmp",
   });
 
   await store.load();
 
   // A backup file should have been created.
-  Assert.ok(await IOUtils.exists(store.path + ".corrupt"));
-  await IOUtils.remove(store.path + ".corrupt");
+  Assert.ok(await OS.File.exists(store.path + ".corrupt"));
+  await OS.File.remove(store.path + ".corrupt");
 
   // The store should be ready to accept new data.
   Assert.ok(store.dataReady);
@@ -204,15 +205,15 @@ add_task(async function test_load_string_malformed_sync() {
 
   let string = '{"number":123,"string":"test","object":{"prop1":1,';
 
-  await IOUtils.writeUTF8(store.path, string, {
+  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
     tmpPath: store.path + ".tmp",
   });
 
   store.ensureDataReady();
 
   // A backup file should have been created.
-  Assert.ok(await IOUtils.exists(store.path + ".corrupt"));
-  await IOUtils.remove(store.path + ".corrupt");
+  Assert.ok(await OS.File.exists(store.path + ".corrupt"));
+  await OS.File.remove(store.path + ".corrupt");
 
   // The store should be ready to accept new data.
   Assert.ok(store.dataReady);
@@ -226,9 +227,11 @@ add_task(async function test_overwrite_data() {
 
   let string = `{"number":456,"string":"tset","object":{"prop1":3,"prop2":4}}`;
 
-  await IOUtils.writeUTF8(storeForSave.path, string, {
-    tmpPath: storeForSave.path + ".tmp",
-  });
+  await OS.File.writeAtomic(
+    storeForSave.path,
+    new TextEncoder().encode(string),
+    { tmpPath: storeForSave.path + ".tmp" }
+  );
 
   Assert.ok(!storeForSave.dataReady);
   storeForSave.data = TEST_DATA;

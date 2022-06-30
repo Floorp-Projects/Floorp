@@ -5,8 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 /* exported LIBC, libc */
 
 // This file is loaded into the same scope as subprocess_unix.jsm

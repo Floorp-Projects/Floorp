@@ -17,6 +17,7 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
 });
 
 // Define our prefs
@@ -34,6 +35,11 @@ const REPORTER_PRODUCT = {
 const LOGGER_NAME = "asanreporter";
 
 let logger;
+
+XPCOMUtils.defineLazyGetter(lazy, "asanDumpDir", () => {
+  let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  return lazy.OS.Path.join(profileDir.path, "asan");
+});
 
 const AsanReporter = {
   init() {
@@ -75,33 +81,67 @@ const AsanReporter = {
   },
 };
 
-async function processDirectory() {
-  const asanDumpDir = PathUtils.join(PathUtils.profileDir, "asan");
-  const children = await IOUtils.getChildren(asanDumpDir);
+function processDirectory() {
+  let iterator = new lazy.OS.File.DirectoryIterator(lazy.asanDumpDir);
+  let results = [];
 
-  const results = children.filter(
-    entry => entry.startsWith("ff_asan_log.") && !entry.includes("submitted")
-  );
+  // Scan the directory for any ASan logs that we haven't
+  // submitted yet. Store the filenames in an array so we
+  // can close the iterator early.
+  iterator
+    .forEach(entry => {
+      if (
+        entry.name.indexOf("ff_asan_log.") == 0 &&
+        !entry.name.includes("submitted")
+      ) {
+        results.push(entry);
+      }
+    })
+    .then(
+      () => {
+        iterator.close();
+        logger.info("Processing " + results.length + " reports...");
 
-  logger.info(`Processing ${results.length} reports...`);
-  for (const result of results) {
-    try {
-      await submitReport(result);
-      logger.info(`Successfully submitted ${result.path}`);
-    } catch (e) {
-      logger.error(`Failed to submit ${result.path}. Reason: ${e}`);
-    }
-  }
+        // Sequentially submit all reports that we found. Note that doing this
+        // with Promise.all would not result in a sequential ordering and would
+        // cause multiple requests to be sent to the server at once.
+        let requests = Promise.resolve();
+        results.forEach(result => {
+          requests = requests.then(
+            // We return a promise here that already handles any submit failures
+            // so our chain is not interrupted if one of the reports couldn't
+            // be submitted for some reason.
+            () =>
+              submitReport(result.path).then(
+                () => {
+                  logger.info("Successfully submitted " + result.path);
+                },
+                e => {
+                  logger.error(
+                    "Failed to submit " + result.path + ". Reason: " + e
+                  );
+                }
+              )
+          );
+        });
 
-  logger.info("Done processing reports.");
+        requests.then(() => logger.info("Done processing reports."));
+      },
+      e => {
+        iterator.close();
+        logger.error("Error while iterating over report files: " + e);
+      }
+    );
 }
 
-async function submitReport(reportFile) {
+function submitReport(reportFile) {
   logger.info("Processing " + reportFile);
-  const data = await IOUtils.read(reportFile);
-  await submitToServer(data);
-  // Mark as submitted only if we successfully submitted it to the server.
-  await IOUtils.move(reportFile, `${reportFile}.submitted`);
+  return lazy.OS.File.read(reportFile)
+    .then(submitToServer)
+    .then(() => {
+      // Mark as submitted only if we successfully submitted it to the server.
+      return lazy.OS.File.move(reportFile, reportFile + ".submitted");
+    });
 }
 
 function submitToServer(data) {
