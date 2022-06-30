@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: packaging
-Version: 21.3
+Version: 20.9
 Summary: Core utilities for Python packages
 Home-page: https://github.com/pypa/packaging
 Author: Donald Stufft and individual contributors
@@ -12,21 +12,20 @@ Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: Apache Software License
 Classifier: License :: OSI Approved :: BSD License
 Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
 Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
-Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: Implementation :: CPython
 Classifier: Programming Language :: Python :: Implementation :: PyPy
-Requires-Python: >=3.6
+Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*
 Description-Content-Type: text/x-rst
-License-File: LICENSE
-License-File: LICENSE.APACHE
-License-File: LICENSE.BSD
-Requires-Dist: pyparsing (!=3.0.5,>=2.0.2)
+Requires-Dist: pyparsing (>=2.0.2)
 
 packaging
 =========
@@ -105,43 +104,10 @@ recent changes and project history.
 Changelog
 ---------
 
-21.3 - 2021-11-17
-~~~~~~~~~~~~~~~~~
-
-* Add a ``pp3-none-any`` tag (`#311 <https://github.com/pypa/packaging/issues/311>`__)
-* Replace the blank pyparsing 3 exclusion with a 3.0.5 exclusion (`#481 <https://github.com/pypa/packaging/issues/481>`__, `#486 <https://github.com/pypa/packaging/issues/486>`__)
-* Fix a spelling mistake (`#479 <https://github.com/pypa/packaging/issues/479>`__)
-
-21.2 - 2021-10-29
-~~~~~~~~~~~~~~~~~
-
-* Update documentation entry for 21.1.
-
-21.1 - 2021-10-29
-~~~~~~~~~~~~~~~~~
-
-* Update pin to pyparsing to exclude 3.0.0.
-
-21.0 - 2021-07-03
-~~~~~~~~~~~~~~~~~
-
-* PEP 656: musllinux support (`#411 <https://github.com/pypa/packaging/issues/411>`__)
-* Drop support for Python 2.7, Python 3.4 and Python 3.5.
-* Replace distutils usage with sysconfig (`#396 <https://github.com/pypa/packaging/issues/396>`__)
-* Add support for zip files in ``parse_sdist_filename`` (`#429 <https://github.com/pypa/packaging/issues/429>`__)
-* Use cached ``_hash`` attribute to short-circuit tag equality comparisons (`#417 <https://github.com/pypa/packaging/issues/417>`__)
-* Specify the default value for the ``specifier`` argument to ``SpecifierSet`` (`#437 <https://github.com/pypa/packaging/issues/437>`__)
-* Proper keyword-only "warn" argument in packaging.tags (`#403 <https://github.com/pypa/packaging/issues/403>`__)
-* Correctly remove prerelease suffixes from ~= check (`#366 <https://github.com/pypa/packaging/issues/366>`__)
-* Fix type hints for ``Version.post`` and ``Version.dev`` (`#393 <https://github.com/pypa/packaging/issues/393>`__)
-* Use typing alias ``UnparsedVersion`` (`#398 <https://github.com/pypa/packaging/issues/398>`__)
-* Improve type inference for ``packaging.specifiers.filter()`` (`#430 <https://github.com/pypa/packaging/issues/430>`__)
-* Tighten the return type of ``canonicalize_version()`` (`#402 <https://github.com/pypa/packaging/issues/402>`__)
-
 20.9 - 2021-01-29
 ~~~~~~~~~~~~~~~~~
 
-* Run `isort <https://pypi.org/project/isort/>`_ over the code base (`#377 <https://github.com/pypa/packaging/issues/377>`__)
+* Run [isort](https://pypi.org/project/isort/) over the code base (`#377 <https://github.com/pypa/packaging/issues/377>`__)
 * Add support for the ``macosx_10_*_universal2`` platform tags (`#379 <https://github.com/pypa/packaging/issues/379>`__)
 * Introduce ``packaging.utils.parse_wheel_filename()`` and ``parse_sdist_filename()``
   (`#387 <https://github.com/pypa/packaging/issues/387>`__ and `#389 <https://github.com/pypa/packaging/issues/389>`__)
@@ -211,7 +177,7 @@ No unreleased changes.
 
 * Use ``sys.implementation.name`` where appropriate for ``packaging.tags`` (`#193 <https://github.com/pypa/packaging/issues/193>`__)
 
-* Expand upon the API provided by ``packaging.tags``: ``interpreter_name()``, ``mac_platforms()``, ``compatible_tags()``, ``cpython_tags()``, ``generic_tags()`` (`#187 <https://github.com/pypa/packaging/issues/187>`__)
+* Expand upon the API provded by ``packaging.tags``: ``interpreter_name()``, ``mac_platforms()``, ``compatible_tags()``, ``cpython_tags()``, ``generic_tags()`` (`#187 <https://github.com/pypa/packaging/issues/187>`__)
 
 * Officially support Python 3.8 (`#232 <https://github.com/pypa/packaging/issues/232>`__)
 
@@ -362,7 +328,7 @@ No unreleased changes.
 15.2 - 2015-05-13
 ~~~~~~~~~~~~~~~~~
 
-* Fix an error where the arbitrary specifier (``===``) was not correctly
+* Fix an error where the arbitary specifier (``===``) was not correctly
   allowing pre-releases when it was being used.
 
 * Expose the specifier and version parts through properties on the

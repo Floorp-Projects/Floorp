@@ -1,12 +1,12 @@
 # This file is dual licensed under the terms of the Apache License, Version
 # 2.0, and the BSD License. See the LICENSE file in the root of this repository
 # for complete details.
+from __future__ import absolute_import, division, print_function
 
 import operator
 import os
 import platform
 import sys
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from pyparsing import (  # noqa: N817
     Forward,
@@ -20,7 +20,15 @@ from pyparsing import (  # noqa: N817
     stringStart,
 )
 
+from ._compat import string_types
+from ._typing import TYPE_CHECKING
 from .specifiers import InvalidSpecifier, Specifier
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+    Operator = Callable[[str, str], bool]
+
 
 __all__ = [
     "InvalidMarker",
@@ -29,8 +37,6 @@ __all__ = [
     "Marker",
     "default_environment",
 ]
-
-Operator = Callable[[str, str], bool]
 
 
 class InvalidMarker(ValueError):
@@ -52,32 +58,39 @@ class UndefinedEnvironmentName(ValueError):
     """
 
 
-class Node:
-    def __init__(self, value: Any) -> None:
+class Node(object):
+    def __init__(self, value):
+        # type: (Any) -> None
         self.value = value
 
-    def __str__(self) -> str:
+    def __str__(self):
+        # type: () -> str
         return str(self.value)
 
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}('{self}')>"
+    def __repr__(self):
+        # type: () -> str
+        return "<{0}({1!r})>".format(self.__class__.__name__, str(self))
 
-    def serialize(self) -> str:
+    def serialize(self):
+        # type: () -> str
         raise NotImplementedError
 
 
 class Variable(Node):
-    def serialize(self) -> str:
+    def serialize(self):
+        # type: () -> str
         return str(self)
 
 
 class Value(Node):
-    def serialize(self) -> str:
-        return f'"{self}"'
+    def serialize(self):
+        # type: () -> str
+        return '"{0}"'.format(self)
 
 
 class Op(Node):
-    def serialize(self) -> str:
+    def serialize(self):
+        # type: () -> str
         return str(self)
 
 
@@ -138,18 +151,18 @@ MARKER_EXPR << MARKER_ATOM + ZeroOrMore(BOOLOP + MARKER_EXPR)
 MARKER = stringStart + MARKER_EXPR + stringEnd
 
 
-def _coerce_parse_result(results: Union[ParseResults, List[Any]]) -> List[Any]:
+def _coerce_parse_result(results):
+    # type: (Union[ParseResults, List[Any]]) -> List[Any]
     if isinstance(results, ParseResults):
         return [_coerce_parse_result(i) for i in results]
     else:
         return results
 
 
-def _format_marker(
-    marker: Union[List[str], Tuple[Node, ...], str], first: Optional[bool] = True
-) -> str:
+def _format_marker(marker, first=True):
+    # type: (Union[List[str], Tuple[Node, ...], str], Optional[bool]) -> str
 
-    assert isinstance(marker, (list, tuple, str))
+    assert isinstance(marker, (list, tuple, string_types))
 
     # Sometimes we have a structure like [[...]] which is a single item list
     # where the single item is itself it's own list. In that case we want skip
@@ -174,7 +187,7 @@ def _format_marker(
         return marker
 
 
-_operators: Dict[str, Operator] = {
+_operators = {
     "in": lambda lhs, rhs: lhs in rhs,
     "not in": lambda lhs, rhs: lhs not in rhs,
     "<": operator.lt,
@@ -183,10 +196,11 @@ _operators: Dict[str, Operator] = {
     "!=": operator.ne,
     ">=": operator.ge,
     ">": operator.gt,
-}
+}  # type: Dict[str, Operator]
 
 
-def _eval_op(lhs: str, op: Op, rhs: str) -> bool:
+def _eval_op(lhs, op, rhs):
+    # type: (str, Op, str) -> bool
     try:
         spec = Specifier("".join([op.serialize(), rhs]))
     except InvalidSpecifier:
@@ -194,36 +208,40 @@ def _eval_op(lhs: str, op: Op, rhs: str) -> bool:
     else:
         return spec.contains(lhs)
 
-    oper: Optional[Operator] = _operators.get(op.serialize())
+    oper = _operators.get(op.serialize())  # type: Optional[Operator]
     if oper is None:
-        raise UndefinedComparison(f"Undefined {op!r} on {lhs!r} and {rhs!r}.")
+        raise UndefinedComparison(
+            "Undefined {0!r} on {1!r} and {2!r}.".format(op, lhs, rhs)
+        )
 
     return oper(lhs, rhs)
 
 
-class Undefined:
+class Undefined(object):
     pass
 
 
 _undefined = Undefined()
 
 
-def _get_env(environment: Dict[str, str], name: str) -> str:
-    value: Union[str, Undefined] = environment.get(name, _undefined)
+def _get_env(environment, name):
+    # type: (Dict[str, str], str) -> str
+    value = environment.get(name, _undefined)  # type: Union[str, Undefined]
 
     if isinstance(value, Undefined):
         raise UndefinedEnvironmentName(
-            f"{name!r} does not exist in evaluation environment."
+            "{0!r} does not exist in evaluation environment.".format(name)
         )
 
     return value
 
 
-def _evaluate_markers(markers: List[Any], environment: Dict[str, str]) -> bool:
-    groups: List[List[bool]] = [[]]
+def _evaluate_markers(markers, environment):
+    # type: (List[Any], Dict[str, str]) -> bool
+    groups = [[]]  # type: List[List[bool]]
 
     for marker in markers:
-        assert isinstance(marker, (list, tuple, str))
+        assert isinstance(marker, (list, tuple, string_types))
 
         if isinstance(marker, list):
             groups[-1].append(_evaluate_markers(marker, environment))
@@ -246,7 +264,8 @@ def _evaluate_markers(markers: List[Any], environment: Dict[str, str]) -> bool:
     return any(all(item) for item in groups)
 
 
-def format_full_version(info: "sys._version_info") -> str:
+def format_full_version(info):
+    # type: (sys._version_info) -> str
     version = "{0.major}.{0.minor}.{0.micro}".format(info)
     kind = info.releaselevel
     if kind != "final":
@@ -254,9 +273,18 @@ def format_full_version(info: "sys._version_info") -> str:
     return version
 
 
-def default_environment() -> Dict[str, str]:
-    iver = format_full_version(sys.implementation.version)
-    implementation_name = sys.implementation.name
+def default_environment():
+    # type: () -> Dict[str, str]
+    if hasattr(sys, "implementation"):
+        # Ignoring the `sys.implementation` reference for type checking due to
+        # mypy not liking that the attribute doesn't exist in Python 2.7 when
+        # run with the `--py27` flag.
+        iver = format_full_version(sys.implementation.version)  # type: ignore
+        implementation_name = sys.implementation.name  # type: ignore
+    else:
+        iver = "0"
+        implementation_name = ""
+
     return {
         "implementation_name": implementation_name,
         "implementation_version": iver,
@@ -272,23 +300,27 @@ def default_environment() -> Dict[str, str]:
     }
 
 
-class Marker:
-    def __init__(self, marker: str) -> None:
+class Marker(object):
+    def __init__(self, marker):
+        # type: (str) -> None
         try:
             self._markers = _coerce_parse_result(MARKER.parseString(marker))
         except ParseException as e:
-            raise InvalidMarker(
-                f"Invalid marker: {marker!r}, parse error at "
-                f"{marker[e.loc : e.loc + 8]!r}"
+            err_str = "Invalid marker: {0!r}, parse error at {1!r}".format(
+                marker, marker[e.loc : e.loc + 8]
             )
+            raise InvalidMarker(err_str)
 
-    def __str__(self) -> str:
+    def __str__(self):
+        # type: () -> str
         return _format_marker(self._markers)
 
-    def __repr__(self) -> str:
-        return f"<Marker('{self}')>"
+    def __repr__(self):
+        # type: () -> str
+        return "<Marker({0!r})>".format(str(self))
 
-    def evaluate(self, environment: Optional[Dict[str, str]] = None) -> bool:
+    def evaluate(self, environment=None):
+        # type: (Optional[Dict[str, str]]) -> bool
         """Evaluate a marker.
 
         Return the boolean from evaluating the given marker against the
