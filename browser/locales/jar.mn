@@ -17,6 +17,7 @@
 #ifdef NIGHTLY_BUILD
   preview/firefoxView.ftl                          (../components/firefoxview/firefoxView.ftl)
   preview/colorwaycloset.ftl                       (../components/colorways/colorwaycloset.ftl)
+  preview/colorways.ftl                            (../components/colorways/colorways.ftl)
 #endif
   browser                                          (%browser/**/*.ftl)
 

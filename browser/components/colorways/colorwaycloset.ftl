@@ -7,6 +7,8 @@ colorway-collection-expiry-date-span = Expires { DATETIME($expiryDate, month: "l
 colorway-intensity-selector-label = Intensity
 colorway-intensity-soft = Soft
 colorway-intensity-balanced = Balanced
+# "Bold" is used in the sense of bravery or courage, not in the sense of
+# emphasized text.
 colorway-intensity-bold = Bold
 
 # Label for the button to keep using the selected colorway in the browser
@@ -17,13 +19,3 @@ colorway-fx-home-link = Use { -brand-product-name } Home for colorful new tabs
 colorway-fx-home-link-success = { -brand-product-name } Home is now your home page
 colorway-fx-home-apply-button = Apply
 colorway-fx-home-undo-button = Undo
-
-## Colorway collections
-
-colorway-collection-life-in-color = Life In Color
-colorway-collection-true-colors = True Colors
-colorway-collection-independent-voices = Independent Voices
-colorway-collection-independent-voices-description = Color can change culture. The latest colorways celebrate voices making the world a better place.
-
-# Subheading for colorway collection card in about:addons
-colorway-collection-independent-voices-subheading2 = Colors that change culture.

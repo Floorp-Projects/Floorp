@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BuiltInThemeConfig: "resource:///modules/BuiltInThemeConfig.jsm",
 });
 
+const ColorwayL10n = new Localization(["preview/colorways.ftl"], true);
+
 const kActiveThemePref = "extensions.activeThemeID";
 const kRetainedThemesPref = "browser.theme.retainedExpiredThemes";
 
@@ -223,6 +225,46 @@ class _BuiltInThemes {
     return (
       collection && this.builtInThemeMap.get(id)?.collection == collection.id
     );
+  }
+
+  /**
+   * Colorway collections are usually divided into and presented as "groups".
+   * A group either contains closely related colorways, e.g. stemming from the
+   * same base color but with different intensities (soft, balanced, and bold),
+   * or if the current collection doesn't have intensities, each colorway is
+   * their own group. Group name localization is optional.
+   * @param {string} id
+   *   The ID of the colorway add-on.
+   * @return {string}
+   *   Localized colorway group name. null if there's no such name, in which
+   *   case the caller should fall back on getting a name from the add-on API.
+   */
+  getLocalizedColorwayGroupName(colorwayId) {
+    return this._getColorwayString(colorwayId, "groupName");
+  }
+
+  /**
+   * @param {string} id
+   *   The ID of the colorway add-on.
+   * @return {string}
+   *   Localized description of the colorway with the provided id, null if
+   *   there's none.
+   */
+  getLocalizedColorwayDescription(colorwayId) {
+    return this._getColorwayString(colorwayId, "description");
+  }
+
+  _getColorwayString(colorwayId, stringType) {
+    let l10nId = this.builtInThemeMap.get(colorwayId)?.l10nId?.[stringType];
+    let s;
+    if (l10nId) {
+      [s] = ColorwayL10n.formatMessagesSync([
+        {
+          id: l10nId,
+        },
+      ]);
+    }
+    return s?.value || null;
   }
 }
 

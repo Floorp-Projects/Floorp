@@ -49,6 +49,21 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
 });
 
+// WARNING: BuiltInThemes.jsm may be provided by the host application (e.g.
+// Firefox), or it might not exist at all. Use with caution, as we don't
+// want things to completely fall if that module can't be loaded.
+XPCOMUtils.defineLazyGetter(lazy, "BuiltInThemes", () => {
+  try {
+    let { BuiltInThemes } = ChromeUtils.import(
+      "resource:///modules/BuiltInThemes.jsm"
+    );
+    return BuiltInThemes;
+  } catch (e) {
+    Cu.reportError(`Unable to load BuiltInThemes.jsm: ${e}`);
+  }
+  return undefined;
+});
+
 const { nsIBlocklistService } = Ci;
 
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -1531,31 +1546,42 @@ const updatedAddonFluentIds = new Map([
       let addonIdPrefix = addon.id.replace("@mozilla.org", "");
       const colorwaySuffix = "colorway";
       if (addonIdPrefix.endsWith(colorwaySuffix)) {
+        // FIXME: Depending on BuiltInThemes here is sort of a hack. Bug 1733466
+        // would provide a more generalized way of doing this.
         if (aProp == "description") {
-          // Colorway themes do not have a description.
-          return null;
+          return lazy.BuiltInThemes?.getLocalizedColorwayDescription(addon.id);
         }
-        // Colorway themes combine an unlocalized color name with a localized
-        // variant name. Their ids have the format
-        // {colorName}-{variantName}-colorway@mozilla.org. The variant name may
-        // be omitted ({colorName}-colorway@mozilla.org), in which case the
-        // unlocalized name from the theme's manifest will be used.
-        let [colorName, variantName] = addonIdPrefix.split("-", 2);
-        if (variantName == colorwaySuffix) {
-          // This theme doesn't have a localized variant name.
-          return addon.defaultLocale.name;
+        // Colorway collections are usually divided into and presented as
+        // "groups". A group either contains closely related colorways, e.g.
+        // stemming from the same base color but with different intensities, or
+        // if the current collection doesn't have intensities, each colorway is
+        // their own group. Colorway names combine the group name with an
+        // intensity. Their ids have the format
+        // {colorwayGroup}-{intensity}-colorway@mozilla.org or
+        // {colorwayGroupName}-colorway@mozilla.org). L10n for colorway group
+        // names is optional and falls back on the unlocalized name from the
+        // theme's manifest. The intensity part, if present, must be localized.
+        let localizedColorwayGroupName = lazy.BuiltInThemes?.getLocalizedColorwayGroupName(
+          addon.id
+        );
+        let [colorwayGroupName, intensity] = addonIdPrefix.split("-", 2);
+        if (intensity == colorwaySuffix) {
+          // This theme doesn't have an intensity.
+          return localizedColorwayGroupName || addon.defaultLocale.name;
         }
         // We're not using toLocaleUpperCase because these color names are
         // always in English.
-        colorName = colorName[0].toUpperCase() + colorName.slice(1);
-        let defaultFluentId = `extension-colorways-${variantName}-name`;
+        colorwayGroupName =
+          localizedColorwayGroupName ||
+          colorwayGroupName[0].toUpperCase() + colorwayGroupName.slice(1);
+        let defaultFluentId = `extension-colorways-${intensity}-name`;
         let fluentId =
           updatedAddonFluentIds.get(defaultFluentId) || defaultFluentId;
         [formattedMessage] = l10n.formatMessagesSync([
           {
             id: fluentId,
             args: {
-              "colorway-name": colorName,
+              "colorway-name": colorwayGroupName,
             },
           },
         ]);
