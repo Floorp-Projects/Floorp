@@ -7,8 +7,8 @@ This is documentation for the Search Service.
 Definitions
 ===========
 
-* Application-provided engines (aka app-provided): These are engines provided 
-  by the application to the user as part of the configurations for the user's 
+* Application-provided engines (aka app-provided): These are engines provided
+  by the application to the user as part of the configurations for the user's
   locale/region.
 * Application default engine: The engine automatically selected by the
   application as default, in the absence of user settings.
