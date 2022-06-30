@@ -202,7 +202,8 @@ void MFMediaEngineParent::NotifyError(MF_MEDIA_ENGINE_ERR aError,
       return;
     }
     case MF_MEDIA_ENGINE_ERR_SRC_NOT_SUPPORTED: {
-      MediaResult error(NS_ERROR_DOM_MEDIA_FATAL_ERR, "Source not supported");
+      MediaResult error(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
+                        "Source not supported");
       Unused << SendNotifyError(error);
       return;
     }
