@@ -475,42 +475,39 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     );
 
     async function slowScriptDebugHandler(tab, callback) {
-      gDevTools
-        .showToolboxForTab(tab, { toolId: "jsdebugger" })
-        .then(toolbox => {
-          const threadFront = toolbox.threadFront;
+      const toolbox = await gDevTools.showToolboxForTab(tab, {
+        toolId: "jsdebugger",
+      });
+      const threadFront = toolbox.threadFront;
 
-          // Break in place, which means resuming the debuggee thread and pausing
-          // right before the next step happens.
-          switch (threadFront.state) {
-            case "paused":
-              // When the debugger is already paused.
-              threadFront.resumeThenPause();
-              callback();
-              break;
-            case "attached":
-              // When the debugger is already open.
-              threadFront.interrupt().then(() => {
-                threadFront.resumeThenPause();
-                callback();
-              });
-              break;
-            case "resuming":
-              // The debugger is newly opened.
-              threadFront.once("resumed", () => {
-                threadFront.interrupt().then(() => {
-                  threadFront.resumeThenPause();
-                  callback();
-                });
-              });
-              break;
-            default:
-              throw Error(
-                "invalid thread front state in slow script debug handler: " +
-                  threadFront.state
-              );
-          }
-        });
+      // Break in place, which means resuming the debuggee thread and pausing
+      // right before the next step happens.
+      switch (threadFront.state) {
+        case "paused":
+          // When the debugger is already paused.
+          threadFront.resumeThenPause();
+          break;
+        case "attached":
+          // When the debugger is already open.
+          const onPaused = threadFront.once("paused");
+          threadFront.interrupt();
+          await onPaused;
+          threadFront.resumeThenPause();
+          break;
+        case "resuming":
+          // The debugger is newly opened.
+          const onResumed = threadFront.once("resumed");
+          await threadFront.interrupt();
+          await onResumed;
+          threadFront.resumeThenPause();
+          break;
+        default:
+          throw Error(
+            "invalid thread front state in slow script debug handler: " +
+              threadFront.state
+          );
+      }
+      callback();
     }
 
     debugService.activationHandler = function(window) {
