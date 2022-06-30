@@ -476,7 +476,7 @@ with Files("tests/html-media-capture/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/imagebitmap-renderingcontext/**"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
+    BUG_COMPONENT = ("Core", "Graphics: Canvas2D")
 
 with Files("tests/images/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
@@ -713,7 +713,7 @@ with Files("tests/webdriver/**"):
     BUG_COMPONENT = ("Testing", "geckodriver")
 
 with Files("tests/webgl/**"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: WebGL")
 
 with Files("tests/webmessaging/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")

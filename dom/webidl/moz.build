@@ -56,7 +56,7 @@ with Files("CSS*"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 with Files("Canvas*"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
+    BUG_COMPONENT = ("Core", "Graphics: Canvas2D")
 
 with Files("Caret*"):
     BUG_COMPONENT = ("Core", "DOM: Editor")
@@ -158,7 +158,7 @@ with Files("Image*"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("ImageBitmap*"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
+    BUG_COMPONENT = ("Core", "Graphics: Canvas2D")
 
 with Files("ImageCapture*"):
     BUG_COMPONENT = ("Core", "Audio/Video")
@@ -239,10 +239,10 @@ with Files("OfflineAudio*"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
 with Files("OffscreenCanvas.webidl"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
+    BUG_COMPONENT = ("Core", "Graphics: Canvas2D")
 
 with Files("OffscreenCanvasRenderingContext2D.webidl"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
+    BUG_COMPONENT = ("Core", "Graphics: Canvas2D")
 
 with Files("OscillatorNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
@@ -356,7 +356,7 @@ with Files("WebAuthentication.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Web Authentication")
 
 with Files("WebGL*"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: WebGL")
 
 with Files("WebGPU*"):
     BUG_COMPONENT = ("Core", "Graphics: WebGPU")

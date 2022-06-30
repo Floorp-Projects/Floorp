@@ -163,7 +163,7 @@ with Files("inline-borderpadding/**"):
 with Files("invalidation/**"):
     BUG_COMPONENT = ("Core", "Layout")
 with Files("layers/**"):
-    BUG_COMPONENT = ("Core", "Graphics: Layers")
+    BUG_COMPONENT = ("Core", "Graphics")
 with Files("line-breaking/**"):
     BUG_COMPONENT = ("Core", "Layout: Block and Inline")
 with Files("list-item/**"):

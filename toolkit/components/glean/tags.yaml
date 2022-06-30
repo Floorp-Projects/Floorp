@@ -85,8 +85,6 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: Graphics':
   description: The Bugzilla component which applies to this object.
-'Core :: Graphics: Layers':
-  description: The Bugzilla component which applies to this object.
 'Core :: Graphics: Text':
   description: The Bugzilla component which applies to this object.
 'Core :: Graphics: WebGPU':
