@@ -40,6 +40,12 @@ exports[`Frame getFrameTitle 1`] = `
           "type": "block",
         },
         "source": Object {
+          "displayURL": Object {
+            "filename": "foo-view.js",
+            "group": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+            "path": "/assets/src/js/foo-view.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "source",
           "isBlackBoxed": false,
@@ -97,6 +103,12 @@ exports[`Frame getFrameTitle 1`] = `
           "type": "block",
         },
         "source": Object {
+          "displayURL": Object {
+            "filename": "foo-view.js",
+            "group": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+            "path": "/assets/src/js/foo-view.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "source",
           "isBlackBoxed": false,
@@ -161,6 +173,12 @@ exports[`Frame library frame 1`] = `
           "type": "block",
         },
         "source": Object {
+          "displayURL": Object {
+            "filename": "backbone.js",
+            "group": "",
+            "path": "backbone.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "source",
           "isBlackBoxed": false,
@@ -219,6 +237,12 @@ exports[`Frame library frame 1`] = `
           "type": "block",
         },
         "source": Object {
+          "displayURL": Object {
+            "filename": "backbone.js",
+            "group": "",
+            "path": "backbone.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "source",
           "isBlackBoxed": false,
@@ -282,6 +306,12 @@ exports[`Frame user frame (not selected) 1`] = `
           "type": "block",
         },
         "source": Object {
+          "displayURL": Object {
+            "filename": "foo-view.js",
+            "group": "",
+            "path": "foo-view.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "source",
           "isBlackBoxed": false,
@@ -339,6 +369,12 @@ exports[`Frame user frame (not selected) 1`] = `
           "type": "block",
         },
         "source": Object {
+          "displayURL": Object {
+            "filename": "foo-view.js",
+            "group": "",
+            "path": "foo-view.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "source",
           "isBlackBoxed": false,
@@ -402,6 +438,12 @@ exports[`Frame user frame 1`] = `
           "type": "block",
         },
         "source": Object {
+          "displayURL": Object {
+            "filename": "foo-view.js",
+            "group": "",
+            "path": "foo-view.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "source",
           "isBlackBoxed": false,
@@ -459,6 +501,12 @@ exports[`Frame user frame 1`] = `
           "type": "block",
         },
         "source": Object {
+          "displayURL": Object {
+            "filename": "foo-view.js",
+            "group": "",
+            "path": "foo-view.js",
+            "search": "",
+          },
           "extensionName": null,
           "id": "source",
           "isBlackBoxed": false,

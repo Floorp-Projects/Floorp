@@ -27,6 +27,12 @@ Array [
     ],
     "filename": "a",
     "source": Object {
+      "displayURL": Object {
+        "filename": "a",
+        "group": "localhost:8000",
+        "path": "/examples/a",
+        "search": "",
+      },
       "extensionName": null,
       "id": "a",
       "isBlackBoxed": false,
@@ -95,6 +101,12 @@ Array [
     ],
     "filename": "a",
     "source": Object {
+      "displayURL": Object {
+        "filename": "a",
+        "group": "localhost:8000",
+        "path": "/examples/a",
+        "search": "",
+      },
       "extensionName": null,
       "id": "a",
       "isBlackBoxed": false,

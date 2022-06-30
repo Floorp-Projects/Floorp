@@ -20,6 +20,7 @@ function makeMockSource(url = "url", id = "source", thread = "FakeThread") {
   return {
     id,
     url,
+    displayURL: getDisplayURL(url),
     thread,
     isBlackBoxed: false,
     isPrettyPrinted: false,
@@ -39,7 +40,6 @@ function makeMockDisplaySource(
   const displayURL = getDisplayURL(url);
   return {
     ...makeMockSource(url, id, thread),
-    displayURL,
     parts: getPathParts(displayURL, thread, "http://www.example.com"),
   };
 }
@@ -97,6 +97,7 @@ function makeMockWasmSource() {
   return {
     id: "wasm-source-id",
     url: "url",
+    displayURL: getDisplayURL("url"),
     thread: "FakeThread",
     isBlackBoxed: false,
     isPrettyPrinted: false,

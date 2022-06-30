@@ -8,6 +8,7 @@ import React from "react";
 import { shallow, mount } from "enzyme";
 import { QuickOpenModal } from "../QuickOpenModal";
 import { mockcx } from "../../utils/test-mockup";
+import { getDisplayURL } from "../../utils/sources-tree/getURL";
 
 jest.mock("fuzzaldrin-plus");
 
@@ -118,7 +119,13 @@ describe("QuickOpenModal", () => {
       {
         enabled: true,
         query: "",
-        displayedSources: [{ url: "mozilla.com", relativeUrl: true }],
+        displayedSources: [
+          {
+            url: "mozilla.com",
+            displayURL: getDisplayURL("mozilla.com"),
+            relativeUrl: true,
+          },
+        ],
         tabs: [generateTab("mozilla.com")],
       },
       "shallow"

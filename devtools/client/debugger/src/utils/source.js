@@ -16,7 +16,7 @@ import { memoizeLast } from "../utils/memoizeLast";
 import { renderWasmText } from "./wasm";
 import { toEditorLine } from "./editor";
 export { isMinified } from "./isMinified";
-import { getURL, getFileExtension } from "./sources-tree";
+import { getFileExtension } from "./sources-tree";
 
 import { isFulfilled } from "./async-value";
 
@@ -32,7 +32,7 @@ export const sourceTypes = {
 const javascriptLikeExtensions = ["marko", "es6", "vue", "jsm"];
 
 function getPath(source) {
-  const { path } = getURL(source);
+  const { path } = source.displayURL;
   let lastIndex = path.lastIndexOf("/");
   let nextToLastIndex = path.lastIndexOf("/", lastIndex - 1);
 
@@ -210,7 +210,7 @@ export function getFilename(
     return getFormattedSourceId(id);
   }
 
-  const { filename } = getURL(source);
+  const { filename } = source.displayURL;
   return getRawSourceURL(filename);
 }
 
@@ -512,7 +512,7 @@ export function getSourceClassnames(source, symbols) {
 }
 
 export function getRelativeUrl(source, root) {
-  const { group, path } = getURL(source);
+  const { group, path } = source.displayURL;
   if (!root) {
     return path;
   }
@@ -552,7 +552,7 @@ export function removeThreadActorId(root, threads) {
  */
 export function isDescendantOfRoot(source, rootUrlWithoutThreadActor) {
   if (source.url && source.url.includes("chrome://")) {
-    const { group, path } = getURL(source);
+    const { group, path } = source.displayURL;
     return (group + path).includes(rootUrlWithoutThreadActor);
   }
 

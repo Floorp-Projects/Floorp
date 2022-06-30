@@ -24,6 +24,9 @@ const Frames = createFactory(
 const {
   annotateFrames,
 } = require("devtools/client/debugger/src/utils/pause/frames/annotateFrames");
+const {
+  getDisplayURL,
+} = require("devtools/client/debugger/src/utils/sources-tree/getURL");
 
 class SmartTrace extends Component {
   static get propTypes() {
@@ -267,6 +270,7 @@ class SmartTrace extends Component {
             location,
             source: {
               url: location.sourceUrl,
+              displayURL: getDisplayURL(location.sourceUrl),
             },
           };
         }

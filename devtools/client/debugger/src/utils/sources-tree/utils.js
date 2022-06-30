@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getURL } from "./getURL";
 import { parse } from "../../utils/url";
 
 export function getPathParts(url, thread, mainThreadHost) {
@@ -94,7 +93,7 @@ export function isSource(item) {
 }
 
 export function getFileExtension(source) {
-  const { path } = getURL(source);
+  const { path } = source.displayURL;
   if (!path) {
     return "";
   }
