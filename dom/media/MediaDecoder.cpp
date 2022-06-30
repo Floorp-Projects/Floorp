@@ -420,7 +420,7 @@ bool MediaDecoder::IsVideoDecodingSuspended() const {
 
 void MediaDecoder::OnPlaybackErrorEvent(const MediaResult& aError) {
   MOZ_ASSERT(NS_IsMainThread());
-#ifndef MOZ_WMF
+#ifndef MOZ_WMF_MEDIA_ENGINE
   DecodeError(aError);
 #else
   if (aError != NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR) {
