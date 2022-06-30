@@ -583,7 +583,7 @@ NS_IMETHODIMP DataPipeSender::AsyncWait(nsIOutputStreamCallback* aCallback,
                                         uint32_t aRequestedCount,
                                         nsIEventTarget* aTarget) {
   AsyncWaitInternal(
-      aCallback ? NS_NewRunnableFunction(
+      aCallback ? NS_NewCancelableRunnableFunction(
                       "DataPipeReceiver::AsyncWait",
                       [self = RefPtr{this}, callback = RefPtr{aCallback}] {
                         MOZ_LOG(gDataPipeLog, LogLevel::Debug,
@@ -654,7 +654,7 @@ NS_IMETHODIMP DataPipeReceiver::AsyncWait(nsIInputStreamCallback* aCallback,
                                           uint32_t aRequestedCount,
                                           nsIEventTarget* aTarget) {
   AsyncWaitInternal(
-      aCallback ? NS_NewRunnableFunction(
+      aCallback ? NS_NewCancelableRunnableFunction(
                       "DataPipeReceiver::AsyncWait",
                       [self = RefPtr{this}, callback = RefPtr{aCallback}] {
                         MOZ_LOG(gDataPipeLog, LogLevel::Debug,
