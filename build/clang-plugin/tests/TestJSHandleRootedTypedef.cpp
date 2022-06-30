@@ -39,7 +39,10 @@ class Foo {
   void FullHandleValue(JS::Handle<JS::Value>){};
   void FullHandleValueVector(JS::Handle<JS::StackGCVector<JS::Value>>){};
   void FullHandleObjectVector(JS::Handle<JS::StackGCVector<JSObject*>>){};
-  void FullHandleIdVector(JS::Handle<JS::StackGCVector<JS::PropertyKey>>){};
+  void FullHandleIdVector(JS::HandleVector<JS::PropertyKey>){};
+  void FullHandleValueVectorShorter(JS::HandleVector<JS::Value>){};
+  void FullHandleObjectVectorShorter(JS::HandleVector<JSObject*>){};
+  void FullHandleIdVectorShorter(JS::HandleVector<JS::PropertyKey>){};
 
   void FullMutableHandleFunction(JS::MutableHandle<JSFunction*>){};
   void FullMutableHandleId(JS::MutableHandle<JS::PropertyKey>){};
@@ -52,6 +55,9 @@ class Foo {
   void FullMutableHandleValueVector(JS::MutableHandle<JS::StackGCVector<JS::Value>>){};
   void FullMutableHandleObjectVector(JS::MutableHandle<JS::StackGCVector<JSObject*>>){};
   void FullMutableHandleIdVector(JS::MutableHandle<JS::StackGCVector<JS::PropertyKey>>){};
+  void FullMutableHandleValueVectorShorter(JS::MutableHandleVector<JS::Value>){};
+  void FullMutableHandleObjectVectorShorter(JS::MutableHandleVector<JSObject*>){};
+  void FullMutableHandleIdVectorShorter(JS::MutableHandleVector<JS::PropertyKey>){};
 };
 
 static void Bar(JSContext *aCx) {
@@ -141,6 +147,9 @@ static void Bar(JSContext *aCx) {
   JS::Handle<JS::StackGCVector<JS::Value>> FullHandleValueVector(FullRootedValueVector);
   JS::Handle<JS::StackGCVector<JSObject*>> FullHandleObjectVector(FullRootedObjectVector);
   JS::Handle<JS::StackGCVector<JS::PropertyKey>> FullHandleIdVector(FullRootedIdVector);
+  JS::HandleVector<JS::Value> FullHandleValueVectorShorter(FullRootedValueVector);
+  JS::HandleVector<JSObject*> FullHandleObjectVectorShorter(FullRootedObjectVector);
+  JS::HandleVector<JS::PropertyKey> FullHandleIdVectorShorter(FullRootedIdVector);
 
   JS::MutableHandle<JSFunction*> FullMutableHandleFunction(&FullRootedFunction);
   JS::MutableHandle<JS::PropertyKey> FullMutableHandleId(&FullRootedId);
@@ -153,4 +162,7 @@ static void Bar(JSContext *aCx) {
   JS::MutableHandle<JS::StackGCVector<JS::Value>> FullMutableHandleValueVector(&FullRootedValueVector);
   JS::MutableHandle<JS::StackGCVector<JSObject*>> FullMutableHandleObjectVector(&FullRootedObjectVector);
   JS::MutableHandle<JS::StackGCVector<JS::PropertyKey>> FullMutableHandleIdVector(&FullRootedIdVector);
+  JS::MutableHandleVector<JS::Value> FullMutableHandleValueVectorShorter(&FullRootedValueVector);
+  JS::MutableHandleVector<JSObject*> FullMutableHandleObjectVectorShorter(&FullRootedObjectVector);
+  JS::MutableHandleVector<JS::PropertyKey> FullMutableHandleIdVectorShorter(&FullRootedIdVector);
 }

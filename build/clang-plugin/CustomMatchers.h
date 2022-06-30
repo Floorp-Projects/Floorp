@@ -451,13 +451,9 @@ AST_MATCHER(MemberExpr, hasKnownLiveAnnotation) {
       {templateName "Symbol", templateName "<JS::Symbol*>"},                   \
       {templateName "BigInt", templateName "<JS::BigInt*>"},                   \
       {templateName "Value", templateName "<JS::Value>"},                      \
-      {templateName "ValueVector",                                             \
-       templateName "<JS::StackGCVector<JS::Value>>"},                         \
-      {templateName "ObjectVector",                                            \
-       templateName "<JS::StackGCVector<JSObject*>>"},                         \
-  {                                                                            \
-    templateName "IdVector",                                                   \
-        templateName "<JS::StackGCVector<JS::PropertyKey>>"                    \
+      {templateName "ValueVector", templateName "Vector<JS::Value>"},          \
+      {templateName "ObjectVector", templateName "Vector<JSObject*>"}, {       \
+    templateName "IdVector", templateName "Vector<JS::PropertyKey>"            \
   }
 
 static const char *const JSHandleRootedTypedefMap[][2] = {
