@@ -12,7 +12,14 @@
 #include <initguid.h>
 #include <stdint.h>
 
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
+#include "MP4Decoder.h"
+#include "OpusDecoder.h"
 #include "VideoUtils.h"
+#include "VorbisDecoder.h"
+#include "VPXDecoder.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Logging.h"
@@ -23,6 +30,12 @@
 #include "prenv.h"
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/WindowsVersion.h"
+
+#ifndef WAVE_FORMAT_OPUS
+#  define WAVE_FORMAT_OPUS 0x704F
+#endif
+DEFINE_GUID(MEDIASUBTYPE_OPUS, WAVE_FORMAT_OPUS, 0x000, 0x0010, 0x80, 0x00,
+            0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 
 namespace mozilla {
 
@@ -202,6 +215,37 @@ const char* MFTMessageTypeToStr(MFT_MESSAGE_TYPE aMsg) {
     default:
       return "Invalid message?";
   }
+}
+
+GUID AudioMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType) {
+  if (aMimeType.EqualsLiteral("audio/mpeg")) {
+    return MFAudioFormat_MP3;
+  } else if (MP4Decoder::IsAAC(aMimeType)) {
+    return MFAudioFormat_AAC;
+  } else if (VorbisDataDecoder::IsVorbis(aMimeType)) {
+    return MFAudioFormat_Vorbis;
+  } else if (OpusDataDecoder::IsOpus(aMimeType)) {
+    return MFAudioFormat_Opus;
+  }
+  NS_WARNING("Unsupport audio mimetype");
+  return GUID_NULL;
+}
+
+GUID VideoMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType) {
+  if (MP4Decoder::IsH264(aMimeType)) {
+    return MFVideoFormat_H264;
+  } else if (VPXDecoder::IsVP8(aMimeType)) {
+    return MFVideoFormat_VP80;
+  } else if (VPXDecoder::IsVP9(aMimeType)) {
+    return MFVideoFormat_VP90;
+  }
+#ifdef MOZ_AV1
+  else if (AOMDecoder::IsAV1(aMimeType)) {
+    return MFVideoFormat_AV1;
+  }
+#endif
+  NS_WARNING("Unsupport video mimetype");
+  return GUID_NULL;
 }
 
 namespace wmf {
