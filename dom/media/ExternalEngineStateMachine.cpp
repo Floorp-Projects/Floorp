@@ -248,8 +248,7 @@ void ExternalEngineStateMachine::SeekReader() {
   // Reset the reader first and ask it to perform a demuxer seek.
   ResetDecode();
   state->mWaitingReaderSeeked = true;
-  LOG("Seek reader to %" PRId64,
-      state->mSeekJob.mTarget->GetTime().ToMicroseconds());
+  LOG("Seek reader to %" PRId64, state->GetTargetTime().ToMicroseconds());
   mReader->Seek(state->mSeekJob.mTarget.ref())
       ->Then(OwnerThread(), __func__, this,
              &ExternalEngineStateMachine::OnSeekResolved,
@@ -264,7 +263,7 @@ void ExternalEngineStateMachine::OnSeekResolved(const media::TimeUnit& aUnit) {
   MOZ_ASSERT(mState.IsSeekingData());
   auto* state = mState.AsSeekingData();
 
-  LOG("OnSeekResolved");
+  LOG("OnReaderSeekResolved");
   state->mSeekRequest.Complete();
   state->mWaitingReaderSeeked = false;
 
@@ -288,7 +287,7 @@ void ExternalEngineStateMachine::OnSeekRejected(
   MOZ_ASSERT(mState.IsSeekingData());
   auto* state = mState.AsSeekingData();
 
-  LOG("OnSeekRejected");
+  LOG("OnReaderSeekRejected");
   state->mSeekRequest.Complete();
   if (aReject.mError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
     LOG("OnSeekRejected reason=WAITING_FOR_DATA type=%s",
@@ -769,11 +768,23 @@ void ExternalEngineStateMachine::OnPlaying() {
 
 void ExternalEngineStateMachine::OnSeeked() {
   AssertOnTaskQueue();
+  if (!mState.IsSeekingData()) {
+    LOG("Engine Seeking has been completed, ignore the event");
+    return;
+  }
   MOZ_ASSERT(mState.IsSeekingData());
+
+  const auto currentTime = mEngine->GetCurrentPosition();
   auto* state = mState.AsSeekingData();
-  // Engine's event could arrive before finishing reader's seeking.
-  state->mWaitingEngineSeeked = false;
-  CheckIfSeekCompleted();
+  LOG("OnEngineSeeked, target=%" PRId64 ", currentTime=%" PRId64,
+      state->GetTargetTime().ToMicroseconds(), currentTime.ToMicroseconds());
+  // It's possible to receive multiple seeked event if we seek the engine
+  // before the previous seeking finishes, so we would wait until the last
+  // seeking is finished.
+  if (currentTime >= state->GetTargetTime()) {
+    state->mWaitingEngineSeeked = false;
+    CheckIfSeekCompleted();
+  }
 }
 
 void ExternalEngineStateMachine::OnBufferingStarted() {
