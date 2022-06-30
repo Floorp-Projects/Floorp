@@ -7,9 +7,10 @@ import subprocess
 from abc import ABCMeta, abstractmethod
 from textwrap import dedent
 
-from six import add_metaclass
+from six import add_metaclass, text_type
 
 from virtualenv.create.via_global_ref.builtin.ref import ExePathRefToDest, PathRefToDest, RefMust
+from virtualenv.info import IS_MAC_ARM64
 from virtualenv.util.path import Path
 from virtualenv.util.six import ensure_text
 
@@ -24,20 +25,11 @@ class CPythonmacOsFramework(CPython):
     def can_describe(cls, interpreter):
         return is_mac_os_framework(interpreter) and super(CPythonmacOsFramework, cls).can_describe(interpreter)
 
-    @classmethod
-    def sources(cls, interpreter):
-        for src in super(CPythonmacOsFramework, cls).sources(interpreter):
-            yield src
-        # add a symlink to the host python image
-        exe = cls.image_ref(interpreter)
-        ref = PathRefToDest(exe, dest=lambda self, _: self.dest / ".Python", must=RefMust.SYMLINK)
-        yield ref
-
     def create(self):
         super(CPythonmacOsFramework, self).create()
 
         # change the install_name of the copied python executables
-        target = "@executable_path/../.Python"
+        target = self.desired_mach_o_image_path()
         current = self.current_mach_o_image_path()
         for src in self._sources:
             if isinstance(src, ExePathRefToDest):
@@ -61,18 +53,23 @@ class CPythonmacOsFramework(CPython):
     def current_mach_o_image_path(self):
         raise NotImplementedError
 
-    @classmethod
-    def image_ref(cls, interpreter):
+    @abstractmethod
+    def desired_mach_o_image_path(self):
         raise NotImplementedError
 
 
 class CPython2macOsFramework(CPythonmacOsFramework, CPython2PosixBase):
     @classmethod
-    def image_ref(cls, interpreter):
-        return Path(interpreter.prefix) / "Python"
+    def can_create(cls, interpreter):
+        if not IS_MAC_ARM64 and super(CPython2macOsFramework, cls).can_describe(interpreter):
+            return super(CPython2macOsFramework, cls).can_create(interpreter)
+        return False
 
     def current_mach_o_image_path(self):
         return os.path.join(self.interpreter.prefix, "Python")
+
+    def desired_mach_o_image_path(self):
+        return "@executable_path/../Python"
 
     @classmethod
     def sources(cls, interpreter):
@@ -81,6 +78,14 @@ class CPython2macOsFramework(CPythonmacOsFramework, CPython2PosixBase):
         # landmark for exec_prefix
         exec_marker_file, to_path, _ = cls.from_stdlib(cls.mappings(interpreter), "lib-dynload")
         yield PathRefToDest(exec_marker_file, dest=to_path)
+
+        # add a copy of the host python image
+        exe = Path(interpreter.prefix) / "Python"
+        yield PathRefToDest(exe, dest=lambda self, _: self.dest / "Python", must=RefMust.COPY)
+
+        # add a symlink to the Resources dir
+        resources = Path(interpreter.prefix) / "Resources"
+        yield PathRefToDest(resources, dest=lambda self, _: self.dest / "Resources")
 
     @property
     def reload_code(self):
@@ -103,13 +108,57 @@ class CPython2macOsFramework(CPythonmacOsFramework, CPython2PosixBase):
         return result
 
 
-class CPython3macOsFramework(CPythonmacOsFramework, CPython3, CPythonPosix):
+class CPython2macOsArmFramework(CPython2macOsFramework, CPythonmacOsFramework, CPython2PosixBase):
     @classmethod
-    def image_ref(cls, interpreter):
-        return Path(interpreter.prefix) / "Python3"
+    def can_create(cls, interpreter):
+        if IS_MAC_ARM64 and super(CPythonmacOsFramework, cls).can_describe(interpreter):
+            return super(CPythonmacOsFramework, cls).can_create(interpreter)
+        return False
 
+    def create(self):
+        super(CPython2macOsFramework, self).create()
+        self.fix_signature()
+
+    def fix_signature(self):
+        """
+        On Apple M1 machines (arm64 chips),  rewriting the python executable invalidates its signature.
+        In python2 this results in a unusable python exe which just dies.
+        As a temporary workaround we can codesign the python exe during the creation process.
+        """
+        exe = self.exe
+        try:
+            logging.debug("Changing signature of copied python exe %s", exe)
+            bak_dir = exe.parent / "bk"
+            # Reset the signing on Darwin since the exe has been modified.
+            # Note codesign fails on the original exe, it needs to be copied and moved back.
+            bak_dir.mkdir(parents=True, exist_ok=True)
+            subprocess.check_call(["cp", text_type(exe), text_type(bak_dir)])
+            subprocess.check_call(["mv", text_type(bak_dir / exe.name), text_type(exe)])
+            bak_dir.rmdir()
+            metadata = "--preserve-metadata=identifier,entitlements,flags,runtime"
+            cmd = ["codesign", "-s", "-", metadata, "-f", text_type(exe)]
+            logging.debug("Changing Signature: %s", cmd)
+            subprocess.check_call(cmd)
+        except Exception:
+            logging.fatal("Could not change MacOS code signing on copied python exe at %s", exe)
+            raise
+
+
+class CPython3macOsFramework(CPythonmacOsFramework, CPython3, CPythonPosix):
     def current_mach_o_image_path(self):
         return "@executable_path/../../../../Python3"
+
+    def desired_mach_o_image_path(self):
+        return "@executable_path/../.Python"
+
+    @classmethod
+    def sources(cls, interpreter):
+        for src in super(CPython3macOsFramework, cls).sources(interpreter):
+            yield src
+
+        # add a symlink to the host python image
+        exe = Path(interpreter.prefix) / "Python3"
+        yield PathRefToDest(exe, dest=lambda self, _: self.dest / ".Python", must=RefMust.SYMLINK)
 
     @property
     def reload_code(self):
@@ -156,7 +205,7 @@ def fix_mach_o(exe, current, new, max_size):
     unneeded bits of information, however Mac OS X 10.5 and earlier cannot read this new Link Edit table format.
     """
     try:
-        logging.debug(u"change Mach-O for %s from %s to %s", ensure_text(exe), current, ensure_text(new))
+        logging.debug("change Mach-O for %s from %s to %s", ensure_text(exe), current, ensure_text(new))
         _builtin_change_mach_o(max_size)(exe, current, new)
     except Exception as e:
         logging.warning("Could not call _builtin_change_mac_o: %s. " "Trying to call install_name_tool instead.", e)
