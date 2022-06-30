@@ -342,6 +342,11 @@ let Player = {
             playerBottomControlsDOMRect: this.controlsBottom.getBoundingClientRect(),
           });
         }
+        // The subtitles settings panel gets selected when entering/exiting fullscreen even though
+        // user-select is set to none. I don't know why this happens or how to prevent so we just
+        // remove the selection when fullscreen is entered/exited.
+        let selection = window.getSelection();
+        selection.removeAllRanges();
         break;
       }
 
