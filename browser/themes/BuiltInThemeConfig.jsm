@@ -452,7 +452,9 @@ const ColorwayCollections = [
       description: "colorway-collection-independent-voices-description",
     },
     cardImagePath:
-      "chrome://browser/content/colorways/colorway-collection-independent-voices.avif",
+      "chrome://browser/content/colorways/independent-voices-collection-banner.avif",
+    iconUrl:
+      "chrome://browser/content/colorways/independent-voices-collection.avif",
   },
 ];
 

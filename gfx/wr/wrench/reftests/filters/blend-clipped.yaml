@@ -21,7 +21,6 @@ root:
         -
           bounds: [0, 111, 1887, 1971]
           "clip-rect": [0, 111, 1887, 1971]
-          "clip-and-scroll": 3
           "backface-visible": true
           type: iframe
           id: [1, 3]
@@ -41,7 +40,6 @@ pipelines:
             "content-size": [1887, 1971]
           -
             "clip-rect": [0, 0, 1887, 1971]
-            "clip-and-scroll": 10
             type: "scroll-frame"
             id: 2
             "content-size": [1887, 1971]
@@ -49,18 +47,15 @@ pipelines:
           -
             bounds: [0, 0, 1887, 1971]
             "clip-rect": [0, 0, 1887, 1971]
-            "clip-and-scroll": 2
             type: clip
             id: 3
             "content-size": [1887, 1971]
           -
-            "clip-and-scroll": 3
             type: "stacking-context"
             items:
               -
                 bounds: [0, -186, 1887, 239]
                 "clip-rect": [0, -186, 1887, 239]
-                "clip-and-scroll": 3
                 "backface-visible": true
                 type: clip
                 id: 4
@@ -68,7 +63,7 @@ pipelines:
               -
                 bounds: [-660.45, -186, 0, 0]
                 "clip-rect": [-660.45, -186, 0, 0]
-                "clip-and-scroll": 4
+                spatial-id: 2
                 type: "stacking-context"
                 transform: [1, 0, 0, 0, -0.57735026, 1, 0, 0, 0, 0, 1, 0, 68.849, 0, 0, 1]
                 items:
@@ -83,10 +78,13 @@ pipelines:
                         type: clip
                         id: 5
                         "content-size": [1887, 239]
+                      - type: clip-chain
+                        id: 15
+                        clips: [3, 4, 5]
                       -
                         bounds: [0, 0, 1887, 239]
                         "clip-rect": [0, 0, 1887, 239]
-                        "clip-and-scroll": 5
+                        clip-chain: 15
                         "backface-visible": true
                         type: gradient
                         start: [943.5, -0.00000000000005684342]

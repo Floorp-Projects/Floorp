@@ -7,6 +7,7 @@ root:
     # should unapply the entire 50px that was applied, and leave the rect
     # visually in the same spot.
     - type: scroll-frame
+      id: 2
       bounds: [10, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 50]
@@ -21,9 +22,11 @@ root:
         - type: rect
           bounds: [10, 10, 50, 50]
           color: green
+          clip-chain: [2]
     # Same as above, but this time we only indicate a previous-applied-offset
     # of 40 pixels, so that's the maximum WR will unapply
     - type: scroll-frame
+      id: 3
       bounds: [10, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 50]
@@ -38,10 +41,12 @@ root:
         - type: rect
           bounds: [10, 70, 50, 50]
           color: green
+          clip-chain: [3]
     # This time we indicate a previously-applied-offset of 50 pixels, but only
     # scroll by 40 pixels. In this case 40 of the 50 applied-offset pixels will
     # be unapplied
     - type: scroll-frame
+      id: 4
       bounds: [10, 130, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 40]
@@ -56,10 +61,12 @@ root:
         - type: rect
           bounds: [10, 130, 50, 50]
           color: green
+          clip-chain: [4]
     # Here we indicate a previously-applied-offset of 50 pixels, but continue
     # scrolling in WR in the same direction by another 10 pixels. This effectively
     # increases the applied offset to 60 pixels.
     - type: scroll-frame
+      id: 5
       bounds: [10, 190, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, -10]
@@ -74,9 +81,11 @@ root:
         - type: rect
           bounds: [10, 190, 50, 50]
           color: green
+          clip-chain: [5]
     # Same as previous case, but this time with the vertical-offset-bounds
     # adjusted to limit the applied offset to only 55 pixels.
     - type: scroll-frame
+      id: 6
       bounds: [10, 250, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, -10]
@@ -91,10 +100,12 @@ root:
         - type: rect
           bounds: [10, 250, 50, 50]
           color: green
+          clip-chain: [6]
 
     # Repeat all the above cases, for top-sticky
 
     - type: scroll-frame
+      id: 7
       bounds: [70, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, -50]
@@ -109,7 +120,9 @@ root:
         - type: rect
           bounds: [70, 10, 50, 50]
           color: green
+          clip-chain: [7]
     - type: scroll-frame
+      id: 8
       bounds: [70, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, -50]
@@ -124,7 +137,9 @@ root:
         - type: rect
           bounds: [70, 70, 50, 50]
           color: green
+          clip-chain: [8]
     - type: scroll-frame
+      id: 9
       bounds: [70, 130, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, -40]
@@ -139,7 +154,9 @@ root:
         - type: rect
           bounds: [70, 130, 50, 50]
           color: green
+          clip-chain: [9]
     - type: scroll-frame
+      id: 10
       bounds: [70, 190, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 10]
@@ -154,7 +171,9 @@ root:
         - type: rect
           bounds: [70, 190, 50, 50]
           color: green
+          clip-chain: [10]
     - type: scroll-frame
+      id: 11
       bounds: [70, 250, 50, 50]
       content-size: [200, 200]
       scroll-offset: [0, 10]
@@ -169,10 +188,12 @@ root:
         - type: rect
           bounds: [70, 250, 50, 50]
           color: green
+          clip-chain: [11]
 
     # Repeat all the above cases, for right-sticky
 
     - type: scroll-frame
+      id: 12
       bounds: [130, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [50, 0]
@@ -187,7 +208,9 @@ root:
         - type: rect
           bounds: [130, 10, 50, 50]
           color: green
+          clip-chain: [12]
     - type: scroll-frame
+      id: 13
       bounds: [130, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [50, 0]
@@ -202,7 +225,9 @@ root:
         - type: rect
           bounds: [130, 70, 50, 50]
           color: green
+          clip-chain: [13]
     - type: scroll-frame
+      id: 14
       bounds: [130, 130, 50, 50]
       content-size: [200, 200]
       scroll-offset: [40, 0]
@@ -217,7 +242,9 @@ root:
         - type: rect
           bounds: [130, 130, 50, 50]
           color: green
+          clip-chain: [14]
     - type: scroll-frame
+      id: 15
       bounds: [130, 190, 50, 50]
       content-size: [200, 200]
       scroll-offset: [-10, 0]
@@ -232,7 +259,9 @@ root:
         - type: rect
           bounds: [130, 190, 50, 50]
           color: green
+          clip-chain: [15]
     - type: scroll-frame
+      id: 16
       bounds: [130, 250, 50, 50]
       content-size: [200, 200]
       scroll-offset: [-10, 0]
@@ -247,10 +276,12 @@ root:
         - type: rect
           bounds: [130, 250, 50, 50]
           color: green
+          clip-chain: [16]
 
     # Repeat all the above cases, for left-sticky
 
     - type: scroll-frame
+      id: 17
       bounds: [190, 10, 50, 50]
       content-size: [200, 200]
       scroll-offset: [-50, 0]
@@ -265,7 +296,9 @@ root:
         - type: rect
           bounds: [190, 10, 50, 50]
           color: green
+          clip-chain: [17]
     - type: scroll-frame
+      id: 18
       bounds: [190, 70, 50, 50]
       content-size: [200, 200]
       scroll-offset: [-50, 0]
@@ -280,7 +313,9 @@ root:
         - type: rect
           bounds: [190, 70, 50, 50]
           color: green
+          clip-chain: [18]
     - type: scroll-frame
+      id: 19
       bounds: [190, 130, 50, 50]
       content-size: [200, 200]
       scroll-offset: [-40, 0]
@@ -295,7 +330,9 @@ root:
         - type: rect
           bounds: [190, 130, 50, 50]
           color: green
+          clip-chain: [19]
     - type: scroll-frame
+      id: 20
       bounds: [190, 190, 50, 50]
       content-size: [200, 200]
       scroll-offset: [10, 0]
@@ -310,7 +347,9 @@ root:
         - type: rect
           bounds: [190, 190, 50, 50]
           color: green
+          clip-chain: [20]
     - type: scroll-frame
+      id: 21
       bounds: [190, 250, 50, 50]
       content-size: [200, 200]
       scroll-offset: [10, 0]
@@ -325,3 +364,4 @@ root:
         - type: rect
           bounds: [190, 250, 50, 50]
           color: green
+          clip-chain: [21]

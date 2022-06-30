@@ -14,13 +14,11 @@ root:
       -
         bounds: [10, 10, 100, 100]
         clip-rect: [10, 10, 100, 100]
-        clip-and-scroll: root-reference-frame
         type: stacking-context
         items:
           -
             bounds: [0, 0, 100, 100]
             clip-rect: [0, 0, 100, 100]
-            clip-and-scroll: root-reference-frame
             type: rect
             color: 0 255 0 1.0
     # The same test as above, except this time the stacking context also starts its
@@ -34,7 +32,6 @@ root:
       -
         bounds: [110, 10, 100, 100]
         clip-rect: [110, 10, 100, 100]
-        clip-and-scroll: root-reference-frame
         id: 4
         type: stacking-context
         transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
@@ -42,7 +39,6 @@ root:
           -
             bounds: [0, 0, 100, 100]
             clip-rect: [0, 0, 100, 100]
-            clip-and-scroll: 4
             type: rect
             color: 0 255 0 1.0
   id: [0, 1]

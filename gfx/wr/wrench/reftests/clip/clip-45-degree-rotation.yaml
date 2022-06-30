@@ -18,10 +18,13 @@ root:
           "clip-rect": [0, 0, 300, 300]
           type: clip
           id: 5
+        - type: clip-chain
+          id: 6
+          clips: [5]
         -
           bounds: [0, 0, 0, 0]
           "clip-rect": [0, 0, 0, 0]
-          clip-and-scroll: 5
+          clip-chain: 6
           type: "stacking-context"
           transform: rotate(45) translate(-300, 0)
           items:

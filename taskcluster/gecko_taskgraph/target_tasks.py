@@ -172,20 +172,26 @@ def filter_release_tasks(task, parameters):
     if task.attributes.get("shipping_phase") not in (None, "build"):
         return False
 
-    """ No debug on beta/release, keep on ESR with 4 week cycles, beta/release
+    """ No debug on release, keep on ESR with 4 week cycles, release
     will not be too different from central, but ESR will live for a long time.
 
     From June 2019 -> June 2020, we found 1 unique regression on ESR debug
     and 5 unique regressions on beta/release.  Keeping spidermonkey and linux
     debug finds all but 1 unique regressions (windows found on try) for beta/release.
-    """
-    if parameters["release_type"].startswith("esr"):
-        return True
 
-    # code below here is intended to reduce beta/release debug tasks
+    ...but debug-only failures started showing up on ESR (esr-91, esr-102) so
+    desktop debug tests were added back for beta.
+    """
     build_type = task.attributes.get("build_type", "")
     build_platform = task.attributes.get("build_platform", "")
     test_platform = task.attributes.get("test_platform", "")
+
+    if parameters["release_type"].startswith("esr") or (
+        parameters["release_type"] == "beta" and "android" not in build_platform
+    ):
+        return True
+
+    # code below here is intended to reduce release debug tasks
     if task.kind == "hazard" or "toolchain" in build_platform:
         # keep hazard and toolchain builds around
         return True

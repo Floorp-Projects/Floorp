@@ -12,16 +12,22 @@ root:
           bottom-left: 50,
           bottom-right: 50,
         }
+  - type: clip-chain
+    id: 12
+    clips: [2]
   - type: stacking-context
     bounds: [0, 0, 100, 100]
     items:
       - type: rect
         bounds: [ 0, 0, 100, 100 ]
         color: [0, 255, 0]
-        clip-and-scroll: 2
+        clip-chain: 12
   - type: clip
     id: 3
     bounds: [120, 0, 50, 50]
+  - type: clip-chain
+    id: 13
+    clips: [3]
   - type: stacking-context
     bounds: [100, 0, 100, 100]
     filters: hue-rotate(90)
@@ -29,4 +35,4 @@ root:
       - type: rect
         bounds: [ 0, 0, 100, 100 ]
         color: [0, 255, 0]
-        clip-and-scroll: 3
+        clip-chain: 13

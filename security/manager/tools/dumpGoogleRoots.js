@@ -17,12 +17,6 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Services.prefs.setBoolPref("network.process.enabled", false);
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
-
 function downloadRoots() {
   let req = new XMLHttpRequest();
   req.open("GET", "https://pki.google.com/roots.pem", false);

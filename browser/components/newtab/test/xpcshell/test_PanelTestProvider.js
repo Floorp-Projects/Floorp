@@ -10,6 +10,7 @@ const { JsonSchema } = ChromeUtils.import(
 
 Cu.importGlobalProperties(["fetch"]);
 
+let MESSAGING_EXPERIMENT_SCHEMA;
 let CFR_SCHEMA;
 let UPDATE_ACTION_SCHEMA;
 let WHATS_NEW_SCHEMA;
@@ -21,20 +22,23 @@ add_setup(async function setup() {
     return fetch(uri, { credentials: "omit" }).then(rsp => rsp.json());
   }
 
+  MESSAGING_EXPERIMENT_SCHEMA = await fetchSchema(
+    "resource://activity-stream/schemas/MessagingExperiment.schema.json"
+  );
   CFR_SCHEMA = await fetchSchema(
-    "resource://activity-stream/schemas/CFR/ExtensionDoorhanger.schema.json"
+    "resource://testing-common/ExtensionDoorhanger.schema.json"
   );
   UPDATE_ACTION_SCHEMA = await fetchSchema(
-    "resource://activity-stream/schemas/OnboardingMessage/UpdateAction.schema.json"
+    "resource://testing-common/UpdateAction.schema.json"
   );
   WHATS_NEW_SCHEMA = await fetchSchema(
-    "resource://activity-stream/schemas/OnboardingMessage/WhatsNewMessage.schema.json"
+    "resource://testing-common/WhatsNewMessage.schema.json"
   );
   SPOTLIGHT_SCHEMA = await fetchSchema(
-    "resource://activity-stream/schemas/OnboardingMessage/Spotlight.schema.json"
+    "resource://testing-common/Spotlight.schema.json"
   );
   PB_NEWTAB_SCHEMA = await fetchSchema(
-    "resource://activity-stream/schemas/PBNewtab/NewtabPromoMessage.schema.json"
+    "resource://testing-common/NewtabPromoMessage.schema.json"
   );
 });
 
@@ -42,7 +46,13 @@ function assertSchema(obj, schema, log) {
   Assert.deepEqual(
     JsonSchema.validate(obj, schema),
     { valid: true, errors: [] },
-    log
+    `${log} (${schema.title} schema)`
+  );
+
+  Assert.deepEqual(
+    JsonSchema.validate(obj, MESSAGING_EXPERIMENT_SCHEMA),
+    { valid: true, errors: [] },
+    `${log} (MessagingExperiment schema)`
   );
 }
 
@@ -58,6 +68,12 @@ add_task(async function test_PanelTestProvider() {
   );
 
   for (const [i, msg] of messages
+    .filter(m => ["cfr_doorhanger", "milestone_message"].includes(m.template))
+    .entries()) {
+    assertSchema(msg, CFR_SCHEMA, `cfr message ${msg.id ?? i} is valid`);
+  }
+
+  for (const [i, msg] of messages
     .filter(m => m.template === "update_action")
     .entries()) {
     assertSchema(
@@ -71,13 +87,9 @@ add_task(async function test_PanelTestProvider() {
     .filter(m => m.template === "whatsnew_panel_message")
     .entries()) {
     assertSchema(
-      msg.content,
+      msg,
       WHATS_NEW_SCHEMA,
       `whatsnew_panel_message message ${msg.id ?? i} is valid`
-    );
-    Assert.ok(
-      Object.keys(msg).includes("order"),
-      `whatsnew_panel_message message ${msg.id ?? i} has "order" property`
     );
   }
 
@@ -105,37 +117,5 @@ add_task(async function test_PanelTestProvider() {
     messages.filter(m => m.template === "pb_newtab").length,
     1,
     "There is one pb_newtab message"
-  );
-});
-
-add_task(async function test_SpotlightAsCFR() {
-  let message = await PanelTestProvider.getMessages().then(msgs =>
-    msgs.find(msg => msg.id === "SPOTLIGHT_MESSAGE_93")
-  );
-
-  message = {
-    ...message,
-    content: {
-      ...message.content,
-      category: "",
-      layout: "icon_and_message",
-      bucket_id: "",
-      notification_text: "",
-      heading_text: "",
-      text: "",
-      buttons: {},
-    },
-  };
-
-  assertSchema(
-    message,
-    CFR_SCHEMA,
-    "Munged spotlight message validates with CFR ExtensionDoorhanger schema"
-  );
-
-  assertSchema(
-    message,
-    SPOTLIGHT_SCHEMA,
-    "Munged Spotlight message validates with Spotlight schema"
   );
 });

@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various keyboard scrolling tests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var bug1756529_prefs= [
+  // Increase distance of line scroll (units here are "number of lines") so
+  // that a smooth scroll animation reliably takes multiple frames.
+  ["toolkit.scrollbox.verticalScrollDistance", 5],
+  // The test performs a single-tap gesture between test cases to cancel the
+  // animation from the previous test case. For test cases that run fast (e.g.
+  // instant scrolling), two single-taps could occur close enough in succession
+  // that they get interpreted as a double-tap.
+  ["apz.allow_double_tap_zooming", false]
+];
+
+var subtests = [
+  // Run helper_bug1756529.html twice, first exercising the main-thread keyboard
+  // scrolling codepaths (e.g. PresShell::ScrollPage()), and once exercising the
+  // APZ keyboard scrolling codepaths.
+  {"file": "helper_bug1756529.html", prefs: bug1756529_prefs},
+  {"file": "helper_bug1756529.html", prefs: [...bug1756529_prefs,
+                                             ["test.events.async.enabled", true]]},
+];
+
+if (isKeyApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+} else {
+  SimpleTest.ok(true, "Keyboard APZ is disabled");
+}
+  </script>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1383365">Async key scrolling test</a>
+</body>
+</html>

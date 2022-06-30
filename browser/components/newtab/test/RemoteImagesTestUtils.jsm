@@ -308,7 +308,7 @@ const RemoteImagesTestUtils = {
         recordId: imageInfo.recordId,
         hash: imageInfo.hash,
         mimetype: imageInfo.mimetype,
-        lastLoaded: lastLoaded ?? Date.UTC(),
+        lastLoaded: lastLoaded ?? Date.now(),
       },
     };
   },

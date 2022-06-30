@@ -172,6 +172,12 @@ body > main > aside {
   padding: .2em 1em;
 }
 
+#colorways-collection-graphic {
+  max-width: 225px;
+  max-height: 225px;
+  margin-bottom: 1.5em;
+}
+
 [hidden] {
   display: none !important;
 }

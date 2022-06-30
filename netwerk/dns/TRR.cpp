@@ -844,6 +844,10 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
 nsresult TRR::On200Response(nsIChannel* aChannel) {
   // decode body and create an AddrInfo struct for the response
   nsClassHashtable<nsCStringHashKey, DOHresp> additionalRecords;
+  RefPtr<TypeHostRecord> typeRec = do_QueryObject(mRec);
+  if (typeRec && typeRec->mOriginHost) {
+    GetOrCreateDNSPacket()->SetOriginHost(typeRec->mOriginHost);
+  }
   nsresult rv = GetOrCreateDNSPacket()->Decode(
       mHost, mType, mCname, StaticPrefs::network_trr_allow_rfc1918(), mDNS,
       mResult, additionalRecords, mTTL);

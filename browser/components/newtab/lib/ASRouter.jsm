@@ -328,9 +328,17 @@ const MessageLoaderUtils = {
   },
 
   async _experimentsAPILoader(provider) {
+    // Allow tests to override the set of featureIds
+    const featureIds = provider.featureIds ?? [
+      "cfr",
+      "infobar",
+      "moments-page",
+      "pbNewtab",
+      "spotlight",
+    ];
     let experiments = [];
-    for (const featureId of provider.messageGroups) {
-      let FeatureAPI = lazy.NimbusFeatures[featureId];
+    for (const featureId of featureIds) {
+      let featureAPI = lazy.NimbusFeatures[featureId];
       let experimentData = lazy.ExperimentAPI.getExperimentMetaData({
         featureId,
       });
@@ -339,9 +347,13 @@ const MessageLoaderUtils = {
         continue;
       }
 
-      let message = FeatureAPI.getAllVariables();
+      let message = featureAPI.getAllVariables();
 
       if (message?.id) {
+        // Cache the Nimbus feature ID on the message because there is not a 1-1
+        // correspondance between templates and features. This is used when
+        // recording expose events (see |sendTriggerMessage|).
+        message._nimbusFeature = featureId;
         experiments.push(message);
       }
 
@@ -1694,7 +1706,7 @@ class _ASRouter {
     TelemetryStopwatch.finish("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
 
     // Format urls if any are defined
-    ["infoLinkUrl", "promoLinkUrl"].forEach(key => {
+    ["infoLinkUrl"].forEach(key => {
       if (message?.content?.[key]) {
         message.content[key] = Services.urlFormatter.formatURL(
           message.content[key]
@@ -1779,17 +1791,9 @@ class _ASRouter {
     }
 
     if (nonReachMessages.length) {
-      // Map from message template to Nimbus feature
-      let featureMap = {
-        cfr_doorhanger: "cfr",
-        spotlight: "spotlight",
-        infobar: "infobar",
-        update_action: "moments-page",
-        pb_newtab: "pbNewtab",
-      };
-      let feature = featureMap[nonReachMessages[0].template];
-      if (feature) {
-        lazy.NimbusFeatures[feature].recordExposureEvent({ once: true });
+      let featureId = nonReachMessages[0]._nimbusFeature;
+      if (featureId) {
+        lazy.NimbusFeatures[featureId].recordExposureEvent({ once: true });
       }
     }
 

@@ -7,6 +7,9 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+// Bug 1777268 - This is currently not available in the globals, but we
+// may consider adding it.
+// eslint-disable-next-line mozilla/reject-importGlobalProperties
 Cu.importGlobalProperties(["structuredClone"]);
 
 var EXPORTED_SYMBOLS = ["ReportSiteIssueHelperChild"];

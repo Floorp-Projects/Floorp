@@ -1,11 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  OnboardingMessageProvider:
-    "resource://activity-stream/lib/OnboardingMessageProvider.jsm",
-  sinon: "resource://testing-common/Sinon.jsm",
-});
+const { JsonSchema } = ChromeUtils.import(
+  "resource://gre/modules/JsonSchema.jsm"
+);
+const { OnboardingMessageProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
+);
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 add_task(
   async function test_OnboardingMessageProvider_getUpgradeMessage_no_pin() {
@@ -71,3 +73,64 @@ add_task(
     sandbox.restore();
   }
 );
+
+add_task(async function test_schemaValidation() {
+  function schemaValidator(uri) {
+    return fetch(uri, { credentials: "omit" })
+      .then(rsp => rsp.json())
+      .then(schema => new JsonSchema.Validator(schema));
+  }
+
+  function assertValid(validator, obj, msg) {
+    const result = validator.validate(obj);
+    Assert.deepEqual(
+      result,
+      { valid: true, errors: [] },
+      `${msg} - errors = ${JSON.stringify(result.errors, undefined, 2)}`
+    );
+  }
+
+  const experimentValidator = await schemaValidator(
+    "resource://activity-stream/schemas/MessagingExperiment.schema.json"
+  );
+  const schemas = {
+    toolbar_badge: await schemaValidator(
+      "resource://testing-common/ToolbarBadgeMessage.schema.json"
+    ),
+    cfr_doorhanger: await schemaValidator(
+      "resource://testing-common/ExtensionDoorhanger.schema.json"
+    ),
+    spotlight: await schemaValidator(
+      "resource://testing-common/Spotlight.schema.json"
+    ),
+    pb_newtab: await schemaValidator(
+      "resource://testing-common/NewtabPromoMessage.schema.json"
+    ),
+    protections_panel: null, // TODO: There is no schema for protections_panel.
+  };
+
+  const messages = await OnboardingMessageProvider.getMessages();
+  for (const message of messages) {
+    const validator = schemas[message.template];
+
+    if (validator === null) {
+      continue;
+    } else if (typeof validator === "undefined") {
+      Assert.ok(
+        false,
+        `No schema validator found for message template ${message.template}. Please update this test to add one.`
+      );
+    } else {
+      assertValid(
+        validator,
+        message,
+        `Message ${message.id} validates as template ${message.template}`
+      );
+      assertValid(
+        experimentValidator,
+        message,
+        `Message ${message.id} validates as MessagingExperiment`
+      );
+    }
+  }
+});

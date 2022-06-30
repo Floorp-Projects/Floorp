@@ -1,4 +1,6 @@
 {
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "file:///ExtensionDoorhanger.schema.json",
   "title": "ExtensionDoorhanger",
   "description": "A template with a heading, addon icon, title and description. No markup allowed.",
   "version": "1.0.0",
@@ -87,8 +89,22 @@
                       "type": "object",
                       "properties": {
                         "tooltiptext": {
-                          "type": "string",
-                          "description": "Text for button tooltip used to provide information about the doorhanger."
+                          "oneOf": [
+                            {
+                              "type": "string",
+                              "description": "Text for button tooltip used to provide information about the doorhanger."
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "string_id": {
+                                  "type": "string",
+                                  "description": "Id of localized string for the tooltip."
+                                }
+                              },
+                              "required": ["string_id"]
+                            }
+                          ]
                         }
                       },
                       "required": ["tooltiptext"]
@@ -390,13 +406,24 @@
       "additionalProperties": true,
       "required": [
         "layout",
-        "category",
         "bucket_id",
-        "notification_text",
         "heading_text",
         "text",
         "buttons"
-      ]
+      ],
+      "if": {
+        "properties": {
+          "skip_address_bar_notifier": {
+            "anyOf": [
+              { "const": "false" },
+              { "const": null }
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": ["category", "notification_text"]
+      }
     },
     "priority": {
       "type": "integer"
@@ -406,7 +433,8 @@
       "description": "A JEXL expression representing targeting information"
     },
     "template": {
-      "type": "string"
+      "type": "string",
+      "enum": ["cfr_doorhanger", "milestone_message"]
     },
     "trigger": {
       "type": "object",
@@ -428,5 +456,5 @@
     }
   },
   "additionalProperties": true,
-  "required": ["id", "groups", "content", "targeting", "template", "trigger"]
+  "required": ["id", "content", "targeting", "template", "trigger"]
 }

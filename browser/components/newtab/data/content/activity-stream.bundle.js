@@ -8332,9 +8332,11 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const {
       DiscoveryStream
     } = this.props;
+    const prefs = this.props.Prefs.values;
     const {
       recentSavesEnabled
     } = DiscoveryStream;
+    const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
     const {
       hybridLayout,
       hideCardBackground,
@@ -8452,7 +8454,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
 
     let moreRecsHeader = ""; // For now this is English only.
 
-    if (recentSavesEnabled || essentialReadsHeader && editorsPicksHeader) {
+    if (showRecentSaves || essentialReadsHeader && editorsPicksHeader) {
       let spliceAt = 6; // For 4 card row layouts, second row is 8 cards, and regular it is 6 cards.
 
       if (fourCardLayout) {
@@ -8479,7 +8481,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const className = `ds-card-grid-${this.props.border} ${variantClass} ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`;
     return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, ((_essentialReadsCards = essentialReadsCards) === null || _essentialReadsCards === void 0 ? void 0 : _essentialReadsCards.length) > 0 && /*#__PURE__*/external_React_default().createElement(GridContainer, {
       className: className
-    }, essentialReadsCards), recentSavesEnabled && /*#__PURE__*/external_React_default().createElement(RecentSavesContainer, {
+    }, essentialReadsCards), showRecentSaves && /*#__PURE__*/external_React_default().createElement(RecentSavesContainer, {
       className: className,
       dispatch: this.props.dispatch
     }), ((_editorsPicksCards = editorsPicksCards) === null || _editorsPicksCards === void 0 ? void 0 : _editorsPicksCards.length) > 0 && /*#__PURE__*/external_React_default().createElement(GridContainer, {
@@ -8534,6 +8536,7 @@ _CardGrid.defaultProps = {
   loadMoreThreshold: 12
 };
 const CardGrid = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  Prefs: state.Prefs,
   DiscoveryStream: state.DiscoveryStream
 }))(_CardGrid);
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss.jsx
@@ -14132,15 +14135,22 @@ class ContentSection extends (external_React_default()).PureComponent {
 
   render() {
     const {
+      enabledSections,
+      mayHaveSponsoredTopSites,
+      pocketRegion,
+      mayHaveSponsoredStories,
+      mayHaveRecentSaves,
+      openPreferences
+    } = this.props;
+    const {
       topSitesEnabled,
       pocketEnabled,
       highlightsEnabled,
       showSponsoredTopSitesEnabled,
       showSponsoredPocketEnabled,
       showRecentSavesEnabled,
-      recentSavesExperiment,
       topSitesRowsCount
-    } = this.props.enabledSections;
+    } = enabledSections;
     return /*#__PURE__*/external_React_default().createElement("div", {
       className: "home-section"
     }, /*#__PURE__*/external_React_default().createElement("div", {
@@ -14199,7 +14209,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       value: "4",
       "data-l10n-id": "newtab-custom-row-selector",
       "data-l10n-args": "{\"num\": 4}"
-    })), this.props.mayHaveSponsoredTopSites && /*#__PURE__*/external_React_default().createElement("div", {
+    })), mayHaveSponsoredTopSites && /*#__PURE__*/external_React_default().createElement("div", {
       className: "check-wrapper",
       role: "presentation"
     }, /*#__PURE__*/external_React_default().createElement("input", {
@@ -14215,7 +14225,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       className: "sponsored",
       htmlFor: "sponsored-shortcuts",
       "data-l10n-id": "newtab-custom-sponsored-sites"
-    })))))), this.props.pocketRegion && /*#__PURE__*/external_React_default().createElement("div", {
+    })))))), pocketRegion && /*#__PURE__*/external_React_default().createElement("div", {
       id: "pocket-section",
       className: "section"
     }, /*#__PURE__*/external_React_default().createElement("label", {
@@ -14242,11 +14252,11 @@ class ContentSection extends (external_React_default()).PureComponent {
       id: "custom-pocket-subtitle",
       className: "subtitle",
       "data-l10n-id": "newtab-custom-pocket-subtitle"
-    }), this.props.mayHaveSponsoredStories && /*#__PURE__*/external_React_default().createElement("div", {
+    }), (mayHaveSponsoredStories || mayHaveRecentSaves) && /*#__PURE__*/external_React_default().createElement("div", {
       className: `more-info-pocket-wrapper ${pocketEnabled ? "" : "shrink"}`
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: `more-information ${pocketEnabled ? "expand" : "shrink"}`
-    }, /*#__PURE__*/external_React_default().createElement("div", {
+    }, mayHaveSponsoredStories && /*#__PURE__*/external_React_default().createElement("div", {
       className: "check-wrapper",
       role: "presentation"
     }, /*#__PURE__*/external_React_default().createElement("input", {
@@ -14262,7 +14272,7 @@ class ContentSection extends (external_React_default()).PureComponent {
       className: "sponsored",
       htmlFor: "sponsored-pocket",
       "data-l10n-id": "newtab-custom-pocket-sponsored"
-    })), recentSavesExperiment && /*#__PURE__*/external_React_default().createElement("div", {
+    })), mayHaveRecentSaves && /*#__PURE__*/external_React_default().createElement("div", {
       className: "check-wrapper",
       role: "presentation"
     }, /*#__PURE__*/external_React_default().createElement("input", {
@@ -14311,7 +14321,7 @@ class ContentSection extends (external_React_default()).PureComponent {
     }), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("button", {
       id: "settings-link",
       className: "external-link",
-      onClick: this.props.openPreferences,
+      onClick: openPreferences,
       "data-l10n-id": "newtab-custom-settings"
     })));
   }
@@ -14379,6 +14389,7 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       pocketRegion: this.props.pocketRegion,
       mayHaveSponsoredTopSites: this.props.mayHaveSponsoredTopSites,
       mayHaveSponsoredStories: this.props.DiscoveryStream.config.show_spocs,
+      mayHaveRecentSaves: this.props.DiscoveryStream.recentSavesEnabled,
       dispatch: this.props.dispatch
     }))));
   }
@@ -14791,7 +14802,6 @@ class BaseContent extends (external_React_default()).PureComponent {
       highlightsEnabled: prefs["feeds.section.highlights"],
       showSponsoredTopSitesEnabled: prefs.showSponsoredTopSites,
       showSponsoredPocketEnabled: prefs.showSponsored,
-      recentSavesExperiment: prefs["discoverystream.recentSaves.enabled"],
       showRecentSavesEnabled: prefs.showRecentSaves,
       topSitesRowsCount: prefs.topSitesRows
     };

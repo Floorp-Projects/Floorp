@@ -159,6 +159,8 @@ public final class GeckoRuntime implements Parcelable {
         GeckoThread.onResume();
       }
       mPaused = false;
+      // Can resume location services, checks if was in use before going to background
+      GeckoAppShell.resumeLocation();
       // Monitor network status and send change notifications to Gecko
       // while active.
       GeckoNetworkManager.getInstance().start(GeckoAppShell.getApplicationContext());
@@ -168,6 +170,8 @@ public final class GeckoRuntime implements Parcelable {
     void onPause() {
       Log.d(LOGTAG, "Lifecycle: onPause");
       mPaused = true;
+      // Pause listening for locations when in background
+      GeckoAppShell.pauseLocation();
       // Stop monitoring network status while inactive.
       GeckoNetworkManager.getInstance().stop();
       GeckoThread.onPause();

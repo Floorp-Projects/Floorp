@@ -1,4 +1,6 @@
 {
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "file:///WhatsNewMessage.schema.json",
   "title": "WhatsNewMessage",
   "description": "A template for the messages that appear in the What's New panel.",
   "version": "1.2.0",
@@ -17,81 +19,141 @@
               "type": "string"
             }
           },
-          "required": ["string_id"],
+          "required": [
+            "string_id"
+          ],
           "description": "Id of localized string to be rendered."
         }
       ]
     }
   },
   "properties": {
-    "layout": {
-      "description": "Different message layouts",
-     "enum": ["tracking-protections"]
+    "content": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "description": "Different message layouts",
+          "enum": [
+            "tracking-protections"
+          ]
+        },
+        "layout_title_content_variable": {
+          "description": "Select what profile specific value to show for the current layout.",
+          "type": "string"
+        },
+        "bucket_id": {
+          "type": "string",
+          "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
+        },
+        "published_date": {
+          "type": "integer",
+          "description": "The date/time (number of milliseconds elapsed since January 1, 1970 00:00:00 UTC) the message was published."
+        },
+        "title": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/localizableText"
+            },
+            {
+              "description": "Id of localized string or message override of What's New message title"
+            }
+          ]
+        },
+        "subtitle": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/localizableText"
+            },
+            {
+              "description": "Id of localized string or message override of What's New message subtitle"
+            }
+          ]
+        },
+        "body": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/localizableText"
+            },
+            {
+              "description": "Id of localized string or message override of What's New message body"
+            }
+          ]
+        },
+        "link_text": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/localizableText"
+            },
+            {
+              "description": "(optional) Id of localized string or message override of What's New message link text"
+            }
+          ]
+        },
+        "cta_url": {
+          "description": "Target URL for the What's New message.",
+          "type": "string",
+          "format": "moz-url-format"
+        },
+        "cta_type": {
+          "description": "Type of url open action",
+          "enum": [
+            "OPEN_URL",
+            "OPEN_ABOUT_PAGE",
+            "OPEN_PROTECTION_REPORT"
+          ]
+        },
+        "cta_where": {
+          "description": "How to open the cta: new window, tab, focused, unfocused.",
+          "enum": [
+            "current",
+            "tabshifted",
+            "tab",
+            "save",
+            "window"
+          ]
+        },
+        "icon_url": {
+          "description": "(optional) URL for the What's New message icon.",
+          "type": "string",
+          "format": "uri"
+        },
+        "icon_alt": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/localizableText"
+            },
+            {
+              "description": "Alt text for image."
+            }
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "required": [
+        "published_date",
+        "title",
+        "body",
+        "cta_url",
+        "bucket_id"
+      ],
+      "dependencies": {
+        "layout": [
+          "layout_title_content_variable"
+        ]
+      }
     },
-    "layout_title_content_variable": {
-      "description": "Select what profile specific value to show for the current layout.",
-      "type": "string"
+    "order": {
+      "type": "integer"
     },
-    "bucket_id": {
+    "template": {
       "type": "string",
-      "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
-    },
-    "published_date": {
-      "type": "integer",
-      "description": "The date/time (number of milliseconds elapsed since January 1, 1970 00:00:00 UTC) the message was published."
-    },
-    "title": {
-      "allOf": [
-        {"$ref": "#/definitions/localizableText"},
-        {"description": "Id of localized string or message override of What's New message title"}
-      ]
-    },
-    "subtitle": {
-      "allOf": [
-        {"$ref": "#/definitions/localizableText"},
-        {"description": "Id of localized string or message override of What's New message subtitle"}
-      ]
-    },
-    "body": {
-      "allOf": [
-        {"$ref": "#/definitions/localizableText"},
-        {"description": "Id of localized string or message override of What's New message body"}
-      ]
-    },
-    "link_text": {
-      "allOf": [
-        {"$ref": "#/definitions/localizableText"},
-        {"description": "(optional) Id of localized string or message override of What's New message link text"}
-      ]
-    },
-    "cta_url": {
-      "description": "Target URL for the What's New message.",
-      "type": "string",
-      "format": "moz-url-format"
-    },
-    "cta_type": {
-      "description": "Type of url open action",
-      "enum": ["OPEN_URL", "OPEN_ABOUT_PAGE", "OPEN_PROTECTION_REPORT"]
-    },
-    "cta_where": {
-      "description": "How to open the cta: new window, tab, focused, unfocused.",
-      "enum": ["current", "tabshifted", "tab", "save", "window"]
-    },
-    "icon_url": {
-      "description": "(optional) URL for the What's New message icon.",
-      "type": "string",
-      "format": "uri"
-    },
-    "icon_alt": {
-      "allOf": [
-        {"$ref": "#/definitions/localizableText"},
-        {"description": "Alt text for image."}
-      ]
+      "const": "whatsnew_panel_message"
     }
   },
-  "additionalProperties": true,
-  "required": ["published_date", "title", "body", "cta_url", "bucket_id"],
-  "dependencies": {
-    "layout": ["layout_title_content_variable"]
-  }
+  "required": [
+    "content",
+    "order",
+    "template"
+  ],
+  "additionalProperties": true
 }

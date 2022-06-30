@@ -457,13 +457,6 @@ const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "discoverystream.recentSaves.enabled",
-    {
-      title: "Control whether recent saves are available to display on Newtab",
-      value: false,
-    },
-  ],
-  [
     "showRecentSaves",
     {
       title: "Control whether a user wants recent saves visible on Newtab",

@@ -180,7 +180,7 @@ async function setup(experiment) {
       ["datareporting.healthreport.uploadEnabled", true],
       [
         "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments",
-        `{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","messageGroups":["cfr","spotlight","infobar","aboutwelcome"],"updateCycleInMs":0}`,
+        `{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","updateCycleInMs":0}`,
       ],
     ],
   });
