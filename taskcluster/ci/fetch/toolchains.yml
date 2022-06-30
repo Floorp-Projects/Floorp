@@ -473,17 +473,6 @@ makecab:
         repo: https://github.com/glandium/rust-makecab/
         revision: 73a4605b97123bf7221533c671f27f234d974b02
 
-nodejs-10-linux64:
-    description: nodejs 10 for x64 linux
-    fetch:
-        type: static-url
-        url: https://nodejs.org/dist/v10.23.1/node-v10.23.1-linux-x64.tar.xz
-        sha256: 207e5ec77ca655ba6fcde922d6b329acbb09898b0bd793ccfcce6c27a36fdff0
-        size: 13139076
-        artifact-name: nodejs.tar.zst
-        strip-components: 1
-        add-prefix: node/
-
 nodejs-12-linux64:
     description: nodejs 12 for x64 linux
     fetch:
@@ -502,17 +491,6 @@ nodejs-16-linux64:
         url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-linux-x64.tar.xz
         sha256: 1736446bb102e19942addce29f6a12b157ca71f38b9159d0446f51ba69618b8d
         size: 22206588
-        artifact-name: nodejs.tar.zst
-        strip-components: 1
-        add-prefix: node/
-
-nodejs-10-macosx64:
-    description: nodejs 10 for x64 macOS
-    fetch:
-        type: static-url
-        url: https://nodejs.org/dist/v10.23.1/node-v10.23.1-darwin-x64.tar.xz
-        sha256: febfdabd98ab5b8f8fdff32ab8c111d834083805bf042ab65c923cc22609c99d
-        size: 12233276
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -550,17 +528,6 @@ nodejs-16-macosx64-arm64:
         strip-components: 1
         add-prefix: node/
 
-nodejs-10-win32:
-    description: nodejs 10 for x86 Windows
-    fetch:
-        type: static-url
-        url: https://nodejs.org/dist/v10.23.1/node-v10.23.1-win-x86.zip
-        sha256: c3be0fd50c218cc52e85377c9e22d7d2110d72de95bdbc9447145b246330f818
-        size: 16806899
-        artifact-name: nodejs.tar.zst
-        strip-components: 1
-        add-prefix: node/
-
 nodejs-12-win32:
     description: nodejs 12 for x86 Windows
     fetch:
@@ -579,17 +546,6 @@ nodejs-16-win32:
         url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-win-x86.zip
         sha256: 0600dffb5331b6f49e6ff4fa97770811746e0e2ecaf53de6deaafff277a644b4
         size: 25092862
-        artifact-name: nodejs.tar.zst
-        strip-components: 1
-        add-prefix: node/
-
-nodejs-10-win64:
-    description: nodejs 10 for x64 Windows
-    fetch:
-        type: static-url
-        url: https://nodejs.org/dist/v10.23.1/node-v10.23.1-win-x64.zip
-        sha256: 497996aa1037b6f7f492c1d275bb90140269223939525286b4e95babad16f0de
-        size: 18307638
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
