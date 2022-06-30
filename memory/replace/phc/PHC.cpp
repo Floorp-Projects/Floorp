@@ -793,14 +793,16 @@ class GMut {
     MOZ_RELEASE_ASSERT(page.mBaseAddr == aPtr);
 
     if (page.mState == AllocPageState::Freed) {
+      LOG("EnsureValidAndInUse(%p), use-after-free\n", aPtr);
       // An operation on a freed page? This is a particular kind of
       // use-after-free. Deliberately touch the page in question, in order to
       // cause a crash that triggers the usual PHC machinery. But unlock sMutex
       // first, because that self-same PHC machinery needs to re-lock it, and
       // the crash causes non-local control flow so sMutex won't be unlocked
       // the normal way in the caller.
-      LOG("EnsureValidAndInUse(%p), use-after-free\n", aPtr);
+      PUSH_IGNORE_THREAD_SAFETY
       sMutex.Unlock();
+      POP_THREAD_SAFETY
       *static_cast<uint8_t*>(aPtr) = 0;
       MOZ_CRASH("unreachable");
     }
@@ -877,8 +879,8 @@ class GMut {
     *aInfo = {TagUnknown, nullptr, 0, 0};
   }
 
-  static void prefork() { sMutex.Lock(); }
-  static void postfork_parent() { sMutex.Unlock(); }
+  static void prefork() CAPABILITY_ACQUIRE(sMutex) { sMutex.Lock(); }
+  static void postfork_parent() CAPABILITY_RELEASE(sMutex) { sMutex.Unlock(); }
   static void postfork_child() { sMutex.Init(); }
 
   void IncPageAllocHits(GMutLock) { mPageAllocHits++; }
