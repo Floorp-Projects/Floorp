@@ -521,13 +521,11 @@ var PlacesUIUtils = {
         false
       )
     ) {
-      let topUndoEntry;
-      let batchBlockingDeferred;
 
       // Set the transaction manager into batching mode.
-      topUndoEntry = lazy.PlacesTransactions.topUndoEntry;
-      batchBlockingDeferred = lazy.PromiseUtils.defer();
-      lazy.PlacesTransactions.batch(async () => {
+      let topUndoEntry = lazy.PlacesTransactions.topUndoEntry;
+      let batchBlockingDeferred = lazy.PromiseUtils.defer();
+      let batchCompletePromise = lazy.PlacesTransactions.batch(async () => {
         await batchBlockingDeferred.promise;
       });
 
@@ -546,12 +544,17 @@ var PlacesUIUtils = {
 
       batchBlockingDeferred.resolve();
 
+      // Ensure the batch has completed before we start the undo/resolve
+      // the deferred promise.
+      await batchCompletePromise.catch(console.error);
+
       if (
         !bookmarkGuid &&
         topUndoEntry != lazy.PlacesTransactions.topUndoEntry
       ) {
-        lazy.PlacesTransactions.undo().catch(Cu.reportError);
+        await lazy.PlacesTransactions.undo().catch(Cu.reportError);
       }
+
       this.lastBookmarkDialogDeferred.resolve(bookmarkGuid);
       return bookmarkGuid;
     }
