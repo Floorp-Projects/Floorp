@@ -114,7 +114,6 @@ bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
   eq &= (xrCompatible == r.xrCompatible);
   eq &= (powerPreference == r.powerPreference);
   eq &= (colorSpace == r.colorSpace);
-  eq &= (ignoreColorSpace == r.ignoreColorSpace);
   return eq;
 }
 
@@ -900,10 +899,14 @@ constexpr auto MakeArray(Args... args) -> std::array<T, sizeof...(Args)> {
 }
 
 inline gfx::ColorSpace2 ToColorSpace2(const WebGLContextOptions& options) {
-  if (options.ignoreColorSpace) {
-    return gfx::ColorSpace2::UNKNOWN;
+  auto ret = gfx::ColorSpace2::UNKNOWN;
+  if (StaticPrefs::gfx_color_management_native_srgb()) {
+    ret = gfx::ColorSpace2::SRGB;
   }
-  return gfx::ToColorSpace2(options.colorSpace);
+  if (options.colorSpace) {
+    ret = gfx::ToColorSpace2(*options.colorSpace);
+  }
+  return ret;
 }
 
 // -
