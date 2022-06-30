@@ -183,7 +183,7 @@ class SitePermissionOptionsStorage(private val context: Context) {
         autoplayInaudible = getAutoplayRules().second,
         persistentStorage = SitePermissionsRules.Action.BLOCKED,
         mediaKeySystemAccess = getSitePermissionRules(SitePermission.MEDIA_KEY_SYSTEM_ACCESS),
-        crossOriginStorageAccess = SitePermissionsRules.Action.BLOCKED
+        crossOriginStorageAccess = SitePermissionsRules.Action.ASK_TO_ALLOW
     )
 
     private fun getSitePermissionRules(sitePermission: SitePermission): SitePermissionsRules.Action {
