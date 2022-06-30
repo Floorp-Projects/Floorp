@@ -1,50 +1,149 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(async function about_colorwaycloset_smoke_test() {
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: "chrome://browser/content/colorwaycloset.html",
+"use strict";
+
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { BuiltInThemes } = ChromeUtils.import(
+  "resource:///modules/BuiltInThemes.jsm"
+);
+const { ColorwayClosetOpener } = ChromeUtils.import(
+  "resource:///modules/ColorwayClosetOpener.jsm"
+);
+
+async function testInColorwayClosetModal(testMethod) {
+  const { closedPromise, dialog } = ColorwayClosetOpener.openModal();
+  await dialog._dialogReady;
+  const document = dialog._frame.contentDocument;
+  await document.l10n.ready;
+  try {
+    testMethod(document);
+  } finally {
+    document.getElementById("cancel").click();
+    await closedPromise;
+  }
+}
+
+add_task(async function setup_tests() {
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(BuiltInThemes, "findActiveColorwayCollection").returns({
+    id: "independent-voices",
+    expiry: new Date("3000-01-01"),
+    l10nId: {
+      title: "colorway-collection-independent-voices",
+      description: "colorway-collection-independent-voices-description",
     },
-    async browser => {
-      const { document } = browser.contentWindow;
+  });
+  sandbox.stub(BuiltInThemes, "isColorwayFromCurrentCollection").returns(true);
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+});
 
-      ok(
-        document.getElementById("collection-expiry-date"),
-        "expiry date exists"
-      );
+add_task(async function colorwaycloset_show_colorway() {
+  await testInColorwayClosetModal(document => {
+    is(
+      document.l10n.getAttributes(document.getElementById("collection-title"))
+        .id,
+      "colorway-collection-independent-voices",
+      "Correct collection title should be shown"
+    );
+    is(
+      document.l10n.getAttributes(
+        document.querySelector("#collection-expiry-date > span")
+      ).args.expiryDate,
+      new Date("3000-01-01").getTime(),
+      "Correct expiry date should be shown"
+    );
+    is(
+      document.l10n.getAttributes(
+        document.querySelector("#collection-expiry-date > span")
+      ).id,
+      "colorway-collection-expiry-date-span",
+      "Correct expiry date format should be shown"
+    );
+  });
+});
 
-      ok(
-        document.getElementById("collection-title"),
-        "collection title exists"
-      );
+add_task(async function colorwaycloset_custom_home_page() {
+  info("Set custom home page");
+  await HomePage.set("https://www.example.com");
+  await testInColorwayClosetModal(document => {
+    ok(
+      BrowserTestUtils.is_visible(
+        document.getElementById("use-fx-home-controls")
+      ),
+      '"Use Firefox home" controls should be shown'
+    );
+    ok(
+      BrowserTestUtils.is_hidden(
+        document.querySelector("#use-fx-home-controls > .success-prompt > span")
+      ),
+      "Success message should not be shown"
+    );
+    ok(
+      BrowserTestUtils.is_hidden(
+        document.querySelector(
+          "#use-fx-home-controls > .success-prompt > button"
+        )
+      ),
+      "Undo button should not be shown"
+    );
+    ok(
+      BrowserTestUtils.is_visible(
+        document.querySelector("#use-fx-home-controls > .reset-prompt > span")
+      ),
+      "Reset message should be shown"
+    );
+    ok(
+      BrowserTestUtils.is_visible(
+        document.querySelector("#use-fx-home-controls > .reset-prompt > button")
+      ),
+      "Apply button should be shown"
+    );
 
-      ok(
-        document.getElementsByTagName("colorway-selector"),
-        "Found colorway selector element"
-      );
+    document
+      .querySelector("#use-fx-home-controls > .reset-prompt > button")
+      .click();
 
-      ok(document.getElementById("colorway-name"), "colorway name exists");
+    ok(
+      BrowserTestUtils.is_visible(
+        document.querySelector("#use-fx-home-controls > .success-prompt > span")
+      ),
+      "Success message should be shown"
+    );
+    ok(
+      BrowserTestUtils.is_visible(
+        document.querySelector(
+          "#use-fx-home-controls > .success-prompt > button"
+        )
+      ),
+      "Undo button should be shown"
+    );
+    ok(
+      BrowserTestUtils.is_hidden(
+        document.querySelector("#use-fx-home-controls > .reset-prompt > span")
+      ),
+      "Reset message should not be shown"
+    );
+    ok(
+      BrowserTestUtils.is_hidden(
+        document.querySelector("#use-fx-home-controls > .reset-prompt > button")
+      ),
+      "Apply button should not be shown"
+    );
+  });
+});
 
-      ok(
-        document.getElementById("colorway-description"),
-        "colorway description exists"
-      );
-
-      ok(document.getElementById("set-colorway"), "Found Set Colorway button");
-
-      const useFXHomeControls = document.getElementById("use-fx-home-controls");
-      ok(useFXHomeControls, "firefox home controls exists");
-      useFXHomeControls.toggleAttribute("hidden", false);
-      ok(
-        document.querySelector("#use-fx-home-controls > .reset-prompt"),
-        "firefox home controls reset prompt exists"
-      );
-      ok(
-        document.querySelector("#use-fx-home-controls > .success-prompt"),
-        "firefox home controls reset prompt exists"
-      );
-    }
-  );
+add_task(async function colorwaycloset_default_home_page() {
+  info("Set default home page");
+  await HomePage.set(HomePage.getOriginalDefault());
+  await testInColorwayClosetModal(document => {
+    ok(
+      BrowserTestUtils.is_hidden(
+        document.getElementById("use-fx-home-controls")
+      ),
+      '"Use Firefox home" controls should be hidden'
+    );
+  });
 });
