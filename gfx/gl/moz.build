@@ -22,8 +22,6 @@ if CONFIG["MOZ_GL_PROVIDER"]:
 
 EXPORTS += [
     "AndroidSurfaceTexture.h",
-    "AutoMappable.h",
-    "Colorspaces.h",
     "ForceDiscreteGPUHelperCGL.h",
     "GfxTexturesReporter.h",
     "GLBlitHelper.h",
@@ -119,7 +117,6 @@ if CONFIG["MOZ_WAYLAND"]:
 
 UNIFIED_SOURCES += [
     "AndroidSurfaceTexture.cpp",
-    "Colorspaces.cpp",
     "GfxTexturesReporter.cpp",
     "GLBlitHelper.cpp",
     "GLContext.cpp",
@@ -139,10 +136,6 @@ UNIFIED_SOURCES += [
 ]
 SOURCES += [
     "GLScreenBuffer.cpp",
-]
-
-TEST_DIRS += [
-    "gtest",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
