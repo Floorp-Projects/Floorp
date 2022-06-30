@@ -48,4 +48,4 @@ with Files("talos/tests/video/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
 with Files("talos/tests/webgl/**"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: WebGL")

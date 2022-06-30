@@ -5,28 +5,28 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
+    BUG_COMPONENT = ("Core", "Graphics: Canvas2D")
 
 with Files("TexUnpackBlob.cpp"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: WebGL")
 
 with Files("WebGL*"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: WebGL")
 
 with Files("test/webgl-conf/**"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: WebGL")
 
 with Files("test/webgl-mochitest/**"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: WebGL")
 
 with Files("test/reftest/webgl*"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: WebGL")
 
 with Files("test/chrome/*webgl*"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: WebGL")
 
 with Files("test/crossorigin/*webgl*"):
-    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: WebGL")
 
 # Change the following line(s) to avoid bug 1081323 (clobber after changing a manifest):
 # * Adjust failure errata for webgl-conf.
