@@ -9,20 +9,20 @@ Most of these changes just add/edit tests for the functionality. Only the
 change to src/cargo/core/compiler/standard_lib.rs is important.
 
 diff --git a/src/cargo/core/compiler/standard_lib.rs b/src/cargo/core/compiler/standard_lib.rs
-index 0b14df805..7bc5151a4 100644
+index e0baebd51..547b84147 100644
 --- a/src/cargo/core/compiler/standard_lib.rs
 +++ b/src/cargo/core/compiler/standard_lib.rs
-@@ -11,6 +11,7 @@ use crate::ops::{self, Packages};
- use crate::util::errors::CargoResult;
+@@ -12,6 +12,7 @@ use crate::util::errors::CargoResult;
+ use crate::Config;
  use std::collections::{HashMap, HashSet};
  use std::env;
 +use std::fs;
  use std::path::PathBuf;
  
- /// Parse the `-Zbuild-std` flag.
-@@ -39,27 +40,45 @@ pub fn resolve_std<'cfg>(
-     crates: &[String],
- ) -> CargoResult<(PackageSet<'cfg>, Resolve, ResolvedFeatures)> {
+ use super::BuildConfig;
+@@ -74,27 +75,45 @@ pub fn resolve_std<'cfg>(
+     }
+ 
      let src_path = detect_sysroot_src_path(target_data)?;
 -    let to_patch = [
 -        "rustc-std-workspace-core",
@@ -254,7 +254,7 @@ index 000000000..4465a08a8
 +this file shouldn't be read 
 \ No newline at end of file
 diff --git a/tests/testsuite/standard_lib.rs b/tests/testsuite/standard_lib.rs
-index b0d42b38d..3bbc49db7 100644
+index 07b038b4a..6393b9ece 100644
 --- a/tests/testsuite/standard_lib.rs
 +++ b/tests/testsuite/standard_lib.rs
 @@ -27,71 +27,18 @@ fn setup() -> Option<Setup> {
