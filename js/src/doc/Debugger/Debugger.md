@@ -518,6 +518,14 @@ the adopting debugger, this method will throw.
 Given `source` of type `Debugger.Source` which is owned by an arbitrary
 `Debugger`, return an equivalent `Debugger.Source` owned by this `Debugger`.
 
+### `enableAsyncStack(global)`
+Enable async stack capturing for the realm for the global object designated by
+<i>global</i>.
+
+### `disableAsyncStack(global)`
+Disable async stack capturing for the realm for the global object designated by
+<i>global</i>.
+
 ## Static methods of the Debugger Object
 
 The functions described below are not called with a `this` value.
