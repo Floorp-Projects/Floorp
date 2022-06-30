@@ -47,8 +47,8 @@ cross-compilation where available:
     * Current stable release
     * Previous stable release
 * macOS Intel and M1
-    * Current release
-    * Previous release
+    * Current major macOS release
+    * Previous major macOS release
 * Windows x86_64
     * Windows 10 with MozillaBuild Environment
     * Windows 11 with MozillaBuild Environment
