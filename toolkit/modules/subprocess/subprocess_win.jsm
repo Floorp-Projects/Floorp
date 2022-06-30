@@ -15,6 +15,7 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -119,15 +120,13 @@ var SubprocessWin = {
   },
 
   async isExecutableFile(path) {
-    if (!PathUtils.isAbsolute(path)) {
+    if (!OS.Path.split(path).absolute) {
       return false;
     }
 
     try {
-      let info = await IOUtils.stat(path);
-      // On Windows, a FileType of "other" indicates it is a reparse point
-      // (i.e., a link).
-      return info.type !== "directory" && info.type !== "other";
+      let info = await OS.File.stat(path);
+      return !(info.isDir || info.isSymlink);
     } catch (e) {
       return false;
     }
@@ -150,7 +149,8 @@ var SubprocessWin = {
    * @returns {Promise<string>}
    */
   async pathSearch(bin, environment) {
-    if (PathUtils.isAbsolute(bin)) {
+    let split = OS.Path.split(bin);
+    if (split.absolute) {
       if (await this.isExecutableFile(bin)) {
         return bin;
       }
@@ -171,7 +171,7 @@ var SubprocessWin = {
     }
 
     for (let dir of dirs) {
-      let path = PathUtils.join(dir, bin);
+      let path = OS.Path.join(dir, bin);
 
       if (await this.isExecutableFile(path)) {
         return path;

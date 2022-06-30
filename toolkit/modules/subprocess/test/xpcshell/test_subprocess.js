@@ -35,8 +35,8 @@ let readAll = async function(pipe) {
 add_task(async function setup() {
   PYTHON = await Subprocess.pathSearch(env.get("PYTHON"));
 
-  PYTHON_BIN = PathUtils.filename(PYTHON);
-  PYTHON_DIR = PathUtils.parent(PYTHON);
+  PYTHON_BIN = OS.Path.basename(PYTHON);
+  PYTHON_DIR = OS.Path.dirname(PYTHON);
 });
 
 add_task(async function test_subprocess_io() {
@@ -527,8 +527,11 @@ add_task(async function test_subprocess_pathSearch() {
 });
 
 add_task(async function test_subprocess_workdir() {
-  let procDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile).path;
-  let tmpDir = PathUtils.normalize(PathUtils.osTempDir);
+  let procDir = await OS.File.getCurrentDirectory();
+  let tmpDirFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  tmpDirFile.initWithPath(OS.Constants.Path.tmpDir);
+  tmpDirFile.normalize();
+  let tmpDir = tmpDirFile.path;
 
   notEqual(
     procDir,
@@ -567,6 +570,13 @@ add_task(async function test_subprocess_workdir() {
     dir,
     tmpDir,
     "Process should launch in the directory specified in `workdir`"
+  );
+
+  dir = await OS.File.getCurrentDirectory();
+  equal(
+    dir,
+    procDir,
+    "`workdir` should not change the working directory of the current process"
   );
 });
 
