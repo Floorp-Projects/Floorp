@@ -6503,6 +6503,17 @@
     "bug_numbers": [1332780, 1531034],
     "description": "Network error from SafeBrowsing database updates. (0=sucess, 1=unknown error, 2=already connected, 3=not connected, 4=connection refused,5=net timeout, 6=offline, 7=port access not allowed, 8=net reset, 9=net interrupt, 10=proxy connection refused,11=partial transfer,12=inadequate security,13=unknown host,14=dns lookup queue full,15=unknown proxy host"
   },
+  "URLCLASSIFIER_UPDATE_REMOTE_SETTINGS_RESULT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["dlee@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "106",
+    "releaseChannelCollection": "opt-out",
+    "kind": "enumerated",
+    "n_values": 4,
+    "bug_numbers": [1728871],
+    "description": "Update result when updating SafeBrowsing database via RemoteSettings. (0=success, 1=update error, 2=download error)"
+  },
   "URLCLASSIFIER_UPDATE_REMOTE_STATUS2": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
