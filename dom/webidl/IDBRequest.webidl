@@ -13,7 +13,7 @@ enum IDBRequestReadyState {
     "done"
 };
 
-[Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
+[Exposed=(Window,Worker)]
 interface IDBRequest : EventTarget {
     [Throws]
     readonly    attribute any                  result;

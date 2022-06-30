@@ -20,6 +20,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_extensions.h"
@@ -57,6 +58,63 @@ NS_IMPL_RELEASE_INHERITED(ServiceWorkerContainer, DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerContainer, DOMEventTargetHelper,
                                    mControllerWorker, mReadyPromise)
+
+namespace {
+
+bool IsInPrivateBrowsing(JSContext* const aCx) {
+  if (const nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx)) {
+    if (const nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull()) {
+      return principal->GetPrivateBrowsingId() > 0;
+    }
+  }
+  return false;
+}
+
+bool IsServiceWorkersTestingEnabledInWindow(JSObject* const aGlobal) {
+  if (const nsCOMPtr<nsPIDOMWindowInner> innerWindow =
+          Navigator::GetWindowFromGlobal(aGlobal)) {
+    if (auto* bc = innerWindow->GetBrowsingContext()) {
+      return bc->Top()->ServiceWorkersTestingEnabled();
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
+/* static */
+bool ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // FIXME: Why does this need to root? Shouldn't the caller root aGlobal for
+  // us?
+  JS::Rooted<JSObject*> global(aCx, aGlobal);
+
+  if (!StaticPrefs::dom_serviceWorkers_enabled()) {
+    return false;
+  }
+
+  if (IsInPrivateBrowsing(aCx)) {
+    return false;
+  }
+
+  // Allow a webextension principal to register a service worker script with
+  // a moz-extension url only if 'extensions.service_worker_register.allowed'
+  // is true.
+  if (!StaticPrefs::extensions_serviceWorkerRegister_allowed()) {
+    nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
+    if (principal && BasePrincipal::Cast(principal)->AddonPolicy()) {
+      return false;
+    }
+  }
+
+  if (IsSecureContextOrObjectIsFromSecureContext(aCx, global)) {
+    return true;
+  }
+
+  return StaticPrefs::dom_serviceWorkers_testing_enabled() ||
+         IsServiceWorkersTestingEnabledInWindow(global);
+}
 
 // static
 already_AddRefed<ServiceWorkerContainer> ServiceWorkerContainer::Create(

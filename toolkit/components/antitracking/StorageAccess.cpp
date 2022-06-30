@@ -235,16 +235,7 @@ StorageAccess StorageAllowedForWindow(nsPIDOMWindowInner* aWindow,
         *aRejectedReason);
   }
 
-  // No document? Try checking Private Browsing Mode without document
-  if (const nsCOMPtr<nsIGlobalObject> global = aWindow->AsGlobal()) {
-    if (const nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull()) {
-      if (principal->GetPrivateBrowsingId() > 0) {
-        return StorageAccess::ePrivateBrowsing;
-      }
-    }
-  }
-
-  // Everything failed? Let's return a generic rejected reason.
+  // No document? Let's return a generic rejected reason.
   return StorageAccess::eDeny;
 }
 
