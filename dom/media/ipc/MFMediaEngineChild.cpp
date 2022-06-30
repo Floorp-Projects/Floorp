@@ -47,50 +47,49 @@ RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
 
   CLOG("Init");
   MOZ_ASSERT(mMediaEngineId == 0);
-  RefPtr<GenericNonExclusivePromise> p =
-      RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded();
   RefPtr<MFMediaEngineChild> self = this;
-  p = p->Then(
+  RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded()->Then(
       mManagerThread, __func__,
-      [self, this, aShouldPreload](bool) -> RefPtr<GenericNonExclusivePromise> {
+      [self, this, aShouldPreload](bool) {
         RefPtr<RemoteDecoderManagerChild> manager =
             RemoteDecoderManagerChild::GetSingleton(RemoteDecodeIn::RddProcess);
         if (!manager || !manager->CanSend()) {
-          return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                             __func__);
+          mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+          return;
         }
 
         mIPDLSelfRef = this;
         Unused << manager->SendPMFMediaEngineConstructor(this);
-
-        RefPtr<GenericNonExclusivePromise::Private> promise =
-            new GenericNonExclusivePromise::Private(__func__);
         MediaEngineInfoIPDL info(aShouldPreload);
-        SendInitMediaEngine(info)->Then(
-            mManagerThread, __func__,
-            [promise, self, this](uint64_t aId) {
-              // Id 0 is used to indicate error.
-              if (aId == 0) {
-                CLOG("Failed to initialize MFMediaEngineChild");
-                promise->Reject(NS_ERROR_FAILURE, __func__);
-                return;
-              }
-              mMediaEngineId = aId;
-              CLOG("Initialized MFMediaEngineChild");
-              promise->Resolve(true, __func__);
-            },
-            [promise, self,
-             this](const mozilla::ipc::ResponseRejectReason& aReason) {
-              CLOG("Failed to initialize MFMediaEngineChild");
-              promise->Reject(NS_ERROR_FAILURE, __func__);
-            });
-        return promise;
+        SendInitMediaEngine(info)
+            ->Then(
+                mManagerThread, __func__,
+                [self, this](uint64_t aId) {
+                  mInitEngineRequest.Complete();
+                  // Id 0 is used to indicate error.
+                  if (aId == 0) {
+                    CLOG("Failed to initialize MFMediaEngineChild");
+                    mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+                    return;
+                  }
+                  mMediaEngineId = aId;
+                  CLOG("Initialized MFMediaEngineChild");
+                  mInitPromiseHolder.Resolve(true, __func__);
+                },
+                [self,
+                 this](const mozilla::ipc::ResponseRejectReason& aReason) {
+                  mInitEngineRequest.Complete();
+                  CLOG(
+                      "Failed to initialize MFMediaEngineChild due to "
+                      "IPC failure");
+                  mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+                })
+            ->Track(mInitEngineRequest);
       },
-      [](nsresult aResult) {
-        return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                           __func__);
+      [self](nsresult aResult) {
+        self->mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
       });
-  return p;
+  return mInitPromiseHolder.Ensure(__func__);
 }
 
 mozilla::ipc::IPCResult MFMediaEngineChild::RecvRequestSample(TrackType aType,
@@ -178,6 +177,12 @@ void MFMediaEngineChild::IPDLActorDestroyed() {
   mIPDLSelfRef = nullptr;
 }
 
+void MFMediaEngineChild::Shutdown() {
+  AssertOnManagerThread();
+  SendShutdown();
+  mInitEngineRequest.DisconnectIfExists();
+}
+
 MFMediaEngineWrapper::MFMediaEngineWrapper(ExternalEngineStateMachine* aOwner)
     : ExternalPlaybackEngine(aOwner),
       mEngine(new MFMediaEngineChild(this)),
@@ -222,7 +227,7 @@ void MFMediaEngineWrapper::Shutdown() {
   WLOG("Shutdown");
   Unused << ManagerThread()->Dispatch(
       NS_NewRunnableFunction("MFMediaEngineWrapper::Shutdown",
-                             [engine = mEngine] { engine->SendShutdown(); }));
+                             [engine = mEngine] { engine->Shutdown(); }));
 }
 
 void MFMediaEngineWrapper::SetPlaybackRate(double aPlaybackRate) {

@@ -875,6 +875,9 @@ void ExternalEngineStateMachine::NotifyEventInternal(
   AUTO_PROFILER_LABEL("ExternalEngineStateMachine::NotifyEventInternal",
                       MEDIA_PLAYBACK);
   LOG("Receive event %s", ExternalEngineEventToStr(aEvent));
+  if (mState.IsShutdownEngine()) {
+    return;
+  }
   switch (aEvent) {
     case ExternalEngineEvent::LoadedMetaData:
       // We read metadata by ourselves, ignore this if there is any.
