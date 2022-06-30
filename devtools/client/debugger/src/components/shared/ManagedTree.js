@@ -46,15 +46,18 @@ class ManagedTree extends Component {
   }
 
   setExpanded = (item, isExpanded, shouldIncludeChildren) => {
+    const { expanded } = this.state;
+    let changed = false;
     const expandItem = i => {
       const path = this.props.getPath(i);
       if (isExpanded) {
+        changed |= !expanded.has(path);
         expanded.add(path);
       } else {
+        changed |= expanded.has(path);
         expanded.delete(path);
       }
     };
-    const { expanded } = this.state;
     expandItem(item);
 
     if (shouldIncludeChildren) {
@@ -62,22 +65,21 @@ class ManagedTree extends Component {
       while (parents.length) {
         const children = [];
         for (const parent of parents) {
-          if (parent.contents?.length) {
-            for (const child of parent.contents) {
-              expandItem(child);
-              children.push(child);
-            }
+          for (const child of this.props.getChildren(parent)) {
+            expandItem(child);
+            children.push(child);
           }
         }
         parents = children;
       }
     }
-    this.setState({ expanded });
-
-    if (isExpanded && this.props.onExpand) {
-      this.props.onExpand(item, expanded);
-    } else if (!isExpanded && this.props.onCollapse) {
-      this.props.onCollapse(item, expanded);
+    if (changed) {
+      this.setState({ expanded });
+      if (isExpanded && this.props.onExpand) {
+        this.props.onExpand(item, expanded);
+      } else if (!isExpanded && this.props.onCollapse) {
+        this.props.onCollapse(item, expanded);
+      }
     }
   };
 
