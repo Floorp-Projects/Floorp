@@ -26,8 +26,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
         resolve()
       );
     });
-  },
-  [["dom.indexedDB.hide_in_pbmode.enabled", false]]
+  }
 );
 
 AntiTracking.runTestInNormalAndPrivateMode(
@@ -98,7 +97,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
       );
     });
   },
-  [["dom.indexedDB.hide_in_pbmode.enabled", false]],
+  null,
   false,
   false
 );

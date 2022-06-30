@@ -8,7 +8,7 @@
  *
  */
 
-[Func="ServiceWorkersEnabled",
+[Func="ServiceWorkerContainer::IsEnabled",
  Exposed=Window]
 interface ServiceWorkerContainer : EventTarget {
   // FIXME(nsm):

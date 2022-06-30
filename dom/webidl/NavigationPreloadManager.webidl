@@ -7,7 +7,7 @@
  * https://w3c.github.io/ServiceWorker/#navigation-preload-manager
  */
 
-[Func="NavigationPreloadManager::IsEnabled", SecureContext,
+[Pref="dom.serviceWorkers.navigationPreload.enabled", SecureContext,
  Exposed=(Window,Worker)]
 interface NavigationPreloadManager {
   [NewObject]

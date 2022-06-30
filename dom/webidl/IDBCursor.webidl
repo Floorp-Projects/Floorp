@@ -14,7 +14,7 @@ enum IDBCursorDirection {
     "prevunique"
 };
 
-[Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
+[Exposed=(Window,Worker)]
 interface IDBCursor {
     readonly    attribute (IDBObjectStore or IDBIndex) source;
 
@@ -45,7 +45,7 @@ interface IDBCursor {
     IDBRequest delete ();
 };
 
-[Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
+[Exposed=(Window,Worker)]
 interface IDBCursorWithValue : IDBCursor {
     [Throws]
     readonly    attribute any value;
