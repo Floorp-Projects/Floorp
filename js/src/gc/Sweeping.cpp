@@ -2300,12 +2300,8 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::DESTROY);
 
-    /*
-     * Sweep script filenames after sweeping functions in the generic loop
-     * above. In this way when a scripted function's finalizer destroys the
-     * script and calls rt->destroyScriptHook, the hook can still access the
-     * script's filename. See bug 323267.
-     */
+    // Sweep shared script bytecode now all zones have been swept and finalizers
+    // for BaseScripts have released their references.
     SweepScriptData(rt);
   }
 
