@@ -16,7 +16,7 @@ import {
   formatURIForDisplay,
   convertTimestamp,
   createFaviconElement,
-} from "./helpers.js";
+} from "./helpers.mjs";
 
 const SYNCED_TABS_CHANGED = "services.sync.tabs.changed";
 
