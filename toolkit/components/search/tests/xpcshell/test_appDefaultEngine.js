@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Test that originalDefaultEngine property is set and switches correctly.
+ * Test that appDefaultEngine property is set and switches correctly.
  */
 
 "use strict";
@@ -13,12 +13,12 @@ add_task(async function setup() {
   await SearchTestUtils.useTestEngines("test-extensions");
 });
 
-add_task(async function test_originalDefaultEngine() {
+add_task(async function test_appDefaultEngine() {
   await Promise.all([Services.search.init(), promiseAfterSettings()]);
   Assert.equal(
-    Services.search.originalDefaultEngine.name,
+    Services.search.appDefaultEngine.name,
     "Multilocale AN",
-    "Should have returned the correct original default engine"
+    "Should have returned the correct app default engine"
   );
 });
 
@@ -32,7 +32,7 @@ add_task(async function test_changeRegion() {
   await promiseSetHomeRegion("tr");
 
   Assert.equal(
-    Services.search.originalDefaultEngine.name,
+    Services.search.appDefaultEngine.name,
     // Very important this default is not the first one in the list (which is
     // the next fallback if the config one can't be found).
     "Special",

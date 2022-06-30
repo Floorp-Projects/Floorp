@@ -4,7 +4,7 @@
 "use strict";
 
 let engine;
-let originalDefaultEngine;
+let appDefaultEngine;
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
@@ -19,7 +19,7 @@ add_task(async function setup() {
     true
   );
 
-  originalDefaultEngine = await Services.search.getDefault();
+  appDefaultEngine = await Services.search.getDefault();
 });
 
 add_task(async function test_addingEngine_opensearch() {
@@ -89,7 +89,7 @@ add_task(async function test_defaultPrivateEngine_notifications() {
 
 add_task(
   async function test_defaultPrivateEngine_notifications_when_not_enabled() {
-    await Services.search.setDefault(originalDefaultEngine);
+    await Services.search.setDefault(appDefaultEngine);
 
     Services.prefs.setBoolPref(
       SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",

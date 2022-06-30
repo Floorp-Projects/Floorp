@@ -12,8 +12,8 @@
  * - If no other visible engines, unhide the region/locale default and use it.
  */
 
-let originalDefault;
-let originalPrivateDefault;
+let appDefault;
+let appPrivateDefault;
 
 add_task(async function setup() {
   useHttpServer();
@@ -36,8 +36,8 @@ add_task(async function setup() {
 
   await AddonTestUtils.promiseStartupManager();
 
-  originalDefault = await Services.search.getDefault();
-  originalPrivateDefault = await Services.search.getDefaultPrivate();
+  appDefault = await Services.search.getDefault();
+  appPrivateDefault = await Services.search.getDefaultPrivate();
 });
 
 function getDefault(privateMode) {
@@ -53,7 +53,7 @@ function setDefault(privateMode, engine) {
 }
 
 async function checkFallbackDefaultRegion(private) {
-  let original = private ? originalPrivateDefault : originalDefault;
+  let defaultEngine = private ? appPrivateDefault : appDefault;
   let expectedDefaultNotification = private
     ? SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
     : SearchUtils.MODIFIED_TYPE.DEFAULT;
@@ -62,7 +62,11 @@ async function checkFallbackDefaultRegion(private) {
   let otherEngine = Services.search.getEngineByName("engine-chromeicon");
   await setDefault(private, otherEngine);
 
-  Assert.notEqual(otherEngine, original, "Sanity check engines are different");
+  Assert.notEqual(
+    otherEngine,
+    defaultEngine,
+    "Sanity check engines are different"
+  );
 
   const observer = new SearchObserver(
     [
@@ -81,12 +85,12 @@ async function checkFallbackDefaultRegion(private) {
   Assert.ok(otherEngine.hidden, "Should have hidden the removed engine");
   Assert.equal(
     (await getDefault(private)).name,
-    original.name,
-    "Should have reverted to the default to the region default"
+    defaultEngine.name,
+    "Should have reverted the defaultEngine to the region default"
   );
   Assert.equal(
     notified.name,
-    original.name,
+    defaultEngine.name,
     "Should have notified the correct default engine"
   );
 }
@@ -100,7 +104,7 @@ add_task(async function test_default_private_fallback_to_region_default() {
 });
 
 async function checkFallbackFirstVisible(private) {
-  let original = private ? originalPrivateDefault : originalDefault;
+  let defaultEngine = private ? appPrivateDefault : appDefault;
   let expectedDefaultNotification = private
     ? SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
     : SearchUtils.MODIFIED_TYPE.DEFAULT;
@@ -108,9 +112,13 @@ async function checkFallbackFirstVisible(private) {
 
   let otherEngine = Services.search.getEngineByName("engine-chromeicon");
   await setDefault(private, otherEngine);
-  await Services.search.removeEngine(original);
+  await Services.search.removeEngine(defaultEngine);
 
-  Assert.notEqual(otherEngine, original, "Sanity check engines are different");
+  Assert.notEqual(
+    otherEngine,
+    defaultEngine,
+    "Sanity check engines are different"
+  );
 
   const observer = new SearchObserver(
     private
@@ -190,22 +198,22 @@ add_task(async function test_default_fallback_when_no_others_visible() {
 
   Assert.equal(
     (await getDefault(false)).name,
-    originalDefault.name,
-    "Should fallback to the original default engine after removing all engines"
+    appDefault.name,
+    "Should fallback to the app default engine after removing all engines"
   );
   Assert.equal(
     (await getDefault(true)).name,
-    originalPrivateDefault.name,
-    "Should fallback to the original default private engine after removing all engines"
+    appPrivateDefault.name,
+    "Should fallback to the app default private engine after removing all engines"
   );
   Assert.equal(
     notified.name,
-    originalDefault.name,
+    appDefault.name,
     "Should have notified the correct default engine"
   );
   Assert.ok(
-    !originalPrivateDefault.hidden,
-    "Should have unhidden the original default private engine"
+    !appPrivateDefault.hidden,
+    "Should have unhidden the app default private engine"
   );
   Assert.equal(
     (await Services.search.getVisibleEngines()).length,
@@ -219,7 +227,7 @@ add_task(async function test_default_fallback_remove_default_no_visible() {
   Services.search.defaultPrivateEngine = Services.search.defaultEngine;
   let visibleEngines = await Services.search.getVisibleEngines();
   for (let engine of visibleEngines) {
-    if (engine.name != originalDefault.name) {
+    if (engine.name != appDefault.name) {
       await Services.search.removeEngine(engine);
     }
   }
@@ -244,7 +252,7 @@ add_task(async function test_default_fallback_remove_default_no_visible() {
   );
 
   // Now remove the last engine, which should set the new default.
-  await Services.search.removeEngine(originalDefault);
+  await Services.search.removeEngine(appDefault);
 
   let notified = await observer.promise;
 
@@ -278,18 +286,18 @@ add_task(
   async function test_default_fallback_remove_default_no_visible_or_general() {
     // Reset.
     Services.search.restoreDefaultEngines();
-    Services.search.defaultEngine = Services.search.defaultPrivateEngine = originalPrivateDefault;
+    Services.search.defaultEngine = Services.search.defaultPrivateEngine = appPrivateDefault;
 
     // Remove all but the default engine.
     let visibleEngines = await Services.search.getVisibleEngines();
     for (let engine of visibleEngines) {
-      if (engine.name != originalPrivateDefault.name) {
+      if (engine.name != appPrivateDefault.name) {
         await Services.search.removeEngine(engine);
       }
     }
     Assert.deepEqual(
       (await Services.search.getVisibleEngines()).map(e => e.name),
-      originalPrivateDefault.name,
+      appPrivateDefault.name,
       "Should only have one visible engine"
     );
 
@@ -310,7 +318,7 @@ add_task(
     );
 
     // Now remove the last engine, which should set the new default.
-    await Services.search.removeEngine(originalPrivateDefault);
+    await Services.search.removeEngine(appPrivateDefault);
 
     let notified = await observer.promise;
 
@@ -345,7 +353,7 @@ add_task(
 // engines.
 
 async function checkNonBuiltinFallback(private) {
-  let original = private ? originalPrivateDefault : originalDefault;
+  let defaultEngine = private ? appPrivateDefault : appDefault;
   let expectedDefaultNotification = private
     ? SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
     : SearchUtils.MODIFIED_TYPE.DEFAULT;
@@ -368,14 +376,14 @@ async function checkNonBuiltinFallback(private) {
   // ... and verify we've reverted to the normal default engine.
   Assert.equal(
     (await getDefault(private)).name,
-    original.name,
-    "Should revert to the original default engine"
+    defaultEngine.name,
+    "Should revert to the app default engine"
   );
 
   let notified = await observer.promise;
   Assert.equal(
     notified.name,
-    original.name,
+    defaultEngine.name,
     "Should have notified the correct default engine"
   );
 }

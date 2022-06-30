@@ -10,8 +10,8 @@
 
 let engine1;
 let engine2;
-let originalDefault;
-let originalPrivateDefault;
+let appDefault;
+let appPrivateDefault;
 
 add_setup(async () => {
   do_get_profile();
@@ -34,8 +34,8 @@ add_setup(async () => {
 
   await Services.search.init();
 
-  originalDefault = Services.search.originalDefaultEngine;
-  originalPrivateDefault = Services.search.originalPrivateDefaultEngine;
+  appDefault = Services.search.appDefaultEngine;
+  appPrivateDefault = Services.search.appPrivateDefaultEngine;
   engine1 = Services.search.getEngineByName("engine-rel-searchform-purpose");
   engine2 = Services.search.getEngineByName("engine-chromeicon");
 });
@@ -43,13 +43,13 @@ add_setup(async () => {
 add_task(async function test_defaultPrivateEngine() {
   Assert.equal(
     Services.search.defaultPrivateEngine,
-    originalPrivateDefault,
-    "Should have the original private default as the default private engine"
+    appPrivateDefault,
+    "Should have the app private default as the default private engine"
   );
   Assert.equal(
     Services.search.defaultEngine,
-    originalDefault,
-    "Should have the original default as the default engine"
+    appDefault,
+    "Should have the app default as the default engine"
   );
 
   await assertGleanDefaultEngine({
@@ -84,8 +84,8 @@ add_task(async function test_defaultPrivateEngine() {
   );
   Assert.equal(
     Services.search.defaultEngine,
-    originalDefault,
-    "Should not have changed the original default engine"
+    appDefault,
+    "Should not have changed the default engine"
   );
 
   await assertGleanDefaultEngine({
@@ -129,8 +129,8 @@ add_task(async function test_defaultPrivateEngine() {
   );
   Assert.equal(
     Services.search.defaultEngine,
-    originalDefault,
-    "Should not have changed the original default engine"
+    appDefault,
+    "Should not have changed the default engine"
   );
 
   await assertGleanDefaultEngine({
@@ -176,13 +176,13 @@ add_task(async function test_defaultPrivateEngine() {
   engine1.hidden = true;
   Assert.equal(
     Services.search.defaultPrivateEngine,
-    originalPrivateDefault,
-    "Should reset to the original default private engine when hiding the default"
+    appPrivateDefault,
+    "Should reset to the app default private engine when hiding the default"
   );
   Assert.equal(
     Services.search.defaultEngine,
-    originalDefault,
-    "Should not have changed the original default engine"
+    appDefault,
+    "Should not have changed the default engine"
   );
 
   await assertGleanDefaultEngine({
@@ -198,7 +198,7 @@ add_task(async function test_defaultPrivateEngine() {
   Services.search.defaultEngine = engine1;
   Assert.equal(
     Services.search.defaultPrivateEngine,
-    originalPrivateDefault,
+    appPrivateDefault,
     "Setting the default engine should not affect the private default"
   );
 
@@ -211,7 +211,7 @@ add_task(async function test_defaultPrivateEngine() {
     },
   });
 
-  Services.search.defaultEngine = originalDefault;
+  Services.search.defaultEngine = appDefault;
 });
 
 add_task(async function test_telemetry_private_empty_submission_url() {
@@ -223,7 +223,7 @@ add_task(async function test_telemetry_private_empty_submission_url() {
 
   await assertGleanDefaultEngine({
     normal: {
-      engineId: originalDefault.telemetryId,
+      engineId: appDefault.telemetryId,
     },
     private: {
       engineId: "other-simple",
@@ -234,11 +234,11 @@ add_task(async function test_telemetry_private_empty_submission_url() {
     },
   });
 
-  Services.search.defaultEngine = originalDefault;
+  Services.search.defaultEngine = appDefault;
 });
 
 add_task(async function test_defaultPrivateEngine_turned_off() {
-  Services.search.defaultEngine = originalDefault;
+  Services.search.defaultEngine = appDefault;
   Services.search.defaultPrivateEngine = engine1;
 
   await assertGleanDefaultEngine({
@@ -257,7 +257,7 @@ add_task(async function test_defaultPrivateEngine_turned_off() {
   );
   Assert.equal(
     await promise,
-    originalDefault,
+    appDefault,
     "Should have notified setting the first engine correctly."
   );
 

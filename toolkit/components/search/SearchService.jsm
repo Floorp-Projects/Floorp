@@ -204,8 +204,8 @@ class SearchService {
    *   The engine that is the default for this locale/region, ignoring any
    *   user changes to the default engine.
    */
-  get originalDefaultEngine() {
-    return this.#originalDefaultEngine();
+  get appDefaultEngine() {
+    return this.#appDefaultEngine();
   }
 
   /**
@@ -215,8 +215,8 @@ class SearchService {
    *   Note: if there is no default for this locale/region, then the non-private
    *   browsing engine will be returned.
    */
-  get originalPrivateDefaultEngine() {
-    return this.#originalDefaultEngine(this.#separatePrivateDefault);
+  get appPrivateDefaultEngine() {
+    return this.#appDefaultEngine(this.#separatePrivateDefault);
   }
 
   get isInitialized() {
@@ -369,10 +369,10 @@ class SearchService {
     this._settings._batchTask?.disarm();
   }
 
-  resetToOriginalDefaultEngine() {
-    let originalDefaultEngine = this.originalDefaultEngine;
-    originalDefaultEngine.hidden = false;
-    this.defaultEngine = originalDefaultEngine;
+  resetToAppDefaultEngine() {
+    let appDefaultEngine = this.appDefaultEngine;
+    appDefaultEngine.hidden = false;
+    this.defaultEngine = appDefaultEngine;
   }
 
   async maybeSetAndOverrideDefault(extension) {
@@ -1177,9 +1177,9 @@ class SearchService {
     }
     if (!name) {
       if (privateMode) {
-        this.#currentPrivateEngine = this.originalPrivateDefaultEngine;
+        this.#currentPrivateEngine = this.appPrivateDefaultEngine;
       } else {
-        this.#currentEngine = this.originalDefaultEngine;
+        this.#currentEngine = this.appDefaultEngine;
       }
     }
 
@@ -1425,7 +1425,7 @@ class SearchService {
    * @returns {SearchEngine}
    *   The engine that is default.
    */
-  #originalDefaultEngine(privateMode = false) {
+  #appDefaultEngine(privateMode = false) {
     let defaultEngine = this.#getEngineByWebExtensionDetails(
       privateMode && this.#searchPrivateDefault
         ? this.#searchPrivateDefault
@@ -1439,11 +1439,11 @@ class SearchService {
     if (privateMode) {
       // If for some reason we can't find the private mode engine, fall back
       // to the non-private one.
-      return this.#originalDefaultEngine(false);
+      return this.#appDefaultEngine(false);
     }
 
-    // Something unexpected as happened. In order to recover the original
-    // default engine, use the first visible engine which is the best we can do.
+    // Something unexpected has happened. In order to recover the app default
+    // engine, use the first visible engine which is the best we can do.
     return this.#sortedVisibleEngines[0];
   }
 
@@ -1496,7 +1496,7 @@ class SearchService {
     let newCurrentEngine = this._getEngineDefault(false)?.name;
     this._settings.setAttribute(
       "appDefaultEngine",
-      this.originalDefaultEngine?.name
+      this.appDefaultEngine?.name
     );
 
     if (
@@ -1670,12 +1670,12 @@ class SearchService {
     // 4) Remove any old engines.
 
     let {
-      engines: originalConfigEngines,
+      engines: appDefaultConfigEngines,
       privateDefault,
     } = await this._fetchEngineSelectorEngines();
 
     let enginesToRemove = [];
-    let configEngines = [...originalConfigEngines];
+    let configEngines = [...appDefaultConfigEngines];
     let oldEngineList = [...this._engines.values()];
 
     for (let engine of oldEngineList) {
@@ -1782,7 +1782,7 @@ class SearchService {
     }
 
     this.#setDefaultAndOrdersFromSelector(
-      originalConfigEngines,
+      appDefaultConfigEngines,
       privateDefault
     );
 
@@ -1875,7 +1875,7 @@ class SearchService {
     // been updated
     this._settings.setAttribute(
       "appDefaultEngine",
-      this.originalDefaultEngine?.name
+      this.appDefaultEngine?.name
     );
 
     this.#dontSetUseSavedOrder = false;
@@ -2224,16 +2224,16 @@ class SearchService {
       addedEngines.add(engine.name);
     }
 
-    // The original default engine should always be first in the list (except
+    // The app default engine should always be first in the list (except
     // for distros, that we should respect).
-    const originalDefault = this.originalDefaultEngine;
-    maybeAddEngineToSort(originalDefault);
+    const appDefault = this.appDefaultEngine;
+    maybeAddEngineToSort(appDefault);
 
     // If there's a private default, and it is different to the normal
     // default, then it should be second in the list.
-    const originalPrivateDefault = this.originalPrivateDefaultEngine;
-    if (originalPrivateDefault && originalPrivateDefault != originalDefault) {
-      maybeAddEngineToSort(originalPrivateDefault);
+    const appPrivateDefault = this.appPrivateDefaultEngine;
+    if (appPrivateDefault && appPrivateDefault != appDefault) {
+      maybeAddEngineToSort(appPrivateDefault);
     }
 
     let remainingEngines;
@@ -2483,9 +2483,9 @@ class SearchService {
             e.webExtension.id == extension.id && e.webExtension.locale == locale
         ) ?? {};
 
-      let originalName = engine.name;
+      let appDefaultName = engine.name;
       let name = manifest.chrome_settings_overrides.search_provider.name.trim();
-      if (originalName != name && this._engines.has(name)) {
+      if (appDefaultName != name && this._engines.has(name)) {
         throw new Error("Can't upgrade to the same name as an existing engine");
       }
 
@@ -2500,8 +2500,8 @@ class SearchService {
         configuration
       );
 
-      if (originalName != engine.name) {
-        this._engines.delete(originalName);
+      if (appDefaultName != engine.name) {
+        this._engines.delete(appDefaultName);
         this._engines.set(engine.name, engine);
         if (isDefault) {
           this._settings.setVerifiedAttribute("current", engine.name);
@@ -2616,10 +2616,10 @@ class SearchService {
    *   The appropriate search engine, or null if one could not be determined.
    */
   #findAndSetNewDefaultEngine({ privateMode, excludeEngineName = "" }) {
-    // First to the original default engine...
+    // First to the app default engine...
     let newDefault = privateMode
-      ? this.originalPrivateDefaultEngine
-      : this.originalDefaultEngine;
+      ? this.appPrivateDefaultEngine
+      : this.appDefaultEngine;
 
     if (
       !newDefault ||
@@ -2638,7 +2638,7 @@ class SearchService {
       if (firstVisible) {
         newDefault = firstVisible;
       } else if (newDefault) {
-        // then to the original if it is not the one that is excluded...
+        // then to the app default if it is not the one that is excluded...
         if (newDefault.name != excludeEngineName) {
           newDefault.hidden = false;
         } else {
@@ -2746,15 +2746,15 @@ class SearchService {
     }
 
     // If we change the default engine in the future, that change should impact
-    // users who have switched away from and then back to the build's "default"
-    // engine. So clear the user pref when the currentEngine is set to the
-    // build's default engine, so that the currentEngine getter falls back to
-    // whatever the default is.
+    // users who have switched away from and then back to the build's
+    // "app default" engine. So clear the user pref when the currentEngine is
+    // set to the build's app default engine, so that the currentEngine getter
+    // falls back to whatever the default is.
     let newName = newCurrentEngine.name;
-    const originalDefault = privateMode
-      ? this.originalPrivateDefaultEngine
-      : this.originalDefaultEngine;
-    if (newCurrentEngine == originalDefault) {
+    const appDefaultEngine = privateMode
+      ? this.appPrivateDefaultEngine
+      : this.appDefaultEngine;
+    if (newCurrentEngine == appDefaultEngine) {
       newName = "";
     }
 

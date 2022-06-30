@@ -744,7 +744,7 @@ EngineStore.prototype = {
       }
     }
 
-    Services.search.resetToOriginalDefaultEngine();
+    Services.search.resetToAppDefaultEngine();
     gSearchPane.showRestoreDefaults(false);
     gSearchPane.buildDefaultEngineDropDowns();
     return added;
