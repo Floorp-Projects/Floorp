@@ -28,6 +28,7 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
     private lateinit var onboardingConfig: Onboarding
     private val components = appContext.components
     private var isCurrentTabSecure = false
+    private var tpExposureAlreadyRecorded = false
 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
@@ -54,6 +55,11 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
         }
 
         if (shouldShowCfrForTrackingProtection(action = action, browserState = context.state)) {
+            if (!tpExposureAlreadyRecorded) {
+                FocusNimbus.features.onboarding.recordExposure()
+                tpExposureAlreadyRecorded = true
+            }
+
             components.appStore.dispatch(
                 AppAction.ShowTrackingProtectionCfrChange(
                     mapOf(
