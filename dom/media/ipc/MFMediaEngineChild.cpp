@@ -20,6 +20,11 @@ namespace mozilla {
           ("MFMediaEngineWrapper=%p, Id=%" PRId64 ", " msg, this, this->Id(), \
            ##__VA_ARGS__))
 
+#define WLOGV(msg, ...)                                                       \
+  MOZ_LOG(gMFMediaEngineLog, LogLevel::Verbose,                               \
+          ("MFMediaEngineWrapper=%p, Id=%" PRId64 ", " msg, this, this->Id(), \
+           ##__VA_ARGS__))
+
 using media::TimeUnit;
 
 MFMediaEngineChild::MFMediaEngineChild(MFMediaEngineWrapper* aOwner)
@@ -88,15 +93,18 @@ RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
   return p;
 }
 
-mozilla::ipc::IPCResult MFMediaEngineChild::RecvRequestSample(TrackType aType) {
+mozilla::ipc::IPCResult MFMediaEngineChild::RecvRequestSample(TrackType aType,
+                                                              bool aIsEnough) {
   AssertOnManagerThread();
   if (!mOwner) {
     return IPC_OK();
   }
   if (aType == TrackType::kVideoTrack) {
-    mOwner->NotifyEvent(ExternalEngineEvent::RequestForVideo);
+    mOwner->NotifyEvent(aIsEnough ? ExternalEngineEvent::VideoEnough
+                                  : ExternalEngineEvent::RequestForVideo);
   } else if (aType == TrackType::kAudioTrack) {
-    mOwner->NotifyEvent(ExternalEngineEvent::RequestForAudio);
+    mOwner->NotifyEvent(aIsEnough ? ExternalEngineEvent::AudioEnough
+                                  : ExternalEngineEvent::RequestForAudio);
   }
   return IPC_OK();
 }
@@ -107,6 +115,50 @@ mozilla::ipc::IPCResult MFMediaEngineChild::RecvUpdateCurrentTime(
   if (mOwner) {
     mOwner->UpdateCurrentTime(aCurrentTimeInSecond);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyEvent(
+    MFMediaEngineEvent aEvent) {
+  AssertOnManagerThread();
+  switch (aEvent) {
+    case MF_MEDIA_ENGINE_EVENT_FIRSTFRAMEREADY:
+      mOwner->NotifyEvent(ExternalEngineEvent::LoadedFirstFrame);
+      break;
+    case MF_MEDIA_ENGINE_EVENT_LOADEDDATA:
+      mOwner->NotifyEvent(ExternalEngineEvent::LoadedData);
+      break;
+    case MF_MEDIA_ENGINE_EVENT_WAITING:
+      mOwner->NotifyEvent(ExternalEngineEvent::Waiting);
+      break;
+    case MF_MEDIA_ENGINE_EVENT_SEEKED:
+      mOwner->NotifyEvent(ExternalEngineEvent::Seeked);
+      break;
+    case MF_MEDIA_ENGINE_EVENT_BUFFERINGSTARTED:
+      mOwner->NotifyEvent(ExternalEngineEvent::BufferingStarted);
+      break;
+    case MF_MEDIA_ENGINE_EVENT_BUFFERINGENDED:
+      mOwner->NotifyEvent(ExternalEngineEvent::BufferingEnded);
+      break;
+    case MF_MEDIA_ENGINE_EVENT_ENDED:
+      mOwner->NotifyEvent(ExternalEngineEvent::Ended);
+      break;
+    case MF_MEDIA_ENGINE_EVENT_PLAYING:
+      mOwner->NotifyEvent(ExternalEngineEvent::Playing);
+      break;
+    default:
+      NS_WARNING(
+          nsPrintfCString("Unhandled event=%s", MediaEngineEventToStr(aEvent))
+              .get());
+      break;
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyError(
+    const MediaResult& aError) {
+  AssertOnManagerThread();
+  mOwner->NotifyError(aError);
   return IPC_OK();
 }
 
@@ -229,15 +281,21 @@ TimeUnit MFMediaEngineWrapper::GetCurrentPosition() {
 
 void MFMediaEngineWrapper::UpdateCurrentTime(double aCurrentTimeInSecond) {
   AssertOnManagerThread();
-  WLOG("Update current time %f", aCurrentTimeInSecond);
+  WLOGV("Update current time %f", aCurrentTimeInSecond);
   mCurrentTimeInSecond = aCurrentTimeInSecond;
   NotifyEvent(ExternalEngineEvent::Timeupdate);
 }
 
 void MFMediaEngineWrapper::NotifyEvent(ExternalEngineEvent aEvent) {
   AssertOnManagerThread();
-  WLOG("Received event %s", ExternalEngineEventToStr(aEvent));
+  WLOGV("Received event %s", ExternalEngineEventToStr(aEvent));
   mOwner->NotifyEvent(aEvent);
+}
+
+void MFMediaEngineWrapper::NotifyError(const MediaResult& aError) {
+  AssertOnManagerThread();
+  WLOG("Received error: %s", aError.Description().get());
+  mOwner->NotifyError(aError);
 }
 
 }  // namespace mozilla
