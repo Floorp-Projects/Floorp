@@ -46,7 +46,7 @@ cd /build
 # shellcheck disable=SC1091
 . install-node.sh
 
-npm install -g yarn@1.22.18
+npm install -g yarn@1.9.4
 
 /build/tooltool.py fetch -m /tmp/eslint.tt
 mv /build/node_modules /build/node_modules_eslint

@@ -13,8 +13,8 @@ from mozboot.util import get_tools_dir
 from mozfile import which
 from six import PY3
 
-NODE_MIN_VERSION = StrictVersion("12.22.1")
-NPM_MIN_VERSION = StrictVersion("6.14.12")
+NODE_MIN_VERSION = StrictVersion("10.23.1")
+NPM_MIN_VERSION = StrictVersion("6.14.10")
 
 
 def find_node_paths():
