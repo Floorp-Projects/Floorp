@@ -9,7 +9,7 @@ job-defaults:
             - artifact: target.perftests.tests.tar.gz
             - artifact: target.zip
         toolchain:
-            - win64-node-12
+            - win64-node
             - win64-geckodriver
     platform: windows10-64-shippable/opt
     require-build:

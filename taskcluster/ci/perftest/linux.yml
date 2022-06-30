@@ -6,7 +6,7 @@ job-defaults:
     worker-type: t-linux-talos-1804
     fetches:
         toolchain:
-            - linux64-node-12
+            - linux64-node
             - linux64-geckodriver
         build:
             - artifact: target.mozinfo.json

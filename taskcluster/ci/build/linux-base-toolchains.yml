@@ -43,7 +43,7 @@ linux64-base-toolchains/opt:
             - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm-2.14.02
-            - linux64-node-10
+            - linux64-node-12
             - sysroot-x86_64-linux-gnu
 
 linux64-base-toolchains/debug:
@@ -83,7 +83,7 @@ linux64-base-toolchains/debug:
             - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm-2.14.02
-            - linux64-node-10
+            - linux64-node-12
             - sysroot-x86_64-linux-gnu
 
 linux64-base-toolchains-clang/opt:
@@ -118,7 +118,7 @@ linux64-base-toolchains-clang/opt:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-nasm-2.14.02
-            - linux64-node-10
+            - linux64-node-12
             - sysroot-x86_64-linux-gnu
 
 linux64-base-toolchains-clang/debug:
@@ -156,5 +156,5 @@ linux64-base-toolchains-clang/debug:
             - linux64-cbindgen
             - linux64-dump_syms
             - linux64-nasm-2.14.02
-            - linux64-node-10
+            - linux64-node-12
             - sysroot-x86_64-linux-gnu
