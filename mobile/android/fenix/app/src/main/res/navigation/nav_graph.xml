@@ -757,7 +757,7 @@
     <fragment
         android:id="@+id/turnOnSyncFragment"
         android:name="org.mozilla.fenix.settings.account.TurnOnSyncFragment"
-        android:label="@string/preferences_sync"
+        android:label="@string/preferences_sync_2"
         tools:layout="@layout/fragment_turn_on_sync">
         <argument
             android:name="padSnackbar"
@@ -771,7 +771,7 @@
     <fragment
         android:id="@+id/pairFragment"
         android:name="org.mozilla.fenix.settings.PairFragment"
-        android:label="@string/preferences_sync"
+        android:label="@string/preferences_sync_2"
         tools:layout="@layout/fragment_pair" />
 
     <fragment

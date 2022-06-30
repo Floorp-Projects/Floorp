@@ -56,6 +56,6 @@ private fun assertTurnOnSyncToolbarTitle() =
     onView(
         allOf(
             withParent(withId(R.id.navigationToolbar)),
-            withText("Turn on Sync")
+            withText(R.string.preferences_sync_2)
         )
     ).check(matches(isDisplayed()))

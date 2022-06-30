@@ -9,8 +9,8 @@
     <androidx.preference.Preference
         android:key="@string/pref_key_sign_in"
         android:layout="@layout/sign_in_preference"
-        android:summary="@string/preferences_sign_in_description"
-        android:title="@string/preferences_sync"
+        android:summary="@string/preferences_sign_in_description_2"
+        android:title="@string/preferences_sync_2"
         app:allowDividerBelow="false" />
 
     <androidx.preference.SwitchPreference

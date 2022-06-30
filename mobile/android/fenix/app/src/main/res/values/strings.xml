@@ -341,7 +341,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Customize</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Sync bookmarks, history, and more with your Firefox Account</string>
+    <string name="preferences_sign_in_description" moz:RemovedIn="104" tools:ignore="UnusedResources">Sync bookmarks, history, and more with your Firefox Account</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Sign in to sync tabs, bookmarks, passwords, and more.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox Account</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -506,7 +508,9 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Turn on Sync</string>
+    <string name="preferences_sync" moz:RemovedIn="104" tools:ignore="UnusedResources">Turn on Sync</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Sync and save your data</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Sign in to reconnect</string>
     <!-- Preference for removing FxA account -->

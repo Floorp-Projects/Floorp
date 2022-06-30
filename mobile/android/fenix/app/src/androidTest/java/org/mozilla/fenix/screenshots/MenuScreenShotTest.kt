@@ -203,7 +203,7 @@ fun deleteBookmarkFolder() = onView(withText(R.string.bookmark_menu_delete_butto
 
 fun tapOnTabCounter() = onView(withId(R.id.counter_text)).click()
 
-fun settingsAccountPreferences() = onView(withText(R.string.preferences_sync)).click()
+fun settingsAccountPreferences() = onView(withText(R.string.preferences_sync_2)).click()
 
 fun settingsSearch() = onView(withText(R.string.preferences_search)).click()
 

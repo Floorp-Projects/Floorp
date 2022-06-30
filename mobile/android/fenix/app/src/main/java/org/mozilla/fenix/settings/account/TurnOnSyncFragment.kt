@@ -105,7 +105,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             pairWithEmailStarted = true
         } else {
             requireComponents.backgroundServices.accountManager.register(this, owner = this)
-            showToolbar(getString(R.string.preferences_sync))
+            showToolbar(getString(R.string.preferences_sync_2))
         }
     }
 
