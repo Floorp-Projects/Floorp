@@ -140,8 +140,8 @@ var AboutReader = function(
   this.colorSchemeMediaList = win.matchMedia("(prefers-color-scheme: dark)");
   this.colorSchemeMediaList.addEventListener("change", this);
 
-  this.prefersContrastMediaList = win.matchMedia("(prefers-contrast)");
-  this.prefersContrastMediaList.addEventListener("change", this);
+  this.forcedColorsMediaList = win.matchMedia("(forced-colors)");
+  this.forcedColorsMediaList.addEventListener("change", this);
 
   this._topScrollChange = this._topScrollChange.bind(this);
   this._intersectionObs = new win.IntersectionObserver(this._topScrollChange, {
@@ -495,7 +495,7 @@ AboutReader.prototype = {
 
       case "change":
         let colorScheme;
-        if (this.prefersContrastMediaList.matches) {
+        if (this.forcedColorsMediaList.matches) {
           colorScheme = "hcm";
         } else {
           colorScheme = Services.prefs.getCharPref("reader.color_scheme");
@@ -786,7 +786,7 @@ AboutReader.prototype = {
       bodyClasses.remove(this._colorScheme);
     }
 
-    if (!this._win.matchMedia("(prefers-contrast)").matches) {
+    if (!this._win.matchMedia("(forced-colors)").matches) {
       if (newColorScheme === "auto") {
         this._colorScheme = this.colorSchemeMediaList.matches
           ? "dark"
