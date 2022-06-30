@@ -121,8 +121,6 @@ ExternalEngineStateMachine::ExternalEngineStateMachine(
                &ExternalEngineStateMachine::OnEngineInitSuccess,
                &ExternalEngineStateMachine::OnEngineInitFailure)
         ->Track(state->mEngineInitRequest);
-  } else {
-    ShutdownInternal();
   }
 }
 
@@ -151,7 +149,6 @@ void ExternalEngineStateMachine::OnEngineInitFailure() {
   state->mInitPromise = nullptr;
   // TODO : Should fallback to the normal playback with media engine.
   DecodeError(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
-  ShutdownInternal();
 }
 
 void ExternalEngineStateMachine::ReadMetadata() {
@@ -377,14 +374,12 @@ RefPtr<GenericPromise> ExternalEngineStateMachine::InvokeSetSink(
 
 RefPtr<ShutdownPromise> ExternalEngineStateMachine::Shutdown() {
   AssertOnTaskQueue();
+  if (mState.IsShutdownEngine()) {
+    LOG("Already shutdown");
+    return mState.AsShutdownEngine()->mShutdown;
+  }
+
   LOG("Shutdown");
-  return ShutdownInternal();
-}
-
-RefPtr<ShutdownPromise> ExternalEngineStateMachine::ShutdownInternal() {
-  AssertOnTaskQueue();
-
-  LOG("ShutdownInternal");
   ChangeStateTo(State::ShutdownEngine);
   ResetDecode();
 
@@ -405,11 +400,14 @@ RefPtr<ShutdownPromise> ExternalEngineStateMachine::ShutdownInternal() {
   mMetadataManager.Disconnect();
 
   mEngine->Shutdown();
-  return mReader->Shutdown()->Then(
+
+  auto* state = mState.AsShutdownEngine();
+  state->mShutdown = mReader->Shutdown()->Then(
       OwnerThread(), __func__, [self = RefPtr{this}, this]() {
         LOG("Shutting down state machine task queue");
         return OwnerThread()->BeginShutdown();
       });
+  return state->mShutdown;
 }
 
 void ExternalEngineStateMachine::SetPlaybackRate(double aPlaybackRate) {

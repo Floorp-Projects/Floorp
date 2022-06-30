@@ -152,7 +152,9 @@ class ExternalEngineStateMachine final
       MozPromiseRequestHolder<MediaFormatReader::SeekPromise> mSeekRequest;
       SeekJob mSeekJob;
     };
-    struct ShutdownEngine {};
+    struct ShutdownEngine {
+      RefPtr<ShutdownPromise> mShutdown;
+    };
 
     StateObject() : mData(InitEngine()), mName(State::InitEngine){};
     explicit StateObject(ReadingMetadata&& aArg)
@@ -179,6 +181,9 @@ class ExternalEngineStateMachine final
     SeekingData* AsSeekingData() {
       return IsSeekingData() ? &mData.as<SeekingData>() : nullptr;
     }
+    ShutdownEngine* AsShutdownEngine() {
+      return IsShutdownEngine() ? &mData.as<ShutdownEngine>() : nullptr;
+    }
 
     Variant<InitEngine, ReadingMetadata, RunningEngine, SeekingData,
             ShutdownEngine>
@@ -190,7 +195,6 @@ class ExternalEngineStateMachine final
   void NotifyEventInternal(ExternalEngineEvent aEvent);
 
   RefPtr<ShutdownPromise> Shutdown() override;
-  RefPtr<ShutdownPromise> ShutdownInternal();
 
   void SetPlaybackRate(double aPlaybackRate) override;
   void BufferedRangeUpdated() override;
