@@ -23,7 +23,7 @@ only-for-build-types:
 
 job-template:
     attributes:
-        artifact_map: taskcluster/fenix_taskgraph/manifests/fenix_candidates.yml
+        artifact_map: taskcluster/fenix_taskgraph/manifests/fenix_releases.yml
         shipping_phase: ship
     treeherder:
         job-symbol: BM
