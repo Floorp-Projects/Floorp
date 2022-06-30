@@ -2071,26 +2071,6 @@ nsToolkitProfileService::Flush() {
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsToolkitProfileFactory, nsIFactory)
-
-NS_IMETHODIMP
-nsToolkitProfileFactory::CreateInstance(const nsID& aIID, void** aResult) {
-  RefPtr<nsToolkitProfileService> profileService =
-      nsToolkitProfileService::gService;
-  if (!profileService) {
-    nsresult rv = NS_NewToolkitProfileService(getter_AddRefs(profileService));
-    if (NS_FAILED(rv)) return rv;
-  }
-  return profileService->QueryInterface(aIID, aResult);
-}
-
-nsresult NS_NewToolkitProfileFactory(nsIFactory** aResult) {
-  *aResult = new nsToolkitProfileFactory();
-
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
 nsresult NS_NewToolkitProfileService(nsToolkitProfileService** aResult) {
   nsToolkitProfileService* profileService = new nsToolkitProfileService();
   nsresult rv = profileService->Init();

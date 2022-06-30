@@ -4,10 +4,10 @@
 
 browser.jar:
     content/browser/firefoxview.html
-    content/browser/firefoxview.js
+    content/browser/firefoxview.mjs
     content/browser/firefoxview.css
-    content/browser/helpers.js
-    content/browser/tabs-pickup.js
-    content/browser/tab-pickup-list.js
-    content/browser/recently-closed-tabs.js
+    content/browser/helpers.mjs
+    content/browser/tabs-pickup.mjs
+    content/browser/tab-pickup-list.mjs
+    content/browser/recently-closed-tabs.mjs
     content/browser/colorway-background.svg (content/colorway-background.svg)

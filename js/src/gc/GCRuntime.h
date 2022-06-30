@@ -576,6 +576,12 @@ class GCRuntime {
   NonEmptyChunksIter allNonEmptyChunks(const AutoLockGC& lock) {
     return NonEmptyChunksIter(availableChunks(lock), fullChunks(lock));
   }
+  uint32_t minEmptyChunkCount(const AutoLockGC& lock) const {
+    return minEmptyChunkCount_;
+  }
+  uint32_t maxEmptyChunkCount(const AutoLockGC& lock) const {
+    return maxEmptyChunkCount_;
+  }
 #ifdef DEBUG
   void verifyAllChunks();
 #endif
@@ -656,8 +662,8 @@ class GCRuntime {
   TriggerResult checkHeapThreshold(Zone* zone, const HeapSize& heapSize,
                                    const HeapThreshold& heapThreshold);
 
-  void updateGCThresholdsAfterCollection(const AutoLockGC& lock);
-  void updateAllGCStartThresholds(const AutoLockGC& lock);
+  void updateGCThresholdsAfterCollection();
+  void updateAllGCStartThresholds();
 
   // For ArenaLists::allocateFromArena()
   friend class ArenaLists;
@@ -682,6 +688,8 @@ class GCRuntime {
   ChunkPool expireEmptyChunkPool(const AutoLockGC& lock);
   void freeEmptyChunks(const AutoLockGC& lock);
   void prepareToFreeChunk(TenuredChunkInfo& info);
+  void setMinEmptyChunkCount(uint32_t value, const AutoLockGC& lock);
+  void setMaxEmptyChunkCount(uint32_t value, const AutoLockGC& lock);
 
   friend class BackgroundAllocTask;
   bool wantBackgroundAllocation(const AutoLockGC& lock) const;
@@ -994,6 +1002,18 @@ class GCRuntime {
   // When all arenas in a chunk are used, it is moved to the fullChunks pool
   // so as to reduce the cost of operations on the available lists.
   GCLockData<ChunkPool> fullChunks_;
+
+  /*
+   * JSGC_MIN_EMPTY_CHUNK_COUNT
+   * JSGC_MAX_EMPTY_CHUNK_COUNT
+   *
+   * Controls the number of empty chunks reserved for future allocation.
+   *
+   * They can be read off main thread by the background allocation task and the
+   * background decommit task.
+   */
+  GCLockData<uint32_t> minEmptyChunkCount_;
+  GCLockData<uint32_t> maxEmptyChunkCount_;
 
   MainThreadData<RootedValueMap> rootsHash;
 

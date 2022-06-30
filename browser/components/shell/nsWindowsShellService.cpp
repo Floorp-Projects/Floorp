@@ -1331,7 +1331,6 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
     }
 
     nsAutoString linkName(aShortcutName);
-    linkName.AppendLiteral(".lnk");
 
     wchar_t exePath[MAXPATHLEN] = {};
     if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {

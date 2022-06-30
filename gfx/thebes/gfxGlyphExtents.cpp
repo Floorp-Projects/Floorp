@@ -37,6 +37,7 @@ bool gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont* aFont,
                                                    DrawTarget* aDrawTarget,
                                                    uint32_t aGlyphID,
                                                    gfxRect* aExtents) {
+  AutoReadLock lock(mLock);
   HashEntry* entry = mTightGlyphExtents.GetEntry(aGlyphID);
   if (!entry) {
     // Some functions higher up in the call chain deliberately pass in a
@@ -50,7 +51,11 @@ bool gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont* aFont,
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     ++gGlyphExtentsSetupLazyTight;
 #endif
+    // We need to temporarily release the read lock, as SetupGlyphExtents will
+    // take a write lock internally when it wants to set the new entry.
+    mLock.ReadUnlock();
     aFont->SetupGlyphExtents(aDrawTarget, aGlyphID, true, this);
+    mLock.ReadLock();
     entry = mTightGlyphExtents.GetEntry(aGlyphID);
     if (!entry) {
       NS_WARNING("Could not get glyph extents");
@@ -122,8 +127,11 @@ void gfxGlyphExtents::GlyphWidths::Set(uint32_t aGlyphID, uint16_t aWidth) {
 
 void gfxGlyphExtents::SetTightGlyphExtents(uint32_t aGlyphID,
                                            const gfxRect& aExtentsAppUnits) {
+  AutoWriteLock lock(mLock);
   HashEntry* entry = mTightGlyphExtents.PutEntry(aGlyphID);
-  if (!entry) return;
+  if (!entry) {
+    return;
+  }
   entry->x = aExtentsAppUnits.X();
   entry->y = aExtentsAppUnits.Y();
   entry->width = aExtentsAppUnits.Width();
@@ -131,6 +139,7 @@ void gfxGlyphExtents::SetTightGlyphExtents(uint32_t aGlyphID,
 }
 
 size_t gfxGlyphExtents::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+  AutoReadLock lock(mLock);
   return mContainedGlyphWidths.SizeOfExcludingThis(aMallocSizeOf) +
          mTightGlyphExtents.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }

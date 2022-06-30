@@ -1059,15 +1059,13 @@ bool StructuredCloneHolder::CustomWriteHandler(
   {
     ImageBitmap* imageBitmap = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageBitmap, &obj, imageBitmap))) {
-      if (imageBitmap->IsWriteOnly()) {
-        return false;
-      }
-
       SameProcessScopeRequired(aSameProcessScopeRequired);
 
       if (CloneScope() == StructuredCloneScope::SameProcess) {
-        return ImageBitmap::WriteStructuredClone(aWriter, GetSurfaces(),
-                                                 imageBitmap);
+        ErrorResult rv;
+        ImageBitmap::WriteStructuredClone(aWriter, GetSurfaces(), imageBitmap,
+                                          rv);
+        return !rv.MaybeSetPendingException(aCx);
       }
       return false;
     }

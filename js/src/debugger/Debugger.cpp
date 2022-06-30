@@ -4136,6 +4136,8 @@ struct MOZ_STACK_CLASS Debugger::CallData {
   bool adoptDebuggeeValue();
   bool adoptFrame();
   bool adoptSource();
+  bool enableAsyncStack();
+  bool disableAsyncStack();
 
   using Method = bool (CallData::*)();
 
@@ -6290,6 +6292,36 @@ bool Debugger::CallData::adoptSource() {
   return true;
 }
 
+bool Debugger::CallData::enableAsyncStack() {
+  if (!args.requireAtLeast(cx, "Debugger.enableAsyncStack", 1)) {
+    return false;
+  }
+  Rooted<GlobalObject*> global(cx, dbg->unwrapDebuggeeArgument(cx, args[0]));
+  if (!global) {
+    return false;
+  }
+
+  global->realm()->isAsyncStackCapturingEnabled = true;
+
+  args.rval().setUndefined();
+  return true;
+}
+
+bool Debugger::CallData::disableAsyncStack() {
+  if (!args.requireAtLeast(cx, "Debugger.disableAsyncStack", 1)) {
+    return false;
+  }
+  Rooted<GlobalObject*> global(cx, dbg->unwrapDebuggeeArgument(cx, args[0]));
+  if (!global) {
+    return false;
+  }
+
+  global->realm()->isAsyncStackCapturingEnabled = false;
+
+  args.rval().setUndefined();
+  return true;
+}
+
 const JSPropertySpec Debugger::properties[] = {
     JS_DEBUG_PSGS("onDebuggerStatement", getOnDebuggerStatement,
                   setOnDebuggerStatement),
@@ -6332,6 +6364,8 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_DEBUG_FN("adoptDebuggeeValue", adoptDebuggeeValue, 1),
     JS_DEBUG_FN("adoptFrame", adoptFrame, 1),
     JS_DEBUG_FN("adoptSource", adoptSource, 1),
+    JS_DEBUG_FN("enableAsyncStack", enableAsyncStack, 1),
+    JS_DEBUG_FN("disableAsyncStack", disableAsyncStack, 1),
     JS_FS_END};
 
 const JSFunctionSpec Debugger::static_methods[]{

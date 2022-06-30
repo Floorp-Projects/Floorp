@@ -96,9 +96,6 @@ add_task(async function test_appid() {
       // Check that the correct rpIdHash is returned.
       let rpIdHashSign = authenticatorData.slice(0, 32);
       ok(memcmp(rpIdHash, rpIdHashSign), "rpIdHash is correct");
-
-      let clientData = JSON.parse(buffer2string(clientDataJSON));
-      is(clientData.clientExtensions.appid, appid, "appid extension sent");
     }
   );
 
@@ -126,14 +123,6 @@ add_task(async function test_appid_unused() {
     signature,
     extensions,
   } = await promiseWebAuthnGetAssertion(tab, rawId, { appid });
-
-  // Check the we can parse clientDataJSON.
-  let clientData = JSON.parse(buffer2string(clientDataJSON));
-  ok(
-    "appid" in clientData.clientExtensions,
-    `since it was passed, appid field should appear in the client data, but ` +
-      `saw: ${JSON.stringify(clientData.clientExtensions)}`
-  );
 
   ok(
     "appid" in extensions,

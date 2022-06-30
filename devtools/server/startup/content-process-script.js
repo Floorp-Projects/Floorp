@@ -170,7 +170,7 @@ class ContentProcessStartup {
       const { connectionPrefix, targets } = sessionData;
       // This is where we only do something significant only if DevTools are opened
       // and requesting to create target actor for content processes
-      if (targets.includes("process")) {
+      if (targets?.includes("process")) {
         this.createTargetActor(watcherActorID, connectionPrefix, sessionData);
       }
     }

@@ -16,8 +16,7 @@ add_setup(async function() {
   });
 });
 
-// Test Engine list
-add_task(async function() {
+add_task(async function test_engine_list() {
   let prefs = await openPreferencesViaOpenPreferencesAPI("search", {
     leaveOpen: true,
   });
@@ -91,6 +90,52 @@ add_task(async function() {
     "keyword",
     "Do not allow duplicated keywords"
   );
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_remove_button_disabled_state() {
+  let prefs = await openPreferencesViaOpenPreferencesAPI("search", {
+    leaveOpen: true,
+  });
+  is(prefs.selectedPane, "paneSearch", "Search pane is selected by default");
+  let doc = gBrowser.contentDocument;
+
+  let tree = doc.querySelector("#engineList");
+  ok(
+    !tree.hidden,
+    "The search engine list should be visible when Search is requested"
+  );
+
+  let defaultEngines = await Services.search.getAppProvidedEngines();
+  for (let i = 0; i < defaultEngines.length; i++) {
+    let engine = defaultEngines[i];
+
+    let isDefaultSearchEngine =
+      engine.name == Services.search.defaultEngine.name ||
+      engine.name == Services.search.defaultPrivateEngine.name;
+
+    tree.scrollIntoView();
+    let rect = tree.getCoordsForCellItem(
+      i,
+      tree.columns.getNamedColumn("engineName"),
+      "text"
+    );
+    let x = rect.x + rect.width / 2;
+    let y = rect.y + rect.height / 2;
+    let win = tree.ownerGlobal;
+
+    let promise = BrowserTestUtils.waitForEvent(tree, "click");
+    EventUtils.synthesizeMouse(tree.body, x, y, { clickCount: 1 }, win);
+    await promise;
+
+    let removeButton = doc.querySelector("#removeEngineButton");
+    is(
+      removeButton.disabled,
+      isDefaultSearchEngine,
+      "Remove button is in correct disable state"
+    );
+  }
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

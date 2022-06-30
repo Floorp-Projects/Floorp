@@ -78,9 +78,8 @@ const BreakpointListActor = ActorClassWithSpec(breakpointListSpec, {
    *                        for details.
    */
   setActiveEventBreakpoints(ids) {
-    const existingIds = this.watcherActor.getSessionDataForType(
-      EVENT_BREAKPOINTS
-    );
+    const existingIds =
+      this.watcherActor.getSessionDataForType(EVENT_BREAKPOINTS) || [];
     const addIds = ids.filter(id => !existingIds.includes(id));
     const removeIds = existingIds.filter(id => !ids.includes(id));
 

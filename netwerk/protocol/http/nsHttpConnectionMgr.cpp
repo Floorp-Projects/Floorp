@@ -3353,8 +3353,7 @@ void nsHttpConnectionMgr::DoSpeculativeConnectionInternal(
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(aTrans);
   MOZ_ASSERT(aEnt);
-  if (aFetchHTTPSRR) {
-    Unused << aTrans->FetchHTTPSRR();
+  if (aFetchHTTPSRR && NS_SUCCEEDED(aTrans->FetchHTTPSRR())) {
     // nsHttpConnectionMgr::DoSpeculativeConnection will be called again when
     // HTTPS RR is available.
     return;

@@ -12,6 +12,7 @@
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/RWLock.h"
 
 class gfxContext;
 
@@ -39,29 +40,36 @@ class gfxGlyphExtents {
 
  public:
   explicit gfxGlyphExtents(int32_t aAppUnitsPerDevUnit)
-      : mAppUnitsPerDevUnit(aAppUnitsPerDevUnit) {
+      : mAppUnitsPerDevUnit(aAppUnitsPerDevUnit),
+        mLock("gfxGlyphExtents lock") {
     MOZ_COUNT_CTOR(gfxGlyphExtents);
   }
   ~gfxGlyphExtents();
 
   enum { INVALID_WIDTH = 0xFFFF };
 
-  void NotifyGlyphsChanged() { mTightGlyphExtents.Clear(); }
+  void NotifyGlyphsChanged() {
+    mozilla::AutoWriteLock lock(mLock);
+    mTightGlyphExtents.Clear();
+  }
 
   // returns INVALID_WIDTH => not a contained glyph
   // Otherwise the glyph has no before-bearing or vertical bearings,
   // and the result is its width measured from the baseline origin, in
   // appunits.
   uint16_t GetContainedGlyphWidthAppUnits(uint32_t aGlyphID) const {
+    mozilla::AutoReadLock lock(mLock);
     return mContainedGlyphWidths.Get(aGlyphID);
   }
 
   bool IsGlyphKnown(uint32_t aGlyphID) const {
+    mozilla::AutoReadLock lock(mLock);
     return mContainedGlyphWidths.Get(aGlyphID) != INVALID_WIDTH ||
            mTightGlyphExtents.GetEntry(aGlyphID) != nullptr;
   }
 
   bool IsGlyphKnownWithTightExtents(uint32_t aGlyphID) const {
+    mozilla::AutoReadLock lock(mLock);
     return mTightGlyphExtents.GetEntry(aGlyphID) != nullptr;
   }
 
@@ -72,6 +80,7 @@ class gfxGlyphExtents {
                                     uint32_t aGlyphID, gfxRect* aExtents);
 
   void SetContainedGlyphWidthAppUnits(uint32_t aGlyphID, uint16_t aWidth) {
+    mozilla::AutoWriteLock lock(mLock);
     mContainedGlyphWidths.Set(aGlyphID, aWidth);
   }
   void SetTightGlyphExtents(uint32_t aGlyphID, const gfxRect& aExtentsAppUnits);
@@ -140,9 +149,10 @@ class gfxGlyphExtents {
     nsTArray<uintptr_t> mBlocks;
   };
 
-  GlyphWidths mContainedGlyphWidths;
-  nsTHashtable<HashEntry> mTightGlyphExtents;
-  int32_t mAppUnitsPerDevUnit;
+  GlyphWidths mContainedGlyphWidths GUARDED_BY(mLock);
+  nsTHashtable<HashEntry> mTightGlyphExtents GUARDED_BY(mLock);
+  const int32_t mAppUnitsPerDevUnit;
+  mutable mozilla::RWLock mLock;
 
  private:
   // not implemented:

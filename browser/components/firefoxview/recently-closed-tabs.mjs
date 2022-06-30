@@ -16,7 +16,7 @@ import {
   formatURIForDisplay,
   convertTimestamp,
   createFaviconElement,
-} from "./helpers.js";
+} from "./helpers.mjs";
 
 const SS_NOTIFY_CLOSED_OBJECTS_CHANGED = "sessionstore-closed-objects-changed";
 
