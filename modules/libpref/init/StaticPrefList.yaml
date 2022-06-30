@@ -5232,37 +5232,6 @@
   value: false
   mirror: once
 
-- name: gfx.blithelper.precision
-  type: RelaxedAtomicUint32
-  value: 2 # { 0: lowp, 1: mediump, 2: highp }
-  mirror: always
-
-- name: gfx.blithelper.lut-size.rgb.b
-  type: RelaxedAtomicUint32
-  value: 15
-  mirror: always
-- name: gfx.blithelper.lut-size.rgb.g
-  type: RelaxedAtomicUint32
-  value: 31
-  mirror: always
-- name: gfx.blithelper.lut-size.rgb.r
-  type: RelaxedAtomicUint32
-  value: 31
-  mirror: always
-
-- name: gfx.blithelper.lut-size.ycbcr.cb
-  type: RelaxedAtomicUint32
-  value: 15
-  mirror: always
-- name: gfx.blithelper.lut-size.ycbcr.cr
-  type: RelaxedAtomicUint32
-  value: 31
-  mirror: always
-- name: gfx.blithelper.lut-size.ycbcr.y
-  type: RelaxedAtomicUint32
-  value: 31
-  mirror: always
-
 # Nb: we ignore this pref on release and beta.
 - name: gfx.blocklist.all
   type: int32_t
