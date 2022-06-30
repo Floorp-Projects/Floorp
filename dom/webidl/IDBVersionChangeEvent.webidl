@@ -15,7 +15,7 @@ dictionary IDBVersionChangeEventInit : EventInit {
     unsigned long long? newVersion = null;
 };
 
-[Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
+[Exposed=(Window,Worker)]
 interface IDBVersionChangeEvent : Event {
     constructor(DOMString type,
                 optional IDBVersionChangeEventInit eventInitDict = {});
