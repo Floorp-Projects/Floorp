@@ -362,22 +362,22 @@ clang-trunk:
         repo: https://github.com/llvm/llvm-project
         branch: main
 
-# This revision currently corresponds to rust nightly-2022-04-05,
-# which is the first nightly with the version 1.62.0,
+# This revision currently corresponds to rust nightly-2022-05-16,
+# which is the first nightly with the version 1.63.0,
 # so it should be as close as possible to the behaviour of
-# stable-1.61.0.
+# stable-1.62.0.
 #
 # We use this to build from source, so the resulting non-official
-# artifacts will report their version as "1.62.0-dev", but will otherwise
+# artifacts will report their version as "1.63.0-dev", but will otherwise
 # behave like a nightly build. This means they will allow you to use
 # unstable features like -Zbuild-std and sanitizers.
-rust-1.62.0-dev:
-    description: Rust 1.62.0-dev source code
+rust-1.63.0-dev:
+    description: Rust 1.63.0-dev source code
     fetch:
         type: git
         include-dot-git: true
         repo: https://github.com/rust-lang/rust/
-        revision: 60e50fc1cfe0bb693a5f4f93eb83ef70854531e3
+        revision: 42e1761c704f074b7b8c7ff8a7433acfd65d2ee9
 
 wasi-sdk:
     description: wasi-sdk-16 source code
