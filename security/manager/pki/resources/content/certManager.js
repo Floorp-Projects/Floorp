@@ -790,7 +790,8 @@ async function addCACerts() {
   fp.open(rv => {
     if (rv == Ci.nsIFilePicker.returnOK) {
       certdb.importCertsFromFile(fp.file, Ci.nsIX509Cert.CA_CERT);
-      caTreeView.loadCerts(Ci.nsIX509Cert.CA_CERT);
+      let certcache = certdb.getCerts();
+      caTreeView.loadCertsFromCache(certcache, Ci.nsIX509Cert.CA_CERT);
       caTreeView.selection.clearSelection();
     }
   });
