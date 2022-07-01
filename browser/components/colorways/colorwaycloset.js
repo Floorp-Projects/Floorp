@@ -160,9 +160,9 @@ const ColorwayCloset = {
         ".colorway-intensity-radio"
       )) {
         let intensity = radio.getAttribute("data-intensity");
-        radio.value = this.selectedColorway.id.replace(
-          MATCH_INTENSITY_FROM_ID,
-          `-${intensity}-colorway@mozilla.org`
+        radio.value = this._changeIntensity(
+          this.selectedColorway.id,
+          intensity
         );
         if (intensity == selectedIntensity) {
           radio.checked = true;
@@ -181,6 +181,13 @@ const ColorwayCloset = {
       : null;
   },
 
+  _changeIntensity(colorwayId, intensity) {
+    return colorwayId.replace(
+      MATCH_INTENSITY_FROM_ID,
+      `-${intensity}-colorway@mozilla.org`
+    );
+  },
+
   _getColorwayGroupName(addon) {
     return BuiltInThemes.getLocalizedColorwayGroupName(addon.id) || addon.name;
   },
@@ -188,7 +195,15 @@ const ColorwayCloset = {
   handleEvent(e) {
     switch (e.type) {
       case "change":
-        this.colorways.find(colorway => colorway.id == e.target.value).enable();
+        let newId = e.target.value;
+        // Persist the selected intensity when toggling between colorway radios.
+        if (e.currentTarget == this.el.colorwayRadios && this.hasIntensities) {
+          let selectedIntensity = document
+            .querySelector(".colorway-intensity-radio:checked")
+            .getAttribute("data-intensity");
+          newId = this._changeIntensity(newId, selectedIntensity);
+        }
+        this.colorways.find(colorway => colorway.id == newId).enable();
         break;
       case "unload":
         AddonManager.removeAddonListener(this);
