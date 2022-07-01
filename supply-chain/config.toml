@@ -1009,17 +1009,9 @@ criteria = "safe-to-deploy"
 version = "0.0.6"
 criteria = "safe-to-deploy"
 
-[[exemptions.malloc_size_of_derive]]
-version = "0.1.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.marionette]]
 version = "0.2.0"
 criteria = "safe-to-run"
-
-[[exemptions.matches]]
-version = "0.1.9"
-criteria = "safe-to-deploy"
 
 [[exemptions.memalloc]]
 version = "0.1.0"
@@ -1108,10 +1100,6 @@ criteria = "safe-to-deploy"
 [[exemptions.net2]]
 version = "0.2.37"
 criteria = "safe-to-run"
-
-[[exemptions.new_debug_unreachable]]
-version = "1.0.4"
-criteria = "safe-to-deploy"
 
 [[exemptions.nix]]
 version = "0.15.0"
@@ -1271,10 +1259,6 @@ criteria = "safe-to-run"
 
 [[exemptions.ppv-lite86]]
 version = "0.2.16"
-criteria = "safe-to-deploy"
-
-[[exemptions.precomputed-hash]]
-version = "0.1.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.proc-macro-error]]
@@ -1771,10 +1755,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.version_check]]
 version = "0.9.4"
-criteria = "safe-to-deploy"
-
-[[exemptions.void]]
-version = "1.0.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.walkdir]]
