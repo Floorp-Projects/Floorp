@@ -571,4 +571,12 @@ void ScrollSnapUtils::PostPendingResnapIfNeededFor(nsIFrame* aFrame) {
   }
 }
 
+void ScrollSnapUtils::PostPendingResnapFor(nsIFrame* aFrame) {
+  if (nsIScrollableFrame* sf = nsLayoutUtils::GetNearestScrollableFrame(
+          aFrame, nsLayoutUtils::SCROLLABLE_SAME_DOC |
+                      nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN)) {
+    sf->PostPendingResnap();
+  }
+}
+
 }  // namespace mozilla

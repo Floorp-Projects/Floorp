@@ -107,6 +107,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void PostOverflowEvent();
   using PostDestroyData = nsIFrame::PostDestroyData;
   void Destroy(PostDestroyData& aPostDestroyData);
+  void DidSetComputedStyle(ComputedStyle* aOldComputedStyle);
 
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists);
@@ -986,6 +987,10 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) final;
 
   void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData&) override;
+  void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) final {
+    nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
+    mHelper.DidSetComputedStyle(aOldComputedStyle);
+  }
 
   nsIScrollableFrame* GetScrollTargetFrame() const final {
     return const_cast<nsHTMLScrollFrame*>(this);
@@ -1430,6 +1435,10 @@ class nsXULScrollFrame final : public nsBoxFrame,
 
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) final;
+  void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) final {
+    nsBoxFrame::DidSetComputedStyle(aOldComputedStyle);
+    mHelper.DidSetComputedStyle(aOldComputedStyle);
+  };
 
   nsIScrollableFrame* GetScrollTargetFrame() const final {
     return const_cast<nsXULScrollFrame*>(this);
