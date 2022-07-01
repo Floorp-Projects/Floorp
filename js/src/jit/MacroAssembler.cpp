@@ -3803,7 +3803,7 @@ CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
       globalDataOffset + offsetof(wasm::FuncImportInstanceData, code),
       ABINonArgReg0);
 
-#ifndef JS_CODEGEN_NONE
+#if !defined(JS_CODEGEN_NONE) && !defined(JS_CODEGEN_WASM32)
   static_assert(ABINonArgReg0 != InstanceReg, "by constraint");
 #endif
 
@@ -4145,6 +4145,8 @@ void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
   ma_dsll(temp1, temp1, temp3);
 #elif JS_CODEGEN_LOONG64
   as_sll_d(temp1, temp1, temp3);
+#elif JS_CODEGEN_WASM32
+  MOZ_CRASH();
 #elif JS_CODEGEN_NONE
   MOZ_CRASH();
 #else

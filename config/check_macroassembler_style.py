@@ -30,8 +30,8 @@ import sys
 
 architecture_independent = set(["generic"])
 all_unsupported_architectures_names = set(["mips32", "mips64", "mips_shared"])
-all_architecture_names = set(["x86", "x64", "arm", "arm64", "loong64"])
-all_shared_architecture_names = set(["x86_shared", "arm", "arm64", "loong64"])
+all_architecture_names = set(["x86", "x64", "arm", "arm64", "loong64", "wasm32"])
+all_shared_architecture_names = set(["x86_shared", "arm", "arm64", "loong64", "wasm32"])
 
 reBeforeArg = "(?<=[(,\s])"
 reArgType = "(?P<type>[\w\s:*&<>]+)"
