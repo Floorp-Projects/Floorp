@@ -64,6 +64,13 @@ struct ScrollSnapUtils {
   // Post a pending re-snap request if the given |aFrame| is one of the snap
   // points on the last scroll operation.
   static void PostPendingResnapIfNeededFor(nsIFrame* aFrame);
+
+  // Similar to above PostPendingResnapIfNeededFor but post a pending re-snap
+  // request even if the given |aFrame| is not one of the last snap point.
+  // This is basically used for cases there was no valid snap point on the last
+  // scroll operation but the given |aFrame| might be a valid snap point now,
+  // e.g changing the scroll-snap-align property from `none` to something.
+  static void PostPendingResnapFor(nsIFrame* aFrame);
 };
 
 }  // namespace mozilla

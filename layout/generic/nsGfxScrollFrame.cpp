@@ -5806,6 +5806,14 @@ void ScrollFrameHelper::Destroy(PostDestroyData& aPostDestroyData) {
   RemoveObservers();
 }
 
+void ScrollFrameHelper::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
+  if (aOldComputedStyle && !mIsRoot &&
+      mOuter->StyleDisplay()->mScrollSnapType !=
+          aOldComputedStyle->StyleDisplay()->mScrollSnapType) {
+    PostPendingResnap();
+  }
+}
+
 void ScrollFrameHelper::RemoveObservers() {
   if (mAsyncScroll) {
     mAsyncScroll->RemoveObserver();
