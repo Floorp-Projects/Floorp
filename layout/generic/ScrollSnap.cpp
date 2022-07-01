@@ -11,6 +11,7 @@
 #include "mozilla/ServoStyleConsts.h"
 #include "nsIFrame.h"
 #include "nsPresContext.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -60,11 +61,14 @@ class CalcSnapPoints final {
     // opposite side of the best edge on this axis.
     SnapPosition mSecondBestEdge;
     bool mEdgeFound;  // true if mBestEdge is storing a valid edge.
+
+    // Assuming in most cases there's no multiple coincide snap points.
+    AutoTArray<ScrollSnapTargetId, 1> mTargetIds;
   };
   void AddEdge(const SnapPosition& aEdge, nscoord aDestination,
                nscoord aStartPos, nscoord aScrollingDirection,
                CandidateTracker* aCandidateTracker);
-  nsPoint GetBestEdge() const;
+  SnapTarget GetBestEdge() const;
   nscoord XDistanceBetweenBestAndSecondEdge() const {
     return std::abs(NSCoordSaturatingSubtract(
         mTrackerOnX.mSecondBestEdge.mPosition, mTrackerOnX.mBestEdge.mPosition,
@@ -115,10 +119,13 @@ CalcSnapPoints::CalcSnapPoints(ScrollUnit aUnit, ScrollSnapFlags aSnapFlags,
   }
 }
 
-nsPoint CalcSnapPoints::GetBestEdge() const {
-  return nsPoint(
-      mTrackerOnX.mEdgeFound ? mTrackerOnX.mBestEdge.mPosition : mStartPos.x,
-      mTrackerOnY.mEdgeFound ? mTrackerOnY.mBestEdge.mPosition : mStartPos.y);
+SnapTarget CalcSnapPoints::GetBestEdge() const {
+  return SnapTarget{
+      nsPoint(mTrackerOnX.mEdgeFound ? mTrackerOnX.mBestEdge.mPosition
+                                     : mStartPos.x,
+              mTrackerOnY.mEdgeFound ? mTrackerOnY.mBestEdge.mPosition
+                                     : mStartPos.y),
+      ScrollSnapTargetIds{mTrackerOnX.mTargetIds, mTrackerOnY.mTargetIds}};
 }
 
 void CalcSnapPoints::AddHorizontalEdge(const SnapPosition& aEdge) {
@@ -147,6 +154,8 @@ void CalcSnapPoints::AddEdge(const SnapPosition& aEdge, nscoord aDestination,
 
   if (!aCandidateTracker->mEdgeFound) {
     aCandidateTracker->mBestEdge = aEdge;
+    aCandidateTracker->mTargetIds =
+        AutoTArray<ScrollSnapTargetId, 1>{aEdge.mTargetId};
     aCandidateTracker->mEdgeFound = true;
     return;
   }
@@ -201,8 +210,13 @@ void CalcSnapPoints::AddEdge(const SnapPosition& aEdge, nscoord aDestination,
         aCandidateTracker->mSecondBestEdge = aCandidateTracker->mBestEdge;
       }
       aCandidateTracker->mBestEdge = aEdge;
-    } else if (aIsCloserThanSecond) {
-      if (isOnOppositeSide) {
+      aCandidateTracker->mTargetIds =
+          AutoTArray<ScrollSnapTargetId, 1>{aEdge.mTargetId};
+    } else {
+      if (aEdge.mPosition == aCandidateTracker->mBestEdge.mPosition) {
+        aCandidateTracker->mTargetIds.AppendElement(aEdge.mTargetId);
+      }
+      if (aIsCloserThanSecond && isOnOppositeSide) {
         aCandidateTracker->mSecondBestEdge = aEdge;
       }
     }
@@ -303,7 +317,7 @@ static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
   }
 }
 
-Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
+Maybe<SnapTarget> ScrollSnapUtils::GetSnapPointForDestination(
     const ScrollSnapInfo& aSnapInfo, ScrollUnit aUnit,
     ScrollSnapFlags aSnapFlags, const nsRect& aScrollRange,
     const nsPoint& aStartPos, const nsPoint& aDestination) {
@@ -348,21 +362,21 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
   }
 
   bool snapped = false;
-  nsPoint finalPos = calcSnapPoints.GetBestEdge();
+  auto finalPos = calcSnapPoints.GetBestEdge();
   nscoord proximityThreshold =
       StaticPrefs::layout_css_scroll_snap_proximity_threshold();
   proximityThreshold = nsPresContext::CSSPixelsToAppUnits(proximityThreshold);
   if (aSnapInfo.mScrollSnapStrictnessY ==
           StyleScrollSnapStrictness::Proximity &&
-      std::abs(aDestination.y - finalPos.y) > proximityThreshold) {
-    finalPos.y = aDestination.y;
+      std::abs(aDestination.y - finalPos.mPosition.y) > proximityThreshold) {
+    finalPos.mPosition.y = aDestination.y;
   } else {
     snapped = true;
   }
   if (aSnapInfo.mScrollSnapStrictnessX ==
           StyleScrollSnapStrictness::Proximity &&
-      std::abs(aDestination.x - finalPos.x) > proximityThreshold) {
-    finalPos.x = aDestination.x;
+      std::abs(aDestination.x - finalPos.mPosition.x) > proximityThreshold) {
+    finalPos.mPosition.x = aDestination.x;
   } else {
     snapped = true;
   }
