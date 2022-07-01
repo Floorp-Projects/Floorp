@@ -8,10 +8,9 @@
 
 #include "FrameMetrics.h"
 
-#include "mozilla/Maybe.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs_layout.h"
-#include "nsLineLayout.h"
+#include "mozilla/ServoStyleConsts.h"
+#include "nsIFrame.h"
+#include "nsPresContext.h"
 
 namespace mozilla {
 
@@ -28,11 +27,15 @@ class CalcSnapPoints final {
   struct SnapPosition {
     SnapPosition() = default;
 
-    SnapPosition(nscoord aPosition, StyleScrollSnapStop aScrollSnapStop)
-        : mPosition(aPosition), mScrollSnapStop(aScrollSnapStop) {}
+    SnapPosition(nscoord aPosition, StyleScrollSnapStop aScrollSnapStop,
+                 ScrollSnapTargetId aTargetId)
+        : mPosition(aPosition),
+          mScrollSnapStop(aScrollSnapStop),
+          mTargetId(aTargetId) {}
 
     nscoord mPosition;
     StyleScrollSnapStop mScrollSnapStop;
+    ScrollSnapTargetId mTargetId;
   };
 
   void AddHorizontalEdge(const SnapPosition& aEdge);
@@ -40,12 +43,14 @@ class CalcSnapPoints final {
 
   struct CandidateTracker {
     explicit CandidateTracker(nscoord aDestination)
-        : mBestEdge(SnapPosition{aDestination, StyleScrollSnapStop::Normal}) {
+        : mBestEdge(SnapPosition{aDestination, StyleScrollSnapStop::Normal,
+                                 ScrollSnapTargetId::None}) {
       // We use NSCoordSaturatingSubtract to calculate the distance between a
       // given position and this second best edge position so that it can be an
       // uninitialized value as the maximum possible value, because the first
       // distance calculation would always be nscoord_MAX.
-      mSecondBestEdge = SnapPosition{nscoord_MAX, StyleScrollSnapStop::Normal};
+      mSecondBestEdge = SnapPosition{nscoord_MAX, StyleScrollSnapStop::Normal,
+                                     ScrollSnapTargetId::None};
       mEdgeFound = false;
     }
 
@@ -288,12 +293,12 @@ static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
     if (target.mSnapPositionX &&
         aSnapInfo.mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) {
       aCalcSnapPoints.AddVerticalEdge(
-          {*target.mSnapPositionX, target.mScrollSnapStop});
+          {*target.mSnapPositionX, target.mScrollSnapStop, target.mTargetId});
     }
     if (target.mSnapPositionY &&
         aSnapInfo.mScrollSnapStrictnessY != StyleScrollSnapStrictness::None) {
       aCalcSnapPoints.AddHorizontalEdge(
-          {*target.mSnapPositionY, target.mScrollSnapStop});
+          {*target.mSnapPositionY, target.mScrollSnapStop, target.mTargetId});
     }
   }
 }
@@ -328,7 +333,7 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
         calcSnapPoints.XDistanceBetweenBestAndSecondEdge() >
             aSnapInfo.mSnapportSize.width) {
       calcSnapPoints.AddVerticalEdge(CalcSnapPoints::SnapPosition{
-          clampedDestination.x, StyleScrollSnapStop::Normal});
+          clampedDestination.x, StyleScrollSnapStop::Normal, range.mTargetId});
       break;
     }
   }
@@ -337,7 +342,7 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
         calcSnapPoints.YDistanceBetweenBestAndSecondEdge() >
             aSnapInfo.mSnapportSize.height) {
       calcSnapPoints.AddHorizontalEdge(CalcSnapPoints::SnapPosition{
-          clampedDestination.y, StyleScrollSnapStop::Normal});
+          clampedDestination.y, StyleScrollSnapStop::Normal, range.mTargetId});
       break;
     }
   }
@@ -362,6 +367,11 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
     snapped = true;
   }
   return snapped ? Some(finalPos) : Nothing();
+}
+
+ScrollSnapTargetId ScrollSnapUtils::GetTargetIdFor(const nsIFrame* aFrame) {
+  MOZ_ASSERT(aFrame && aFrame->GetContent());
+  return ScrollSnapTargetId{reinterpret_cast<uintptr_t>(aFrame->GetContent())};
 }
 
 }  // namespace mozilla

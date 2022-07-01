@@ -34,11 +34,12 @@ TEST_F(APZCSnappingTesterMock, Bug1265510) {
 
   snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
       Nothing(), Some(0 * AppUnitsPerCSSPixel()),
-      CSSRect::ToAppUnits(CSSRect(0, 0, 10, 10)), StyleScrollSnapStop::Normal));
-  snap.mSnapTargets.AppendElement(
-      ScrollSnapInfo::SnapTarget(Nothing(), Some(100 * AppUnitsPerCSSPixel()),
-                                 CSSRect::ToAppUnits(CSSRect(0, 100, 10, 10)),
-                                 StyleScrollSnapStop::Normal));
+      CSSRect::ToAppUnits(CSSRect(0, 0, 10, 10)), StyleScrollSnapStop::Normal,
+      ScrollSnapTargetId{1}));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(100 * AppUnitsPerCSSPixel()),
+      CSSRect::ToAppUnits(CSSRect(0, 100, 10, 10)), StyleScrollSnapStop::Normal,
+      ScrollSnapTargetId{2}));
 
   ModifyFrameMetrics(root, [&](ScrollMetadata& aSm, FrameMetrics&) {
     aSm.SetSnapInfo(ScrollSnapInfo(snap));
@@ -112,11 +113,12 @@ TEST_F(APZCSnappingTesterMock, Snap_After_Pinch) {
 
   snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
       Nothing(), Some(0 * AppUnitsPerCSSPixel()),
-      CSSRect::ToAppUnits(CSSRect(0, 0, 10, 10)), StyleScrollSnapStop::Normal));
-  snap.mSnapTargets.AppendElement(
-      ScrollSnapInfo::SnapTarget(Nothing(), Some(100 * AppUnitsPerCSSPixel()),
-                                 CSSRect::ToAppUnits(CSSRect(0, 100, 10, 10)),
-                                 StyleScrollSnapStop::Normal));
+      CSSRect::ToAppUnits(CSSRect(0, 0, 10, 10)), StyleScrollSnapStop::Normal,
+      ScrollSnapTargetId{1}));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(100 * AppUnitsPerCSSPixel()),
+      CSSRect::ToAppUnits(CSSRect(0, 100, 10, 10)), StyleScrollSnapStop::Normal,
+      ScrollSnapTargetId{2}));
 
   // Save the scroll snap info on the root APZC.
   // Also mark the root APZC as "root content", since APZC only allows
@@ -168,14 +170,14 @@ TEST_F(APZCSnappingTesterMock, SnapOnPanEndWithZeroVelocity) {
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
   snap.mSnapportSize = CSSSize::ToAppUnits(
       layerVisibleRegion[0].GetBounds().Size() * LayerToCSSScale(1.0));
-  snap.mSnapTargets.AppendElement(
-      ScrollSnapInfo::SnapTarget(Nothing(), Some(30 * AppUnitsPerCSSPixel()),
-                                 CSSRect::ToAppUnits(CSSRect(0, 30, 10, 10)),
-                                 StyleScrollSnapStop::Normal));
-  snap.mSnapTargets.AppendElement(
-      ScrollSnapInfo::SnapTarget(Nothing(), Some(100 * AppUnitsPerCSSPixel()),
-                                 CSSRect::ToAppUnits(CSSRect(0, 100, 10, 10)),
-                                 StyleScrollSnapStop::Normal));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(30 * AppUnitsPerCSSPixel()),
+      CSSRect::ToAppUnits(CSSRect(0, 30, 10, 10)), StyleScrollSnapStop::Normal,
+      ScrollSnapTargetId{1}));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(100 * AppUnitsPerCSSPixel()),
+      CSSRect::ToAppUnits(CSSRect(0, 100, 10, 10)), StyleScrollSnapStop::Normal,
+      ScrollSnapTargetId{2}));
 
   // Save the scroll snap info on the root APZC.
   ModifyFrameMetrics(root, [&](ScrollMetadata& aSm, FrameMetrics& aMetrics) {
@@ -245,14 +247,14 @@ TEST_F(APZCSnappingTesterMock, SnapOnPanEndWithPositiveVelocity) {
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
   snap.mSnapportSize = CSSSize::ToAppUnits(
       layerVisibleRegion[0].GetBounds().Size() * LayerToCSSScale(1.0));
-  snap.mSnapTargets.AppendElement(
-      ScrollSnapInfo::SnapTarget(Nothing(), Some(30 * AppUnitsPerCSSPixel()),
-                                 CSSRect::ToAppUnits(CSSRect(0, 30, 10, 10)),
-                                 StyleScrollSnapStop::Normal));
-  snap.mSnapTargets.AppendElement(
-      ScrollSnapInfo::SnapTarget(Nothing(), Some(100 * AppUnitsPerCSSPixel()),
-                                 CSSRect::ToAppUnits(CSSRect(0, 100, 10, 10)),
-                                 StyleScrollSnapStop::Normal));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(30 * AppUnitsPerCSSPixel()),
+      CSSRect::ToAppUnits(CSSRect(0, 30, 10, 10)), StyleScrollSnapStop::Normal,
+      ScrollSnapTargetId{1}));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(100 * AppUnitsPerCSSPixel()),
+      CSSRect::ToAppUnits(CSSRect(0, 100, 10, 10)), StyleScrollSnapStop::Normal,
+      ScrollSnapTargetId{2}));
 
   // Save the scroll snap info on the root APZC.
   ModifyFrameMetrics(root, [&](ScrollMetadata& aSm, FrameMetrics& aMetrics) {

@@ -22,9 +22,10 @@
 #include "mozilla/layers/LayersTypes.h"          // for ScrollDirection
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid
 #include "mozilla/ScrollPositionUpdate.h"        // for ScrollPositionUpdate
-#include "mozilla/StaticPtr.h"                   // for StaticAutoPtr
-#include "mozilla/TimeStamp.h"                   // for TimeStamp
-#include "nsTHashMap.h"                          // for nsTHashMap
+#include "mozilla/ScrollSnapTargetId.h"
+#include "mozilla/StaticPtr.h"  // for StaticAutoPtr
+#include "mozilla/TimeStamp.h"  // for TimeStamp
+#include "nsTHashMap.h"         // for nsTHashMap
 #include "nsString.h"
 #include "PLDHashTable.h"  // for PLDHashNumber
 
@@ -721,20 +722,26 @@ struct ScrollSnapInfo {
     // https://drafts.csswg.org/css-scroll-snap/#propdef-scroll-snap-stop
     StyleScrollSnapStop mScrollSnapStop;
 
+    // Use for tracking the last snapped target.
+    ScrollSnapTargetId mTargetId;
+
     SnapTarget() = default;
 
     SnapTarget(Maybe<nscoord>&& aSnapPositionX, Maybe<nscoord>&& aSnapPositionY,
-               nsRect&& aSnapArea, StyleScrollSnapStop aScrollSnapStop)
+               nsRect&& aSnapArea, StyleScrollSnapStop aScrollSnapStop,
+               ScrollSnapTargetId aTargetId)
         : mSnapPositionX(std::move(aSnapPositionX)),
           mSnapPositionY(std::move(aSnapPositionY)),
           mSnapArea(std::move(aSnapArea)),
-          mScrollSnapStop(aScrollSnapStop) {}
+          mScrollSnapStop(aScrollSnapStop),
+          mTargetId(aTargetId) {}
 
     bool operator==(const SnapTarget& aOther) const {
       return mSnapPositionX == aOther.mSnapPositionX &&
              mSnapPositionY == aOther.mSnapPositionY &&
              mSnapArea == aOther.mSnapArea &&
-             mScrollSnapStop == aOther.mScrollSnapStop;
+             mScrollSnapStop == aOther.mScrollSnapStop &&
+             mTargetId == aOther.mTargetId;
     }
   };
 
@@ -743,13 +750,16 @@ struct ScrollSnapInfo {
   struct ScrollSnapRange {
     ScrollSnapRange() = default;
 
-    ScrollSnapRange(nscoord aStart, nscoord aEnd)
-        : mStart(aStart), mEnd(aEnd) {}
+    ScrollSnapRange(nscoord aStart, nscoord aEnd, ScrollSnapTargetId aTargetId)
+        : mStart(aStart), mEnd(aEnd), mTargetId(aTargetId) {}
 
     nscoord mStart;
     nscoord mEnd;
+    ScrollSnapTargetId mTargetId;
+
     bool operator==(const ScrollSnapRange& aOther) const {
-      return mStart == aOther.mStart && mEnd == aOther.mEnd;
+      return mStart == aOther.mStart && mEnd == aOther.mEnd &&
+             mTargetId == aOther.mTargetId;
     }
 
     // Returns true if |aPoint| is a valid snap position in this range.

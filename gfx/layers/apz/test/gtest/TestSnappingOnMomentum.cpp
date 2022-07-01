@@ -31,11 +31,12 @@ TEST_F(APZCSnappingOnMomentumTesterMock, Snap_On_Momentum) {
       layerVisibleRegion[0].GetBounds().Size() * LayerToCSSScale(1.0));
   snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
       Nothing(), Some(0 * AppUnitsPerCSSPixel()),
-      CSSRect::ToAppUnits(CSSRect(0, 0, 10, 10)), StyleScrollSnapStop::Normal));
-  snap.mSnapTargets.AppendElement(
-      ScrollSnapInfo::SnapTarget(Nothing(), Some(100 * AppUnitsPerCSSPixel()),
-                                 CSSRect::ToAppUnits(CSSRect(0, 100, 10, 10)),
-                                 StyleScrollSnapStop::Normal));
+      CSSRect::ToAppUnits(CSSRect(0, 0, 10, 10)), StyleScrollSnapStop::Normal,
+      ScrollSnapTargetId{1}));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(100 * AppUnitsPerCSSPixel()),
+      CSSRect::ToAppUnits(CSSRect(0, 100, 10, 10)), StyleScrollSnapStop::Normal,
+      ScrollSnapTargetId{2}));
 
   ModifyFrameMetrics(root, [&](ScrollMetadata& aSm, FrameMetrics&) {
     aSm.SetSnapInfo(ScrollSnapInfo(snap));

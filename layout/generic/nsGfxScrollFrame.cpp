@@ -7639,15 +7639,19 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
   nsRect snapArea =
       InflateByScrollMargin(targetRect, scrollMargin, aScrolledRect);
 
+  ScrollSnapTargetId targetId = ScrollSnapUtils::GetTargetIdFor(aFrame);
+
   // These snap range shouldn't be involved with scroll-margin since we just
   // need the visible range of the target element.
   if (snapArea.width > aSnapInfo.mSnapportSize.width) {
     aSnapInfo.mXRangeWiderThanSnapport.AppendElement(
-        ScrollSnapInfo::ScrollSnapRange(snapArea.X(), snapArea.XMost()));
+        ScrollSnapInfo::ScrollSnapRange(snapArea.X(), snapArea.XMost(),
+                                        targetId));
   }
   if (snapArea.height > aSnapInfo.mSnapportSize.height) {
     aSnapInfo.mYRangeWiderThanSnapport.AppendElement(
-        ScrollSnapInfo::ScrollSnapRange(snapArea.Y(), snapArea.YMost()));
+        ScrollSnapInfo::ScrollSnapRange(snapArea.Y(), snapArea.YMost(),
+                                        targetId));
   }
 
   // Shift target rect position by the scroll padding to get the padded
@@ -7745,14 +7749,14 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
   if (blockDirectionPosition || inlineDirectionPosition) {
     aSnapInfo.mSnapTargets.AppendElement(
         aWritingModeOnScroller.IsVertical()
-            ? ScrollSnapInfo::SnapTarget(std::move(blockDirectionPosition),
-                                         std::move(inlineDirectionPosition),
-                                         std::move(snapArea),
-                                         styleDisplay->mScrollSnapStop)
-            : ScrollSnapInfo::SnapTarget(std::move(inlineDirectionPosition),
-                                         std::move(blockDirectionPosition),
-                                         std::move(snapArea),
-                                         styleDisplay->mScrollSnapStop));
+            ? ScrollSnapInfo::SnapTarget(
+                  std::move(blockDirectionPosition),
+                  std::move(inlineDirectionPosition), std::move(snapArea),
+                  styleDisplay->mScrollSnapStop, targetId)
+            : ScrollSnapInfo::SnapTarget(
+                  std::move(inlineDirectionPosition),
+                  std::move(blockDirectionPosition), std::move(snapArea),
+                  styleDisplay->mScrollSnapStop, targetId));
   }
 }
 
