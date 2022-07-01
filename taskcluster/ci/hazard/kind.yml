@@ -21,7 +21,7 @@ job-defaults:
         tier: 1
     worker-type: b-linux
     worker:
-        max-run-time: 36000
+        max-run-time: 10800
         docker-image: {in-tree: debian11-amd64-build}
 
 jobs:

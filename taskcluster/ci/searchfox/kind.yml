@@ -34,7 +34,7 @@ jobs:
             platform: linux64/debug
         worker-type: b-linux
         worker:
-            max-run-time: 36000
+            max-run-time: 10800
             env:
                 PERFHERDER_EXTRA_OPTIONS: searchfox
                 RUSTC_BOOTSTRAP: "1"
@@ -69,7 +69,7 @@ jobs:
         worker-type: b-linux
         worker:
             docker-image: {in-tree: debian11-amd64-build}
-            max-run-time: 36000
+            max-run-time: 10800
             env:
                 PERFHERDER_EXTRA_OPTIONS: searchfox
                 RUSTC_BOOTSTRAP: "1"
@@ -109,7 +109,7 @@ jobs:
         worker-type: b-linux
         worker:
             docker-image: {in-tree: debian11-amd64-build}
-            max-run-time: 36000
+            max-run-time: 10800
             env:
                 PERFHERDER_EXTRA_OPTIONS: searchfox
                 RUSTC_BOOTSTRAP: "1"
@@ -160,7 +160,7 @@ jobs:
         worker-type: b-linux
         worker:
             docker-image: {in-tree: android-build}
-            max-run-time: 36000
+            max-run-time: 10800
             env:
                 PERFHERDER_EXTRA_OPTIONS: searchfox
                 RUSTC_BOOTSTRAP: "1"
