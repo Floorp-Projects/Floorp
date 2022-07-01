@@ -246,6 +246,7 @@ set_config("JS_CODEGEN_MIPS64", jit_codegen.mips64)
 set_config("JS_CODEGEN_LOONG64", jit_codegen.loong64)
 set_config("JS_CODEGEN_X86", jit_codegen.x86)
 set_config("JS_CODEGEN_X64", jit_codegen.x64)
+set_config("JS_CODEGEN_WASM32", jit_codegen.wasm32)
 set_define("JS_CODEGEN_NONE", jit_codegen.none)
 set_define("JS_CODEGEN_ARM", jit_codegen.arm)
 set_define("JS_CODEGEN_ARM64", jit_codegen.arm64)
@@ -254,6 +255,7 @@ set_define("JS_CODEGEN_MIPS64", jit_codegen.mips64)
 set_define("JS_CODEGEN_LOONG64", jit_codegen.loong64)
 set_define("JS_CODEGEN_X86", jit_codegen.x86)
 set_define("JS_CODEGEN_X64", jit_codegen.x64)
+set_define("JS_CODEGEN_WASM32", jit_codegen.wasm32)
 
 # Profiling
 # =======================================================

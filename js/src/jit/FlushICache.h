@@ -29,7 +29,7 @@ inline void FlushICache(void* code, size_t size,
 
 extern void FlushICache(void* code, size_t size, bool codeIsThreadLocal = true);
 
-#elif defined(JS_CODEGEN_NONE)
+#elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
 
 inline void FlushICache(void* code, size_t size,
                         bool codeIsThreadLocal = true) {

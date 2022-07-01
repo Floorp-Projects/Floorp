@@ -22,6 +22,8 @@
 #  include "jit/mips64/Architecture-mips64.h"
 #elif defined(JS_CODEGEN_LOONG64)
 #  include "jit/loong64/Architecture-loong64.h"
+#elif defined(JS_CODEGEN_WASM32)
+#  include "jit/wasm32/Architecture-wasm32.h"
 #elif defined(JS_CODEGEN_NONE)
 #  include "jit/none/Architecture-none.h"
 #else
