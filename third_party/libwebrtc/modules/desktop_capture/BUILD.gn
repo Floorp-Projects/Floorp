@@ -562,8 +562,6 @@ rtc_library("desktop_capture_generic") {
     sources += [
       "linux/wayland/moz_base_capturer_pipewire.cc",
       "linux/wayland/moz_base_capturer_pipewire.h",
-      "linux/wayland/egl_dmabuf.cc",
-      "linux/wayland/egl_dmabuf.h",
     ]
     }
 
