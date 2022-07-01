@@ -147,6 +147,7 @@ EXPORTS.mozilla += [
     "ScrollGeneration.h",
     "ScrollOrigin.h",
     "ScrollPositionUpdate.h",
+    "ScrollSnapTargetId.h",
     "ViewportFrame.h",
     "WritingModes.h",
 ]

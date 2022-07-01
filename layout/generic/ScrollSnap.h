@@ -8,8 +8,10 @@
 #define mozilla_layout_ScrollSnap_h_
 
 #include "mozilla/ScrollTypes.h"
+#include "mozilla/ScrollSnapTargetId.h"
 #include "mozilla/Maybe.h"
 
+class nsIFrame;
 struct nsPoint;
 struct nsRect;
 
@@ -34,10 +36,12 @@ struct ScrollSnapUtils {
    *                 not to touch main-thread-only data structures without
    *                 appropriate locking.
    */
-  static mozilla::Maybe<nsPoint> GetSnapPointForDestination(
+  static Maybe<nsPoint> GetSnapPointForDestination(
       const layers::ScrollSnapInfo& aSnapInfo, ScrollUnit aUnit,
       ScrollSnapFlags aSnapFlags, const nsRect& aScrollRange,
       const nsPoint& aStartPos, const nsPoint& aDestination);
+
+  static ScrollSnapTargetId GetTargetIdFor(const nsIFrame* aFrame);
 };
 
 }  // namespace mozilla
