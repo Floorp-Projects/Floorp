@@ -10,6 +10,8 @@
 
 #include "mozilla/ServoStyleConsts.h"
 #include "nsIFrame.h"
+#include "nsIScrollableFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsTArray.h"
 
@@ -386,7 +388,7 @@ static std::pair<Maybe<nscoord>, Maybe<nscoord>> GetCandidateInLastTargets(
     const UniquePtr<ScrollSnapTargetIds>& aLastSnapTargetIds,
     const nsIContent* aFocusedContent) {
   ScrollSnapTargetId targetIdForFocusedContent = ScrollSnapTargetId::None;
-  if (aFocusedContent) {
+  if (aFocusedContent && aFocusedContent->GetPrimaryFrame()) {
     targetIdForFocusedContent =
         ScrollSnapUtils::GetTargetIdFor(aFocusedContent->GetPrimaryFrame());
   }
@@ -554,6 +556,19 @@ Maybe<mozilla::SnapTarget> ScrollSnapUtils::GetSnapPointForResnap(
     }
   }
   return Some(snapTarget);
+}
+
+void ScrollSnapUtils::PostPendingResnapIfNeededFor(nsIFrame* aFrame) {
+  ScrollSnapTargetId id = GetTargetIdFor(aFrame);
+  if (id == ScrollSnapTargetId::None) {
+    return;
+  }
+
+  if (nsIScrollableFrame* sf = nsLayoutUtils::GetNearestScrollableFrame(
+          aFrame, nsLayoutUtils::SCROLLABLE_SAME_DOC |
+                      nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN)) {
+    sf->PostPendingResnapIfNeeded(aFrame);
+  }
 }
 
 }  // namespace mozilla
