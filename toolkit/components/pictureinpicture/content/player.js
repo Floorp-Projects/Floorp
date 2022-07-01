@@ -429,6 +429,12 @@ let Player = {
         break;
       }
 
+      case "":
+      case "controls-bottom":
+      case "controls": {
+        document.querySelector("#settings").classList.add("hide");
+        break;
+      }
       case "closed-caption": {
         let settingsPanel = document.querySelector("#settings");
         let settingsPanelVisible = !settingsPanel.classList.contains("hide");
