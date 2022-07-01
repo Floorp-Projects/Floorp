@@ -314,10 +314,10 @@ class ScrollFrameHelper : public nsIReflowCallback {
    * Returns true if a suitable snap point could be found and aDestination has
    * been updated to a valid snapping position.
    */
-  bool GetSnapPointForDestination(mozilla::ScrollUnit aUnit,
-                                  mozilla::ScrollSnapFlags aFlags,
-                                  const nsPoint& aStartPos,
-                                  nsPoint& aDestination);
+  Maybe<SnapTarget> GetSnapPointForDestination(mozilla::ScrollUnit aUnit,
+                                               mozilla::ScrollSnapFlags aFlags,
+                                               const nsPoint& aStartPos,
+                                               const nsPoint& aDestination);
 
   nsMargin GetScrollPadding() const;
 
@@ -799,10 +799,27 @@ class ScrollFrameHelper : public nsIReflowCallback {
   };
 
   struct ScrollOperationParams {
+    ScrollOperationParams(const ScrollOperationParams&) = delete;
+    ScrollOperationParams(ScrollMode aMode, ScrollOrigin aOrigin)
+        : mMode(aMode), mOrigin(aOrigin) {}
+    ScrollOperationParams(ScrollMode aMode, ScrollOrigin aOrigin,
+                          ScrollSnapTargetIds&& aSnapTargetIds)
+        : ScrollOperationParams(aMode, aOrigin) {
+      mTargetIds = std::move(aSnapTargetIds);
+    }
+    ScrollOperationParams(ScrollMode aMode, ScrollOrigin aOrigin,
+                          mozilla::ScrollSnapFlags aSnapFlags,
+                          ScrollTriggeredByScript aTriggeredByScript)
+        : ScrollOperationParams(aMode, aOrigin) {
+      mSnapFlags = aSnapFlags;
+      mTriggeredByScript = aTriggeredByScript;
+    }
+
     ScrollMode mMode;
     ScrollOrigin mOrigin;
     mozilla::ScrollSnapFlags mSnapFlags = mozilla::ScrollSnapFlags::Disabled;
     ScrollTriggeredByScript mTriggeredByScript = ScrollTriggeredByScript::No;
+    ScrollSnapTargetIds mTargetIds;
 
     bool IsInstant() const { return mMode == ScrollMode::Instant; }
     bool IsSmoothMsd() const { return mMode == ScrollMode::SmoothMsd; }
@@ -814,6 +831,12 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   /**
    * @note This method might destroy the frame, pres shell and other objects.
+   *
+   * A caller can ask this ScrollToWithOrigin() function to perform snapping by
+   * passing in aParams.mSnapFlags != ScrollSnapFlags::Disabled. Alternatively,
+   * a caller may want to do its own snapping, in which case it should pass
+   * ScrollSnapFlags::Disabled and populate aParams.mTargetIds based on the
+   * result of the snapping.
    */
   void ScrollToWithOrigin(nsPoint aScrollPosition, const nsRect* aRange,
                           ScrollOperationParams&& aParams);
