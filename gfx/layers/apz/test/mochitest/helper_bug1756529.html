@@ -198,10 +198,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1756529
       }
     }
 
-    if (getPlatform() == "linux") {
+    if (getPlatform() == "linux" || getPlatform() == "mac") {
       // FIXME(bug 1760731): On Linux, this test frequently hangs at
       // "await touchStartPromise", so we skip it.
-      ok(true, "Test is disabled on Linux, skipping");
+      // For Mac, the test is disabled due to a high intermittent failure
+      // rate reported in bug 1771836.
+      ok(true, "Test is disabled on Linux and Mac, skipping");
       subtestDone();
     } else {
       waitUntilApzStable()

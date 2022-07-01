@@ -2298,7 +2298,7 @@ template <typename T>
 T MachineState::read(FloatRegister reg) const {
   MOZ_ASSERT(reg.size() == sizeof(T));
 
-#if !defined(JS_CODEGEN_NONE)
+#if !defined(JS_CODEGEN_NONE) && !defined(JS_CODEGEN_WASM32)
   if (state_.is<BailoutState>()) {
     uint32_t offset = reg.getRegisterDumpOffsetInBytes();
     MOZ_ASSERT((offset % sizeof(T)) == 0);

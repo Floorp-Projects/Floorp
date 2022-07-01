@@ -87,7 +87,7 @@ const uint8_t JS_SCOPE_DATA_TRAILING_NAMES_PATTERN = 0xCC;
  * illegal in user mode.
  */
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || \
-    defined(JS_CODEGEN_NONE)
+    defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
 #  define JS_SWEPT_CODE_PATTERN 0xED  // IN instruction, crashes in user mode.
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
 #  define JS_SWEPT_CODE_PATTERN 0xA3  // undefined instruction
