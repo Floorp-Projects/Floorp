@@ -2590,9 +2590,11 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
 
   UniquePtr<ScrollSnapTargetIds> snapTargetIds;
   if (snapTarget) {
-    snapTargetIds = MakeUnique<ScrollSnapTargetIds>(snapTarget->mTargetIds);
+    snapTargetIds =
+        MakeUnique<ScrollSnapTargetIds>(std::move(snapTarget->mTargetIds));
   } else {
-    snapTargetIds = MakeUnique<ScrollSnapTargetIds>(aParams.mTargetIds);
+    snapTargetIds =
+        MakeUnique<ScrollSnapTargetIds>(std::move(aParams.mTargetIds));
   }
   if (aParams.IsInstant()) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
@@ -7956,8 +7958,8 @@ Maybe<SnapTarget> ScrollFrameHelper::GetSnapPointForDestination(
     const nsPoint& aDestination) {
   // We can release the strong references for the previous snap target
   // elements here since calling this ComputeScrollSnapInfo with
-  // |aSnapTargets| means we are going to evaluate new snap points,thus
-  // there's no chance to gererating nsIContent instances in between this
+  // |aSnapTargets| means we are going to evaluate new snap points, thus
+  // there's no chance to generating nsIContent instances in between this
   // function call and the function call for the (re-)evaluation.
   mSnapTargets.Clear();
   return ScrollSnapUtils::GetSnapPointForDestination(
