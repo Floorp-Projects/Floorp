@@ -3,8 +3,12 @@
 
 "use strict";
 
+const TEST_PAGE_URL =
+  "data:text/html;charset=utf-8,<body>test_zoom_levels</body>";
+
 /**
- * Tests that the zoom commands have the expected disabled state.
+ * Waits for the zoom commands in the window to have the expected enabled
+ * state.
  *
  * @param {Object} expectedState
  *   An object where each key represents one of the zoom commands,
@@ -14,25 +18,29 @@
  *   The keys are "enlarge", "reduce" and "reset" for readability,
  *   and internally this function maps those keys to the appropriate
  *   commands.
+ * @returns Promise
+ * @resolves undefined
  */
-function assertCommandEnabledState(expectedState) {
+async function waitForCommandEnabledState(expectedState) {
   const COMMAND_MAP = {
     enlarge: "cmd_fullZoomEnlarge",
     reduce: "cmd_fullZoomReduce",
     reset: "cmd_fullZoomReset",
   };
 
-  for (let commandKey in expectedState) {
-    let commandID = COMMAND_MAP[commandKey];
-    let command = document.getElementById(commandID);
-    let expectedEnabled = expectedState[commandKey];
+  await TestUtils.waitForCondition(() => {
+    for (let commandKey in expectedState) {
+      let commandID = COMMAND_MAP[commandKey];
+      let command = document.getElementById(commandID);
+      let expectedEnabled = expectedState[commandKey];
 
-    Assert.equal(
-      command.hasAttribute("disabled"),
-      !expectedEnabled,
-      `${commandID} command should have the expected enabled state.`
-    );
-  }
+      if (command.hasAttribute("disabled") == expectedEnabled) {
+        return false;
+      }
+    }
+    Assert.ok("Commands finally reached the expected state.");
+    return true;
+  }, "Waiting for commands to reach the right state.");
 }
 
 /**
@@ -54,12 +62,9 @@ function assertTextZoomCommandCheckedState(isChecked) {
 
 /**
  * Tests that zoom commands are properly updated when changing
- * zoom levels and/or preferences.
+ * zoom levels and/or preferences on an individual browser.
  */
-add_task(async () => {
-  const TEST_PAGE_URL =
-    "data:text/html;charset=utf-8,<body>test_zoom_levels</body>";
-
+add_task(async function test_update_browser_zoom() {
   await BrowserTestUtils.withNewTab(TEST_PAGE_URL, async browser => {
     let currentZoom = await FullZoomHelper.getGlobalValue();
     Assert.equal(
@@ -68,7 +73,7 @@ add_task(async () => {
       "We expect to start at the default zoom level."
     );
 
-    assertCommandEnabledState({
+    await waitForCommandEnabledState({
       enlarge: true,
       reduce: true,
       reset: false,
@@ -86,42 +91,113 @@ add_task(async () => {
 
       // 120% global zoom
       info("Changing default zoom by a single level");
-      await FullZoomHelper.changeDefaultZoom(120);
+      ZoomManager.zoom = 1.2;
 
-      assertCommandEnabledState({
+      await waitForCommandEnabledState({
         enlarge: true,
         reduce: true,
         reset: true,
       });
-      assertTextZoomCommandCheckedState(textZoom);
+      await assertTextZoomCommandCheckedState(textZoom);
 
       // Now max out the zoom level.
-      await FullZoomHelper.changeDefaultZoom(500);
+      ZoomManager.zoom = ZoomManager.MAX;
 
-      assertCommandEnabledState({
+      await waitForCommandEnabledState({
         enlarge: false,
         reduce: true,
         reset: true,
       });
-      assertTextZoomCommandCheckedState(textZoom);
+      await assertTextZoomCommandCheckedState(textZoom);
 
       // Now min out the zoom level.
-      await FullZoomHelper.changeDefaultZoom(30);
-      assertCommandEnabledState({
+      ZoomManager.zoom = ZoomManager.MIN;
+      await waitForCommandEnabledState({
         enlarge: true,
         reduce: false,
         reset: true,
       });
-      assertTextZoomCommandCheckedState(textZoom);
+      await assertTextZoomCommandCheckedState(textZoom);
 
       // Now reset back to the default zoom level
-      await FullZoomHelper.changeDefaultZoom(100);
-      assertCommandEnabledState({
+      ZoomManager.zoom = 1;
+      await waitForCommandEnabledState({
         enlarge: true,
         reduce: true,
         reset: false,
       });
-      assertTextZoomCommandCheckedState(textZoom);
+      await assertTextZoomCommandCheckedState(textZoom);
     }
+  });
+});
+
+/**
+ * Tests that zoom commands are properly updated when changing
+ * zoom levels when the default zoom is not at 1.0.
+ */
+add_task(async function test_update_browser_zoom() {
+  await BrowserTestUtils.withNewTab(TEST_PAGE_URL, async browser => {
+    let currentZoom = await FullZoomHelper.getGlobalValue();
+    Assert.equal(
+      currentZoom,
+      1,
+      "We expect to start at the default zoom level."
+    );
+
+    // Now change the default zoom to 200%, which is what we'll switch
+    // back to when choosing to reset the zoom level.
+    //
+    // It's a bit maddening that changeDefaultZoom takes values in integer
+    // units from 30 to 500, whereas ZoomManager.zoom takes things in float
+    // units from 0.3 to 5.0, but c'est la vie for now.
+    await FullZoomHelper.changeDefaultZoom(200);
+    registerCleanupFunction(async () => {
+      await FullZoomHelper.changeDefaultZoom(100);
+    });
+
+    await waitForCommandEnabledState({
+      enlarge: true,
+      reduce: true,
+      reset: false,
+    });
+
+    // 120% global zoom
+    info("Changing default zoom by a single level");
+    ZoomManager.zoom = 2.2;
+
+    await waitForCommandEnabledState({
+      enlarge: true,
+      reduce: true,
+      reset: true,
+    });
+    await assertTextZoomCommandCheckedState(false);
+
+    // Now max out the zoom level.
+    ZoomManager.zoom = ZoomManager.MAX;
+
+    await waitForCommandEnabledState({
+      enlarge: false,
+      reduce: true,
+      reset: true,
+    });
+    await assertTextZoomCommandCheckedState(false);
+
+    // Now min out the zoom level.
+    ZoomManager.zoom = ZoomManager.MIN;
+    await waitForCommandEnabledState({
+      enlarge: true,
+      reduce: false,
+      reset: true,
+    });
+    await assertTextZoomCommandCheckedState(false);
+
+    // Now reset back to the default zoom level
+    ZoomManager.zoom = 2;
+    await waitForCommandEnabledState({
+      enlarge: true,
+      reduce: true,
+      reset: false,
+    });
+    await assertTextZoomCommandCheckedState(false);
   });
 });

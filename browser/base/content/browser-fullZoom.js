@@ -339,9 +339,14 @@ var FullZoom = {
    *   whether or not the ZoomManager.zoom level is at 1.0. This is specifically
    *   for when using scaling zoom via the pinch gesture which doesn't cause
    *   the ZoomManager.zoom level to change.
+   * @returns Promise
+   * @resolves undefined
    */
-  updateCommands: function FullZoom_updateCommands(forceResetEnabled = false) {
+  updateCommands: async function FullZoom_updateCommands(
+    forceResetEnabled = false
+  ) {
     let zoomLevel = ZoomManager.zoom;
+    let defaultZoomLevel = await ZoomUI.getGlobalValue();
     let reduceCmd = document.getElementById("cmd_fullZoomReduce");
     if (zoomLevel == ZoomManager.MIN) {
       reduceCmd.setAttribute("disabled", "true");
@@ -357,7 +362,7 @@ var FullZoom = {
     }
 
     let resetCmd = document.getElementById("cmd_fullZoomReset");
-    if (zoomLevel == 1 && !forceResetEnabled) {
+    if (zoomLevel == defaultZoomLevel && !forceResetEnabled) {
       resetCmd.setAttribute("disabled", "true");
     } else {
       resetCmd.removeAttribute("disabled");
