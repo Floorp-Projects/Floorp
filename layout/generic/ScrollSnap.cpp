@@ -292,15 +292,8 @@ void CalcSnapPoints::AddEdge(const SnapPosition& aEdge, nscoord aDestination,
 static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
                                  const ScrollSnapInfo& aSnapInfo) {
   for (const auto& target : aSnapInfo.mSnapTargets) {
-    nsPoint snapPoint(target.mSnapPositionX ? *target.mSnapPositionX
-                                            : aCalcSnapPoints.Destination().x,
-                      target.mSnapPositionY ? *target.mSnapPositionY
-                                            : aCalcSnapPoints.Destination().y);
-    nsRect snappedPort = nsRect(snapPoint, aSnapInfo.mSnapportSize);
-    // Ignore snap points if snapping to the point would leave the snap area
-    // outside of the snapport.
-    // https://drafts.csswg.org/css-scroll-snap-1/#snap-scope
-    if (!snappedPort.Intersects(target.mSnapArea)) {
+    if (!target.IsValidFor(aCalcSnapPoints.Destination(),
+                           aSnapInfo.mSnapportSize)) {
       continue;
     }
 
@@ -386,6 +379,181 @@ Maybe<SnapTarget> ScrollSnapUtils::GetSnapPointForDestination(
 ScrollSnapTargetId ScrollSnapUtils::GetTargetIdFor(const nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame && aFrame->GetContent());
   return ScrollSnapTargetId{reinterpret_cast<uintptr_t>(aFrame->GetContent())};
+}
+
+static std::pair<Maybe<nscoord>, Maybe<nscoord>> GetCandidateInLastTargets(
+    const layers::ScrollSnapInfo& aSnapInfo, const nsPoint& aCurrentPosition,
+    const UniquePtr<ScrollSnapTargetIds>& aLastSnapTargetIds,
+    const nsIContent* aFocusedContent) {
+  ScrollSnapTargetId targetIdForFocusedContent = ScrollSnapTargetId::None;
+  if (aFocusedContent) {
+    targetIdForFocusedContent =
+        ScrollSnapUtils::GetTargetIdFor(aFocusedContent->GetPrimaryFrame());
+  }
+
+  // Note: Below algorithm doesn't care about cases where the last snap point
+  // was on an element larger than the snapport since it's not clear to us
+  // what we should do for now.
+  // https://github.com/w3c/csswg-drafts/issues/7438
+  const ScrollSnapInfo::SnapTarget* focusedTarget = nullptr;
+  Maybe<nscoord> x, y;
+  for (const auto& target : aSnapInfo.mSnapTargets) {
+    if (!target.IsValidFor(aCurrentPosition, aSnapInfo.mSnapportSize)) {
+      continue;
+    }
+
+    if (target.mSnapPositionX &&
+        aSnapInfo.mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) {
+      if (aLastSnapTargetIds->mIdsOnX.Contains(target.mTargetId)) {
+        if (targetIdForFocusedContent == target.mTargetId) {
+          // If we've already found the candidate on Y axis, but if snapping to
+          // the point results this target is scrolled out, we can't use it.
+          if ((y && !target.mSnapArea.Intersects(
+                        nsRect(nsPoint(*target.mSnapPositionX, *y),
+                               aSnapInfo.mSnapportSize)))) {
+            y.reset();
+          }
+
+          focusedTarget = &target;
+          // If the focused one is valid, then it's the candidate.
+          x = target.mSnapPositionX;
+        }
+
+        if (!x) {
+          // Update the candidate on X axis only if
+          // 1) we haven't yet found the candidate on Y axis
+          // 2) or if we've found the candiate on Y axis and if snapping to the
+          //    candidate position result the target element is visible inside
+          //    the snapport.
+          if (!y || (y && target.mSnapArea.Intersects(
+                              nsRect(nsPoint(*target.mSnapPositionX, *y),
+                                     aSnapInfo.mSnapportSize)))) {
+            x = target.mSnapPositionX;
+          }
+        }
+      }
+    }
+    if (target.mSnapPositionY &&
+        aSnapInfo.mScrollSnapStrictnessY != StyleScrollSnapStrictness::None) {
+      if (aLastSnapTargetIds->mIdsOnY.Contains(target.mTargetId)) {
+        if (targetIdForFocusedContent == target.mTargetId) {
+          MOZ_ASSERT(!focusedTarget || focusedTarget == &target,
+                     "If the focused target has been found on X axis, the "
+                     "target should "
+                     "be same");
+          // If we've already found the candidate on X axis other than the
+          // focused one, but if snapping to the point results this target is
+          // scrolled out, we can't use it.
+          if (!focusedTarget && (x && !target.mSnapArea.Intersects(nsRect(
+                                          nsPoint(*x, *target.mSnapPositionY),
+                                          aSnapInfo.mSnapportSize)))) {
+            x.reset();
+          }
+
+          focusedTarget = &target;
+          y = target.mSnapPositionY;
+        }
+
+        if (!y) {
+          if (!x || (x && target.mSnapArea.Intersects(
+                              nsRect(nsPoint(*x, *target.mSnapPositionY),
+                                     aSnapInfo.mSnapportSize)))) {
+            y = target.mSnapPositionY;
+          }
+        }
+      }
+    }
+
+    // If we found candidates on both axes, it's the one we need.
+    if (x && y &&
+        // If we haven't found the focused target, it's possible that we haven't
+        // iterated it, don't break in such case.
+        (targetIdForFocusedContent == ScrollSnapTargetId::None ||
+         focusedTarget)) {
+      break;
+    }
+  }
+
+  return {x, y};
+}
+
+Maybe<mozilla::SnapTarget> ScrollSnapUtils::GetSnapPointForResnap(
+    const layers::ScrollSnapInfo& aSnapInfo, const nsRect& aScrollRange,
+    const nsPoint& aCurrentPosition,
+    const UniquePtr<ScrollSnapTargetIds>& aLastSnapTargetIds,
+    const nsIContent* aFocusedContent) {
+  if (!aLastSnapTargetIds) {
+    return GetSnapPointForDestination(aSnapInfo, ScrollUnit::DEVICE_PIXELS,
+                                      ScrollSnapFlags::IntendedEndPosition,
+                                      aScrollRange, aCurrentPosition,
+                                      aCurrentPosition);
+  }
+
+  auto [x, y] = GetCandidateInLastTargets(aSnapInfo, aCurrentPosition,
+                                          aLastSnapTargetIds, aFocusedContent);
+  if (!x && !y) {
+    // In the worst case there's no longer valid snap points previously snapped,
+    // try to find new valid snap points.
+    return GetSnapPointForDestination(aSnapInfo, ScrollUnit::DEVICE_PIXELS,
+                                      ScrollSnapFlags::IntendedEndPosition,
+                                      aScrollRange, aCurrentPosition,
+                                      aCurrentPosition);
+  }
+
+  // If there's no candidate on one of the axes in the last snap points, try
+  // to find a new candidate.
+  if (!x || !y) {
+    nsPoint newPosition =
+        nsPoint(x ? *x : aCurrentPosition.x, y ? *y : aCurrentPosition.y);
+    CalcSnapPoints calcSnapPoints(ScrollUnit::DEVICE_PIXELS,
+                                  ScrollSnapFlags::IntendedEndPosition,
+                                  newPosition, newPosition);
+    for (const auto& target : aSnapInfo.mSnapTargets) {
+      if (!target.IsValidFor(newPosition, aSnapInfo.mSnapportSize)) {
+        continue;
+      }
+
+      if (!x && target.mSnapPositionX &&
+          aSnapInfo.mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) {
+        calcSnapPoints.AddVerticalEdge(
+            {*target.mSnapPositionX, target.mScrollSnapStop, target.mTargetId});
+      }
+      if (!y && target.mSnapPositionY &&
+          aSnapInfo.mScrollSnapStrictnessY != StyleScrollSnapStrictness::None) {
+        calcSnapPoints.AddHorizontalEdge(
+            {*target.mSnapPositionY, target.mScrollSnapStop, target.mTargetId});
+      }
+    }
+    auto finalPos = calcSnapPoints.GetBestEdge();
+    if (!x) {
+      x = Some(finalPos.mPosition.x);
+    }
+    if (!y) {
+      y = Some(finalPos.mPosition.y);
+    }
+  }
+
+  SnapTarget snapTarget{nsPoint(*x, *y)};
+  // Collect snap points where the position is still same as the new snap
+  // position.
+  for (const auto& target : aSnapInfo.mSnapTargets) {
+    if (!target.IsValidFor(snapTarget.mPosition, aSnapInfo.mSnapportSize)) {
+      continue;
+    }
+
+    if (target.mSnapPositionX &&
+        aSnapInfo.mScrollSnapStrictnessX != StyleScrollSnapStrictness::None &&
+        target.mSnapPositionX == x) {
+      snapTarget.mTargetIds.mIdsOnX.AppendElement(target.mTargetId);
+    }
+
+    if (target.mSnapPositionY &&
+        aSnapInfo.mScrollSnapStrictnessY != StyleScrollSnapStrictness::None &&
+        target.mSnapPositionY == y) {
+      snapTarget.mTargetIds.mIdsOnY.AppendElement(target.mTargetId);
+    }
+  }
+  return Some(snapTarget);
 }
 
 }  // namespace mozilla

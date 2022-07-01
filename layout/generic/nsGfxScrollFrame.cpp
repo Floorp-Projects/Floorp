@@ -7953,6 +7953,14 @@ Maybe<SnapTarget> ScrollFrameHelper::GetSnapPointForDestination(
       GetLayoutScrollRange(), aStartPos, aDestination);
 }
 
+Maybe<SnapTarget> ScrollFrameHelper::GetSnapPointForResnap() {
+  nsIContent* focusedContent =
+      mOuter->GetContent()->GetComposedDoc()->GetUnretargetedFocusedContent();
+  return ScrollSnapUtils::GetSnapPointForResnap(
+      ComputeScrollSnapInfo(&mSnapTargets), GetLayoutScrollRange(),
+      GetScrollPosition(), mLastSnapTargetIds, focusedContent);
+}
+
 void ScrollFrameHelper::SetLastSnapTargetIds(
     UniquePtr<ScrollSnapTargetIds> aIds) {
   if (!aIds) {

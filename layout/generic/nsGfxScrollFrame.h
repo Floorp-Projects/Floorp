@@ -320,6 +320,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
                                                const nsPoint& aStartPos,
                                                const nsPoint& aDestination);
 
+  Maybe<mozilla::SnapTarget> GetSnapPointForResnap();
+
   void SetLastSnapTargetIds(UniquePtr<ScrollSnapTargetIds> aId);
 
   nsMargin GetScrollPadding() const;

@@ -7,10 +7,12 @@
 #ifndef mozilla_layout_ScrollSnap_h_
 #define mozilla_layout_ScrollSnap_h_
 
+#include <memory>
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ScrollSnapTargetId.h"
 #include "mozilla/Maybe.h"
 
+class nsIContent;
 class nsIFrame;
 struct nsPoint;
 struct nsRect;
@@ -40,6 +42,22 @@ struct ScrollSnapUtils {
       const layers::ScrollSnapInfo& aSnapInfo, ScrollUnit aUnit,
       ScrollSnapFlags aSnapFlags, const nsRect& aScrollRange,
       const nsPoint& aStartPos, const nsPoint& aDestination);
+
+  /**
+   * Similar to above GetSnapPointForDestination but for re-snapping.
+   *
+   * |aCurrentPosition| are the snap point(s) last time when we scrolled.
+   * |aLastSnapTargetIds| are the snap point(s) last time when we scrolled if
+   * exists.
+   * |aFocusedContent| is the focused content in the document if exists.
+   * Other parameters are same as GetSnapPointForDestination.
+   */
+
+  static mozilla::Maybe<mozilla::SnapTarget> GetSnapPointForResnap(
+      const layers::ScrollSnapInfo& aSnapInfo, const nsRect& aScrollRange,
+      const nsPoint& aCurrentPosition,
+      const UniquePtr<ScrollSnapTargetIds>& aLastSnapTargetIds,
+      const nsIContent* aFocusedContent);
 
   static ScrollSnapTargetId GetTargetIdFor(const nsIFrame* aFrame);
 };
