@@ -43,8 +43,19 @@
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Ko ñanduti renda oikotevẽ jeikekatu.</string>
 
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+<ul>
+<li>Pe kuatiarogue rehechaséva ndaikatúi ojehechauka ko ñanduti renda oikotevẽgui peteĩ jeikekatu.</li>
+<li>Ikatu pe apañuãi ojoajuvehína ñanduti renda rehe ha ndaipóri mba’eve ikatúva ojejapo oñemyatyrõ hag̃ua.</li>
+<li>Emomarandukuaa ñanduti renda ñangarekohárape ko apañuãi rehegua.</li>
+</ul>
+]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Opanungáva…</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[<label><b>%1$s</b>oguereko peteĩ ñe’ẽñemi ñeñangarekorã hérava HTTP Strict Transport Security (HSTS), he’iséva <b>%2$s</b> ikatuha oñembojoaju hese ñeñangareko reheve añoite. Ndaikatúi remoĩ peteĩ oĩ’ỹva reike hag̃ua ko tendápe.]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Guevijey</string>
 
