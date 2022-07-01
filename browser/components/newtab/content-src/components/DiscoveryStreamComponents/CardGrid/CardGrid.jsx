@@ -9,6 +9,7 @@ import {
 } from "../DSCard/DSCard.jsx";
 import { DSEmptyState } from "../DSEmptyState/DSEmptyState.jsx";
 import { TopicsWidget } from "../TopicsWidget/TopicsWidget.jsx";
+import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import React, { useEffect, useState, useRef, useCallback } from "react";
@@ -17,27 +18,11 @@ const WIDGET_IDS = {
   TOPICS: 1,
 };
 
-export function DSSubHeader(props) {
+export function DSSubHeader({ children }) {
   return (
     <div className="section-top-bar ds-sub-header">
-      <h3 className="section-title-container">
-        <span className="section-title">{props.children}</span>
-      </h3>
+      <h3 className="section-title-container">{children}</h3>
     </div>
-  );
-}
-
-export function GridContainer(props) {
-  const { header, className, children } = props;
-  return (
-    <>
-      {header && (
-        <DSSubHeader>
-          <FluentOrText message={header} />
-        </DSSubHeader>
-      )}
-      <div className={`ds-card-grid ${className}`}>{children}</div>
-    </>
   );
 }
 
@@ -73,14 +58,17 @@ export function IntersectionObserver({
 }
 
 export function RecentSavesContainer({
-  className,
+  gridClassName = "",
   dispatch,
   windowObj = window,
   items = 3,
+  source = "CARDGRID_RECENT_SAVES",
 }) {
-  const { recentSavesData, isUserLoggedIn } = useSelector(
-    state => state.DiscoveryStream
-  );
+  const {
+    recentSavesData,
+    isUserLoggedIn,
+    experimentData: { utmCampaign, utmContent, utmSource },
+  } = useSelector(state => state.DiscoveryStream);
 
   const [visible, setVisible] = useState(false);
   const onIntersecting = useCallback(() => setVisible(true), []);
@@ -117,7 +105,7 @@ export function RecentSavesContainer({
         key={`dscard-${rec?.id || index}`}
         id={rec.id}
         pos={index}
-        type="CARDGRID_RECENT_SAVES"
+        type={source}
         image_src={rec.image_src}
         raw_image_src={rec.raw_image_src}
         word_count={rec.word_count}
@@ -132,6 +120,19 @@ export function RecentSavesContainer({
     );
   }
 
+  function onMyListClicked() {
+    dispatch(
+      ac.UserEvent({
+        event: "CLICK",
+        source: `${source}_VIEW_LIST`,
+      })
+    );
+  }
+
+  let queryParams = `?utm_source=${utmSource}`;
+  if (utmCampaign && utmContent) {
+    queryParams += `&utm_content=${utmContent}&utm_campaign=${utmCampaign}`;
+  }
   const recentSavesCards = [];
   // We fill the cards with a for loop over an inline map because
   // we want empty placeholders if there are not enough cards.
@@ -161,9 +162,21 @@ export function RecentSavesContainer({
 
   // We are visible and logged in.
   return (
-    <GridContainer className={className} header="Recently Saved to your List">
-      {recentSavesCards}
-    </GridContainer>
+    <>
+      <DSSubHeader>
+        <span className="section-title">
+          <FluentOrText message="Recently Saved to your List" />
+        </span>
+        <SafeAnchor
+          onLinkClick={onMyListClicked}
+          className="section-sub-link"
+          url={`https://getpocket.com/a${queryParams}`}
+        >
+          <FluentOrText message="View My List" />
+        </SafeAnchor>
+      </DSSubHeader>
+      <div className={gridClassName}>{recentSavesCards}</div>
+    </>
   );
 }
 
@@ -358,30 +371,40 @@ export class _CardGrid extends React.PureComponent {
       ? `ds-card-grid-hybrid-layout`
       : ``;
 
-    const className = `ds-card-grid-${this.props.border} ${variantClass} ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`;
+    const gridClassName = `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`;
 
     return (
       <>
         {essentialReadsCards?.length > 0 && (
-          <GridContainer className={className}>
-            {essentialReadsCards}
-          </GridContainer>
+          <div className={gridClassName}>{essentialReadsCards}</div>
         )}
         {showRecentSaves && (
           <RecentSavesContainer
-            className={className}
+            gridClassName={gridClassName}
             dispatch={this.props.dispatch}
           />
         )}
         {editorsPicksCards?.length > 0 && (
-          <GridContainer className={className} header="Editor’s Picks">
-            {editorsPicksCards}
-          </GridContainer>
+          <>
+            <DSSubHeader>
+              <span className="section-title">
+                <FluentOrText message="Editor’s Picks" />
+              </span>
+            </DSSubHeader>
+            <div className={gridClassName}>{editorsPicksCards}</div>
+          </>
         )}
         {cards?.length > 0 && (
-          <GridContainer className={className} header={moreRecsHeader}>
-            {cards}
-          </GridContainer>
+          <>
+            {moreRecsHeader && (
+              <DSSubHeader>
+                <span className="section-title">
+                  <FluentOrText message={moreRecsHeader} />
+                </span>
+              </DSSubHeader>
+            )}
+            <div className={gridClassName}>{cards}</div>
+          </>
         )}
       </>
     );

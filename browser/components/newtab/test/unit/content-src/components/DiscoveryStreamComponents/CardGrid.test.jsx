@@ -3,7 +3,6 @@ import {
   IntersectionObserver,
   RecentSavesContainer,
   DSSubHeader,
-  GridContainer,
 } from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
 import { combineReducers, createStore } from "redux";
 import { INITIAL_STATE, reducers } from "common/Reducers.jsm";
@@ -45,10 +44,10 @@ describe("<CardGrid>", () => {
   it("should render DSCards", () => {
     wrapper.setProps({ items: 2, data: { recommendations: [{}, {}] } });
 
-    assert.lengthOf(wrapper.find(GridContainer).children(), 2);
+    assert.lengthOf(wrapper.find(".ds-card-grid").children(), 2);
     assert.equal(
       wrapper
-        .find(GridContainer)
+        .find(".ds-card-grid")
         .children()
         .at(0)
         .type(),
@@ -255,43 +254,6 @@ describe("<RecentSavesContainer>", () => {
 
   beforeEach(() => {
     dispatch = sinon.stub();
-    intersectEntries = [{ isIntersecting: false }];
-    fakeWindow = {
-      IntersectionObserver: buildIntersectionObserver(intersectEntries),
-    };
-    wrapper = mount(
-      <WrapWithProvider>
-        <RecentSavesContainer windowObj={fakeWindow} dispatch={dispatch} />
-      </WrapWithProvider>
-    ).find(RecentSavesContainer);
-  });
-
-  it("should render an IntersectionObserver when not visible", () => {
-    assert.ok(wrapper.exists());
-    assert.ok(wrapper.find(IntersectionObserver).exists());
-  });
-
-  it("should render a nothing if visible until we log in", () => {
-    intersectEntries = [{ isIntersecting: true }];
-    fakeWindow = {
-      IntersectionObserver: buildIntersectionObserver(intersectEntries),
-    };
-    wrapper = mount(
-      <WrapWithProvider>
-        <RecentSavesContainer windowObj={fakeWindow} dispatch={dispatch} />
-      </WrapWithProvider>
-    ).find(RecentSavesContainer);
-    assert.ok(!wrapper.find(IntersectionObserver).exists());
-    assert.calledOnce(dispatch);
-    assert.calledWith(
-      dispatch,
-      ac.AlsoToMain({
-        type: at.DISCOVERY_STREAM_POCKET_STATE_INIT,
-      })
-    );
-  });
-
-  it("should render a GridContainer if visible and logged in", () => {
     intersectEntries = [{ isIntersecting: true }];
     fakeWindow = {
       IntersectionObserver: buildIntersectionObserver(intersectEntries),
@@ -311,14 +273,77 @@ describe("<RecentSavesContainer>", () => {
                 excerpt: "excerpt",
               },
             ],
+            experimentData: {
+              utmSource: "utmSource",
+              utmContent: "utmContent",
+              utmCampaign: "utmCampaign",
+            },
           },
         }}
       >
+        <RecentSavesContainer
+          gridClassName="ds-card-grid"
+          windowObj={fakeWindow}
+          dispatch={dispatch}
+        />
+      </WrapWithProvider>
+    ).find(RecentSavesContainer);
+  });
+
+  it("should render an IntersectionObserver when not visible", () => {
+    intersectEntries = [{ isIntersecting: false }];
+    fakeWindow = {
+      IntersectionObserver: buildIntersectionObserver(intersectEntries),
+    };
+    wrapper = mount(
+      <WrapWithProvider>
         <RecentSavesContainer windowObj={fakeWindow} dispatch={dispatch} />
       </WrapWithProvider>
     ).find(RecentSavesContainer);
-    assert.lengthOf(wrapper.find(GridContainer), 1);
+
+    assert.ok(wrapper.exists());
+    assert.ok(wrapper.find(IntersectionObserver).exists());
+  });
+
+  it("should render nothing if visible until we log in", () => {
+    assert.ok(!wrapper.find(IntersectionObserver).exists());
+    assert.calledOnce(dispatch);
+    assert.calledWith(
+      dispatch,
+      ac.AlsoToMain({
+        type: at.DISCOVERY_STREAM_POCKET_STATE_INIT,
+      })
+    );
+  });
+
+  it("should render a grid if visible and logged in", () => {
+    assert.lengthOf(wrapper.find(".ds-card-grid"), 1);
+    assert.lengthOf(wrapper.find(DSSubHeader), 1);
     assert.lengthOf(wrapper.find(PlaceholderDSCard), 2);
     assert.lengthOf(wrapper.find(DSCard), 3);
+  });
+
+  it("should render a my list link with proper utm params", () => {
+    assert.equal(
+      wrapper
+        .find(".section-sub-link")
+        .at(0)
+        .prop("url"),
+      "https://getpocket.com/a?utm_source=utmSource&utm_content=utmContent&utm_campaign=utmCampaign"
+    );
+  });
+
+  it("should fire a UserEvent for my list clicks", () => {
+    wrapper
+      .find(".section-sub-link")
+      .at(0)
+      .simulate("click");
+    assert.calledWith(
+      dispatch,
+      ac.UserEvent({
+        event: "CLICK",
+        source: `CARDGRID_RECENT_SAVES_VIEW_LIST`,
+      })
+    );
   });
 });

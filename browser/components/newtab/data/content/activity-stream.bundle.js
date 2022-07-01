@@ -8150,28 +8150,17 @@ const TopicsWidget = (0,external_ReactRedux_namespaceObject.connect)(state => ({
 
 
 
+
 const WIDGET_IDS = {
   TOPICS: 1
 };
-function DSSubHeader(props) {
+function DSSubHeader({
+  children
+}) {
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: "section-top-bar ds-sub-header"
   }, /*#__PURE__*/external_React_default().createElement("h3", {
     className: "section-title-container"
-  }, /*#__PURE__*/external_React_default().createElement("span", {
-    className: "section-title"
-  }, props.children)));
-}
-function GridContainer(props) {
-  const {
-    header,
-    className,
-    children
-  } = props;
-  return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, header && /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
-    message: header
-  })), /*#__PURE__*/external_React_default().createElement("div", {
-    className: `ds-card-grid ${className}`
   }, children));
 }
 function CardGrid_IntersectionObserver({
@@ -8211,14 +8200,20 @@ function CardGrid_IntersectionObserver({
   }, children);
 }
 function RecentSavesContainer({
-  className,
+  gridClassName = "",
   dispatch,
   windowObj = window,
-  items = 3
+  items = 3,
+  source = "CARDGRID_RECENT_SAVES"
 }) {
   const {
     recentSavesData,
-    isUserLoggedIn
+    isUserLoggedIn,
+    experimentData: {
+      utmCampaign,
+      utmContent,
+      utmSource
+    }
   } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.DiscoveryStream);
   const [visible, setVisible] = (0,external_React_namespaceObject.useState)(false);
   const onIntersecting = (0,external_React_namespaceObject.useCallback)(() => setVisible(true), []);
@@ -8248,7 +8243,7 @@ function RecentSavesContainer({
       key: `dscard-${(rec === null || rec === void 0 ? void 0 : rec.id) || index}`,
       id: rec.id,
       pos: index,
-      type: "CARDGRID_RECENT_SAVES",
+      type: source,
       image_src: rec.image_src,
       raw_image_src: rec.raw_image_src,
       word_count: rec.word_count,
@@ -8260,6 +8255,19 @@ function RecentSavesContainer({
       isRecentSave: true,
       dispatch: dispatch
     });
+  }
+
+  function onMyListClicked() {
+    dispatch(actionCreators.UserEvent({
+      event: "CLICK",
+      source: `${source}_VIEW_LIST`
+    }));
+  }
+
+  let queryParams = `?utm_source=${utmSource}`;
+
+  if (utmCampaign && utmContent) {
+    queryParams += `&utm_content=${utmContent}&utm_campaign=${utmCampaign}`;
   }
 
   const recentSavesCards = []; // We fill the cards with a for loop over an inline map because
@@ -8290,10 +8298,19 @@ function RecentSavesContainer({
   } // We are visible and logged in.
 
 
-  return /*#__PURE__*/external_React_default().createElement(GridContainer, {
-    className: className,
-    header: "Recently Saved to your List"
-  }, recentSavesCards);
+  return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
+    className: "section-title"
+  }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
+    message: "Recently Saved to your List"
+  })), /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
+    onLinkClick: onMyListClicked,
+    className: "section-sub-link",
+    url: `https://getpocket.com/a${queryParams}`
+  }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
+    message: "View My List"
+  }))), /*#__PURE__*/external_React_default().createElement("div", {
+    className: gridClassName
+  }, recentSavesCards));
 }
 class _CardGrid extends (external_React_default()).PureComponent {
   constructor(props) {
@@ -8478,19 +8495,25 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const hideDescriptionsClassName = !hideDescriptions ? `ds-card-grid-include-descriptions` : ``;
     const compactGridClassName = compactGrid ? `ds-card-grid-compact` : ``;
     const hybridLayoutClassName = hybridLayout ? `ds-card-grid-hybrid-layout` : ``;
-    const className = `ds-card-grid-${this.props.border} ${variantClass} ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`;
-    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, ((_essentialReadsCards = essentialReadsCards) === null || _essentialReadsCards === void 0 ? void 0 : _essentialReadsCards.length) > 0 && /*#__PURE__*/external_React_default().createElement(GridContainer, {
-      className: className
+    const gridClassName = `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`;
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, ((_essentialReadsCards = essentialReadsCards) === null || _essentialReadsCards === void 0 ? void 0 : _essentialReadsCards.length) > 0 && /*#__PURE__*/external_React_default().createElement("div", {
+      className: gridClassName
     }, essentialReadsCards), showRecentSaves && /*#__PURE__*/external_React_default().createElement(RecentSavesContainer, {
-      className: className,
+      gridClassName: gridClassName,
       dispatch: this.props.dispatch
-    }), ((_editorsPicksCards = editorsPicksCards) === null || _editorsPicksCards === void 0 ? void 0 : _editorsPicksCards.length) > 0 && /*#__PURE__*/external_React_default().createElement(GridContainer, {
-      className: className,
-      header: "Editor\u2019s Picks"
-    }, editorsPicksCards), (cards === null || cards === void 0 ? void 0 : cards.length) > 0 && /*#__PURE__*/external_React_default().createElement(GridContainer, {
-      className: className,
-      header: moreRecsHeader
-    }, cards));
+    }), ((_editorsPicksCards = editorsPicksCards) === null || _editorsPicksCards === void 0 ? void 0 : _editorsPicksCards.length) > 0 && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "section-title"
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
+      message: "Editor\u2019s Picks"
+    }))), /*#__PURE__*/external_React_default().createElement("div", {
+      className: gridClassName
+    }, editorsPicksCards)), (cards === null || cards === void 0 ? void 0 : cards.length) > 0 && /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, moreRecsHeader && /*#__PURE__*/external_React_default().createElement(DSSubHeader, null, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "section-title"
+    }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
+      message: moreRecsHeader
+    }))), /*#__PURE__*/external_React_default().createElement("div", {
+      className: gridClassName
+    }, cards)));
   }
 
   render() {
