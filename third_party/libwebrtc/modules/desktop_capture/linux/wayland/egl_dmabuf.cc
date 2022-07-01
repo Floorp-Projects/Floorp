@@ -7,7 +7,6 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#if !defined(WEBRTC_MOZILLA_BUILD)
 
 #include "modules/desktop_capture/linux/wayland/egl_dmabuf.h"
 
@@ -585,4 +584,3 @@ absl::optional<std::string> EglDmaBuf::GetRenderNode() {
 }
 
 }  // namespace webrtc
-#endif  // #if !defined(WEBRTC_MOZILLA_BUILD)

@@ -501,9 +501,7 @@ void BaseCapturerPipeWire::Init() {
   }
 #endif  // defined(WEBRTC_DLOPEN_PIPEWIRE)
 
-#if !defined(WEBRTC_MOZILLA_BUILD)
   egl_dmabuf_ = std::make_unique<EglDmaBuf>();
-#endif
 
   pw_init(/*argc=*/nullptr, /*argc=*/nullptr);
 
@@ -582,13 +580,11 @@ pw_stream* BaseCapturerPipeWire::CreateReceivingStream() {
                           SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
     // Modifiers can be used with PipeWire >= 0.3.33
     if (has_required_pw_client_version && has_required_pw_server_version) {
-#if !defined(WEBRTC_MOZILLA_BUILD)
       modifiers = egl_dmabuf_->QueryDmaBufModifiers(format);
 
       if (!modifiers.empty()) {
         params.push_back(BuildFormat(&builder, format, modifiers));
       }
-#endif
     }
 
     params.push_back(BuildFormat(&builder, format, /*modifiers=*/{}));
@@ -635,7 +631,6 @@ void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
 
     src = SPA_MEMBER(map.get(), spa_buffer->datas[0].mapoffset, uint8_t);
   } else if (spa_buffer->datas[0].type == SPA_DATA_DmaBuf) {
-#if !defined(WEBRTC_MOZILLA_BUILD)
     const uint n_planes = spa_buffer->n_datas;
 
     if (!n_planes) {
@@ -654,7 +649,6 @@ void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
     src_unique_ptr = egl_dmabuf_->ImageFromDmaBuf(
         desktop_size_, spa_video_format_.format, plane_datas, modifier_);
     src = src_unique_ptr.get();
-#endif
   } else if (spa_buffer->datas[0].type == SPA_DATA_MemPtr) {
     src = static_cast<uint8_t*>(spa_buffer->datas[0].data);
   }
