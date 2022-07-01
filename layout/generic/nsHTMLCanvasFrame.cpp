@@ -300,18 +300,17 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
 
     gfxRect destGFXRect = presContext->AppUnitsToGfxUnits(dest);
 
+    // Transform the canvas into the right place
+    gfxPoint p = destGFXRect.TopLeft();
+    Matrix transform = Matrix::Translation(p.x, p.y);
+    transform.PreScale(destGFXRect.Width() / canvasSizeInPx.width,
+                       destGFXRect.Height() / canvasSizeInPx.height);
     gfxContextMatrixAutoSaveRestore saveMatrix(aCtx);
 
+    aCtx->SetMatrix(
+        gfxUtils::SnapTransformTranslation(aCtx->CurrentMatrix(), nullptr));
+
     if (RefPtr<layers::Image> image = canvas->GetAsImage()) {
-      // Transform the canvas into the right place
-      gfxPoint p = destGFXRect.TopLeft();
-      Matrix transform = Matrix::Translation(p.x, p.y);
-      transform.PreScale(destGFXRect.Width() / canvasSizeInPx.width,
-                         destGFXRect.Height() / canvasSizeInPx.height);
-
-      aCtx->SetMatrix(
-          gfxUtils::SnapTransformTranslation(aCtx->CurrentMatrix(), nullptr));
-
       RefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
       if (!surface || !surface->IsValid()) {
         return;
@@ -339,27 +338,23 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
     }
     renderer->FirePreTransactionCallback();
     const auto snapshot = renderer->BorrowSnapshot();
-    if (!snapshot) {
-      return;
-    }
+    if (!snapshot) return;
     const auto& surface = snapshot->mSurf;
 
-    if (!renderer->YIsDown()) {
-      // Calculate y-coord that is as far below the bottom of destGFXRect as
-      // the origin was above the top, then reflect about that.
-      float y = destGFXRect.Y() + destGFXRect.YMost();
-      Matrix transform = Matrix::Translation(0.0f, y).PreScale(1.0f, -1.0f);
-      aCtx->Multiply(transform);
-    }
+    transform = gfxUtils::SnapTransform(
+        transform, gfxRect(0, 0, canvasSizeInPx.width, canvasSizeInPx.height),
+        nullptr);
 
-    const auto& rect = surface->GetRect();
-    aCtx->GetDrawTarget()->DrawSurface(
-        surface,
-        Rect(float(destGFXRect.X()), float(destGFXRect.Y()),
-             float(destGFXRect.Width()), float(destGFXRect.Height())),
-        Rect(float(rect.X()), float(rect.Y()), float(rect.Width()),
-             float(rect.Height())),
-        DrawSurfaceOptions(nsLayoutUtils::GetSamplingFilterForFrame(f)));
+    if (!renderer->YIsDown()) {
+      // y-flip
+      transform.PreTranslate(0.0f, canvasSizeInPx.height).PreScale(1.0f, -1.0f);
+    }
+    aCtx->Multiply(transform);
+
+    aCtx->GetDrawTarget()->FillRect(
+        Rect(0, 0, canvasSizeInPx.width, canvasSizeInPx.height),
+        SurfacePattern(surface, ExtendMode::CLAMP, Matrix(),
+                       nsLayoutUtils::GetSamplingFilterForFrame(f)));
 
     renderer->FireDidTransactionCallback();
     renderer->ResetDirty();
