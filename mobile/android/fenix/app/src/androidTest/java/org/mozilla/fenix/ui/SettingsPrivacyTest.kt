@@ -332,7 +332,6 @@ class SettingsPrivacyTest {
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24573")
     @Test
     fun openExternalLinksInPrivateTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -343,6 +342,7 @@ class SettingsPrivacyTest {
         openAppFromExternalLink(firstWebPage.url.toString())
 
         browserScreen {
+            verifyUrl(firstWebPage.url.toString())
         }.openTabDrawer {
             verifyPrivateModeSelected()
         }.closeTabDrawer {
@@ -354,6 +354,7 @@ class SettingsPrivacyTest {
         openAppFromExternalLink(secondWebPage.url.toString())
 
         browserScreen {
+            verifyUrl(secondWebPage.url.toString())
         }.openTabDrawer {
             verifyNormalModeSelected()
         }
