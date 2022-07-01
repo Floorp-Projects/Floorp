@@ -574,6 +574,14 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual ScrollSnapInfo GetScrollSnapInfo() = 0;
 
+  virtual void TryResnap() = 0;
+  /**
+   * Post a pending re-snap request if the given |aFrame| is one of the snap
+   * points on the last scroll operation.
+   */
+  virtual void PostPendingResnapIfNeeded(const nsIFrame* aFrame) = 0;
+  virtual void PostPendingResnap() = 0;
+
   /**
    * Given the drag event aEvent, determine whether the mouse is near the edge
    * of the scrollable area, and scroll the view in the direction of that edge

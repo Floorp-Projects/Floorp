@@ -1527,7 +1527,11 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
 void nsHTMLScrollFrame::DidReflow(nsPresContext* aPresContext,
                                   const ReflowInput* aReflowInput) {
   nsContainerFrame::DidReflow(aPresContext, aReflowInput);
-  PresShell()->PostPendingScrollAnchorAdjustment(Anchor());
+  if (mHelper.NeedsResnap()) {
+    PostPendingResnap();
+  } else {
+    PresShell()->PostPendingScrollAnchorAdjustment(Anchor());
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7954,11 +7958,23 @@ Maybe<SnapTarget> ScrollFrameHelper::GetSnapPointForDestination(
 }
 
 Maybe<SnapTarget> ScrollFrameHelper::GetSnapPointForResnap() {
+  // Same as in GetSnapPointForDestination, We can release the strong references
+  // for the previous snap targets here.
+  mSnapTargets.Clear();
   nsIContent* focusedContent =
       mOuter->GetContent()->GetComposedDoc()->GetUnretargetedFocusedContent();
   return ScrollSnapUtils::GetSnapPointForResnap(
       ComputeScrollSnapInfo(&mSnapTargets), GetLayoutScrollRange(),
       GetScrollPosition(), mLastSnapTargetIds, focusedContent);
+}
+
+bool ScrollFrameHelper::NeedsResnap() {
+  nsIContent* focusedContent =
+      mOuter->GetContent()->GetComposedDoc()->GetUnretargetedFocusedContent();
+  return ScrollSnapUtils::GetSnapPointForResnap(
+             ComputeScrollSnapInfo(), GetLayoutScrollRange(),
+             GetScrollPosition(), mLastSnapTargetIds, focusedContent)
+      .isSome();
 }
 
 void ScrollFrameHelper::SetLastSnapTargetIds(
@@ -7986,6 +8002,47 @@ void ScrollFrameHelper::SetLastSnapTargetIds(
   }
 
   mLastSnapTargetIds = std::move(aIds);
+}
+
+bool ScrollFrameHelper::IsLastSnappedTarget(const nsIFrame* aFrame) const {
+  ScrollSnapTargetId id = ScrollSnapUtils::GetTargetIdFor(aFrame);
+  MOZ_ASSERT(id != ScrollSnapTargetId::None,
+             "This function is supposed to be called for contents");
+
+  if (!mLastSnapTargetIds) {
+    return false;
+  }
+
+  return mLastSnapTargetIds->mIdsOnX.Contains(id) ||
+         mLastSnapTargetIds->mIdsOnY.Contains(id);
+}
+
+void ScrollFrameHelper::TryResnap() {
+  if (auto snapTarget = GetSnapPointForResnap()) {
+    // We are going to re-snap so that we need to clobber scroll anchoring.
+    mAnchor.UserScrolled();
+
+    // Snap to the nearest snap position if exists.
+    ScrollToWithOrigin(
+        snapTarget->mPosition, nullptr /* range */,
+        ScrollOperationParams{
+            IsSmoothScroll(ScrollBehavior::Auto) ? ScrollMode::SmoothMsd
+                                                 : ScrollMode::Instant,
+            ScrollOrigin::Other, std::move(snapTarget->mTargetIds)});
+  }
+}
+
+void ScrollFrameHelper::PostPendingResnapIfNeeded(const nsIFrame* aFrame) {
+  if (!IsLastSnappedTarget(aFrame)) {
+    return;
+  }
+
+  PostPendingResnap();
+}
+
+void ScrollFrameHelper::PostPendingResnap() {
+  nsIScrollableFrame* sf = do_QueryFrame(mOuter);
+  mOuter->PresShell()->PostPendingScrollResnap(sf);
 }
 
 bool ScrollFrameHelper::UsesOverlayScrollbars() const {

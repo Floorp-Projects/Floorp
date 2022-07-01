@@ -321,6 +321,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
                                                const nsPoint& aDestination);
 
   Maybe<mozilla::SnapTarget> GetSnapPointForResnap();
+  bool NeedsResnap();
 
   void SetLastSnapTargetIds(UniquePtr<ScrollSnapTargetIds> aId);
 
@@ -476,6 +477,11 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool UsesOverlayScrollbars() const;
 
   ScrollSnapInfo GetScrollSnapInfo();
+
+  bool IsLastSnappedTarget(const nsIFrame* aFrame) const;
+  void TryResnap();
+  void PostPendingResnapIfNeeded(const nsIFrame* aFrame);
+  void PostPendingResnap();
 
   static bool ShouldActivateAllScrollFrames();
   nsRect RestrictToRootDisplayPort(const nsRect& aDisplayportBase);
@@ -1282,6 +1288,12 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     return mHelper.GetScrollSnapInfo();
   }
 
+  void TryResnap() final { mHelper.TryResnap(); }
+  void PostPendingResnapIfNeeded(const nsIFrame* aFrame) final {
+    mHelper.PostPendingResnapIfNeeded(aFrame);
+  }
+  void PostPendingResnap() final { mHelper.PostPendingResnap(); }
+
   bool DragScroll(mozilla::WidgetEvent* aEvent) final {
     return mHelper.DragScroll(aEvent);
   }
@@ -1753,6 +1765,12 @@ class nsXULScrollFrame final : public nsBoxFrame,
   ScrollSnapInfo GetScrollSnapInfo() final {
     return mHelper.GetScrollSnapInfo();
   }
+
+  void TryResnap() final { mHelper.TryResnap(); }
+  void PostPendingResnapIfNeeded(const nsIFrame* aFrame) final {
+    mHelper.PostPendingResnapIfNeeded(aFrame);
+  }
+  void PostPendingResnap() final { mHelper.PostPendingResnap(); }
 
   bool DragScroll(mozilla::WidgetEvent* aEvent) final {
     return mHelper.DragScroll(aEvent);

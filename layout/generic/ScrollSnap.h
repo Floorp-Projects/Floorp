@@ -60,6 +60,10 @@ struct ScrollSnapUtils {
       const nsIContent* aFocusedContent);
 
   static ScrollSnapTargetId GetTargetIdFor(const nsIFrame* aFrame);
+
+  // Post a pending re-snap request if the given |aFrame| is one of the snap
+  // points on the last scroll operation.
+  static void PostPendingResnapIfNeededFor(nsIFrame* aFrame);
 };
 
 }  // namespace mozilla
