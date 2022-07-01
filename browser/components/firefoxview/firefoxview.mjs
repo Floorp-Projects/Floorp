@@ -47,14 +47,15 @@ async function getColorway() {
     colorwayProperties = {
       colorwayName: titleCase(colorwayName),
       intensity: titleCase(intensity),
+      figureUrl: BuiltInThemes.builtInThemeMap.get(colorway.id).figureUrl,
     };
   }
   const collectionName = await document.l10n.formatValue(
     colorwaysCollection.l10nId.title
   );
   return {
-    ...colorwayProperties,
     ...colorwaysCollection,
+    ...colorwayProperties,
     collectionName,
   };
 }
@@ -65,7 +66,7 @@ function showColorway({
   collectionName,
   expiry,
   l10nId,
-  iconUrl,
+  figureUrl,
 }) {
   const el = {
     button: document.getElementById("colorways-button"),
@@ -108,7 +109,7 @@ function showColorway({
     document.l10n.setAttributes(el.title, l10nId.title);
     document.l10n.setAttributes(el.button, "firefoxview-try-colorways-button");
   }
-  document.getElementById("colorways-collection-graphic").src = iconUrl || "";
+  document.getElementById("colorways-collection-graphic").src = figureUrl || "";
 }
 
 const getColorwayPromise = getColorway();

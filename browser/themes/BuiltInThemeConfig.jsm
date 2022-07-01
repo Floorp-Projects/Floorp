@@ -525,7 +525,7 @@ const ColorwayCollections = [
     },
     cardImagePath:
       "chrome://browser/content/colorways/independent-voices-collection-banner.avif",
-    iconUrl:
+    figureUrl:
       "chrome://browser/content/colorways/independent-voices-collection.avif",
   },
 ];
