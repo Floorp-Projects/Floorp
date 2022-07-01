@@ -8648,7 +8648,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
         aContent->GetProperty(nsGkAtoms::MinimalDisplayPort));
   }
 
-  const nsIScrollableFrame* scrollableFrame = nullptr;
+  nsIScrollableFrame* scrollableFrame = nullptr;
   if (aScrollFrame) scrollableFrame = aScrollFrame->GetScrollTargetFrame();
 
   metrics.SetScrollableRect(

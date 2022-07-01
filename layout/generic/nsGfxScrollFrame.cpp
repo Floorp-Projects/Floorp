@@ -1992,7 +1992,8 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
                        const nsPoint& aInitialDestination,
                        const nsSize& aInitialVelocity, const nsRect& aRange,
                        const mozilla::TimeStamp& aStartTime,
-                       nsPresContext* aPresContext)
+                       nsPresContext* aPresContext,
+                       UniquePtr<ScrollSnapTargetIds> aSnapTargetIds)
       : mXAxisModel(aInitialPosition.x, aInitialDestination.x,
                     aInitialVelocity.width,
                     StaticPrefs::layout_css_scroll_behavior_spring_constant(),
@@ -2004,7 +2005,8 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
         mRange(aRange),
         mLastRefreshTime(aStartTime),
         mCallee(nullptr),
-        mOneDevicePixelInAppUnits(aPresContext->DevPixelsToAppUnits(1)) {
+        mOneDevicePixelInAppUnits(aPresContext->DevPixelsToAppUnits(1)),
+        mSnapTargetIds(std::move(aSnapTargetIds)) {
     Telemetry::SetHistogramRecordingEnabled(
         Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS, true);
   }
@@ -2093,6 +2095,10 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
     }
   }
 
+  UniquePtr<ScrollSnapTargetIds> TakeSnapTargetIds() {
+    return std::move(mSnapTargetIds);
+  }
+
  private:
   // Private destructor, to discourage deletion outside of Release():
   ~AsyncSmoothMSDScroll() {
@@ -2110,6 +2116,7 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
   mozilla::TimeStamp mLastRefreshTime;
   ScrollFrameHelper* mCallee;
   nscoord mOneDevicePixelInAppUnits;
+  UniquePtr<ScrollSnapTargetIds> mSnapTargetIds;
 };
 
 // AsyncScroll has ref counting.
@@ -2118,8 +2125,10 @@ class ScrollFrameHelper::AsyncScroll final : public nsARefreshObserver {
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  explicit AsyncScroll()
-      : mOrigin(ScrollOrigin::NotSpecified), mCallee(nullptr) {
+  explicit AsyncScroll(UniquePtr<ScrollSnapTargetIds> aSnapTargetIds)
+      : mOrigin(ScrollOrigin::NotSpecified),
+        mCallee(nullptr),
+        mSnapTargetIds(std::move(aSnapTargetIds)) {
     Telemetry::SetHistogramRecordingEnabled(
         Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS, true);
   }
@@ -2212,8 +2221,13 @@ class ScrollFrameHelper::AsyncScroll final : public nsARefreshObserver {
     }
   }
 
+  UniquePtr<ScrollSnapTargetIds> TakeSnapTargetIds() {
+    return std::move(mSnapTargetIds);
+  }
+
  private:
   ScrollFrameHelper* mCallee;
+  UniquePtr<ScrollSnapTargetIds> mSnapTargetIds;
 
   nsRefreshDriver* RefreshDriver(ScrollFrameHelper* aCallee) {
     return aCallee->mOuter->PresContext()->RefreshDriver();
@@ -2389,7 +2403,8 @@ void ScrollFrameHelper::AsyncSmoothMSDScrollCallback(
     return;
   }
 
-  aInstance->CompleteAsyncScroll(range);
+  aInstance->CompleteAsyncScroll(
+      range, aInstance->mAsyncSmoothMSDScroll->TakeSnapTargetIds());
 }
 
 /*
@@ -2421,11 +2436,15 @@ void ScrollFrameHelper::AsyncScrollCallback(ScrollFrameHelper* aInstance,
     }
   }
 
-  aInstance->CompleteAsyncScroll(range);
+  aInstance->CompleteAsyncScroll(range,
+                                 aInstance->mAsyncScroll->TakeSnapTargetIds());
 }
 
-void ScrollFrameHelper::CompleteAsyncScroll(const nsRect& aRange,
-                                            ScrollOrigin aOrigin) {
+void ScrollFrameHelper::CompleteAsyncScroll(
+    const nsRect& aRange, UniquePtr<ScrollSnapTargetIds> aSnapTargetIds,
+    ScrollOrigin aOrigin) {
+  SetLastSnapTargetIds(std::move(aSnapTargetIds));
+
   // Apply desired destination range since this is the last step of scrolling.
   RemoveObservers();
   AutoWeakFrame weakFrame(mOuter);
@@ -2565,10 +2584,16 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
                      ? *aRange
                      : nsRect(aScrollPosition, nsSize(0, 0));
 
+  UniquePtr<ScrollSnapTargetIds> snapTargetIds;
+  if (snapTarget) {
+    snapTargetIds = MakeUnique<ScrollSnapTargetIds>(snapTarget->mTargetIds);
+  } else {
+    snapTargetIds = MakeUnique<ScrollSnapTargetIds>(aParams.mTargetIds);
+  }
   if (aParams.IsInstant()) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
     // async-scrolling process and do an instant scroll.
-    CompleteAsyncScroll(range, aParams.mOrigin);
+    CompleteAsyncScroll(range, std::move(snapTargetIds), aParams.mOrigin);
     mApzSmoothScrollDestination = Nothing();
     return;
   }
@@ -2608,7 +2633,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
 
       mAsyncSmoothMSDScroll = new AsyncSmoothMSDScroll(
           GetScrollPosition(), mDestination, currentVelocity,
-          GetLayoutScrollRange(), now, presContext);
+          GetLayoutScrollRange(), now, presContext, std::move(snapTargetIds));
 
       mAsyncSmoothMSDScroll->SetRefreshObserver(this);
     } else {
@@ -2627,7 +2652,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
   }
 
   if (!mAsyncScroll) {
-    mAsyncScroll = new AsyncScroll();
+    mAsyncScroll = new AsyncScroll(std::move(snapTargetIds));
     mAsyncScroll->SetRefreshObserver(this);
   }
 
@@ -7658,12 +7683,11 @@ static nsRect InflateByScrollMargin(const nsRect& aTargetRect,
  * Append scroll positions for valid snap positions into |aSnapInfo| if
  * applicable.
  */
-static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
-                                         const nsIFrame* aScrolledFrame,
-                                         const nsRect& aScrolledRect,
-                                         const nsMargin& aScrollPadding,
-                                         WritingMode aWritingModeOnScroller,
-                                         ScrollSnapInfo& aSnapInfo) {
+static void AppendScrollPositionsForSnap(
+    const nsIFrame* aFrame, const nsIFrame* aScrolledFrame,
+    const nsRect& aScrolledRect, const nsMargin& aScrollPadding,
+    WritingMode aWritingModeOnScroller, ScrollSnapInfo& aSnapInfo,
+    ScrollFrameHelper::SnapTargetSet* aSnapTargets) {
   nsRect targetRect = nsLayoutUtils::TransformFrameRectToAncestor(
       aFrame, aFrame->GetRectRelativeToSelf(), aScrolledFrame);
 
@@ -7791,6 +7815,9 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
                   std::move(inlineDirectionPosition),
                   std::move(blockDirectionPosition), std::move(snapArea),
                   styleDisplay->mScrollSnapStop, targetId));
+    if (aSnapTargets) {
+      aSnapTargets->EnsureInserted(aFrame->GetContent());
+    }
   }
 }
 
@@ -7798,12 +7825,10 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
  * Collect the scroll positions corresponding to snap positions of frames in the
  * subtree rooted at |aFrame|, relative to |aScrolledFrame|, into |aSnapInfo|.
  */
-static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
-                                          nsIFrame* aScrolledFrame,
-                                          const nsRect& aScrolledRect,
-                                          const nsMargin& aScrollPadding,
-                                          WritingMode aWritingModeOnScroller,
-                                          ScrollSnapInfo& aSnapInfo) {
+static void CollectScrollPositionsForSnap(
+    nsIFrame* aFrame, nsIFrame* aScrolledFrame, const nsRect& aScrolledRect,
+    const nsMargin& aScrollPadding, WritingMode aWritingModeOnScroller,
+    ScrollSnapInfo& aSnapInfo, ScrollFrameHelper::SnapTargetSet* aSnapTargets) {
   // Snap positions only affect the nearest ancestor scroll container on the
   // element's containing block chain.
   nsIScrollableFrame* sf = do_QueryFrame(aFrame);
@@ -7820,11 +7845,11 @@ static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
               StyleScrollSnapAlignKeyword::None) {
         AppendScrollPositionsForSnap(f, aScrolledFrame, aScrolledRect,
                                      aScrollPadding, aWritingModeOnScroller,
-                                     aSnapInfo);
+                                     aSnapInfo, aSnapTargets);
       }
       CollectScrollPositionsForSnap(f, aScrolledFrame, aScrolledRect,
                                     aScrollPadding, aWritingModeOnScroller,
-                                    aSnapInfo);
+                                    aSnapInfo, aSnapTargets);
     }
   }
 }
@@ -7880,7 +7905,8 @@ nsMargin ScrollFrameHelper::GetScrollPadding() const {
                                    GetScrollPortRect().Size());
 }
 
-layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo() const {
+layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
+    SnapTargetSet* aSnapTargets) {
   ScrollSnapInfo result;
 
   nsIFrame* scrollSnapFrame = GetFrameForStyle();
@@ -7904,11 +7930,11 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo() const {
   result.mSnapportSize = snapport.Size();
   CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame,
                                 GetScrolledRect(), scrollPadding, writingMode,
-                                result);
+                                result, aSnapTargets);
   return result;
 }
 
-layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo() const {
+layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo() {
   // TODO(botond): Should we cache it?
   return ComputeScrollSnapInfo();
 }
@@ -7916,9 +7942,42 @@ layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo() const {
 Maybe<SnapTarget> ScrollFrameHelper::GetSnapPointForDestination(
     ScrollUnit aUnit, ScrollSnapFlags aFlags, const nsPoint& aStartPos,
     const nsPoint& aDestination) {
+  // We can release the strong references for the previous snap target
+  // elements here since calling this ComputeScrollSnapInfo with
+  // |aSnapTargets| means we are going to evaluate new snap points,thus
+  // there's no chance to gererating nsIContent instances in between this
+  // function call and the function call for the (re-)evaluation.
+  mSnapTargets.Clear();
   return ScrollSnapUtils::GetSnapPointForDestination(
-      GetScrollSnapInfo(), aUnit, aFlags, GetLayoutScrollRange(), aStartPos,
-      aDestination);
+      ComputeScrollSnapInfo(&mSnapTargets), aUnit, aFlags,
+      GetLayoutScrollRange(), aStartPos, aDestination);
+}
+
+void ScrollFrameHelper::SetLastSnapTargetIds(
+    UniquePtr<ScrollSnapTargetIds> aIds) {
+  if (!aIds) {
+    mLastSnapTargetIds = nullptr;
+    return;
+  }
+
+  // This SetLastSnapTargetIds gets called asynchronously so that there's a race
+  // condition something like;
+  // 1) an async scroll operation triggered snapping to a point on an element
+  // 2) during the async scroll operation, the element got removed from this
+  //    scroll container
+  // 3) re-snapping triggered
+  // 4) this SetLastSnapTargetIds got called
+  // In such case |aIds| are stale, we shouldn't use it.
+  for (const auto* idList : {&aIds->mIdsOnX, &aIds->mIdsOnY}) {
+    for (const auto id : *idList) {
+      if (!mSnapTargets.Contains(reinterpret_cast<nsIContent*>(id))) {
+        mLastSnapTargetIds = nullptr;
+        return;
+      }
+    }
+  }
+
+  mLastSnapTargetIds = std::move(aIds);
 }
 
 bool ScrollFrameHelper::UsesOverlayScrollbars() const {

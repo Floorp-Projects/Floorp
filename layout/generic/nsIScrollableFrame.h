@@ -572,7 +572,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   /**
    * Returns information required to determine where to snap to after a scroll.
    */
-  virtual ScrollSnapInfo GetScrollSnapInfo() const = 0;
+  virtual ScrollSnapInfo GetScrollSnapInfo() = 0;
 
   /**
    * Given the drag event aEvent, determine whether the mouse is near the edge
