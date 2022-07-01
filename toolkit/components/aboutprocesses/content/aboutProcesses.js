@@ -1066,7 +1066,7 @@ var Control = {
         Services.profiler.StartProfiler(
           10000000,
           1,
-          ["default", "ipcmessages"],
+          ["default", "ipcmessages", "power"],
           ["pid:" + target.parentNode.parentNode.process.pid]
         );
         target.classList.add("profiler-active");

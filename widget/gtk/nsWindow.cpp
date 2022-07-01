@@ -1818,7 +1818,7 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
       if (!useIt) {
         return false;
       }
-      if (WaylandPopupFitsToplevelWindow()) {
+      if (popup->WaylandPopupFitsToplevelWindow()) {
         // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
         // Bug 1760276 - don't use move-to-rect when popup is inside main
         // Firefox window.
@@ -1882,6 +1882,13 @@ void nsWindow::WaylandPopupPropagateChangesToLayout(bool aMove, bool aResize) {
 
 void nsWindow::NativeMoveResizeWaylandPopupCallback(
     const GdkRectangle* aFinalSize, bool aFlippedX, bool aFlippedY) {
+#ifdef NIGHTLY_BUILD
+  // We're getting move-to-rect callback without move-to-rect call.
+  // That indicates a compositor bug
+  MOZ_DIAGNOSTIC_ASSERT(mWaitingForMoveToRectCallback,
+                        "Bogus move-to-rect callback! A compositor bug?");
+#endif
+
   mWaitingForMoveToRectCallback = false;
 
   bool movedByLayout = mMovedAfterMoveToRect;
@@ -2075,6 +2082,8 @@ bool nsWindow::WaylandPopupFitsToplevelWindow() {
 
   GdkPoint topLeft = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
   GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mLastSizeRequest);
+  LOG("  popup topleft %d, %d size %d x %d", topLeft.x, topLeft.y, size.width,
+      size.height);
   int fits = topLeft.x >= 0 && topLeft.y >= 0 &&
              topLeft.x + size.width <= parentWidth &&
              topLeft.y + size.height <= parentHeight;
