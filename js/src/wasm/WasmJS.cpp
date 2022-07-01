@@ -422,9 +422,12 @@ bool wasm::HasPlatformSupport(JSContext* cx) {
     return false;
   }
 
+#  ifndef __wasi__
+  // WASI doesn't support signals so we don't have this function.
   if (!wasm::EnsureFullSignalHandlers(cx)) {
     return false;
   }
+#  endif
 
   if (!jit::JitSupportsAtomics()) {
     return false;

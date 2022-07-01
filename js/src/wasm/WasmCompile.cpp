@@ -74,7 +74,7 @@ uint32_t wasm::ObservedCPUFeatures() {
 #elif defined(JS_CODEGEN_LOONG64)
   MOZ_ASSERT(jit::GetLOONG64Flags() <= (UINT32_MAX >> ARCH_BITS));
   return LOONG64 | (jit::GetLOONG64Flags() << ARCH_BITS);
-#elif defined(JS_CODEGEN_NONE)
+#elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
   return 0;
 #else
 #  error "unknown architecture"

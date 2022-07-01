@@ -35,7 +35,7 @@ using namespace js::jit;
 //
 // Scratch register configuration.
 
-#if defined(JS_CODEGEN_NONE)
+#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
 #  define RABALDR_SCRATCH_I32
 #  define RABALDR_SCRATCH_F32
 #  define RABALDR_SCRATCH_F64
