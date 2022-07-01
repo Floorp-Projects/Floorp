@@ -657,4 +657,4 @@ cargo-vet:
     fetch:
         type: git
         repo: https://github.com/mozilla/cargo-vet
-        revision: 65830ae54590edff20dafc8485ea181681411250
+        revision: 16e5c986f3204889910720b647a2ef25dd417f13
