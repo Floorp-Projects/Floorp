@@ -6070,12 +6070,12 @@ Maybe<CSSPoint> AsyncPanZoomController::FindSnapPointNear(
   APZC_LOG("%p scroll snapping near %s\n", this,
            ToString(aDestination).c_str());
   CSSRect scrollRange = Metrics().CalculateScrollRange();
-  if (Maybe<nsPoint> snapPoint = ScrollSnapUtils::GetSnapPointForDestination(
+  if (auto snapTarget = ScrollSnapUtils::GetSnapPointForDestination(
           mScrollMetadata.GetSnapInfo(), aUnit, aSnapFlags,
           CSSRect::ToAppUnits(scrollRange),
           CSSPoint::ToAppUnits(Metrics().GetVisualScrollOffset()),
           CSSPoint::ToAppUnits(aDestination))) {
-    CSSPoint cssSnapPoint = CSSPoint::FromAppUnits(snapPoint.ref());
+    CSSPoint cssSnapPoint = CSSPoint::FromAppUnits(snapTarget->mPosition);
     // GetSnapPointForDestination() can produce a destination that's outside
     // of the scroll frame's scroll range. Clamp it here (this matches the
     // behaviour of the main-thread code path, which clamps it in

@@ -36,7 +36,7 @@ struct ScrollSnapUtils {
    *                 not to touch main-thread-only data structures without
    *                 appropriate locking.
    */
-  static Maybe<nsPoint> GetSnapPointForDestination(
+  static Maybe<SnapTarget> GetSnapPointForDestination(
       const layers::ScrollSnapInfo& aSnapInfo, ScrollUnit aUnit,
       ScrollSnapFlags aSnapFlags, const nsRect& aScrollRange,
       const nsPoint& aStartPos, const nsPoint& aDestination);

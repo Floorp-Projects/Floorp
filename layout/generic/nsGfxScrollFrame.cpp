@@ -7883,11 +7883,11 @@ bool ScrollFrameHelper::GetSnapPointForDestination(ScrollUnit aUnit,
                                                    ScrollSnapFlags aSnapFlags,
                                                    const nsPoint& aStartPos,
                                                    nsPoint& aDestination) {
-  Maybe<nsPoint> snapPoint = ScrollSnapUtils::GetSnapPointForDestination(
+  auto snapTarget = ScrollSnapUtils::GetSnapPointForDestination(
       GetScrollSnapInfo(), aUnit, aSnapFlags, GetLayoutScrollRange(), aStartPos,
       aDestination);
-  if (snapPoint) {
-    aDestination = snapPoint.ref();
+  if (snapTarget) {
+    aDestination = snapTarget->mPosition;
     return true;
   }
   return false;

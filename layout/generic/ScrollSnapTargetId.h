@@ -6,6 +6,8 @@
 #define mozilla_ScrollSnapTargetId_h_
 
 #include <cstdint>
+#include "nsPoint.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -13,6 +15,16 @@ namespace mozilla {
 // 0 means it wasn't snapped on the last scroll operation.
 enum class ScrollSnapTargetId : uintptr_t {
   None = 0,
+};
+
+struct ScrollSnapTargetIds {
+  CopyableTArray<ScrollSnapTargetId> mIdsOnX;
+  CopyableTArray<ScrollSnapTargetId> mIdsOnY;
+};
+
+struct SnapTarget {
+  nsPoint mPosition;
+  ScrollSnapTargetIds mTargetIds;
 };
 
 }  // namespace mozilla
