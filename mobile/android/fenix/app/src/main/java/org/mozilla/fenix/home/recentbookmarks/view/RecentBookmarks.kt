@@ -219,7 +219,7 @@ private fun RecentBookmarksMenu(
 @Composable
 @Preview
 private fun RecentBookmarksPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         RecentBookmarks(
             bookmarks = listOf(
                 RecentBookmark(

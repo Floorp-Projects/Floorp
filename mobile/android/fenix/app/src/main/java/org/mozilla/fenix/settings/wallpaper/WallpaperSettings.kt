@@ -294,7 +294,7 @@ private fun WallpaperLogoSwitch(
 @Preview
 @Composable
 private fun WallpaperThumbnailsPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         val context = LocalContext.current
         val wallpaperManager = context.components.wallpaperManager
 
@@ -316,7 +316,7 @@ private fun WallpaperThumbnailsPreview() {
 @Preview
 @Composable
 private fun WallpaperSnackbarPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         WallpaperSnackbar(
             onViewWallpaper = {}
         )

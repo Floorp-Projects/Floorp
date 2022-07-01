@@ -121,7 +121,7 @@ fun StaggeredHorizontalGrid(
 @Composable
 @Preview
 private fun StaggeredHorizontalGridPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             StaggeredHorizontalGrid(
                 horizontalItemsSpacing = 8.dp,

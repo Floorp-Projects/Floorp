@@ -154,7 +154,7 @@ fun ListItemTabSurface(
 @Composable
 @Preview
 private fun ListItemTabLargePreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         ListItemTabLarge(
             imageUrl = "",
             title = "This is a very long title for a tab but needs to be so for this preview",
@@ -166,7 +166,7 @@ private fun ListItemTabLargePreview() {
 @Composable
 @Preview
 private fun ListItemTabSurfacePreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         ListItemTabSurface(
             imageUrl = ""
         ) {

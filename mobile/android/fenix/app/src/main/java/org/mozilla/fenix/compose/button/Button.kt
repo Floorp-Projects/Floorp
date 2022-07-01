@@ -171,7 +171,7 @@ fun DestructiveButton(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun ButtonPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Column(
             modifier = Modifier
                 .background(FirefoxTheme.colors.layer1)

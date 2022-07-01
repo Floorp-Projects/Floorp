@@ -173,7 +173,7 @@ private fun Thumbnail(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun TabListItemPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         TabListItem(
             tab = createTab(url = "www.mozilla.com", title = "Mozilla"),
             onCloseClick = {},
@@ -188,7 +188,7 @@ private fun TabListItemPreview() {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun SelectedTabListItemPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         TabListItem(
             tab = createTab(url = "www.mozilla.com", title = "Mozilla"),
             onCloseClick = {},

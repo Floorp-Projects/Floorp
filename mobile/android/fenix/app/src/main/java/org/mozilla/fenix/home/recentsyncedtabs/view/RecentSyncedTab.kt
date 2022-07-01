@@ -200,7 +200,7 @@ private fun LoadedRecentSyncedTab() {
         url = "https://mozilla.org",
         iconUrl = "https://mozilla.org",
     )
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         RecentSyncedTab(
             tab = tab,
             onRecentSyncedTabClick = {},
@@ -212,7 +212,7 @@ private fun LoadedRecentSyncedTab() {
 @Preview
 @Composable
 private fun LoadingRecentSyncedTab() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         RecentSyncedTab(
             tab = null,
             onRecentSyncedTabClick = {},

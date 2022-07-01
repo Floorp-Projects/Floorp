@@ -130,7 +130,7 @@ private fun ThumbnailImage(
 @Preview
 @Composable
 private fun ThumbnailCardPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         ThumbnailCard(
             url = "https://mozilla.com",
             key = "123",

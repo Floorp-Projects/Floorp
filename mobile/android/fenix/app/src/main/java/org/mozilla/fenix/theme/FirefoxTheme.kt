@@ -19,6 +19,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import mozilla.components.ui.colors.PhotonColors
+import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.ext.settings
 
 /**
@@ -33,12 +34,11 @@ enum class Theme {
         /**
          * Returns the current [Theme] that is displayed.
          *
-         * @param isPrivate Whether or not private browsing mode is enabled.
          * @return the current [Theme] that is displayed.
          */
         @Composable
-        fun getTheme(isPrivate: Boolean = LocalContext.current.settings().lastKnownMode.isPrivate) =
-            if (isPrivate) {
+        fun getTheme() =
+            if (!inComposePreview && LocalContext.current.settings().lastKnownMode.isPrivate) {
                 Private
             } else if (isSystemInDarkTheme()) {
                 Dark

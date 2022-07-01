@@ -60,7 +60,7 @@ class PocketRecommendationsHeaderViewHolder(
 @Composable
 @Preview
 fun PocketRecommendationsFooterViewHolderPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         PoweredByPocketHeader(
             onLearnMoreClicked = {}
         )

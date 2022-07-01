@@ -66,7 +66,7 @@ fun HomeSectionHeader(
 @Composable
 @Preview
 private fun HomeSectionsHeaderPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         HomeSectionHeader(
             headerText = stringResource(R.string.recent_bookmarks_title),
             description = stringResource(R.string.recently_saved_show_all_content_description_2),

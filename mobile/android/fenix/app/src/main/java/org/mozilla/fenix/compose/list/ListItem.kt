@@ -250,7 +250,7 @@ private fun ListItem(
 @Composable
 @Preview(name = "TextListItem", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             TextListItem(label = "Label only")
         }
@@ -260,7 +260,7 @@ private fun TextListItemPreview() {
 @Composable
 @Preview(name = "TextListItem with a description", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemWithDescriptionPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             TextListItem(
                 label = "Label + description",
@@ -273,7 +273,7 @@ private fun TextListItemWithDescriptionPreview() {
 @Composable
 @Preview(name = "TextListItem with a right icon", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemWithIconPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             TextListItem(
                 label = "Label + right icon",
@@ -288,7 +288,7 @@ private fun TextListItemWithIconPreview() {
 @Composable
 @Preview(name = "IconListItem", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun IconListItemPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             IconListItem(
                 label = "Left icon list item",
@@ -305,7 +305,7 @@ private fun IconListItemPreview() {
     uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 private fun IconListItemWithRightIconPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             IconListItem(
                 label = "Left icon list item + right icon",
@@ -325,7 +325,7 @@ private fun IconListItemWithRightIconPreview() {
     uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 private fun FaviconListItemPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             FaviconListItem(
                 label = "Favicon + right icon + clicks",

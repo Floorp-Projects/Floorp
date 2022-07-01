@@ -137,7 +137,7 @@ fun MessageCard(
 @Composable
 @Preview
 private fun MessageCardPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             MessageCard(
                 message = Message(
@@ -166,7 +166,7 @@ private fun MessageCardPreview() {
 @Composable
 @Preview
 private fun MessageCardWithoutTitlePreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             MessageCard(
                 message = Message(
@@ -191,7 +191,7 @@ private fun MessageCardWithoutTitlePreview() {
 @Composable
 @Preview
 private fun MessageCardWithButtonLabelPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             MessageCard(
                 message = Message(

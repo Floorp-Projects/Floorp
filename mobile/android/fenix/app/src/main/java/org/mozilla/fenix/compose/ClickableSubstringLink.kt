@@ -87,7 +87,7 @@ fun ClickableSubstringLink(
 private fun ClickableSubstringTextPreview() {
     val text = "This text contains a link"
 
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
             ClickableSubstringLink(
                 text = text,

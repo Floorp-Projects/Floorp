@@ -68,7 +68,7 @@ fun SelectableChip(
 @Composable
 @Preview(uiMode = UI_MODE_NIGHT_YES)
 private fun SelectableChipDarkThemePreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -84,7 +84,7 @@ private fun SelectableChipDarkThemePreview() {
 @Composable
 @Preview(uiMode = UI_MODE_NIGHT_NO)
 private fun SelectableChipLightThemePreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

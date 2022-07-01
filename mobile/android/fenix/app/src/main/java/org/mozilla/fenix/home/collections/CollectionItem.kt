@@ -195,7 +195,7 @@ private fun Modifier.clipTop() = this.then(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun TabInCollectionPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+    FirefoxTheme(theme = Theme.getTheme()) {
         Column {
             Box(modifier = Modifier.height(56.dp)) {
                 DismissedTabBackground(
