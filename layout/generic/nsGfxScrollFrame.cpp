@@ -1802,7 +1802,8 @@ void ScrollFrameHelper::ThumbMoved(nsScrollbarFrame* aScrollbar,
     return;
   }
 
-  ScrollTo(dest, ScrollMode::Instant, ScrollOrigin::Other, &allowedRange);
+  ScrollToWithOrigin(dest, ScrollMode::Instant, ScrollOrigin::Other,
+                     &allowedRange);
 }
 
 void ScrollFrameHelper::ScrollbarReleased(nsScrollbarFrame* aScrollbar) {
@@ -2493,10 +2494,11 @@ void ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
     range.y = pt.y;
     range.height = 0;
   }
-  ScrollTo(pt, aMode, ScrollOrigin::Other, &range,
-           // This ScrollToCSSPixels is used for Element.scrollTo,
-           // Element.scrollTop, Element.scrollLeft and for Window.scrollTo.
-           ScrollSnapFlags::IntendedEndPosition, ScrollTriggeredByScript::Yes);
+  ScrollToWithOrigin(
+      pt, aMode, ScrollOrigin::Other, &range,
+      // This ScrollToCSSPixels is used for Element.scrollTo,
+      // Element.scrollTop, Element.scrollLeft and for Window.scrollTo.
+      ScrollSnapFlags::IntendedEndPosition, ScrollTriggeredByScript::Yes);
   // 'this' might be destroyed here
 }
 
@@ -4873,7 +4875,8 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
         if (aSnapFlags != ScrollSnapFlags::Disabled) {
           GetSnapPointForDestination(aUnit, aSnapFlags, mDestination, pos);
         }
-        ScrollTo(pos, aMode, ScrollOrigin::Other);
+        ScrollToWithOrigin(pos, aMode, ScrollOrigin::Other,
+                           nullptr /* range */);
         // 'this' might be destroyed here
         if (aOverflow) {
           *aOverflow = nsIntPoint(0, 0);
@@ -5037,7 +5040,8 @@ void ScrollFrameHelper::ScrollSnap(const nsPoint& aDestination,
   }
   if (GetSnapPointForDestination(ScrollUnit::DEVICE_PIXELS, snapFlags, pos,
                                  snapDestination)) {
-    ScrollTo(snapDestination, aMode, ScrollOrigin::Other);
+    ScrollToWithOrigin(snapDestination, aMode, ScrollOrigin::Other, nullptr /*
+    range */);
   }
 }
 
@@ -7949,8 +7953,8 @@ bool ScrollFrameHelper::DragScroll(WidgetEvent* aEvent) {
   }
 
   if (offset.x || offset.y) {
-    ScrollTo(GetScrollPosition() + offset, ScrollMode::Normal,
-             ScrollOrigin::Other);
+    ScrollToWithOrigin(GetScrollPosition() + offset, ScrollMode::Normal,
+                       ScrollOrigin::Other, nullptr /* range */);
   }
 
   return willScroll;
