@@ -1802,8 +1802,9 @@ void ScrollFrameHelper::ThumbMoved(nsScrollbarFrame* aScrollbar,
     return;
   }
 
-  ScrollToWithOrigin(dest, ScrollMode::Instant, ScrollOrigin::Other,
-                     &allowedRange);
+  ScrollToWithOrigin(
+      dest, &allowedRange,
+      ScrollOperationParams{ScrollMode::Instant, ScrollOrigin::Other});
 }
 
 void ScrollFrameHelper::ScrollbarReleased(nsScrollbarFrame* aScrollbar) {
@@ -2450,8 +2451,9 @@ void ScrollFrameHelper::ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
   if (aOrigin == ScrollOrigin::NotSpecified) {
     aOrigin = ScrollOrigin::Other;
   }
-  ScrollToWithOrigin(aScrollPosition, aMode, aOrigin, aRange, aSnapFlags,
-                     aTriggeredByScript);
+  ScrollToWithOrigin(
+      aScrollPosition, aRange,
+      ScrollOperationParams{aMode, aOrigin, aSnapFlags, aTriggeredByScript});
 }
 
 void ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
@@ -2495,10 +2497,12 @@ void ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
     range.height = 0;
   }
   ScrollToWithOrigin(
-      pt, aMode, ScrollOrigin::Other, &range,
-      // This ScrollToCSSPixels is used for Element.scrollTo,
-      // Element.scrollTop, Element.scrollLeft and for Window.scrollTo.
-      ScrollSnapFlags::IntendedEndPosition, ScrollTriggeredByScript::Yes);
+      pt, &range,
+      ScrollOperationParams{
+          aMode, ScrollOrigin::Other,
+          // This ScrollToCSSPixels is used for Element.scrollTo,
+          // Element.scrollTop, Element.scrollLeft and for Window.scrollTo.
+          ScrollSnapFlags::IntendedEndPosition, ScrollTriggeredByScript::Yes});
   // 'this' might be destroyed here
 }
 
@@ -2508,7 +2512,9 @@ void ScrollFrameHelper::ScrollToCSSPixelsForApz(
   nscoord halfRange = nsPresContext::CSSPixelsToAppUnits(1000);
   nsRect range(pt.x - halfRange, pt.y - halfRange, 2 * halfRange - 1,
                2 * halfRange - 1);
-  ScrollToWithOrigin(pt, ScrollMode::Instant, ScrollOrigin::Apz, &range);
+  ScrollToWithOrigin(
+      pt, &range,
+      ScrollOperationParams{ScrollMode::Instant, ScrollOrigin::Apz});
   // 'this' might be destroyed here
 }
 
@@ -2520,14 +2526,13 @@ CSSIntPoint ScrollFrameHelper::GetScrollPositionCSSPixels() {
  * this method wraps calls to ScrollToImpl(), either in one shot or
  * incrementally, based on the setting of the smoothness scroll pref
  */
-void ScrollFrameHelper::ScrollToWithOrigin(
-    nsPoint aScrollPosition, ScrollMode aMode, ScrollOrigin aOrigin,
-    const nsRect* aRange, ScrollSnapFlags aSnapFlags,
-    ScrollTriggeredByScript aTriggeredByScript) {
+void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
+                                           const nsRect* aRange,
+                                           ScrollOperationParams&& aParams) {
   // None is never a valid scroll origin to be passed in.
-  MOZ_ASSERT(aOrigin != ScrollOrigin::None);
+  MOZ_ASSERT(aParams.mOrigin != ScrollOrigin::None);
 
-  if (aOrigin != ScrollOrigin::Restore) {
+  if (aParams.mOrigin != ScrollOrigin::Restore) {
     // If we're doing a non-restore scroll, we don't want to later
     // override it by restoring our saved scroll position.
     SCROLLRESTORE_LOG("%p: Clearing mRestorePos (cur=%s, dst=%s)\n", this,
@@ -2537,32 +2542,34 @@ void ScrollFrameHelper::ScrollToWithOrigin(
   }
 
   bool willSnap = false;
-  if (aSnapFlags != ScrollSnapFlags::Disabled) {
-    willSnap = GetSnapPointForDestination(ScrollUnit::DEVICE_PIXELS, aSnapFlags,
-                                          mDestination, aScrollPosition);
+  if (!aParams.IsScrollSnapDisabled()) {
+    willSnap = GetSnapPointForDestination(ScrollUnit::DEVICE_PIXELS,
+                                          aParams.mSnapFlags, mDestination,
+                                          aScrollPosition);
   }
 
   nsRect scrollRange = GetLayoutScrollRange();
   mDestination = scrollRange.ClampPoint(aScrollPosition);
-  if (mDestination != aScrollPosition && aOrigin == ScrollOrigin::Restore &&
+  if (mDestination != aScrollPosition &&
+      aParams.mOrigin == ScrollOrigin::Restore &&
       GetPageLoadingState() != LoadingState::Loading) {
     // If we're doing a restore but the scroll position is clamped, promote
     // the origin from one that APZ can clobber to one that it can't clobber.
-    aOrigin = ScrollOrigin::Other;
+    aParams.mOrigin = ScrollOrigin::Other;
   }
 
   nsRect range =
       aRange && !willSnap ? *aRange : nsRect(aScrollPosition, nsSize(0, 0));
 
-  if (aMode == ScrollMode::Instant) {
+  if (aParams.IsInstant()) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
     // async-scrolling process and do an instant scroll.
-    CompleteAsyncScroll(range, aOrigin);
+    CompleteAsyncScroll(range, aParams.mOrigin);
     mApzSmoothScrollDestination = Nothing();
     return;
   }
 
-  if (aMode != ScrollMode::SmoothMsd) {
+  if (!aParams.IsSmoothMsd()) {
     // If we get a non-smooth-scroll, reset the cached APZ scroll destination,
     // so that we know to process the next smooth-scroll destined for APZ.
     mApzSmoothScrollDestination = Nothing();
@@ -2576,7 +2583,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(
 
   nsSize currentVelocity(0, 0);
 
-  if (aMode == ScrollMode::SmoothMsd) {
+  if (aParams.IsSmoothMsd()) {
     mIgnoreMomentumScroll = true;
     if (!mAsyncSmoothMSDScroll) {
       nsPoint sv = mVelocityQueue.GetVelocity();
@@ -2590,7 +2597,8 @@ void ScrollFrameHelper::ScrollToWithOrigin(
       }
 
       if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll()) {
-        ApzSmoothScrollTo(mDestination, aOrigin, aTriggeredByScript);
+        ApzSmoothScrollTo(mDestination, aParams.mOrigin,
+                          aParams.mTriggeredByScript);
         return;
       }
 
@@ -2619,11 +2627,10 @@ void ScrollFrameHelper::ScrollToWithOrigin(
     mAsyncScroll->SetRefreshObserver(this);
   }
 
-  const bool isSmoothScroll =
-      aMode == ScrollMode::Smooth && IsSmoothScrollingEnabled();
+  const bool isSmoothScroll = aParams.IsSmooth() && IsSmoothScrollingEnabled();
   if (isSmoothScroll) {
     mAsyncScroll->InitSmoothScroll(now, GetScrollPosition(), mDestination,
-                                   aOrigin, range, currentVelocity);
+                                   aParams.mOrigin, range, currentVelocity);
   } else {
     mAsyncScroll->Init(range);
   }
@@ -4875,8 +4882,8 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
         if (aSnapFlags != ScrollSnapFlags::Disabled) {
           GetSnapPointForDestination(aUnit, aSnapFlags, mDestination, pos);
         }
-        ScrollToWithOrigin(pos, aMode, ScrollOrigin::Other,
-                           nullptr /* range */);
+        ScrollToWithOrigin(pos, nullptr /* range */,
+                           ScrollOperationParams{aMode, ScrollOrigin::Other});
         // 'this' might be destroyed here
         if (aOverflow) {
           *aOverflow = nsIntPoint(0, 0);
@@ -4954,7 +4961,7 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
   nsRect range(rangeLowerX, rangeLowerY, rangeUpperX - rangeLowerX,
                rangeUpperY - rangeLowerY);
   AutoWeakFrame weakFrame(mOuter);
-  ScrollToWithOrigin(newPos, aMode, aOrigin, &range);
+  ScrollToWithOrigin(newPos, &range, ScrollOperationParams{aMode, aOrigin});
   if (!weakFrame.IsAlive()) {
     return;
   }
@@ -5007,8 +5014,10 @@ void ScrollFrameHelper::ScrollByCSSPixels(const CSSIntPoint& aDelta,
     range.y = pt.y;
     range.height = 0;
   }
-  ScrollToWithOrigin(pt, aMode, ScrollOrigin::Relative, &range, aSnapFlags,
-                     ScrollTriggeredByScript::Yes);
+  ScrollToWithOrigin(
+      pt, &range,
+      ScrollOperationParams{aMode, ScrollOrigin::Relative, aSnapFlags,
+                            ScrollTriggeredByScript::Yes});
   // 'this' might be destroyed here
 }
 
@@ -5040,8 +5049,8 @@ void ScrollFrameHelper::ScrollSnap(const nsPoint& aDestination,
   }
   if (GetSnapPointForDestination(ScrollUnit::DEVICE_PIXELS, snapFlags, pos,
                                  snapDestination)) {
-    ScrollToWithOrigin(snapDestination, aMode, ScrollOrigin::Other, nullptr /*
-    range */);
+    ScrollToWithOrigin(snapDestination, nullptr /* range */,
+                       ScrollOperationParams{aMode, ScrollOrigin::Other});
   }
 }
 
@@ -5259,8 +5268,9 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
       AutoWeakFrame weakFrame(mOuter);
       // It's very important to pass ScrollOrigin::Restore here, so
       // ScrollToWithOrigin won't clear out mRestorePos.
-      ScrollToWithOrigin(layoutScrollToPos, ScrollMode::Instant,
-                         ScrollOrigin::Restore, nullptr);
+      ScrollToWithOrigin(
+          layoutScrollToPos, nullptr,
+          ScrollOperationParams{ScrollMode::Instant, ScrollOrigin::Restore});
       if (!weakFrame.IsAlive()) {
         return;
       }
@@ -5862,9 +5872,10 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent,
   }
 
   if (aDoScroll) {
-    ScrollToWithOrigin(dest,
-                       isSmooth ? ScrollMode::Smooth : ScrollMode::Instant,
-                       ScrollOrigin::Scrollbars, &allowedRange);
+    ScrollToWithOrigin(dest, &allowedRange,
+                       ScrollOperationParams{
+                           isSmooth ? ScrollMode::Smooth : ScrollMode::Instant,
+                           ScrollOrigin::Scrollbars});
   }
   // 'this' might be destroyed here
 }
@@ -7953,8 +7964,9 @@ bool ScrollFrameHelper::DragScroll(WidgetEvent* aEvent) {
   }
 
   if (offset.x || offset.y) {
-    ScrollToWithOrigin(GetScrollPosition() + offset, ScrollMode::Normal,
-                       ScrollOrigin::Other, nullptr /* range */);
+    ScrollToWithOrigin(
+        GetScrollPosition() + offset, nullptr /* range */,
+        ScrollOperationParams{ScrollMode::Normal, ScrollOrigin::Other});
   }
 
   return willScroll;

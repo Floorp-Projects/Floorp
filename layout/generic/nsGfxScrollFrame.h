@@ -798,14 +798,25 @@ class ScrollFrameHelper : public nsIReflowCallback {
     bool mOldSuppressValue;
   };
 
+  struct ScrollOperationParams {
+    ScrollMode mMode;
+    ScrollOrigin mOrigin;
+    mozilla::ScrollSnapFlags mSnapFlags = mozilla::ScrollSnapFlags::Disabled;
+    ScrollTriggeredByScript mTriggeredByScript = ScrollTriggeredByScript::No;
+
+    bool IsInstant() const { return mMode == ScrollMode::Instant; }
+    bool IsSmoothMsd() const { return mMode == ScrollMode::SmoothMsd; }
+    bool IsSmooth() const { return mMode == ScrollMode::Smooth; }
+    bool IsScrollSnapDisabled() const {
+      return mSnapFlags == mozilla::ScrollSnapFlags::Disabled;
+    }
+  };
+
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollToWithOrigin(
-      nsPoint aScrollPosition, ScrollMode aMode, ScrollOrigin aOrigin,
-      const nsRect* aRange,
-      mozilla::ScrollSnapFlags aSnapFlags = mozilla::ScrollSnapFlags::Disabled,
-      ScrollTriggeredByScript aTriggeredByScript = ScrollTriggeredByScript::No);
+  void ScrollToWithOrigin(nsPoint aScrollPosition, const nsRect* aRange,
+                          ScrollOperationParams&& aParams);
 
   void CompleteAsyncScroll(const nsRect& aRange,
                            ScrollOrigin aOrigin = ScrollOrigin::NotSpecified);
