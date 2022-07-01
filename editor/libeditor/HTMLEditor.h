@@ -608,6 +608,20 @@ class HTMLEditor final : public EditorBase,
   }
 
   /**
+   * Get split/join node(s) direction for **this** instance.
+   */
+  [[nodiscard]] SplitNodeDirection GetSplitNodeDirection() const {
+    return MOZ_LIKELY(mUseGeckoTraditionalJoinSplitBehavior)
+               ? SplitNodeDirection::LeftNodeIsNewOne
+               : SplitNodeDirection::RightNodeIsNewOne;
+  }
+  [[nodiscard]] JoinNodesDirection GetJoinNodesDirection() const {
+    return MOZ_LIKELY(mUseGeckoTraditionalJoinSplitBehavior)
+               ? JoinNodesDirection::LeftNodeIntoRightNode
+               : JoinNodesDirection::RightNodeIntoLeftNode;
+  }
+
+  /**
    * Modifies the table containing the selection according to the
    * activation of an inline table editing UI element
    * @param aUIAnonymousElement [IN] the inline table editing UI element
@@ -4391,6 +4405,10 @@ class HTMLEditor final : public EditorBase,
   RefPtr<dom::HTMLBRElement> mPaddingBRElementForEmptyEditor;
 
   bool mCRInParagraphCreatesParagraph;
+
+  // Whether use Blink/WebKit compatible joining nodes and split a node
+  // direction or Gecko's traditional direction.
+  bool mUseGeckoTraditionalJoinSplitBehavior = true;
 
   UniquePtr<CSSEditUtils> mCSSEditUtils;
 

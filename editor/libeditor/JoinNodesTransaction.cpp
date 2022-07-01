@@ -5,8 +5,9 @@
 
 #include "JoinNodesTransaction.h"
 
-#include "EditorDOMPoint.h"  // for EditorDOMPoint, etc.
-#include "HTMLEditor.h"      // for HTMLEditor
+#include "EditorDOMPoint.h"   // for EditorDOMPoint, etc.
+#include "HTMLEditHelpers.h"  // for SplitNodeResult, JoinNodesDirection, etc
+#include "HTMLEditor.h"       // for HTMLEditor
 #include "HTMLEditUtils.h"
 
 #include "mozilla/Logging.h"
@@ -62,7 +63,9 @@ std::ostream& operator<<(std::ostream& aStream,
     aStream << " (" << *aTransaction.mKeepingContent << ")";
   }
   aStream << ", mJoinedOffset=" << aTransaction.mJoinedOffset
-          << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get() << " }";
+          << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get()
+          << ", GetJoinNodesDirection()="
+          << aTransaction.GetJoinNodesDirection() << " }";
   return aStream;
 }
 
@@ -72,6 +75,16 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(JoinNodesTransaction, EditTransactionBase,
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JoinNodesTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
+
+SplitNodeDirection JoinNodesTransaction::GetSplitNodeDirection() const {
+  return MOZ_LIKELY(mHTMLEditor) ? mHTMLEditor->GetSplitNodeDirection()
+                                 : SplitNodeDirection::LeftNodeIsNewOne;
+}
+
+JoinNodesDirection JoinNodesTransaction::GetJoinNodesDirection() const {
+  return MOZ_LIKELY(mHTMLEditor) ? mHTMLEditor->GetJoinNodesDirection()
+                                 : JoinNodesDirection::LeftNodeIntoRightNode;
+}
 
 bool JoinNodesTransaction::CanDoIt() const {
   if (NS_WARN_IF(!mKeepingContent) || NS_WARN_IF(!mRemovedContent) ||

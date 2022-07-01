@@ -34,9 +34,10 @@ class SplitNodeTransaction final : public EditTransactionBase {
    *
    * @param aHTMLEditor             The provider of core editing operations.
    * @param aStartOfRightContent    The point to split.  Its container will be
-   *                                will be split, and its previous sibling will
-   *                                be cloned new node.  And the point will be
-   *                                start of the right node.
+   *                                split, and its preceding or following
+   *                                content will be moved to the new node.  And
+   *                                the point will be start of the right node or
+   *                                end of the left node.
    */
   template <typename PT, typename CT>
   static already_AddRefed<SplitNodeTransaction> Create(
@@ -51,6 +52,11 @@ class SplitNodeTransaction final : public EditTransactionBase {
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(SplitNodeTransaction)
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
+
+  // Note that we don't support join/split node direction switching per
+  // transaction.
+  [[nodiscard]] SplitNodeDirection GetSplitNodeDirection() const;
+  [[nodiscard]] JoinNodesDirection GetJoinNodesDirection() const;
 
   nsIContent* GetSplitContent() const { return mSplitContent; }
   nsIContent* GetNewContent() const { return mNewContent; }

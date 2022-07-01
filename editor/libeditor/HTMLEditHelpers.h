@@ -40,12 +40,35 @@ enum class JoinNodesDirection {
   LeftNodeIntoRightNode,
   RightNodeIntoLeftNode,
 };
+
+static inline std::ostream& operator<<(std::ostream& aStream,
+                                       JoinNodesDirection aJoinNodesDirection) {
+  if (aJoinNodesDirection == JoinNodesDirection::LeftNodeIntoRightNode) {
+    return aStream << "JoinNodesDirection::LeftNodeIntoRightNode";
+  }
+  if (aJoinNodesDirection == JoinNodesDirection::RightNodeIntoLeftNode) {
+    return aStream << "JoinNodesDirection::RightNodeIntoLeftNode";
+  }
+  return aStream << "Invalid value";
+}
+
 // SplitNodeDirection is also affected to which one is removed at joining a
 // node because a couple of undo/redo.
 enum class SplitNodeDirection {
   LeftNodeIsNewOne,
   RightNodeIsNewOne,
 };
+
+static inline std::ostream& operator<<(std::ostream& aStream,
+                                       SplitNodeDirection aSplitNodeDirection) {
+  if (aSplitNodeDirection == SplitNodeDirection::LeftNodeIsNewOne) {
+    return aStream << "SplitNodeDirection::LeftNodeIsNewOne";
+  }
+  if (aSplitNodeDirection == SplitNodeDirection::RightNodeIsNewOne) {
+    return aStream << "SplitNodeDirection::RightNodeIsNewOne";
+  }
+  return aStream << "Invalid value";
+}
 
 /*****************************************************************************
  * EditResult returns nsresult and preferred point where selection should be
