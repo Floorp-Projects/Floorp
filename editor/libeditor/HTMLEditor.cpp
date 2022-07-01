@@ -4558,10 +4558,10 @@ SplitNodeResult HTMLEditor::SplitNodeWithTransaction(
     return SplitNodeResult(NS_ERROR_FAILURE);
   }
   TopLevelEditSubActionDataRef().DidSplitContent(
-      *this, *splitContent, *newContent, SplitNodeDirection::LeftNodeIsNewOne);
+      *this, *splitContent, *newContent, transaction->GetSplitNodeDirection());
 
   return SplitNodeResult(std::move(newContent), std::move(splitContent),
-                         SplitNodeDirection::LeftNodeIsNewOne);
+                         transaction->GetSplitNodeDirection());
 }
 
 SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
@@ -4582,8 +4582,8 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
   EditorDOMPoint atStartOfRightNode(aStartOfDeepestRightNode);
   // lastResult is as explained by its name, the last result which may not be
   // split a node actually.
-  SplitNodeResult lastResult = SplitNodeResult::NotHandled(
-      atStartOfRightNode, SplitNodeDirection::LeftNodeIsNewOne);
+  SplitNodeResult lastResult =
+      SplitNodeResult::NotHandled(atStartOfRightNode, GetSplitNodeDirection());
 
   while (true) {
     // Need to insert rules code call here to do things like not split a list
@@ -4638,7 +4638,7 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
     // allowed to create empty container node, try to split its parent after it.
     else if (!atStartOfRightNode.IsStartOfContainer()) {
       lastResult = SplitNodeResult::HandledButDidNotSplitDueToEndOfContainer(
-          *splittingContent, SplitNodeDirection::LeftNodeIsNewOne, &lastResult);
+          *splittingContent, GetSplitNodeDirection(), &lastResult);
       if (splittingContent == &aMostAncestorToSplit) {
         return lastResult;
       }
@@ -4651,8 +4651,7 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
     else {
       if (splittingContent == &aMostAncestorToSplit) {
         return SplitNodeResult::HandledButDidNotSplitDueToStartOfContainer(
-            *splittingContent, SplitNodeDirection::LeftNodeIsNewOne,
-            &lastResult);
+            *splittingContent, GetSplitNodeDirection(), &lastResult);
       }
 
       // Try to split its parent before current node.
@@ -4660,8 +4659,7 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
       //     this is the last splitable content node in the limiter, this
       //     method will return "not handled".
       lastResult = SplitNodeResult::NotHandled(
-          atStartOfRightNode, SplitNodeDirection::LeftNodeIsNewOne,
-          &lastResult);
+          atStartOfRightNode, GetSplitNodeDirection(), &lastResult);
       atStartOfRightNode.Set(splittingContent);
     }
   }
@@ -4883,12 +4881,12 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
 
   DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
       *aStartOfRightNode.ContainerAsContent(), aStartOfRightNode.Offset(),
-      aNewNode, SplitNodeDirection::LeftNodeIsNewOne);
+      aNewNode, GetSplitNodeDirection());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjSplitNode() failed, but ignored");
 
   return SplitNodeResult(aNewNode, *aStartOfRightNode.ContainerAsContent(),
-                         SplitNodeDirection::LeftNodeIsNewOne);
+                         GetSplitNodeDirection());
 }
 
 JoinNodesResult HTMLEditor::JoinNodesWithTransaction(
@@ -4948,7 +4946,7 @@ JoinNodesResult HTMLEditor::JoinNodesWithTransaction(
 
   return JoinNodesResult(transaction->CreateJoinedPoint<EditorDOMPoint>(),
                          *transaction->GetRemovedContent(),
-                         JoinNodesDirection::LeftNodeIntoRightNode);
+                         transaction->GetJoinNodesDirection());
 }
 
 void HTMLEditor::DidJoinNodesTransaction(
@@ -4981,7 +4979,7 @@ void HTMLEditor::DidJoinNodesTransaction(
       textServicesDocument->DidJoinContents(
           aTransaction.CreateJoinedPoint<EditorRawDOMPoint>(),
           *aTransaction.GetRemovedContent(),
-          JoinNodesDirection::LeftNodeIntoRightNode);
+          aTransaction.GetJoinNodesDirection());
     }
   }
 
@@ -4989,7 +4987,9 @@ void HTMLEditor::DidJoinNodesTransaction(
     for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored = listener->DidJoinContents(
           aTransaction.CreateJoinedPoint<EditorRawDOMPoint>(),
-          aTransaction.GetRemovedContent(), true);
+          aTransaction.GetRemovedContent(),
+          aTransaction.GetJoinNodesDirection() ==
+              JoinNodesDirection::LeftNodeIntoRightNode);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "nsIEditActionListener::DidJoinContents() failed, but ignored");
@@ -5122,8 +5122,7 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
     DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjJoinNodes(
         EditorRawDOMPoint(&aContentToKeep, std::min(removingContentLength,
                                                     aContentToKeep.Length())),
-        aContentToRemove, *removingContentIndex,
-        JoinNodesDirection::LeftNodeIntoRightNode);
+        aContentToRemove, *removingContentIndex, GetJoinNodesDirection());
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
   }

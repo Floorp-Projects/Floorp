@@ -6,7 +6,7 @@
 #include "SplitNodeTransaction.h"
 
 #include "EditorDOMPoint.h"   // for EditorRawDOMPoint
-#include "HTMLEditHelpers.h"  // for SplitNodeResult
+#include "HTMLEditHelpers.h"  // for SplitNodeResult, SplitNodeDirection, etc
 #include "HTMLEditor.h"       // for HTMLEditor
 #include "HTMLEditUtils.h"
 #include "SelectionState.h"  // for AutoTrackDOMPoint and RangeUpdater
@@ -68,7 +68,9 @@ std::ostream& operator<<(std::ostream& aStream,
     aStream << " (" << *aTransaction.mSplitContent << ")";
   }
   aStream << ", mSplitOffset=" << aTransaction.mSplitOffset
-          << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get() << " }";
+          << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get()
+          << ", GetSplitNodeDirection()="
+          << aTransaction.GetSplitNodeDirection() << " }";
   return aStream;
 }
 
@@ -80,6 +82,16 @@ NS_IMPL_ADDREF_INHERITED(SplitNodeTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(SplitNodeTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
+
+SplitNodeDirection SplitNodeTransaction::GetSplitNodeDirection() const {
+  return MOZ_LIKELY(mHTMLEditor) ? mHTMLEditor->GetSplitNodeDirection()
+                                 : SplitNodeDirection::LeftNodeIsNewOne;
+}
+
+JoinNodesDirection SplitNodeTransaction::GetJoinNodesDirection() const {
+  return MOZ_LIKELY(mHTMLEditor) ? mHTMLEditor->GetJoinNodesDirection()
+                                 : JoinNodesDirection::LeftNodeIntoRightNode;
+}
 
 NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
   MOZ_LOG(GetLogModule(), LogLevel::Info,
