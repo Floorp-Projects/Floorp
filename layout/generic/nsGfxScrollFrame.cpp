@@ -2541,11 +2541,14 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
     mRestorePos.x = mRestorePos.y = -1;
   }
 
-  bool willSnap = false;
+  Maybe<SnapTarget> snapTarget;
   if (!aParams.IsScrollSnapDisabled()) {
-    willSnap = GetSnapPointForDestination(ScrollUnit::DEVICE_PIXELS,
-                                          aParams.mSnapFlags, mDestination,
-                                          aScrollPosition);
+    snapTarget = GetSnapPointForDestination(ScrollUnit::DEVICE_PIXELS,
+                                            aParams.mSnapFlags, mDestination,
+                                            aScrollPosition);
+    if (snapTarget) {
+      aScrollPosition = snapTarget->mPosition;
+    }
   }
 
   nsRect scrollRange = GetLayoutScrollRange();
@@ -2558,8 +2561,9 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
     aParams.mOrigin = ScrollOrigin::Other;
   }
 
-  nsRect range =
-      aRange && !willSnap ? *aRange : nsRect(aScrollPosition, nsSize(0, 0));
+  nsRect range = aRange && snapTarget.isNothing()
+                     ? *aRange
+                     : nsRect(aScrollPosition, nsSize(0, 0));
 
   if (aParams.IsInstant()) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
@@ -4879,11 +4883,10 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
       } else {
         nsPoint pos = GetScrollPosition();
         AdjustDestinationForWholeDelta(aDelta, GetLayoutScrollRange(), pos);
-        if (aSnapFlags != ScrollSnapFlags::Disabled) {
-          GetSnapPointForDestination(aUnit, aSnapFlags, mDestination, pos);
-        }
-        ScrollToWithOrigin(pos, nullptr /* range */,
-                           ScrollOperationParams{aMode, ScrollOrigin::Other});
+        ScrollToWithOrigin(
+            pos, nullptr /* range */,
+            ScrollOperationParams{aMode, ScrollOrigin::Other, aSnapFlags,
+                                  ScrollTriggeredByScript::No});
         // 'this' might be destroyed here
         if (aOverflow) {
           *aOverflow = nsIntPoint(0, 0);
@@ -4934,6 +4937,7 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
                                       NSCoordSaturatingNonnegativeMultiply(
                                           aDelta.y, deltaMultiplier.height)));
 
+  Maybe<SnapTarget> snapTarget;
   if (aSnapFlags != ScrollSnapFlags::Disabled) {
     if (NeedsScrollSnap()) {
       nscoord appUnitsPerDevPixel =
@@ -4948,7 +4952,11 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
         // of scroll delta.
         snapUnit = ScrollUnit::LINES;
       }
-      GetSnapPointForDestination(snapUnit, aSnapFlags, mDestination, newPos);
+      snapTarget = GetSnapPointForDestination(snapUnit, aSnapFlags,
+                                              mDestination, newPos);
+      if (snapTarget) {
+        newPos = snapTarget->mPosition;
+      }
     }
   }
 
@@ -4961,7 +4969,11 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
   nsRect range(rangeLowerX, rangeLowerY, rangeUpperX - rangeLowerX,
                rangeUpperY - rangeLowerY);
   AutoWeakFrame weakFrame(mOuter);
-  ScrollToWithOrigin(newPos, &range, ScrollOperationParams{aMode, aOrigin});
+  ScrollToWithOrigin(
+      newPos, &range,
+      snapTarget ? ScrollOperationParams{aMode, aOrigin,
+                                         std::move(snapTarget->mTargetIds)}
+                 : ScrollOperationParams{aMode, aOrigin});
   if (!weakFrame.IsAlive()) {
     return;
   }
@@ -5047,10 +5059,17 @@ void ScrollFrameHelper::ScrollSnap(const nsPoint& aDestination,
   if (mVelocityQueue.GetVelocity() != nsPoint()) {
     snapFlags |= ScrollSnapFlags::IntendedDirection;
   }
-  if (GetSnapPointForDestination(ScrollUnit::DEVICE_PIXELS, snapFlags, pos,
-                                 snapDestination)) {
-    ScrollToWithOrigin(snapDestination, nullptr /* range */,
-                       ScrollOperationParams{aMode, ScrollOrigin::Other});
+
+  // Bug 1776624 : Consider using mDestination as |aStartPos| argument for this
+  // GetSnapPointForDestination call, this function call is the only one call
+  // site using `GetScrollPosition()` as |aStartPos|.
+  if (auto snapTarget = GetSnapPointForDestination(
+          ScrollUnit::DEVICE_PIXELS, snapFlags, pos, snapDestination)) {
+    snapDestination = snapTarget->mPosition;
+    ScrollToWithOrigin(
+        snapDestination, nullptr /* range */,
+        ScrollOperationParams{aMode, ScrollOrigin::Other,
+                              std::move(snapTarget->mTargetIds)});
   }
 }
 
@@ -7894,18 +7913,12 @@ layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo() const {
   return ComputeScrollSnapInfo();
 }
 
-bool ScrollFrameHelper::GetSnapPointForDestination(ScrollUnit aUnit,
-                                                   ScrollSnapFlags aSnapFlags,
-                                                   const nsPoint& aStartPos,
-                                                   nsPoint& aDestination) {
-  auto snapTarget = ScrollSnapUtils::GetSnapPointForDestination(
-      GetScrollSnapInfo(), aUnit, aSnapFlags, GetLayoutScrollRange(), aStartPos,
+Maybe<SnapTarget> ScrollFrameHelper::GetSnapPointForDestination(
+    ScrollUnit aUnit, ScrollSnapFlags aFlags, const nsPoint& aStartPos,
+    const nsPoint& aDestination) {
+  return ScrollSnapUtils::GetSnapPointForDestination(
+      GetScrollSnapInfo(), aUnit, aFlags, GetLayoutScrollRange(), aStartPos,
       aDestination);
-  if (snapTarget) {
-    aDestination = snapTarget->mPosition;
-    return true;
-  }
-  return false;
 }
 
 bool ScrollFrameHelper::UsesOverlayScrollbars() const {
