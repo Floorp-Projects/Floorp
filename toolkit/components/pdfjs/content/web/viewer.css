@@ -110,16 +110,6 @@
   }
 }
 
-[data-annotation-rotation="90"] {
-  transform: rotate(90deg) translateY(-100%);
-}
-[data-annotation-rotation="180"] {
-  transform: rotate(180deg) translate(-100%, -100%);
-}
-[data-annotation-rotation="270"] {
-  transform: rotate(270deg) translateX(-100%);
-}
-
 .annotationLayer {
   position: absolute;
   top: 0;
@@ -702,14 +692,30 @@
   --freetext-padding: 2px;
 }
 
+@media (forced-colors: active) {
+  :root {
+    --focus-outline: solid 3px ButtonText;
+    --hover-outline: dashed 3px ButtonText;
+  }
+}
+
+[data-editor-rotation="90"] {
+  transform: rotate(90deg);
+}
+[data-editor-rotation="180"] {
+  transform: rotate(180deg);
+}
+[data-editor-rotation="270"] {
+  transform: rotate(270deg);
+}
+
 .annotationEditorLayer {
   background: transparent;
-  width: 100%;
-  height: 100%;
   position: absolute;
   top: 0;
   left: 0;
   font-size: calc(100px * var(--scale-factor));
+  transform-origin: 0 0;
 }
 
 .annotationEditorLayer .freeTextEditor {
@@ -720,6 +726,8 @@
   resize: none;
   width: auto;
   height: auto;
+  z-index: 1;
+  transform-origin: 0 0;
 }
 
 .annotationEditorLayer .freeTextEditor .internal {
@@ -782,6 +790,7 @@
   width: 100%;
   height: 100%;
   z-index: 1;
+  transform-origin: 0 0;
 }
 
 .annotationEditorLayer .background {
@@ -815,6 +824,7 @@
   --pdfViewer-padding-bottom: 0;
   --page-margin: 1px auto -8px;
   --page-border: 9px solid transparent;
+  --page-border-image: url(images/shadow.png) 9 9 repeat;
   --spreadHorizontalWrapped-margin-LR: -3.5px;
   --scale-factor: 1;
 }
@@ -822,10 +832,21 @@
 @media screen and (forced-colors: active) {
   :root {
     --pdfViewer-padding-bottom: 9px;
-    --page-margin: 9px auto 0;
-    --page-border: none;
-    --spreadHorizontalWrapped-margin-LR: 4.5px;
+    --page-margin: 8px auto -1px;
+    --page-border: 1px solid CanvasText;
+    --page-border-image: none;
+    --spreadHorizontalWrapped-margin-LR: 3.5px;
   }
+}
+
+[data-main-rotation="90"] {
+  transform: rotate(90deg) translateY(-100%);
+}
+[data-main-rotation="180"] {
+  transform: rotate(180deg) translate(-100%, -100%);
+}
+[data-main-rotation="270"] {
+  transform: rotate(270deg) translateX(-100%);
 }
 
 .pdfViewer {
@@ -844,8 +865,8 @@
   position: relative;
   overflow: visible;
   border: var(--page-border);
+  border-image: var(--page-border-image);
   background-clip: content-box;
-  border-image: url(images/shadow.png) 9 9 repeat;
   background-color: rgba(255, 255, 255, 1);
 }
 
@@ -1264,7 +1285,8 @@ select {
 
 #toolbarContainer,
 .findbar,
-.secondaryToolbar {
+.secondaryToolbar,
+.editorParamsToolbar {
   position: relative;
   height: 32px;
   background-color: var(--toolbar-bg-color);
@@ -1344,7 +1366,8 @@ select {
 }
 
 .findbar,
-.secondaryToolbar {
+.secondaryToolbar,
+.editorParamsToolbar {
   top: 32px;
   position: absolute;
   z-index: 10000;
@@ -1411,12 +1434,57 @@ select {
   background-color: rgba(255, 102, 102, 1);
 }
 
-.secondaryToolbar {
+.secondaryToolbar,
+.editorParamsToolbar {
   padding: 6px 0 10px;
   inset-inline-end: 4px;
   height: auto;
   z-index: 30000;
   background-color: var(--doorhanger-bg-color);
+}
+
+.editorParamsToolbarContainer {
+  width: 220px;
+  margin-bottom: -4px;
+}
+
+.editorParamsToolbarContainer > .editorParamsSetter {
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 10px;
+}
+
+.editorParamsToolbarContainer .editorParamsLabel {
+  padding-inline-end: 10px;
+  flex: none;
+  color: var(--main-color);
+}
+
+.editorParamsToolbarContainer .editorParamsColor {
+  width: 32px;
+  height: 32px;
+  flex: none;
+}
+
+.editorParamsToolbarContainer .editorParamsSlider {
+  background-color: transparent;
+  width: 90px;
+  flex: 0 1 0;
+}
+
+.editorParamsToolbarContainer .editorParamsSlider::-moz-range-progress {
+  background-color: black;
+}
+.editorParamsToolbarContainer .editorParamsSlider::-moz-range-track,
+.editorParamsToolbarContainer
+  .editorParamsSlider::-webkit-slider-runnable-track {
+  background-color: black;
+}
+.editorParamsToolbarContainer .editorParamsSlider::-moz-range-thumb,
+.editorParamsToolbarContainer .editorParamsSlider::-webkit-slider-thumb {
+  background-color: white;
 }
 
 #secondaryToolbarButtonContainer {
@@ -1425,6 +1493,16 @@ select {
   max-height: calc(var(--viewer-container-height) - 40px);
   overflow-y: auto;
   margin-bottom: -4px;
+}
+
+#editorInkParamsToolbar {
+  inset-inline-end: 40px;
+  background-color: var(--toolbar-bg-color);
+}
+
+#editorFreeTextParamsToolbar {
+  inset-inline-end: 68px;
+  background-color: var(--toolbar-bg-color);
 }
 
 .doorHanger,
@@ -2068,11 +2146,15 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
   cursor: pointer;
 }
 
-#layersView .treeItem > a > * {
+#layersView .treeItem > a * {
   cursor: pointer;
 }
 #layersView .treeItem > a > label {
   padding-inline-start: 4px;
+}
+#layersView .treeItem > a > label > input {
+  float: inline-start;
+  margin-top: 1px;
 }
 
 .treeItemToggler {

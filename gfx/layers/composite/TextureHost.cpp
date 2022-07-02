@@ -240,8 +240,7 @@ already_AddRefed<TextureHost> TextureHost::Create(
 
   if (result && WrapWithWebRenderTextureHost(aDeallocator, aBackend, aFlags)) {
     MOZ_ASSERT(aExternalImageId.isSome());
-    result =
-        new WebRenderTextureHost(aDesc, aFlags, result, aExternalImageId.ref());
+    result = new WebRenderTextureHost(aFlags, result, aExternalImageId.ref());
   }
 
   if (result) {

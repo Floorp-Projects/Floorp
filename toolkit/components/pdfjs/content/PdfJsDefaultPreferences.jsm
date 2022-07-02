@@ -22,7 +22,7 @@
 "use strict";
 var EXPORTED_SYMBOLS = ["PdfJsDefaultPreferences"];
 var PdfJsDefaultPreferences = Object.freeze({
- "annotationEditorEnabled": false,
+ "annotationEditorMode": -1,
  "annotationMode": 2,
  "cursorToolOnLoad": 0,
  "defaultZoomValue": "",
