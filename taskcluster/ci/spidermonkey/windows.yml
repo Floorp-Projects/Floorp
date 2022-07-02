@@ -5,7 +5,7 @@
 job-defaults:
     worker-type: b-win2012
     worker:
-        max-run-time: 36000
+        max-run-time: 10800
     run:
         tooltool-downloads: public
 

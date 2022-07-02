@@ -332,8 +332,7 @@ RefPtr<TextureHost> RemoteTextureMap::CreateRemoteTexture(
     return nullptr;
   }
 
-  textureHost =
-      new WebRenderTextureHost(desc, flags, textureHost, *externalImageId);
+  textureHost = new WebRenderTextureHost(flags, textureHost, *externalImageId);
   return textureHost;
 }
 
