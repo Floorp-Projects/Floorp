@@ -258,7 +258,7 @@ int LibvpxVp9Encoder::Release() {
 
   if (encoder_ != nullptr) {
     if (inited_) {
-      if (vpx_codec_destroy(encoder_)) {
+      if (libvpx_->codec_destroy(encoder_)) {
         ret_val = WEBRTC_VIDEO_CODEC_MEMORY;
       }
     }
@@ -270,7 +270,7 @@ int LibvpxVp9Encoder::Release() {
     config_ = nullptr;
   }
   if (raw_ != nullptr) {
-    vpx_img_free(raw_);
+    libvpx_->img_free(raw_);
     raw_ = nullptr;
   }
   inited_ = false;
@@ -502,7 +502,7 @@ int LibvpxVp9Encoder::InitEncode(const VideoCodec* inst,
   is_svc_ = (num_spatial_layers_ > 1 || num_temporal_layers_ > 1);
 
   // Populate encoder configuration with default values.
-  if (vpx_codec_enc_config_default(vpx_codec_vp9_cx(), config_, 0)) {
+  if (libvpx_->codec_enc_config_default(vpx_codec_vp9_cx(), config_, 0)) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
@@ -533,8 +533,8 @@ int LibvpxVp9Encoder::InitEncode(const VideoCodec* inst,
   // Creating a wrapper to the image - setting image data to nullptr. Actual
   // pointer will be set in encode. Setting align to 1, as it is meaningless
   // (actual memory is not allocated).
-  raw_ =
-      vpx_img_wrap(nullptr, img_fmt, codec_.width, codec_.height, 1, nullptr);
+  raw_ = libvpx_->img_wrap(nullptr, img_fmt, codec_.width, codec_.height, 1,
+                           nullptr);
   raw_->bit_depth = bits_for_storage;
 
   config_->g_w = codec_.width;
@@ -729,11 +729,11 @@ int LibvpxVp9Encoder::InitAndSetControlSettings(const VideoCodec* inst) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
-  const vpx_codec_err_t rv = vpx_codec_enc_init(
+  const vpx_codec_err_t rv = libvpx_->codec_enc_init(
       encoder_, vpx_codec_vp9_cx(), config_,
       config_->g_bit_depth == VPX_BITS_8 ? 0 : VPX_CODEC_USE_HIGHBITDEPTH);
   if (rv != VPX_CODEC_OK) {
-    RTC_LOG(LS_ERROR) << "Init error: " << vpx_codec_err_to_string(rv);
+    RTC_LOG(LS_ERROR) << "Init error: " << libvpx_->codec_err_to_string(rv);
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 
@@ -749,20 +749,20 @@ int LibvpxVp9Encoder::InitAndSetControlSettings(const VideoCodec* inst) {
     }
   }
 
-  vpx_codec_control(encoder_, VP8E_SET_MAX_INTRA_BITRATE_PCT,
-                    rc_max_intra_target_);
-  vpx_codec_control(encoder_, VP9E_SET_AQ_MODE,
-                    inst->VP9().adaptiveQpMode ? 3 : 0);
+  libvpx_->codec_control(encoder_, VP8E_SET_MAX_INTRA_BITRATE_PCT,
+                         rc_max_intra_target_);
+  libvpx_->codec_control(encoder_, VP9E_SET_AQ_MODE,
+                         inst->VP9().adaptiveQpMode ? 3 : 0);
 
-  vpx_codec_control(encoder_, VP9E_SET_FRAME_PARALLEL_DECODING, 0);
-  vpx_codec_control(encoder_, VP9E_SET_SVC_GF_TEMPORAL_REF, 0);
+  libvpx_->codec_control(encoder_, VP9E_SET_FRAME_PARALLEL_DECODING, 0);
+  libvpx_->codec_control(encoder_, VP9E_SET_SVC_GF_TEMPORAL_REF, 0);
 
   if (is_svc_) {
-    vpx_codec_control(encoder_, VP9E_SET_SVC, 1);
-    vpx_codec_control(encoder_, VP9E_SET_SVC_PARAMETERS, &svc_params_);
+    libvpx_->codec_control(encoder_, VP9E_SET_SVC, 1);
+    libvpx_->codec_control(encoder_, VP9E_SET_SVC_PARAMETERS, &svc_params_);
   }
   if (!performance_flags_.use_per_layer_speed) {
-    vpx_codec_control(
+    libvpx_->codec_control(
         encoder_, VP8E_SET_CPUUSED,
         performance_flags_by_spatial_index_.rbegin()->base_layer_speed);
   }
@@ -770,13 +770,13 @@ int LibvpxVp9Encoder::InitAndSetControlSettings(const VideoCodec* inst) {
   if (num_spatial_layers_ > 1) {
     switch (inter_layer_pred_) {
       case InterLayerPredMode::kOn:
-        vpx_codec_control(encoder_, VP9E_SET_SVC_INTER_LAYER_PRED, 0);
+        libvpx_->codec_control(encoder_, VP9E_SET_SVC_INTER_LAYER_PRED, 0);
         break;
       case InterLayerPredMode::kOff:
-        vpx_codec_control(encoder_, VP9E_SET_SVC_INTER_LAYER_PRED, 1);
+        libvpx_->codec_control(encoder_, VP9E_SET_SVC_INTER_LAYER_PRED, 1);
         break;
       case InterLayerPredMode::kOnKeyPic:
-        vpx_codec_control(encoder_, VP9E_SET_SVC_INTER_LAYER_PRED, 2);
+        libvpx_->codec_control(encoder_, VP9E_SET_SVC_INTER_LAYER_PRED, 2);
         break;
       default:
         RTC_NOTREACHED();
@@ -813,40 +813,41 @@ int LibvpxVp9Encoder::InitAndSetControlSettings(const VideoCodec* inst) {
         svc_drop_frame_.framedrop_thresh[i] = config_->rc_dropframe_thresh;
       }
     }
-    vpx_codec_control(encoder_, VP9E_SET_SVC_FRAME_DROP_LAYER,
-                      &svc_drop_frame_);
+    libvpx_->codec_control(encoder_, VP9E_SET_SVC_FRAME_DROP_LAYER,
+                           &svc_drop_frame_);
   }
 
   // Register callback for getting each spatial layer.
   vpx_codec_priv_output_cx_pkt_cb_pair_t cbp = {
       LibvpxVp9Encoder::EncoderOutputCodedPacketCallback,
       reinterpret_cast<void*>(this)};
-  vpx_codec_control(encoder_, VP9E_REGISTER_CX_CALLBACK,
-                    reinterpret_cast<void*>(&cbp));
+  libvpx_->codec_control(encoder_, VP9E_REGISTER_CX_CALLBACK,
+                         reinterpret_cast<void*>(&cbp));
 
   // Control function to set the number of column tiles in encoding a frame, in
   // log2 unit: e.g., 0 = 1 tile column, 1 = 2 tile columns, 2 = 4 tile columns.
   // The number tile columns will be capped by the encoder based on image size
   // (minimum width of tile column is 256 pixels, maximum is 4096).
-  vpx_codec_control(encoder_, VP9E_SET_TILE_COLUMNS, (config_->g_threads >> 1));
+  libvpx_->codec_control(encoder_, VP9E_SET_TILE_COLUMNS,
+                         static_cast<int>((config_->g_threads >> 1)));
 
   // Turn on row-based multithreading.
-  vpx_codec_control(encoder_, VP9E_SET_ROW_MT, 1);
+  libvpx_->codec_control(encoder_, VP9E_SET_ROW_MT, 1);
 
 #if !defined(WEBRTC_ARCH_ARM) && !defined(WEBRTC_ARCH_ARM64) && \
     !defined(ANDROID)
   // Do not enable the denoiser on ARM since optimization is pending.
   // Denoiser is on by default on other platforms.
-  vpx_codec_control(encoder_, VP9E_SET_NOISE_SENSITIVITY,
-                    inst->VP9().denoisingOn ? 1 : 0);
+  libvpx_->codec_control(encoder_, VP9E_SET_NOISE_SENSITIVITY,
+                         inst->VP9().denoisingOn ? 1 : 0);
 #endif
 
   if (codec_.mode == VideoCodecMode::kScreensharing) {
     // Adjust internal parameters to screen content.
-    vpx_codec_control(encoder_, VP9E_SET_TUNE_CONTENT, 1);
+    libvpx_->codec_control(encoder_, VP9E_SET_TUNE_CONTENT, 1);
   }
   // Enable encoder skip of static/low content blocks.
-  vpx_codec_control(encoder_, VP8E_SET_STATIC_THRESHOLD, 1);
+  libvpx_->codec_control(encoder_, VP8E_SET_STATIC_THRESHOLD, 1);
   inited_ = true;
   config_changed_ = true;
   return WEBRTC_VIDEO_CODEC_OK;
@@ -993,20 +994,20 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
       }
     }
     if (speed_updated) {
-      vpx_codec_control(encoder_, VP9E_SET_SVC_PARAMETERS, &svc_params_);
+      libvpx_->codec_control(encoder_, VP9E_SET_SVC_PARAMETERS, &svc_params_);
     }
   }
 
-  vpx_codec_control(encoder_, VP9E_SET_SVC_LAYER_ID, &layer_id);
+  libvpx_->codec_control(encoder_, VP9E_SET_SVC_LAYER_ID, &layer_id);
 
   if (num_spatial_layers_ > 1) {
     // Update frame dropping settings as they may change on per-frame basis.
-    vpx_codec_control(encoder_, VP9E_SET_SVC_FRAME_DROP_LAYER,
-                      &svc_drop_frame_);
+    libvpx_->codec_control(encoder_, VP9E_SET_SVC_FRAME_DROP_LAYER,
+                           &svc_drop_frame_);
   }
 
   if (config_changed_) {
-    if (vpx_codec_enc_config_set(encoder_, config_)) {
+    if (libvpx_->codec_enc_config_set(encoder_, config_)) {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
@@ -1023,7 +1024,7 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
               std::prev(performance_flags_.settings_by_resolution.lower_bound(
                             width * height))
                   ->second.base_layer_speed;
-          vpx_codec_control(encoder_, VP8E_SET_CPUUSED, speed);
+          libvpx_->codec_control(encoder_, VP8E_SET_CPUUSED, speed);
           break;
         }
       }
@@ -1120,7 +1121,8 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
 
   if (svc_controller_) {
     vpx_svc_ref_frame_config_t ref_config = Vp9References(layer_frames_);
-    vpx_codec_control(encoder_, VP9E_SET_SVC_REF_FRAME_CONFIG, &ref_config);
+    libvpx_->codec_control(encoder_, VP9E_SET_SVC_REF_FRAME_CONFIG,
+                           &ref_config);
   } else if (external_ref_control_) {
     vpx_svc_ref_frame_config_t ref_config =
         SetReferences(force_key_frame_, layer_id.spatial_layer_id);
@@ -1133,7 +1135,8 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
       }
     }
 
-    vpx_codec_control(encoder_, VP9E_SET_SVC_REF_FRAME_CONFIG, &ref_config);
+    libvpx_->codec_control(encoder_, VP9E_SET_SVC_REF_FRAME_CONFIG,
+                           &ref_config);
   }
 
   first_frame_in_picture_ = true;
@@ -1153,14 +1156,14 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
                          .GetTargetRate())
           : codec_.maxFramerate;
   uint32_t duration = static_cast<uint32_t>(90000 / target_framerate_fps);
-  const vpx_codec_err_t rv = vpx_codec_encode(encoder_, raw_, timestamp_,
-                                              duration, flags, VPX_DL_REALTIME);
+  const vpx_codec_err_t rv = libvpx_->codec_encode(
+      encoder_, raw_, timestamp_, duration, flags, VPX_DL_REALTIME);
   if (rv != VPX_CODEC_OK) {
-    RTC_LOG(LS_ERROR) << "Encoding error: " << vpx_codec_err_to_string(rv)
+    RTC_LOG(LS_ERROR) << "Encoding error: " << libvpx_->codec_err_to_string(rv)
                       << "\n"
                          "Details: "
-                      << vpx_codec_error(encoder_) << "\n"
-                      << vpx_codec_error_detail(encoder_);
+                      << libvpx_->codec_error(encoder_) << "\n"
+                      << libvpx_->codec_error_detail(encoder_);
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   timestamp_ += duration;
@@ -1233,7 +1236,7 @@ void LibvpxVp9Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
   }
 
   vpx_svc_layer_id_t layer_id = {0};
-  vpx_codec_control(encoder_, VP9E_GET_SVC_LAYER_ID, &layer_id);
+  libvpx_->codec_control(encoder_, VP9E_GET_SVC_LAYER_ID, &layer_id);
 
   // Can't have keyframe with non-zero temporal layer.
   RTC_DCHECK(pics_since_key_ != 0 || layer_id.temporal_layer_id == 0);
@@ -1361,7 +1364,7 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
                                             const bool inter_layer_predicted,
                                             CodecSpecificInfoVP9* vp9_info) {
   vpx_svc_layer_id_t layer_id = {0};
-  vpx_codec_control(encoder_, VP9E_GET_SVC_LAYER_ID, &layer_id);
+  libvpx_->codec_control(encoder_, VP9E_GET_SVC_LAYER_ID, &layer_id);
 
   const bool is_key_frame =
       (pkt.data.frame.flags & VPX_FRAME_IS_KEY) ? true : false;
@@ -1370,7 +1373,8 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
 
   if (is_svc_) {
     vpx_svc_ref_frame_config_t enc_layer_conf = {{0}};
-    vpx_codec_control(encoder_, VP9E_GET_SVC_REF_FRAME_CONFIG, &enc_layer_conf);
+    libvpx_->codec_control(encoder_, VP9E_GET_SVC_REF_FRAME_CONFIG,
+                           &enc_layer_conf);
     int ref_buf_flags = 0;
 
     if (enc_layer_conf.reference_last[layer_id.spatial_layer_id]) {
@@ -1478,14 +1482,15 @@ void LibvpxVp9Encoder::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
 void LibvpxVp9Encoder::UpdateReferenceBuffers(const vpx_codec_cx_pkt& pkt,
                                               const size_t pic_num) {
   vpx_svc_layer_id_t layer_id = {0};
-  vpx_codec_control(encoder_, VP9E_GET_SVC_LAYER_ID, &layer_id);
+  libvpx_->codec_control(encoder_, VP9E_GET_SVC_LAYER_ID, &layer_id);
 
   RefFrameBuffer frame_buf(pic_num, layer_id.spatial_layer_id,
                            layer_id.temporal_layer_id);
 
   if (is_svc_) {
     vpx_svc_ref_frame_config_t enc_layer_conf = {{0}};
-    vpx_codec_control(encoder_, VP9E_GET_SVC_REF_FRAME_CONFIG, &enc_layer_conf);
+    libvpx_->codec_control(encoder_, VP9E_GET_SVC_REF_FRAME_CONFIG,
+                           &enc_layer_conf);
     const int update_buffer_slot =
         enc_layer_conf.update_buffer_slot[layer_id.spatial_layer_id];
 
@@ -1618,7 +1623,7 @@ int LibvpxVp9Encoder::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {
   }
 
   vpx_svc_layer_id_t layer_id = {0};
-  vpx_codec_control(encoder_, VP9E_GET_SVC_LAYER_ID, &layer_id);
+  libvpx_->codec_control(encoder_, VP9E_GET_SVC_LAYER_ID, &layer_id);
 
   if (layer_buffering_) {
     // Deliver buffered low spatial layer frame.
@@ -1658,7 +1663,7 @@ int LibvpxVp9Encoder::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {
   encoded_image_._encodedWidth =
       pkt->data.frame.width[layer_id.spatial_layer_id];
   int qp = -1;
-  vpx_codec_control(encoder_, VP8E_GET_LAST_QUANTIZER, &qp);
+  libvpx_->codec_control(encoder_, VP8E_GET_LAST_QUANTIZER, &qp);
   encoded_image_.qp_ = qp;
 
   if (!layer_buffering_) {
@@ -1914,12 +1919,14 @@ LibvpxVp9Encoder::GetDefaultPerformanceFlags() {
 
 void LibvpxVp9Encoder::MaybeRewrapRawWithFormat(const vpx_img_fmt fmt) {
   if (!raw_) {
-    raw_ = vpx_img_wrap(nullptr, fmt, codec_.width, codec_.height, 1, nullptr);
+    raw_ = libvpx_->img_wrap(nullptr, fmt, codec_.width, codec_.height, 1,
+                             nullptr);
   } else if (raw_->fmt != fmt) {
     RTC_LOG(INFO) << "Switching VP9 encoder pixel format to "
                   << (fmt == VPX_IMG_FMT_NV12 ? "NV12" : "I420");
-    vpx_img_free(raw_);
-    raw_ = vpx_img_wrap(nullptr, fmt, codec_.width, codec_.height, 1, nullptr);
+    libvpx_->img_free(raw_);
+    raw_ = libvpx_->img_wrap(nullptr, fmt, codec_.width, codec_.height, 1,
+                             nullptr);
   }
   // else no-op since the image is already in the right format.
 }

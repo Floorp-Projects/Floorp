@@ -81,7 +81,29 @@ class LibvpxInterface {
   virtual vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
                                         vp8e_enc_control_id ctrl_id,
                                         vpx_scaling_mode* param) const = 0;
-
+  virtual vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                        vp8e_enc_control_id ctrl_id,
+                                        vpx_svc_extra_cfg_t* param) const = 0;
+  virtual vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                        vp8e_enc_control_id ctrl_id,
+                                        vpx_svc_frame_drop_t* param) const = 0;
+  virtual vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                        vp8e_enc_control_id ctrl_id,
+                                        void* param) const = 0;
+  virtual vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                        vp8e_enc_control_id ctrl_id,
+                                        vpx_svc_layer_id_t* param) const = 0;
+  virtual vpx_codec_err_t codec_control(
+      vpx_codec_ctx_t* ctx,
+      vp8e_enc_control_id ctrl_id,
+      vpx_svc_ref_frame_config_t* param) const = 0;
+  virtual vpx_codec_err_t codec_control(
+      vpx_codec_ctx_t* ctx,
+      vp8e_enc_control_id ctrl_id,
+      vpx_svc_spatial_layer_sync_t* param) const = 0;
+  virtual vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                        vp8e_enc_control_id ctrl_id,
+                                        vpx_rc_funcs_t* param) const = 0;
   virtual vpx_codec_err_t codec_encode(vpx_codec_ctx_t* ctx,
                                        const vpx_image_t* img,
                                        vpx_codec_pts_t pts,
@@ -94,6 +116,8 @@ class LibvpxInterface {
       vpx_codec_iter_t* iter) const = 0;
 
   virtual const char* codec_error_detail(vpx_codec_ctx_t* ctx) const = 0;
+  virtual const char* codec_error(vpx_codec_ctx_t* ctx) const = 0;
+  virtual const char* codec_err_to_string(vpx_codec_err_t err) const = 0;
 
   // Returns interface wrapping the actual libvpx functions.
   static std::unique_ptr<LibvpxInterface> Create();
