@@ -669,7 +669,6 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
           "webgpu::WebGPUParent::PresentCallback",
           [imageHost = data->mImageHost, texture = data->mTextureHost,
            frameID = data->mNextFrameID++]() {
-            layers::SurfaceDescriptor surfaceDesc;
             AutoTArray<layers::CompositableHost::TimedTexture, 1> textures;
 
             layers::CompositableHost::TimedTexture* timedTexture =
@@ -682,8 +681,8 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
             // here to avoid a race uploading the texture and doing the copy in
             // PresentCallback.
             timedTexture->mTexture = new layers::WebRenderTextureHost(
-                surfaceDesc, layers::TextureFlags::BORROWED_EXTERNAL_ID,
-                texture, texture->GetMaybeExternalImageId().ref());
+                layers::TextureFlags::BORROWED_EXTERNAL_ID, texture,
+                texture->GetMaybeExternalImageId().ref());
             timedTexture->mTimeStamp = TimeStamp();
             timedTexture->mPictureRect =
                 gfx::IntRect(gfx::IntPoint(0, 0), texture->GetSize());
