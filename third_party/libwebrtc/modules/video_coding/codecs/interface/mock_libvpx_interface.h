@@ -87,6 +87,38 @@ class MockLibvpxInterface : public LibvpxInterface {
               (vpx_codec_ctx_t*, vp8e_enc_control_id, vpx_scaling_mode*),
               (const, override));
   MOCK_METHOD(vpx_codec_err_t,
+              codec_control,
+              (vpx_codec_ctx_t*, vp8e_enc_control_id, vpx_svc_extra_cfg_t*),
+              (const, override));
+  MOCK_METHOD(vpx_codec_err_t,
+              codec_control,
+              (vpx_codec_ctx_t*, vp8e_enc_control_id, vpx_svc_frame_drop_t*),
+              (const, override));
+  MOCK_METHOD(vpx_codec_err_t,
+              codec_control,
+              (vpx_codec_ctx_t*, vp8e_enc_control_id, void*),
+              (const, override));
+  MOCK_METHOD(vpx_codec_err_t,
+              codec_control,
+              (vpx_codec_ctx_t*, vp8e_enc_control_id, vpx_svc_layer_id_t*),
+              (const, override));
+  MOCK_METHOD(vpx_codec_err_t,
+              codec_control,
+              (vpx_codec_ctx_t*,
+               vp8e_enc_control_id,
+               vpx_svc_ref_frame_config_t*),
+              (const, override));
+  MOCK_METHOD(vpx_codec_err_t,
+              codec_control,
+              (vpx_codec_ctx_t*,
+               vp8e_enc_control_id,
+               vpx_svc_spatial_layer_sync_t*),
+              (const, override));
+  MOCK_METHOD(vpx_codec_err_t,
+              codec_control,
+              (vpx_codec_ctx_t*, vp8e_enc_control_id, vpx_rc_funcs_t*),
+              (const, override));
+  MOCK_METHOD(vpx_codec_err_t,
               codec_encode,
               (vpx_codec_ctx_t*,
                const vpx_image_t*,
@@ -102,6 +134,11 @@ class MockLibvpxInterface : public LibvpxInterface {
   MOCK_METHOD(const char*,
               codec_error_detail,
               (vpx_codec_ctx_t*),
+              (const, override));
+  MOCK_METHOD(const char*, codec_error, (vpx_codec_ctx_t*), (const, override));
+  MOCK_METHOD(const char*,
+              codec_err_to_string,
+              (vpx_codec_err_t),
               (const, override));
 };
 

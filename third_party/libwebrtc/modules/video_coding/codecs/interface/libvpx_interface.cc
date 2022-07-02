@@ -93,17 +93,45 @@ class LibvpxFacade : public LibvpxInterface {
         return vpx_codec_control(ctx, VP8E_SET_ARNR_MAXFRAMES, param);
       case VP8E_SET_ARNR_STRENGTH:
         return vpx_codec_control(ctx, VP8E_SET_ARNR_STRENGTH, param);
-      case VP8E_SET_ARNR_TYPE:
-        RTC_NOTREACHED() << "VP8E_SET_ARNR_TYPE is deprecated.";
-        return VPX_CODEC_UNSUP_FEATURE;
       case VP8E_SET_CQ_LEVEL:
         return vpx_codec_control(ctx, VP8E_SET_CQ_LEVEL, param);
       case VP8E_SET_MAX_INTRA_BITRATE_PCT:
         return vpx_codec_control(ctx, VP8E_SET_MAX_INTRA_BITRATE_PCT, param);
+      case VP9E_SET_MAX_INTER_BITRATE_PCT:
+        return vpx_codec_control(ctx, VP9E_SET_MAX_INTER_BITRATE_PCT, param);
       case VP8E_SET_GF_CBR_BOOST_PCT:
         return vpx_codec_control(ctx, VP8E_SET_GF_CBR_BOOST_PCT, param);
       case VP8E_SET_SCREEN_CONTENT_MODE:
         return vpx_codec_control(ctx, VP8E_SET_SCREEN_CONTENT_MODE, param);
+      case VP9E_SET_GF_CBR_BOOST_PCT:
+        return vpx_codec_control(ctx, VP9E_SET_GF_CBR_BOOST_PCT, param);
+      case VP9E_SET_LOSSLESS:
+        return vpx_codec_control(ctx, VP9E_SET_LOSSLESS, param);
+      case VP9E_SET_FRAME_PARALLEL_DECODING:
+        return vpx_codec_control(ctx, VP9E_SET_FRAME_PARALLEL_DECODING, param);
+      case VP9E_SET_AQ_MODE:
+        return vpx_codec_control(ctx, VP9E_SET_AQ_MODE, param);
+      case VP9E_SET_FRAME_PERIODIC_BOOST:
+        return vpx_codec_control(ctx, VP9E_SET_FRAME_PERIODIC_BOOST, param);
+      case VP9E_SET_NOISE_SENSITIVITY:
+        return vpx_codec_control(ctx, VP9E_SET_NOISE_SENSITIVITY, param);
+      case VP9E_SET_MIN_GF_INTERVAL:
+        return vpx_codec_control(ctx, VP9E_SET_MIN_GF_INTERVAL, param);
+      case VP9E_SET_MAX_GF_INTERVAL:
+        return vpx_codec_control(ctx, VP9E_SET_MAX_GF_INTERVAL, param);
+      case VP9E_SET_TARGET_LEVEL:
+        return vpx_codec_control(ctx, VP9E_SET_TARGET_LEVEL, param);
+      case VP9E_SET_ROW_MT:
+        return vpx_codec_control(ctx, VP9E_SET_ROW_MT, param);
+      case VP9E_ENABLE_MOTION_VECTOR_UNIT_TEST:
+        return vpx_codec_control(ctx, VP9E_ENABLE_MOTION_VECTOR_UNIT_TEST,
+                                 param);
+      case VP9E_SET_SVC_INTER_LAYER_PRED:
+        return vpx_codec_control(ctx, VP9E_SET_SVC_INTER_LAYER_PRED, param);
+      case VP9E_SET_SVC_GF_TEMPORAL_REF:
+        return vpx_codec_control(ctx, VP9E_SET_SVC_GF_TEMPORAL_REF, param);
+      case VP9E_SET_POSTENCODE_DROP:
+        return vpx_codec_control(ctx, VP9E_SET_POSTENCODE_DROP, param);
       default:
         RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
     }
@@ -118,14 +146,41 @@ class LibvpxFacade : public LibvpxInterface {
         return vpx_codec_control(ctx, VP8E_SET_FRAME_FLAGS, param);
       case VP8E_SET_TEMPORAL_LAYER_ID:
         return vpx_codec_control(ctx, VP8E_SET_TEMPORAL_LAYER_ID, param);
+      case VP9E_SET_SVC:
+        return vpx_codec_control(ctx, VP9E_SET_SVC, param);
       case VP8E_SET_CPUUSED:
         return vpx_codec_control(ctx, VP8E_SET_CPUUSED, param);
       case VP8E_SET_TOKEN_PARTITIONS:
         return vpx_codec_control(ctx, VP8E_SET_TOKEN_PARTITIONS, param);
       case VP8E_SET_TUNING:
         return vpx_codec_control(ctx, VP8E_SET_TUNING, param);
+      case VP9E_SET_TILE_COLUMNS:
+        return vpx_codec_control(ctx, VP9E_SET_TILE_COLUMNS, param);
+      case VP9E_SET_TILE_ROWS:
+        return vpx_codec_control(ctx, VP9E_SET_TILE_ROWS, param);
+      case VP9E_SET_TPL:
+        return vpx_codec_control(ctx, VP9E_SET_TPL, param);
+      case VP9E_SET_ALT_REF_AQ:
+        return vpx_codec_control(ctx, VP9E_SET_ALT_REF_AQ, param);
+      case VP9E_SET_TUNE_CONTENT:
+        return vpx_codec_control(ctx, VP9E_SET_TUNE_CONTENT, param);
+      case VP9E_SET_COLOR_SPACE:
+        return vpx_codec_control(ctx, VP9E_SET_COLOR_SPACE, param);
+      case VP9E_SET_COLOR_RANGE:
+        return vpx_codec_control(ctx, VP9E_SET_COLOR_RANGE, param);
+      case VP9E_SET_DELTA_Q_UV:
+        return vpx_codec_control(ctx, VP9E_SET_DELTA_Q_UV, param);
+      case VP9E_SET_DISABLE_OVERSHOOT_MAXQ_CBR:
+        return vpx_codec_control(ctx, VP9E_SET_DISABLE_OVERSHOOT_MAXQ_CBR,
+                                 param);
+      case VP9E_SET_DISABLE_LOOPFILTER:
+        return vpx_codec_control(ctx, VP9E_SET_DISABLE_LOOPFILTER, param);
 
       default:
+        if (param >= 0) {
+          // Might be intended for uint32_t but int literal used, try fallback.
+          return codec_control(ctx, ctrl_id, static_cast<uint32_t>(param));
+        }
         RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
     }
     return VPX_CODEC_ERROR;
@@ -139,6 +194,10 @@ class LibvpxFacade : public LibvpxInterface {
         return vpx_codec_control(ctx, VP8E_GET_LAST_QUANTIZER, param);
       case VP8E_GET_LAST_QUANTIZER_64:
         return vpx_codec_control(ctx, VP8E_GET_LAST_QUANTIZER_64, param);
+      case VP9E_SET_RENDER_SIZE:
+        return vpx_codec_control(ctx, VP9E_SET_RENDER_SIZE, param);
+      case VP9E_GET_LEVEL:
+        return vpx_codec_control(ctx, VP9E_GET_LEVEL, param);
       default:
         RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
     }
@@ -151,6 +210,8 @@ class LibvpxFacade : public LibvpxInterface {
     switch (ctrl_id) {
       case VP8E_SET_ROI_MAP:
         return vpx_codec_control(ctx, VP8E_SET_ROI_MAP, param);
+      case VP9E_SET_ROI_MAP:
+        return vpx_codec_control(ctx, VP9E_SET_ROI_MAP, param);
       default:
         RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
     }
@@ -162,6 +223,8 @@ class LibvpxFacade : public LibvpxInterface {
                                 vpx_active_map* param) const override {
     switch (ctrl_id) {
       case VP8E_SET_ACTIVEMAP:
+        return vpx_codec_control(ctx, VP8E_SET_ACTIVEMAP, param);
+      case VP9E_GET_ACTIVEMAP:
         return vpx_codec_control(ctx, VP8E_SET_ACTIVEMAP, param);
       default:
         RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
@@ -175,6 +238,98 @@ class LibvpxFacade : public LibvpxInterface {
     switch (ctrl_id) {
       case VP8E_SET_SCALEMODE:
         return vpx_codec_control(ctx, VP8E_SET_SCALEMODE, param);
+      default:
+        RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
+    }
+    return VPX_CODEC_ERROR;
+  }
+
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                vpx_svc_extra_cfg_t* param) const override {
+    switch (ctrl_id) {
+      case VP9E_SET_SVC_PARAMETERS:
+        return vpx_codec_control_(ctx, VP9E_SET_SVC_PARAMETERS, param);
+      default:
+        RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
+    }
+    return VPX_CODEC_ERROR;
+  }
+
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                vpx_svc_frame_drop_t* param) const override {
+    switch (ctrl_id) {
+      case VP9E_SET_SVC_FRAME_DROP_LAYER:
+        return vpx_codec_control_(ctx, VP9E_SET_SVC_FRAME_DROP_LAYER, param);
+      default:
+        RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
+    }
+    return VPX_CODEC_ERROR;
+  }
+
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                void* param) const override {
+    switch (ctrl_id) {
+      case VP9E_SET_SVC_PARAMETERS:
+        return vpx_codec_control_(ctx, VP9E_SET_SVC_PARAMETERS, param);
+      case VP9E_REGISTER_CX_CALLBACK:
+        return vpx_codec_control_(ctx, VP9E_REGISTER_CX_CALLBACK, param);
+      default:
+        RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
+    }
+    return VPX_CODEC_ERROR;
+  }
+
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                vpx_svc_layer_id_t* param) const override {
+    switch (ctrl_id) {
+      case VP9E_SET_SVC_LAYER_ID:
+        return vpx_codec_control_(ctx, VP9E_SET_SVC_LAYER_ID, param);
+      case VP9E_GET_SVC_LAYER_ID:
+        return vpx_codec_control_(ctx, VP9E_GET_SVC_LAYER_ID, param);
+      default:
+        RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
+    }
+    return VPX_CODEC_ERROR;
+  }
+
+  vpx_codec_err_t codec_control(
+      vpx_codec_ctx_t* ctx,
+      vp8e_enc_control_id ctrl_id,
+      vpx_svc_ref_frame_config_t* param) const override {
+    switch (ctrl_id) {
+      case VP9E_SET_SVC_REF_FRAME_CONFIG:
+        return vpx_codec_control_(ctx, VP9E_SET_SVC_REF_FRAME_CONFIG, param);
+      case VP9E_GET_SVC_REF_FRAME_CONFIG:
+        return vpx_codec_control_(ctx, VP9E_GET_SVC_REF_FRAME_CONFIG, param);
+      default:
+        RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
+    }
+    return VPX_CODEC_ERROR;
+  }
+
+  vpx_codec_err_t codec_control(
+      vpx_codec_ctx_t* ctx,
+      vp8e_enc_control_id ctrl_id,
+      vpx_svc_spatial_layer_sync_t* param) const override {
+    switch (ctrl_id) {
+      case VP9E_SET_SVC_SPATIAL_LAYER_SYNC:
+        return vpx_codec_control_(ctx, VP9E_SET_SVC_SPATIAL_LAYER_SYNC, param);
+      default:
+        RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
+    }
+    return VPX_CODEC_ERROR;
+  }
+
+  vpx_codec_err_t codec_control(vpx_codec_ctx_t* ctx,
+                                vp8e_enc_control_id ctrl_id,
+                                vpx_rc_funcs_t* param) const override {
+    switch (ctrl_id) {
+      case VP9E_SET_EXTERNAL_RATE_CONTROL:
+        return vpx_codec_control_(ctx, VP9E_SET_EXTERNAL_RATE_CONTROL, param);
       default:
         RTC_NOTREACHED() << "Unsupported libvpx ctrl_id: " << ctrl_id;
     }
@@ -198,6 +353,14 @@ class LibvpxFacade : public LibvpxInterface {
 
   const char* codec_error_detail(vpx_codec_ctx_t* ctx) const override {
     return ::vpx_codec_error_detail(ctx);
+  }
+
+  const char* codec_error(vpx_codec_ctx_t* ctx) const override {
+    return ::vpx_codec_error(ctx);
+  }
+
+  const char* codec_err_to_string(vpx_codec_err_t err) const override {
+    return ::vpx_codec_err_to_string(err);
   }
 };
 
