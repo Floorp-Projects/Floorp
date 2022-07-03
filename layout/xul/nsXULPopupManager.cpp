@@ -43,6 +43,7 @@
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/PopupPositionedEvent.h"
 #include "mozilla/dom/PopupPositionedEventBinding.h"
+#include "mozilla/dom/XULCommandEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
@@ -162,6 +163,11 @@ uint16_t PendingPopup::MouseInputSource() const {
         mEvent->WidgetEventPtr()->AsMouseEventBase();
     if (mouseEvent) {
       return mouseEvent->mInputSource;
+    }
+
+    RefPtr<XULCommandEvent> commandEvent = mEvent->AsXULCommandEvent();
+    if (commandEvent) {
+      return commandEvent->InputSource();
     }
   }
 
