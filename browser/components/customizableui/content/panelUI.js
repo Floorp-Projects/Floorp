@@ -391,7 +391,6 @@ const PanelUI = {
    * @param aEvent the event triggering the view showing.
    */
   async showSubView(aViewId, aAnchor, aEvent) {
-    let domEvent = null;
     if (aEvent) {
       // On Mac, ctrl-click will send a context menu event from the widget, so
       // we don't want to bring up the panel when ctrl key is pressed.
@@ -408,31 +407,6 @@ const PanelUI = {
         aEvent.key != "Enter"
       ) {
         return;
-      }
-      if (aEvent.type == "command" && aEvent.inputSource != null) {
-        // Synthesize a new DOM mouse event to pass on the inputSource.
-        domEvent = document.createEvent("MouseEvent");
-        domEvent.initNSMouseEvent(
-          "click",
-          true,
-          true,
-          null,
-          0,
-          aEvent.screenX,
-          aEvent.screenY,
-          0,
-          0,
-          false,
-          false,
-          false,
-          false,
-          0,
-          aEvent.target,
-          0,
-          aEvent.inputSource
-        );
-      } else if (aEvent.mozInputSource != null || aEvent.type == "keypress") {
-        domEvent = aEvent;
       }
     }
 
@@ -516,7 +490,7 @@ const PanelUI = {
       try {
         viewShown = await PanelMultiView.openPopup(tempPanel, anchor, {
           position: "bottomcenter topright",
-          triggerEvent: domEvent,
+          triggerEvent: aEvent,
         });
       } catch (ex) {
         Cu.reportError(ex);
