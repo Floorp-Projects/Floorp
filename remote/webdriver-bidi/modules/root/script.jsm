@@ -126,7 +126,7 @@ class ScriptModule extends Module {
    * realm or a browsing context.
    *
    * @param {Object=} options
-   * @param {boolean=} awaitPromise [unsupported]
+   * @param {boolean=} awaitPromise
    *     Determines if the command should wait for the return value of the
    *     expression to resolve, if this return value is a Promise. Defaults to
    *     true.
@@ -217,6 +217,7 @@ class ScriptModule extends Module {
         id: realm.context.id,
       },
       params: {
+        awaitPromise,
         expression: source,
       },
     });

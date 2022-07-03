@@ -64,6 +64,9 @@ class ScriptModule extends Module {
    * Evaluate a provided expression in the current window global.
    *
    * @param {Object} options
+   * @param {boolean} awaitPromise
+   *     Determines if the command should wait for the return value of the
+   *     expression to resolve, if this return value is a Promise.
    * @param {string} expression
    *     The expression to evaluate.
    *
@@ -71,13 +74,34 @@ class ScriptModule extends Module {
    *     - result {RemoteValue} the result of the evaluation serialized as a
    *     RemoteValue.
    */
-  evaluateExpression(options) {
-    const { expression } = options;
+  async evaluateExpression(options) {
+    const { awaitPromise, expression } = options;
     const rv = this.#global.executeInGlobal(expression);
 
     if ("return" in rv) {
+      let result = rv.return;
+      if (
+        awaitPromise &&
+        // Only non-primitive return values are wrapped in Debugger.Object.
+        result instanceof Debugger.Object &&
+        result.isPromise
+      ) {
+        try {
+          // Force wrapping the promise resolution result in a Debugger.Object
+          // wrapper for consistency with the synchronous codepath.
+          result = this.#global.makeDebuggeeValue(
+            await result.unsafeDereference()
+          );
+        } catch (e) {
+          // Errors will be handled in Bug 1770477.
+          throw new lazy.error.UnsupportedOperationError(
+            `Unsupported promise rejection for expression evaluation`
+          );
+        }
+      }
+
       return {
-        result: lazy.serialize(this.#toRawObject(rv.return), 1),
+        result: lazy.serialize(this.#toRawObject(result), 1),
       };
     }
 
