@@ -5,6 +5,7 @@ root:
       bounds: [0, 0, 1000, 1000]
       items:
         - type: clip
+          id: 2
           bounds: [ 50, 50, 200, 200 ]
           complex:
             - rect: [ 50, 50, 200, 200 ]
@@ -13,12 +14,13 @@ root:
                 top-right: [0, 0]
                 bottom-left: [200, 100]
                 bottom-right: [0, 0]
-          items:
-            - type: rect
-              bounds: [ 50, 50, 200, 200 ]
-              color: blue
+        - type: rect
+          bounds: [ 50, 50, 200, 200 ]
+          color: blue
+          clip-chain: [2]
 
         - type: clip
+          id: 3
           bounds: [ 300, 50, 200, 200 ]
           complex:
             - rect: [ 300, 50, 200, 200 ]
@@ -27,12 +29,13 @@ root:
                 top-right: [100, 200]
                 bottom-left: [0, 0]
                 bottom-right: [0, 0]
-          items:
-            - type: rect
-              bounds: [ 300, 50, 200, 200 ]
-              color: green
+        - type: rect
+          bounds: [ 300, 50, 200, 200 ]
+          color: green
+          clip-chain: [3]
 
         - type: clip
+          id: 4
           bounds: [ 50, 300, 200, 200 ]
           complex:
             - rect: [ 50, 300, 200, 200 ]
@@ -41,12 +44,13 @@ root:
                 top-right: [200, 100]
                 bottom-left: [0, 0]
                 bottom-right: [200, 100]
-          items:
-            - type: rect
-              bounds: [ 50, 300, 200, 200 ]
-              color: red
+        - type: rect
+          bounds: [ 50, 300, 200, 200 ]
+          color: red
+          clip-chain: [4]
 
         - type: clip
+          id: 5
           bounds: [ 300, 300, 200, 200 ]
           complex:
             - rect: [ 300, 300, 200, 200 ]
@@ -55,7 +59,7 @@ root:
                 top-right: [0, 0]
                 bottom-left: [100, 200]
                 bottom-right: [100, 200]
-          items:
-            - type: rect
-              bounds: [ 300, 300, 200, 200 ]
-              color: yellow
+        - type: rect
+          bounds: [ 300, 300, 200, 200 ]
+          color: yellow
+          clip-chain: [5]

@@ -20,36 +20,39 @@ root:
                 -
                   bounds: [24, 539, 24, 24]
                   type: clip
+                  id: 2
                   complex:
                     -
                       rect: [24, 539, 24, 24]
                       radius: [12, 12]
-                  items:
-                    -
-                      bounds: [24, 539, 24, 24]
-                      type: rect
-                      color: black
+                -
+                  bounds: [24, 539, 24, 24]
+                  type: rect
+                  color: black
+                  clip-chain: [2]
                 -
                   bounds: [24, 770, 24, 24]
                   type: clip
+                  id: 3
                   complex:
                     -
                       rect: [24, 770, 24, 24]
                       radius: [12, 12]
-                  items:
-                    -
-                      bounds: [24, 770, 24, 24]
-                      type: rect
-                      color: black
+                -
+                  bounds: [24, 770, 24, 24]
+                  type: rect
+                  color: black
+                  clip-chain: [3]
                 -
                   bounds: [24, 847, 24, 24]
                   type: clip
+                  id: 4
                   complex:
                     -
                       rect: [24, 847, 24, 24]
                       radius: [12, 12]
-                  items:
-                    -
-                      bounds: [24, 847, 24, 24]
-                      type: rect
-                      color: black
+                -
+                  bounds: [24, 847, 24, 24]
+                  type: rect
+                  color: black
+                  clip-chain: [4]

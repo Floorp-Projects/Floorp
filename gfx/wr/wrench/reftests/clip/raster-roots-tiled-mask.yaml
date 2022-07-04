@@ -9,12 +9,13 @@ root:
       scroll-offset: [0, 1024]
       items:
         - type: clip
+          id: 2
           bounds: [0, 0, 8, 2048]
           image-mask:
             image: solid-color(128,0,0,0,8,1024)
             rect: [0, 0, 8, 2048]
             repeat: false
-          items:
-            - type: rect
-              bounds: [0, 1024, 8, 128]
-              color: red
+        - type: rect
+          bounds: [0, 1024, 8, 128]
+          color: red
+          clip-chain: [2]

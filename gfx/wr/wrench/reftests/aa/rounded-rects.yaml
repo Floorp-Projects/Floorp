@@ -6,26 +6,39 @@ root:
       type: stacking-context
       items:
         - type: clip
+          id: 3
           bounds: [50, 50, 200, 200]
           complex:
             - rect: [50, 50, 200, 200]
               radius: 8
-          items:
-          - type: rect
-            bounds: 50 50 200 200
-            color: red
+        -
+          type: "clip-chain"
+          id: 10
+          clips: [3]
+
+        - type: rect
+          bounds: 50 50 200 200
+          color: red
+          clip-chain: 10
 
         - type: clip
+          id: 4
           bounds: [270, 50, 200, 200]
           complex:
             - rect: [270, 50, 200, 200]
               radius: [16, 32, 48, 64]
-          items:
-          - type: rect
-            bounds: 270 50 200 200
-            color: green
+        -
+          type: "clip-chain"
+          id: 11
+          clips: [4]
+
+        - type: rect
+          bounds: 270 50 200 200
+          color: green
+          clip-chain: 11
 
         - type: clip
+          id: 5
           bounds: [490, 50, 500, 500]
           complex:
             - rect: [490, 50, 500, 500]
@@ -35,7 +48,12 @@ root:
                 bottom-left: [48, 64],
                 bottom-right: [52, 80],
               }
-          items:
-          - type: rect
-            bounds: 490 50 500 500
-            color: blue
+        -
+          type: "clip-chain"
+          id: 12
+          clips: [5]
+
+        - type: rect
+          bounds: 490 50 500 500
+          color: blue
+          clip-chain: 12

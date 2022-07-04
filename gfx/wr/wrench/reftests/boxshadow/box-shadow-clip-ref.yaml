@@ -5,36 +5,55 @@ root:
       bounds: [0, 0, 1000, 1000]
       items:
         - type: clip
+          id: 2
           bounds: [0, 0, 100, 200]
-          items:
-            - type: box-shadow
-              bounds: [ 20, 20, 200, 80 ]
-              color: blue
-              offset: [10, 20]
-              clip-mode: outset
+        - type: clip-chain
+          id: 10
+          clips: [2]
+        - type: box-shadow
+          bounds: [ 20, 20, 200, 80 ]
+          color: blue
+          offset: [10, 20]
+          clip-mode: outset
+          clip-chain: 10
+
         - type: clip
+          id: 3
           bounds: [200, 0, 100, 200]
-          items:
-            - type: box-shadow
-              bounds: [ 220, 20, 200, 80 ]
-              color: red
-              offset: [10, 20]
-              blur-radius: 10
-              clip-mode: outset
+        - type: clip-chain
+          id: 11
+          clips: [3]
+        - type: box-shadow
+          bounds: [ 220, 20, 200, 80 ]
+          color: red
+          offset: [10, 20]
+          blur-radius: 10
+          clip-mode: outset
+          clip-chain: 11
+
         - type: clip
+          id: 4
           bounds: [0, 200, 100, 200]
-          items:
-            - type: box-shadow
-              bounds: [ 20, 220, 200, 80 ]
-              color: green
-              offset: [10, 20]
-              clip-mode: inset
+        - type: clip-chain
+          id: 12
+          clips: [4]
+        - type: box-shadow
+          bounds: [ 20, 220, 200, 80 ]
+          color: green
+          offset: [10, 20]
+          clip-mode: inset
+          clip-chain: 12
+
         - type: clip
+          id: 5
           bounds: [200, 200, 100, 200]
-          items:
-            - type: box-shadow
-              bounds: [ 220, 220, 200, 80 ]
-              color: yellow
-              offset: [10, 20]
-              blur-radius: 10
-              clip-mode: inset
+        - type: clip-chain
+          id: 13
+          clips: [5]
+        - type: box-shadow
+          bounds: [ 220, 220, 200, 80 ]
+          color: yellow
+          offset: [10, 20]
+          blur-radius: 10
+          clip-mode: inset
+          clip-chain: 13
