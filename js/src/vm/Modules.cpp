@@ -259,3 +259,18 @@ JS_PUBLIC_API JSString* JS::GetModuleRequestSpecifier(
 
   return moduleRequestArg->as<js::ModuleRequestObject>().specifier();
 }
+
+JS_PUBLIC_API void JS::ClearModuleEnvironment(JSObject* moduleObj) {
+  MOZ_ASSERT(moduleObj);
+  AssertHeapIsIdle();
+
+  js::ModuleEnvironmentObject* env =
+      moduleObj->as<js::ModuleObject>().environment();
+
+  const JSClass* clasp = env->getClass();
+  uint32_t numReserved = JSCLASS_RESERVED_SLOTS(clasp);
+  uint32_t numSlots = env->slotSpan();
+  for (uint32_t i = numReserved; i < numSlots; i++) {
+    env->setSlot(i, UndefinedValue());
+  }
+}

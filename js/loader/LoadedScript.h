@@ -97,6 +97,8 @@ class ModuleScript final : public LoadedScript {
   bool HasErrorToRethrow() const { return !mErrorToRethrow.isUndefined(); }
   bool DebuggerDataInitialized() const { return mDebuggerDataInitialized; }
 
+  void Shutdown();
+
   void UnlinkModuleRecord();
 
   friend void CheckModuleScriptPrivate(LoadedScript*, const JS::Value&);
