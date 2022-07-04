@@ -101,7 +101,7 @@ class AboutLibrariesFragment : Fragment(R.layout.fragment_about_libraries) {
         dialog.show()
 
         val textView = dialog.findViewById<TextView>(android.R.id.message)!!
-        Linkify.addLinks(textView, Linkify.ALL)
+        Linkify.addLinks(textView, Linkify.WEB_URLS)
         textView.linksClickable = true
         textView.textSize = LICENSE_TEXT_SIZE
         textView.typeface = Typeface.MONOSPACE
