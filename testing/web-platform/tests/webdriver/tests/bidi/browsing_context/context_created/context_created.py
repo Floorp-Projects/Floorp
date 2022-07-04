@@ -134,11 +134,13 @@ async def test_navigate_creates_iframes(bidi_session, top_context, test_page_mul
     children_info = root_info["children"]
     assert len(children_info) == 2
 
+    # Note: Live `browsingContext.contextCreated` events are always created with "about:blank":
+    # https://github.com/w3c/webdriver-bidi/issues/220#issuecomment-1145785349
     assert_browsing_context(
         events[0],
         children_info[0]["context"],
         children=None,
-        url=children_info[0]["url"],
+        url="about:blank",
         parent=root_info["context"],
     )
 
@@ -146,7 +148,7 @@ async def test_navigate_creates_iframes(bidi_session, top_context, test_page_mul
         events[1],
         children_info[1]["context"],
         children=None,
-        url=children_info[1]["url"],
+        url="about:blank",
         parent=root_info["context"],
     )
 
@@ -186,11 +188,13 @@ async def test_navigate_creates_nested_iframes(bidi_session, top_context, test_p
     assert len(child1_info["children"]) == 1
     child2_info = child1_info["children"][0]
 
+    # Note: `browsingContext.contextCreated` is always created with "about:blank":
+    # https://github.com/w3c/webdriver-bidi/issues/220#issuecomment-1145785349
     assert_browsing_context(
         events[0],
         child1_info["context"],
         children=None,
-        url=child1_info["url"],
+        url="about:blank",
         parent=root_info["context"],
     )
 
@@ -198,7 +202,7 @@ async def test_navigate_creates_nested_iframes(bidi_session, top_context, test_p
         events[1],
         child2_info["context"],
         children=None,
-        url=child2_info["url"],
+        url="about:blank",
         parent=child1_info["context"],
     )
 
