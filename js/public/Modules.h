@@ -268,6 +268,11 @@ extern JS_PUBLIC_API JSObject* GetModuleForNamespace(
 extern JS_PUBLIC_API JSObject* GetModuleEnvironment(
     JSContext* cx, Handle<JSObject*> moduleObj);
 
+/*
+ * Clear all bindings in a module's environment. Used during shutdown.
+ */
+extern JS_PUBLIC_API void ClearModuleEnvironment(JSObject* moduleObj);
+
 }  // namespace JS
 
 #endif  // js_Modules_h

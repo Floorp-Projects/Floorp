@@ -10576,7 +10576,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   }
 
   static initialize(l10n) {
-    this._l10nPromise = l10n.get("freetext_default_content");
+    this._l10nPromise = l10n.get("free_text_default_content");
     const style = getComputedStyle(document.documentElement);
     this._internalPadding = parseFloat(style.getPropertyValue("--freetext-padding"));
   }

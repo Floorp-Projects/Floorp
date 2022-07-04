@@ -20,6 +20,7 @@ const {
   NETWORK_MESSAGES_UPDATE,
   NETWORK_UPDATES_REQUEST,
   MESSAGES_CLEAR,
+  MESSAGES_DISABLE,
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
   MESSAGE_TYPE,
@@ -60,6 +61,13 @@ function messagesAdd(packets, idGenerator = null) {
 function messagesClear() {
   return {
     type: MESSAGES_CLEAR,
+  };
+}
+
+function messagesDisable(ids) {
+  return {
+    type: MESSAGES_DISABLE,
+    ids,
   };
 }
 
@@ -145,6 +153,7 @@ function networkUpdateRequests(updates) {
 module.exports = {
   messagesAdd,
   messagesClear,
+  messagesDisable,
   messageOpen,
   messageClose,
   messageRemove,

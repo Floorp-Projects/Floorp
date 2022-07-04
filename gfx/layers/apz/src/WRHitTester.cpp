@@ -167,6 +167,7 @@ IAPZHitTester::HitTestResult WRHitTester::GetAPZCAtPoint(
   hit.mLayersId = chosenResult->mLayersId;
   ScrollableLayerGuid::ViewID scrollId = chosenResult->mScrollId;
   gfx::CompositorHitTestInfo hitInfo = chosenResult->mHitInfo;
+  Maybe<uint64_t> animationId = chosenResult->mAnimationId;
   SideBits sideBits = chosenResult->mSideBits;
 
   APZCTM_LOG("Successfully matched APZC %p (hit result 0x%x)\n",
@@ -201,6 +202,40 @@ IAPZHitTester::HitTestResult WRHitTester::GetAPZCAtPoint(
   }
 
   hit.mFixedPosSides = sideBits;
+  if (animationId.isSome()) {
+    RefPtr<HitTestingTreeNode> positionedNode = nullptr;
+
+    positionedNode = BreadthFirstSearch<ReverseIterator>(
+        GetRootNode(), [&](HitTestingTreeNode* aNode) {
+          return (aNode->GetFixedPositionAnimationId() == animationId ||
+                  aNode->GetStickyPositionAnimationId() == animationId);
+        });
+
+    if (positionedNode) {
+      MOZ_ASSERT(positionedNode->GetLayersId() == chosenResult->mLayersId,
+                 "Found node layers id does not match the hit result");
+      MOZ_ASSERT((positionedNode->GetFixedPositionAnimationId().isSome() ||
+                  positionedNode->GetStickyPositionAnimationId().isSome()),
+                 "A a matching fixed/sticky position node should be found");
+      InitializeHitTestingTreeNodeAutoLock(hit.mNode, aProofOfTreeLock,
+                                           positionedNode);
+    }
+
+#if defined(MOZ_WIDGET_ANDROID)
+    if (hit.mNode && hit.mNode->GetFixedPositionAnimationId().isSome()) {
+      // If the hit element is a fixed position element, the side bits from
+      // the hit-result item tag are used. For now just ensure that these
+      // match what is found in the hit-testing tree node.
+      MOZ_ASSERT(sideBits == hit.mNode->GetFixedPosSides(),
+                 "Fixed position side bits do not match");
+    } else if (hit.mTargetApzc->IsRootContent()) {
+      // If the hit element is not a fixed position element, then the hit test
+      // result item's side bits should not be populated.
+      MOZ_ASSERT(sideBits == SideBits::eNone,
+                 "Hit test results have side bits only for pos:fixed");
+    }
+#endif
+  }
 
   hit.mHitOverscrollGutter =
       hit.mTargetApzc && hit.mTargetApzc->IsInOverscrollGutter(aHitTestPoint);

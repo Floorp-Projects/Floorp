@@ -22,7 +22,6 @@ DevToolsModules(
     "store.js",
     "types.js",
     "utils.js",
-    "webconsole-connection-proxy.js",
     "webconsole-ui.js",
     "webconsole-wrapper.js",
     "webconsole.js",

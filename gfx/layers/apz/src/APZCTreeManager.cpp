@@ -1941,9 +1941,9 @@ void APZCTreeManager::ProcessTouchInput(InputHandlingState& aState,
     }
 
     aState.mHit = GetTouchInputBlockAPZC(aInput, &touchBehaviors);
-    // Repopulate mTouchBlockHitResult with the fields we care about.
-    mTouchBlockHitResult = aState.mHit.CopyWithoutScrollbarNode();
-    hitScrollbarNode = std::move(aState.mHit.mScrollbarNode);
+    RecursiveMutexAutoLock lock(mTreeLock);
+    // Repopulate mTouchBlockHitResult from the input state.
+    mTouchBlockHitResult = mHitTester->CloneHitTestResult(lock, aState.mHit);
 
     // Check if this event starts a scrollbar touch-drag. The conditions
     // checked are similar to the ones we check for MOUSE_INPUT starting
@@ -1968,7 +1968,8 @@ void APZCTreeManager::ProcessTouchInput(InputHandlingState& aState,
   } else if (mTouchBlockHitResult.mTargetApzc) {
     APZCTM_LOG("Re-using APZC %p as continuation of event block\n",
                mTouchBlockHitResult.mTargetApzc.get());
-    aState.mHit = mTouchBlockHitResult.CopyWithoutScrollbarNode();
+    RecursiveMutexAutoLock lock(mTreeLock);
+    aState.mHit = mHitTester->CloneHitTestResult(lock, mTouchBlockHitResult);
   }
 
   if (mInScrollbarTouchDrag) {
@@ -2038,6 +2039,17 @@ void APZCTreeManager::ProcessTouchInput(InputHandlingState& aState,
           touchData.mScreenPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
               GetCompositorFixedLayerMargins(lock),
               mTouchBlockHitResult.mFixedPosSides, mGeckoFixedLayerMargins));
+        } else if (mTouchBlockHitResult.mNode &&
+                   mTouchBlockHitResult.mNode->GetStickyPositionAnimationId()) {
+          SideBits sideBits = SideBits::eNone;
+          {
+            RecursiveMutexAutoLock lock(mTreeLock);
+            sideBits =
+                SidesStuckToRootContent(mTouchBlockHitResult.mNode.Get(lock));
+          }
+          MutexAutoLock lock(mMapLock);
+          touchData.mScreenPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
+              GetCompositorFixedLayerMargins(lock), sideBits, ScreenMargin()));
         }
       }
     }
@@ -3238,6 +3250,14 @@ Maybe<ScreenIntPoint> APZCTreeManager::ConvertToGecko(
       *geckoPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
           GetCompositorFixedLayerMargins(mapLock),
           mTouchBlockHitResult.mFixedPosSides, mGeckoFixedLayerMargins));
+    } else if (mTouchBlockHitResult.mNode &&
+               mTouchBlockHitResult.mNode->GetStickyPositionAnimationId()) {
+      SideBits sideBits =
+          SidesStuckToRootContent(mTouchBlockHitResult.mNode.Get(lock));
+
+      MutexAutoLock mapLock(mMapLock);
+      *geckoPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
+          GetCompositorFixedLayerMargins(mapLock), sideBits, ScreenMargin()));
     }
   }
   return geckoPoint;

@@ -18,7 +18,7 @@ root:
             complex:
               - rect: [0, 0, 100, 100]
                 radius: 10
-            items:
-              - type: rect
-                bounds: 0 0 100 100
-                color: red
+          - type: rect
+            clip-chain: [2]
+            bounds: 0 0 100 100
+            color: red

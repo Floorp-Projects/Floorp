@@ -60,9 +60,9 @@ class MockCallFrameInfoHandler : public CallFrameInfo::Handler {
                bool(uint64 address, int reg, int base_register, long offset));
   MOCK_METHOD3(RegisterRule, bool(uint64 address, int reg, int base_register));
   MOCK_METHOD3(ExpressionRule,
-               bool(uint64 address, int reg, const std::string& expression));
+               bool(uint64 address, int reg, const ImageSlice& expression));
   MOCK_METHOD3(ValExpressionRule,
-               bool(uint64 address, int reg, const std::string& expression));
+               bool(uint64 address, int reg, const ImageSlice& expression));
   MOCK_METHOD0(End, bool());
   MOCK_METHOD2(PersonalityRoutine, bool(uint64 address, bool indirect));
   MOCK_METHOD2(LanguageSpecificDataArea, bool(uint64 address, bool indirect));
@@ -827,15 +827,15 @@ TEST_F(LulDwarfCFIInsn, DW_CFA_def_cfa_register) {
 TEST_F(LulDwarfCFIInsn, DW_CFA_def_cfa_registerBadRule) {
   ByteReader reader(ENDIANNESS_BIG);
   CFISection section(kBigEndian, 4);
+  ImageSlice expr("needle in a haystack");
   StockCIEAndFDE(&section);
   section.D8(lul::DW_CFA_def_cfa_expression)
-      .Block("needle in a haystack")
+      .Block(expr)
       .D8(lul::DW_CFA_def_cfa_register)
       .ULEB128(0xf1b49e49)
       .FinishEntry();
 
-  EXPECT_CALL(handler, ValExpressionRule(fde_start, kCFARegister,
-                                         "needle in a haystack"))
+  EXPECT_CALL(handler, ValExpressionRule(fde_start, kCFARegister, expr))
       .WillRepeatedly(Return(true));
   EXPECT_CALL(handler, End()).InSequence(s).WillOnce(Return(true));
 
@@ -884,14 +884,14 @@ TEST_F(LulDwarfCFIInsn, DW_CFA_def_cfa_offsetBadRule) {
   ByteReader reader(ENDIANNESS_BIG);
   CFISection section(kBigEndian, 4);
   StockCIEAndFDE(&section);
+  ImageSlice expr("six ways to Sunday");
   section.D8(lul::DW_CFA_def_cfa_expression)
-      .Block("six ways to Sunday")
+      .Block(expr)
       .D8(lul::DW_CFA_def_cfa_offset)
       .ULEB128(0x1e8e3b9b)
       .FinishEntry();
 
-  EXPECT_CALL(handler,
-              ValExpressionRule(fde_start, kCFARegister, "six ways to Sunday"))
+  EXPECT_CALL(handler, ValExpressionRule(fde_start, kCFARegister, expr))
       .WillRepeatedly(Return(true));
   EXPECT_CALL(handler, End()).InSequence(s).WillOnce(Return(true));
 
@@ -901,11 +901,11 @@ TEST_F(LulDwarfCFIInsn, DW_CFA_def_cfa_offsetBadRule) {
 TEST_F(LulDwarfCFIInsn, DW_CFA_def_cfa_expression) {
   ByteReader reader(ENDIANNESS_LITTLE);
   CFISection section(kLittleEndian, 8);
+  ImageSlice expr("eating crow");
   StockCIEAndFDE(&section);
-  section.D8(lul::DW_CFA_def_cfa_expression).Block("eating crow").FinishEntry();
+  section.D8(lul::DW_CFA_def_cfa_expression).Block(expr).FinishEntry();
 
-  EXPECT_CALL(handler,
-              ValExpressionRule(fde_start, kCFARegister, "eating crow"))
+  EXPECT_CALL(handler, ValExpressionRule(fde_start, kCFARegister, expr))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, End()).InSequence(s).WillOnce(Return(true));
@@ -1055,14 +1055,13 @@ TEST_F(LulDwarfCFIInsn, DW_CFA_expression) {
   ByteReader reader(ENDIANNESS_BIG);
   CFISection section(kBigEndian, 8);
   StockCIEAndFDE(&section);
+  ImageSlice expr("plus ça change, plus c'est la même chose");
   section.D8(lul::DW_CFA_expression)
       .ULEB128(0xa1619fb2)
-      .Block("plus ça change, plus c'est la même chose")
+      .Block(expr)
       .FinishEntry();
 
-  EXPECT_CALL(handler,
-              ExpressionRule(fde_start, 0xa1619fb2,
-                             "plus ça change, plus c'est la même chose"))
+  EXPECT_CALL(handler, ExpressionRule(fde_start, 0xa1619fb2, expr))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, End()).InSequence(s).WillOnce(Return(true));
@@ -1073,14 +1072,14 @@ TEST_F(LulDwarfCFIInsn, DW_CFA_expression) {
 TEST_F(LulDwarfCFIInsn, DW_CFA_val_expression) {
   ByteReader reader(ENDIANNESS_BIG);
   CFISection section(kBigEndian, 4);
+  ImageSlice expr("he who has the gold makes the rules");
   StockCIEAndFDE(&section);
   section.D8(lul::DW_CFA_val_expression)
       .ULEB128(0xc5e4a9e3)
-      .Block("he who has the gold makes the rules")
+      .Block(expr)
       .FinishEntry();
 
-  EXPECT_CALL(handler, ValExpressionRule(fde_start, 0xc5e4a9e3,
-                                         "he who has the gold makes the rules"))
+  EXPECT_CALL(handler, ValExpressionRule(fde_start, 0xc5e4a9e3, expr))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, End()).InSequence(s).WillOnce(Return(true));
@@ -1870,6 +1869,7 @@ TEST_F(LulDwarfCFIRestore, RestoreRegisterRuleChangedRegister) {
 TEST_F(LulDwarfCFIRestore, RestoreExpressionRuleUnchanged) {
   ByteReader reader(ENDIANNESS_LITTLE);
   CFISection section(kLittleEndian, 4);
+  ImageSlice dwarf("dwarf");
   StockCIEAndFDE(&section);
   section.D8(lul::DW_CFA_expression)
       .ULEB128(0x666ae152)
@@ -1879,7 +1879,7 @@ TEST_F(LulDwarfCFIRestore, RestoreExpressionRuleUnchanged) {
       .D8(lul::DW_CFA_restore_state)
       .FinishEntry();
 
-  EXPECT_CALL(handler, ExpressionRule(fde_start, 0x666ae152, "dwarf"))
+  EXPECT_CALL(handler, ExpressionRule(fde_start, 0x666ae152, dwarf))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, End()).WillOnce(Return(true));
@@ -1890,10 +1890,11 @@ TEST_F(LulDwarfCFIRestore, RestoreExpressionRuleUnchanged) {
 TEST_F(LulDwarfCFIRestore, RestoreExpressionRuleChanged) {
   ByteReader reader(ENDIANNESS_LITTLE);
   CFISection section(kLittleEndian, 4);
+  ImageSlice elf("elf");
   StockCIEAndFDE(&section);
   section.D8(lul::DW_CFA_expression)
       .ULEB128(0xb5ca5c46)
-      .Block("elf")
+      .Block(elf)
       .D8(lul::DW_CFA_remember_state)
       .D8(lul::DW_CFA_advance_loc | 1)
       .D8(lul::DW_CFA_undefined)
@@ -1902,14 +1903,14 @@ TEST_F(LulDwarfCFIRestore, RestoreExpressionRuleChanged) {
       .D8(lul::DW_CFA_restore_state)
       .FinishEntry();
 
-  EXPECT_CALL(handler, ExpressionRule(fde_start, 0xb5ca5c46, "elf"))
+  EXPECT_CALL(handler, ExpressionRule(fde_start, 0xb5ca5c46, elf))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, UndefinedRule(fde_start + code_factor, 0xb5ca5c46))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler,
-              ExpressionRule(fde_start + 2 * code_factor, 0xb5ca5c46, "elf"))
+              ExpressionRule(fde_start + 2 * code_factor, 0xb5ca5c46, elf))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, End()).WillOnce(Return(true));
@@ -1921,28 +1922,29 @@ TEST_F(LulDwarfCFIRestore, RestoreExpressionRuleChangedExpression) {
   ByteReader reader(ENDIANNESS_LITTLE);
   CFISection section(kLittleEndian, 4);
   StockCIEAndFDE(&section);
+  ImageSlice smurf("smurf");
+  ImageSlice orc("orc");
   section.D8(lul::DW_CFA_expression)
       .ULEB128(0x500f5739)
-      .Block("smurf")
+      .Block(smurf)
       .D8(lul::DW_CFA_remember_state)
       .D8(lul::DW_CFA_advance_loc | 1)
       .D8(lul::DW_CFA_expression)
       .ULEB128(0x500f5739)
-      .Block("orc")
+      .Block(orc)
       .D8(lul::DW_CFA_advance_loc | 1)
       .D8(lul::DW_CFA_restore_state)
       .FinishEntry();
 
-  EXPECT_CALL(handler, ExpressionRule(fde_start, 0x500f5739, "smurf"))
+  EXPECT_CALL(handler, ExpressionRule(fde_start, 0x500f5739, smurf))
       .InSequence(s)
       .WillOnce(Return(true));
-  EXPECT_CALL(handler,
-              ExpressionRule(fde_start + code_factor, 0x500f5739, "orc"))
+  EXPECT_CALL(handler, ExpressionRule(fde_start + code_factor, 0x500f5739, orc))
       .InSequence(s)
       .WillOnce(Return(true));
   // Expectations are not wishes.
   EXPECT_CALL(handler,
-              ExpressionRule(fde_start + 2 * code_factor, 0x500f5739, "smurf"))
+              ExpressionRule(fde_start + 2 * code_factor, 0x500f5739, smurf))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, End()).WillOnce(Return(true));
@@ -1953,16 +1955,17 @@ TEST_F(LulDwarfCFIRestore, RestoreExpressionRuleChangedExpression) {
 TEST_F(LulDwarfCFIRestore, RestoreValExpressionRuleUnchanged) {
   ByteReader reader(ENDIANNESS_LITTLE);
   CFISection section(kLittleEndian, 4);
+  ImageSlice hideous("hideous");
   StockCIEAndFDE(&section);
   section.D8(lul::DW_CFA_val_expression)
       .ULEB128(0x666ae152)
-      .Block("hideous")
+      .Block(hideous)
       .D8(lul::DW_CFA_remember_state)
       .D8(lul::DW_CFA_advance_loc | 1)
       .D8(lul::DW_CFA_restore_state)
       .FinishEntry();
 
-  EXPECT_CALL(handler, ValExpressionRule(fde_start, 0x666ae152, "hideous"))
+  EXPECT_CALL(handler, ValExpressionRule(fde_start, 0x666ae152, hideous))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, End()).WillOnce(Return(true));
@@ -1973,10 +1976,11 @@ TEST_F(LulDwarfCFIRestore, RestoreValExpressionRuleUnchanged) {
 TEST_F(LulDwarfCFIRestore, RestoreValExpressionRuleChanged) {
   ByteReader reader(ENDIANNESS_LITTLE);
   CFISection section(kLittleEndian, 4);
+  ImageSlice revolting("revolting");
   StockCIEAndFDE(&section);
   section.D8(lul::DW_CFA_val_expression)
       .ULEB128(0xb5ca5c46)
-      .Block("revolting")
+      .Block(revolting)
       .D8(lul::DW_CFA_remember_state)
       .D8(lul::DW_CFA_advance_loc | 1)
       .D8(lul::DW_CFA_undefined)
@@ -1987,14 +1991,14 @@ TEST_F(LulDwarfCFIRestore, RestoreValExpressionRuleChanged) {
 
   PERHAPS_WRITE_DEBUG_FRAME_FILE("RestoreValExpressionRuleChanged", section);
 
-  EXPECT_CALL(handler, ValExpressionRule(fde_start, 0xb5ca5c46, "revolting"))
+  EXPECT_CALL(handler, ValExpressionRule(fde_start, 0xb5ca5c46, revolting))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, UndefinedRule(fde_start + code_factor, 0xb5ca5c46))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, ValExpressionRule(fde_start + 2 * code_factor,
-                                         0xb5ca5c46, "revolting"))
+                                         0xb5ca5c46, revolting))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, End()).WillOnce(Return(true));
@@ -2005,15 +2009,17 @@ TEST_F(LulDwarfCFIRestore, RestoreValExpressionRuleChanged) {
 TEST_F(LulDwarfCFIRestore, RestoreValExpressionRuleChangedValExpression) {
   ByteReader reader(ENDIANNESS_LITTLE);
   CFISection section(kLittleEndian, 4);
+  ImageSlice repulsive("repulsive");
+  ImageSlice nauseous("nauseous");
   StockCIEAndFDE(&section);
   section.D8(lul::DW_CFA_val_expression)
       .ULEB128(0x500f5739)
-      .Block("repulsive")
+      .Block(repulsive)
       .D8(lul::DW_CFA_remember_state)
       .D8(lul::DW_CFA_advance_loc | 1)
       .D8(lul::DW_CFA_val_expression)
       .ULEB128(0x500f5739)
-      .Block("nauseous")
+      .Block(nauseous)
       .D8(lul::DW_CFA_advance_loc | 1)
       .D8(lul::DW_CFA_restore_state)
       .FinishEntry();
@@ -2021,16 +2027,16 @@ TEST_F(LulDwarfCFIRestore, RestoreValExpressionRuleChangedValExpression) {
   PERHAPS_WRITE_DEBUG_FRAME_FILE("RestoreValExpressionRuleChangedValExpression",
                                  section);
 
-  EXPECT_CALL(handler, ValExpressionRule(fde_start, 0x500f5739, "repulsive"))
+  EXPECT_CALL(handler, ValExpressionRule(fde_start, 0x500f5739, repulsive))
       .InSequence(s)
       .WillOnce(Return(true));
-  EXPECT_CALL(handler, ValExpressionRule(fde_start + code_factor, 0x500f5739,
-                                         "nauseous"))
+  EXPECT_CALL(handler,
+              ValExpressionRule(fde_start + code_factor, 0x500f5739, nauseous))
       .InSequence(s)
       .WillOnce(Return(true));
   // Expectations are not wishes.
   EXPECT_CALL(handler, ValExpressionRule(fde_start + 2 * code_factor,
-                                         0x500f5739, "repulsive"))
+                                         0x500f5739, repulsive))
       .InSequence(s)
       .WillOnce(Return(true));
   EXPECT_CALL(handler, End()).WillOnce(Return(true));
@@ -2458,7 +2464,8 @@ TEST_F(LulDwarfExpr, SimpleTransliteration) {
     EXPECT_CALL(summ, AddPfxInstr(PfxInstr(PX_End)));
   }
 
-  int32_t ix = parseDwarfExpr(&summ, &reader, expr, false, false, false);
+  int32_t ix =
+      parseDwarfExpr(&summ, &reader, ImageSlice(expr), false, false, false);
   EXPECT_TRUE(ix >= 0);
 }
 
@@ -2478,7 +2485,8 @@ TEST_F(LulDwarfExpr, UnknownOpcode) {
     EXPECT_CALL(summ, AddPfxInstr(PfxInstr(PX_Start, 0)));
   }
 
-  int32_t ix = parseDwarfExpr(&summ, &reader, expr, false, false, false);
+  int32_t ix =
+      parseDwarfExpr(&summ, &reader, ImageSlice(expr), false, false, false);
   EXPECT_TRUE(ix == -1);
 }
 
@@ -2502,7 +2510,8 @@ TEST_F(LulDwarfExpr, ExpressionOverrun) {
     EXPECT_CALL(summ, AddPfxInstr(_));
   }
 
-  int32_t ix = parseDwarfExpr(&summ, &reader, expr, false, false, false);
+  int32_t ix =
+      parseDwarfExpr(&summ, &reader, ImageSlice(expr), false, false, false);
   EXPECT_TRUE(ix == -1);
 }
 

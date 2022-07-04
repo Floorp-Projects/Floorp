@@ -17,11 +17,11 @@ root:
     - text: "Cats making all the muffins knock over christmas tree"
       origin: 40 40
       size: 20
-      "clip-and-scroll": 2
+      clip-chain: [2]
       font: "FreeSans.ttf"
     - text: "Cats making all the muffins knock over christmas tree"
       origin: 40 80
       size: 20
       color: white
-      "clip-and-scroll": 2
+      clip-chain: [2]
       font: "FreeSans.ttf"

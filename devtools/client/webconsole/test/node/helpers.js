@@ -134,33 +134,18 @@ function getPrivatePacket(key) {
   return packet;
 }
 
-function getWebConsoleUiMock(hud, proxyOverrides) {
-  const proxy = getProxyMock(proxyOverrides);
+function getWebConsoleUiMock(hud) {
   return {
     emit: () => {},
     emitForTests: () => {},
     hud,
-    getAllProxies: () => [proxy],
-    proxy,
     clearNetworkRequests: () => {},
     clearMessagesCache: () => {},
-    releaseActor: proxy.releaseActor,
-    getProxy: () => proxy,
     inspectObjectActor: () => {},
     toolbox: {
       sessionId: 1,
     },
     watchCssMessages: () => {},
-  };
-}
-
-function getProxyMock(overrides = {}) {
-  return {
-    releaseActor: actor => {},
-    target: {
-      ensureCSSErrorReportingEnabled: () => {},
-    },
-    ...overrides,
   };
 }
 

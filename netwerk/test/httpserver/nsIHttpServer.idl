@@ -61,6 +61,12 @@ interface nsIHttpServer : nsISupports
   void start_ipv6(in long port);
 
   /**
+   * Like the two functions above, but this server supports both IPv6 and
+   * IPv4 addresses.
+   */
+  void start_dualStack(in long port);
+
+  /**
    * Shuts down this server if it is running (including the period of time after
    * stop() has been called but before the provided callback has been called).
    *

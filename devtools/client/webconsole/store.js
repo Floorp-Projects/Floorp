@@ -108,9 +108,11 @@ function configureStore(webConsoleUI, options = {}) {
     compose(
       middleware,
       enableActorReleaser(webConsoleUI),
-      enableBatching(),
       enableMessagesCacheClearing(webConsoleUI),
-      ensureCSSErrorReportingEnabled(webConsoleUI)
+      ensureCSSErrorReportingEnabled(webConsoleUI),
+      // ⚠️ Keep this one last so it will be executed before all the other ones. This is
+      // needed so batched actions can be "unbatched" and handled in the other enhancers.
+      enableBatching()
     )
   );
 }

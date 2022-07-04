@@ -67,6 +67,13 @@ interface nsIServerSocket : nsISupports
                   in long aBackLog);
 
     /**
+     * Similar to init(), but initializes a server socket that supports
+     * both IPv4 and IPv6.
+     */
+    void initDualStack(in long aPort,
+                       in long aBackLog);
+
+    /**
      * initSpecialConnection
      *
      * This method initializes a server socket and offers the ability to have

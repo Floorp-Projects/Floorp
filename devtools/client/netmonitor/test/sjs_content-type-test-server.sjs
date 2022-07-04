@@ -299,6 +299,13 @@ function handleRequest(request, response) {
           response.finish();
           break;
         }
+        case "application-ogg": {
+          response.setStatusLine(request.httpVersion, status, "OK");
+          response.setHeader("Content-Type", "application/ogg", false);
+          setCacheHeaders();
+          response.finish();
+          break;
+        }
         case "audio": {
           response.setStatusLine(request.httpVersion, status, "OK");
           response.setHeader("Content-Type", "audio/ogg", false);

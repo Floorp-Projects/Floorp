@@ -5,6 +5,7 @@ root:
       bounds: [0, 0, 200, 200]
       items:
         - type: clip
+          id: 2
           bounds: [ 0, 0, 200, 200 ]
           complex:
             - rect: [ 10, 10, 180, 180 ]
@@ -13,7 +14,10 @@ root:
                 top-right: [0, 0]
                 bottom-left: [0, 0]
                 bottom-right: [180, 180]
-          items:
-            - type: rect
-              bounds: [ 0, 0, 200, 200 ]
-              color: [ 0, 0, 255, 0.5 ]
+        - type: clip-chain
+          id: 3
+          clips: [2]
+        - type: rect
+          bounds: [ 0, 0, 200, 200 ]
+          color: [ 0, 0, 255, 0.5 ]
+          clip-chain: 3

@@ -3,19 +3,21 @@
 root:
   items:
     - type: clip
+      id: 2
       bounds: [28, 28, 80, 80]
-      items:
-        -
-          bounds: [6, 6, 132, 133]
-          text: "overflow text"          
-          origin: [9, 101]
-          size: 12
-          color: [0, 0, 0, 1]
-          font: "VeraBd.ttf"
-        -
-          bounds: [6, 6, 132, 133]
-          text: "overflow text"          
-          origin: [8, 100]
-          size: 12
-          color: [255, 0, 0, 1]
-          font: "VeraBd.ttf"
+    -
+      bounds: [6, 6, 132, 133]
+      text: "overflow text"          
+      origin: [9, 101]
+      size: 12
+      color: [0, 0, 0, 1]
+      font: "VeraBd.ttf"
+      clip-chain: [2]
+    -
+      bounds: [6, 6, 132, 133]
+      text: "overflow text"          
+      origin: [8, 100]
+      size: 12
+      color: [255, 0, 0, 1]
+      font: "VeraBd.ttf"
+      clip-chain: [2]

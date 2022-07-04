@@ -3,6 +3,7 @@
 root:
   items:
     - type: clip
+      id: 2
       bounds: [0, 0, 200, 200]
       image-mask:
         image: transparent-checkerboard(2, 16, 16)
@@ -10,7 +11,7 @@ root:
         repeat: false
         # This is the point of the test, can't be a divisor of 200.
         tile-size: 37
-      items:
-      - type: rect
-        bounds: [0, 0, 200, 200]
-        color: blue
+    - type: rect
+      bounds: [0, 0, 200, 200]
+      color: blue
+      clip-chain: [2]

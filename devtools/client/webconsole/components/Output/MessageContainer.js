@@ -48,6 +48,7 @@ class MessageContainer extends Component {
       networkMessageUpdate: PropTypes.object,
       getMessage: PropTypes.func.isRequired,
       inWarningGroup: PropTypes.bool,
+      disabled: PropTypes.bool,
     };
   }
 
@@ -60,6 +61,7 @@ class MessageContainer extends Component {
       "networkMessageUpdate",
       "badge",
       "inWarningGroup",
+      "disabled",
     ];
 
     return triggeringUpdateProps.some(

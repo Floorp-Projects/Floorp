@@ -151,6 +151,7 @@ class GlobalObjectData {
     ExportEntryProto,
     RequestedModuleProto,
     ModuleRequestProto,
+    ResolvedBindingProto,
 
     Limit
   };
@@ -719,6 +720,12 @@ class GlobalObject : public NativeObject {
                                    initModuleRequestProto);
   }
 
+  static JSObject* getOrCreateResolvedBindingPrototype(
+      JSContext* cx, Handle<GlobalObject*> global) {
+    return getOrCreateBuiltinProto(cx, global, ProtoKind::ResolvedBindingProto,
+                                   initResolvedBindingProto);
+  }
+
   static JSFunction* getOrCreateTypedArrayConstructor(
       JSContext* cx, Handle<GlobalObject*> global) {
     if (!ensureConstructor(cx, global, JSProto_TypedArray)) {
@@ -1047,6 +1054,8 @@ class GlobalObject : public NativeObject {
                                        Handle<GlobalObject*> global);
   static bool initModuleRequestProto(JSContext* cx,
                                      Handle<GlobalObject*> global);
+  static bool initResolvedBindingProto(JSContext* cx,
+                                       Handle<GlobalObject*> global);
 
   static bool initStandardClasses(JSContext* cx, Handle<GlobalObject*> global);
 

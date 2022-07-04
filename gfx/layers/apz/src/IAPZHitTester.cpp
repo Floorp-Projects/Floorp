@@ -11,14 +11,29 @@
 namespace mozilla {
 namespace layers {
 
-IAPZHitTester::HitTestResult
-IAPZHitTester::HitTestResult::CopyWithoutScrollbarNode() const {
+IAPZHitTester::HitTestResult IAPZHitTester::CloneHitTestResult(
+    RecursiveMutexAutoLock& aProofOfTreeLock,
+    const IAPZHitTester::HitTestResult& aHitTestResult) const {
   HitTestResult result;
-  result.mTargetApzc = mTargetApzc;
-  result.mHitResult = mHitResult;
-  result.mLayersId = mLayersId;
-  result.mFixedPosSides = mFixedPosSides;
-  result.mHitOverscrollGutter = mHitOverscrollGutter;
+
+  result.mTargetApzc = aHitTestResult.mTargetApzc;
+  result.mHitResult = aHitTestResult.mHitResult;
+  result.mLayersId = aHitTestResult.mLayersId;
+  result.mFixedPosSides = aHitTestResult.mFixedPosSides;
+  result.mHitOverscrollGutter = aHitTestResult.mHitOverscrollGutter;
+
+  RefPtr<HitTestingTreeNode> scrollbarNode =
+      aHitTestResult.mScrollbarNode.Get(aProofOfTreeLock);
+  RefPtr<HitTestingTreeNode> node = aHitTestResult.mNode.Get(aProofOfTreeLock);
+
+  if (aHitTestResult.mScrollbarNode) {
+    InitializeHitTestingTreeNodeAutoLock(result.mScrollbarNode,
+                                         aProofOfTreeLock, scrollbarNode);
+  }
+  if (aHitTestResult.mNode) {
+    InitializeHitTestingTreeNodeAutoLock(result.mNode, aProofOfTreeLock, node);
+  }
+
   return result;
 }
 
@@ -54,7 +69,7 @@ already_AddRefed<HitTestingTreeNode> IAPZHitTester::GetTargetNode(
 void IAPZHitTester::InitializeHitTestingTreeNodeAutoLock(
     HitTestingTreeNodeAutoLock& aAutoLock,
     const RecursiveMutexAutoLock& aProofOfTreeLock,
-    RefPtr<HitTestingTreeNode>& aNode) {
+    RefPtr<HitTestingTreeNode>& aNode) const {
   aAutoLock.Initialize(aProofOfTreeLock, aNode.forget(),
                        mTreeManager->mTreeLock);
 }

@@ -29,9 +29,7 @@ This layer already exists in some panels, but we are using slightly different na
   Today, we pass the `connector` to all middlewares from configureStore,
   we could instead pass the netmonitor command object.
 * Web Console has:
-  * WebConsoleConnectionProxy, but this is probably going to disappear and doesn't do much.
-  * WebConsoleUI, which does dispatch to many target's actor, via getAllProxies (see clearMessagesCache)
-  * See devtools/client/webconsole/actions/input.js:handleHelperResult(), where we have to put some code, which is a duplicate of Netmonitor Connector,
+  * devtools/client/webconsole/actions/input.js:handleHelperResult(), where we have to put some code, which is a duplicate of Netmonitor Connector,
     and could be shared via a netmonitor command class.
 * Inspector is probably the panel doing the most dispatch to many target's actor.
   Codes using getAllInspectorFronts could all be migrated to an inspector command class:

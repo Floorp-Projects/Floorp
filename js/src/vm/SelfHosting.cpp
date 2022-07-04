@@ -36,7 +36,6 @@
 #  include "builtin/intl/RelativeTimeFormat.h"
 #endif
 #include "builtin/MapObject.h"
-#include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
 #include "builtin/Promise.h"
 #include "builtin/Reflect.h"
@@ -65,7 +64,6 @@
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/HashTable.h"
-#include "js/Modules.h"             // JS::GetModulePrivate
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "js/PropertySpec.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
@@ -468,35 +466,6 @@ static bool intrinsic_GetErrorMessage(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setString(message);
-  return true;
-}
-
-static bool intrinsic_CreateModuleSyntaxError(JSContext* cx, unsigned argc,
-                                              Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 4);
-  MOZ_ASSERT(args[0].isObject());
-  MOZ_RELEASE_ASSERT(args[1].isInt32());
-  MOZ_RELEASE_ASSERT(args[2].isInt32());
-  MOZ_ASSERT(args[3].isString());
-
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  RootedString filename(cx,
-                        JS_NewStringCopyZ(cx, module->script()->filename()));
-  if (!filename) {
-    return false;
-  }
-
-  RootedString message(cx, args[3].toString());
-
-  RootedValue error(cx);
-  if (!JS::CreateError(cx, JSEXN_SYNTAXERR, nullptr, filename,
-                       args[1].toInt32(), args[2].toInt32(), nullptr, message,
-                       JS::NothingHandleValue, &error)) {
-    return false;
-  }
-
-  args.rval().set(error);
   return true;
 }
 
@@ -1812,224 +1781,6 @@ static bool intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_HostResolveImportedModule(JSContext* cx, unsigned argc,
-                                                Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  RootedObject moduleRequest(cx, &args[1].toObject());
-
-  RootedValue referencingPrivate(cx, JS::GetModulePrivate(module));
-  RootedObject result(
-      cx, CallModuleResolveHook(cx, referencingPrivate, moduleRequest));
-  if (!result) {
-    return false;
-  }
-
-  if (!result->is<ModuleObject>()) {
-    JS_ReportErrorASCII(cx, "Module resolve hook did not return Module object");
-    return false;
-  }
-
-  args.rval().setObject(*result);
-  return true;
-}
-
-static bool intrinsic_CreateImportBinding(JSContext* cx, unsigned argc,
-                                          Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 4);
-  Rooted<ModuleEnvironmentObject*> environment(
-      cx, &args[0].toObject().as<ModuleEnvironmentObject>());
-  Rooted<JSAtom*> importedName(cx, &args[1].toString()->asAtom());
-  Rooted<ModuleObject*> module(cx, &args[2].toObject().as<ModuleObject>());
-  Rooted<JSAtom*> localName(cx, &args[3].toString()->asAtom());
-  if (!environment->createImportBinding(cx, importedName, module, localName)) {
-    return false;
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_CreateNamespaceBinding(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 3);
-  Rooted<ModuleEnvironmentObject*> environment(
-      cx, &args[0].toObject().as<ModuleEnvironmentObject>());
-  RootedId name(cx, AtomToId(&args[1].toString()->asAtom()));
-  MOZ_ASSERT(args[2].toObject().is<ModuleNamespaceObject>());
-  // The property already exists in the evironment but is not writable, so set
-  // the slot directly.
-  mozilla::Maybe<PropertyInfo> prop = environment->lookup(cx, name);
-  MOZ_ASSERT(prop.isSome());
-  environment->setSlot(prop->slot(), args[2]);
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_EnsureModuleEnvironmentNamespace(JSContext* cx,
-                                                       unsigned argc,
-                                                       Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  MOZ_ASSERT(args[1].toObject().is<ModuleNamespaceObject>());
-  Rooted<ModuleEnvironmentObject*> environment(cx,
-                                               &module->initialEnvironment());
-  // The property already exists in the evironment but is not writable, so set
-  // the slot directly.
-  mozilla::Maybe<PropertyInfo> prop =
-      environment->lookup(cx, cx->names().starNamespaceStar);
-  MOZ_ASSERT(prop.isSome());
-  environment->setSlot(prop->slot(), args[1]);
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_InstantiateModuleFunctionDeclarations(JSContext* cx,
-                                                            unsigned argc,
-                                                            Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  args.rval().setUndefined();
-  return ModuleObject::instantiateFunctionDeclarations(cx, module);
-}
-
-static bool intrinsic_ExecuteModule(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  return ModuleObject::execute(cx, module, args.rval());
-}
-
-static bool intrinsic_SetCycleRoot(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  Rooted<ModuleObject*> cycleRoot(cx, &args[1].toObject().as<ModuleObject>());
-  module->setCycleRoot(cycleRoot);
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_GetCycleRoot(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  JSObject* result = module->getCycleRoot();
-  if (!result) {
-    return false;
-  }
-  args.rval().setObject(*result);
-  return true;
-}
-
-static bool intrinsic_AppendAsyncParentModule(JSContext* cx, unsigned argc,
-                                              Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  Rooted<ModuleObject*> self(cx, &args[0].toObject().as<ModuleObject>());
-  Rooted<ModuleObject*> parent(cx, &args[1].toObject().as<ModuleObject>());
-  return ModuleObject::appendAsyncParentModule(cx, self, parent);
-}
-
-static bool intrinsic_InitAsyncEvaluating(JSContext* cx, unsigned argc,
-                                          Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  if (!module->initAsyncEvaluatingSlot()) {
-    return false;
-  }
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_IsAsyncEvaluating(JSContext* cx, unsigned argc,
-                                        Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  bool isAsyncEvaluating = module->isAsyncEvaluating();
-  args.rval().setBoolean(isAsyncEvaluating);
-  return true;
-}
-
-static bool intrinsic_CreateTopLevelCapability(JSContext* cx, unsigned argc,
-                                               Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> self(cx, &args[0].toObject().as<ModuleObject>());
-  PromiseObject* result = ModuleObject::createTopLevelCapability(cx, self);
-  if (!result) {
-    return false;
-  }
-  args.rval().setObject(*result);
-  return true;
-}
-
-static bool intrinsic_ModuleTopLevelCapabilityResolve(JSContext* cx,
-                                                      unsigned argc,
-                                                      Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  if (!ModuleObject::topLevelCapabilityResolve(cx, module)) {
-    return false;
-  }
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_ModuleTopLevelCapabilityReject(JSContext* cx,
-                                                     unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  HandleValue error = args[1];
-  if (!ModuleObject::topLevelCapabilityReject(cx, module, error)) {
-    return false;
-  }
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_NewModuleNamespace(JSContext* cx, unsigned argc,
-                                         Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  RootedObject exports(cx, &args[1].toObject());
-  JSObject* namespace_ = ModuleObject::createNamespace(cx, module, exports);
-  if (!namespace_) {
-    return false;
-  }
-
-  args.rval().setObject(*namespace_);
-  return true;
-}
-
-static bool intrinsic_AddModuleNamespaceBinding(JSContext* cx, unsigned argc,
-                                                Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 4);
-  Rooted<ModuleNamespaceObject*> namespace_(
-      cx, &args[0].toObject().as<ModuleNamespaceObject>());
-  Rooted<JSAtom*> exportedName(cx, &args[1].toString()->asAtom());
-  Rooted<ModuleObject*> targetModule(cx,
-                                     &args[2].toObject().as<ModuleObject>());
-  Rooted<JSAtom*> targetName(cx, &args[3].toString()->asAtom());
-  if (!namespace_->addBinding(cx, exportedName, targetModule, targetName)) {
-    return false;
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool intrinsic_PromiseResolve(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
@@ -2140,11 +1891,21 @@ static bool intrinsic_NoPrivateGetter(JSContext* cx, unsigned argc, Value* vp) {
   return false;
 }
 
+static bool intrinsic_newList(JSContext* cx, unsigned argc, js::Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 0);
+
+  ArrayObject* list = NewArrayWithNullProto(cx);
+  if (!list) {
+    return false;
+  }
+
+  args.rval().setObject(*list);
+  return true;
+}
+
 static const JSFunctionSpec intrinsic_functions[] = {
     // Intrinsic helper functions
-    JS_FN("AddModuleNamespaceBinding", intrinsic_AddModuleNamespaceBinding, 4,
-          0),
-    JS_FN("AppendAsyncParentModule", intrinsic_AppendAsyncParentModule, 2, 0),
     JS_INLINABLE_FN("ArrayBufferByteLength",
                     intrinsic_ArrayBufferByteLength<ArrayBufferObject>, 1, 0,
                     IntrinsicArrayBufferByteLength),
@@ -2169,8 +1930,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
           CallNonGenericSelfhostedMethod<Is<MapIteratorObject>>, 2, 0),
     JS_FN("CallMapMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<MapObject>>, 2, 0),
-    JS_FN("CallModuleMethodIfWrapped",
-          CallNonGenericSelfhostedMethod<Is<ModuleObject>>, 2, 0),
     JS_FN("CallRegExpMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<RegExpObject>>, 2, 0),
     JS_FN("CallRegExpStringIteratorMethodIfWrapped",
@@ -2191,20 +1950,13 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1, 0),
     JS_FN("CopyDataPropertiesOrGetOwnKeys",
           intrinsic_CopyDataPropertiesOrGetOwnKeys, 3, 0),
-    JS_FN("CreateImportBinding", intrinsic_CreateImportBinding, 4, 0),
     JS_FN("CreateMapIterationResultPair",
           intrinsic_CreateMapIterationResultPair, 0, 0),
-    JS_FN("CreateModuleSyntaxError", intrinsic_CreateModuleSyntaxError, 4, 0),
-    JS_FN("CreateNamespaceBinding", intrinsic_CreateNamespaceBinding, 3, 0),
     JS_FN("CreateSetIterationResult", intrinsic_CreateSetIterationResult, 0, 0),
-    JS_FN("CreateTopLevelCapability", intrinsic_CreateTopLevelCapability, 1, 0),
     JS_FN("DecompileArg", intrinsic_DecompileArg, 2, 0),
     JS_FN("DefineDataProperty", intrinsic_DefineDataProperty, 4, 0),
     JS_FN("DefineProperty", intrinsic_DefineProperty, 6, 0),
     JS_FN("DumpMessage", intrinsic_DumpMessage, 1, 0),
-    JS_FN("EnsureModuleEnvironmentNamespace",
-          intrinsic_EnsureModuleEnvironmentNamespace, 1, 0),
-    JS_FN("ExecuteModule", intrinsic_ExecuteModule, 1, 0),
     JS_INLINABLE_FN("FinishBoundFunctionInit",
                     intrinsic_FinishBoundFunctionInit, 3, 0,
                     IntrinsicFinishBoundFunctionInit),
@@ -2213,7 +1965,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GeneratorIsRunning", intrinsic_GeneratorIsRunning, 1, 0),
     JS_FN("GeneratorObjectIsClosed", intrinsic_GeneratorObjectIsClosed, 1, 0),
     JS_FN("GeneratorSetClosed", intrinsic_GeneratorSetClosed, 1, 0),
-    JS_FN("GetCycleRoot", intrinsic_GetCycleRoot, 1, 0),
     JS_FN("GetElemBaseForLambda", intrinsic_GetElemBaseForLambda, 1, 0),
     JS_FN("GetErrorMessage", intrinsic_GetErrorMessage, 1, 0),
     JS_INLINABLE_FN("GetFirstDollarIndex", GetFirstDollarIndex, 1, 0,
@@ -2267,16 +2018,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("GuardToWrapForValidIterator",
                     intrinsic_GuardToBuiltin<WrapForValidIteratorObject>, 1, 0,
                     IntrinsicGuardToWrapForValidIterator),
-    JS_FN("HostResolveImportedModule", intrinsic_HostResolveImportedModule, 2,
-          0),
-    JS_FN("InitAsyncEvaluating", intrinsic_InitAsyncEvaluating, 1, 0),
-    JS_FN("InstantiateModuleFunctionDeclarations",
-          intrinsic_InstantiateModuleFunctionDeclarations, 1, 0),
     JS_FN("IntrinsicAsyncGeneratorNext", AsyncGeneratorNext, 1, 0),
     JS_FN("IntrinsicAsyncGeneratorReturn", AsyncGeneratorReturn, 1, 0),
     JS_FN("IntrinsicAsyncGeneratorThrow", AsyncGeneratorThrow, 1, 0),
     JS_INLINABLE_FN("IsArray", intrinsic_IsArray, 1, 0, ArrayIsArray),
-    JS_FN("IsAsyncEvaluating", intrinsic_IsAsyncEvaluating, 1, 0),
     JS_FN("IsAsyncFunctionGeneratorObject",
           intrinsic_IsInstanceOfBuiltin<AsyncFunctionGeneratorObject>, 1, 0),
     JS_FN("IsAsyncGeneratorObject",
@@ -2292,9 +2037,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicIsCrossRealmArrayConstructor),
     JS_FN("IsGeneratorObject", intrinsic_IsInstanceOfBuiltin<GeneratorObject>,
           1, 0),
-    JS_FN("IsModule", intrinsic_IsInstanceOfBuiltin<ModuleObject>, 1, 0),
-    JS_FN("IsModuleEnvironment",
-          intrinsic_IsInstanceOfBuiltin<ModuleEnvironmentObject>, 1, 0),
     JS_INLINABLE_FN("IsObject", intrinsic_IsObject, 1, 0, IntrinsicIsObject),
     JS_INLINABLE_FN("IsPackedArray", intrinsic_IsPackedArray, 1, 0,
                     IntrinsicIsPackedArray),
@@ -2323,15 +2065,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_IsWrappedInstanceOfBuiltin<ArrayBufferObject>, 1, 0),
     JS_FN("IsWrappedSharedArrayBuffer",
           intrinsic_IsWrappedInstanceOfBuiltin<SharedArrayBufferObject>, 1, 0),
-    JS_FN("ModuleTopLevelCapabilityReject",
-          intrinsic_ModuleTopLevelCapabilityReject, 2, 0),
-    JS_FN("ModuleTopLevelCapabilityResolve",
-          intrinsic_ModuleTopLevelCapabilityResolve, 1, 0),
     JS_INLINABLE_FN("NewArrayIterator", intrinsic_NewArrayIterator, 0, 0,
                     IntrinsicNewArrayIterator),
     JS_FN("NewAsyncIteratorHelper", intrinsic_NewAsyncIteratorHelper, 0, 0),
     JS_FN("NewIteratorHelper", intrinsic_NewIteratorHelper, 0, 0),
-    JS_FN("NewModuleNamespace", intrinsic_NewModuleNamespace, 2, 0),
     JS_INLINABLE_FN("NewRegExpStringIterator",
                     intrinsic_NewRegExpStringIterator, 0, 0,
                     IntrinsicNewRegExpStringIterator),
@@ -2366,7 +2103,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("RegExpSearcher", RegExpSearcher, 3, 0, RegExpSearcher),
     JS_INLINABLE_FN("RegExpTester", RegExpTester, 3, 0, RegExpTester),
     JS_INLINABLE_FN("SameValue", js::obj_is, 2, 0, ObjectIs),
-    JS_FN("SetCycleRoot", intrinsic_SetCycleRoot, 2, 0),
     JS_FN("SharedArrayBufferByteLength",
           intrinsic_ArrayBufferByteLength<SharedArrayBufferObject>, 1, 0),
     JS_FN("SharedArrayBufferCopyData",

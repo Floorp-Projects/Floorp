@@ -36,15 +36,14 @@ class Script(BidiModule):
     def evaluate(self,
                  expression: str,
                  target: Target,
-                 await_promise: Optional[bool] = None,
+                 await_promise: bool,
                  result_ownership: Optional[OwnershipModel] = None) -> Mapping[str, Any]:
         params: MutableMapping[str, Any] = {
             "expression": expression,
             "target": target,
+            "awaitPromise": await_promise,
         }
 
-        if await_promise is not None:
-            params["awaitPromise"] = await_promise
         if result_ownership is not None:
             params["resultOwnership"] = result_ownership
         return params

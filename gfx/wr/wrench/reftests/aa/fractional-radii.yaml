@@ -2,41 +2,57 @@
 root:
   items:
     - type: clip
+      id: 2
       bounds: [20, 50, 100, 100]
       complex:
         - rect: [20, 50, 100, 100]
           radius: 0
-      items:
-      - type: rect
-        bounds: 20 50 100 100
-        color: blue
+    - type: clip-chain
+      id: 10
+      clips: [2]
+    - type: rect
+      bounds: 20 50 100 100
+      color: blue
+      clip-chain: 10
 
     - type: clip
+      id: 3
       bounds: [140, 50, 100, 100]
       complex:
         - rect: [140, 50, 100, 100]
           radius: 0.001
-      items:
-      - type: rect
-        bounds: 140 50 100 100
-        color: blue
+    - type: clip-chain
+      id: 11
+      clips: [3]
+    - type: rect
+      bounds: 140 50 100 100
+      color: blue
+      clip-chain: 11
 
     - type: clip
+      id: 4
       bounds: [260, 50, 100, 100]
       complex:
         - rect: [260, 50, 100, 100]
           radius: 0.01
-      items:
-      - type: rect
-        bounds: 260 50 100 100
-        color: blue
+    - type: clip-chain
+      id: 12
+      clips: [4]
+    - type: rect
+      bounds: 260 50 100 100
+      color: blue
+      clip-chain: 12
 
     - type: clip
+      id: 5
       bounds: [380, 50, 100, 100]
       complex:
         - rect: [380, 50, 100, 100]
           radius: 0.1
-      items:
-      - type: rect
-        bounds: 380 50 100 100
-        color: blue
+    - type: clip-chain
+      id: 13
+      clips: [5]
+    - type: rect
+      bounds: 380 50 100 100
+      color: blue
+      clip-chain: 13

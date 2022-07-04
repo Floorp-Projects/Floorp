@@ -45,6 +45,10 @@ class IAPZHitTester {
     // If content that is fixed to the root-content APZC was hit,
     // the sides of the viewport to which the content is fixed.
     SideBits mFixedPosSides = SideBits::eNone;
+    // If a fixed/sticky position element was hit, this will be populated with
+    // the hit-testing tree node. The AutoLock allows accessing the node
+    // without having to hold the tree lock.
+    HitTestingTreeNodeAutoLock mNode;
     // This is set to true If mTargetApzc is overscrolled and the
     // event targeted the gap space ("gutter") created by the overscroll.
     bool mHitOverscrollGutter = false;
@@ -53,15 +57,14 @@ class IAPZHitTester {
     // Make it move-only.
     HitTestResult(HitTestResult&&) = default;
     HitTestResult& operator=(HitTestResult&&) = default;
-
-    // Make a copy of all the fields except mScrollbarNode (the field
-    // that makes this move-only).
-    HitTestResult CopyWithoutScrollbarNode() const;
   };
 
   virtual HitTestResult GetAPZCAtPoint(
       const ScreenPoint& aHitTestPoint,
       const RecursiveMutexAutoLock& aProofOfTreeLock) = 0;
+
+  HitTestResult CloneHitTestResult(RecursiveMutexAutoLock& aProofOfTreeLock,
+                                   const HitTestResult& aHitTestResult) const;
 
  protected:
   APZCTreeManager* mTreeManager = nullptr;
@@ -79,7 +82,7 @@ class IAPZHitTester {
   void InitializeHitTestingTreeNodeAutoLock(
       HitTestingTreeNodeAutoLock& aAutoLock,
       const RecursiveMutexAutoLock& aProofOfTreeLock,
-      RefPtr<HitTestingTreeNode>& aNode);
+      RefPtr<HitTestingTreeNode>& aNode) const;
 };
 
 }  // namespace layers

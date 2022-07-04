@@ -5,17 +5,18 @@
 root:
   items:
     - type: clip
+      id: 2
       bounds: [10, 10, 256, 256]
       complex:
         - rect: [10, 10, 256, 256]
           radius: 16
+    - type: stacking-context
+      filters: grayscale(1)
       items:
-        - type: stacking-context
-          filters: grayscale(1)
-          items:
-            - type: rect
-              color: red
-              bounds: [10, 10, 512, 512]
+        - type: rect
+          color: red
+          bounds: [10, 10, 512, 512]
+          clip-chain: [2]
     - type: rect
       color: red
       bounds: [0, 0, 300, 32]

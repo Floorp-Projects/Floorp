@@ -73,7 +73,8 @@ function isMedia({ mimeType }) {
       mimeType.includes("video/") ||
       mimeType.includes("model/") ||
       mimeType === "application/vnd.apple.mpegurl" ||
-      mimeType === "application/x-mpegurl")
+      mimeType === "application/x-mpegurl" ||
+      mimeType === "application/ogg")
   );
 }
 

@@ -114,23 +114,6 @@ PlainObject* PlainObject::createWithTemplateFromDifferentRealm(
   return createWithShape(cx, shape);
 }
 
-static bool AddPlainObjectProperties(JSContext* cx, Handle<PlainObject*> obj,
-                                     IdValuePair* properties,
-                                     size_t nproperties) {
-  RootedId propid(cx);
-  RootedValue value(cx);
-
-  for (size_t i = 0; i < nproperties; i++) {
-    propid = properties[i].id;
-    value = properties[i].value;
-    if (!NativeDefineDataProperty(cx, obj, propid, value, JSPROP_ENUMERATE)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 // static
 Shape* GlobalObject::createPlainObjectShapeWithDefaultProto(
     JSContext* cx, gc::AllocKind kind) {
@@ -213,15 +196,137 @@ PlainObject* js::NewPlainObjectWithProtoAndAllocKind(JSContext* cx,
   return PlainObject::createWithShape(cx, shape, allocKind, newKind);
 }
 
-PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
-                                              IdValuePair* properties,
-                                              size_t nproperties,
-                                              NewObjectKind newKind) {
+void js::NewPlainObjectWithPropsCache::add(Shape* shape) {
+  MOZ_ASSERT(shape);
+  MOZ_ASSERT(shape->slotSpan() > 0);
+  for (size_t i = NumEntries - 1; i > 0; i--) {
+    entries_[i] = entries_[i - 1];
+  }
+  entries_[0] = shape;
+}
+
+static bool ShapeMatches(IdValuePair* properties, size_t nproperties,
+                         Shape* shape) {
+  if (shape->slotSpan() != nproperties) {
+    return false;
+  }
+  ShapePropertyIter<NoGC> iter(shape);
+  for (size_t i = nproperties; i > 0; i--) {
+    MOZ_ASSERT(iter->isDataProperty());
+    MOZ_ASSERT(iter->flags() == PropertyFlags::defaultDataPropFlags);
+    if (properties[i - 1].id != iter->key()) {
+      return false;
+    }
+    iter++;
+  }
+  MOZ_ASSERT(iter.done());
+  return true;
+}
+
+Shape* js::NewPlainObjectWithPropsCache::lookup(IdValuePair* properties,
+                                                size_t nproperties) const {
+  for (size_t i = 0; i < NumEntries; i++) {
+    Shape* shape = entries_[i];
+    if (shape && ShapeMatches(properties, nproperties, shape)) {
+      return shape;
+    }
+  }
+  return nullptr;
+}
+
+enum class KeysKind { UniqueNames, Unknown };
+
+template <KeysKind Kind>
+static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
+                                                 IdValuePair* properties,
+                                                 size_t nproperties) {
+  auto& cache = cx->realm()->newPlainObjectWithPropsCache;
+
+  // If we recently created an object with these properties, we can use that
+  // Shape directly.
+  if (Shape* shape = cache.lookup(properties, nproperties)) {
+    Rooted<Shape*> shapeRoot(cx, shape);
+    PlainObject* obj = PlainObject::createWithShape(cx, shapeRoot);
+    if (!obj) {
+      return nullptr;
+    }
+    MOZ_ASSERT(obj->slotSpan() == nproperties);
+    for (size_t i = 0; i < nproperties; i++) {
+      obj->initSlot(i, properties[i].value);
+    }
+    return obj;
+  }
+
   gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
-  Rooted<PlainObject*> obj(cx,
-                           NewPlainObjectWithAllocKind(cx, allocKind, newKind));
-  if (!obj || !AddPlainObjectProperties(cx, obj, properties, nproperties)) {
+  Rooted<PlainObject*> obj(cx, NewPlainObjectWithAllocKind(cx, allocKind));
+  if (!obj) {
     return nullptr;
   }
+
+  if (nproperties == 0) {
+    return obj;
+  }
+
+  Rooted<PropertyKey> key(cx);
+  Rooted<Value> value(cx);
+  bool canCache = true;
+
+  for (size_t i = 0; i < nproperties; i++) {
+    key = properties[i].id;
+    value = properties[i].value;
+
+    // Integer keys may need to be stored in dense elements. This is uncommon so
+    // just fall back to NativeDefineDataProperty.
+    if constexpr (Kind == KeysKind::Unknown) {
+      if (MOZ_UNLIKELY(key.isInt())) {
+        canCache = false;
+        if (!NativeDefineDataProperty(cx, obj, key, value, JSPROP_ENUMERATE)) {
+          return nullptr;
+        }
+        continue;
+      }
+    }
+
+    MOZ_ASSERT(key.isAtom() || key.isSymbol());
+
+    // Check for duplicate keys. In this case we must overwrite the earlier
+    // property value.
+    if constexpr (Kind == KeysKind::UniqueNames) {
+      MOZ_ASSERT(!obj->containsPure(key));
+    } else {
+      mozilla::Maybe<PropertyInfo> prop = obj->lookup(cx, key);
+      if (MOZ_UNLIKELY(prop)) {
+        canCache = false;
+        MOZ_ASSERT(prop->isDataProperty());
+        obj->setSlot(prop->slot(), value);
+        continue;
+      }
+    }
+
+    if (!AddDataPropertyToPlainObject(cx, obj, key, value)) {
+      return nullptr;
+    }
+  }
+
+  if (canCache && !obj->inDictionaryMode()) {
+    MOZ_ASSERT(!obj->isIndexed());
+    MOZ_ASSERT(obj->slotSpan() == nproperties);
+    cache.add(obj->shape());
+  }
+
   return obj;
+}
+
+PlainObject* js::NewPlainObjectWithUniqueNames(JSContext* cx,
+                                               IdValuePair* properties,
+                                               size_t nproperties) {
+  return NewPlainObjectWithProperties<KeysKind::UniqueNames>(cx, properties,
+                                                             nproperties);
+}
+
+PlainObject* js::NewPlainObjectWithMaybeDuplicateKeys(JSContext* cx,
+                                                      IdValuePair* properties,
+                                                      size_t nproperties) {
+  return NewPlainObjectWithProperties<KeysKind::Unknown>(cx, properties,
+                                                         nproperties);
 }

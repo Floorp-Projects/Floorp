@@ -10,19 +10,19 @@ root:
     -
       bounds: [0, 100, 100, 100]
       "clip-rect": [0, 100, 100, 100]
-      "clip-and-scroll": 2
+      clip-chain: [2]
       type: rect
       color: blue
     -
       bounds: [100, 0, 100, 100]
       "clip-rect": [100, 0, 100, 100]
-      "clip-and-scroll": 2
+      clip-chain: [2]
       type: rect
       color: green
     -
       bounds: [100, 100, 100, 100]
       "clip-rect": [100, 100, 100, 100]
-      "clip-and-scroll": 2
+      clip-chain: [2]
       type: rect
       color: red
 

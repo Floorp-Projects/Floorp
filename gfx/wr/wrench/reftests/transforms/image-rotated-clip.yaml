@@ -9,7 +9,7 @@ root:
       "content-size": [400, 400]
     -
       bounds: [0, 0, 0, 0]
-      "clip-and-scroll": 2
+      clip-chain: [2]
       type: "stacking-context"
       transform: [0.70710677, 0.70710677, 0, 0, -0.70710677, 0.70710677, 0, 0, 0, 0, 1, 0, 218, -64.84271, 0, 1]
       items:

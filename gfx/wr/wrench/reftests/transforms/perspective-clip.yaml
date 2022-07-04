@@ -4,24 +4,25 @@
 root:
   items:
     - type: clip
+      id: 2
       bounds: [225, 200, 150, 200]
       complex:
         - rect: [225, 200, 150, 200]
           radius: 32
+    -
+      type: "stacking-context"
+      bounds: 0 0 1000 1000
+      perspective: 100
+      perspective-origin: 300 300
       items:
         -
           type: "stacking-context"
-          bounds: 0 0 1000 1000
-          perspective: 100
-          perspective-origin: 300 300
+          transform: rotate-x(-10)
+          transform-origin: 300 300
+          filters: identity
           items:
             -
-              type: "stacking-context"
-              transform: rotate-x(-10)
-              transform-origin: 300 300
-              filters: identity
-              items:
-                -
-                  bounds: [200, 200, 200, 200]
-                  image: checkerboard(2, 16, 12)
-                  stretch-size: 200 200
+              bounds: [200, 200, 200, 200]
+              image: checkerboard(2, 16, 12)
+              stretch-size: 200 200
+              clip-chain: [2]

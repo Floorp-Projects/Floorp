@@ -21,6 +21,7 @@ const {
 const {
   getMutableMessagesById,
   getMessage,
+  getAllNetworkMessagesUpdateById,
 } = require("devtools/client/webconsole/selectors/messages");
 const Telemetry = require("devtools/client/shared/telemetry");
 
@@ -143,6 +144,13 @@ class WebConsoleWrapper {
 
   dispatchMessagesAdd(messages) {
     this.batchedMessagesAdd(messages);
+  }
+
+  dispatchNetworkMessagesDisable() {
+    const networkMessageIds = Object.keys(
+      getAllNetworkMessagesUpdateById(store.getState())
+    );
+    store.dispatch(actions.messagesDisable(networkMessageIds));
   }
 
   dispatchMessagesClear() {
