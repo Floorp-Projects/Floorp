@@ -26,8 +26,8 @@ const CONSTANT_ICONS = Object.entries(l10nLevels).reduce(
   {}
 );
 
-function getIconElement(level, type) {
-  let title = l10n.getStr(l10nLevels[level] || level);
+function getIconElement(level, type, title) {
+  title = title || l10n.getStr(l10nLevels[level] || level);
   const classnames = ["icon"];
 
   if (type && type === "logPoint") {
@@ -52,13 +52,14 @@ MessageIcon.displayName = "MessageIcon";
 MessageIcon.propTypes = {
   level: PropTypes.string.isRequired,
   type: PropTypes.string,
+  title: PropTypes.string,
 };
 
 function MessageIcon(props) {
-  const { level, type } = props;
+  const { level, type, title } = props;
 
   if (type) {
-    return getIconElement(level, type);
+    return getIconElement(level, type, title);
   }
 
   return CONSTANT_ICONS[level] || getIconElement(level);
