@@ -27,9 +27,7 @@ bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
 ModuleNamespaceObject* GetOrCreateModuleNamespace(JSContext* cx,
                                                   Handle<ModuleObject*> module);
 
-void EnsureModuleEnvironmentNamespace(JSContext* cx,
-                                      Handle<ModuleObject*> module,
-                                      Handle<ModuleNamespaceObject*> ns);
+bool ModuleInitializeEnvironment(JSContext* cx, Handle<ModuleObject*> module);
 
 }  // namespace js
 

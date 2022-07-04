@@ -472,35 +472,6 @@ static bool intrinsic_GetErrorMessage(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool intrinsic_CreateModuleSyntaxError(JSContext* cx, unsigned argc,
-                                              Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 4);
-  MOZ_ASSERT(args[0].isObject());
-  MOZ_RELEASE_ASSERT(args[1].isInt32());
-  MOZ_RELEASE_ASSERT(args[2].isInt32());
-  MOZ_ASSERT(args[3].isString());
-
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  RootedString filename(cx,
-                        JS_NewStringCopyZ(cx, module->script()->filename()));
-  if (!filename) {
-    return false;
-  }
-
-  RootedString message(cx, args[3].toString());
-
-  RootedValue error(cx);
-  if (!JS::CreateError(cx, JSEXN_SYNTAXERR, nullptr, filename,
-                       args[1].toInt32(), args[2].toInt32(), nullptr, message,
-                       JS::NothingHandleValue, &error)) {
-    return false;
-  }
-
-  args.rval().set(error);
-  return true;
-}
-
 /**
  * Handles an assertion failure in self-hosted code just like an assertion
  * failure in C++ code. Information about the failure can be provided in
@@ -1836,61 +1807,18 @@ static bool intrinsic_HostResolveImportedModule(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_CreateImportBinding(JSContext* cx, unsigned argc,
-                                          Value* vp) {
+static bool intrinsic_InitializeEnvironment(JSContext* cx, unsigned argc,
+                                            Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 4);
-  Rooted<ModuleEnvironmentObject*> environment(
-      cx, &args[0].toObject().as<ModuleEnvironmentObject>());
-  Rooted<JSAtom*> importedName(cx, &args[1].toString()->asAtom());
-  Rooted<ModuleObject*> module(cx, &args[2].toObject().as<ModuleObject>());
-  Rooted<JSAtom*> localName(cx, &args[3].toString()->asAtom());
-  if (!environment->createImportBinding(cx, importedName, module, localName)) {
+  MOZ_ASSERT(args.length() == 1);
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
+
+  if (!ModuleInitializeEnvironment(cx, module)) {
     return false;
   }
 
   args.rval().setUndefined();
   return true;
-}
-
-static bool intrinsic_CreateNamespaceBinding(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 3);
-  Rooted<ModuleEnvironmentObject*> environment(
-      cx, &args[0].toObject().as<ModuleEnvironmentObject>());
-  RootedId name(cx, AtomToId(&args[1].toString()->asAtom()));
-  MOZ_ASSERT(args[2].toObject().is<ModuleNamespaceObject>());
-  // The property already exists in the evironment but is not writable, so set
-  // the slot directly.
-  mozilla::Maybe<PropertyInfo> prop = environment->lookup(cx, name);
-  MOZ_ASSERT(prop.isSome());
-  environment->setSlot(prop->slot(), args[2]);
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_EnsureModuleEnvironmentNamespace(JSContext* cx,
-                                                       unsigned argc,
-                                                       Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  Rooted<ModuleNamespaceObject*> ns(
-      cx, &args[1].toObject().as<ModuleNamespaceObject>());
-  EnsureModuleEnvironmentNamespace(cx, module, ns);
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_InstantiateModuleFunctionDeclarations(JSContext* cx,
-                                                            unsigned argc,
-                                                            Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  args.rval().setUndefined();
-  return ModuleObject::instantiateFunctionDeclarations(cx, module);
 }
 
 static bool intrinsic_ExecuteModule(JSContext* cx, unsigned argc, Value* vp) {
@@ -1966,17 +1894,13 @@ static bool intrinsic_CreateTopLevelCapability(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_ModuleResolveExport(JSContext* cx, unsigned argc,
-                                          Value* vp) {
+static bool intrinsic_ModuleInitializeEnvironment(JSContext* cx, unsigned argc,
+                                                  Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
+  MOZ_ASSERT(args.length() == 1);
   Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
 
-  // The names passed to ModuleResolveExport flow only from module
-  // ImportEntryObject and ExportEntryObjects that are populated with atoms.
-  Rooted<JSAtom*> exportName(cx, &args[1].toString()->asAtom());
-
-  return ModuleResolveExport(cx, module, exportName, args.rval());
+  return ModuleInitializeEnvironment(cx, module);
 }
 
 static bool intrinsic_ModuleTopLevelCapabilityResolve(JSContext* cx,
@@ -2002,21 +1926,6 @@ static bool intrinsic_ModuleTopLevelCapabilityReject(JSContext* cx,
     return false;
   }
   args.rval().setUndefined();
-  return true;
-}
-
-static bool intrinsic_GetModuleNamespace(JSContext* cx, unsigned argc,
-                                         Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-
-  ModuleNamespaceObject* ns = GetOrCreateModuleNamespace(cx, module);
-  if (!ns) {
-    return false;
-  }
-
-  args.rval().setObject(*ns);
   return true;
 }
 
@@ -2192,19 +2101,14 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1, 0),
     JS_FN("CopyDataPropertiesOrGetOwnKeys",
           intrinsic_CopyDataPropertiesOrGetOwnKeys, 3, 0),
-    JS_FN("CreateImportBinding", intrinsic_CreateImportBinding, 4, 0),
     JS_FN("CreateMapIterationResultPair",
           intrinsic_CreateMapIterationResultPair, 0, 0),
-    JS_FN("CreateModuleSyntaxError", intrinsic_CreateModuleSyntaxError, 4, 0),
-    JS_FN("CreateNamespaceBinding", intrinsic_CreateNamespaceBinding, 3, 0),
     JS_FN("CreateSetIterationResult", intrinsic_CreateSetIterationResult, 0, 0),
     JS_FN("CreateTopLevelCapability", intrinsic_CreateTopLevelCapability, 1, 0),
     JS_FN("DecompileArg", intrinsic_DecompileArg, 2, 0),
     JS_FN("DefineDataProperty", intrinsic_DefineDataProperty, 4, 0),
     JS_FN("DefineProperty", intrinsic_DefineProperty, 6, 0),
     JS_FN("DumpMessage", intrinsic_DumpMessage, 1, 0),
-    JS_FN("EnsureModuleEnvironmentNamespace",
-          intrinsic_EnsureModuleEnvironmentNamespace, 1, 0),
     JS_FN("ExecuteModule", intrinsic_ExecuteModule, 1, 0),
     JS_INLINABLE_FN("FinishBoundFunctionInit",
                     intrinsic_FinishBoundFunctionInit, 3, 0,
@@ -2219,7 +2123,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GetErrorMessage", intrinsic_GetErrorMessage, 1, 0),
     JS_INLINABLE_FN("GetFirstDollarIndex", GetFirstDollarIndex, 1, 0,
                     GetFirstDollarIndex),
-    JS_FN("GetModuleNamespace", intrinsic_GetModuleNamespace, 1, 0),
     JS_INLINABLE_FN("GetNextMapEntryForIterator",
                     intrinsic_GetNextMapEntryForIterator, 2, 0,
                     IntrinsicGetNextMapEntryForIterator),
@@ -2272,8 +2175,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("HostResolveImportedModule", intrinsic_HostResolveImportedModule, 2,
           0),
     JS_FN("InitAsyncEvaluating", intrinsic_InitAsyncEvaluating, 1, 0),
-    JS_FN("InstantiateModuleFunctionDeclarations",
-          intrinsic_InstantiateModuleFunctionDeclarations, 1, 0),
+    JS_FN("InitializeEnvironment", intrinsic_InitializeEnvironment, 1, 0),
     JS_FN("IntrinsicAsyncGeneratorNext", AsyncGeneratorNext, 1, 0),
     JS_FN("IntrinsicAsyncGeneratorReturn", AsyncGeneratorReturn, 1, 0),
     JS_FN("IntrinsicAsyncGeneratorThrow", AsyncGeneratorThrow, 1, 0),
@@ -2325,7 +2227,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_IsWrappedInstanceOfBuiltin<ArrayBufferObject>, 1, 0),
     JS_FN("IsWrappedSharedArrayBuffer",
           intrinsic_IsWrappedInstanceOfBuiltin<SharedArrayBufferObject>, 1, 0),
-    JS_FN("ModuleResolveExport", intrinsic_ModuleResolveExport, 2, 0),
+    JS_FN("ModuleInitializeEnvironment", intrinsic_ModuleInitializeEnvironment,
+          1, 0),
     JS_FN("ModuleTopLevelCapabilityReject",
           intrinsic_ModuleTopLevelCapabilityReject, 2, 0),
     JS_FN("ModuleTopLevelCapabilityResolve",

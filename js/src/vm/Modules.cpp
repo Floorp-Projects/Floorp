@@ -659,9 +659,9 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
   return true;
 }
 
-void js::EnsureModuleEnvironmentNamespace(JSContext* cx,
-                                          Handle<ModuleObject*> module,
-                                          Handle<ModuleNamespaceObject*> ns) {
+static void EnsureModuleEnvironmentNamespace(
+    JSContext* cx, Handle<ModuleObject*> module,
+    Handle<ModuleNamespaceObject*> ns) {
   Rooted<ModuleEnvironmentObject*> environment(cx,
                                                &module->initialEnvironment());
   // The property already exists in the evironment but is not writable, so set
@@ -727,13 +727,11 @@ ModuleNamespaceObject* js::GetOrCreateModuleNamespace(
   return ns;
 }
 
-#ifdef DEBUG
 static bool IsResolvedBinding(JSContext* cx, Handle<Value> resolution) {
   MOZ_ASSERT(resolution.isObjectOrNull() ||
              resolution.toString() == cx->names().ambiguous);
   return resolution.isObject();
 }
-#endif
 
 // https://tc39.es/ecma262/#sec-modulenamespacecreate
 // ES2023 10.4.6.12 ModuleNamespaceCreate
@@ -796,4 +794,221 @@ static ModuleNamespaceObject* ModuleNamespaceCreate(
 
   // Step 10. Return M.
   return ns;
+}
+
+static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
+                                 Handle<Value> resolution, bool isDirectImport,
+                                 Handle<JSAtom*> name, uint32_t line,
+                                 uint32_t column) {
+  MOZ_ASSERT(line != 0);
+
+  bool isAmbiguous = resolution == StringValue(cx->names().ambiguous);
+
+  static constexpr unsigned ErrorNumbers[2][2] = {
+      {JSMSG_AMBIGUOUS_IMPORT, JSMSG_MISSING_IMPORT},
+      {JSMSG_AMBIGUOUS_INDIRECT_EXPORT, JSMSG_MISSING_INDIRECT_EXPORT}};
+  unsigned errorNumber = ErrorNumbers[isDirectImport][isAmbiguous];
+
+  const JSErrorFormatString* errorString =
+      GetErrorMessage(nullptr, errorNumber);
+  MOZ_ASSERT(errorString);
+
+  MOZ_ASSERT(errorString->argCount == 0);
+  Rooted<JSString*> message(cx, JS_NewStringCopyZ(cx, errorString->format));
+  if (!message) {
+    return;
+  }
+
+  Rooted<JSString*> separator(cx, JS_NewStringCopyZ(cx, ": "));
+  if (!separator) {
+    return;
+  }
+
+  message = ConcatStrings<CanGC>(cx, message, separator);
+  if (!message) {
+    return;
+  }
+
+  message = ConcatStrings<CanGC>(cx, message, name);
+  if (!message) {
+    return;
+  }
+
+  RootedString filename(cx);
+  filename = JS_NewStringCopyZ(cx, module->script()->filename());
+  if (!filename) {
+    return;
+  }
+
+  RootedValue error(cx);
+  if (!JS::CreateError(cx, JSEXN_SYNTAXERR, nullptr, filename, line, column,
+                       nullptr, message, JS::NothingHandleValue, &error)) {
+    return;
+  }
+
+  cx->setPendingException(error, nullptr);
+}
+
+static void InitNamespaceBinding(JSContext* cx,
+                                 Handle<ModuleEnvironmentObject*> env,
+                                 Handle<JSAtom*> name,
+                                 Handle<ModuleNamespaceObject*> ns) {
+  // The property already exists in the evironment but is not writable, so set
+  // the slot directly.
+  RootedId id(cx, AtomToId(name));
+  mozilla::Maybe<PropertyInfo> prop = env->lookup(cx, id);
+  MOZ_ASSERT(prop.isSome());
+  env->setSlot(prop->slot(), ObjectValue(*ns));
+}
+
+// https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment
+// ES2023 16.2.1.6.4 InitializeEnvironment
+bool js::ModuleInitializeEnvironment(JSContext* cx,
+                                     Handle<ModuleObject*> module) {
+  MOZ_ASSERT(module->status() == MODULE_STATUS_LINKING);
+
+  // Step 1. For each ExportEntry Record e of module.[[IndirectExportEntries]],
+  //         do:
+  Rooted<ArrayObject*> indirectExportEntries(cx,
+                                             &module->indirectExportEntries());
+  Rooted<ExportEntryObject*> e(cx);
+  Rooted<JSAtom*> exportName(cx);
+  Rooted<Value> resolution(cx);
+  for (uint32_t i = 0; i != indirectExportEntries->length(); i++) {
+    e = &indirectExportEntries->getDenseElement(i)
+             .toObject()
+             .as<ExportEntryObject>();
+
+    // Step 1.a. Let resolution be ? module.ResolveExport(e.[[ExportName]]).
+    exportName = e->exportName();
+    if (!ModuleResolveExport(cx, module, exportName, &resolution)) {
+      return false;
+    }
+
+    // Step 1.b. If resolution is null or ambiguous, throw a SyntaxError
+    //           exception.
+    if (!IsResolvedBinding(cx, resolution)) {
+      ThrowResolutionError(cx, module, resolution, false, exportName,
+                           e->lineNumber(), e->columnNumber());
+      return false;
+    }
+  }
+
+  // Step 5. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
+  // Step 6. Set module.[[Environment]] to env.
+  // Note that we have already created the environment by this point.
+  Rooted<ModuleEnvironmentObject*> env(cx, &module->initialEnvironment());
+
+  // Step 7. For each ImportEntry Record in of module.[[ImportEntries]], do:
+  Rooted<ArrayObject*> importEntries(cx, &module->importEntries());
+  Rooted<ImportEntryObject*> in(cx);
+  Rooted<ModuleRequestObject*> moduleRequest(cx);
+  Rooted<ModuleObject*> importedModule(cx);
+  Rooted<JSAtom*> importName(cx);
+  Rooted<JSAtom*> localName(cx);
+  Rooted<ModuleObject*> sourceModule(cx);
+  Rooted<JSAtom*> bindingName(cx);
+  for (uint32_t i = 0; i != importEntries->length(); i++) {
+    in = &importEntries->getDenseElement(i).toObject().as<ImportEntryObject>();
+
+    // Step 7.a. Let importedModule be ! HostResolveImportedModule(module,
+    //           in.[[ModuleRequest]]).
+    moduleRequest = in->moduleRequest();
+    importedModule = HostResolveImportedModule(cx, module, moduleRequest,
+                                               MODULE_STATUS_LINKING);
+    if (!importedModule) {
+      return false;
+    }
+
+    localName = in->localName();
+    importName = in->importName();
+
+    // Step 7.c. If in.[[ImportName]] is namespace-object, then:
+    if (!importName) {
+      // Step 7.c.i. Let namespace be ? GetModuleNamespace(importedModule).
+      Rooted<ModuleNamespaceObject*> ns(
+          cx, GetOrCreateModuleNamespace(cx, importedModule));
+      if (!ns) {
+        return false;
+      }
+
+      // Step 7.c.ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]],
+      // true). This happens when the environment is created.
+
+      // Step 7.c.iii. Perform ! env.InitializeBinding(in.[[LocalName]],
+      // namespace).
+      InitNamespaceBinding(cx, env, localName, ns);
+    } else {
+      // Step 7.d. Else:
+      // Step 7.d.i. Let resolution be ?
+      // importedModule.ResolveExport(in.[[ImportName]]).
+      if (!ModuleResolveExport(cx, importedModule, importName, &resolution)) {
+        return false;
+      }
+
+      // Step 7.d.ii. If resolution is null or ambiguous, throw a SyntaxError
+      //              exception.
+      if (!IsResolvedBinding(cx, resolution)) {
+        ThrowResolutionError(cx, module, resolution, true, importName,
+                             in->lineNumber(), in->columnNumber());
+        return false;
+      }
+
+      auto* binding = &resolution.toObject().as<ResolvedBindingObject>();
+      sourceModule = binding->module();
+      bindingName = binding->bindingName();
+
+      // Step 7.d.iii. If resolution.[[BindingName]] is namespace, then:
+      if (bindingName == cx->names().starNamespaceStar) {
+        // Step 7.d.iii.1. Let namespace be ?
+        //                 GetModuleNamespace(resolution.[[Module]]).
+        Rooted<ModuleNamespaceObject*> ns(
+            cx, GetOrCreateModuleNamespace(cx, sourceModule));
+        if (!ns) {
+          return false;
+        }
+
+        // Step 7.d.iii.2. Perform !
+        //                 env.CreateImmutableBinding(in.[[LocalName]], true).
+        // Step 7.d.iii.3. Perform ! env.InitializeBinding(in.[[LocalName]],
+        //                 namespace).
+        //
+        // This should be InitNamespaceBinding, but we have already generated
+        // bytecode assuming an indirect binding. Instead, ensure a special
+        // "*namespace*"" binding exists on the target module's environment. We
+        // then generate an indirect binding to this synthetic binding.
+        EnsureModuleEnvironmentNamespace(cx, sourceModule, ns);
+        if (!env->createImportBinding(cx, localName, sourceModule,
+                                      bindingName)) {
+          return false;
+        }
+      } else {
+        // Step 7.d.iv. Else:
+        // Step 7.d.iv.1. 1. Perform env.CreateImportBinding(in.[[LocalName]],
+        //                   resolution.[[Module]], resolution.[[BindingName]]).
+        if (!env->createImportBinding(cx, localName, sourceModule,
+                                      bindingName)) {
+          return false;
+        }
+      }
+    }
+  }
+
+  // Steps 8-26.
+  //
+  // Some of these do not need to happen for practical purposes. For steps
+  // 21-23, the bindings that can be handled in a similar way to regulars
+  // scripts are done separately. Function Declarations are special due to
+  // hoisting and are handled within this function. See ModuleScope and
+  // ModuleEnvironmentObject for further details.
+
+  // Step 24. For each element d of lexDeclarations, do:
+  // Step 24.a. For each element dn of the BoundNames of d, do:
+  // Step 24.a.iii. If d is a FunctionDeclaration, a GeneratorDeclaration, an
+  //                AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration,
+  //                then:
+  // Step 24.a.iii.1 Let fo be InstantiateFunctionObject of d with arguments env
+  //                 and privateEnv.
+  // Step 24.a.iii.2. Perform ! env.InitializeBinding(dn, fo).
+  return ModuleObject::instantiateFunctionDeclarations(cx, module);
 }
