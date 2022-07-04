@@ -258,7 +258,7 @@ class ToolbarGestureHandler(
                     .setDuration(shortAnimationDuration.toLong())
                     .setListener(
                         object : AnimatorListenerAdapter() {
-                            override fun onAnimationEnd(animation: Animator?) {
+                            override fun onAnimationEnd(animation: Animator) {
                                 tabPreview.isVisible = false
                             }
                         },
