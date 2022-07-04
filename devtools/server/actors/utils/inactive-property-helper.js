@@ -387,6 +387,22 @@ class InactivePropertyHelper {
         fixId: "inactive-scroll-padding-when-not-scroll-container-fix",
         msgId: "inactive-scroll-padding-when-not-scroll-container",
       },
+      // border-image properties used on internal table with border collapse.
+      {
+        invalidProperties: [
+          "border-image",
+          "border-image-outset",
+          "border-image-repeat",
+          "border-image-slice",
+          "border-image-source",
+          "border-image-width",
+        ],
+        when: () =>
+          this.internalTableElement &&
+          this.checkTableParentHasBorderCollapsed(),
+        fixId: "inactive-css-border-image-fix",
+        msgId: "inactive-css-border-image",
+      },
     ];
   }
 
@@ -1065,6 +1081,42 @@ class InactivePropertyHelper {
     }
 
     return current;
+  }
+
+  /**
+   * Get the parent table element of the current element.
+   *
+   * @return {DOMNode|null}
+   *         The closest table element or null if there are none.
+   */
+  getTableParent() {
+    let current = this.node.parentNode;
+
+    // Find the table parent
+    while (current && computedStyle(current).display !== "table") {
+      current = current.parentNode;
+
+      // If we reached the document element, stop.
+      if (current == this.node.ownerDocument.documentElement) {
+        return null;
+      }
+    }
+
+    return current;
+  }
+
+  /**
+   * Assuming the current element is an internal table element,
+   * check wether its parent table element has `border-collapse` set to `collapse`.
+   *
+   * @returns {Boolean}
+   */
+  checkTableParentHasBorderCollapsed() {
+    const parent = this.getTableParent();
+    if (!parent) {
+      return false;
+    }
+    return computedStyle(parent).borderCollapse === "collapse";
   }
 }
 
