@@ -12,12 +12,10 @@
 #include "mozilla/FileLocation.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/UniquePtr.h"
 #include "nsIMemoryReporter.h"
 #include "nsISupports.h"
 #include "nsIURI.h"
 #include "nsClassHashtable.h"
-#include "nsTHashMap.h"
 #include "jsapi.h"
 #include "js/experimental/JSStencil.h"
 
