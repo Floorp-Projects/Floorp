@@ -15,7 +15,8 @@ async def test_types_and_values(
     on_entry_added = wait_for_event("log.entryAdded")
 
     expected_text = current_session.execute_script(
-        "const err = new Error('foo'); return err.toString()")
+        "const err = new Error('foo'); return err.toString()"
+    )
 
     time_start = current_time()
 
@@ -35,7 +36,8 @@ async def test_types_and_values(
         level="error",
         text=expected_text,
         time_start=time_start,
-        time_end=time_end
+        time_end=time_end,
+        context=top_context["context"],
     )
 
     # Navigate to a page with no error to avoid polluting the next tests with

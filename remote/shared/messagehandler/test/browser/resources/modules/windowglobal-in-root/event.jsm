@@ -13,6 +13,16 @@ const { Module } = ChromeUtils.import(
 class EventModule extends Module {
   destroy() {}
 
+  interceptEvent(name, payload) {
+    if (name === "event.testEventWithInterception") {
+      return {
+        ...payload,
+        additionalInformation: "information added through interception",
+      };
+    }
+    return payload;
+  }
+
   /**
    * Commands
    */
