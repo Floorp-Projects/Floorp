@@ -6,9 +6,6 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
-const {
-  WebConsoleConnectionProxy,
-} = require("devtools/client/webconsole/webconsole-connection-proxy");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 
@@ -80,6 +77,7 @@ class WebConsoleUI {
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
     this._onNetworkResourceUpdated = this._onNetworkResourceUpdated.bind(this);
+    this.clearPrivateMessages = this.clearPrivateMessages.bind(this);
 
     EventEmitter.decorate(this);
   }
@@ -89,23 +87,7 @@ class WebConsoleUI {
    * @type object
    */
   get webConsoleFront() {
-    const proxy = this.getProxy();
-
-    if (!proxy) {
-      return null;
-    }
-
-    return proxy.webConsoleFront;
-  }
-
-  /**
-   * Return the main target proxy, i.e. the proxy for MainProcessTarget in BrowserConsole,
-   * and the proxy for the target passed from the Toolbox to WebConsole.
-   *
-   * @returns {WebConsoleConnectionProxy}
-   */
-  getProxy() {
-    return this.proxy;
+    return this._webConsoleFront;
   }
 
   /**
@@ -205,11 +187,7 @@ class WebConsoleUI {
 
     this.stopWatchingNetworkResources();
 
-    if (this.proxy) {
-      this.proxy.disconnect();
-      this.proxy = null;
-    }
-
+    this._webConsoleFront = null;
     this.networkDataProvider.destroy();
     this.networkDataProvider = null;
 
@@ -538,13 +516,39 @@ class WebConsoleUI {
    *        composed of a WindowGlobalTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront }) {
-    // Only handle new top level target
-    if (!targetFront.isTopLevel) {
-      return;
+    // Once we support only server watcher for NETWORK_EVENT, we will be able to drop this.
+    // We have to wait for the fully enabling of NETWORK_EVENT watchers, especially on the Browser Toolbox.
+    const { targetCommand, resourceCommand } = this.hud.commands;
+    const hasNetworkResourceCommandSupport = resourceCommand.hasResourceCommandSupport(
+      resourceCommand.TYPES.NETWORK_EVENT
+    );
+    const supportsWatcherRequest = targetCommand.hasTargetWatcherSupport();
+    if (!hasNetworkResourceCommandSupport || !supportsWatcherRequest) {
+      // There is no way to view response bodies from the Browser Console, so do
+      // not waste the memory.
+      const saveBodies =
+        !this.isBrowserConsole &&
+        Services.prefs.getBoolPref(
+          "devtools.netmonitor.saveRequestAndResponseBodies"
+        );
+
+      const front = await targetFront.getFront("console");
+      // Make sure the web console client connection is established first.
+      await front.setPreferences({
+        "NetworkMonitor.saveRequestAndResponseBodies": saveBodies,
+      });
     }
 
-    this.proxy = new WebConsoleConnectionProxy(this, targetFront);
-    await this.proxy.connect();
+    if (targetFront.isTopLevel) {
+      this._webConsoleFront = await targetFront.getFront("console");
+      if (this.isBrowserConsole || this.isBrowserToolboxConsole) {
+        // Private messages only need to be removed from the output in Browser Console/Browser Toolbox
+        this.webConsoleFront.on(
+          "lastPrivateContextExited",
+          this.clearPrivateMessages
+        );
+      }
+    }
   }
 
   /**
@@ -554,13 +558,7 @@ class WebConsoleUI {
    * See _onTargetAvailable for param's description.
    */
   _onTargetDestroyed({ targetFront }) {
-    // Only handle new top level target
-    if (!targetFront.isTopLevel || !this.proxy) {
-      return;
-    }
-
-    this.proxy.disconnect();
-    this.proxy = null;
+    // XXX keeping this as it's going to be used again in a patch in this queue
   }
 
   _initUI() {

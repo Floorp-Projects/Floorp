@@ -20,7 +20,7 @@ describe("Release actor enhancer:", () => {
     actions = setupActions();
   });
 
-  describe("Client proxy", () => {
+  describe("release", () => {
     it("releases backend actors when limit reached adding a single message", () => {
       const logLimit = 100;
       const releasedActors = [];
