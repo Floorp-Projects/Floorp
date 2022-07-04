@@ -50,6 +50,9 @@ class nsServerSocket : public nsASocketHandler, public nsIServerSocket {
   // try attaching our socket (mFD) to the STS's poll list.
   nsresult TryAttach();
 
+  nsresult InitWithAddressInternal(const PRNetAddr* aAddr, int32_t aBackLog,
+                                   bool aDualStack = false);
+
   // lock protects access to mListener; so it is not cleared while being used.
   mozilla::Mutex mLock MOZ_UNANNOTATED{"nsServerSocket.mLock"};
   PRNetAddr mAddr = {.raw = {0, {0}}};
