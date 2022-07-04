@@ -30,6 +30,10 @@ class EventModule extends Module {
     const text = `protocol event from ${this.messageHandler.contextId}`;
     this.emitProtocolEvent("event.testEvent", { text });
   }
+
+  testEmitProtocolEventWithInterception() {
+    this.emitProtocolEvent("event.testEventWithInterception", {});
+  }
 }
 
 const event = EventModule;
