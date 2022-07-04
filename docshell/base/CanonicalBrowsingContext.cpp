@@ -1948,7 +1948,7 @@ CanonicalBrowsingContext::ChangeRemoteness(
     if (blocker && blocker->State() != Promise::PromiseState::Resolved) {
       change->mWaitingForPrepareToChange = true;
       RefPtr<DomPromiseListener> listener = new DomPromiseListener(
-          [change](JSContext* aCx, JS::HandleValue aValue) {
+          [change](JSContext* aCx, JS::Handle<JS::Value> aValue) {
             change->mWaitingForPrepareToChange = false;
             change->MaybeFinish();
           },
@@ -2043,7 +2043,7 @@ void CanonicalBrowsingContext::MaybeSetPermanentKey(Element* aEmbedder) {
 
   if (aEmbedder) {
     if (nsCOMPtr<nsIBrowser> browser = aEmbedder->AsBrowser()) {
-      JS::RootedValue key(RootingCx());
+      JS::Rooted<JS::Value> key(RootingCx());
       if (NS_SUCCEEDED(browser->GetPermanentKey(&key)) && key.isObject()) {
         mPermanentKey = key;
       }
@@ -2424,10 +2424,10 @@ nsresult CanonicalBrowsingContext::WriteSessionStorageToSessionStore(
     return NS_ERROR_FAILURE;
   }
 
-  JS::RootedValue key(jsapi.cx(), Top()->PermanentKey());
+  JS::Rooted<JS::Value> key(jsapi.cx(), Top()->PermanentKey());
 
   Record<nsCString, Record<nsString, nsString>> storage;
-  JS::RootedValue update(jsapi.cx());
+  JS::Rooted<JS::Value> update(jsapi.cx());
 
   if (!aSesssionStorage.IsEmpty()) {
     SessionStoreUtils::ConstructSessionStorageValues(this, aSesssionStorage,
