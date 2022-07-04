@@ -1,9 +1,6 @@
-def assert_base_entry(entry,
-                      level=None,
-                      text=None,
-                      time_start=None,
-                      time_end=None,
-                      stacktrace=None):
+def assert_base_entry(
+    entry, level=None, text=None, time_start=None, time_end=None, stacktrace=None
+):
     assert "level" in entry
     assert isinstance(entry["level"], str)
     if level is not None:
@@ -33,15 +30,17 @@ def assert_base_entry(entry,
             assert call_frames[index] == stacktrace[index]
 
 
-def assert_console_entry(entry,
-                         method=None,
-                         level=None,
-                         text=None,
-                         args=None,
-                         time_start=None,
-                         time_end=None,
-                         realm=None,
-                         stacktrace=None):
+def assert_console_entry(
+    entry,
+    method=None,
+    level=None,
+    text=None,
+    args=None,
+    time_start=None,
+    time_end=None,
+    realm=None,
+    stacktrace=None,
+):
     assert_base_entry(entry, level, text, time_start, time_end, stacktrace)
 
     assert "type" in entry
@@ -63,12 +62,9 @@ def assert_console_entry(entry,
         assert isinstance(entry["realm"], str)
 
 
-def assert_javascript_entry(entry,
-                            level=None,
-                            text=None,
-                            time_start=None,
-                            time_end=None,
-                            stacktrace=None):
+def assert_javascript_entry(
+    entry, level=None, text=None, time_start=None, time_end=None, stacktrace=None
+):
     assert_base_entry(entry, level, text, time_start, time_end, stacktrace)
 
     assert "type" in entry
@@ -82,12 +78,14 @@ def create_console_api_message(current_session, inline, text):
 
 
 def create_javascript_error(current_session, inline, error_message="foo"):
-    return current_session.execute_script(f"""
+    return current_session.execute_script(
+        f"""
         const script = document.createElement("script");
         script.append(document.createTextNode(`(() => {{throw new Error('{error_message}')}})()`));
         document.body.append(script);
         const err = new Error('{error_message}'); return err.toString()
-    """)
+    """
+    )
 
 
 def create_log(current_session, inline, log_type, text="foo"):
