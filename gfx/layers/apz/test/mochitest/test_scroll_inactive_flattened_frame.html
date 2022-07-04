@@ -39,7 +39,8 @@ async function test() {
 SimpleTest.waitForExplicitFinish();
 
 pushPrefs([["general.smoothScroll", false],
-           ["mousewheel.transaction.timeout", 1000000]])
+           ["mousewheel.transaction.timeout", 1000000],
+           ["test.events.async.enabled", true]])
 .then(waitUntilApzStable)
 .then(test)
 .then(SimpleTest.finish, SimpleTest.finishWithFailure);
