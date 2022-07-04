@@ -593,7 +593,7 @@ void IDBTransaction::AbortInternal(const nsresult aAbortCode,
   MOZ_ASSERT(!IsCommittingOrFinished());
 
   const bool isVersionChange = mMode == Mode::VersionChange;
-  const bool needToSendAbort = mReadyState == ReadyState::Inactive && !mStarted;
+  const bool needToSendAbort = !mStarted;
 
   mAbortCode = aAbortCode;
   mReadyState = ReadyState::Finished;
