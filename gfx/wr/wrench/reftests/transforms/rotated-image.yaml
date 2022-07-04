@@ -16,7 +16,6 @@ root:
       "content-size": [2880, 1482]
     - 
       "clip-rect": [0, 0, 2880, 1482]
-      "clip-and-scroll": 10
       "backface-visible": true
       type: "scroll-frame"
       id: 2
@@ -25,7 +24,6 @@ root:
     - 
       bounds: [0, 0, 2880, 1482]
       "clip-rect": [0, 0, 2880, 1482]
-      "clip-and-scroll": 2
       "backface-visible": true
       type: clip
       id: 3
@@ -33,14 +31,13 @@ root:
     - 
       bounds: [0, 0, 2880, 1482]
       "clip-rect": [0, 0, 2880, 1482]
-      "clip-and-scroll": 3
       "backface-visible": true
       type: rect
       color: white
     -
       bounds: [0, 0, 0, 0]
       "clip-rect": [0, 0, 0, 0]
-      "clip-and-scroll": 3
+      clip-chain: [10, 3]
       "backface-visible": true
       type: "stacking-context"
       "scroll-policy": scrollable
@@ -57,7 +54,7 @@ root:
         - 
           bounds: [2, -182, 152, 216]
           "clip-rect": [2, 0, 152, 34]
-          "clip-and-scroll": 4
+          clip-chain: [10, 3, 4]
           "backface-visible": true
           image: "image.png"
           "stretch-size": [152, 216]

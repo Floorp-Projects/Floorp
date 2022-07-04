@@ -11,17 +11,19 @@ root:
           transform: 10 0 0 0 0 10 0 0 0 0 10 0 0 0 -9 1
           items:
             - type: clip
+              id: 2
               bounds: [50, 50, 200, 200]
               complex:
                 - rect: [50, 50, 200, 200]
                   radius: 8
-              items:
-                -
-                  type: rect
-                  bounds: [50, 50, 200, 200]
-                  color: green
-                -
-                  text: "X"
-                  origin: 100 150
-                  size: 100
-                  font: "Ahem.ttf"
+            -
+              type: rect
+              bounds: [50, 50, 200, 200]
+              color: green
+              clip-chain: [2]
+            -
+              text: "X"
+              origin: 100 150
+              size: 100
+              font: "Ahem.ttf"
+              clip-chain: [2]
