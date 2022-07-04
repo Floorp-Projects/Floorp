@@ -91,6 +91,24 @@ class Module {
   }
 
   /**
+   * Intercept an event and modify the payload.
+   *
+   * It's required to be implemented in windowglobal-in-root modules.
+   *
+   * @param {string} name
+   *     Name of the event.
+   * @param {Object} payload
+   *    The event's payload.
+   * @returns {Object}
+   *     The modified event payload.
+   */
+  interceptEvent(name, payload) {
+    throw new Error(
+      `Could not intercept event ${name}, interceptEvent is not implemented in windowglobal-in-root module`
+    );
+  }
+
+  /**
    * Remove session data for a given module and event.
    *
    * @param {string} moduleName

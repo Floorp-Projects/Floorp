@@ -109,6 +109,10 @@ class MessageHandler extends EventEmitter {
     return this._eventsDispatcher;
   }
 
+  get moduleCache() {
+    return this._moduleCache;
+  }
+
   get name() {
     return [this.sessionId, this.constructor.type, this.contextId].join("-");
   }
