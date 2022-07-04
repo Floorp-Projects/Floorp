@@ -81,6 +81,16 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
                                        JS::MutableHandleObject aModuleExports,
                                        bool aIgnoreExports);
 
+  // If the request was handled by fallback before, fills the output and
+  // sets *aFound to true and returns NS_OK.
+  // If the request wasn't yet handled by fallback, sets *Found to false
+  // and returns NS_OK.
+  nsresult TryCachedFallbackToImportESModule(
+      JSContext* aCx, const nsACString& aResourceURI,
+      JS::MutableHandleObject aModuleGlobal,
+      JS::MutableHandleObject aModuleExports, bool aIgnoreExports,
+      bool* aFound);
+
   nsresult Unload(const nsACString& aResourceURI);
   nsresult IsModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
   nsresult IsJSModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
@@ -184,11 +194,32 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 #endif
   };
 
+  class FallbackModuleEntry {
+   public:
+    explicit FallbackModuleEntry(JS::RootingContext* aRootingCx)
+        : globalProxy(aRootingCx), moduleNamespace(aRootingCx) {}
+
+    ~FallbackModuleEntry() { Clear(); }
+
+    void Clear() {
+      globalProxy = nullptr;
+      moduleNamespace = nullptr;
+    }
+
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+      return aMallocSizeOf(this);
+    }
+
+    JS::PersistentRootedObject globalProxy;
+    JS::PersistentRootedObject moduleNamespace;
+  };
+
   nsresult ExtractExports(JSContext* aCx, ModuleLoaderInfo& aInfo,
                           ModuleEntry* aMod, JS::MutableHandleObject aExports);
 
   nsClassHashtable<nsCStringHashKey, ModuleEntry> mImports;
   nsTHashMap<nsCStringHashKey, ModuleEntry*> mInProgressImports;
+  nsClassHashtable<nsCStringHashKey, FallbackModuleEntry> mFallbackImports;
 
   // A map of on-disk file locations which are loaded as modules to the
   // pre-resolved URIs they were loaded from. Used to prevent the same file

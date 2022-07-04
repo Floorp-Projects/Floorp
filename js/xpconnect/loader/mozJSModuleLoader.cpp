@@ -263,6 +263,7 @@ NS_IMPL_ISUPPORTS(mozJSModuleLoader, nsIMemoryReporter)
 mozJSModuleLoader::mozJSModuleLoader()
     : mImports(16),
       mInProgressImports(16),
+      mFallbackImports(16),
       mLocations(16),
       mInitialized(false),
       mLoaderGlobal(dom::RootingCx()) {
@@ -457,6 +458,7 @@ size_t mozJSModuleLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
   n += SizeOfTableExcludingThis(mImports, aMallocSizeOf);
   n += mLocations.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += SizeOfTableExcludingThis(mInProgressImports, aMallocSizeOf);
+  n += SizeOfTableExcludingThis(mFallbackImports, aMallocSizeOf);
   return n;
 }
 
@@ -949,6 +951,7 @@ void mozJSModuleLoader::UnloadModules() {
     mLoaderGlobal = nullptr;
   }
 
+  mFallbackImports.Clear();
   mInProgressImports.Clear();
   mImports.Clear();
   mLocations.Clear();
@@ -1341,6 +1344,16 @@ nsresult mozJSModuleLoader::Import(JSContext* aCx, const nsACString& aLocation,
       return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
     }
 
+    // If we've hit file-not-found and fallback was successful,
+    // return the cached data.
+    bool aFound;
+    rv = TryCachedFallbackToImportESModule(
+        aCx, aLocation, aModuleGlobal, aModuleExports, aIgnoreExports, &aFound);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (aFound) {
+      return NS_OK;
+    }
+
     newEntry = MakeUnique<ModuleEntry>(RootingContext::get(aCx));
 
     // Note: This implies EnsureURI().
@@ -1469,7 +1482,15 @@ nsresult mozJSModuleLoader::TryFallbackToImportESModule(
     if (!globalProxy) {
       return NS_ERROR_FAILURE;
     }
+
+    // Cache the redirect to use in subsequent imports.
+    ModuleLoaderInfo info(aLocation);
+    auto newEntry = MakeUnique<FallbackModuleEntry>(RootingContext::get(aCx));
+    newEntry->globalProxy = globalProxy;
+    newEntry->moduleNamespace = moduleNamespace;
+    mFallbackImports.InsertOrUpdate(info.Key(), std::move(newEntry));
   }
+
   if (!JS_WrapObject(aCx, &globalProxy)) {
     return NS_ERROR_FAILURE;
   }
@@ -1483,6 +1504,35 @@ nsresult mozJSModuleLoader::TryFallbackToImportESModule(
     aModuleExports.set(exports);
   }
 
+  return NS_OK;
+}
+
+nsresult mozJSModuleLoader::TryCachedFallbackToImportESModule(
+    JSContext* aCx, const nsACString& aLocation,
+    JS::MutableHandleObject aModuleGlobal,
+    JS::MutableHandleObject aModuleExports, bool aIgnoreExports, bool* aFound) {
+  ModuleLoaderInfo info(aLocation);
+  FallbackModuleEntry* fallbackMod;
+  if (!mFallbackImports.Get(info.Key(), &fallbackMod)) {
+    *aFound = false;
+    return NS_OK;
+  }
+
+  JS::RootedObject globalProxy(aCx, fallbackMod->globalProxy);
+  if (!JS_WrapObject(aCx, &globalProxy)) {
+    return NS_ERROR_FAILURE;
+  }
+  aModuleGlobal.set(globalProxy);
+
+  if (!aIgnoreExports) {
+    JS::RootedObject exports(aCx, fallbackMod->moduleNamespace);
+    if (!JS_WrapObject(aCx, &exports)) {
+      return NS_ERROR_FAILURE;
+    }
+    aModuleExports.set(exports);
+  }
+
+  *aFound = true;
   return NS_OK;
 }
 
