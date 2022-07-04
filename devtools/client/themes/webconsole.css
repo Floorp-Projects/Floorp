@@ -147,6 +147,11 @@
   overflow: hidden;
 }
 
+.message.disabled {
+  z-index: 2;
+  opacity: 0.6;
+}
+
 .message.error {
   z-index: 2;
   color: var(--console-error-color);
@@ -244,6 +249,11 @@
 }
 
 .message.info > .icon {
+  color: var(--theme-icon-color);
+  background-image: url(chrome://devtools/skin/images/info-small.svg);
+}
+
+.message.disabled > .icon {
   color: var(--theme-icon-color);
   background-image: url(chrome://devtools/skin/images/info-small.svg);
 }
@@ -889,7 +899,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 /* Hide the icon, so that we can use the collapse-button in its place */
-.message.network:not(.network-message-blocked) > .icon,
+.message.network:not(:where(.network-message-blocked, .disabled)) > .icon,
 .message.startGroup > .icon,
 .message.startGroupCollapsed > .icon {
   display: none;

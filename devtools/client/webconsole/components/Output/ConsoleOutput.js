@@ -18,6 +18,7 @@ const LazyMessageList = require("devtools/client/webconsole/components/Output/La
 const {
   getMutableMessagesById,
   getAllMessagesUiById,
+  getAllDisabledMessagesById,
   getAllCssMessagesMatchingElements,
   getAllNetworkMessagesUpdateById,
   getLastMessageId,
@@ -49,6 +50,7 @@ class ConsoleOutput extends Component {
       mutableMessages: PropTypes.object.isRequired,
       messageCount: PropTypes.number.isRequired,
       messagesUi: PropTypes.array.isRequired,
+      disabledMessages: PropTypes.array.isRequired,
       serviceContainer: PropTypes.shape({
         attachRefToWebConsoleUI: PropTypes.func.isRequired,
         openContextMenu: PropTypes.func.isRequired,
@@ -265,6 +267,7 @@ class ConsoleOutput extends Component {
       cacheGeneration,
       dispatch,
       visibleMessages,
+      disabledMessages,
       mutableMessages,
       messagesUi,
       cssMatchingElements,
@@ -285,6 +288,7 @@ class ConsoleOutput extends Component {
         open: messagesUi.includes(messageId),
         cssMatchingElements: cssMatchingElements.get(messageId),
         timestampsVisible,
+        disabled: disabledMessages.includes(messageId),
         repeat: messagesRepeat[messageId],
         badge: warningGroups.has(messageId)
           ? warningGroups.get(messageId).length
@@ -356,6 +360,7 @@ function mapStateToProps(state, props) {
     mutableMessages,
     lastMessageId: getLastMessageId(state),
     visibleMessages: getVisibleMessages(state),
+    disabledMessages: getAllDisabledMessagesById(state),
     messagesUi: getAllMessagesUiById(state),
     cssMatchingElements: getAllCssMessagesMatchingElements(state),
     messagesRepeat: getAllRepeatById(state),

@@ -90,6 +90,8 @@ const MessageState = overrides =>
         networkMessagesUpdateById: {},
         // Id of the last messages that was added.
         lastMessageId: null,
+        // List of the message ids which are disabled
+        disabledMessagesById: [],
       },
       overrides
     )
@@ -111,6 +113,7 @@ function cloneState(state) {
     mutableMessagesOrder: state.mutableMessagesOrder,
     currentGroup: state.currentGroup,
     lastMessageId: state.lastMessageId,
+    disabledMessagesById: [...state.disabledMessagesById],
   };
 }
 
@@ -377,6 +380,7 @@ function messages(
     networkMessagesUpdateById,
     groupsById,
     visibleMessages,
+    disabledMessagesById,
   } = state;
 
   const { logLimit } = prefsState;
@@ -467,6 +471,12 @@ function messages(
         removedIds
       );
     }
+
+    case constants.MESSAGES_DISABLE:
+      return {
+        ...state,
+        disabledMessagesById: [...disabledMessagesById, ...action.ids],
+      };
 
     case constants.MESSAGE_OPEN:
       const openState = { ...state };
@@ -969,11 +979,18 @@ function removeMessagesFromState(state, removedMessagesIds) {
 
   removedMessagesIds.forEach(id => {
     state.mutableMessagesById.delete(id);
+
     state.mutableMessagesOrder.splice(
       state.mutableMessagesOrder.indexOf(id),
       1
     );
   });
+
+  if (state.disabledMessagesById.find(isInRemovedId)) {
+    state.disabledMessagesById = state.disabledMessagesById.filter(
+      id => !isInRemovedId(id)
+    );
+  }
 
   if (state.messagesUiById.find(isInRemovedId)) {
     state.messagesUiById = state.messagesUiById.filter(

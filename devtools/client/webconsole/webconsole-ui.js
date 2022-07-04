@@ -280,6 +280,12 @@ class WebConsoleUI {
     return this.wrapper;
   }
 
+  disableAllNetworkMessages() {
+    if (this.wrapper) {
+      this.wrapper.dispatchNetworkMessagesDisable();
+    }
+  }
+
   getPanelWindow() {
     return this.window;
   }

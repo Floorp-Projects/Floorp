@@ -21,6 +21,11 @@ function getMessage(state, id) {
 function getAllMessagesUiById(state) {
   return state.messages.messagesUiById;
 }
+
+function getAllDisabledMessagesById(state) {
+  return state.messages.disabledMessagesById;
+}
+
 function getAllCssMessagesMatchingElements(state) {
   return state.messages.cssMessagesMatchingElements;
 }
@@ -75,6 +80,7 @@ module.exports = {
   getMutableMessagesById,
   getAllCssMessagesMatchingElements,
   getAllMessagesUiById,
+  getAllDisabledMessagesById,
   getAllNetworkMessagesUpdateById,
   getAllRepeatById,
   getCurrentGroup,
