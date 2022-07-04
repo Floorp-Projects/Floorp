@@ -63,6 +63,85 @@ add_task(async function test_event() {
 });
 
 /**
+ * Emit an event from a WindowGlobal module triggered by a specific command.
+ * Check that the event is intercepted and the event payload is modified.
+ */
+add_task(async function test_event_with_interception() {
+  const tab = BrowserTestUtils.addTab(
+    gBrowser,
+    "https://example.com/document-builder.sjs?html=tab"
+  );
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  const browsingContext = tab.linkedBrowser.browsingContext;
+
+  const rootMessageHandler = createRootMessageHandler("session-id-event");
+
+  const onTestEvent = rootMessageHandler.once("message-handler-event");
+
+  rootMessageHandler.handleCommand({
+    moduleName: "event",
+    commandName: "testEmitProtocolEventWithInterception",
+    destination: {
+      type: WindowGlobalMessageHandler.type,
+      id: browsingContext.id,
+    },
+  });
+
+  const messageHandlerEvent = await onTestEvent;
+  is(
+    messageHandlerEvent.name,
+    "event.testEventWithInterception",
+    "Received event on the ROOT MessageHandler"
+  );
+  is(
+    messageHandlerEvent.data.additionalInformation,
+    `information added through interception`,
+    "Payload was extended through interception"
+  );
+
+  rootMessageHandler.destroy();
+  gBrowser.removeTab(tab);
+});
+
+/**
+ * Make sure that event emission without interception in windowglobal-in-root
+ * still works.
+ */
+add_task(async function test_event_without_interception() {
+  const tab = BrowserTestUtils.addTab(
+    gBrowser,
+    "https://example.com/document-builder.sjs?html=tab"
+  );
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  const browsingContext = tab.linkedBrowser.browsingContext;
+  const rootMessageHandler = createRootMessageHandler("session-id-event");
+  const onTestEvent = rootMessageHandler.once("message-handler-event");
+
+  rootMessageHandler.handleCommand({
+    moduleName: "eventnointercept",
+    commandName: "testEvent",
+    destination: {
+      type: WindowGlobalMessageHandler.type,
+      id: browsingContext.id,
+    },
+  });
+
+  const messageHandlerEvent = await onTestEvent;
+  is(
+    messageHandlerEvent.name,
+    "eventnointercept.testEvent",
+    "Received event on the ROOT MessageHandler"
+  );
+  Assert.deepEqual(
+    messageHandlerEvent.data,
+    { text: `event no interception` },
+    "Received the expected payload"
+  );
+
+  rootMessageHandler.destroy();
+  gBrowser.removeTab(tab);
+});
+/**
  * Emit an event from a Root module triggered by a specific command.
  * Check that the event is emitted on the RootMessageHandler.
  */

@@ -4,17 +4,19 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["log"];
+const EXPORTED_SYMBOLS = ["eventnointercept"];
 
 const { Module } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/Module.jsm"
 );
 
-class LogModule extends Module {
+class EventNoInterceptModule extends Module {
   destroy() {}
-  interceptEvent(name, payload) {
-    return payload;
+
+  testEvent() {
+    const text = `event no interception`;
+    this.emitProtocolEvent("eventnointercept.testEvent", { text });
   }
 }
 
-const log = LogModule;
+const eventnointercept = EventNoInterceptModule;
