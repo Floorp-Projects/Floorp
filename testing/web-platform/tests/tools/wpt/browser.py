@@ -935,9 +935,14 @@ class Chrome(ChromeChromiumBase):
                 suffix = " " + channel.capitalize()
             return f"/Applications/Google Chrome{suffix}.app/Contents/MacOS/Google Chrome{suffix}"
         if uname[0] == "Windows":
-            path = os.path.expandvars(r"$SYSTEMDRIVE\Program Files (x86)\Google\Chrome\Application\chrome.exe")
-            if not os.path.exists(path):
-                path = os.path.expandvars(r"$SYSTEMDRIVE\Program Files\Google\Chrome\Application\chrome.exe")
+            name = "Chrome"
+            if channel == "beta":
+                name += " Beta"
+            elif channel == "dev":
+                name += " Dev"
+            path = os.path.expandvars(fr"$PROGRAMFILES\Google\{name}\Application\chrome.exe")
+            if channel == "canary":
+                path = os.path.expandvars(r"$LOCALAPPDATA\Google\Chrome SxS\Application\chrome.exe")
             return path
         self.logger.warning("Unable to find the browser binary.")
         return None
