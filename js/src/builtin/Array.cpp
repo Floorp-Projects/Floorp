@@ -5068,21 +5068,12 @@ JS_PUBLIC_API bool JS::SetArrayLength(JSContext* cx, Handle<JSObject*> obj,
   return SetLengthProperty(cx, obj, length);
 }
 
-bool js::intrinsic_newList(JSContext* cx, unsigned argc, js::Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 0);
-
+ArrayObject* js::NewArrayWithNullProto(JSContext* cx) {
   Rooted<Shape*> shape(cx, GetArrayShapeWithProto(cx, nullptr));
   if (!shape) {
-    return false;
+    return nullptr;
   }
 
   uint32_t length = 0;
-  ArrayObject* list = ::NewArrayWithShape<0>(cx, shape, length, GenericObject);
-  if (!list) {
-    return false;
-  }
-
-  args.rval().setObject(*list);
-  return true;
+  return ::NewArrayWithShape<0>(cx, shape, length, GenericObject);
 }
