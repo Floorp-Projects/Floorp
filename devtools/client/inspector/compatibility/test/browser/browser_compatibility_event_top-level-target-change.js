@@ -9,7 +9,7 @@ const TEST_DATA_ISSUES = {
   uri: `
     <style>
     body {
-      border-block-color: lime;
+      ruby-align: center;
     }
     div {
       font-variant-alternates: historical-forms;
@@ -19,9 +19,9 @@ const TEST_DATA_ISSUES = {
       <div>test</div>
     </body>
   `,
-  expectedIssuesOnSelected: [{ property: "border-block-color" }],
+  expectedIssuesOnSelected: [{ property: "ruby-align" }],
   expectedIssuesOnAll: [
-    { property: "border-block-color" },
+    { property: "ruby-align" },
     { property: "font-variant-alternates" },
   ],
 };

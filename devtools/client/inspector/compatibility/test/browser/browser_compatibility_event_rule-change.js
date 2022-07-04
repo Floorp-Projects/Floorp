@@ -9,7 +9,7 @@
 const TEST_URI = `
   <style>
   .test-class {
-    border-block-color: lime;
+    ruby-align: center;
   }
   div {
     font-variant-alternates: historical-forms;
@@ -22,12 +22,12 @@ const TEST_URI = `
 const TEST_DATA_SELECTED = {
   fullRule: {
     expectedProperties: [
-      { property: "border-block-color" },
+      { property: "ruby-align" },
       { property: "font-variant-alternates" },
     ],
     expectedNodes: [
       {
-        property: "border-block-color",
+        property: "ruby-align",
         nodes: [],
       },
       {
@@ -37,10 +37,10 @@ const TEST_DATA_SELECTED = {
     ],
   },
   classRule: {
-    expectedProperties: [{ property: "border-block-color" }],
+    expectedProperties: [{ property: "ruby-align" }],
     expectedNodes: [
       {
-        property: "border-block-color",
+        property: "ruby-align",
         nodes: [],
       },
     ],
@@ -59,12 +59,12 @@ const TEST_DATA_SELECTED = {
 const TEST_DATA_ALL = {
   fullRule: {
     expectedProperties: [
-      { property: "border-block-color" },
+      { property: "ruby-align" },
       { property: "font-variant-alternates" },
     ],
     expectedNodes: [
       {
-        property: "border-block-color",
+        property: "ruby-align",
         nodes: ["div.test-class"],
       },
       {
@@ -74,10 +74,10 @@ const TEST_DATA_ALL = {
     ],
   },
   classRule: {
-    expectedProperties: [{ property: "border-block-color" }],
+    expectedProperties: [{ property: "ruby-align" }],
     expectedNodes: [
       {
-        property: "border-block-color",
+        property: "ruby-align",
         nodes: ["div.test-class"],
       },
     ],
