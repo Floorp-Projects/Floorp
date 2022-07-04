@@ -109,34 +109,6 @@ class WebConsoleUI {
   }
 
   /**
-   * Return all the proxies we're currently managing (i.e. the "main" one, and the
-   * possible additional ones).
-   *
-   * @param {Boolean} filterDisconnectedProxies: True by default, if false, this
-   *   function also returns not-already-connected or already disconnected proxies.
-   *
-   * @returns {Array<WebConsoleConnectionProxy>}
-   */
-  getAllProxies(filterDisconnectedProxies = true) {
-    let proxies = [this.getProxy()];
-
-    if (this.additionalProxies) {
-      proxies = proxies.concat([...this.additionalProxies.values()]);
-    }
-
-    // Ignore Fronts that are already destroyed
-    if (filterDisconnectedProxies) {
-      proxies = proxies.filter(proxy => {
-        return (
-          proxy && proxy.webConsoleFront && !!proxy.webConsoleFront.actorID
-        );
-      });
-    }
-
-    return proxies;
-  }
-
-  /**
    * Initialize the WebConsoleUI instance.
    * @return object
    *         A promise object that resolves once the frame is ready to use.
@@ -213,7 +185,7 @@ class WebConsoleUI {
     this.hud.commands.targetCommand.unwatchTargets({
       types: this.hud.commands.targetCommand.ALL_TYPES,
       onAvailable: this._onTargetAvailable,
-      onDestroyed: this._onTargetDestroy,
+      onDestroyed: this._onTargetDestroyed,
     });
 
     const resourceCommand = this.hud.resourceCommand;
@@ -233,11 +205,10 @@ class WebConsoleUI {
 
     this.stopWatchingNetworkResources();
 
-    for (const proxy of this.getAllProxies()) {
-      proxy.disconnect();
+    if (this.proxy) {
+      this.proxy.disconnect();
+      this.proxy = null;
     }
-    this.proxy = null;
-    this.additionalProxies = null;
 
     this.networkDataProvider.destroy();
     this.networkDataProvider = null;
@@ -257,7 +228,7 @@ class WebConsoleUI {
    * @param object event
    *        If the event exists, calls preventDefault on it.
    */
-  clearOutput(clearStorage, event) {
+  async clearOutput(clearStorage, event) {
     if (event) {
       event.preventDefault();
     }
@@ -266,14 +237,39 @@ class WebConsoleUI {
     }
 
     if (clearStorage) {
-      this.clearMessagesCache();
+      await this.clearMessagesCache();
     }
     this.emitForTests("messages-cleared");
   }
 
-  clearMessagesCache() {
-    for (const proxy of this.getAllProxies()) {
-      proxy.webConsoleFront.clearMessagesCache();
+  async clearMessagesCache() {
+    if (!this.hud) {
+      return;
+    }
+
+    const {
+      hasWebConsoleClearMessagesCacheAsync,
+    } = this.hud.commands.client.mainRoot.traits;
+
+    // This can be called during console destruction and getAllFronts would reject in such case.
+    try {
+      const consoleFronts = await this.hud.commands.targetCommand.getAllFronts(
+        this.hud.commands.targetCommand.ALL_TYPES,
+        "console"
+      );
+      const promises = [];
+      for (const consoleFront of consoleFronts) {
+        // @backward-compat { version 104 } clearMessagesCacheAsync was added in 104
+        promises.push(
+          hasWebConsoleClearMessagesCacheAsync
+            ? consoleFront.clearMessagesCacheAsync()
+            : consoleFront.clearMessagesCache()
+        );
+      }
+      await Promise.all(promises);
+      this.emitForTests("messages-cache-cleared");
+    } catch (e) {
+      console.warn("Exception in clearMessagesCache", e);
     }
   }
 
@@ -325,8 +321,6 @@ class WebConsoleUI {
    *         A promise object that is resolved/reject based on the proxies connections.
    */
   async _attachTargets() {
-    this.additionalProxies = new Map();
-
     const { commands, resourceCommand } = this.hud;
     this.networkDataProvider = new FirefoxDataProvider({
       commands,
@@ -346,7 +340,7 @@ class WebConsoleUI {
     await commands.targetCommand.watchTargets({
       types: this.hud.commands.targetCommand.ALL_TYPES,
       onAvailable: this._onTargetAvailable,
-      onDestroyed: this._onTargetDestroy,
+      onDestroyed: this._onTargetDestroyed,
     });
 
     await resourceCommand.watchResources(
@@ -544,42 +538,13 @@ class WebConsoleUI {
    *        composed of a WindowGlobalTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront }) {
-    // This is a top level target. It may update on process switches
-    // when navigating to another domain.
-    if (targetFront.isTopLevel) {
-      this.proxy = new WebConsoleConnectionProxy(this, targetFront);
-      await this.proxy.connect();
+    // Only handle new top level target
+    if (!targetFront.isTopLevel) {
       return;
     }
 
-    // Allow frame, but only in content toolbox, i.e. still ignore them in
-    // the context of the browser toolbox as we inspect messages via the process targets
-    const listenForFrames = this.hud.commands.descriptorFront.isLocalTab;
-
-    const { TYPES } = this.hud.commands.targetCommand;
-    const isWorkerTarget =
-      targetFront.targetType == TYPES.WORKER ||
-      targetFront.targetType == TYPES.SHARED_WORKER ||
-      targetFront.targetType == TYPES.SERVICE_WORKER;
-
-    const acceptTarget =
-      // Unconditionally accept all process targets, this should only happens in the
-      // multiprocess browser toolbox/console
-      targetFront.targetType == TYPES.PROCESS ||
-      (targetFront.targetType == TYPES.FRAME && listenForFrames) ||
-      // Accept worker targets if the platform dispatching of worker messages to the main
-      // thread is disabled (e.g. we get them directly from the worker target).
-      (isWorkerTarget &&
-        !this.hud.commands.targetCommand.rootFront.traits
-          .workerConsoleApiMessagesDispatchedToMainThread);
-
-    if (!acceptTarget) {
-      return;
-    }
-
-    const proxy = new WebConsoleConnectionProxy(this, targetFront);
-    this.additionalProxies.set(targetFront, proxy);
-    await proxy.connect();
+    this.proxy = new WebConsoleConnectionProxy(this, targetFront);
+    await this.proxy.connect();
   }
 
   /**
@@ -589,14 +554,13 @@ class WebConsoleUI {
    * See _onTargetAvailable for param's description.
    */
   _onTargetDestroyed({ targetFront }) {
-    if (targetFront.isTopLevel) {
-      this.proxy.disconnect();
-      this.proxy = null;
-    } else {
-      const proxy = this.additionalProxies.get(targetFront);
-      proxy.disconnect();
-      this.additionalProxies.delete(targetFront);
+    // Only handle new top level target
+    if (!targetFront.isTopLevel || !this.proxy) {
+      return;
     }
+
+    this.proxy.disconnect();
+    this.proxy = null;
   }
 
   _initUI() {

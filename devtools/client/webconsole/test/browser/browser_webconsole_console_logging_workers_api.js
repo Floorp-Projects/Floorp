@@ -83,12 +83,14 @@ async function testWorkerMessage(directConnectionToWorkerThread = false) {
   }
 
   info("Click on the clear button and wait for messages to be removed");
+  const onMessagesCacheCleared = hud.ui.once("messages-cache-cleared");
   hud.ui.window.document.querySelector(".devtools-clear-icon").click();
   await waitFor(
     () =>
       !findConsoleAPIMessage(hud, "initial-message-from-worker") &&
       !findConsoleAPIMessage(hud, "log-from-worker")
   );
+  await onMessagesCacheCleared;
   ok(true, "Messages were removed");
 
   info("Close and reopen the console to check messages were cleared properly");

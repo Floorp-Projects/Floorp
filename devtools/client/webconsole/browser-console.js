@@ -93,9 +93,9 @@ class BrowserConsole extends WebConsole {
 
       this.commands.targetCommand.destroy();
       // Wait for any pending connection initialization.
-      await Promise.all(
-        this.ui.getAllProxies().map(proxy => proxy.getConnectionPromise())
-      );
+      if (this.ui.proxy) {
+        await this.ui.proxy.getConnectionPromise();
+      }
 
       await super.destroy();
       await this.currentTarget.destroy();

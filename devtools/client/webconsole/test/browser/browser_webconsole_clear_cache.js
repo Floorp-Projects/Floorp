@@ -27,8 +27,9 @@ add_task(async function() {
   info(
     "Click the clear output button and wait until there's no messages in the output"
   );
+  let onMessagesCacheCleared = hud.ui.once("messages-cache-cleared");
   hud.ui.window.document.querySelector(".devtools-clear-icon").click();
-  await waitFor(() => findAllMessages(hud).length === 0);
+  await onMessagesCacheCleared;
 
   info("Close and re-open the console");
   await closeToolbox();
@@ -52,6 +53,7 @@ add_task(async function() {
   await logTextToConsole(hud, NEW_CACHED_MESSAGE);
 
   info("Send a console.clear() from the content page");
+  onMessagesCacheCleared = hud.ui.once("messages-cache-cleared");
   const onConsoleCleared = waitForMessageByType(
     hud,
     "Console was cleared",
@@ -60,7 +62,7 @@ add_task(async function() {
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.console.clear();
   });
-  await onConsoleCleared;
+  await Promise.all([onConsoleCleared, onMessagesCacheCleared]);
 
   info("Close and re-open the console");
   await closeToolbox();
