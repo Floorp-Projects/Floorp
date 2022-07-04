@@ -12,13 +12,13 @@ root:
           radius: [97, 97]
           "clip-mode": clip
     - type: clip-chain
-      id: 3
+      id: 12
       clips: [2]
     -
       bounds: [10, 10, 100, 200]
-      clip-chain: 3
       type: border
       width: [100, 50, 100, 50]
       border-type: normal
       color: green
       style: solid
+      clip-chain: 12

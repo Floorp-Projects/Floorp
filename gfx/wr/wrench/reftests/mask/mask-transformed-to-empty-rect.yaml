@@ -17,10 +17,10 @@ root:
             rect: [0, 0, 300, 300]
             repeat: false
           id: 2
-          items:
-            - type: rect
-              bounds: [0, 0, 300, 300]
-              color: 0 128 0 1.0000
+        - type: rect
+          clip-chain: [2]
+          bounds: [0, 0, 300, 300]
+          color: 0 128 0 1.0000
     - type: rect
       bounds: [0, 0, 100, 100]
       color: 0 255 0 1.0

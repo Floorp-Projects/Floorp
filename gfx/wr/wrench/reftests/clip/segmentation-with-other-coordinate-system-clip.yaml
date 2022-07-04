@@ -8,6 +8,7 @@ root:
     type: "stacking-context"
     items:
     -
+      id: 2
       bounds: [0, 0, 100, 100]
       "clip-rect": [0, 0, 100, 100]
       type: clip
@@ -45,3 +46,4 @@ root:
                       "clip-rect": [1000, 0, 1000, 1000]
                       type: rect
                       color: green
+                      clip-chain: [2]
