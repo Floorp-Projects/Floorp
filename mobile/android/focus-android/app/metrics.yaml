@@ -1859,7 +1859,7 @@ metrics:
     expires: never
     metadata:
       tags:
-        - performance
+        - Performance
   start_reason_activity_error:
     type: boolean
     description: |
@@ -1879,4 +1879,4 @@ metrics:
     expires: never
     metadata:
       tags:
-        - performance
+        - Performance
