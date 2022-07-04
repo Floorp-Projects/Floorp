@@ -189,14 +189,6 @@ testGetter(m, "asyncEvaluatingPostOrder");
 testGetter(m, "asyncParentModules");
 testGetter(m, "pendingAsyncDependencies");
 
-// ==== getExportedNames method shouldn't be exposed ====
-const n = parseModule(``);
-assertEq(n.getExportedNames, undefined);
-
-// ==== resolveExport method shouldn't be exposed ====
-const o = parseModule(``);
-assertEq(o.resolveExport, undefined);
-
 // ==== declarationInstantiation and evaluationmethod methods ====
 const p = parseModule(``);
 p.declarationInstantiation();
@@ -227,7 +219,3 @@ t.declarationInstantiation();
 t.evaluation();
 testMethod(t, "declarationInstantiation");
 testMethod(t, "evaluation");
-
-// ==== gatherAsyncParentCompletions method shouldn't be exposed ====
-const s = parseModule(``);
-assertEq(s.gatherAsyncParentCompletions, undefined);

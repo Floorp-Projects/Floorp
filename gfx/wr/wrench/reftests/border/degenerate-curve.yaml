@@ -8,6 +8,7 @@ root:
       "transform-style": flat
       items: 
         - type: clip
+          id: 2
           bounds: [28, 18, 144, 122]
           complex:
             - rect: [28, 18, 144, 122]
@@ -16,10 +17,13 @@ root:
                   "top-right": [61, 61]
                   "bottom-left": [0, 0]
                   "bottom-right": [61, 61]
-          items:
-          - type: rect
-            color: 255 0 0 1.0000
-            bounds: [28, 18, 144, 122]
+        - type: clip-chain
+          id: 20
+          clips: [2]
+        - type: rect
+          color: 255 0 0 1.0000
+          bounds: [28, 18, 144, 122]
+          clip-chain: 20
         - 
           bounds: [28, 18, 144, 122]
           type: border
@@ -37,14 +41,19 @@ root:
             "bottom-left": [0, 0]
             "bottom-right": [61, 61]
         - type: clip
+          id: 3
           bounds: [28, 160, 144, 122]
           complex:
             - rect: [28, 160, 144, 122]
               radius: [61, 61]
-          items:
-          - type: rect
-            bounds: [28, 160, 144, 122]
-            color: 255 0 0 1.0000
+        - type: clip-chain
+          id: 21
+          clips: [3]
+        - type: rect
+          bounds: [28, 160, 144, 122]
+          color: 255 0 0 1.0000
+          clip-chain: 21
+
         - 
           bounds: [28, 160, 144, 122]
           type: border
@@ -58,6 +67,7 @@ root:
             - none
           radius: [61, 61]
         - type: clip
+          id: 4
           bounds: [28, 302, 154, 122]
           complex:
             - rect: [28, 302, 154, 122]
@@ -66,10 +76,14 @@ root:
                 "top-right": [61, 61]
                 "bottom-left": [0, 0]
                 "bottom-right": [61, 61]
-          items:
-          - type: rect
-            bounds: [28, 302, 154, 122]
-            color: 255 0 0 1.0000
+        - type: clip-chain
+          id: 22
+          clips: [4]
+        - type: rect
+          bounds: [28, 302, 154, 122]
+          color: 255 0 0 1.0000
+          clip-chain: 22
+
         - type: border
           bounds: [28, 302, 154, 122]
           width: [18, 0, 18, 10]
@@ -90,6 +104,7 @@ root:
             "bottom-left": [0, 0]
             "bottom-right": [61, 61]
         - type: clip
+          id: 5
           bounds: [202, 18, 145, 122]
           complex:
             - rect: [202, 18, 144.03334, 122]
@@ -98,10 +113,14 @@ root:
                 "top-right": [61, 61]
                 "bottom-left": [0, 0]
                 "bottom-right": [61, 61]
-          items:
-            - type: rect
-              bounds: [202, 18, 144.03334, 122]
-              color: 255 0 0 1.0000
+        - type: clip-chain
+          id: 23
+          clips: [5]
+        - type: rect
+          bounds: [202, 18, 144.03334, 122]
+          color: 255 0 0 1.0000
+          clip-chain: 23
+
         - type: border
           bounds: [202, 18, 144.03334, 122]
           width: [18, 0.016666668, 18, 0.016666668]
@@ -118,14 +137,19 @@ root:
             "bottom-left": [0, 0]
             "bottom-right": [61, 61]
         - type: clip
+          id: 6
           bounds: [202, 160, 144, 122]
           complex:
             - rect: [202, 160, 144, 122]
               radius: [61, 61]
-          items:
-            - type: rect
-              bounds: [202, 160, 144, 122]
-              color: 255 0 0 1.0000
+        - type: clip-chain
+          id: 24
+          clips: [6]
+        - type: rect
+          bounds: [202, 160, 144, 122]
+          color: 255 0 0 1.0000
+          clip-chain: 24
+
         - type: border
           bounds: [202, 160, 144, 122]
           width: [18, 0, 18, 0]
@@ -138,6 +162,7 @@ root:
           style: solid
           radius: [61, 61]
         - type: clip
+          id: 7
           bounds: [202, 302, 154, 122]
           complex:
             - rect: [202, 302, 154, 122]
@@ -146,10 +171,14 @@ root:
                 "top-right": [72, 72]
                 "bottom-left": [0, 0]
                 "bottom-right": [0, 0]
-          items:
-          - type: rect
-            bounds: [202, 302, 154, 122]
-            color: 255 0 0 1.0000
+        - type: clip-chain
+          id: 25
+          clips: [7]
+        - type: rect
+          bounds: [202, 302, 154, 122]
+          color: 255 0 0 1.0000
+          clip-chain: 25
+
         - 
           bounds: [202, 302, 154, 122]
           type: border
@@ -171,14 +200,19 @@ root:
             "bottom-left": [0, 0]
             "bottom-right": [0, 0]
         - type: clip
+          id: 8
           bounds: [376, 18, 144, 122]
           complex:
             - rect: [376, 18, 144, 122]
               radius: [61, 61]
-          items:
-          - type: rect
-            bounds: [376, 18, 144, 122]
-            color: 255 0 0 1.0000
+        - type: clip-chain
+          id: 26
+          clips: [8]
+        - type: rect
+          bounds: [376, 18, 144, 122]
+          color: 255 0 0 1.0000
+          clip-chain: 26
+
         - 
           bounds: [376, 18, 144, 122]
           type: border
@@ -196,14 +230,19 @@ root:
             - hidden
           radius: [61, 61]
         - type: clip
+          id: 9
           bounds: [376, 160, 144, 122]
           complex:
             - rect: [376, 160, 144, 122]
               radius: [61, 61]
-          items:
-          - type: rect
-            bounds: [376, 160, 144, 122]
-            color: 255 0 0 1.0000
+        - type: clip-chain
+          id: 27
+          clips: [9]
+        - type: rect
+          bounds: [376, 160, 144, 122]
+          color: 255 0 0 1.0000
+          clip-chain: 27
+
         - 
           bounds: [376, 160, 144, 122]
           clip: [-17895698, -17895698, 35791396, 35791396]
@@ -222,6 +261,7 @@ root:
             - none
           radius: [61, 61]
         - type: clip
+          id: 10
           bounds: [376, 302, 144, 122]
           complex:
             - rect: [376, 302, 144, 122]
@@ -230,10 +270,14 @@ root:
                 "top-right": [72, 72]
                 "bottom-left": [72, 72]
                 "bottom-right": [0, 0]
-          items:
-          - type: rect
-            bounds: [376, 302, 144, 122]
-            color: 255 0 0 1.0000
+        - type: clip-chain
+          id: 28
+          clips: [10]
+        - type: rect
+          bounds: [376, 302, 144, 122]
+          color: 255 0 0 1.0000
+          clip-chain: 28
+
         - 
           bounds: [376, 302, 144, 122]
           type: border

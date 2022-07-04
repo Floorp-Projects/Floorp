@@ -24,6 +24,7 @@
   MACRO_(abort, abort, "abort")                                                \
   MACRO_(add, add, "add")                                                      \
   MACRO_(allowContentIter, allowContentIter, "allowContentIter")               \
+  MACRO_(ambiguous, ambiguous, "ambiguous")                                    \
   MACRO_(anonymous, anonymous, "anonymous")                                    \
   MACRO_(Any, Any, "Any")                                                      \
   MACRO_(apply, apply, "apply")                                                \

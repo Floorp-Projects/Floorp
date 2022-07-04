@@ -487,6 +487,7 @@ The response packet:
 
 
 There's also the ``clearMessagesCache`` request packet that has no response. This clears the console API calls cache and should clear the page errors cache - see `bug 717611 <https://bugzilla.mozilla.org/show_bug.cgi?id=717611>`_.
+An alternate version was added in Firefox 104, ``clearMessagesCacheAsync``, which does exactly the same thing but resolves when the cache was actually cleared.
 
 
 Network logging

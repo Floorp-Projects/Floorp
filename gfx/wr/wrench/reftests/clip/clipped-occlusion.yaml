@@ -15,9 +15,11 @@ root:
       bounds: [0, -5000, 1000, 10000]
       items:
        - type: clip
+         id: 2
          bounds: [0, 0, 0, 0]
-         items:
-          -
-            bounds: [0, -5000, 1000, 10000]
-            type: rect
-            color: green
+       -
+        bounds: [0, -5000, 1000, 10000]
+        type: rect
+        color: green
+        clip-chain: [2]
+        

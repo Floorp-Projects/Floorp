@@ -20,7 +20,6 @@ root:
       "content-size": [2560, 1294]
     -
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 10
       "backface-visible": true
       type: "scroll-frame"
       id: 2
@@ -29,7 +28,6 @@ root:
     -
       bounds: [0, 0, 2560, 1294]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 2
       "backface-visible": true
       type: clip
       id: 3
@@ -37,14 +35,12 @@ root:
     -
       bounds: [0, 0, 2560, 1294]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       type: rect
       color: white
     -
       bounds: [16, 16, 520, 280]
       "clip-rect": [16, 16, 520, 280]
-      "clip-and-scroll": 3
       "backface-visible": true
       type: border
       width: 40
@@ -54,7 +50,6 @@ root:
     -
       bounds: [56, 216, 80, 40]
       "clip-rect": [56, 216, 80, 40]
-      "clip-and-scroll": 2
       "backface-visible": true
       type: clip
       id: 4
@@ -62,14 +57,12 @@ root:
     -
       bounds: [56, 216, 80, 40]
       "clip-rect": [56, 216, 80, 40]
-      "clip-and-scroll": 4
       "backface-visible": true
       type: rect
       color: black
     -
       bounds: [54, 55, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [67, 68]
       offsets: [56, 88, 96, 88]
@@ -79,7 +72,6 @@ root:
     -
       bounds: [54, 95, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [69, 70]
       offsets: [56, 128, 96, 128]
@@ -89,7 +81,6 @@ root:
     -
       bounds: [54, 135, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [71, 72]
       offsets: [56, 168, 96, 168]
@@ -99,7 +90,6 @@ root:
     -
       bounds: [54, 175, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [73, 74]
       offsets: [56, 208, 96, 208]
@@ -109,7 +99,6 @@ root:
     -
       bounds: [54, 215, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [19, 20, 21]
       offsets: [56, 248, 96, 248, 136, 248]
@@ -119,7 +108,6 @@ root:
     -
       bounds: [174, 55, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [75, 76]
       offsets: [176, 88, 216, 88]
@@ -129,7 +117,6 @@ root:
     -
       bounds: [174, 95, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [77, 78]
       offsets: [176, 128, 216, 128]
@@ -139,7 +126,6 @@ root:
     -
       bounds: [174, 135, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [79, 80]
       offsets: [176, 168, 216, 168]
@@ -149,7 +135,6 @@ root:
     -
       bounds: [174, 175, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [81, 83]
       offsets: [176, 208, 216, 208]
@@ -159,7 +144,6 @@ root:
     -
       bounds: [174, 215, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [67, 68]
       offsets: [176, 248, 216, 248]
@@ -169,7 +153,6 @@ root:
     -
       bounds: [294, 55, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [69, 70]
       offsets: [296, 88, 336, 88]
@@ -179,7 +162,6 @@ root:
     -
       bounds: [294, 95, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [71, 72]
       offsets: [296, 128, 336, 128]
@@ -189,7 +171,6 @@ root:
     -
       bounds: [294, 135, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [73, 74]
       offsets: [296, 168, 336, 168]
@@ -199,7 +180,6 @@ root:
     -
       bounds: [294, 175, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [84, 85]
       offsets: [296, 208, 336, 208]
@@ -209,7 +189,6 @@ root:
     -
       bounds: [294, 215, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [86, 87]
       offsets: [296, 248, 336, 248]
@@ -219,7 +198,6 @@ root:
     -
       bounds: [414, 55, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [88, 89]
       offsets: [416, 88, 456, 88]
@@ -229,7 +207,6 @@ root:
     -
       bounds: [414, 95, 124, 42]
       "clip-rect": [0, 0, 2560, 1294]
-      "clip-and-scroll": 3
       "backface-visible": true
       glyphs: [90, 91]
       offsets: [416, 128, 456, 128]
@@ -239,5 +216,4 @@ root:
     -
       bounds: [0, 0, 0, 0]
       "clip-rect": [0, 0, 0, 0]
-      "clip-and-scroll": root-scroll-node
       "backface-visible": true

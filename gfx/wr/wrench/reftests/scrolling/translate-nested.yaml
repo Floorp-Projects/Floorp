@@ -9,20 +9,21 @@ root:
           bounds: [0, 0, 200, 200]
           type: clip
           id: 2
+        -
+          bounds: [0, 0, 200, 200]
+          type: rect
+          color: red
+          clip-chain: [2]
+        -
+          bounds: [0, 0, 200, 200]
+          type: "stacking-context"
+          transform: translate(100, 0)
           items:
             -
-              bounds: [0, 0, 200, 200]
+              bounds: [-100, 0, 200, 200]
+              clip-rect: [-300, -300, 900, 900]
               type: rect
-              color: red
-            -
-              bounds: [0, 0, 200, 200]
-              type: "stacking-context"
-              transform: translate(100, 0)
-              items:
-                -
-                  bounds: [-100, 0, 200, 200]
-                  clip-rect: [-300, -300, 900, 900]
-                  type: rect
-                  color: green
+              color: green
+              clip-chain: [2]
   id: [0, 0]
 pipelines: []

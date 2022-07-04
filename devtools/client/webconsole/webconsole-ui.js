@@ -6,9 +6,6 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
-const {
-  WebConsoleConnectionProxy,
-} = require("devtools/client/webconsole/webconsole-connection-proxy");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 
@@ -80,6 +77,7 @@ class WebConsoleUI {
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
     this._onNetworkResourceUpdated = this._onNetworkResourceUpdated.bind(this);
+    this.clearPrivateMessages = this.clearPrivateMessages.bind(this);
 
     EventEmitter.decorate(this);
   }
@@ -89,51 +87,7 @@ class WebConsoleUI {
    * @type object
    */
   get webConsoleFront() {
-    const proxy = this.getProxy();
-
-    if (!proxy) {
-      return null;
-    }
-
-    return proxy.webConsoleFront;
-  }
-
-  /**
-   * Return the main target proxy, i.e. the proxy for MainProcessTarget in BrowserConsole,
-   * and the proxy for the target passed from the Toolbox to WebConsole.
-   *
-   * @returns {WebConsoleConnectionProxy}
-   */
-  getProxy() {
-    return this.proxy;
-  }
-
-  /**
-   * Return all the proxies we're currently managing (i.e. the "main" one, and the
-   * possible additional ones).
-   *
-   * @param {Boolean} filterDisconnectedProxies: True by default, if false, this
-   *   function also returns not-already-connected or already disconnected proxies.
-   *
-   * @returns {Array<WebConsoleConnectionProxy>}
-   */
-  getAllProxies(filterDisconnectedProxies = true) {
-    let proxies = [this.getProxy()];
-
-    if (this.additionalProxies) {
-      proxies = proxies.concat([...this.additionalProxies.values()]);
-    }
-
-    // Ignore Fronts that are already destroyed
-    if (filterDisconnectedProxies) {
-      proxies = proxies.filter(proxy => {
-        return (
-          proxy && proxy.webConsoleFront && !!proxy.webConsoleFront.actorID
-        );
-      });
-    }
-
-    return proxies;
+    return this._webConsoleFront;
   }
 
   /**
@@ -213,7 +167,7 @@ class WebConsoleUI {
     this.hud.commands.targetCommand.unwatchTargets({
       types: this.hud.commands.targetCommand.ALL_TYPES,
       onAvailable: this._onTargetAvailable,
-      onDestroyed: this._onTargetDestroy,
+      onDestroyed: this._onTargetDestroyed,
     });
 
     const resourceCommand = this.hud.resourceCommand;
@@ -233,12 +187,7 @@ class WebConsoleUI {
 
     this.stopWatchingNetworkResources();
 
-    for (const proxy of this.getAllProxies()) {
-      proxy.disconnect();
-    }
-    this.proxy = null;
-    this.additionalProxies = null;
-
+    this._webConsoleFront = null;
     this.networkDataProvider.destroy();
     this.networkDataProvider = null;
 
@@ -257,7 +206,7 @@ class WebConsoleUI {
    * @param object event
    *        If the event exists, calls preventDefault on it.
    */
-  clearOutput(clearStorage, event) {
+  async clearOutput(clearStorage, event) {
     if (event) {
       event.preventDefault();
     }
@@ -266,14 +215,39 @@ class WebConsoleUI {
     }
 
     if (clearStorage) {
-      this.clearMessagesCache();
+      await this.clearMessagesCache();
     }
     this.emitForTests("messages-cleared");
   }
 
-  clearMessagesCache() {
-    for (const proxy of this.getAllProxies()) {
-      proxy.webConsoleFront.clearMessagesCache();
+  async clearMessagesCache() {
+    if (!this.hud) {
+      return;
+    }
+
+    const {
+      hasWebConsoleClearMessagesCacheAsync,
+    } = this.hud.commands.client.mainRoot.traits;
+
+    // This can be called during console destruction and getAllFronts would reject in such case.
+    try {
+      const consoleFronts = await this.hud.commands.targetCommand.getAllFronts(
+        this.hud.commands.targetCommand.ALL_TYPES,
+        "console"
+      );
+      const promises = [];
+      for (const consoleFront of consoleFronts) {
+        // @backward-compat { version 104 } clearMessagesCacheAsync was added in 104
+        promises.push(
+          hasWebConsoleClearMessagesCacheAsync
+            ? consoleFront.clearMessagesCacheAsync()
+            : consoleFront.clearMessagesCache()
+        );
+      }
+      await Promise.all(promises);
+      this.emitForTests("messages-cache-cleared");
+    } catch (e) {
+      console.warn("Exception in clearMessagesCache", e);
     }
   }
 
@@ -306,6 +280,12 @@ class WebConsoleUI {
     return this.wrapper;
   }
 
+  disableAllNetworkMessages() {
+    if (this.wrapper) {
+      this.wrapper.dispatchNetworkMessagesDisable();
+    }
+  }
+
   getPanelWindow() {
     return this.window;
   }
@@ -325,8 +305,6 @@ class WebConsoleUI {
    *         A promise object that is resolved/reject based on the proxies connections.
    */
   async _attachTargets() {
-    this.additionalProxies = new Map();
-
     const { commands, resourceCommand } = this.hud;
     this.networkDataProvider = new FirefoxDataProvider({
       commands,
@@ -346,7 +324,7 @@ class WebConsoleUI {
     await commands.targetCommand.watchTargets({
       types: this.hud.commands.targetCommand.ALL_TYPES,
       onAvailable: this._onTargetAvailable,
-      onDestroyed: this._onTargetDestroy,
+      onDestroyed: this._onTargetDestroyed,
     });
 
     await resourceCommand.watchResources(
@@ -544,42 +522,39 @@ class WebConsoleUI {
    *        composed of a WindowGlobalTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront }) {
-    // This is a top level target. It may update on process switches
-    // when navigating to another domain.
+    // Once we support only server watcher for NETWORK_EVENT, we will be able to drop this.
+    // We have to wait for the fully enabling of NETWORK_EVENT watchers, especially on the Browser Toolbox.
+    const { targetCommand, resourceCommand } = this.hud.commands;
+    const hasNetworkResourceCommandSupport = resourceCommand.hasResourceCommandSupport(
+      resourceCommand.TYPES.NETWORK_EVENT
+    );
+    const supportsWatcherRequest = targetCommand.hasTargetWatcherSupport();
+    if (!hasNetworkResourceCommandSupport || !supportsWatcherRequest) {
+      // There is no way to view response bodies from the Browser Console, so do
+      // not waste the memory.
+      const saveBodies =
+        !this.isBrowserConsole &&
+        Services.prefs.getBoolPref(
+          "devtools.netmonitor.saveRequestAndResponseBodies"
+        );
+
+      const front = await targetFront.getFront("console");
+      // Make sure the web console client connection is established first.
+      await front.setPreferences({
+        "NetworkMonitor.saveRequestAndResponseBodies": saveBodies,
+      });
+    }
+
     if (targetFront.isTopLevel) {
-      this.proxy = new WebConsoleConnectionProxy(this, targetFront);
-      await this.proxy.connect();
-      return;
+      this._webConsoleFront = await targetFront.getFront("console");
+      if (this.isBrowserConsole || this.isBrowserToolboxConsole) {
+        // Private messages only need to be removed from the output in Browser Console/Browser Toolbox
+        this.webConsoleFront.on(
+          "lastPrivateContextExited",
+          this.clearPrivateMessages
+        );
+      }
     }
-
-    // Allow frame, but only in content toolbox, i.e. still ignore them in
-    // the context of the browser toolbox as we inspect messages via the process targets
-    const listenForFrames = this.hud.commands.descriptorFront.isLocalTab;
-
-    const { TYPES } = this.hud.commands.targetCommand;
-    const isWorkerTarget =
-      targetFront.targetType == TYPES.WORKER ||
-      targetFront.targetType == TYPES.SHARED_WORKER ||
-      targetFront.targetType == TYPES.SERVICE_WORKER;
-
-    const acceptTarget =
-      // Unconditionally accept all process targets, this should only happens in the
-      // multiprocess browser toolbox/console
-      targetFront.targetType == TYPES.PROCESS ||
-      (targetFront.targetType == TYPES.FRAME && listenForFrames) ||
-      // Accept worker targets if the platform dispatching of worker messages to the main
-      // thread is disabled (e.g. we get them directly from the worker target).
-      (isWorkerTarget &&
-        !this.hud.commands.targetCommand.rootFront.traits
-          .workerConsoleApiMessagesDispatchedToMainThread);
-
-    if (!acceptTarget) {
-      return;
-    }
-
-    const proxy = new WebConsoleConnectionProxy(this, targetFront);
-    this.additionalProxies.set(targetFront, proxy);
-    await proxy.connect();
   }
 
   /**
@@ -589,14 +564,7 @@ class WebConsoleUI {
    * See _onTargetAvailable for param's description.
    */
   _onTargetDestroyed({ targetFront }) {
-    if (targetFront.isTopLevel) {
-      this.proxy.disconnect();
-      this.proxy = null;
-    } else {
-      const proxy = this.additionalProxies.get(targetFront);
-      proxy.disconnect();
-      this.additionalProxies.delete(targetFront);
-    }
+    // XXX keeping this as it's going to be used again in a patch in this queue
   }
 
   _initUI() {

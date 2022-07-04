@@ -10,19 +10,22 @@ root:
       items:
         -
           type: clip
+          id: 2
           bounds: [0, 0, 200, 200]
           complex:
             - rect: [ 0, 0, 200, 200 ]
               radius: 100
+        - type: rect
+          bounds: [ 0, 0, 200, 200 ]
+          color: red
+          clip-chain: [2]
+        - type: "stacking-context"
+          bounds: [0, 0, 0, 0]
+          transform: translate(0, 0, 1)
           items:
-            - type: rect
-              bounds: [ 0, 0, 200, 200 ]
-              color: red
-            - type: "stacking-context"
-              bounds: [0, 0, 0, 0]
-              transform: translate(0, 0, 1)
-              items:
-                -
-                  type: rect
-                  bounds: [0, 0, 25, 25]
-                  color: blue
+            -
+              type: rect
+              bounds: [0, 0, 25, 25]
+              color: blue
+              clip-chain: [2]
+              

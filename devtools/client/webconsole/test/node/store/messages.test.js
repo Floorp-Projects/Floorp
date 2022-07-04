@@ -7,6 +7,7 @@ const {
   getAllCssMessagesMatchingElements,
   getAllNetworkMessagesUpdateById,
   getAllRepeatById,
+  getAllDisabledMessagesById,
   getCurrentGroup,
   getGroupsById,
   getMutableMessagesById,
@@ -1240,6 +1241,65 @@ describe("Message reducer:", () => {
       expanded = getAllMessagesUiById(getState());
       expect(expanded.length).toBe(1);
       expect(expanded.includes(secondTraceMessage.id)).toBeFalsy();
+    });
+  });
+
+  describe("disabledMessagesById", () => {
+    it("adds messages ids to disabledMessagesById when message disable action is called", () => {
+      const { dispatch, getState } = setupStore();
+
+      dispatch(actions.messagesDisable(["message1", "message2"]));
+
+      const disabledMessages = getAllDisabledMessagesById(getState());
+      expect(disabledMessages).toEqual(["message1", "message2"]);
+    });
+
+    it("clears disabledMessagesById in response to MESSAGES_CLEAR action", () => {
+      const { dispatch, getState } = setupStore();
+
+      dispatch(actions.messagesDisable(["message1", "message2"]));
+
+      let disabledMessages = getAllDisabledMessagesById(getState());
+      expect(disabledMessages).toEqual(["message1", "message2"]);
+
+      dispatch(actions.messagesClear());
+
+      disabledMessages = getAllDisabledMessagesById(getState());
+      expect(disabledMessages).toEqual([]);
+    });
+
+    it("remove message id from disabledMessagesById when the message is removed", () => {
+      const { dispatch, getState } = setupStore(
+        [
+          "console.log('foobar', 'test')",
+          "XHR GET request update",
+          "console.log(undefined)",
+        ],
+        {
+          actions,
+          storeOptions: {
+            logLimit: 3,
+          },
+        }
+      );
+
+      // This is `console.log('foobar', 'test'`
+      const firstMessageId = getMessageAt(getState(), 0).id;
+      // This is for `XHR GET request update`
+      const secondMessageId = getMessageAt(getState(), 1).id;
+
+      dispatch(actions.messagesDisable([firstMessageId, secondMessageId]));
+
+      let disabledMessages = getAllDisabledMessagesById(getState());
+      expect(disabledMessages).toEqual([firstMessageId, secondMessageId]);
+
+      // Adding a new message should prune the first(oldest) message and should
+      // remove its id from the disabled messages list.
+      const packet = stubPackets.get("GET request");
+      dispatch(actions.messagesAdd([packet]));
+
+      disabledMessages = getAllDisabledMessagesById(getState());
+      expect(disabledMessages).toEqual([secondMessageId]);
     });
   });
 });

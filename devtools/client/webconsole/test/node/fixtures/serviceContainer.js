@@ -6,10 +6,6 @@
 module.exports = {
   attachRefToWebConsoleUI: () => {},
   emitForTests: () => {},
-  proxy: {
-    client: {},
-    releaseActor: actor => console.log("Release actor", actor),
-  },
   onViewSourceInDebugger: () => {},
   onViewSourceInStyleEditor: () => {},
   openNetworkPanel: () => {},

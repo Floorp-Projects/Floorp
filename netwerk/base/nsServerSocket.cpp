@@ -14,8 +14,19 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/net/DNS.h"
+#include "mozilla/Unused.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIFile.h"
+#if defined(XP_WIN)
+#  include "private/pprio.h"
+#  include <Winsock2.h>
+#  include <mstcpip.h>
+
+#  ifndef IPV6_V6ONLY
+#    define IPV6_V6ONLY 27
+#  endif
+
+#endif
 
 namespace mozilla {
 namespace net {
@@ -260,6 +271,16 @@ nsServerSocket::InitIPv6(int32_t aPort, bool aLoopbackOnly, int32_t aBackLog) {
 }
 
 NS_IMETHODIMP
+nsServerSocket::InitDualStack(int32_t aPort, int32_t aBackLog) {
+  if (aPort < 0) {
+    aPort = 0;
+  }
+  PRNetAddr addr;
+  PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, aPort, &addr);
+  return InitWithAddressInternal(&addr, aBackLog, true);
+}
+
+NS_IMETHODIMP
 nsServerSocket::InitWithFilename(nsIFile* aPath, uint32_t aPermissions,
                                  int32_t aBacklog) {
 #if defined(XP_UNIX)
@@ -329,6 +350,12 @@ nsServerSocket::InitSpecialConnection(int32_t aPort, nsServerSocketFlag aFlags,
 
 NS_IMETHODIMP
 nsServerSocket::InitWithAddress(const PRNetAddr* aAddr, int32_t aBackLog) {
+  return InitWithAddressInternal(aAddr, aBackLog);
+}
+
+nsresult nsServerSocket::InitWithAddressInternal(const PRNetAddr* aAddr,
+                                                 int32_t aBackLog,
+                                                 bool aDualStack) {
   NS_ENSURE_TRUE(mFD == nullptr, NS_ERROR_ALREADY_INITIALIZED);
   nsresult rv;
 
@@ -341,6 +368,21 @@ nsServerSocket::InitWithAddress(const PRNetAddr* aAddr, int32_t aBackLog) {
     NS_WARNING("unable to create server socket");
     return ErrorAccordingToNSPR(PR_GetError());
   }
+
+#if defined(XP_WIN)
+  // https://docs.microsoft.com/en-us/windows/win32/winsock/dual-stack-sockets
+  // To create a Dual-Stack Socket, we have to disable IPV6_V6ONLY.
+  if (aDualStack) {
+    PROsfd osfd = PR_FileDesc2NativeHandle(mFD);
+    if (osfd != -1) {
+      int disable = 0;
+      setsockopt(osfd, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&disable,
+                 sizeof(disable));
+    }
+  }
+#else
+  mozilla::Unused << aDualStack;
+#endif
 
   PR_SetFDInheritable(mFD, false);
 

@@ -274,6 +274,24 @@ class Section {
     return *this;
   };
 
+  // Append data from SLICE to the end of this section. Return
+  // a reference to this section.
+  Section& Append(const lul::ImageSlice& slice) {
+    for (size_t i = 0; i < slice.length_; i++) {
+      contents_.append(1, slice.start_[i]);
+    }
+    return *this;
+  }
+
+  // Append data from CSTRING to the end of this section.  The terminating
+  // zero is not included.  Return a reference to this section.
+  Section& Append(const char* cstring) {
+    for (size_t i = 0; cstring[i] != '\0'; i++) {
+      contents_.append(1, cstring[i]);
+    }
+    return *this;
+  }
+
   // Append SIZE copies of BYTE to the end of this section. Return a
   // reference to this section.
   Section& Append(size_t size, uint8_t byte) {
@@ -576,9 +594,18 @@ class CFISection : public Section {
 
   // Append the contents of BLOCK as a DW_FORM_block value: an
   // unsigned LEB128 length, followed by that many bytes of data.
-  CFISection& Block(const string& block) {
-    ULEB128(block.size());
+  CFISection& Block(const lul::ImageSlice& block) {
+    ULEB128(block.length_);
     Append(block);
+    return *this;
+  }
+
+  // Append data from CSTRING as a DW_FORM_block value: an unsigned LEB128
+  // length, followed by that many bytes of data. The terminating zero is not
+  // included.
+  CFISection& Block(const char* cstring) {
+    ULEB128(strlen(cstring));
+    Append(cstring);
     return *this;
   }
 

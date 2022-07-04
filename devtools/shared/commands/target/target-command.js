@@ -907,9 +907,12 @@ class TargetCommand extends EventEmitter {
       ? this.getAllTargets(targetTypes)
       : await this.getAllTargetsInSelectedTargetTree(targetTypes);
     for (const target of targets) {
-      // For still-attaching worker targets, the threadFront may not yet be available,
+      // For still-attaching worker targets, the thread or console front may not yet be available,
       // whereas TargetMixin.getFront will throw if the actorID isn't available in targetForm.
-      if (frontType == "thread" && !target.targetForm.threadActor) {
+      if (
+        (frontType == "thread" && !target.targetForm.threadActor) ||
+        (frontType == "console" && !target.targetForm.consoleActor)
+      ) {
         continue;
       }
 

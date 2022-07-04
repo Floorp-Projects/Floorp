@@ -7,6 +7,7 @@
 #ifndef vm_Realm_h
 #define vm_Realm_h
 
+#include "mozilla/Array.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
@@ -125,6 +126,25 @@ class NewProxyCache {
     entries_[0].shape = shape;
   }
   void purge() { entries_.reset(); }
+};
+
+// Cache for NewPlainObjectWithProperties. When the list of properties matches
+// a recently created object's shape, we can use this shape directly.
+class NewPlainObjectWithPropsCache {
+  static const size_t NumEntries = 4;
+  mozilla::Array<Shape*, NumEntries> entries_;
+
+ public:
+  NewPlainObjectWithPropsCache() { purge(); }
+
+  Shape* lookup(IdValuePair* properties, size_t nproperties) const;
+  void add(Shape* shape);
+
+  void purge() {
+    for (size_t i = 0; i < NumEntries; i++) {
+      entries_[i] = nullptr;
+    }
+  }
 };
 
 // [SMDOC] Object MetadataBuilder API
@@ -404,6 +424,7 @@ class JS::Realm : public JS::shadow::Realm {
 
   js::DtoaCache dtoaCache;
   js::NewProxyCache newProxyCache;
+  js::NewPlainObjectWithPropsCache newPlainObjectWithPropsCache;
   js::ArraySpeciesLookup arraySpeciesLookup;
   js::PromiseLookup promiseLookup;
 

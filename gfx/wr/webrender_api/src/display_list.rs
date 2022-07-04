@@ -1037,7 +1037,6 @@ impl SpatialNodeInfo {
     }
 }
 
-#[derive(Clone)]
 pub struct DisplayListBuilder {
     payload: DisplayListPayload,
     pub pipeline_id: PipelineId,

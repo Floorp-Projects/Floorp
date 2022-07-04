@@ -3,12 +3,13 @@
 root:
   items:
     - type: clip
+      id: 2
       bounds: [0, 0, 95, 88]
       image-mask:
         image: invalid
         rect: [0, 0, 35, 35]
         repeat: false
-      items:
-      - type: rect
-        bounds: [0, 0, 95, 88]
-        color: blue
+    - type: rect
+      bounds: [0, 0, 95, 88]
+      color: blue
+      clip-chain: [2]

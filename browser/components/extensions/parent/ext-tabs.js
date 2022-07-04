@@ -898,7 +898,20 @@ this.tabs = class extends ExtensionAPIPersistent {
                 : Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
               triggeringPrincipal: context.principal,
             };
-            nativeTab.linkedBrowser.loadURI(url, options);
+
+            let browser = nativeTab.linkedBrowser;
+            if (nativeTab.linkedPanel) {
+              browser.loadURI(url, options);
+            } else {
+              // Shift to fully loaded browser and make
+              // sure load handler is instantiated.
+              nativeTab.addEventListener(
+                "SSTabRestoring",
+                () => browser.loadURI(url, options),
+                { once: true }
+              );
+              tabbrowser._insertBrowser(nativeTab);
+            }
           }
 
           if (updateProperties.active) {

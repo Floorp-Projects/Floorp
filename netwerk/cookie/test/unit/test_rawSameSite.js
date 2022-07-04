@@ -49,10 +49,6 @@ add_task(async _ => {
       true
     );
     Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", true);
-    Services.prefs.setBoolPref(
-      "network.cookie.sameSite.noneRequiresSecure",
-      true
-    );
   }
 
   let uri = NetUtil.newURI("http://example.org/");

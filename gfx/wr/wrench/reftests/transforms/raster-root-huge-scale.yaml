@@ -24,10 +24,10 @@ root:
                   "clip-mode": clip
             - type: stacking-context
               bounds: 0 0 0 0
-              clip-and-scroll: 2
               items:
                 - rect: 0 0 100 100
                   color: red
+                  clip-chain: [2]
             - type: box-shadow
               bounds: 0 0 100 100
               color: blue

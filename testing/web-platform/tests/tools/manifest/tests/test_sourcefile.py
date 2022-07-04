@@ -849,7 +849,6 @@ def test_reftest_fuzzy(fuzzy, expected):
     assert s.content_is_ref_node
     assert s.fuzzy == expected
 
-
 @pytest.mark.parametrize("fuzzy, expected", [
     ([b"1;200"], {None: [[1, 1], [200, 200]]}),
     ([b"ref-2.html:0-1;100-200"], {("/foo/test.html", "/foo/ref-2.html", "=="): [[0, 1], [100, 200]]}),
@@ -868,6 +867,15 @@ def test_reftest_fuzzy_multi(fuzzy, expected):
     assert s.content_is_ref_node
     assert s.fuzzy == expected
 
+@pytest.mark.parametrize("pac, expected", [
+    (b"proxy.pac", "proxy.pac")])
+def test_pac(pac, expected):
+    content = b"""
+<meta name=pac content="%s">
+""" % pac
+
+    s = create("foo/test.html", content)
+    assert s.pac == expected
 
 @pytest.mark.parametrize("page_ranges, expected", [
     (b"1-2", [[1, 2]]),

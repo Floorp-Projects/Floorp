@@ -76,7 +76,7 @@ const HTTP_METHODS = [
   "PUT",
   "OPTIONS",
   "TRACE",
-  "PATH",
+  "PATCH",
 ];
 
 /*

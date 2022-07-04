@@ -16,15 +16,21 @@ root:
           border-radius: 8
 
         - type: clip
+          id: 2
           bounds: [90, 0, 150, 150]
           complex:
             - rect: [90, 0, 150, 150]
               radius: 8
-          items:
-          - type: rect
-            color: red
-            border-radius: 8
-            bounds: [90, 0, 150, 150]
+
+        - type: clip-chain
+          id: 10
+          clips: [2]
+
+        - type: rect
+          color: red
+          border-radius: 8
+          bounds: [90, 0, 150, 150]
+          clip-chain: 10
 
     - type: rect
       color: white

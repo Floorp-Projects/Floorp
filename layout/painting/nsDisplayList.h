@@ -5491,6 +5491,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   bool IsFixedPositionLayer() const;
   bool IsStickyPositionLayer() const;
   bool HasDynamicToolbar() const;
+  bool ShouldFixedAndStickyContentGetAnimationIds() const;
 
   bool CreatesStackingContextHelper() override { return true; }
 

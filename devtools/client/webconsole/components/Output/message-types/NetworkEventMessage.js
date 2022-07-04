@@ -74,6 +74,7 @@ function NetworkEventMessage({
   networkMessageActiveTabId,
   dispatch,
   open,
+  disabled,
 }) {
   const {
     id,
@@ -186,9 +187,10 @@ function NetworkEventMessage({
   };
 
   // Only render the attachment if the network-event is
-  // actually opened (performance optimization).
+  // actually opened (performance optimization) and its not disabled.
   const attachment =
     open &&
+    !disabled &&
     dom.div(
       {
         className: "network-info network-monitor",
@@ -222,6 +224,7 @@ function NetworkEventMessage({
     indent,
     collapsible: true,
     open,
+    disabled,
     onToggle,
     attachment,
     topLevelClasses,
