@@ -3866,6 +3866,7 @@ pub unsafe extern "C" fn wr_api_end_builder(
 pub struct HitResult {
     pipeline_id: WrPipelineId,
     scroll_id: u64,
+    animation_id: u64,
     hit_info: u16,
 }
 
@@ -3876,6 +3877,7 @@ pub extern "C" fn wr_api_hit_test(dh: &mut DocumentHandle, point: WorldPoint, ou
         out_results.push(HitResult {
             pipeline_id: item.pipeline,
             scroll_id: item.tag.0,
+            animation_id: item.animation_id,
             hit_info: item.tag.1,
         });
     }

@@ -94,6 +94,7 @@ struct WrHitResult {
   layers::ScrollableLayerGuid::ViewID mScrollId;
   gfx::CompositorHitTestInfo mHitInfo;
   SideBits mSideBits;
+  Maybe<uint64_t> mAnimationId;
 };
 
 class TransactionBuilder final {
@@ -492,7 +493,8 @@ class DisplayListBuilder final {
   void PushHitTest(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
                    bool aIsBackfaceVisible,
                    const layers::ScrollableLayerGuid::ViewID& aScrollId,
-                   gfx::CompositorHitTestInfo aHitInfo, SideBits aSideBits);
+                   const gfx::CompositorHitTestInfo& aHitInfo,
+                   SideBits aSideBits);
   void PushClearRect(const wr::LayoutRect& aBounds);
 
   void PushBackdropFilter(const wr::LayoutRect& aBounds,
