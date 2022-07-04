@@ -153,8 +153,8 @@
 
     <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+       <p>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ڈیٹا ترسیل وچ ہک خرابی دا سراغ لڳے۔</p> 
       <ul>
-        <li>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ڈیٹا ترسیل وچ ہک خرابی دا سراغ لڳے۔</li> 
         <li>ویب سائٹ دے مالک کوں ایں مسئلے دا ݙسݨ کیتے  انہاں  نال رابطہ کرو۔</li>
       </ul>
     ]]></string>
@@ -163,8 +163,8 @@
     <string name="mozac_browser_errorpages_content_crashed_title">مواد تباہ تھی ڳیا</string>
 
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+       <p>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ڈیٹا ترسیل وچ ہک خرابی دا سراغ لڳے۔</p> 
       <ul>
-        <li>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ڈیٹا ترسیل وچ ہک خرابی دا سراغ لڳے۔</li> 
         <li>ویب سائٹ دے مالک کوں ایں مسئلے دا ݙسݨ کیتے  انہاں  نال رابطہ کرو۔</li>
       </ul>
     ]]></string>
@@ -173,8 +173,8 @@
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">مواد اینکوڈ کرݨ وچ خرابی</string>
 
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+        <p>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ایہ ہک غلط یا بغیر سہارا تھئی کمپریشن ورتیندے۔</p> 
       <ul>
-        <li>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ایہ ہک غلط یا بغیر سہارا تھئی کمپریشن ورتیندے۔</li> 
         <li>ویب سائٹ دے مالک کوں ایں مسئلے دا ݙسݨ کیتے  انہاں  نال رابطہ کرو۔</li>
       </ul>
     ]]></string>
