@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Optional, Mapping, MutableMapping, Union, Dict
+from typing import Any, Optional, Mapping, List, MutableMapping, Union, Dict
 
 from ._module import BidiModule, command
 
@@ -32,6 +32,34 @@ Target = Union[RealmTarget, ContextTarget]
 
 
 class Script(BidiModule):
+    @command
+    def call_function(self,
+                      function_declaration: str,
+                      await_promise: bool,
+                      target: Target,
+                      arguments: Optional[List[Mapping[str, Any]]] = None,
+                      this: Optional[Mapping[str, Any]] = None,
+                      result_ownership: Optional[OwnershipModel] = None) -> Mapping[str, Any]:
+        params: MutableMapping[str, Any] = {
+            "functionDeclaration": function_declaration,
+            "target": target,
+            "awaitPromise": await_promise
+        }
+
+        if arguments is not None:
+            params["arguments"] = arguments
+        if this is not None:
+            params["this"] = this
+        if result_ownership is not None:
+            params["resultOwnership"] = result_ownership
+        return params
+
+    @call_function.result
+    def _call_function(self, result: Mapping[str, Any]) -> Any:
+        if "result" not in result:
+            raise ScriptEvaluateResultException(result)
+        return result["result"]
+
     @command
     def evaluate(self,
                  expression: str,
