@@ -36,19 +36,18 @@ on the following diagram.
                                                           {ui}
                                                             │
                                                             ▼ 1
-                                               ┌────────────────────────┐             ┌─────────────────────────────────┐
-                                               │      WebConsoleUI      │            1│    WebConsoleConnectionProxy    │
-                                               │   [webconsole-ui.js]   │───{proxy}──▶│[webconsole-connection-proxy.js] │
-                                               └────────────────────────┘             └─────────────────────────────────┘
-                                                            │                                          │
-                                                       {wrapper}
-                                                            │                                          │
+                                               ┌────────────────────────┐
+                                               │      WebConsoleUI      │
+                                               │   [webconsole-ui.js]   │
+                                               └────────────────────────┘
                                                             │
-                                                            │                                          │
+                                                       {wrapper}
+                                                            │
+                                                            │
                                                             ▼ 1
-                                               ┌────────────────────────┐                              │
+                                               ┌────────────────────────┐
                                                │   WebConsoleWrapper    │
-                                               │[webconsole-wrapper.js] │◀ ─ ─ ─calls methods from ─ ─ ┘
+                                               │[webconsole-wrapper.js] │
                                                └────────────────────────┘
                                                             │
                                                         <renders>

@@ -92,11 +92,6 @@ class BrowserConsole extends WebConsole {
       this._telemetry.toolClosed("browserconsole", -1, this);
 
       this.commands.targetCommand.destroy();
-      // Wait for any pending connection initialization.
-      if (this.ui.proxy) {
-        await this.ui.proxy.getConnectionPromise();
-      }
-
       await super.destroy();
       await this.currentTarget.destroy();
       this.chromeWindow.close();
