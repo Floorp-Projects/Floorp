@@ -36,6 +36,7 @@
 #  include "MacLaunchHelper.h"
 #  include "updaterfileutils_osx.h"
 #  include "mozilla/Monitor.h"
+#  include "gfxPlatformMac.h"
 #endif
 
 #if defined(XP_WIN)
@@ -432,6 +433,12 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
   }
 
 #if defined(XP_MACOSX)
+  // If we're going to do a restart, we need to make sure the font registration
+  // thread has finished before this process exits (bug 1777332).
+  if (restart) {
+    gfxPlatformMac::WaitForFontRegistration();
+  }
+
   // We need to detect whether elevation is required for this update. This can
   // occur when an admin user installs the application, but another admin
   // user attempts to update (see bug 394984).
