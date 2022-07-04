@@ -55,7 +55,7 @@ class GfxInfoBase : public nsIGfxInfo,
                                               nsAString& _retval) override;
 
   NS_IMETHOD GetMonitors(JSContext* cx,
-                         JS::MutableHandleValue _retval) override;
+                         JS::MutableHandle<JS::Value> _retval) override;
   NS_IMETHOD GetFailures(nsTArray<int32_t>& indices,
                          nsTArray<nsCString>& failures) override;
   NS_IMETHOD_(void) LogFailure(const nsACString& failure) override;
@@ -106,7 +106,7 @@ class GfxInfoBase : public nsIGfxInfo,
   // Convenience to get the application version
   static const nsCString& GetApplicationVersion();
 
-  virtual nsresult FindMonitors(JSContext* cx, JS::HandleObject array);
+  virtual nsresult FindMonitors(JSContext* cx, JS::Handle<JSObject*> array);
 
   static void SetFeatureStatus(
       nsTArray<mozilla::gfx::GfxInfoFeatureStatus>&& aFS);
