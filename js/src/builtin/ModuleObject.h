@@ -349,6 +349,8 @@ class ModuleObject : public NativeObject {
                                                  Handle<ModuleObject*> module);
   bool isAsync() const;
   bool isAsyncEvaluating() const;
+  bool wasAsyncEvaluating() const;
+  void setAsyncEvaluating();
   void setAsyncEvaluatingFalse();
   void setEvaluationError(HandleValue newValue);
   void setPendingAsyncDependencies(uint32_t newValue);
@@ -371,18 +373,12 @@ class ModuleObject : public NativeObject {
   [[nodiscard]] static bool topLevelCapabilityReject(
       JSContext* cx, Handle<ModuleObject*> module, HandleValue error);
 
-  // Start evaluating the module. If TLA is enabled, rval will be a promise
-  static bool Evaluate(JSContext* cx, Handle<ModuleObject*> self,
-                       MutableHandleValue rval);
-
   void setMetaObject(JSObject* obj);
 
   static bool instantiateFunctionDeclarations(JSContext* cx,
                                               Handle<ModuleObject*> self);
 
-  // For intrinsic_ExecuteModule.
-  static bool execute(JSContext* cx, Handle<ModuleObject*> self,
-                      MutableHandleValue rval);
+  static bool execute(JSContext* cx, Handle<ModuleObject*> self);
 
   static ModuleNamespaceObject* createNamespace(JSContext* cx,
                                                 Handle<ModuleObject*> self,
@@ -392,8 +388,6 @@ class ModuleObject : public NativeObject {
 
   bool initAsyncSlots(JSContext* cx, bool isAsync,
                       HandleObject asyncParentModulesList);
-
-  bool initAsyncEvaluatingSlot();
 
   static bool GatherAsyncParentCompletions(
       JSContext* cx, Handle<ModuleObject*> module,
