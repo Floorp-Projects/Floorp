@@ -11,7 +11,7 @@ const TEST_URI = `
   <style>
   body {
     color: blue;
-    border-block-color: lime;
+    font-variant-alternates: historical-forms;
     user-modify: read-only;
   }
   div {
@@ -26,8 +26,8 @@ const TEST_URI = `
 const TEST_DATA_SELECTED = [
   {
     type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-    property: "border-block-color",
-    url: "https://developer.mozilla.org/docs/Web/CSS/border-block-color",
+    property: "font-variant-alternates",
+    url: "https://developer.mozilla.org/docs/Web/CSS/font-variant-alternates",
     deprecated: false,
     experimental: false,
   },

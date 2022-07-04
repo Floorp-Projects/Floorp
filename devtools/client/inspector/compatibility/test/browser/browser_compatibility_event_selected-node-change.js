@@ -8,11 +8,11 @@
 const TEST_URI = `
   <style>
   body {
-    border-block-color: lime;
+    ruby-align: center;
   }
 
   .has-issue {
-    border-inline-color: lime;
+    font-variant-alternates: historical-forms;
     user-modify: read-only;
   }
 
@@ -30,7 +30,7 @@ const TEST_DATA_SELECTED = [
   {
     selector: ".has-issue",
     expectedIssues: [
-      { property: "border-inline-color" },
+      { property: "font-variant-alternates" },
       { property: "user-modify" },
     ],
   },
@@ -40,13 +40,13 @@ const TEST_DATA_SELECTED = [
   },
   {
     selector: "body",
-    expectedIssues: [{ property: "border-block-color" }],
+    expectedIssues: [{ property: "ruby-align" }],
   },
 ];
 
 const TEST_DATA_ALL = [
-  { property: "border-block-color" },
-  { property: "border-inline-color" },
+  { property: "ruby-align" },
+  { property: "font-variant-alternates" },
   { property: "user-modify" },
 ];
 
