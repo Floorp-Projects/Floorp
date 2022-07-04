@@ -98,8 +98,7 @@ extern PlainObject* NewPlainObjectWithProtoAndAllocKind(
 
 extern PlainObject* NewPlainObjectWithProperties(JSContext* cx,
                                                  IdValuePair* properties,
-                                                 size_t nproperties,
-                                                 NewObjectKind newKind);
+                                                 size_t nproperties);
 
 }  // namespace js
 

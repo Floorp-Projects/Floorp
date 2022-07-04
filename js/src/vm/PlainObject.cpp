@@ -198,11 +198,9 @@ PlainObject* js::NewPlainObjectWithProtoAndAllocKind(JSContext* cx,
 
 PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
                                               IdValuePair* properties,
-                                              size_t nproperties,
-                                              NewObjectKind newKind) {
+                                              size_t nproperties) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
-  Rooted<PlainObject*> obj(cx,
-                           NewPlainObjectWithAllocKind(cx, allocKind, newKind));
+  Rooted<PlainObject*> obj(cx, NewPlainObjectWithAllocKind(cx, allocKind));
   if (!obj) {
     return nullptr;
   }
