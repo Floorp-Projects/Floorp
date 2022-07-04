@@ -135,6 +135,14 @@ ModuleScript::ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
   MOZ_ASSERT(!HasErrorToRethrow());
 }
 
+void ModuleScript::Shutdown() {
+  if (mModuleRecord) {
+    JS::ClearModuleEnvironment(mModuleRecord);
+  }
+
+  UnlinkModuleRecord();
+}
+
 void ModuleScript::UnlinkModuleRecord() {
   // Remove the module record's pointer to this object if present and
   // decrement our reference count. The reference is added by

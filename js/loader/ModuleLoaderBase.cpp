@@ -891,6 +891,11 @@ ModuleLoaderBase::~ModuleLoaderBase() {
 
 void ModuleLoaderBase::Shutdown() {
   MOZ_ASSERT(mFetchingModules.IsEmpty());
+
+  for (const auto& entry : mFetchedModules) {
+    entry.GetData()->Shutdown();
+  }
+
   mFetchedModules.Clear();
   mGlobalObject = nullptr;
   mEventTarget = nullptr;
