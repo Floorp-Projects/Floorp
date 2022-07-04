@@ -70,6 +70,35 @@ namespace lul {
 
 class UniqueString;
 
+// This represents a read-only slice of the "image" (the temporarily mmaped-in
+// .so).  It is used for representing byte ranges containing Dwarf expressions.
+// Note that equality (operator==) is on slice contents, not slice locations.
+struct ImageSlice {
+  const char* start_;
+  size_t length_;
+  ImageSlice() : start_(0), length_(0) {}
+  ImageSlice(const char* start, size_t length)
+      : start_(start), length_(length) {}
+  // Make one from a C string (for testing only).  Note, the terminating zero
+  // is not included in the length.
+  explicit ImageSlice(const char* cstring)
+      : start_(cstring), length_(strlen(cstring)) {}
+  explicit ImageSlice(const std::string& str)
+      : start_(str.c_str()), length_(str.length()) {}
+  ImageSlice(const ImageSlice& other)
+      : start_(other.start_), length_(other.length_) {}
+  ImageSlice(ImageSlice& other)
+      : start_(other.start_), length_(other.length_) {}
+  bool operator==(const ImageSlice& other) const {
+    if (length_ != other.length_) {
+      return false;
+    }
+    // This relies on the fact that that memcmp returns zero whenever length_
+    // is zero.
+    return memcmp(start_, other.start_, length_) == 0;
+  }
+};
+
 // Exception handling frame description pointer formats, as described
 // by the Linux Standard Base Core Specification 4.0, section 11.5,
 // DWARF Extensions.
@@ -843,13 +872,6 @@ class CallFrameInfo {
 
   // Internal use.
   class Rule;
-  class UndefinedRule;
-  class SameValueRule;
-  class OffsetRule;
-  class ValOffsetRule;
-  class RegisterRule;
-  class ExpressionRule;
-  class ValExpressionRule;
   class RuleMap;
   class State;
 
@@ -979,13 +1001,13 @@ class CallFrameInfo::Handler {
   // At ADDRESS, the DWARF expression EXPRESSION yields the address at
   // which REG was saved.
   virtual bool ExpressionRule(uint64 address, int reg,
-                              const std::string& expression) = 0;
+                              const ImageSlice& expression) = 0;
 
   // At ADDRESS, the DWARF expression EXPRESSION yields the caller's
   // value for REG. (This rule doesn't provide an address at which the
   // register's value is saved.)
   virtual bool ValExpressionRule(uint64 address, int reg,
-                                 const std::string& expression) = 0;
+                                 const ImageSlice& expression) = 0;
 
   // Indicate that the rules for the address range reported by the
   // last call to Entry are complete.  End should return true if
@@ -1245,9 +1267,9 @@ class DwarfCFIToModule : public CallFrameInfo::Handler {
   virtual bool RegisterRule(uint64 address, int reg,
                             int base_register) override;
   virtual bool ExpressionRule(uint64 address, int reg,
-                              const std::string& expression) override;
+                              const ImageSlice& expression) override;
   virtual bool ValExpressionRule(uint64 address, int reg,
-                                 const std::string& expression) override;
+                                 const ImageSlice& expression) override;
   virtual bool End() override;
 
  private:
@@ -1281,7 +1303,7 @@ class DwarfCFIToModule : public CallFrameInfo::Handler {
 // SecMap referred to by |summ|, and return the index of the starting
 // PfxInstr added, which must be >= 0.  In case of failure return -1.
 int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
-                       std::string expr, bool debug, bool pushCfaAtStart,
+                       ImageSlice expr, bool debug, bool pushCfaAtStart,
                        bool derefAtEnd);
 
 }  // namespace lul
