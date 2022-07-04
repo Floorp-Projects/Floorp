@@ -1385,21 +1385,6 @@ bool ModuleObject::Evaluate(JSContext* cx, Handle<ModuleObject*> self,
   return InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluate, rval);
 }
 
-/* static */
-ModuleNamespaceObject* ModuleObject::GetOrCreateModuleNamespace(
-    JSContext* cx, Handle<ModuleObject*> self) {
-  FixedInvokeArgs<1> args(cx);
-  args[0].setObject(*self);
-
-  RootedValue result(cx);
-  if (!CallSelfHostedFunction(cx, cx->names().GetModuleNamespace,
-                              UndefinedHandleValue, args, &result)) {
-    return nullptr;
-  }
-
-  return &result.toObject().as<ModuleNamespaceObject>();
-}
-
 DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, NamespaceSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, status, StatusSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluationError, EvaluationErrorSlot)
@@ -2763,7 +2748,7 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
                  ->as<PromiseObject>()
                  .state() == JS::PromiseState::Fulfilled);
 
-  RootedObject ns(cx, ModuleObject::GetOrCreateModuleNamespace(cx, module));
+  RootedObject ns(cx, GetOrCreateModuleNamespace(cx, module));
   if (!ns) {
     return RejectPromiseWithPendingError(cx, promise);
   }

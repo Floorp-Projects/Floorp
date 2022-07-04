@@ -217,8 +217,7 @@ JS_PUBLIC_API JSObject* JS::GetModuleNamespace(JSContext* cx,
   cx->check(moduleRecord);
   MOZ_ASSERT(moduleRecord->is<ModuleObject>());
 
-  return ModuleObject::GetOrCreateModuleNamespace(
-      cx, moduleRecord.as<ModuleObject>());
+  return GetOrCreateModuleNamespace(cx, moduleRecord.as<ModuleObject>());
 }
 
 JS_PUBLIC_API JSObject* JS::GetModuleForNamespace(
@@ -300,6 +299,9 @@ class ResolveSetEntry {
 
 using ResolveSet = GCVector<ResolveSetEntry, 0, SystemAllocPolicy>;
 
+using ModuleSet =
+    GCHashSet<ModuleObject*, DefaultHasher<ModuleObject*>, SystemAllocPolicy>;
+
 static ModuleObject* HostResolveImportedModule(
     JSContext* cx, Handle<ModuleObject*> module,
     Handle<ModuleRequestObject*> moduleRequest,
@@ -308,6 +310,8 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
                                 Handle<JSAtom*> exportName,
                                 MutableHandle<ResolveSet> resolveSet,
                                 MutableHandle<Value> result);
+static ModuleNamespaceObject* ModuleNamespaceCreate(
+    JSContext* cx, Handle<ModuleObject*> module, Handle<ArrayObject*> exports);
 
 static ArrayObject* NewList(JSContext* cx) {
   // Note that this creates an ArrayObject, not a ListObject (see vm/List.h).
@@ -328,7 +332,7 @@ static bool ArrayContainsName(Handle<ArrayObject*> array,
 
 // https://tc39.es/ecma262/#sec-getexportednames
 // ES2023 16.2.1.6.2 GetExportedNames
-ArrayObject* js::ModuleGetExportedNames(
+static ArrayObject* ModuleGetExportedNames(
     JSContext* cx, Handle<ModuleObject*> module,
     MutableHandle<ModuleSet> exportStarSet) {
   // Step 4. Let exportedNames be a new empty List.
@@ -653,4 +657,143 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
   // Step 9. Return starResolution.
   result.setObjectOrNull(starResolution);
   return true;
+}
+
+void js::EnsureModuleEnvironmentNamespace(JSContext* cx,
+                                          Handle<ModuleObject*> module,
+                                          Handle<ModuleNamespaceObject*> ns) {
+  Rooted<ModuleEnvironmentObject*> environment(cx,
+                                               &module->initialEnvironment());
+  // The property already exists in the evironment but is not writable, so set
+  // the slot directly.
+  mozilla::Maybe<PropertyInfo> prop =
+      environment->lookup(cx, cx->names().starNamespaceStar);
+  MOZ_ASSERT(prop.isSome());
+  environment->setSlot(prop->slot(), ObjectValue(*ns));
+}
+
+// https://tc39.es/ecma262/#sec-getmodulenamespace
+// ES2023 16.2.1.10 GetModuleNamespace
+ModuleNamespaceObject* js::GetOrCreateModuleNamespace(
+    JSContext* cx, Handle<ModuleObject*> module) {
+  // Step 1. Assert: If module is a Cyclic Module Record, then module.[[Status]]
+  //         is not unlinked.
+  MOZ_ASSERT(module->status() != MODULE_STATUS_UNLINKED);
+
+  // Step 2. Let namespace be module.[[Namespace]].
+  Rooted<ModuleNamespaceObject*> ns(cx, module->namespace_());
+
+  // Step 3. If namespace is empty, then:
+  if (!ns) {
+    // Step 3.a. Let exportedNames be ? module.GetExportedNames().
+    Rooted<ModuleSet> exportStarSet(cx);
+    Rooted<ArrayObject*> exportedNames(cx);
+    exportedNames = ModuleGetExportedNames(cx, module, &exportStarSet);
+    if (!exportedNames) {
+      return nullptr;
+    }
+
+    // Step 3.b. Let unambiguousNames be a new empty List.
+    Rooted<ArrayObject*> unambiguousNames(cx, NewList(cx));
+    if (!unambiguousNames) {
+      return nullptr;
+    }
+
+    // Step 3.c. For each element name of exportedNames, do:
+    Rooted<JSAtom*> name(cx);
+    Rooted<Value> resolution(cx);
+    for (uint32_t i = 0; i != exportedNames->length(); i++) {
+      name = &exportedNames->getDenseElement(i).toString()->asAtom();
+
+      // Step 3.c.i. Let resolution be ? module.ResolveExport(name).
+      if (!ModuleResolveExport(cx, module, name, &resolution)) {
+        return nullptr;
+      }
+
+      // Step 3.c.ii. If resolution is a ResolvedBinding Record, append name to
+      //              unambiguousNames.
+      if (resolution.isObject() &&
+          !NewbornArrayPush(cx, unambiguousNames, StringValue(name))) {
+        return nullptr;
+      }
+    }
+
+    // Step 3.d. Set namespace to ModuleNamespaceCreate(module,
+    //           unambiguousNames).
+    ns = ModuleNamespaceCreate(cx, module, unambiguousNames);
+  }
+
+  // Step 4. Return namespace.
+  return ns;
+}
+
+#ifdef DEBUG
+static bool IsResolvedBinding(JSContext* cx, Handle<Value> resolution) {
+  MOZ_ASSERT(resolution.isObjectOrNull() ||
+             resolution.toString() == cx->names().ambiguous);
+  return resolution.isObject();
+}
+#endif
+
+// https://tc39.es/ecma262/#sec-modulenamespacecreate
+// ES2023 10.4.6.12 ModuleNamespaceCreate
+static ModuleNamespaceObject* ModuleNamespaceCreate(
+    JSContext* cx, Handle<ModuleObject*> module, Handle<ArrayObject*> exports) {
+  // Step 1. Assert: module.[[Namespace]] is empty.
+  MOZ_ASSERT(!module->namespace_());
+
+  // Steps 2 - 5.
+  Rooted<ModuleNamespaceObject*> ns(
+      cx, ModuleObject::createNamespace(cx, module, exports));
+  if (!ns) {
+    return nullptr;
+  }
+
+  // Step 6. Let sortedExports be a List whose elements are the elements of
+  //         exports ordered as if an Array of the same values had been sorted
+  //         using %Array.prototype.sort% using undefined as comparefn.
+  if (!ArrayNativeSort(cx, exports)) {
+    return nullptr;
+  }
+
+  // Pre-compute all binding mappings now instead of on each access.
+  // See:
+  // https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver
+  // ES2023 10.4.6.8 Module Namespace Exotic Object [[Get]]
+  Rooted<JSAtom*> name(cx);
+  Rooted<Value> resolution(cx);
+  Rooted<ResolvedBindingObject*> binding(cx);
+  Rooted<ModuleObject*> importedModule(cx);
+  Rooted<ModuleNamespaceObject*> importedNamespace(cx);
+  Rooted<JSAtom*> bindingName(cx);
+  for (uint32_t i = 0; i != exports->length(); i++) {
+    name = &exports->getDenseElement(i).toString()->asAtom();
+
+    if (!ModuleResolveExport(cx, module, name, &resolution)) {
+      return nullptr;
+    }
+
+    MOZ_ASSERT(IsResolvedBinding(cx, resolution));
+    binding = &resolution.toObject().as<ResolvedBindingObject>();
+    importedModule = binding->module();
+    if (binding->bindingName() == cx->names().starNamespaceStar) {
+      importedNamespace = GetOrCreateModuleNamespace(cx, importedModule);
+      if (!importedNamespace) {
+        return nullptr;
+      }
+
+      // The spec uses an immutable binding here but we have already generated
+      // bytecode for an indirect binding. Instead, use an indirect binding to
+      // "*namespace*" slot of the target environment.
+      EnsureModuleEnvironmentNamespace(cx, importedModule, importedNamespace);
+    }
+
+    bindingName = binding->bindingName();
+    if (!ns->addBinding(cx, name, importedModule, bindingName)) {
+      return nullptr;
+    }
+  }
+
+  // Step 10. Return M.
+  return ns;
 }

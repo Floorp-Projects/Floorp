@@ -372,9 +372,6 @@ class ModuleObject : public NativeObject {
   static bool Evaluate(JSContext* cx, Handle<ModuleObject*> self,
                        MutableHandleValue rval);
 
-  static ModuleNamespaceObject* GetOrCreateModuleNamespace(
-      JSContext* cx, Handle<ModuleObject*> self);
-
   void setMetaObject(JSObject* obj);
 
   // For intrinsic_InstantiateModuleFunctionDeclarations.
@@ -385,7 +382,6 @@ class ModuleObject : public NativeObject {
   static bool execute(JSContext* cx, Handle<ModuleObject*> self,
                       MutableHandleValue rval);
 
-  // For intrinsic_NewModuleNamespace.
   static ModuleNamespaceObject* createNamespace(JSContext* cx,
                                                 Handle<ModuleObject*> self,
                                                 HandleObject exports);
