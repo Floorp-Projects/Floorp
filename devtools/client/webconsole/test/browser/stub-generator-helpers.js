@@ -302,7 +302,7 @@ module.exports = {
 };
 `;
 
-  await IOUtils.write(filePath, fileContent);
+  await IOUtils.write(filePath, new TextEncoder().encode(fileContent));
 }
 
 function getStubFile(fileName) {
