@@ -93,6 +93,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
+#include "vm/Modules.h"
 #include "vm/PIC.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Printer.h"
@@ -1971,6 +1972,23 @@ static bool intrinsic_CreateTopLevelCapability(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool intrinsic_ModuleGetExportedNames(JSContext* cx, unsigned argc,
+                                             Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
+
+  Rooted<ModuleSet> exportStarSet(cx);
+  Rooted<ArrayObject*> exportedNames(cx);
+  exportedNames = ModuleGetExportedNames(cx, module, &exportStarSet);
+  if (!exportedNames) {
+    return false;
+  }
+
+  args.rval().setObject(*exportedNames);
+  return true;
+}
+
 static bool intrinsic_ModuleTopLevelCapabilityResolve(JSContext* cx,
                                                       unsigned argc,
                                                       Value* vp) {
@@ -2138,6 +2156,19 @@ static bool intrinsic_NoPrivateGetter(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setUndefined();
   return false;
+}
+
+static bool intrinsic_newList(JSContext* cx, unsigned argc, js::Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 0);
+
+  ArrayObject* list = NewArrayWithNullProto(cx);
+  if (!list) {
+    return false;
+  }
+
+  args.rval().setObject(*list);
+  return true;
 }
 
 static const JSFunctionSpec intrinsic_functions[] = {
@@ -2323,6 +2354,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_IsWrappedInstanceOfBuiltin<ArrayBufferObject>, 1, 0),
     JS_FN("IsWrappedSharedArrayBuffer",
           intrinsic_IsWrappedInstanceOfBuiltin<SharedArrayBufferObject>, 1, 0),
+    JS_FN("ModuleGetExportedNames", intrinsic_ModuleGetExportedNames, 1, 0),
     JS_FN("ModuleTopLevelCapabilityReject",
           intrinsic_ModuleTopLevelCapabilityReject, 2, 0),
     JS_FN("ModuleTopLevelCapabilityResolve",

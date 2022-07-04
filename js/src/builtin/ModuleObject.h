@@ -401,8 +401,9 @@ class ModuleObject : public NativeObject {
 
 JSObject* GetOrCreateModuleMetaObject(JSContext* cx, HandleObject module);
 
-JSObject* CallModuleResolveHook(JSContext* cx, HandleValue referencingPrivate,
-                                HandleObject moduleRequest);
+ModuleObject* CallModuleResolveHook(JSContext* cx,
+                                    HandleValue referencingPrivate,
+                                    HandleObject moduleRequest);
 
 // https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionfulfilled
 void AsyncModuleExecutionFulfilled(JSContext* cx, Handle<ModuleObject*> module);

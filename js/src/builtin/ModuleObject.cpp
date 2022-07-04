@@ -1379,7 +1379,6 @@ bool GlobalObject::initModuleProto(JSContext* cx,
       JS_PS_END};
 
   static const JSFunctionSpec protoFunctions[] = {
-      JS_SELF_HOSTED_FN("getExportedNames", "ModuleGetExportedNames", 1, 0),
       JS_SELF_HOSTED_FN("resolveExport", "ModuleResolveExport", 2, 0),
       JS_SELF_HOSTED_FN("declarationInstantiation", "ModuleInstantiate", 0, 0),
       JS_SELF_HOSTED_FN("evaluation", "ModuleEvaluate", 0, 0),
@@ -2181,9 +2180,9 @@ JSObject* js::GetOrCreateModuleMetaObject(JSContext* cx,
   return metaObject;
 }
 
-JSObject* js::CallModuleResolveHook(JSContext* cx,
-                                    HandleValue referencingPrivate,
-                                    HandleObject moduleRequest) {
+ModuleObject* js::CallModuleResolveHook(JSContext* cx,
+                                        HandleValue referencingPrivate,
+                                        HandleObject moduleRequest) {
   JS::ModuleResolveHook moduleResolveHook = cx->runtime()->moduleResolveHook;
   if (!moduleResolveHook) {
     JS_ReportErrorASCII(cx, "Module resolve hook not set");
@@ -2201,7 +2200,7 @@ JSObject* js::CallModuleResolveHook(JSContext* cx,
     return nullptr;
   }
 
-  return result;
+  return &result->as<ModuleObject>();
 }
 
 bool js::AsyncModuleExecutionFulfilledHandler(JSContext* cx, unsigned argc,
