@@ -43,4 +43,8 @@ add_task(async function() {
     document.getElementById("editBMPanel_newFolderButton").disabled,
     "New folder button is disabled if there's no selection"
   );
+
+  let hiddenPromise = promisePopupHidden(bookmarkPanel);
+  document.getElementById("editBookmarkPanelRemoveButton").click();
+  await hiddenPromise;
 });
