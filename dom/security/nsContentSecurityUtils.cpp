@@ -611,6 +611,11 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
       // Bug 1584564 tracks requiring safe usage of require.js
       "resource://gre/modules/workers/require.js"_ns,
 
+      // The profiler's symbolication code uses a wasm module to extract symbols
+      // from the binary files result of local builds.
+      // See bug 1777479
+      "resource://devtools/client/performance-new/symbolication.jsm.js"_ns,
+
       // The Browser Toolbox/Console
       "debugger"_ns,
   };
