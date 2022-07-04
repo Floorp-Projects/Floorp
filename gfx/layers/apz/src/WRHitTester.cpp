@@ -207,13 +207,15 @@ IAPZHitTester::HitTestResult WRHitTester::GetAPZCAtPoint(
 
     positionedNode = BreadthFirstSearch<ReverseIterator>(
         GetRootNode(), [&](HitTestingTreeNode* aNode) {
-          return aNode->GetFixedPositionAnimationId() == animationId;
+          return (aNode->GetFixedPositionAnimationId() == animationId ||
+                  aNode->GetStickyPositionAnimationId() == animationId);
         });
 
     if (positionedNode) {
       MOZ_ASSERT(positionedNode->GetLayersId() == chosenResult->mLayersId,
                  "Found node layers id does not match the hit result");
-      MOZ_ASSERT(positionedNode->GetFixedPositionAnimationId().isSome(),
+      MOZ_ASSERT((positionedNode->GetFixedPositionAnimationId().isSome() ||
+                  positionedNode->GetStickyPositionAnimationId().isSome()),
                  "A a matching fixed/sticky position node should be found");
       InitializeHitTestingTreeNodeAutoLock(hit.mNode, aProofOfTreeLock,
                                            positionedNode);

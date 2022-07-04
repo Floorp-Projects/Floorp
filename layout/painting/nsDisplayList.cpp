@@ -5250,7 +5250,8 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
                    (IsScrollThumbLayer() || IsZoomingLayer() ||
                     (IsFixedPositionLayer() &&
                      ShouldFixedAndStickyContentGetAnimationIds()) ||
-                    (IsStickyPositionLayer() && HasDynamicToolbar()) ||
+                    (IsStickyPositionLayer() &&
+                     ShouldFixedAndStickyContentGetAnimationIds()) ||
                     (IsRootScrollbarContainer() && HasDynamicToolbar()));
 
   if (needsProp) {
@@ -5279,7 +5280,8 @@ bool nsDisplayOwnLayer::CreateWebRenderCommands(
   if (IsZoomingLayer() ||
       ((IsFixedPositionLayer() &&
         ShouldFixedAndStickyContentGetAnimationIds()) ||
-       (IsStickyPositionLayer() && HasDynamicToolbar()) ||
+       (IsStickyPositionLayer() &&
+        ShouldFixedAndStickyContentGetAnimationIds()) ||
        (IsRootScrollbarContainer() && HasDynamicToolbar()))) {
     params.is_2d_scale_translation = true;
     params.should_snap = true;
@@ -5299,7 +5301,8 @@ bool nsDisplayOwnLayer::UpdateScrollData(WebRenderScrollData* aData,
       (IsScrollThumbLayer() || IsScrollbarContainer() || IsZoomingLayer() ||
        (IsFixedPositionLayer() &&
         ShouldFixedAndStickyContentGetAnimationIds()) ||
-       (IsStickyPositionLayer() && HasDynamicToolbar()));
+       (IsStickyPositionLayer() &&
+        ShouldFixedAndStickyContentGetAnimationIds()));
 
   if (!isRelevantToApz) {
     return false;
@@ -5319,7 +5322,7 @@ bool nsDisplayOwnLayer::UpdateScrollData(WebRenderScrollData* aData,
     return true;
   }
 
-  if (IsStickyPositionLayer() && HasDynamicToolbar()) {
+  if (IsStickyPositionLayer() && ShouldFixedAndStickyContentGetAnimationIds()) {
     aLayerData->SetStickyPositionAnimationId(mWrAnimationId);
     return true;
   }
