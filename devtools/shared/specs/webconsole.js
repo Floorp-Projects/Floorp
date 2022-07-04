@@ -189,9 +189,18 @@ const webconsoleSpecPrototype = {
     /**
      * Clear the cache of messages (page errors and console API calls) expects no response.
      */
+    // @backward-compat { version 104 } This can be removed once older server have clearMessagesCacheAsync.
     clearMessagesCache: {
       oneway: true,
     },
+
+    /**
+     * Same as clearMessagesCache, but wait for the server response.
+     */
+    clearMessagesCacheAsync: {
+      request: {},
+    },
+
     /**
      * Get Web Console-related preferences on the server.
      *
