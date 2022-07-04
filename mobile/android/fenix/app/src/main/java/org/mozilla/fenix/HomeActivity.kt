@@ -618,7 +618,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 return
             }
         }
-        super.onBackPressed()
+        super.getOnBackPressedDispatcher().onBackPressed()
     }
 
     @Suppress("DEPRECATION")
