@@ -340,6 +340,11 @@ class ModuleObject : public NativeObject {
   ArrayObject& starExportEntries() const;
   IndirectBindingMap& importBindings();
 
+  void setStatus(ModuleStatus newStatus);
+  void setDfsIndex(uint32_t index);
+  void setDfsAncestorIndex(uint32_t index);
+  void clearDfsIndexes();
+
   static PromiseObject* createTopLevelCapability(JSContext* cx,
                                                  Handle<ModuleObject*> module);
   bool isAsync() const;
@@ -365,8 +370,6 @@ class ModuleObject : public NativeObject {
       JSContext* cx, Handle<ModuleObject*> module);
   [[nodiscard]] static bool topLevelCapabilityReject(
       JSContext* cx, Handle<ModuleObject*> module, HandleValue error);
-
-  static bool Instantiate(JSContext* cx, Handle<ModuleObject*> self);
 
   // Start evaluating the module. If TLA is enabled, rval will be a promise
   static bool Evaluate(JSContext* cx, Handle<ModuleObject*> self,

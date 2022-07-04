@@ -29,6 +29,8 @@ ModuleNamespaceObject* GetOrCreateModuleNamespace(JSContext* cx,
 
 bool ModuleInitializeEnvironment(JSContext* cx, Handle<ModuleObject*> module);
 
+bool ModuleInstantiate(JSContext* cx, Handle<ModuleObject*> module);
+
 }  // namespace js
 
 #endif  // vm_Modules_h
