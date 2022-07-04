@@ -101,6 +101,10 @@ class MessageHandler extends EventEmitter {
     this._eventsDispatcher = new lazy.EventsDispatcher(this);
   }
 
+  get context() {
+    return this._context;
+  }
+
   get contextId() {
     return this._contextId;
   }
