@@ -28,105 +28,6 @@ function ModuleSetStatus(module, newStatus)
     UnsafeSetReservedSlot(module, MODULE_OBJECT_STATUS_SLOT, newStatus);
 }
 
-// https://tc39.es/ecma262/#sec-getexportednames
-// ES2020 15.2.1.17.3 ResolveExport
-//
-// Returns an object describing the location of the resolved export or
-// indicating a failure.
-//
-// On success this returns a resolved binding record: { module, bindingName }
-//
-// There are two failure cases:
-//
-//  - If no definition was found or the request is found to be circular, *null*
-//    is returned.
-//
-//  - If the request is found to be ambiguous, the string `"ambiguous"` is
-//    returned.
-//
-function ModuleResolveExport(exportName, resolveSet = new_List())
-{
-    assert(typeof exportName === "string", "ModuleResolveExport");
-
-    if (!IsObject(this) || !IsModule(this)) {
-        return callFunction(CallModuleMethodIfWrapped, this, exportName, resolveSet,
-                            "ModuleResolveExport");
-    }
-
-    // Step 3
-    let module = this;
-
-    // Step 4
-    for (let i = 0; i < resolveSet.length; i++) {
-        let r = resolveSet[i];
-        if (r.module === module && r.exportName === exportName) {
-            // This is a circular import request.
-            return null;
-        }
-    }
-
-    // Step 5
-    DefineDataProperty(resolveSet, resolveSet.length, {module, exportName});
-
-    // Step 6
-    let localExportEntries = module.localExportEntries;
-    for (let i = 0; i < localExportEntries.length; i++) {
-        let e = localExportEntries[i];
-        if (exportName === e.exportName)
-            return {module, bindingName: e.localName};
-    }
-
-    // Step 7
-    let indirectExportEntries = module.indirectExportEntries;
-    for (let i = 0; i < indirectExportEntries.length; i++) {
-        let e = indirectExportEntries[i];
-        if (exportName === e.exportName) {
-            let importedModule = CallModuleResolveHook(module, e.moduleRequest,
-                                                       MODULE_STATUS_UNLINKED);
-            if (e.importName === null) {
-                return {module: importedModule, bindingName: "*namespace*"};
-            }
-            return callFunction(importedModule.resolveExport, importedModule, e.importName,
-                                resolveSet);
-        }
-    }
-
-    // Step 8
-    if (exportName === "default") {
-        // A default export cannot be provided by an export *.
-        return null;
-    }
-
-    // Step 9
-    let starResolution = null;
-
-    // Step 10
-    let starExportEntries = module.starExportEntries;
-    for (let i = 0; i < starExportEntries.length; i++) {
-        let e = starExportEntries[i];
-        let importedModule = CallModuleResolveHook(module, e.moduleRequest,
-                                                   MODULE_STATUS_UNLINKED);
-        let resolution = callFunction(importedModule.resolveExport, importedModule, exportName,
-                                      resolveSet);
-        if (resolution === "ambiguous")
-            return resolution;
-        if (resolution !== null) {
-            if (starResolution === null) {
-                starResolution = resolution;
-            } else {
-                if (resolution.module !== starResolution.module ||
-                    resolution.bindingName !== starResolution.bindingName)
-                {
-                    return "ambiguous";
-                }
-            }
-        }
-    }
-
-    // Step 11
-    return starResolution;
-}
-
 function IsResolvedBinding(resolution)
 {
     assert(resolution === "ambiguous" || typeof resolution === "object",
@@ -154,7 +55,7 @@ function GetModuleNamespace(module)
         let unambiguousNames = new_List();
         for (let i = 0; i < exportedNames.length; i++) {
             let name = exportedNames[i];
-            let resolution = callFunction(module.resolveExport, module, name);
+            let resolution = ModuleResolveExport(module, name);
             if (IsResolvedBinding(resolution))
                 DefineDataProperty(unambiguousNames, unambiguousNames.length, name);
         }
@@ -177,7 +78,7 @@ function ModuleNamespaceCreate(module, exports)
     // See: ES2020 9.4.6.7 Module Namespace Exotic Object [[Get]]
     for (let i = 0; i < exports.length; i++) {
         let name = exports[i];
-        let binding = callFunction(module.resolveExport, module, name);
+        let binding = ModuleResolveExport(module, name);
         assert(IsResolvedBinding(binding), "Failed to resolve binding");
         // ES2020 9.4.6.7 Module Namespace Exotic Object [[Get]], Step 10.
         if (binding.bindingName === "*namespace*") {
@@ -402,7 +303,7 @@ function InitializeEnvironment()
     let indirectExportEntries = module.indirectExportEntries;
     for (let i = 0; i < indirectExportEntries.length; i++) {
         let e = indirectExportEntries[i];
-        let resolution = callFunction(module.resolveExport, module, e.exportName);
+        let resolution = ModuleResolveExport(module, e.exportName);
         if (!IsResolvedBinding(resolution)) {
             ThrowResolutionError(module, resolution, "indirectExport", e.exportName,
                                  e.lineNumber, e.columnNumber);
@@ -427,8 +328,8 @@ function InitializeEnvironment()
             let namespace = GetModuleNamespace(importedModule);
             CreateNamespaceBinding(env, imp.localName, namespace);
         } else {
-            let resolution = callFunction(importedModule.resolveExport, importedModule,
-                                          imp.importName);
+            let resolution = ModuleResolveExport(importedModule,
+                                                 imp.importName);
             if (!IsResolvedBinding(resolution)) {
                 ThrowResolutionError(module, resolution, "import", imp.importName,
                                      imp.lineNumber, imp.columnNumber);

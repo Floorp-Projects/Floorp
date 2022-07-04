@@ -126,6 +126,19 @@ class RequestedModuleObject : public NativeObject {
   uint32_t columnNumber() const;
 };
 
+class ResolvedBindingObject : public NativeObject {
+ public:
+  enum { ModuleSlot = 0, BindingNameSlot, SlotCount };
+
+  static const JSClass class_;
+  static bool isInstance(HandleValue value);
+  static ResolvedBindingObject* create(JSContext* cx,
+                                       Handle<ModuleObject*> module,
+                                       Handle<JSAtom*> bindingName);
+  ModuleObject* module() const;
+  JSAtom* bindingName() const;
+};
+
 class IndirectBindingMap {
  public:
   void trace(JSTracer* trc);
