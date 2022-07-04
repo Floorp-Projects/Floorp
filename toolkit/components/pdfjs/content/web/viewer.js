@@ -11546,7 +11546,7 @@ const DEFAULT_L10N_STRINGS = {
   printing_not_supported: "Warning: Printing is not fully supported by this browser.",
   printing_not_ready: "Warning: The PDF is not fully loaded for printing.",
   web_fonts_disabled: "Web fonts are disabled: unable to use embedded PDF fonts.",
-  freetext_default_content: "Enter text…"
+  free_text_default_content: "Enter text…"
 };
 
 function getL10nFallback(key, args) {
