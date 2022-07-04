@@ -12,6 +12,8 @@ import android.text.method.LinkMovementMethod
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.MetricServiceType
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import kotlin.system.exitProcess
 
@@ -44,11 +46,12 @@ fun showPrivacyPopWindow(context: Context, activity: Activity) {
     // Users can only use fenix after they agree with the privacy notice
     val builder = AlertDialog.Builder(activity)
         .setPositiveButton(
-            context.getString(R.string.privacy_notice_positive_button),
-            { _, _ ->
-                context.settings().shouldShowPrivacyPopWindow = false
-            }
-        )
+            context.getString(R.string.privacy_notice_positive_button)
+        ) { _, _ ->
+            context.settings().shouldShowPrivacyPopWindow = false
+            context.settings().isMarketingTelemetryEnabled = true
+            context.components.analytics.metrics.start(MetricServiceType.Marketing)
+        }
         .setNeutralButton(
             context.getString(R.string.privacy_notice_neutral_button_2),
             { _, _ -> exitProcess(0) }
