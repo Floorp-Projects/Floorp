@@ -22,8 +22,8 @@ root:
                   "clip-mode": clip
             - type: stacking-context
               bounds: 0 0 0 0
-              clip-and-scroll: 2
               items:
                 - type: rect
                   bounds: 0 0 60000 60000
                   color: blue
+                  clip-chain: [2]

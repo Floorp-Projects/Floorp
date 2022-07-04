@@ -9,7 +9,7 @@ root:
       "content-size": [1000, 1000]
     -
       bounds: [0, 0, 0, 0]
-      "clip-and-scroll": 3
+      clip-chain: [3]
       type: "stacking-context"
       transform: rotate(-45) translate(200, 200)
       items:
@@ -22,5 +22,5 @@ root:
         -
           bounds: [2, -182, 152, 216]
           "clip-rect": [2, 0, 152, 34]
-          "clip-and-scroll": 4
+          clip-chain: [3, 4]
           image: solid-color(255, 0, 0, 255, 100, 100)

@@ -12,16 +12,18 @@ root:
       scroll-offset: [0, 0]
       items:
       - type: clip
+        id: 2
         bounds: [0, 0, 200, 200]
         complex:
           - rect: [0, 0, 200, 200]
             radius: 4
-        items:
-          - type: rect
-            bounds: [0, 0, 200, 200]
-            color: white
-          - text: "A"
-            origin: 20 190
-            size: 180
-            color: black
-            font: "FreeSans.ttf"
+      - type: rect
+        bounds: [0, 0, 200, 200]
+        color: white
+        clip-chain: [2]
+      - text: "A"
+        origin: 20 190
+        size: 180
+        color: black
+        font: "FreeSans.ttf"
+        clip-chain: [2]

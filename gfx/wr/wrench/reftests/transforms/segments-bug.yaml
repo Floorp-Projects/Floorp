@@ -17,7 +17,6 @@ root:
               radius: 20
               "clip-mode": clip
         -
-          "clip-and-scroll": 4
           type: "stacking-context"
           transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 12, 12, 0, 1]
           items:
@@ -25,3 +24,4 @@ root:
               bounds: [0, 0, 130, 130]
               type: rect
               color: 0 128 0 1.0000
+              clip-chain: [4]

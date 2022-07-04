@@ -21,7 +21,8 @@ root:
             - type: rect
               bounds: [0, 0, 128, 512]
               color: magenta
-              clip-and-scroll: [3, 2]
+              spatial-id: 3
+              clip-chain: 12
             - type: stacking-context
               mix-blend-mode: lighten
               clip-chain: 12
