@@ -9,7 +9,7 @@ const TEST_URI = `
   <style>
   body {
     color: blue;
-    border-block-color: lime;
+    ruby-align: center;
     user-modify: read-only;
   }
   div {
@@ -22,7 +22,7 @@ const TEST_URI = `
 `;
 
 const TEST_DATA_SELECTED = [
-  { property: "border-block-color" },
+  { property: "ruby-align" },
   { property: "user-modify" },
 ];
 
