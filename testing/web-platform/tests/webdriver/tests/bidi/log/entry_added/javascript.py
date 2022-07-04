@@ -37,6 +37,7 @@ async def test_types_and_values(
         text=expected_text,
         time_start=time_start,
         time_end=time_end,
+        context=top_context["context"],
     )
 
     # Navigate to a page with no error to avoid polluting the next tests with

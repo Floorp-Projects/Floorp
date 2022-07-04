@@ -1,5 +1,12 @@
 def assert_base_entry(
-    entry, level=None, text=None, time_start=None, time_end=None, stacktrace=None
+    entry,
+    level=None,
+    text=None,
+    time_start=None,
+    time_end=None,
+    stacktrace=None,
+    realm=None,
+    context=None,
 ):
     assert "level" in entry
     assert isinstance(entry["level"], str)
@@ -29,6 +36,19 @@ def assert_base_entry(
         for index in range(0, len(call_frames)):
             assert call_frames[index] == stacktrace[index]
 
+    assert "source" in entry
+    source = entry["source"]
+
+    assert "realm" in source
+    assert isinstance(source["realm"], str)
+
+    if realm is not None:
+        assert source["realm"] == realm
+
+    if context is not None:
+        assert "context" in source
+        assert source["context"] == context
+
 
 def assert_console_entry(
     entry,
@@ -40,8 +60,11 @@ def assert_console_entry(
     time_end=None,
     realm=None,
     stacktrace=None,
+    context=None,
 ):
-    assert_base_entry(entry, level, text, time_start, time_end, stacktrace)
+    assert_base_entry(
+        entry, level, text, time_start, time_end, stacktrace, realm, context
+    )
 
     assert "type" in entry
     assert isinstance(entry["type"], str)
@@ -57,15 +80,20 @@ def assert_console_entry(
     if args is not None:
         assert entry["args"] == args
 
-    if realm is not None:
-        assert "realm" in entry
-        assert isinstance(entry["realm"], str)
-
 
 def assert_javascript_entry(
-    entry, level=None, text=None, time_start=None, time_end=None, stacktrace=None
+    entry,
+    level=None,
+    text=None,
+    time_start=None,
+    time_end=None,
+    stacktrace=None,
+    realm=None,
+    context=None,
 ):
-    assert_base_entry(entry, level, text, time_start, time_end, stacktrace)
+    assert_base_entry(
+        entry, level, text, time_start, time_end, stacktrace, realm, context
+    )
 
     assert "type" in entry
     assert isinstance(entry["type"], str)

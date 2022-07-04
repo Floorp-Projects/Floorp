@@ -66,6 +66,7 @@ async def test_console_entry_sync_callstack(
         method=log_method,
         text="cheese",
         stacktrace=expected_stack,
+        context=top_context["context"],
     )
 
     # Navigate to a page with no error to avoid polluting the next tests with
@@ -110,6 +111,7 @@ async def test_javascript_entry_sync_callstack(
         level="error",
         text="Error: cheese",
         stacktrace=expected_stack,
+        context=top_context["context"],
     )
 
     # Navigate to a page with no error to avoid polluting the next tests with

@@ -40,7 +40,7 @@ async def test_subscribe_twice(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("log_type", ["console_api_log", "javascript_error"])
 async def test_subscribe_unsubscribe(
-    bidi_session, current_session, inline, wait_for_event, log_type
+    bidi_session, current_session, inline, wait_for_event, log_type, top_context
 ):
     # Subscribe for log events globally
     await bidi_session.session.subscribe(events=["log.entryAdded"])
@@ -88,16 +88,17 @@ async def test_subscribe_unsubscribe(
     await on_entry_added
 
     assert len(events) == 1
-    assert_base_entry(events[0], text=expected_text)
+    assert_base_entry(events[0], text=expected_text, context=top_context["context"])
 
     # Check that we also get events from new tab/window
-    current_session.new_window()
+    new_window_handle = current_session.new_window()
+    current_session.window_handle = new_window_handle
 
     on_entry_added = wait_for_event("log.entryAdded")
     expected_text = create_log(current_session, inline, log_type, "text5")
     await on_entry_added
 
     assert len(events) == 2
-    assert_base_entry(events[1], text=expected_text)
+    assert_base_entry(events[1], text=expected_text, context=new_window_handle)
 
     remove_listener()
