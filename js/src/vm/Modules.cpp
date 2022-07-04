@@ -16,6 +16,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "builtin/ModuleObject.h"  // js::FinishDynamicModuleImport, js::{,Requested}ModuleObject
+#include "ds/Sort.h"
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
 #include "js/Context.h"                 // js::AssertHeapIsIdle
 #include "js/PropertyAndElement.h"
@@ -302,8 +303,6 @@ using ResolveSet = GCVector<ResolveSetEntry, 0, SystemAllocPolicy>;
 using ModuleSet =
     GCHashSet<ModuleObject*, DefaultHasher<ModuleObject*>, SystemAllocPolicy>;
 
-using ModuleVector = GCVector<ModuleObject*, 0, SystemAllocPolicy>;
-
 static ModuleObject* HostResolveImportedModule(
     JSContext* cx, Handle<ModuleObject*> module,
     Handle<ModuleRequestObject*> moduleRequest,
@@ -321,6 +320,9 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
                                   MutableHandle<ModuleVector> stack,
                                   size_t index, size_t* indexOut);
 static bool ExecuteAsyncModule(JSContext* cx, Handle<ModuleObject*> module);
+static bool GatherAvailableModuleAncestors(
+    JSContext* cx, Handle<ModuleObject*> module,
+    MutableHandle<ModuleVector> execList);
 
 static ArrayObject* NewList(JSContext* cx) {
   // Note that this creates an ArrayObject, not a ListObject (see vm/List.h).
@@ -339,8 +341,6 @@ static bool ArrayContainsName(Handle<ArrayObject*> array,
   return false;
 }
 
-#ifdef DEBUG
-
 static bool ContainsElement(Handle<ModuleVector> stack, ModuleObject* module) {
   for (ModuleObject* m : stack) {
     if (m == module) {
@@ -351,6 +351,7 @@ static bool ContainsElement(Handle<ModuleVector> stack, ModuleObject* module) {
   return false;
 }
 
+#ifdef DEBUG
 static size_t CountElements(Handle<ModuleVector> stack, ModuleObject* module) {
   size_t count = 0;
   for (ModuleObject* m : stack) {
@@ -361,7 +362,6 @@ static size_t CountElements(Handle<ModuleVector> stack, ModuleObject* module) {
 
   return count;
 }
-
 #endif
 
 // https://tc39.es/ecma262/#sec-getexportednames
@@ -1502,6 +1502,8 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
       //               requiredModule.[[Status]] to evaluated.
       // Step 16.b.v. Otherwise, set requiredModule.[[Status]] to
       //              evaluating-async.
+
+      // Bug 1777972: We don't have a separate evaluating-async state.
       requiredModule->setStatus(MODULE_STATUS_EVALUATED);
 
       // Step 16.b.vi. If requiredModule and module are the same Module Record,
@@ -1533,4 +1535,95 @@ static bool ExecuteAsyncModule(JSContext* cx, Handle<ModuleObject*> module) {
   // Step 9. Perform ! module.ExecuteModule(capability).
   // Step 10. Return unused.
   return ModuleObject::execute(cx, module);
+}
+
+struct EvalOrderComparator {
+  bool operator()(ModuleObject* a, ModuleObject* b, bool* lessOrEqualp) {
+    int32_t result = int32_t(a->getAsyncEvaluatingPostOrder()) -
+                     int32_t(b->getAsyncEvaluatingPostOrder());
+    *lessOrEqualp = (result <= 0);
+    return true;
+  }
+};
+
+bool js::GatherAvailableModuleAncestors(
+    JSContext* cx, Handle<ModuleObject*> module,
+    MutableHandle<ModuleVector> sortedList) {
+  MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATED);
+  MOZ_ASSERT(sortedList.empty());
+
+  if (!::GatherAvailableModuleAncestors(cx, module, sortedList)) {
+    return false;
+  }
+
+  // Sort the list as per 16.2.1.5.2.4 AsyncModuleExecutionFulfilled:
+  //
+  // Step 10. Let sortedExecList be a List whose elements are the elements of
+  //          execList, in the order in which they had their [[AsyncEvaluation]]
+  //          fields set to true in InnerModuleEvaluation.
+
+  Rooted<ModuleVector> scratch(cx);
+  if (!scratch.resize(sortedList.length())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  MOZ_ALWAYS_TRUE(MergeSort(sortedList.begin(), sortedList.length(),
+                            scratch.begin(), EvalOrderComparator()));
+  return true;
+}
+
+// https://tc39.es/ecma262/#sec-gather-available-ancestors
+// ES2023 16.2.1.5.2.3 GatherAvailableAncestors
+static bool GatherAvailableModuleAncestors(
+    JSContext* cx, Handle<ModuleObject*> module,
+    MutableHandle<ModuleVector> execList) {
+  // Step 1. For each Cyclic Module Record m of module.[[AsyncParentModules]],
+  //         do:
+  Rooted<ListObject*> asyncParentModules(cx, module->asyncParentModules());
+  Rooted<ModuleObject*> m(cx);
+  for (uint32_t i = 0; i != asyncParentModules->length(); i++) {
+    m = &asyncParentModules->getDenseElement(i).toObject().as<ModuleObject>();
+
+    // Step 1.a. If execList does not contain m and
+    //           m.[[CycleRoot]].[[EvaluationError]] is empty, then:
+    if (!m->getCycleRoot()->hadEvaluationError() &&
+        !ContainsElement(execList, m)) {
+      // Step 1.a.i. Assert: m.[[Status]] is evaluating-async.
+
+      // Bug 1777972: We don't have a separate evaluating-async state.
+      MOZ_ASSERT(m->status() == MODULE_STATUS_EVALUATED);
+
+      // Step 1.a.ii. Assert: m.[[EvaluationError]] is empty.
+      MOZ_ASSERT(!m->hadEvaluationError());
+
+      // Step 1.a.iii. Assert: m.[[AsyncEvaluation]] is true.
+      MOZ_ASSERT(m->isAsyncEvaluating());
+
+      // Step 1.a.iv. Assert: m.[[PendingAsyncDependencies]] > 0.
+      MOZ_ASSERT(m->pendingAsyncDependencies() > 0);
+
+      // Step 1.a.v. Set m.[[PendingAsyncDependencies]] to
+      // m.[[PendingAsyncDependencies]] - 1.
+      m->setPendingAsyncDependencies(m->pendingAsyncDependencies() - 1);
+
+      // Step 1.a.vi. If m.[[PendingAsyncDependencies]] = 0, then:
+      if (m->pendingAsyncDependencies() == 0) {
+        // Step 1.a.vi.1. Append m to execList.
+        if (!execList.append(m)) {
+          return false;
+        }
+
+        // Step 1.a.vi.2. If m.[[HasTLA]] is false, perform
+        //                GatherAvailableAncestors(m, execList).
+        if (!m->isAsync() &&
+            !::GatherAvailableModuleAncestors(cx, m, execList)) {
+          return false;
+        }
+      }
+    }
+  }
+
+  // Step 2. Return unused.
+  return true;
 }
