@@ -74,7 +74,7 @@ class AddressEditorViewTest {
             organization = "",
             streetAddress = address.streetAddress,
             addressLevel3 = "",
-            addressLevel2 = "",
+            addressLevel2 = address.addressLevel2,
             addressLevel1 = address.addressLevel1,
             postalCode = address.postalCode,
             country = address.country,

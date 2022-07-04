@@ -93,7 +93,7 @@ class AddressEditorView(
             organization = "",
             streetAddress = binding.streetAddressInput.text.toString(),
             addressLevel3 = "",
-            addressLevel2 = "",
+            addressLevel2 = binding.cityInput.text.toString(),
             addressLevel1 = binding.subregionDropDown.selectedItem.toString(),
             postalCode = binding.zipInput.text.toString(),
             country = binding.countryDropDown.selectedItem.toString().toCountryCode(),
