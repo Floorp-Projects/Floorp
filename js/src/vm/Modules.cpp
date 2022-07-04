@@ -18,12 +18,13 @@
 #include "builtin/ModuleObject.h"  // js::FinishDynamicModuleImport, js::{,Requested}ModuleObject
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
 #include "js/Context.h"                 // js::AssertHeapIsIdle
-#include "js/RootingAPI.h"              // JS::MutableHandle
-#include "js/Value.h"                   // JS::Value
-#include "vm/EnvironmentObject.h"       // js::ModuleEnvironmentObject
-#include "vm/JSContext.h"               // CHECK_THREAD, JSContext
-#include "vm/JSObject.h"                // JSObject
-#include "vm/Runtime.h"                 // JSRuntime
+#include "js/PropertyAndElement.h"
+#include "js/RootingAPI.h"         // JS::MutableHandle
+#include "js/Value.h"              // JS::Value
+#include "vm/EnvironmentObject.h"  // js::ModuleEnvironmentObject
+#include "vm/JSContext.h"          // CHECK_THREAD, JSContext
+#include "vm/JSObject.h"           // JSObject
+#include "vm/Runtime.h"            // JSRuntime
 
 #include "builtin/Array-inl.h"
 #include "vm/JSContext-inl.h"  // JSContext::{c,releaseC}heck
@@ -280,10 +281,33 @@ JS_PUBLIC_API void JS::ClearModuleEnvironment(JSObject* moduleObj) {
 ////////////////////////////////////////////////////////////////////////////////
 // Internal implementation
 
+class ResolveSetEntry {
+  ModuleObject* module_;
+  JSAtom* exportName_;
+
+ public:
+  ResolveSetEntry(ModuleObject* module, JSAtom* exportName)
+      : module_(module), exportName_(exportName) {}
+
+  ModuleObject* module() const { return module_; }
+  JSAtom* exportName() const { return exportName_; }
+
+  void trace(JSTracer* trc) {
+    TraceRoot(trc, &module_, "ResolveSetEntry::module_");
+    TraceRoot(trc, &exportName_, "ResolveSetEntry::exportName_");
+  }
+};
+
+using ResolveSet = GCVector<ResolveSetEntry, 0, SystemAllocPolicy>;
+
 static ModuleObject* HostResolveImportedModule(
     JSContext* cx, Handle<ModuleObject*> module,
     Handle<ModuleRequestObject*> moduleRequest,
     ModuleStatus expectedMinimumStatus);
+static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
+                                Handle<JSAtom*> exportName,
+                                MutableHandle<ResolveSet> resolveSet,
+                                MutableHandle<Value> result);
 
 static ArrayObject* NewList(JSContext* cx) {
   // Note that this creates an ArrayObject, not a ListObject (see vm/List.h).
@@ -422,4 +446,211 @@ static ModuleObject* HostResolveImportedModule(
   }
 
   return requestedModule;
+}
+
+// https://tc39.es/ecma262/#sec-resolveexport
+// ES2023 16.2.1.6.3 ResolveExport
+//
+// Returns an value describing the location of the resolved export or indicating
+// a failure.
+//
+// On success this returns a resolved binding record: { module, bindingName }
+//
+// There are two failure cases:
+//
+//  - If no definition was found or the request is found to be circular, *null*
+//    is returned.
+//
+//  - If the request is found to be ambiguous, the string `"ambiguous"` is
+//    returned.
+//
+bool js::ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
+                             Handle<JSAtom*> exportName,
+                             MutableHandle<Value> result) {
+  // Step 1. If resolveSet is not present, set resolveSet to a new empty List.
+  Rooted<ResolveSet> resolveSet(cx);
+
+  return ::ModuleResolveExport(cx, module, exportName, &resolveSet, result);
+}
+
+static bool CreateResolvedBindingObject(JSContext* cx,
+                                        Handle<ModuleObject*> module,
+                                        Handle<JSAtom*> bindingName,
+                                        MutableHandle<Value> result) {
+  Rooted<ResolvedBindingObject*> obj(
+      cx, ResolvedBindingObject::create(cx, module, bindingName));
+  if (!obj) {
+    return false;
+  }
+
+  result.setObject(*obj);
+  return true;
+}
+
+static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
+                                Handle<JSAtom*> exportName,
+                                MutableHandle<ResolveSet> resolveSet,
+                                MutableHandle<Value> result) {
+  // Step 2. For each Record { [[Module]], [[ExportName]] } r of resolveSet, do:
+  for (const auto& entry : resolveSet) {
+    // Step 2.a. If module and r.[[Module]] are the same Module Record and
+    //           SameValue(exportName, r.[[ExportName]]) is true, then:
+    if (entry.module() == module && entry.exportName() == exportName) {
+      // Step 2.a.i. Assert: This is a circular import request.
+      // Step 2.a.ii. Return null.
+      result.setNull();
+      return true;
+    }
+  }
+
+  // Step 3. Append the Record { [[Module]]: module, [[ExportName]]: exportName
+  // } to resolveSet.
+  if (!resolveSet.emplaceBack(module, exportName)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Step 4. For each ExportEntry Record e of module.[[LocalExportEntries]], do:
+  Rooted<ArrayObject*> localExportEntries(cx, &module->localExportEntries());
+  Rooted<ExportEntryObject*> e(cx);
+  for (uint32_t i = 0; i != localExportEntries->length(); i++) {
+    e = &localExportEntries->getDenseElement(i)
+             .toObject()
+             .as<ExportEntryObject>();
+
+    // Step 4.a. If SameValue(exportName, e.[[ExportName]]) is true, then:
+    if (exportName == e->exportName()) {
+      // Step 4.a.i. Assert: module provides the direct binding for this export.
+      // Step 4.a.ii. Return ResolvedBinding Record { [[Module]]: module,
+      //              [[BindingName]]: e.[[LocalName]] }.
+      Rooted<JSAtom*> localName(cx, e->localName());
+      return CreateResolvedBindingObject(cx, module, localName, result);
+    }
+  }
+
+  // Step 5. For each ExportEntry Record e of module.[[IndirectExportEntries]],
+  //         do:
+  Rooted<ArrayObject*> indirectExportEntries(cx,
+                                             &module->indirectExportEntries());
+  Rooted<ModuleRequestObject*> moduleRequest(cx);
+  Rooted<ModuleObject*> importedModule(cx);
+  Rooted<JSAtom*> name(cx);
+  for (uint32_t i = 0; i != indirectExportEntries->length(); i++) {
+    e = &indirectExportEntries->getDenseElement(i)
+             .toObject()
+             .as<ExportEntryObject>();
+    // Step 5.a. If SameValue(exportName, e.[[ExportName]]) is true, then:
+    if (exportName == e->exportName()) {
+      // Step 5.a.i. Let importedModule be ? HostResolveImportedModule(module,
+      //             e.[[ModuleRequest]]).
+      moduleRequest = e->moduleRequest();
+      importedModule = HostResolveImportedModule(cx, module, moduleRequest,
+                                                 MODULE_STATUS_UNLINKED);
+      if (!importedModule) {
+        return false;
+      }
+
+      // Step 5.a.ii. If e.[[ImportName]] is all, then:
+      if (!e->importName()) {
+        // Step 5.a.ii.1. Assert: module does not provide the direct binding for
+        //                this export.
+        // Step 5.a.ii.2. Return ResolvedBinding Record { [[Module]]:
+        //                importedModule, [[BindingName]]: namespace }.
+        name = cx->names().starNamespaceStar;
+        return CreateResolvedBindingObject(cx, importedModule, name, result);
+      } else {
+        // Step 5.a.iii.1. Assert: module imports a specific binding for this
+        //                 export.
+        // Step 5.a.iii.2. Return ?
+        // importedModule.ResolveExport(e.[[ImportName]],
+        //                 resolveSet).
+        name = e->importName();
+        return ModuleResolveExport(cx, importedModule, name, resolveSet,
+                                   result);
+      }
+    }
+  }
+
+  // Step 6. If SameValue(exportName, "default") is true, then:
+  if (exportName == cx->names().default_) {
+    // Step 6.a. Assert: A default export was not explicitly defined by this
+    //           module.
+    // Step 6.b. Return null.
+    // Step 6.c. NOTE: A default export cannot be provided by an export * from
+    //           "mod" declaration.
+    result.setNull();
+    return true;
+  }
+
+  // Step 7. Let starResolution be null.
+  Rooted<ResolvedBindingObject*> starResolution(cx);
+
+  // Step 8. For each ExportEntry Record e of module.[[StarExportEntries]], do:
+  Rooted<ArrayObject*> starExportEntries(cx, &module->starExportEntries());
+  Rooted<Value> resolution(cx);
+  Rooted<ResolvedBindingObject*> binding(cx);
+  for (uint32_t i = 0; i != starExportEntries->length(); i++) {
+    e = &starExportEntries->getDenseElement(i)
+             .toObject()
+             .as<ExportEntryObject>();
+    // Step 8.a. Let importedModule be ? HostResolveImportedModule(module,
+    //           e.[[ModuleRequest]]).
+    moduleRequest = e->moduleRequest();
+    importedModule = HostResolveImportedModule(cx, module, moduleRequest,
+                                               MODULE_STATUS_UNLINKED);
+    if (!importedModule) {
+      return false;
+    }
+
+    // Step 8.b. Let resolution be ? importedModule.ResolveExport(exportName,
+    //           resolveSet).
+    if (!ModuleResolveExport(cx, importedModule, exportName, resolveSet,
+                             &resolution)) {
+      return false;
+    }
+
+    // Step 8.c. If resolution is ambiguous, return ambiguous.
+    if (resolution == StringValue(cx->names().ambiguous)) {
+      result.set(resolution);
+      return true;
+    }
+
+    // Step 8.d. If resolution is not null, then:
+    if (!resolution.isNull()) {
+      // Step 8.d.i. Assert: resolution is a ResolvedBinding Record.
+      binding = &resolution.toObject().as<ResolvedBindingObject>();
+
+      // Step 8.d.ii. If starResolution is null, set starResolution to
+      // resolution.
+      if (!starResolution) {
+        starResolution = binding;
+      } else {
+        // Step 8.d.iii. Else:
+        // Step 8.d.iii.1. Assert: There is more than one * import that includes
+        //                 the requested name.
+        // Step 8.d.iii.2. If resolution.[[Module]] and
+        //                 starResolution.[[Module]] are not the same Module
+        //                 Record, return ambiguous.
+        // Step 8.d.iii.3. If resolution.[[BindingName]] is namespace and
+        //                 starResolution.[[BindingName]] is not namespace, or
+        //                 if resolution.[[BindingName]] is not namespace and
+        //                 starResolution.[[BindingName]] is namespace, return
+        //                 ambiguous.
+        // Step 8.d.iii.4. If resolution.[[BindingName]] is a String,
+        //                 starResolution.[[BindingName]] is a String, and
+        //                 SameValue(resolution.[[BindingName]],
+        //                 starResolution.[[BindingName]]) is false, return
+        //                 ambiguous.
+        if (binding->module() != starResolution->module() ||
+            binding->bindingName() != starResolution->bindingName()) {
+          result.set(StringValue(cx->names().ambiguous));
+          return true;
+        }
+      }
+    }
+  }
+
+  // Step 9. Return starResolution.
+  result.setObjectOrNull(starResolution);
+  return true;
 }

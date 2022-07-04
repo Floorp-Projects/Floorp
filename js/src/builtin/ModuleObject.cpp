@@ -25,8 +25,9 @@
 #include "vm/AsyncIteration.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/ModuleBuilder.h"       // js::ModuleBuilder
-#include "vm/PlainObject.h"         // js::PlainObject
-#include "vm/PromiseObject.h"       // js::PromiseObject
+#include "vm/Modules.h"
+#include "vm/PlainObject.h"    // js::PlainObject
+#include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/SelfHosting.h"
 #include "vm/SharedStencil.h"  // js::GCThingIndex
 
@@ -318,6 +319,73 @@ RequestedModuleObject* RequestedModuleObject::create(JSContext* cx,
   self->initReservedSlot(ModuleRequestSlot, ObjectValue(*moduleRequest));
   self->initReservedSlot(LineNumberSlot, NumberValue(lineNumber));
   self->initReservedSlot(ColumnNumberSlot, NumberValue(columnNumber));
+  return self;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// ResolvedBindingObject
+
+/* static */ const JSClass ResolvedBindingObject::class_ = {
+    "ResolvedBinding",
+    JSCLASS_HAS_RESERVED_SLOTS(ResolvedBindingObject::SlotCount)};
+
+DEFINE_GETTER_FUNCTIONS(ResolvedBindingObject, module, ModuleSlot)
+DEFINE_GETTER_FUNCTIONS(ResolvedBindingObject, bindingName, BindingNameSlot)
+
+ModuleObject* ResolvedBindingObject::module() const {
+  Value value = getReservedSlot(ModuleSlot);
+  return &value.toObject().as<ModuleObject>();
+}
+
+JSAtom* ResolvedBindingObject::bindingName() const {
+  Value value = getReservedSlot(BindingNameSlot);
+  return &value.toString()->asAtom();
+}
+
+/* static */
+bool ResolvedBindingObject::isInstance(HandleValue value) {
+  return value.isObject() && value.toObject().is<ResolvedBindingObject>();
+}
+
+/* static */
+bool GlobalObject::initResolvedBindingProto(JSContext* cx,
+                                            Handle<GlobalObject*> global) {
+  static const JSPropertySpec protoAccessors[] = {
+      JS_PSG("module", ResolvedBindingObject_moduleGetter, 0),
+      JS_PSG("bindingName", ResolvedBindingObject_bindingNameGetter, 0),
+      JS_PS_END};
+
+  Rooted<JSObject*> proto(
+      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
+  if (!proto) {
+    return false;
+  }
+
+  if (!DefinePropertiesAndFunctions(cx, proto, protoAccessors, nullptr)) {
+    return false;
+  }
+
+  global->initBuiltinProto(ProtoKind::ResolvedBindingProto, proto);
+  return true;
+}
+
+/* static */
+ResolvedBindingObject* ResolvedBindingObject::create(
+    JSContext* cx, Handle<ModuleObject*> module, Handle<JSAtom*> bindingName) {
+  Rooted<JSObject*> proto(
+      cx, GlobalObject::getOrCreateResolvedBindingPrototype(cx, cx->global()));
+  if (!proto) {
+    return nullptr;
+  }
+
+  ResolvedBindingObject* self =
+      NewObjectWithGivenProto<ResolvedBindingObject>(cx, proto);
+  if (!self) {
+    return nullptr;
+  }
+
+  self->initReservedSlot(ModuleSlot, ObjectValue(*module));
+  self->initReservedSlot(BindingNameSlot, StringValue(bindingName));
   return self;
 }
 
@@ -1379,7 +1447,6 @@ bool GlobalObject::initModuleProto(JSContext* cx,
       JS_PS_END};
 
   static const JSFunctionSpec protoFunctions[] = {
-      JS_SELF_HOSTED_FN("resolveExport", "ModuleResolveExport", 2, 0),
       JS_SELF_HOSTED_FN("declarationInstantiation", "ModuleInstantiate", 0, 0),
       JS_SELF_HOSTED_FN("evaluation", "ModuleEvaluate", 0, 0),
       JS_SELF_HOSTED_FN("gatherAsyncParentCompletions",

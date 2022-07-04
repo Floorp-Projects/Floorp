@@ -1989,6 +1989,19 @@ static bool intrinsic_ModuleGetExportedNames(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool intrinsic_ModuleResolveExport(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 2);
+  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
+
+  // The names passed to ModuleResolveExport flow only from module
+  // ImportEntryObject and ExportEntryObjects that are populated with atoms.
+  Rooted<JSAtom*> exportName(cx, &args[1].toString()->asAtom());
+
+  return ModuleResolveExport(cx, module, exportName, args.rval());
+}
+
 static bool intrinsic_ModuleTopLevelCapabilityResolve(JSContext* cx,
                                                       unsigned argc,
                                                       Value* vp) {
@@ -2355,6 +2368,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsWrappedSharedArrayBuffer",
           intrinsic_IsWrappedInstanceOfBuiltin<SharedArrayBufferObject>, 1, 0),
     JS_FN("ModuleGetExportedNames", intrinsic_ModuleGetExportedNames, 1, 0),
+    JS_FN("ModuleResolveExport", intrinsic_ModuleResolveExport, 2, 0),
     JS_FN("ModuleTopLevelCapabilityReject",
           intrinsic_ModuleTopLevelCapabilityReject, 2, 0),
     JS_FN("ModuleTopLevelCapabilityResolve",

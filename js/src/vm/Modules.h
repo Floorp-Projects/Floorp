@@ -29,6 +29,10 @@ using ModuleSet =
 ArrayObject* ModuleGetExportedNames(JSContext* cx, Handle<ModuleObject*> module,
                                     MutableHandle<ModuleSet> exportStarSet);
 
+bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
+                         Handle<JSAtom*> exportName,
+                         MutableHandle<Value> result);
+
 }  // namespace js
 
 #endif  // vm_Modules_h
