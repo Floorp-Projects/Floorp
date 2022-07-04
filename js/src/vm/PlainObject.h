@@ -96,9 +96,16 @@ extern PlainObject* NewPlainObjectWithProtoAndAllocKind(
     JSContext* cx, HandleObject proto, gc::AllocKind allocKind,
     NewObjectKind newKind = GenericObject);
 
-extern PlainObject* NewPlainObjectWithProperties(JSContext* cx,
-                                                 IdValuePair* properties,
-                                                 size_t nproperties);
+// Create a plain object with the given properties. The list must not contain
+// duplicate keys or integer keys.
+extern PlainObject* NewPlainObjectWithUniqueNames(JSContext* cx,
+                                                  IdValuePair* properties,
+                                                  size_t nproperties);
+
+// Create a plain object with the given properties. The list may contain integer
+// keys or duplicate keys.
+extern PlainObject* NewPlainObjectWithMaybeDuplicateKeys(
+    JSContext* cx, IdValuePair* properties, size_t nproperties);
 
 }  // namespace js
 

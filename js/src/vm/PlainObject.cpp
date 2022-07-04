@@ -196,9 +196,12 @@ PlainObject* js::NewPlainObjectWithProtoAndAllocKind(JSContext* cx,
   return PlainObject::createWithShape(cx, shape, allocKind, newKind);
 }
 
-PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
-                                              IdValuePair* properties,
-                                              size_t nproperties) {
+enum class KeysKind { UniqueNames, Unknown };
+
+template <KeysKind Kind>
+static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
+                                                 IdValuePair* properties,
+                                                 size_t nproperties) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
   Rooted<PlainObject*> obj(cx, NewPlainObjectWithAllocKind(cx, allocKind));
   if (!obj) {
@@ -214,22 +217,28 @@ PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
 
     // Integer keys may need to be stored in dense elements. This is uncommon so
     // just fall back to NativeDefineDataProperty.
-    if (MOZ_UNLIKELY(key.isInt())) {
-      if (!NativeDefineDataProperty(cx, obj, key, value, JSPROP_ENUMERATE)) {
-        return nullptr;
+    if constexpr (Kind == KeysKind::Unknown) {
+      if (MOZ_UNLIKELY(key.isInt())) {
+        if (!NativeDefineDataProperty(cx, obj, key, value, JSPROP_ENUMERATE)) {
+          return nullptr;
+        }
+        continue;
       }
-      continue;
     }
 
     MOZ_ASSERT(key.isAtom() || key.isSymbol());
 
     // Check for duplicate keys. In this case we must overwrite the earlier
     // property value.
-    mozilla::Maybe<PropertyInfo> prop = obj->lookup(cx, key);
-    if (MOZ_UNLIKELY(prop)) {
-      MOZ_ASSERT(prop->isDataProperty());
-      obj->setSlot(prop->slot(), value);
-      continue;
+    if constexpr (Kind == KeysKind::UniqueNames) {
+      MOZ_ASSERT(!obj->containsPure(key));
+    } else {
+      mozilla::Maybe<PropertyInfo> prop = obj->lookup(cx, key);
+      if (MOZ_UNLIKELY(prop)) {
+        MOZ_ASSERT(prop->isDataProperty());
+        obj->setSlot(prop->slot(), value);
+        continue;
+      }
     }
 
     if (!AddDataPropertyToPlainObject(cx, obj, key, value)) {
@@ -238,4 +247,18 @@ PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
   }
 
   return obj;
+}
+
+PlainObject* js::NewPlainObjectWithUniqueNames(JSContext* cx,
+                                               IdValuePair* properties,
+                                               size_t nproperties) {
+  return NewPlainObjectWithProperties<KeysKind::UniqueNames>(cx, properties,
+                                                             nproperties);
+}
+
+PlainObject* js::NewPlainObjectWithMaybeDuplicateKeys(JSContext* cx,
+                                                      IdValuePair* properties,
+                                                      size_t nproperties) {
+  return NewPlainObjectWithProperties<KeysKind::Unknown>(cx, properties,
+                                                         nproperties);
 }
