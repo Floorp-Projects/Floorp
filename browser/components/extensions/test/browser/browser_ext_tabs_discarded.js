@@ -24,7 +24,7 @@ add_task(async function test_discarded() {
       permissions: ["tabs", "webNavigation"],
     },
 
-    background: async function() {
+    background() {
       browser.webNavigation.onCompleted.addListener(
         async details => {
           browser.test.log(`webNav onCompleted received for ${details.tabId}`);
@@ -126,7 +126,7 @@ add_task(async function test_create_discarded() {
       permissions: ["tabs", "webNavigation"],
     },
 
-    background: async function() {
+    background() {
       let tabOpts = {
         url: "http://example.com/",
         active: false,
@@ -185,7 +185,7 @@ add_task(async function test_discarded_private_tab_restored() {
   let extension = ExtensionTestUtils.loadExtension({
     incognitoOverride: "spanning",
 
-    background: async function() {
+    background() {
       browser.tabs.onUpdated.addListener(
         async (tabId, changeInfo, tab) => {
           const { active, discarded, incognito } = tab;
@@ -235,4 +235,69 @@ add_task(async function test_discarded_private_tab_restored() {
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(privateWin);
+});
+
+add_task(async function test_update_discarded() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs", "<all_urls>"],
+    },
+
+    background() {
+      browser.test.onMessage.addListener(async msg => {
+        let [tab] = await browser.tabs.query({ url: "http://example.com/" });
+        if (msg == "update") {
+          await browser.tabs.update(tab.id, { url: "https://example.com/" });
+        } else {
+          browser.test.fail(`Unexpected message received: ${msg}`);
+        }
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  let lazyTab = BrowserTestUtils.addTab(gBrowser, "http://example.com/", {
+    createLazyBrowser: true,
+    lazyTabTitle: "Example Domain",
+  });
+
+  let tabBrowserInsertedPromise = BrowserTestUtils.waitForEvent(
+    lazyTab,
+    "TabBrowserInserted"
+  );
+
+  SimpleTest.waitForExplicitFinish();
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, [
+      {
+        message: /Lazy browser prematurely inserted via 'loadURI' property access:/,
+        forbid: true,
+      },
+    ]);
+  });
+
+  extension.sendMessage("update");
+  await tabBrowserInsertedPromise;
+
+  await BrowserTestUtils.waitForBrowserStateChange(
+    lazyTab.linkedBrowser,
+    "https://example.com/",
+    stateFlags => {
+      return (
+        stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
+        stateFlags & Ci.nsIWebProgressListener.STATE_STOP
+      );
+    }
+  );
+
+  await TestUtils.waitForTick();
+  BrowserTestUtils.removeTab(lazyTab);
+
+  await extension.unload();
+
+  SimpleTest.endMonitorConsole();
+  await waitForConsole;
 });
