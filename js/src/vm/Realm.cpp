@@ -395,6 +395,7 @@ void Realm::fixupAfterMovingGC(JSTracer* trc) {
 void Realm::purge() {
   dtoaCache.purge();
   newProxyCache.purge();
+  newPlainObjectWithPropsCache.purge();
   objects_.iteratorCache.clearAndCompact();
   arraySpeciesLookup.purge();
   promiseLookup.purge();
