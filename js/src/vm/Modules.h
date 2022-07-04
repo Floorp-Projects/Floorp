@@ -13,7 +13,6 @@
 
 #include "builtin/ModuleObject.h"
 #include "js/AllocPolicy.h"
-#include "js/GCHashTable.h"
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
 
@@ -21,17 +20,16 @@ struct JSContext;
 
 namespace js {
 
-class ArrayObject;
-
-using ModuleSet =
-    GCHashSet<ModuleObject*, DefaultHasher<ModuleObject*>, SystemAllocPolicy>;
-
-ArrayObject* ModuleGetExportedNames(JSContext* cx, Handle<ModuleObject*> module,
-                                    MutableHandle<ModuleSet> exportStarSet);
-
 bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
                          Handle<JSAtom*> exportName,
                          MutableHandle<Value> result);
+
+ModuleNamespaceObject* GetOrCreateModuleNamespace(JSContext* cx,
+                                                  Handle<ModuleObject*> module);
+
+void EnsureModuleEnvironmentNamespace(JSContext* cx,
+                                      Handle<ModuleObject*> module,
+                                      Handle<ModuleNamespaceObject*> ns);
 
 }  // namespace js
 

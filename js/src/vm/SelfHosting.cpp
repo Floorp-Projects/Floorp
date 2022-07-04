@@ -1876,15 +1876,9 @@ static bool intrinsic_EnsureModuleEnvironmentNamespace(JSContext* cx,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
   Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  MOZ_ASSERT(args[1].toObject().is<ModuleNamespaceObject>());
-  Rooted<ModuleEnvironmentObject*> environment(cx,
-                                               &module->initialEnvironment());
-  // The property already exists in the evironment but is not writable, so set
-  // the slot directly.
-  mozilla::Maybe<PropertyInfo> prop =
-      environment->lookup(cx, cx->names().starNamespaceStar);
-  MOZ_ASSERT(prop.isSome());
-  environment->setSlot(prop->slot(), args[1]);
+  Rooted<ModuleNamespaceObject*> ns(
+      cx, &args[1].toObject().as<ModuleNamespaceObject>());
+  EnsureModuleEnvironmentNamespace(cx, module, ns);
   args.rval().setUndefined();
   return true;
 }
@@ -1972,23 +1966,6 @@ static bool intrinsic_CreateTopLevelCapability(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_ModuleGetExportedNames(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-
-  Rooted<ModuleSet> exportStarSet(cx);
-  Rooted<ArrayObject*> exportedNames(cx);
-  exportedNames = ModuleGetExportedNames(cx, module, &exportStarSet);
-  if (!exportedNames) {
-    return false;
-  }
-
-  args.rval().setObject(*exportedNames);
-  return true;
-}
-
 static bool intrinsic_ModuleResolveExport(JSContext* cx, unsigned argc,
                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2028,36 +2005,18 @@ static bool intrinsic_ModuleTopLevelCapabilityReject(JSContext* cx,
   return true;
 }
 
-static bool intrinsic_NewModuleNamespace(JSContext* cx, unsigned argc,
+static bool intrinsic_GetModuleNamespace(JSContext* cx, unsigned argc,
                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
+  MOZ_ASSERT(args.length() == 1);
   Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  RootedObject exports(cx, &args[1].toObject());
-  JSObject* namespace_ = ModuleObject::createNamespace(cx, module, exports);
-  if (!namespace_) {
+
+  ModuleNamespaceObject* ns = GetOrCreateModuleNamespace(cx, module);
+  if (!ns) {
     return false;
   }
 
-  args.rval().setObject(*namespace_);
-  return true;
-}
-
-static bool intrinsic_AddModuleNamespaceBinding(JSContext* cx, unsigned argc,
-                                                Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 4);
-  Rooted<ModuleNamespaceObject*> namespace_(
-      cx, &args[0].toObject().as<ModuleNamespaceObject>());
-  Rooted<JSAtom*> exportedName(cx, &args[1].toString()->asAtom());
-  Rooted<ModuleObject*> targetModule(cx,
-                                     &args[2].toObject().as<ModuleObject>());
-  Rooted<JSAtom*> targetName(cx, &args[3].toString()->asAtom());
-  if (!namespace_->addBinding(cx, exportedName, targetModule, targetName)) {
-    return false;
-  }
-
-  args.rval().setUndefined();
+  args.rval().setObject(*ns);
   return true;
 }
 
@@ -2186,8 +2145,6 @@ static bool intrinsic_newList(JSContext* cx, unsigned argc, js::Value* vp) {
 
 static const JSFunctionSpec intrinsic_functions[] = {
     // Intrinsic helper functions
-    JS_FN("AddModuleNamespaceBinding", intrinsic_AddModuleNamespaceBinding, 4,
-          0),
     JS_FN("AppendAsyncParentModule", intrinsic_AppendAsyncParentModule, 2, 0),
     JS_INLINABLE_FN("ArrayBufferByteLength",
                     intrinsic_ArrayBufferByteLength<ArrayBufferObject>, 1, 0,
@@ -2262,6 +2219,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GetErrorMessage", intrinsic_GetErrorMessage, 1, 0),
     JS_INLINABLE_FN("GetFirstDollarIndex", GetFirstDollarIndex, 1, 0,
                     GetFirstDollarIndex),
+    JS_FN("GetModuleNamespace", intrinsic_GetModuleNamespace, 1, 0),
     JS_INLINABLE_FN("GetNextMapEntryForIterator",
                     intrinsic_GetNextMapEntryForIterator, 2, 0,
                     IntrinsicGetNextMapEntryForIterator),
@@ -2367,7 +2325,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_IsWrappedInstanceOfBuiltin<ArrayBufferObject>, 1, 0),
     JS_FN("IsWrappedSharedArrayBuffer",
           intrinsic_IsWrappedInstanceOfBuiltin<SharedArrayBufferObject>, 1, 0),
-    JS_FN("ModuleGetExportedNames", intrinsic_ModuleGetExportedNames, 1, 0),
     JS_FN("ModuleResolveExport", intrinsic_ModuleResolveExport, 2, 0),
     JS_FN("ModuleTopLevelCapabilityReject",
           intrinsic_ModuleTopLevelCapabilityReject, 2, 0),
@@ -2377,7 +2334,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicNewArrayIterator),
     JS_FN("NewAsyncIteratorHelper", intrinsic_NewAsyncIteratorHelper, 0, 0),
     JS_FN("NewIteratorHelper", intrinsic_NewIteratorHelper, 0, 0),
-    JS_FN("NewModuleNamespace", intrinsic_NewModuleNamespace, 2, 0),
     JS_INLINABLE_FN("NewRegExpStringIterator",
                     intrinsic_NewRegExpStringIterator, 0, 0,
                     IntrinsicNewRegExpStringIterator),

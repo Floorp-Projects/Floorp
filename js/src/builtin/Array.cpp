@@ -2044,6 +2044,9 @@ static bool FillWithUndefined(JSContext* cx, HandleObject obj, uint32_t start,
   return true;
 }
 
+static bool ArrayNativeSortImpl(JSContext* cx, Handle<JSObject*> obj,
+                                Handle<Value> fval, ComparatorMatchResult comp);
+
 bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
   // This function is called from the self-hosted Array.prototype.sort
   // implementation. It returns |true| if the array was sorted, otherwise it
@@ -2071,15 +2074,29 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
     comp = Match_None;
   }
 
-  RootedObject obj(cx, &args.thisv().toObject());
+  Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
+  if (!ArrayNativeSortImpl(cx, obj, fval, comp)) {
+    return false;
+  }
+
+  args.rval().setBoolean(true);
+  return true;
+}
+
+bool js::ArrayNativeSort(JSContext* cx, Handle<JSObject*> obj) {
+  return ArrayNativeSortImpl(cx, obj, UndefinedHandleValue, Match_None);
+}
+
+static bool ArrayNativeSortImpl(JSContext* cx, Handle<JSObject*> obj,
+                                Handle<Value> fval,
+                                ComparatorMatchResult comp) {
   uint64_t length;
   if (!GetLengthPropertyInlined(cx, obj, &length)) {
     return false;
   }
   if (length < 2) {
     /* [] and [a] remain unchanged when sorted. */
-    args.rval().setBoolean(true);
     return true;
   }
 
@@ -2168,7 +2185,6 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
      */
     n = vec.length();
     if (n == 0 && undefs == 0) {
-      args.rval().setBoolean(true);
       return true;
     }
 
@@ -2228,7 +2244,6 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
   }
-  args.rval().setBoolean(true);
   return true;
 }
 
