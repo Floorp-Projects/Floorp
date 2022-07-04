@@ -51,7 +51,7 @@ use crate::clip::{ClipChainId, ClipItemKey, ClipStore, ClipItemKeyKind};
 use crate::clip::{ClipInternData, ClipNodeKind, ClipInstance, SceneClipInstance};
 use crate::clip::{PolygonDataHandle};
 use crate::segment::EdgeAaSegmentMask;
-use crate::spatial_tree::{SceneSpatialTree, SpatialNodeIndex, get_external_scroll_offset};
+use crate::spatial_tree::{SceneSpatialTree, SpatialNodeContainer, SpatialNodeIndex, get_external_scroll_offset};
 use crate::frame_builder::{FrameBuilderConfig};
 use crate::glyph_rasterizer::{FontInstance, SharedFontResources};
 use crate::hit_test::HitTestingScene;
@@ -80,7 +80,9 @@ use crate::resource_cache::ImageRequest;
 use crate::scene::{Scene, ScenePipeline, BuiltScene, SceneStats, StackingContextHelpers};
 use crate::scene_builder_thread::Interners;
 use crate::space::SpaceSnapper;
-use crate::spatial_node::{StickyFrameInfo, ScrollFrameKind, SpatialNodeUid};
+use crate::spatial_node::{
+    ReferenceFrameInfo, StickyFrameInfo, ScrollFrameKind, SpatialNodeUid, SpatialNodeType
+};
 use crate::tile_cache::TileCacheBuilder;
 use euclid::approxeq::ApproxEq;
 use std::{f32, mem, usize};
@@ -1378,6 +1380,15 @@ impl<'a> SceneBuilder<'a> {
                     flags: info.flags,
                 };
 
+                let spatial_node = self.spatial_tree.get_node_info(spatial_node_index);
+                let anim_id: u64 =  match spatial_node.node_type {
+                    SpatialNodeType::ReferenceFrame(ReferenceFrameInfo {
+                        source_transform: PropertyBinding::Binding(key, _),
+                        ..
+                    }) => key.clone().into(),
+                    _ => 0,
+                };
+
                 // TODO(gw): Port internal API to be ClipChain based, rather than ClipId once all callers updated
                 let clip_id = ClipId::ClipChain(info.clip_chain_id);
 
@@ -1386,6 +1397,7 @@ impl<'a> SceneBuilder<'a> {
                     spatial_node_index,
                     clip_id,
                     info.tag,
+                    anim_id,
                 );
             }
             DisplayItem::ClearRectangle(ref info) => {
@@ -1855,9 +1867,11 @@ impl<'a> SceneBuilder<'a> {
         spatial_node_index: SpatialNodeIndex,
         clip_id: ClipId,
         tag: ItemTag,
+        anim_id: u64,
     ) {
         self.hit_testing_scene.add_item(
             tag,
+            anim_id,
             info,
             spatial_node_index,
             clip_id,

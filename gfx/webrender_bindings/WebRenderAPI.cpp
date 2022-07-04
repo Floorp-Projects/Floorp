@@ -33,30 +33,6 @@ namespace wr {
 MOZ_DEFINE_MALLOC_SIZE_OF(WebRenderMallocSizeOf)
 MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(WebRenderMallocEnclosingSizeOf)
 
-enum SideBitsPacked {
-  eSideBitsPackedTop = 0x1000,
-  eSideBitsPackedRight = 0x2000,
-  eSideBitsPackedBottom = 0x4000,
-  eSideBitsPackedLeft = 0x8000
-};
-
-static uint16_t SideBitsToHitInfoBits(SideBits aSideBits) {
-  uint16_t ret = 0;
-  if (aSideBits & SideBits::eTop) {
-    ret |= eSideBitsPackedTop;
-  }
-  if (aSideBits & SideBits::eRight) {
-    ret |= eSideBitsPackedRight;
-  }
-  if (aSideBits & SideBits::eBottom) {
-    ret |= eSideBitsPackedBottom;
-  }
-  if (aSideBits & SideBits::eLeft) {
-    ret |= eSideBitsPackedLeft;
-  }
-  return ret;
-}
-
 class NewRenderer : public RendererEvent {
  public:
   NewRenderer(wr::DocumentHandle** aDocHandle,
@@ -464,25 +440,6 @@ void WebRenderAPI::SendTransaction(TransactionBuilder& aTxn) {
   wr_api_send_transaction(mDocHandle, aTxn.Raw(), aTxn.UseSceneBuilderThread());
 }
 
-SideBits ExtractSideBitsFromHitInfoBits(uint16_t& aHitInfoBits) {
-  SideBits sideBits = SideBits::eNone;
-  if (aHitInfoBits & eSideBitsPackedTop) {
-    sideBits |= SideBits::eTop;
-  }
-  if (aHitInfoBits & eSideBitsPackedRight) {
-    sideBits |= SideBits::eRight;
-  }
-  if (aHitInfoBits & eSideBitsPackedBottom) {
-    sideBits |= SideBits::eBottom;
-  }
-  if (aHitInfoBits & eSideBitsPackedLeft) {
-    sideBits |= SideBits::eLeft;
-  }
-
-  aHitInfoBits &= 0x0fff;
-  return sideBits;
-}
-
 std::vector<WrHitResult> WebRenderAPI::HitTest(const wr::WorldPoint& aPoint) {
   static_assert(gfx::DoesCompositorHitTestInfoFitIntoBits<12>(),
                 "CompositorHitTestFlags MAX value has to be less than number "
@@ -497,8 +454,14 @@ std::vector<WrHitResult> WebRenderAPI::HitTest(const wr::WorldPoint& aPoint) {
     geckoResult.mLayersId = wr::AsLayersId(wrResult.pipeline_id);
     geckoResult.mScrollId =
         static_cast<layers::ScrollableLayerGuid::ViewID>(wrResult.scroll_id);
-    geckoResult.mSideBits = ExtractSideBitsFromHitInfoBits(wrResult.hit_info);
-    geckoResult.mHitInfo.deserialize(wrResult.hit_info);
+    geckoResult.mHitInfo.deserialize(wrResult.hit_info & 0x0fff);
+    geckoResult.mSideBits = static_cast<SideBits>(wrResult.hit_info >> 12);
+
+    if (wrResult.animation_id != 0) {
+      geckoResult.mAnimationId = Some(wrResult.animation_id);
+    } else {
+      geckoResult.mAnimationId = Nothing();
+    }
     geckoResults.push_back(geckoResult);
   }
   return geckoResults;
@@ -1038,9 +1001,11 @@ Maybe<wr::WrSpatialId> DisplayListBuilder::PushStackingContext(
   MOZ_ASSERT(mClipChainLeaf.isNothing(),
              "Non-empty leaf from clip chain given, but not used with SC!");
 
-  WRDL_LOG("PushStackingContext b=%s t=%s\n", mWrState,
-           ToString(aBounds).c_str(),
-           transform ? ToString(*transform).c_str() : "none");
+  WRDL_LOG(
+      "PushStackingContext b=%s t=%s id=0x%" PRIx64 "\n", mWrState,
+      ToString(aBounds).c_str(),
+      aParams.mTransformPtr ? ToString(*aParams.mTransformPtr).c_str() : "none",
+      aParams.animation ? aParams.animation->id : 0);
 
   auto spatialId = wr_dp_push_stacking_context(
       mWrState, aBounds, mCurrentSpaceAndClipChain.space, &aParams,
@@ -1174,8 +1139,8 @@ wr::WrSpatialId DisplayListBuilder::DefineScrollLayer(
 
   WRDL_LOG("DefineScrollLayer id=%" PRIu64
            "/%zu p=%s co=%s cl=%s generation=%s hasScrollLinkedEffect=%s\n",
-           mWrState, aViewId, space->id,
-           aParent ? ToString(aParent->space.id).c_str() : "(nil)",
+           mWrState, aViewId, space.id,
+           aParent ? ToString(aParent->id).c_str() : "(nil)",
            ToString(aContentRect).c_str(), ToString(aClipRect).c_str(),
            ToString(aScrollOffsetGeneration).c_str(),
            ToString(aHasScrollLinkedEffect).c_str());
@@ -1230,7 +1195,7 @@ void DisplayListBuilder::PushHitTest(
     const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
     bool aIsBackfaceVisible,
     const layers::ScrollableLayerGuid::ViewID& aScrollId,
-    gfx::CompositorHitTestInfo aHitInfo, SideBits aSideBits) {
+    const gfx::CompositorHitTestInfo& aHitInfo, SideBits aSideBits) {
   wr::LayoutRect clip = MergeClipLeaf(aClip);
   WRDL_LOG("PushHitTest b=%s cl=%s\n", mWrState, ToString(aBounds).c_str(),
            ToString(clip).c_str());
@@ -1240,7 +1205,7 @@ void DisplayListBuilder::PushHitTest(
                 "of bits in uint16_t minus 4 for SideBitsPacked");
 
   uint16_t hitInfoBits = static_cast<uint16_t>(aHitInfo.serialize()) |
-                         SideBitsToHitInfoBits(aSideBits);
+                         (static_cast<uint16_t>(aSideBits) << 12);
 
   wr_dp_push_hit_test(mWrState, aBounds, clip, aIsBackfaceVisible,
                       &mCurrentSpaceAndClipChain, aScrollId, hitInfoBits);

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipMode, HitTestItem, HitTestResult, ItemTag, PrimitiveFlags};
+use api::{BorderRadius, ClipMode, HitTestResultItem, HitTestResult, ItemTag, PrimitiveFlags};
 use api::{PipelineId, ApiHitTester, ClipId};
 use api::units::*;
 use crate::clip::{ClipItemKind, ClipStore, ClipNode, rounded_rectangle_contains_point};
@@ -113,6 +113,7 @@ struct HitTestingItem {
     rect: LayoutRect,
     clip_rect: LayoutRect,
     tag: ItemTag,
+    animation_id: u64,
     is_backface_visible: bool,
     spatial_node_index: SpatialNodeIndex,
     #[ignore_malloc_size_of = "Range"]
@@ -122,6 +123,7 @@ struct HitTestingItem {
 impl HitTestingItem {
     fn new(
         tag: ItemTag,
+        animation_id: u64,
         info: &LayoutPrimitiveInfo,
         spatial_node_index: SpatialNodeIndex,
         clip_nodes_range: ops::Range<ClipNodeIndex>,
@@ -130,6 +132,7 @@ impl HitTestingItem {
             rect: info.rect,
             clip_rect: info.clip_rect,
             tag,
+            animation_id,
             is_backface_visible: info.flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE),
             spatial_node_index,
             clip_nodes_range,
@@ -210,6 +213,7 @@ impl HitTestingScene {
     pub fn add_item(
         &mut self,
         tag: ItemTag,
+        anim_id: u64,
         info: &LayoutPrimitiveInfo,
         spatial_node_index: SpatialNodeIndex,
         clip_id: ClipId,
@@ -261,6 +265,7 @@ impl HitTestingScene {
 
         let item = HitTestingItem::new(
             tag,
+            anim_id,
             info,
             spatial_node_index,
             clip_range,
@@ -433,9 +438,10 @@ impl HitTester {
                 continue;
             }
 
-            result.items.push(HitTestItem {
+            result.items.push(HitTestResultItem {
                 pipeline: pipeline_id,
                 tag: item.tag,
+                animation_id: item.animation_id,
             });
         }
 

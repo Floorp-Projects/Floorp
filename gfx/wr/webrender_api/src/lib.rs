@@ -312,19 +312,22 @@ impl HitTesterRequest {
 
 /// Describe an item that matched a hit-test query.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
-pub struct HitTestItem {
+pub struct HitTestResultItem {
     /// The pipeline that the display item that was hit belongs to.
     pub pipeline: PipelineId,
 
     /// The tag of the hit display item.
     pub tag: ItemTag,
+
+    /// The animation id from the stacking context.
+    pub animation_id: u64,
 }
 
 /// Returned by `RenderApi::hit_test`.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct HitTestResult {
     /// List of items that are match the hit-test query.
-    pub items: Vec<HitTestItem>,
+    pub items: Vec<HitTestResultItem>,
 }
 
 impl Drop for NotificationRequest {
@@ -367,6 +370,11 @@ impl PropertyBindingId {
             uid: value as u32,
         }
     }
+
+    /// Decompose the ID back into the raw integer.
+    pub fn to_u64(&self) -> u64 {
+        ((self.namespace.0 as u64) << 32) | self.uid as u64
+    }
 }
 
 /// A unique key that is used for connecting animated property
@@ -385,6 +393,12 @@ impl<T: Copy> PropertyBindingKey<T> {
     ///
     pub fn with(self, value: T) -> PropertyValue<T> {
         PropertyValue { key: self, value }
+    }
+}
+
+impl<T> Into<u64> for PropertyBindingKey<T> {
+    fn into(self) -> u64 {
+        self.id.to_u64()
     }
 }
 
