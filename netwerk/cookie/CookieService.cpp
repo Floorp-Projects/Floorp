@@ -49,31 +49,6 @@ uint32_t MakeCookieBehavior(uint32_t aCookieBehavior) {
   return aCookieBehavior;
 }
 
-/*
- Enables sanitizeOnShutdown cleaning prefs and disables the
- network.cookie.lifetimePolicy
-*/
-void MigrateCookieLifetimePrefs() {
-  if (mozilla::Preferences::GetInt("network.cookie.lifetimePolicy") !=
-      nsICookieService::ACCEPT_SESSION) {
-    return;
-  }
-  if (!mozilla::Preferences::GetBool("privacy.sanitize.sanitizeOnShutdown")) {
-    mozilla::Preferences::SetBool("privacy.sanitize.sanitizeOnShutdown", true);
-    // To avoid clearing categories that the user did not intend to clear
-    mozilla::Preferences::SetBool("privacy.clearOnShutdown.history", false);
-    mozilla::Preferences::SetBool("privacy.clearOnShutdown.formdata", false);
-    mozilla::Preferences::SetBool("privacy.clearOnShutdown.downloads", false);
-    mozilla::Preferences::SetBool("privacy.clearOnShutdown.sessions", false);
-    mozilla::Preferences::SetBool("privacy.clearOnShutdown.siteSettings",
-                                  false);
-  }
-  mozilla::Preferences::SetBool("privacy.clearOnShutdown.cookies", true);
-  mozilla::Preferences::SetBool("privacy.clearOnShutdown.cache", true);
-  mozilla::Preferences::SetBool("privacy.clearOnShutdown.offlineApps", true);
-  mozilla::Preferences::ClearUser("network.cookie.lifetimePolicy");
-}
-
 }  // anonymous namespace
 
 // static
@@ -248,9 +223,6 @@ nsresult CookieService::Init() {
 
   // Init our default, and possibly private CookieStorages.
   InitCookieStorages();
-
-  // Migrate network.cookie.lifetimePolicy pref to sanitizeOnShutdown prefs
-  MigrateCookieLifetimePrefs();
 
   RegisterWeakMemoryReporter(this);
 
