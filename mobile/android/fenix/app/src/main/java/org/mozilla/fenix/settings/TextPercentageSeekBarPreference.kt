@@ -363,12 +363,12 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
             object :
                 View.AccessibilityDelegate() {
                 override fun onInitializeAccessibilityNodeInfo(
-                    host: View?,
-                    info: AccessibilityNodeInfo?,
+                    host: View,
+                    info: AccessibilityNodeInfo,
                 ) {
                     super.onInitializeAccessibilityNodeInfo(host, info)
-                    val initialInfo = info?.rangeInfo
-                    info?.rangeInfo = initialInfo?.let {
+                    val initialInfo = info.rangeInfo
+                    info.rangeInfo = initialInfo?.let {
                         AccessibilityNodeInfo.RangeInfo.obtain(
                             RANGE_TYPE_PERCENT,
                             MIN_VALUE.toFloat(),

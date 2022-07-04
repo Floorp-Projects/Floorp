@@ -43,11 +43,11 @@ fun View.removeTouchDelegate() {
 fun View.setNewAccessibilityParent(newParent: View) {
     this.accessibilityDelegate = object : View.AccessibilityDelegate() {
         override fun onInitializeAccessibilityNodeInfo(
-            host: View?,
-            info: AccessibilityNodeInfo?,
+            host: View,
+            info: AccessibilityNodeInfo,
         ) {
             super.onInitializeAccessibilityNodeInfo(host, info)
-            info?.setParent(newParent)
+            info.setParent(newParent)
         }
     }
 }
@@ -64,11 +64,11 @@ fun View.updateAccessibilityCollectionItemInfo(
 ) {
     this.accessibilityDelegate = object : View.AccessibilityDelegate() {
         override fun onInitializeAccessibilityNodeInfo(
-            host: View?,
-            info: AccessibilityNodeInfo?,
+            host: View,
+            info: AccessibilityNodeInfo,
         ) {
             super.onInitializeAccessibilityNodeInfo(host, info)
-            info?.collectionItemInfo =
+            info.collectionItemInfo =
                 AccessibilityNodeInfo.CollectionItemInfo.obtain(
                     rowIndex,
                     rowSpan,
@@ -90,11 +90,11 @@ fun View.updateAccessibilityCollectionInfo(
 ) {
     this.accessibilityDelegate = object : View.AccessibilityDelegate() {
         override fun onInitializeAccessibilityNodeInfo(
-            host: View?,
-            info: AccessibilityNodeInfo?,
+            host: View,
+            info: AccessibilityNodeInfo,
         ) {
             super.onInitializeAccessibilityNodeInfo(host, info)
-            info?.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
+            info.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
                 rowCount,
                 columnCount,
                 false,
