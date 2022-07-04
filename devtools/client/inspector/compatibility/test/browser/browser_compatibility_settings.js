@@ -74,14 +74,15 @@ async function updateTargetBrowsers(panel, store, isTargetBrowserFunc) {
     ),
   ];
   Assert.deepEqual(
-    browsers,
+    // Filter out IE, to be removed in an upcoming browser compat data sync.
+    // TODO: Remove the filter once D150961 lands. see Bug 1778009
+    browsers.filter(browser => browser != "ie"),
     [
       "chrome",
       "chrome_android",
       "edge",
       "firefox",
       "firefox_android",
-      "ie",
       "safari",
       "safari_ios",
     ],
