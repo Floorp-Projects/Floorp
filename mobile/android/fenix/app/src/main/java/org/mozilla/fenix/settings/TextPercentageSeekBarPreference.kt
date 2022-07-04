@@ -22,6 +22,7 @@ package org.mozilla.fenix.settings
 
 import android.content.Context
 import android.content.res.TypedArray
+import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.AttributeSet
@@ -369,12 +370,22 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
                     super.onInitializeAccessibilityNodeInfo(host, info)
                     val initialInfo = info.rangeInfo
                     info.rangeInfo = initialInfo?.let {
-                        AccessibilityNodeInfo.RangeInfo.obtain(
-                            RANGE_TYPE_PERCENT,
-                            MIN_VALUE.toFloat(),
-                            SEEK_BAR_MAX.toFloat(),
-                            convertCurrentValue(it.current),
-                        )
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            AccessibilityNodeInfo.RangeInfo(
+                                RANGE_TYPE_PERCENT,
+                                MIN_VALUE.toFloat(),
+                                SEEK_BAR_MAX.toFloat(),
+                                convertCurrentValue(it.current),
+                            )
+                        } else {
+                            @Suppress("DEPRECATION")
+                            AccessibilityNodeInfo.RangeInfo.obtain(
+                                RANGE_TYPE_PERCENT,
+                                MIN_VALUE.toFloat(),
+                                SEEK_BAR_MAX.toFloat(),
+                                convertCurrentValue(it.current),
+                            )
+                        }
                     }
                 }
             },

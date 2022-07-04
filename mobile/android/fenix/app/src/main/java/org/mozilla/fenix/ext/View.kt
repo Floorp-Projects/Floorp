@@ -68,7 +68,18 @@ fun View.updateAccessibilityCollectionItemInfo(
             info: AccessibilityNodeInfo,
         ) {
             super.onInitializeAccessibilityNodeInfo(host, info)
-            info.collectionItemInfo =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                info.collectionItemInfo =
+                    AccessibilityNodeInfo.CollectionItemInfo(
+                        rowIndex,
+                        rowSpan,
+                        columnIndex,
+                        columnSpan,
+                        false,
+                        isSelected,
+                    )
+            } else {
+                @Suppress("DEPRECATION")
                 AccessibilityNodeInfo.CollectionItemInfo.obtain(
                     rowIndex,
                     rowSpan,
@@ -77,6 +88,7 @@ fun View.updateAccessibilityCollectionItemInfo(
                     false,
                     isSelected,
                 )
+            }
         }
     }
 }
@@ -94,11 +106,20 @@ fun View.updateAccessibilityCollectionInfo(
             info: AccessibilityNodeInfo,
         ) {
             super.onInitializeAccessibilityNodeInfo(host, info)
-            info.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
-                rowCount,
-                columnCount,
-                false,
-            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                info.collectionInfo = AccessibilityNodeInfo.CollectionInfo(
+                    rowCount,
+                    columnCount,
+                    false,
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                info.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
+                    rowCount,
+                    columnCount,
+                    false,
+                )
+            }
         }
     }
 }

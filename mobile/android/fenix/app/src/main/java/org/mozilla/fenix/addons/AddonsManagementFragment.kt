@@ -334,9 +334,12 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
     }
 
     private fun announceForAccessibility(announcementText: CharSequence) {
-        val event = AccessibilityEvent.obtain(
-            AccessibilityEvent.TYPE_ANNOUNCEMENT,
-        )
+        val event = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            AccessibilityEvent(AccessibilityEvent.TYPE_ANNOUNCEMENT)
+        } else {
+            @Suppress("DEPRECATION")
+            AccessibilityEvent.obtain(AccessibilityEvent.TYPE_ANNOUNCEMENT)
+        }
 
         binding?.addonProgressOverlay?.overlayCardView?.onInitializeAccessibilityEvent(event)
         event.text.add(announcementText)
