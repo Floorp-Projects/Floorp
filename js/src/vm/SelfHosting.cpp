@@ -1807,20 +1807,6 @@ static bool intrinsic_HostResolveImportedModule(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_InitializeEnvironment(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-
-  if (!ModuleInitializeEnvironment(cx, module)) {
-    return false;
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool intrinsic_ExecuteModule(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
@@ -1892,15 +1878,6 @@ static bool intrinsic_CreateTopLevelCapability(JSContext* cx, unsigned argc,
   }
   args.rval().setObject(*result);
   return true;
-}
-
-static bool intrinsic_ModuleInitializeEnvironment(JSContext* cx, unsigned argc,
-                                                  Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-
-  return ModuleInitializeEnvironment(cx, module);
 }
 
 static bool intrinsic_ModuleTopLevelCapabilityResolve(JSContext* cx,
@@ -2175,7 +2152,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("HostResolveImportedModule", intrinsic_HostResolveImportedModule, 2,
           0),
     JS_FN("InitAsyncEvaluating", intrinsic_InitAsyncEvaluating, 1, 0),
-    JS_FN("InitializeEnvironment", intrinsic_InitializeEnvironment, 1, 0),
     JS_FN("IntrinsicAsyncGeneratorNext", AsyncGeneratorNext, 1, 0),
     JS_FN("IntrinsicAsyncGeneratorReturn", AsyncGeneratorReturn, 1, 0),
     JS_FN("IntrinsicAsyncGeneratorThrow", AsyncGeneratorThrow, 1, 0),
@@ -2227,8 +2203,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_IsWrappedInstanceOfBuiltin<ArrayBufferObject>, 1, 0),
     JS_FN("IsWrappedSharedArrayBuffer",
           intrinsic_IsWrappedInstanceOfBuiltin<SharedArrayBufferObject>, 1, 0),
-    JS_FN("ModuleInitializeEnvironment", intrinsic_ModuleInitializeEnvironment,
-          1, 0),
     JS_FN("ModuleTopLevelCapabilityReject",
           intrinsic_ModuleTopLevelCapabilityReject, 2, 0),
     JS_FN("ModuleTopLevelCapabilityResolve",

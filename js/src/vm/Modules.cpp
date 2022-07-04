@@ -140,7 +140,7 @@ JS_PUBLIC_API bool JS::ModuleInstantiate(JSContext* cx,
   CHECK_THREAD(cx);
   cx->releaseCheck(moduleArg);
 
-  return ModuleObject::Instantiate(cx, moduleArg.as<ModuleObject>());
+  return js::ModuleInstantiate(cx, moduleArg.as<ModuleObject>());
 }
 
 JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
@@ -302,6 +302,8 @@ using ResolveSet = GCVector<ResolveSetEntry, 0, SystemAllocPolicy>;
 using ModuleSet =
     GCHashSet<ModuleObject*, DefaultHasher<ModuleObject*>, SystemAllocPolicy>;
 
+using ModuleVector = GCVector<ModuleObject*, 0, SystemAllocPolicy>;
+
 static ModuleObject* HostResolveImportedModule(
     JSContext* cx, Handle<ModuleObject*> module,
     Handle<ModuleRequestObject*> moduleRequest,
@@ -312,6 +314,9 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
                                 MutableHandle<Value> result);
 static ModuleNamespaceObject* ModuleNamespaceCreate(
     JSContext* cx, Handle<ModuleObject*> module, Handle<ArrayObject*> exports);
+static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
+                               MutableHandle<ModuleVector> stack, size_t index,
+                               size_t* indexOut);
 
 static ArrayObject* NewList(JSContext* cx) {
   // Note that this creates an ArrayObject, not a ListObject (see vm/List.h).
@@ -329,6 +334,31 @@ static bool ArrayContainsName(Handle<ArrayObject*> array,
 
   return false;
 }
+
+#ifdef DEBUG
+
+static bool ContainsElement(Handle<ModuleVector> stack, ModuleObject* module) {
+  for (ModuleObject* m : stack) {
+    if (m == module) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+static size_t CountElements(Handle<ModuleVector> stack, ModuleObject* module) {
+  size_t count = 0;
+  for (ModuleObject* m : stack) {
+    if (m == module) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+#endif
 
 // https://tc39.es/ecma262/#sec-getexportednames
 // ES2023 16.2.1.6.2 GetExportedNames
@@ -1011,4 +1041,175 @@ bool js::ModuleInitializeEnvironment(JSContext* cx,
   //                 and privateEnv.
   // Step 24.a.iii.2. Perform ! env.InitializeBinding(dn, fo).
   return ModuleObject::instantiateFunctionDeclarations(cx, module);
+}
+
+// https://tc39.es/ecma262/#sec-moduledeclarationlinking
+// ES2023 16.2.1.5.1 Link
+bool js::ModuleInstantiate(JSContext* cx, Handle<ModuleObject*> module) {
+  // Step 1. Assert: module.[[Status]] is not linking or evaluating.
+  MOZ_ASSERT(module->status() != MODULE_STATUS_LINKING &&
+             module->status() != MODULE_STATUS_EVALUATING);
+
+  // Step 2. Let stack be a new empty List.
+  Rooted<ModuleVector> stack(cx);
+
+  // Step 3. Let result be Completion(InnerModuleLinking(module, stack, 0)).
+  size_t ignored;
+  bool ok = InnerModuleLinking(cx, module, &stack, 0, &ignored);
+
+  // Step 4. If result is an abrupt completion, then:
+  if (!ok) {
+    // Step 4.a. For each Cyclic Module Record m of stack, do:
+    for (ModuleObject* m : stack) {
+      // Step 4.a.i. Assert: m.[[Status]] is linking.
+      MOZ_ASSERT(m->status() == MODULE_STATUS_LINKING);
+      // Step 4.a.ii. Set m.[[Status]] to unlinked.
+      m->setStatus(MODULE_STATUS_UNLINKED);
+      m->clearDfsIndexes();
+    }
+
+    // Step 4.b. Assert: module.[[Status]] is unlinked.
+    MOZ_ASSERT(module->status() == MODULE_STATUS_UNLINKED);
+
+    // Step 4.c.
+    return false;
+  }
+
+  // Step 5. Assert: module.[[Status]] is linked, evaluating-async, or
+  //         evaluated.
+  MOZ_ASSERT(module->status() == MODULE_STATUS_LINKED ||
+             module->status() == MODULE_STATUS_EVALUATED ||
+             module->status() == MODULE_STATUS_EVALUATED_ERROR);
+
+  // Step 6. Assert: stack is empty.
+  MOZ_ASSERT(stack.empty());
+
+  // Step 7. Return unused.
+  return true;
+}
+
+// https://tc39.es/ecma262/#sec-InnerModuleLinking
+// ES2023 16.2.1.5.1.1 InnerModuleLinking
+static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
+                               MutableHandle<ModuleVector> stack, size_t index,
+                               size_t* indexOut) {
+  // Step 2. If module.[[Status]] is linking, linked, evaluating-async, or
+  //         evaluated, then:
+  if (module->status() == MODULE_STATUS_LINKING ||
+      module->status() == MODULE_STATUS_LINKED ||
+      module->status() == MODULE_STATUS_EVALUATED ||
+      module->status() == MODULE_STATUS_EVALUATED_ERROR) {
+    // Step 2.a. Return index.
+    *indexOut = index;
+    return true;
+  }
+
+  // Step 3. Assert: module.[[Status]] is unlinked.
+  if (module->status() != MODULE_STATUS_UNLINKED) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_BAD_MODULE_STATUS);
+    return false;
+  }
+
+  // Step 8. Append module to stack.
+  // Do this before changing the status so that we can recover on failure.
+  if (!stack.append(module)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Step 4. Set module.[[Status]] to linking.
+  module->setStatus(MODULE_STATUS_LINKING);
+
+  // Step 5. Set module.[[DFSIndex]] to index.
+  module->setDfsIndex(index);
+
+  // Step 6. Set module.[[DFSAncestorIndex]] to index.
+  module->setDfsAncestorIndex(index);
+
+  // Step 7. Set index to index + 1.
+  index++;
+
+  // Step 9. For each String required that is an element of
+  //         module.[[RequestedModules]], do:
+  Rooted<ArrayObject*> requestedModules(cx, &module->requestedModules());
+  Rooted<ModuleRequestObject*> moduleRequest(cx);
+  Rooted<ModuleObject*> requiredModule(cx);
+  for (uint32_t i = 0; i != requestedModules->length(); i++) {
+    moduleRequest = requestedModules->getDenseElement(i)
+                        .toObject()
+                        .as<RequestedModuleObject>()
+                        .moduleRequest();
+
+    // Step 9.a. Let requiredModule be ? HostResolveImportedModule(module,
+    //           required).
+    requiredModule = HostResolveImportedModule(cx, module, moduleRequest,
+                                               MODULE_STATUS_UNLINKED);
+    if (!requiredModule) {
+      return false;
+    }
+
+    // Step 9.b. Set index to ? InnerModuleLinking(requiredModule, stack,
+    //           index).
+    if (!InnerModuleLinking(cx, requiredModule, stack, index, &index)) {
+      return false;
+    }
+
+    // Step 9.c. If requiredModule is a Cyclic Module Record, then:
+    // Step 9.c.i. Assert: requiredModule.[[Status]] is either linking, linked,
+    //             evaluating-async, or evaluated.
+    MOZ_ASSERT(requiredModule->status() == MODULE_STATUS_LINKING ||
+               requiredModule->status() == MODULE_STATUS_LINKED ||
+               requiredModule->status() == MODULE_STATUS_EVALUATED ||
+               requiredModule->status() == MODULE_STATUS_EVALUATED_ERROR);
+
+    // Step 9.c.ii. Assert: requiredModule.[[Status]] is linking if and only if
+    //              requiredModule is in stack.
+    MOZ_ASSERT((requiredModule->status() == MODULE_STATUS_LINKING) ==
+               ContainsElement(stack, requiredModule));
+
+    // Step 9.c.iii. If requiredModule.[[Status]] is linking, then:
+    if (requiredModule->status() == MODULE_STATUS_LINKING) {
+      // Step 9.c.iii.1. Set module.[[DFSAncestorIndex]] to
+      //                 min(module.[[DFSAncestorIndex]],
+      //                 requiredModule.[[DFSAncestorIndex]]).
+      module->setDfsAncestorIndex(std::min(module->dfsAncestorIndex(),
+                                           requiredModule->dfsAncestorIndex()));
+    }
+  }
+
+  // Step 10. Perform ? module.InitializeEnvironment().
+  if (!ModuleInitializeEnvironment(cx, module)) {
+    return false;
+  }
+
+  // Step 11. Assert: module occurs exactly once in stack.
+  MOZ_ASSERT(CountElements(stack, module) == 1);
+
+  // Step 12. Assert: module.[[DFSAncestorIndex]] <= module.[[DFSIndex]].
+  MOZ_ASSERT(module->dfsAncestorIndex() <= module->dfsIndex());
+
+  // Step 13. If module.[[DFSAncestorIndex]] = module.[[DFSIndex]], then
+  if (module->dfsAncestorIndex() == module->dfsIndex()) {
+    // Step 13.a.
+    bool done = false;
+
+    // Step 13.b. Repeat, while done is false:
+    while (!done) {
+      // Step 13.b.i. Let requiredModule be the last element in stack.
+      // Step 13.b.ii. Remove the last element of stack.
+      requiredModule = stack.popCopy();
+
+      // Step 13.b.iv. Set requiredModule.[[Status]] to linked.
+      requiredModule->setStatus(MODULE_STATUS_LINKED);
+
+      // Step 13.b.v. If requiredModule and module are the same Module Record,
+      //              set done to true.
+      done = requiredModule == module;
+    }
+  }
+
+  // Step 14. Return index.
+  *indexOut = index;
+  return true;
 }

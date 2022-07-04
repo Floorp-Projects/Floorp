@@ -1114,6 +1114,19 @@ ModuleStatus ModuleObject::status() const {
   return status;
 }
 
+void ModuleObject::setStatus(ModuleStatus newStatus) {
+  AssertValidModuleStatus(newStatus);
+
+  // Note that under OOM conditions we can fail the module instantiation process
+  // even after modules have been marked as instantiated.
+  MOZ_ASSERT((status() <= MODULE_STATUS_LINKED &&
+              newStatus == MODULE_STATUS_UNLINKED) ||
+                 newStatus > status(),
+             "New module status inconsistent with current status");
+
+  setReservedSlot(StatusSlot, Int32Value(newStatus));
+}
+
 bool ModuleObject::isAsync() const {
   return getReservedSlot(AsyncSlot).toBoolean();
 }
@@ -1138,11 +1151,30 @@ void ModuleObject::setAsyncEvaluatingFalse() {
 }
 
 uint32_t ModuleObject::dfsIndex() const {
-  return getReservedSlot(DFSIndexSlot).toInt32();
+  int32_t index = getReservedSlot(DFSIndexSlot).toInt32();
+  MOZ_ASSERT(index >= 0);
+  return index;
+}
+
+void ModuleObject::setDfsIndex(uint32_t index) {
+  MOZ_ASSERT(index <= INT32_MAX);
+  setReservedSlot(DFSIndexSlot, Int32Value(index));
 }
 
 uint32_t ModuleObject::dfsAncestorIndex() const {
-  return getReservedSlot(DFSAncestorIndexSlot).toInt32();
+  int32_t index = getReservedSlot(DFSAncestorIndexSlot).toInt32();
+  MOZ_ASSERT(index >= 0);
+  return index;
+}
+
+void ModuleObject::setDfsAncestorIndex(uint32_t index) {
+  MOZ_ASSERT(index <= INT32_MAX);
+  setReservedSlot(DFSAncestorIndexSlot, Int32Value(index));
+}
+
+void ModuleObject::clearDfsIndexes() {
+  setReservedSlot(DFSIndexSlot, UndefinedValue());
+  setReservedSlot(DFSAncestorIndexSlot, UndefinedValue());
 }
 
 JSObject* ModuleObject::topLevelCapability() const {
@@ -1372,11 +1404,15 @@ static bool InvokeSelfHostedMethod(JSContext* cx, Handle<ModuleObject*> self,
   return CallSelfHostedFunction(cx, name, thisv, args, rval);
 }
 
-/* static */
-bool ModuleObject::Instantiate(JSContext* cx, Handle<ModuleObject*> self) {
-  RootedValue ignored(cx);
-  return InvokeSelfHostedMethod(cx, self, cx->names().ModuleInstantiate,
-                                &ignored);
+static bool module_InstantiateImpl(JSContext* cx, const CallArgs& args) {
+  Rooted<ModuleObject*> module(cx, &args.thisv().toObject().as<ModuleObject>());
+  return js::ModuleInstantiate(cx, module);
+}
+
+static bool module_Instantiate(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<ModuleObject::isInstance, module_InstantiateImpl>(
+      cx, args);
 }
 
 /* static */
@@ -1432,7 +1468,7 @@ bool GlobalObject::initModuleProto(JSContext* cx,
       JS_PS_END};
 
   static const JSFunctionSpec protoFunctions[] = {
-      JS_SELF_HOSTED_FN("declarationInstantiation", "ModuleInstantiate", 0, 0),
+      JS_FN("declarationInstantiation", module_Instantiate, 0, 0),
       JS_SELF_HOSTED_FN("evaluation", "ModuleEvaluate", 0, 0),
       JS_SELF_HOSTED_FN("gatherAsyncParentCompletions",
                         "GatherAsyncParentCompletions", 2, 0),
