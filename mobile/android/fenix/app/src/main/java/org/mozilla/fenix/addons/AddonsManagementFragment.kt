@@ -341,10 +341,12 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         binding?.addonProgressOverlay?.overlayCardView?.onInitializeAccessibilityEvent(event)
         event.text.add(announcementText)
         event.contentDescription = null
-        binding?.addonProgressOverlay?.overlayCardView?.parent?.requestSendAccessibilityEvent(
-            binding?.addonProgressOverlay?.overlayCardView,
-            event,
-        )
+        binding?.addonProgressOverlay?.overlayCardView?.let {
+            it.parent?.requestSendAccessibilityEvent(
+                it,
+                event,
+            )
+        }
     }
 
     companion object {
