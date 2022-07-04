@@ -53,6 +53,7 @@ class Message extends Component {
       open: PropTypes.bool,
       collapsible: PropTypes.bool,
       collapseTitle: PropTypes.string,
+      disabled: PropTypes.bool,
       onToggle: PropTypes.func,
       source: PropTypes.string.isRequired,
       type: PropTypes.string.isRequired,
@@ -142,7 +143,11 @@ class Message extends Component {
     // Don't bubble up to the main App component, which  redirects focus to input,
     // making difficult for screen reader users to review output
     e.stopPropagation();
-    const { open, dispatch, messageId, onToggle } = this.props;
+    const { open, dispatch, messageId, onToggle, disabled } = this.props;
+
+    if (disabled) {
+      return;
+    }
 
     // Early exit the function to avoid the message to collapse if the user is
     // selecting a range in the toggle message.
@@ -175,10 +180,24 @@ class Message extends Component {
   }
 
   renderIcon() {
-    const { level, inWarningGroup, isBlockedNetworkMessage, type } = this.props;
+    const {
+      level,
+      inWarningGroup,
+      isBlockedNetworkMessage,
+      type,
+      disabled,
+    } = this.props;
 
     if (inWarningGroup) {
       return undefined;
+    }
+
+    if (disabled) {
+      return MessageIcon({
+        level: MESSAGE_LEVEL.INFO,
+        type,
+        title: l10n.getStr("webconsole.disableIcon.title"),
+      });
     }
 
     if (isBlockedNetworkMessage) {
@@ -270,6 +289,7 @@ class Message extends Component {
       open,
       collapsible,
       collapseTitle,
+      disabled,
       source,
       type,
       level,
@@ -288,6 +308,10 @@ class Message extends Component {
     topLevelClasses.push("message", source, type, level);
     if (open) {
       topLevelClasses.push("open");
+    }
+
+    if (disabled) {
+      topLevelClasses.push("disabled");
     }
 
     const timestampEl = this.renderTimestamp();
@@ -322,7 +346,7 @@ class Message extends Component {
 
     // If there is an expandable part, make it collapsible.
     let collapse = null;
-    if (collapsible) {
+    if (collapsible && !disabled) {
       collapse = createElement(CollapseButton, {
         open,
         title: collapseTitle,

@@ -2908,6 +2908,16 @@ Toolbox.prototype = {
   },
 
   /**
+   * Disable all network logs in the console
+   */
+  disableAllConsoleNetworkLogs: function() {
+    const consolePanel = this.getPanel("webconsole");
+    if (consolePanel) {
+      consolePanel.hud.ui.disableAllNetworkMessages();
+    }
+  },
+
+  /**
    * If the console is split and we are focusing an element outside
    * of the console, then store the newly focused element, so that
    * it can be restored once the split console closes.
