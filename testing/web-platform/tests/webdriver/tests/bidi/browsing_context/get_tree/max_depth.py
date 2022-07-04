@@ -12,7 +12,6 @@ async def test_params_boundaries(bidi_session, value):
 
 async def test_null(
     bidi_session,
-    current_session,
     top_context,
     test_page,
     test_page_same_origin_frame,
@@ -22,8 +21,8 @@ async def test_null(
         context=top_context["context"], url=test_page_nested_frames, wait="complete"
     )
 
-    # Retrieve browsing contexts for current tab only
-    top_level_context_id = current_session.window_handle
+    # Retrieve browsing contexts for first tab only
+    top_level_context_id = top_context["context"]
     contexts = await bidi_session.browsing_context.get_tree(root=top_level_context_id)
 
     assert len(contexts) == 1
@@ -60,13 +59,13 @@ async def test_null(
     assert child2_info["context"] != child1_info["context"]
 
 
-async def test_top_level_only(bidi_session, current_session, top_context, test_page_nested_frames):
+async def test_top_level_only(bidi_session, top_context, test_page_nested_frames):
     await bidi_session.browsing_context.navigate(
         context=top_context["context"], url=test_page_nested_frames, wait="complete"
     )
 
-    # Retrieve browsing contexts for current tab only
-    top_level_context_id = current_session.window_handle
+    # Retrieve browsing contexts for first tab only
+    top_level_context_id = top_context["context"]
     contexts = await bidi_session.browsing_context.get_tree(
         max_depth=0,
         root=top_level_context_id
@@ -85,7 +84,6 @@ async def test_top_level_only(bidi_session, current_session, top_context, test_p
 
 async def test_top_level_and_one_child(
     bidi_session,
-    current_session,
     top_context,
     test_page_nested_frames,
     test_page_same_origin_frame,
@@ -94,8 +92,8 @@ async def test_top_level_and_one_child(
         context=top_context["context"], url=test_page_nested_frames, wait="complete"
     )
 
-    # Retrieve browsing contexts for current tab only
-    top_level_context_id = current_session.window_handle
+    # Retrieve browsing contexts for first tab only
+    top_level_context_id = top_context["context"]
     contexts = await bidi_session.browsing_context.get_tree(
         max_depth=1,
         root=top_level_context_id
