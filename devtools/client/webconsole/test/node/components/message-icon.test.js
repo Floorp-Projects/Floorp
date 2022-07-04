@@ -28,4 +28,16 @@ describe("MessageIcon component:", () => {
     );
     expect(rendered.hasClass("logpoint")).toBe(true);
   });
+
+  it("renders icon with custom title", () => {
+    const expectedTitle = "Rendered with custom title";
+    const rendered = render(
+      MessageIcon({
+        level: MESSAGE_LEVEL.INFO,
+        type: "info",
+        title: expectedTitle,
+      })
+    );
+    expect(rendered.attr("title")).toBe(expectedTitle);
+  });
 });
