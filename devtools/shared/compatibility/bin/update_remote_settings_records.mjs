@@ -19,7 +19,12 @@
 // from the appropriate collection in RemoteSettings.
 
 import fetch from "node-fetch";
-import compatData from "@mdn/browser-compat-data";
+
+// Use the legacy wrapper to support all Node 12+ versions.
+// If we only support Node 16+, can be updated to:
+//   import bcd from '@mdn/browser-compat-data' assert { type: 'json' };
+// See https://github.com/mdn/browser-compat-data.
+import compatData from "@mdn/browser-compat-data/forLegacyNode";
 
 if (!process.env.AUTH) {
   throw new Error(`AUTH environment variable needs to be set`);
