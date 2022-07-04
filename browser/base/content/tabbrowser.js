@@ -2287,7 +2287,7 @@
             getter = () => {
               if (AppConstants.NIGHTLY_BUILD) {
                 let message = `[bug 1345098] Lazy browser prematurely inserted via '${name}' property access:\n`;
-                console.log(message + new Error().stack);
+                Services.console.logStringMessage(message + new Error().stack);
               }
               this._insertBrowser(aTab);
               return browser[name];
@@ -2295,7 +2295,7 @@
             setter = value => {
               if (AppConstants.NIGHTLY_BUILD) {
                 let message = `[bug 1345098] Lazy browser prematurely inserted via '${name}' property access:\n`;
-                console.log(message + new Error().stack);
+                Services.console.logStringMessage(message + new Error().stack);
               }
               this._insertBrowser(aTab);
               return (browser[name] = value);
