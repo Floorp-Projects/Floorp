@@ -36,7 +36,6 @@
 #  include "builtin/intl/RelativeTimeFormat.h"
 #endif
 #include "builtin/MapObject.h"
-#include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
 #include "builtin/Promise.h"
 #include "builtin/Reflect.h"
@@ -1782,18 +1781,6 @@ static bool intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_GetCycleRoot(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  Rooted<ModuleObject*> module(cx, &args[0].toObject().as<ModuleObject>());
-  JSObject* result = module->getCycleRoot();
-  if (!result) {
-    return false;
-  }
-  args.rval().setObject(*result);
-  return true;
-}
-
 static bool intrinsic_PromiseResolve(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
@@ -1978,7 +1965,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GeneratorIsRunning", intrinsic_GeneratorIsRunning, 1, 0),
     JS_FN("GeneratorObjectIsClosed", intrinsic_GeneratorObjectIsClosed, 1, 0),
     JS_FN("GeneratorSetClosed", intrinsic_GeneratorSetClosed, 1, 0),
-    JS_FN("GetCycleRoot", intrinsic_GetCycleRoot, 1, 0),
     JS_FN("GetElemBaseForLambda", intrinsic_GetElemBaseForLambda, 1, 0),
     JS_FN("GetErrorMessage", intrinsic_GetErrorMessage, 1, 0),
     JS_INLINABLE_FN("GetFirstDollarIndex", GetFirstDollarIndex, 1, 0,

@@ -219,7 +219,3 @@ t.declarationInstantiation();
 t.evaluation();
 testMethod(t, "declarationInstantiation");
 testMethod(t, "evaluation");
-
-// ==== gatherAsyncParentCompletions method shouldn't be exposed ====
-const s = parseModule(``);
-assertEq(s.gatherAsyncParentCompletions, undefined);

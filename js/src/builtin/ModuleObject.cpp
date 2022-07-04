@@ -1199,7 +1199,7 @@ void ModuleObject::setInitialTopLevelCapability(HandleObject promiseObj) {
   initReservedSlot(TopLevelCapabilitySlot, ObjectValue(*promiseObj));
 }
 
-inline ListObject* ModuleObject::asyncParentModules() const {
+ListObject* ModuleObject::asyncParentModules() const {
   return &getReservedSlot(AsyncParentModulesSlot).toObject().as<ListObject>();
 }
 
@@ -1472,10 +1472,7 @@ bool GlobalObject::initModuleProto(JSContext* cx,
 
   static const JSFunctionSpec protoFunctions[] = {
       JS_FN("declarationInstantiation", module_Instantiate, 0, 0),
-      JS_FN("evaluation", module_Evaluate, 0, 0),
-      JS_SELF_HOSTED_FN("gatherAsyncParentCompletions",
-                        "GatherAsyncParentCompletions", 2, 0),
-      JS_FS_END};
+      JS_FN("evaluation", module_Evaluate, 0, 0), JS_FS_END};
 
   RootedObject proto(
       cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
@@ -2322,26 +2319,6 @@ bool js::AsyncModuleExecutionRejectedHandler(JSContext* cx, unsigned argc,
 }
 
 // Top Level Await
-// https://tc39.es/proposal-top-level-await/#sec-gather-async-parent-completions
-bool ModuleObject::GatherAsyncParentCompletions(
-    JSContext* cx, Handle<ModuleObject*> module,
-    MutableHandle<ArrayObject*> execList) {
-  FixedInvokeArgs<1> args(cx);
-  args[0].setObject(*module);
-
-  RootedValue rval(cx);
-  if (!CallSelfHostedFunction(cx, cx->names().GatherAsyncParentCompletions,
-                              UndefinedHandleValue, args, &rval)) {
-    // This will happen if we OOM, we don't have a good way of handling this in
-    // this specific situationn (promise resolution is in progress) so we will
-    // reject the promise.
-    return false;
-  }
-  execList.set(&rval.toObject().as<ArrayObject>());
-  return true;
-}
-
-// Top Level Await
 // https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionfulfilled
 void js::AsyncModuleExecutionFulfilled(JSContext* cx,
                                        Handle<ModuleObject*> module) {
@@ -2361,8 +2338,8 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
     }
   }
 
-  Rooted<ArrayObject*> sortedList(cx);
-  if (!ModuleObject::GatherAsyncParentCompletions(cx, module, &sortedList)) {
+  Rooted<ModuleVector> sortedList(cx);
+  if (!GatherAvailableModuleAncestors(cx, module, &sortedList)) {
     // We have OOM'd -- all bets are off, reject the promise. Not much more we
     // can do.
     MOZ_ASSERT(cx->isExceptionPending());
@@ -2379,9 +2356,9 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
 
   Rooted<ModuleObject*> m(cx);
 
-  uint32_t length = sortedList->length();
-  for (uint32_t i = 0; i < length; i++) {
-    m = &sortedList->getDenseElement(i).toObject().as<ModuleObject>();
+  for (ModuleObject* obj : sortedList) {
+    m = obj;
+
     // Step 2.
     if (!m->isAsyncEvaluating()) {
       MOZ_ASSERT(m->hadEvaluationError());

@@ -595,7 +595,6 @@ selfhosted_inputs = [
     "builtin/Generator.js",
     "builtin/Iterator.js",
     "builtin/Map.js",
-    "builtin/Module.js",
     "builtin/Number.js",
     "builtin/Object.js",
     "builtin/Promise.js",
