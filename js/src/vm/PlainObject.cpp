@@ -207,13 +207,34 @@ PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
     return nullptr;
   }
 
-  RootedId propid(cx);
-  RootedValue value(cx);
+  Rooted<PropertyKey> key(cx);
+  Rooted<Value> value(cx);
 
   for (size_t i = 0; i < nproperties; i++) {
-    propid = properties[i].id;
+    key = properties[i].id;
     value = properties[i].value;
-    if (!NativeDefineDataProperty(cx, obj, propid, value, JSPROP_ENUMERATE)) {
+
+    // Integer keys may need to be stored in dense elements. This is uncommon so
+    // just fall back to NativeDefineDataProperty.
+    if (MOZ_UNLIKELY(key.isInt())) {
+      if (!NativeDefineDataProperty(cx, obj, key, value, JSPROP_ENUMERATE)) {
+        return nullptr;
+      }
+      continue;
+    }
+
+    MOZ_ASSERT(key.isAtom() || key.isSymbol());
+
+    // Check for duplicate keys. In this case we must overwrite the earlier
+    // property value.
+    mozilla::Maybe<PropertyInfo> prop = obj->lookup(cx, key);
+    if (MOZ_UNLIKELY(prop)) {
+      MOZ_ASSERT(prop->isDataProperty());
+      obj->setSlot(prop->slot(), value);
+      continue;
+    }
+
+    if (!AddDataPropertyToPlainObject(cx, obj, key, value)) {
       return nullptr;
     }
   }
