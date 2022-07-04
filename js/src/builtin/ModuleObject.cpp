@@ -997,10 +997,9 @@ uint32_t nextPostOrder() {
   return ordinal;
 }
 
-bool ModuleObject::initAsyncEvaluatingSlot() {
+void ModuleObject::setAsyncEvaluating() {
   initReservedSlot(AsyncEvaluatingPostOrderSlot,
                    PrivateUint32Value(nextPostOrder()));
-  return true;
 }
 
 void ModuleObject::initScriptSlots(HandleScript script) {
@@ -1132,11 +1131,13 @@ bool ModuleObject::isAsync() const {
 }
 
 bool ModuleObject::isAsyncEvaluating() const {
-  if (getReservedSlot(AsyncEvaluatingPostOrderSlot).isUndefined()) {
-    return false;
-  }
-  return getReservedSlot(AsyncEvaluatingPostOrderSlot).toPrivateUint32() !=
-         ASYNC_EVALUATING_POST_ORDER_FALSE;
+  return !getReservedSlot(AsyncEvaluatingPostOrderSlot).isUndefined() &&
+         !wasAsyncEvaluating();
+}
+
+bool ModuleObject::wasAsyncEvaluating() const {
+  return getReservedSlot(AsyncEvaluatingPostOrderSlot) ==
+         PrivateUint32Value(ASYNC_EVALUATING_POST_ORDER_FALSE);
 }
 
 void ModuleObject::setAsyncEvaluatingFalse() {
@@ -1321,8 +1322,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
 }
 
 /* static */
-bool ModuleObject::execute(JSContext* cx, Handle<ModuleObject*> self,
-                           MutableHandleValue rval) {
+bool ModuleObject::execute(JSContext* cx, Handle<ModuleObject*> self) {
 #ifdef DEBUG
   MOZ_ASSERT(self->status() == MODULE_STATUS_EVALUATING ||
              self->status() == MODULE_STATUS_EVALUATED);
@@ -1349,7 +1349,8 @@ bool ModuleObject::execute(JSContext* cx, Handle<ModuleObject*> self,
     return false;
   }
 
-  return Execute(cx, script, env, rval);
+  Rooted<Value> ignored(cx);
+  return Execute(cx, script, env, &ignored);
 }
 
 /* static */
@@ -1395,15 +1396,6 @@ bool ModuleObject::createEnvironment(JSContext* cx,
   return true;
 }
 
-static bool InvokeSelfHostedMethod(JSContext* cx, Handle<ModuleObject*> self,
-                                   Handle<PropertyName*> name,
-                                   MutableHandleValue rval) {
-  RootedValue thisv(cx, ObjectValue(*self));
-  FixedInvokeArgs<0> args(cx);
-
-  return CallSelfHostedFunction(cx, name, thisv, args, rval);
-}
-
 static bool module_InstantiateImpl(JSContext* cx, const CallArgs& args) {
   Rooted<ModuleObject*> module(cx, &args.thisv().toObject().as<ModuleObject>());
   return js::ModuleInstantiate(cx, module);
@@ -1415,10 +1407,21 @@ static bool module_Instantiate(JSContext* cx, unsigned argc, Value* vp) {
       cx, args);
 }
 
-/* static */
-bool ModuleObject::Evaluate(JSContext* cx, Handle<ModuleObject*> self,
-                            MutableHandleValue rval) {
-  return InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluate, rval);
+static bool module_EvaluateImpl(JSContext* cx, const CallArgs& args) {
+  Rooted<ModuleObject*> module(cx, &args.thisv().toObject().as<ModuleObject>());
+  Rooted<Value> result(cx);
+  if (!js::ModuleEvaluate(cx, module, &result)) {
+    return false;
+  }
+
+  args.rval().set(result);
+  return true;
+}
+
+static bool module_Evaluate(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<ModuleObject::isInstance, module_EvaluateImpl>(
+      cx, args);
 }
 
 DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, NamespaceSlot)
@@ -1469,7 +1472,7 @@ bool GlobalObject::initModuleProto(JSContext* cx,
 
   static const JSFunctionSpec protoFunctions[] = {
       JS_FN("declarationInstantiation", module_Instantiate, 0, 0),
-      JS_SELF_HOSTED_FN("evaluation", "ModuleEvaluate", 0, 0),
+      JS_FN("evaluation", module_Evaluate, 0, 0),
       JS_SELF_HOSTED_FN("gatherAsyncParentCompletions",
                         "GatherAsyncParentCompletions", 2, 0),
       JS_FS_END};
@@ -2374,7 +2377,6 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
   // this is out of step with the spec in order to be able to OOM
   module->setAsyncEvaluatingFalse();
 
-  RootedValue ignored(cx);
   Rooted<ModuleObject*> m(cx);
 
   uint32_t length = sortedList->length();
@@ -2392,9 +2394,9 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
                  m->status() == MODULE_STATUS_EVALUATED);
       MOZ_ASSERT(m->isAsync());
       MOZ_ASSERT(m->isAsyncEvaluating());
-      ModuleObject::execute(cx, m, &ignored);
+      MOZ_ALWAYS_TRUE(ModuleObject::execute(cx, m));
     } else {
-      if (!ModuleObject::execute(cx, m, &ignored)) {
+      if (!ModuleObject::execute(cx, m)) {
         MOZ_ASSERT(cx->isExceptionPending());
         RootedValue exception(cx);
         if (!cx->getPendingException(&exception)) {
