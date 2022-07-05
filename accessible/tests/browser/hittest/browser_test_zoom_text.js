@@ -7,9 +7,9 @@
 /**
  * Test if getOffsetAtPoint returns the given text offset at given coordinates.
  */
-function testOffsetAtPoint(hyperText, x, y, coordType, expectedOffset) {
-  is(
-    hyperText.getOffsetAtPoint(x, y, coordType),
+async function testOffsetAtPoint(hyperText, x, y, coordType, expectedOffset) {
+  await untilCacheIs(
+    () => hyperText.getOffsetAtPoint(x, y, coordType),
     expectedOffset,
     `Wrong offset at given point (${x}, ${y}) for ${prettyName(hyperText)}`
   );
@@ -33,7 +33,7 @@ async function runTests(browser, accDoc) {
     await getContentDPR(browser)
   );
 
-  testOffsetAtPoint(
+  await testOffsetAtPoint(
     hyperText,
     x + width / 2,
     y + height / 2,
@@ -55,7 +55,7 @@ async function runTests(browser, accDoc) {
     await getContentDPR(browser)
   );
 
-  testOffsetAtPoint(
+  await testOffsetAtPoint(
     hyperText,
     x + width / 2,
     y + height / 2,
