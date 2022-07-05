@@ -1066,6 +1066,12 @@ async function assertScopes(dbg, items) {
   is(getScopeLabel(dbg, items.length + 1), "Window");
 }
 
+function findSourceTreeThreadByName(dbg, name) {
+  return [...findAllElements(dbg, "sourceTreeThreads")].find(el => {
+    return el.textContent.includes(name);
+  });
+}
+
 function findSourceNodeWithText(dbg, text) {
   return [...findAllElements(dbg, "sourceNodes")].find(el => {
     return el.textContent.includes(text);
