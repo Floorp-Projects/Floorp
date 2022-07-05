@@ -572,8 +572,6 @@ class DiscoveryStreamFeed {
         hybridLayout: pocketConfig.hybridLayout,
         hideCardBackground: pocketConfig.hideCardBackground,
         fourCardLayout: pocketConfig.fourCardLayout,
-        loadMore: pocketConfig.loadMore,
-        lastCardMessageEnabled: pocketConfig.lastCardMessageEnabled,
         pocketButtonEnabled,
         saveToPocketCard: pocketButtonEnabled && pocketConfig.saveToPocketCard,
         newFooterSection: pocketConfig.newFooterSection,
@@ -1977,8 +1975,6 @@ class DiscoveryStreamFeed {
      `hybridLayout` Changes cards to smaller more compact cards only for specific breakpoints.
      `hideCardBackground` Removes Pocket card background and borders.
      `fourCardLayout` Enable four Pocket cards per row.
-     `loadMore` Hide half the Pocket stories behind a load more button.
-     `lastCardMessageEnabled` Shows a message card at the end of the feed.
      `newFooterSection` Changes the layout of the topics section.
      `pocketButtonEnabled` Removes Pocket context menu items from cards.
      `saveToPocketCard` Cards have a save to Pocket button over their thumbnail on hover.
@@ -2001,8 +1997,6 @@ getHardcodedLayout = ({
   hybridLayout = false,
   hideCardBackground = false,
   fourCardLayout = false,
-  loadMore = false,
-  lastCardMessageEnabled = false,
   newFooterSection = false,
   pocketButtonEnabled = false,
   saveToPocketCard = false,
@@ -2112,8 +2106,6 @@ getHardcodedLayout = ({
             }),
             data: widgetData,
           },
-          loadMore,
-          lastCardMessageEnabled,
           pocketButtonEnabled,
           saveToPocketCard,
           cta_variant: "link",

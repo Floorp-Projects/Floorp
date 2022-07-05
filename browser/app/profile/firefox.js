@@ -1526,8 +1526,6 @@ pref("browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout"
 pref("browser.newtabpage.activity-stream.discoverystream.hybridLayout.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.hideCardBackground.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.fourCardLayout.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.loadMore.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.lastCardMessage.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.newFooterSection.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.saveToPocketCard.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.hideDescriptions.enabled", false);
