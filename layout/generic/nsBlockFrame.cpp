@@ -3534,7 +3534,7 @@ bool nsBlockFrame::ShouldApplyBStartMargin(BlockReflowState& aState,
     return true;
   }
 
-  if (!aState.IsAdjacentWithTop()) {
+  if (!aState.IsAdjacentWithBStart()) {
     // If we aren't at the start block-coordinate then something of non-zero
     // height must have been placed. Therefore the childs block-start margin
     // applies.
@@ -3904,7 +3904,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
 
       frameReflowStatus.Reset();
       brc.ReflowBlock(availSpace, applyBStartMargin, aState.mPrevBEndMargin,
-                      clearance, aState.IsAdjacentWithTop(), aLine.get(),
+                      clearance, aState.IsAdjacentWithBStart(), aLine.get(),
                       *childReflowInput, frameReflowStatus, aState);
 
       if (frameReflowStatus.IsInlineBreakBefore()) {
@@ -4048,7 +4048,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
       // Don't force the block to fit if it's impacted by a float. If it is,
       // then pushing it to the next page would give it more room. Note that
       // isImpacted doesn't include impact from the block's own floats.
-      bool forceFit = aState.IsAdjacentWithTop() && clearance <= 0 &&
+      bool forceFit = aState.IsAdjacentWithBStart() && clearance <= 0 &&
                       !floatAvailableSpace.HasFloats();
       nsCollapsingMargin collapsedBEndMargin;
       OverflowAreas overflowAreas;
@@ -6688,7 +6688,7 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowInput);
 
   // Reflow the float
-  bool isAdjacentWithTop = aState.IsAdjacentWithTop();
+  bool isAdjacentWithTop = aState.IsAdjacentWithBStart();
 
   nsIFrame* clearanceFrame = nullptr;
   do {
