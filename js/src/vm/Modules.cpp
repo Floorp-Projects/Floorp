@@ -696,19 +696,6 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
   return true;
 }
 
-static void EnsureModuleEnvironmentNamespace(
-    JSContext* cx, Handle<ModuleObject*> module,
-    Handle<ModuleNamespaceObject*> ns) {
-  Rooted<ModuleEnvironmentObject*> environment(cx,
-                                               &module->initialEnvironment());
-  // The property already exists in the evironment but is not writable, so set
-  // the slot directly.
-  mozilla::Maybe<PropertyInfo> prop =
-      environment->lookup(cx, cx->names().starNamespaceStar);
-  MOZ_ASSERT(prop.isSome());
-  environment->setSlot(prop->slot(), ObjectValue(*ns));
-}
-
 // https://tc39.es/ecma262/#sec-getmodulenamespace
 // ES2023 16.2.1.10 GetModuleNamespace
 ModuleNamespaceObject* js::GetOrCreateModuleNamespace(
@@ -770,6 +757,18 @@ static bool IsResolvedBinding(JSContext* cx, Handle<Value> resolution) {
   return resolution.isObject();
 }
 
+static void InitNamespaceBinding(JSContext* cx,
+                                 Handle<ModuleEnvironmentObject*> env,
+                                 Handle<JSAtom*> name,
+                                 Handle<ModuleNamespaceObject*> ns) {
+  // The property already exists in the evironment but is not writable, so set
+  // the slot directly.
+  RootedId id(cx, AtomToId(name));
+  mozilla::Maybe<PropertyInfo> prop = env->lookup(cx, id);
+  MOZ_ASSERT(prop.isSome());
+  env->setSlot(prop->slot(), ObjectValue(*ns));
+}
+
 // https://tc39.es/ecma262/#sec-modulenamespacecreate
 // ES2023 10.4.6.12 ModuleNamespaceCreate
 static ModuleNamespaceObject* ModuleNamespaceCreate(
@@ -811,7 +810,9 @@ static ModuleNamespaceObject* ModuleNamespaceCreate(
     MOZ_ASSERT(IsResolvedBinding(cx, resolution));
     binding = &resolution.toObject().as<ResolvedBindingObject>();
     importedModule = binding->module();
-    if (binding->bindingName() == cx->names().starNamespaceStar) {
+    bindingName = binding->bindingName();
+
+    if (bindingName == cx->names().starNamespaceStar) {
       importedNamespace = GetOrCreateModuleNamespace(cx, importedModule);
       if (!importedNamespace) {
         return nullptr;
@@ -820,10 +821,11 @@ static ModuleNamespaceObject* ModuleNamespaceCreate(
       // The spec uses an immutable binding here but we have already generated
       // bytecode for an indirect binding. Instead, use an indirect binding to
       // "*namespace*" slot of the target environment.
-      EnsureModuleEnvironmentNamespace(cx, importedModule, importedNamespace);
+      Rooted<ModuleEnvironmentObject*> env(
+          cx, &importedModule->initialEnvironment());
+      InitNamespaceBinding(cx, env, bindingName, importedNamespace);
     }
 
-    bindingName = binding->bindingName();
     if (!ns->addBinding(cx, name, importedModule, bindingName)) {
       return nullptr;
     }
@@ -884,18 +886,6 @@ static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
   }
 
   cx->setPendingException(error, nullptr);
-}
-
-static void InitNamespaceBinding(JSContext* cx,
-                                 Handle<ModuleEnvironmentObject*> env,
-                                 Handle<JSAtom*> name,
-                                 Handle<ModuleNamespaceObject*> ns) {
-  // The property already exists in the evironment but is not writable, so set
-  // the slot directly.
-  RootedId id(cx, AtomToId(name));
-  mozilla::Maybe<PropertyInfo> prop = env->lookup(cx, id);
-  MOZ_ASSERT(prop.isSome());
-  env->setSlot(prop->slot(), ObjectValue(*ns));
 }
 
 // https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment
@@ -1014,7 +1004,9 @@ bool js::ModuleInitializeEnvironment(JSContext* cx,
         // bytecode assuming an indirect binding. Instead, ensure a special
         // "*namespace*"" binding exists on the target module's environment. We
         // then generate an indirect binding to this synthetic binding.
-        EnsureModuleEnvironmentNamespace(cx, sourceModule, ns);
+        Rooted<ModuleEnvironmentObject*> sourceEnv(
+            cx, &sourceModule->initialEnvironment());
+        InitNamespaceBinding(cx, sourceEnv, bindingName, ns);
         if (!env->createImportBinding(cx, localName, sourceModule,
                                       bindingName)) {
           return false;
