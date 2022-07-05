@@ -181,21 +181,6 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
-  ClipboardReadTextPaste: {
-    parent: {
-      moduleURI: "resource://gre/actors/ClipboardReadTextPasteParent.jsm",
-    },
-
-    child: {
-      moduleURI: "resource://gre/actors/ClipboardReadTextPasteChild.jsm",
-      events: {
-        MozClipboardReadTextPaste: {},
-      },
-    },
-
-    allFrames: true,
-  },
-
   Conduits: {
     parent: {
       moduleURI: "resource://gre/modules/ConduitsParent.jsm",
@@ -513,10 +498,26 @@ if (!Services.prefs.getBoolPref("browser.pagedata.enabled", false)) {
   };
 }
 
-/**
- * Note that GeckoView has another implementation in mobile/android/actors.
- */
 if (AppConstants.platform != "android") {
+  // For GeckoView support see bug 1776829.
+  JSWINDOWACTORS.ClipboardReadTextPaste = {
+    parent: {
+      moduleURI: "resource://gre/actors/ClipboardReadTextPasteParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource://gre/actors/ClipboardReadTextPasteChild.jsm",
+      events: {
+        MozClipboardReadTextPaste: {},
+      },
+    },
+
+    allFrames: true,
+  };
+
+  /**
+   * Note that GeckoView has another implementation in mobile/android/actors.
+   */
   JSWINDOWACTORS.Select = {
     parent: {
       moduleURI: "resource://gre/actors/SelectParent.jsm",
