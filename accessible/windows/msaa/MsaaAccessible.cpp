@@ -489,6 +489,16 @@ static already_AddRefed<IDispatch> GetProxiedAccessibleInSubtree(
   return disp.forget();
 }
 
+static bool IsInclusiveDescendantOf(DocAccessible* aAncestor,
+                                    DocAccessible* aDescendant) {
+  for (DocAccessible* doc = aDescendant; doc; doc = doc->ParentDocument()) {
+    if (doc == aAncestor) {
+      return true;
+    }
+  }
+  return false;
+}
+
 already_AddRefed<IAccessible> MsaaAccessible::GetIAccessibleFor(
     const VARIANT& aVarChild, bool* aIsDefunct) {
   if (aVarChild.vt != VT_I4) return nullptr;
@@ -602,9 +612,8 @@ already_AddRefed<IAccessible> MsaaAccessible::GetIAccessibleFor(
       }
       for (DocAccessibleParent* remoteDoc : *remoteDocs) {
         LocalAccessible* outerDoc = remoteDoc->OuterDocOfRemoteBrowser();
-        if (!outerDoc || outerDoc->Document() != localDoc) {
-          // The OuterDoc isn't inside our document, so this isn't a
-          // descendant.
+        if (!outerDoc ||
+            !IsInclusiveDescendantOf(localDoc, outerDoc->Document())) {
           continue;
         }
         child = GetAccessibleInSubtree(remoteDoc, id);
