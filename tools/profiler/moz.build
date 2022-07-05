@@ -106,6 +106,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
         "/mozglue/linker",
         "/netwerk/base",
         "/netwerk/protocol/http",
+        "/toolkit/components/jsoncpp/include",
         "/toolkit/crashreporter/google-breakpad/src",
         "/tools/profiler/core/",
         "/tools/profiler/gecko/",
@@ -195,6 +196,10 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
     EXPORTS.mozilla += [
         "!profiler_ffi_generated.h",
     ]
+
+USE_LIBS += [
+    "jsoncpp",
+]
 
 FINAL_LIBRARY = "xul"
 

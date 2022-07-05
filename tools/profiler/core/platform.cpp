@@ -373,6 +373,30 @@ static constexpr uint32_t StartupExtraDefaultFeatures() {
   return ProfilerFeature::FileIOAll | ProfilerFeature::IPCMessages;
 }
 
+/* static */ mozilla::baseprofiler::detail::BaseProfilerMutex
+    ProfilingLog::gMutex;
+/* static */ mozilla::UniquePtr<Json::Value> ProfilingLog::gLog;
+
+/* static */ void ProfilingLog::Init() {
+  mozilla::baseprofiler::detail::BaseProfilerAutoLock lock{gMutex};
+  MOZ_ASSERT(!gLog);
+  gLog = mozilla::MakeUniqueFallible<Json::Value>(Json::objectValue);
+  if (gLog) {
+    (*gLog)[Json::StaticString{"profilingLogBegin" TIMESTAMP_JSON_SUFFIX}] =
+        ProfilingLog::Timestamp();
+  }
+}
+
+/* static */ void ProfilingLog::Destroy() {
+  mozilla::baseprofiler::detail::BaseProfilerAutoLock lock{gMutex};
+  MOZ_ASSERT(gLog);
+  gLog = nullptr;
+}
+
+/* static */ bool ProfilingLog::IsLockedOnCurrentThread() {
+  return gMutex.IsLockedOnCurrentThread();
+}
+
 // RAII class to lock the profiler mutex.
 // It provides a mechanism to determine if it is locked or not in order for
 // memory hooks to avoid re-entering the profiler locked state.
@@ -382,10 +406,12 @@ class MOZ_RAII PSAutoLock {
   PSAutoLock()
       : mLock([]() -> mozilla::baseprofiler::detail::BaseProfilerMutex& {
           // In DEBUG builds, *before* we attempt to lock gPSMutex, we want to
-          // check that the ThreadRegistry and ThreadRegistration mutexes are
-          // *not* locked on this thread, to avoid inversion deadlocks.
+          // check that the ThreadRegistry, ThreadRegistration, and ProfilingLog
+          // mutexes are *not* locked on this thread, to avoid inversion
+          // deadlocks.
           MOZ_ASSERT(!ThreadRegistry::IsRegistryMutexLockedOnCurrentThread());
           MOZ_ASSERT(!ThreadRegistration::IsDataMutexLockedOnCurrentThread());
+          MOZ_ASSERT(!ProfilingLog::IsLockedOnCurrentThread());
           return gPSMutex;
         }()) {}
 
@@ -776,6 +802,8 @@ class ActivePS {
             NewSamplerThread(aLock, mGeneration, aInterval, aFeatures)),
         mIsPaused(false),
         mIsSamplingPaused(false) {
+    ProfilingLog::Init();
+
     // Deep copy and lower-case aFilters.
     MOZ_ALWAYS_TRUE(mFilters.resize(aFilterCount));
     MOZ_ALWAYS_TRUE(mFiltersLowered.resize(aFilterCount));
@@ -852,6 +880,8 @@ class ActivePS {
       // We still control the chunk manager, remove it from the core buffer.
       profiler_get_core_buffer().ResetChunkManager();
     }
+
+    ProfilingLog::Destroy();
   }
 
   bool ThreadSelected(const char* aThreadName) {
@@ -3302,6 +3332,20 @@ static void locked_profiler_stream_json_for_this_process(
                                           "Streamed pauses"));
   }
   aWriter.EndArray();
+
+  ProfilingLog::Access([&](Json::Value& aProfilingLogObject) {
+    aProfilingLogObject[Json::StaticString{
+        "profilingLogEnd" TIMESTAMP_JSON_SUFFIX}] = ProfilingLog::Timestamp();
+
+    aWriter.StartObjectProperty("profilingLog");
+    {
+      nsAutoCString pid;
+      pid.AppendInt(int64_t(profiler_current_process_id().ToNumber()));
+      Json::String logString = aProfilingLogObject.toStyledString();
+      aWriter.SplicedJSONProperty(pid, logString);
+    }
+    aWriter.EndObject();
+  });
 
   const double collectionEndMs = profiler_time();
 
