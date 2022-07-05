@@ -14,11 +14,16 @@
 #include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/ProportionValue.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "nsIProfiler.h"
 #include "nsITimer.h"
 #include "nsServiceManagerUtils.h"
 #include "ProfilerCodeAddressService.h"
+
+namespace Json {
+class Value;
+}  // namespace Json
 
 class nsProfiler final : public nsIProfiler {
  public:
@@ -88,6 +93,9 @@ class nsProfiler final : public nsIProfiler {
   mozilla::Vector<PendingProfile> mPendingProfiles;
   bool mGathering;
   nsCOMPtr<nsITimer> mGatheringTimer;
+  // Supplemental log to the profiler's "profilingLog" (which has already been
+  // completed in JSON profiles that are gathered).
+  mozilla::UniquePtr<Json::Value> mGatheringLog;
 };
 
 #endif  // nsProfiler_h

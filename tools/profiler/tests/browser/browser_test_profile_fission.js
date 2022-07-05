@@ -100,6 +100,18 @@ add_task(async function test_profile_fission_no_private_browsing() {
       "number"
     );
 
+    Assert.equal(typeof profile.profileGatheringLog, "object");
+    Assert.equal(typeof profile.profileGatheringLog[parentPid], "object");
+    Assert.equal(
+      typeof profile.profileGatheringLog[parentPid]
+        .profileGatheringLogBegin_TSms,
+      "number"
+    );
+    Assert.equal(
+      typeof profile.profileGatheringLog[parentPid].profileGatheringLogEnd_TSms,
+      "number"
+    );
+
     Assert.equal(typeof contentProcess.profilingLog, "object");
     Assert.equal(typeof contentProcess.profilingLog[contentPid], "object");
     Assert.equal(
@@ -110,6 +122,8 @@ add_task(async function test_profile_fission_no_private_browsing() {
       typeof contentProcess.profilingLog[contentPid].profilingLogEnd_TSms,
       "number"
     );
+
+    Assert.equal(typeof contentProcess.profileGatheringLog, "undefined");
   } finally {
     await BrowserTestUtils.closeWindow(win);
   }
