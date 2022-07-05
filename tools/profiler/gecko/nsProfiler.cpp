@@ -19,6 +19,7 @@
 #include "js/JSON.h"
 #include "js/PropertyAndElement.h"  // JS_SetElement
 #include "js/Value.h"
+#include "json/json.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
@@ -1033,6 +1034,10 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
   }
 
   mGathering = true;
+  mGatheringLog = mozilla::MakeUnique<Json::Value>(Json::objectValue);
+  (*mGatheringLog)[Json::StaticString{
+      "profileGatheringLogBegin" TIMESTAMP_JSON_SUFFIX}] =
+      ProfilingLog::Timestamp();
 
   if (mGatheringTimer) {
     mGatheringTimer->Cancel();
@@ -1197,6 +1202,21 @@ void nsProfiler::FinishGathering() {
   // Close the "processes" array property.
   mWriter->EndArray();
 
+  if (mGatheringLog) {
+    (*mGatheringLog)[Json::StaticString{
+        "profileGatheringLogEnd" TIMESTAMP_JSON_SUFFIX}] =
+        ProfilingLog::Timestamp();
+    mWriter->StartObjectProperty("profileGatheringLog");
+    {
+      nsAutoCString pid;
+      pid.AppendInt(int64_t(profiler_current_process_id().ToNumber()));
+      Json::String logString = mGatheringLog->toStyledString();
+      mGatheringLog = nullptr;
+      mWriter->SplicedJSONProperty(pid, logString);
+    }
+    mWriter->EndObject();
+  }
+
   // Close the root object of the generated JSON.
   mWriter->End();
 
@@ -1218,6 +1238,7 @@ void nsProfiler::ResetGathering() {
   }
   mPendingProfiles.clearAndFree();
   mGathering = false;
+  mGatheringLog = nullptr;
   if (mGatheringTimer) {
     mGatheringTimer->Cancel();
     mGatheringTimer = nullptr;
