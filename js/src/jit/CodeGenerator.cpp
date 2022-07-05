@@ -3795,8 +3795,7 @@ void CodeGenerator::visitStackArgT(LStackArgT* lir) {
   uint32_t argslot = lir->argslot();
   MOZ_ASSERT(argslot - 1u < graph.argumentSlotCount());
 
-  int32_t stack_offset = StackOffsetOfPassedArg(argslot);
-  Address dest(masm.getStackPointer(), stack_offset);
+  Address dest = AddressOfPassedArg(argslot);
 
   if (arg->isFloatReg()) {
     masm.boxDouble(ToFloatRegister(arg), dest);
@@ -3812,9 +3811,7 @@ void CodeGenerator::visitStackArgV(LStackArgV* lir) {
   uint32_t argslot = lir->argslot();
   MOZ_ASSERT(argslot - 1u < graph.argumentSlotCount());
 
-  int32_t stack_offset = StackOffsetOfPassedArg(argslot);
-
-  masm.storeValue(val, Address(masm.getStackPointer(), stack_offset));
+  masm.storeValue(val, AddressOfPassedArg(argslot));
 }
 
 void CodeGenerator::visitMoveGroup(LMoveGroup* group) {

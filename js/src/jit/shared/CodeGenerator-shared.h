@@ -148,7 +148,7 @@ class CodeGeneratorShared : public LElementVisitor {
   inline uint32_t SlotToStackOffset(uint32_t slot) const;
 
   // For argument construction for calls. Argslots are Value-sized.
-  inline uint32_t StackOffsetOfPassedArg(uint32_t slot) const;
+  inline Address AddressOfPassedArg(uint32_t slot) const;
   inline uint32_t UnusedStackBytesForCall(uint32_t numArgSlots) const;
 
   inline uint32_t ToStackOffset(LAllocation a) const;
