@@ -254,7 +254,7 @@ pub struct RectClipDisplayItem {
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct RoundedRectClipDisplayItem {
     pub id: ClipId,
-    pub parent_space_and_clip: SpaceAndClipInfo,
+    pub spatial_id: SpatialId,
     pub clip: ComplexClipRegion,
 }
 
