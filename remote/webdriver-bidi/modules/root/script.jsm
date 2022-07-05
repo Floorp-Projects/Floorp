@@ -126,10 +126,9 @@ class ScriptModule extends Module {
    * realm or a browsing context.
    *
    * @param {Object=} options
-   * @param {boolean=} awaitPromise
+   * @param {boolean} awaitPromise
    *     Determines if the command should wait for the return value of the
-   *     expression to resolve, if this return value is a Promise. Defaults to
-   *     true.
+   *     expression to resolve, if this return value is a Promise.
    * @param {string} expression
    *     The expression to evaluate.
    * @param {OwnershipModel=} resultOwnership [unsupported]
@@ -147,7 +146,7 @@ class ScriptModule extends Module {
    */
   async evaluate(options = {}) {
     const {
-      awaitPromise = true,
+      awaitPromise,
       expression: source,
       resultOwnership = OwnershipModel.None,
       target = {},
