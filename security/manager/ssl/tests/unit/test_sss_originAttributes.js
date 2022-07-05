@@ -23,13 +23,7 @@ function doTest(secInfo, originAttributes1, originAttributes2, shouldShare) {
   sss.clearAll();
   let header = GOOD_MAX_AGE;
   // Set HSTS for originAttributes1.
-  sss.processHeader(
-    uri,
-    header,
-    secInfo,
-    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
-    originAttributes1
-  );
+  sss.processHeader(uri, header, secInfo, originAttributes1);
   ok(
     sss.isSecureURI(uri, originAttributes1),
     "URI should be secure given original origin attributes"
@@ -64,14 +58,7 @@ function testInvalidOriginAttributes(secInfo, originAttributes) {
   let header = GOOD_MAX_AGE;
 
   let callbacks = [
-    () =>
-      sss.processHeader(
-        uri,
-        header,
-        secInfo,
-        Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
-        originAttributes
-      ),
+    () => sss.processHeader(uri, header, secInfo, originAttributes),
     () => sss.isSecureURI(uri, originAttributes),
     () => sss.resetState(uri, originAttributes),
   ];

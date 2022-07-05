@@ -25,7 +25,6 @@ function test_removeState(secInfo, originAttributes) {
     notPreloadedURI,
     "max-age=1000;",
     secInfo,
-    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
     originAttributes
   );
   ok(gSSService.isSecureURI(notPreloadedURI, originAttributes));
@@ -40,7 +39,6 @@ function test_removeState(secInfo, originAttributes) {
     notPreloadedURI,
     "max-age=0;",
     secInfo,
-    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
     originAttributes
   );
   ok(!gSSService.isSecureURI(notPreloadedURI, originAttributes));
@@ -57,7 +55,6 @@ function test_removeState(secInfo, originAttributes) {
     preloadedURI,
     "max-age=1000;",
     secInfo,
-    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
     originAttributes
   );
   ok(gSSService.isSecureURI(preloadedURI, originAttributes));
@@ -72,7 +69,6 @@ function test_removeState(secInfo, originAttributes) {
     preloadedURI,
     "max-age=0;",
     secInfo,
-    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
     originAttributes
   );
   ok(!gSSService.isSecureURI(preloadedURI, originAttributes));

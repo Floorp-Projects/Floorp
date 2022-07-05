@@ -64,15 +64,6 @@ interface nsISiteSecurityService : nsISupports
     // ERROR_ROOT_NOT_BUILT_IN was 14
 
     /**
-     * nsISiteSecurityService::IsSecureURI can optionally return a flag
-     * indicating the source of the HSTS cache entry, if it comes from the
-     * preload list, was seen naturally, or is a result of HSTS priming.
-     */
-    const uint32_t SOURCE_UNKNOWN         = 0;
-    const uint32_t SOURCE_PRELOAD_LIST    = 1;
-    const uint32_t SOURCE_ORGANIC_REQUEST = 2;
-
-    /**
      * Parses a given HTTP header and records the results internally.
      * Currently one header type is supported: HSTS (aka STS).
      * The format of the HSTS header is defined by the HSTS specification:
@@ -90,8 +81,6 @@ interface nsISiteSecurityService : nsISupports
      *                          happens).
      *                          If mPrivateBrowsingId > 0, information gathered
      *                          from this header will not be saved persistently.
-     * @param aSource the source of the header, whether it was from the preload
-     *                list, an organic header, or unknown.
      * @param aMaxAge the parsed max-age directive of the header.
      * @param aIncludeSubdomains the parsed includeSubdomains directive.
      * @param aFailureResult a more specific failure result if NS_ERROR_FAILURE
@@ -105,7 +94,6 @@ interface nsISiteSecurityService : nsISupports
     void processHeaderNative(in nsIURI aSourceURI,
                              in ACString aHeader,
                              in nsITransportSecurityInfo aSecInfo,
-                             in uint32_t aSource,
                              in const_OriginAttributesRef aOriginAttributes,
                              [optional] out unsigned long long aMaxAge,
                              [optional] out boolean aIncludeSubdomains,
@@ -116,7 +104,6 @@ interface nsISiteSecurityService : nsISupports
     void processHeader(in nsIURI aSourceURI,
                        in ACString aHeader,
                        in nsITransportSecurityInfo aSecInfo,
-                       in uint32_t aSource,
                        [optional] in jsval aOriginAttributes,
                        [optional] out unsigned long long aMaxAge,
                        [optional] out boolean aIncludeSubdomains,
@@ -154,23 +141,14 @@ interface nsISiteSecurityService : nsISupports
      *                          by userContextId because of the risk of man-in-
      *                          the-middle attacks before trust-on-second-use
      *                          happens).
-     * @param aCached true if we have cached information about this host, even
-     *                if the security state is false.
-     * @param aSource the source of the HSTS entry. One of SOURCE_PRELOAD_LIST,
-     *                SOURCE_ORGANIC_REQUEST, or SOURCE_UNKNOWN.
      */
     [binaryname(IsSecureURI), noscript, must_use]
     boolean isSecureURINative(in nsIURI aURI,
-                              in const_OriginAttributesRef aOriginAttributes,
-                              [optional] out boolean aCached,
-                              [optional] out uint32_t aSource);
+                              in const_OriginAttributesRef aOriginAttributes);
 
     [binaryname(IsSecureURIScriptable), implicit_jscontext, optional_argc,
      must_use]
-    boolean isSecureURI(in nsIURI aURI,
-                        [optional] in jsval aOriginAttributes,
-                        [optional] out boolean aCached,
-                        [optional] out uint32_t aSource);
+    boolean isSecureURI(in nsIURI aURI, [optional] in jsval aOriginAttributes);
 
     /**
      * Removes all non-preloaded HSTS state by resetting to factory-original

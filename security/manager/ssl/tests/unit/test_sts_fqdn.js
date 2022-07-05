@@ -19,12 +19,7 @@ function run_test() {
   let secInfo = Cc[
     "@mozilla.org/security/transportsecurityinfo;1"
   ].createInstance(Ci.nsITransportSecurityInfo);
-  SSService.processHeader(
-    uri,
-    "max-age=1000;includeSubdomains",
-    secInfo,
-    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
-  );
+  SSService.processHeader(uri, "max-age=1000;includeSubdomains", secInfo);
   ok(SSService.isSecureURI(uri));
   ok(SSService.isSecureURI(uri1));
   ok(SSService.isSecureURI(uri2));
