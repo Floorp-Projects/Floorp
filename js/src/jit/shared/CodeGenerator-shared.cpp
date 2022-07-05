@@ -76,6 +76,8 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
   }
 
   if (gen->compilingWasm()) {
+    offsetOfArgsFromFP_ = sizeof(wasm::Frame);
+
 #ifdef JS_CODEGEN_ARM64
     // Ensure SP is aligned to 16 bytes.
     frameDepth_ = AlignBytes(graph->localSlotsSize(), WasmStackAlignment);
@@ -112,6 +114,8 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
                "Trap exit stub needs 16-byte aligned stack pointer");
 #endif
   } else {
+    offsetOfArgsFromFP_ = sizeof(JitFrameLayout);
+
     // Allocate space for local slots (register allocator spills). Round to
     // JitStackAlignment, and implicitly to sizeof(Value) as JitStackAlignment
     // is a multiple of sizeof(Value). This was originally implemented for

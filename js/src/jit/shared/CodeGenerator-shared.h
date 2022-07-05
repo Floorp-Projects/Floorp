@@ -137,6 +137,9 @@ class CodeGeneratorShared : public LElementVisitor {
   // spills.
   uint32_t frameDepth_;
 
+  // Offset in bytes to the incoming arguments, relative to the frame pointer.
+  uint32_t offsetOfArgsFromFP_ = 0;
+
   // Offset in bytes of the stack region reserved for passed argument Values.
   uint32_t offsetOfPassedArgSlots_ = 0;
 
