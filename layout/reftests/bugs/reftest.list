@@ -1567,7 +1567,7 @@ random-if(winWidget) fuzzy(0-1,0-480) needs-focus == 598726-1.html 598726-1-ref.
 # the idealized rendering. As such we assume we fail the old test, and pass the
 # new test. See bug 1580534 for more details.
 fuzzy-if(Android,0-8,0-20) fails-if(!useDrawSnapshot) == 602200-3.html 602200-3-ref.html
-fuzzy-if(useDrawSnapshot,255-255,44-44) == 1580534.html 1580534-ref.html
+fuzzy-if(useDrawSnapshot,255-255,34-34) == 1580534.html 1580534-ref.html
 == 602200-4.html 602200-4-ref.html
 == 603423-1.html 603423-1-ref.html
 == 604737.html 604737-ref.html
