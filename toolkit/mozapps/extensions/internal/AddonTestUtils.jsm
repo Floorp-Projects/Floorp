@@ -11,7 +11,7 @@ var EXPORTED_SYMBOLS = ["AddonTestUtils", "MockAsyncShutdown"];
 
 const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 
-const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
+const { AddonManager, AddonManagerPrivate, AMTelemetry } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
 const { AsyncShutdown } = ChromeUtils.import(
@@ -33,7 +33,6 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
   getAppInfo: "resource://testing-common/AppInfo.jsm",
   Management: "resource://gre/modules/Extension.jsm",
@@ -1815,8 +1814,8 @@ var AddonTestUtils = {
    * ensure that there are no unexamined events after the test file is exiting.
    */
   hookAMTelemetryEvents() {
-    let originalRecordEvent = lazy.AMTelemetry.recordEvent;
-    lazy.AMTelemetry.recordEvent = event => {
+    let originalRecordEvent = AMTelemetry.recordEvent;
+    AMTelemetry.recordEvent = event => {
       this.collectedTelemetryEvents.push(event);
     };
     this.testScope.registerCleanupFunction(() => {
@@ -1825,7 +1824,7 @@ var AddonTestUtils = {
         this.collectedTelemetryEvents,
         "No unexamined telemetry events after test is finished"
       );
-      lazy.AMTelemetry.recordEvent = originalRecordEvent;
+      AMTelemetry.recordEvent = originalRecordEvent;
     });
   },
 
