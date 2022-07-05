@@ -61,7 +61,7 @@ figure > img {
   padding: .2em 1em;
 }
 
-#use-fx-home-controls:not([hidden]) {
+#homepage-reset-container:not([hidden]) {
   grid-area: footer;
   display: flex;
   align-items: flex-end;
@@ -69,12 +69,12 @@ figure > img {
   padding: 2em;
 }
 
-#use-fx-home-controls:not(.success) > .success-prompt,
-#use-fx-home-controls.success > .reset-prompt {
+#homepage-reset-container:not(.success) > .success-prompt,
+#homepage-reset-container.success > .reset-prompt {
   display: none;
 }
 
-#use-fx-home-controls > .success-prompt::before {
+#homepage-reset-container > .success-prompt::before {
   display: inline-block;
   content: "";
   background: var(--green-50) url('chrome://global/skin/icons/check.svg') center center no-repeat;
