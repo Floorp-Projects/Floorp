@@ -781,7 +781,8 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
   // Are we required to place at least part of the float because we're
   // at the top of the page (to avoid an infinite loop of pushing and
   // breaking).
-  bool mustPlaceFloat = mReflowInput.mFlags.mIsTopOfPage && IsAdjacentWithTop();
+  bool mustPlaceFloat =
+      mReflowInput.mFlags.mIsTopOfPage && IsAdjacentWithBStart();
 
   for (;;) {
     if (mReflowInput.AvailableHeight() != NS_UNCONSTRAINEDSIZE &&
