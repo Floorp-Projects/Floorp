@@ -884,7 +884,17 @@ void DrawTargetCairo::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
   cairo_pattern_set_matrix(pat, &src_mat);
   cairo_pattern_set_filter(
       pat, GfxSamplingFilterToCairoFilter(aSurfOptions.mSamplingFilter));
-  cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
+  // For PDF output, we avoid using EXTEND_PAD here because floating-point
+  // error accumulation may lead cairo_pdf_surface to conclude that padding
+  // is needed due to an apparent one- or two-pixel mismatch between source
+  // pattern and destination rect sizes when we're rendering a pdf.js page,
+  // and this forces undesirable fallback to the rasterization codepath
+  // instead of simply replaying the recording.
+  // (See bug 1777209.)
+  cairo_pattern_set_extend(
+      pat, cairo_surface_get_type(mSurface) == CAIRO_SURFACE_TYPE_PDF
+               ? CAIRO_EXTEND_NONE
+               : CAIRO_EXTEND_PAD);
 
   cairo_set_antialias(mContext,
                       GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
