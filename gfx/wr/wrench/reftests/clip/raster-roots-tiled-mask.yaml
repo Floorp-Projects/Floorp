@@ -10,7 +10,6 @@ root:
       items:
         - type: clip
           id: 2
-          bounds: [0, 0, 8, 2048]
           image-mask:
             image: solid-color(128,0,0,0,8,1024)
             rect: [0, 0, 8, 2048]

@@ -17,11 +17,10 @@ root:
           id: 22
           bounds: [10, 60, 50, 50]
           content-size: [100, 100]
-          items:
-          - type: rect
-            bounds: [10, 60, 50, 50]
-            color: green
-            clip-chain: [2, 22]
+        - type: rect
+          bounds: [10, 60, 50, 50]
+          color: green
+          clip-chain: [2, 22]
     # Do the same thing, but now for the "top" constraint.
     - type: scroll-frame
       id: 3
@@ -39,11 +38,10 @@ root:
           id: 23
           bounds: [70, 10, 50, 50]
           content-size: [100, 100]
-          items:
-          - type: rect
-            bounds: [70, 10, 50, 50]
-            color: green
-            clip-chain: [3, 23]
+        - type: rect
+          bounds: [70, 10, 50, 50]
+          color: green
+          clip-chain: [3, 23]
     # Do the same thing, but now for the "right" constraint.
     - type: scroll-frame
       id: 4
@@ -60,11 +58,10 @@ root:
           id: 24
           bounds: [60, 70, 50, 50]
           content-size: [100, 100]
-          items:
-          - type: rect
-            bounds: [60, 70, 50, 50]
-            color: green
-            clip-chain: [4, 24]
+        - type: rect
+          bounds: [60, 70, 50, 50]
+          color: green
+          clip-chain: [4, 24]
     # Do the same thing, but now for the "left" constraint.
     - type: scroll-frame
       id: 5
@@ -82,11 +79,10 @@ root:
           id: 25
           bounds: [70, 70, 50, 50]
           content-size: [100, 100]
-          items:
-          - type: rect
-            bounds: [70, 70, 50, 50]
-            color: green
-            clip-chain: [5, 25]
+        - type: rect
+          bounds: [70, 70, 50, 50]
+          color: green
+          clip-chain: [5, 25]
 
     # The same tests, but this time with a margin.
     - type: scroll-frame
@@ -104,11 +100,10 @@ root:
           id: 26
           bounds: [130, 60, 50, 50]
           content-size: [100, 100]
-          items:
-          - type: rect
-            bounds: [130, 60, 50, 50]
-            color: green
-            clip-chain: [6, 26]
+        - type: rect
+          bounds: [130, 60, 50, 50]
+          color: green
+          clip-chain: [6, 26]
 
     # Do the same thing, but now for the "top" constraint.
     - type: scroll-frame
@@ -127,11 +122,10 @@ root:
           id: 27
           bounds: [190, 10, 50, 50]
           content-size: [100, 100]
-          items:
-          - type: rect
-            bounds: [190, 10, 50, 50]
-            color: green
-            clip-chain: [7, 27]
+        - type: rect
+          bounds: [190, 10, 50, 50]
+          color: green
+          clip-chain: [7, 27]
 
     # Do the same thing, but now for the "right" constraint.
     - type: scroll-frame
@@ -149,11 +143,10 @@ root:
           id: 28
           bounds: [180, 70, 50, 50]
           content-size: [100, 100]
-          items:
-          - type: rect
-            bounds: [180, 70, 50, 50]
-            color: green
-            clip-chain: [8, 28]
+        - type: rect
+          bounds: [180, 70, 50, 50]
+          color: green
+          clip-chain: [8, 28]
 
     # Do the same thing, but now for the "left" constraint.
     - type: scroll-frame
@@ -172,11 +165,10 @@ root:
           id: 29
           bounds: [190, 70, 50, 50]
           content-size: [100, 100]
-          items:
-          - type: rect
-            bounds: [190, 70, 50, 50]
-            color: green
-            clip-chain: [9, 29]
+        - type: rect
+          bounds: [190, 70, 50, 50]
+          color: green
+          clip-chain: [9, 29]
 
     # The same tests, but this time with a limit.
     - type: scroll-frame
@@ -194,11 +186,10 @@ root:
           id: 30
           bounds: [250, 60, 50, 50]
           content-size: [100, 100]
-          items:
-          - type: rect
-            bounds: [250, 60, 50, 50]
-            color: green
-            clip-chain: [10, 30]
+        - type: rect
+          bounds: [250, 60, 50, 50]
+          color: green
+          clip-chain: [10, 30]
 
     # Do the same thing, but now for the "top" constraint.
     - type: scroll-frame
@@ -217,11 +208,10 @@ root:
           bounds: [310, 10, 50, 50]
           content-size: [100, 100]
           id: 31
-          items:
-          - type: rect
-            bounds: [310, 10, 50, 50]
-            color: green
-            clip-chain: [11, 31]
+        - type: rect
+          bounds: [310, 10, 50, 50]
+          color: green
+          clip-chain: [11, 31]
 
     # Do the same thing, but now for the "right" constraint.
     - type: scroll-frame
@@ -239,11 +229,10 @@ root:
           id: 32
           bounds: [300, 70, 50, 50]
           content-size: [100, 100]
-          items:
-          - type: rect
-            bounds: [300, 70, 50, 50]
-            color: green
-            clip-chain: [12, 32]
+        - type: rect
+          bounds: [300, 70, 50, 50]
+          color: green
+          clip-chain: [12, 32]
 
     # Do the same thing, but now for the "left" constraint.
     - type: scroll-frame
@@ -262,8 +251,7 @@ root:
           id: 33
           bounds: [310, 70, 50, 50]
           content-size: [100, 100]
-          items:
-          - type: rect
-            bounds: [310, 70, 50, 50]
-            color: green
-            clip-chain: [13, 33]
+        - type: rect
+          bounds: [310, 70, 50, 50]
+          color: green
+          clip-chain: [13, 33]

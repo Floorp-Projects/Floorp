@@ -5,7 +5,6 @@ root:
   items:
     - type: clip
       id: 2
-      bounds: [225, 200, 150, 200]
       complex:
         - rect: [225, 200, 150, 200]
           radius: 32

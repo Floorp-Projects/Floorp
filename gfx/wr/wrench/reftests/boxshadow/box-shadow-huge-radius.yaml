@@ -41,7 +41,6 @@ root:
             "bottom-right": [0, 0]
           "clip-mode": outset
         -
-          bounds: [16, 164, 1352, 200]
           "clip-rect": [16, 164, 1352, 200]
           "backface-visible": true
           type: clip
@@ -89,7 +88,6 @@ root:
             "bottom-right": [0, 0]
           "clip-mode": outset
         -
-          bounds: [16, 402, 200, 200]
           "clip-rect": [16, 402, 200, 200]
           "backface-visible": true
           type: clip

@@ -12,7 +12,6 @@ root:
           items:
             - type: clip
               id: 2
-              bounds: [50, 50, 200, 200]
               complex:
                 - rect: [50, 50, 200, 200]
                   radius: 8
