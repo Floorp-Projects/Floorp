@@ -11,8 +11,8 @@ stencil = compileToStencilXDR("import * as ns from 'a'", {module: true});
 m = instantiateModuleStencilXDR(stencil);
 let b = registerModule('b', m);
 
-b.declarationInstantiation();
-b.evaluation();
+moduleLink(b);
+moduleEvaluate(b);
 
 let ns = a.namespace;
 for (let i = 0; i < count; i++)

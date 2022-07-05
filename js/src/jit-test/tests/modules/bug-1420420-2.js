@@ -13,5 +13,5 @@ registerModule("a", parseModule(`import* as ns from "good"; import {y} from "bad
 let b = registerModule("b", parseModule(`import "a";`));
 let c = registerModule("c", parseModule(`import "a";`));
 
-assertThrowsInstanceOf(() => b.declarationInstantiation(), SyntaxError);
-assertThrowsInstanceOf(() => c.declarationInstantiation(), SyntaxError);
+assertThrowsInstanceOf(() => moduleLink(b), SyntaxError);
+assertThrowsInstanceOf(() => moduleLink(c), SyntaxError);

@@ -7,8 +7,8 @@ function y() {
 }
 export { x, y };
 `);
-m1.declarationInstantiation();
-m1.evaluation();
+moduleLink(m1);
+moduleEvaluate(m1);
 
 registerModule('m1', m1);
 
@@ -26,5 +26,5 @@ test(1);
 y();
 test(2);
 `);
-m2.declarationInstantiation();
-m2.evaluation();
+moduleLink(m2);
+moduleEvaluate(m2);

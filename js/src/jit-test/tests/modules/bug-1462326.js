@@ -3,4 +3,4 @@
 let m = parseModule(`
   import A from "A";
 `);
-m.declarationInstantiation();
+moduleLink(m);

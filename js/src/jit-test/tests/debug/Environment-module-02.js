@@ -9,14 +9,14 @@ const m = g.parseModule(`
   export function foo() { return x; }
   foo();
 `);
-m.declarationInstantiation();
+moduleLink(m);
 
 let fooFunction;
 dbg.onEnterFrame = function (frame) {
   fooFunction = frame.callee;
 };
 
-m.evaluation();
+moduleEvaluate(m);
 assertEq(fooFunction instanceof Debugger.Object, true);
 
 dbg.onEnterFrame = function (frame) {

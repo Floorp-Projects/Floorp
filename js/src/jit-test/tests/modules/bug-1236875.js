@@ -1,2 +1,2 @@
 let m = parseModule(`{ function x() {} }`);
-m.declarationInstantiation();
+moduleLink(m);

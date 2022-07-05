@@ -2,8 +2,8 @@
 m = parseModule(`
     await 0 ? b : c
 `);
-m.declarationInstantiation();
-m.evaluation()
+moduleLink(m);
+moduleEvaluate(m)
 d = newGlobal();
 d.e = this;
 d.eval(`

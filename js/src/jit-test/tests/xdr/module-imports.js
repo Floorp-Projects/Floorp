@@ -14,12 +14,12 @@ stencil = compileToStencilXDR(s, {module: true});
 m = instantiateModuleStencilXDR(stencil);
 let b = registerModule('b', m);
 
-b.declarationInstantiation();
-b.evaluation();
+moduleLink(b);
+moduleEvaluate(b);
 
 
 stencil = compileToStencilXDR("import * as nsa from 'a'; import * as nsb from 'b';", {module: true});
 m = instantiateModuleStencilXDR(stencil);
 
-m.declarationInstantiation();
-m.evaluation();
+moduleLink(m);
+moduleEvaluate(m);

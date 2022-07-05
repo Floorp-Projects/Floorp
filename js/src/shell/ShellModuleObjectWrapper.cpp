@@ -293,72 +293,6 @@ static const JSPropertySpec ShellModuleObjectWrapper_accessors[] = {
 
 #undef DEFINE_GETTER_FUNCTIONS
 
-template <class T, size_t ARGC, typename CheckArgsT, typename FilterT>
-bool ShellModuleWrapperMethod(JSContext* cx, const JS::CallArgs& args,
-                              const char* prop, CheckArgsT checkArgs,
-                              FilterT filter) {
-  using TargetT = typename T::Target;
-
-  JS::Rooted<TargetT*> obj(cx, args.thisv().toObject().as<T>().get());
-  JS::Rooted<JS::Value> methodVal(cx);
-  if (!JS_GetProperty(cx, obj, prop, &methodVal)) {
-    return false;
-  }
-  if (!methodVal.isObject() || !methodVal.toObject().is<JSFunction>()) {
-    JS_ReportErrorASCII(cx, "method property is not function");
-    return false;
-  }
-
-  JS::Rooted<JSFunction*> method(cx, &methodVal.toObject().as<JSFunction>());
-  if (!checkArgs(cx, args)) {
-    return false;
-  }
-
-  FixedInvokeArgs<ARGC> invokeArgs(cx);
-  for (size_t i = 0; i < ARGC; i++) {
-    invokeArgs[i].set(args.get(i));
-  }
-
-  JS::Rooted<JS::Value> rval(cx);
-  if (!JS::Call(cx, obj, method, invokeArgs, &rval)) {
-    return false;
-  }
-
-  JS::Rooted<JS::Value> filtered(cx);
-  if (!filter(cx, rval, &filtered)) {
-    return false;
-  }
-  args.rval().set(filtered);
-  return true;
-}
-
-#define DEFINE_METHOD_FUNCTIONS(CLASS, METHOD, ARGC, CHECK, FILTER)           \
-  static bool Shell##CLASS##Wrapper_##METHOD##_impl(                          \
-      JSContext* cx, const JS::CallArgs& args) {                              \
-    return ShellModuleWrapperMethod<Shell##CLASS##Wrapper, ARGC>(             \
-        cx, args, #METHOD, CHECK, FILTER);                                    \
-  }                                                                           \
-  static bool Shell##CLASS##Wrapper##_##METHOD(JSContext* cx, unsigned argc,  \
-                                               Value* vp) {                   \
-    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);                         \
-    return CallNonGenericMethod<Is##Shell##CLASS##Wrapper,                    \
-                                Shell##CLASS##Wrapper_##METHOD##_impl>(cx,    \
-                                                                       args); \
-  }
-
-static bool CheckNoArgs(JSContext* cx, const CallArgs& args) { return true; }
-
-DEFINE_METHOD_FUNCTIONS(ModuleObject, declarationInstantiation, 0, CheckNoArgs,
-                        IdentFilter)
-DEFINE_METHOD_FUNCTIONS(ModuleObject, evaluation, 0, CheckNoArgs, IdentFilter)
-
-static const JSFunctionSpec ShellModuleObjectWrapper_functions[] = {
-    JS_FN("declarationInstantiation",
-          ShellModuleObjectWrapper_declarationInstantiation, 0, 0),
-    JS_FN("evaluation", ShellModuleObjectWrapper_evaluation, 0, 0), JS_FS_END};
-
-#undef DEFINE_METHOD_FUNCTIONS
-
 #define DEFINE_CREATE(CLASS, ACCESSORS, FUNCTIONS)                            \
   /* static */                                                                \
   Shell##CLASS##Wrapper* Shell##CLASS##Wrapper::create(                       \
@@ -383,7 +317,6 @@ DEFINE_CREATE(ExportEntryObject, ShellExportEntryObjectWrapper_accessors,
               nullptr)
 DEFINE_CREATE(RequestedModuleObject,
               ShellRequestedModuleObjectWrapper_accessors, nullptr)
-DEFINE_CREATE(ModuleObject, ShellModuleObjectWrapper_accessors,
-              ShellModuleObjectWrapper_functions)
+DEFINE_CREATE(ModuleObject, ShellModuleObjectWrapper_accessors, nullptr)
 
 #undef DEFINE_CREATE

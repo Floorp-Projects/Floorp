@@ -20,6 +20,6 @@ const m = g.parseModule(`
   await 10;
   debugger;
 `);
-m.declarationInstantiation();
-m.evaluation();
+moduleLink(m);
+moduleEvaluate(m);
 drainJobQueue();
