@@ -484,15 +484,18 @@ void RemoteAccessibleBase<Derived>::ApplyScrollOffset(nsRect& aBounds) const {
 
 template <class Derived>
 nsRect RemoteAccessibleBase<Derived>::BoundsInAppUnits() const {
-  dom::CanonicalBrowsingContext* cbc =
-      static_cast<dom::BrowserParent*>(mDoc->Manager())
-          ->GetBrowsingContext()
-          ->Top();
-  dom::BrowserParent* bp = cbc->GetBrowserParent();
-  nsPresContext* presContext =
-      bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
-  return LayoutDeviceIntRect::ToAppUnits(Bounds(),
-                                         presContext->AppUnitsPerDevPixel());
+  if (dom::CanonicalBrowsingContext* cbc = mDoc->GetBrowsingContext()->Top()) {
+    if (dom::BrowserParent* bp = cbc->GetBrowserParent()) {
+      DocAccessibleParent* topDoc = bp->GetTopLevelDocAccessible();
+      if (topDoc && topDoc->mCachedFields) {
+        auto appUnitsPerDevPixel = topDoc->mCachedFields->GetAttribute<int32_t>(
+            nsGkAtoms::_moz_device_pixel_ratio);
+        MOZ_ASSERT(appUnitsPerDevPixel);
+        return LayoutDeviceIntRect::ToAppUnits(Bounds(), *appUnitsPerDevPixel);
+      }
+    }
+  }
+  return LayoutDeviceIntRect::ToAppUnits(Bounds(), AppUnitsPerCSSPixel());
 }
 
 template <class Derived>
