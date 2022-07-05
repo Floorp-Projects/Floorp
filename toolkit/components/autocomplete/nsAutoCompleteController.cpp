@@ -824,13 +824,12 @@ nsAutoCompleteController::OnSearchResult(nsIAutoCompleteSearch* aSearch,
   for (uint32_t i = 0; i < mSearches.Length(); ++i) {
     if (mSearches[i] == aSearch) {
       ProcessResult(i, aResult);
+      break;
     }
   }
 
-  if (mSearchesOngoing == 0) {
-    // If this is the last search to return, cleanup.
-    PostSearchCleanup();
-  }
+  // If a match is found in ProcessResult, PostSearchCleanup will open the popup
+  PostSearchCleanup();
 
   return NS_OK;
 }
@@ -996,6 +995,7 @@ nsresult nsAutoCompleteController::StartSearch(uint16_t aSearchType) {
 
 void nsAutoCompleteController::AfterSearches() {
   mResultCache.Clear();
+  // if the below evaluates to true, that means mSearchesOngoing must be 0
   if (mSearchesFailed == mSearches.Length()) {
     PostSearchCleanup();
   }
@@ -1344,7 +1344,6 @@ nsresult nsAutoCompleteController::ProcessResult(
   NS_ENSURE_STATE(mInput);
   MOZ_ASSERT(aResult, "ProcessResult should always receive a result");
   NS_ENSURE_ARG(aResult);
-  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
 
   uint16_t searchResult = 0;
   aResult->GetSearchResult(&searchResult);
@@ -1413,18 +1412,6 @@ nsresult nsAutoCompleteController::ProcessResult(
   NS_ENSURE_TRUE(popup != nullptr, NS_ERROR_FAILURE);
   popup->Invalidate(nsIAutoCompletePopup::INVALIDATE_REASON_NEW_RESULT);
 
-  uint32_t minResults;
-  input->GetMinResultsForPopup(&minResults);
-
-  // Make sure the popup is open, if necessary, since we now have at least one
-  // search result ready to display. Don't force the popup closed if we might
-  // get results in the future to avoid unnecessarily canceling searches.
-  if (mMatchCount || !minResults) {
-    OpenPopup();
-  } else if (mSearchesOngoing == 0) {
-    ClosePopup();
-  }
-
   return NS_OK;
 }
 
@@ -1437,17 +1424,17 @@ nsresult nsAutoCompleteController::PostSearchCleanup() {
 
   if (mMatchCount || minResults == 0) {
     OpenPopup();
-    if (mMatchCount)
-      mSearchStatus = nsIAutoCompleteController::STATUS_COMPLETE_MATCH;
-    else
-      mSearchStatus = nsIAutoCompleteController::STATUS_COMPLETE_NO_MATCH;
-  } else {
-    mSearchStatus = nsIAutoCompleteController::STATUS_COMPLETE_NO_MATCH;
+  } else if (mSearchesOngoing == 0) {
     ClosePopup();
   }
 
-  // notify the input that the search is complete
-  input->OnSearchComplete();
+  if (mSearchesOngoing == 0) {
+    mSearchStatus = mMatchCount
+                        ? nsIAutoCompleteController::STATUS_COMPLETE_MATCH
+                        : nsIAutoCompleteController::STATUS_COMPLETE_NO_MATCH;
+    // notify the input that the search is complete
+    input->OnSearchComplete();
+  }
 
   return NS_OK;
 }

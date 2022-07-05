@@ -226,7 +226,7 @@ function createSourceObject({
     // A (slightly tweaked) URL object to represent the source URL.
     // The URL object is augmented of a "group" attribute and some other standard attributes
     // are modified from their typical value. See getDisplayURL implementation.
-    displayURL: getDisplayURL(url),
+    displayURL: getDisplayURL(url, extensionName),
 
     // The thread actor id of the thread/target which this source belongs to
     thread,

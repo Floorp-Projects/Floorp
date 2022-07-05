@@ -9,8 +9,8 @@ function f() {
 
 function execModule(source) {
     m = parseModule(source);
-    m.declarationInstantiation();
-    return m.evaluation();
+    moduleLink(m);
+    return moduleEvaluate(m);
 }
 
 execModule("f();").then(() => {

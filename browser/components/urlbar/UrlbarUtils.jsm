@@ -126,6 +126,7 @@ var UrlbarUtils = {
     TABS: 4,
     OTHER_LOCAL: 5,
     OTHER_NETWORK: 6,
+    ACTIONS: 7,
   },
 
   // This defines icon locations that are commonly used in the UI.
@@ -233,6 +234,12 @@ var UrlbarUtils = {
         restrict: UrlbarTokenizer.RESTRICT.HISTORY,
         icon: "chrome://browser/skin/history.svg",
         pref: "shortcuts.history",
+      },
+      {
+        source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
+        restrict: UrlbarTokenizer.RESTRICT.ACTION,
+        icon: "chrome://devtools/skin/images/command-console.svg",
+        pref: "shortcuts.quickactions",
       },
     ];
   },

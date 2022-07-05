@@ -80,9 +80,8 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
 
  private:
   friend class nsToolkitProfile;
-  friend nsresult NS_NewToolkitProfileService(nsToolkitProfileService**);
-  friend nsresult mozilla::xpcom::CreateInstanceImpl(
-      mozilla::xpcom::ModuleID aID, const nsIID& aIID, void** aResult);
+  friend already_AddRefed<nsToolkitProfileService>
+  NS_GetToolkitProfileService();
 
   nsToolkitProfileService();
   ~nsToolkitProfileService();
@@ -172,5 +171,7 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
     RefPtr<nsToolkitProfile> mCurrent;
   };
 };
+
+already_AddRefed<nsToolkitProfileService> NS_GetToolkitProfileService();
 
 #endif

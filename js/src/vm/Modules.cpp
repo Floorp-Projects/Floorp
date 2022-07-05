@@ -135,13 +135,12 @@ JS_PUBLIC_API JS::Value JS::GetModulePrivate(JSObject* module) {
   return module->as<ModuleObject>().scriptSourceObject()->getPrivate();
 }
 
-JS_PUBLIC_API bool JS::ModuleInstantiate(JSContext* cx,
-                                         Handle<JSObject*> moduleArg) {
+JS_PUBLIC_API bool JS::ModuleLink(JSContext* cx, Handle<JSObject*> moduleArg) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->releaseCheck(moduleArg);
 
-  return js::ModuleInstantiate(cx, moduleArg.as<ModuleObject>());
+  return js::ModuleLink(cx, moduleArg.as<ModuleObject>());
 }
 
 JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
@@ -269,6 +268,9 @@ JS_PUBLIC_API void JS::ClearModuleEnvironment(JSObject* moduleObj) {
 
   js::ModuleEnvironmentObject* env =
       moduleObj->as<js::ModuleObject>().environment();
+  if (!env) {
+    return;
+  }
 
   const JSClass* clasp = env->getClass();
   uint32_t numReserved = JSCLASS_RESERVED_SLOTS(clasp);
@@ -432,7 +434,7 @@ static ArrayObject* ModuleGetExportedNames(
     //           e.[[ModuleRequest]]).
     moduleRequest = e->moduleRequest();
     requestedModule = HostResolveImportedModule(cx, module, moduleRequest,
-                                                MODULE_STATUS_UNLINKED);
+                                                ModuleStatus::Unlinked);
     if (!requestedModule) {
       return nullptr;
     }
@@ -583,7 +585,7 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
       //             e.[[ModuleRequest]]).
       moduleRequest = e->moduleRequest();
       importedModule = HostResolveImportedModule(cx, module, moduleRequest,
-                                                 MODULE_STATUS_UNLINKED);
+                                                 ModuleStatus::Unlinked);
       if (!importedModule) {
         return false;
       }
@@ -635,7 +637,7 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
     //           e.[[ModuleRequest]]).
     moduleRequest = e->moduleRequest();
     importedModule = HostResolveImportedModule(cx, module, moduleRequest,
-                                               MODULE_STATUS_UNLINKED);
+                                               ModuleStatus::Unlinked);
     if (!importedModule) {
       return false;
     }
@@ -693,26 +695,13 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
   return true;
 }
 
-static void EnsureModuleEnvironmentNamespace(
-    JSContext* cx, Handle<ModuleObject*> module,
-    Handle<ModuleNamespaceObject*> ns) {
-  Rooted<ModuleEnvironmentObject*> environment(cx,
-                                               &module->initialEnvironment());
-  // The property already exists in the evironment but is not writable, so set
-  // the slot directly.
-  mozilla::Maybe<PropertyInfo> prop =
-      environment->lookup(cx, cx->names().starNamespaceStar);
-  MOZ_ASSERT(prop.isSome());
-  environment->setSlot(prop->slot(), ObjectValue(*ns));
-}
-
 // https://tc39.es/ecma262/#sec-getmodulenamespace
 // ES2023 16.2.1.10 GetModuleNamespace
 ModuleNamespaceObject* js::GetOrCreateModuleNamespace(
     JSContext* cx, Handle<ModuleObject*> module) {
   // Step 1. Assert: If module is a Cyclic Module Record, then module.[[Status]]
   //         is not unlinked.
-  MOZ_ASSERT(module->status() != MODULE_STATUS_UNLINKED);
+  MOZ_ASSERT(module->status() != ModuleStatus::Unlinked);
 
   // Step 2. Let namespace be module.[[Namespace]].
   Rooted<ModuleNamespaceObject*> ns(cx, module->namespace_());
@@ -767,6 +756,18 @@ static bool IsResolvedBinding(JSContext* cx, Handle<Value> resolution) {
   return resolution.isObject();
 }
 
+static void InitNamespaceBinding(JSContext* cx,
+                                 Handle<ModuleEnvironmentObject*> env,
+                                 Handle<JSAtom*> name,
+                                 Handle<ModuleNamespaceObject*> ns) {
+  // The property already exists in the evironment but is not writable, so set
+  // the slot directly.
+  RootedId id(cx, AtomToId(name));
+  mozilla::Maybe<PropertyInfo> prop = env->lookup(cx, id);
+  MOZ_ASSERT(prop.isSome());
+  env->setSlot(prop->slot(), ObjectValue(*ns));
+}
+
 // https://tc39.es/ecma262/#sec-modulenamespacecreate
 // ES2023 10.4.6.12 ModuleNamespaceCreate
 static ModuleNamespaceObject* ModuleNamespaceCreate(
@@ -808,7 +809,9 @@ static ModuleNamespaceObject* ModuleNamespaceCreate(
     MOZ_ASSERT(IsResolvedBinding(cx, resolution));
     binding = &resolution.toObject().as<ResolvedBindingObject>();
     importedModule = binding->module();
-    if (binding->bindingName() == cx->names().starNamespaceStar) {
+    bindingName = binding->bindingName();
+
+    if (bindingName == cx->names().starNamespaceStar) {
       importedNamespace = GetOrCreateModuleNamespace(cx, importedModule);
       if (!importedNamespace) {
         return nullptr;
@@ -817,10 +820,11 @@ static ModuleNamespaceObject* ModuleNamespaceCreate(
       // The spec uses an immutable binding here but we have already generated
       // bytecode for an indirect binding. Instead, use an indirect binding to
       // "*namespace*" slot of the target environment.
-      EnsureModuleEnvironmentNamespace(cx, importedModule, importedNamespace);
+      Rooted<ModuleEnvironmentObject*> env(
+          cx, &importedModule->initialEnvironment());
+      InitNamespaceBinding(cx, env, bindingName, importedNamespace);
     }
 
-    bindingName = binding->bindingName();
     if (!ns->addBinding(cx, name, importedModule, bindingName)) {
       return nullptr;
     }
@@ -883,23 +887,11 @@ static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
   cx->setPendingException(error, nullptr);
 }
 
-static void InitNamespaceBinding(JSContext* cx,
-                                 Handle<ModuleEnvironmentObject*> env,
-                                 Handle<JSAtom*> name,
-                                 Handle<ModuleNamespaceObject*> ns) {
-  // The property already exists in the evironment but is not writable, so set
-  // the slot directly.
-  RootedId id(cx, AtomToId(name));
-  mozilla::Maybe<PropertyInfo> prop = env->lookup(cx, id);
-  MOZ_ASSERT(prop.isSome());
-  env->setSlot(prop->slot(), ObjectValue(*ns));
-}
-
 // https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment
 // ES2023 16.2.1.6.4 InitializeEnvironment
 bool js::ModuleInitializeEnvironment(JSContext* cx,
                                      Handle<ModuleObject*> module) {
-  MOZ_ASSERT(module->status() == MODULE_STATUS_LINKING);
+  MOZ_ASSERT(module->status() == ModuleStatus::Linking);
 
   // Step 1. For each ExportEntry Record e of module.[[IndirectExportEntries]],
   //         do:
@@ -949,7 +941,7 @@ bool js::ModuleInitializeEnvironment(JSContext* cx,
     //           in.[[ModuleRequest]]).
     moduleRequest = in->moduleRequest();
     importedModule = HostResolveImportedModule(cx, module, moduleRequest,
-                                               MODULE_STATUS_LINKING);
+                                               ModuleStatus::Linking);
     if (!importedModule) {
       return false;
     }
@@ -1011,7 +1003,9 @@ bool js::ModuleInitializeEnvironment(JSContext* cx,
         // bytecode assuming an indirect binding. Instead, ensure a special
         // "*namespace*"" binding exists on the target module's environment. We
         // then generate an indirect binding to this synthetic binding.
-        EnsureModuleEnvironmentNamespace(cx, sourceModule, ns);
+        Rooted<ModuleEnvironmentObject*> sourceEnv(
+            cx, &sourceModule->initialEnvironment());
+        InitNamespaceBinding(cx, sourceEnv, bindingName, ns);
         if (!env->createImportBinding(cx, localName, sourceModule,
                                       bindingName)) {
           return false;
@@ -1049,10 +1043,10 @@ bool js::ModuleInitializeEnvironment(JSContext* cx,
 
 // https://tc39.es/ecma262/#sec-moduledeclarationlinking
 // ES2023 16.2.1.5.1 Link
-bool js::ModuleInstantiate(JSContext* cx, Handle<ModuleObject*> module) {
+bool js::ModuleLink(JSContext* cx, Handle<ModuleObject*> module) {
   // Step 1. Assert: module.[[Status]] is not linking or evaluating.
-  MOZ_ASSERT(module->status() != MODULE_STATUS_LINKING &&
-             module->status() != MODULE_STATUS_EVALUATING);
+  MOZ_ASSERT(module->status() != ModuleStatus::Linking &&
+             module->status() != ModuleStatus::Evaluating);
 
   // Step 2. Let stack be a new empty List.
   Rooted<ModuleVector> stack(cx);
@@ -1066,14 +1060,14 @@ bool js::ModuleInstantiate(JSContext* cx, Handle<ModuleObject*> module) {
     // Step 4.a. For each Cyclic Module Record m of stack, do:
     for (ModuleObject* m : stack) {
       // Step 4.a.i. Assert: m.[[Status]] is linking.
-      MOZ_ASSERT(m->status() == MODULE_STATUS_LINKING);
+      MOZ_ASSERT(m->status() == ModuleStatus::Linking);
       // Step 4.a.ii. Set m.[[Status]] to unlinked.
-      m->setStatus(MODULE_STATUS_UNLINKED);
+      m->setStatus(ModuleStatus::Unlinked);
       m->clearDfsIndexes();
     }
 
     // Step 4.b. Assert: module.[[Status]] is unlinked.
-    MOZ_ASSERT(module->status() == MODULE_STATUS_UNLINKED);
+    MOZ_ASSERT(module->status() == ModuleStatus::Unlinked);
 
     // Step 4.c.
     return false;
@@ -1081,9 +1075,9 @@ bool js::ModuleInstantiate(JSContext* cx, Handle<ModuleObject*> module) {
 
   // Step 5. Assert: module.[[Status]] is linked, evaluating-async, or
   //         evaluated.
-  MOZ_ASSERT(module->status() == MODULE_STATUS_LINKED ||
-             module->status() == MODULE_STATUS_EVALUATED ||
-             module->status() == MODULE_STATUS_EVALUATED_ERROR);
+  MOZ_ASSERT(module->status() == ModuleStatus::Linked ||
+             module->status() == ModuleStatus::Evaluated ||
+             module->status() == ModuleStatus::Evaluated_Error);
 
   // Step 6. Assert: stack is empty.
   MOZ_ASSERT(stack.empty());
@@ -1099,17 +1093,17 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
                                size_t* indexOut) {
   // Step 2. If module.[[Status]] is linking, linked, evaluating-async, or
   //         evaluated, then:
-  if (module->status() == MODULE_STATUS_LINKING ||
-      module->status() == MODULE_STATUS_LINKED ||
-      module->status() == MODULE_STATUS_EVALUATED ||
-      module->status() == MODULE_STATUS_EVALUATED_ERROR) {
+  if (module->status() == ModuleStatus::Linking ||
+      module->status() == ModuleStatus::Linked ||
+      module->status() == ModuleStatus::Evaluated ||
+      module->status() == ModuleStatus::Evaluated_Error) {
     // Step 2.a. Return index.
     *indexOut = index;
     return true;
   }
 
   // Step 3. Assert: module.[[Status]] is unlinked.
-  if (module->status() != MODULE_STATUS_UNLINKED) {
+  if (module->status() != ModuleStatus::Unlinked) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_BAD_MODULE_STATUS);
     return false;
@@ -1123,7 +1117,7 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
   }
 
   // Step 4. Set module.[[Status]] to linking.
-  module->setStatus(MODULE_STATUS_LINKING);
+  module->setStatus(ModuleStatus::Linking);
 
   // Step 5. Set module.[[DFSIndex]] to index.
   module->setDfsIndex(index);
@@ -1148,7 +1142,7 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
     // Step 9.a. Let requiredModule be ? HostResolveImportedModule(module,
     //           required).
     requiredModule = HostResolveImportedModule(cx, module, moduleRequest,
-                                               MODULE_STATUS_UNLINKED);
+                                               ModuleStatus::Unlinked);
     if (!requiredModule) {
       return false;
     }
@@ -1162,18 +1156,18 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
     // Step 9.c. If requiredModule is a Cyclic Module Record, then:
     // Step 9.c.i. Assert: requiredModule.[[Status]] is either linking, linked,
     //             evaluating-async, or evaluated.
-    MOZ_ASSERT(requiredModule->status() == MODULE_STATUS_LINKING ||
-               requiredModule->status() == MODULE_STATUS_LINKED ||
-               requiredModule->status() == MODULE_STATUS_EVALUATED ||
-               requiredModule->status() == MODULE_STATUS_EVALUATED_ERROR);
+    MOZ_ASSERT(requiredModule->status() == ModuleStatus::Linking ||
+               requiredModule->status() == ModuleStatus::Linked ||
+               requiredModule->status() == ModuleStatus::Evaluated ||
+               requiredModule->status() == ModuleStatus::Evaluated_Error);
 
     // Step 9.c.ii. Assert: requiredModule.[[Status]] is linking if and only if
     //              requiredModule is in stack.
-    MOZ_ASSERT((requiredModule->status() == MODULE_STATUS_LINKING) ==
+    MOZ_ASSERT((requiredModule->status() == ModuleStatus::Linking) ==
                ContainsElement(stack, requiredModule));
 
     // Step 9.c.iii. If requiredModule.[[Status]] is linking, then:
-    if (requiredModule->status() == MODULE_STATUS_LINKING) {
+    if (requiredModule->status() == ModuleStatus::Linking) {
       // Step 9.c.iii.1. Set module.[[DFSAncestorIndex]] to
       //                 min(module.[[DFSAncestorIndex]],
       //                 requiredModule.[[DFSAncestorIndex]]).
@@ -1205,7 +1199,7 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
       requiredModule = stack.popCopy();
 
       // Step 13.b.iv. Set requiredModule.[[Status]] to linked.
-      requiredModule->setStatus(MODULE_STATUS_LINKED);
+      requiredModule->setStatus(ModuleStatus::Linked);
 
       // Step 13.b.v. If requiredModule and module are the same Module Record,
       //              set done to true.
@@ -1226,9 +1220,9 @@ bool js::ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
 
   // Step 2. Assert: module.[[Status]] is linked, evaluating-async, or
   //         evaluated.
-  if (module->status() != MODULE_STATUS_LINKED &&
-      module->status() != MODULE_STATUS_EVALUATED &&
-      module->status() != MODULE_STATUS_EVALUATED_ERROR) {
+  if (module->status() != ModuleStatus::Linked &&
+      module->status() != ModuleStatus::Evaluated &&
+      module->status() != ModuleStatus::Evaluated_Error) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_BAD_MODULE_STATUS);
     return false;
@@ -1236,7 +1230,7 @@ bool js::ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
 
   // Step 3. If module.[[Status]] is evaluating-async or evaluated, set module
   //         to module.[[CycleRoot]].
-  if (module->status() == MODULE_STATUS_EVALUATED) {
+  if (module->status() == ModuleStatus::Evaluated) {
     module = module->getCycleRoot();
   }
 
@@ -1278,7 +1272,7 @@ bool js::ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
     // Step 9.a. For each Cyclic Module Record m of stack, do
     for (ModuleObject* m : stack) {
       // Step 9.a.i. Assert: m.[[Status]] is evaluating.
-      MOZ_ASSERT(m->status() == MODULE_STATUS_EVALUATING);
+      MOZ_ASSERT(m->status() == ModuleStatus::Evaluating);
 
       // Step 9.a.ii. Set m.[[Status]] to evaluated.
       // Step 9.a.iii. Set m.[[EvaluationError]] to result.
@@ -1291,7 +1285,7 @@ bool js::ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
     }
 
     // Step 9.b. Assert: module.[[Status]] is evaluated.
-    MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATED_ERROR);
+    MOZ_ASSERT(module->status() == ModuleStatus::Evaluated_Error);
 
     // Step 9.c. Assert: module.[[EvaluationError]] is result.
     MOZ_ASSERT(module->evaluationError() == error);
@@ -1305,13 +1299,13 @@ bool js::ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
     // Step 10. Else:
     // Step 10.a. Assert: module.[[Status]] is evaluating-async or evaluated.
     // Step 10.b. Assert: module.[[EvaluationError]] is empty.
-    MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATING ||
-               module->status() == MODULE_STATUS_EVALUATED);
+    MOZ_ASSERT(module->status() == ModuleStatus::Evaluating ||
+               module->status() == ModuleStatus::Evaluated);
 
     // Step 10.c. If module.[[AsyncEvaluation]] is false, then:
     if (!module->isAsyncEvaluating()) {
       // Step 10.c.i. Assert: module.[[Status]] is evaluated.
-      MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATED);
+      MOZ_ASSERT(module->status() == ModuleStatus::Evaluated);
 
       // Step 10.c.ii. Perform ! Call(capability.[[Resolve]], undefined,
       //               undefined).
@@ -1346,14 +1340,14 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
     cx->setPendingException(error, ShouldCaptureStack::Maybe);
     return false;
   }
-  if (module->status() == MODULE_STATUS_EVALUATING ||
-      module->status() == MODULE_STATUS_EVALUATED) {
+  if (module->status() == ModuleStatus::Evaluating ||
+      module->status() == ModuleStatus::Evaluated) {
     *indexOut = index;
     return true;
   }
 
   // Step 4. Assert: module.[[Status]] is linked.
-  MOZ_ASSERT(module->status() == MODULE_STATUS_LINKED);
+  MOZ_ASSERT(module->status() == ModuleStatus::Linked);
 
   // Step 10. Append module to stack.
   // Do this before changing the status so that we can recover on failure.
@@ -1363,7 +1357,7 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
   }
 
   // Step 5. Set module.[[Status]] to evaluating.
-  module->setStatus(MODULE_STATUS_EVALUATING);
+  module->setStatus(ModuleStatus::Evaluating);
 
   // Step 6. Set module.[[DFSIndex]] to index.
   module->setDfsIndex(index);
@@ -1393,7 +1387,7 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
     //            this method, so every requested module is guaranteed to
     //            resolve successfully.
     requiredModule =
-        HostResolveImportedModule(cx, module, required, MODULE_STATUS_LINKED);
+        HostResolveImportedModule(cx, module, required, ModuleStatus::Linked);
     if (!requiredModule) {
       return false;
     }
@@ -1407,16 +1401,16 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
     // Step 11.d. If requiredModule is a Cyclic Module Record, then:
     // Step 11.d.i. Assert: requiredModule.[[Status]] is either evaluating,
     //              evaluating-async, or evaluated.
-    MOZ_ASSERT(requiredModule->status() == MODULE_STATUS_EVALUATING ||
-               requiredModule->status() == MODULE_STATUS_EVALUATED);
+    MOZ_ASSERT(requiredModule->status() == ModuleStatus::Evaluating ||
+               requiredModule->status() == ModuleStatus::Evaluated);
 
     // Step 11.d.ii. Assert: requiredModule.[[Status]] is evaluating if and only
     //               if requiredModule is in stack.
-    MOZ_ASSERT((requiredModule->status() == MODULE_STATUS_EVALUATING) ==
+    MOZ_ASSERT((requiredModule->status() == ModuleStatus::Evaluating) ==
                ContainsElement(stack, requiredModule));
 
     // Step 11.d.iii. If requiredModule.[[Status]] is evaluating, then:
-    if (requiredModule->status() == MODULE_STATUS_EVALUATING) {
+    if (requiredModule->status() == ModuleStatus::Evaluating) {
       // Step 11.d.iii.1. Set module.[[DFSAncestorIndex]] to
       //                  min(module.[[DFSAncestorIndex]],
       //                  requiredModule.[[DFSAncestorIndex]]).
@@ -1429,11 +1423,11 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
 
       // Step 11.d.iv.2. Assert: requiredModule.[[Status]] is evaluating-async
       //                 or evaluated.
-      MOZ_ASSERT(requiredModule->status() >= MODULE_STATUS_EVALUATED);
+      MOZ_ASSERT(requiredModule->status() >= ModuleStatus::Evaluated);
 
       // Step 11.d.iv.3. If requiredModule.[[EvaluationError]] is not empty,
       //                 return ? requiredModule.[[EvaluationError]].
-      if (requiredModule->status() == MODULE_STATUS_EVALUATED_ERROR) {
+      if (requiredModule->status() == ModuleStatus::Evaluated_Error) {
         Rooted<Value> error(cx, requiredModule->evaluationError());
         cx->setPendingException(error, ShouldCaptureStack::Maybe);
         return false;
@@ -1504,7 +1498,7 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
       //              evaluating-async.
 
       // Bug 1777972: We don't have a separate evaluating-async state.
-      requiredModule->setStatus(MODULE_STATUS_EVALUATED);
+      requiredModule->setStatus(ModuleStatus::Evaluated);
 
       // Step 16.b.vi. If requiredModule and module are the same Module Record,
       //               set done to true.
@@ -1524,8 +1518,8 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
 // ES2023 16.2.1.5.2.2 ExecuteAsyncModule
 static bool ExecuteAsyncModule(JSContext* cx, Handle<ModuleObject*> module) {
   // Step 1. Assert: module.[[Status]] is evaluating or evaluating-async.
-  MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATING ||
-             module->status() == MODULE_STATUS_EVALUATED);
+  MOZ_ASSERT(module->status() == ModuleStatus::Evaluating ||
+             module->status() == ModuleStatus::Evaluated);
 
   // Step 2. Assert: module.[[HasTLA]] is true.
   MOZ_ASSERT(module->isAsync());
@@ -1549,7 +1543,7 @@ struct EvalOrderComparator {
 bool js::GatherAvailableModuleAncestors(
     JSContext* cx, Handle<ModuleObject*> module,
     MutableHandle<ModuleVector> sortedList) {
-  MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATED);
+  MOZ_ASSERT(module->status() == ModuleStatus::Evaluated);
   MOZ_ASSERT(sortedList.empty());
 
   if (!::GatherAvailableModuleAncestors(cx, module, sortedList)) {
@@ -1592,7 +1586,7 @@ static bool GatherAvailableModuleAncestors(
       // Step 1.a.i. Assert: m.[[Status]] is evaluating-async.
 
       // Bug 1777972: We don't have a separate evaluating-async state.
-      MOZ_ASSERT(m->status() == MODULE_STATUS_EVALUATED);
+      MOZ_ASSERT(m->status() == ModuleStatus::Evaluated);
 
       // Step 1.a.ii. Assert: m.[[EvaluationError]] is empty.
       MOZ_ASSERT(!m->hadEvaluationError());

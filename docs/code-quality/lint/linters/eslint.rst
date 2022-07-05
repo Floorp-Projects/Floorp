@@ -47,19 +47,40 @@ My editor doesn't understand a new global I've just added (e.g. to a content fil
 
 * This is a limitation which is a mixture of our ESLint setup and how we share globals across files.
 * Restarting your editor should pick up the new globals.
-* You can always double check via `./mach lint --linter eslint <file path>` on the command line.
+* You can always double check via ``./mach lint --linter eslint <file path>`` on the command line.
+
+I'm adding tests, how do I set up the right configuration?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* If the directory path of the tests is one of the `known ones`_, then ESLint will
+  do the right thing for that test type. This is the preferred option.
+
+  * For example placing xpcshell-tests in ``browser/components/foo/test/unit/``
+    will set up ESLint correctly.
+
+* If you really can't match the directory name, e.g. like the
+  ``browser/base/content/tests/*``, then you'll need `a file in the directory`_.
+
+Note: If you have multiple types of tests within a single directory, this is
+`difficult for ESLint to handle`_. Currently this may cause:
+
+* Rules to be incorrectly applied to the wrong types of test file.
+* Extra definitions for globals in tests which means that the no undefined variables
+  rule does not get triggered in some cases.
+
+I'm using an ES module
+^^^^^^^^^^^^^^^^^^^^^^
+
+* Use a ``.mjs`` extension for the file. ESLint will pick this up and automatically
+  treat it as a module.
+* If it is a system module (e.g. component definition or other non-frontend code),
+  use a ``.sys.mjs`` extension.
 
 This code shouldn't be linted
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * If it is a third-party piece of code, please add it to `ThirdPartyPaths.txt`_.
 * If it is pre-generated file or intentionally invalid, please add it to `.eslintignore`_
-
-I'm using an es6 module
-^^^^^^^^^^^^^^^^^^^^^^^
-
-* ESlint will need to be `informed that it is a module`_. You have to do this from
-  the configuration itself.
 
 I have valid code that is failing the ``no-undef`` rule or can't be parsed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -121,3 +142,6 @@ Sources
 .. _frame script environment: http://localhost:5500/code-quality/lint/linters/eslint-plugin-mozilla/environment.html#frame-script
 .. _Configuration (YAML): https://searchfox.org/mozilla-central/source/tools/lint/eslint.yml
 .. _Source: https://searchfox.org/mozilla-central/source/tools/lint/eslint/__init__.py
+.. _known ones: https://searchfox.org/mozilla-central/rev/287583a4a605eee8cd2d41381ffaea7a93d7b987/.eslintrc.js#24-40
+.. _a file in the directory: https://searchfox.org/mozilla-central/source/browser/base/content/test/popups/.eslintrc.js
+.. _difficult for ESLint to handle: https://bugzilla.mozilla.org/show_bug.cgi?id=1379669

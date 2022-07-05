@@ -15,7 +15,7 @@ colorway-intensity-bold = Bold
 colorway-closet-set-colorway-button = Set colorway
 colorway-closet-cancel-button = Cancel
 
-colorway-fx-home-link = Use { -brand-product-name } Home for colorful new tabs
-colorway-fx-home-link-success = { -brand-product-name } Home is now your home page
-colorway-fx-home-apply-button = Apply
-colorway-fx-home-undo-button = Undo
+colorway-homepage-reset-prompt = Make { -brand-product-name } Home your colorful homepage
+colorway-homepage-reset-success-message = { -brand-product-name } Home is now your homepage
+colorway-homepage-reset-apply-button = Apply
+colorway-homepage-reset-undo-button = Undo

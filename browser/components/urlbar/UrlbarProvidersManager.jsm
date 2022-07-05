@@ -52,6 +52,8 @@ var localProviderModules = {
     "resource:///modules/UrlbarProviderPreloadedSites.jsm",
   UrlbarProviderPrivateSearch:
     "resource:///modules/UrlbarProviderPrivateSearch.jsm",
+  UrlbarProviderQuickActions:
+    "resource:///modules/UrlbarProviderQuickActions.jsm",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarProviderRemoteTabs: "resource:///modules/UrlbarProviderRemoteTabs.jsm",
@@ -662,6 +664,7 @@ function updateSourcesIfEmpty(context) {
       UrlbarTokenizer.TYPE.RESTRICT_SEARCH,
       UrlbarTokenizer.TYPE.RESTRICT_TITLE,
       UrlbarTokenizer.TYPE.RESTRICT_URL,
+      UrlbarTokenizer.TYPE.RESTRICT_ACTION,
     ].includes(t.type)
   );
 

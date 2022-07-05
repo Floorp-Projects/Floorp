@@ -2869,25 +2869,12 @@ bool NS_IsSrcdocChannel(nsIChannel* aChannel) {
 }
 
 // helper function for NS_ShouldSecureUpgrade for checking HSTS
-bool handleResultFunc(bool aAllowSTS, bool aIsStsHost, uint32_t aHstsSource) {
+bool handleResultFunc(bool aAllowSTS, bool aIsStsHost) {
   if (aIsStsHost) {
     LOG(("nsHttpChannel::Connect() STS permissions found\n"));
     if (aAllowSTS) {
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::STS);
-      switch (aHstsSource) {
-        case nsISiteSecurityService::SOURCE_PRELOAD_LIST:
-          Telemetry::Accumulate(Telemetry::HSTS_UPGRADE_SOURCE, 0);
-          break;
-        case nsISiteSecurityService::SOURCE_ORGANIC_REQUEST:
-          Telemetry::Accumulate(Telemetry::HSTS_UPGRADE_SOURCE, 1);
-          break;
-        case nsISiteSecurityService::SOURCE_UNKNOWN:
-        default:
-          // record this as an organic request
-          Telemetry::Accumulate(Telemetry::HSTS_UPGRADE_SOURCE, 1);
-          break;
-      }
       return true;
     }
     Telemetry::AccumulateCategorical(
@@ -3018,7 +3005,6 @@ nsresult NS_ShouldSecureUpgrade(
   NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
 
   bool isStsHost = false;
-  uint32_t hstsSource = 0;
   // Calling |IsSecureURI| before the storage is ready to read will
   // block the main thread. Once the storage is ready, we can call it
   // from main thread.
@@ -3052,15 +3038,13 @@ nsresult NS_ShouldSecureUpgrade(
              callbackWrapper{std::move(callbackWrapper)},
              allowSTS{std::move(aAllowSTS)}]() mutable {
               bool isStsHost = false;
-              uint32_t hstsSource = 0;
-              nsresult rv = service->IsSecureURI(uri, originAttributes, nullptr,
-                                                 &hstsSource, &isStsHost);
+              nsresult rv =
+                  service->IsSecureURI(uri, originAttributes, &isStsHost);
 
               // Successfully get the result from |IsSecureURI| implies that
               // the storage is ready to read.
               storageReady = NS_SUCCEEDED(rv);
-              bool shouldUpgrade =
-                  handleResultFunc(allowSTS, isStsHost, hstsSource);
+              bool shouldUpgrade = handleResultFunc(allowSTS, isStsHost);
               // Check if request should be upgraded.
               NS_DispatchToMainThread(NS_NewRunnableFunction(
                   "net::NS_ShouldSecureUpgrade::ResultCallback",
@@ -3074,15 +3058,14 @@ nsresult NS_ShouldSecureUpgrade(
     return rv;
   }
 
-  nsresult rv = sss->IsSecureURI(aURI, aOriginAttributes, nullptr, &hstsSource,
-                                 &isStsHost);
+  nsresult rv = sss->IsSecureURI(aURI, aOriginAttributes, &isStsHost);
 
   // if the SSS check fails, it's likely because this load is on a
   // malformed URI or something else in the setup is wrong, so any error
   // should be reported.
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aShouldUpgrade = handleResultFunc(aAllowSTS, isStsHost, hstsSource);
+  aShouldUpgrade = handleResultFunc(aAllowSTS, isStsHost);
   if (!aShouldUpgrade) {
     // Check for CSP upgrade-insecure-requests, Mixed content auto upgrading
     // and Https-Only / -First.

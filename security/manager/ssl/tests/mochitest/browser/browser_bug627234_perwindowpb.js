@@ -41,7 +41,6 @@ function test() {
           uri,
           "max-age=1000",
           secInfo,
-          Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
           originAttributes(aIsPrivateMode)
         );
         ok(

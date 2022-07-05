@@ -113,7 +113,7 @@ void ScriptLoadRequest::SetReady() {
 
 void ScriptLoadRequest::Cancel() {
   mState = State::Canceled;
-  if (HasLoadContext()) {
+  if (HasScriptLoadContext()) {
     GetScriptLoadContext()->MaybeCancelOffThreadScript();
   }
 }
@@ -177,7 +177,7 @@ bool ScriptLoadRequest::IsMarkedForBytecodeEncoding() const {
 nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
                                             MaybeSourceText* aMaybeSource) {
   // If there's no script text, we try to get it from the element
-  if (HasLoadContext() && GetScriptLoadContext()->mIsInline) {
+  if (HasScriptLoadContext() && GetScriptLoadContext()->mIsInline) {
     nsAutoString inlineData;
     GetScriptLoadContext()->GetScriptElement()->GetScriptText(inlineData);
 

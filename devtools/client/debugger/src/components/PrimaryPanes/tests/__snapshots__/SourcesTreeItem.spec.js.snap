@@ -2037,12 +2037,12 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="angular"
+      className="folder"
     />
     <span
       className="label"
     >
-      Angular
+      ng://
     </span>
   </div>,
   "defaultState": null,
@@ -2216,12 +2216,12 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="angular"
+            className="folder"
           />
           <span
             className="label"
           >
-            Angular
+            ng://
           </span>
         </div>,
         "_rendering": false,
@@ -2909,7 +2909,7 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="extension"
+      className="globe-small"
     />
     <span
       className="label"
@@ -2933,7 +2933,41 @@ Object {
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
       "item": Object {
-        "contents": Array [],
+        "contents": Object {
+          "displayURL": Object {
+            "filename": "foo.js",
+            "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+            "path": "/foo.js",
+            "search": "",
+          },
+          "extensionName": null,
+          "id": "server1.conn13.child1/40",
+          "isBlackBoxed": false,
+          "isExtension": true,
+          "isOriginal": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+              "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "foo.js",
+              "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+            },
+          ],
+          "relativeUrl": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+          "thread": "FakeThread",
+          "url": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+        },
         "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
         "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
         "type": "directory",
@@ -3017,7 +3051,41 @@ Object {
           getSourcesGroups={[Function]}
           item={
             Object {
-              "contents": Array [],
+              "contents": Object {
+                "displayURL": Object {
+                  "filename": "foo.js",
+                  "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+                  "path": "/foo.js",
+                  "search": "",
+                },
+                "extensionName": null,
+                "id": "server1.conn13.child1/40",
+                "isBlackBoxed": false,
+                "isExtension": true,
+                "isOriginal": false,
+                "isPrettyPrinted": false,
+                "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+                    "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "foo.js",
+                    "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+                  },
+                ],
+                "relativeUrl": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+                "thread": "FakeThread",
+                "url": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+              },
               "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
               "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
               "type": "directory",
@@ -3090,7 +3158,7 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="extension"
+            className="globe-small"
           />
           <span
             className="label"
@@ -3112,7 +3180,41 @@ Object {
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
     "item": Object {
-      "contents": Array [],
+      "contents": Object {
+        "displayURL": Object {
+          "filename": "foo.js",
+          "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+          "path": "/foo.js",
+          "search": "",
+        },
+        "extensionName": null,
+        "id": "server1.conn13.child1/40",
+        "isBlackBoxed": false,
+        "isExtension": true,
+        "isOriginal": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+            "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "foo.js",
+            "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+          },
+        ],
+        "relativeUrl": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+        "thread": "FakeThread",
+        "url": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+      },
       "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
       "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
       "type": "directory",
@@ -3179,7 +3281,7 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="extension"
+      className="globe-small"
     />
     <span
       className="label"
@@ -3203,7 +3305,41 @@ Object {
       "focusItem": [MockFunction],
       "getSourcesGroups": [Function],
       "item": Object {
-        "contents": Array [],
+        "contents": Object {
+          "displayURL": Object {
+            "filename": "foo.js",
+            "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+            "path": "/foo.js",
+            "search": "",
+          },
+          "extensionName": null,
+          "id": "server1.conn13.child1/40",
+          "isBlackBoxed": false,
+          "isExtension": true,
+          "isOriginal": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+              "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "foo.js",
+              "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+            },
+          ],
+          "relativeUrl": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+          "thread": "FakeThread",
+          "url": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+        },
         "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
         "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
         "type": "directory",
@@ -3288,7 +3424,41 @@ Object {
           getSourcesGroups={[Function]}
           item={
             Object {
-              "contents": Array [],
+              "contents": Object {
+                "displayURL": Object {
+                  "filename": "foo.js",
+                  "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+                  "path": "/foo.js",
+                  "search": "",
+                },
+                "extensionName": null,
+                "id": "server1.conn13.child1/40",
+                "isBlackBoxed": false,
+                "isExtension": true,
+                "isOriginal": false,
+                "isPrettyPrinted": false,
+                "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+                    "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "foo.js",
+                    "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+                  },
+                ],
+                "relativeUrl": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+                "thread": "FakeThread",
+                "url": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+              },
               "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
               "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
               "type": "directory",
@@ -3362,7 +3532,7 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="extension"
+            className="globe-small"
           />
           <span
             className="label"
@@ -3384,7 +3554,41 @@ Object {
     "focusItem": [MockFunction],
     "getSourcesGroups": [Function],
     "item": Object {
-      "contents": Array [],
+      "contents": Object {
+        "displayURL": Object {
+          "filename": "foo.js",
+          "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+          "path": "/foo.js",
+          "search": "",
+        },
+        "extensionName": null,
+        "id": "server1.conn13.child1/40",
+        "isBlackBoxed": false,
+        "isExtension": true,
+        "isOriginal": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "parts": Array [
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "FakeThread",
+            "path": "FakeThread",
+          },
+          Object {
+            "mainThreadHostIfRoot": "http://www.example.com",
+            "part": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+            "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+          },
+          Object {
+            "mainThreadHostIfRoot": null,
+            "part": "foo.js",
+            "path": "FakeThread/moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+          },
+        ],
+        "relativeUrl": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+        "thread": "FakeThread",
+        "url": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856/foo.js",
+      },
       "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
       "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
       "type": "directory",
@@ -3452,12 +3656,12 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="webpack"
+      className="folder"
     />
     <span
       className="label"
     >
-      Webpack
+      webpack://
     </span>
   </div>,
   "defaultState": null,
@@ -3631,12 +3835,12 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="webpack"
+            className="folder"
           />
           <span
             className="label"
           >
-            Webpack
+            webpack://
           </span>
         </div>,
         "_rendering": false,

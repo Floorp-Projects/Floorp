@@ -1729,10 +1729,7 @@ impl YamlFrameReader {
 
         let clip_id = if clip_to_frame {
             Some(dl.define_clip_rect(
-                &SpaceAndClipInfo {
-                    clip_id: ClipId::ClipChain(ClipChainId::INVALID),
-                    spatial_id: self.top_space_and_clip().spatial_id,
-                },
+                self.top_space_and_clip().spatial_id,
                 clip_rect,
             ))
         } else {
@@ -1894,10 +1891,7 @@ impl YamlFrameReader {
 
         if let Some(clip_rect) = yaml["bounds"].as_rect() {
             space_and_clip.clip_id = dl.define_clip_rect(
-                &SpaceAndClipInfo {
-                    spatial_id: space_and_clip.spatial_id,
-                    clip_id: ClipId::ClipChain(ClipChainId::INVALID),
-                },
+                space_and_clip.spatial_id,
                 clip_rect,
             );
         }

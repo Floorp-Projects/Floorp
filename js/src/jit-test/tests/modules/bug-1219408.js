@@ -1,2 +1,2 @@
 // |jit-test| error: Error
-parseModule("").evaluation();
+moduleEvaluate(parseModule(""));

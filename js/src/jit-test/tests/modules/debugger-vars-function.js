@@ -24,7 +24,7 @@ g.eval(
         let e = 5;
         function f() { debugger; return e; }
     \`);
-    m.declarationInstantiation();
-    m.evaluation();
+    moduleLink(m);
+    moduleEvaluate(m);
 `);
 

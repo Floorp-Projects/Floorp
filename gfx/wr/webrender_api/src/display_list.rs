@@ -1971,17 +1971,17 @@ impl DisplayListBuilder {
 
     pub fn define_clip_rect(
         &mut self,
-        parent_space_and_clip: &di::SpaceAndClipInfo,
+        spatial_id: di::SpatialId,
         clip_rect: LayoutRect,
     ) -> di::ClipId {
         let id = self.generate_clip_index();
 
-        let current_offset = self.current_offset(parent_space_and_clip.spatial_id);
+        let current_offset = self.current_offset(spatial_id);
         let clip_rect = clip_rect.translate(current_offset);
 
         let item = di::DisplayItem::RectClip(di::RectClipDisplayItem {
             id,
-            parent_space_and_clip: *parent_space_and_clip,
+            spatial_id,
             clip_rect,
         });
 

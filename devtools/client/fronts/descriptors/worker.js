@@ -81,12 +81,6 @@ class WorkerDescriptorFront extends DescriptorMixin(
         return this;
       }
 
-      // @backward-compat { version 102 } WorkerDescriptor no longer implement attach method
-      //                  We can stop calling attach once 102 is the release channel.
-      if (!this.traits.doNotAttach) {
-        await super.attach();
-      }
-
       if (this.isServiceWorker) {
         this.registration = await this._getRegistrationIfActive();
         if (this.registration) {

@@ -4892,13 +4892,8 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   }
 #endif
 
-  rv = NS_NewToolkitProfileService(getter_AddRefs(mProfileSvc));
-  if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
-    PR_fprintf(PR_STDERR,
-               "Error: Access was denied while trying to open files in "
-               "your profile directory.\n");
-  }
-  if (NS_FAILED(rv)) {
+  mProfileSvc = NS_GetToolkitProfileService();
+  if (!mProfileSvc) {
     // We failed to choose or create profile - notify user and quit
     ProfileMissingDialog(mNativeApp);
     return 1;

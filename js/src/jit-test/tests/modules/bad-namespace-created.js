@@ -12,4 +12,4 @@ registerModule('C', parseModule('export * from "D"; export * from "E"'));
 registerModule('D', parseModule('export let x'));
 registerModule('E', parseModule('export let x'));
 
-assertThrowsInstanceOf(() => a.declarationInstantiation(), SyntaxError);
+assertThrowsInstanceOf(() => moduleLink(a), SyntaxError);

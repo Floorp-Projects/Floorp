@@ -145,15 +145,6 @@ export function getDisplayedSourcesList(state) {
   return Object.values(getDisplayedSources(state)).flatMap(Object.values);
 }
 
-export function getExtensionNameBySourceUrl(state, url) {
-  const match = getSourceList(state).find(
-    source => source.url && source.url.startsWith(url)
-  );
-  if (match && match.extensionName) {
-    return match.extensionName;
-  }
-}
-
 // This is only used by tests
 export function getSourceCount(state) {
   return getSourcesMap(state).size;
@@ -243,6 +234,7 @@ export const getDisplayedSources = createSelector(
       // with two additional fields: parts and displayURL.
       const displayedSource = {
         thread: source.thread,
+        isExtension: source.isExtension,
         isPrettyPrinted: source.isPrettyPrinted,
         isBlackBoxed: source.isBlackBoxed,
         isOriginal: source.isOriginal,

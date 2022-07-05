@@ -381,10 +381,8 @@ bool ExecutionRunnable::ParseAndLinkModule(
   if (!module) {
     return false;
   }
-  // Link() was previously named Instantiate().
-  // https://github.com/tc39/ecma262/pull/1312
   // Any imports will fail here - bug 1572644.
-  if (!JS::ModuleInstantiate(aCx, module)) {
+  if (!JS::ModuleLink(aCx, module)) {
     return false;
   }
   aModule.set(module);

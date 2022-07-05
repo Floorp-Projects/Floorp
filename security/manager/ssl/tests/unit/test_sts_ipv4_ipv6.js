@@ -24,7 +24,6 @@ function check_ip(s, v, ip) {
     uri,
     "max-age=1000;includeSubdomains",
     secInfo,
-    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
     {},
     parsedMaxAge,
     parsedIncludeSubdomains

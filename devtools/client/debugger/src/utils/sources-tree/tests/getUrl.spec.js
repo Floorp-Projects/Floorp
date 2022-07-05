@@ -40,11 +40,11 @@ describe("getUrl", () => {
 
   it("creates a group name for webpack", () => {
     const urlObject = getDisplayURL("webpack:///src/component.jsx");
-    expect(urlObject.group).toBe("webpack://");
+    expect(urlObject.group).toBe("Webpack");
   });
 
   it("creates a group name for angular source", () => {
     const urlObject = getDisplayURL("ng://src/component.jsx");
-    expect(urlObject.group).toBe("ng://");
+    expect(urlObject.group).toBe("Angular");
   });
 });

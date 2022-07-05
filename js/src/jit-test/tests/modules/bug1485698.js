@@ -5,5 +5,5 @@ let m = parseModule(`
   }
   f(1,2,3)
 `);
-m.declarationInstantiation();
-m.evaluation();
+moduleLink(m);
+moduleEvaluate(m);

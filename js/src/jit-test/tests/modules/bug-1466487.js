@@ -2,6 +2,6 @@
 
 evalInWorker(`
     let m = parseModule("import.meta;");
-    m.declarationInstantiation();
-    m.evaluation();
+    moduleLink(m);
+    moduleEvaluate(m);
 `);

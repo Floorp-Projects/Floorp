@@ -70,12 +70,7 @@ function add_tests() {
         if (testcase.includeSubdomains) {
           header += "; includeSubdomains";
         }
-        sss.processHeader(
-          uri,
-          header,
-          secInfo,
-          Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
-        );
+        sss.processHeader(uri, header, secInfo);
       }
     );
   }

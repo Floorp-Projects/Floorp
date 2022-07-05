@@ -3,5 +3,5 @@ let m = parseModule(`
   minorgc();
   root.eval();
 `);
-m.declarationInstantiation();
-m.evaluation();
+moduleLink(m);
+moduleEvaluate(m);
