@@ -1502,6 +1502,22 @@ static void JSONRootCheck(const Json::Value& aRoot,
       JSONRootCheck(process, aWithMainThread);
     }
   }
+
+  GET_JSON(profilingLog, aRoot["profilingLog"], Object);
+  EXPECT_EQ(profilingLog.size(), 1u);
+  for (auto it = profilingLog.begin(); it != profilingLog.end(); ++it) {
+    // The key should be a pid.
+    const auto key = it.name();
+    for (const auto letter : key) {
+      EXPECT_GE(letter, '0');
+      EXPECT_LE(letter, '9');
+    }
+    // And the value should be an object.
+    GET_JSON(logForPid, profilingLog[key], Object);
+    // Its content is not defined, but we expect at least these:
+    EXPECT_HAS_JSON(logForPid["profilingLogBegin_TSms"], Double);
+    EXPECT_HAS_JSON(logForPid["profilingLogEnd_TSms"], Double);
+  }
 }
 
 // Check that various expected top properties are in the JSON, and then call the
