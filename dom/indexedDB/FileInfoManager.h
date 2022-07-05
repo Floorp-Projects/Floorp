@@ -86,7 +86,7 @@ class FileInfoManager : public FileInfoManagerBase {
     return NS_OK;
   }
 
-  class FileInfoManagerGuard {
+  struct FileInfoManagerGuard {
     FileInfoManagerGuard() = default;
   };
 
