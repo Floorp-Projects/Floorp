@@ -32,7 +32,7 @@ ModuleNamespaceObject* GetOrCreateModuleNamespace(JSContext* cx,
 
 bool ModuleInitializeEnvironment(JSContext* cx, Handle<ModuleObject*> module);
 
-bool ModuleInstantiate(JSContext* cx, Handle<ModuleObject*> module);
+bool ModuleLink(JSContext* cx, Handle<ModuleObject*> module);
 
 // Start evaluating the module. If TLA is enabled, result will be a promise.
 bool ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,

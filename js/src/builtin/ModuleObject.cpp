@@ -949,8 +949,8 @@ ModuleEnvironmentObject* ModuleObject::environment() const {
   // Note that this it's valid to call this even if there was an error
   // evaluating the module.
 
-  // According to the spec the environment record is created during
-  // instantiation, but we create it earlier than that.
+  // According to the spec the environment record is created during linking, but
+  // we create it earlier than that.
   if (status() < ModuleStatus::Linked) {
     return nullptr;
   }
@@ -1120,8 +1120,8 @@ ModuleStatus ModuleObject::status() const {
 void ModuleObject::setStatus(ModuleStatus newStatus) {
   AssertValidModuleStatus(newStatus);
 
-  // Note that under OOM conditions we can fail the module instantiation process
-  // even after modules have been marked as instantiated.
+  // Note that under OOM conditions we can fail the module linking process even
+  // after modules have been marked as linked.
   MOZ_ASSERT((status() <= ModuleStatus::Linked &&
               newStatus == ModuleStatus::Unlinked) ||
                  newStatus > status(),
@@ -1402,7 +1402,7 @@ bool ModuleObject::createEnvironment(JSContext* cx,
 
 static bool module_InstantiateImpl(JSContext* cx, const CallArgs& args) {
   Rooted<ModuleObject*> module(cx, &args.thisv().toObject().as<ModuleObject>());
-  return js::ModuleInstantiate(cx, module);
+  return js::ModuleLink(cx, module);
 }
 
 static bool module_Instantiate(JSContext* cx, unsigned argc, Value* vp) {
