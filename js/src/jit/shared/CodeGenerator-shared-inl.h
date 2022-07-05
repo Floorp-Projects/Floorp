@@ -236,18 +236,23 @@ uint32_t CodeGeneratorShared::UnusedStackBytesForCall(
   return unusedArgSlots * sizeof(Value);
 }
 
-Address CodeGeneratorShared::ToAddress(const LAllocation& a) const {
+Address CodeGeneratorShared::ToAddress(const LAllocation& a,
+                                       BaseRegForAddress base) const {
   MOZ_ASSERT(a.isMemory() || a.isStackArea());
   MOZ_ASSERT(masm.framePushed() == frameSize());
 
   if (a.isArgument()) {
+    // Use the frame pointer, unless the caller explicitly requested a
+    // stack-pointer-relative address.
     uint32_t offsetFromFP =
         a.toArgument()->index() +
         (gen->compilingWasm() ? sizeof(wasm::Frame) : sizeof(JitFrameLayout));
-    if (useWasmStackArgumentAbi()) {
-      return Address(FramePointer, offsetFromFP);
+    if (base == BaseRegForAddress::SP) {
+      return Address(masm.getStackPointer(), frameSize() + offsetFromFP);
     }
-    return Address(masm.getStackPointer(), frameSize() + offsetFromFP);
+    MOZ_ASSERT(base == BaseRegForAddress::Default ||
+               base == BaseRegForAddress::FP);
+    return Address(FramePointer, offsetFromFP);
   }
 
   uint32_t slot =
@@ -257,8 +262,9 @@ Address CodeGeneratorShared::ToAddress(const LAllocation& a) const {
   return Address(masm.getStackPointer(), frameSize() - slot);
 }
 
-Address CodeGeneratorShared::ToAddress(const LAllocation* a) const {
-  return ToAddress(*a);
+Address CodeGeneratorShared::ToAddress(const LAllocation* a,
+                                       BaseRegForAddress base) const {
+  return ToAddress(*a, base);
 }
 
 // static

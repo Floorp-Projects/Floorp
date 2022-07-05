@@ -12390,7 +12390,6 @@ bool CodeGenerator::generateWasm(
   AutoCreatedBy acb(masm, "CodeGenerator::generateWasm");
 
   JitSpew(JitSpew_Codegen, "# Emitting wasm code");
-  setUseWasmStackArgumentAbi();
 
   size_t nInboundStackArgBytes = StackArgAreaSizeUnaligned(argTypes);
 
@@ -16921,7 +16920,10 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         } else if (larg->isFloatReg()) {
           stackArgs.infallibleEmplaceBack(ToFloatRegister(larg));
         } else {
-          stackArgs.infallibleEmplaceBack(ToAddress(larg));
+          // Always use the stack pointer here because GenerateDirectCallFromJit
+          // depends on this.
+          Address addr = ToAddress(larg, BaseRegForAddress::SP);
+          stackArgs.infallibleEmplaceBack(addr);
         }
         break;
       }

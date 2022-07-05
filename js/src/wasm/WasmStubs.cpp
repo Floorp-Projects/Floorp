@@ -1537,6 +1537,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
       case JitCallStackArg::Tag::Address: {
         // The address offsets were valid *before* we pushed our frame.
         Address src = stackArg.addr();
+        MOZ_ASSERT(src.base == masm.getStackPointer());
         src.offset += masm.framePushed() - framePushedAtStart;
         switch (iter.mirType()) {
           case MIRType::Double: {

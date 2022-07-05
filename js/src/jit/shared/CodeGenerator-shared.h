@@ -43,8 +43,6 @@ class CodeGeneratorShared : public LElementVisitor {
   MacroAssembler& ensureMasm(MacroAssembler* masm);
   mozilla::Maybe<IonHeapMacroAssembler> maybeMasm_;
 
-  bool useWasmStackArgumentAbi_;
-
  public:
   MacroAssembler& masm;
 
@@ -146,8 +144,14 @@ class CodeGeneratorShared : public LElementVisitor {
   inline Address AddressOfPassedArg(uint32_t slot) const;
   inline uint32_t UnusedStackBytesForCall(uint32_t numArgSlots) const;
 
-  inline Address ToAddress(const LAllocation& a) const;
-  inline Address ToAddress(const LAllocation* a) const;
+  enum class BaseRegForAddress { Default, FP, SP };
+
+  inline Address ToAddress(
+      const LAllocation& a,
+      BaseRegForAddress base = BaseRegForAddress::Default) const;
+  inline Address ToAddress(
+      const LAllocation* a,
+      BaseRegForAddress base = BaseRegForAddress::Default) const;
 
   static inline Address ToAddress(Register elements, const LAllocation* index,
                                   Scalar::Type type,
@@ -159,10 +163,6 @@ class CodeGeneratorShared : public LElementVisitor {
   bool addNativeToBytecodeEntry(const BytecodeSite* site);
   void dumpNativeToBytecodeEntries();
   void dumpNativeToBytecodeEntry(uint32_t idx);
-
-  void setUseWasmStackArgumentAbi() { useWasmStackArgumentAbi_ = true; }
-
-  bool useWasmStackArgumentAbi() const { return useWasmStackArgumentAbi_; }
 
  public:
   MIRGenerator& mirGen() const { return *gen; }
