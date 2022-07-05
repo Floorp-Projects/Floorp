@@ -42,7 +42,7 @@ use api::{FilterOp, FilterPrimitive, FontInstanceKey, FontSize, GlyphInstance, G
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode, StackingContextFlags};
 use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDescriptor, ReferenceFrameMapper};
-use api::{APZScrollGeneration, HasScrollLinkedEffect, Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDescriptor, ImageMask, ItemTag};
+use api::{APZScrollGeneration, HasScrollLinkedEffect, Shadow, SpatialId, StickyFrameDescriptor, ImageMask, ItemTag};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::{ReferenceTransformBinding, Rotation, FillRule, SpatialTreeItem, ReferenceFrameDescriptor};
 use api::units::*;
@@ -1084,9 +1084,11 @@ impl<'a> SceneBuilder<'a> {
             },
         };
 
+        // TODO(gw): This is the only remaining call site that relies on ClipId parenting, remove me!
         self.add_rect_clip_node(
             ClipId::root(iframe_pipeline_id),
-            &info.space_and_clip,
+            info.space_and_clip.spatial_id,
+            Some(info.space_and_clip.clip_id),
             &info.clip_rect,
         );
 
@@ -1697,7 +1699,8 @@ impl<'a> SceneBuilder<'a> {
 
                 self.add_rect_clip_node(
                     info.id,
-                    &info.parent_space_and_clip,
+                    info.spatial_id,
+                    None,
                     &info.clip_rect,
                 );
             }
@@ -2732,13 +2735,14 @@ impl<'a> SceneBuilder<'a> {
     }
 
     /// Add a new rectangle clip, positioned by the spatial node in the `space_and_clip`.
-    pub fn add_rect_clip_node(
+    fn add_rect_clip_node(
         &mut self,
         new_node_id: ClipId,
-        space_and_clip: &SpaceAndClipInfo,
+        spatial_id: SpatialId,
+        parent: Option<ClipId>,
         clip_rect: &LayoutRect,
     ) {
-        let spatial_node_index = self.get_space(space_and_clip.spatial_id);
+        let spatial_node_index = self.get_space(spatial_id);
 
         let snapped_clip_rect = self.snap_rect(
             clip_rect,
@@ -2766,7 +2770,7 @@ impl<'a> SceneBuilder<'a> {
 
         self.clip_store.register_clip_template(
             new_node_id,
-            Some(space_and_clip.clip_id),
+            parent,
             &[instance],
         );
     }
