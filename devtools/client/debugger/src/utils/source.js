@@ -574,14 +574,3 @@ export function getSourceQueryString(source) {
 export function isUrlExtension(url) {
   return url.includes("moz-extension:") || url.includes("chrome-extension");
 }
-
-export function isExtensionDirectoryPath(url) {
-  if (isUrlExtension(url)) {
-    const urlArr = url.replace(/\/+/g, "/").split("/");
-    let extensionIndex = urlArr.indexOf("moz-extension:");
-    if (extensionIndex === -1) {
-      extensionIndex = urlArr.indexOf("chrome-extension:");
-    }
-    return !urlArr[extensionIndex + 2];
-  }
-}

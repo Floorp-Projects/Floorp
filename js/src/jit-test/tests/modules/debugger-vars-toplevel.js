@@ -25,7 +25,7 @@ g.eval(
         function f() { return e; }
         debugger;
     \`);
-    m.declarationInstantiation();
-    m.evaluation();
+    moduleLink(m);
+    moduleEvaluate(m);
 `);
 

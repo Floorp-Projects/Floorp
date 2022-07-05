@@ -180,8 +180,19 @@ const MENU_BUTTON = "menubutton";
  * Collection of timeouts that are used to ensure something should not happen.
  */
 const TIMEOUT_ENSURE_PROFILE_NOT_SAVED = 1000;
-const TIMEOUT_ENSURE_CC_EDIT_DIALOG_NOT_CLOSED = 500;
+const TIMEOUT_ENSURE_CC_DIALOG_NOT_CLOSED = 500;
 const TIMEOUT_ENSURE_AUTOCOMPLETE_NOT_SHOWN = 1000;
+
+async function ensureCreditCardDialogNotClosed(win) {
+  const unloadHandler = () => {
+    ok(false, "Credit card dialog shouldn't be closed");
+  };
+  win.addEventListener("unload", unloadHandler);
+  await new Promise(resolve =>
+    setTimeout(resolve, TIMEOUT_ENSURE_CC_DIALOG_NOT_CLOSED)
+  );
+  win.removeEventListener("unload", unloadHandler);
+}
 
 function getDisplayedPopupItems(
   browser,
@@ -621,6 +632,14 @@ function getRecords(data) {
 
 function getAddresses() {
   return getRecords({ collectionName: "addresses" });
+}
+
+async function ensureNoAddressSaved() {
+  await new Promise(resolve =>
+    setTimeout(resolve, TIMEOUT_ENSURE_PROFILE_NOT_SAVED)
+  );
+  const addresses = await getAddresses();
+  is(addresses.length, 0, "No address was saved");
 }
 
 function getCreditCards() {

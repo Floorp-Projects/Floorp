@@ -1556,7 +1556,7 @@ nsresult mozJSModuleLoader::ImportESModule(
   nsCString str(aLocation);
 
   AUTO_PROFILER_MARKER_TEXT(
-      "ChromeUtils.importModule", JS,
+      "ChromeUtils.importESModule", JS,
       MarkerOptions(MarkerStack::Capture(),
                     MarkerInnerWindowIdFromJSContext(aCx)),
       aLocation);
@@ -1596,6 +1596,10 @@ nsresult mozJSModuleLoader::ImportESModule(
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ASSERT(request->IsReadyToRun());
+  if (!request->mModuleScript) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (!request->InstantiateModuleGraph()) {
     return NS_ERROR_FAILURE;
   }

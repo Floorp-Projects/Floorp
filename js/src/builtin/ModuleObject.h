@@ -247,8 +247,16 @@ class ModuleNamespaceObject : public ProxyObject {
   static const ProxyHandler proxyHandler;
 };
 
-// Possible values for ModuleStatus are defined in SelfHostingDefines.h.
-using ModuleStatus = int32_t;
+// Value types of [[Status]] in a Cyclic Module Record
+// https://tc39.es/ecma262/#table-cyclic-module-fields
+enum class ModuleStatus : int32_t {
+  Unlinked,
+  Linking,
+  Linked,
+  Evaluating,
+  Evaluated,
+  Evaluated_Error  // Sub-state of Evaluated with error value set.
+};
 
 class ModuleObject : public NativeObject {
  public:
@@ -277,26 +285,6 @@ class ModuleObject : public NativeObject {
     CycleRootSlot,
     SlotCount
   };
-
-  static_assert(EnvironmentSlot == MODULE_OBJECT_ENVIRONMENT_SLOT,
-                "EnvironmentSlot must match self-hosting define");
-  static_assert(StatusSlot == MODULE_OBJECT_STATUS_SLOT,
-                "StatusSlot must match self-hosting define");
-  static_assert(EvaluationErrorSlot == MODULE_OBJECT_EVALUATION_ERROR_SLOT,
-                "EvaluationErrorSlot must match self-hosting define");
-  static_assert(DFSIndexSlot == MODULE_OBJECT_DFS_INDEX_SLOT,
-                "DFSIndexSlot must match self-hosting define");
-  static_assert(DFSAncestorIndexSlot == MODULE_OBJECT_DFS_ANCESTOR_INDEX_SLOT,
-                "DFSAncestorIndexSlot must match self-hosting define");
-  static_assert(AsyncEvaluatingPostOrderSlot ==
-                    MODULE_OBJECT_ASYNC_EVALUATING_POST_ORDER_SLOT,
-                "AsyncEvaluatingSlot must match self-hosting define");
-  static_assert(TopLevelCapabilitySlot ==
-                    MODULE_OBJECT_TOP_LEVEL_CAPABILITY_SLOT,
-                "topLevelCapabilitySlot must match self-hosting define");
-  static_assert(PendingAsyncDependenciesSlot ==
-                    MODULE_OBJECT_PENDING_ASYNC_DEPENDENCIES_SLOT,
-                "PendingAsyncDependenciesSlot must match self-hosting define");
 
   static const JSClass class_;
 

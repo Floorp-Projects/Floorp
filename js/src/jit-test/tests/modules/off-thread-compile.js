@@ -8,8 +8,8 @@ function offThreadParseAndEvaluate(source) {
     offThreadCompileModuleToStencil(source);
     let stencil = finishOffThreadCompileModuleToStencil();
     let m = instantiateModuleStencil(stencil);
-    m.declarationInstantiation();
-    return m.evaluation();
+    moduleLink(m);
+    return moduleEvaluate(m);
 }
 
 offThreadParseAndEvaluate("export let x = 2 * 3;");

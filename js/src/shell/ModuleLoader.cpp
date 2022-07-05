@@ -146,7 +146,7 @@ bool ModuleLoader::loadAndExecute(JSContext* cx, HandleString path,
     return false;
   }
 
-  if (!JS::ModuleInstantiate(cx, module)) {
+  if (!JS::ModuleLink(cx, module)) {
     return false;
   }
 

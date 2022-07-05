@@ -65,8 +65,8 @@ f = g2.eval(
         export const c = 3;
         export function f(x) { return x + 1; }
     \`));
-    a.declarationInstantiation();
-    a.evaluation();
+    moduleLink(a);
+    moduleEvaluate(a);
 
     let m = parseModule(
     \`
@@ -78,6 +78,6 @@ f = g2.eval(
         eval("");
         debugger;
     \`);
-    m.declarationInstantiation();
-    m.evaluation();
+    moduleLink(m);
+    moduleEvaluate(m);
 `);

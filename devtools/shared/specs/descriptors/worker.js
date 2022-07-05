@@ -9,12 +9,6 @@ const workerDescriptorSpec = generateActorSpec({
   typeName: "workerDescriptor",
 
   methods: {
-    // @backward-compat { version 102 } WorkerDescriptor no longer implement attach method
-    //                  We can remove this method once 102 is the release channel.
-    attach: {
-      request: {},
-      response: RetVal("json"),
-    },
     detach: {
       request: {},
       response: {},

@@ -14,9 +14,12 @@ let ColorwayClosetOpener = {
   openModal: () => {
     let win = BrowserWindowTracker.getTopWindow();
     let dialogBox = win.gBrowser.getTabDialogBox(win.gBrowser.selectedBrowser);
-    return dialogBox.open("chrome://browser/content/colorwaycloset.html", {
-      features: "resizable=no",
-      sizeTo: "available",
-    });
+    return dialogBox.open(
+      "chrome://browser/content/colorways/colorwaycloset.html",
+      {
+        features: "resizable=no",
+        sizeTo: "available",
+      }
+    );
   },
 };

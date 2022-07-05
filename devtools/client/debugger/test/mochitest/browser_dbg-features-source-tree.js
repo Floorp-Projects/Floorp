@@ -250,6 +250,13 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
 
   await waitForSourcesInSourceTree(dbg, INTEGRATION_TEST_PAGE_SOURCES);
 
+  const mainThreadItem = findSourceTreeThreadByName(dbg, "Main Thread");
+  ok(mainThreadItem, "Found the thread item for the main thread");
+  ok(
+    mainThreadItem.querySelector("span.img.window"),
+    "The thread has the window icon"
+  );
+
   info(
     "Assert the number of sources and source actors for the same-url.sjs sources"
   );
@@ -295,6 +302,12 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
     dbg.selectors.getSourceActorsForSource(workerSameUrlSource.id).length,
     1,
     "same-url.js is loaded one time in the worker thread"
+  );
+  const workerThreadItem = findSourceTreeThreadByName(dbg, "same-url.sjs");
+  ok(workerThreadItem, "Found the thread item for the worker");
+  ok(
+    workerThreadItem.querySelector("span.img.worker"),
+    "The thread has the worker icon"
   );
 
   info("Assert the content of the named eval");
@@ -374,6 +387,17 @@ add_task(async function testSourceTreeWithWebExtensionContentScript() {
     findElementWithSelector(dbg, ".sources-list .focused"),
     "Source is focused"
   );
+
+  const contentScriptGroupItem = findSourceNodeWithText(
+    dbg,
+    "Test content script extension"
+  );
+  ok(contentScriptGroupItem, "Found the group item for the content script");
+  ok(
+    contentScriptGroupItem.querySelector("span.img.extension"),
+    "The group has the extension icon"
+  );
+
   for (let i = 1; i < 3; i++) {
     info(
       `Reloading tab (${i} time), the content script should always be reselected`

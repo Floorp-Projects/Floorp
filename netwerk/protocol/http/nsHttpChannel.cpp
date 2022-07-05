@@ -1800,9 +1800,8 @@ nsresult nsHttpChannel::ProcessHSTSHeader(nsITransportSecurityInfo* aSecInfo) {
   }
 
   uint32_t failureResult;
-  uint32_t headerSource = nsISiteSecurityService::SOURCE_ORGANIC_REQUEST;
-  rv = sss->ProcessHeader(mURI, securityHeader, aSecInfo, headerSource,
-                          originAttributes, nullptr, nullptr, &failureResult);
+  rv = sss->ProcessHeader(mURI, securityHeader, aSecInfo, originAttributes,
+                          nullptr, nullptr, &failureResult);
   if (NS_FAILED(rv)) {
     nsAutoString consoleErrorCategory(u"Invalid HSTS Headers"_ns);
     nsAutoString consoleErrorTag;

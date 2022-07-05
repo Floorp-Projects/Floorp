@@ -3,8 +3,8 @@
 
 function parseAndEvaluate(source) {
     let m = parseModule(source);
-    m.declarationInstantiation();
-    return m.evaluation();
+    moduleLink(m);
+    return moduleEvaluate(m);
 }
 
 parseAndEvaluate("this")
@@ -15,8 +15,8 @@ parseAndEvaluate("this")
   });
 
 let m = parseModule("export function getThis() { return this; }");
-m.declarationInstantiation();
-m.evaluation()
+moduleLink(m);
+moduleEvaluate(m)
   .then(() => {
     let f = getModuleEnvironmentValue(m, "getThis");
     assertEq(typeof(f()), "undefined");

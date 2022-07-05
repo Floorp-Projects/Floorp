@@ -18,6 +18,6 @@ const sb =
 oomTest(() => {
     let a = registerModule('a', parseModule(sa));
     let b = registerModule('b', parseModule(sb));
-    b.declarationInstantiation();
-    assertEq(b.evaluation(), 42);
+    moduleLink(b);
+    assertEq(moduleEvaluate(b), 42);
 });

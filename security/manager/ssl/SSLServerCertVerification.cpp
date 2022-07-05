@@ -439,8 +439,8 @@ static nsresult OverrideAllowedForHost(
     return rv;
   }
 
-  rv = sss->IsSecureURI(uri, aOriginAttributes, nullptr, nullptr,
-                        &strictTransportSecurityEnabled);
+  rv =
+      sss->IsSecureURI(uri, aOriginAttributes, &strictTransportSecurityEnabled);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("[0x%" PRIx64 "] checking for HSTS failed", aPtrForLog));

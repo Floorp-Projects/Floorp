@@ -195,6 +195,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["shortcuts.bookmarks", true],
   ["shortcuts.tabs", true],
   ["shortcuts.history", true],
+  ["shortcuts.quickactions", false],
 
   // Whether to show search suggestions before general results.
   ["showSearchSuggestionsFirst", true],
@@ -224,6 +225,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include synced tab results. The syncing of open tabs
   // must also be enabled, from Sync preferences.
   ["suggest.remotetab", true],
+
+  // Whether results will include QuickActions.
+  ["quickactions.enabled", false],
 
   // Whether results will include non-sponsored quick suggest suggestions.
   ["suggest.quicksuggest.nonsponsored", false],

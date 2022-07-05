@@ -835,6 +835,14 @@
   fill-opacity: var(--urlbar-icon-fill-opacity);
 }
 
+.urlbarView-row[source="actions"] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
+#urlbar-engine-one-off-item-actions {
+  list-style-image: url("chrome://devtools/skin/images/command-console.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: var(--urlbar-icon-fill-opacity);
+}
+
 /**
  * We remove the blue fill from the bookmark icon when it is selected. We use
  * a blue color as the selection background-color in some instances (Linux with

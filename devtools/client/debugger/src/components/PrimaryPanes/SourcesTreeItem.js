@@ -15,17 +15,11 @@ import {
   getGeneratedSourceByURL,
   hasPrettyTab as checkHasPrettyTab,
   getContext,
-  getExtensionNameBySourceUrl,
   getSourceContent,
 } from "../../selectors";
 import actions from "../../actions";
 
-import {
-  isUrlExtension,
-  isExtensionDirectoryPath,
-  shouldBlackbox,
-  sourceTypes,
-} from "../../utils/source";
+import { shouldBlackbox, sourceTypes } from "../../utils/source";
 import {
   isDirectory,
   getPathWithoutThread,
@@ -45,7 +39,6 @@ class SourceTreeItem extends Component {
       cx: PropTypes.object.isRequired,
       depth: PropTypes.number.isRequired,
       expanded: PropTypes.bool.isRequired,
-      extensionName: PropTypes.string,
       focusItem: PropTypes.func.isRequired,
       focused: PropTypes.bool.isRequired,
       getSourcesGroups: PropTypes.func.isRequired,
@@ -279,12 +272,10 @@ class SourceTreeItem extends Component {
   renderIcon(item, depth) {
     const { projectRoot, source, hasPrettyTab, threads } = this.props;
 
-    if (item.name === "webpack://") {
+    if (item.name === "Webpack") {
       return <AccessibleImage className="webpack" />;
-    } else if (item.name === "ng://") {
+    } else if (item.name === "Angular") {
       return <AccessibleImage className="angular" />;
-    } else if (isExtensionDirectoryPath(item.path)) {
-      return <AccessibleImage className="extension" />;
     }
 
     // Threads level
@@ -294,6 +285,26 @@ class SourceTreeItem extends Component {
       if (thread) {
         const icon = thread.targetType.includes("worker") ? "worker" : "window";
         return <AccessibleImage className={classnames(icon)} />;
+      }
+    }
+
+    // Check if the group relates to an extension.
+    // This happens when a webextension injects a content script.
+    if (depth == 1) {
+      // Retrieve the first source in this group, as there is nothing
+      // on `item` to know if we are on an extension
+      function findFirstSource(_item) {
+        if (_item.type == "source") {
+          return _item.contents;
+        }
+        if (_item.contents[0]) {
+          return findFirstSource(_item.contents[0]);
+        }
+        return null;
+      }
+      const firstSource = findFirstSource(item);
+      if (firstSource?.isExtension) {
+        return <AccessibleImage className={classnames("extension")} />;
       }
     }
 
@@ -335,7 +346,7 @@ class SourceTreeItem extends Component {
   }
 
   renderItemName(depth) {
-    const { item, threads, extensionName } = this.props;
+    const { item, threads } = this.props;
 
     if (depth === 0) {
       const thread = threads.find(({ actor }) => actor == item.name);
@@ -347,26 +358,11 @@ class SourceTreeItem extends Component {
       }
     }
 
-    if (isExtensionDirectory(depth, extensionName)) {
-      return extensionName;
-    }
-
-    switch (item.name) {
-      case "ng://":
-        return "Angular";
-      case "webpack://":
-        return "Webpack";
-      default:
-        return `${unescape(item.name)}`;
-    }
+    return unescape(item.name);
   }
 
   renderItemTooltip() {
-    const { item, depth, extensionName } = this.props;
-
-    if (isExtensionDirectory(depth, extensionName)) {
-      return item.name;
-    }
+    const { item } = this.props;
 
     return item.type === "source"
       ? unescape(item.contents.url)
@@ -412,21 +408,13 @@ function getSourceContentValue(state, source) {
   return content && isFulfilled(content) ? content.value : null;
 }
 
-function isExtensionDirectory(depth, extensionName) {
-  return extensionName && (depth === 1 || depth === 0);
-}
-
 const mapStateToProps = (state, props) => {
-  const { source, item } = props;
+  const { source } = props;
   return {
     cx: getContext(state),
     hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
     hasPrettyTab: source ? checkHasPrettyTab(state, source.url) : false,
     sourceContent: source ? getSourceContentValue(state, source) : null,
-    extensionName:
-      (isUrlExtension(item.name) &&
-        getExtensionNameBySourceUrl(state, item.name)) ||
-      null,
   };
 };
 

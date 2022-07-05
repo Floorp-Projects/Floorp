@@ -2,8 +2,8 @@
 
 function evalModuleAndCheck(source, expected) {
     let m = parseModule(source);
-    m.declarationInstantiation();
-    m.evaluation();
+    moduleLink(m);
+    moduleEvaluate(m);
     assertEq(getModuleEnvironmentValue(m, "r"), expected);
 }
 
@@ -23,8 +23,8 @@ function offThreadEvalModuleAndCheck(source, expected) {
     let stencil = finishOffThreadCompileModuleToStencil();
     let m = instantiateModuleStencil(stencil);
     print("compiled");
-    m.declarationInstantiation();
-    m.evaluation();
+    moduleLink(m);
+    moduleEvaluate(m);
     assertEq(getModuleEnvironmentValue(m, "r"), expected);
 }
 

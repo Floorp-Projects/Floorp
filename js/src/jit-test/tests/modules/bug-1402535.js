@@ -2,5 +2,5 @@
 
 stackTest(function() {
     let m = parseModule(``);
-    m.declarationInstantiation();
+    moduleLink(m);
 });

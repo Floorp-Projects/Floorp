@@ -166,15 +166,14 @@ extern JS_PUBLIC_API void SetModulePrivate(JSObject* module,
 extern JS_PUBLIC_API Value GetModulePrivate(JSObject* module);
 
 /*
- * Perform the ModuleInstantiate operation on the given source text module
- * record.
+ * Perform the ModuleLink operation on the given source text module record.
  *
  * This transitively resolves all module dependencies (calling the
  * HostResolveImportedModule hook) and initializes the environment record for
  * the module.
  */
-extern JS_PUBLIC_API bool ModuleInstantiate(JSContext* cx,
-                                            Handle<JSObject*> moduleRecord);
+extern JS_PUBLIC_API bool ModuleLink(JSContext* cx,
+                                     Handle<JSObject*> moduleRecord);
 
 /*
  * Perform the ModuleEvaluate operation on the given source text module record
@@ -185,7 +184,7 @@ extern JS_PUBLIC_API bool ModuleInstantiate(JSContext* cx,
  * promise. Otherwise, it transitively evaluates all dependences of this module
  * and then evaluates this module.
  *
- * ModuleInstantiate must have completed prior to calling this.
+ * ModuleLink must have completed prior to calling this.
  */
 extern JS_PUBLIC_API bool ModuleEvaluate(JSContext* cx,
                                          Handle<JSObject*> moduleRecord,

@@ -161,14 +161,12 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
       // Cu is not available for workers and so we are not able to get a
       // WebExtensionPolicy object
-      if (!isWorker && this.url) {
+      if (!isWorker && this.url?.startsWith("moz-extension:")) {
         try {
           const extURI = Services.io.newURI(this.url);
-          if (extURI) {
-            const policy = WebExtensionPolicy.getByURI(extURI);
-            if (policy) {
-              this._extensionName = policy.name;
-            }
+          const policy = WebExtensionPolicy.getByURI(extURI);
+          if (policy) {
+            this._extensionName = policy.name;
           }
         } catch (e) {
           console.warn(`Failed to find extension name for ${this.url} : ${e}`);

@@ -25,5 +25,5 @@ export default 1;
 registerModule('A', parseModule(ASrc));
 
 let m = parseModule(mainSrc);
-m.declarationInstantiation()
-m.evaluation();
+moduleLink(m)
+moduleEvaluate(m);

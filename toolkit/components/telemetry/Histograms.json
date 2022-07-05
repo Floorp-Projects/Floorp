@@ -12205,16 +12205,6 @@
     "bug_numbers": [1435713],
     "description": "Result of the content signature verification keyed by application (certificate fingerprint). 0=valid, 1=invalid, 2=noCertChain, 3=createContextFailedWithOtherError, 4=expiredCert, 5=certNotValidYet, 6=buildCertChainFailed, 7=eeCertForWrongHost, 8=extractKeyError, 9=vfyContextError"
   },
-  "HSTS_UPGRADE_SOURCE": {
-    "record_in_processes": [ "main" ],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1363546],
-    "expires_in_version": "62",
-    "kind": "enumerated",
-    "n_values": 8,
-    "description": "When we record an upgrade due to HSTS, record the source of that HSTS entry. (0: HSTS preload list, 1: HSTS Header seen naturally, 2: HSTS priming)"
-  },
   "COOKIE_TIME_MOVING_MS": {
     "record_in_processes": ["content"],
     "products": ["firefox", "fennec"],

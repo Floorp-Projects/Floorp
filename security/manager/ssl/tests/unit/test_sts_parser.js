@@ -18,15 +18,7 @@ function testSuccess(header, expectedMaxAge, expectedIncludeSubdomains) {
   let maxAge = {};
   let includeSubdomains = {};
 
-  sss.processHeader(
-    dummyUri,
-    header,
-    secInfo,
-    sss.SOURCE_ORGANIC_REQUEST,
-    {},
-    maxAge,
-    includeSubdomains
-  );
+  sss.processHeader(dummyUri, header, secInfo, {}, maxAge, includeSubdomains);
 
   equal(maxAge.value, expectedMaxAge, "Did not correctly parse maxAge");
   equal(
@@ -47,7 +39,6 @@ function testFailure(header) {
         dummyUri,
         header,
         secInfo,
-        sss.SOURCE_ORGANIC_REQUEST,
         {},
         maxAge,
         includeSubdomains
