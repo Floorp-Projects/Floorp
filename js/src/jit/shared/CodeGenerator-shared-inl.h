@@ -224,7 +224,7 @@ uint32_t CodeGeneratorShared::SlotToStackOffset(uint32_t slot) const {
 
 // For argument construction for calls. Argslots are Value-sized.
 uint32_t CodeGeneratorShared::StackOffsetOfPassedArg(uint32_t slot) const {
-  // A slot of 0 is permitted only to calculate %esp offset for calls.
+  MOZ_ASSERT(slot > 0);
   MOZ_ASSERT(slot <= graph.argumentSlotCount());
   uint32_t offsetFromBase = offsetOfPassedArgSlots_ + slot * sizeof(Value);
 
@@ -236,6 +236,14 @@ uint32_t CodeGeneratorShared::StackOffsetOfPassedArg(uint32_t slot) const {
   // sizeof(Value) to ensure proper alignment.
   MOZ_ASSERT(offset % sizeof(Value) == 0);
   return offset;
+}
+
+uint32_t CodeGeneratorShared::UnusedStackBytesForCall(
+    uint32_t numArgSlots) const {
+  MOZ_ASSERT(masm.framePushed() == frameSize());
+  MOZ_ASSERT(numArgSlots <= graph.argumentSlotCount());
+  uint32_t unusedArgSlots = graph.argumentSlotCount() - numArgSlots;
+  return unusedArgSlots * sizeof(Value);
 }
 
 uint32_t CodeGeneratorShared::ToStackOffset(LAllocation a) const {

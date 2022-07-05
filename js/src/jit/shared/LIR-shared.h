@@ -396,7 +396,7 @@ class LJSCallInstructionHelper
       : LCallInstructionHelper<Defs, Operands, Temps>(opcode) {}
 
  public:
-  uint32_t argslot() const {
+  uint32_t paddedNumStackArgs() const {
     if (JitStackValueAlignment > 1) {
       return AlignBytes(mir()->numStackArgs(), JitStackValueAlignment);
     }
