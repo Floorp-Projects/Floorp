@@ -39,12 +39,12 @@ const ColorwayCloset = {
     expiryDateSpan: document.querySelector("#collection-expiry-date > span"),
     setColorwayButton: document.getElementById("set-colorway"),
     cancelButton: document.getElementById("cancel"),
-    useFXHomeControls: document.getElementById("use-fx-home-controls"),
+    homepageResetContainer: document.getElementById("homepage-reset-container"),
   },
 
   init() {
     this._displayCollectionData();
-    this._displayUseFXHomeControls();
+    this._displayHomepageResetOption();
 
     AddonManager.addAddonListener(this);
     window.addEventListener("unload", this);
@@ -98,23 +98,23 @@ const ColorwayCloset = {
     }
   },
 
-  _displayUseFXHomeControls() {
+  _displayHomepageResetOption() {
     const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
-    this.el.useFXHomeControls.hidden = HomePage.isDefault;
+    this.el.homepageResetContainer.hidden = HomePage.isDefault;
     if (!HomePage.isDefault) {
       let homeState;
-      this.el.useFXHomeControls
+      this.el.homepageResetContainer
         .querySelector(".reset-prompt > button")
         .addEventListener("click", () => {
           homeState = HomePage.get();
           HomePage.reset();
-          this.el.useFXHomeControls.classList.add("success");
+          this.el.homepageResetContainer.classList.add("success");
         });
-      this.el.useFXHomeControls
+      this.el.homepageResetContainer
         .querySelector(".success-prompt > button")
         .addEventListener("click", () => {
           HomePage.set(homeState);
-          this.el.useFXHomeControls.classList.remove("success");
+          this.el.homepageResetContainer.classList.remove("success");
         });
     }
   },

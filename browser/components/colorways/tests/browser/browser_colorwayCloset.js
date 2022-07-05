@@ -28,18 +28,18 @@ function getTestElements(document) {
     colorwayFigure: document.getElementById("colorway-figure"),
     collectionTitle: document.getElementById("collection-title"),
     expiryDateSpan: document.querySelector("#collection-expiry-date > span"),
-    useFXHomeControls: document.getElementById("use-fx-home-controls"),
-    useFXHomeSuccessMessage: document.querySelector(
-      "#use-fx-home-controls > .success-prompt > span"
+    homepageResetContainer: document.getElementById("homepage-reset-container"),
+    homepageResetSuccessMessage: document.querySelector(
+      "#homepage-reset-container > .success-prompt > span"
     ),
-    useFXHomeSuccessUndoButton: document.querySelector(
-      "#use-fx-home-controls > .success-prompt > button"
+    homepageResetUndoButton: document.querySelector(
+      "#homepage-reset-container > .success-prompt > button"
     ),
-    useFXHomeResetMessage: document.querySelector(
-      "#use-fx-home-controls > .reset-prompt > span"
+    homepageResetMessage: document.querySelector(
+      "#homepage-reset-container > .reset-prompt > span"
     ),
-    useFXHomeResetApplyButton: document.querySelector(
-      "#use-fx-home-controls > .reset-prompt > button"
+    homepageResetApplyButton: document.querySelector(
+      "#homepage-reset-container > .reset-prompt > button"
     ),
   };
 }
@@ -109,43 +109,40 @@ add_task(async function colorwaycloset_show_colorway() {
 add_task(async function colorwaycloset_custom_home_page() {
   await HomePage.set("https://www.example.com");
   await testInColorwayClosetModal(document => {
-    const { useFXHomeResetApplyButton } = getTestElements(document);
+    const { homepageResetApplyButton } = getTestElements(document);
     let v = getElementVisibility(document);
     ok(
-      v.useFXHomeControls.isVisible,
-      '"Use Firefox home" controls should be shown'
+      v.homepageResetContainer.isVisible,
+      "Homepage reset prompt should be shown"
     );
     ok(
-      v.useFXHomeSuccessMessage.isHidden,
+      v.homepageResetSuccessMessage.isHidden,
       "Success message should not be shown"
     );
-    ok(
-      v.useFXHomeSuccessUndoButton.isHidden,
-      "Undo button should not be shown"
-    );
-    ok(v.useFXHomeResetMessage.isVisible, "Reset message should be shown");
-    ok(v.useFXHomeResetApplyButton.isVisible, "Apply button should be shown");
+    ok(v.homepageResetUndoButton.isHidden, "Undo button should not be shown");
+    ok(v.homepageResetMessage.isVisible, "Reset message should be shown");
+    ok(v.homepageResetApplyButton.isVisible, "Apply button should be shown");
 
-    useFXHomeResetApplyButton.click();
+    homepageResetApplyButton.click();
     v = getElementVisibility(document);
 
-    ok(v.useFXHomeSuccessMessage.isVisible, "Success message should be shown");
-    ok(v.useFXHomeSuccessUndoButton.isVisible, "Undo button should be shown");
-    ok(v.useFXHomeResetMessage.isHidden, "Reset message should not be shown");
     ok(
-      v.useFXHomeResetApplyButton.isHidden,
-      "Apply button should not be shown"
+      v.homepageResetSuccessMessage.isVisible,
+      "Success message should be shown"
     );
+    ok(v.homepageResetUndoButton.isVisible, "Undo button should be shown");
+    ok(v.homepageResetMessage.isHidden, "Reset message should not be shown");
+    ok(v.homepageResetApplyButton.isHidden, "Apply button should not be shown");
   });
 });
 
 add_task(async function colorwaycloset_default_home_page() {
   await HomePage.set(HomePage.getOriginalDefault());
   await testInColorwayClosetModal(document => {
-    const { useFXHomeControls } = getTestElements(document);
+    const { homepageResetContainer } = getTestElements(document);
     ok(
-      BrowserTestUtils.is_hidden(useFXHomeControls),
-      '"Use Firefox home" controls should be hidden'
+      BrowserTestUtils.is_hidden(homepageResetContainer),
+      "Homepage reset prompt should be hidden"
     );
   });
 });
