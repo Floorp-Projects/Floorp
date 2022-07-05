@@ -451,7 +451,7 @@ cfr:
   isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 "moments-page":
   description: "A Firefox Messaging System message for the moments-page message channel"
@@ -461,7 +461,7 @@ cfr:
   isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 infobar:
   description: "A Firefox Messaging system message for the infobar message channel"
@@ -471,7 +471,7 @@ infobar:
   isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 spotlight:
   description: "A Firefox Messaging System message for the spotlight message channel"
@@ -481,7 +481,7 @@ spotlight:
   isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 pbNewtab:
   description: "A Firefox Messaging System message for the pbNewtab message channel"
@@ -491,7 +491,7 @@ pbNewtab:
   isEarlyStartup: false
   schema:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-    path: "browser/components/newtab/schemas/MessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 syncAfterTabChange:
   description: "Schedule a sync after any tab change"
