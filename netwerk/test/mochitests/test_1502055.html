@@ -9,27 +9,40 @@
 <script type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [
-  ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-  ["dom.serviceWorkers.enabled", true],
-  ["dom.serviceWorkers.testing.enabled", true]
-]}).then(() => {
-  let ifr = document.createElement('iframe');
-  ifr.src = "https://example.org/tests/netwerk/test/mochitests/iframe_1502055.html";
-  document.body.appendChild(ifr);
-  addEventListener("message", e => {
-    if (e.data.type == "finish") {
-      ok(true, "Test passed");
-      SimpleTest.finish();
-      return;
-    }
+  (async () => {
+    // Grant example.org first-party storage-access to allow service workers to
+    // run in the third-party context when dFPI is enabled. This won't be
+    // necessary anymore once we enable service worker partitioning in beta and
+    // release. See Bug 1730885.
+    await SpecialPowers.pushPermissions([
+      {
+        type: "3rdPartyStorage^https://example.org",
+        allow: true,
+        context: document.location.origin,
+      },
+    ]);
+    await SpecialPowers.pushPrefEnv({
+      "set": [
+        ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+        ["dom.serviceWorkers.enabled", true],
+        ["dom.serviceWorkers.testing.enabled", true]
+      ]
+    })
+    let ifr = document.createElement('iframe');
+    ifr.src = "https://example.org/tests/netwerk/test/mochitests/iframe_1502055.html";
+    document.body.appendChild(ifr);
+    addEventListener("message", e => {
+      if (e.data.type == "finish") {
+        ok(true, "Test passed");
+        SimpleTest.finish();
+        return;
+      }
 
-    if (e.data.type == "info") {
-      info(e.data.msg);
-    }
-  });
-});
-
+      if (e.data.type == "info") {
+        info(e.data.msg);
+      }
+    });
+  })();
 </script>
 
 </body>
