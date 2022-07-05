@@ -503,6 +503,7 @@ def run_web_platform_tests(command_context, **params):
 
     wpt_setup = command_context._spawn(WebPlatformTestsRunnerSetup)
     wpt_setup._mach_context = command_context._mach_context
+    wpt_setup._virtualenv_name = command_context._virtualenv_name
     wpt_runner = WebPlatformTestsRunner(wpt_setup)
 
     logger = wpt_runner.setup_logging(**params)
