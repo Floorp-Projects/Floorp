@@ -1550,7 +1550,7 @@ void GfxInfoBase::RemoveCollector(GfxInfoCollectorBase* collector) {
 }
 
 static void AppendMonitor(JSContext* aCx, widget::Screen& aScreen,
-                          JS::HandleObject aOutArray, int32_t aIndex) {
+                          JS::Handle<JSObject*> aOutArray, int32_t aIndex) {
   JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
 
   auto screenSize = aScreen.GetRect().Size();
@@ -1583,7 +1583,8 @@ static void AppendMonitor(JSContext* aCx, widget::Screen& aScreen,
   JS_SetElement(aCx, aOutArray, aIndex, element);
 }
 
-nsresult GfxInfoBase::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray) {
+nsresult GfxInfoBase::FindMonitors(JSContext* aCx,
+                                   JS::Handle<JSObject*> aOutArray) {
   int32_t index = 0;
   auto& sm = ScreenManager::GetSingleton();
   for (auto& screen : sm.CurrentScreenList()) {
@@ -1600,7 +1601,7 @@ nsresult GfxInfoBase::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray) {
 }
 
 NS_IMETHODIMP
-GfxInfoBase::GetMonitors(JSContext* aCx, JS::MutableHandleValue aResult) {
+GfxInfoBase::GetMonitors(JSContext* aCx, JS::MutableHandle<JS::Value> aResult) {
   JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
 
   nsresult rv = FindMonitors(aCx, array);

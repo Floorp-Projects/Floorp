@@ -411,7 +411,7 @@ template <typename T>
 template <typename K, typename V>
 [[nodiscard]] bool ToJSValue(JSContext* aCx, const Record<K, V>& aArgument,
                              JS::MutableHandle<JS::Value> aValue) {
-  JS::RootedObject recordObj(aCx, JS_NewPlainObject(aCx));
+  JS::Rooted<JSObject*> recordObj(aCx, JS_NewPlainObject(aCx));
   if (!recordObj) {
     return false;
   }

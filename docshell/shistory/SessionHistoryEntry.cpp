@@ -1391,7 +1391,8 @@ SessionHistoryEntry::GetBfcacheID(uint64_t* aBfcacheID) {
 }
 
 NS_IMETHODIMP
-SessionHistoryEntry::GetWireframe(JSContext* aCx, JS::MutableHandleValue aOut) {
+SessionHistoryEntry::GetWireframe(JSContext* aCx,
+                                  JS::MutableHandle<JS::Value> aOut) {
   if (mWireframe.isNothing()) {
     aOut.set(JS::NullValue());
   } else if (NS_WARN_IF(!mWireframe->ToObjectInternal(aCx, aOut))) {
@@ -1401,7 +1402,7 @@ SessionHistoryEntry::GetWireframe(JSContext* aCx, JS::MutableHandleValue aOut) {
 }
 
 NS_IMETHODIMP
-SessionHistoryEntry::SetWireframe(JSContext* aCx, JS::HandleValue aArg) {
+SessionHistoryEntry::SetWireframe(JSContext* aCx, JS::Handle<JS::Value> aArg) {
   if (aArg.isNullOrUndefined()) {
     mWireframe = Nothing();
     return NS_OK;

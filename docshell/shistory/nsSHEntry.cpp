@@ -1107,12 +1107,12 @@ nsSHEntry::GetBfcacheID(uint64_t* aBFCacheID) {
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetWireframe(JSContext* aCx, JS::MutableHandleValue aOut) {
+nsSHEntry::GetWireframe(JSContext* aCx, JS::MutableHandle<JS::Value> aOut) {
   aOut.set(JS::NullValue());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetWireframe(JSContext* aCx, JS::HandleValue aArg) {
+nsSHEntry::SetWireframe(JSContext* aCx, JS::Handle<JS::Value> aArg) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

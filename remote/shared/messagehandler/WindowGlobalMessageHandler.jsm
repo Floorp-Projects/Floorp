@@ -6,20 +6,9 @@
 
 const EXPORTED_SYMBOLS = ["WindowGlobalMessageHandler"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-const { MessageHandler } = ChromeUtils.import(
+const { ContextDescriptorType, MessageHandler } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/MessageHandler.jsm"
 );
-
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ContextDescriptorType:
-    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
-});
 
 /**
  * A WindowGlobalMessageHandler is dedicated to debugging a single window
@@ -133,9 +122,8 @@ class WindowGlobalMessageHandler extends MessageHandler {
 
   _matchesContext(contextDescriptor) {
     return (
-      contextDescriptor.type === lazy.ContextDescriptorType.All ||
-      (contextDescriptor.type ===
-        lazy.ContextDescriptorType.TopBrowsingContext &&
+      contextDescriptor.type === ContextDescriptorType.All ||
+      (contextDescriptor.type === ContextDescriptorType.TopBrowsingContext &&
         contextDescriptor.id === this._context.browserId)
     );
   }

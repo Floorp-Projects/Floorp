@@ -23,6 +23,11 @@ add_task(async function test_localization() {
 
   // One from toolkit/.
   await doOne("toolkit/global/commonDialog.ftl", "common-dialog-title-system");
-  // And one from browser/.
-  await doOne("browser/pageInfo.ftl", "not-set-date");
+  if (AppConstants.MOZ_APP_NAME == "thunderbird") {
+    // And one from messenger/.
+    await doOne("messenger/messenger.ftl", "no-reply-title");
+  } else {
+    // And one from browser/.
+    await doOne("browser/pageInfo.ftl", "not-set-date");
+  }
 });
