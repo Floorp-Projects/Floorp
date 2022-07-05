@@ -54,7 +54,6 @@ import org.mozilla.fenix.helpers.idlingresource.NetworkConnectionIdlingResource
 import org.mozilla.fenix.ui.robots.BrowserRobot
 import org.mozilla.fenix.utils.IntentUtils
 import java.util.regex.Pattern
-import org.junit.Assert.assertTrue
 
 object TestHelper {
 
@@ -131,17 +130,20 @@ object TestHelper {
     // Remove test file from Google Photos (AOSP) on Firebase
     fun deleteDownloadFromStorage() {
         val deleteButton = mDevice.findObject(UiSelector().resourceId("$GOOGLE_APPS_PHOTOS:id/trash"))
+        deleteButton.waitForExists(waitingTime)
         deleteButton.click()
 
         // Sometimes there's a secondary confirmation
         try {
             val deleteConfirm = mDevice.findObject(UiSelector().text("Got it"))
+            deleteConfirm.waitForExists(waitingTime)
             deleteConfirm.click()
         } catch (e: UiObjectNotFoundException) {
             // Do nothing
         }
 
         val trashIt = mDevice.findObject(UiSelector().resourceId("$GOOGLE_APPS_PHOTOS:id/move_to_trash"))
+        trashIt.waitForExists(waitingTime)
         trashIt.click()
     }
 

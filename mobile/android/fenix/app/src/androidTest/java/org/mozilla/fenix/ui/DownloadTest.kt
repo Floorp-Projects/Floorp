@@ -12,7 +12,6 @@ import androidx.test.runner.permission.PermissionRequester
 import androidx.test.uiautomator.UiDevice
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -163,7 +162,6 @@ class DownloadTest {
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/17485")
     @SmokeTest
     @Test
         /* Verifies downloads in the Downloads Menu:
