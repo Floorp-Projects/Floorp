@@ -96,7 +96,7 @@ LoadInfo::LoadInfo(
     nsContentPolicyType aContentPolicyType,
     const Maybe<mozilla::dom::ClientInfo>& aLoadingClientInfo,
     const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
-    uint32_t aSandboxFlags)
+    uint32_t aSandboxFlags, bool aSkipCheckForBrokenURLOrZeroSized)
     : mLoadingPrincipal(aLoadingContext ? aLoadingContext->NodePrincipal()
                                         : aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal ? aTriggeringPrincipal
@@ -108,7 +108,8 @@ LoadInfo::LoadInfo(
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
 
-      mInternalContentPolicyType(aContentPolicyType) {
+      mInternalContentPolicyType(aContentPolicyType),
+      mSkipCheckForBrokenURLOrZeroSized(aSkipCheckForBrokenURLOrZeroSized) {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
 
@@ -1894,6 +1895,14 @@ NS_IMETHODIMP
 LoadInfo::GetIsFromObjectOrEmbed(bool* aIsFromObjectOrEmbed) {
   MOZ_ASSERT(aIsFromObjectOrEmbed);
   *aIsFromObjectOrEmbed = mIsFromObjectOrEmbed;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetShouldSkipCheckForBrokenURLOrZeroSized(
+    bool* aShouldSkipCheckForBrokenURLOrZeroSized) {
+  MOZ_ASSERT(aShouldSkipCheckForBrokenURLOrZeroSized);
+  *aShouldSkipCheckForBrokenURLOrZeroSized = mSkipCheckForBrokenURLOrZeroSized;
   return NS_OK;
 }
 

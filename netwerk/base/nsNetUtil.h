@@ -187,7 +187,8 @@ nsresult NS_NewChannelInternal(
     nsILoadGroup* aLoadGroup = nullptr,
     nsIInterfaceRequestor* aCallbacks = nullptr,
     nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL,
-    nsIIOService* aIoService = nullptr, uint32_t aSandboxFlags = 0);
+    nsIIOService* aIoService = nullptr, uint32_t aSandboxFlags = 0,
+    bool aSkipCheckForBrokenURLOrZeroSized = false);
 
 // See NS_NewChannelInternal for usage and argument description
 nsresult NS_NewChannelInternal(
@@ -244,7 +245,8 @@ nsresult NS_NewChannel(
     nsILoadGroup* aLoadGroup = nullptr,
     nsIInterfaceRequestor* aCallbacks = nullptr,
     nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL,
-    nsIIOService* aIoService = nullptr, uint32_t aSandboxFlags = 0);
+    nsIIOService* aIoService = nullptr, uint32_t aSandboxFlags = 0,
+    bool aSkipCheckForBrokenURLOrZeroSized = false);
 
 // See NS_NewChannelInternal for usage and argument description
 nsresult NS_NewChannel(
@@ -255,7 +257,8 @@ nsresult NS_NewChannel(
     nsILoadGroup* aLoadGroup = nullptr,
     nsIInterfaceRequestor* aCallbacks = nullptr,
     nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL,
-    nsIIOService* aIoService = nullptr, uint32_t aSandboxFlags = 0);
+    nsIIOService* aIoService = nullptr, uint32_t aSandboxFlags = 0,
+    bool aSkipCheckForBrokenURLOrZeroSized = false);
 
 // See NS_NewChannelInternal for usage and argument description
 nsresult NS_NewChannel(
@@ -268,7 +271,8 @@ nsresult NS_NewChannel(
     nsILoadGroup* aLoadGroup = nullptr,
     nsIInterfaceRequestor* aCallbacks = nullptr,
     nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL,
-    nsIIOService* aIoService = nullptr, uint32_t aSandboxFlags = 0);
+    nsIIOService* aIoService = nullptr, uint32_t aSandboxFlags = 0,
+    bool aSkipCheckForBrokenURLOrZeroSized = false);
 
 nsresult NS_GetIsDocumentChannel(nsIChannel* aChannel, bool* aIsDocument);
 

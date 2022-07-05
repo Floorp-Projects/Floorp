@@ -188,7 +188,8 @@ class nsIOService final : public nsIIOService,
       const mozilla::Maybe<mozilla::dom::ClientInfo>& aLoadingClientInfo,
       const mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
       uint32_t aSecurityFlags, nsContentPolicyType aContentPolicyType,
-      uint32_t aSandboxFlags, nsIChannel** result);
+      uint32_t aSandboxFlags, bool aSkipCheckForBrokenURLOrZeroSized,
+      nsIChannel** result);
 
   nsresult NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
                                                    nsIURI* aProxyURI,

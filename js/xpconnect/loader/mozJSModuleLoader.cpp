@@ -319,16 +319,25 @@ class MOZ_STACK_CLASS ModuleLoaderInfo {
   }
   nsresult EnsureScriptChannel() {
     BEGIN_ENSURE(ScriptChannel, IOService, URI);
+
+    // The JSM may already be ESM-ified, and in that case the load is expected
+    // to fail.  Suppress the error message, the crash, and also the telemetry
+    // event for the failure.
+    //
+    // If this load fails, it will be redirected to `.sys.mjs` URL
+    // in TryFallbackToImportESModule, and the check is performed there.
+    bool skipCheckForBrokenURLOrZeroSized = !IsModule();
+
     return NS_NewChannel(
         getter_AddRefs(mScriptChannel), mURI,
         nsContentUtils::GetSystemPrincipal(),
         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
         nsIContentPolicy::TYPE_SCRIPT,
-        nullptr,  // nsICookieJarSettings
-        nullptr,  // aPerformanceStorage
-        nullptr,  // aLoadGroup
-        nullptr,  // aCallbacks
-        nsIRequest::LOAD_NORMAL, mIOService);
+        /* aCookieJarSettings = */ nullptr,
+        /* aPerformanceStorage = */ nullptr,
+        /* aLoadGroup = */ nullptr, /* aCallbacks = */ nullptr,
+        nsIRequest::LOAD_NORMAL, mIOService, /* aSandboxFlags = */ 0,
+        skipCheckForBrokenURLOrZeroSized);
   }
 
   nsIURI* ResolvedURI() {
