@@ -272,9 +272,9 @@ class SourceTreeItem extends Component {
   renderIcon(item, depth) {
     const { projectRoot, source, hasPrettyTab, threads } = this.props;
 
-    if (item.name === "webpack://") {
+    if (item.name === "Webpack") {
       return <AccessibleImage className="webpack" />;
-    } else if (item.name === "ng://") {
+    } else if (item.name === "Angular") {
       return <AccessibleImage className="angular" />;
     }
 
@@ -358,14 +358,7 @@ class SourceTreeItem extends Component {
       }
     }
 
-    switch (item.name) {
-      case "ng://":
-        return "Angular";
-      case "webpack://":
-        return "Webpack";
-      default:
-        return `${unescape(item.name)}`;
-    }
+    return unescape(item.name);
   }
 
   renderItemTooltip() {

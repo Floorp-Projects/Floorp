@@ -92,7 +92,7 @@ describe("sources-tree", () => {
       expect(tree.contents).toHaveLength(1);
 
       const base = tree.contents[0];
-      expect(base.name).toBe("webpack://");
+      expect(base.name).toBe("Webpack");
       expect(base.contents).toHaveLength(1);
 
       const fooNode = base.contents[0];
@@ -115,7 +115,7 @@ describe("sources-tree", () => {
       expect(tree.contents).toHaveLength(1);
 
       const base = tree.contents[0];
-      expect(base.name).toBe("webpack://");
+      expect(base.name).toBe("Webpack");
       expect(base.contents).toHaveLength(1);
 
       const userNode = base.contents[0];

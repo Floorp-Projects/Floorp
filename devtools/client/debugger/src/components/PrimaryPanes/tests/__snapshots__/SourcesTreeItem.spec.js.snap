@@ -2037,12 +2037,12 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="angular"
+      className="folder"
     />
     <span
       className="label"
     >
-      Angular
+      ng://
     </span>
   </div>,
   "defaultState": null,
@@ -2216,12 +2216,12 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="angular"
+            className="folder"
           />
           <span
             className="label"
           >
-            Angular
+            ng://
           </span>
         </div>,
         "_rendering": false,
@@ -3656,12 +3656,12 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="webpack"
+      className="folder"
     />
     <span
       className="label"
     >
-      Webpack
+      webpack://
     </span>
   </div>,
   "defaultState": null,
@@ -3835,12 +3835,12 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="webpack"
+            className="folder"
           />
           <span
             className="label"
           >
-            Webpack
+            webpack://
           </span>
         </div>,
         "_rendering": false,
