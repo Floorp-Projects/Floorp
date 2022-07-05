@@ -11,9 +11,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { UrlbarProvider } = ChromeUtils.import(
-  "resource:///modules/UrlbarUtils.jsm"
-);
+const {
+  SkippableTimer,
+  TaskQueue,
+  UrlbarProvider,
+  UrlbarUtils,
+} = ChromeUtils.import("resource:///modules/UrlbarUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
@@ -23,12 +26,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   setInterval: "resource://gre/modules/Timer.jsm",
-  SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
-  TaskQueue: "resource:///modules/UrlbarUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";
