@@ -4,7 +4,7 @@
 
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
-const { SearchEngine } = ChromeUtils.import(
+const { EngineURL, SearchEngine } = ChromeUtils.import(
   "resource://gre/modules/SearchEngine.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -15,7 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  EngineURL: "resource://gre/modules/SearchEngine.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
@@ -286,7 +285,7 @@ class OpenSearchEngine extends SearchEngine {
     }
 
     try {
-      var url = new lazy.EngineURL(type, method, template);
+      var url = new EngineURL(type, method, template);
     } catch (ex) {
       throw Components.Exception(
         "_parseURL: failed to add " + template + " as a URL",
