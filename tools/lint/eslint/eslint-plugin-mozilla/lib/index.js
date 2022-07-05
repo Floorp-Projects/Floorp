@@ -60,6 +60,7 @@ module.exports = {
     "reject-globalThis-modification": require("../lib/rules/reject-globalThis-modification"),
     "reject-import-system-module-from-non-system": require("../lib/rules/reject-import-system-module-from-non-system"),
     "reject-importGlobalProperties": require("../lib/rules/reject-importGlobalProperties"),
+    "reject-mixing-eager-and-lazy": require("../lib/rules/reject-mixing-eager-and-lazy"),
     "reject-osfile": require("../lib/rules/reject-osfile"),
     "reject-scriptableunicodeconverter": require("../lib/rules/reject-scriptableunicodeconverter"),
     "reject-relative-requires": require("../lib/rules/reject-relative-requires"),
