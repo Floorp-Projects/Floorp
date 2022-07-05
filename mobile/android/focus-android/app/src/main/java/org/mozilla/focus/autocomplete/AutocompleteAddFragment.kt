@@ -22,6 +22,7 @@ import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FragmentAutocompleteAddDomainBinding
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -50,7 +51,7 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
             job = Job()
         }
 
-        updateTitle(R.string.preference_autocomplete_title_add)
+        showToolbar(getString(R.string.preference_autocomplete_title_add))
     }
 
     override fun onCreateView(

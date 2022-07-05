@@ -9,6 +9,7 @@ import androidx.preference.Preference
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.requirePreference
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermission
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOptionsStorage
@@ -25,7 +26,7 @@ class SitePermissionsFragment : BaseSettingsFragment() {
 
     override fun onStart() {
         super.onStart()
-        updateTitle(R.string.preference_site_permissions)
+        showToolbar(getString(R.string.preference_site_permissions))
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

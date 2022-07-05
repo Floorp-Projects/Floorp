@@ -7,56 +7,38 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:background="@color/settings_background"
+    android:orientation="vertical"
+    android:padding="8dp">
 
-    <View
-        android:id="@+id/status_bar_background"
-        android:layout_width="match_parent"
-        android:layout_height="0dp" />
-
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/settings_background" />
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:text="@string/preference_autocomplete_add_title"
+        android:textColor="@color/colorAccentSettings" />
 
-    <LinearLayout
+    <EditText
+        android:id="@+id/domainView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/settings_background"
-        android:orientation="vertical"
-        android:padding="8dp">
+        android:layout_height="wrap_content"
+        android:hint="@string/preference_autocomplete_add_hint"
+        android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
+        android:importantForAutofill="no"
+        android:inputType="textUri"
+        android:lines="1"
+        android:paddingStart="8dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="8dp"
+        tools:targetApi="o" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="@string/preference_autocomplete_add_title"
-            android:textColor="@color/colorAccentSettings" />
-
-        <EditText
-            android:id="@+id/domainView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/preference_autocomplete_add_hint"
-            android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
-            android:importantForAutofill="no"
-            android:inputType="textUri"
-            android:lines="1"
-            android:paddingStart="8dp"
-            android:paddingTop="8dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="8dp"
-            tools:targetApi="o" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="@string/preference_autocomplete_add_example2" />
-
-    </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:text="@string/preference_autocomplete_add_example2" />
 
 </LinearLayout>

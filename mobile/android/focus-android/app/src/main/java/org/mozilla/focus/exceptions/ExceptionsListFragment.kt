@@ -33,6 +33,7 @@ import org.mozilla.focus.autocomplete.AutocompleteDomainFormatter
 import org.mozilla.focus.databinding.FragmentExceptionsDomainsBinding
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
@@ -158,7 +159,7 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
 
         job = Job()
 
-        updateTitle(R.string.preference_exceptions)
+        showToolbar(getString(R.string.preference_exceptions))
 
         (binding.exceptionList.adapter as DomainListAdapter).refresh(requireActivity()) {
             if ((binding.exceptionList.adapter as DomainListAdapter).itemCount == 0) {

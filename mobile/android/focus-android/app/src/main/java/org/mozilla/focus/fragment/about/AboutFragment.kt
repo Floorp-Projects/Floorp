@@ -32,6 +32,7 @@ import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FragmentAboutBinding
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.ui.theme.FocusTheme
@@ -56,7 +57,7 @@ class AboutFragment : BaseSettingsLikeFragment() {
 
     override fun onResume() {
         super.onResume()
-        updateTitle(R.string.menu_about)
+        showToolbar(getString(R.string.menu_about))
         secretSettingsUnlocker.resetCounter()
     }
 

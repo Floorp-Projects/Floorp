@@ -19,6 +19,7 @@ import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FragmentStudiesBinding
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.utils.SupportUtils
@@ -47,7 +48,7 @@ class StudiesFragment : BaseSettingsLikeFragment() {
 
     override fun onStart() {
         super.onStart()
-        updateTitle(R.string.preference_studies)
+        showToolbar(getString(R.string.preference_studies))
     }
 
     private fun setLearnMore() {

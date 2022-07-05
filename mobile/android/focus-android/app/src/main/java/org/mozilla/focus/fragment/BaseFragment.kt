@@ -10,9 +10,16 @@ import android.view.animation.AnimationSet
 import android.view.animation.AnimationUtils
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import org.mozilla.focus.ext.hideToolbar
 
 abstract class BaseFragment : Fragment() {
     private var animationSet: AnimationSet? = null
+
+    override fun onResume() {
+        super.onResume()
+        hideToolbar()
+    }
+
     fun cancelAnimation() {
         if (animationSet != null) {
             animationSet!!.duration = 0

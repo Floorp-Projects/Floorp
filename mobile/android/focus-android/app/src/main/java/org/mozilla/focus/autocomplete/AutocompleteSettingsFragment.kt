@@ -10,6 +10,7 @@ import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.requirePreference
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
@@ -42,7 +43,7 @@ class AutocompleteSettingsFragment : BaseSettingsFragment(), SharedPreferences.O
     override fun onResume() {
         super.onResume()
 
-        updateTitle(R.string.preference_subitem_autocomplete)
+        showToolbar(getString(R.string.preference_subitem_autocomplete))
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
     }

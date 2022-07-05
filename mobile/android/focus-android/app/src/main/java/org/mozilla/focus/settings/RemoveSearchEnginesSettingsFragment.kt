@@ -12,6 +12,7 @@ import mozilla.components.browser.state.state.searchEngines
 import org.mozilla.focus.GleanMetrics.SearchEngines
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.search.MultiselectSearchEngineListPreference
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -31,7 +32,7 @@ class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onResume() {
         super.onResume()
 
-        updateTitle(R.string.preference_search_remove_title)
+        showToolbar(getString(R.string.preference_search_remove_title))
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

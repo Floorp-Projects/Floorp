@@ -3,34 +3,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:background="@color/settings_background"
+    android:orientation="vertical"
+    android:padding="@dimen/preference_padding_horizontal">
 
-    <View
-        android:id="@+id/status_bar_background"
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/about_page_content"
         android:layout_width="match_parent"
-        android:layout_height="0dp" />
+        android:layout_height="match_parent" />
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/settings_background"/>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="@dimen/preference_padding_horizontal"
-        android:background="@color/settings_background">
-
-        <androidx.compose.ui.platform.ComposeView
-            android:id="@+id/about_page_content"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-    </LinearLayout>
 </LinearLayout>

@@ -12,6 +12,7 @@ import org.mozilla.focus.GleanMetrics.SearchEngines
 import org.mozilla.focus.GleanMetrics.ShowSearchSuggestions
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -28,7 +29,7 @@ class SearchSettingsFragment :
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        updateTitle(R.string.preference_category_search)
+        showToolbar(getString(R.string.preference_category_search))
     }
 
     override fun onPause() {

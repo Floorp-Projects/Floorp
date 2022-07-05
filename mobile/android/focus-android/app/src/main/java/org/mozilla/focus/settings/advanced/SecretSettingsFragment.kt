@@ -10,6 +10,7 @@ import androidx.preference.SwitchPreferenceCompat
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.getPreferenceKey
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.settings.BaseSettingsFragment
 import kotlin.system.exitProcess
 
@@ -19,7 +20,7 @@ class SecretSettingsFragment :
 
     override fun onStart() {
         super.onStart()
-        updateTitle(R.string.preference_secret_settings)
+        showToolbar(getString(R.string.preference_secret_settings))
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
     }
 

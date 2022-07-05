@@ -18,6 +18,7 @@ import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.focus.GleanMetrics.SearchEngines
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.search.RadioSearchEngineListPreference
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
@@ -37,7 +38,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onResume() {
         super.onResume()
 
-        updateTitle(R.string.preference_choose_search_engine)
+        showToolbar(getString(R.string.preference_choose_search_engine))
 
         if (languageChanged)
             restoreSearchEngines()

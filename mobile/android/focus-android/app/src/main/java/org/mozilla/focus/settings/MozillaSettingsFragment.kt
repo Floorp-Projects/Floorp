@@ -13,6 +13,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -31,7 +32,7 @@ class MozillaSettingsFragment :
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
-        updateTitle(R.string.preference_category_mozilla)
+        showToolbar(getString(R.string.preference_category_mozilla))
     }
 
     override fun onPause() {

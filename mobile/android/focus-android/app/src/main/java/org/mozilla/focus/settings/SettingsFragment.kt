@@ -8,11 +8,11 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.GleanMetrics.SettingsScreen
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -30,9 +30,7 @@ class SettingsFragment : BaseSettingsFragment() {
     override fun onResume() {
         super.onResume()
 
-        (requireActivity() as AppCompatActivity).supportActionBar?.customView
-
-        updateTitle(R.string.menu_settings)
+        showToolbar(getString(R.string.menu_settings))
     }
 
     override fun onPreferenceTreeClick(preference: androidx.preference.Preference): Boolean {

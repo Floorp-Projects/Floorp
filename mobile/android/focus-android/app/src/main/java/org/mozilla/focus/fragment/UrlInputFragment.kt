@@ -37,6 +37,7 @@ import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.GleanMetrics.BrowserSearch
 import org.mozilla.focus.GleanMetrics.SearchBar
 import org.mozilla.focus.R
+import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.databinding.FragmentUrlinputBinding
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.defaultSearchEngineName
@@ -203,6 +204,8 @@ class UrlInputFragment :
             customDomainsProvider.initialize(it.applicationContext)
         }
 
+        // Hide status bar background if the parent activity can be casted to MainActivity
+        (requireActivity() as? MainActivity)?.hideStatusBarBackground()
         StatusBarUtils.getStatusBarHeight(binding.landingLayout) {
             adjustViewToStatusBarHeight(it)
         }

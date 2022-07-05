@@ -17,6 +17,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.state.AppAction
@@ -74,7 +75,7 @@ class PrivacySecuritySettingsFragment :
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
         // Update title and icons when returning to fragments.
-        updateTitle(R.string.preference_privacy_and_security_header)
+        showToolbar(getString(R.string.preference_privacy_and_security_header))
     }
 
     override fun onPause() {

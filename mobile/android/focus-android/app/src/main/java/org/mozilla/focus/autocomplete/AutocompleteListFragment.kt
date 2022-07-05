@@ -33,6 +33,7 @@ import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FragmentAutocompleteCustomdomainsBinding
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
@@ -150,7 +151,7 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
             job = Job()
         }
 
-        updateTitle(R.string.preference_autocomplete_subitem_manage_sites)
+        showToolbar(getString(R.string.preference_autocomplete_subitem_manage_sites))
 
         (binding.domainList.adapter as DomainListAdapter).refresh(requireActivity()) {
             activity?.invalidateOptionsMenu()

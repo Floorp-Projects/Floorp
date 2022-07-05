@@ -36,6 +36,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -62,7 +63,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
     override fun onResume() {
         super.onResume()
 
-        updateTitle(R.string.action_option_add_search_engine)
+        showToolbar(getString(R.string.action_option_add_search_engine))
     }
 
     override fun onPause() {

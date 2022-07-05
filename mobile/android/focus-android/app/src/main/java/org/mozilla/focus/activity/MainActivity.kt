@@ -14,8 +14,11 @@ import android.util.AttributeSet
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewTreeObserver
+import androidx.appcompat.app.ActionBar
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.isVisible
 import androidx.preference.PreferenceManager
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.concept.engine.EngineView
@@ -31,7 +34,9 @@ import org.mozilla.focus.GleanMetrics.AppOpened
 import org.mozilla.focus.GleanMetrics.Notifications
 import org.mozilla.focus.R
 import org.mozilla.focus.appreview.AppReviewUtils
+import org.mozilla.focus.databinding.ActivityMainBinding
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.setNavigationIcon
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.ext.updateSecureWindowFlags
 import org.mozilla.focus.fragment.BrowserFragment
@@ -46,12 +51,14 @@ import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.telemetry.startuptelemetry.StartupPathProvider
 import org.mozilla.focus.telemetry.startuptelemetry.StartupTypeTelemetry
+import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 
 private const val REQUEST_TIME_OUT = 2000L
 
 @Suppress("TooManyFunctions", "LargeClass")
 open class MainActivity : LocaleAwareAppCompatActivity() {
+    private var isToolbarInflated = false
     private val intentProcessor by lazy {
         IntentProcessor(this, components.tabsUseCases, components.customTabsUseCases)
     }
@@ -62,6 +69,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     private val startupPathProvider = StartupPathProvider()
     private lateinit var startupTypeTelemetry: StartupTypeTelemetry
+    private var _binding: ActivityMainBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -69,6 +78,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         updateSecureWindowFlags()
 
         super.onCreate(savedInstanceState)
+
+        _binding = ActivityMainBinding.inflate(layoutInflater)
 
         // Checks if Activity is currently in PiP mode if launched from external intents, then exits it
         checkAndExitPiP()
@@ -94,7 +105,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
                 clearLightSystemBars()
             }
         }
-        setContentView(R.layout.activity_main)
+        setContentView(binding.root)
 
         startupPathProvider.attachOnActivityOnCreate(lifecycle, intent)
         startupTypeTelemetry = StartupTypeTelemetry(components.startupStateProvider, startupPathProvider).apply {
@@ -129,13 +140,12 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     private fun setSplashScreenPreDrawListener(safeIntent: SafeIntent) {
-        val content: View = findViewById(android.R.id.content)
         val endTime = System.currentTimeMillis() + REQUEST_TIME_OUT
-        content.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+        binding.container.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
             override fun onPreDraw(): Boolean {
                 return if (System.currentTimeMillis() >= endTime) {
                     showFirstScreen(safeIntent)
-                    content.viewTreeObserver.removeOnPreDrawListener(this)
+                    binding.container.viewTreeObserver.removeOnPreDrawListener(this)
                     true
                 } else {
                     false
@@ -360,6 +370,37 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             // API level can display handle light navigation bar color
             window.getWindowInsetsController().isAppearanceLightNavigationBars = false
         }
+    }
+
+    fun getToolbar(): ActionBar {
+        if (!isToolbarInflated) {
+            val toolbar = binding.toolbar.inflate() as Toolbar
+            setSupportActionBar(toolbar)
+            setNavigationIcon(R.drawable.ic_back_button)
+            isToolbarInflated = true
+        }
+        return supportActionBar!!
+    }
+
+    fun customizeStatusBar(backgroundColorId: Int? = null) {
+        with(binding.statusBarBackground) {
+            binding.statusBarBackground.isVisible = true
+            StatusBarUtils.getStatusBarHeight(this) { statusBarHeight ->
+                layoutParams.height = statusBarHeight
+                backgroundColorId?.let { color ->
+                    setBackgroundColor(ContextCompat.getColor(context, color))
+                }
+            }
+        }
+    }
+
+    fun hideStatusBarBackground() {
+        binding.statusBarBackground.isVisible = false
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
     }
 
     enum class AppOpenType(val type: String) {

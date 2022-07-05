@@ -18,6 +18,7 @@ import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import kotlin.coroutines.CoroutineContext
@@ -65,7 +66,7 @@ class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
             job = Job()
         }
 
-        updateTitle(R.string.preference_autocomplete_title_remove)
+        showToolbar(getString(R.string.preference_autocomplete_title_remove))
     }
 
     override fun onPause() {

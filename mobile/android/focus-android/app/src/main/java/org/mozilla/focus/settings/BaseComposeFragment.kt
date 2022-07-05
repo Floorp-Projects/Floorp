@@ -26,6 +26,8 @@ import com.google.accompanist.insets.LocalWindowInsets
 import com.google.accompanist.insets.rememberInsetsPaddingValues
 import com.google.accompanist.insets.ui.TopAppBar
 import org.mozilla.focus.R
+import org.mozilla.focus.activity.MainActivity
+import org.mozilla.focus.ext.hideToolbar
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.ui.theme.focusColors
 import org.mozilla.focus.utils.StatusBarUtils
@@ -58,47 +60,55 @@ abstract class BaseComposeFragment : Fragment() {
     @Composable
     abstract fun Content()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?):
-        View = ComposeView(requireContext()).apply {
-        StatusBarUtils.getStatusBarHeight(this) { statusBarHeight ->
-            setContent {
-                var title = ""
-                titleRes?.let { title = getString(it) }
-                titleText?.let { title = it }
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        hideToolbar()
+        (requireActivity() as? MainActivity)?.hideStatusBarBackground()
 
-                FocusTheme {
-                    Scaffold {
-                        Column {
-                            CompositionLocalProvider {
-                                TopAppBar(
-                                    title = {
-                                        Text(
-                                            text = title,
-                                            color = focusColors.toolbarColor
-                                        )
-                                    },
-                                    contentPadding = rememberInsetsPaddingValues(
-                                        insets = LocalWindowInsets.current.statusBars,
-                                        additionalTop = LocalDensity.current.run {
-                                            (statusBarHeight - LocalWindowInsets.current.statusBars.top)
-                                                .toDp()
-                                        }
-                                    ),
-                                    navigationIcon = {
-                                        IconButton(
-                                            onClick = onNavigateUp()
-                                        ) {
-                                            Icon(
-                                                Icons.Filled.ArrowBack,
-                                                stringResource(R.string.go_back),
-                                                tint = focusColors.toolbarColor
+        return ComposeView(requireContext()).apply {
+            StatusBarUtils.getStatusBarHeight(this) { statusBarHeight ->
+                setContent {
+                    var title = ""
+                    titleRes?.let { title = getString(it) }
+                    titleText?.let { title = it }
+
+                    FocusTheme {
+                        Scaffold {
+                            Column {
+                                CompositionLocalProvider {
+                                    TopAppBar(
+                                        title = {
+                                            Text(
+                                                text = title,
+                                                color = focusColors.toolbarColor
                                             )
-                                        }
-                                    },
-                                    backgroundColor = colorResource(R.color.settings_background)
-                                )
+                                        },
+                                        contentPadding = rememberInsetsPaddingValues(
+                                            insets = LocalWindowInsets.current.statusBars,
+                                            additionalTop = LocalDensity.current.run {
+                                                (statusBarHeight - LocalWindowInsets.current.statusBars.top)
+                                                    .toDp()
+                                            }
+                                        ),
+                                        navigationIcon = {
+                                            IconButton(
+                                                onClick = onNavigateUp()
+                                            ) {
+                                                Icon(
+                                                    Icons.Filled.ArrowBack,
+                                                    stringResource(R.string.go_back),
+                                                    tint = focusColors.toolbarColor
+                                                )
+                                            }
+                                        },
+                                        backgroundColor = colorResource(R.color.settings_background)
+                                    )
+                                }
+                                this@BaseComposeFragment.Content()
                             }
-                            this@BaseComposeFragment.Content()
                         }
                     }
                 }

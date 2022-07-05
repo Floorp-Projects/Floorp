@@ -13,6 +13,7 @@ import androidx.preference.PreferenceManager
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.requirePreference
+import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.locale.screen.LanguageStorage.Companion.LOCALE_SYSTEM_DEFAULT
 import org.mozilla.focus.locale.screen.LocaleDescriptor
 import org.mozilla.focus.state.AppAction
@@ -37,7 +38,7 @@ class GeneralSettingsFragment :
     override fun onResume() {
         super.onResume()
         defaultBrowserPreference.update()
-        updateTitle(R.string.preference_category_general)
+        showToolbar(getString(R.string.preference_category_general))
     }
 
     private fun setupPreferences() {

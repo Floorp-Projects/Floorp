@@ -658,6 +658,8 @@ class BrowserFragment :
     override fun onResume() {
         super.onResume()
 
+        // Hide status bar background if the parent activity can be casted to MainActivity
+        (requireActivity() as? MainActivity)?.hideStatusBarBackground()
         StatusBarUtils.getStatusBarHeight(binding.statusBarBackground) { statusBarHeight ->
             binding.statusBarBackground.layoutParams.height = statusBarHeight
         }
