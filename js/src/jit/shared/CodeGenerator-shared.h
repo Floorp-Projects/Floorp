@@ -152,7 +152,6 @@ class CodeGeneratorShared : public LElementVisitor {
   inline uint32_t UnusedStackBytesForCall(uint32_t numArgSlots) const;
 
   inline uint32_t ToStackOffset(LAllocation a) const;
-  inline uint32_t ToStackOffset(const LAllocation* a) const;
 
   inline Address ToAddress(const LAllocation& a) const;
   inline Address ToAddress(const LAllocation* a) const;
@@ -164,7 +163,6 @@ class CodeGeneratorShared : public LElementVisitor {
   // Returns the offset from FP to address incoming stack arguments
   // when we use wasm stack argument abi (useWasmStackArgumentAbi()).
   inline uint32_t ToFramePointerOffset(LAllocation a) const;
-  inline uint32_t ToFramePointerOffset(const LAllocation* a) const;
 
   uint32_t frameSize() const { return frameDepth_; }
 
