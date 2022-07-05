@@ -162,11 +162,9 @@ class ShmemPool final {
   bool AllocateShmem(T* aInstance, size_t aSize, ShmemBuffer& aRes,
                      AllocationPolicy aPolicy) {
     return (aPolicy == AllocationPolicy::Default &&
-            aInstance->AllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC,
-                                  &aRes.mShmem)) ||
+            aInstance->AllocShmem(aSize, &aRes.mShmem)) ||
            (aPolicy == AllocationPolicy::Unsafe &&
-            aInstance->AllocUnsafeShmem(aSize, ipc::SharedMemory::TYPE_BASIC,
-                                        &aRes.mShmem));
+            aInstance->AllocUnsafeShmem(aSize, &aRes.mShmem));
   }
   const PoolType mPoolType;
   Mutex mMutex MOZ_UNANNOTATED;

@@ -130,7 +130,7 @@ BufferTextureData* BufferTextureData::CreateInternal(
     return new MemoryTextureData(aDesc, aMoz2DBackend, buffer, aBufferSize);
   } else {
     ipc::Shmem shm;
-    if (!aAllocator->AllocUnsafeShmem(aBufferSize, OptimalShmemType(), &shm)) {
+    if (!aAllocator->AllocUnsafeShmem(aBufferSize, &shm)) {
       return nullptr;
     }
 
@@ -491,7 +491,7 @@ ShmemTextureData* ShmemTextureData::Create(gfx::IntSize aSize,
   }
 
   mozilla::ipc::Shmem shm;
-  if (!aAllocator->AllocUnsafeShmem(bufSize, OptimalShmemType(), &shm)) {
+  if (!aAllocator->AllocUnsafeShmem(bufSize, &shm)) {
     return nullptr;
   }
 

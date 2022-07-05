@@ -198,9 +198,8 @@ class IProtocol : public HasResultCodes {
   IProtocol* Lookup(int32_t aId);
   void Unregister(int32_t aId);
 
-  Shmem::SharedMemory* CreateSharedMemory(size_t aSize,
-                                          SharedMemory::SharedMemoryType aType,
-                                          bool aUnsafe, int32_t* aId);
+  Shmem::SharedMemory* CreateSharedMemory(size_t aSize, bool aUnsafe,
+                                          int32_t* aId);
   Shmem::SharedMemory* LookupSharedMemory(int32_t aId);
   bool IsTrackingSharedMemory(Shmem::SharedMemory* aSegment);
   bool DestroySharedMemory(Shmem& aShmem);
@@ -243,11 +242,8 @@ class IProtocol : public HasResultCodes {
                                    UniquePtr<Message>& aReply) = 0;
   virtual Result OnCallReceived(const Message& aMessage,
                                 UniquePtr<Message>& aReply) = 0;
-  bool AllocShmem(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType,
-                  Shmem* aOutMem);
-  bool AllocUnsafeShmem(size_t aSize,
-                        Shmem::SharedMemory::SharedMemoryType aType,
-                        Shmem* aOutMem);
+  bool AllocShmem(size_t aSize, Shmem* aOutMem);
+  bool AllocUnsafeShmem(size_t aSize, Shmem* aOutMem);
   bool DeallocShmem(Shmem& aMem);
 
   void FatalError(const char* const aErrorMsg) const;
@@ -401,9 +397,8 @@ class IToplevelProtocol : public IProtocol {
   IProtocol* Lookup(int32_t aId);
   void Unregister(int32_t aId);
 
-  Shmem::SharedMemory* CreateSharedMemory(size_t aSize,
-                                          SharedMemory::SharedMemoryType aType,
-                                          bool aUnsafe, int32_t* aId);
+  Shmem::SharedMemory* CreateSharedMemory(size_t aSize, bool aUnsafe,
+                                          int32_t* aId);
   Shmem::SharedMemory* LookupSharedMemory(int32_t aId);
   bool IsTrackingSharedMemory(Shmem::SharedMemory* aSegment);
   bool DestroySharedMemory(Shmem& aShmem);
@@ -509,25 +504,19 @@ class IToplevelProtocol : public IProtocol {
 
 class IShmemAllocator {
  public:
-  virtual bool AllocShmem(size_t aSize,
-                          mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
-                          mozilla::ipc::Shmem* aShmem) = 0;
-  virtual bool AllocUnsafeShmem(
-      size_t aSize, mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
-      mozilla::ipc::Shmem* aShmem) = 0;
+  virtual bool AllocShmem(size_t aSize, mozilla::ipc::Shmem* aShmem) = 0;
+  virtual bool AllocUnsafeShmem(size_t aSize, mozilla::ipc::Shmem* aShmem) = 0;
   virtual bool DeallocShmem(mozilla::ipc::Shmem& aShmem) = 0;
 };
 
 #define FORWARD_SHMEM_ALLOCATOR_TO(aImplClass)                             \
-  virtual bool AllocShmem(                                                 \
-      size_t aSize, mozilla::ipc::SharedMemory::SharedMemoryType aShmType, \
-      mozilla::ipc::Shmem* aShmem) override {                              \
-    return aImplClass::AllocShmem(aSize, aShmType, aShmem);                \
+  virtual bool AllocShmem(size_t aSize, mozilla::ipc::Shmem* aShmem)       \
+      override {                                                           \
+    return aImplClass::AllocShmem(aSize, aShmem);                          \
   }                                                                        \
-  virtual bool AllocUnsafeShmem(                                           \
-      size_t aSize, mozilla::ipc::SharedMemory::SharedMemoryType aShmType, \
-      mozilla::ipc::Shmem* aShmem) override {                              \
-    return aImplClass::AllocUnsafeShmem(aSize, aShmType, aShmem);          \
+  virtual bool AllocUnsafeShmem(size_t aSize, mozilla::ipc::Shmem* aShmem) \
+      override {                                                           \
+    return aImplClass::AllocUnsafeShmem(aSize, aShmem);                    \
   }                                                                        \
   virtual bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override {        \
     return aImplClass::DeallocShmem(aShmem);                               \

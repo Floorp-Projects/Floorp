@@ -39,12 +39,8 @@ class VideoBridgeChild final : public PVideoBridgeChild,
   void ActorDealloc() override;
 
   // ISurfaceAllocator
-  bool AllocUnsafeShmem(size_t aSize,
-                        mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
-                        mozilla::ipc::Shmem* aShmem) override;
-  bool AllocShmem(size_t aSize,
-                  mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
-                  mozilla::ipc::Shmem* aShmem) override;
+  bool AllocUnsafeShmem(size_t aSize, mozilla::ipc::Shmem* aShmem) override;
+  bool AllocShmem(size_t aSize, mozilla::ipc::Shmem* aShmem) override;
   bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   // TextureForwarder
@@ -69,11 +65,9 @@ class VideoBridgeChild final : public PVideoBridgeChild,
 
  protected:
   void HandleFatalError(const char* aMsg) const override;
-  bool DispatchAllocShmemInternal(size_t aSize,
-                                  SharedMemory::SharedMemoryType aType,
-                                  mozilla::ipc::Shmem* aShmem, bool aUnsafe);
+  bool DispatchAllocShmemInternal(size_t aSize, mozilla::ipc::Shmem* aShmem,
+                                  bool aUnsafe);
   void ProxyAllocShmemNow(SynchronousTask* aTask, size_t aSize,
-                          SharedMemory::SharedMemoryType aType,
                           mozilla::ipc::Shmem* aShmem, bool aUnsafe,
                           bool* aSuccess);
   void ProxyDeallocShmemNow(SynchronousTask* aTask, mozilla::ipc::Shmem* aShmem,

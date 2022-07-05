@@ -138,8 +138,7 @@ already_AddRefed<Buffer> Device::CreateBuffer(
     const auto& size = checked.value();
 
     // TODO: use `ShmemPool`?
-    if (!mBridge->AllocShmem(size, ipc::Shmem::SharedMemory::TYPE_BASIC,
-                             &shmem)) {
+    if (!mBridge->AllocShmem(size, &shmem)) {
       aRv.ThrowAbortError(
           nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
       return nullptr;

@@ -7875,7 +7875,7 @@ static bool AllocateShmem(mozilla::dom::ContentChild* aChild,
   IShmemAllocator* allocator = aChild ? static_cast<IShmemAllocator*>(aChild)
                                       : static_cast<IShmemAllocator*>(aParent);
 
-  return allocator->AllocShmem(aSize, SharedMemory::TYPE_BASIC, aShmem);
+  return allocator->AllocShmem(aSize, aShmem);
 }
 
 static Shmem ConvertToShmem(mozilla::dom::ContentChild* aChild,
@@ -8166,7 +8166,7 @@ struct GetSurfaceDataShmem {
 
   ReturnType Allocate(size_t aSize) {
     Shmem shmem;
-    if (!mAllocator->AllocShmem(aSize, SharedMemory::TYPE_BASIC, &shmem)) {
+    if (!mAllocator->AllocShmem(aSize, &shmem)) {
       return Nothing();
     }
 
