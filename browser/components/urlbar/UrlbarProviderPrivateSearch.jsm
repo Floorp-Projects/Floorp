@@ -19,7 +19,9 @@ const { SkippableTimer, UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
   "resource:///modules/UrlbarUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
@@ -60,7 +62,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
    */
   isActive(queryContext) {
     return (
-      UrlbarSearchUtils.separatePrivateDefaultUIEnabled &&
+      lazy.UrlbarSearchUtils.separatePrivateDefaultUIEnabled &&
       !queryContext.isPrivate &&
       queryContext.tokens.length
     );
@@ -77,7 +79,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
     let searchString = queryContext.trimmedSearchString;
     if (
       queryContext.tokens.some(
-        t => t.type == UrlbarTokenizer.TYPE.RESTRICT_SEARCH
+        t => t.type == lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH
       )
     ) {
       if (queryContext.tokens.length == 1) {
@@ -86,7 +88,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
       }
       // Remove the restriction char from the search string.
       searchString = queryContext.tokens
-        .filter(t => t.type != UrlbarTokenizer.TYPE.RESTRICT_SEARCH)
+        .filter(t => t.type != lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH)
         .map(t => t.value)
         .join(" ");
     }
@@ -97,7 +99,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
       ? Services.search.getEngineByName(queryContext.searchMode.engineName)
       : await Services.search.getDefaultPrivate();
     let isPrivateEngine =
-      UrlbarSearchUtils.separatePrivateDefault &&
+      lazy.UrlbarSearchUtils.separatePrivateDefault &&
       engine != (await Services.search.getDefault());
     this.logger.info(`isPrivateEngine: ${isPrivateEngine}`);
 
@@ -115,10 +117,10 @@ class ProviderPrivateSearch extends UrlbarProvider {
       return;
     }
 
-    let result = new UrlbarResult(
+    let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
-      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
         query: [searchString, UrlbarUtils.HIGHLIGHT.NONE],
         icon: engine.iconURI?.spec,

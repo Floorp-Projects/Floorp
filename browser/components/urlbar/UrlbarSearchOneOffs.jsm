@@ -15,7 +15,9 @@ const { SearchOneOffs } = ChromeUtils.import(
   "resource:///modules/SearchOneOffs.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -34,7 +36,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     super(view.panel.querySelector(".search-one-offs"));
     this.view = view;
     this.input = view.input;
-    UrlbarPrefs.addObserver(this);
+    lazy.UrlbarPrefs.addObserver(this);
     // Override the SearchOneOffs.jsm value for the Address Bar.
     this.disableOneOffsHorizontalKeyNavigation = true;
     this._webEngines = [];
@@ -199,7 +201,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     let startQueryParams = {
       allowAutofill:
         !searchMode.engineName &&
-        searchMode.source != UrlbarUtils.RESULT_SOURCE.SEARCH,
+        searchMode.source != lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       event,
     };
 
@@ -298,7 +300,11 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     // We need to call super.willHide() even when we return false below because
     // it has the necessary side effect of creating this._engineInfo.
     let superWillHide = await super.willHide();
-    if (UrlbarUtils.LOCAL_SEARCH_MODES.some(m => UrlbarPrefs.get(m.pref))) {
+    if (
+      lazy.UrlbarUtils.LOCAL_SEARCH_MODES.some(m =>
+        lazy.UrlbarPrefs.get(m.pref)
+      )
+    ) {
       return false;
     }
     return superWillHide;
@@ -315,7 +321,9 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     // Invalidate the engine cache when the local-one-offs-related prefs change
     // so that the one-offs rebuild themselves the next time the view opens.
     if (
-      [...UrlbarUtils.LOCAL_SEARCH_MODES.map(m => m.pref)].includes(changedPref)
+      [...lazy.UrlbarUtils.LOCAL_SEARCH_MODES.map(m => m.pref)].includes(
+        changedPref
+      )
     ) {
       this.invalidateCache();
     }
@@ -341,11 +349,12 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   _rebuildEngineList(engines, addEngines) {
     super._rebuildEngineList(engines, addEngines);
 
-    for (let { source, pref, restrict } of UrlbarUtils.LOCAL_SEARCH_MODES) {
-      if (!UrlbarPrefs.get(pref)) {
+    for (let { source, pref, restrict } of lazy.UrlbarUtils
+      .LOCAL_SEARCH_MODES) {
+      if (!lazy.UrlbarPrefs.get(pref)) {
         continue;
       }
-      let name = UrlbarUtils.getResultSourceName(source);
+      let name = lazy.UrlbarUtils.getResultSourceName(source);
       let button = this.document.createXULElement("button");
       button.id = `urlbar-engine-one-off-item-${name}`;
       button.setAttribute("class", "searchbar-engine-one-off-item");

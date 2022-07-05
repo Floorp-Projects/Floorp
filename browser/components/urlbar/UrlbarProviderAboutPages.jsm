@@ -18,7 +18,9 @@ const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
   "resource:///modules/UrlbarUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutPagesUtils: "resource://gre/modules/AboutPagesUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
 });
@@ -65,12 +67,12 @@ class ProviderAboutPages extends UrlbarProvider {
    */
   startQuery(queryContext, addCallback) {
     let searchString = queryContext.trimmedSearchString.toLowerCase();
-    for (const aboutUrl of AboutPagesUtils.visibleAboutUrls) {
+    for (const aboutUrl of lazy.AboutPagesUtils.visibleAboutUrls) {
       if (aboutUrl.startsWith(searchString)) {
-        let result = new UrlbarResult(
+        let result = new lazy.UrlbarResult(
           UrlbarUtils.RESULT_TYPE.URL,
           UrlbarUtils.RESULT_SOURCE.HISTORY,
-          ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             title: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
             url: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
             icon: UrlbarUtils.getIconForUrl(aboutUrl),

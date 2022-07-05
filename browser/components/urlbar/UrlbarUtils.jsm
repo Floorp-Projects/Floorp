@@ -23,7 +23,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   KeywordUtils: "resource://gre/modules/KeywordUtils.jsm",
@@ -219,25 +220,25 @@ var UrlbarUtils = {
     return [
       {
         source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
-        restrict: UrlbarTokenizer.RESTRICT.BOOKMARK,
+        restrict: lazy.UrlbarTokenizer.RESTRICT.BOOKMARK,
         icon: "chrome://browser/skin/bookmark.svg",
         pref: "shortcuts.bookmarks",
       },
       {
         source: UrlbarUtils.RESULT_SOURCE.TABS,
-        restrict: UrlbarTokenizer.RESTRICT.OPENPAGE,
+        restrict: lazy.UrlbarTokenizer.RESTRICT.OPENPAGE,
         icon: "chrome://browser/skin/tab.svg",
         pref: "shortcuts.tabs",
       },
       {
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        restrict: UrlbarTokenizer.RESTRICT.HISTORY,
+        restrict: lazy.UrlbarTokenizer.RESTRICT.HISTORY,
         icon: "chrome://browser/skin/history.svg",
         pref: "shortcuts.history",
       },
       {
         source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
-        restrict: UrlbarTokenizer.RESTRICT.ACTION,
+        restrict: lazy.UrlbarTokenizer.RESTRICT.ACTION,
         icon: "chrome://devtools/skin/images/command-console.svg",
         pref: "shortcuts.quickactions",
       },
@@ -263,13 +264,13 @@ var UrlbarUtils = {
    */
   addToUrlbarHistory(url, window) {
     if (
-      !PrivateBrowsingUtils.isWindowPrivate(window) &&
+      !lazy.PrivateBrowsingUtils.isWindowPrivate(window) &&
       url &&
       !url.includes(" ") &&
       // eslint-disable-next-line no-control-regex
       !/[\x00-\x1F]/.test(url)
     ) {
-      PlacesUIUtils.markPageAsTyped(url);
+      lazy.PlacesUIUtils.markPageAsTyped(url);
     }
   },
 
@@ -308,7 +309,7 @@ var UrlbarUtils = {
     // from the location bar.
     let entry = null;
     try {
-      entry = await PlacesUtils.keywords.fetch(keyword);
+      entry = await lazy.PlacesUtils.keywords.fetch(keyword);
     } catch (ex) {
       Cu.reportError(`Unable to fetch Places keyword "${keyword}": ${ex}`);
     }
@@ -318,7 +319,7 @@ var UrlbarUtils = {
     }
 
     try {
-      [url, postData] = await KeywordUtils.parseUrlAndPostData(
+      [url, postData] = await lazy.KeywordUtils.parseUrlAndPostData(
         entry.url.href,
         entry.postData,
         param
@@ -698,9 +699,10 @@ var UrlbarUtils = {
    *   setSearchMode documentation for details.
    */
   searchModeForToken(token) {
-    if (token == UrlbarTokenizer.RESTRICT.SEARCH) {
+    if (token == lazy.UrlbarTokenizer.RESTRICT.SEARCH) {
       return {
-        engineName: UrlbarSearchUtils.getDefaultEngine(this.isPrivate).name,
+        engineName: lazy.UrlbarSearchUtils.getDefaultEngine(this.isPrivate)
+          .name,
       };
     }
 
@@ -722,7 +724,7 @@ var UrlbarUtils = {
    *       initialized, it will be a no-op.
    */
   setupSpeculativeConnection(urlOrEngine, window) {
-    if (!UrlbarPrefs.get("speculativeConnect.enabled")) {
+    if (!lazy.UrlbarPrefs.get("speculativeConnect.enabled")) {
       return;
     }
     if (urlOrEngine instanceof Ci.nsISearchEngine) {
@@ -860,7 +862,7 @@ var UrlbarUtils = {
   },
 
   async addToInputHistory(url, input) {
-    await PlacesUtils.withConnectionWrapper("addToInputHistory", db => {
+    await lazy.PlacesUtils.withConnectionWrapper("addToInputHistory", db => {
       // use_count will asymptotically approach the max of 10.
       return db.executeCached(
         `
@@ -944,7 +946,7 @@ var UrlbarUtils = {
    *          then [prefix, remainder].  Otherwise, ["", str].
    */
   stripURLPrefix(str) {
-    let match = UrlbarTokenizer.REGEXP_PREFIX.exec(str);
+    let match = lazy.UrlbarTokenizer.REGEXP_PREFIX.exec(str);
     if (!match) {
       return ["", str];
     }
@@ -973,7 +975,7 @@ var UrlbarUtils = {
    */
   async getHeuristicResultFor(
     searchString,
-    window = BrowserWindowTracker.getTopWindow()
+    window = lazy.BrowserWindowTracker.getTopWindow()
   ) {
     if (!searchString) {
       throw new Error("Must pass a non-null search string");
@@ -981,7 +983,7 @@ var UrlbarUtils = {
 
     let options = {
       allowAutofill: false,
-      isPrivate: PrivateBrowsingUtils.isWindowPrivate(window),
+      isPrivate: lazy.PrivateBrowsingUtils.isWindowPrivate(window),
       maxResults: 1,
       searchString,
       userContextId: window.gBrowser.selectedBrowser.getAttribute(
@@ -998,7 +1000,7 @@ var UrlbarUtils = {
       }
     }
     let context = new UrlbarQueryContext(options);
-    await UrlbarProvidersManager.startQuery(context);
+    await lazy.UrlbarProvidersManager.startQuery(context);
     if (!context.heuristicResult) {
       throw new Error("There should always be an heuristic result");
     }
@@ -1014,17 +1016,17 @@ var UrlbarUtils = {
    */
   getLogger({ prefix = "" } = {}) {
     if (!this._logger) {
-      this._logger = Log.repository.getLogger("urlbar");
+      this._logger = lazy.Log.repository.getLogger("urlbar");
       this._logger.manageLevelFromPref("browser.urlbar.loglevel");
       this._logger.addAppender(
-        new Log.ConsoleAppender(new Log.BasicFormatter())
+        new lazy.Log.ConsoleAppender(new lazy.Log.BasicFormatter())
       );
     }
     if (prefix) {
       // This is not an early return because it is necessary to invoke getLogger
       // at least once before getLoggerWithMessagePrefix; it replaces a
       // method of the original logger, rather than using an actual Proxy.
-      return Log.repository.getLoggerWithMessagePrefix(
+      return lazy.Log.repository.getLoggerWithMessagePrefix(
         "urlbar",
         prefix + " :: "
       );
@@ -1068,12 +1070,13 @@ var UrlbarUtils = {
     if (
       !value ||
       input.isPrivate ||
-      value.length > SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH
+      value.length >
+        lazy.SearchSuggestionController.SEARCH_HISTORY_MAX_VALUE_LENGTH
     ) {
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
-      FormHistory.update(
+      lazy.FormHistory.update(
         {
           op: "bump",
           fieldname: input.formHistoryName,
@@ -1113,10 +1116,10 @@ var UrlbarUtils = {
 
     // Create `URL` objects to make the logic below easier. The strings must
     // include schemes for this to work.
-    if (!UrlbarTokenizer.REGEXP_PREFIX.test(url)) {
+    if (!lazy.UrlbarTokenizer.REGEXP_PREFIX.test(url)) {
       url = "http://" + url;
     }
-    if (!UrlbarTokenizer.REGEXP_PREFIX.test(candidate)) {
+    if (!lazy.UrlbarTokenizer.REGEXP_PREFIX.test(candidate)) {
       candidate = "http://" + candidate;
     }
     try {
@@ -1236,7 +1239,7 @@ var UrlbarUtils = {
 };
 
 XPCOMUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {
-  return PlacesUtils.favicons.defaultFavicon.spec;
+  return lazy.PlacesUtils.favicons.defaultFavicon.spec;
 });
 
 XPCOMUtils.defineLazyGetter(UrlbarUtils, "strings", () => {
@@ -1726,7 +1729,7 @@ class UrlbarQueryContext {
     // mozilla.o, because the fixup check below can't validate them.
     if (
       this.tokens.length == 1 &&
-      this.tokens[0].type == UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN
+      this.tokens[0].type == lazy.UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN
     ) {
       return false;
     }

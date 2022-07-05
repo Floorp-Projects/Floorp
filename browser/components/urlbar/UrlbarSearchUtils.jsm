@@ -18,7 +18,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -161,10 +163,10 @@ class SearchUtils {
     await Promise.all([this.init(), this._refreshEnginesByAliasPromise]);
     let engine = this._enginesByAlias.get(alias.toLocaleLowerCase());
     if (engine && searchString) {
-      let query = UrlbarUtils.substringAfter(searchString, alias);
+      let query = lazy.UrlbarUtils.substringAfter(searchString, alias);
       // Match an alias only when it has a space after it.  If there's no trailing
       // space, then continue to treat it as part of the search string.
-      if (!UrlbarTokenizer.REGEXP_SPACES_START.test(query)) {
+      if (!lazy.UrlbarTokenizer.REGEXP_SPACES_START.test(query)) {
         return null;
       }
     }
@@ -254,7 +256,8 @@ class SearchUtils {
         scalarKey = searchMode.engineName;
       }
     } else if (searchMode.source) {
-      scalarKey = UrlbarUtils.getResultSourceName(searchMode.source) || "other";
+      scalarKey =
+        lazy.UrlbarUtils.getResultSourceName(searchMode.source) || "other";
     }
 
     return scalarKey;

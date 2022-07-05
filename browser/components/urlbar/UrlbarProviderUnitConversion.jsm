@@ -27,14 +27,16 @@ const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
   "resource:///modules/UrlbarUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "ClipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1",
   "nsIClipboardHelper"
@@ -84,8 +86,8 @@ const VIEW_TEMPLATE = {
 class ProviderUnitConversion extends UrlbarProvider {
   constructor() {
     super();
-    UrlbarResult.addDynamicResultType(DYNAMIC_RESULT_TYPE);
-    UrlbarView.addDynamicViewTemplate(DYNAMIC_RESULT_TYPE, VIEW_TEMPLATE);
+    lazy.UrlbarResult.addDynamicResultType(DYNAMIC_RESULT_TYPE);
+    lazy.UrlbarView.addDynamicViewTemplate(DYNAMIC_RESULT_TYPE, VIEW_TEMPLATE);
   }
 
   /**
@@ -115,7 +117,7 @@ class ProviderUnitConversion extends UrlbarProvider {
    *   Whether this provider should be invoked for the search.
    */
   isActive({ searchString }) {
-    if (!UrlbarPrefs.get("unitConversion.enabled")) {
+    if (!lazy.UrlbarPrefs.get("unitConversion.enabled")) {
       return false;
     }
 
@@ -163,7 +165,7 @@ class ProviderUnitConversion extends UrlbarProvider {
    *   The callback invoked by this method to add each result.
    */
   startQuery(queryContext, addCallback) {
-    const result = new UrlbarResult(
+    const result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.DYNAMIC,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       {
@@ -172,7 +174,9 @@ class ProviderUnitConversion extends UrlbarProvider {
         input: queryContext.searchString,
       }
     );
-    result.suggestedIndex = UrlbarPrefs.get("unitConversion.suggestedIndex");
+    result.suggestedIndex = lazy.UrlbarPrefs.get(
+      "unitConversion.suggestedIndex"
+    );
 
     addCallback(this, result);
   }
@@ -181,7 +185,7 @@ class ProviderUnitConversion extends UrlbarProvider {
     const { textContent } = element.querySelector(
       ".urlbarView-dynamic-unitConversion-output"
     );
-    ClipboardHelper.copyString(textContent);
+    lazy.ClipboardHelper.copyString(textContent);
   }
 }
 

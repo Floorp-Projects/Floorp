@@ -18,7 +18,9 @@ const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
   "resource:///modules/UrlbarUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   KeywordUtils: "resource://gre/modules/KeywordUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
@@ -54,7 +56,8 @@ class ProviderBookmarkKeywords extends UrlbarProvider {
   isActive(queryContext) {
     return (
       (!queryContext.restrictSource ||
-        queryContext.restrictSource == UrlbarTokenizer.RESTRICT.BOOKMARK) &&
+        queryContext.restrictSource ==
+          lazy.UrlbarTokenizer.RESTRICT.BOOKMARK) &&
       !queryContext.searchMode &&
       queryContext.tokens.length
     );
@@ -73,7 +76,7 @@ class ProviderBookmarkKeywords extends UrlbarProvider {
       queryContext.searchString,
       keyword
     ).trim();
-    let { entry, url, postData } = await KeywordUtils.getBindableKeyword(
+    let { entry, url, postData } = await lazy.KeywordUtils.getBindableKeyword(
       keyword,
       searchString
     );
@@ -99,10 +102,10 @@ class ProviderBookmarkKeywords extends UrlbarProvider {
       title = UrlbarUtils.unEscapeURIForUI(url);
     }
 
-    let result = new UrlbarResult(
+    let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.KEYWORD,
       UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
-      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
         url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
         keyword: [keyword, UrlbarUtils.HIGHLIGHT.TYPED],

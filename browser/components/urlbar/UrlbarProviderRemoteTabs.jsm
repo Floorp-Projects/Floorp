@@ -19,7 +19,9 @@ const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
   "resource:///modules/UrlbarUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -34,7 +36,7 @@ let _cache = null;
 // are found.
 const RECENT_REMOTE_TAB_THRESHOLD_MS = 72 * 60 * 60 * 1000; // 72 hours.
 
-XPCOMUtils.defineLazyGetter(this, "weaveXPCService", function() {
+XPCOMUtils.defineLazyGetter(lazy, "weaveXPCService", function() {
   try {
     return Cc["@mozilla.org/weave/service;1"].getService(
       Ci.nsISupports
@@ -46,21 +48,21 @@ XPCOMUtils.defineLazyGetter(this, "weaveXPCService", function() {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "showRemoteIconsPref",
   "services.sync.syncedTabs.showRemoteIcons",
   true
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "showRemoteTabsPref",
   "services.sync.syncedTabs.showRemoteTabs",
   true
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "syncUsernamePref",
   "services.sync.username"
 );
@@ -103,13 +105,13 @@ class ProviderRemoteTabs extends UrlbarProvider {
    */
   isActive(queryContext) {
     return (
-      syncUsernamePref &&
-      showRemoteTabsPref &&
-      UrlbarPrefs.get("suggest.remotetab") &&
+      lazy.syncUsernamePref &&
+      lazy.showRemoteTabsPref &&
+      lazy.UrlbarPrefs.get("suggest.remotetab") &&
       queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.TABS) &&
-      weaveXPCService &&
-      weaveXPCService.ready &&
-      weaveXPCService.enabled
+      lazy.weaveXPCService &&
+      lazy.weaveXPCService.ready &&
+      lazy.weaveXPCService.enabled
     );
   }
 
@@ -137,30 +139,30 @@ class ProviderRemoteTabs extends UrlbarProvider {
     for (let { tab, client } of tabsData) {
       if (
         !searchString ||
-        searchString == UrlbarTokenizer.RESTRICT.OPENPAGE ||
+        searchString == lazy.UrlbarTokenizer.RESTRICT.OPENPAGE ||
         re.test(tab.url) ||
         (tab.title && re.test(tab.title))
       ) {
-        if (showRemoteIconsPref) {
+        if (lazy.showRemoteIconsPref) {
           if (!tab.icon) {
             // It's rare that Sync supplies the icon for the page. If it does, it is a
             // string URL.
             tab.icon = UrlbarUtils.getIconForUrl(tab.url);
           } else {
-            tab.icon = PlacesUtils.favicons.getFaviconLinkForIcon(
+            tab.icon = lazy.PlacesUtils.favicons.getFaviconLinkForIcon(
               Services.io.newURI(tab.icon)
             ).spec;
           }
         }
 
-        let result = new UrlbarResult(
+        let result = new lazy.UrlbarResult(
           UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
           UrlbarUtils.RESULT_SOURCE.TABS,
-          ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             url: [tab.url, UrlbarUtils.HIGHLIGHT.TYPED],
             title: [tab.title, UrlbarUtils.HIGHLIGHT.TYPED],
             device: client.name,
-            icon: showRemoteIconsPref ? tab.icon : "",
+            icon: lazy.showRemoteIconsPref ? tab.icon : "",
             lastUsed: (tab.lastUsed || 0) * 1000,
           })
         );
@@ -208,9 +210,9 @@ class ProviderRemoteTabs extends UrlbarProvider {
     // being signed in), don't reach in to Weave.Service as that may initialize
     // Sync unnecessarily - we'll get an observer notification later when it
     // becomes ready and has synced a list of tabs.
-    if (weaveXPCService.ready) {
-      let clients = await SyncedTabs.getTabClients();
-      SyncedTabs.sortTabClientsByLastUsed(clients);
+    if (lazy.weaveXPCService.ready) {
+      let clients = await lazy.SyncedTabs.getTabClients();
+      lazy.SyncedTabs.sortTabClientsByLastUsed(clients);
       for (let client of clients) {
         for (let tab of client.tabs) {
           tabsData.push({ tab, client });

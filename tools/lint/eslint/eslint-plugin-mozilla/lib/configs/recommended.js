@@ -65,13 +65,6 @@ module.exports = {
       },
     },
     {
-      // Temporarily disable until the proxy-based loader gets landed.
-      files: ["browser/components/urlbar/**"],
-      rules: {
-        "mozilla/reject-global-this": "off",
-      },
-    },
-    {
       files: ["**/*.mjs", "**/*.jsm"],
       rules: {
         // Modules are far easier to check for no-unused-vars on a global scope,
