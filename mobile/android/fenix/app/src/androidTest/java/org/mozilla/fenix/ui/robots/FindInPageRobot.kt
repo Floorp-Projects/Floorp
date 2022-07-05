@@ -33,6 +33,8 @@ class FindInPageRobot {
     fun verifyFindInPageNextButton() = assertFindInPageNextButton()!!
     fun verifyFindInPagePrevButton() = assertFindInPagePrevButton()!!
     fun verifyFindInPageCloseButton() = assertFindInPageCloseButton()!!
+    fun clickFindInPageNextButton() = findInPageNextButton().click()
+    fun clickFindInPagePrevButton() = findInPagePrevButton().click()
 
     fun verifyFindInPageSearchBarItems() {
         verifyFindInPageQuery()
@@ -51,18 +53,12 @@ class FindInPageRobot {
 
     fun verifyFindNextInPageResult(ratioCounter: String) {
         mDevice.waitNotNull(Until.findObject(By.text(ratioCounter)), waitingTime)
-        val element = mDevice.findObject(By.text(ratioCounter))
         findInPageResult().check(matches(withText((ratioCounter))))
-        findInPageNextButton().click()
-        element.wait(Until.textNotEquals(ratioCounter), waitingTime)
     }
 
     fun verifyFindPrevInPageResult(ratioCounter: String) {
         mDevice.waitNotNull(Until.findObject(By.text(ratioCounter)), waitingTime)
-        val element = mDevice.findObject(By.text(ratioCounter))
         findInPageResult().check(matches(withText((ratioCounter))))
-        findInPagePrevButton().click()
-        element.wait(Until.textNotEquals(ratioCounter), waitingTime)
     }
 
     class Transition {
