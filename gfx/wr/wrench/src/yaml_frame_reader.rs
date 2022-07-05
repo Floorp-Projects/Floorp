@@ -469,7 +469,7 @@ impl YamlFrameReader {
         builder.begin();
         let mut info = CommonItemProperties {
             clip_rect: LayoutRect::zero(),
-            clip_id: ClipId::invalid(),
+            clip_chain_id: ClipChainId::INVALID,
             spatial_id: SpatialId::new(0, PipelineId::dummy()),
             flags: PrimitiveFlags::default(),
         };
@@ -839,15 +839,10 @@ impl YamlFrameReader {
             &info.clip_rect
         );
 
-        let clip_chain_id = match info.clip_id {
-            ClipId::Clip(..) => panic!("bug: must be a clip-chain"),
-            ClipId::ClipChain(id) => id,
-        };
-
         if let Some(tag) = self.to_hit_testing_tag(&item["hit-testing-tag"]) {
             dl.push_hit_test(
                 info.clip_rect,
-                clip_chain_id,
+                info.clip_chain_id,
                 info.spatial_id,
                 info.flags,
                 tag,
@@ -1494,7 +1489,7 @@ impl YamlFrameReader {
             info.clip_rect,
             &SpaceAndClipInfo {
                 spatial_id: info.spatial_id,
-                clip_id: info.clip_id
+                clip_chain_id: info.clip_chain_id
             },
             pipeline_id,
             ignore
@@ -1561,7 +1556,7 @@ impl YamlFrameReader {
 
             let mut info = CommonItemProperties {
                 clip_rect,
-                clip_id: ClipId::ClipChain(clip_chain_id),
+                clip_chain_id,
                 spatial_id: self.top_space(),
                 flags,
             };
@@ -1774,7 +1769,7 @@ impl YamlFrameReader {
         let color = yaml["color"].as_colorf().unwrap_or(ColorF::BLACK);
 
         dl.push_shadow(
-            &SpaceAndClipInfo { spatial_id: info.spatial_id, clip_id: info.clip_id },
+            &SpaceAndClipInfo { spatial_id: info.spatial_id, clip_chain_id: info.clip_chain_id },
             Shadow {
                 blur_radius,
                 offset,
