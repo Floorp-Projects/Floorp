@@ -135,13 +135,12 @@ JS_PUBLIC_API JS::Value JS::GetModulePrivate(JSObject* module) {
   return module->as<ModuleObject>().scriptSourceObject()->getPrivate();
 }
 
-JS_PUBLIC_API bool JS::ModuleInstantiate(JSContext* cx,
-                                         Handle<JSObject*> moduleArg) {
+JS_PUBLIC_API bool JS::ModuleLink(JSContext* cx, Handle<JSObject*> moduleArg) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->releaseCheck(moduleArg);
 
-  return js::ModuleInstantiate(cx, moduleArg.as<ModuleObject>());
+  return js::ModuleLink(cx, moduleArg.as<ModuleObject>());
 }
 
 JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
@@ -1044,7 +1043,7 @@ bool js::ModuleInitializeEnvironment(JSContext* cx,
 
 // https://tc39.es/ecma262/#sec-moduledeclarationlinking
 // ES2023 16.2.1.5.1 Link
-bool js::ModuleInstantiate(JSContext* cx, Handle<ModuleObject*> module) {
+bool js::ModuleLink(JSContext* cx, Handle<ModuleObject*> module) {
   // Step 1. Assert: module.[[Status]] is not linking or evaluating.
   MOZ_ASSERT(module->status() != ModuleStatus::Linking &&
              module->status() != ModuleStatus::Evaluating);
