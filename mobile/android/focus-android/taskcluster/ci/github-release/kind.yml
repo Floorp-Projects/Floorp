@@ -22,6 +22,8 @@ only-for-build-types:
     - klar-release
 
 job-template:
+    attributes:
+        shipping_phase: ship
     description: Create or update a Github release in order to upload APKs
     worker-type: github
     worker:

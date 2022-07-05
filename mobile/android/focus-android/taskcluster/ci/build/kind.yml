@@ -65,6 +65,7 @@ jobs:
             # inherit this attribute via the multi_dep loader
         attributes:
             release-type: release
+            shipping_phase: promote
         run-on-tasks-for: [github-pull-request]
         include-shippable-secrets: true
         include-release-version: true
@@ -79,6 +80,7 @@ jobs:
         description: 'Release Klar build'
         attributes:
             release-type: release
+            shipping_phase: promote
         run-on-tasks-for: [github-pull-request]
         include-shippable-secrets: true
         include-release-version: true
@@ -108,6 +110,7 @@ jobs:
         description: 'Beta focus build'
         attributes:
             release-type: beta
+            shipping_phase: promote
         run-on-tasks-for: []
         include-shippable-secrets: true
         include-release-version: true

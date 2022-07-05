@@ -23,7 +23,7 @@ def get_defaults(repo_root):
 extend_parameters_schema({
     Required("pull_request_number"): Any(All(int, Range(min=1)), None),
     Required("release_type"): str,
-    Optional("shipping_phase"): Any('build', 'ship', None),
+    Optional("shipping_phase"): Any('build', 'promote', 'ship', None),
     Required("version"): str,
     Required("next_version"): Any(None, str),
 }, defaults_fn=get_defaults)

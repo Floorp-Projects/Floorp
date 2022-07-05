@@ -21,6 +21,8 @@ only-for-build-types:
     - focus-release
 
 job-template:
+    attributes:
+        shipping_phase: ship
     description: Mark Focus as shipped in ship-it
     worker-type: ship-it
     scopes:
