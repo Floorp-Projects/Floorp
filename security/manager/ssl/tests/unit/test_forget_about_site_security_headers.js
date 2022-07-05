@@ -44,12 +44,7 @@ function add_tests() {
   // that the platform doesn't consider a.pinning.example.com to be HSTS any
   // longer.
   add_task(async function() {
-    sss.processHeader(
-      uri,
-      GOOD_MAX_AGE,
-      secInfo,
-      Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
-    );
+    sss.processHeader(uri, GOOD_MAX_AGE, secInfo);
 
     Assert.ok(sss.isSecureURI(uri), "a.pinning.example.com should be HSTS");
 
@@ -66,12 +61,7 @@ function add_tests() {
   // doesn't consider the subdomain to be HSTS any longer. Also test that
   // unrelated sites don't also get removed.
   add_task(async function() {
-    sss.processHeader(
-      uri,
-      GOOD_MAX_AGE,
-      secInfo,
-      Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
-    );
+    sss.processHeader(uri, GOOD_MAX_AGE, secInfo);
 
     Assert.ok(
       sss.isSecureURI(uri),
@@ -80,12 +70,7 @@ function add_tests() {
 
     // Add an unrelated site to HSTS.
     let unrelatedURI = Services.io.newURI("https://example.org");
-    sss.processHeader(
-      unrelatedURI,
-      GOOD_MAX_AGE,
-      secInfo,
-      Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
-    );
+    sss.processHeader(unrelatedURI, GOOD_MAX_AGE, secInfo);
     Assert.ok(sss.isSecureURI(unrelatedURI), "example.org should be HSTS");
 
     await ForgetAboutSite.removeDataFromDomain("example.com");
@@ -117,13 +102,7 @@ function add_tests() {
     let unrelatedURI = Services.io.newURI("https://example.org");
 
     for (let originAttributes of originAttributesList) {
-      sss.processHeader(
-        uri,
-        GOOD_MAX_AGE,
-        secInfo,
-        Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
-        originAttributes
-      );
+      sss.processHeader(uri, GOOD_MAX_AGE, secInfo, originAttributes);
 
       Assert.ok(
         sss.isSecureURI(uri, originAttributes),
@@ -131,13 +110,7 @@ function add_tests() {
       );
 
       // Add an unrelated site to HSTS.
-      sss.processHeader(
-        unrelatedURI,
-        GOOD_MAX_AGE,
-        secInfo,
-        Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
-        originAttributes
-      );
+      sss.processHeader(unrelatedURI, GOOD_MAX_AGE, secInfo, originAttributes);
       Assert.ok(
         sss.isSecureURI(unrelatedURI, originAttributes),
         "example.org should be HSTS (originAttributes case)"

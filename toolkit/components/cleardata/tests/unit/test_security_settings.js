@@ -32,13 +32,7 @@ function addSecurityInfo({ host, topLevelBaseDomain, originAttributes = {} }) {
     "@mozilla.org/security/transportsecurityinfo;1"
   ].createInstance(Ci.nsITransportSecurityInfo);
 
-  gSSService.processHeader(
-    uri,
-    "max-age=1000;",
-    secInfo,
-    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
-    attrs
-  );
+  gSSService.processHeader(uri, "max-age=1000;", secInfo, attrs);
 
   cars.rememberDecisionScriptable(host, attrs, serverCert, clientCert);
 }

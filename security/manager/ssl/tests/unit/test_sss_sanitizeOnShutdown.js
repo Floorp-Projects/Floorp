@@ -42,8 +42,7 @@ add_task(async function run_test() {
   SSService.processHeader(
     Services.io.newURI("http://example.com"),
     header,
-    secInfo,
-    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
+    secInfo
   );
   await TestUtils.topicObserved(
     "data-storage-written",
