@@ -20,7 +20,7 @@ def index_exists(index_path, reason=""):
         return False
 
 
-@_target_task('release')
+@_target_task('ship')
 def target_tasks_default(full_task_graph, parameters, graph_config):
     """Target the tasks (release or beta) triggered by a shipit phase action."""
 

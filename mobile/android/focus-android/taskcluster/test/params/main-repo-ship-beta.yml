@@ -48,6 +48,6 @@ pushlog_id: '0'
 release_type: beta
 repository_type: git
 shipping_phase: ship
-target_tasks_method: release
+target_tasks_method: ship
 tasks_for: action
 version: 103.0.0-beta.2
