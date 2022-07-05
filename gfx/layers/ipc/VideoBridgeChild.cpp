@@ -57,30 +57,24 @@ VideoBridgeChild::~VideoBridgeChild() = default;
 
 VideoBridgeChild* VideoBridgeChild::GetSingleton() { return sVideoBridge; }
 
-bool VideoBridgeChild::AllocUnsafeShmem(
-    size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
-    ipc::Shmem* aShmem) {
+bool VideoBridgeChild::AllocUnsafeShmem(size_t aSize, ipc::Shmem* aShmem) {
   if (!mThread->IsOnCurrentThread()) {
-    return DispatchAllocShmemInternal(aSize, aType, aShmem,
-                                      true);  // true: unsafe
+    return DispatchAllocShmemInternal(aSize, aShmem, true);  // true: unsafe
   }
 
   if (!CanSend()) {
     return false;
   }
 
-  return PVideoBridgeChild::AllocUnsafeShmem(aSize, aType, aShmem);
+  return PVideoBridgeChild::AllocUnsafeShmem(aSize, aShmem);
 }
 
-bool VideoBridgeChild::AllocShmem(size_t aSize,
-                                  ipc::SharedMemory::SharedMemoryType aType,
-                                  ipc::Shmem* aShmem) {
+bool VideoBridgeChild::AllocShmem(size_t aSize, ipc::Shmem* aShmem) {
   MOZ_ASSERT(CanSend());
-  return PVideoBridgeChild::AllocShmem(aSize, aType, aShmem);
+  return PVideoBridgeChild::AllocShmem(aSize, aShmem);
 }
 
 void VideoBridgeChild::ProxyAllocShmemNow(SynchronousTask* aTask, size_t aSize,
-                                          SharedMemory::SharedMemoryType aType,
                                           ipc::Shmem* aShmem, bool aUnsafe,
                                           bool* aSuccess) {
   AutoCompleteTask complete(aTask);
@@ -91,22 +85,22 @@ void VideoBridgeChild::ProxyAllocShmemNow(SynchronousTask* aTask, size_t aSize,
 
   bool ok = false;
   if (aUnsafe) {
-    ok = AllocUnsafeShmem(aSize, aType, aShmem);
+    ok = AllocUnsafeShmem(aSize, aShmem);
   } else {
-    ok = AllocShmem(aSize, aType, aShmem);
+    ok = AllocShmem(aSize, aShmem);
   }
   *aSuccess = ok;
 }
 
-bool VideoBridgeChild::DispatchAllocShmemInternal(
-    size_t aSize, SharedMemory::SharedMemoryType aType, ipc::Shmem* aShmem,
-    bool aUnsafe) {
+bool VideoBridgeChild::DispatchAllocShmemInternal(size_t aSize,
+                                                  ipc::Shmem* aShmem,
+                                                  bool aUnsafe) {
   SynchronousTask task("AllocatorProxy alloc");
 
   bool success = false;
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<VideoBridgeChild>(this), &VideoBridgeChild::ProxyAllocShmemNow,
-      &task, aSize, aType, aShmem, aUnsafe, &success);
+      &task, aSize, aShmem, aUnsafe, &success);
   GetThread()->Dispatch(runnable.forget());
 
   task.Wait();

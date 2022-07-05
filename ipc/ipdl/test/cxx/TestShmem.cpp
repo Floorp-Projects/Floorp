@@ -13,10 +13,8 @@ void TestShmemParent::Main() {
   Shmem unsafe;
 
   size_t size = 12345;
-  if (!AllocShmem(size, SharedMemory::TYPE_BASIC, &mem))
-    fail("can't alloc shmem");
-  if (!AllocUnsafeShmem(size, SharedMemory::TYPE_BASIC, &unsafe))
-    fail("can't alloc shmem");
+  if (!AllocShmem(size, &mem)) fail("can't alloc shmem");
+  if (!AllocUnsafeShmem(size, &unsafe)) fail("can't alloc shmem");
 
   if (mem.Size<char>() != size)
     fail("shmem is wrong size: expected %lu, got %lu", size, mem.Size<char>());

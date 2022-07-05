@@ -63,8 +63,6 @@ class SharedMemoryBasic final
 #endif
   }
 
-  virtual SharedMemoryType Type() const override { return TYPE_BASIC; }
-
   static Handle NULLHandle() { return base::SharedMemory::NULLHandle(); }
 
   virtual bool IsHandleValid(const Handle& aHandle) const override {

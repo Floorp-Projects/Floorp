@@ -30,9 +30,7 @@ Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(const size_t size) {
       capacity = size;
     }
 
-    auto shmem = webgl::RaiiShmem::Alloc(
-        this, capacity,
-        mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC);
+    auto shmem = webgl::RaiiShmem::Alloc(this, capacity);
     if (!shmem) {
       NS_WARNING("Failed to alloc shmem for AllocPendingCmdBytes.");
       return {};

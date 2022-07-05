@@ -52,8 +52,6 @@ enum BufferCapabilities {
 
 class SurfaceDescriptor;
 
-mozilla::ipc::SharedMemory::SharedMemoryType OptimalShmemType();
-
 /**
  * An interface used to create and destroy surfaces that are shared with the
  * Compositor process (using shmem, or other platform specific memory)

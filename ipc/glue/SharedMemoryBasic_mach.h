@@ -51,8 +51,6 @@ class SharedMemoryBasic final
 #endif
   }
 
-  virtual SharedMemoryType Type() const override { return TYPE_BASIC; }
-
   static Handle NULLHandle() { return Handle(); }
 
   static void* FindFreeAddressSpace(size_t aSize);

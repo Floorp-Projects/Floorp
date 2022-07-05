@@ -51,9 +51,8 @@ class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
   uint32_t GetPluginId() const override { return mPluginId; }
 
   // GMPSharedMemManager
-  bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType,
-             Shmem* aMem) override {
-    return AllocShmem(aSize, aType, aMem);
+  bool Alloc(size_t aSize, Shmem* aMem) override {
+    return AllocShmem(aSize, aMem);
   }
   void Dealloc(Shmem&& aMem) override { DeallocShmem(aMem); }
 
