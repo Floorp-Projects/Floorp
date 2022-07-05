@@ -14,10 +14,14 @@ var EXPORTED_SYMBOLS = ["UrlbarProviderOmnibox"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+const { UrlbarProvider } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });

@@ -13,12 +13,22 @@ const EXPORTED_SYMBOLS = ["UrlbarProviderUnitConversion"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+const { UnitConverterSimple } = ChromeUtils.import(
+  "resource:///modules/UnitConverterSimple.jsm"
+);
+const { UnitConverterTemperature } = ChromeUtils.import(
+  "resource:///modules/UnitConverterTemperature.jsm"
+);
+const { UnitConverterTimezone } = ChromeUtils.import(
+  "resource:///modules/UnitConverterTimezone.jsm"
+);
+const { UrlbarProvider } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  UnitConverterSimple: "resource:///modules/UnitConverterSimple.jsm",
-  UnitConverterTemperature: "resource:///modules/UnitConverterTemperature.jsm",
-  UnitConverterTimezone: "resource:///modules/UnitConverterTimezone.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
