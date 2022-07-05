@@ -248,9 +248,7 @@ Address CodeGeneratorShared::ToAddress(const LAllocation& a,
   if (a.isArgument()) {
     // Use the frame pointer, unless the caller explicitly requested a
     // stack-pointer-relative address.
-    uint32_t offsetFromFP =
-        a.toArgument()->index() +
-        (gen->compilingWasm() ? sizeof(wasm::Frame) : sizeof(JitFrameLayout));
+    uint32_t offsetFromFP = offsetOfArgsFromFP_ + a.toArgument()->index();
     if (base == BaseRegForAddress::SP) {
       return Address(masm.getStackPointer(), frameSize() + offsetFromFP);
     }
