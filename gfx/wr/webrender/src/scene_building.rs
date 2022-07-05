@@ -767,12 +767,12 @@ impl<'a> SceneBuilder<'a> {
         let invalid_clip_chain_id = ClipId::ClipChain(api::ClipChainId::INVALID);
         self.clip_store.register_clip_template(
             invalid_clip_chain_id,
-            invalid_clip_chain_id,
+            None,
             &[],
         );
 
         let root_clip_id = ClipId::root(root_pipeline.pipeline_id);
-        self.clip_store.register_clip_template(root_clip_id, root_clip_id, &[]);
+        self.clip_store.register_clip_template(root_clip_id, None, &[]);
         self.clip_store.push_clip_root(Some(root_clip_id), false);
         self.id_to_index_mapper_stack.push(NodeIdToIndexMapper::default());
 
@@ -884,7 +884,7 @@ impl<'a> SceneBuilder<'a> {
                         continue 'outer;
                     }
                     _ => {
-                        self.build_item(item, bc.pipeline_id);
+                        self.build_item(item);
                     }
                 };
             }
@@ -1248,7 +1248,6 @@ impl<'a> SceneBuilder<'a> {
     fn build_item<'b>(
         &'b mut self,
         item: DisplayItemRef,
-        pipeline_id: PipelineId,
     ) {
         match *item.item() {
             DisplayItem::Image(ref info) => {
@@ -1678,7 +1677,7 @@ impl<'a> SceneBuilder<'a> {
 
                 self.add_image_mask_clip_node(
                     info.id,
-                    &info.parent_space_and_clip,
+                    info.spatial_id,
                     &info.image_mask,
                     info.fill_rule,
                     item.points(),
@@ -1705,7 +1704,7 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::ClipChain(ref info) => {
                 profile_scope!("clip_chain");
 
-                let parent = info.parent.map_or(ClipId::root(pipeline_id), |id| ClipId::ClipChain(id));
+                let parent = info.parent.map(|id| ClipId::ClipChain(id));
                 let mut clips: SmallVec<[SceneClipInstance; 4]> = SmallVec::new();
 
                 for clip_item in item.clip_chain_items() {
@@ -2680,12 +2679,12 @@ impl<'a> SceneBuilder<'a> {
     fn add_image_mask_clip_node(
         &mut self,
         new_node_id: ClipId,
-        space_and_clip: &SpaceAndClipInfo,
+        spatial_id: SpatialId,
         image_mask: &ImageMask,
         fill_rule: FillRule,
         points_range: ItemRange<LayoutPoint>,
     ) {
-        let spatial_node_index = self.get_space(space_and_clip.spatial_id);
+        let spatial_node_index = self.get_space(spatial_id);
 
         let snapped_mask_rect = self.snap_rect(
             &image_mask.rect,
@@ -2727,7 +2726,7 @@ impl<'a> SceneBuilder<'a> {
 
         self.clip_store.register_clip_template(
             new_node_id,
-            space_and_clip.clip_id,
+            None,
             &[instance],
         );
     }
@@ -2767,7 +2766,7 @@ impl<'a> SceneBuilder<'a> {
 
         self.clip_store.register_clip_template(
             new_node_id,
-            space_and_clip.clip_id,
+            Some(space_and_clip.clip_id),
             &[instance],
         );
     }
@@ -2810,7 +2809,7 @@ impl<'a> SceneBuilder<'a> {
 
         self.clip_store.register_clip_template(
             new_node_id,
-            space_and_clip.clip_id,
+            Some(space_and_clip.clip_id),
             &[instance],
         );
     }

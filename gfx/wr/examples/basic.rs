@@ -68,7 +68,7 @@ impl Example for App {
             ClipMode::Clip
         );
         let mask_clip_id = builder.define_clip_image_mask(
-            &root_space_and_clip,
+            root_space_and_clip.spatial_id,
             mask,
             &vec![],
             FillRule::Nonzero,

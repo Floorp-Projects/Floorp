@@ -1904,7 +1904,7 @@ impl YamlFrameReader {
 
         if let Some(image_mask) = self.as_image_mask(&yaml["image-mask"], wrench) {
             space_and_clip.clip_id = dl.define_clip_image_mask(
-                &space_and_clip,
+                space_and_clip.spatial_id,
                 image_mask,
                 &[],
                 FillRule::Nonzero,

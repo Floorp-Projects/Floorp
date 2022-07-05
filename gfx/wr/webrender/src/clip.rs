@@ -161,7 +161,7 @@ pub struct SceneClipInstance {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ClipTemplate {
     /// Parent of this clip, in terms of the public clip API
-    pub parent: ClipId,
+    pub parent: Option<ClipId>,
     /// Range of instances that define this clip template
     pub clips: ops::Range<u32>,
 }
@@ -266,19 +266,26 @@ impl ClipChainBuilder {
             clip_chain_id = new_clip_chain_id;
         }
 
-        // The ClipId parenting is terminated when we reach the root ClipId
-        if clip_id == template.parent {
-            return clip_chain_id;
-        }
+        match template.parent {
+            Some(parent) => {
+                // The ClipId parenting is terminated when we reach the root ClipId
+                if clip_id == parent {
+                    return clip_chain_id;
+                }
 
-        ClipChainBuilder::add_new_clips_to_chain(
-            template.parent,
-            clip_chain_id,
-            existing_clips,
-            clip_chain_nodes,
-            templates,
-            clip_instances,
-        )
+                ClipChainBuilder::add_new_clips_to_chain(
+                    parent,
+                    clip_chain_id,
+                    existing_clips,
+                    clip_chain_nodes,
+                    templates,
+                    clip_instances,
+                )
+            }
+            None => {
+                clip_chain_id
+            }
+        }
     }
 
     /// Return true if any of the clips in the hierarchy from clip_id to the
@@ -301,17 +308,24 @@ impl ClipChainBuilder {
             }
         }
 
-        // The ClipId parenting is terminated when we reach the root ClipId
-        if clip_id == template.parent {
-            return false;
-        }
+        match template.parent {
+            Some(parent) => {
+                // The ClipId parenting is terminated when we reach the root ClipId
+                if clip_id == parent {
+                    return false;
+                }
 
-        // Recurse into parent clip template to also check those
-        self.has_complex_clips(
-            template.parent,
-            templates,
-            instances,
-        )
+                // Recurse into parent clip template to also check those
+                self.has_complex_clips(
+                    parent,
+                    templates,
+                    instances,
+                )
+            }
+            None => {
+                false
+            }
+        }
     }
 
     /// This is the main method used to get a clip chain for a primitive. Given a
@@ -1036,7 +1050,7 @@ impl ClipStore {
     pub fn register_clip_template(
         &mut self,
         clip_id: ClipId,
-        parent: ClipId,
+        parent: Option<ClipId>,
         clips: &[SceneClipInstance],
     ) {
         let start = self.instances.len() as u32;

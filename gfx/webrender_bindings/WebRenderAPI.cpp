@@ -1043,7 +1043,7 @@ wr::WrClipId DisplayListBuilder::DefineImageMaskClip(
   CancelGroup();
 
   WrClipId clipId = wr_dp_define_image_mask_clip_with_parent_clip_chain(
-      mWrState, &mCurrentSpaceAndClipChain, aMask, aPoints.Elements(),
+      mWrState, mCurrentSpaceAndClipChain.space, aMask, aPoints.Elements(),
       aPoints.Length(), aFillRule);
 
   return clipId;

@@ -239,7 +239,7 @@ pub enum DebugDisplayItem {
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct ImageMaskClipDisplayItem {
     pub id: ClipId,
-    pub parent_space_and_clip: SpaceAndClipInfo,
+    pub spatial_id: SpatialId,
     pub image_mask: ImageMask,
     pub fill_rule: FillRule,
 } // IMPLICIT points: Vec<LayoutPoint>

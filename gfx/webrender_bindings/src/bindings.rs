@@ -2661,7 +2661,7 @@ pub extern "C" fn wr_dp_define_clipchain(
 #[no_mangle]
 pub extern "C" fn wr_dp_define_image_mask_clip_with_parent_clip_chain(
     state: &mut WrState,
-    parent: &WrSpaceAndClipChain,
+    space: WrSpatialId,
     mask: ImageMask,
     points: *const LayoutPoint,
     point_count: usize,
@@ -2673,7 +2673,7 @@ pub extern "C" fn wr_dp_define_image_mask_clip_with_parent_clip_chain(
     let points: Vec<LayoutPoint> = c_points.iter().copied().collect();
 
     let clip_id = state.frame_builder.dl_builder.define_clip_image_mask(
-        &parent.to_webrender(state.pipeline_id),
+        space.to_webrender(state.pipeline_id),
         mask,
         &points,
         fill_rule,
