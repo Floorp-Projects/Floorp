@@ -1,0 +1,53 @@
+base_repository: https://github.com/mozilla-releng/staging-focus-android
+build_date: 1641480286
+build_number: 1
+do_not_optimize: []
+existing_tasks:
+  build-android-test-beta: Oph9oP_LQLyNJOBFWnT4dg
+  build-android-test-debug: S7VKPl80SOyX7wlJUteI_A
+  build-android-test-nightly: a-8uH4p5QTGq4H7_MHXWPA
+  build-beta-firebase: PsF808NCRR6vpsY3JyOb5Q
+  build-docker-image-android-build: M7o0p0PiQpixFwMAxzIM1g
+  build-docker-image-base: Qw0alixOQPSXGr4uVXXoKQ
+  build-docker-image-ui-tests: d9Y_vAXVRjG-H_iGfKeGDA
+  build-focus-debug: DWt1mX_DQoS6oU63y2JtRg
+  build-klar-debug: GedOyZzXRnKEy-dKG2hf7A
+  build-nightly-firebase: RRs6IXLXTkuc3NEhYTvQ6w
+  fetch-android-sdk-3859397: CPljdvU0RSi34NLVFp_3GQ
+  lint-compare-locales: EXzO2H8-RZmQ0Ci00nQwNQ
+  lint-detekt: bWrMl8zbTZO8eXYAWAsD9w
+  lint-ktlint: HYGk30A-QH-0KGF3NKa1wQ
+  lint-lint: Ln8wq847Rey7RAItmDZscA
+  signing-android-test-beta: IQuMUBzFQEqnF5BusI6yqw
+  signing-android-test-debug: Nk7L8uK4QFinxekMRdh2TQ
+  signing-android-test-nightly: WbpL9RvtQC2CG181cbGjfw
+  signing-beta-firebase: fB9KVKlTRjmqyVNgB6Ma4A
+  signing-focus-debug: XAGgUTQwQTKWcjKKwvDidQ
+  signing-nightly-firebase: TP1vAjMzRBaGwGJeLgzROQ
+  test-debug: K7wi51n4S6-lvUDafrxXXQ
+  toolchain-linux64-android-gradle-dependencies: ZFAlTYosQ5aIe_v7T-E8Lg
+  toolchain-linux64-android-sdk-linux-repack: TYzwZg7VQMKjfONa-KFL0A
+  ui-test-x86-beta: KOJSMERTRGOFhseCuzFFgg
+  ui-test-x86-debug: YvzCkTdVRS6o96wLBxe6Ew
+  ui-test-x86-nightly: FxAwBu_XRiqys-HyEAPGxw
+filters:
+- target_tasks_method
+head_ref: refs/heads/releases_v97.0.0
+head_repository: https://github.com/mozilla-releng/staging-focus-android
+head_rev: 631dddf00682cd34a02b25394be0596a7f210e11
+head_tag: v97.0.0
+level: '1'
+moz_build_date: '20220106144446'
+next_version: 97.0.1
+optimize_target_tasks: true
+owner: sclements@mozilla.com
+project: staging-focus-android
+pull_request_number: null
+pushdate: 0
+pushlog_id: '0'
+release_type: release
+repository_type: git
+shipping_phase: ship
+target_tasks_method: release
+tasks_for: action
+version: 97.0.0

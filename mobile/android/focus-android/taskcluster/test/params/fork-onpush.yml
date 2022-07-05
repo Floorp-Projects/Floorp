@@ -1,0 +1,20 @@
+base_repository: https://github.com/mozilla-releng/staging-focus-android
+build_date: 1638813205
+do_not_optimize: []
+existing_tasks: {}
+filters:
+- target_tasks_method
+head_ref: refs/heads/main
+head_repository: https://github.com/mozilla-releng/staging-focus-android
+head_rev: 3b4e33d7099bba4b1563e07c8e5cfcec591ad34f
+head_tag: ''
+level: '1'
+moz_build_date: '20211206175325'
+optimize_target_tasks: true
+owner: sclements@mozilla.com
+project: staging-focus-android
+pushdate: 0
+pushlog_id: '0'
+repository_type: git
+target_tasks_method: default
+tasks_for: github-push

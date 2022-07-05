@@ -1,0 +1,24 @@
+base_repository: https://github.com/mozilla-mobile/focus-android
+build_date: 1656781263
+do_not_optimize: []
+existing_tasks: {}
+filters:
+- target_tasks_method
+head_ref: main
+head_repository: https://github.com/mozilla-mobile/focus-android
+head_rev: afd3526c2bc583dd2f37199caf5bdf8b1c858cc0
+head_tag: ''
+level: '3'
+moz_build_date: '20220702170103'
+next_version: null
+optimize_target_tasks: true
+owner: cron@noreply.mozilla.org
+project: focus-android
+pull_request_number: null
+pushdate: 0
+pushlog_id: '0'
+release_type: ''
+repository_type: git
+target_tasks_method: nightly
+tasks_for: cron
+version: ''

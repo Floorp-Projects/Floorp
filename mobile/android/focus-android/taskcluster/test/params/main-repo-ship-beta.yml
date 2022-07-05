@@ -1,0 +1,53 @@
+base_repository: https://github.com/mozilla-mobile/focus-android
+build_date: 1656894112
+build_number: 1
+do_not_optimize: []
+existing_tasks:
+  build-android-test-beta: bm8EJ486SQS5KM4BH2MUBQ
+  build-android-test-debug: TZHrsppbQNapfLViotKlcw
+  build-android-test-nightly: aqCsBPZGTx6Cm9X44D1n3Q
+  build-beta-firebase: EhSSl6m4TYu1K7SiGPCgSg
+  build-docker-image-android-build: JgpWeaJWQYyHEMGD7R55RQ
+  build-docker-image-base: YxBJJvhiQeOKmV-5zK5lPw
+  build-docker-image-ui-tests: I8LzhCd_SDuqASeXophkyA
+  build-focus-debug: KLIdAsk5T8O_i7BvuuprOw
+  build-klar-debug: avI9-Qg2QXSYek26Kt65DQ
+  build-nightly-firebase: NcMd63f7Sju_nxQY2RhPzA
+  fetch-android-sdk-3859397: Es-GUCNWR-iJsOd5F1A3pA
+  lint-compare-locales: aKkXlb35THyuiOY4fPAlMg
+  lint-detekt: Kgf4Qk07QJeup7snf6LtTQ
+  lint-ktlint: EDEaBkVlRTWT6Xh6tDnGdA
+  lint-lint: bXFRcgvlRd6ZPPos10NL5w
+  signing-android-test-beta: QWlSL86-SR6sSP7CN3USMg
+  signing-android-test-debug: MKP-pLWCS2WHI5lI9o2mXQ
+  signing-android-test-nightly: PMQeZXdjQo6qbltzKuOXHg
+  signing-beta-firebase: MlPQSqHYR5-veEPWDT47kA
+  signing-focus-debug: fyZHk7gFQMC_FWQgZsjZHA
+  signing-nightly-firebase: ABmGVElMTouWmlRvXAloUA
+  test-debug: V-nBq6IhTUijCz6CgEDHVg
+  toolchain-linux64-android-gradle-dependencies: MTWGVmA_RTarTutL-w_9mA
+  toolchain-linux64-android-sdk-linux-repack: Fq4Z4hQbSUeWKdIIHpfBDQ
+  ui-test-x86-beta: KgATGHH7QPuYW-AWiDrXLQ
+  ui-test-x86-debug: Eh35QFwCRuqVJDMO0vg_hw
+  ui-test-x86-nightly: FN_19ft5R7OAQ6yllCg8vA
+filters:
+- target_tasks_method
+head_ref: refs/heads/releases_v103.0
+head_repository: https://github.com/mozilla-mobile/focus-android
+head_rev: fd82d6d9aed1a2e65f0a79eecf0ab2e4329f9e7e
+head_tag: v103.0.0-beta.2
+level: '3'
+moz_build_date: '20220704002152'
+next_version: 103.0.0-beta.3
+optimize_target_tasks: true
+owner: 76789979+DonalMe@users.noreply.github.com
+project: focus-android
+pull_request_number: null
+pushdate: 0
+pushlog_id: '0'
+release_type: beta
+repository_type: git
+shipping_phase: ship
+target_tasks_method: release
+tasks_for: action
+version: 103.0.0-beta.2
