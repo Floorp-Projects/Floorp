@@ -6,16 +6,6 @@
 /* global gToolbox */
 
 add_task(async function() {
-  // Disable safebrowsing components which can trigger network requests.
-  Services.prefs.setBoolPref("browser.safebrowsing.blockedURIs.enabled", false);
-  Services.prefs.setBoolPref("browser.safebrowsing.downloads.enabled", false);
-  Services.prefs.setBoolPref("browser.safebrowsing.malware.enabled", false);
-  Services.prefs.setBoolPref("browser.safebrowsing.passwords.enabled", false);
-  Services.prefs.setBoolPref("browser.safebrowsing.phishing.enabled", false);
-  // We can't disable RemoteSettings, but assigning it an erroneous URL will prevent
-  // the request to show up in the Netmonitor.
-  Services.prefs.setCharPref("services.settings.server", "invalid::/err");
-  // Define a set list of visible columns
   Services.prefs.setCharPref(
     "devtools.netmonitor.visibleColumns",
     JSON.stringify([
@@ -30,12 +20,6 @@ add_task(async function() {
   );
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("devtools.netmonitor.visibleColumns");
-    Services.prefs.clearUserPref("browser.safebrowsing.blockedURIs.enabled");
-    Services.prefs.clearUserPref("browser.safebrowsing.downloads.enabled");
-    Services.prefs.clearUserPref("browser.safebrowsing.malware.enabled");
-    Services.prefs.clearUserPref("browser.safebrowsing.passwords.enabled");
-    Services.prefs.clearUserPref("browser.safebrowsing.phishing.enabled");
-    Services.prefs.clearUserPref("services.settings.server");
   });
 
   const ToolboxTask = await initBrowserToolboxTask({
@@ -56,10 +40,6 @@ add_task(async function() {
     );
 
     store.dispatch(Actions.batchEnable(false));
-
-    await waitUntil(
-      () => !!document.querySelector(".request-list-empty-notice")
-    );
 
     const emptyListNotice = document.querySelector(
       ".request-list-empty-notice"
