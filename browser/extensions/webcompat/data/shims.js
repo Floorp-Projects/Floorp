@@ -752,6 +752,11 @@ const AVAILABLE_SHIMS = [
         runAt: "document_start",
         allFrames: true,
       },
+      {
+        js: "bloggerAccount.js",
+        matches: ["*://www.blogger.com/blog/*"],
+        runAt: "document_end",
+      },
     ],
     onlyIfDFPIActive: true,
   },
