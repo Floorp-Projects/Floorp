@@ -97,6 +97,7 @@ class GeckoEngineSession(
     internal var currentUrl: String? = null
     internal var lastLoadRequestUri: String? = null
     internal var pageLoadingUrl: String? = null
+    internal var appRedirectUrl: String? = null
     internal var scrollY: Int = 0
     // The Gecko site permissions for the loaded site.
     internal var geckoPermissions: List<ContentPermission> = emptyList()
@@ -474,6 +475,13 @@ class GeckoEngineSession(
                 return
             }
 
+            appRedirectUrl?.let {
+                if (url == appRedirectUrl) {
+                    goBack(false)
+                    return
+                }
+            }
+
             currentUrl = url
             initialLoad = false
             initialLoadRequest = null
@@ -590,6 +598,7 @@ class GeckoEngineSession(
                         is InterceptionResponse.Content -> loadData(data, mimeType, encoding)
                         is InterceptionResponse.Url -> loadUrl(url)
                         is InterceptionResponse.AppIntent -> {
+                            appRedirectUrl = lastLoadRequestUri
                             notifyObservers {
                                 onLaunchIntentRequest(url = url, appIntent = appIntent)
                             }
@@ -604,6 +613,7 @@ class GeckoEngineSession(
             }
 
             if (interceptionResponse !is InterceptionResponse.AppIntent) {
+                appRedirectUrl = ""
                 lastLoadRequestUri = request.uri
             }
             return interceptionResponse
@@ -695,6 +705,12 @@ class GeckoEngineSession(
                 (flags and GeckoSession.HistoryDelegate.VISIT_UNRECOVERABLE_ERROR) != 0
             ) {
                 return GeckoResult.fromValue(false)
+            }
+
+            appRedirectUrl?.let {
+                if (url == appRedirectUrl) {
+                    return GeckoResult.fromValue(false)
+                }
             }
 
             val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(false)
@@ -851,22 +867,24 @@ class GeckoEngineSession(
         }
 
         override fun onTitleChange(session: GeckoSession, title: String?) {
-            if (!privateMode) {
-                currentUrl?.let { url ->
-                    settings.historyTrackingDelegate?.let { delegate ->
-                        if (delegate.shouldStoreUri(url)) {
-                            // NB: There's no guarantee that the title change will be processed by the
-                            // delegate before the session is closed (and the corresponding coroutine
-                            // job is cancelled). Observers will always be notified of the title
-                            // change though.
-                            launch(coroutineContext) {
-                                delegate.onTitleChanged(url, title ?: "")
+            if (appRedirectUrl.isNullOrEmpty()) {
+                if (!privateMode) {
+                    currentUrl?.let { url ->
+                        settings.historyTrackingDelegate?.let { delegate ->
+                            if (delegate.shouldStoreUri(url)) {
+                                // NB: There's no guarantee that the title change will be processed by the
+                                // delegate before the session is closed (and the corresponding coroutine
+                                // job is cancelled). Observers will always be notified of the title
+                                // change though.
+                                launch(coroutineContext) {
+                                    delegate.onTitleChanged(url, title ?: "")
+                                }
                             }
                         }
                     }
                 }
+                notifyObservers { onTitleChange(title ?: "") }
             }
-            notifyObservers { onTitleChange(title ?: "") }
         }
 
         override fun onPreviewImage(session: GeckoSession, previewImageUrl: String) {

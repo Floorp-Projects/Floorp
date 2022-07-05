@@ -841,6 +841,69 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `GIVEN an app initiated request WHEN the user swipe back or launches the browser THEN the tab should display the correct page`() = runTestOnMain {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+            context = coroutineContext,
+        )
+
+        captureDelegates()
+
+        val historyTrackingDelegate: HistoryTrackingDelegate = mock()
+
+        var observedUrl = "https://www.google.com"
+        var observedTitle = "Google Search"
+        val emptyPageUrl = "https://example.com"
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLocationChange(url: String) { observedUrl = url }
+            override fun onTitleChange(title: String) { observedTitle = title }
+        })
+        engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+        engineSession.appRedirectUrl = emptyPageUrl
+
+        class MockHistoryList(
+            items: List<GeckoSession.HistoryDelegate.HistoryItem>,
+            private val currentIndex: Int
+        ) : ArrayList<GeckoSession.HistoryDelegate.HistoryItem>(items), GeckoSession.HistoryDelegate.HistoryList {
+            override fun getCurrentIndex() = currentIndex
+        }
+
+        fun mockHistoryItem(title: String?, uri: String): GeckoSession.HistoryDelegate.HistoryItem {
+            val item = mock<GeckoSession.HistoryDelegate.HistoryItem>()
+            whenever(item.title).thenReturn(title)
+            whenever(item.uri).thenReturn(uri)
+            return item
+        }
+
+        historyDelegate.value.onHistoryStateChange(mock(), MockHistoryList(emptyList(), 0))
+
+        historyDelegate.value.onHistoryStateChange(
+            mock(),
+            MockHistoryList(
+                listOf(
+                    mockHistoryItem("Google Search", observedUrl),
+                    mockHistoryItem("Moved", emptyPageUrl),
+                ),
+                1
+            )
+        )
+
+        navigationDelegate.value.onLocationChange(geckoSession, emptyPageUrl, emptyList())
+        contentDelegate.value.onTitleChange(geckoSession, emptyPageUrl)
+
+        historyDelegate.value.onVisited(
+            geckoSession, emptyPageUrl, null,
+            9
+        )
+
+        verify(historyTrackingDelegate, never()).onVisited(eq(emptyPageUrl), any())
+        assertEquals("https://www.google.com", observedUrl)
+        assertEquals("Google Search", observedTitle)
+    }
+
+    @Test
     fun `notifies configured history delegate of preview image URL changes`() = runTestOnMain {
         val engineSession = GeckoEngineSession(
             runtime, geckoSessionProvider = geckoSessionProvider,
