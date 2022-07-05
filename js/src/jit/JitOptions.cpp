@@ -271,6 +271,25 @@ DefaultJitOptions::DefaultJitOptions() {
   // This is set to its actual value in InitializeJit.
   SET_DEFAULT(supportsUnalignedAccesses, false);
 
+  // To access local (non-argument) slots, it's more efficient to use the frame
+  // pointer (FP) instead of the stack pointer (SP) as base register on x86 and
+  // x64 (because instructions are one byte shorter, for example).
+  //
+  // However, because this requires a negative offset from FP, on ARM64 it can
+  // be more efficient to use SP-relative addresses for larger stack frames
+  // because the range for load/store immediate offsets is [-256, 4095] and
+  // offsets outside this range will require an extra instruction.
+  //
+  // We default to FP-relative addresses on x86/x64 and SP-relative on other
+  // platforms, but to improve fuzzing we allow changing this in the shell:
+  //
+  //   setJitCompilerOption("base-reg-for-locals", N); // 0 for SP, 1 for FP
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  baseRegForLocals = BaseRegForAddress::FP;
+#else
+  baseRegForLocals = BaseRegForAddress::SP;
+#endif
+
   // Toggles the optimization whereby offsets are folded into loads and not
   // included in the bounds check.
   SET_DEFAULT(wasmFoldOffsets, true);

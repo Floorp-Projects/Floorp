@@ -216,16 +216,20 @@ Address CodeGeneratorShared::AddressOfPassedArg(uint32_t slot) const {
 
   MOZ_ASSERT(slot > 0);
   MOZ_ASSERT(slot <= graph.argumentSlotCount());
-  uint32_t offsetFromBase = offsetOfPassedArgSlots_ + slot * sizeof(Value);
 
+  uint32_t offsetFromBase = offsetOfPassedArgSlots_ + slot * sizeof(Value);
   MOZ_ASSERT(offsetFromBase <= frameSize());
-  uint32_t offset = frameSize() - offsetFromBase;
 
   // Space for passed arguments is reserved below a function's local stack
   // storage. Note that passedArgSlotsOffset_ is aligned to at least
   // sizeof(Value) to ensure proper alignment.
-  MOZ_ASSERT(offset % sizeof(Value) == 0);
-  return Address(masm.getStackPointer(), offset);
+  MOZ_ASSERT((offsetFromBase % sizeof(Value)) == 0);
+
+  if (JitOptions.baseRegForLocals == BaseRegForAddress::SP) {
+    return Address(masm.getStackPointer(), frameSize() - offsetFromBase);
+  }
+  MOZ_ASSERT(JitOptions.baseRegForLocals == BaseRegForAddress::FP);
+  return Address(FramePointer, -int32_t(offsetFromBase));
 }
 
 uint32_t CodeGeneratorShared::UnusedStackBytesForCall(
@@ -259,6 +263,15 @@ Address CodeGeneratorShared::ToAddress(const LAllocation& a,
       a.isStackSlot() ? a.toStackSlot()->slot() : a.toStackArea()->base();
   MOZ_ASSERT(slot > 0 && slot <= graph.localSlotsSize());
   MOZ_ASSERT(slot <= frameSize());
+
+  if (MOZ_LIKELY(base == BaseRegForAddress::Default)) {
+    base = JitOptions.baseRegForLocals;
+  }
+
+  if (base == BaseRegForAddress::FP) {
+    return Address(FramePointer, -int32_t(slot));
+  }
+  MOZ_ASSERT(base == BaseRegForAddress::SP);
   return Address(masm.getStackPointer(), frameSize() - slot);
 }
 
