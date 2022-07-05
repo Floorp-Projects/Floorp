@@ -580,7 +580,7 @@ class SearchEngine {
   // The name of the charset used to submit the search terms.
   _queryCharset = null;
   // The engine's raw SearchForm value (URL string pointing to a search form).
-  __searchForm = null;
+  #cachedSearchForm = null;
   // Whether or not to send an attribution request to the server.
   _sendAttributionRequest = false;
   // The number of days between update checks for new versions
@@ -639,11 +639,11 @@ class SearchEngine {
   }
 
   get _searchForm() {
-    return this.__searchForm;
+    return this.#cachedSearchForm;
   }
   set _searchForm(value) {
     if (/^https?:/i.test(value)) {
-      this.__searchForm = value;
+      this.#cachedSearchForm = value;
     } else {
       lazy.logConsole.debug(
         "_searchForm: Invalid URL dropped for",
@@ -1015,7 +1015,7 @@ class SearchEngine {
     if (details.encoding) {
       this._queryCharset = details.encoding;
     }
-    this.__searchForm = details.search_form;
+    this.#cachedSearchForm = details.search_form;
   }
 
   checkSearchUrlMatchesManifest(details) {
@@ -1058,7 +1058,7 @@ class SearchEngine {
     this._overriddenData = {
       urls: this._urls,
       queryCharset: this._queryCharset,
-      searchForm: this.__searchForm,
+      searchForm: this.#cachedSearchForm,
     };
     this._urls = [];
     this.setAttr("overriddenBy", extensionID);
@@ -1076,7 +1076,7 @@ class SearchEngine {
       if (this._overriddenData) {
         this._urls = this._overriddenData.urls;
         this._queryCharset = this._overriddenData.queryCharset;
-        this.__searchForm = this._overriddenData.searchForm;
+        this.#cachedSearchForm = this._overriddenData.searchForm;
         delete this._overriddenData;
       } else {
         lazy.logConsole.error(
@@ -1103,7 +1103,7 @@ class SearchEngine {
     this._hasPreferredIcon = json._hasPreferredIcon == undefined;
     this._queryCharset =
       json.queryCharset || lazy.SearchUtils.DEFAULT_QUERY_CHARSET;
-    this.__searchForm = json.__searchForm;
+    this.#cachedSearchForm = json.__searchForm;
     this._updateInterval = json._updateInterval || null;
     this._updateURL = json._updateURL || null;
     this._iconUpdateURL = json._iconUpdateURL || null;
@@ -1153,7 +1153,6 @@ class SearchEngine {
       "_name",
       "_loadPath",
       "description",
-      "__searchForm",
       "_iconURL",
       "_iconMapObj",
       "_metaData",
@@ -1177,6 +1176,9 @@ class SearchEngine {
       }
     }
 
+    if (this.#cachedSearchForm) {
+      json.__searchForm = this.#cachedSearchForm;
+    }
     if (!this._hasPreferredIcon) {
       json._hasPreferredIcon = this._hasPreferredIcon;
     }
