@@ -1516,7 +1516,7 @@ JSObject* BrowsingContext::ReadStructuredClone(JSContext* aCx,
     return nullptr;
   }
 
-  JS::RootedValue val(aCx, JS::NullValue());
+  JS::Rooted<JS::Value> val(aCx, JS::NullValue());
   // We'll get rooting hazard errors from the RefPtr destructor if it isn't
   // destroyed before we try to return a raw JSObject*, so create it in its own
   // scope.

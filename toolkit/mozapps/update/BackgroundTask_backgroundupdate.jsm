@@ -11,9 +11,10 @@ var EXPORTED_SYMBOLS = [
   "runBackgroundTask",
 ];
 
-const { EXIT_CODE } = ChromeUtils.import(
+const { BackgroundUpdate } = ChromeUtils.import(
   "resource://gre/modules/BackgroundUpdate.jsm"
-).BackgroundUpdate;
+);
+const { EXIT_CODE } = BackgroundUpdate;
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -27,7 +28,6 @@ const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppUpdater: "resource:///modules/AppUpdater.jsm",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.jsm",
-  BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
@@ -84,9 +84,9 @@ async function _attemptBackgroundUpdate() {
   lazy.log.debug(
     `${SLUG}: checking for preconditions necessary to update this installation`
   );
-  let reasons = await lazy.BackgroundUpdate._reasonsToNotUpdateInstallation();
+  let reasons = await BackgroundUpdate._reasonsToNotUpdateInstallation();
 
-  if (lazy.BackgroundUpdate._force()) {
+  if (BackgroundUpdate._force()) {
     // We want to allow developers and testers to monkey with the system.
     lazy.log.debug(
       `${SLUG}: app.update.background.force=true, ignoring reasons: ${JSON.stringify(
@@ -313,7 +313,7 @@ async function runBackgroundTask() {
   // Glean has a preinit queue for metric operations that happen before init, so
   // this is safe.  We want to have these metrics set before the first possible
   // time we might send (built-in) pings.
-  await lazy.BackgroundUpdate.recordUpdateEnvironment();
+  await BackgroundUpdate.recordUpdateEnvironment();
 
   // The final leaf is for the benefit of `FileUtils`.  To help debugging, use
   // the `GLEAN_LOG_PINGS` and `GLEAN_DEBUG_VIEW_TAG` environment variables: see
