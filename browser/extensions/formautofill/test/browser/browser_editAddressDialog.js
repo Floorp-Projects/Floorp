@@ -513,7 +513,7 @@ add_task(async function test_countryAndStateFieldLabels() {
     // Change country to verify labels
     doc.querySelector("#country").focus();
 
-    let mutatableLabels = [
+    let mutableLabels = [
       "postal-code-container",
       "address-level1-container",
       "address-level2-container",
@@ -529,7 +529,7 @@ add_task(async function test_countryAndStateFieldLabels() {
       }
 
       // Clear L10N attributes and textContent to not leave leftovers between country tests
-      for (let labelEl of mutatableLabels) {
+      for (let labelEl of mutableLabels) {
         labelEl.textContent = "";
         delete labelEl.dataset.localization;
       }
@@ -538,7 +538,7 @@ add_task(async function test_countryAndStateFieldLabels() {
       EventUtils.synthesizeKey(countryOption.label, {}, win);
 
       // Check that the labels were filled
-      for (let labelEl of mutatableLabels) {
+      for (let labelEl of mutableLabels) {
         if (!labelEl.textContent) {
           // This test used to rely on the implied initial timer of
           // TestUtils.waitForCondition. See bug 1700685.

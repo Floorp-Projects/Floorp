@@ -242,11 +242,7 @@ add_task(async function test_editCreditCardWithMissingBillingAddress() {
 });
 
 add_task(async function test_addInvalidCreditCard() {
-  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, win => {
-    const unloadHandler = () =>
-      ok(false, "Edit credit card dialog shouldn't be closed");
-    win.addEventListener("unload", unloadHandler);
-
+  await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, async win => {
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey("test", {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -265,15 +261,9 @@ add_task(async function test_addInvalidCreditCard() {
       false,
       "cc-number is invalid"
     );
-    SimpleTest.requestFlakyTimeout(
-      "Ensure the window remains open after save attempt"
-    );
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    setTimeout(() => {
-      win.removeEventListener("unload", unloadHandler);
-      info("closing");
-      win.close();
-    }, TIMEOUT_ENSURE_CC_EDIT_DIALOG_NOT_CLOSED);
+    await ensureCreditCardDialogNotClosed(win);
+    info("closing");
+    win.close();
   });
   info("closed");
   let creditCards = await getCreditCards();

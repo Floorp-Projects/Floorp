@@ -31,13 +31,7 @@ add_task(async function test_add_address() {
     }
   );
 
-  // Wait 1 second to make sure the profile has not been saved
-  await new Promise(resolve =>
-    /* eslint-disable mozilla/no-arbitrary-setTimeout */
-    setTimeout(resolve, TIMEOUT_ENSURE_PROFILE_NOT_SAVED)
-  );
-  addresses = await getAddresses();
-  is(addresses.length, 0, "No address saved in private browsing mode");
+  await ensureNoAddressSaved();
 
   await BrowserTestUtils.closeWindow(privateWin);
 });
