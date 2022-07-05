@@ -81,30 +81,6 @@ android-arm/debug:
             - linux64-sccache
             - android-gradle-dependencies
 
-android-arm-lite/debug:
-    description: "Android 4.1 Arm Debug Lite"
-    index:
-        job-name: android-arm-lite-debug
-    attributes:
-        enable-full-crashsymbols: true
-    treeherder:
-        platform: android-4-1-armv7/debug
-        symbol: Bl
-    worker-type: b-linux-gcp
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-    run:
-        actions: [get-secrets, build]
-        config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: arm-lite-debug
-    use-sccache: true
-    fetches:
-        toolchain:
-            - linux64-clang
-            - linux64-sccache
-            - android-gradle-dependencies-lite
-
 android-x86/opt:
     description: "Android 5.0 x86 Opt"
     index:
@@ -432,31 +408,6 @@ android-aarch64/debug:
             - linux64-sccache
             - android-gradle-dependencies
 
-android-aarch64-lite/debug:
-    description: "Android 5.0 AArch64 Debug Lite"
-    index:
-        job-name: android-aarch64-lite-debug
-    attributes:
-        enable-full-crashsymbols: true
-    treeherder:
-        platform: android-5-0-aarch64/debug
-        symbol: Bl
-    worker-type: b-linux-gcp
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: lite
-    run:
-        actions: [get-secrets, build]
-        config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: aarch64-lite-debug
-    use-sccache: true
-    fetches:
-        toolchain:
-            - linux64-clang
-            - linux64-sccache
-            - android-gradle-dependencies-lite
-
 android-aarch64-shippable/opt:
     description: "Android 5.0 AArch64 Shippable"
     use-pgo: android-x86_64-shippable/opt
@@ -660,32 +611,6 @@ android-x86_64/debug:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies
-
-android-x86_64-lite/debug:
-    description: "Android 5.0 x86-64 Debug Lite"
-    index:
-        job-name: android-x86_64-lite-debug
-    attributes:
-        enable-full-crashsymbols: true
-    treeherder:
-        platform: android-5-0-x86_64/debug
-        symbol: Bl
-    worker-type: b-linux-gcp
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
-            PERFHERDER_EXTRA_OPTIONS: lite
-    run:
-        actions: [get-secrets, build]
-        config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: x86_64-lite-debug
-    use-sccache: true
-    fetches:
-        toolchain:
-            - linux64-clang
-            - linux64-sccache
-            - android-gradle-dependencies-lite
 
 android-x86_64/debug-isolated-process:
     description: "Android 5.0 x86-64 Debug with Isolated Process"

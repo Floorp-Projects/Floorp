@@ -336,11 +336,6 @@ android-em-7.0-x86_64-qr/debug:
     test-sets:
         - android-x86_64-tests
 
-android-em-7.0-x86_64-lite-qr/debug:
-    build-platform: android-x86_64-lite/debug
-    test-sets:
-        - android-x86_64-tests
-
 android-em-7.0-x86_64-qr/debug-isolated-process:
     build-platform: android-x86_64/debug-isolated-process
     test-sets:
