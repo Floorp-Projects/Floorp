@@ -34,9 +34,8 @@ class nsBlockReflowContext {
 
   void ReflowBlock(const mozilla::LogicalRect& aSpace, bool aApplyBStartMargin,
                    nsCollapsingMargin& aPrevMargin, nscoord aClearance,
-                   bool aIsAdjacentWithBStart, nsLineBox* aLine,
-                   ReflowInput& aReflowInput, nsReflowStatus& aReflowStatus,
-                   BlockReflowState& aState);
+                   nsLineBox* aLine, ReflowInput& aReflowInput,
+                   nsReflowStatus& aReflowStatus, BlockReflowState& aState);
 
   bool PlaceBlock(const ReflowInput& aReflowInput, bool aForceFit,
                   nsLineBox* aLine,

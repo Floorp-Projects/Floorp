@@ -209,17 +209,19 @@ done:
   return dirtiedLine;
 }
 
-void nsBlockReflowContext::ReflowBlock(
-    const LogicalRect& aSpace, bool aApplyBStartMargin,
-    nsCollapsingMargin& aPrevMargin, nscoord aClearance,
-    bool aIsAdjacentWithBStart, nsLineBox* aLine, ReflowInput& aFrameRI,
-    nsReflowStatus& aFrameReflowStatus, BlockReflowState& aState) {
+void nsBlockReflowContext::ReflowBlock(const LogicalRect& aSpace,
+                                       bool aApplyBStartMargin,
+                                       nsCollapsingMargin& aPrevMargin,
+                                       nscoord aClearance, nsLineBox* aLine,
+                                       ReflowInput& aFrameRI,
+                                       nsReflowStatus& aFrameReflowStatus,
+                                       BlockReflowState& aState) {
   mFrame = aFrameRI.mFrame;
   mWritingMode = aState.mReflowInput.GetWritingMode();
   mContainerSize = aState.ContainerSize();
   mSpace = aSpace;
 
-  if (!aIsAdjacentWithBStart) {
+  if (!aState.IsAdjacentWithBStart()) {
     aFrameRI.mFlags.mIsTopOfPage = false;  // make sure this is cleared
   }
 

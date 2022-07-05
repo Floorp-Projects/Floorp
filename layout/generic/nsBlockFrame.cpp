@@ -3904,8 +3904,8 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
 
       frameReflowStatus.Reset();
       brc.ReflowBlock(availSpace, applyBStartMargin, aState.mPrevBEndMargin,
-                      clearance, aState.IsAdjacentWithBStart(), aLine.get(),
-                      *childReflowInput, frameReflowStatus, aState);
+                      clearance, aLine.get(), *childReflowInput,
+                      frameReflowStatus, aState);
 
       if (frameReflowStatus.IsInlineBreakBefore()) {
         // No need to retry this loop if there is a break opportunity before the
@@ -6674,10 +6674,6 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
   // input.  However, when reflowing a float, if we've placed other
   // floats that force this float *down* or *narrower*, we should unset
   // the mIsTopOfPage state.
-  // FIXME: This is somewhat redundant with the |isAdjacentWithTop|
-  // variable below, which has the exact same effect.  Perhaps it should
-  // be merged into that, except that the test for narrowing here is not
-  // about adjacency with the top, so it seems misleading.
   if (floatRS.mFlags.mIsTopOfPage &&
       (aFloatPushedDown ||
        aAdjustedAvailableSpace.ISize(wm) != aState.ContentISize())) {
@@ -6686,9 +6682,6 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
 
   // Setup a block reflow context to reflow the float.
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowInput);
-
-  // Reflow the float
-  bool isAdjacentWithTop = aState.IsAdjacentWithBStart();
 
   nsIFrame* clearanceFrame = nullptr;
   do {
@@ -6707,8 +6700,8 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
       }
     }
 
-    brc.ReflowBlock(aAdjustedAvailableSpace, true, margin, 0, isAdjacentWithTop,
-                    nullptr, floatRS, aReflowStatus, aState);
+    brc.ReflowBlock(aAdjustedAvailableSpace, true, margin, 0, nullptr, floatRS,
+                    aReflowStatus, aState);
   } while (clearanceFrame);
 
   if (aFloat->IsLetterFrame()) {
