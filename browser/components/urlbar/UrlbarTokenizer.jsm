@@ -61,6 +61,7 @@ var UrlbarTokenizer = {
     RESTRICT_SEARCH: 8,
     RESTRICT_TITLE: 9,
     RESTRICT_URL: 10,
+    RESTRICT_ACTION: 11,
   },
 
   // The special characters below can be typed into the urlbar to restrict
@@ -77,6 +78,7 @@ var UrlbarTokenizer = {
     SEARCH: "?",
     TITLE: "#",
     URL: "$",
+    ACTION: ">",
   },
 
   // The keys of characters in RESTRICT that will enter search mode.
@@ -86,6 +88,7 @@ var UrlbarTokenizer = {
       this.RESTRICT.BOOKMARK,
       this.RESTRICT.OPENPAGE,
       this.RESTRICT.SEARCH,
+      this.RESTRICT.ACTION,
     ]);
   },
 

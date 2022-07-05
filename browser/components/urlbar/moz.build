@@ -12,6 +12,7 @@ DIRS += [
 ]
 
 EXTRA_JS_MODULES += [
+    "QuickActionsLoaderDefault.jsm",
     "UrlbarController.jsm",
     "UrlbarEventBufferer.jsm",
     "UrlbarInput.jsm",
@@ -31,6 +32,7 @@ EXTRA_JS_MODULES += [
     "UrlbarProviderPlaces.jsm",
     "UrlbarProviderPreloadedSites.jsm",
     "UrlbarProviderPrivateSearch.jsm",
+    "UrlbarProviderQuickActions.jsm",
     "UrlbarProviderQuickSuggest.jsm",
     "UrlbarProviderRemoteTabs.jsm",
     "UrlbarProviderSearchSuggestions.jsm",

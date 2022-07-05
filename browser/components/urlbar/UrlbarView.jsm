@@ -1348,7 +1348,7 @@ class UrlbarView {
         (result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC) ||
       (oldResultType == UrlbarUtils.RESULT_TYPE.DYNAMIC &&
         result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC &&
-        oldResult.dynamicType != result.dynamicType) ||
+        oldResult.payload.dynamicType != result.payload.dynamicType) ||
       // Dynamic results that implement getViewTemplate will
       // always need updating.
       provider.getViewTemplate ||

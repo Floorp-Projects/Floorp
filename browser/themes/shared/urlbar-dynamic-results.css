@@ -143,3 +143,60 @@
 .urlbarView-row[dynamicType=unitConversion] > .urlbarView-row-inner[selected] .urlbarView-dynamic-unitConversion-action {
   color: var(--autocomplete-popup-highlight-color);
 }
+
+.urlbarView-row[dynamicType=quickactions] > .urlbarView-row-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+}
+
+.urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row {
+  background: rgba(255, 255, 255, .1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: .5em;
+  border: .5px solid rgba(207,207,216, .6);
+  margin-top: 2px;
+  position: relative;
+}
+
+.urlbarView-row[dynamicType=quickactions] .urlbarView-label {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.urlbarView-row[dynamicType=quickactions] .urlbarView-favicon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.urlbarView-row[dynamicType=quickactions] .urlbarView-favicon-img {
+  width: 16px;
+  height: 16px;
+}
+
+.urlbarView-row[dynamicType=quickactions][label]::before {
+  top: -1em;
+  margin-inline-start: 12px;
+}
+
+.urlbarView-row:not([dynamicType=quickactions]) {
+  margin-inline: calc(5px + var(--urlbar-container-padding));
+}
+
+.urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row:hover {
+  background-color: var(--autocomplete-popup-highlight-background);
+  border: .5px solid #CFCFD8;
+}
+
+.urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row[selected] {
+  background-color: var(--autocomplete-popup-highlight-background);
+  color: var(--autocomplete-popup-highlight-color);
+}
+
+.urlbarView-row[dynamicType=quickactions] .urlbarView-title,
+.urlbarView-row[dynamicType=quickactions] .urlbarView-label {
+  display: flex
+}
