@@ -39,11 +39,15 @@
 
 using namespace js;
 
-static_assert(MODULE_STATUS_UNLINKED < MODULE_STATUS_LINKING &&
-                  MODULE_STATUS_LINKING < MODULE_STATUS_LINKED &&
-                  MODULE_STATUS_LINKED < MODULE_STATUS_EVALUATED &&
-                  MODULE_STATUS_EVALUATED < MODULE_STATUS_EVALUATED_ERROR,
+static_assert(ModuleStatus::Unlinked < ModuleStatus::Linking &&
+                  ModuleStatus::Linking < ModuleStatus::Linked &&
+                  ModuleStatus::Linked < ModuleStatus::Evaluated &&
+                  ModuleStatus::Evaluated < ModuleStatus::Evaluated_Error,
               "Module statuses are ordered incorrectly");
+
+static inline Value ModuleStatusValue(ModuleStatus status) {
+  return Int32Value(int32_t(status));
+}
 
 template <typename T, Value ValueGetter(const T* obj)>
 static bool ModuleValueGetterImpl(JSContext* cx, const CallArgs& args) {
@@ -947,7 +951,7 @@ ModuleEnvironmentObject* ModuleObject::environment() const {
 
   // According to the spec the environment record is created during
   // instantiation, but we create it earlier than that.
-  if (status() < MODULE_STATUS_LINKED) {
+  if (status() < ModuleStatus::Linked) {
     return nullptr;
   }
 
@@ -1015,7 +1019,7 @@ void ModuleObject::setInitialEnvironment(
 }
 
 void ModuleObject::initStatusSlot() {
-  initReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_UNLINKED));
+  initReservedSlot(StatusSlot, ModuleStatusValue(ModuleStatus::Unlinked));
 }
 
 void ModuleObject::initImportExportData(
@@ -1103,12 +1107,12 @@ JSScript* ModuleObject::script() const {
 }
 
 static inline void AssertValidModuleStatus(ModuleStatus status) {
-  MOZ_ASSERT(status >= MODULE_STATUS_UNLINKED &&
-             status <= MODULE_STATUS_EVALUATED_ERROR);
+  MOZ_ASSERT(status >= ModuleStatus::Unlinked &&
+             status <= ModuleStatus::Evaluated_Error);
 }
 
 ModuleStatus ModuleObject::status() const {
-  ModuleStatus status = getReservedSlot(StatusSlot).toInt32();
+  ModuleStatus status = ModuleStatus(getReservedSlot(StatusSlot).toInt32());
   AssertValidModuleStatus(status);
   return status;
 }
@@ -1118,12 +1122,12 @@ void ModuleObject::setStatus(ModuleStatus newStatus) {
 
   // Note that under OOM conditions we can fail the module instantiation process
   // even after modules have been marked as instantiated.
-  MOZ_ASSERT((status() <= MODULE_STATUS_LINKED &&
-              newStatus == MODULE_STATUS_UNLINKED) ||
+  MOZ_ASSERT((status() <= ModuleStatus::Linked &&
+              newStatus == ModuleStatus::Unlinked) ||
                  newStatus > status(),
              "New module status inconsistent with current status");
 
-  setReservedSlot(StatusSlot, Int32Value(newStatus));
+  setReservedSlot(StatusSlot, ModuleStatusValue(newStatus));
 }
 
 bool ModuleObject::isAsync() const {
@@ -1238,11 +1242,11 @@ bool ModuleObject::hasTopLevelCapability() const {
 }
 
 bool ModuleObject::hadEvaluationError() const {
-  return status() == MODULE_STATUS_EVALUATED_ERROR;
+  return status() == ModuleStatus::Evaluated_Error;
 }
 
 void ModuleObject::setEvaluationError(HandleValue newValue) {
-  setReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_EVALUATED_ERROR));
+  setReservedSlot(StatusSlot, ModuleStatusValue(ModuleStatus::Evaluated_Error));
   return setReservedSlot(EvaluationErrorSlot, newValue);
 }
 
@@ -1280,7 +1284,7 @@ void ModuleObject::trace(JSTracer* trc, JSObject* obj) {
 bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
                                                    Handle<ModuleObject*> self) {
 #ifdef DEBUG
-  MOZ_ASSERT(self->status() == MODULE_STATUS_LINKING);
+  MOZ_ASSERT(self->status() == ModuleStatus::Linking);
   if (!AssertFrozen(cx, self)) {
     return false;
   }
@@ -1324,8 +1328,8 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
 /* static */
 bool ModuleObject::execute(JSContext* cx, Handle<ModuleObject*> self) {
 #ifdef DEBUG
-  MOZ_ASSERT(self->status() == MODULE_STATUS_EVALUATING ||
-             self->status() == MODULE_STATUS_EVALUATED);
+  MOZ_ASSERT(self->status() == ModuleStatus::Evaluating ||
+             self->status() == ModuleStatus::Evaluated);
   if (!AssertFrozen(cx, self)) {
     return false;
   }
@@ -2323,7 +2327,7 @@ bool js::AsyncModuleExecutionRejectedHandler(JSContext* cx, unsigned argc,
 void js::AsyncModuleExecutionFulfilled(JSContext* cx,
                                        Handle<ModuleObject*> module) {
   // Step 1.
-  MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATED);
+  MOZ_ASSERT(module->status() == ModuleStatus::Evaluated);
 
   // Step 2.
   MOZ_ASSERT(module->isAsyncEvaluating());
@@ -2367,8 +2371,8 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
 
     if (m->isAsync()) {
       // Steps for ExecuteAsyncModule
-      MOZ_ASSERT(m->status() == MODULE_STATUS_EVALUATING ||
-                 m->status() == MODULE_STATUS_EVALUATED);
+      MOZ_ASSERT(m->status() == ModuleStatus::Evaluating ||
+                 m->status() == ModuleStatus::Evaluated);
       MOZ_ASSERT(m->isAsync());
       MOZ_ASSERT(m->isAsyncEvaluating());
       MOZ_ALWAYS_TRUE(ModuleObject::execute(cx, m));
@@ -2403,8 +2407,8 @@ void js::AsyncModuleExecutionRejected(JSContext* cx,
                                       Handle<ModuleObject*> module,
                                       HandleValue error) {
   // Step 1.
-  MOZ_ASSERT(module->status() == MODULE_STATUS_EVALUATED ||
-             module->status() == MODULE_STATUS_EVALUATED_ERROR);
+  MOZ_ASSERT(module->status() == ModuleStatus::Evaluated ||
+             module->status() == ModuleStatus::Evaluated_Error);
 
   // Step 2.
   if (!module->isAsyncEvaluating()) {
@@ -2752,7 +2756,7 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Rooted<ModuleObject*> module(cx, &result->as<ModuleObject>());
-  if (module->status() != MODULE_STATUS_EVALUATED) {
+  if (module->status() != ModuleStatus::Evaluated) {
     JS_ReportErrorASCII(
         cx, "Unevaluated or errored module returned by module resolve hook");
     return RejectPromiseWithPendingError(cx, promise);

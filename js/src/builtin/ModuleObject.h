@@ -247,8 +247,16 @@ class ModuleNamespaceObject : public ProxyObject {
   static const ProxyHandler proxyHandler;
 };
 
-// Possible values for ModuleStatus are defined in SelfHostingDefines.h.
-using ModuleStatus = int32_t;
+// Value types of [[Status]] in a Cyclic Module Record
+// https://tc39.es/ecma262/#table-cyclic-module-fields
+enum class ModuleStatus : int32_t {
+  Unlinked,
+  Linking,
+  Linked,
+  Evaluating,
+  Evaluated,
+  Evaluated_Error  // Sub-state of Evaluated with error value set.
+};
 
 class ModuleObject : public NativeObject {
  public:
