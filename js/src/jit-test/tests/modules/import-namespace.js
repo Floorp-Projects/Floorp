@@ -8,8 +8,8 @@ load(libdir + "iteration.js");
 
 function parseAndEvaluate(source) {
     let m = parseModule(source);
-    m.declarationInstantiation();
-    return m.evaluation();
+    moduleLink(m);
+    return moduleEvaluate(m);
 }
 
 function testHasNames(names, expected) {
@@ -40,8 +40,8 @@ let b = registerModule('b', parseModule(
      export var x = ns.a + ns.b;`
 ));
 
-b.declarationInstantiation();
-b.evaluation();
+moduleLink(b);
+moduleEvaluate(b);
 testHasNames(getModuleEnvironmentNames(b), ["ns", "x"]);
 let ns = getModuleEnvironmentValue(b, "ns");
 testHasNames(Object.keys(ns), ["a", "b"]);
@@ -89,9 +89,9 @@ let c = registerModule('c',
     parseModule("export let c = 1; import * as ns from 'd'; let d = ns.d;"));
 let d = registerModule('d',
     parseModule("export let d = 2; import * as ns from 'c'; let c = ns.c;"));
-c.declarationInstantiation();
-d.declarationInstantiation();
-c.evaluation()
+moduleLink(c);
+moduleLink(d);
+moduleEvaluate(c)
   .then(r => {
     // We expect the evaluation to throw, so we should not reach this.
     assertEq(false, true)
@@ -105,10 +105,10 @@ let e = registerModule('e',
     parseModule("export let e = 1; import * as ns from 'f'; export function f() { return ns.f }"));
 let f = registerModule('f',
     parseModule("export let f = 2; import * as ns from 'e'; export function e() { return ns.e }"));
-e.declarationInstantiation();
-f.declarationInstantiation();
-e.evaluation();
-f.evaluation();
+moduleLink(e);
+moduleLink(f);
+moduleEvaluate(e);
+moduleEvaluate(f);
 assertEq(e.namespace.f(), 2);
 assertEq(f.namespace.e(), 1);
 drainJobQueue();

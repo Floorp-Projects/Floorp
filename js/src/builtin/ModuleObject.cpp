@@ -1400,34 +1400,6 @@ bool ModuleObject::createEnvironment(JSContext* cx,
   return true;
 }
 
-static bool module_InstantiateImpl(JSContext* cx, const CallArgs& args) {
-  Rooted<ModuleObject*> module(cx, &args.thisv().toObject().as<ModuleObject>());
-  return js::ModuleLink(cx, module);
-}
-
-static bool module_Instantiate(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<ModuleObject::isInstance, module_InstantiateImpl>(
-      cx, args);
-}
-
-static bool module_EvaluateImpl(JSContext* cx, const CallArgs& args) {
-  Rooted<ModuleObject*> module(cx, &args.thisv().toObject().as<ModuleObject>());
-  Rooted<Value> result(cx);
-  if (!js::ModuleEvaluate(cx, module, &result)) {
-    return false;
-  }
-
-  args.rval().set(result);
-  return true;
-}
-
-static bool module_Evaluate(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<ModuleObject::isInstance, module_EvaluateImpl>(
-      cx, args);
-}
-
 DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, NamespaceSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, status, StatusSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluationError, EvaluationErrorSlot)
@@ -1474,18 +1446,13 @@ bool GlobalObject::initModuleProto(JSContext* cx,
              ModuleObject_pendingAsyncDependenciesGetter, 0),
       JS_PS_END};
 
-  static const JSFunctionSpec protoFunctions[] = {
-      JS_FN("declarationInstantiation", module_Instantiate, 0, 0),
-      JS_FN("evaluation", module_Evaluate, 0, 0), JS_FS_END};
-
   RootedObject proto(
       cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
   if (!proto) {
     return false;
   }
 
-  if (!DefinePropertiesAndFunctions(cx, proto, protoAccessors,
-                                    protoFunctions)) {
+  if (!DefinePropertiesAndFunctions(cx, proto, protoAccessors, nullptr)) {
     return false;
   }
 

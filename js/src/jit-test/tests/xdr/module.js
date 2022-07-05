@@ -5,8 +5,8 @@ load(libdir + "asserts.js");
 async function parseAndEvaluate(source) {
     let stencil = compileToStencilXDR(source, {module: true});
     let m = instantiateModuleStencilXDR(stencil);
-    m.declarationInstantiation();
-    await m.evaluation();
+    moduleLink(m);
+    await moduleEvaluate(m);
     return m;
 }
 
@@ -20,10 +20,10 @@ async function parseAndEvaluate(source) {
   // and promise is always the same.
   let stencil = compileToStencilXDR("1", {module: true});
   let m = instantiateModuleStencilXDR(stencil);
-  m.declarationInstantiation();
-  assertEq(typeof m.evaluation(), "object");
-  assertEq(m.evaluation() instanceof Promise, true);
-  assertEq(m.evaluation(), m.evaluation());
+  moduleLink(m);
+  assertEq(typeof moduleEvaluate(m), "object");
+  assertEq(moduleEvaluate(m) instanceof Promise, true);
+  assertEq(moduleEvaluate(m), moduleEvaluate(m));
 })();
 
 (async () => {
@@ -31,8 +31,8 @@ async function parseAndEvaluate(source) {
   let stencil = compileToStencilXDR("export var x = 2 + 2;", {module: true});
   let m = instantiateModuleStencilXDR(stencil);
   assertEq(typeof getModuleEnvironmentValue(m, "x"), "undefined");
-  m.declarationInstantiation();
-  await m.evaluation();
+  moduleLink(m);
+  await moduleEvaluate(m);
   assertEq(getModuleEnvironmentValue(m, "x"), 4);
 })();
 

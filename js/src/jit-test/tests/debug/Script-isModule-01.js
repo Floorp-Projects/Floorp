@@ -8,6 +8,6 @@ dbg.onNewScript = function (script) {
     assertEq(script.isModule, true);
 };
 const m = g.parseModule("");
-m.declarationInstantiation();
-m.evaluation();
+moduleLink(m);
+moduleEvaluate(m);
 assertEq(count, 1);

@@ -3,6 +3,6 @@ let a = registerModule('a', parseModule(`
 `));
 
 let m = parseModule("import { get } from 'a'; export { get };");
-m.declarationInstantiation();
-m.evaluation()
+moduleLink(m);
+moduleEvaluate(m)
 assertEq(getModuleEnvironmentValue(m, "get").x, "foo");

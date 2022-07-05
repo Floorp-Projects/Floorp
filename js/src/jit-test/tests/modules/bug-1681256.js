@@ -14,7 +14,7 @@ async function loadFile(lfVarx) {
     try {
         try { evaluate(lfVarx); } catch(exc) {}
         let lfMod = parseModule(lfVarx);
-        lfMod.declarationInstantiation();
-        await lfMod.evaluation();
+        lfMomoduleLink(d);
+        await lfMomoduleEvaluate(d);
     } catch (lfVare) {}
 }
