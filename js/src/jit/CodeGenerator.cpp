@@ -16922,7 +16922,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         } else {
           // Always use the stack pointer here because GenerateDirectCallFromJit
           // depends on this.
-          Address addr = ToAddress(larg, BaseRegForAddress::SP);
+          Address addr = ToAddress<BaseRegForAddress::SP>(larg);
           stackArgs.infallibleEmplaceBack(addr);
         }
         break;

@@ -147,12 +147,11 @@ class CodeGeneratorShared : public LElementVisitor {
   inline Address AddressOfPassedArg(uint32_t slot) const;
   inline uint32_t UnusedStackBytesForCall(uint32_t numArgSlots) const;
 
-  inline Address ToAddress(
-      const LAllocation& a,
-      BaseRegForAddress base = BaseRegForAddress::Default) const;
-  inline Address ToAddress(
-      const LAllocation* a,
-      BaseRegForAddress base = BaseRegForAddress::Default) const;
+  template <BaseRegForAddress Base = BaseRegForAddress::Default>
+  inline Address ToAddress(const LAllocation& a) const;
+
+  template <BaseRegForAddress Base = BaseRegForAddress::Default>
+  inline Address ToAddress(const LAllocation* a) const;
 
   static inline Address ToAddress(Register elements, const LAllocation* index,
                                   Scalar::Type type,

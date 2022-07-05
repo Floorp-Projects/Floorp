@@ -240,8 +240,8 @@ uint32_t CodeGeneratorShared::UnusedStackBytesForCall(
   return unusedArgSlots * sizeof(Value);
 }
 
-Address CodeGeneratorShared::ToAddress(const LAllocation& a,
-                                       BaseRegForAddress base) const {
+template <BaseRegForAddress Base>
+Address CodeGeneratorShared::ToAddress(const LAllocation& a) const {
   MOZ_ASSERT(a.isMemory() || a.isStackArea());
   MOZ_ASSERT(masm.framePushed() == frameSize());
 
@@ -249,12 +249,13 @@ Address CodeGeneratorShared::ToAddress(const LAllocation& a,
     // Use the frame pointer, unless the caller explicitly requested a
     // stack-pointer-relative address.
     uint32_t offsetFromFP = offsetOfArgsFromFP_ + a.toArgument()->index();
-    if (base == BaseRegForAddress::SP) {
+    if constexpr (Base == BaseRegForAddress::SP) {
       return Address(masm.getStackPointer(), frameSize() + offsetFromFP);
+    } else {
+      static_assert(Base == BaseRegForAddress::Default ||
+                    Base == BaseRegForAddress::FP);
+      return Address(FramePointer, offsetFromFP);
     }
-    MOZ_ASSERT(base == BaseRegForAddress::Default ||
-               base == BaseRegForAddress::FP);
-    return Address(FramePointer, offsetFromFP);
   }
 
   uint32_t slot =
@@ -262,7 +263,8 @@ Address CodeGeneratorShared::ToAddress(const LAllocation& a,
   MOZ_ASSERT(slot > 0 && slot <= graph.localSlotsSize());
   MOZ_ASSERT(slot <= frameSize());
 
-  if (MOZ_LIKELY(base == BaseRegForAddress::Default)) {
+  BaseRegForAddress base = Base;
+  if constexpr (Base == BaseRegForAddress::Default) {
     base = JitOptions.baseRegForLocals;
   }
 
@@ -273,9 +275,9 @@ Address CodeGeneratorShared::ToAddress(const LAllocation& a,
   return Address(masm.getStackPointer(), frameSize() - slot);
 }
 
-Address CodeGeneratorShared::ToAddress(const LAllocation* a,
-                                       BaseRegForAddress base) const {
-  return ToAddress(*a, base);
+template <BaseRegForAddress Base>
+Address CodeGeneratorShared::ToAddress(const LAllocation* a) const {
+  return ToAddress<Base>(*a);
 }
 
 // static
