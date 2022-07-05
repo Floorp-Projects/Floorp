@@ -236,11 +236,7 @@ def set_download_symbols(config, tasks):
     for task in tasks:
         if task["test-platform"].split("/")[-1] == "debug":
             task["mozharness"]["download-symbols"] = True
-        elif (
-            task["build-platform"] == "linux64-asan/opt"
-            or task["build-platform"] == "linux64-asan-qr/opt"
-            or task["build-platform"] == "windows10-64-asan-qr/opt"
-        ):
+        elif "asan" in task["build-platform"]:
             if "download-symbols" in task["mozharness"]:
                 del task["mozharness"]["download-symbols"]
         else:
