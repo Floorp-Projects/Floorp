@@ -10,7 +10,6 @@ import { Provider } from "react-redux";
 import {
   DSCard,
   PlaceholderDSCard,
-  LastCardMessage,
 } from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
 import { TopicsWidget } from "content-src/components/DiscoveryStreamComponents/TopicsWidget/TopicsWidget";
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
@@ -126,56 +125,6 @@ describe("<CardGrid>", () => {
     });
 
     assert.ok(!wrapper.find(".ds-card-grid-include-descriptions").exists());
-  });
-
-  it("should show last card and more loaded state", () => {
-    const dispatch = sinon.stub();
-    wrapper.setProps({
-      dispatch,
-      compact: true,
-      loadMore: true,
-      lastCardMessageEnabled: true,
-      loadMoreThreshold: 2,
-      data: {
-        recommendations: [{}, {}, {}],
-      },
-    });
-
-    const loadMoreButton = wrapper.find(".ds-card-grid-load-more-button");
-    assert.ok(loadMoreButton.exists());
-
-    loadMoreButton.simulate("click", { preventDefault: () => {} });
-    assert.calledOnce(dispatch);
-    assert.calledWith(
-      dispatch,
-      ac.UserEvent({
-        event: "CLICK",
-        source: "DS_LOAD_MORE_BUTTON",
-      })
-    );
-
-    const lastCard = wrapper.find(LastCardMessage);
-    assert.ok(lastCard.exists());
-  });
-
-  it("should only show load more with more than threshold number of stories", () => {
-    wrapper.setProps({
-      loadMore: true,
-      loadMoreThreshold: 2,
-      data: {
-        recommendations: [{}, {}, {}],
-      },
-    });
-
-    let loadMoreButton = wrapper.find(".ds-card-grid-load-more-button");
-    assert.ok(loadMoreButton.exists());
-
-    wrapper.setProps({
-      loadMoreThreshold: 3,
-    });
-
-    loadMoreButton = wrapper.find(".ds-card-grid-load-more-button");
-    assert.ok(!loadMoreButton.exists());
   });
 
   it("should create a widget card", () => {
