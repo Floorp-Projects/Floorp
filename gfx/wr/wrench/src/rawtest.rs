@@ -307,7 +307,7 @@ impl<'a> RawtestHarness<'a> {
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
-            &root_space_and_clip,
+            root_space_and_clip.spatial_id,
             rect(40., 41., 200., 201.).to_box2d(),
         );
 
@@ -391,7 +391,7 @@ impl<'a> RawtestHarness<'a> {
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
-            &root_space_and_clip,
+            root_space_and_clip.spatial_id,
             rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
 
@@ -484,7 +484,7 @@ impl<'a> RawtestHarness<'a> {
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
-            &root_space_and_clip,
+            root_space_and_clip.spatial_id,
             rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
 
@@ -529,7 +529,7 @@ impl<'a> RawtestHarness<'a> {
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
-            &root_space_and_clip,
+            root_space_and_clip.spatial_id,
             rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
 
@@ -576,7 +576,7 @@ impl<'a> RawtestHarness<'a> {
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let clip_id = builder.define_clip_rect(
-            &root_space_and_clip,
+            root_space_and_clip.spatial_id,
             rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
 
@@ -1067,7 +1067,7 @@ impl<'a> RawtestHarness<'a> {
 
             let spatial_id = SpatialId::root_scroll_node(self.wrench.root_pipeline_id);
             let clip_id = builder.define_clip_rect(
-                &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
+                SpatialId::root_scroll_node(self.wrench.root_pipeline_id),
                 rect(110., 120., 200., 200.).to_box2d(),
             );
             builder.push_rect(
@@ -1082,7 +1082,7 @@ impl<'a> RawtestHarness<'a> {
             if should_try_and_fail {
                 builder.save();
                 let clip_id = builder.define_clip_rect(
-                    &SpaceAndClipInfo { spatial_id, clip_id },
+                    spatial_id,
                     rect(80., 80., 90., 90.).to_box2d(),
                 );
                 let space_and_clip = SpaceAndClipInfo {
@@ -1125,7 +1125,7 @@ impl<'a> RawtestHarness<'a> {
             {
                 builder.save();
                 let clip_id = builder.define_clip_rect(
-                    &SpaceAndClipInfo { spatial_id, clip_id },
+                    spatial_id,
                     rect(80., 80., 100., 100.).to_box2d(),
                 );
                 builder.push_rect(

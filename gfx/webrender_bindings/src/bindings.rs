@@ -2700,15 +2700,10 @@ pub extern "C" fn wr_dp_define_rounded_rect_clip(
 pub extern "C" fn wr_dp_define_rect_clip(state: &mut WrState, space: WrSpatialId, clip_rect: LayoutRect) -> WrClipId {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let space_and_clip = SpaceAndClipInfo {
-        spatial_id: space.to_webrender(state.pipeline_id),
-        clip_id: ClipId::root(state.pipeline_id),
-    };
-
     let clip_id = state
         .frame_builder
         .dl_builder
-        .define_clip_rect(&space_and_clip, clip_rect);
+        .define_clip_rect(space.to_webrender(state.pipeline_id), clip_rect);
     WrClipId::from_webrender(clip_id)
 }
 
