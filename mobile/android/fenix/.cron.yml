@@ -30,3 +30,9 @@ jobs:
           treeherder-symbol: screenshots-D
           target-tasks-method: screenshots
       when: [{weekday: 'Monday', hour: 10, minute: 0}]
+    - name: legacy-api-ui-tests
+      job:
+          type: decision-task
+          treeherder-symbol: legacy-api-ui
+          target-tasks-method: legacy_api_ui_tests
+      when: [{hour: 10, minute: 30}]

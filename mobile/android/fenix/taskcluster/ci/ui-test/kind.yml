@@ -148,3 +148,14 @@ jobs:
                 - [automation/taskcluster/androidTest/ui-test.sh, x86-start-test, app.apk, android-test.apk, '-1']
         treeherder:
             symbol: nightly(ui-test-x86-nightly)
+    legacy-x86:
+        attributes:
+            legacy: true
+        description: Run select UI tests on older Android API on cron
+        run-on-tasks-for: []
+        run-on-git-branches: [main]
+        run:
+            commands:
+                - [automation/taskcluster/androidTest/ui-test.sh, x86-legacy-api-tests, app.apk, android-test.apk, '-1']
+        treeherder:
+            symbol: debug(legacy-x86)
