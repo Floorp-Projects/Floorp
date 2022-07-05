@@ -2,7 +2,6 @@ root:
   items:
     - type: clip
       id: 2
-      bounds: [0, 0, 1314, 650]
       complex:
             - rect: [0, 0, 1314, 650]
     - type: yuv-image

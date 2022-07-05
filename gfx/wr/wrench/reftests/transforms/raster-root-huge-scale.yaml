@@ -15,7 +15,6 @@ root:
           transform-style: preserve-3d
           items:
             - type: clip
-              bounds: [0, 0, 60000, 60000]
               clip-rect: [0, 0, 60000, 60000]
               id: 2
               complex:

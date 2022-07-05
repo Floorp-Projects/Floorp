@@ -13,7 +13,7 @@ root:
         -
           bounds: [0, 0, 1024, 200]
           "clip-rect": [0, 0, 1024, 200]
-          "clip-and-scroll": 2
+          spatial-id: 2
           type: "stacking-context"
           transform: [0.70710677, 0, -0.70710677, 0, 0, 1, 0, 0, 0.70710677, 0, 0.70710677, 0, 149.96133, 0, -937.9613, 1]
           items:

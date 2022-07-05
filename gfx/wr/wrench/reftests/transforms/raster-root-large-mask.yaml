@@ -13,7 +13,6 @@ root:
           transform: ["scale(0.001667, 0.001667)"]
           items:
             - type: clip
-              bounds: [10, 10, 60000, 60000]
               clip-rect: [10, 10, 60000, 60000]
               id: 2
               complex:

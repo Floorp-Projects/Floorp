@@ -5,9 +5,8 @@ root:
       "clip-rect": [0, 0, 750, 100]
       type: rect
       color: [180, 180, 180]
-    - bounds: [0, 0, 750, 100]
+    - type: clip
       "clip-rect": [0, 0, 750, 100]
-      type: clip
       id: 2
       "content-size": [750, 100]
       "image-mask":

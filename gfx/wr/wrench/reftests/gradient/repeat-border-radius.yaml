@@ -3,7 +3,6 @@ root:
   items:
     - type: clip
       id: 2
-      bounds: [20, 20, 100, 100]
       complex:
         - rect: [20, 20, 100, 100]
           radius: 32
@@ -21,7 +20,6 @@ root:
 
     - type: clip
       id: 3
-      bounds: [140, 20, 100, 100]
       complex:
         - rect: [140, 20, 100, 100]
           radius: 32
@@ -38,7 +36,6 @@ root:
 
     - type: clip
       id: 4
-      bounds: [270, 20, 100, 100]
       complex:
         - rect: [270, 20, 100, 100]
           radius: 32
@@ -51,7 +48,6 @@ root:
 
     - type: clip
       id: 5
-      bounds: [20, 160, 100, 100]
       complex:
         - rect: [20, 160, 100, 100]
           radius: 32
@@ -68,7 +64,6 @@ root:
 
     - type: clip
       id: 6
-      bounds: [140, 160, 100, 100]
       complex:
         - rect: [140, 160, 100, 100]
           radius: 32
@@ -85,7 +80,6 @@ root:
 
     - type: clip
       id: 7
-      bounds: [270, 160, 100, 100]
       complex:
         - rect: [270, 160, 100, 100]
           radius: 32
@@ -98,7 +92,6 @@ root:
 
     - type: clip
       id: 8
-      bounds: [20, 300, 100, 100]
       complex:
         - rect: [20, 300, 100, 100]
           radius: 32
@@ -116,7 +109,6 @@ root:
 
     - type: clip
       id: 9
-      bounds: [140, 300, 100, 100]
       complex:
         - rect: [140, 300, 100, 100]
           radius: 32
@@ -133,7 +125,6 @@ root:
 
     - type: clip
       id: 10
-      bounds: [270, 300, 100, 100]
       complex:
         - rect: [270, 300, 100, 100]
           radius: 32

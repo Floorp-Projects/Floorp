@@ -3,7 +3,6 @@ root:
   items:
     - type: clip
       id: 2
-      bounds: [20, 50, 100, 100]
       complex:
         - rect: [20, 50, 100, 100]
           radius: 0
@@ -17,7 +16,6 @@ root:
 
     - type: clip
       id: 3
-      bounds: [140, 50, 100, 100]
       complex:
         - rect: [140, 50, 100, 100]
           radius: 0.001
@@ -31,7 +29,6 @@ root:
 
     - type: clip
       id: 4
-      bounds: [260, 50, 100, 100]
       complex:
         - rect: [260, 50, 100, 100]
           radius: 0.01
@@ -45,7 +42,6 @@ root:
 
     - type: clip
       id: 5
-      bounds: [380, 50, 100, 100]
       complex:
         - rect: [380, 50, 100, 100]
           radius: 0.1
