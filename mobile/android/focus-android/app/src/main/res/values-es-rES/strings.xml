@@ -758,14 +758,23 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">Desbloquear %1$s</string>
+    <string moz:removedIn="103" name="biometric_auth_title">Desbloquear %1$s</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Desbloquear</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">Confirma usando tu huella dactilar</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">Puedes usar tu huella dactilar para continuar con tu sesión actual de la aplicación.</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">Toca el sensor de huellas digitales para continuar.</string>
+    <string moz:removedIn="103" name="biometric_auth_description">Toca el sensor de huellas digitales para continuar.</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">Nueva sesión</string>
+    <string moz:removedIn="103" name="biometric_auth_new_session">Nueva sesión</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -859,8 +868,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Cambie a un enlace en una nueva pestaña inmediatamente</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">Navegación segura</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Bloquear sitios potencialmente peligrosos y engañosos</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -870,8 +877,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_https_only_title">Modo solo HTTPS</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Intenta conectarse automáticamente a sitios web usando HTTPS para una mayor seguridad. Las conexiones HTTPS proporcionan una conexión segura y cifrada a los sitios web que visitas.</string>
-
     <string name="preference_https_only_summary3">Intenta conectarse automáticamente a sitios utilizando el protocolo de cifrado HTTPS para mayor seguridad.</string>
 
     <!-- Preference for exceptions tracking protection -->

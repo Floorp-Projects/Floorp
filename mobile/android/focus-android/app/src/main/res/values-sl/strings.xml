@@ -761,14 +761,17 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">Odkleni %1$s</string>
+    <string moz:removedIn="103" name="biometric_auth_title">Odkleni %1$s</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Odkleni</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">Za nadaljevanje se dotaknite čitalnika prstnih odtisov.</string>
+    <string moz:removedIn="103" name="biometric_auth_description">Za nadaljevanje se dotaknite čitalnika prstnih odtisov.</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">Nova seja</string>
+    <string moz:removedIn="103" name="biometric_auth_new_session">Nova seja</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -864,8 +867,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Takoj preklopi na povezavo v novem zavihku</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">Varno brskanje</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Zavrni morebitne nevarne in zavajajoče strani</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -875,7 +876,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_https_only_title">Način &quot;samo HTTPS&quot;</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Za večjo varnost poskuša samodejno vzpostaviti povezavo HTTPS. Povezava HTTPS zagotavljaja varno in šifrirano povezavo s spletnimi mesti, ki jih obiščete.</string>
     <string name="preference_https_only_summary3">Za večjo varnost poskuša samodejno vzpostaviti povezavo s šifrirnim protokolom HTTPS.</string>
 
     <!-- Preference for exceptions tracking protection -->

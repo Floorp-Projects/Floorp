@@ -761,14 +761,23 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">Buka %1$s</string>
+    <string moz:removedIn="103" name="biometric_auth_title">Buka %1$s</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Buka</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">Konfirmasi Menggunakan Sidik Jari Anda</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">Anda dapat menggunakan sidik jari untuk melanjutkan sesi aplikasi Anda saat ini.</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">Sentuh sensor sidik jari untuk melanjutkan.</string>
+    <string moz:removedIn="103" name="biometric_auth_description">Sentuh sensor sidik jari untuk melanjutkan.</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">Sesi Baru</string>
+    <string moz:removedIn="103" name="biometric_auth_new_session">Sesi Baru</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -864,8 +873,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Alihkan tautan langsung ke tab baru</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">Penjelajahan Aman</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Blokir situs yang mungkin berbahaya serta penipuan</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -873,9 +880,8 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Mode Hanya HTTPS</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Secara otomatis mencoba untuk terhubung ke situs menggunakan HTTPS untuk meningkatkan keamanan. Koneksi HTTPS menyediakan koneksi yang aman dan terenkripsi ke situs web yang Anda kunjungi.</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preference_https_only_summary3">Secara otomatis mencoba terhubung ke situs menggunakan protokol enkripsi HTTPS untuk meningkatkan keamanan.</string>
 
     <!-- Preference for exceptions tracking protection -->

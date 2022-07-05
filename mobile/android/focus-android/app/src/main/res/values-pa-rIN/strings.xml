@@ -755,14 +755,23 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">%1$s ਅਣ-ਲਾਕ ਕਰੋ</string>
+    <string moz:removedIn="103" name="biometric_auth_title">%1$s ਅਣ-ਲਾਕ ਕਰੋ</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">ਅਣ-ਲਾਕ ਕਰੋ</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">ਆਪਣੇ ਫਿੰਗਰਪਰਿੰਟ ਵਰਤ ਕੇ ਤਸਦੀਕ ਕਰੋ</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">ਹੁਣ ਤੁਸੀ ਆਪਣੇ ਮੌਜੂਦਾ ਐਪ ਸ਼ੈਸ਼ਨ ਲਈ ਆਪਣੇ ਫਿੰਗਰਪਰਿੰਟ ਨੂੰ ਵਰਤ ਸਕਦੇ ਹੋ।</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">ਜਾਰੀ ਰੱਖਣ ਲਈ ਫਿੰਗਰਪਰਿੰਟ ਸੈਂਸਰ ਨੂੰ ਛੂਹੋ।</string>
+    <string moz:removedIn="103" name="biometric_auth_description">ਜਾਰੀ ਰੱਖਣ ਲਈ ਫਿੰਗਰਪਰਿੰਟ ਸੈਂਸਰ ਨੂੰ ਛੂਹੋ।</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">ਨਵਾਂ ਸ਼ੈਸ਼ਨ</string>
+    <string moz:removedIn="103" name="biometric_auth_new_session">ਨਵਾਂ ਸ਼ੈਸ਼ਨ</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -862,8 +871,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">ਲਿੰਕ ਨੂੰ ਤੁਰੰਤ ਨੂੰ ਨਵੀਂ ਟੈਬ ਵਿੱਚ ਬਦਲੋ</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">ਸੁਰੱਖਿਅਤ ਬਰਾਊਜ਼ਿੰਗ</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">ਸੰਭਾਵਿਤ ਖ਼ਤਰਨਾਕ ਅਤੇ ਭਰਮਪੂਰਕ ਸਾਈਟਾਂ \'ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -873,8 +880,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_https_only_title">ਸਿਰਫ਼-HTTPS ਢੰਗ</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ ਲਈ HTTPS ਵਰਤ ਕੇ ਸਾਈਟ ਨਾਲ ਆਪਣੇ-ਆਪ ਕਨੈਕਟ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ। HTTPS ਕਨੈਕਸ਼ਨ ਤੁਹਾਡੇ ਵਲੋਂ ਖੋਲ੍ਹੀਆਂ ਜਾਂਦੀਆਂ ਵੈੱਬਸਾਈਟਾਂ ਲਈ ਸੁਰੱਖਿਅਤ, ਇੰਕ੍ਰਿਪਟ ਕੀਤੇ ਕਨੈਕਸ਼ਨ ਦਿੰਦੇ ਹਨ।</string>
-
     <string name="preference_https_only_summary3">ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ ਲਈ HTTPS ਇੰਕ੍ਰਿਪਸ਼ਨ ਪਰੋਟੋਕਾਲ ਵਰਤ ਕੇ ਸਾਈਟਾਂ ਨਾਲ ਕਨੈਕਟ ਕਰਨ ਦੀ ਆਪਣੇ-ਆਪ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
 
     <!-- Preference for exceptions tracking protection -->
