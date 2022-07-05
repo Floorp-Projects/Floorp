@@ -1410,7 +1410,13 @@ interface nsILoadInfo : nsISupports
    * elements
    */
   [infallible] attribute boolean isFromObjectOrEmbed;
-  
+
+  /**
+   * This attribute will be true if the URL is known to be possibly broken and
+   * CheckForBrokenChromeURL and RecordZeroLengthEvent should be skipped.
+   */
+  [infallible] readonly attribute boolean shouldSkipCheckForBrokenURLOrZeroSized;
+
   /**
    * If this is non-null, this property holds the URI as it was before query
    * stripping was performed.

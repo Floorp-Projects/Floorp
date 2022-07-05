@@ -565,6 +565,12 @@ TRRLoadInfo::GetIsFromObjectOrEmbed(bool* aIsFromObjectOrEmbed) {
 }
 
 NS_IMETHODIMP
+TRRLoadInfo::GetShouldSkipCheckForBrokenURLOrZeroSized(
+    bool* aShouldSkipCheckForBrokenURLOrZeroSized) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TRRLoadInfo::GetResultPrincipalURI(nsIURI** aURI) {
   nsCOMPtr<nsIURI> uri = mResultPrincipalURI;
   uri.forget(aURI);
