@@ -1688,7 +1688,7 @@ impl<'a> SceneBuilder<'a> {
 
                 self.add_rounded_rect_clip_node(
                     info.id,
-                    &info.parent_space_and_clip,
+                    info.spatial_id,
                     &info.clip,
                 );
             }
@@ -2774,10 +2774,10 @@ impl<'a> SceneBuilder<'a> {
     fn add_rounded_rect_clip_node(
         &mut self,
         new_node_id: ClipId,
-        space_and_clip: &SpaceAndClipInfo,
+        spatial_id: SpatialId,
         clip: &ComplexClipRegion,
     ) {
-        let spatial_node_index = self.get_space(space_and_clip.spatial_id);
+        let spatial_node_index = self.get_space(spatial_id);
 
         let snapped_region_rect = self.snap_rect(
             &clip.rect,
@@ -2809,7 +2809,7 @@ impl<'a> SceneBuilder<'a> {
 
         self.clip_store.register_clip_template(
             new_node_id,
-            Some(space_and_clip.clip_id),
+            None,
             &[instance],
         );
     }

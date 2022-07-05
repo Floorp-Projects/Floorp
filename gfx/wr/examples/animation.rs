@@ -91,7 +91,7 @@ impl App {
             mode: ClipMode::Clip,
         };
         let clip_id = builder.define_clip_rounded_rect(
-            &space_and_clip,
+            space_and_clip.spatial_id,
             complex_clip,
         );
 
