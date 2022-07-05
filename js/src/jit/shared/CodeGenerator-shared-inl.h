@@ -212,12 +212,14 @@ static inline ValueOperand GetTempValue(Register type, Register payload) {
 
 // For argument construction for calls. Argslots are Value-sized.
 Address CodeGeneratorShared::AddressOfPassedArg(uint32_t slot) const {
+  MOZ_ASSERT(masm.framePushed() == frameSize());
+
   MOZ_ASSERT(slot > 0);
   MOZ_ASSERT(slot <= graph.argumentSlotCount());
   uint32_t offsetFromBase = offsetOfPassedArgSlots_ + slot * sizeof(Value);
 
-  MOZ_ASSERT(offsetFromBase <= masm.framePushed());
-  uint32_t offset = masm.framePushed() - offsetFromBase;
+  MOZ_ASSERT(offsetFromBase <= frameSize());
+  uint32_t offset = frameSize() - offsetFromBase;
 
   // Space for passed arguments is reserved below a function's local stack
   // storage. Note that passedArgSlotsOffset_ is aligned to at least
@@ -236,6 +238,7 @@ uint32_t CodeGeneratorShared::UnusedStackBytesForCall(
 
 Address CodeGeneratorShared::ToAddress(const LAllocation& a) const {
   MOZ_ASSERT(a.isMemory() || a.isStackArea());
+  MOZ_ASSERT(masm.framePushed() == frameSize());
 
   if (a.isArgument()) {
     uint32_t offsetFromFP =
@@ -244,14 +247,14 @@ Address CodeGeneratorShared::ToAddress(const LAllocation& a) const {
     if (useWasmStackArgumentAbi()) {
       return Address(FramePointer, offsetFromFP);
     }
-    return Address(masm.getStackPointer(), masm.framePushed() + offsetFromFP);
+    return Address(masm.getStackPointer(), frameSize() + offsetFromFP);
   }
 
   uint32_t slot =
       a.isStackSlot() ? a.toStackSlot()->slot() : a.toStackArea()->base();
   MOZ_ASSERT(slot > 0 && slot <= graph.localSlotsSize());
-  MOZ_ASSERT(slot <= masm.framePushed());
-  return Address(masm.getStackPointer(), masm.framePushed() - slot);
+  MOZ_ASSERT(slot <= frameSize());
+  return Address(masm.getStackPointer(), frameSize() - slot);
 }
 
 Address CodeGeneratorShared::ToAddress(const LAllocation* a) const {
