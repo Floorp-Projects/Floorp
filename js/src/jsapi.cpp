@@ -4067,6 +4067,16 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
       }
       jit::JitOptions.frequentBailoutThreshold = value;
       break;
+    case JSJITCOMPILER_BASE_REG_FOR_LOCALS:
+      if (value == 0) {
+        jit::JitOptions.baseRegForLocals = jit::BaseRegForAddress::SP;
+      } else if (value == 1) {
+        jit::JitOptions.baseRegForLocals = jit::BaseRegForAddress::FP;
+      } else {
+        jit::DefaultJitOptions defaultValues;
+        jit::JitOptions.baseRegForLocals = defaultValues.baseRegForLocals;
+      }
+      break;
     case JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE:
       if (value == 1) {
         jit::JitOptions.baselineInterpreter = true;
@@ -4188,6 +4198,9 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       break;
     case JSJITCOMPILER_ION_FREQUENT_BAILOUT_THRESHOLD:
       *valueOut = jit::JitOptions.frequentBailoutThreshold;
+      break;
+    case JSJITCOMPILER_BASE_REG_FOR_LOCALS:
+      *valueOut = uint32_t(jit::JitOptions.baseRegForLocals);
       break;
     case JSJITCOMPILER_INLINING_BYTECODE_MAX_LENGTH:
       *valueOut = jit::JitOptions.smallFunctionMaxBytecodeLength;

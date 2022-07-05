@@ -144,8 +144,6 @@ class CodeGeneratorShared : public LElementVisitor {
   inline Address AddressOfPassedArg(uint32_t slot) const;
   inline uint32_t UnusedStackBytesForCall(uint32_t numArgSlots) const;
 
-  enum class BaseRegForAddress { Default, FP, SP };
-
   inline Address ToAddress(
       const LAllocation& a,
       BaseRegForAddress base = BaseRegForAddress::Default) const;
