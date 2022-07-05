@@ -68,15 +68,21 @@ export function getDisplayURL(url, extensionName = null) {
         group: `${protocol}//${host || ""}`,
       };
     case "webpack:":
+      return {
+        ...def,
+        path: pathname,
+        search,
+        filename,
+        group: `Webpack`,
+      };
     case "ng:":
       return {
         ...def,
         path: pathname,
         search,
         filename,
-        group: `${protocol}//`,
+        group: `Angular`,
       };
-
     case "about:":
       // An about page is a special case
       return {
