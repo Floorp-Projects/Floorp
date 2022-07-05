@@ -52,8 +52,7 @@ Address MoveEmitterARM::toAddress(const MoveOperand& operand) const {
   MOZ_ASSERT(operand.isMemoryOrEffectiveAddress());
 
   if (operand.base() != StackPointer) {
-    MOZ_ASSERT(operand.disp() < 1024 && operand.disp() > -1024);
-    return Operand(operand.base(), operand.disp()).toAddress();
+    return Address(operand.base(), operand.disp());
   }
 
   MOZ_ASSERT(operand.disp() >= 0);
