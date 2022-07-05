@@ -269,6 +269,9 @@ JS_PUBLIC_API void JS::ClearModuleEnvironment(JSObject* moduleObj) {
 
   js::ModuleEnvironmentObject* env =
       moduleObj->as<js::ModuleObject>().environment();
+  if (!env) {
+    return;
+  }
 
   const JSClass* clasp = env->getClass();
   uint32_t numReserved = JSCLASS_RESERVED_SLOTS(clasp);
