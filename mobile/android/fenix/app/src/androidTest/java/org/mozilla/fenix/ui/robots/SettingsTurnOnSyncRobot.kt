@@ -14,8 +14,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
@@ -34,8 +32,6 @@ class SettingsTurnOnSyncRobot {
     fun verifyTurnOnSyncToolbarTitle() = assertTurnOnSyncToolbarTitle()
 
     class Transition {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
         fun goBack(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsRobot.Transition {
             goBackButton().perform(ViewActions.click())
 

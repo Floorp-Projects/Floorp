@@ -13,11 +13,10 @@ import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -41,8 +40,6 @@ class SettingsSubMenuThemeRobot {
     fun clickBottomToolbarToggle() = bottomToolbarToggle().click()
 
     class Transition {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             mDevice.waitForIdle()
             goBackButton().perform(ViewActions.click())

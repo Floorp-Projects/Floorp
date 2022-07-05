@@ -37,6 +37,7 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
@@ -260,7 +261,7 @@ class SettingsSubMenuAddonsManagerRobot {
 
     private fun assertAddonCanBeInstalled(addonName: String) {
         scrollToElementByText(addonName)
-        device.waitNotNull(Until.findObject(By.text(addonName)), waitingTime)
+        mDevice.waitNotNull(Until.findObject(By.text(addonName)), waitingTime)
 
         onView(
             allOf(

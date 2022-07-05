@@ -10,8 +10,6 @@ import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.click
@@ -30,8 +28,6 @@ class SettingsSubMenuSitePermissionsExceptionsRobot {
     }
 
     class Transition {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
-
         fun goBack(interact: SettingsSubMenuSitePermissionsRobot.() -> Unit): SettingsSubMenuSitePermissionsRobot.Transition {
             goBackButton().click()
 

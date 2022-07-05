@@ -17,9 +17,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
@@ -31,6 +29,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -106,8 +105,6 @@ class DownloadRobot {
         }
 
         fun clickAllowPermission(interact: DownloadRobot.() -> Unit): Transition {
-            val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
             mDevice.waitNotNull(
                 Until.findObject(By.res(TestHelper.getPermissionAllowID() + ":id/permission_allow_button")),
                 waitingTime

@@ -15,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import java.lang.AssertionError
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort

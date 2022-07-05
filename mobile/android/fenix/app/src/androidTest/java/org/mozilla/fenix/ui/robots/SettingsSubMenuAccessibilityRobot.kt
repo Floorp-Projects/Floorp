@@ -26,10 +26,10 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matcher
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.assertIsEnabled
 import org.mozilla.fenix.helpers.isEnabled
 import org.mozilla.fenix.ui.robots.SettingsSubMenuAccessibilityRobot.Companion.DECIMAL_CONVERSION
@@ -63,8 +63,6 @@ class SettingsSubMenuAccessibilityRobot {
     fun verifyTextSizePercentage(textSize: Int) = assertTextSizePercentage(textSize)
 
     class Transition {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             mDevice.waitForIdle()
             goBackButton().perform(click())
@@ -74,8 +72,6 @@ class SettingsSubMenuAccessibilityRobot {
         }
     }
 }
-
-val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
 private fun assertAutomaticFontSizingMenuItems() {
     onView(withText("Automatic font sizing"))

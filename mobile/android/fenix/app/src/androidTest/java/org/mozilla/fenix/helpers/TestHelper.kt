@@ -52,7 +52,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.idlingresource.NetworkConnectionIdlingResource
 import org.mozilla.fenix.ui.robots.BrowserRobot
-import org.mozilla.fenix.ui.robots.mDevice
 import org.mozilla.fenix.utils.IntentUtils
 import java.util.regex.Pattern
 import org.junit.Assert.assertTrue
@@ -60,8 +59,9 @@ import org.junit.Assert.assertTrue
 object TestHelper {
 
     val appContext: Context = InstrumentationRegistry.getInstrumentation().targetContext
-    val packageName: String = appContext.packageName
     val appName = appContext.appName
+    var mDevice: UiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    val packageName: String = appContext.packageName
 
     fun scrollToElementByText(text: String): UiScrollable {
         val appView = UiScrollable(UiSelector().scrollable(true))
@@ -146,7 +146,6 @@ object TestHelper {
     }
 
     fun setNetworkEnabled(enabled: Boolean) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         val networkDisconnectedIdlingResource = NetworkConnectionIdlingResource(false)
         val networkConnectedIdlingResource = NetworkConnectionIdlingResource(true)
 
@@ -220,7 +219,6 @@ object TestHelper {
                 e.printStackTrace()
             }
         } else {
-            val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
             mDevice.waitNotNull(
                 Until.findObject(By.text("Could not open file")),
                 waitingTime
@@ -274,9 +272,8 @@ object TestHelper {
     }
 
     fun grantPermission() {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
         if (Build.VERSION.SDK_INT >= 23) {
-            UiDevice.getInstance(instrumentation).findObject(
+            mDevice.findObject(
                 By.text(
                     when (Build.VERSION.SDK_INT) {
                         Build.VERSION_CODES.R -> Pattern.compile(
@@ -290,9 +287,8 @@ object TestHelper {
     }
 
     fun denyPermission() {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
         if (Build.VERSION.SDK_INT >= 23) {
-            UiDevice.getInstance(instrumentation).findObject(
+            mDevice.findObject(
                 By.text(
                     when (Build.VERSION.SDK_INT) {
                         Build.VERSION_CODES.R -> Pattern.compile(

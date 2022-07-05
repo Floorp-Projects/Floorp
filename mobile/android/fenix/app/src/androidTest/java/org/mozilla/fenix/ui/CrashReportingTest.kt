@@ -1,6 +1,8 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -15,11 +17,10 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.ui.robots.homeScreen
-import org.mozilla.fenix.ui.robots.mDevice
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class CrashReportingTest {
-
+    private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
     private val tabCrashMessage = getStringResource(R.string.tab_crash_title_2)
@@ -35,6 +36,7 @@ class CrashReportingTest {
         featureSettingsHelper.setJumpBackCFREnabled(false)
         featureSettingsHelper.setPocketEnabled(false)
 
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

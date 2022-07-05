@@ -12,8 +12,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestHelper.appName
@@ -45,7 +43,6 @@ class SettingsSubMenuDataCollectionRobot {
     }
 
     class Transition {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             goBackButton().click()
 

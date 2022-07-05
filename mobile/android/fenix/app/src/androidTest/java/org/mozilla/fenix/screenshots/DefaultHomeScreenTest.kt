@@ -7,23 +7,32 @@
 package org.mozilla.fenix.screenshots
 
 import android.os.SystemClock
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
+import androidx.test.uiautomator.UiDevice
 import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.homeScreen
-import org.mozilla.fenix.ui.robots.mDevice
 import tools.fastlane.screengrab.Screengrab
 import tools.fastlane.screengrab.locale.LocaleTestRule
 
 class DefaultHomeScreenTest : ScreenshotTest() {
+    private lateinit var mDevice: UiDevice
+
     @Rule @JvmField
     val localeTestRule = LocaleTestRule()
     @get:Rule
     var mActivityTestRule: ActivityTestRule<HomeActivity> = HomeActivityTestRule()
+
+    @Before
+    fun setUp() {
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    }
 
     @After
     fun tearDown() {

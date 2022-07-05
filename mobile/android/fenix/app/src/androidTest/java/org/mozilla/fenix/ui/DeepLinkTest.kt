@@ -32,7 +32,7 @@ import org.mozilla.fenix.ui.robots.DeepLinkRobot
 
 @Ignore("All tests perma-failing, see: https://github.com/mozilla-mobile/fenix/issues/13491")
 class DeepLinkTest {
-    private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
 
     private val robot = DeepLinkRobot()
@@ -42,6 +42,7 @@ class DeepLinkTest {
 
     @Before
     fun setUp() {
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

@@ -13,10 +13,9 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 
 /**
  * Implementation of Robot Pattern for the settings Tabs sub menu.
@@ -30,8 +29,6 @@ class SettingsSubMenuTabsRobot {
     fun verifyMoveOldTabsToInactiveOptions() = assertMoveOldTabsToInactiveOptions()
 
     class Transition {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             mDevice.waitForIdle()
             goBackButton().perform(ViewActions.click())

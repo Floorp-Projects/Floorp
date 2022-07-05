@@ -13,9 +13,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import junit.framework.TestCase.assertTrue
@@ -24,6 +22,7 @@ import org.hamcrest.Matchers.not
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -33,9 +32,6 @@ import org.mozilla.fenix.helpers.isChecked
  * Implementation of Robot Pattern for Enhanced Tracking Protection UI.
  */
 class EnhancedTrackingProtectionRobot {
-
-    val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
-
     fun verifyEnhancedTrackingProtectionSheetStatus(status: String, state: Boolean) =
         assertEnhancedTrackingProtectionSheetStatus(status, state)
 

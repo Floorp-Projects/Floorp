@@ -8,6 +8,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -28,7 +29,7 @@ import org.mozilla.fenix.ui.robots.homeScreen
 class HomeScreenTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
 
-    private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var mDevice: UiDevice
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
@@ -36,6 +37,11 @@ class HomeScreenTest {
     @Rule
     @JvmField
     val retryTestRule = RetryTestRule(3)
+
+    @Before
+    fun setUp() {
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    }
 
     @Test
     fun homeScreenItemsTest() {

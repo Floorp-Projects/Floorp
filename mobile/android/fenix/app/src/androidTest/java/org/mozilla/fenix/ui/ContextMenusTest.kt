@@ -37,7 +37,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  */
 
 class ContextMenusTest {
-    private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule
@@ -50,6 +50,7 @@ class ContextMenusTest {
     @Before
     fun setUp() {
         activityIntentTestRule.activity.applicationContext.settings().shouldShowJumpBackInCFR = false
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

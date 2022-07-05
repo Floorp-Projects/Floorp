@@ -29,7 +29,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class SettingsAdvancedTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
 
-    private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
 
@@ -38,6 +38,7 @@ class SettingsAdvancedTest {
 
     @Before
     fun setUp() {
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

@@ -29,7 +29,7 @@ import org.mozilla.fenix.ui.robots.tabDrawer
  */
 
 class CollectionTest {
-    private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
     private val firstCollectionName = "testcollection_1"
     private val secondCollectionName = "testcollection_2"
@@ -51,6 +51,7 @@ class CollectionTest {
         featureSettingsHelper.setJumpBackCFREnabled(false)
         featureSettingsHelper.setRecentlyVisitedFeatureEnabled(false)
 
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

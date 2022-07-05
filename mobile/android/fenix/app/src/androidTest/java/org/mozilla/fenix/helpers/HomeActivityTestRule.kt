@@ -8,12 +8,11 @@ package org.mozilla.fenix.helpers
 
 import android.view.ViewConfiguration.getLongPressTimeout
 import androidx.test.espresso.intent.rule.IntentsTestRule
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
-import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.onboarding.FenixOnboarding
 
 /**
@@ -79,7 +78,6 @@ fun setLongTapTimeout(delay: Int) {
     var attempts = 0
     while (attempts++ < 3) {
         try {
-            val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
             mDevice.executeShellCommand("settings put secure long_press_timeout $delay")
             break
         } catch (e: RuntimeException) {
@@ -95,7 +93,6 @@ private fun skipOnboardingBeforeLaunch() {
 }
 
 private fun closeNotificationShade() {
-    val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     if (mDevice.findObject(
             UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller")
         ).exists()

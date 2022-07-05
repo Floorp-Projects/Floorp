@@ -12,13 +12,12 @@ import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matchers.not
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.assertIsChecked
 import org.mozilla.fenix.helpers.click
 
@@ -94,12 +93,10 @@ class SettingsSubMenuSitePermissionsCommonRobot {
     }
 
     fun openAppSystemPermissionsSettings() {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.findObject(UiSelector().textContains("Permissions")).click()
     }
 
     fun switchAppPermissionSystemSetting(permissionCategory: String, permission: String) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.findObject(UiSelector().textContains(permissionCategory)).click()
 
         if (permission == "Allow") {
@@ -110,8 +107,6 @@ class SettingsSubMenuSitePermissionsCommonRobot {
     }
 
     class Transition {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
-
         fun goBack(interact: SettingsSubMenuSitePermissionsRobot.() -> Unit): SettingsSubMenuSitePermissionsRobot.Transition {
             goBackButton().click()
 

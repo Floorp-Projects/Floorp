@@ -32,7 +32,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  */
 
 class TopSitesTest {
-    private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
 
@@ -41,6 +41,7 @@ class TopSitesTest {
 
     @Before
     fun setUp() {
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

@@ -6,7 +6,9 @@ package org.mozilla.fenix.ui
 
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.IdlingRegistry
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
+import androidx.test.uiautomator.UiDevice
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.BookmarkRoot
 import okhttp3.mockwebserver.MockWebServer
@@ -27,7 +29,6 @@ import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.ui.robots.bookmarksMenu
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
-import org.mozilla.fenix.ui.robots.mDevice
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -38,6 +39,7 @@ class BookmarksTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
 
     private lateinit var mockWebServer: MockWebServer
+    private lateinit var mDevice: UiDevice
     private val bookmarksFolderName = "New Folder"
     private val testBookmark = object {
         var title: String = "Bookmark title"
@@ -54,6 +56,7 @@ class BookmarksTest {
 
     @Before
     fun setUp() {
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

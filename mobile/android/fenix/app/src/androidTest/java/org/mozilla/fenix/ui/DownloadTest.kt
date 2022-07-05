@@ -36,7 +36,7 @@ import org.mozilla.fenix.ui.robots.notificationShade
  *  - Verifies managing downloads inside the Downloads listing.
  **/
 class DownloadTest {
-    private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var mDevice: UiDevice
     private val featureSettingsHelper = FeatureSettingsHelper()
     /* Remote test page managed by Mozilla Mobile QA team at https://github.com/mozilla-mobile/testapp */
     private val downloadTestPage = "https://storage.googleapis.com/mobile_test_assets/test_app/downloads.html"
@@ -63,6 +63,7 @@ class DownloadTest {
 
     @Before
     fun setUp() {
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         // disabling the jump-back-in pop-up that interferes with the tests.
         featureSettingsHelper.setJumpBackCFREnabled(false)
         // disabling the PWA CFR on 3rd visit

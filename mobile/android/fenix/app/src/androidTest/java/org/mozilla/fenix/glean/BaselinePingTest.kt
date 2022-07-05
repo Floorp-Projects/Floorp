@@ -26,6 +26,7 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.json.JSONObject
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
@@ -69,12 +70,18 @@ fun RecordedRequest.getPlainBody(): String {
 @RunWith(AndroidJUnit4::class)
 class BaselinePingTest {
     private val server = MockWebServerHelper.createAlwaysOkMockWebServer()
+    private lateinit var mDevice: UiDevice
 
     @get:Rule
     val activityRule: ActivityTestRule<HomeActivity> = HomeActivityTestRule()
 
     @get:Rule
     val gleanRule = GleanTestLocalServer(ApplicationProvider.getApplicationContext(), server.port)
+
+    @Before
+    fun setup() {
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    }
 
     companion object {
         @BeforeClass
@@ -140,22 +147,21 @@ class BaselinePingTest {
     fun validateBaselinePing() {
         // Wait for the app to be idle/ready.
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        device.waitForIdle()
+        mDevice.waitForIdle()
 
         // Wait for 1 second: this should guarantee we have some valid duration in the
         // ping.
         Thread.sleep(1000)
 
         // Move it to background.
-        device.pressHome()
+        mDevice.pressHome()
 
         // Due to bug 1632184, we need move the activity to foreground again, in order
         // for a 'background' ping with reason 'foreground' to be generated and also trigger
         // sending the ping that was submitted on background. This can go away once bug 1634375
         // is fixed.
-        device.pressRecentApps()
-        device.findObject(
+        mDevice.pressRecentApps()
+        mDevice.findObject(
             UiSelector().descriptionContains(
                 ApplicationProvider.getApplicationContext<Context>().getString(R.string.app_name)
             )

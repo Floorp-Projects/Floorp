@@ -25,10 +25,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.By.text
-import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
@@ -45,6 +43,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.clickAtLocationInView
@@ -60,8 +59,6 @@ import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorStateMatcher
 class TabDrawerRobot {
 
     fun verifyBrowserTabsTrayURL(url: String) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
         mDevice.waitNotNull(
             Until.findObject(By.res("$packageName:id/mozac_browser_tabstray_url")),
             waitingTime
@@ -269,8 +266,6 @@ class TabDrawerRobot {
     }
 
     class Transition {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
             mDevice.waitForIdle()
 
@@ -413,7 +408,6 @@ class TabDrawerRobot {
 
             threeDotMenu().click()
 
-            val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
             mDevice.waitNotNull(
                 Until.findObject(text("Recently closed tabs")),
                 waitingTime

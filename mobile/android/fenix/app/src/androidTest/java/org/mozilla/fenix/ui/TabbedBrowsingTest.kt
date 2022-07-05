@@ -40,7 +40,7 @@ import org.mozilla.fenix.ui.robots.notificationShade
  */
 
 class TabbedBrowsingTest {
-    private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
 
@@ -57,6 +57,7 @@ class TabbedBrowsingTest {
         // disabling the new homepage pop-up that interferes with the tests.
         featureSettingsHelper.setJumpBackCFREnabled(false)
 
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

@@ -6,6 +6,8 @@ package org.mozilla.fenix.ui
 
 import android.view.View
 import androidx.test.espresso.IdlingRegistry
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -18,7 +20,6 @@ import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
-import org.mozilla.fenix.ui.robots.mDevice
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
@@ -32,6 +33,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class ReaderViewTest {
     private lateinit var mockWebServer: MockWebServer
+    private lateinit var mDevice: UiDevice
     private var readerViewNotification: ViewVisibilityIdlingResource? = null
     private val estimatedReadingTime = "1 - 2 minutes"
 
@@ -44,6 +46,7 @@ class ReaderViewTest {
 
     @Before
     fun setUp() {
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

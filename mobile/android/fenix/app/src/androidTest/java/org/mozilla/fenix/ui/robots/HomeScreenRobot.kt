@@ -27,9 +27,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
@@ -58,6 +56,7 @@ import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.matchers.hasItem
 import org.mozilla.fenix.helpers.withBitmapDrawable
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_ACCOUNT_SIGN_IN_HEADER
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TOOLBAR_PLACEMENT_HEADER
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
@@ -205,7 +204,6 @@ class HomeScreenRobot {
         onView(withId(R.id.sessionControlRecyclerView)).perform(ViewActions.swipeDown())
 
     fun verifySnackBarText(expectedText: String) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(findObject(By.text(expectedText)), waitingTime)
     }
 
@@ -221,7 +219,6 @@ class HomeScreenRobot {
     fun clickFirefoxLogo() = homepageWordmark.click()
 
     class Transition {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             mDevice.findObject(
@@ -421,8 +418,6 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
     return HomeScreenRobot.Transition()
 }
 
-val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
 private fun homeScreenList() =
     UiScrollable(
         UiSelector()
@@ -433,7 +428,7 @@ private fun homeScreenList() =
 private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
     Assert.assertEquals(
         isExpectedToBeVisible,
-        UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        mDevice
             .executeShellCommand("dumpsys input_method | grep mInputShown")
             .contains("mInputShown=true")
     )
@@ -674,8 +669,6 @@ private fun assertNotExistingTopSitesList(title: String) {
 }
 
 private fun assertTopSiteContextMenuItems() {
-    val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
     mDevice.waitNotNull(
         findObject(By.text("Open in private tab")),
         waitingTime

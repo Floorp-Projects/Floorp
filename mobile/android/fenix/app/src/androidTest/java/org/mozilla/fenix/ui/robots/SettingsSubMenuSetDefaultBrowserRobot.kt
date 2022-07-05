@@ -4,13 +4,10 @@
 
 package org.mozilla.fenix.ui.robots
 
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 
 class SettingsSubMenuSetDefaultBrowserRobot {
     class Transition {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             mDevice.waitForIdle()
 

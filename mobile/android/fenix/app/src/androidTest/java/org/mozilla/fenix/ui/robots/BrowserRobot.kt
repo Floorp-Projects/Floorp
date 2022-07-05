@@ -25,10 +25,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.By.text
-import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
@@ -46,6 +44,7 @@ import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -61,7 +60,6 @@ class BrowserRobot {
     }
 
     fun verifyUrl(url: String) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
         runWithIdleRes(sessionLoadedIdlingResource) {
@@ -130,7 +128,6 @@ class BrowserRobot {
     }
 
     fun verifyLinkContextMenuItems(containsURL: Uri) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(
             Until.findObject(By.textContains(containsURL.toString())),
             waitingTime
@@ -148,7 +145,6 @@ class BrowserRobot {
     }
 
     fun verifyLinkImageContextMenuItems(containsURL: Uri) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(Until.findObject(By.textContains(containsURL.toString())))
         mDevice.waitNotNull(
             Until.findObject(text("Open link in new tab")), waitingTime
@@ -183,7 +179,6 @@ class BrowserRobot {
     }
 
     fun verifyNoLinkImageContextMenuItems(containsURL: Uri) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(Until.findObject(By.textContains(containsURL.toString())))
         mDevice.waitNotNull(
             Until.findObject(text("Open image in new tab")),
@@ -214,7 +209,6 @@ class BrowserRobot {
     }
 
     fun clickContextOpenLinkInNewTab() {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(
             Until.findObject(text("Open link in new tab")),
             waitingTime
@@ -225,7 +219,6 @@ class BrowserRobot {
     }
 
     fun clickContextOpenLinkInPrivateTab() {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(
             Until.findObject(text("Open link in private tab")),
             waitingTime
@@ -236,7 +229,6 @@ class BrowserRobot {
     }
 
     fun clickContextCopyLink() {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(Until.findObject(text("Copy link")), waitingTime)
 
         val menuCopyLink = mDevice.findObject(text("Copy link"))
@@ -244,7 +236,6 @@ class BrowserRobot {
     }
 
     fun clickContextShareLink(url: Uri) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(Until.findObject(text("Share link")), waitingTime)
 
         val menuShareLink = mDevice.findObject(text("Share link"))
@@ -274,7 +265,6 @@ class BrowserRobot {
     }
 
     fun clickContextCopyImageLocation() {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(
             Until.findObject(text("Copy image location")),
             waitingTime
@@ -285,7 +275,6 @@ class BrowserRobot {
     }
 
     fun clickContextOpenImageNewTab() {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(
             Until.findObject(text("Open image in new tab")),
             waitingTime
@@ -296,7 +285,6 @@ class BrowserRobot {
     }
 
     fun clickContextSaveImage() {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(Until.findObject(text("Save image")), waitingTime)
 
         val menuSaveImage = mDevice.findObject(text("Save image"))
@@ -709,7 +697,6 @@ class BrowserRobot {
     }
 
     class Transition {
-        private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         private fun threeDotButton() = onView(
             allOf(
                 ViewMatchers.withContentDescription(
@@ -804,7 +791,7 @@ class BrowserRobot {
         }
 
         fun clickShareSelectedText(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
-            val shareTextButton = org.mozilla.fenix.ui.robots.mDevice.findObject(By.textContains("Share"))
+            val shareTextButton = mDevice.findObject(By.textContains("Share"))
             shareTextButton.click()
 
             ShareOverlayRobot().interact()

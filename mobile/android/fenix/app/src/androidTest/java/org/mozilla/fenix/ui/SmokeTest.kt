@@ -61,7 +61,7 @@ import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
 @Suppress("ForbiddenComment")
 @SmokeTest
 class SmokeTest {
-    private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
     private var awesomeBar: ViewVisibilityIdlingResource? = null
     private var addonsListIdlingResource: RecyclerViewIdlingResource? = null
@@ -97,6 +97,7 @@ class SmokeTest {
         // disabling the new homepage pop-up that interferes with the tests.
         featureSettingsHelper.setJumpBackCFREnabled(false)
 
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
@@ -796,7 +797,7 @@ class SmokeTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            org.mozilla.fenix.ui.robots.mDevice.waitForIdle()
+            mDevice.waitForIdle()
         }
 
         readerViewNotification = ViewVisibilityIdlingResource(

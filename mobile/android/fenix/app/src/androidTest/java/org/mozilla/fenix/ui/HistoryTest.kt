@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import okhttp3.mockwebserver.MockWebServer
@@ -25,7 +26,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.ui.robots.historyMenu
 import org.mozilla.fenix.ui.robots.homeScreen
-import org.mozilla.fenix.ui.robots.mDevice
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -36,6 +36,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class HistoryTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
+    private lateinit var mDevice: UiDevice
     private var historyListIdlingResource: RecyclerViewIdlingResource? = null
     private var recentlyClosedTabsListIdlingResource: RecyclerViewIdlingResource? = null
 
@@ -47,6 +48,7 @@ class HistoryTest {
         InstrumentationRegistry.getInstrumentation().targetContext.settings()
             .shouldShowJumpBackInCFR = false
 
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
