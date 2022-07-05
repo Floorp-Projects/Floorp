@@ -11,7 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -148,7 +150,7 @@ class UrlbarValueFormatter {
     let flags =
       Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
       Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-    if (PrivateBrowsingUtils.isWindowPrivate(this.window)) {
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(this.window)) {
       flags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
     }
     let uriInfo;
@@ -262,7 +264,7 @@ class UrlbarValueFormatter {
       url,
     } = urlMetaData;
     // We strip http, so we should not show the scheme box for it.
-    if (!UrlbarPrefs.get("trimURLs") || schemeWSlashes != "http://") {
+    if (!lazy.UrlbarPrefs.get("trimURLs") || schemeWSlashes != "http://") {
       this.scheme.value = schemeWSlashes;
       this.inputField.style.setProperty(
         "--urlbar-scheme-size",
@@ -272,7 +274,7 @@ class UrlbarValueFormatter {
 
     this._ensureFormattedHostVisible(urlMetaData);
 
-    if (!UrlbarPrefs.get("formatting.enabled")) {
+    if (!lazy.UrlbarPrefs.get("formatting.enabled")) {
       return false;
     }
 
@@ -369,7 +371,7 @@ class UrlbarValueFormatter {
    *   True if formatting was applied and false if not.
    */
   _formatSearchAlias() {
-    if (!UrlbarPrefs.get("formatting.enabled")) {
+    if (!lazy.UrlbarPrefs.get("formatting.enabled")) {
       return false;
     }
 
@@ -459,7 +461,7 @@ class UrlbarValueFormatter {
 
     if (
       this._selectedResult &&
-      this._selectedResult.type == UrlbarUtils.RESULT_TYPE.SEARCH
+      this._selectedResult.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH
     ) {
       return this._selectedResult.payload.keyword || null;
     }

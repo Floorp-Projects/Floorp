@@ -20,7 +20,9 @@ const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
   "resource:///modules/UrlbarUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarView: "resource:///modules/UrlbarView.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.jsm",
@@ -96,8 +98,8 @@ const VIEW_TEMPLATE = {
  *  of the provider singleton.
  */
 function initializeDynamicResult() {
-  UrlbarResult.addDynamicResultType(DYNAMIC_RESULT_TYPE);
-  UrlbarView.addDynamicViewTemplate(DYNAMIC_RESULT_TYPE, VIEW_TEMPLATE);
+  lazy.UrlbarResult.addDynamicResultType(DYNAMIC_RESULT_TYPE);
+  lazy.UrlbarView.addDynamicViewTemplate(DYNAMIC_RESULT_TYPE, VIEW_TEMPLATE);
 }
 
 /**
@@ -140,7 +142,7 @@ class ProviderTabToSearch extends UrlbarProvider {
       queryContext.searchString &&
       queryContext.tokens.length == 1 &&
       !queryContext.searchMode &&
-      UrlbarPrefs.get("suggest.engines")
+      lazy.UrlbarPrefs.get("suggest.engines")
     );
   }
 
@@ -235,12 +237,12 @@ class ProviderTabToSearch extends UrlbarProvider {
       (!this.onboardingInteractionAtTime ||
         this.onboardingInteractionAtTime < Date.now() - 1000 * 60 * 5)
     ) {
-      let interactionsLeft = UrlbarPrefs.get(
+      let interactionsLeft = lazy.UrlbarPrefs.get(
         "tabToSearch.onboard.interactionsLeft"
       );
 
       if (interactionsLeft > 0) {
-        UrlbarPrefs.set(
+        lazy.UrlbarPrefs.set(
           "tabToSearch.onboard.interactionsLeft",
           --interactionsLeft
         );
@@ -275,7 +277,7 @@ class ProviderTabToSearch extends UrlbarProvider {
     try {
       // urlbar.tabtosearch.* is prerelease-only/opt-in for now. See bug 1686330.
       for (let engine of this.enginesShown.regular) {
-        let scalarKey = UrlbarSearchUtils.getSearchModeScalarKey({
+        let scalarKey = lazy.UrlbarSearchUtils.getSearchModeScalarKey({
           engineName: engine,
         });
         Services.telemetry.keyedScalarAdd(
@@ -285,7 +287,7 @@ class ProviderTabToSearch extends UrlbarProvider {
         );
       }
       for (let engine of this.enginesShown.onboarding) {
-        let scalarKey = UrlbarSearchUtils.getSearchModeScalarKey({
+        let scalarKey = lazy.UrlbarSearchUtils.getSearchModeScalarKey({
           engineName: engine,
         });
         Services.telemetry.keyedScalarAdd(
@@ -355,7 +357,7 @@ class ProviderTabToSearch extends UrlbarProvider {
     );
     // Skip any string that cannot be an origin.
     if (
-      !UrlbarTokenizer.looksLikeOrigin(searchStr, {
+      !lazy.UrlbarTokenizer.looksLikeOrigin(searchStr, {
         ignoreKnownDomains: true,
         noIp: true,
       })
@@ -369,15 +371,18 @@ class ProviderTabToSearch extends UrlbarProvider {
     }
 
     // Add all matching engines.
-    let engines = await UrlbarSearchUtils.enginesForDomainPrefix(searchStr, {
-      matchAllDomainLevels: true,
-      onlyEnabled: true,
-    });
+    let engines = await lazy.UrlbarSearchUtils.enginesForDomainPrefix(
+      searchStr,
+      {
+        matchAllDomainLevels: true,
+        onlyEnabled: true,
+      }
+    );
     if (!engines.length) {
       return;
     }
 
-    const onboardingInteractionsLeft = UrlbarPrefs.get(
+    const onboardingInteractionsLeft = lazy.UrlbarPrefs.get(
       "tabToSearch.onboard.interactionsLeft"
     );
 
@@ -427,7 +432,7 @@ class ProviderTabToSearch extends UrlbarProvider {
       }
     }
     if (partialMatchEnginesByHost.size) {
-      let host = await UrlbarProviderAutofill.getTopHostOverThreshold(
+      let host = await lazy.UrlbarProviderAutofill.getTopHostOverThreshold(
         queryContext,
         Array.from(partialMatchEnginesByHost.keys())
       );
@@ -448,7 +453,7 @@ function makeOnboardingResult(engine, satisfiesAutofillThreshold = false) {
     stripWww: true,
   });
   url = url.substr(0, url.length - engine.searchUrlPublicSuffix.length);
-  let result = new UrlbarResult(
+  let result = new lazy.UrlbarResult(
     UrlbarUtils.RESULT_TYPE.DYNAMIC,
     UrlbarUtils.RESULT_SOURCE.SEARCH,
     {
@@ -470,10 +475,10 @@ function makeResult(context, engine, satisfiesAutofillThreshold = false) {
     stripWww: true,
   });
   url = url.substr(0, url.length - engine.searchUrlPublicSuffix.length);
-  let result = new UrlbarResult(
+  let result = new lazy.UrlbarResult(
     UrlbarUtils.RESULT_TYPE.SEARCH,
     UrlbarUtils.RESULT_SOURCE.SEARCH,
-    ...UrlbarResult.payloadAndSimpleHighlights(context.tokens, {
+    ...lazy.UrlbarResult.payloadAndSimpleHighlights(context.tokens, {
       engine: engine.name,
       isGeneralPurposeEngine: engine.isGeneralPurposeEngine,
       url,

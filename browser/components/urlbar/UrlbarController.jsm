@@ -13,7 +13,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -87,7 +88,7 @@ class UrlbarController {
     this.input = options.input;
     this.browserWindow = options.input.window;
 
-    this.manager = options.manager || UrlbarProvidersManager;
+    this.manager = options.manager || lazy.UrlbarProvidersManager;
 
     this._listeners = new Set();
     this._userSelectionBehavior = "none";
@@ -369,7 +370,7 @@ class UrlbarController {
             this.view.selectBy(
               event.keyCode == KeyEvent.DOM_VK_PAGE_DOWN ||
                 event.keyCode == KeyEvent.DOM_VK_PAGE_UP
-                ? UrlbarUtils.PAGE_UP_DOWN_DELTA
+                ? lazy.UrlbarUtils.PAGE_UP_DOWN_DELTA
                 : 1,
               {
                 reverse:
@@ -448,7 +449,7 @@ class UrlbarController {
     if (!this.input || context.isPrivate || !context.results.length) {
       return;
     }
-    let { url } = UrlbarUtils.getUrlFromResult(result);
+    let { url } = lazy.UrlbarUtils.getUrlFromResult(result);
     if (!url) {
       return;
     }
@@ -460,22 +461,25 @@ class UrlbarController {
           (result == context.results[0] && result.heuristic) ||
           result.autofill
         ) {
-          if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+          if (result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH) {
             // Speculative connect only if search suggestions are enabled.
             if (
-              UrlbarPrefs.get("suggest.searches") &&
-              UrlbarPrefs.get("browser.search.suggest.enabled")
+              lazy.UrlbarPrefs.get("suggest.searches") &&
+              lazy.UrlbarPrefs.get("browser.search.suggest.enabled")
             ) {
               let engine = Services.search.getEngineByName(
                 result.payload.engine
               );
-              UrlbarUtils.setupSpeculativeConnection(
+              lazy.UrlbarUtils.setupSpeculativeConnection(
                 engine,
                 this.browserWindow
               );
             }
           } else if (result.autofill) {
-            UrlbarUtils.setupSpeculativeConnection(url, this.browserWindow);
+            lazy.UrlbarUtils.setupSpeculativeConnection(
+              url,
+              this.browserWindow
+            );
           }
         }
         return;
@@ -483,7 +487,7 @@ class UrlbarController {
       case "mousedown": {
         // On mousedown, connect only to http/https urls.
         if (url.startsWith("http")) {
-          UrlbarUtils.setupSpeculativeConnection(url, this.browserWindow);
+          lazy.UrlbarUtils.setupSpeculativeConnection(url, this.browserWindow);
         }
         return;
       }
@@ -526,7 +530,7 @@ class UrlbarController {
       // will happen when you press the Enter key.  Treat it as no selection.
       selectedResult = resultIndex > 0 || !result.heuristic ? resultIndex : -1;
     }
-    BrowserSearchTelemetry.recordSearchSuggestionSelectionMethod(
+    lazy.BrowserSearchTelemetry.recordSearchSuggestionSelectionMethod(
       event,
       "urlbar",
       selectedResult,
@@ -553,7 +557,7 @@ class UrlbarController {
     let telemetryType =
       result.providerName == "UrlbarProviderTopSites"
         ? "topsite"
-        : UrlbarUtils.telemetryTypeFromResult(result);
+        : lazy.UrlbarUtils.telemetryTypeFromResult(result);
     Services.telemetry.keyedScalarAdd(
       `urlbar.picked.${telemetryType}`,
       resultIndex,
@@ -608,7 +612,7 @@ class UrlbarController {
     }
 
     // First call `provider.blockResult()`.
-    let provider = UrlbarProvidersManager.getProvider(result.providerName);
+    let provider = lazy.UrlbarProvidersManager.getProvider(result.providerName);
     if (!provider) {
       Cu.reportError(`Provider not found: ${result.providerName}`);
     }
@@ -622,7 +626,7 @@ class UrlbarController {
     // is from history.
     if (
       !blockedByProvider &&
-      result.source != UrlbarUtils.RESULT_SOURCE.HISTORY
+      result.source != lazy.UrlbarUtils.RESULT_SOURCE.HISTORY
     ) {
       return false;
     }
@@ -641,15 +645,15 @@ class UrlbarController {
     }
 
     // Form history or url restyled as search.
-    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+    if (result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH) {
       if (!queryContext.formHistoryName) {
         return false;
       }
       // Generate the search url to remove it from browsing history.
-      let { url } = UrlbarUtils.getUrlFromResult(result);
-      PlacesUtils.history.remove(url).catch(Cu.reportError);
+      let { url } = lazy.UrlbarUtils.getUrlFromResult(result);
+      lazy.PlacesUtils.history.remove(url).catch(Cu.reportError);
       // Now remove form history.
-      FormHistory.update(
+      lazy.FormHistory.update(
         {
           op: "remove",
           fieldname: queryContext.formHistoryName,
@@ -665,7 +669,7 @@ class UrlbarController {
     }
 
     // Remove browsing history entries from Places.
-    PlacesUtils.history.remove(result.payload.url).catch(Cu.reportError);
+    lazy.PlacesUtils.history.remove(result.payload.url).catch(Cu.reportError);
     return true;
   }
 
@@ -761,7 +765,9 @@ class TelemetryEvent {
     if (event.interactionType) {
       interactionType = event.interactionType;
     } else if (event.type == "input") {
-      interactionType = UrlbarUtils.isPasteEvent(event) ? "pasted" : "typed";
+      interactionType = lazy.UrlbarUtils.isPasteEvent(event)
+        ? "pasted"
+        : "typed";
     } else if (event.type == "drop") {
       interactionType = "dropped";
     } else if (searchString) {
@@ -864,7 +870,7 @@ class TelemetryEvent {
 
     // Rather than listening to the pref, just update status when we record an
     // event, if the pref changed from the last time.
-    let recordingEnabled = UrlbarPrefs.get("eventTelemetry.enabled");
+    let recordingEnabled = lazy.UrlbarPrefs.get("eventTelemetry.enabled");
     if (this._eventRecordingEnabled != recordingEnabled) {
       this._eventRecordingEnabled = recordingEnabled;
       Services.telemetry.setEventRecordingEnabled("urlbar", recordingEnabled);
@@ -878,7 +884,7 @@ class TelemetryEvent {
       numChars: details.searchString.length.toString(),
       numWords: details.searchString
         .trim()
-        .split(UrlbarTokenizer.REGEXP_SPACES)
+        .split(lazy.UrlbarTokenizer.REGEXP_SPACES)
         .filter(t => t)
         .length.toString(),
     };
@@ -909,7 +915,9 @@ class TelemetryEvent {
 
     if (method === "engagement" && queryContext.results?.[0].autofill) {
       // Record autofill impressions upon engagement.
-      const type = UrlbarUtils.telemetryTypeFromResult(queryContext.results[0]);
+      const type = lazy.UrlbarUtils.telemetryTypeFromResult(
+        queryContext.results[0]
+      );
       Services.telemetry.scalarAdd(`urlbar.impression.${type}`, 1);
     }
 
@@ -946,7 +954,7 @@ class TelemetryEvent {
     if (row.result && row.result.providerName != "UrlbarProviderTopSites") {
       // Element handlers go here.
       if (element.classList.contains("urlbarView-button-help")) {
-        return row.result.type == UrlbarUtils.RESULT_TYPE.TIP
+        return row.result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
           ? "tiphelp"
           : "help";
       }
@@ -955,6 +963,6 @@ class TelemetryEvent {
       }
     }
     // Now handle the result.
-    return UrlbarUtils.telemetryTypeFromResult(row.result);
+    return lazy.UrlbarUtils.telemetryTypeFromResult(row.result);
   }
 }

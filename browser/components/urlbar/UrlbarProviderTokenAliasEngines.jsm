@@ -18,7 +18,9 @@ const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
   "resource:///modules/UrlbarUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
@@ -84,7 +86,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
       return false;
     }
 
-    this._engines = await UrlbarSearchUtils.tokenAliasEngines();
+    this._engines = await lazy.UrlbarSearchUtils.tokenAliasEngines();
     if (!this._engines.length) {
       return false;
     }
@@ -99,7 +101,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
     }
 
     // If the user is typing a potential engine name, autofill it.
-    if (UrlbarPrefs.get("autoFill") && queryContext.allowAutofill) {
+    if (lazy.UrlbarPrefs.get("autoFill") && queryContext.allowAutofill) {
       let result = this._getAutofillResult(queryContext);
       if (result) {
         this._autofillData = { result, instance };
@@ -133,10 +135,10 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
         tokenAliases[0].startsWith(queryContext.trimmedSearchString) &&
         engine.name != this._autofillData?.result.payload.engine
       ) {
-        let result = new UrlbarResult(
+        let result = new lazy.UrlbarResult(
           UrlbarUtils.RESULT_TYPE.SEARCH,
           UrlbarUtils.RESULT_SOURCE.SEARCH,
-          ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
             keyword: [tokenAliases[0], UrlbarUtils.HIGHLIGHT.TYPED],
             query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
@@ -183,7 +185,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
           // alias followed by a space. We enter search mode at that point.
           if (
             lowerCaseSearchString.startsWith(alias) &&
-            UrlbarTokenizer.REGEXP_SPACES_START.test(
+            lazy.UrlbarTokenizer.REGEXP_SPACES_START.test(
               lowerCaseSearchString.substring(alias.length)
             )
           ) {
@@ -196,16 +198,19 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
             queryContext.searchString +
             alias.substr(queryContext.searchString.length);
           let value = aliasPreservingUserCase + " ";
-          let result = new UrlbarResult(
+          let result = new lazy.UrlbarResult(
             UrlbarUtils.RESULT_TYPE.SEARCH,
             UrlbarUtils.RESULT_SOURCE.SEARCH,
-            ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-              engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-              keyword: [aliasPreservingUserCase, UrlbarUtils.HIGHLIGHT.TYPED],
-              query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
-              icon: engine.iconURI?.spec,
-              providesSearchMode: true,
-            })
+            ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+              queryContext.tokens,
+              {
+                engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
+                keyword: [aliasPreservingUserCase, UrlbarUtils.HIGHLIGHT.TYPED],
+                query: ["", UrlbarUtils.HIGHLIGHT.TYPED],
+                icon: engine.iconURI?.spec,
+                providesSearchMode: true,
+              }
+            )
           );
 
           // We set suggestedIndex = 0 instead of the heuristic because we
