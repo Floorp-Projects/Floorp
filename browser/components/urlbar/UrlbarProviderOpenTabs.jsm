@@ -14,9 +14,13 @@ var EXPORTED_SYMBOLS = ["UrlbarProviderOpenTabs"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+const { UrlbarProvider } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",

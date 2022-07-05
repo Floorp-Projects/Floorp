@@ -13,11 +13,15 @@ var EXPORTED_SYMBOLS = ["UrlbarProviderAutofill"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+const { UrlbarProvider } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutPagesUtils: "resource://gre/modules/AboutPagesUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",

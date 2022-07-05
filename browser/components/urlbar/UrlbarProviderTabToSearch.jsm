@@ -15,10 +15,14 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const { UrlbarProvider } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarView: "resource:///modules/UrlbarView.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",

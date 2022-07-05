@@ -10,9 +10,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const { CONTEXTUAL_SERVICES_PING_TYPES } = ChromeUtils.import(
+  "resource:///modules/PartnerLinkAttribution.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  CONTEXTUAL_SERVICES_PING_TYPES:
-    "resource:///modules/PartnerLinkAttribution.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",

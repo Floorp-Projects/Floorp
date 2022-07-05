@@ -11,9 +11,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   QUICK_SUGGEST_SOURCE: "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
