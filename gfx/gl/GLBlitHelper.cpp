@@ -826,7 +826,7 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
 #else
       return false;
 #endif
-    case ImageFormat::CAIRO_SURFACE:
+    case ImageFormat::MOZ2D_SURFACE:
     case ImageFormat::NV_IMAGE:
     case ImageFormat::OVERLAY_IMAGE:
     case ImageFormat::SHARED_RGB:
