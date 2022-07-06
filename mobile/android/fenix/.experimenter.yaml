@@ -1,12 +1,4 @@
 ---
-default-browser-message:
-  description: A small feature allowing experiments on the placement of a default browser message.
-  hasExposure: true
-  exposureDescription: ""
-  variables:
-    message-location:
-      type: string
-      description: Where is the message to be put.
 engine-settings:
   description: Contains a set of settings for controlling the web engine configurations.
   hasExposure: true

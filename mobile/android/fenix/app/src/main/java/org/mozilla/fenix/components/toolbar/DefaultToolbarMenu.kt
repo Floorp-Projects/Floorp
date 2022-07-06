@@ -38,7 +38,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixAccountManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.theme.ThemeManager
 
 /**
@@ -364,7 +363,6 @@ open class DefaultToolbarMenu(
 
     @VisibleForTesting(otherwise = PRIVATE)
     val coreMenuItems by lazy {
-        val defaultBrowserItem = getSetDefaultBrowserItem()
         val menuItems =
             listOfNotNull(
                 if (shouldUseBottomToolbar) null else menuToolbar,
@@ -376,8 +374,6 @@ open class DefaultToolbarMenu(
                 extensionsItem,
                 syncMenuItem,
                 BrowserMenuDivider(),
-                defaultBrowserItem,
-                defaultBrowserItem?.let { BrowserMenuDivider() },
                 findInPageItem,
                 desktopSiteItem,
                 customizeReaderView.apply { visible = ::shouldShowReaderViewCustomization },
@@ -447,22 +443,6 @@ open class DefaultToolbarMenu(
             isCurrentUrlBookmarked = bookmarksStorage
                 .getBookmarksWithUrl(newUrl)
                 .any { it.url == newUrl }
-        }
-    }
-
-    private fun getSetDefaultBrowserItem(): BrowserMenuImageText? {
-        val settings = context.components.settings
-        return if (
-            settings.isDefaultBrowserMessageLocation(MessageSurfaceId.APP_MENU_ITEM)
-        ) {
-            BrowserMenuImageText(
-                label = context.getString(R.string.preferences_set_as_default_browser),
-                imageResource = R.mipmap.ic_launcher
-            ) {
-                onItemTapped.invoke(ToolbarMenu.Item.SetDefaultBrowser)
-            }
-        } else {
-            null
         }
     }
 }

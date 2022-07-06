@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.DialogInterface
 import android.content.Intent
@@ -51,11 +50,9 @@ import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.navigateToNotificationsSettings
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.ext.REQUEST_CODE_BROWSER_ROLE
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.nimbus.FxNimbus
-import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.perf.ProfilerViewModel
 import org.mozilla.fenix.settings.account.AccountUiView
 import org.mozilla.fenix.utils.BrowsersCache
@@ -160,22 +157,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        val preferencesId = getPreferenceLayoutId()
-
-        setPreferencesFromResource(preferencesId, rootKey)
-        updateMakeDefaultBrowserPreference()
+        setPreferencesFromResource(R.xml.preferences, rootKey)
     }
-
-    /**
-     * @return The preference layout to be used depending on flags and existing experiment branches.
-     * Note: Changing Settings screen before experiment is over requires changing all layouts.
-     */
-    private fun getPreferenceLayoutId() =
-        if (isDefaultBrowserExperimentBranch()) {
-            R.xml.preferences_default_browser_experiment
-        } else {
-            R.xml.preferences
-        }
 
     @SuppressLint("RestrictedApi")
     override fun onResume() {
@@ -250,8 +233,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 requireComponents.backgroundServices.accountManager.accountProfile()
             )
         }
-
-        updateMakeDefaultBrowserPreference()
     }
 
     @SuppressLint("InflateParams")
@@ -520,23 +501,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    @Suppress("DEPRECATION")
-    // https://github.com/mozilla-mobile/fenix/issues/19919
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        // If the user made us the default browser, update the switch
-        if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE_BROWSER_ROLE) {
-            updateMakeDefaultBrowserPreference()
-        }
-    }
-
-    private fun updateMakeDefaultBrowserPreference() {
-        if (!isDefaultBrowserExperimentBranch()) {
-            requirePreference<DefaultBrowserPreference>(R.string.pref_key_make_default_browser).updateSwitch()
-        }
-    }
-
     private fun navigateFromSettings(directions: NavDirections) {
         view?.findNavController()?.let { navController ->
             if (navController.currentDestination?.id == R.id.settingsFragment) {
@@ -655,9 +619,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
     }
-
-    private fun isDefaultBrowserExperimentBranch(): Boolean =
-        requireContext().settings().isDefaultBrowserMessageLocation(MessageSurfaceId.SETTINGS)
 
     private fun isFirefoxDefaultBrowser(): Boolean {
         val browsers = BrowsersCache.all(requireContext())

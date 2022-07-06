@@ -63,13 +63,6 @@ features:
       - channel: developer
         value:
           enabled: true
-  default-browser-message:
-    description: A small feature allowing experiments on the placement of a default browser message.
-    variables:
-      message-location:
-        description: Where is the message to be put.
-        type: Option<MessageSurfaceId>
-        default: null
   messaging:
     description: |
       Configuration for the messaging system.
