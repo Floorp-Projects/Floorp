@@ -21,7 +21,6 @@ using Origin = nsCString;
 using PageNumber = uint32_t;
 using Path = nsTArray<Name>;
 using TimeStamp = int64_t;
-using Usage = int64_t;
 
 }  // namespace mozilla::dom::fs
 

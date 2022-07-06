@@ -8,9 +8,6 @@
 
 #include "FileSystemMocks.h"
 
-#include "fs/FileSystemChildFactory.h"
-
-#include "mozilla/dom/FileSystemActorHolder.h"
 #include "mozilla/dom/FileSystemFileHandle.h"
 #include "mozilla/dom/FileSystemFileHandleBinding.h"
 #include "mozilla/dom/FileSystemHandle.h"
@@ -27,26 +24,23 @@ class TestFileSystemFileHandle : public ::testing::Test {
   void SetUp() override {
     mRequestHandler = MakeUnique<MockFileSystemRequestHandler>();
     mMetadata = FileSystemEntryMetadata("file"_ns, u"File"_ns);
-    mActor = MakeAndAddRef<FileSystemActorHolder>(
-        MakeUnique<FileSystemChildFactory>()->Create().take());
   }
 
   nsIGlobalObject* mGlobal = GetGlobal();
   UniquePtr<MockFileSystemRequestHandler> mRequestHandler;
   FileSystemEntryMetadata mMetadata;
-  RefPtr<FileSystemActorHolder> mActor;
 };
 
 TEST_F(TestFileSystemFileHandle, constructFileHandleRefPointer) {
   RefPtr<FileSystemFileHandle> fileHandle = MakeAndAddRef<FileSystemFileHandle>(
-      mGlobal, mActor, mMetadata, mRequestHandler.release());
+      mGlobal, mMetadata, mRequestHandler.release());
 
   ASSERT_TRUE(fileHandle);
 }
 
 TEST_F(TestFileSystemFileHandle, isHandleKindFile) {
   RefPtr<FileSystemFileHandle> fileHandle = MakeAndAddRef<FileSystemFileHandle>(
-      mGlobal, mActor, mMetadata, mRequestHandler.release());
+      mGlobal, mMetadata, mRequestHandler.release());
 
   ASSERT_TRUE(fileHandle);
 
@@ -55,7 +49,7 @@ TEST_F(TestFileSystemFileHandle, isHandleKindFile) {
 
 TEST_F(TestFileSystemFileHandle, isFileReturned) {
   RefPtr<FileSystemFileHandle> fileHandle = MakeAndAddRef<FileSystemFileHandle>(
-      mGlobal, mActor, mMetadata, mRequestHandler.release());
+      mGlobal, mMetadata, mRequestHandler.release());
 
   ASSERT_TRUE(fileHandle);
 
@@ -68,7 +62,7 @@ TEST_F(TestFileSystemFileHandle, isFileReturned) {
 TEST_F(TestFileSystemFileHandle, doesGetFileFailOnNullGlobal) {
   mGlobal = nullptr;
   RefPtr<FileSystemFileHandle> fileHandle = MakeAndAddRef<FileSystemFileHandle>(
-      mGlobal, mActor, mMetadata, mRequestHandler.release());
+      mGlobal, mMetadata, mRequestHandler.release());
 
   ASSERT_TRUE(fileHandle);
 
@@ -80,7 +74,7 @@ TEST_F(TestFileSystemFileHandle, doesGetFileFailOnNullGlobal) {
 
 TEST_F(TestFileSystemFileHandle, isWritableReturned) {
   RefPtr<FileSystemFileHandle> fileHandle = MakeAndAddRef<FileSystemFileHandle>(
-      mGlobal, mActor, mMetadata, mRequestHandler.release());
+      mGlobal, mMetadata, mRequestHandler.release());
 
   ASSERT_TRUE(fileHandle);
 
@@ -94,7 +88,7 @@ TEST_F(TestFileSystemFileHandle, isWritableReturned) {
 TEST_F(TestFileSystemFileHandle, doesCreateWritableFailOnNullGlobal) {
   mGlobal = nullptr;
   RefPtr<FileSystemFileHandle> fileHandle = MakeAndAddRef<FileSystemFileHandle>(
-      mGlobal, mActor, mMetadata, mRequestHandler.release());
+      mGlobal, mMetadata, mRequestHandler.release());
 
   ASSERT_TRUE(fileHandle);
 
@@ -107,7 +101,7 @@ TEST_F(TestFileSystemFileHandle, doesCreateWritableFailOnNullGlobal) {
 
 TEST_F(TestFileSystemFileHandle, isSyncAccessHandleReturned) {
   RefPtr<FileSystemFileHandle> fileHandle = MakeAndAddRef<FileSystemFileHandle>(
-      mGlobal, mActor, mMetadata, mRequestHandler.release());
+      mGlobal, mMetadata, mRequestHandler.release());
 
   ASSERT_TRUE(fileHandle);
 
@@ -120,7 +114,7 @@ TEST_F(TestFileSystemFileHandle, isSyncAccessHandleReturned) {
 TEST_F(TestFileSystemFileHandle, doesCreateSyncAccessHandleFailOnNullGlobal) {
   mGlobal = nullptr;
   RefPtr<FileSystemFileHandle> fileHandle = MakeAndAddRef<FileSystemFileHandle>(
-      mGlobal, mActor, mMetadata, mRequestHandler.release());
+      mGlobal, mMetadata, mRequestHandler.release());
 
   ASSERT_TRUE(fileHandle);
 

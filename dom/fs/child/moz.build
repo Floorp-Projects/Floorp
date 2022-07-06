@@ -6,11 +6,9 @@
 
 EXPORTS.mozilla.dom += [
     "BackgroundFileSystemChild.h",
-    "OriginPrivateFileSystemChild.h",
 ]
 
 UNIFIED_SOURCES += [
-    "FileSystemChildFactory.cpp",
     "FileSystemRequestHandler.cpp",
 ]
 

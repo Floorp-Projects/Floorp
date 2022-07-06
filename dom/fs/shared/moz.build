@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    "FileSystemActorHolder.h",
     "FileSystemTypes.h",
 ]
 
@@ -13,7 +12,6 @@ FINAL_LIBRARY = "xul"
 
 IPDL_SOURCES += [
     "PBackgroundFileSystem.ipdl",
-    "POriginPrivateFileSystem.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

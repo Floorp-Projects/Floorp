@@ -11,15 +11,12 @@
 #include "gmock/gmock.h"
 
 #include "TestHelpers.h"
-
 #include "fs/FileSystemRequestHandler.h"
-#include "fs/FileSystemChildFactory.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -27,7 +24,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIGlobalObject.h"
-#include "nsISupports.h"
 #include "nsISupportsImpl.h"
 #include "nsITimer.h"
 
@@ -43,36 +39,29 @@ nsIGlobalObject* GetGlobal();
 
 class MockFileSystemRequestHandler : public FileSystemRequestHandler {
  public:
-  MOCK_METHOD(void, GetRoot, (RefPtr<Promise> aPromise), (override));
+  MOCK_METHOD1(GetRoot, void(RefPtr<Promise> aPromise));
 
-  MOCK_METHOD(void, GetDirectoryHandle,
-              (RefPtr<FileSystemActorHolder> & aActor,
-               const FileSystemChildMetadata& aDirectory, bool aCreate,
-               RefPtr<Promise> aPromise),
-              (override));
+  MOCK_METHOD4(GetDirectoryHandle,
+               void(RefPtr<FileSystemActorHolder>& aActor,
+                    const FileSystemChildMetadata& aDirectory, bool aCreate,
+                    RefPtr<Promise> aPromise));
 
-  MOCK_METHOD(void, GetFileHandle,
-              (RefPtr<FileSystemActorHolder> & aActor,
-               const FileSystemChildMetadata& aFile, bool aCreate,
-               RefPtr<Promise> aPromise),
-              (override));
+  MOCK_METHOD4(GetFileHandle, void(RefPtr<FileSystemActorHolder>& aActor,
+                                   const FileSystemChildMetadata& aFile,
+                                   bool aCreate, RefPtr<Promise> aPromise));
 
-  MOCK_METHOD(void, GetFile,
-              (RefPtr<FileSystemActorHolder> & aActor,
-               const FileSystemEntryMetadata& aFile, RefPtr<Promise> aPromise),
-              (override));
+  MOCK_METHOD3(GetFile, void(RefPtr<FileSystemActorHolder>& aActor,
+                             const FileSystemEntryMetadata& aFile,
+                             RefPtr<Promise> aPromise));
 
-  MOCK_METHOD(void, GetEntries,
-              (RefPtr<FileSystemActorHolder> & aActor,
-               const EntryId& aDirectory, PageNumber aPage,
-               RefPtr<Promise> aPromise, ArrayAppendable& aSink),
-              (override));
+  MOCK_METHOD5(GetEntries,
+               void(RefPtr<FileSystemActorHolder>& aActor,
+                    const EntryId& aDirectory, PageNumber aPage,
+                    RefPtr<Promise> aPromise, ArrayAppendable& aSink));
 
-  MOCK_METHOD(void, RemoveEntry,
-              (RefPtr<FileSystemActorHolder> & aActor,
-               const FileSystemChildMetadata& aEntry, bool aRecursive,
-               RefPtr<Promise> aPromise),
-              (override));
+  MOCK_METHOD4(RemoveEntry, void(RefPtr<FileSystemActorHolder>& aActor,
+                                 const FileSystemChildMetadata& aEntry,
+                                 bool aRecursive, RefPtr<Promise> aPromise));
 };
 
 class WaitablePromiseListener {
@@ -94,11 +83,7 @@ template <class SuccessHandler, class ErrorHandler,
 class TestPromiseListener : public PromiseNativeHandler,
                             public WaitablePromiseListener {
  public:
-  TestPromiseListener()
-      : mIsDone(std::make_shared<bool>(false)),
-        mTimer(),
-        mOnSuccess(),
-        mOnError() {
+  TestPromiseListener() : mIsDone(std::make_shared<bool>(false)), mTimer() {
     ClearDone();
   }
 
@@ -117,23 +102,17 @@ class TestPromiseListener : public PromiseNativeHandler,
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                         ErrorResult& aRv) override {
-    mozilla::ScopeExit flagAsDone([isDone = mIsDone, timer = mTimer] {
-      timer->Cancel();
-      *isDone = true;
-    });
+    mozilla::ScopeExit flagAsDone([isDone = mIsDone] { *isDone = true; });
 
-    mOnSuccess();
+    SuccessHandler{}();
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                         ErrorResult& aRv) override {
-    mozilla::ScopeExit flagAsDone([isDone = mIsDone, timer = mTimer] {
-      timer->Cancel();
-      *isDone = true;
-    });
+    mozilla::ScopeExit flagAsDone([isDone = mIsDone] { *isDone = true; });
 
     if (aValue.isInt32()) {
-      mOnError(static_cast<nsresult>(aValue.toInt32()));
+      ErrorHandler{}(static_cast<nsresult>(aValue.toInt32()));
       return;
     }
 
@@ -143,7 +122,7 @@ class TestPromiseListener : public PromiseNativeHandler,
     RefPtr<Exception> exception;
     UNWRAP_OBJECT(Exception, exceptionObject, exception);
     if (exception) {
-      mOnError(static_cast<nsresult>(exception->Result()));
+      ErrorHandler{}(static_cast<nsresult>(exception->Result()));
       return;
     }
   }
@@ -157,7 +136,6 @@ class TestPromiseListener : public PromiseNativeHandler,
     }
     auto timerCallback = [isDone = mIsDone](nsITimer* aTimer) {
       *isDone = true;
-      FAIL() << "Timed out!";
     };
     const char* timerName = "fs::TestPromiseListener::ClearDone";
     auto res = NS_NewTimerWithCallback(timerCallback, MilliSeconds,
@@ -171,106 +149,12 @@ class TestPromiseListener : public PromiseNativeHandler,
 
   PromiseNativeHandler* AsHandler() override { return this; }
 
-  SuccessHandler& GetSuccessHandler() { return mOnSuccess; }
-
-  SuccessHandler& GetErrorHandler() { return mOnError; }
-
  protected:
   virtual ~TestPromiseListener() = default;
 
   std::shared_ptr<bool> mIsDone;  // We pass this to a callback
 
   nsCOMPtr<nsITimer> mTimer;
-
-  SuccessHandler mOnSuccess;
-
-  ErrorHandler mOnError;
-};
-
-class TestOriginPrivateFileSystemChild : public OriginPrivateFileSystemChild {
- public:
-  NS_INLINE_DECL_REFCOUNTING(TestOriginPrivateFileSystemChild, override)
-
-  void ManualRelease() {
-    if (mRefCnt > 0u) {
-      --mRefCnt;
-    }
-  }
-
-  MOCK_METHOD(
-      void, SendGetDirectoryHandle,
-      (const FileSystemGetHandleRequest& request,
-       mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>&& aResolve,
-       mozilla::ipc::RejectCallback&& aReject),
-      (override));
-
-  MOCK_METHOD(
-      void, SendGetFileHandle,
-      (const FileSystemGetHandleRequest& request,
-       mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>&& aResolve,
-       mozilla::ipc::RejectCallback&& aReject),
-      (override));
-
-  MOCK_METHOD(
-      void, SendGetFile,
-      (const FileSystemGetFileRequest& request,
-       mozilla::ipc::ResolveCallback<FileSystemGetFileResponse>&& aResolve,
-       mozilla::ipc::RejectCallback&& aReject),
-      (override));
-
-  MOCK_METHOD(
-      void, SendResolve,
-      (const FileSystemResolveRequest& request,
-       mozilla::ipc::ResolveCallback<FileSystemResolveResponse>&& aResolve,
-       mozilla::ipc::RejectCallback&& aReject),
-      (override));
-
-  MOCK_METHOD(
-      void, SendGetEntries,
-      (const FileSystemGetEntriesRequest& request,
-       mozilla::ipc::ResolveCallback<FileSystemGetEntriesResponse>&& aResolve,
-       mozilla::ipc::RejectCallback&& aReject),
-      (override));
-
-  MOCK_METHOD(
-      void, SendRemoveEntry,
-      (const FileSystemRemoveEntryRequest& request,
-       mozilla::ipc::ResolveCallback<FileSystemRemoveEntryResponse>&& aResolve,
-       mozilla::ipc::RejectCallback&& aReject),
-      (override));
-
-  MOCK_METHOD(bool, IsCloseable, (), (const, override));
-
-  MOCK_METHOD(void, Close, (), (override));
-
-  MOCK_METHOD(POriginPrivateFileSystemChild*, AsBindable, (), (override));
-
- protected:
-  virtual ~TestOriginPrivateFileSystemChild() = default;
-};
-
-class TestFileSystemChildFactory final : public FileSystemChildFactory {
- public:
-  explicit TestFileSystemChildFactory(TestOriginPrivateFileSystemChild* aChild)
-      : mChild(aChild) {}
-
-  already_AddRefed<OriginPrivateFileSystemChild> Create() const override {
-    return RefPtr<TestOriginPrivateFileSystemChild>(mChild).forget();
-  }
-
-  ~TestFileSystemChildFactory() = default;
-
- private:
-  TestOriginPrivateFileSystemChild* mChild;
-};
-
-struct MockExpectMe {
-  MOCK_METHOD0(InvokeMe, void());
-
-  template <class... Args>
-  void operator()(Args...) {
-    InvokeMe();
-  }
 };
 
 template <nsresult Expected>
@@ -279,10 +163,7 @@ struct NSErrorMatcher {
 };
 
 struct FailOnCall {
-  template <class... Args>
-  void operator()(Args...) {
-    FAIL();
-  }
+  void operator()() { FAIL(); }
 };
 
 }  // namespace mozilla::dom::fs::test
@@ -293,8 +174,5 @@ struct FailOnCall {
 MOCK_PROMISE_LISTENER(
     ExpectNotImplemented, mozilla::dom::fs::test::FailOnCall,
     mozilla::dom::fs::test::NSErrorMatcher<NS_ERROR_NOT_IMPLEMENTED>);
-
-MOCK_PROMISE_LISTENER(ExpectResolveCalled, mozilla::dom::fs::test::MockExpectMe,
-                      mozilla::dom::fs::test::FailOnCall);
 
 #endif  // DOM_FS_TEST_GTEST_FILESYSTEMMOCKS_H_
