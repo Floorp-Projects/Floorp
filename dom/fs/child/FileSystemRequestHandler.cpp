@@ -15,9 +15,9 @@
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 
 namespace mozilla::dom::fs {
@@ -192,6 +192,11 @@ void ResolveCallback(
   MOZ_ASSERT(aPromise);
   QM_TRY(OkIf(Promise::PromiseState::Pending == aPromise->State()), QM_VOID);
 
+  if (FileSystemRemoveEntryResponse::Tvoid_t == aResponse.type()) {
+    aPromise->MaybeResolveWithUndefined();
+    return;
+  }
+
   MOZ_ASSERT(FileSystemRemoveEntryResponse::Tnsresult == aResponse.type());
   const auto& status = aResponse.get_nsresult();
   if (NS_ERROR_FILE_ACCESS_DENIED == status) {
@@ -279,7 +284,7 @@ void IPCRejectReporter(mozilla::ipc::ResponseRejectReason aReason) {
   }
 }
 
-void RejectHandler(
+void RejectCallback(
     RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
     mozilla::ipc::ResponseRejectReason aReason) {
   IPCRejectReporter(aReason);
@@ -291,7 +296,7 @@ mozilla::ipc::RejectCallback GetRejectCallback(
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
   return static_cast<mozilla::ipc::RejectCallback>(
       // NOLINTNEXTLINE(modernize-avoid-bind)
-      std::bind(RejectHandler, aPromise, std::placeholders::_1));
+      std::bind(RejectCallback, aPromise, std::placeholders::_1));
 }
 
 }  // namespace
@@ -309,8 +314,8 @@ void FileSystemRequestHandler::GetRoot(
       POriginPrivateFileSystem::CreateEndpoints(&parentEp, &childEp));
 
   RefPtr<FileSystemActorHolder> actor =
-      MakeAndAddRef<FileSystemActorHolder>(new OriginPrivateFileSystemChild());
-  if (!childEp.Bind(actor->Actor())) {
+      MakeAndAddRef<FileSystemActorHolder>(mChildFactory->Create().take());
+  if (!childEp.Bind(actor->Actor()->AsBindable())) {
     aPromise->MaybeRejectWithUndefined();
     return;
   }
@@ -348,7 +353,9 @@ void FileSystemRequestHandler::GetDirectoryHandle(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aActor), QM_VOID);
+  QM_TRY(OkIf(aActor), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
   aActor->Actor()->SendGetDirectoryHandle(request, std::move(onResolve),
                                           std::move(onReject));
 }
@@ -368,7 +375,9 @@ void FileSystemRequestHandler::GetFileHandle(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aActor), QM_VOID);
+  QM_TRY(OkIf(aActor), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
   aActor->Actor()->SendGetFileHandle(request, std::move(onResolve),
                                      std::move(onReject));
 }
@@ -387,7 +396,9 @@ void FileSystemRequestHandler::GetFile(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aActor), QM_VOID);
+  QM_TRY(OkIf(aActor), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
   aActor->Actor()->SendGetFile(request, std::move(onResolve),
                                std::move(onReject));
 }
@@ -414,7 +425,9 @@ void FileSystemRequestHandler::GetEntries(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aActor), QM_VOID);
+  QM_TRY(OkIf(aActor), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
   aActor->Actor()->SendGetEntries(request, std::move(onResolve),
                                   std::move(onReject));
 }
@@ -433,7 +446,9 @@ void FileSystemRequestHandler::RemoveEntry(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aActor), QM_VOID);
+  QM_TRY(OkIf(aActor), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
   aActor->Actor()->SendRemoveEntry(request, std::move(onResolve),
                                    std::move(onReject));
 }

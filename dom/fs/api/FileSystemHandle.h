@@ -68,6 +68,7 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
   virtual ~FileSystemHandle() = default;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
+
   RefPtr<FileSystemActorHolder> mActor;
 
   const fs::FileSystemEntryMetadata mMetadata;

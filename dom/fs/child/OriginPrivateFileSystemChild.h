@@ -8,12 +8,52 @@
 #define DOM_FS_CHILD_ORIGINPRIVATEFILESYSTEMCHILD_H_
 
 #include "mozilla/dom/POriginPrivateFileSystemChild.h"
-#include "nsISupports.h"
+#include "mozilla/UniquePtr.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla::dom {
 
-class OriginPrivateFileSystemChild : public POriginPrivateFileSystemChild {
-  NS_INLINE_DECL_REFCOUNTING(OriginPrivateFileSystemChild);
+class OriginPrivateFileSystemChild {
+ public:
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  virtual void SendGetDirectoryHandle(
+      const fs::FileSystemGetHandleRequest& request,
+      mozilla::ipc::ResolveCallback<fs::FileSystemGetHandleResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) = 0;
+
+  virtual void SendGetFileHandle(
+      const fs::FileSystemGetHandleRequest& request,
+      mozilla::ipc::ResolveCallback<fs::FileSystemGetHandleResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) = 0;
+
+  virtual void SendGetFile(
+      const fs::FileSystemGetFileRequest& request,
+      mozilla::ipc::ResolveCallback<fs::FileSystemGetFileResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) = 0;
+
+  virtual void SendResolve(
+      const fs::FileSystemResolveRequest& request,
+      mozilla::ipc::ResolveCallback<fs::FileSystemResolveResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) = 0;
+
+  virtual void SendGetEntries(
+      const fs::FileSystemGetEntriesRequest& request,
+      mozilla::ipc::ResolveCallback<fs::FileSystemGetEntriesResponse>&&
+          aResolve,
+      mozilla::ipc::RejectCallback&& aReject) = 0;
+
+  virtual void SendRemoveEntry(
+      const fs::FileSystemRemoveEntryRequest& request,
+      mozilla::ipc::ResolveCallback<fs::FileSystemRemoveEntryResponse>&&
+          aResolve,
+      mozilla::ipc::RejectCallback&& aReject) = 0;
+
+  virtual bool IsCloseable() const = 0;
+
+  virtual void Close() = 0;
+
+  virtual POriginPrivateFileSystemChild* AsBindable() = 0;
 
  protected:
   virtual ~OriginPrivateFileSystemChild() = default;

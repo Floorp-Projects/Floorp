@@ -10,7 +10,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.ipc += [
-    "ActorHolder.h",
     "AsyncBlockers.h",
     "BackgroundChild.h",
     "BackgroundParent.h",
@@ -60,6 +59,7 @@ EXPORTS.mozilla.ipc += [
     "ShmemMessageUtils.h",
     "TaintingIPCUtils.h",
     "TaskFactory.h",
+    "ToplevelActorHolder.h",
     "TransportSecurityInfoUtils.h",
     "URIUtils.h",
     "UtilityAudioDecoderChild.h",

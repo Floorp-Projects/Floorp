@@ -26,7 +26,8 @@ struct FileSystemEntryMetadata
 };
 
 /**
- * Identifies a file or a directory with its parent identifier and user provided name.
+ * Identifies a file or a directory with its parent identifier and
+ * user provided name.
  */
 struct FileSystemChildMetadata
 {
@@ -207,7 +208,8 @@ async protocol POriginPrivateFileSystem
    *
    * @returns error or entry handle
    */
-  async GetDirectoryHandle(FileSystemGetHandleRequest request) returns(FileSystemGetHandleResponse handle);
+  async GetDirectoryHandle(FileSystemGetHandleRequest request)
+      returns(FileSystemGetHandleResponse handle);
 
   /**
    * Initiates an asynchronous request for the handle to
@@ -225,7 +227,8 @@ async protocol POriginPrivateFileSystem
    *
    * @returns error or entry handle
    */
-  async GetFileHandle(FileSystemGetHandleRequest request) returns(FileSystemGetHandleResponse handle);
+  async GetFileHandle(FileSystemGetHandleRequest request)
+      returns(FileSystemGetHandleResponse handle);
 
   /**
    * Initiates an asynchronous request for a read-only object representing the
@@ -242,17 +245,20 @@ async protocol POriginPrivateFileSystem
    *
    * @returns error or file object
    */
-  async GetFile(FileSystemGetFileRequest request) returns(FileSystemGetFileResponse response);
+  async GetFile(FileSystemGetFileRequest request)
+      returns(FileSystemGetFileResponse response);
 
   /**
    * TODO: documentation
    */
-  async GetAccessHandle(FileSystemGetFileRequest request) returns(FileSystemGetAccessHandleResponse fileData);
+  async GetAccessHandle(FileSystemGetFileRequest request)
+      returns(FileSystemGetAccessHandleResponse fileData);
 
   /**
    * TODO: documentation
    */
-  async GetWritable(FileSystemGetFileRequest request) returns(FileSystemGetAccessHandleResponse fileData);
+  async GetWritable(FileSystemGetFileRequest request)
+      returns(FileSystemGetAccessHandleResponse fileData);
 
   /**
    * Initiates an asynchronous request for the file system path
@@ -262,32 +268,35 @@ async protocol POriginPrivateFileSystem
    *
    * @returns error or file system path
    */
-  async Resolve(FileSystemResolveRequest request) returns(FileSystemResolveResponse response);
+  async Resolve(FileSystemResolveRequest request)
+      returns(FileSystemResolveResponse response);
 
   /**
-   * Initiates an asynchronous request for an iterator to the child entries under
-   * the current directory handle.
+   * Initiates an asynchronous request for an iterator to the child entries
+   * under the calling directory handle.
    *
-   * If the directory item names or the directory structure is modified while the iterator
-   * is in use, the iterator remains safe to use but no guarantees are made regarding
-   * the visibility of the concurrent changes. It is possible that a file which is added after
-   * the iteration has begun will not be returned, or that among the values there
-   * are invalid file handles whose underlying objects have been removed
-   * after the iteration started.
+   * If the directory item names or the directory structure is modified while
+   * the iterator is in use, the iterator remains safe to use but no guarantees
+   * are made regarding the visibility of the concurrent changes.
+   * It is possible that a file which is added after the iteration has begun
+   * will not be returned, or that among the values there are invalid file
+   * handles whose underlying objects have been removed after the iteration
+   * started.
    *
    * @param[in] request for a iterator
    *
    * @returns error or iterator
    */
-  async GetEntries(FileSystemGetEntriesRequest request) returns(FileSystemGetEntriesResponse entries);
+  async GetEntries(FileSystemGetEntriesRequest request)
+      returns(FileSystemGetEntriesResponse entries);
 
   /**
-   * Initiates an asynchronous request to delete a directory or file with a given name
-   * under the current directory handle.
+   * Initiates an asynchronous request to delete a directory or file with a
+   * given name under the calling directory handle.
    *
-   * If recursive flag of the request is not set, a request to remove a non-empty
-   * directory returns an appropriate error, otherwise all the child files and
-   * directories are made to vanish.
+   * If recursive flag of the request is not set, a request to remove a
+   * non-empty directory returns an appropriate error, otherwise all the child
+   * files and directories are made to vanish.
    *
    * The recursive flag has no impact on files.
    *
@@ -295,7 +304,9 @@ async protocol POriginPrivateFileSystem
    *
    * @returns error information
    */
-  async RemoveEntry(FileSystemRemoveEntryRequest request) returns(FileSystemRemoveEntryResponse response);
+  async RemoveEntry(FileSystemRemoveEntryRequest request)
+      returns(FileSystemRemoveEntryResponse response);
+
   /**
    * TODO: documentation
    * So we can implement exclusive access
@@ -303,10 +314,12 @@ async protocol POriginPrivateFileSystem
   async CloseFile(FileSystemGetFileRequest request);
 
   /**
-   * Request for quota needed to finish a write, beyond the amount preallocated at creation of the AccessHandle.
-   * While officially async, this is used in a sync manner from write() by spinning an event loop.
+   * Request for quota needed to finish a write, beyond the amount preallocated
+   * at creation of the AccessHandle. While officially async, this is used in a
+   * sync manner from write() by spinning an event loop.
    */
-  async NeedQuota(FileSystemQuotaRequest aRequest) returns (uint64_t aQuotaGranted);
+  async NeedQuota(FileSystemQuotaRequest aRequest)
+      returns (uint64_t aQuotaGranted);
 
  child:
 

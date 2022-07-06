@@ -7,8 +7,6 @@ include protocol POriginPrivateFileSystem;
 
 using mozilla::dom::fs::EntryId from "mozilla/dom/FileSystemTypes.h";
 
-using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
-
 namespace mozilla {
 namespace dom {
 namespace fs {
@@ -30,7 +28,6 @@ async protocol PBackgroundFileSystem
   /**
    * This will set up a POriginPrivateFileSystem IPC connection
    */
-
   async GetRoot(Endpoint<POriginPrivateFileSystemParent> aParentEP) returns(FileSystemGetRootResponse handle);
 
  child:
