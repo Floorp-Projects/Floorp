@@ -190,6 +190,11 @@ aboutwelcome:
     transitions:
       type: boolean
       description: Enable transition effect between screens
+    templateMR:
+      type: boolean
+      fallbackPref: browser.aboutwelcome.templateMR
+      description: >-
+        Should users see the MR 50-50 split template?
 moreFromMozilla:
   description: "New page on about:preferences to suggest more Mozilla products"
   hasExposure: true
