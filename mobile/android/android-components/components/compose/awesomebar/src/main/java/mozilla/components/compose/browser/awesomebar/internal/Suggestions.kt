@@ -37,9 +37,11 @@ internal fun Suggestions(
     ) {
 
         suggestions.forEach { (group, suggestions) ->
-            group.title?.let { title ->
-                item(group.id) {
-                    SuggestionGroup(title, colors)
+            if (suggestions.isNotEmpty()) {
+                group.title?.let { title ->
+                    item(group.id) {
+                        SuggestionGroup(title, colors)
+                    }
                 }
             }
 

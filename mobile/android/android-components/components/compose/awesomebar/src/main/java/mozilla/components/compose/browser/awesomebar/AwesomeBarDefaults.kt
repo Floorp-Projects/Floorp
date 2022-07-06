@@ -28,7 +28,7 @@ object AwesomeBarDefaults {
             alpha = ContentAlpha.medium
         ),
         autocompleteIcon: Color = MaterialTheme.colors.onSurface,
-        groupTitle: Color = MaterialTheme.colors.primary
+        groupTitle: Color = MaterialTheme.colors.onBackground,
     ) = AwesomeBarColors(
         background,
         title,

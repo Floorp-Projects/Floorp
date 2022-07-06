@@ -35,6 +35,7 @@ const val DEFAULT_METADATA_SUGGESTION_LIMIT = 5
  * @param maxNumberOfSuggestions optional parameter to specify the maximum number of returned suggestions,
  * defaults to [DEFAULT_METADATA_SUGGESTION_LIMIT].
  * @param showEditSuggestion optional parameter to specify if the suggestion should show the edit button
+ * @param suggestionsHeader optional parameter to specify if the suggestion should have a header
  */
 class HistoryMetadataSuggestionProvider(
     private val historyStorage: HistoryMetadataStorage,
@@ -43,8 +44,13 @@ class HistoryMetadataSuggestionProvider(
     internal val engine: Engine? = null,
     @VisibleForTesting internal val maxNumberOfSuggestions: Int = DEFAULT_METADATA_SUGGESTION_LIMIT,
     private val showEditSuggestion: Boolean = true,
+    private val suggestionsHeader: String? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
+
+    override fun groupTitle(): String? {
+        return suggestionsHeader
+    }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
         if (text.isNullOrBlank()) {

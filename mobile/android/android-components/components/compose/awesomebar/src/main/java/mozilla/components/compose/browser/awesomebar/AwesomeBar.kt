@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -41,10 +40,22 @@ fun AwesomeBar(
     onScroll: () -> Unit = {},
     profiler: Profiler? = null
 ) {
-    val groups = remember(providers) {
-        listOf(
+    val mapTitlesToProviders = HashMap<String?, ArrayList<AwesomeBar.SuggestionProvider>>()
+    for (provider in providers) {
+        var groupedProviders: ArrayList<AwesomeBar.SuggestionProvider>? =
+            mapTitlesToProviders[provider.groupTitle()]
+        if (groupedProviders == null) {
+            groupedProviders = ArrayList()
+        }
+        groupedProviders.add(provider)
+        mapTitlesToProviders[provider.groupTitle()] = groupedProviders
+    }
+    val groups: ArrayList<AwesomeBar.SuggestionProviderGroup> = ArrayList()
+    for (item in mapTitlesToProviders) {
+        groups.add(
             AwesomeBar.SuggestionProviderGroup(
-                providers = providers
+                providers = item.value,
+                title = item.key
             )
         )
     }

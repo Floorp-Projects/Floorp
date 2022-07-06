@@ -153,6 +153,11 @@ interface AwesomeBar {
         val id: String
 
         /**
+         * A header title for grouping the suggestions.
+         **/
+        fun groupTitle(): String? = null
+
+        /**
          * Fired when the user starts interacting with the awesome bar by entering text in the toolbar.
          *
          * The provider has the option to return an initial list of suggestions that will be displayed before the

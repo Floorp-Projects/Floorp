@@ -41,6 +41,7 @@ const val DEFAULT_COMBINED_SUGGESTION_LIMIT = 5
  * @param maxNumberOfSuggestions optional parameter to specify the maximum number of returned suggestions,
  * defaults to [DEFAULT_COMBINED_SUGGESTION_LIMIT].
  * @param showEditSuggestion optional parameter to specify if the suggestion should show the edit button
+ * @param suggestionsHeader optional parameter to specify if the suggestion should have a header
  */
 @Suppress("LongParameterList")
 class CombinedHistorySuggestionProvider(
@@ -51,8 +52,13 @@ class CombinedHistorySuggestionProvider(
     internal val engine: Engine? = null,
     @VisibleForTesting internal var maxNumberOfSuggestions: Int = DEFAULT_COMBINED_SUGGESTION_LIMIT,
     private val showEditSuggestion: Boolean = true,
+    private val suggestionsHeader: String? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
+
+    override fun groupTitle(): String? {
+        return suggestionsHeader
+    }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> = coroutineScope {
         if (text.isBlank()) {

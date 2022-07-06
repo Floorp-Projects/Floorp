@@ -30,9 +30,14 @@ class SessionSuggestionProvider(
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
     private val icons: BrowserIcons? = null,
     private val indicatorIcon: Drawable? = null,
-    private val excludeSelectedSession: Boolean = false
+    private val excludeSelectedSession: Boolean = false,
+    private val suggestionsHeader: String? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
+
+    override fun groupTitle(): String? {
+        return suggestionsHeader
+    }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
         if (text.isEmpty()) {
