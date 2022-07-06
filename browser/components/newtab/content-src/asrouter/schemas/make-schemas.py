@@ -8,6 +8,7 @@ import sys
 from argparse import ArgumentParser
 from itertools import chain
 from pathlib import Path
+from urllib.parse import urlparse
 
 SCHEMA_BASE_DIR = Path("..", "templates")
 
@@ -41,10 +42,60 @@ def extract_template_values(template):
         return [const]
 
 
+def patch_schema(schema):
+    """Patch the given schema.
+
+    All relative references will be re-mapped to absolute references.
+    """
+    schema_id = schema["$id"]
+
+    def patch_impl(schema):
+        ref = schema.get("$ref")
+
+        if ref:
+            uri = urlparse(ref)
+            if (
+                uri.scheme == ""
+                and uri.netloc == ""
+                and uri.path == ""
+                and uri.fragment != ""
+            ):
+                schema["$ref"] = f"{schema_id}#{uri.fragment}"
+
+        properties = schema.get("properties")
+        if properties:
+            for prop in properties.keys():
+                patch_impl(properties[prop])
+
+        items = schema.get("items")
+        if items:
+            patch_impl(items)
+
+        for key in ("if", "then", "else"):
+            if key in schema:
+                patch_impl(schema[key])
+
+        for key in ("oneOf", "allOf", "anyOf"):
+            subschema = schema.get(key)
+            if subschema:
+                for i, alternate in enumerate(subschema):
+                    patch_impl(alternate)
+
+    patch_impl(schema)
+
+    for key in ("$defs", "definitions"):
+        defns = schema.get(key)
+        if defns:
+            for defn_name, defn_value in defns.items():
+                patch_impl(defn_value)
+
+    return schema
+
+
 def main(check=False):
     """Generate Nimbus feature schemas for Firefox Messaging System."""
     defs = {
-        name: read_schema(SCHEMA_BASE_DIR / path)
+        name: patch_schema(read_schema(SCHEMA_BASE_DIR / path))
         for name, path in MESSAGE_TYPES.items()
     }
 
@@ -88,9 +139,11 @@ def main(check=False):
 
     all_templates = list(chain.from_iterable(templates.values()))
 
+    schema_id = "resource://activity-stream/schemas/MessagingExperiment.schema.json"
+
     feature_schema = {
         "$schema": "https://json-schema.org/draft/2019-09/schema",
-        "$id": "resource://activity-stream/schemas/MessagingExperiment.schema.json",
+        "$id": schema_id,
         "title": "Messaging Experiment",
         "description": "A Firefox Messaging System message.",
         "allOf": [
@@ -118,7 +171,7 @@ def main(check=False):
                         },
                         "required": ["template"],
                     },
-                    "then": {"$ref": f"#/$defs/{message_type}"},
+                    "then": {"$ref": f"{schema_id}#/$defs/{message_type}"},
                 }
                 for message_type in defs
             ),
