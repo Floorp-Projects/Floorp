@@ -40,6 +40,7 @@ add_task(async function() {
     "resource://devtools/client/shared/vendor/react-dom-factories.js",
     "resource://devtools/client/shared/vendor/react-redux.js",
     "resource://devtools/client/shared/vendor/redux.js",
+    "resource://devtools/client/shared/redux/subscriber.js",
     "resource://devtools/client/shared/worker-utils.js",
     "resource://devtools/client/debugger/src/workers/parser/index.js",
     "resource://devtools/client/shared/source-map/index.js",

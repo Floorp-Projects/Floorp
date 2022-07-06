@@ -146,6 +146,10 @@ html[dir="rtl"] .img.more-tabs {
   mask-image: url(chrome://devtools/content/debugger/images/prettyPrint.svg);
 }
 
+.img.removeAll {
+  mask-image: url(chrome://devtools/skin/images/clear.svg)
+}
+
 .img.refresh {
   mask-image: url(chrome://devtools/content/debugger/images/reload.svg);
 }
