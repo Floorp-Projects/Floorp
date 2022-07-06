@@ -45,16 +45,6 @@ class nsStringBundleService : public nsIStringBundleService,
     return NS_OK;
   };
 
-  size_t SizeOfIncludingThis(
-      mozilla::MallocSizeOf aMallocSizeOf) const override;
-
-  void SendContentBundles(
-      mozilla::dom::ContentParent* aContentParent) const override;
-
-  void RegisterContentBundle(const nsCString& aBundleURL,
-                             const mozilla::ipc::FileDescriptor& aMapFile,
-                             size_t aMapSize) override;
-
  private:
   virtual ~nsStringBundleService();
 

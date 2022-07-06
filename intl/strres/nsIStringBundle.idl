@@ -28,7 +28,11 @@ class FileDescriptor;
 
 %}
 
-[scriptable, uuid(D85A17C2-AA7C-11d2-9B8C-00805F8A16D9)]
+[ptr] native ContentParent(mozilla::dom::ContentParent);
+[ref] native FileDescriptor(mozilla::ipc::FileDescriptor);
+native MallocSizeOf(mozilla::MallocSizeOf);
+
+[scriptable, builtinclass, uuid(D85A17C2-AA7C-11d2-9B8C-00805F8A16D9)]
 interface nsIStringBundle : nsISupports
 {
   AString GetStringFromID(in long aID);
@@ -67,13 +71,11 @@ interface nsIStringBundle : nsISupports
   // Preloads string bundle data asynchronously
   void asyncPreload();
 
-%{C++
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
-  virtual size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
-%}
+  [notxpcom, nostdcall] size_t SizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
+  [notxpcom, nostdcall] size_t SizeOfIncludingThisIfUnshared(in MallocSizeOf aMallocSizeOf);
 };
 
-[scriptable, uuid(D85A17C0-AA7C-11d2-9B8C-00805F8A16D9)]
+[scriptable, builtinclass, uuid(D85A17C0-AA7C-11d2-9B8C-00805F8A16D9)]
 interface nsIStringBundleService : nsISupports
 {
   nsIStringBundle createBundle(in string aURLSpec);
@@ -99,13 +101,11 @@ interface nsIStringBundleService : nsISupports
    */
   void flushBundles();
 
-  %{C++
-    virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+  [notxpcom, nostdcall] size_t sizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
 
-  virtual void SendContentBundles(mozilla::dom::ContentParent* aContentParent) const = 0;
+  [notxpcom, nostdcall] void sendContentBundles(in ContentParent aContentParent);
 
-  virtual void RegisterContentBundle(const nsCString& aBundleURL,
-                                     const mozilla::ipc::FileDescriptor& aMapFile,
-                                     size_t aMapSize) = 0;
-  %}
+  [notxpcom, nostdcall] void registerContentBundle(in ACString aBundleURL,
+                                                   [const] in FileDescriptor aMapFile,
+                                                   in size_t aMapSize);
 };

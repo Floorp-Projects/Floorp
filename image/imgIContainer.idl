@@ -82,6 +82,7 @@ native ImageResolution(mozilla::image::Resolution);
 native TempRefSourceSurface(already_AddRefed<mozilla::gfx::SourceSurface>);
 native TempRefImgIContainer(already_AddRefed<imgIContainer>);
 native nsIntSizeByVal(nsIntSize);
+[ref] native MediaFeatureChange(mozilla::MediaFeatureChange);
 
 
 /**
@@ -674,20 +675,18 @@ interface imgIContainer : nsISupports
    */
   [noscript, notxpcom] void propagateUseCounters(in Document aReferencingDocument);
 
-  %{C++
   /*
    * Called when media feature values that apply to all documents (such as
    * those based on system metrics) have changed.  If this image is a type
    * that can respond to media queries (i.e., an SVG image), this function
    * is overridden to handle restyling and invalidating the image.
    */
-  virtual void MediaFeatureValuesChangedAllDocuments(const mozilla::MediaFeatureChange& aChange) {}
+  [notxpcom, nostdcall] void mediaFeatureValuesChangedAllDocuments([const] in MediaFeatureChange aChange);
 
   /*
    * Get the set of sizes the image can decode to natively.
    */
-  virtual nsresult GetNativeSizes(nsTArray<nsIntSize>& aNativeSizes) const = 0;
+  [nostdcall] Array<nsIntSizeByVal> getNativeSizes();
 
-  virtual size_t GetNativeSizesLength() const = 0;
-  %}
+  [nostdcall, notxpcom] size_t getNativeSizesLength();
 };

@@ -19,6 +19,7 @@ struct PrintSettingsInitializer;
  */
 native nsNativeIntMargin(nsIntMargin);
 [ref] native nsNativeIntMarginRef(nsIntMargin);
+native PrintSettingsInitializer(mozilla::PrintSettingsInitializer);
 
 interface nsIOutputStream;
 
@@ -362,12 +363,12 @@ interface nsIPrintSettings : nsISupports
    */
   attribute Array<long> pageRanges;
 
-%{C++
   /**
    * Get a PrintSettingsInitializer populated with the relevant current settings.
    */
-  virtual mozilla::PrintSettingsInitializer GetSettingsInitializer() = 0;
+  [notxpcom, nostdcall] PrintSettingsInitializer getSettingsInitializer();
 
+%{C++
   static bool IsPageSkipped(int32_t aPageNum, const nsTArray<int32_t>& aRanges);
 %}
 };

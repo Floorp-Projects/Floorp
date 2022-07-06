@@ -48,9 +48,9 @@ typedef long long           int64_t  ;
 typedef unsigned long       nsrefcnt ;
 typedef unsigned long       nsresult ;
 
-// XXX need this built into xpidl compiler so that it's really size_t or size_t
-// and it's scriptable:
-typedef unsigned long       size_t;
+// If we ever want to use `size_t` in scriptable interfaces, this will need to
+// be built into the xpidl compiler, as the size varies based on platform.
+              native size_t(size_t);
 
 [ptr]         native voidPtr(void);
 [ptr]         native charPtr(char);

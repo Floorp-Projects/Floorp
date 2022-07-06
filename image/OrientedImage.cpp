@@ -42,7 +42,7 @@ OrientedImage::GetHeight(int32_t* aHeight) {
   }
 }
 
-nsresult OrientedImage::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) const {
+nsresult OrientedImage::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) {
   nsresult rv = InnerImage()->GetNativeSizes(aNativeSizes);
 
   if (mOrientation.SwapsWidthAndHeight()) {

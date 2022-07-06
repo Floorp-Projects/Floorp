@@ -21,8 +21,6 @@ class ImageWrapper : public Image {
   NS_DECL_IMGICONTAINER
 
   // Inherited methods from Image.
-  nsresult GetNativeSizes(nsTArray<gfx::IntSize>& aNativeSizes) const override;
-  size_t GetNativeSizesLength() const override;
   virtual already_AddRefed<ProgressTracker> GetProgressTracker() override;
 
   virtual size_t SizeOfSourceWithComputedFallback(

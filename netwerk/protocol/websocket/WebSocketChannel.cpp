@@ -3719,7 +3719,8 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport* aTransport,
   return OnTransportAvailableInternal();
 }
 
-nsresult WebSocketChannel::OnWebSocketConnectionAvailable(
+NS_IMETHODIMP
+WebSocketChannel::OnWebSocketConnectionAvailable(
     WebSocketConnectionBase* aConnection) {
   if (!NS_IsMainThread()) {
     RefPtr<WebSocketChannel> self = this;

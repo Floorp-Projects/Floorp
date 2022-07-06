@@ -781,7 +781,7 @@ void nsTimerImpl::SetHolder(nsTimerImplHolder* aHolder) { mHolder = aHolder; }
 
 nsTimer::~nsTimer() = default;
 
-size_t nsTimer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+size_t nsTimer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) {
   return aMallocSizeOf(this);
 }
 

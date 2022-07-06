@@ -82,7 +82,6 @@ interface mozIStorageValueArray : nsISupports {
   [noscript] void getSharedString(in unsigned long aIndex, out unsigned long aByteLength, [shared,retval] out wstring aResult);
   [noscript] void getSharedBlob(in unsigned long aIndex, out unsigned long aByteLength, [shared,retval] out octetPtr aResult);
 
-%{C++
   /**
    * Getters for native code that return their values as
    * the return type, for convenience and sanity.
@@ -90,6 +89,7 @@ interface mozIStorageValueArray : nsISupports {
    * Not virtual; no vtable bloat.
    */
 
+%{C++
   inline int32_t AsInt32(uint32_t idx) {
     int32_t v = 0;
     mozilla::DebugOnly<nsresult> rv = GetInt32(idx, &v);

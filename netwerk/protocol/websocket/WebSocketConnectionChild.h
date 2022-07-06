@@ -37,11 +37,6 @@ class WebSocketConnectionChild final : public PWebSocketConnectionChild,
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  nsresult OnWebSocketConnectionAvailable(
-      WebSocketConnectionBase* aConnection) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   void OnError(nsresult aStatus) override;
   void OnTCPClosed() override;
   nsresult OnDataReceived(uint8_t* aData, uint32_t aCount) override;
