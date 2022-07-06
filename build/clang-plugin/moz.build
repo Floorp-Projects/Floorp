@@ -70,9 +70,8 @@ GeneratedFile(
     script="ThirdPartyPaths.py",
     entry_point="generate",
     inputs=[
-        "/tools/rewriting/Generated.txt",
         "/tools/rewriting/ThirdPartyPaths.txt",
-        "/tools/rewriting/Unvalidated.txt",
+        "/tools/rewriting/Generated.txt",
     ],
 )
 
