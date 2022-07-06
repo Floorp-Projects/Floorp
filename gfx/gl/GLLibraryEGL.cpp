@@ -218,12 +218,22 @@ static std::shared_ptr<EglDisplay> GetAndInitSurfacelessDisplay(
 }
 #endif
 
+static auto EglDebugLayersEnabled() {
+  EGLAttrib ret = LOCAL_EGL_FALSE;
+  if (StaticPrefs::gfx_direct3d11_enable_debug_layer_AtStartup()) {
+    ret = LOCAL_EGL_TRUE;
+  }
+  return ret;
+}
+
 static std::shared_ptr<EglDisplay> GetAndInitWARPDisplay(
     GLLibraryEGL& egl, void* displayType,
     const StaticMutexAutoLock& aProofOfLock) {
   const EGLAttrib attrib_list[] = {
       LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
       LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_WARP_ANGLE,
+      LOCAL_EGL_PLATFORM_ANGLE_DEBUG_LAYERS_ENABLED_ANGLE,
+      EglDebugLayersEnabled(),
       // Requires:
       LOCAL_EGL_PLATFORM_ANGLE_TYPE_ANGLE,
       LOCAL_EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE, LOCAL_EGL_NONE};
