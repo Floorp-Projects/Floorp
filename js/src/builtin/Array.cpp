@@ -1129,6 +1129,7 @@ static bool array_toSource(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "toSource");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (!args.thisv().isObject()) {
@@ -1394,6 +1395,9 @@ static bool array_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
   if (!recursion.check(cx)) {
     return false;
   }
+
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype",
+                                        "toLocaleString");
 
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -3310,6 +3314,7 @@ bool IsIntegralNumber(JSContext* cx, HandleValue v, bool* result) {
  * Array.prototype.with()
  */
 static bool array_with(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "with");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   /* Step 1. Let O be ? ToObject(this value). */
@@ -3827,7 +3832,9 @@ JSObject* js::ArgumentsSliceDense(JSContext* cx, HandleObject obj,
 }
 
 static bool array_isArray(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Array", "isArray");
   CallArgs args = CallArgsFromVp(argc, vp);
+
   bool isArray = false;
   if (args.get(0).isObject()) {
     RootedObject obj(cx, &args[0].toObject());
@@ -3852,6 +3859,7 @@ static bool ArrayFromCallArgs(JSContext* cx, CallArgs& args,
 }
 
 static bool array_of(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Array", "of");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   bool isArrayConstructor =
@@ -4461,11 +4469,13 @@ static inline bool ArrayConstructorImpl(JSContext* cx, CallArgs& args,
 
 /* ES5 15.4.2 */
 bool js::ArrayConstructor(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSConstructorProfilerEntry pseudoFrame(cx, "Array");
   CallArgs args = CallArgsFromVp(argc, vp);
   return ArrayConstructorImpl(cx, args, /* isConstructor = */ true);
 }
 
 bool js::array_construct(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSConstructorProfilerEntry pseudoFrame(cx, "Array");
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(!args.isConstructing());
   MOZ_ASSERT(args.length() == 1);
