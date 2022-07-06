@@ -12905,6 +12905,53 @@ if (IsCSSPropertyPrefEnabled("layout.css.content-visibility.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.contain-intrinsic-size.enabled")) {
+  gCSSProperties["contain-intrinsic-width"] = {
+    domProp: "containIntrinsicWidth",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: ["1em", "1px", "auto 1px"],
+    invalid_values: ["auto auto", "auto none", "auto", "-1px"],
+  };
+  gCSSProperties["contain-intrinsic-height"] = {
+    domProp: "containIntrinsicHeight",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: ["1em", "1px", "auto 1px"],
+    invalid_values: ["auto auto", "auto none", "auto", "-1px"],
+  };
+  gCSSProperties["contain-intrinsic-block-size"] = {
+    domProp: "containIntrinsicBlockSize",
+    inherited: false,
+    logical: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: ["1em", "1px", "auto 1px"],
+    invalid_values: ["auto auto", "auto none", "auto", "-1px"],
+  };
+  gCSSProperties["contain-intrinsic-inline-size"] = {
+    domProp: "containIntrinsicInlineSize",
+    inherited: false,
+    logical: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: ["1em", "1px", "auto 1px"],
+    invalid_values: ["auto auto", "auto none", "auto", "-1px"],
+  };
+
+  gCSSProperties["contain-intrinsic-size"] = {
+    domProp: "containIntrinsicSize",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: ["contain-intrinsic-width", "contain-intrinsic-height"],
+    initial_values: ["none"],
+    other_values: ["1em 1em", "1px 1px", "auto 1px auto 1px", "1px auto 1px"],
+    invalid_values: ["auto auto", "-1px -1px", "1px, auto none"],
+  };
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.container-queries.enabled")) {
   gCSSProperties["container-type"] = {
     domProp: "containerType",
