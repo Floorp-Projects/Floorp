@@ -94,48 +94,7 @@ class ScriptModule extends Module {
     };
   }
 
-  #toRawObject(maybeDebuggerObject) {
-    if (maybeDebuggerObject instanceof Debugger.Object) {
-      // Retrieve the referent for the provided Debugger.object.
-      // See https://firefox-source-docs.mozilla.org/devtools-user/debugger-api/debugger.object/index.html
-      const rawObject = maybeDebuggerObject.unsafeDereference();
-
-      // TODO: Getters for Maps and Sets iterators return "Opaque" objects and
-      // are not iterable. RemoteValue.jsm' serializer should handle calling
-      // waiveXrays on Maps/Sets/... and then unwaiveXrays on entries but since
-      // we serialize with maxDepth=1, calling waiveXrays once on the root
-      // object allows to return correctly serialized values.
-      return Cu.waiveXrays(rawObject);
-    }
-
-    // If maybeDebuggerObject was not a Debugger.Object, it is a primitive value
-    // which can be used as is.
-    return maybeDebuggerObject;
-  }
-
-  /**
-   * Evaluate a provided expression in the current window global.
-   *
-   * @param {Object} options
-   * @param {boolean} awaitPromise
-   *     Determines if the command should wait for the return value of the
-   *     expression to resolve, if this return value is a Promise.
-   * @param {string} expression
-   *     The expression to evaluate.
-   *
-   * @return {Object}
-   *     - evaluationStatus {EvaluationStatus} One of "normal", "throw".
-   *     - exceptionDetails {ExceptionDetails=} the details of the exception if
-   *     the evaluation status was "throw".
-   *     - result {RemoteValue=} the result of the evaluation serialized as a
-   *     RemoteValue if the evaluation status was "normal".
-   */
-  async evaluateExpression(options) {
-    const { awaitPromise, expression } = options;
-    const rv = this.#global.executeInGlobal(expression, {
-      url: this.messageHandler.window.document.baseURI,
-    });
-
+  async #buildReturnValue(rv, awaitPromise) {
     let evaluationStatus, exception, result, stack;
     if ("return" in rv) {
       evaluationStatus = EvaluationStatus.Normal;
@@ -183,6 +142,78 @@ class ScriptModule extends Module {
           `Unsupported completion value for expression evaluation`
         );
     }
+  }
+
+  #toRawObject(maybeDebuggerObject) {
+    if (maybeDebuggerObject instanceof Debugger.Object) {
+      // Retrieve the referent for the provided Debugger.object.
+      // See https://firefox-source-docs.mozilla.org/devtools-user/debugger-api/debugger.object/index.html
+      const rawObject = maybeDebuggerObject.unsafeDereference();
+
+      // TODO: Getters for Maps and Sets iterators return "Opaque" objects and
+      // are not iterable. RemoteValue.jsm' serializer should handle calling
+      // waiveXrays on Maps/Sets/... and then unwaiveXrays on entries but since
+      // we serialize with maxDepth=1, calling waiveXrays once on the root
+      // object allows to return correctly serialized values.
+      return Cu.waiveXrays(rawObject);
+    }
+
+    // If maybeDebuggerObject was not a Debugger.Object, it is a primitive value
+    // which can be used as is.
+    return maybeDebuggerObject;
+  }
+
+  /**
+   * Call a function in the current window global.
+   *
+   * @param {Object} options
+   * @param {boolean} awaitPromise
+   *     Determines if the command should wait for the return value of the
+   *     expression to resolve, if this return value is a Promise.
+   * @param {Array<RemoteValue>} commandArguments
+   *     The arguments to pass to the function call.
+   * @param {string} functionDeclaration
+   *     The body of the function to call.
+   *
+   * @return {Object}
+   *     - evaluationStatus {EvaluationStatus} One of "normal", "throw".
+   *     - exceptionDetails {ExceptionDetails=} the details of the exception if
+   *     the evaluation status was "throw".
+   *     - result {RemoteValue=} the result of the evaluation serialized as a
+   *     RemoteValue if the evaluation status was "normal".
+   */
+  async callFunctionDeclaration(options) {
+    const { awaitPromise, functionDeclaration } = options;
+    const rv = this.#global.executeInGlobal(`(${functionDeclaration})()`, {
+      url: this.messageHandler.window.document.baseURI,
+    });
+    return this.#buildReturnValue(rv, awaitPromise);
+  }
+
+  /**
+   * Evaluate a provided expression in the current window global.
+   *
+   * @param {Object} options
+   * @param {boolean} awaitPromise
+   *     Determines if the command should wait for the return value of the
+   *     expression to resolve, if this return value is a Promise.
+   * @param {string} expression
+   *     The expression to evaluate.
+   *
+   * @return {Object}
+   *     - evaluationStatus {EvaluationStatus} One of "normal", "throw".
+   *     - exceptionDetails {ExceptionDetails=} the details of the exception if
+   *     the evaluation status was "throw".
+   *     - result {RemoteValue=} the result of the evaluation serialized as a
+   *     RemoteValue if the evaluation status was "normal".
+   */
+  async evaluateExpression(options) {
+    const { awaitPromise, expression } = options;
+    const rv = this.#global.executeInGlobal(expression, {
+      url: this.messageHandler.window.document.baseURI,
+    });
+
+    return this.#buildReturnValue(rv, awaitPromise);
   }
 }
 
