@@ -93,6 +93,7 @@ class SecondaryPanes extends Component {
       toggleMapScopes: PropTypes.func.isRequired,
       workers: PropTypes.array.isRequired,
       removeAllBreakpoints: PropTypes.func.isRequired,
+      removeAllXHRBreakpoints: PropTypes.func.isRequired,
     };
   }
 
@@ -106,7 +107,6 @@ class SecondaryPanes extends Component {
 
   watchExpressionHeaderButtons() {
     const { expressions } = this.props;
-
     const buttons = [];
 
     if (expressions.length) {
@@ -117,12 +117,11 @@ class SecondaryPanes extends Component {
             this.props.evaluateExpressions(this.props.cx);
           },
           "refresh",
-          "refresh",
+          "active",
           L10N.getStr("watchExpressions.refreshButton")
         )
       );
     }
-
     buttons.push(
       debugBtn(
         evt => {
@@ -132,18 +131,15 @@ class SecondaryPanes extends Component {
           this.setState({ showExpressionsInput: true });
         },
         "plus",
-        "plus",
+        "active",
         L10N.getStr("expressions.placeholder")
       )
     );
-
     return buttons;
   }
 
   xhrBreakpointsHeaderButtons() {
-    const buttons = [];
-
-    buttons.push(
+    return [
       debugBtn(
         evt => {
           if (prefs.xhrBreakpointsVisible) {
@@ -152,12 +148,20 @@ class SecondaryPanes extends Component {
           this.setState({ showXHRInput: true });
         },
         "plus",
-        "plus",
+        "active",
         L10N.getStr("xhrBreakpoints.label")
-      )
-    );
+      ),
 
-    return buttons;
+      debugBtn(
+        evt => {
+          evt.stopPropagation();
+          this.props.removeAllXHRBreakpoints();
+        },
+        "removeAll",
+        "active",
+        L10N.getStr("xhrBreakpoints.removeAll.tooltip")
+      ),
+    ];
   }
 
   breakpointsHeaderButtons() {
@@ -168,7 +172,7 @@ class SecondaryPanes extends Component {
           this.props.removeAllBreakpoints(this.props.cx);
         },
         "removeAll",
-        "removeAll",
+        "active",
         L10N.getStr("breakpointMenuItem.deleteAll")
       ),
     ];
@@ -518,4 +522,5 @@ export default connect(mapStateToProps, {
   breakOnNext: actions.breakOnNext,
   toggleEventLogging: actions.toggleEventLogging,
   removeAllBreakpoints: actions.removeAllBreakpoints,
+  removeAllXHRBreakpoints: actions.removeAllXHRBreakpoints,
 })(SecondaryPanes);
