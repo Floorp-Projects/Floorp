@@ -844,6 +844,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   mozilla::NonNegativeLengthPercentageOrNormal mColumnGap;
   mozilla::NonNegativeLengthPercentageOrNormal mRowGap;
 
+  mozilla::StyleContainIntrinsicSize mContainIntrinsicWidth;
+  mozilla::StyleContainIntrinsicSize mContainIntrinsicHeight;
+
   // Logical-coordinate accessors for width and height properties,
   // given a WritingMode value. The definitions of these methods are
   // found in WritingModes.h (after the WritingMode class is fully

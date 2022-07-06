@@ -2910,6 +2910,8 @@ exports.CSS_PROPERTIES = {
       "inline-size",
       "min-inline-size",
       "max-inline-size",
+      "contain-intrinsic-block-size",
+      "contain-intrinsic-inline-size",
       "background-color",
       "background-image",
       "background-position-x",
@@ -3172,6 +3174,8 @@ exports.CSS_PROPERTIES = {
       "column-gap",
       "row-gap",
       "aspect-ratio",
+      "contain-intrinsic-width",
+      "contain-intrinsic-height",
       "vector-effect",
       "stop-color",
       "stop-opacity",
@@ -11821,6 +11825,22 @@ exports.PREFERENCES = [
     "layout.css.individual-transform.enabled"
   ],
   [
+    "contain-intrinsic-block-size",
+    "layout.css.contain-intrinsic-size.enabled"
+  ],
+  [
+    "contain-intrinsic-height",
+    "layout.css.contain-intrinsic-size.enabled"
+  ],
+  [
+    "contain-intrinsic-inline-size",
+    "layout.css.contain-intrinsic-size.enabled"
+  ],
+  [
+    "contain-intrinsic-width",
+    "layout.css.contain-intrinsic-size.enabled"
+  ],
+  [
     "offset-distance",
     "layout.css.motion-path.enabled"
   ],
@@ -11843,6 +11863,10 @@ exports.PREFERENCES = [
   [
     "zoom",
     "layout.css.zoom-transform-hack.enabled"
+  ],
+  [
+    "contain-intrinsic-size",
+    "layout.css.contain-intrinsic-size.enabled"
   ],
   [
     "scroll-timeline",

@@ -7678,6 +7678,13 @@
   mirror: always
   rust: true
 
+# Whether the `contain-intrinsic-size` CSS property is enabled
+- name: layout.css.contain-intrinsic-size.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for GeometryUtils.convert*FromNode enabled?
 - name: layout.css.convertFromNode.enabled
   type: bool
