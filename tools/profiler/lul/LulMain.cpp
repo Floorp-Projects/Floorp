@@ -347,10 +347,6 @@ uint32_t SecMap::AddPfxInstr(PfxInstr pfxi) {
   return mPfxInstrs.size() - 1;
 }
 
-static bool CmpExtentsByOffsetLE(const Extent& ext1, const Extent& ext2) {
-  return ext1.offset() < ext2.offset();
-}
-
 // Prepare the map for searching, by sorting it, de-overlapping entries and
 // removing any resulting zero-length entries.  At the start of this routine,
 // all Extents should fall within [mMapMinAVMA, mMapMaxAVMA] and not have zero
@@ -400,7 +396,10 @@ void SecMap::PrepareRuleSets() {
 #endif
 
   // Sort by start addresses.
-  std::sort(mExtents.begin(), mExtents.end(), CmpExtentsByOffsetLE);
+  std::sort(mExtents.begin(), mExtents.end(),
+            [](const Extent& ext1, const Extent& ext2) {
+              return ext1.offset() < ext2.offset();
+            });
 
   // Iteratively truncate any overlaps and remove any zero length
   // entries that might result, or that may have been present
