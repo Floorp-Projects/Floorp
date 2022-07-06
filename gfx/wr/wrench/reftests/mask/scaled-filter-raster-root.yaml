@@ -9,7 +9,6 @@ root:
       transform: scale(20)
       items:
         - type: clip
-          bounds: [10, 10, 10, 10]
           id: 2
           image-mask:
             image: "circle.png"

@@ -52,11 +52,10 @@ class gfxBaseSharedMemorySurface : public Base {
    * by this function.
    */
   template <class ShmemAllocator>
-  static already_AddRefed<Sub> Create(
-      ShmemAllocator* aAllocator, const mozilla::gfx::IntSize& aSize,
-      gfxImageFormat aFormat,
-      SharedMemory::SharedMemoryType aShmType = SharedMemory::TYPE_BASIC) {
-    return Create<ShmemAllocator, false>(aAllocator, aSize, aFormat, aShmType);
+  static already_AddRefed<Sub> Create(ShmemAllocator* aAllocator,
+                                      const mozilla::gfx::IntSize& aSize,
+                                      gfxImageFormat aFormat) {
+    return Create<ShmemAllocator, false>(aAllocator, aSize, aFormat);
   }
 
   /**
@@ -79,11 +78,10 @@ class gfxBaseSharedMemorySurface : public Base {
   }
 
   template <class ShmemAllocator>
-  static already_AddRefed<Sub> CreateUnsafe(
-      ShmemAllocator* aAllocator, const mozilla::gfx::IntSize& aSize,
-      gfxImageFormat aFormat,
-      SharedMemory::SharedMemoryType aShmType = SharedMemory::TYPE_BASIC) {
-    return Create<ShmemAllocator, true>(aAllocator, aSize, aFormat, aShmType);
+  static already_AddRefed<Sub> CreateUnsafe(ShmemAllocator* aAllocator,
+                                            const mozilla::gfx::IntSize& aSize,
+                                            gfxImageFormat aFormat) {
+    return Create<ShmemAllocator, true>(aAllocator, aSize, aFormat);
   }
 
   Shmem& GetShmem() { return mShmem; }
@@ -136,17 +134,16 @@ class gfxBaseSharedMemorySurface : public Base {
   template <class ShmemAllocator, bool Unsafe>
   static already_AddRefed<Sub> Create(ShmemAllocator* aAllocator,
                                       const mozilla::gfx::IntSize& aSize,
-                                      gfxImageFormat aFormat,
-                                      SharedMemory::SharedMemoryType aShmType) {
+                                      gfxImageFormat aFormat) {
     if (!mozilla::gfx::Factory::CheckSurfaceSize(aSize)) return nullptr;
 
     Shmem shmem;
     long stride = gfxImageSurface::ComputeStride(aSize, aFormat);
     size_t size = GetAlignedSize(aSize, stride);
     if (!Unsafe) {
-      if (!aAllocator->AllocShmem(size, aShmType, &shmem)) return nullptr;
+      if (!aAllocator->AllocShmem(size, &shmem)) return nullptr;
     } else {
-      if (!aAllocator->AllocUnsafeShmem(size, aShmType, &shmem)) return nullptr;
+      if (!aAllocator->AllocUnsafeShmem(size, &shmem)) return nullptr;
     }
 
     RefPtr<Sub> s = new Sub(aSize, stride, aFormat, shmem);

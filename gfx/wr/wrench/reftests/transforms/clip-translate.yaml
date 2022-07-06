@@ -11,7 +11,6 @@ root:
           items:
             - type: clip
               id: 2
-              bounds: [0, 0, 24, 24]
               image-mask:
                 image: solid-color(255, 0, 0, 255, 24, 24)
                 rect: [0, 0, 24, 24]

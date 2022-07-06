@@ -13,14 +13,15 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  UrlbarUtils.getLogger({ prefix: "EventBufferer" })
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.UrlbarUtils.getLogger({ prefix: "EventBufferer" })
 );
 
 // Maximum time events can be deferred for. In automation providers can be quite
@@ -100,7 +101,7 @@ class UrlbarEventBufferer {
       context: queryContext,
     };
     if (this._deferringTimeout) {
-      clearTimeout(this._deferringTimeout);
+      lazy.clearTimeout(this._deferringTimeout);
       this._deferringTimeout = null;
     }
   }
@@ -126,12 +127,12 @@ class UrlbarEventBufferer {
    */
   handleEvent(event) {
     if (event.type == "blur") {
-      logger.debug("Clearing queue on blur");
+      lazy.logger.debug("Clearing queue on blur");
       // The input field was blurred, pending events don't matter anymore.
       // Clear the timeout and the queue.
       this._eventsQueue.length = 0;
       if (this._deferringTimeout) {
-        clearTimeout(this._deferringTimeout);
+        lazy.clearTimeout(this._deferringTimeout);
         this._deferringTimeout = null;
       }
     }
@@ -172,7 +173,7 @@ class UrlbarEventBufferer {
     if (event.urlbarDeferred) {
       throw new Error(`Event ${event.type}:${event.keyCode} already deferred!`);
     }
-    logger.debug(`Deferring ${event.type}:${event.keyCode} event`);
+    lazy.logger.debug(`Deferring ${event.type}:${event.keyCode} event`);
     // Mark the event as deferred.
     event.urlbarDeferred = true;
     // Also store the current search string, as an added safety check. If the
@@ -183,7 +184,7 @@ class UrlbarEventBufferer {
     if (!this._deferringTimeout) {
       let elapsed = Cu.now() - this._lastQuery.startDate;
       let remaining = DEFERRING_TIMEOUT_MS - elapsed;
-      this._deferringTimeout = setTimeout(() => {
+      this._deferringTimeout = lazy.setTimeout(() => {
         this.replayDeferredEvents(false);
         this._deferringTimeout = null;
       }, Math.max(0, remaining));

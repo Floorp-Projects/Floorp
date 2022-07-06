@@ -14,12 +14,17 @@ var EXPORTED_SYMBOLS = ["UrlbarProviderAliasEngines"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
+
+const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 /**
@@ -52,7 +57,7 @@ class ProviderAliasEngines extends UrlbarProvider {
   isActive(queryContext) {
     return (
       (!queryContext.restrictSource ||
-        queryContext.restrictSource == UrlbarTokenizer.RESTRICT.SEARCH) &&
+        queryContext.restrictSource == lazy.UrlbarTokenizer.RESTRICT.SEARCH) &&
       !queryContext.searchMode &&
       queryContext.tokens.length
     );
@@ -67,7 +72,7 @@ class ProviderAliasEngines extends UrlbarProvider {
   async startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
     let alias = queryContext.tokens[0]?.value;
-    let engine = await UrlbarSearchUtils.engineForAlias(
+    let engine = await lazy.UrlbarSearchUtils.engineForAlias(
       alias,
       queryContext.searchString
     );
@@ -75,10 +80,10 @@ class ProviderAliasEngines extends UrlbarProvider {
       return;
     }
     let query = UrlbarUtils.substringAfter(queryContext.searchString, alias);
-    let result = new UrlbarResult(
+    let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
-      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: engine.name,
         keyword: alias,
         query: query.trimStart(),

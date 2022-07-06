@@ -10,16 +10,20 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
-  this,
+  lazy,
   "ClipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1",
   "nsIClipboardHelper"
@@ -68,8 +72,8 @@ const MIN_EXPRESSION_LENGTH = 3;
 class ProviderCalculator extends UrlbarProvider {
   constructor() {
     super();
-    UrlbarResult.addDynamicResultType(DYNAMIC_RESULT_TYPE);
-    UrlbarView.addDynamicViewTemplate(DYNAMIC_RESULT_TYPE, VIEW_TEMPLATE);
+    lazy.UrlbarResult.addDynamicResultType(DYNAMIC_RESULT_TYPE);
+    lazy.UrlbarView.addDynamicViewTemplate(DYNAMIC_RESULT_TYPE, VIEW_TEMPLATE);
   }
 
   /**
@@ -98,7 +102,7 @@ class ProviderCalculator extends UrlbarProvider {
     return (
       queryContext.trimmedSearchString &&
       !queryContext.searchMode &&
-      UrlbarPrefs.get(ENABLED_PREF)
+      lazy.UrlbarPrefs.get(ENABLED_PREF)
     );
   }
 
@@ -119,7 +123,7 @@ class ProviderCalculator extends UrlbarProvider {
         return;
       }
       let value = Calculator.evaluatePostfix(postfix);
-      const result = new UrlbarResult(
+      const result = new lazy.UrlbarResult(
         UrlbarUtils.RESULT_TYPE.DYNAMIC,
         UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         {
@@ -155,7 +159,7 @@ class ProviderCalculator extends UrlbarProvider {
   }
 
   async pickResult({ payload }) {
-    ClipboardHelper.copyString(payload.value);
+    lazy.ClipboardHelper.copyString(payload.value);
   }
 }
 

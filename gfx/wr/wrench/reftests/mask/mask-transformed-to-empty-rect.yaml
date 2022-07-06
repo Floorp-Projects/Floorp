@@ -8,7 +8,6 @@ root:
       transform: [1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 150, -150, 1]
       items:
         - type: clip
-          bounds: [0, 0, 300, 300]
           # This image mask here assures that we will be forced to try to
           # mask instead of skipping it due to the mask rect becoming a
           # zero rect.

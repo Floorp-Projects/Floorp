@@ -7750,31 +7750,6 @@ class _DSCard extends (external_React_default()).PureComponent {
       });
     }
 
-    if (this.props.lastCard) {
-      return /*#__PURE__*/external_React_default().createElement("div", {
-        className: "ds-card last-card-message"
-      }, /*#__PURE__*/external_React_default().createElement("div", {
-        className: "img-wrapper"
-      }, /*#__PURE__*/external_React_default().createElement("picture", {
-        className: "ds-image img loaded"
-      }, /*#__PURE__*/external_React_default().createElement("img", {
-        "data-l10n-id": "newtab-pocket-last-card-image",
-        className: "last-card-message-image",
-        src: "chrome://activity-stream/content/data/content/assets/caught-up-illustration.svg",
-        alt: "You\u2019re all caught up"
-      }))), /*#__PURE__*/external_React_default().createElement("div", {
-        className: "meta"
-      }, /*#__PURE__*/external_React_default().createElement("div", {
-        className: "info-wrap"
-      }, /*#__PURE__*/external_React_default().createElement("header", {
-        className: "title clamp",
-        "data-l10n-id": "newtab-pocket-last-card-title"
-      }), /*#__PURE__*/external_React_default().createElement("p", {
-        className: "ds-last-card-desc",
-        "data-l10n-id": "newtab-pocket-last-card-desc"
-      }))));
-    }
-
     const isButtonCTA = this.props.cta_variant === "button";
     const {
       is_video,
@@ -7918,9 +7893,6 @@ const DSCard = (0,external_ReactRedux_namespaceObject.connect)(state => ({
 }))(_DSCard);
 const PlaceholderDSCard = props => /*#__PURE__*/external_React_default().createElement(DSCard, {
   placeholder: true
-});
-const LastCardMessage = props => /*#__PURE__*/external_React_default().createElement(DSCard, {
-  lastCard: true
 });
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -8313,39 +8285,9 @@ function RecentSavesContainer({
   }, recentSavesCards));
 }
 class _CardGrid extends (external_React_default()).PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      moreLoaded: false
-    };
-    this.loadMoreClicked = this.loadMoreClicked.bind(this);
-  }
-
-  loadMoreClicked() {
-    this.props.dispatch(actionCreators.UserEvent({
-      event: "CLICK",
-      source: "DS_LOAD_MORE_BUTTON"
-    }));
-    this.setState({
-      moreLoaded: true
-    });
-  }
-
-  get showLoadMore() {
-    const {
-      loadMore,
-      data,
-      loadMoreThreshold
-    } = this.props;
-    return loadMore && data.recommendations.length > loadMoreThreshold && !this.state.moreLoaded;
-  }
-
   renderCards() {
     var _widgets$positions, _widgets$data, _essentialReadsCards, _editorsPicksCards;
 
-    let {
-      items
-    } = this.props;
     const {
       DiscoveryStream
     } = this.props;
@@ -8355,13 +8297,12 @@ class _CardGrid extends (external_React_default()).PureComponent {
     } = DiscoveryStream;
     const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
     const {
+      items,
       hybridLayout,
       hideCardBackground,
       fourCardLayout,
       hideDescriptions,
-      lastCardMessageEnabled,
       saveToPocketCard,
-      loadMoreThreshold,
       compactGrid,
       compactImages,
       imageGradient,
@@ -8373,14 +8314,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
       editorsPicksHeader,
       widgets
     } = this.props;
-    let showLastCardMessage = lastCardMessageEnabled;
-
-    if (this.showLoadMore) {
-      items = loadMoreThreshold; // We don't want to show this until after load more has been clicked.
-
-      showLastCardMessage = false;
-    }
-
     const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
     let essentialReadsCards = [];
@@ -8427,13 +8360,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
         cta_variant: this.props.cta_variant,
         is_video: this.props.enable_video_playheads && rec.is_video,
         is_collection: this.props.is_collection
-      }));
-    } // Replace last card with "you are all caught up card"
-
-
-    if (showLastCardMessage) {
-      cards.splice(cards.length - 1, 1, /*#__PURE__*/external_React_default().createElement(LastCardMessage, {
-        key: `dscard-last-${cards.length - 1}`
       }));
     }
 
@@ -8541,11 +8467,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
       status: data.status,
       dispatch: this.props.dispatch,
       feed: this.props.feed
-    })) : this.renderCards(), this.showLoadMore && /*#__PURE__*/external_React_default().createElement("button", {
-      className: "ASRouterButton primary ds-card-grid-load-more-button",
-      onClick: this.loadMoreClicked,
-      "data-l10n-id": "newtab-pocket-load-more-stories-button"
-    }));
+    })) : this.renderCards());
   }
 
 }
@@ -8554,9 +8476,7 @@ _CardGrid.defaultProps = {
   items: 4,
   // Number of stories to display
   enable_video_playheads: false,
-  lastCardMessageEnabled: false,
-  saveToPocketCard: false,
-  loadMoreThreshold: 12
+  saveToPocketCard: false
 };
 const CardGrid = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Prefs: state.Prefs,
@@ -13932,8 +13852,6 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           essentialReadsHeader: component.properties.essentialReadsHeader,
           editorsPicksHeader: component.properties.editorsPicksHeader,
           readTime: component.properties.readTime,
-          loadMore: component.loadMore,
-          lastCardMessageEnabled: component.lastCardMessageEnabled,
           saveToPocketCard: component.saveToPocketCard,
           cta_variant: component.cta_variant,
           pocket_button_enabled: component.pocketButtonEnabled,

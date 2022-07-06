@@ -17,13 +17,17 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 const MS_PER_DAY = 86400000; // 24 * 60 * 60 * 1000
@@ -42,7 +46,7 @@ function PreloadedSite(url, title) {
  *   populate(sites) : populates the  storage with array of [url,title]
  *   sites[]: resulting array of sites (PreloadedSite objects)
  */
-XPCOMUtils.defineLazyGetter(this, "PreloadedSiteStorage", () =>
+XPCOMUtils.defineLazyGetter(lazy, "PreloadedSiteStorage", () =>
   Object.seal({
     sites: [],
 
@@ -60,8 +64,8 @@ XPCOMUtils.defineLazyGetter(this, "PreloadedSiteStorage", () =>
   })
 );
 
-XPCOMUtils.defineLazyGetter(this, "ProfileAgeCreatedPromise", async () => {
-  let times = await ProfileAge();
+XPCOMUtils.defineLazyGetter(lazy, "ProfileAgeCreatedPromise", async () => {
+  let times = await lazy.ProfileAge();
   return times.created;
 });
 
@@ -72,10 +76,10 @@ class ProviderPreloadedSites extends UrlbarProvider {
   constructor() {
     super();
 
-    if (UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
+    if (lazy.UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
       fetch("chrome://browser/content/urlbar/preloaded-top-urls.json")
         .then(response => response.json())
-        .then(sites => PreloadedSiteStorage.populate(sites))
+        .then(sites => lazy.PreloadedSiteStorage.populate(sites))
         .catch(ex => this.logger.error(ex));
     }
   }
@@ -117,12 +121,12 @@ class ProviderPreloadedSites extends UrlbarProvider {
       return false;
     }
 
-    if (!UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
+    if (!lazy.UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
       return false;
     }
 
     if (
-      !UrlbarPrefs.get("autoFill") ||
+      !lazy.UrlbarPrefs.get("autoFill") ||
       !queryContext.allowAutofill ||
       queryContext.tokens.length != 1
     ) {
@@ -146,7 +150,7 @@ class ProviderPreloadedSites extends UrlbarProvider {
 
     // As an optimization, don't try to autofill if the search term includes any
     // whitespace.
-    if (UrlbarTokenizer.REGEXP_SPACES.test(queryContext.searchString)) {
+    if (lazy.UrlbarTokenizer.REGEXP_SPACES.test(queryContext.searchString)) {
       return false;
     }
 
@@ -183,17 +187,17 @@ class ProviderPreloadedSites extends UrlbarProvider {
     }
 
     // Now, add non-autofill preloaded sites.
-    for (let site of PreloadedSiteStorage.sites) {
+    for (let site of lazy.PreloadedSiteStorage.sites) {
       let url = site.uri.spec;
       if (
         (!this._strippedPrefix || url.startsWith(this._strippedPrefix)) &&
         (site.uri.host.includes(this._lowerCaseSearchString) ||
           site._matchTitle.includes(this._lowerCaseSearchString))
       ) {
-        let result = new UrlbarResult(
+        let result = new lazy.UrlbarResult(
           UrlbarUtils.RESULT_TYPE.URL,
           UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-          ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             title: [site.title, UrlbarUtils.HIGHLIGHT.TYPED],
             url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
             icon: UrlbarUtils.getIconForUrl(url),
@@ -222,11 +226,11 @@ class ProviderPreloadedSites extends UrlbarProvider {
    *   the format.
    */
   populatePreloadedSiteStorage(list) {
-    PreloadedSiteStorage.populate(list);
+    lazy.PreloadedSiteStorage.populate(list);
   }
 
   async _getAutofillResult(queryContext) {
-    let matchedSite = PreloadedSiteStorage.sites.find(site => {
+    let matchedSite = lazy.PreloadedSiteStorage.sites.find(site => {
       return (
         (!this._strippedPrefix ||
           site.uri.spec.startsWith(this._strippedPrefix)) &&
@@ -246,10 +250,10 @@ class ProviderPreloadedSites extends UrlbarProvider {
       trimSlash: !this._searchString.includes("/"),
     });
 
-    let result = new UrlbarResult(
+    let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
         url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
         icon: UrlbarUtils.getIconForUrl(url),
@@ -272,15 +276,15 @@ class ProviderPreloadedSites extends UrlbarProvider {
   }
 
   async _checkPreloadedSitesExpiry() {
-    if (!UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
+    if (!lazy.UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
       return;
     }
-    let profileCreationDate = await ProfileAgeCreatedPromise;
+    let profileCreationDate = await lazy.ProfileAgeCreatedPromise;
     let daysSinceProfileCreation =
       (Date.now() - profileCreationDate) / MS_PER_DAY;
     if (
       daysSinceProfileCreation >
-      UrlbarPrefs.get("usepreloadedtopurls.expire_days")
+      lazy.UrlbarPrefs.get("usepreloadedtopurls.expire_days")
     ) {
       Services.prefs.setBoolPref(
         "browser.urlbar.usepreloadedtopurls.enabled",

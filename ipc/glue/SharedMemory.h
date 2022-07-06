@@ -38,8 +38,6 @@ class SharedMemory {
   }
 
  public:
-  enum SharedMemoryType { TYPE_BASIC, TYPE_UNKNOWN };
-
   enum OpenRights {
     RightsReadOnly = RightsRead,
     RightsReadWrite = RightsRead | RightsWrite,
@@ -54,8 +52,6 @@ class SharedMemory {
   virtual void Unmap() = 0;
 
   virtual void CloseHandle() = 0;
-
-  virtual SharedMemoryType Type() const = 0;
 
   virtual bool WriteHandle(IPC::MessageWriter* aWriter) = 0;
   virtual bool ReadHandle(IPC::MessageReader* aReader) = 0;

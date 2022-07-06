@@ -4,112 +4,96 @@
 root:
   items:
     -
-      bounds: [128, 128, 632, 632]
       type: clip
       complex:
         - rect: [128, 128, 632, 632]
           radius: 300
       id: 2
     -
-      bounds: [126, 126, 628, 628]
       type: clip
       complex:
         - rect: [126, 126, 628, 628]
           radius: 300
       id: 3
     -
-      bounds: [123, 123, 624, 624]
       type: clip
       complex:
         - rect: [123, 123, 624, 624]
           radius: 300
       id: 4
     -
-      bounds: [120, 120, 626, 626]
       type: clip
       complex:
         - rect: [120, 120, 626, 626]
           radius: 300
       id: 5
     -
-      bounds: [117, 117, 622, 622]
       type: clip
       complex:
         - rect: [117, 117, 622, 622]
           radius: 300
       id: 6
     -
-      bounds: [114, 114, 619, 619]
       type: clip
       complex:
         - rect: [114, 114, 619, 619]
           radius: 300
       id: 7
     -
-      bounds: [111, 111, 615, 615]
       type: clip
       complex:
         - rect: [111, 111, 615, 615]
           radius: 300
       id: 8
     -
-      bounds: [108, 108, 612, 612]
       type: clip
       complex:
         - rect: [108, 108, 612, 612]
           radius: 300
       id: 9
     -
-      bounds: [105, 105, 609, 609]
       type: clip
       complex:
         - rect: [105, 105, 609, 609]
           radius: 300
       id: 10
     -
-      bounds: [102, 102, 606, 606]
       type: clip
       complex:
         - rect: [102, 102, 606, 606]
           radius: 300
       id: 11
     -
-      bounds: [99, 99, 603, 603]
       type: clip
       complex:
         - rect: [99, 99, 603, 603]
           radius: 300
       id: 12
     -
-      bounds: [96, 96, 600, 600]
       type: clip
       complex:
         - rect: [96, 96, 600, 600]
           radius: 300
       id: 13
     -
-      bounds: [93, 93, 612, 612]
       type: clip
       complex:
         - rect: [93, 93, 612, 612]
           radius: 300
       id: 14
     -
-      bounds: [90, 90, 609, 609]
       type: clip
       complex:
         - rect: [90, 90, 609, 609]
           radius: 300
       id: 15
     -
-      bounds: [87, 87, 606, 606]
       type: clip
       complex:
         - rect: [87, 87, 606, 606]
           radius: 300
       id: 16
     -
-      bounds: [84, 84, 603, 603]
       type: clip
       complex:
         - rect: [84, 84, 603, 603]

@@ -11,7 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
   UrlbarProviderQuickActions:
@@ -22,7 +23,7 @@ const BASE_URL = Services.urlFormatter.formatURLPref("app.support.baseURL");
 
 let openUrlFun = url => () => openUrl(url);
 let openUrl = url => {
-  let window = BrowserWindowTracker.getTopWindow();
+  let window = lazy.BrowserWindowTracker.getTopWindow();
   window.gBrowser.loadOneTab(url, {
     inBackground: false,
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -37,7 +38,7 @@ let openUrl = url => {
 let currentPageIsWebContentFilter = () =>
   currentBrowser().currentURI.spec.startsWith("about:");
 let currentBrowser = () =>
-  BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+  lazy.BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
 
 const DEFAULT_ACTIONS = {
   clear: {
@@ -65,7 +66,7 @@ const DEFAULT_ACTIONS = {
     label: "quickactions-print",
     isActive: currentPageIsWebContentFilter,
     onPick: () => {
-      BrowserWindowTracker.getTopWindow()
+      lazy.BrowserWindowTracker.getTopWindow()
         .document.getElementById("cmd_print")
         .doCommand();
     },
@@ -113,8 +114,8 @@ const DEFAULT_ACTIONS = {
 
 function openInspector() {
   // TODO: This is supposed to be called with an element to start inspecting.
-  DevToolsShim.inspectNode(
-    BrowserWindowTracker.getTopWindow().gBrowser.selectedTab
+  lazy.DevToolsShim.inspectNode(
+    lazy.BrowserWindowTracker.getTopWindow().gBrowser.selectedTab
   );
 }
 
@@ -150,7 +151,7 @@ function restartBrowser() {
 class QuickActionsLoaderDefault {
   static load() {
     for (const key in DEFAULT_ACTIONS) {
-      UrlbarProviderQuickActions.addAction(key, DEFAULT_ACTIONS[key]);
+      lazy.UrlbarProviderQuickActions.addAction(key, DEFAULT_ACTIONS[key]);
     }
   }
 }

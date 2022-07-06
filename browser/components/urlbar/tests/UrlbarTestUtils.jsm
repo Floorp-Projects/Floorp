@@ -13,7 +13,13 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
@@ -24,9 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TestUtils: "resource://testing-common/TestUtils.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 var UrlbarTestUtils = {
@@ -121,8 +125,8 @@ var UrlbarTestUtils = {
       // Using the value setter in some cases may trim and fetch unexpected
       // results, then pick an alternate path.
       if (
-        UrlbarPrefs.get("trimURLs") &&
-        value != BrowserUIUtils.trimURL(value)
+        lazy.UrlbarPrefs.get("trimURLs") &&
+        value != lazy.BrowserUIUtils.trimURL(value)
       ) {
         window.gURLBar.inputField.value = value;
         fireInputEvent = true;
@@ -343,7 +347,7 @@ var UrlbarTestUtils = {
     if (!httpserver) {
       throw new Error("Must provide an http server");
     }
-    return BrowserTestUtils.waitForCondition(
+    return lazy.BrowserTestUtils.waitForCondition(
       () => httpserver.connectionNumber == count,
       "Waiting for speculative connection setup"
     );
@@ -412,7 +416,7 @@ var UrlbarTestUtils = {
   async withContextMenu(win, task) {
     let textBox = win.gURLBar.querySelector("moz-input-box");
     let cxmenu = textBox.menupopup;
-    let openPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
+    let openPromise = lazy.BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
     this.EventUtils.synthesizeMouseAtCenter(
       win.gURLBar.inputField,
       {
@@ -429,7 +433,10 @@ var UrlbarTestUtils = {
     } finally {
       // Close the context menu if the task didn't pick anything.
       if (cxmenu.state == "open" || cxmenu.state == "showing") {
-        let closePromise = BrowserTestUtils.waitForEvent(cxmenu, "popuphidden");
+        let closePromise = lazy.BrowserTestUtils.waitForEvent(
+          cxmenu,
+          "popuphidden"
+        );
         cxmenu.hidePopup();
         await closePromise;
       }
@@ -470,7 +477,7 @@ var UrlbarTestUtils = {
       // Check the input's placeholder.
       const prefName =
         "browser.urlbar.placeholderName" +
-        (PrivateBrowsingUtils.isWindowPrivate(window) ? ".private" : "");
+        (lazy.PrivateBrowsingUtils.isWindowPrivate(window) ? ".private" : "");
       let engineName = Services.prefs.getStringPref(prefName, "");
       this.Assert.deepEqual(
         window.document.l10n.getAttributes(window.gURLBar.inputField),
@@ -593,7 +600,7 @@ var UrlbarTestUtils = {
           let engine = Services.search.getEngineByName(
             expectedSearchMode.engineName
           );
-          let engineRootDomain = UrlbarSearchUtils.getRootDomainFromEngine(
+          let engineRootDomain = lazy.UrlbarSearchUtils.getRootDomainFromEngine(
             engine
           );
           let resultUrl = new URL(result.url);
@@ -624,7 +631,7 @@ var UrlbarTestUtils = {
 
     // Ensure the the one-offs are finished rebuilding and visible.
     let oneOffs = this.getOneOffSearchButtons(window);
-    await TestUtils.waitForCondition(
+    await lazy.TestUtils.waitForCondition(
       () => !oneOffs._rebuilding,
       "Waiting for one-offs to finish rebuilding"
     );
@@ -768,7 +775,7 @@ var UrlbarTestUtils = {
    * @returns {UrlbarController} A new controller.
    */
   newMockController(options = {}) {
-    return new UrlbarController(
+    return new lazy.UrlbarController(
       Object.assign(
         {
           input: {
@@ -802,7 +809,7 @@ var UrlbarTestUtils = {
     // This is necessary because UrlbarMuxerUnifiedComplete.sort calls
     // Services.search.parseSubmissionURL, so we need engines.
     try {
-      await AddonTestUtils.promiseStartupManager();
+      await lazy.AddonTestUtils.promiseStartupManager();
     } catch (error) {
       if (!error.message.includes("already started")) {
         throw error;
@@ -821,9 +828,9 @@ UrlbarTestUtils.formHistory = {
    *   The window containing the urlbar.
    * @returns {Promise} resolved once the operation is complete.
    */
-  add(values = [], window = BrowserWindowTracker.getTopWindow()) {
+  add(values = [], window = lazy.BrowserWindowTracker.getTopWindow()) {
     let fieldname = this.getFormHistoryName(window);
-    return FormHistoryTestUtils.add(fieldname, values);
+    return lazy.FormHistoryTestUtils.add(fieldname, values);
   },
 
   /**
@@ -836,9 +843,9 @@ UrlbarTestUtils.formHistory = {
    *   The window containing the urlbar.
    * @returns {Promise} resolved once the operation is complete.
    */
-  remove(values = [], window = BrowserWindowTracker.getTopWindow()) {
+  remove(values = [], window = lazy.BrowserWindowTracker.getTopWindow()) {
     let fieldname = this.getFormHistoryName(window);
-    return FormHistoryTestUtils.remove(fieldname, values);
+    return lazy.FormHistoryTestUtils.remove(fieldname, values);
   },
 
   /**
@@ -849,9 +856,9 @@ UrlbarTestUtils.formHistory = {
    *   The window containing the urlbar.
    * @returns {Promise} resolved once the operation is complete.
    */
-  clear(window = BrowserWindowTracker.getTopWindow()) {
+  clear(window = lazy.BrowserWindowTracker.getTopWindow()) {
     let fieldname = this.getFormHistoryName(window);
-    return FormHistoryTestUtils.clear(fieldname);
+    return lazy.FormHistoryTestUtils.clear(fieldname);
   },
 
   /**
@@ -864,9 +871,9 @@ UrlbarTestUtils.formHistory = {
    * @returns {Promise}
    *   A promise resolved with an array of found form history entries.
    */
-  search(criteria = {}, window = BrowserWindowTracker.getTopWindow()) {
+  search(criteria = {}, window = lazy.BrowserWindowTracker.getTopWindow()) {
     let fieldname = this.getFormHistoryName(window);
-    return FormHistoryTestUtils.search(fieldname, criteria);
+    return lazy.FormHistoryTestUtils.search(fieldname, criteria);
   },
 
   /**
@@ -878,7 +885,7 @@ UrlbarTestUtils.formHistory = {
    *   Resolved on the next specified form history change.
    */
   promiseChanged(change = null) {
-    return TestUtils.topicObserved(
+    return lazy.TestUtils.topicObserved(
       "satchel-storage-changed",
       (subject, data) => !change || data == "formhistory-" + change
     );
@@ -892,7 +899,7 @@ UrlbarTestUtils.formHistory = {
    * @returns {string}
    *   The form history name of the urlbar in the window.
    */
-  getFormHistoryName(window = BrowserWindowTracker.getTopWindow()) {
+  getFormHistoryName(window = lazy.BrowserWindowTracker.getTopWindow()) {
     return window ? window.gURLBar.formHistoryName : "searchbar-history";
   },
 };
@@ -958,7 +965,7 @@ class TestProvider extends UrlbarProvider {
         addCallback(this, result);
       } else {
         await new Promise(resolve => {
-          setTimeout(() => {
+          lazy.setTimeout(() => {
             addCallback(this, result);
             resolve();
           }, this._addTimeout);

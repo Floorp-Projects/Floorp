@@ -14,7 +14,8 @@ var EXPORTED_SYMBOLS = ["UrlbarProvidersManager"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
@@ -26,8 +27,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  UrlbarUtils.getLogger({ prefix: "ProvidersManager" })
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.UrlbarUtils.getLogger({ prefix: "ProvidersManager" })
 );
 
 // List of available local providers, each is implemented in its own jsm module
@@ -117,19 +118,21 @@ class ProvidersManager {
    * @param {object} provider
    */
   registerProvider(provider) {
-    if (!provider || !(provider instanceof UrlbarProvider)) {
+    if (!provider || !(provider instanceof lazy.UrlbarProvider)) {
       throw new Error(`Trying to register an invalid provider`);
     }
-    if (!Object.values(UrlbarUtils.PROVIDER_TYPE).includes(provider.type)) {
+    if (
+      !Object.values(lazy.UrlbarUtils.PROVIDER_TYPE).includes(provider.type)
+    ) {
       throw new Error(`Unknown provider type ${provider.type}`);
     }
-    logger.info(`Registering provider ${provider.name}`);
+    lazy.logger.info(`Registering provider ${provider.name}`);
     let index = -1;
-    if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
+    if (provider.type == lazy.UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
       // Keep heuristic providers in order at the front of the array.  Find the
       // first non-heuristic provider and insert the new provider there.
       index = this.providers.findIndex(
-        p => p.type != UrlbarUtils.PROVIDER_TYPE.HEURISTIC
+        p => p.type != lazy.UrlbarUtils.PROVIDER_TYPE.HEURISTIC
       );
     }
     if (index < 0) {
@@ -143,7 +146,7 @@ class ProvidersManager {
    * @param {object} provider
    */
   unregisterProvider(provider) {
-    logger.info(`Unregistering provider ${provider.name}`);
+    lazy.logger.info(`Unregistering provider ${provider.name}`);
     let index = this.providers.findIndex(p => p.name == provider.name);
     if (index != -1) {
       this.providers.splice(index, 1);
@@ -164,10 +167,10 @@ class ProvidersManager {
    * @param {object} muxer a UrlbarMuxer object
    */
   registerMuxer(muxer) {
-    if (!muxer || !(muxer instanceof UrlbarMuxer)) {
+    if (!muxer || !(muxer instanceof lazy.UrlbarMuxer)) {
       throw new Error(`Trying to register an invalid muxer`);
     }
-    logger.info(`Registering muxer ${muxer.name}`);
+    lazy.logger.info(`Registering muxer ${muxer.name}`);
     this.muxers.set(muxer.name, muxer);
   }
 
@@ -177,7 +180,7 @@ class ProvidersManager {
    */
   unregisterMuxer(muxer) {
     let muxerName = typeof muxer == "string" ? muxer : muxer.name;
-    logger.info(`Unregistering muxer ${muxerName}`);
+    lazy.logger.info(`Unregistering muxer ${muxerName}`);
     this.muxers.delete(muxerName);
   }
 
@@ -187,11 +190,11 @@ class ProvidersManager {
    * @param {object} [controller] a UrlbarController instance
    */
   async startQuery(queryContext, controller = null) {
-    logger.info(`Query start ${queryContext.searchString}`);
+    lazy.logger.info(`Query start ${queryContext.searchString}`);
 
     // Define the muxer to use.
     let muxerName = queryContext.muxer || DEFAULT_MUXER;
-    logger.info(`Using muxer ${muxerName}`);
+    lazy.logger.info(`Using muxer ${muxerName}`);
     let muxer = this.muxers.get(muxerName);
     if (!muxer) {
       throw new Error(`Muxer with name ${muxerName} not found`);
@@ -204,7 +207,7 @@ class ProvidersManager {
       : this.providers;
 
     // Apply tokenization.
-    UrlbarTokenizer.tokenize(queryContext);
+    lazy.UrlbarTokenizer.tokenize(queryContext);
 
     // If there's a single source, we are in restriction mode.
     if (queryContext.sources && queryContext.sources.length == 1) {
@@ -221,11 +224,11 @@ class ProvidersManager {
       queryContext.restrictToken = restrictToken;
       // If the restriction token has an equivalent source, then set it as
       // restrictSource.
-      if (UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(restrictToken.value)) {
+      if (lazy.UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(restrictToken.value)) {
         queryContext.restrictSource = queryContext.sources[0];
       }
     }
-    logger.debug(`Context sources ${queryContext.sources}`);
+    lazy.logger.debug(`Context sources ${queryContext.sources}`);
 
     let query = new Query(queryContext, controller, muxer, providers);
     this.queries.set(queryContext, query);
@@ -233,7 +236,7 @@ class ProvidersManager {
     // The muxer and many providers depend on the search service and our search
     // utils.  Make sure they're initialized now (via UrlbarSearchUtils) so that
     // all query-related urlbar modules don't need to do it.
-    await UrlbarSearchUtils.init();
+    await lazy.UrlbarSearchUtils.init();
     if (query.canceled) {
       return;
     }
@@ -242,7 +245,7 @@ class ProvidersManager {
     let updateBehaviorPromises = [];
     for (let provider of this.providers) {
       if (
-        provider.type == UrlbarUtils.PROVIDER_TYPE.EXTENSION &&
+        provider.type == lazy.UrlbarUtils.PROVIDER_TYPE.EXTENSION &&
         provider.name != "Omnibox"
       ) {
         updateBehaviorPromises.push(
@@ -265,7 +268,7 @@ class ProvidersManager {
    * @param {object} queryContext
    */
   cancelQuery(queryContext) {
-    logger.info(`Query cancel "${queryContext.searchString}"`);
+    lazy.logger.info(`Query cancel "${queryContext.searchString}"`);
     let query = this.queries.get(queryContext);
     if (!query) {
       throw new Error("Couldn't find a matching query for the given context");
@@ -273,7 +276,7 @@ class ProvidersManager {
     query.cancel();
     if (!this.interruptLevel) {
       try {
-        let db = PlacesUtils.promiseLargeCacheDBConnection();
+        let db = lazy.PlacesUtils.promiseLargeCacheDBConnection();
         db.interrupt();
       } catch (ex) {}
     }
@@ -407,7 +410,7 @@ class Query {
               }
             }
           })
-          .catch(ex => logger.error(ex))
+          .catch(ex => lazy.logger.error(ex))
       );
     }
 
@@ -436,7 +439,7 @@ class Query {
 
     let queryPromises = [];
     for (let provider of activeProviders) {
-      if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
+      if (provider.type == lazy.UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
         this.context.pendingHeuristicProviders.add(provider.name);
         queryPromises.push(startQuery(provider));
         continue;
@@ -445,9 +448,9 @@ class Query {
         // Tracks the delay timer. We will fire (in this specific case, cancel
         // would do the same, since the callback is empty) the timer when the
         // search is canceled, unblocking start().
-        this._sleepTimer = new SkippableTimer({
+        this._sleepTimer = new lazy.SkippableTimer({
           name: "Query provider timer",
-          time: UrlbarPrefs.get("delay"),
+          time: lazy.UrlbarPrefs.get("delay"),
           logger: provider.logger,
         });
       }
@@ -458,7 +461,7 @@ class Query {
       );
     }
 
-    logger.info(`Queried ${queryPromises.length} providers`);
+    lazy.logger.info(`Queried ${queryPromises.length} providers`);
     await Promise.all(queryPromises);
 
     // All the providers are done returning results, so we can stop chunking.
@@ -494,13 +497,13 @@ class Query {
       provider.tryMethod("cancelQuery", this.context);
     }
     if (this._heuristicProviderTimer) {
-      this._heuristicProviderTimer.cancel().catch(ex => logger.error(ex));
+      this._heuristicProviderTimer.cancel().catch(ex => lazy.logger.error(ex));
     }
     if (this._chunkTimer) {
-      this._chunkTimer.cancel().catch(ex => logger.error(ex));
+      this._chunkTimer.cancel().catch(ex => lazy.logger.error(ex));
     }
     if (this._sleepTimer) {
-      this._sleepTimer.fire().catch(ex => logger.error(ex));
+      this._sleepTimer.fire().catch(ex => lazy.logger.error(ex));
     }
   }
 
@@ -510,7 +513,7 @@ class Query {
    * @param {object} result
    */
   add(provider, result) {
-    if (!(provider instanceof UrlbarProvider)) {
+    if (!(provider instanceof lazy.UrlbarProvider)) {
       throw new Error("Invalid provider passed to the add callback");
     }
 
@@ -545,9 +548,9 @@ class Query {
       !this.acceptableSources.includes(result.source) &&
       !result.heuristic &&
       // Treat form history as searches for the purpose of acceptableSources.
-      (result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
-        result.source != UrlbarUtils.RESULT_SOURCE.HISTORY ||
-        !this.acceptableSources.includes(UrlbarUtils.RESULT_SOURCE.SEARCH))
+      (result.type != lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
+        result.source != lazy.UrlbarUtils.RESULT_SOURCE.HISTORY ||
+        !this.acceptableSources.includes(lazy.UrlbarUtils.RESULT_SOURCE.SEARCH))
     ) {
       return;
     }
@@ -555,11 +558,11 @@ class Query {
     // Filter out javascript results for safety. The provider is supposed to do
     // it, but we don't want to risk leaking these out.
     if (
-      result.type != UrlbarUtils.RESULT_TYPE.KEYWORD &&
+      result.type != lazy.UrlbarUtils.RESULT_TYPE.KEYWORD &&
       result.payload.url &&
       result.payload.url.startsWith("javascript:") &&
       !this.context.searchString.startsWith("javascript:") &&
-      UrlbarPrefs.get("filter.javascript")
+      lazy.UrlbarPrefs.get("filter.javascript")
     ) {
       return;
     }
@@ -579,9 +582,9 @@ class Query {
     // If the timer fires first, we stop waiting on the remaining heuristic
     // providers.
     // Both timers are used to reduce UI flicker.
-    if (provider.type == UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
+    if (provider.type == lazy.UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
       if (!this._heuristicProviderTimer) {
-        this._heuristicProviderTimer = new SkippableTimer({
+        this._heuristicProviderTimer = new lazy.SkippableTimer({
           name: "Heuristic provider timer",
           callback: () => this._notifyResults(),
           time: CHUNK_RESULTS_DELAY_MS,
@@ -589,7 +592,7 @@ class Query {
         });
       }
     } else if (!this._chunkTimer) {
-      this._chunkTimer = new SkippableTimer({
+      this._chunkTimer = new lazy.SkippableTimer({
         name: "Query chunk timer",
         callback: () => this._notifyResults(),
         time: CHUNK_RESULTS_DELAY_MS,
@@ -602,7 +605,7 @@ class Query {
       this._heuristicProviderTimer &&
       !this.context.pendingHeuristicProviders.size
     ) {
-      this._heuristicProviderTimer.fire().catch(ex => logger.error(ex));
+      this._heuristicProviderTimer.fire().catch(ex => lazy.logger.error(ex));
     }
   }
 
@@ -610,12 +613,12 @@ class Query {
     this.muxer.sort(this.context);
 
     if (this._heuristicProviderTimer) {
-      this._heuristicProviderTimer.cancel().catch(ex => logger.error(ex));
+      this._heuristicProviderTimer.cancel().catch(ex => lazy.logger.error(ex));
       this._heuristicProviderTimer = null;
     }
 
     if (this._chunkTimer) {
-      this._chunkTimer.cancel().catch(ex => logger.error(ex));
+      this._chunkTimer.cancel().catch(ex => lazy.logger.error(ex));
       this._chunkTimer = null;
     }
 
@@ -631,7 +634,7 @@ class Query {
       return;
     }
 
-    this.context.firstResultChanged = !ObjectUtils.deepEqual(
+    this.context.firstResultChanged = !lazy.ObjectUtils.deepEqual(
       this.context.firstResult,
       this.context.results[0]
     );
@@ -657,52 +660,52 @@ function updateSourcesIfEmpty(context) {
   // There can be only one restrict token per query.
   let restrictToken = context.tokens.find(t =>
     [
-      UrlbarTokenizer.TYPE.RESTRICT_HISTORY,
-      UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK,
-      UrlbarTokenizer.TYPE.RESTRICT_TAG,
-      UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE,
-      UrlbarTokenizer.TYPE.RESTRICT_SEARCH,
-      UrlbarTokenizer.TYPE.RESTRICT_TITLE,
-      UrlbarTokenizer.TYPE.RESTRICT_URL,
-      UrlbarTokenizer.TYPE.RESTRICT_ACTION,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_HISTORY,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_TAG,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_TITLE,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_URL,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_ACTION,
     ].includes(t.type)
   );
 
   // RESTRICT_TITLE and RESTRICT_URL do not affect query sources.
   let restrictTokenType =
     restrictToken &&
-    restrictToken.type != UrlbarTokenizer.TYPE.RESTRICT_TITLE &&
-    restrictToken.type != UrlbarTokenizer.TYPE.RESTRICT_URL
+    restrictToken.type != lazy.UrlbarTokenizer.TYPE.RESTRICT_TITLE &&
+    restrictToken.type != lazy.UrlbarTokenizer.TYPE.RESTRICT_URL
       ? restrictToken.type
       : undefined;
 
-  for (let source of Object.values(UrlbarUtils.RESULT_SOURCE)) {
+  for (let source of Object.values(lazy.UrlbarUtils.RESULT_SOURCE)) {
     // Skip sources that the context doesn't care about.
     if (context.sources && !context.sources.includes(source)) {
       continue;
     }
     // Check prefs and restriction tokens.
     switch (source) {
-      case UrlbarUtils.RESULT_SOURCE.BOOKMARKS:
+      case lazy.UrlbarUtils.RESULT_SOURCE.BOOKMARKS:
         if (
-          restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK ||
-          restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_TAG ||
-          (!restrictTokenType && UrlbarPrefs.get("suggest.bookmark"))
+          restrictTokenType === lazy.UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK ||
+          restrictTokenType === lazy.UrlbarTokenizer.TYPE.RESTRICT_TAG ||
+          (!restrictTokenType && lazy.UrlbarPrefs.get("suggest.bookmark"))
         ) {
           acceptedSources.push(source);
         }
         break;
-      case UrlbarUtils.RESULT_SOURCE.HISTORY:
+      case lazy.UrlbarUtils.RESULT_SOURCE.HISTORY:
         if (
-          restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_HISTORY ||
-          (!restrictTokenType && UrlbarPrefs.get("suggest.history"))
+          restrictTokenType === lazy.UrlbarTokenizer.TYPE.RESTRICT_HISTORY ||
+          (!restrictTokenType && lazy.UrlbarPrefs.get("suggest.history"))
         ) {
           acceptedSources.push(source);
         }
         break;
-      case UrlbarUtils.RESULT_SOURCE.SEARCH:
+      case lazy.UrlbarUtils.RESULT_SOURCE.SEARCH:
         if (
-          restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_SEARCH ||
+          restrictTokenType === lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH ||
           !restrictTokenType
         ) {
           // We didn't check browser.urlbar.suggest.searches here, because it
@@ -713,20 +716,20 @@ function updateSourcesIfEmpty(context) {
           acceptedSources.push(source);
         }
         break;
-      case UrlbarUtils.RESULT_SOURCE.TABS:
+      case lazy.UrlbarUtils.RESULT_SOURCE.TABS:
         if (
-          restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE ||
-          (!restrictTokenType && UrlbarPrefs.get("suggest.openpage"))
+          restrictTokenType === lazy.UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE ||
+          (!restrictTokenType && lazy.UrlbarPrefs.get("suggest.openpage"))
         ) {
           acceptedSources.push(source);
         }
         break;
-      case UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK:
+      case lazy.UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK:
         if (!context.isPrivate && !restrictTokenType) {
           acceptedSources.push(source);
         }
         break;
-      case UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL:
+      case lazy.UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL:
       default:
         if (!restrictTokenType) {
           acceptedSources.push(source);

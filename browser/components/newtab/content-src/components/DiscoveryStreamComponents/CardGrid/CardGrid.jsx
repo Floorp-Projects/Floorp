@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  DSCard,
-  PlaceholderDSCard,
-  LastCardMessage,
-} from "../DSCard/DSCard.jsx";
+import { DSCard, PlaceholderDSCard } from "../DSCard/DSCard.jsx";
 import { DSEmptyState } from "../DSEmptyState/DSEmptyState.jsx";
 import { TopicsWidget } from "../TopicsWidget/TopicsWidget.jsx";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
@@ -181,45 +177,18 @@ export function RecentSavesContainer({
 }
 
 export class _CardGrid extends React.PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = { moreLoaded: false };
-    this.loadMoreClicked = this.loadMoreClicked.bind(this);
-  }
-
-  loadMoreClicked() {
-    this.props.dispatch(
-      ac.UserEvent({
-        event: "CLICK",
-        source: "DS_LOAD_MORE_BUTTON",
-      })
-    );
-    this.setState({ moreLoaded: true });
-  }
-
-  get showLoadMore() {
-    const { loadMore, data, loadMoreThreshold } = this.props;
-    return (
-      loadMore &&
-      data.recommendations.length > loadMoreThreshold &&
-      !this.state.moreLoaded
-    );
-  }
-
   renderCards() {
-    let { items } = this.props;
     const { DiscoveryStream } = this.props;
     const prefs = this.props.Prefs.values;
     const { recentSavesEnabled } = DiscoveryStream;
     const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
     const {
+      items,
       hybridLayout,
       hideCardBackground,
       fourCardLayout,
       hideDescriptions,
-      lastCardMessageEnabled,
       saveToPocketCard,
-      loadMoreThreshold,
       compactGrid,
       compactImages,
       imageGradient,
@@ -231,12 +200,6 @@ export class _CardGrid extends React.PureComponent {
       editorsPicksHeader,
       widgets,
     } = this.props;
-    let showLastCardMessage = lastCardMessageEnabled;
-    if (this.showLoadMore) {
-      items = loadMoreThreshold;
-      // We don't want to show this until after load more has been clicked.
-      showLastCardMessage = false;
-    }
 
     const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
@@ -288,15 +251,6 @@ export class _CardGrid extends React.PureComponent {
             is_collection={this.props.is_collection}
           />
         )
-      );
-    }
-
-    // Replace last card with "you are all caught up card"
-    if (showLastCardMessage) {
-      cards.splice(
-        cards.length - 1,
-        1,
-        <LastCardMessage key={`dscard-last-${cards.length - 1}`} />
       );
     }
 
@@ -444,13 +398,6 @@ export class _CardGrid extends React.PureComponent {
         ) : (
           this.renderCards()
         )}
-        {this.showLoadMore && (
-          <button
-            className="ASRouterButton primary ds-card-grid-load-more-button"
-            onClick={this.loadMoreClicked}
-            data-l10n-id="newtab-pocket-load-more-stories-button"
-          />
-        )}
       </div>
     );
   }
@@ -460,9 +407,7 @@ _CardGrid.defaultProps = {
   border: `border`,
   items: 4, // Number of stories to display
   enable_video_playheads: false,
-  lastCardMessageEnabled: false,
   saveToPocketCard: false,
-  loadMoreThreshold: 12,
 };
 
 export const CardGrid = connect(state => ({

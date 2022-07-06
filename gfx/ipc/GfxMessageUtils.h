@@ -1197,8 +1197,7 @@ struct IPDLParamTraits<gfx::PaintFragment> {
                     paramType&& aParam) {
     Shmem shmem;
     if (aParam.mSize.IsEmpty() ||
-        !aActor->AllocShmem(aParam.mRecording.mLen, SharedMemory::TYPE_BASIC,
-                            &shmem)) {
+        !aActor->AllocShmem(aParam.mRecording.mLen, &shmem)) {
       WriteParam(aWriter, gfx::IntSize(0, 0));
       return;
     }

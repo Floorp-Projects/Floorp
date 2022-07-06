@@ -168,6 +168,15 @@ class TextLeafPoint final {
    */
   LayoutDeviceIntRect CharBounds();
 
+  /**
+   * Returns true if the given point (in screen coords) is contained
+   * in the char bounds of the current TextLeafPoint. Returns false otherwise.
+   * If the current point is an empty container, we use the acc's bounds instead
+   * of char bounds. Because this depends on CharBounds, this function only
+   * works on remote accessibles, and assumes caching is enabled.
+   */
+  bool ContainsPoint(int32_t aX, int32_t aY);
+
   bool IsLineFeedChar() const { return GetChar() == '\n'; }
 
   bool IsSpace() const;

@@ -6,7 +6,6 @@ root:
       items:
         - type: clip
           id: 2
-          bounds: [ 50, 50, 200, 100 ]
           complex:
             - rect: [ 50, 50, 200, 100 ]
               radius:
@@ -21,7 +20,6 @@ root:
 
         - type: clip
           id: 3
-          bounds: [ 50, 150, 200, 100 ]
           complex:
             - rect: [ 50, 150, 200, 100 ]
               radius:
@@ -36,7 +34,6 @@ root:
 
         - type: clip
           id: 4
-          bounds: [ 300, 50, 100, 200 ]
           complex:
             - rect: [ 300, 50, 100, 200 ]
               radius:
@@ -51,7 +48,6 @@ root:
 
         - type: clip
           id: 5
-          bounds: [ 400, 50, 100, 200 ]
           complex:
             - rect: [ 400, 50, 100, 200 ]
               radius:
@@ -66,7 +62,6 @@ root:
 
         - type: clip
           id: 6
-          bounds: [ 50, 300, 200, 100 ]
           complex:
             - rect: [ 50, 300, 200, 100 ]
               radius:
@@ -81,7 +76,6 @@ root:
 
         - type: clip
           id: 7
-          bounds: [ 50, 400, 200, 100 ]
           complex:
             - rect: [ 50, 400, 200, 100 ]
               radius:
@@ -96,7 +90,6 @@ root:
 
         - type: clip
           id: 8
-          bounds: [ 300, 300, 100, 200 ]
           complex:
             - rect: [ 300, 300, 100, 200 ]
               radius:
@@ -111,7 +104,6 @@ root:
 
         - type: clip
           id: 9
-          bounds: [ 400, 300, 100, 200 ]
           complex:
             - rect: [ 400, 300, 100, 200 ]
               radius:

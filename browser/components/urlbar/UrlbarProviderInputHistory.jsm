@@ -16,13 +16,18 @@ var EXPORTED_SYMBOLS = ["UrlbarProviderInputHistory"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+
+const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 // Sqlite result row index constants.
@@ -99,9 +104,9 @@ class ProviderInputHistory extends UrlbarProvider {
    */
   isActive(queryContext) {
     return (
-      (UrlbarPrefs.get("suggest.history") ||
-        UrlbarPrefs.get("suggest.bookmark") ||
-        UrlbarPrefs.get("suggest.openpage")) &&
+      (lazy.UrlbarPrefs.get("suggest.history") ||
+        lazy.UrlbarPrefs.get("suggest.bookmark") ||
+        lazy.UrlbarPrefs.get("suggest.openpage")) &&
       !queryContext.searchMode
     );
   }
@@ -117,7 +122,7 @@ class ProviderInputHistory extends UrlbarProvider {
   async startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
 
-    let conn = await PlacesUtils.promiseLargeCacheDBConnection();
+    let conn = await lazy.PlacesUtils.promiseLargeCacheDBConnection();
     if (instance != this.queryInstance) {
       return;
     }
@@ -139,15 +144,15 @@ class ProviderInputHistory extends UrlbarProvider {
       const tags = row.getResultByIndex(QUERYINDEX.TAGS) || "";
 
       let resultTitle = historyTitle;
-      if (openPageCount > 0 && UrlbarPrefs.get("suggest.openpage")) {
+      if (openPageCount > 0 && lazy.UrlbarPrefs.get("suggest.openpage")) {
         if (url == queryContext.currentPage) {
           // Don't suggest switching to the current page.
           continue;
         }
-        let result = new UrlbarResult(
+        let result = new lazy.UrlbarResult(
           UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
           UrlbarUtils.RESULT_SOURCE.TABS,
-          ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
             title: [resultTitle, UrlbarUtils.HIGHLIGHT.TYPED],
             icon: UrlbarUtils.getIconForUrl(url),
@@ -158,10 +163,10 @@ class ProviderInputHistory extends UrlbarProvider {
       }
 
       let resultSource;
-      if (bookmarked && UrlbarPrefs.get("suggest.bookmark")) {
+      if (bookmarked && lazy.UrlbarPrefs.get("suggest.bookmark")) {
         resultSource = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
         resultTitle = bookmarkTitle || historyTitle;
-      } else if (UrlbarPrefs.get("suggest.history")) {
+      } else if (lazy.UrlbarPrefs.get("suggest.history")) {
         resultSource = UrlbarUtils.RESULT_SOURCE.HISTORY;
       } else {
         continue;
@@ -178,10 +183,10 @@ class ProviderInputHistory extends UrlbarProvider {
         })
         .sort();
 
-      let result = new UrlbarResult(
+      let result = new lazy.UrlbarResult(
         UrlbarUtils.RESULT_TYPE.URL,
         resultSource,
-        ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+        ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
           url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
           title: [resultTitle, UrlbarUtils.HIGHLIGHT.TYPED],
           tags: [resultTags, UrlbarUtils.HIGHLIGHT.TYPED],
@@ -204,11 +209,11 @@ class ProviderInputHistory extends UrlbarProvider {
     return [
       SQL_ADAPTIVE_QUERY,
       {
-        parent: PlacesUtils.tagsFolderId,
+        parent: lazy.PlacesUtils.tagsFolderId,
         search_string: queryContext.searchString.toLowerCase(),
         matchBehavior: Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE,
-        searchBehavior: UrlbarPrefs.get("defaultBehavior"),
-        userContextId: UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+        searchBehavior: lazy.UrlbarPrefs.get("defaultBehavior"),
+        userContextId: lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
           queryContext.userContextId,
           queryContext.isPrivate
         ),

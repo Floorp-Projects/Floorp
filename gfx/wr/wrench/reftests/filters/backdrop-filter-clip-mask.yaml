@@ -4,7 +4,6 @@
 root:
   items:
     - type: clip
-      bounds: [64, 64, 128, 128]
       id: 2
       image-mask:
           image: solid-color(255,255,255,255,128,128)

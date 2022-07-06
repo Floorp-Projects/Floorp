@@ -149,16 +149,13 @@ void CompositorBridgeParentBase::SendAsyncMessage(
   Unused << SendParentAsyncMessages(aMessage);
 }
 
-bool CompositorBridgeParentBase::AllocShmem(
-    size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
-    ipc::Shmem* aShmem) {
-  return PCompositorBridgeParent::AllocShmem(aSize, aType, aShmem);
+bool CompositorBridgeParentBase::AllocShmem(size_t aSize, ipc::Shmem* aShmem) {
+  return PCompositorBridgeParent::AllocShmem(aSize, aShmem);
 }
 
-bool CompositorBridgeParentBase::AllocUnsafeShmem(
-    size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
-    ipc::Shmem* aShmem) {
-  return PCompositorBridgeParent::AllocUnsafeShmem(aSize, aType, aShmem);
+bool CompositorBridgeParentBase::AllocUnsafeShmem(size_t aSize,
+                                                  ipc::Shmem* aShmem) {
+  return PCompositorBridgeParent::AllocUnsafeShmem(aSize, aShmem);
 }
 
 bool CompositorBridgeParentBase::DeallocShmem(ipc::Shmem& aShmem) {
@@ -2115,7 +2112,7 @@ Maybe<CollectedFramesParams> CompositorBridgeParent::WrapCollectedFrames(
   }
 
   Shmem shmem;
-  if (!AllocShmem(totalLength, SharedMemory::TYPE_BASIC, &shmem)) {
+  if (!AllocShmem(totalLength, &shmem)) {
     return Nothing();
   }
 

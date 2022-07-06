@@ -16,20 +16,24 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
   DefaultBrowserCheck: "resource:///modules/BrowserGlue.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "updateManager", () => {
+XPCOMUtils.defineLazyGetter(lazy, "updateManager", () => {
   return (
     Cc["@mozilla.org/updates/update-manager;1"] &&
     Cc["@mozilla.org/updates/update-manager;1"].getService(Ci.nsIUpdateManager)
@@ -37,7 +41,7 @@ XPCOMUtils.defineLazyGetter(this, "updateManager", () => {
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  this,
+  lazy,
   "cfrFeaturesUserPref",
   "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
   true
@@ -97,7 +101,10 @@ class ProviderSearchTips extends UrlbarProvider {
     // example because a tip was already shown.
     this.disableTipsForCurrentSession = true;
     for (let tip of Object.values(TIPS)) {
-      if (tip && UrlbarPrefs.get(`tipShownCount.${tip}`) < MAX_SHOWN_COUNT) {
+      if (
+        tip &&
+        lazy.UrlbarPrefs.get(`tipShownCount.${tip}`) < MAX_SHOWN_COUNT
+      ) {
         this.disableTipsForCurrentSession = false;
         break;
       }
@@ -119,7 +126,7 @@ class ProviderSearchTips extends UrlbarProvider {
 
   get PRIORITY() {
     // Search tips are prioritized over the Places and top sites providers.
-    return UrlbarProviderTopSites.PRIORITY + 1;
+    return lazy.UrlbarProviderTopSites.PRIORITY + 1;
   }
 
   /**
@@ -145,7 +152,7 @@ class ProviderSearchTips extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    return this.currentTip && cfrFeaturesUserPref;
+    return this.currentTip && lazy.cfrFeaturesUserPref;
   }
 
   /**
@@ -174,7 +181,7 @@ class ProviderSearchTips extends UrlbarProvider {
 
     let defaultEngine = await Services.search.getDefault();
 
-    let result = new UrlbarResult(
+    let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.TIP,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       {
@@ -220,7 +227,7 @@ class ProviderSearchTips extends UrlbarProvider {
    *   The result that was picked.
    */
   pickResult(result) {
-    let window = BrowserWindowTracker.getTopWindow();
+    let window = lazy.BrowserWindowTracker.getTopWindow();
     window.gURLBar.value = "";
     window.gURLBar.setPageProxyState("invalid");
     window.gURLBar.removeAttribute("suppress-focus-border");
@@ -253,7 +260,7 @@ class ProviderSearchTips extends UrlbarProvider {
       // engaged with the urlbar while the tip was showing. We treat both as the
       // user's acknowledgment of the tip, and we don't show tips again in any
       // session. Set the shown count to the max.
-      UrlbarPrefs.set(
+      lazy.UrlbarPrefs.set(
         `tipShownCount.${this.showedTipTypeInCurrentEngagement}`,
         MAX_SHOWN_COUNT
       );
@@ -316,9 +323,9 @@ class ProviderSearchTips extends UrlbarProvider {
 
     // Check if we are supposed to show a tip for the current session.
     if (
-      !cfrFeaturesUserPref ||
+      !lazy.cfrFeaturesUserPref ||
       (this.disableTipsForCurrentSession &&
-        !UrlbarPrefs.get("searchTips.test.ignoreShowLimits"))
+        !lazy.UrlbarPrefs.get("searchTips.test.ignoreShowLimits"))
     ) {
       return;
     }
@@ -352,11 +359,13 @@ class ProviderSearchTips extends UrlbarProvider {
       return;
     }
 
-    let ignoreShowLimits = UrlbarPrefs.get("searchTips.test.ignoreShowLimits");
+    let ignoreShowLimits = lazy.UrlbarPrefs.get(
+      "searchTips.test.ignoreShowLimits"
+    );
 
     // If we've shown this type of tip the maximum number of times over all
     // sessions, don't show it again.
-    let shownCount = UrlbarPrefs.get(`tipShownCount.${tip}`);
+    let shownCount = lazy.UrlbarPrefs.get(`tipShownCount.${tip}`);
     if (shownCount >= MAX_SHOWN_COUNT && !ignoreShowLimits) {
       return;
     }
@@ -368,12 +377,12 @@ class ProviderSearchTips extends UrlbarProvider {
     }
 
     // Start a search.
-    setTimeout(async () => {
+    lazy.setTimeout(async () => {
       if (this._maybeShowTipForUrlInstance != instance) {
         return;
       }
 
-      let window = BrowserWindowTracker.getTopWindow();
+      let window = lazy.BrowserWindowTracker.getTopWindow();
       // We don't want to interrupt a user's typed query with a Search Tip.
       // See bugs 1613662 and 1619547.
       if (
@@ -396,7 +405,7 @@ class ProviderSearchTips extends UrlbarProvider {
       this.disableTipsForCurrentSession = true;
 
       // Store the new shown count.
-      UrlbarPrefs.set(`tipShownCount.${tip}`, shownCount + 1);
+      lazy.UrlbarPrefs.set(`tipShownCount.${tip}`, shownCount + 1);
 
       this.currentTip = tip;
       window.gURLBar.search("", { focus: tip == TIPS.ONBOARD });
@@ -405,7 +414,7 @@ class ProviderSearchTips extends UrlbarProvider {
 }
 
 async function isBrowserShowingNotification() {
-  let window = BrowserWindowTracker.getTopWindow();
+  let window = lazy.BrowserWindowTracker.getTopWindow();
 
   // urlbar view and notification box (info bar)
   if (
@@ -418,9 +427,9 @@ async function isBrowserShowingNotification() {
 
   // app menu notification doorhanger
   if (
-    AppMenuNotifications.activeNotification &&
-    !AppMenuNotifications.activeNotification.dismissed &&
-    !AppMenuNotifications.activeNotification.options.badgeOnly
+    lazy.AppMenuNotifications.activeNotification &&
+    !lazy.AppMenuNotifications.activeNotification.dismissed &&
+    !lazy.AppMenuNotifications.activeNotification.options.badgeOnly
   ) {
     return true;
   }
@@ -465,7 +474,7 @@ async function isBrowserShowingNotification() {
   // On startup, the default browser check normally opens after the Search Tip.
   // As a result, we can't check for the prompt's presence, but we can check if
   // it plans on opening.
-  const willPrompt = await DefaultBrowserCheck.willCheckDefaultBrowser(
+  const willPrompt = await lazy.DefaultBrowserCheck.willCheckDefaultBrowser(
     /* isStartupCheck */ false
   );
   if (willPrompt) {
@@ -516,12 +525,12 @@ async function lastBrowserUpdateDate() {
   // Get the newest update in the update history. This isn't perfect
   // because these dates are when updates are applied, not when the
   // user restarts with the update. See bug 1595328.
-  if (updateManager && updateManager.getUpdateCount()) {
-    let update = updateManager.getUpdateAt(0);
+  if (lazy.updateManager && lazy.updateManager.getUpdateCount()) {
+    let update = lazy.updateManager.getUpdateAt(0);
     return update.installDate;
   }
   // Fall back to the profile age.
-  let age = await ProfileAge();
+  let age = await lazy.ProfileAge();
   return (await age.firstUse) || age.created;
 }
 

@@ -148,12 +148,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       const nsTArray<AsyncParentMessageData>& aMessage) override;
 
   // IShmemAllocator
-  bool AllocShmem(size_t aSize,
-                  mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                  mozilla::ipc::Shmem* aShmem) override;
-  bool AllocUnsafeShmem(size_t aSize,
-                        mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                        mozilla::ipc::Shmem* aShmem) override;
+  bool AllocShmem(size_t aSize, mozilla::ipc::Shmem* aShmem) override;
+  bool AllocUnsafeShmem(size_t aSize, mozilla::ipc::Shmem* aShmem) override;
   bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override {

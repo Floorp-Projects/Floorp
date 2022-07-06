@@ -100,9 +100,8 @@ GMPErr GMPVideoEncodedFrameImpl::CreateEmptyFrame(uint32_t aSize) {
     DestroyBuffer();
   } else if (aSize > AllocatedSize()) {
     DestroyBuffer();
-    if (!mHost->SharedMemMgr()->MgrAllocShmem(
-            GMPSharedMem::kGMPEncodedData, aSize, ipc::SharedMemory::TYPE_BASIC,
-            &mBuffer) ||
+    if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMem::kGMPEncodedData,
+                                              aSize, &mBuffer) ||
         !Buffer()) {
       return GMPAllocErr;
     }
@@ -176,9 +175,8 @@ void GMPVideoEncodedFrameImpl::SetAllocatedSize(uint32_t aNewSize) {
   }
 
   ipc::Shmem new_mem;
-  if (!mHost->SharedMemMgr()->MgrAllocShmem(
-          GMPSharedMem::kGMPEncodedData, aNewSize,
-          ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
+  if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMem::kGMPEncodedData,
+                                            aNewSize, &new_mem) ||
       !new_mem.get<uint8_t>()) {
     return;
   }

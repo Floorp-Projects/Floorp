@@ -517,7 +517,7 @@ const ColorwayCollections = [
     id: "independent-voices",
     expiry:
       colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
-        ? "2022-12-31"
+        ? "2023-01-24"
         : "1970-01-01",
     l10nId: {
       title: "colorway-collection-independent-voices",

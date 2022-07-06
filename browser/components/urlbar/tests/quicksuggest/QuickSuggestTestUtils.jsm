@@ -10,14 +10,18 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  CONTEXTUAL_SERVICES_PING_TYPES:
-    "resource:///modules/PartnerLinkAttribution.jsm",
+const {
+  CONTEXTUAL_SERVICES_PING_TYPES,
+  PartnerLinkAttribution,
+} = ChromeUtils.import("resource:///modules/PartnerLinkAttribution.jsm");
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
-  PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
@@ -28,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
+XPCOMUtils.defineLazyGetter(lazy, "UrlbarTestUtils", () => {
   const { UrlbarTestUtils: module } = ChromeUtils.import(
     "resource://testing-common/UrlbarTestUtils.jsm"
   );
@@ -103,11 +107,11 @@ class QSTestUtils {
   }
 
   get BEST_MATCH_LEARN_MORE_URL() {
-    return UrlbarProviderQuickSuggest.bestMatchHelpUrl;
+    return lazy.UrlbarProviderQuickSuggest.bestMatchHelpUrl;
   }
 
   get SCALARS() {
-    return UrlbarProviderQuickSuggest.TELEMETRY_SCALARS;
+    return lazy.UrlbarProviderQuickSuggest.TELEMETRY_SCALARS;
   }
 
   get TELEMETRY_EVENT_CATEGORY() {
@@ -181,21 +185,21 @@ class QSTestUtils {
     this.info?.(
       "ensureQuickSuggestInit awaiting UrlbarQuickSuggest.readyPromise"
     );
-    await UrlbarQuickSuggest.readyPromise;
+    await lazy.UrlbarQuickSuggest.readyPromise;
     this.info?.(
       "ensureQuickSuggestInit done awaiting UrlbarQuickSuggest.readyPromise"
     );
 
     // Stub _queueSettingsSync() so any actual remote settings syncs that happen
     // during the test are ignored.
-    let sandbox = sinon.createSandbox();
-    sandbox.stub(UrlbarQuickSuggest, "_queueSettingsSync");
+    let sandbox = lazy.sinon.createSandbox();
+    sandbox.stub(lazy.UrlbarQuickSuggest, "_queueSettingsSync");
     let cleanup = () => sandbox.restore();
     this.registerCleanupFunction?.(cleanup);
 
     if (results) {
-      UrlbarQuickSuggest._resultsByKeyword.clear();
-      await UrlbarQuickSuggest._addResults(results);
+      lazy.UrlbarQuickSuggest._resultsByKeyword.clear();
+      await lazy.UrlbarQuickSuggest._addResults(results);
     }
     if (config) {
       this.setConfig(config);
@@ -217,14 +221,14 @@ class QSTestUtils {
    */
   async initNimbusFeature(value = {}) {
     this.info?.("initNimbusFeature awaiting ExperimentManager.onStartup");
-    await ExperimentManager.onStartup();
+    await lazy.ExperimentManager.onStartup();
 
     this.info?.("initNimbusFeature awaiting ExperimentAPI.ready");
-    await ExperimentAPI.ready();
+    await lazy.ExperimentAPI.ready();
 
     this.info?.("initNimbusFeature awaiting ExperimentFakes.enrollWithRollout");
-    let doCleanup = await ExperimentFakes.enrollWithRollout({
-      featureId: NimbusFeatures.urlbar.featureId,
+    let doCleanup = await lazy.ExperimentFakes.enrollWithRollout({
+      featureId: lazy.NimbusFeatures.urlbar.featureId,
       value: { enabled: true, ...value },
     });
 
@@ -248,7 +252,7 @@ class QSTestUtils {
    * @param {object} config
    */
   setConfig(config) {
-    UrlbarQuickSuggest._setConfig(config);
+    lazy.UrlbarQuickSuggest._setConfig(config);
   }
 
   /**
@@ -274,15 +278,15 @@ class QSTestUtils {
     // If we try to set the scenario before a previous update has finished,
     // `updateFirefoxSuggestScenario` will bail, so wait.
     await this.waitForScenarioUpdated();
-    await UrlbarPrefs.updateFirefoxSuggestScenario({ scenario });
+    await lazy.UrlbarPrefs.updateFirefoxSuggestScenario({ scenario });
   }
 
   /**
    * Waits for any prior scenario update to finish.
    */
   async waitForScenarioUpdated() {
-    await TestUtils.waitForCondition(
-      () => !UrlbarPrefs.updatingFirefoxSuggestScenario,
+    await lazy.TestUtils.waitForCondition(
+      () => !lazy.UrlbarPrefs.updatingFirefoxSuggestScenario,
       "Waiting for updatingFirefoxSuggestScenario to be false"
     );
   }
@@ -320,7 +324,7 @@ class QSTestUtils {
     );
 
     if (index < 0) {
-      let resultCount = UrlbarTestUtils.getResultCount(window);
+      let resultCount = lazy.UrlbarTestUtils.getResultCount(window);
       if (isBestMatch) {
         index = 1;
         this.Assert.greater(
@@ -338,7 +342,10 @@ class QSTestUtils {
       }
     }
 
-    let details = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
+    let details = await lazy.UrlbarTestUtils.getDetailsOfResultAt(
+      window,
+      index
+    );
     let { result } = details;
 
     this.info?.(
@@ -350,7 +357,7 @@ class QSTestUtils {
       "UrlbarProviderQuickSuggest",
       "Result provider name is UrlbarProviderQuickSuggest"
     );
-    this.Assert.equal(details.type, UrlbarUtils.RESULT_TYPE.URL);
+    this.Assert.equal(details.type, lazy.UrlbarUtils.RESULT_TYPE.URL);
     this.Assert.equal(details.isSponsored, isSponsored, "Result isSponsored");
     if (url) {
       this.Assert.equal(details.url, url, "Result URL");
@@ -385,13 +392,13 @@ class QSTestUtils {
     if (!isBestMatch) {
       this.Assert.equal(
         !!blockButton,
-        UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+        lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled"),
         "The block button is present iff quick suggest blocking is enabled"
       );
     } else {
       this.Assert.equal(
         !!blockButton,
-        UrlbarPrefs.get("bestMatchBlockingEnabled"),
+        lazy.UrlbarPrefs.get("bestMatchBlockingEnabled"),
         "The block button is present iff best match blocking is enabled"
       );
     }
@@ -407,7 +414,10 @@ class QSTestUtils {
    *   The index of the result.
    */
   async assertIsNotQuickSuggest(window, index) {
-    let details = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
+    let details = await lazy.UrlbarTestUtils.getDetailsOfResultAt(
+      window,
+      index
+    );
     this.Assert.notEqual(
       details.result.providerName,
       "UrlbarProviderQuickSuggest",
@@ -421,7 +431,7 @@ class QSTestUtils {
    * @param {object} window
    */
   async assertNoQuickSuggestResults(window) {
-    for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
+    for (let i = 0; i < lazy.UrlbarTestUtils.getResultCount(window); i++) {
       await this.assertIsNotQuickSuggest(window, i);
     }
   }
@@ -435,10 +445,14 @@ class QSTestUtils {
    *   expect a scalar not to be incremented, don't include it.
    */
   assertScalars(expectedIndexesByScalarName) {
-    let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+    let scalars = lazy.TelemetryTestUtils.getProcessScalars(
+      "parent",
+      true,
+      true
+    );
     for (let scalarName of Object.values(this.SCALARS)) {
       if (scalarName in expectedIndexesByScalarName) {
-        TelemetryTestUtils.assertKeyedScalar(
+        lazy.TelemetryTestUtils.assertKeyedScalar(
           scalars,
           scalarName,
           expectedIndexesByScalarName[scalarName],
@@ -468,7 +482,7 @@ class QSTestUtils {
    *   The options object to pass to `TelemetryTestUtils.assertEvents()`.
    */
   assertEvents(expectedEvents, filterOverrides = {}, options = undefined) {
-    TelemetryTestUtils.assertEvents(
+    lazy.TelemetryTestUtils.assertEvents(
       expectedEvents,
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
@@ -492,7 +506,7 @@ class QSTestUtils {
    *   it otherwise.
    */
   createTelemetryPingSpy() {
-    let sandbox = sinon.createSandbox();
+    let sandbox = lazy.sinon.createSandbox();
     let spy = sandbox.spy(
       PartnerLinkAttribution._pingCentre,
       "sendStructuredIngestionPing"
@@ -615,7 +629,10 @@ class QSTestUtils {
    *   }
    */
   assertTimestampsReplaced(result, urls) {
-    let { TIMESTAMP_TEMPLATE, TIMESTAMP_LENGTH } = UrlbarProviderQuickSuggest;
+    let {
+      TIMESTAMP_TEMPLATE,
+      TIMESTAMP_LENGTH,
+    } = lazy.UrlbarProviderQuickSuggest;
 
     // Parse the timestamp strings from each payload property and save them in
     // `urls[key].timestamp`.
@@ -687,7 +704,7 @@ class QSTestUtils {
    */
   async enrollExperiment({ valueOverrides = {} }) {
     this.info?.("Awaiting ExperimentAPI.ready");
-    await ExperimentAPI.ready();
+    await lazy.ExperimentAPI.ready();
 
     // Wait for any prior scenario updates to finish. If updates are ongoing,
     // UrlbarPrefs will ignore the Nimbus update when the experiment is
@@ -699,15 +716,17 @@ class QSTestUtils {
     // These notifications signal either that pref updates due to enrollment are
     // done or that updates weren't necessary.
     let updatePromise = Promise.race([
-      TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_TOPIC),
-      TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_SKIPPED_TOPIC),
+      lazy.TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_TOPIC),
+      lazy.TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_SKIPPED_TOPIC),
     ]);
 
-    let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-      enabled: true,
-      featureId: "urlbar",
-      value: valueOverrides,
-    });
+    let doExperimentCleanup = await lazy.ExperimentFakes.enrollWithFeatureConfig(
+      {
+        enabled: true,
+        featureId: "urlbar",
+        value: valueOverrides,
+      }
+    );
 
     // Wait for the pref updates triggered by the experiment enrollment.
     this.info?.("Awaiting update after enrolling in experiment");
@@ -717,8 +736,10 @@ class QSTestUtils {
       // The same pref updates will be triggered by unenrollment, so wait for
       // them again.
       let unenrollUpdatePromise = Promise.race([
-        TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_TOPIC),
-        TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_SKIPPED_TOPIC),
+        lazy.TestUtils.topicObserved(QuickSuggestTestUtils.UPDATE_TOPIC),
+        lazy.TestUtils.topicObserved(
+          QuickSuggestTestUtils.UPDATE_SKIPPED_TOPIC
+        ),
       ]);
 
       this.info?.("Awaiting experiment cleanup");
@@ -738,8 +759,8 @@ class QSTestUtils {
     await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
 
     Services.telemetry.clearEvents();
-    NimbusFeatures.urlbar._didSendExposureEvent = false;
-    UrlbarQuickSuggest._recordedExposureEvent = false;
+    lazy.NimbusFeatures.urlbar._didSendExposureEvent = false;
+    lazy.UrlbarQuickSuggest._recordedExposureEvent = false;
   }
 
   /**
@@ -753,7 +774,7 @@ class QSTestUtils {
    */
   async assertExposureEvent(expectedRecorded) {
     this.Assert.equal(
-      UrlbarQuickSuggest._recordedExposureEvent,
+      lazy.UrlbarQuickSuggest._recordedExposureEvent,
       expectedRecorded,
       "_recordedExposureEvent is correct"
     );
@@ -779,7 +800,7 @@ class QSTestUtils {
     // so likewise queue the assert to idle instead of doing it immediately.
     await new Promise(resolve => {
       Services.tm.idleDispatchToMainThread(() => {
-        TelemetryTestUtils.assertEvents(expectedEvents, filter);
+        lazy.TelemetryTestUtils.assertEvents(expectedEvents, filter);
         resolve();
       });
     });

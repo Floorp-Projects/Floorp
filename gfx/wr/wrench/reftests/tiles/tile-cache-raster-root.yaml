@@ -21,17 +21,18 @@ pipelines:
         bounds: [0, 0, 1887, 1971]
         clip-to-frame: true
       -
-        "clip-and-scroll": 2
+        spatial-id: 2
         type: "stacking-context"
         items:
           -
             bounds: [0, -186, 1887, 239]
-            "clip-and-scroll": 2
+            spatial-id: 2
             type: clip
             id: 4
           -
             bounds: [-660.45, -186, 0, 0]
-            "clip-and-scroll": 4
+            spatial-id: 2
+            clip-chain: [4]
             type: "stacking-context"
             transform: [1, 0, 0, 0, -0.57735026, 1, 0, 0, 0, 0, 1, 0, 68.849, 0, 0, 1]
             items:
@@ -40,4 +41,3 @@ pipelines:
                 type: rect
                 color: blue
                 clip-chain: [2, 4]
-                

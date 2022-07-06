@@ -5,7 +5,6 @@ root:
       type: "stacking-context"
       items:
         -
-          bounds: [12, 12, 130, 130]
           type: clip
           id: 4
           complex:

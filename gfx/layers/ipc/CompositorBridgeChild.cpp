@@ -577,18 +577,14 @@ void CompositorBridgeChild::EndCanvasTransaction() {
   }
 }
 
-bool CompositorBridgeChild::AllocUnsafeShmem(
-    size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
-    ipc::Shmem* aShmem) {
+bool CompositorBridgeChild::AllocUnsafeShmem(size_t aSize, ipc::Shmem* aShmem) {
   ShmemAllocated(this);
-  return PCompositorBridgeChild::AllocUnsafeShmem(aSize, aType, aShmem);
+  return PCompositorBridgeChild::AllocUnsafeShmem(aSize, aShmem);
 }
 
-bool CompositorBridgeChild::AllocShmem(
-    size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
-    ipc::Shmem* aShmem) {
+bool CompositorBridgeChild::AllocShmem(size_t aSize, ipc::Shmem* aShmem) {
   ShmemAllocated(this);
-  return PCompositorBridgeChild::AllocShmem(aSize, aType, aShmem);
+  return PCompositorBridgeChild::AllocShmem(aSize, aShmem);
 }
 
 bool CompositorBridgeChild::DeallocShmem(ipc::Shmem& aShmem) {

@@ -74,7 +74,6 @@ class Shmem final {
   typedef int32_t id_t;
   // Low-level wrapper around platform shmem primitives.
   typedef mozilla::ipc::SharedMemory SharedMemory;
-  typedef SharedMemory::SharedMemoryType SharedMemoryType;
   // Shmem objects should only be constructed directly from SharedMemory
   // objects by the Shmem implementation itself, or by a select few functions
   // in ProtocolUtils.{h,cpp}.  You should not need to add new instances of
@@ -151,7 +150,6 @@ class Shmem final {
 
   static already_AddRefed<Shmem::SharedMemory> Alloc(PrivateIPDLCaller,
                                                      size_t aNBytes,
-                                                     SharedMemoryType aType,
                                                      bool aUnsafe,
                                                      bool aProtect = false);
 

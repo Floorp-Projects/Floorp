@@ -5,27 +5,30 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = ["UrlbarProviderInterventions", "QueryScorer"];
-var gGlobalScope = this;
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppUpdater: "resource:///modules/AppUpdater.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   NLP: "resource://gre/modules/NLP.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "appUpdater", () => new AppUpdater());
+XPCOMUtils.defineLazyGetter(lazy, "appUpdater", () => new lazy.AppUpdater());
 
 // The possible tips to show.  These names (except NONE) are used in the names
 // of keys in the `urlbar.tips` keyed scalar telemetry (see telemetry.rst).
@@ -358,7 +361,7 @@ class QueryScorer {
     // Compare each word in the node to the current query word.
     let queryWord = queryWords[queryWordsIndex];
     for (let [childWord, child] of node.childrenByWord) {
-      let distance = NLP.levenshtein(queryWord, childWord);
+      let distance = lazy.NLP.levenshtein(queryWord, childWord);
       if (distance <= this._distanceThreshold) {
         // The word represented by this child node matches the current query
         // word.  Recurse into the child node.
@@ -490,7 +493,9 @@ class ProviderInterventions extends UrlbarProvider {
     if (
       !queryContext.searchString ||
       queryContext.searchString.length > UrlbarUtils.MAX_TEXT_LENGTH ||
-      UrlbarTokenizer.REGEXP_LIKE_PROTOCOL.test(queryContext.searchString) ||
+      lazy.UrlbarTokenizer.REGEXP_LIKE_PROTOCOL.test(
+        queryContext.searchString
+      ) ||
       !EN_LOCALE_MATCH.test(Services.locale.appLocaleAsBCP47) ||
       !Services.policies.isAllowed("urlbarinterventions")
     ) {
@@ -519,8 +524,8 @@ class ProviderInterventions extends UrlbarProvider {
     if (topDocIDs.has("update")) {
       this._setCurrentTipFromAppUpdaterStatus();
     } else if (topDocIDs.has("clear")) {
-      let window = BrowserWindowTracker.getTopWindow();
-      if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
+      let window = lazy.BrowserWindowTracker.getTopWindow();
+      if (!lazy.PrivateBrowsingUtils.isWindowPrivate(window)) {
         this.currentTip = TIPS.CLEAR;
       }
     } else if (topDocIDs.has("refresh")) {
@@ -551,27 +556,27 @@ class ProviderInterventions extends UrlbarProvider {
     }
 
     // There are several update tips. Figure out which one to show.
-    switch (appUpdater.status) {
-      case AppUpdater.STATUS.READY_FOR_RESTART:
+    switch (lazy.appUpdater.status) {
+      case lazy.AppUpdater.STATUS.READY_FOR_RESTART:
         // Prompt the user to restart.
         this.currentTip = TIPS.UPDATE_RESTART;
         break;
-      case AppUpdater.STATUS.DOWNLOAD_AND_INSTALL:
+      case lazy.AppUpdater.STATUS.DOWNLOAD_AND_INSTALL:
         // There's an update available, but the user's pref says we should ask
         // them to download and apply it.
         this.currentTip = TIPS.UPDATE_ASK;
         break;
-      case AppUpdater.STATUS.NO_UPDATES_FOUND:
+      case lazy.AppUpdater.STATUS.NO_UPDATES_FOUND:
         // We show a special refresh tip when the browser is up to date.
         this.currentTip = TIPS.UPDATE_REFRESH;
         break;
-      case AppUpdater.STATUS.CHECKING:
+      case lazy.AppUpdater.STATUS.CHECKING:
         // This will be the case the first time we check.  See startQuery for
         // how this special tip is handled.
         this.currentTip = TIPS.UPDATE_CHECKING;
         break;
-      case AppUpdater.STATUS.NO_UPDATER:
-      case AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY:
+      case lazy.AppUpdater.STATUS.NO_UPDATER:
+      case lazy.AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY:
         // If the updater is disabled at build time or at runtime, either by
         // policy or because we're in a package, do not select any update tips.
         this.currentTip = TIPS.NONE;
@@ -616,11 +621,11 @@ class ProviderInterventions extends UrlbarProvider {
         // The updater is still checking, so wait for it to finish.
         await new Promise(resolve => {
           this._appUpdaterListener = () => {
-            appUpdater.removeListener(this._appUpdaterListener);
+            lazy.appUpdater.removeListener(this._appUpdaterListener);
             delete this._appUpdaterListener;
             resolve();
           };
-          appUpdater.addListener(this._appUpdaterListener);
+          lazy.appUpdater.addListener(this._appUpdaterListener);
         });
         if (instance != this.queryInstance) {
           // The query was canceled before the check finished.
@@ -638,7 +643,7 @@ class ProviderInterventions extends UrlbarProvider {
     // At this point, this.currentTip != TIPS.UPDATE_CHECKING because we
     // returned early above if it was.
 
-    let result = new UrlbarResult(
+    let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.TIP,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       {
@@ -668,7 +673,7 @@ class ProviderInterventions extends UrlbarProvider {
     // If we're waiting for appUpdater to finish its update check,
     // this._appUpdaterListener will be defined.  We can stop listening now.
     if (this._appUpdaterListener) {
-      appUpdater.removeListener(this._appUpdaterListener);
+      lazy.appUpdater.removeListener(this._appUpdaterListener);
       delete this._appUpdaterListener;
     }
   }
@@ -698,7 +703,7 @@ class ProviderInterventions extends UrlbarProvider {
         restartBrowser();
         break;
       case TIPS.UPDATE_WEB:
-        let window = BrowserWindowTracker.getTopWindow();
+        let window = lazy.BrowserWindowTracker.getTopWindow();
         window.gBrowser.selectedTab = window.gBrowser.addWebTab(
           "https://www.mozilla.org/firefox/new/"
         );
@@ -729,7 +734,7 @@ class ProviderInterventions extends UrlbarProvider {
       Date.now() - this._lastUpdateCheckTime >= UPDATE_CHECK_PERIOD_MS
     ) {
       this._lastUpdateCheckTime = Date.now();
-      appUpdater.check();
+      lazy.appUpdater.check();
     }
   }
 
@@ -739,8 +744,8 @@ class ProviderInterventions extends UrlbarProvider {
    */
   resetAppUpdater() {
     // Reset only if the object has already been initialized.
-    if (!Object.getOwnPropertyDescriptor(gGlobalScope, "appUpdater").get) {
-      appUpdater = new AppUpdater();
+    if (!Object.getOwnPropertyDescriptor(lazy, "appUpdater").get) {
+      lazy.appUpdater = new lazy.AppUpdater();
     }
   }
 }
@@ -752,7 +757,7 @@ var UrlbarProviderInterventions = new ProviderInterventions();
  */
 
 function installBrowserUpdateAndRestart() {
-  if (appUpdater.status != AppUpdater.STATUS.DOWNLOAD_AND_INSTALL) {
+  if (lazy.appUpdater.status != lazy.AppUpdater.STATUS.DOWNLOAD_AND_INSTALL) {
     return Promise.resolve();
   }
   return new Promise(resolve => {
@@ -760,30 +765,30 @@ function installBrowserUpdateAndRestart() {
       // Once we call startDownload, there are two possible end
       // states: DOWNLOAD_FAILED and READY_FOR_RESTART.
       if (
-        appUpdater.status != AppUpdater.STATUS.READY_FOR_RESTART &&
-        appUpdater.status != AppUpdater.STATUS.DOWNLOAD_FAILED
+        lazy.appUpdater.status != lazy.AppUpdater.STATUS.READY_FOR_RESTART &&
+        lazy.appUpdater.status != lazy.AppUpdater.STATUS.DOWNLOAD_FAILED
       ) {
         return;
       }
-      appUpdater.removeListener(listener);
-      if (appUpdater.status == AppUpdater.STATUS.READY_FOR_RESTART) {
+      lazy.appUpdater.removeListener(listener);
+      if (lazy.appUpdater.status == lazy.AppUpdater.STATUS.READY_FOR_RESTART) {
         restartBrowser();
       }
       resolve();
     };
-    appUpdater.addListener(listener);
-    appUpdater.startDownload();
+    lazy.appUpdater.addListener(listener);
+    lazy.appUpdater.startDownload();
   });
 }
 
 function openClearHistoryDialog() {
-  let window = BrowserWindowTracker.getTopWindow();
+  let window = lazy.BrowserWindowTracker.getTopWindow();
   // The behaviour of the Clear Recent History dialog in PBM does
   // not have the expected effect (bug 463607).
-  if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+  if (lazy.PrivateBrowsingUtils.isWindowPrivate(window)) {
     return;
   }
-  Sanitizer.showUI(window);
+  lazy.Sanitizer.showUI(window);
 }
 
 function restartBrowser() {
@@ -811,9 +816,9 @@ function restartBrowser() {
 }
 
 function resetBrowser() {
-  if (!ResetProfile.resetSupported()) {
+  if (!lazy.ResetProfile.resetSupported()) {
     return;
   }
-  let window = BrowserWindowTracker.getTopWindow();
-  ResetProfile.openConfirmationDialog(window);
+  let window = lazy.BrowserWindowTracker.getTopWindow();
+  lazy.ResetProfile.openConfirmationDialog(window);
 }

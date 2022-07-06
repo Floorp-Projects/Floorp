@@ -18,7 +18,6 @@ root:
               transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -110, 0, 0, 1]
               items:
                 -
-                  bounds: [24, 539, 24, 24]
                   type: clip
                   id: 2
                   complex:
@@ -31,7 +30,6 @@ root:
                   color: black
                   clip-chain: [2]
                 -
-                  bounds: [24, 770, 24, 24]
                   type: clip
                   id: 3
                   complex:
@@ -44,7 +42,6 @@ root:
                   color: black
                   clip-chain: [3]
                 -
-                  bounds: [24, 847, 24, 24]
                   type: clip
                   id: 4
                   complex:

@@ -14,12 +14,16 @@ var EXPORTED_SYMBOLS = ["UrlbarProviderOmnibox"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+
+const { SkippableTimer, UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
-  SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 // After this time, we'll give up waiting for the extension to return matches.
@@ -65,7 +69,7 @@ class ProviderOmnibox extends UrlbarProvider {
     if (
       queryContext.tokens[0] &&
       queryContext.tokens[0].value.length &&
-      ExtensionSearchHandler.isKeywordRegistered(
+      lazy.ExtensionSearchHandler.isKeywordRegistered(
         queryContext.tokens[0].value
       ) &&
       UrlbarUtils.substringAfter(
@@ -80,8 +84,8 @@ class ProviderOmnibox extends UrlbarProvider {
     // query but cancelQuery can be called multiple times per query.
     // The frequent cancels can cause the extension's state to drift from the
     // provider's state.
-    if (ExtensionSearchHandler.hasActiveInputSession()) {
-      ExtensionSearchHandler.handleInputCancelled();
+    if (lazy.ExtensionSearchHandler.hasActiveInputSession()) {
+      lazy.ExtensionSearchHandler.handleInputCancelled();
     }
 
     return false;
@@ -113,11 +117,11 @@ class ProviderOmnibox extends UrlbarProvider {
 
     // Fetch heuristic result.
     let keyword = queryContext.tokens[0].value;
-    let description = ExtensionSearchHandler.getDescription(keyword);
-    let heuristicResult = new UrlbarResult(
+    let description = lazy.ExtensionSearchHandler.getDescription(keyword);
+    let heuristicResult = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.OMNIBOX,
       UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
-      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         title: [description, UrlbarUtils.HIGHLIGHT.TYPED],
         content: [queryContext.searchString, UrlbarUtils.HIGHLIGHT.TYPED],
         keyword: [queryContext.tokens[0].value, UrlbarUtils.HIGHLIGHT.TYPED],
@@ -133,7 +137,7 @@ class ProviderOmnibox extends UrlbarProvider {
       text: queryContext.searchString,
       inPrivateWindow: queryContext.isPrivate,
     };
-    this._resultsPromise = ExtensionSearchHandler.handleSearch(
+    this._resultsPromise = lazy.ExtensionSearchHandler.handleSearch(
       data,
       suggestions => {
         if (instance != this.queryInstance) {
@@ -144,18 +148,21 @@ class ProviderOmnibox extends UrlbarProvider {
           if (content == heuristicResult.payload.content) {
             continue;
           }
-          let result = new UrlbarResult(
+          let result = new lazy.UrlbarResult(
             UrlbarUtils.RESULT_TYPE.OMNIBOX,
             UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
-            ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-              title: [suggestion.description, UrlbarUtils.HIGHLIGHT.TYPED],
-              content: [content, UrlbarUtils.HIGHLIGHT.TYPED],
-              keyword: [
-                queryContext.tokens[0].value,
-                UrlbarUtils.HIGHLIGHT.TYPED,
-              ],
-              icon: UrlbarUtils.ICON.EXTENSION,
-            })
+            ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+              queryContext.tokens,
+              {
+                title: [suggestion.description, UrlbarUtils.HIGHLIGHT.TYPED],
+                content: [content, UrlbarUtils.HIGHLIGHT.TYPED],
+                keyword: [
+                  queryContext.tokens[0].value,
+                  UrlbarUtils.HIGHLIGHT.TYPED,
+                ],
+                icon: UrlbarUtils.ICON.EXTENSION,
+              }
+            )
           );
           addCallback(this, result);
         }

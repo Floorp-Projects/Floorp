@@ -9,7 +9,6 @@ root:
       items: 
         - type: clip
           id: 2
-          bounds: [28, 18, 144, 122]
           complex:
             - rect: [28, 18, 144, 122]
               radius:
@@ -42,7 +41,6 @@ root:
             "bottom-right": [61, 61]
         - type: clip
           id: 3
-          bounds: [28, 160, 144, 122]
           complex:
             - rect: [28, 160, 144, 122]
               radius: [61, 61]
@@ -68,7 +66,6 @@ root:
           radius: [61, 61]
         - type: clip
           id: 4
-          bounds: [28, 302, 154, 122]
           complex:
             - rect: [28, 302, 154, 122]
               radius: 
@@ -105,7 +102,6 @@ root:
             "bottom-right": [61, 61]
         - type: clip
           id: 5
-          bounds: [202, 18, 145, 122]
           complex:
             - rect: [202, 18, 144.03334, 122]
               radius: 
@@ -138,7 +134,6 @@ root:
             "bottom-right": [61, 61]
         - type: clip
           id: 6
-          bounds: [202, 160, 144, 122]
           complex:
             - rect: [202, 160, 144, 122]
               radius: [61, 61]
@@ -163,7 +158,6 @@ root:
           radius: [61, 61]
         - type: clip
           id: 7
-          bounds: [202, 302, 154, 122]
           complex:
             - rect: [202, 302, 154, 122]
               radius: 
@@ -201,7 +195,6 @@ root:
             "bottom-right": [0, 0]
         - type: clip
           id: 8
-          bounds: [376, 18, 144, 122]
           complex:
             - rect: [376, 18, 144, 122]
               radius: [61, 61]
@@ -231,7 +224,6 @@ root:
           radius: [61, 61]
         - type: clip
           id: 9
-          bounds: [376, 160, 144, 122]
           complex:
             - rect: [376, 160, 144, 122]
               radius: [61, 61]
@@ -262,7 +254,6 @@ root:
           radius: [61, 61]
         - type: clip
           id: 10
-          bounds: [376, 302, 144, 122]
           complex:
             - rect: [376, 302, 144, 122]
               radius:

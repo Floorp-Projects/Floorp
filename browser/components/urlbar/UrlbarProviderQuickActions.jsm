@@ -10,17 +10,17 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { UrlbarProvider } = ChromeUtils.import(
+const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
   "resource:///modules/UrlbarUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   QuickActionsLoaderDefault:
     "resource:///modules/QuickActionsLoaderDefault.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 // These prefs are relative to the `browser.urlbar` branch.
@@ -44,9 +44,9 @@ const SUGGESTED_INDEX = 1;
 class ProviderQuickActions extends UrlbarProvider {
   constructor() {
     super();
-    UrlbarResult.addDynamicResultType(DYNAMIC_TYPE_NAME);
+    lazy.UrlbarResult.addDynamicResultType(DYNAMIC_TYPE_NAME);
     Services.tm.idleDispatchToMainThread(() =>
-      QuickActionsLoaderDefault.load()
+      lazy.QuickActionsLoaderDefault.load()
     );
   }
 
@@ -81,9 +81,9 @@ class ProviderQuickActions extends UrlbarProvider {
    */
   isActive(queryContext) {
     return (
-      UrlbarPrefs.get(ENABLED_PREF) &&
+      lazy.UrlbarPrefs.get(ENABLED_PREF) &&
       (!queryContext.restrictSource ||
-        queryContext.restrictSource == UrlbarTokenizer.RESTRICT.ACTIONS) &&
+        queryContext.restrictSource == lazy.UrlbarTokenizer.RESTRICT.ACTIONS) &&
       !queryContext.searchMode
     );
   }
@@ -118,7 +118,7 @@ class ProviderQuickActions extends UrlbarProvider {
       results.length = ACTIONS_SHOWN_FOCUS;
     }
 
-    const result = new UrlbarResult(
+    const result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.DYNAMIC,
       UrlbarUtils.RESULT_SOURCE.ACTIONS,
       {

@@ -66,7 +66,7 @@ impl Example for App {
             );
             let space_and_clip1 = SpaceAndClipInfo {
                 spatial_id: space1,
-                clip_id: root_space_and_clip.clip_id,
+                clip_chain_id: root_space_and_clip.clip_chain_id,
             };
 
             // now put some content into it.
@@ -122,7 +122,7 @@ impl Example for App {
             );
             let space_and_clip2 = SpaceAndClipInfo {
                 spatial_id: space2,
-                clip_id: root_space_and_clip.clip_id,
+                clip_chain_id: root_space_and_clip.clip_chain_id,
             };
 
             // give it a giant gray background just to distinguish it and to easily
@@ -170,7 +170,7 @@ impl Example for App {
                 (50, 350).by(50, 50),
                 SpaceAndClipInfo {
                     spatial_id: sticky_id,
-                    clip_id: space_and_clip2.clip_id,
+                    clip_chain_id: space_and_clip2.clip_chain_id,
                 },
             );
             builder.push_hit_test(

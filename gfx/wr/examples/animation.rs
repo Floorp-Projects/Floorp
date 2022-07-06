@@ -82,7 +82,7 @@ impl App {
 
         let space_and_clip = SpaceAndClipInfo {
             spatial_id,
-            clip_id: ClipId::root(pipeline_id),
+            clip_chain_id: ClipChainId::INVALID,
         };
         let clip_bounds = LayoutRect::from_size(bounds.size());
         let complex_clip = ComplexClipRegion {
@@ -94,6 +94,7 @@ impl App {
             space_and_clip.spatial_id,
             complex_clip,
         );
+        let clip_chain_id = builder.define_clip_chain(None, [clip_id]);
 
         // Fill it with a white rect
         builder.push_rect(
@@ -101,7 +102,7 @@ impl App {
                 LayoutRect::from_size(bounds.size()),
                 SpaceAndClipInfo {
                     spatial_id,
-                    clip_id,
+                    clip_chain_id,
                 }
             ),
             LayoutRect::from_size(bounds.size()),
