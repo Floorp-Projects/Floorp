@@ -11,21 +11,18 @@
 #include "mozilla/dom/FileSystemDirectoryHandleBinding.h"
 #include "mozilla/dom/FileSystemDirectoryIterator.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
-#include "mozilla/dom/POriginPrivateFileSystem.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla::dom {
 
 FileSystemDirectoryHandle::FileSystemDirectoryHandle(
-    nsIGlobalObject* aGlobal, RefPtr<FileSystemActorHolder>& aActor,
-    const fs::FileSystemEntryMetadata& aMetadata,
+    nsIGlobalObject* aGlobal, const fs::FileSystemEntryMetadata& aMetadata,
     fs::FileSystemRequestHandler* aRequestHandler)
-    : FileSystemHandle(aGlobal, aActor, aMetadata, aRequestHandler) {}
+    : FileSystemHandle(aGlobal, aMetadata, aRequestHandler) {}
 
 FileSystemDirectoryHandle::FileSystemDirectoryHandle(
-    nsIGlobalObject* aGlobal, RefPtr<FileSystemActorHolder>& aActor,
-    const fs::FileSystemEntryMetadata& aMetadata)
-    : FileSystemDirectoryHandle(aGlobal, aActor, aMetadata,
+    nsIGlobalObject* aGlobal, const fs::FileSystemEntryMetadata& aMetadata)
+    : FileSystemDirectoryHandle(aGlobal, aMetadata,
                                 new fs::FileSystemRequestHandler()) {}
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(FileSystemDirectoryHandle,

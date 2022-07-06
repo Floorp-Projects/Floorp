@@ -9,9 +9,8 @@
 
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/dom/PBackgroundFileSystemParent.h"
-#include "mozilla/dom/POriginPrivateFileSystemParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
-#include "mozilla/TaskQueue.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "nsISupports.h"
 
 namespace mozilla::dom {
@@ -22,9 +21,26 @@ class BackgroundFileSystemParent : public PBackgroundFileSystemParent {
       const mozilla::ipc::PrincipalInfo& aPrincipalInfo)
       : mPrincipalInfo(aPrincipalInfo) {}
 
-  mozilla::ipc::IPCResult RecvGetRoot(
-      mozilla::ipc::Endpoint<POriginPrivateFileSystemParent>&& aParentEp,
-      GetRootResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvGetRoot(GetRootResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvGetDirectoryHandle(
+      FileSystemGetHandleRequest&& aRequest,
+      GetDirectoryHandleResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvGetFileHandle(
+      FileSystemGetHandleRequest&& aRequest, GetFileHandleResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvGetFile(FileSystemGetFileRequest&& aRequest,
+                                      GetFileResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvResolve(FileSystemResolveRequest&& aRequest,
+                                      ResolveResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvGetEntries(FileSystemGetEntriesRequest&& aRequest,
+                                         GetEntriesResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvRemoveEntry(
+      FileSystemRemoveEntryRequest&& aRequest, RemoveEntryResolver&& aResolver);
 
   NS_INLINE_DECL_REFCOUNTING(BackgroundFileSystemParent)
 

@@ -6,12 +6,10 @@
 
 EXPORTS.mozilla.dom += [
     "BackgroundFileSystemParent.h",
-    "OriginPrivateFileSystemParent.h",
 ]
 
 UNIFIED_SOURCES += [
     "BackgroundFileSystemParent.cpp",
-    "OriginPrivateFileSystemParent.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

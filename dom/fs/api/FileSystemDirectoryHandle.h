@@ -23,12 +23,10 @@ struct FileSystemRemoveOptions;
 class FileSystemDirectoryHandle final : public FileSystemHandle {
  public:
   FileSystemDirectoryHandle(nsIGlobalObject* aGlobal,
-                            RefPtr<FileSystemActorHolder>& aActor,
                             const fs::FileSystemEntryMetadata& aMetadata,
                             fs::FileSystemRequestHandler* aRequestHandler);
 
   FileSystemDirectoryHandle(nsIGlobalObject* aGlobal,
-                            RefPtr<FileSystemActorHolder>& aActor,
                             const fs::FileSystemEntryMetadata& aMetadata);
 
   NS_DECL_ISUPPORTS_INHERITED
