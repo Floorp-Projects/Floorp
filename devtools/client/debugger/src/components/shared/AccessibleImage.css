@@ -139,7 +139,7 @@ html[dir="rtl"] .img.more-tabs {
 }
 
 .img.plus {
-  mask-image: url(chrome://devtools/content/debugger/images/plus.svg);
+  mask-image: url(chrome://devtools/skin/images/add.svg);
 }
 
 .img.prettyPrint {
@@ -151,7 +151,7 @@ html[dir="rtl"] .img.more-tabs {
 }
 
 .img.refresh {
-  mask-image: url(chrome://devtools/content/debugger/images/reload.svg);
+  mask-image: url(chrome://devtools/skin/images/reload.svg);
 }
 
 .img.regex-match {
