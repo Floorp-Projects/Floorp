@@ -281,6 +281,15 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .screen[pos=split] .section-main .main-content .steps {
   z-index: 1;
 }
+.onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar {
+  width: 400px;
+  margin-inline: -35px;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar .indicator {
+  border-radius: 0;
+  width: -moz-available;
+  margin-inline: 0;
+}
 .onboardingContainer .screen[pos=split] .section-secondary {
   border-radius: 8px 0 0 8px;
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
@@ -365,6 +374,13 @@ body[lwt-newtab-brighttext] {
   .onboardingContainer .screen[pos=split] .section-main .main-content .primary,
 .onboardingContainer .screen[pos=split] .section-main .main-content .secondary {
     width: 240px;
+  }
+  .onboardingContainer .screen[pos=split] .section-main .main-content .steps {
+    padding-block: 0;
+    margin: 0;
+  }
+  .onboardingContainer .screen[pos=split] .section-main .main-content .steps.progress-bar {
+    margin-inline: 0;
   }
   .onboardingContainer .screen[pos=split] .section-main:dir(rtl) {
     margin: 0 auto auto;
@@ -949,6 +965,23 @@ body[lwt-newtab-brighttext] {
   border-color: var(--checkbox-checked-bgcolor);
 }
 .onboardingContainer .steps .indicator.current:last-of-type:first-of-type {
+  opacity: 0;
+}
+.onboardingContainer .steps.progress-bar {
+  height: 6px;
+  padding-block: 0;
+  margin-block: 42px 0;
+}
+.onboardingContainer .steps.progress-bar .indicator {
+  border-radius: 0;
+  width: -moz-available;
+  margin-inline: 0;
+}
+.onboardingContainer .steps .indicator.current, .onboardingContainer .steps.progress-bar .indicator.complete {
+  opacity: 1;
+  border-color: var(--checkbox-checked-bgcolor);
+}
+.onboardingContainer .steps .indicator.current:last-of-type:first-of-type, .onboardingContainer .steps.progress-bar .indicator.complete:last-of-type:first-of-type {
   opacity: 0;
 }
 .onboardingContainer .primary,

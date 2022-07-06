@@ -234,7 +234,9 @@ export const SecondaryCTA = props => {
 export const StepsIndicator = props => {
   let steps = [];
   for (let i = 0; i < props.totalNumberOfScreens; i++) {
-    let className = i === props.order ? "current" : "";
+    let className = `${i === props.order ? "current" : ""} ${
+      i < props.order ? "complete" : ""
+    }`;
     steps.push(<div key={i} className={`indicator ${className}`} />);
   }
   return steps;

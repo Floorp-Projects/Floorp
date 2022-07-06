@@ -485,12 +485,14 @@ const MESSAGES = () => [
             background:
               "url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) no-repeat center/cover",
             text_color: "light",
+            progress_bar: true,
             logo: {
               imageURL:
                 "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
             },
             title: "A dialog with a background image",
-            subtitle: "The text color is configurable",
+            subtitle:
+              "The text color is configurable and a progress bar style step indicator is used",
             primary_button: {
               label: "Continue",
               action: {
@@ -511,6 +513,7 @@ const MESSAGES = () => [
           id: "BACKGROUND_COLOR",
           content: {
             background: "white",
+            progress_bar: true,
             logo: {
               height: "200px",
               imageURL: "",
@@ -522,8 +525,7 @@ const MESSAGES = () => [
             },
             title_style: "fancy shine",
             text_color: "dark",
-            subtitle:
-              "For the best privacy protection, keep Firefox in easy reach.",
+            subtitle: "Using progress bar style step indicator",
             primary_button: {
               label: "Continue",
               action: {
