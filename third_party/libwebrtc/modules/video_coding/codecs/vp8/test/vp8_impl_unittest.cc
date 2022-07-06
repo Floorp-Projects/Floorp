@@ -27,6 +27,7 @@
 #include "modules/video_coding/utility/vp8_header_parser.h"
 #include "rtc_base/time_utils.h"
 #include "test/field_trial.h"
+#include "test/mappable_native_buffer.h"
 #include "test/video_codec_settings.h"
 
 namespace webrtc {
@@ -714,5 +715,62 @@ TEST_F(TestVp8Impl, GetEncoderInfoFpsAllocationSimulcastVideo) {
   EXPECT_THAT(encoder_->GetEncoderInfo().fps_allocation,
               ::testing::ElementsAreArray(expected_fps_allocation));
 }
+
+class TestVp8ImplForPixelFormat
+    : public TestVp8Impl,
+      public ::testing::WithParamInterface<VideoFrameBuffer::Type> {
+ public:
+  TestVp8ImplForPixelFormat() : TestVp8Impl(), mappable_type_(GetParam()) {}
+
+ protected:
+  VideoFrameBuffer::Type mappable_type_;
+};
+
+TEST_P(TestVp8ImplForPixelFormat, EncodeNativeFrameSimulcast) {
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
+
+  // Configure simulcast.
+  codec_settings_.numberOfSimulcastStreams = 3;
+  codec_settings_.simulcastStream[0] = {
+      kWidth / 4, kHeight / 4, kFramerateFps, 1, 4000, 3000, 2000, 80, true};
+  codec_settings_.simulcastStream[1] = {
+      kWidth / 2, kHeight / 2, kFramerateFps, 1, 4000, 3000, 2000, 80, true};
+  codec_settings_.simulcastStream[2] = {
+      kWidth, kHeight, kFramerateFps, 1, 4000, 3000, 2000, 80, true};
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
+            encoder_->InitEncode(&codec_settings_, kSettings));
+
+  // Create a zero-conversion NV12 frame (calling ToI420 on it crashes).
+  VideoFrame input_frame =
+      test::CreateMappableNativeFrame(1, mappable_type_, kWidth, kHeight);
+
+  EncodedImage encoded_frame;
+  CodecSpecificInfo codec_specific_info;
+  EncodeAndWaitForFrame(input_frame, &encoded_frame, &codec_specific_info);
+
+  // After encoding, we expect one mapping per simulcast layer.
+  rtc::scoped_refptr<test::MappableNativeBuffer> mappable_buffer =
+      test::GetMappableNativeBufferFromVideoFrame(input_frame);
+  std::vector<rtc::scoped_refptr<VideoFrameBuffer>> mapped_buffers =
+      mappable_buffer->GetMappedFramedBuffers();
+  ASSERT_EQ(mapped_buffers.size(), 3u);
+  EXPECT_EQ(mapped_buffers[0]->type(), mappable_type_);
+  EXPECT_EQ(mapped_buffers[0]->width(), kWidth);
+  EXPECT_EQ(mapped_buffers[0]->height(), kHeight);
+  EXPECT_EQ(mapped_buffers[1]->type(), mappable_type_);
+  EXPECT_EQ(mapped_buffers[1]->width(), kWidth / 2);
+  EXPECT_EQ(mapped_buffers[1]->height(), kHeight / 2);
+  EXPECT_EQ(mapped_buffers[2]->type(), mappable_type_);
+  EXPECT_EQ(mapped_buffers[2]->width(), kWidth / 4);
+  EXPECT_EQ(mapped_buffers[2]->height(), kHeight / 4);
+  EXPECT_FALSE(mappable_buffer->DidConvertToI420());
+
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
+}
+
+INSTANTIATE_TEST_SUITE_P(All,
+                         TestVp8ImplForPixelFormat,
+                         ::testing::Values(VideoFrameBuffer::Type::kI420,
+                                           VideoFrameBuffer::Type::kNV12));
 
 }  // namespace webrtc

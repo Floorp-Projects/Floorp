@@ -95,8 +95,13 @@ class LibvpxVp8Encoder : public VideoEncoder {
   bool UpdateVpxConfiguration(size_t stream_index);
 
   void MaybeUpdatePixelFormat(vpx_img_fmt fmt);
-  void PrepareI420Image(const I420BufferInterface* frame);
-  void PrepareNV12Image(const NV12BufferInterface* frame);
+  // Prepares |raw_image_| to reference image data of |buffer|, or of mapped or
+  // scaled versions of |buffer|. Returns a list of buffers that got referenced
+  // as a result, allowing the caller to keep references to them until after
+  // encoding has finished. On failure to convert the buffer, an empty list is
+  // returned.
+  std::vector<rtc::scoped_refptr<VideoFrameBuffer>> PrepareBuffers(
+      rtc::scoped_refptr<VideoFrameBuffer> buffer);
 
   const std::unique_ptr<LibvpxInterface> libvpx_;
 
