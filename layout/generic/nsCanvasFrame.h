@@ -112,7 +112,7 @@ class nsCanvasFrame final : public nsContainerFrame,
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
-  virtual nsresult GetContentForEvent(mozilla::WidgetEvent* aEvent,
+  virtual nsresult GetContentForEvent(const mozilla::WidgetEvent* aEvent,
                                       nsIContent** aContent) override;
 
   nsRect CanvasArea() const;

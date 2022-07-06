@@ -2455,7 +2455,7 @@ bool nsImageFrame::IsLeafDynamic() const {
   return !shadow;
 }
 
-nsresult nsImageFrame::GetContentForEvent(WidgetEvent* aEvent,
+nsresult nsImageFrame::GetContentForEvent(const WidgetEvent* aEvent,
                                           nsIContent** aContent) {
   NS_ENSURE_ARG_POINTER(aContent);
 
