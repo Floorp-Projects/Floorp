@@ -208,7 +208,7 @@ class ScriptModule extends Module {
     }
 
     const realm = this.#getRealmInfoFromTarget({ contextId, realmId, sandbox });
-    const { result } = await this.messageHandler.forwardCommand({
+    const evaluationResult = await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "evaluateExpression",
       destination: {
@@ -221,10 +221,22 @@ class ScriptModule extends Module {
       },
     });
 
-    return {
-      result,
-      realm: realm.realm,
-    };
+    const rv = { realm: realm.realm };
+    switch (evaluationResult.evaluationStatus) {
+      // TODO: Compare with EvaluationStatus.Normal after Bug 1774444 is fixed.
+      case "normal":
+        rv.result = evaluationResult.result;
+        break;
+      // TODO: Compare with EvaluationStatus.Throw after Bug 1774444 is fixed.
+      case "throw":
+        rv.exceptionDetails = evaluationResult.exceptionDetails;
+        break;
+      default:
+        throw new lazy.error.UnsupportedOperationError(
+          `Unsupported evaluation status ${evaluationResult.evaluationStatus}`
+        );
+    }
+    return rv;
   }
 
   #getRealmInfoFromTarget({ contextId, realmId, sandbox }) {
