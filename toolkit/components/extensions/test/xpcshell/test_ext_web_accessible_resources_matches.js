@@ -83,8 +83,12 @@ add_task(async function test_web_accessible_resources() {
 
       web_accessible_resources: [
         {
-          resources: ["/accessible.html", "/image.png", "/script.js"],
+          resources: ["/accessible.html", "/script.js"],
           matches: ["http://example.com/data/*"],
+        },
+        {
+          resources: ["/image.png"],
+          matches: ["<all_urls>"],
         },
       ],
     },
