@@ -6,6 +6,8 @@
 
 #include "shell/ShellModuleObjectWrapper.h"
 
+#include "mozilla/Maybe.h"
+
 #include "jsapi.h"  // JS_GetProperty, JS::Call, JS_NewPlainObject, JS_DefineProperty
 
 #include "builtin/ModuleObject.h"     // js::ModuleObject
@@ -153,30 +155,64 @@ bool ListToArrayFilter(JSContext* cx, JS::Handle<JS::Value> from,
   return true;
 }
 
-template <class T, typename FilterT>
+static Value StringOrNullValue(JSString* maybeString) {
+  if (!maybeString) {
+    return NullValue();
+  }
+
+  return StringValue(maybeString);
+}
+
+static Value Uint32Value(uint32_t x) {
+  MOZ_ASSERT(x <= INT32_MAX);
+  return Int32Value(x);
+}
+
+static Value Uint32OrUndefinedValue(mozilla::Maybe<uint32_t> x) {
+  if (x.isNothing()) {
+    return UndefinedValue();
+  }
+
+  return Uint32Value(x.value());
+}
+
+static Value StatusValue(ModuleStatus status) {
+  return Int32Value(int32_t(status));
+}
+
+static Value ObjectOrUndefinedValue(JSObject* object) {
+  if (!object) {
+    return UndefinedValue();
+  }
+
+  return ObjectValue(*object);
+}
+
+template <class T, typename RawGetterT, typename FilterT>
 bool ShellModuleWrapperGetter(JSContext* cx, const JS::CallArgs& args,
-                              const char* prop, FilterT filter) {
+                              RawGetterT rawGetter, FilterT filter) {
   using TargetT = typename T::Target;
 
   JS::Rooted<TargetT*> obj(cx, args.thisv().toObject().as<T>().get());
-  JS::Rooted<JS::Value> rval(cx);
-  if (!JS_GetProperty(cx, obj, prop, &rval)) {
+  JS::Rooted<JS::Value> raw(cx, rawGetter(obj));
+
+  JS::Rooted<JS::Value> filtered(cx);
+  if (!filter(cx, raw, &filtered)) {
     return false;
   }
 
-  JS::Rooted<JS::Value> filtered(cx);
-  if (!filter(cx, rval, &filtered)) {
-    return false;
-  }
   args.rval().set(filtered);
   return true;
 }
 
-#define DEFINE_GETTER_FUNCTIONS(CLASS, PROP, FILTER)                           \
+#define DEFINE_GETTER_FUNCTIONS(CLASS, PROP, TO_VALUE, FILTER)                 \
+  static Value Shell##CLASS##Wrapper_##PROP##Getter_raw(CLASS* obj) {          \
+    return TO_VALUE(obj->PROP());                                              \
+  }                                                                            \
   static bool Shell##CLASS##Wrapper_##PROP##Getter_impl(                       \
       JSContext* cx, const JS::CallArgs& args) {                               \
-    return ShellModuleWrapperGetter<Shell##CLASS##Wrapper>(cx, args, #PROP,    \
-                                                           FILTER);            \
+    return ShellModuleWrapperGetter<Shell##CLASS##Wrapper>(                    \
+        cx, args, Shell##CLASS##Wrapper_##PROP##Getter_raw, FILTER);           \
   }                                                                            \
   static bool Shell##CLASS##Wrapper_##PROP##Getter(JSContext* cx,              \
                                                    unsigned argc, Value* vp) { \
@@ -186,20 +222,24 @@ bool ShellModuleWrapperGetter(JSContext* cx, const JS::CallArgs& args,
         cx, args);                                                             \
   }
 
-DEFINE_GETTER_FUNCTIONS(ModuleRequestObject, specifier, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleRequestObject, assertions, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleRequestObject, specifier, StringOrNullValue,
+                        IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleRequestObject, assertions, ObjectOrNullValue,
+                        IdentFilter)
 
 static const JSPropertySpec ShellModuleRequestObjectWrapper_accessors[] = {
     JS_PSG("specifier", ShellModuleRequestObjectWrapper_specifierGetter, 0),
     JS_PSG("assertions", ShellModuleRequestObjectWrapper_assertionsGetter, 0),
     JS_PS_END};
 
-DEFINE_GETTER_FUNCTIONS(ImportEntryObject, moduleRequest,
+DEFINE_GETTER_FUNCTIONS(ImportEntryObject, moduleRequest, ObjectOrNullValue,
                         SingleFilter<ShellModuleRequestObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(ImportEntryObject, importName, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ImportEntryObject, localName, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ImportEntryObject, lineNumber, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ImportEntryObject, columnNumber, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ImportEntryObject, importName, StringOrNullValue,
+                        IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ImportEntryObject, localName, StringValue, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ImportEntryObject, lineNumber, Uint32Value, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ImportEntryObject, columnNumber, Uint32Value,
+                        IdentFilter)
 
 static const JSPropertySpec ShellImportEntryObjectWrapper_accessors[] = {
     JS_PSG("moduleRequest", ShellImportEntryObjectWrapper_moduleRequestGetter,
@@ -210,13 +250,17 @@ static const JSPropertySpec ShellImportEntryObjectWrapper_accessors[] = {
     JS_PSG("columnNumber", ShellImportEntryObjectWrapper_columnNumberGetter, 0),
     JS_PS_END};
 
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, exportName, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, moduleRequest,
+DEFINE_GETTER_FUNCTIONS(ExportEntryObject, exportName, StringOrNullValue,
+                        IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ExportEntryObject, moduleRequest, ObjectOrNullValue,
                         SingleFilter<ShellModuleRequestObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, importName, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, localName, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, lineNumber, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ExportEntryObject, columnNumber, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ExportEntryObject, importName, StringOrNullValue,
+                        IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ExportEntryObject, localName, StringOrNullValue,
+                        IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ExportEntryObject, lineNumber, Uint32Value, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ExportEntryObject, columnNumber, Uint32Value,
+                        IdentFilter)
 
 static const JSPropertySpec ShellExportEntryObjectWrapper_accessors[] = {
     JS_PSG("exportName", ShellExportEntryObjectWrapper_exportNameGetter, 0),
@@ -228,10 +272,12 @@ static const JSPropertySpec ShellExportEntryObjectWrapper_accessors[] = {
     JS_PSG("columnNumber", ShellExportEntryObjectWrapper_columnNumberGetter, 0),
     JS_PS_END};
 
-DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, moduleRequest,
+DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, moduleRequest, ObjectOrNullValue,
                         SingleFilter<ShellModuleRequestObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, lineNumber, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, columnNumber, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, lineNumber, Uint32Value,
+                        IdentFilter)
+DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, columnNumber, Uint32Value,
+                        IdentFilter)
 
 static const JSPropertySpec ShellRequestedModuleObjectWrapper_accessors[] = {
     JS_PSG("moduleRequest",
@@ -241,30 +287,36 @@ static const JSPropertySpec ShellRequestedModuleObjectWrapper_accessors[] = {
            0),
     JS_PS_END};
 
-DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, status, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluationError, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules,
+DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, ObjectOrNullValue,
+                        IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, status, StatusValue, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluationError, Value, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, ObjectValue,
                         ArrayFilter<ShellRequestedModuleObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, importEntries,
+DEFINE_GETTER_FUNCTIONS(ModuleObject, importEntries, ObjectValue,
                         ArrayFilter<ShellImportEntryObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, localExportEntries,
+DEFINE_GETTER_FUNCTIONS(ModuleObject, localExportEntries, ObjectValue,
                         ArrayFilter<ShellExportEntryObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, indirectExportEntries,
+DEFINE_GETTER_FUNCTIONS(ModuleObject, indirectExportEntries, ObjectValue,
                         ArrayFilter<ShellExportEntryObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, starExportEntries,
+DEFINE_GETTER_FUNCTIONS(ModuleObject, starExportEntries, ObjectValue,
                         ArrayFilter<ShellExportEntryObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, dfsIndex, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, dfsAncestorIndex, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, async, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, topLevelCapability, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, asyncEvaluatingPostOrder, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, asyncParentModules,
+DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeDfsIndex, Uint32OrUndefinedValue,
+                        IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeDfsAncestorIndex,
+                        Uint32OrUndefinedValue, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, isAsync, BooleanValue, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeTopLevelCapability,
+                        ObjectOrUndefinedValue, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeAsyncEvaluatingPostOrder,
+                        Uint32OrUndefinedValue, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, asyncParentModules, ObjectOrNullValue,
                         ListToArrayFilter<ShellModuleObjectWrapper>)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, pendingAsyncDependencies, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, maybePendingAsyncDependencies,
+                        Uint32OrUndefinedValue, IdentFilter)
 
 static const JSPropertySpec ShellModuleObjectWrapper_accessors[] = {
-    JS_PSG("namespace", ShellModuleObjectWrapper_namespaceGetter, 0),
+    JS_PSG("namespace", ShellModuleObjectWrapper_namespace_Getter, 0),
     JS_PSG("status", ShellModuleObjectWrapper_statusGetter, 0),
     JS_PSG("evaluationError", ShellModuleObjectWrapper_evaluationErrorGetter,
            0),
@@ -277,18 +329,18 @@ static const JSPropertySpec ShellModuleObjectWrapper_accessors[] = {
            ShellModuleObjectWrapper_indirectExportEntriesGetter, 0),
     JS_PSG("starExportEntries",
            ShellModuleObjectWrapper_starExportEntriesGetter, 0),
-    JS_PSG("dfsIndex", ShellModuleObjectWrapper_dfsIndexGetter, 0),
-    JS_PSG("dfsAncestorIndex", ShellModuleObjectWrapper_dfsAncestorIndexGetter,
-           0),
-    JS_PSG("async", ShellModuleObjectWrapper_asyncGetter, 0),
+    JS_PSG("dfsIndex", ShellModuleObjectWrapper_maybeDfsIndexGetter, 0),
+    JS_PSG("dfsAncestorIndex",
+           ShellModuleObjectWrapper_maybeDfsAncestorIndexGetter, 0),
+    JS_PSG("async", ShellModuleObjectWrapper_isAsyncGetter, 0),
     JS_PSG("topLevelCapability",
-           ShellModuleObjectWrapper_topLevelCapabilityGetter, 0),
+           ShellModuleObjectWrapper_maybeTopLevelCapabilityGetter, 0),
     JS_PSG("asyncEvaluatingPostOrder",
-           ShellModuleObjectWrapper_asyncEvaluatingPostOrderGetter, 0),
+           ShellModuleObjectWrapper_maybeAsyncEvaluatingPostOrderGetter, 0),
     JS_PSG("asyncParentModules",
            ShellModuleObjectWrapper_asyncParentModulesGetter, 0),
     JS_PSG("pendingAsyncDependencies",
-           ShellModuleObjectWrapper_pendingAsyncDependenciesGetter, 0),
+           ShellModuleObjectWrapper_maybePendingAsyncDependenciesGetter, 0),
     JS_PS_END};
 
 #undef DEFINE_GETTER_FUNCTIONS

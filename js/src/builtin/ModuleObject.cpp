@@ -39,6 +39,10 @@
 
 using namespace js;
 
+using mozilla::Maybe;
+using mozilla::Nothing;
+using mozilla::Some;
+
 static_assert(ModuleStatus::Unlinked < ModuleStatus::Linking &&
                   ModuleStatus::Linking < ModuleStatus::Linked &&
                   ModuleStatus::Linked < ModuleStatus::Evaluated &&
@@ -404,6 +408,15 @@ DEFINE_GETTER_FUNCTIONS(ModuleRequestObject, assertions, AssertionSlot)
 
 DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ModuleRequestObject, specifier)
 
+ArrayObject* ModuleRequestObject::assertions() const {
+  JSObject* obj = getReservedSlot(AssertionSlot).toObjectOrNull();
+  if (!obj) {
+    return nullptr;
+  }
+
+  return &obj->as<ArrayObject>();
+}
+
 /* static */
 bool ModuleRequestObject::isInstance(HandleValue value) {
   return value.isObject() && value.toObject().is<ModuleRequestObject>();
@@ -513,7 +526,7 @@ bool IndirectBindingMap::lookup(jsid name, ModuleEnvironmentObject** envOut,
   MOZ_ASSERT(
       binding.environment->containsPure(binding.targetName, binding.prop));
   *envOut = binding.environment;
-  *propOut = mozilla::Some(binding.prop);
+  *propOut = Some(binding.prop);
   return true;
 }
 
@@ -634,8 +647,7 @@ bool ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(
   Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
   if (id.isSymbol()) {
     if (id.isWellKnownSymbol(JS::SymbolCode::toStringTag)) {
-      desc.set(mozilla::Some(
-          PropertyDescriptor::Data(StringValue(cx->names().Module))));
+      desc.set(Some(PropertyDescriptor::Data(StringValue(cx->names().Module))));
       return true;
     }
 
@@ -658,9 +670,9 @@ bool ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(
     return false;
   }
 
-  desc.set(mozilla::Some(PropertyDescriptor::Data(
-      value,
-      {JS::PropertyAttribute::Enumerable, JS::PropertyAttribute::Writable})));
+  desc.set(
+      Some(PropertyDescriptor::Data(value, {JS::PropertyAttribute::Enumerable,
+                                            JS::PropertyAttribute::Writable})));
   return true;
 }
 
@@ -1155,21 +1167,37 @@ void ModuleObject::setAsyncEvaluatingFalse() {
                          PrivateUint32Value(ASYNC_EVALUATING_POST_ORDER_FALSE));
 }
 
-uint32_t ModuleObject::dfsIndex() const {
-  int32_t index = getReservedSlot(DFSIndexSlot).toInt32();
+Maybe<uint32_t> ModuleObject::maybeDfsIndex() const {
+  Value value = getReservedSlot(DFSIndexSlot);
+  if (value.isUndefined()) {
+    return mozilla::Nothing();
+  }
+
+  int32_t index = value.toInt32();
   MOZ_ASSERT(index >= 0);
-  return index;
+  return Some(index);
 }
+
+uint32_t ModuleObject::dfsIndex() const { return maybeDfsIndex().value(); }
 
 void ModuleObject::setDfsIndex(uint32_t index) {
   MOZ_ASSERT(index <= INT32_MAX);
   setReservedSlot(DFSIndexSlot, Int32Value(index));
 }
 
-uint32_t ModuleObject::dfsAncestorIndex() const {
-  int32_t index = getReservedSlot(DFSAncestorIndexSlot).toInt32();
+Maybe<uint32_t> ModuleObject::maybeDfsAncestorIndex() const {
+  Value value = getReservedSlot(DFSAncestorIndexSlot);
+  if (value.isUndefined()) {
+    return mozilla::Nothing();
+  }
+
+  int32_t index = value.toInt32();
   MOZ_ASSERT(index >= 0);
-  return index;
+  return Some(index);
+}
+
+uint32_t ModuleObject::dfsAncestorIndex() const {
+  return maybeDfsAncestorIndex().value();
 }
 
 void ModuleObject::setDfsAncestorIndex(uint32_t index) {
@@ -1182,10 +1210,19 @@ void ModuleObject::clearDfsIndexes() {
   setReservedSlot(DFSAncestorIndexSlot, UndefinedValue());
 }
 
+JSObject* ModuleObject::maybeTopLevelCapability() const {
+  Value value = getReservedSlot(TopLevelCapabilitySlot);
+  if (value.isUndefined()) {
+    return nullptr;
+  }
+
+  return &value.toObject();
+}
+
 JSObject* ModuleObject::topLevelCapability() const {
-  Value capability = getReservedSlot(TopLevelCapabilitySlot);
-  MOZ_RELEASE_ASSERT(capability.isObject());
-  return &capability.toObject();
+  JSObject* capability = maybeTopLevelCapability();
+  MOZ_RELEASE_ASSERT(capability);
+  return capability;
 }
 
 PromiseObject* ModuleObject::createTopLevelCapability(
@@ -1214,13 +1251,31 @@ bool ModuleObject::appendAsyncParentModule(JSContext* cx,
   return self->asyncParentModules()->append(cx, parentValue);
 }
 
+Maybe<uint32_t> ModuleObject::maybePendingAsyncDependencies() const {
+  Value value = getReservedSlot(PendingAsyncDependenciesSlot);
+  if (value.isUndefined()) {
+    return Nothing();
+  }
+
+  return Some(value.toInt32());
+}
+
 uint32_t ModuleObject::pendingAsyncDependencies() const {
-  return getReservedSlot(PendingAsyncDependenciesSlot).toInt32();
+  return maybePendingAsyncDependencies().value();
+}
+
+Maybe<uint32_t> ModuleObject::maybeAsyncEvaluatingPostOrder() const {
+  Value value = getReservedSlot(AsyncEvaluatingPostOrderSlot);
+  if (value.isUndefined()) {
+    return Nothing();
+  }
+
+  MOZ_ASSERT(isAsyncEvaluating());
+  return Some(value.toPrivateUint32());
 }
 
 uint32_t ModuleObject::getAsyncEvaluatingPostOrder() const {
-  MOZ_ASSERT(isAsyncEvaluating());
-  return getReservedSlot(AsyncEvaluatingPostOrderSlot).toPrivateUint32();
+  return maybeAsyncEvaluatingPostOrder().value();
 }
 
 void ModuleObject::setPendingAsyncDependencies(uint32_t newValue) {

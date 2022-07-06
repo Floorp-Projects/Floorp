@@ -57,6 +57,7 @@ class ModuleRequestObject : public NativeObject {
       Handle<ArrayObject*> maybeAssertions);
 
   JSAtom* specifier() const;
+  ArrayObject* assertions() const;
 };
 
 class ImportEntryObject : public NativeObject {
@@ -315,7 +316,9 @@ class ModuleObject : public NativeObject {
   ModuleEnvironmentObject* environment() const;
   ModuleNamespaceObject* namespace_();
   ModuleStatus status() const;
+  mozilla::Maybe<uint32_t> maybeDfsIndex() const;
   uint32_t dfsIndex() const;
+  mozilla::Maybe<uint32_t> maybeDfsAncestorIndex() const;
   uint32_t dfsAncestorIndex() const;
   bool hadEvaluationError() const;
   Value evaluationError() const;
@@ -344,9 +347,12 @@ class ModuleObject : public NativeObject {
   void setPendingAsyncDependencies(uint32_t newValue);
   void setInitialTopLevelCapability(HandleObject promiseObj);
   bool hasTopLevelCapability() const;
+  JSObject* maybeTopLevelCapability() const;
   JSObject* topLevelCapability() const;
   ListObject* asyncParentModules() const;
+  mozilla::Maybe<uint32_t> maybePendingAsyncDependencies() const;
   uint32_t pendingAsyncDependencies() const;
+  mozilla::Maybe<uint32_t> maybeAsyncEvaluatingPostOrder() const;
   uint32_t getAsyncEvaluatingPostOrder() const;
   void setCycleRoot(ModuleObject* cycleRoot);
   ModuleObject* getCycleRoot() const;
