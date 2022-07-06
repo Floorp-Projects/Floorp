@@ -53,6 +53,7 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/reject-global-this
    eslint-plugin-mozilla/reject-globalThis-modification
    eslint-plugin-mozilla/reject-importGlobalProperties
+   eslint-plugin-mozilla/reject-lazy-imports-into-globals
    eslint-plugin-mozilla/reject-mixing-eager-and-lazy
    eslint-plugin-mozilla/reject-osfile
    eslint-plugin-mozilla/reject-relative-requires

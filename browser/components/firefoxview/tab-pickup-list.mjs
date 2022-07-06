@@ -4,13 +4,13 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "SyncedTabs",
+  "resource://services-sync/SyncedTabs.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(globalThis, {
-  SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
-  Services: "resource://gre/modules/Services.jsm",
-});
 
 import {
   formatURIForDisplay,
@@ -66,7 +66,7 @@ class TabPickupList extends HTMLElement {
 
   async getSyncedTabData() {
     let tabs = [];
-    let clients = await SyncedTabs.getTabClients();
+    let clients = await lazy.SyncedTabs.getTabClients();
 
     for (let client of clients) {
       for (let tab of client.tabs) {

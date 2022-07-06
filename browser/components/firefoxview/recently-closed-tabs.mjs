@@ -4,13 +4,13 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetters(globalThis, {
-  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
-});
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "SessionStore",
+  "resource:///modules/sessionstore/SessionStore.jsm"
+);
 
 import {
   formatURIForDisplay,
@@ -73,12 +73,12 @@ class RecentlyClosedTabsList extends HTMLElement {
     const item = event.target.closest(".closed-tab-li");
     const index = [...this.tabsList.children].indexOf(item);
 
-    SessionStore.undoCloseTab(getWindow(), index);
+    lazy.SessionStore.undoCloseTab(getWindow(), index);
     this.tabsList.removeChild(item);
   }
 
   initiateTabsList() {
-    let closedTabs = SessionStore.getClosedTabData(getWindow());
+    let closedTabs = lazy.SessionStore.getClosedTabData(getWindow());
     closedTabs = closedTabs.slice(0, this.maxTabsLength);
     this.closedTabsData = closedTabs;
 
@@ -90,7 +90,7 @@ class RecentlyClosedTabsList extends HTMLElement {
   }
 
   updateTabsList() {
-    let newClosedTabs = SessionStore.getClosedTabData(getWindow());
+    let newClosedTabs = lazy.SessionStore.getClosedTabData(getWindow());
     newClosedTabs = newClosedTabs.slice(0, this.maxTabsLength);
 
     if (this.closedTabsData.length && !newClosedTabs.length) {
@@ -264,7 +264,7 @@ class RecentlyClosedTabsContainer extends HTMLElement {
 
   getClosedTabCount = () => {
     try {
-      return SessionStore.getClosedTabCount(getWindow());
+      return lazy.SessionStore.getClosedTabCount(getWindow());
     } catch (ex) {
       return 0;
     }
