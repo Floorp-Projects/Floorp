@@ -46,6 +46,7 @@ class SessionAccessibility final
 
   static void Init();
   static RefPtr<SessionAccessibility> GetInstanceFor(Accessible* aAccessible);
+  static RefPtr<SessionAccessibility> GetInstanceFor(PresShell* aPresShell);
 
   // Native implementations
   using Base::AttachNative;
@@ -113,6 +114,7 @@ class SessionAccessibility final
 
   static void RegisterAccessible(Accessible* aAccessible);
   static void UnregisterAccessible(Accessible* aAccessible);
+  static void UnregisterAll(PresShell* aPresShell);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SessionAccessibility)
 
