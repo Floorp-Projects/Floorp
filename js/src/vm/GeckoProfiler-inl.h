@@ -119,6 +119,22 @@ AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(
     : AutoGeckoProfilerEntry(cx, label, /* dynamicString */ nullptr,
                              categoryPair, flags) {}
 
+MOZ_ALWAYS_INLINE
+AutoJSMethodProfilerEntry::AutoJSMethodProfilerEntry(JSContext* cx,
+                                                     const char* label,
+                                                     const char* dynamicString)
+    : AutoGeckoProfilerEntry(
+          cx, label, dynamicString, JS::ProfilingCategoryPair::JS_Builtin,
+          uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS) |
+              uint32_t(ProfilingStackFrame::Flags::STRING_TEMPLATE_METHOD)) {}
+
+MOZ_ALWAYS_INLINE
+AutoJSConstructorProfilerEntry::AutoJSConstructorProfilerEntry(
+    JSContext* cx, const char* label)
+    : AutoGeckoProfilerEntry(
+          cx, label, "constructor", JS::ProfilingCategoryPair::JS_Builtin,
+          uint32_t(ProfilingStackFrame::Flags::RELEVANT_FOR_JS)) {}
+
 }  // namespace js
 
 #endif  // vm_GeckoProfiler_inl_h

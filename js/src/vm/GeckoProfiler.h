@@ -206,6 +206,36 @@ class MOZ_RAII AutoGeckoProfilerEntry {
 };
 
 /*
+ * Use this RAII class to add Gecko Profiler label frames for methods of the
+ * JavaScript builtin API.
+ * These frames will be exposed to JavaScript developers (ie they won't be
+ * filtered out when using the "JavaScript" filtering option in the Firefox
+ * Profiler UI).
+ * Technical note: the label and dynamicString values will be joined with a dot
+ * separator if dynamicString is present.
+ */
+class MOZ_RAII AutoJSMethodProfilerEntry : public AutoGeckoProfilerEntry {
+ public:
+  explicit MOZ_ALWAYS_INLINE AutoJSMethodProfilerEntry(
+      JSContext* cx, const char* label, const char* dynamicString = nullptr);
+};
+
+/*
+ * Use this RAII class to add Gecko Profiler label frames for constructors of
+ * the JavaScript builtin API.
+ * These frames will be exposed to JavaScript developers (ie they won't be
+ * filtered out when using the "JavaScript" filtering option in the Firefox
+ * Profiler UI).
+ * Technical note: the word "constructor" will be appended to the label (with a
+ * space separator).
+ */
+class MOZ_RAII AutoJSConstructorProfilerEntry : public AutoGeckoProfilerEntry {
+ public:
+  explicit MOZ_ALWAYS_INLINE AutoJSConstructorProfilerEntry(JSContext* cx,
+                                                            const char* label);
+};
+
+/*
  * This class is used in the interpreter to bound regions where the baseline JIT
  * being entered via OSR.  It marks the current top profiling stack frame as
  * OSR-ed
