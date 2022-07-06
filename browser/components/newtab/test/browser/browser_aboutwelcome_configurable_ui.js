@@ -274,6 +274,81 @@ add_task(async function test_aboutwelcome_with_text_color_override() {
 });
 
 /**
+ * Test rendering a screen with a "progress bar" style step indicator
+ */
+add_task(async function test_aboutwelcome_with_progress_bar() {
+  let screens = [];
+  // we need at least three screens to test the progress bar styling
+  for (let i = 0; i < 3; i++) {
+    screens.push(
+      makeTestContent("TEST_PROGRESS_BAR_OVERRIDE_STEP", {
+        progress_bar: true,
+        primary_button: {
+          label: "next",
+          action: {
+            navigate: true,
+          },
+        },
+      })
+    );
+  }
+
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "aboutwelcome",
+    enabled: true,
+    value: {
+      screens,
+    },
+  });
+  let browser = await openAboutWelcome(JSON.stringify(screens));
+
+  // Advance to second screen
+  await onButtonClick(browser, "button.primary");
+
+  // Ensure step indicator has progress bar styles
+  await test_element_styles(
+    browser,
+    ".indicator",
+    // Expected styles:
+    {
+      height: "6px",
+      "padding-block": "0px",
+      margin: "0px",
+    }
+  );
+
+  // Both completed and current steps should have border color set
+  await test_element_styles(
+    browser,
+    ".indicator.complete",
+    // Expected styles:
+    {
+      "border-color": "rgb(0, 221, 255)",
+    }
+  );
+  await test_element_styles(
+    browser,
+    ".indicator.current",
+    // Expected styles:
+    {
+      "border-color": "rgb(0, 221, 255)",
+    }
+  );
+
+  // Upcoming steps should be gray
+  await test_element_styles(
+    browser,
+    ".indicator:not(.current):not(.complete)",
+    // Expected styles:
+    {
+      "border-color": "rgb(251, 251, 254)",
+    }
+  );
+
+  await doExperimentCleanup();
+});
+
+/**
  * Test rendering a screen with a dismiss button
  */
 add_task(async function test_aboutwelcome_dismiss_button() {

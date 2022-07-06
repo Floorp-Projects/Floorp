@@ -360,7 +360,7 @@ const StepsIndicator = props => {
   let steps = [];
 
   for (let i = 0; i < props.totalNumberOfScreens; i++) {
-    let className = i === props.order ? "current" : "";
+    let className = `${i === props.order ? "current" : ""} ${i < props.order ? "complete" : ""}`;
     steps.push( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       key: i,
       className: `indicator ${className}`
@@ -813,7 +813,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       content: content,
       handleAction: this.props.handleAction
     }) : null)), hideStepsIndicator ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("nav", {
-      className: "steps",
+      className: `steps ${content.progress_bar ? "progress-bar" : ""}`,
       "data-l10n-id": "onboarding-welcome-steps-indicator",
       "data-l10n-args": JSON.stringify({
         current: this.props.order,
