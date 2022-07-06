@@ -34,7 +34,7 @@
       }
     }
     is(unseen_longhands.size, 0,
-       "All longhands should be mapped to some animation type");
+       "All longhands should be mapped to some animation type: " + [...unseen_longhands].join(", "));
 
     SimpleTest.finish();
   };
