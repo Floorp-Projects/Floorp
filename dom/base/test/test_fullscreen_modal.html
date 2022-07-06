@@ -51,6 +51,9 @@ async function testFullscreenIsModal(modal) {
 
   clickButton(/* expectEvent = */ !modal);
 
+  ok(document.fullscreenElement.matches(":fullscreen"), "Fullscreen element matches :fullscreen");
+  is(document.fullscreenElement.matches(":modal"), modal, "Fullscreen element matches :modal");
+
   await document.exitFullscreen();
   clickButton(/* expectEvent = */ true);
 }
