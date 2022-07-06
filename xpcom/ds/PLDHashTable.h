@@ -499,10 +499,10 @@ class PLDHashTable {
   // Measure the size of the table's entry storage. If the entries contain
   // pointers to other heap blocks, you have to iterate over the table and
   // measure those separately; hence the "Shallow" prefix.
-  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   // Like ShallowSizeOfExcludingThis(), but includes sizeof(*this).
-  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   // Mark a table as immutable for the remainder of its lifetime. This
   // changes the implementation from asserting one set of invariants to
