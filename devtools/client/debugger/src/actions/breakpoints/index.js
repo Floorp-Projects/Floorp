@@ -8,6 +8,7 @@
  */
 
 import { PROMISE } from "../utils/middleware/promise";
+import { asyncStore } from "../../utils/prefs";
 import {
   getBreakpointsList,
   getXHRBreakpoints,
@@ -131,6 +132,7 @@ export function removeAllBreakpoints(cx) {
       breakpointList.map(bp => dispatch(removeBreakpoint(cx, bp)))
     );
     dispatch({ type: "CLEAR_BREAKPOINTS" });
+    asyncStore.pendingBreakpoints = {};
   };
 }
 

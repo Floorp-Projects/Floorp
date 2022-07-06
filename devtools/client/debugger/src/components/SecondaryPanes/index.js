@@ -92,6 +92,7 @@ class SecondaryPanes extends Component {
       toggleEventLogging: PropTypes.func.isRequired,
       toggleMapScopes: PropTypes.func.isRequired,
       workers: PropTypes.array.isRequired,
+      removeAllBreakpoints: PropTypes.func.isRequired,
     };
   }
 
@@ -157,6 +158,20 @@ class SecondaryPanes extends Component {
     );
 
     return buttons;
+  }
+
+  breakpointsHeaderButtons() {
+    return [
+      debugBtn(
+        evt => {
+          evt.stopPropagation();
+          this.props.removeAllBreakpoints(this.props.cx);
+        },
+        "removeAll",
+        "removeAll",
+        L10N.getStr("breakpointMenuItem.deleteAll")
+      ),
+    ];
   }
 
   getScopeItem() {
@@ -304,6 +319,7 @@ class SecondaryPanes extends Component {
     return {
       header: L10N.getStr("breakpoints.header"),
       className: "breakpoints-pane",
+      buttons: this.breakpointsHeaderButtons(),
       component: (
         <Breakpoints
           shouldPauseOnExceptions={shouldPauseOnExceptions}
@@ -501,4 +517,5 @@ export default connect(mapStateToProps, {
   toggleMapScopes: actions.toggleMapScopes,
   breakOnNext: actions.breakOnNext,
   toggleEventLogging: actions.toggleEventLogging,
+  removeAllBreakpoints: actions.removeAllBreakpoints,
 })(SecondaryPanes);

@@ -13,10 +13,27 @@ import {
 import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 import { mockPendingBreakpoint } from "../../tests/helpers/breakpoints.js";
 import { makePendingLocationId } from "../../../utils/breakpoint";
+import { asyncStore } from "../../../utils/prefs";
+const {
+  registerStoreObserver,
+} = require("devtools/client/shared/redux/subscriber");
+
+jest.mock("../../../utils/prefs", () => ({
+  prefs: {
+    expressions: [],
+  },
+  asyncStore: {
+    pendingBreakpoints: {},
+  },
+  features: {
+    inlinePreview: true,
+  },
+}));
 
 function mockClient(positionsResponse = {}) {
   return {
     ...mockCommandClient,
+    setSkipPausing: jest.fn(),
     getSourceActorBreakpointPositions: async () => positionsResponse,
     getSourceActorBreakableLines: async () => [],
   };
@@ -307,10 +324,29 @@ describe("breakpoints", () => {
     const id = makePendingLocationId(mockedPendingBreakpoint.location);
     const pendingBreakpoints = { [id]: mockedPendingBreakpoint };
 
-    const { dispatch, getState, cx } = createStore(
-      mockClient({ "5": [1], "6": [2] }),
-      { pendingBreakpoints }
-    );
+    asyncStore.pendingBreakpoints = pendingBreakpoints;
+
+    const store = createStore(mockClient({ "5": [1], "6": [2] }), {
+      pendingBreakpoints,
+    });
+
+    const { dispatch, getState, cx } = store;
+
+    // This mocks the updatePrefs observer which listens & updates the asyncStore
+    // when the reducer state changes. See https://searchfox.org/mozilla-central/
+    // rev/287583a4a605eee8cd2d41381ffaea7a93d7b987/devtools/client/debugger/
+    // src/utils/bootstrap.js#114-142
+    function mockUpdatePrefs(state, oldState) {
+      if (
+        selectors.getPendingBreakpoints(oldState) &&
+        selectors.getPendingBreakpoints(oldState) !==
+          selectors.getPendingBreakpoints(state)
+      ) {
+        asyncStore.pendingBreakpoints = selectors.getPendingBreakpoints(state);
+      }
+    }
+
+    registerStoreObserver(store, mockUpdatePrefs);
 
     const loc1 = {
       sourceId: "a",
@@ -332,16 +368,24 @@ describe("breakpoints", () => {
     const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
     await dispatch(actions.loadSourceText({ cx, source: bSource }));
 
+    expect(selectors.getBreakpointsList(getState())).toHaveLength(0);
+    expect(selectors.getPendingBreakpointList(getState())).toHaveLength(1);
+    expect(Object.keys(asyncStore.pendingBreakpoints)).toHaveLength(1);
+
     await dispatch(actions.addBreakpoint(cx, loc1));
     await dispatch(actions.addBreakpoint(cx, loc2));
 
+    // The breakpoint list contains all the live breakpoints while the pending-breakpoint
+    // list stores contains all the breakpoints persisted across toolbox reopenings.
+    expect(selectors.getBreakpointsList(getState())).toHaveLength(2);
+    expect(selectors.getPendingBreakpointList(getState())).toHaveLength(3);
+    expect(Object.keys(asyncStore.pendingBreakpoints)).toHaveLength(3);
+
     await dispatch(actions.removeAllBreakpoints(cx));
 
-    const bps = selectors.getBreakpointsList(getState());
-    const pendingBps = selectors.getPendingBreakpointList(getState());
-
-    expect(bps).toHaveLength(0);
-    expect(pendingBps).toHaveLength(0);
+    expect(selectors.getBreakpointsList(getState())).toHaveLength(0);
+    expect(selectors.getPendingBreakpointList(getState())).toHaveLength(0);
+    expect(Object.keys(asyncStore.pendingBreakpoints)).toHaveLength(0);
   });
 
   it("should toggle a breakpoint at a location", async () => {
