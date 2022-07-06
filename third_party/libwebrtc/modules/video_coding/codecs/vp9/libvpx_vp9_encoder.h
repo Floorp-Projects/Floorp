@@ -106,6 +106,12 @@ class LibvpxVp9Encoder : public VP9Encoder {
   size_t SteadyStateSize(int sid, int tid);
 
   void MaybeRewrapRawWithFormat(const vpx_img_fmt fmt);
+  // Prepares |raw_| to reference image data of |buffer|, or of mapped or scaled
+  // versions of |buffer|. Returns the buffer that got referenced as a result,
+  // allowing the caller to keep a reference to it until after encoding has
+  // finished. On failure to convert the buffer, null is returned.
+  rtc::scoped_refptr<VideoFrameBuffer> PrepareBufferForProfile0(
+      rtc::scoped_refptr<VideoFrameBuffer> buffer);
 
   const std::unique_ptr<LibvpxInterface> libvpx_;
   EncodedImage encoded_image_;

@@ -30,6 +30,7 @@
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/mappable_native_buffer.h"
 #include "test/video_codec_settings.h"
 
 namespace webrtc {
@@ -156,6 +157,31 @@ TEST_P(TestVp9ImplForPixelFormat, EncodeDecode) {
             color_space.chroma_siting_horizontal());
   EXPECT_EQ(ColorSpace::ChromaSiting::kUnspecified,
             color_space.chroma_siting_vertical());
+}
+
+TEST_P(TestVp9ImplForPixelFormat, EncodeNativeBuffer) {
+  VideoFrame input_frame = NextInputFrame();
+  // Replace the input frame with a fake native buffer of the same size and
+  // underlying pixel format. Do not allow ToI420() for non-I420 buffers,
+  // ensuring zero-conversion.
+  input_frame = test::CreateMappableNativeFrame(
+      input_frame.ntp_time_ms(), input_frame.video_frame_buffer()->type(),
+      input_frame.width(), input_frame.height());
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Encode(input_frame, nullptr));
+  EncodedImage encoded_frame;
+  CodecSpecificInfo codec_specific_info;
+  ASSERT_TRUE(WaitForEncodedFrame(&encoded_frame, &codec_specific_info));
+
+  // After encoding, we would expect a single mapping to have happened.
+  rtc::scoped_refptr<test::MappableNativeBuffer> mappable_buffer =
+      test::GetMappableNativeBufferFromVideoFrame(input_frame);
+  std::vector<rtc::scoped_refptr<VideoFrameBuffer>> mapped_buffers =
+      mappable_buffer->GetMappedFramedBuffers();
+  ASSERT_EQ(mapped_buffers.size(), 1u);
+  EXPECT_EQ(mapped_buffers[0]->type(), mappable_buffer->mappable_type());
+  EXPECT_EQ(mapped_buffers[0]->width(), input_frame.width());
+  EXPECT_EQ(mapped_buffers[0]->height(), input_frame.height());
+  EXPECT_FALSE(mappable_buffer->DidConvertToI420());
 }
 
 TEST_P(TestVp9ImplForPixelFormat, DecodedColorSpaceFromBitstream) {
