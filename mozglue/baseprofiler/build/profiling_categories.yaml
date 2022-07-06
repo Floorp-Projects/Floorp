@@ -115,6 +115,8 @@
       label: Selector query
     - name: LAYOUT_StyleComputation
       label: Style computation
+    - name: LAYOUT_Destroy
+      label: Layout cleanup
 
 - name: JS
   label: JavaScript

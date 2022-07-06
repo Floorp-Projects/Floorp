@@ -1192,7 +1192,10 @@ void PresShell::Destroy() {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "destroy called on presshell while scripts not blocked");
 
-  AUTO_PROFILER_LABEL("PresShell::Destroy", LAYOUT);
+  [[maybe_unused]] nsIURI* uri = mDocument->GetDocumentURI();
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_RELEVANT_FOR_JS(
+      "Layout tree destruction", LAYOUT_Destroy,
+      uri ? uri->GetSpecOrDefault() : "N/A"_ns);
 
   // Try to determine if the page is the user had a meaningful opportunity to
   // zoom this page. This is not 100% accurate but should be "good enough" for
