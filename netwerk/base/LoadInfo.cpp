@@ -757,41 +757,7 @@ void LoadInfo::ComputeIsThirdPartyContext(dom::WindowGlobalParent* aGlobal) {
   thirdPartyUtil->IsThirdPartyGlobal(aGlobal, &mIsThirdPartyContext);
 }
 
-NS_IMPL_ADDREF(LoadInfo)
-
-bool LoadInfo::DispatchRelease() {
-  if (NS_IsMainThread()) {
-    return false;
-  }
-
-  NS_DispatchToMainThread(NewNonOwningRunnableMethod("net::LoadInfo::Release",
-                                                     this, &LoadInfo::Release),
-                          NS_DISPATCH_NORMAL);
-  return true;
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-LoadInfo::Release() {
-  nsrefcnt count = mRefCnt - 1;
-  if (DispatchRelease()) {
-    // Redispatched to main thread.
-    return count;
-  }
-
-  MOZ_ASSERT(0 != mRefCnt, "dup release");
-  count = --mRefCnt;
-  NS_LOG_RELEASE(this, count, "LoadInfo");
-
-  if (0 == count) {
-    mRefCnt = 1;
-    delete (this);
-    return 0;
-  }
-
-  return count;
-}
-
-NS_IMPL_QUERY_INTERFACE(LoadInfo, nsILoadInfo)
+NS_IMPL_ISUPPORTS(LoadInfo, nsILoadInfo)
 
 void LoadInfo::ReleaseMembers() {
   mCSPEventListener = nullptr;

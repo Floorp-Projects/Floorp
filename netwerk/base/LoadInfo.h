@@ -262,7 +262,6 @@ class LoadInfo final : public nsILoadInfo {
   void UpdateFrameBrowsingContextID(uint64_t aFrameBrowsingContextID) {
     mFrameBrowsingContextID = aFrameBrowsingContextID;
   }
-  bool DispatchRelease();
   MOZ_NEVER_INLINE void ReleaseMembers();
 
   // if you add a member, please also update the copy constructor and consider
