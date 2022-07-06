@@ -513,6 +513,16 @@ class gfxTextRun : public gfxShapedText {
       }
       return false;
     }
+
+    bool IsSidewaysLeft() const {
+      return (mOrientation & mozilla::gfx::ShapedTextFlags::TEXT_ORIENT_MASK) ==
+             mozilla::gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT;
+    }
+
+    bool IsSidewaysRight() const {
+      return (mOrientation & mozilla::gfx::ShapedTextFlags::TEXT_ORIENT_MASK) ==
+             mozilla::gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
+    }
   };
 
   // Script run codes that we will mark as CJK to suppress skip-ink behavior.
