@@ -2539,6 +2539,32 @@ nsINode* nsContentUtils::Retarget(nsINode* aTargetA, nsINode* aTargetB) {
 }
 
 // static
+nsINode* nsContentUtils::GetAnElementForTiming(Element* aTarget,
+                                               const Document* aDocument,
+                                               nsIGlobalObject* aGlobal) {
+  if (!aTarget->IsInComposedDoc()) {
+    return nullptr;
+  }
+
+  if (!aDocument) {
+    nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(aGlobal);
+    if (!inner) {
+      return nullptr;
+    }
+    aDocument = inner->GetExtantDoc();
+  }
+
+  MOZ_ASSERT(aDocument);
+
+  if (aTarget->GetUncomposedDocOrConnectedShadowRoot() != aDocument ||
+      !aDocument->IsCurrentActiveDocument()) {
+    return nullptr;
+  }
+
+  return aTarget;
+}
+
+// static
 nsresult nsContentUtils::GetInclusiveAncestors(nsINode* aNode,
                                                nsTArray<nsINode*>& aArray) {
   while (aNode) {
