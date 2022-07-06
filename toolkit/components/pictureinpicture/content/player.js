@@ -78,6 +78,10 @@ function showSubtitlesButton() {
   Player.showSubtitlesButton();
 }
 
+function hideSubtitlesButton() {
+  Player.hideSubtitlesButton();
+}
+
 /**
  * The Player object handles initializing the player, holds state, and handles
  * events for updating state.
@@ -722,6 +726,13 @@ let Player = {
     // onToggleChange where this.captionsToggleEnabled will be updated
     if (!Services.prefs.getBoolPref(CAPTIONS_TOGGLE_ENABLED_PREF, true)) {
       document.querySelector("#subtitles-toggle").click();
+    }
+  },
+
+  hideSubtitlesButton() {
+    let subtitlesContent = document.querySelectorAll(".subtitles");
+    for (let ele of subtitlesContent) {
+      ele.hidden = true;
     }
   },
 
