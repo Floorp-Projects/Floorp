@@ -560,7 +560,6 @@ def _get_clang_tidy_command(
         "-clang-apply-replacements-binary",
         clang_paths._clang_apply_replacements,
         "-checks=%s" % checks,
-        "-extra-arg=-std=c++17",
         "-extra-arg=-DMOZ_CLANG_PLUGIN",
     ]
 
