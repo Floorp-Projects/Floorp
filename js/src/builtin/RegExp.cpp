@@ -25,6 +25,7 @@
 #include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/ObjectOperations-inl.h"
 #include "vm/PlainObject-inl.h"
@@ -568,6 +569,7 @@ static bool regexp_compile(JSContext* cx, unsigned argc, Value* vp) {
  * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad 21.2.3.1.
  */
 bool js::regexp_construct(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSConstructorProfilerEntry pseudoFrame(cx, "RegExp");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Steps 1.

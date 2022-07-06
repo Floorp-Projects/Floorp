@@ -11,6 +11,7 @@ $break-point-large: 866px;
 $container-min-width: 700px;
 $logo-size: 80px;
 $main-section-width: 504px;
+$split-section-width: 400px;
 $noodle-buffer: 106px;
 
 html {
@@ -61,8 +62,8 @@ body {
 // Styling for about:welcome background container
 .welcome-container {
   .onboardingContainer {
-    min-width: $container-min-width;
     min-height: $break-point-medium;
+    min-width: fit-content;
   }
 }
 
@@ -132,6 +133,23 @@ body {
       flex-direction: column;
       flex-grow: 1;
       justify-content: space-around;
+    }
+  }
+
+  // Handle conditional display of steps indicator
+  // Don't show on corner screen or when there's
+  // only one centered screen
+  .main-content .no-steps,
+  .screen {
+    &[pos='corner'],
+    &[pos='center'].dialog-initial.dialog-last {
+      .main-content {
+        padding-bottom: 48px;
+      }
+
+      .steps {
+        display: none;
+      }
     }
   }
 
@@ -208,11 +226,231 @@ body {
         }
       }
     }
+
+    &[pos='split'] {
+      margin: auto;
+
+      .section-secondary,
+      .section-main {
+        width: 400px;
+        height: 550px;
+      }
+
+      .section-main {
+        flex-direction: row;
+        display: block;
+        margin: auto auto auto 0;
+
+        &:dir(rtl) {
+          margin: auto 0 auto auto;
+        }
+
+        .main-content {
+          border-radius: 0 8px 8px 0;
+          overflow: hidden;
+          padding-inline: 35px 20px;
+          padding-block: 120px 0;
+
+          &:dir(rtl) {
+            border-radius: 8px 0 0 8px;
+          }
+
+          .main-content-inner {
+            min-height: 330px;
+          }
+
+          .action-buttons {
+            position: relative;
+            text-align: initial;
+            height: 100%;
+
+            .secondary-cta {
+              position: absolute;
+              bottom: 0;
+              inset-inline-end: 0;
+
+              .secondary {
+                // sass-lint:disable-block no-important
+                background-color: #F0F0F4 !important;
+                line-height: 12px;
+                color: #000;
+                font-size: 10px;
+                font-weight: 600;
+                padding: 8px 16px;
+
+                &:hover {
+                  text-decoration: none;
+                  // sass-lint:disable-block no-important
+                  background-color: var(--in-content-button-background-hover) !important;
+                }
+              }
+            }
+          }
+
+          .brand-logo {
+            height: 25px;
+            margin-block: 0;
+            background-position: left;
+
+            &:dir(rtl) {
+              background-position: right;
+            }
+          }
+
+          .welcome-text {
+            margin-inline: 0 10px;
+            margin-block: 10px 35px;
+            text-align: initial;
+            align-items: initial;
+
+            h1 {
+              font-size: 29px;
+            }
+
+            h2 {
+              color: #5B5B66;
+              margin: 10px 0 0;
+              min-height: 1em;
+              font-size: 15px;
+            }
+          }
+
+          .welcome-text h1,
+          .primary {
+            margin: 0;
+          }
+
+          .steps {
+            z-index: 1;
+          }
+        }
+      }
+
+      .section-secondary {
+        border-radius: 8px 0 0 8px;
+        box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+        margin: auto 0 auto auto;
+        display: flex;
+        align-items: center;
+
+        &:dir(rtl) {
+          border-radius: 0 8px 8px 0;
+          margin: auto auto auto 0;
+        }
+
+        h1 {
+          font-weight: 700;
+          font-size: clamp(52px, 7vw, 104px);
+          line-height: 110%;
+          max-width: 340px;
+          text-align: initial;
+          white-space: pre-wrap;
+          text-shadow: none;
+          margin-inline: 40px 0;
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .section-main .main-content {
+          .welcome-text h2 {
+            color: #CFCFD8;
+          }
+
+          .action-buttons .secondary {
+            background-color: #2B2A33;
+          }
+        }
+      }
+
+      @media only screen and (max-width: 800px) {
+        flex-direction: column;
+
+        .section-secondary,
+        .section-main {
+          width: $split-section-width;
+        }
+
+        .section-secondary {
+          border-radius: 8px 8px 0 0;
+          margin: auto auto 0;
+          height: 150px;
+
+          h1 {
+            display: none;
+          }
+
+          &:dir(rtl) {
+            margin: auto auto 0;
+            border-radius: 8px 8px 0 0;
+          }
+        }
+
+        .section-main {
+          margin: 0 auto auto;
+          height: 400px;
+
+          .main-content {
+            border-radius: 0 0 8px 8px;
+            padding: 30px 0 0;
+
+            .main-content-inner {
+              align-items: center;
+            }
+
+            .brand-logo {
+              min-height: 25px;
+
+              &,
+              &:dir(rtl) {
+                background-position: center;
+              }
+            }
+
+            .welcome-text {
+              text-align: center;
+              margin-inline: 0;
+
+              .spacer-bottom,
+              .spacer-top {
+                display: none;
+              }
+            }
+
+            .action-buttons {
+              text-align: center;
+            }
+
+            .action-buttons .secondary-cta {
+              position: relative;
+              margin-block: 10px 0;
+            }
+
+            .primary,
+            .secondary {
+              width: 240px;
+            }
+          }
+
+          &:dir(rtl) {
+            margin: 0 auto auto;
+
+            .main-content {
+              border-radius: 0 0 8px 8px;
+            }
+          }
+        }
+      }
+    }
   }
 
   .brand-logo {
     margin-block: 60px 10px;
     transition: var(--transition);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    background-image: url('chrome://branding/content/about-logo.svg');
+    height: 80px;
 
     &.cta-top {
       margin-top: 25px;
@@ -961,6 +1199,7 @@ body {
     background-image: url('chrome://activity-stream/content/data/content/assets/noodle-solid-L.svg');
     -moz-context-properties: fill;
     fill: var(--in-content-page-background);
+    display: none;
   }
 
   .purple-C {
@@ -979,7 +1218,7 @@ body {
     background-color: transparent;
     min-width: $container-min-width;
 
-    .section-left {
+    .section-secondary {
       display: flex;
       flex-direction: column;
       margin-inline-start: 6vw;
@@ -1062,8 +1301,10 @@ body {
       }
     }
 
-    // Position of noodles on first screen
+    // Position noodles on first screen
+    // and show solid L for corner positioned screen
     .solid-L {
+      display: block;
       width: 1300px;
       height: 1050px;
       bottom: -390px;

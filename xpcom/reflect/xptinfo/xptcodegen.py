@@ -331,14 +331,21 @@ def link_to_cpp(interfaces, fd, header_fd):
             )
         )
 
+    def is_type_reflectable(type):
+        # All native types end up getting tagged as void*, or as wrapper types around void*
+        if type["tag"] == "TD_VOID":
+            return False
+        if type["tag"] in ("TD_ARRAY", "TD_LEGACY_ARRAY"):
+            return is_type_reflectable(type["element"])
+        return True
+
     def is_method_reflectable(method):
         if "hidden" in method["flags"]:
             return False
 
         for param in method["params"]:
-            # Reflected methods can't use native types. All native types end up
-            # getting tagged as void*, so this check is easy.
-            if param["type"]["tag"] == "TD_VOID":
+            # Reflected methods can't use non-reflectable types.
+            if not is_type_reflectable(param["type"]):
                 return False
 
         return True

@@ -959,15 +959,6 @@ bool GlobalObject::addIntrinsicValue(JSContext* cx,
 }
 
 /* static */
-bool GlobalObject::ensureModulePrototypesCreated(JSContext* cx,
-                                                 Handle<GlobalObject*> global) {
-  return getOrCreateModulePrototype(cx, global) &&
-         getOrCreateImportEntryPrototype(cx, global) &&
-         getOrCreateExportEntryPrototype(cx, global) &&
-         getOrCreateRequestedModulePrototype(cx, global);
-}
-
-/* static */
 JSObject* GlobalObject::createIteratorPrototype(JSContext* cx,
                                                 Handle<GlobalObject*> global) {
   if (!cx->realm()->creationOptions().getIteratorHelpersEnabled()) {

@@ -27,9 +27,9 @@
 # Label of the profiling category. This a more human readable string for the
 # category. Label will be displayed in the Firefox Profiler front-end. But also
 # this will be used as a Rust enum field (with non-alphanumeric characters
-# removed) because it's more suitable for Rust enums since name field is a snake
-# cased field with all caps. This is not idiomatic to rust enum field. On the
-# other hand, this field produces idiomatic fields.
+# removed) because it's more idiomatic for Rust enums than name fields (which
+# are snake cased fields with all caps, which is not idiomatic to rust enum
+# field).
 #
 # color [required]
 # =====
@@ -56,10 +56,7 @@
 # sub-category) or should start with parent category name + underscore
 # (e.g. JS_Parsing).
 #
-# label attribute is the same as parent category label attribute. Except that
-# this field is only used by the default sub-category. This is because the name
-# of the default sub-category is the same with parent category. label field
-# ensures that they are different.
+# label attribute has the same purpose as parent category label attribute.
 #
 # For example:
 # - name: JS
@@ -70,8 +67,8 @@
 #       label: Parsing
 #
 # Note that the first sub-category has the same name with the category. This is
-# the default category. Also note the other categories starting with the category
-# name + underscore.
+# the default sub-category. Also note the other sub-categories starting with the
+# category name + underscore.
 #
 
 - name: IDLE
@@ -115,6 +112,8 @@
       label: Selector query
     - name: LAYOUT_StyleComputation
       label: Style computation
+    - name: LAYOUT_Destroy
+      label: Layout cleanup
 
 - name: JS
   label: JavaScript
@@ -136,6 +135,8 @@
       label: JIT (baseline)
     - name: JS_IonMonkey
       label: JIT (ion)
+    - name: JS_Builtin
+      label: Builtin API
 
 - name: GCCC
   label: GC / CC

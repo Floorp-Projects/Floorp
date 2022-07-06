@@ -42,6 +42,7 @@
 #include "vm/Runtime.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -124,6 +125,8 @@ const ClassSpec DateTimeFormatObject::classSpec_ = {
  */
 static bool DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct,
                            DateTimeFormatOptions dtfOptions) {
+  AutoJSConstructorProfilerEntry pseudoFrame(cx, "Intl.DateTimeFormat");
+
   // Step 1 (Handled by OrdinaryCreateFromConstructor fallback code).
 
   // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).

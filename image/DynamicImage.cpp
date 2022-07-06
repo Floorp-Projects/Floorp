@@ -90,11 +90,14 @@ DynamicImage::GetHeight(int32_t* aHeight) {
   return NS_OK;
 }
 
-nsresult DynamicImage::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) const {
+void DynamicImage::MediaFeatureValuesChangedAllDocuments(
+    const mozilla::MediaFeatureChange& aChange) {}
+
+nsresult DynamicImage::GetNativeSizes(nsTArray<IntSize>&) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-size_t DynamicImage::GetNativeSizesLength() const { return 0; }
+size_t DynamicImage::GetNativeSizesLength() { return 0; }
 
 NS_IMETHODIMP
 DynamicImage::GetIntrinsicSize(nsSize* aSize) {

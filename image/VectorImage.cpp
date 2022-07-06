@@ -465,12 +465,12 @@ VectorImage::GetWidth(int32_t* aWidth) {
 }
 
 //******************************************************************************
-nsresult VectorImage::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) const {
+nsresult VectorImage::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //******************************************************************************
-size_t VectorImage::GetNativeSizesLength() const { return 0; }
+size_t VectorImage::GetNativeSizesLength() { return 0; }
 
 //******************************************************************************
 NS_IMETHODIMP_(void)

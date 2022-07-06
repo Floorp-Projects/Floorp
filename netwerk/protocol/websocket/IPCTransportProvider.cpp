@@ -6,6 +6,7 @@
 
 #include "mozilla/net/IPCTransportProvider.h"
 
+#include "IPCTransportProvider.h"
 #include "nsISocketTransport.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -50,6 +51,12 @@ TransportProviderParent::OnTransportAvailable(
 
 NS_IMETHODIMP
 TransportProviderParent::OnUpgradeFailed(nsresult aErrorCode) { return NS_OK; }
+
+NS_IMETHODIMP
+TransportProviderParent::OnWebSocketConnectionAvailable(
+    WebSocketConnectionBase* aConnection) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 void TransportProviderParent::MaybeNotify() {
   if (!mListener || !mTransport) {

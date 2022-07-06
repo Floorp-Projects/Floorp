@@ -31,6 +31,7 @@
 #endif
 
 #include "gc/Marking-inl.h"
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -735,6 +736,7 @@ void MapObject::sweepAfterMinorGC(JS::GCContext* gcx, MapObject* mapobj) {
 }
 
 bool MapObject::construct(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSConstructorProfilerEntry pseudoFrame(cx, "Map");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (!ThrowIfNotConstructing(cx, args, "Map")) {
@@ -805,6 +807,7 @@ bool MapObject::size_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool MapObject::size(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Map.prototype", "size");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<MapObject::is, MapObject::size_impl>(cx, args);
 }
@@ -833,6 +836,7 @@ bool MapObject::get_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool MapObject::get(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Map.prototype", "get");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<MapObject::is, MapObject::get_impl>(cx, args);
 }
@@ -861,6 +865,7 @@ bool MapObject::has_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool MapObject::has(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Map.prototype", "has");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<MapObject::is, MapObject::has_impl>(cx, args);
 }
@@ -882,6 +887,7 @@ bool MapObject::set_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool MapObject::set(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Map.prototype", "set");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<MapObject::is, MapObject::set_impl>(cx, args);
 }
@@ -926,6 +932,7 @@ bool MapObject::delete_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool MapObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Map.prototype", "delete");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<MapObject::is, MapObject::delete_impl>(cx, args);
 }
@@ -952,6 +959,7 @@ bool MapObject::keys_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool MapObject::keys(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Map.prototype", "keys");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod(cx, is, keys_impl, args);
 }
@@ -961,6 +969,7 @@ bool MapObject::values_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool MapObject::values(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Map.prototype", "values");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod(cx, is, values_impl, args);
 }
@@ -970,6 +979,7 @@ bool MapObject::entries_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool MapObject::entries(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Map.prototype", "entries");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod(cx, is, entries_impl, args);
 }
@@ -981,6 +991,7 @@ bool MapObject::clear_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool MapObject::clear(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Map.prototype", "clear");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod(cx, is, clear_impl, args);
 }
@@ -1411,6 +1422,7 @@ bool SetObject::isBuiltinAdd(HandleValue add) {
 }
 
 bool SetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSConstructorProfilerEntry pseudoFrame(cx, "Set");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (!ThrowIfNotConstructing(cx, args, "Set")) {
@@ -1509,6 +1521,7 @@ bool SetObject::size_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool SetObject::size(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Set.prototype", "size");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<SetObject::is, SetObject::size_impl>(cx, args);
 }
@@ -1538,6 +1551,7 @@ bool SetObject::has(JSContext* cx, HandleObject obj, HandleValue key,
 }
 
 bool SetObject::has(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Set.prototype", "has");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<SetObject::is, SetObject::has_impl>(cx, args);
 }
@@ -1558,6 +1572,7 @@ bool SetObject::add_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool SetObject::add(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Set.prototype", "add");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<SetObject::is, SetObject::add_impl>(cx, args);
 }
@@ -1595,6 +1610,7 @@ bool SetObject::delete_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool SetObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Set.prototype", "delete");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<SetObject::is, SetObject::delete_impl>(cx, args);
 }
@@ -1629,6 +1645,7 @@ bool SetObject::values_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool SetObject::values(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Set.prototype", "values");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod(cx, is, values_impl, args);
 }
@@ -1638,6 +1655,7 @@ bool SetObject::entries_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool SetObject::entries(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Set.prototype", "entries");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod(cx, is, entries_impl, args);
 }
@@ -1663,6 +1681,7 @@ bool SetObject::clear_impl(JSContext* cx, const CallArgs& args) {
 }
 
 bool SetObject::clear(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Set.prototype", "clear");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod(cx, is, clear_impl, args);
 }

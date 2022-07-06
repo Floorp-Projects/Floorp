@@ -30,6 +30,7 @@
 #include "vm/StringType.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;
@@ -99,6 +100,8 @@ const ClassSpec CollatorObject::classSpec_ = {
  * ES2017 Intl draft rev 94045d234762ad107a3d09bb6f7381a65f1a2f9b
  */
 static bool Collator(JSContext* cx, const CallArgs& args) {
+  AutoJSConstructorProfilerEntry pseudoFrame(cx, "Intl.Collator");
+
   // Step 1 (Handled by OrdinaryCreateFromConstructor fallback code).
 
   // Steps 2-5 (Inlined 9.1.14, OrdinaryCreateFromConstructor).

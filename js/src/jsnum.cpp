@@ -51,6 +51,7 @@
 #include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/Compartment-inl.h"  // For js::UnwrapAndTypeCheckThis
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/StringType-inl.h"
@@ -932,6 +933,8 @@ static bool num_toString(JSContext* cx, unsigned argc, Value* vp) {
 
 #if !JS_HAS_INTL_API
 static bool num_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Number.prototype",
+                                        "toLocaleString");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   double d;
@@ -1128,6 +1131,7 @@ template <typename Op>
 
 // ES 2021 draft 21.1.3.3.
 static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Number.prototype", "toFixed");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
@@ -1202,6 +1206,8 @@ static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES 2021 draft 21.1.3.2.
 static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Number.prototype",
+                                        "toExponential");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
@@ -1259,6 +1265,7 @@ static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES 2021 draft 21.1.3.5.
 static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Number.prototype", "toPrecision");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.

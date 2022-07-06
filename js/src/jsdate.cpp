@@ -54,6 +54,7 @@
 #include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/Compartment-inl.h"  // For js::UnwrapAndTypeCheckThis
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;
@@ -621,6 +622,7 @@ static double MakeTime(double hour, double min, double sec, double ms) {
 // 20.3.3.4
 // Date.UTC(year [, month [, date [, hours [, minutes [, seconds [, ms]]]]]])
 static bool date_UTC(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date", "UTC");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
@@ -1487,6 +1489,7 @@ static bool ParseDate(JSLinearString* s, ClippedTime* result) {
 }
 
 static bool date_parse(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date", "parse");
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 0) {
     args.rval().setNaN();
@@ -1555,6 +1558,7 @@ static ClippedTime NowAsMillis(JSContext* cx) {
 }
 
 bool js::date_now(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date", "now");
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().set(TimeValue(NowAsMillis(cx)));
   return true;
@@ -2702,6 +2706,7 @@ static const char* const months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
 
 /* ES5 B.2.6. */
 static bool date_toUTCString(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date.prototype", "toUTCString");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, "toUTCString");
@@ -2733,6 +2738,7 @@ static bool date_toUTCString(JSContext* cx, unsigned argc, Value* vp) {
 
 /* ES6 draft 2015-01-15 20.3.4.36. */
 static bool date_toISOString(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date.prototype", "toISOString");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, "toISOString");
@@ -2773,6 +2779,7 @@ static bool date_toISOString(JSContext* cx, unsigned argc, Value* vp) {
 
 /* ES5 15.9.5.44. */
 static bool date_toJSON(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date.prototype", "toJSON");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   /* Step 1. */
@@ -3057,6 +3064,7 @@ static bool ToLocaleFormatHelper(JSContext* cx, double utcTime,
 
 /* ES5 15.9.5.5. */
 static bool date_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date.prototype", "toLocaleString");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   auto* unwrapped =
@@ -3082,6 +3090,8 @@ static bool date_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool date_toLocaleDateString(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date.prototype",
+                                        "toLocaleDateString");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   auto* unwrapped =
@@ -3107,6 +3117,8 @@ static bool date_toLocaleDateString(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool date_toLocaleTimeString(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date.prototype",
+                                        "toLocaleTimeString");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   auto* unwrapped =
@@ -3121,6 +3133,7 @@ static bool date_toLocaleTimeString(JSContext* cx, unsigned argc, Value* vp) {
 #endif /* !JS_HAS_INTL_API */
 
 static bool date_toTimeString(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date.prototype", "toTimeString");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   auto* unwrapped =
@@ -3134,6 +3147,7 @@ static bool date_toTimeString(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool date_toDateString(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date.prototype", "toDateString");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   auto* unwrapped =
@@ -3147,6 +3161,7 @@ static bool date_toDateString(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool date_toSource(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date.prototype", "toSource");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, "toSource");
@@ -3170,6 +3185,7 @@ static bool date_toSource(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 bool date_toString(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Date.prototype", "toString");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   auto* unwrapped = UnwrapAndTypeCheckThis<DateObject>(cx, args, "toString");
@@ -3447,6 +3463,7 @@ static bool DateMultipleArguments(JSContext* cx, const CallArgs& args) {
 }
 
 static bool DateConstructor(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSConstructorProfilerEntry pseudoFrame(cx, "Date");
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (args.length() == 0) {

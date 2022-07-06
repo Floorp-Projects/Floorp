@@ -24,9 +24,6 @@ class nsPersistentProperties final : public nsIPersistentProperties {
   NS_DECL_NSIPROPERTIES
   NS_DECL_NSIPERSISTENTPROPERTIES
 
-  size_t SizeOfIncludingThis(
-      mozilla::MallocSizeOf aMallocSizeOf) const override;
-
  private:
   ~nsPersistentProperties();
 

@@ -5780,10 +5780,6 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
   if (goal == frontend::ParseGoal::Script) {
     pn = parser.parse();
   } else {
-    if (!GlobalObject::ensureModulePrototypesCreated(cx, cx->global())) {
-      return false;
-    }
-
     ModuleBuilder builder(cx, &parser);
 
     SourceExtent extent = SourceExtent::makeGlobalExtent(length);

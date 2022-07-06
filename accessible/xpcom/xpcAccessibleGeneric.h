@@ -37,8 +37,8 @@ class xpcAccessibleGeneric : public xpcAccessible,
   NS_DECL_ISUPPORTS
 
   // nsIAccessible
-  LocalAccessible* ToInternalAccessible() const final;
-  Accessible* ToInternalGeneric() const final { return mIntl; }
+  LocalAccessible* ToInternalAccessible() final;
+  Accessible* ToInternalGeneric() final { return mIntl; }
 
   // xpcAccessibleGeneric
   virtual void Shutdown();
