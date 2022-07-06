@@ -14,12 +14,17 @@ var EXPORTED_SYMBOLS = ["UrlbarProviderOpenTabs"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+
+const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 const PRIVATE_USER_CONTEXT_ID = -1;
@@ -101,7 +106,7 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
    * Copy over cached open tabs to the memory table once the Urlbar
    * connection has been initialized.
    */
-  static promiseDBPopulated = PlacesUtils.largeCacheDBConnDeferred.promise.then(
+  static promiseDBPopulated = lazy.PlacesUtils.largeCacheDBConnDeferred.promise.then(
     async () => {
       // Must be set before populating.
       UrlbarProviderOpenTabs.memoryTableInitialized = true;
@@ -169,7 +174,7 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
     // TODO:
     //  * properly search and handle tokens, this is just a mock for now.
     let instance = this.queryInstance;
-    let conn = await PlacesUtils.promiseLargeCacheDBConnection();
+    let conn = await lazy.PlacesUtils.promiseLargeCacheDBConnection();
     await UrlbarProviderOpenTabs.promiseDBPopulated;
     await conn.executeCached(
       `
@@ -184,7 +189,7 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
         }
         addCallback(
           this,
-          new UrlbarResult(
+          new lazy.UrlbarResult(
             UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
             UrlbarUtils.RESULT_SOURCE.TABS,
             {
@@ -208,8 +213,8 @@ async function addToMemoryTable(url, userContextId) {
   if (!UrlbarProviderOpenTabs.memoryTableInitialized) {
     return;
   }
-  await UrlbarProvidersManager.runInCriticalSection(async () => {
-    let conn = await PlacesUtils.promiseLargeCacheDBConnection();
+  await lazy.UrlbarProvidersManager.runInCriticalSection(async () => {
+    let conn = await lazy.PlacesUtils.promiseLargeCacheDBConnection();
     await conn.executeCached(
       `
       INSERT OR REPLACE INTO moz_openpages_temp (url, userContextId, open_count)
@@ -238,8 +243,8 @@ async function removeFromMemoryTable(url, userContextId) {
   if (!UrlbarProviderOpenTabs.memoryTableInitialized) {
     return;
   }
-  await UrlbarProvidersManager.runInCriticalSection(async () => {
-    let conn = await PlacesUtils.promiseLargeCacheDBConnection();
+  await lazy.UrlbarProvidersManager.runInCriticalSection(async () => {
+    let conn = await lazy.PlacesUtils.promiseLargeCacheDBConnection();
     await conn.executeCached(
       `
       UPDATE moz_openpages_temp

@@ -42,8 +42,7 @@ class GMPVideoDecoderChild : public PGMPVideoDecoderChild,
   void Error(GMPErr aError) override;
 
   // GMPSharedMemManager
-  bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType,
-             Shmem* aMem) override;
+  bool Alloc(size_t aSize, Shmem* aMem) override;
   void Dealloc(Shmem&& aMem) override;
 
  private:

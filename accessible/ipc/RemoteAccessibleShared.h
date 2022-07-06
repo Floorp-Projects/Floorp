@@ -90,7 +90,8 @@ virtual void TextBeforeOffset(int32_t aOffset,
 
 char16_t CharAt(int32_t aOffset);
 
-int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
+virtual int32_t OffsetAtPoint(int32_t aX, int32_t aY,
+                              uint32_t aCoordType) override;
 
 bool SetSelectionBoundsAt(int32_t aSelectionNum, int32_t aStartOffset,
                           int32_t aEndOffset);

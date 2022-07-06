@@ -20,8 +20,7 @@ class ShmemCreated : public IPC::Message {
   typedef Shmem::id_t id_t;
 
  public:
-  ShmemCreated(int32_t routingId, id_t aIPDLId, size_t aSize,
-               SharedMemory::SharedMemoryType aType)
+  ShmemCreated(int32_t routingId, id_t aIPDLId, size_t aSize)
       : IPC::Message(routingId, SHMEM_CREATED_MESSAGE_TYPE, 0,
                      HeaderFlags(NESTED_INSIDE_CPOW)) {
     MOZ_RELEASE_ASSERT(aSize < std::numeric_limits<uint32_t>::max(),
@@ -29,14 +28,12 @@ class ShmemCreated : public IPC::Message {
     IPC::MessageWriter writer(*this);
     IPC::WriteParam(&writer, aIPDLId);
     IPC::WriteParam(&writer, uint32_t(aSize));
-    IPC::WriteParam(&writer, int32_t(aType));
   }
 
   static bool ReadInfo(IPC::MessageReader* aReader, id_t* aIPDLId,
-                       size_t* aSize, SharedMemory::SharedMemoryType* aType) {
+                       size_t* aSize) {
     uint32_t size = 0;
-    if (!IPC::ReadParam(aReader, aIPDLId) || !IPC::ReadParam(aReader, &size) ||
-        !IPC::ReadParam(aReader, reinterpret_cast<int32_t*>(aType))) {
+    if (!IPC::ReadParam(aReader, aIPDLId) || !IPC::ReadParam(aReader, &size)) {
       return false;
     }
     *aSize = size;
@@ -60,18 +57,11 @@ class ShmemDestroyed : public IPC::Message {
   }
 };
 
-static SharedMemory* NewSegment(SharedMemory::SharedMemoryType aType) {
-  if (SharedMemory::TYPE_BASIC == aType) {
-    return new SharedMemoryBasic;
-  } else {
-    NS_ERROR("unknown Shmem type");
-    return nullptr;
-  }
-}
+static SharedMemory* NewSegment() { return new SharedMemoryBasic; }
 
-static already_AddRefed<SharedMemory> CreateSegment(
-    SharedMemory::SharedMemoryType aType, size_t aNBytes, size_t aExtraSize) {
-  RefPtr<SharedMemory> segment = NewSegment(aType);
+static already_AddRefed<SharedMemory> CreateSegment(size_t aNBytes,
+                                                    size_t aExtraSize) {
+  RefPtr<SharedMemory> segment = NewSegment();
   if (!segment) {
     return nullptr;
   }
@@ -89,12 +79,11 @@ static already_AddRefed<SharedMemory> ReadSegment(
     NS_ERROR("expected 'shmem created' message");
     return nullptr;
   }
-  SharedMemory::SharedMemoryType type;
   IPC::MessageReader reader(aDescriptor);
-  if (!ShmemCreated::ReadInfo(&reader, aId, aNBytes, &type)) {
+  if (!ShmemCreated::ReadInfo(&reader, aId, aNBytes)) {
     return nullptr;
   }
-  RefPtr<SharedMemory> segment = NewSegment(type);
+  RefPtr<SharedMemory> segment = NewSegment();
   if (!segment) {
     return nullptr;
   }
@@ -288,16 +277,14 @@ void Shmem::RevokeRights(PrivateIPDLCaller) {
 
 // static
 already_AddRefed<Shmem::SharedMemory> Shmem::Alloc(PrivateIPDLCaller,
-                                                   size_t aNBytes,
-                                                   SharedMemoryType aType,
-                                                   bool aUnsafe,
+                                                   size_t aNBytes, bool aUnsafe,
                                                    bool aProtect) {
   NS_ASSERTION(aNBytes <= UINT32_MAX, "Will truncate shmem segment size!");
   MOZ_ASSERT(!aProtect || !aUnsafe, "protect => !unsafe");
 
   size_t pageSize = SharedMemory::SystemPageSize();
   // |2*pageSize| is for the front and back sentinel
-  RefPtr<SharedMemory> segment = CreateSegment(aType, aNBytes, 2 * pageSize);
+  RefPtr<SharedMemory> segment = CreateSegment(aNBytes, 2 * pageSize);
   if (!segment) {
     return nullptr;
   }
@@ -388,11 +375,9 @@ Shmem::Shmem(PrivateIPDLCaller, SharedMemory* aSegment, id_t aId)
 // static
 already_AddRefed<Shmem::SharedMemory> Shmem::Alloc(PrivateIPDLCaller,
                                                    size_t aNBytes,
-                                                   SharedMemoryType aType,
                                                    bool /*unused*/,
                                                    bool /*unused*/) {
-  RefPtr<SharedMemory> segment =
-      CreateSegment(aType, aNBytes, sizeof(uint32_t));
+  RefPtr<SharedMemory> segment = CreateSegment(aNBytes, sizeof(uint32_t));
   if (!segment) {
     return nullptr;
   }
@@ -432,7 +417,7 @@ UniquePtr<IPC::Message> Shmem::MkCreatedMessage(PrivateIPDLCaller,
                                                 int32_t routingId) {
   AssertInvariants();
 
-  auto msg = MakeUnique<ShmemCreated>(routingId, mId, mSize, mSegment->Type());
+  auto msg = MakeUnique<ShmemCreated>(routingId, mId, mSize);
   IPC::MessageWriter writer(*msg);
   if (!mSegment->WriteHandle(&writer)) {
     return nullptr;

@@ -59,11 +59,12 @@ impl Example for App {
             root_space_and_clip.spatial_id,
             complex,
         );
+        let clip_chain_id = builder.define_clip_chain(None, [clip_id]);
 
         builder.push_rect(
             &CommonItemProperties::new(
                 (100, 100).to(200, 200),
-                SpaceAndClipInfo { spatial_id, clip_id },
+                SpaceAndClipInfo { spatial_id, clip_chain_id },
             ),
             (100, 100).to(200, 200),
             ColorF::new(0.0, 1.0, 0.0, 1.0),
@@ -72,7 +73,7 @@ impl Example for App {
         builder.push_rect(
             &CommonItemProperties::new(
                 (250, 100).to(350, 200),
-                SpaceAndClipInfo { spatial_id, clip_id },
+                SpaceAndClipInfo { spatial_id, clip_chain_id },
             ),
             (250, 100).to(350, 200),
             ColorF::new(0.0, 1.0, 0.0, 1.0),
@@ -95,7 +96,7 @@ impl Example for App {
         builder.push_border(
             &CommonItemProperties::new(
                 bounds,
-                SpaceAndClipInfo { spatial_id, clip_id },
+                SpaceAndClipInfo { spatial_id, clip_chain_id },
             ),
             bounds,
             border_widths,

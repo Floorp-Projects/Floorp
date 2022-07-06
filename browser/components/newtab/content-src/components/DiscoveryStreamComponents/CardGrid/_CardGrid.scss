@@ -160,7 +160,6 @@ $col4-header-font-size: 14;
         }
 
         .source,
-        .ds-last-card-desc,
         .story-sponsored-label,
         .status-message .story-context-label {
           color: var(--newtab-text-secondary-color);
@@ -168,7 +167,6 @@ $col4-header-font-size: 14;
         }
 
         .source,
-        .ds-last-card-desc,
         .story-sponsored-label {
           font-size: 13px;
         }
@@ -271,12 +269,6 @@ $col4-header-font-size: 14;
     .img-wrapper .img img {
       border-radius: 8px;
       box-shadow: $shadow-card;
-
-      &.last-card-message-image {
-        background: transparent;
-        box-shadow: none;
-        object-fit: contain;
-      }
     }
 
     .meta {
@@ -310,13 +302,5 @@ $col4-header-font-size: 14;
         color: var(--newtab-primary-element-active-color);
       }
     }
-  }
-
-  .ds-card-grid-load-more-button {
-    display: block;
-    margin: 32px auto 0;
-    font-size: 13px;
-    line-height: 16px;
-    border-radius: 4px;
   }
 }

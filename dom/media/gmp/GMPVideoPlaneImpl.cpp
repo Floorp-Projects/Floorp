@@ -72,9 +72,8 @@ GMPErr GMPPlaneImpl::MaybeResize(int32_t aNewSize) {
   }
 
   ipc::Shmem new_mem;
-  if (!mHost->SharedMemMgr()->MgrAllocShmem(
-          GMPSharedMem::kGMPFrameData, aNewSize, ipc::SharedMemory::TYPE_BASIC,
-          &new_mem) ||
+  if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMem::kGMPFrameData,
+                                            aNewSize, &new_mem) ||
       !new_mem.get<uint8_t>()) {
     return GMPAllocErr;
   }

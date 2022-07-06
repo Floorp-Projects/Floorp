@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/a11y/DocAccessibleParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/WindowsVersion.h"
 #include "MsaaRootAccessible.h"
 #include "Relation.h"
@@ -129,12 +131,11 @@ MsaaRootAccessible::get_accFocus(
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return S_FALSE;
   }
-  // Get the document in the active tab.
-  RootAccessible* rootAcc = RootAcc();
-  if (!rootAcc) {
-    return CO_E_OBJNOTCONNECTED;
+  dom::BrowserParent* browser = dom::BrowserParent::GetFocused();
+  if (!browser) {
+    return hr;
   }
-  RemoteAccessible* docProxy = rootAcc->GetPrimaryRemoteTopLevelContentDoc();
+  DocAccessibleParent* docProxy = browser->GetTopLevelDocAccessible();
   if (!docProxy) {
     return hr;
   }

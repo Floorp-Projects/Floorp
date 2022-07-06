@@ -15,18 +15,22 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   CONTEXTUAL_SERVICES_PING_TYPES:
     "resource:///modules/PartnerLinkAttribution.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   TOP_SITES_MAX_SITES_PER_ROW: "resource://activity-stream/common/Reducers.jsm",
   TOP_SITES_DEFAULT_ROWS: "resource://activity-stream/common/Reducers.jsm",
 });
@@ -124,7 +128,7 @@ class ProviderTopSites extends UrlbarProvider {
       return;
     }
 
-    let sites = AboutNewTab.getTopSites();
+    let sites = lazy.AboutNewTab.getTopSites();
 
     let instance = this.queryInstance;
 
@@ -132,7 +136,7 @@ class ProviderTopSites extends UrlbarProvider {
     // on about:newtab.
     sites = sites.filter(site => site);
 
-    if (!UrlbarPrefs.get("sponsoredTopSites")) {
+    if (!lazy.UrlbarPrefs.get("sponsoredTopSites")) {
       sites = sites.filter(site => !site.sponsored_position);
     }
 
@@ -144,7 +148,7 @@ class ProviderTopSites extends UrlbarProvider {
         this,
         "topSitesRows",
         "browser.newtabpage.activity-stream.topSitesRows",
-        TOP_SITES_DEFAULT_ROWS
+        lazy.TOP_SITES_DEFAULT_ROWS
       );
     }
 
@@ -152,8 +156,8 @@ class ProviderTopSites extends UrlbarProvider {
     // Sites greater than what is visible in the New Tab Page, because the
     // additional ones couldn't be managed from the page.
     let numTopSites = Math.min(
-      UrlbarPrefs.get("maxRichResults"),
-      TOP_SITES_MAX_SITES_PER_ROW * this.topSitesRows
+      lazy.UrlbarPrefs.get("maxRichResults"),
+      lazy.TOP_SITES_MAX_SITES_PER_ROW * this.topSitesRows
     );
     sites = sites.slice(0, numTopSites);
 
@@ -214,18 +218,18 @@ class ProviderTopSites extends UrlbarProvider {
               sponsoredClickUrl: site.sponsoredClickUrl,
             };
           }
-          let result = new UrlbarResult(
+          let result = new lazy.UrlbarResult(
             UrlbarUtils.RESULT_TYPE.URL,
             UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-            ...UrlbarResult.payloadAndSimpleHighlights(
+            ...lazy.UrlbarResult.payloadAndSimpleHighlights(
               queryContext.tokens,
               payload
             )
           );
 
           let tabs;
-          if (UrlbarPrefs.get("suggest.openpage")) {
-            tabs = UrlbarProviderOpenTabs.getOpenTabs(
+          if (lazy.UrlbarPrefs.get("suggest.openpage")) {
+            tabs = lazy.UrlbarProviderOpenTabs.getOpenTabs(
               queryContext.userContextId || 0,
               queryContext.isPrivate
             );
@@ -234,8 +238,8 @@ class ProviderTopSites extends UrlbarProvider {
           if (tabs && tabs.includes(site.url.replace(/#.*$/, ""))) {
             result.type = UrlbarUtils.RESULT_TYPE.TAB_SWITCH;
             result.source = UrlbarUtils.RESULT_SOURCE.TABS;
-          } else if (UrlbarPrefs.get("suggest.bookmark")) {
-            let bookmark = await PlacesUtils.bookmarks.fetch({
+          } else if (lazy.UrlbarPrefs.get("suggest.bookmark")) {
+            let bookmark = await lazy.PlacesUtils.bookmarks.fetch({
               url: new URL(result.payload.url),
             });
             if (bookmark) {
@@ -252,7 +256,7 @@ class ProviderTopSites extends UrlbarProvider {
           break;
         }
         case "search": {
-          let engine = await UrlbarSearchUtils.engineForAlias(site.title);
+          let engine = await lazy.UrlbarSearchUtils.engineForAlias(site.title);
 
           if (!engine && site.url) {
             // Look up the engine by its domain.
@@ -262,7 +266,7 @@ class ProviderTopSites extends UrlbarProvider {
             } catch (err) {}
             if (host) {
               engine = (
-                await UrlbarSearchUtils.enginesForDomainPrefix(host)
+                await lazy.UrlbarSearchUtils.enginesForDomainPrefix(host)
               )[0];
             }
           }
@@ -276,18 +280,21 @@ class ProviderTopSites extends UrlbarProvider {
             break;
           }
 
-          let result = new UrlbarResult(
+          let result = new lazy.UrlbarResult(
             UrlbarUtils.RESULT_TYPE.SEARCH,
             UrlbarUtils.RESULT_SOURCE.SEARCH,
-            ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-              title: site.title,
-              keyword: site.title,
-              providesSearchMode: true,
-              engine: engine.name,
-              query: "",
-              icon: site.favicon,
-              isPinned: site.isPinned,
-            })
+            ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+              queryContext.tokens,
+              {
+                title: site.title,
+                keyword: site.title,
+                providesSearchMode: true,
+                engine: engine.name,
+                query: "",
+                icon: site.favicon,
+                isPinned: site.isPinned,
+              }
+            )
           );
           addCallback(this, result);
           break;
@@ -325,7 +332,7 @@ class ProviderTopSites extends UrlbarProvider {
           `urlbar_${site.position}`,
           1
         );
-        PartnerLinkAttribution.sendContextualServicesPing(
+        lazy.PartnerLinkAttribution.sendContextualServicesPing(
           {
             source: "urlbar",
             tile_id: site.sponsoredTileId || -1,
@@ -333,7 +340,7 @@ class ProviderTopSites extends UrlbarProvider {
             reporting_url: site.sponsoredImpressionUrl,
             advertiser: site.title.toLocaleLowerCase(),
           },
-          CONTEXTUAL_SERVICES_PING_TYPES.TOPSITES_IMPRESSION
+          lazy.CONTEXTUAL_SERVICES_PING_TYPES.TOPSITES_IMPRESSION
         );
       }
     }

@@ -326,10 +326,9 @@ void IProtocol::Unregister(int32_t aId) {
   return mToplevel->Unregister(aId);
 }
 
-Shmem::SharedMemory* IProtocol::CreateSharedMemory(
-    size_t aSize, SharedMemory::SharedMemoryType aType, bool aUnsafe,
-    int32_t* aId) {
-  return mToplevel->CreateSharedMemory(aSize, aType, aUnsafe, aId);
+Shmem::SharedMemory* IProtocol::CreateSharedMemory(size_t aSize, bool aUnsafe,
+                                                   int32_t* aId) {
+  return mToplevel->CreateSharedMemory(aSize, aUnsafe, aId);
 }
 Shmem::SharedMemory* IProtocol::LookupSharedMemory(int32_t aId) {
   return mToplevel->LookupSharedMemory(aId);
@@ -403,9 +402,7 @@ void IProtocol::HandleFatalError(const char* aErrorMsg) const {
   mozilla::ipc::FatalError(aErrorMsg, mSide == ParentSide);
 }
 
-bool IProtocol::AllocShmem(size_t aSize,
-                           Shmem::SharedMemory::SharedMemoryType aType,
-                           Shmem* aOutMem) {
+bool IProtocol::AllocShmem(size_t aSize, Shmem* aOutMem) {
   if (!CanSend()) {
     NS_WARNING(
         "Shmem not allocated.  Cannot communicate with the other actor.");
@@ -413,7 +410,7 @@ bool IProtocol::AllocShmem(size_t aSize,
   }
 
   Shmem::id_t id;
-  Shmem::SharedMemory* rawmem(CreateSharedMemory(aSize, aType, false, &id));
+  Shmem::SharedMemory* rawmem(CreateSharedMemory(aSize, false, &id));
   if (!rawmem) {
     return false;
   }
@@ -422,9 +419,7 @@ bool IProtocol::AllocShmem(size_t aSize,
   return true;
 }
 
-bool IProtocol::AllocUnsafeShmem(size_t aSize,
-                                 Shmem::SharedMemory::SharedMemoryType aType,
-                                 Shmem* aOutMem) {
+bool IProtocol::AllocUnsafeShmem(size_t aSize, Shmem* aOutMem) {
   if (!CanSend()) {
     NS_WARNING(
         "Shmem not allocated.  Cannot communicate with the other actor.");
@@ -432,7 +427,7 @@ bool IProtocol::AllocUnsafeShmem(size_t aSize,
   }
 
   Shmem::id_t id;
-  Shmem::SharedMemory* rawmem(CreateSharedMemory(aSize, aType, true, &id));
+  Shmem::SharedMemory* rawmem(CreateSharedMemory(aSize, true, &id));
   if (!rawmem) {
     return false;
   }
@@ -675,11 +670,11 @@ void IToplevelProtocol::Unregister(int32_t aId) {
   mActorMap.Remove(aId);
 }
 
-Shmem::SharedMemory* IToplevelProtocol::CreateSharedMemory(
-    size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, bool aUnsafe,
-    Shmem::id_t* aId) {
+Shmem::SharedMemory* IToplevelProtocol::CreateSharedMemory(size_t aSize,
+                                                           bool aUnsafe,
+                                                           Shmem::id_t* aId) {
   RefPtr<Shmem::SharedMemory> segment(
-      Shmem::Alloc(Shmem::PrivateIPDLCaller(), aSize, aType, aUnsafe));
+      Shmem::Alloc(Shmem::PrivateIPDLCaller(), aSize, aUnsafe));
   if (!segment) {
     return nullptr;
   }

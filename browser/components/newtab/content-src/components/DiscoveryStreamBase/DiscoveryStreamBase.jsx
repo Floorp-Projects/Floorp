@@ -225,8 +225,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             essentialReadsHeader={component.properties.essentialReadsHeader}
             editorsPicksHeader={component.properties.editorsPicksHeader}
             readTime={component.properties.readTime}
-            loadMore={component.loadMore}
-            lastCardMessageEnabled={component.lastCardMessageEnabled}
             saveToPocketCard={component.saveToPocketCard}
             cta_variant={component.cta_variant}
             pocket_button_enabled={component.pocketButtonEnabled}

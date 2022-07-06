@@ -76,9 +76,8 @@ int32_t RefCountedShm::Release(const RefCountedShmem& aShm) {
 bool RefCountedShm::Alloc(mozilla::ipc::IProtocol* aAllocator, size_t aSize,
                           RefCountedShmem& aShm) {
   MOZ_ASSERT(!IsValid(aShm));
-  auto shmType = ipc::SharedMemory::SharedMemoryType::TYPE_BASIC;
   auto size = aSize + SHM_REFCOUNT_HEADER_SIZE;
-  if (!aAllocator->AllocUnsafeShmem(size, shmType, &aShm.buffer())) {
+  if (!aAllocator->AllocUnsafeShmem(size, &aShm.buffer())) {
     return false;
   }
   return true;

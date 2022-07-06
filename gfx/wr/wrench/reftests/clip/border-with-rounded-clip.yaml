@@ -2,7 +2,6 @@
 root:
   items:
     -
-      bounds: [10, 10, 938, 200]
       clip-rect: [10, 10, 938, 200]
       type: clip
       id: 2

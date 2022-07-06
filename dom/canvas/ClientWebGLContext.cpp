@@ -4310,10 +4310,8 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
       MOZ_ASSERT(desc->sd);
       const auto byteCount = pShmem->Size<uint8_t>();
       const auto* const src = pShmem->get<uint8_t>();
-      const auto shmemType =
-          mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC;
       mozilla::ipc::Shmem shmemForResend;
-      if (!child->AllocShmem(byteCount, shmemType, &shmemForResend)) {
+      if (!child->AllocShmem(byteCount, &shmemForResend)) {
         NS_WARNING("AllocShmem failed in TexImage");
         return;
       }

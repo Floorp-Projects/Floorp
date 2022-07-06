@@ -18,9 +18,8 @@ namespace mozilla::gmp {
 // Compressed (encoded) data goes from the Decoder parent to the child;
 // pool there, and then return with Encoded() frames and goes into the parent
 // pool.
-bool GMPSharedMemManager::MgrAllocShmem(
-    GMPSharedMem::GMPMemoryClasses aClass, size_t aSize,
-    ipc::Shmem::SharedMemory::SharedMemoryType aType, ipc::Shmem* aMem) {
+bool GMPSharedMemManager::MgrAllocShmem(GMPSharedMem::GMPMemoryClasses aClass,
+                                        size_t aSize, ipc::Shmem* aMem) {
   mData->CheckThread();
 
   // first look to see if we have a free buffer large enough
@@ -36,7 +35,7 @@ bool GMPSharedMemManager::MgrAllocShmem(
   // Didn't find a buffer free with enough space; allocate one
   size_t pagesize = ipc::SharedMemory::SystemPageSize();
   aSize = (aSize + (pagesize - 1)) & ~(pagesize - 1);  // round up to page size
-  bool retval = Alloc(aSize, aType, aMem);
+  bool retval = Alloc(aSize, aMem);
   if (retval) {
     // The allocator (or NeedsShmem call) should never return less than we ask
     // for...

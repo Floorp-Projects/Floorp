@@ -11,9 +11,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+const { EventEmitter } = ChromeUtils.import(
+  "resource://gre/modules/EventEmitter.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   QUICK_SUGGEST_SOURCE: "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
@@ -25,7 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const log = console.createInstance({
   prefix: "QuickSuggest",
-  maxLogLevel: UrlbarPrefs.get("quicksuggest.log") ? "All" : "Warn",
+  maxLogLevel: lazy.UrlbarPrefs.get("quicksuggest.log") ? "All" : "Warn",
 });
 
 const RS_COLLECTION = "quicksuggest";
@@ -71,8 +76,8 @@ const ADD_RESULTS_CHUNK_SIZE = 1000;
  */
 class QuickSuggest extends EventEmitter {
   init() {
-    UrlbarPrefs.addObserver(this);
-    NimbusFeatures.urlbar.onUpdate(() => this._queueSettingsSetup());
+    lazy.UrlbarPrefs.addObserver(this);
+    lazy.NimbusFeatures.urlbar.onUpdate(() => this._queueSettingsSetup());
 
     this._settingsTaskQueue.queue(() => {
       return new Promise(resolve => {
@@ -171,7 +176,7 @@ class QuickSuggest extends EventEmitter {
         typeof result.score == "number"
           ? result.score
           : DEFAULT_SUGGESTION_SCORE,
-      source: QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS,
+      source: lazy.QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS,
       icon: icons.shift(),
       position: result.position,
       _test_is_best_match: result._test_is_best_match,
@@ -190,7 +195,7 @@ class QuickSuggest extends EventEmitter {
     if (!this._recordedExposureEvent) {
       this._recordedExposureEvent = true;
       Services.tm.idleDispatchToMainThread(() =>
-        NimbusFeatures.urlbar.recordExposureEvent({ once: true })
+        lazy.NimbusFeatures.urlbar.recordExposureEvent({ once: true })
       );
     }
   }
@@ -265,54 +270,54 @@ class QuickSuggest extends EventEmitter {
     // The call to this method races scenario initialization on startup, and the
     // Nimbus variables we rely on below depend on the scenario, so wait for it
     // to be initialized.
-    await UrlbarPrefs.firefoxSuggestScenarioStartupPromise;
+    await lazy.UrlbarPrefs.firefoxSuggestScenarioStartupPromise;
 
     // If the feature is disabled, the user has already seen the dialog, or the
     // user has already opted in, don't show the onboarding.
     if (
-      !UrlbarPrefs.get(FEATURE_AVAILABLE) ||
-      UrlbarPrefs.get(SEEN_DIALOG_PREF) ||
-      UrlbarPrefs.get("quicksuggest.dataCollection.enabled")
+      !lazy.UrlbarPrefs.get(FEATURE_AVAILABLE) ||
+      lazy.UrlbarPrefs.get(SEEN_DIALOG_PREF) ||
+      lazy.UrlbarPrefs.get("quicksuggest.dataCollection.enabled")
     ) {
       return false;
     }
 
     // Wait a number of restarts before showing the dialog.
-    let restartsSeen = UrlbarPrefs.get(RESTARTS_PREF);
+    let restartsSeen = lazy.UrlbarPrefs.get(RESTARTS_PREF);
     if (
       restartsSeen <
-      UrlbarPrefs.get("quickSuggestShowOnboardingDialogAfterNRestarts")
+      lazy.UrlbarPrefs.get("quickSuggestShowOnboardingDialogAfterNRestarts")
     ) {
-      UrlbarPrefs.set(RESTARTS_PREF, restartsSeen + 1);
+      lazy.UrlbarPrefs.set(RESTARTS_PREF, restartsSeen + 1);
       return false;
     }
 
-    let win = BrowserWindowTracker.getTopWindow();
+    let win = lazy.BrowserWindowTracker.getTopWindow();
 
     // Don't show the dialog on top of about:welcome for new users.
     if (win.gBrowser?.currentURI?.spec == "about:welcome") {
       return false;
     }
 
-    if (UrlbarPrefs.get("experimentType") === "modal") {
+    if (lazy.UrlbarPrefs.get("experimentType") === "modal") {
       this.ensureExposureEventRecorded();
     }
 
-    if (!UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog")) {
+    if (!lazy.UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog")) {
       return false;
     }
 
     let variationType;
     try {
       // An error happens if the pref is not in user prefs.
-      variationType = UrlbarPrefs.get(DIALOG_VARIATION_PREF).toLowerCase();
+      variationType = lazy.UrlbarPrefs.get(DIALOG_VARIATION_PREF).toLowerCase();
     } catch (e) {}
 
     let params = { choice: undefined, variationType, visitedMain: false };
     await win.gDialogBox.open(ONBOARDING_URI, params);
 
-    UrlbarPrefs.set(SEEN_DIALOG_PREF, true);
-    UrlbarPrefs.set(
+    lazy.UrlbarPrefs.set(SEEN_DIALOG_PREF, true);
+    lazy.UrlbarPrefs.set(
       DIALOG_VERSION_PREF,
       JSON.stringify({ version: 1, variation: variationType })
     );
@@ -321,12 +326,12 @@ class QuickSuggest extends EventEmitter {
     // so it will retain its user-branch value regardless of what the particular
     // default was at the time.
     let optedIn = params.choice == ONBOARDING_CHOICE.ACCEPT_2;
-    UrlbarPrefs.set("quicksuggest.dataCollection.enabled", optedIn);
+    lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", optedIn);
 
     switch (params.choice) {
       case ONBOARDING_CHOICE.LEARN_MORE_1:
       case ONBOARDING_CHOICE.LEARN_MORE_2:
-        win.openTrustedLinkIn(UrlbarProviderQuickSuggest.helpUrl, "tab", {
+        win.openTrustedLinkIn(lazy.UrlbarProviderQuickSuggest.helpUrl, "tab", {
           fromChrome: true,
         });
         break;
@@ -343,7 +348,7 @@ class QuickSuggest extends EventEmitter {
         break;
     }
 
-    UrlbarPrefs.set("quicksuggest.onboardingDialogChoice", params.choice);
+    lazy.UrlbarPrefs.set("quicksuggest.onboardingDialogChoice", params.choice);
 
     Services.telemetry.recordEvent(
       "contextservices.quicksuggest",
@@ -380,7 +385,7 @@ class QuickSuggest extends EventEmitter {
   // overlap, and happen only one at a time. It also lets clients, especially
   // tests, use this class without having to worry about whether a settings sync
   // or initialization is ongoing; see `readyPromise`.
-  _settingsTaskQueue = new TaskQueue();
+  _settingsTaskQueue = new lazy.TaskQueue();
 
   // Configuration data synced from remote settings. See the `config` getter.
   _config = {};
@@ -404,12 +409,12 @@ class QuickSuggest extends EventEmitter {
   _queueSettingsSetup() {
     this._settingsTaskQueue.queue(() => {
       let enabled =
-        UrlbarPrefs.get(FEATURE_AVAILABLE) &&
-        (UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
-          UrlbarPrefs.get("suggest.quicksuggest.sponsored"));
+        lazy.UrlbarPrefs.get(FEATURE_AVAILABLE) &&
+        (lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
+          lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored"));
       if (enabled && !this._rs) {
         this._onSettingsSync = (...args) => this._queueSettingsSync(...args);
-        this._rs = RemoteSettings(RS_COLLECTION);
+        this._rs = lazy.RemoteSettings(RS_COLLECTION);
         this._rs.on("sync", this._onSettingsSync);
       } else if (!enabled && this._rs) {
         this._rs.off("sync", this._onSettingsSync);
@@ -443,7 +448,7 @@ class QuickSuggest extends EventEmitter {
         );
       }
 
-      let dataType = UrlbarPrefs.get("quickSuggestRemoteSettingsDataType");
+      let dataType = lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsDataType");
       log.debug("Loading data with type:", dataType);
 
       let [configArray, data] = await Promise.all([

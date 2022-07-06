@@ -16,12 +16,13 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  UrlbarUtils.getLogger({ prefix: "Tokenizer" })
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.UrlbarUtils.getLogger({ prefix: "Tokenizer" })
 );
 
 var UrlbarTokenizer = {
@@ -127,7 +128,7 @@ var UrlbarTokenizer = {
     }
 
     let path = slashIndex != -1 ? token.slice(slashIndex) : "";
-    logger.debug("path", path);
+    lazy.logger.debug("path", path);
     if (requirePath && !path) {
       return false;
     }
@@ -196,8 +197,8 @@ var UrlbarTokenizer = {
     let userinfo = atIndex != -1 ? token.slice(0, atIndex) : "";
     let hostPort = atIndex != -1 ? token.slice(atIndex + 1) : token;
     let hasPort = this.REGEXP_HAS_PORT.test(hostPort);
-    logger.debug("userinfo", userinfo);
-    logger.debug("hostPort", hostPort);
+    lazy.logger.debug("userinfo", userinfo);
+    lazy.logger.debug("hostPort", hostPort);
     if (noPort && hasPort) {
       return false;
     }
@@ -241,7 +242,7 @@ var UrlbarTokenizer = {
    *          tokens property.
    */
   tokenize(queryContext) {
-    logger.info("Tokenizing", queryContext);
+    lazy.logger.info("Tokenizing", queryContext);
     if (!queryContext.trimmedSearchString) {
       queryContext.tokens = [];
       return queryContext;
@@ -407,6 +408,6 @@ function filterTokens(tokens) {
     }
   }
 
-  logger.info("Filtered Tokens", tokens);
+  lazy.logger.info("Filtered Tokens", tokens);
   return filtered;
 }

@@ -179,9 +179,7 @@ mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvDecodingComplete() {
   return IPC_OK();
 }
 
-bool GMPVideoDecoderChild::Alloc(size_t aSize,
-                                 Shmem::SharedMemory::SharedMemoryType aType,
-                                 Shmem* aMem) {
+bool GMPVideoDecoderChild::Alloc(size_t aSize, Shmem* aMem) {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   bool rv;

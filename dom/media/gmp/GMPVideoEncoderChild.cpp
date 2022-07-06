@@ -172,9 +172,7 @@ mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvEncodingComplete() {
   return IPC_OK();
 }
 
-bool GMPVideoEncoderChild::Alloc(size_t aSize,
-                                 Shmem::SharedMemory::SharedMemoryType aType,
-                                 Shmem* aMem) {
+bool GMPVideoEncoderChild::Alloc(size_t aSize, Shmem* aMem) {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   bool rv;
@@ -189,7 +187,7 @@ bool GMPVideoEncoderChild::Alloc(size_t aSize,
                           this, &GMPVideoEncoderChild::RecvEncodingComplete));
   }
 #else
-  rv = AllocShmem(aSize, aType, aMem);
+  rv = AllocShmem(aSize, aMem);
 #endif
   return rv;
 }

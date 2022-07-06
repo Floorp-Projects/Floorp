@@ -7,7 +7,6 @@
 root:
   items:
     - type: clip
-      bounds: [0, 0, 100, 100]
       id: 2
       image-mask:
           image: solid-color(255,255,255,255,100,100)

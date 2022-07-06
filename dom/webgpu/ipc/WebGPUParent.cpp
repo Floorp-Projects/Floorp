@@ -717,7 +717,7 @@ ipc::IPCResult WebGPUParent::GetFrontBufferSnapshot(
       aSize.width * BytesPerPixel(data->mTextureHost->GetFormat());
   uint32_t len = data->mRowCount * stride;
   Shmem shmem;
-  if (!AllocShmem(len, ipc::Shmem::SharedMemory::TYPE_BASIC, &shmem)) {
+  if (!AllocShmem(len, &shmem)) {
     return IPC_OK();
   }
 

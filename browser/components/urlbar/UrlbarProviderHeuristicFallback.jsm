@@ -16,13 +16,18 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
+
+const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 /**
@@ -90,12 +95,12 @@ class ProviderHeuristicFallback extends UrlbarProvider {
         new URL(str);
       } catch (ex) {
         if (
-          UrlbarPrefs.get("keyword.enabled") &&
-          (UrlbarTokenizer.looksLikeOrigin(str, {
+          lazy.UrlbarPrefs.get("keyword.enabled") &&
+          (lazy.UrlbarTokenizer.looksLikeOrigin(str, {
             noIp: true,
             noPort: true,
           }) ||
-            UrlbarTokenizer.REGEXP_COMMON_EMAIL.test(str))
+            lazy.UrlbarTokenizer.REGEXP_COMMON_EMAIL.test(str))
         ) {
           let searchResult = this._engineSearchResult(queryContext);
           if (instance != this.queryInstance) {
@@ -132,7 +137,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     // restriction token was typed.
     if (
       queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH ||
-      UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(
+      lazy.UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(
         queryContext.restrictToken?.value
       ) ||
       queryContext.searchMode
@@ -155,12 +160,12 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     if (queryContext.fixupError) {
       if (
         queryContext.fixupError == Cr.NS_ERROR_MALFORMED_URI &&
-        !UrlbarPrefs.get("keyword.enabled")
+        !lazy.UrlbarPrefs.get("keyword.enabled")
       ) {
-        let result = new UrlbarResult(
+        let result = new lazy.UrlbarResult(
           UrlbarUtils.RESULT_TYPE.URL,
           UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-          ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             title: [searchUrl, UrlbarUtils.HIGHLIGHT.NONE],
             url: [searchUrl, UrlbarUtils.HIGHLIGHT.NONE],
           })
@@ -215,10 +220,10 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       iconUri = `page-icon:${prePath}/`;
     }
 
-    let result = new UrlbarResult(
+    let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         title: [displayURL, UrlbarUtils.HIGHLIGHT.NONE],
         url: [escapedURL, UrlbarUtils.HIGHLIGHT.NONE],
         icon: iconUri,
@@ -234,7 +239,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     }
 
     let firstToken = queryContext.tokens[0].value;
-    if (!UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(firstToken)) {
+    if (!lazy.UrlbarTokenizer.SEARCH_MODE_RESTRICT.has(firstToken)) {
       return null;
     }
 
@@ -260,7 +265,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       queryContext.searchString,
       firstToken
     );
-    if (!UrlbarTokenizer.REGEXP_SPACES_START.test(query)) {
+    if (!lazy.UrlbarTokenizer.REGEXP_SPACES_START.test(query)) {
       return null;
     }
 
@@ -268,10 +273,10 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     if (queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH) {
       result = this._engineSearchResult(queryContext, firstToken);
     } else {
-      result = new UrlbarResult(
+      result = new lazy.UrlbarResult(
         UrlbarUtils.RESULT_TYPE.SEARCH,
         UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+        ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
           query: [query.trimStart(), UrlbarUtils.HIGHLIGHT.NONE],
           keyword: [firstToken, UrlbarUtils.HIGHLIGHT.NONE],
         })
@@ -288,7 +293,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
         queryContext.searchMode.engineName
       );
     } else {
-      engine = UrlbarSearchUtils.getDefaultEngine(queryContext.isPrivate);
+      engine = lazy.UrlbarSearchUtils.getDefaultEngine(queryContext.isPrivate);
     }
 
     if (!engine) {
@@ -302,7 +307,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     let query = queryContext.searchString;
     if (
       queryContext.tokens[0] &&
-      queryContext.tokens[0].value === UrlbarTokenizer.RESTRICT.SEARCH
+      queryContext.tokens[0].value === lazy.UrlbarTokenizer.RESTRICT.SEARCH
     ) {
       query = UrlbarUtils.substringAfter(
         query,
@@ -310,10 +315,10 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       ).trim();
     }
 
-    return new UrlbarResult(
+    return new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
-      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
         icon: engine.iconURI?.spec,
         query: [query, UrlbarUtils.HIGHLIGHT.NONE],

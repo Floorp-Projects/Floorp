@@ -109,7 +109,7 @@ impl<'a> RawtestHarness<'a> {
         let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         CommonItemProperties {
             clip_rect,
-            clip_id: space_and_clip.clip_id,
+            clip_chain_id: space_and_clip.clip_chain_id,
             spatial_id: space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
         }
@@ -118,12 +118,12 @@ impl<'a> RawtestHarness<'a> {
     fn make_common_properties_with_clip_and_spatial(
         &self,
         clip_rect: LayoutRect,
-        clip_id: ClipId,
+        clip_chain_id: ClipChainId,
         spatial_id: SpatialId
     ) -> CommonItemProperties {
         CommonItemProperties {
             clip_rect,
-            clip_id,
+            clip_chain_id,
             spatial_id,
             flags: PrimitiveFlags::default(),
         }
@@ -310,10 +310,11 @@ impl<'a> RawtestHarness<'a> {
             root_space_and_clip.spatial_id,
             rect(40., 41., 200., 201.).to_box2d(),
         );
+        let clip_chain_id = builder.define_clip_chain(None, [clip_id]);
 
         let info = CommonItemProperties {
             clip_rect: rect(0.0, 0.0, 800.0, 800.0).to_box2d(),
-            clip_id,
+            clip_chain_id,
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
         };
@@ -394,10 +395,11 @@ impl<'a> RawtestHarness<'a> {
             root_space_and_clip.spatial_id,
             rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
+        let clip_chain_id = builder.define_clip_chain(None, [clip_id]);
 
         let info = CommonItemProperties {
             clip_rect: rect(10.0, 10.0, 400.0, 400.0).to_box2d(),
-            clip_id,
+            clip_chain_id,
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
         };
@@ -487,10 +489,11 @@ impl<'a> RawtestHarness<'a> {
             root_space_and_clip.spatial_id,
             rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
+        let clip_chain_id = builder.define_clip_chain(None, [clip_id]);
 
         let info = CommonItemProperties {
             clip_rect: rect(0.0, 0.0, 1000.0, 1000.0).to_box2d(),
-            clip_id,
+            clip_chain_id,
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
         };
@@ -532,10 +535,11 @@ impl<'a> RawtestHarness<'a> {
             root_space_and_clip.spatial_id,
             rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
+        let clip_chain_id = builder.define_clip_chain(None, [clip_id]);
 
         let info = CommonItemProperties {
             clip_rect: rect(0.0, 0.0, 1000.0, 1000.0).to_box2d(),
-            clip_id,
+            clip_chain_id,
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
         };
@@ -579,10 +583,11 @@ impl<'a> RawtestHarness<'a> {
             root_space_and_clip.spatial_id,
             rect(-1000.0, -1000.0, 2000.0, 2000.0).to_box2d(),
         );
+        let clip_chain_id = builder.define_clip_chain(None, [clip_id]);
 
         let info = CommonItemProperties {
             clip_rect: rect(0.0, 0.0, 1000.0, 1000.0).to_box2d(),
-            clip_id,
+            clip_chain_id,
             spatial_id: root_space_and_clip.spatial_id,
             flags: PrimitiveFlags::default(),
         };
@@ -1070,10 +1075,11 @@ impl<'a> RawtestHarness<'a> {
                 SpatialId::root_scroll_node(self.wrench.root_pipeline_id),
                 rect(110., 120., 200., 200.).to_box2d(),
             );
+            let clip_chain_id = builder.define_clip_chain(None, [clip_id]);
             builder.push_rect(
                 &self.make_common_properties_with_clip_and_spatial(
                     rect(100., 100., 100., 100.).to_box2d(),
-                    clip_id,
+                    clip_chain_id,
                     spatial_id),
                 rect(100., 100., 100., 100.).to_box2d(),
                 ColorF::new(0.0, 0.0, 1.0, 1.0),
@@ -1085,14 +1091,15 @@ impl<'a> RawtestHarness<'a> {
                     spatial_id,
                     rect(80., 80., 90., 90.).to_box2d(),
                 );
+                let clip_chain_id = builder.define_clip_chain(None, [clip_id]);
                 let space_and_clip = SpaceAndClipInfo {
                     spatial_id,
-                    clip_id
+                    clip_chain_id,
                 };
                 builder.push_rect(
                     &self.make_common_properties_with_clip_and_spatial(
                         rect(110., 110., 50., 50.).to_box2d(),
-                        clip_id,
+                        clip_chain_id,
                         spatial_id),
                     rect(110., 110., 50., 50.).to_box2d(),
                     ColorF::new(0.0, 1.0, 0.0, 1.0),
@@ -1108,7 +1115,7 @@ impl<'a> RawtestHarness<'a> {
                 );
                 let info = CommonItemProperties {
                     clip_rect: rect(110., 110., 50., 2.).to_box2d(),
-                    clip_id,
+                    clip_chain_id,
                     spatial_id,
                     flags: PrimitiveFlags::default(),
                 };
@@ -1128,10 +1135,11 @@ impl<'a> RawtestHarness<'a> {
                     spatial_id,
                     rect(80., 80., 100., 100.).to_box2d(),
                 );
+                let clip_chain_id = builder.define_clip_chain(None, [clip_id]);
                 builder.push_rect(
                     &self.make_common_properties_with_clip_and_spatial(
                         rect(150., 150., 100., 100.).to_box2d(),
-                        clip_id,
+                        clip_chain_id,
                         spatial_id),
                     rect(150., 150., 100., 100.).to_box2d(),
                     ColorF::new(0.0, 0.0, 1.0, 1.0),

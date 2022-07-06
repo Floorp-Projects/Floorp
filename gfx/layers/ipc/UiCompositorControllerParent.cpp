@@ -186,7 +186,7 @@ void UiCompositorControllerParent::ToolbarAnimatorMessageFromCompositor(
 bool UiCompositorControllerParent::AllocPixelBuffer(const int32_t aSize,
                                                     ipc::Shmem* aMem) {
   MOZ_ASSERT(aSize > 0);
-  return AllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC, aMem);
+  return AllocShmem(aSize, aMem);
 }
 
 void UiCompositorControllerParent::NotifyLayersUpdated() {

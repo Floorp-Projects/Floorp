@@ -272,8 +272,7 @@ mozilla::ipc::IPCResult RemoteDecoderManagerParent::RecvReadback(
   size_t length = ImageDataSerializer::ComputeRGBBufferSize(size, format);
 
   Shmem buffer;
-  if (!length ||
-      !AllocShmem(length, Shmem::SharedMemory::TYPE_BASIC, &buffer)) {
+  if (!length || !AllocShmem(length, &buffer)) {
     *aResult = null_t();
     return IPC_OK();
   }

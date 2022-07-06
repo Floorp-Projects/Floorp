@@ -2766,14 +2766,12 @@ main.has-snippet {
   margin-top: 8px;
 }
 .ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .source,
-.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .ds-last-card-desc,
 .ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .story-sponsored-label,
 .ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .status-message .story-context-label {
   color: var(--newtab-text-secondary-color);
   -webkit-line-clamp: 2;
 }
 .ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .source,
-.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .ds-last-card-desc,
 .ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .story-sponsored-label {
   font-size: 13px;
 }
@@ -2820,29 +2818,21 @@ main.has-snippet {
     margin-top: 8px;
   }
   .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
 .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
 .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
 .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
 .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label {
     color: var(--newtab-text-secondary-color);
     -webkit-line-clamp: 2;
   }
   .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label {
     font-size: 13px;
   }
@@ -2875,29 +2865,21 @@ main.has-snippet {
     margin-top: 8px;
   }
   .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
 .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
 .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
 .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
 .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label {
     color: var(--newtab-text-secondary-color);
     -webkit-line-clamp: 2;
   }
   .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
-.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
 .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label {
     font-size: 13px;
   }
@@ -2940,12 +2922,6 @@ main.has-snippet {
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
-.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img.last-card-message-image,
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img.last-card-message-image {
-  background: transparent;
-  box-shadow: none;
-  object-fit: contain;
-}
 .outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .meta,
 .outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .meta {
   padding: 12px 0 0;
@@ -2971,13 +2947,6 @@ main.has-snippet {
 }
 .ds-layout .ds-sub-header .section-sub-link:active {
   color: var(--newtab-primary-element-active-color);
-}
-.ds-layout .ds-card-grid-load-more-button {
-  display: block;
-  margin: 32px auto 0;
-  font-size: 13px;
-  line-height: 16px;
-  border-radius: 4px;
 }
 
 .ds-dismiss.ds-dismiss-ds-collection .ds-dismiss-button {
@@ -3509,19 +3478,6 @@ main.has-snippet {
 }
 .ds-card.video-card .meta {
   margin-top: 4px;
-}
-.ds-card.last-card-message .ds-last-card-desc {
-  font-size: 13px;
-  color: var(--newtab-text-secondary-color);
-}
-.ds-card.last-card-message .ds-last-card-desc,
-.ds-card.last-card-message .title {
-  text-align: center;
-}
-.ds-card.last-card-message .last-card-message-image {
-  object-fit: contain;
-  background: transparent;
-  box-shadow: none;
 }
 .ds-card .meta {
   display: flex;

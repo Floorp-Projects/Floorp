@@ -17,7 +17,8 @@ var EXPORTED_SYMBOLS = ["UrlbarResult"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
@@ -45,14 +46,14 @@ class UrlbarResult {
   constructor(resultType, resultSource, payload, payloadHighlights = {}) {
     // Type describes the payload and visualization that should be used for
     // this result.
-    if (!Object.values(UrlbarUtils.RESULT_TYPE).includes(resultType)) {
+    if (!Object.values(lazy.UrlbarUtils.RESULT_TYPE).includes(resultType)) {
       throw new Error("Invalid result type");
     }
     this.type = resultType;
 
     // Source describes which data has been used to derive this result. In case
     // multiple sources are involved, use the more privacy restricted.
-    if (!Object.values(UrlbarUtils.RESULT_SOURCE).includes(resultSource)) {
+    if (!Object.values(lazy.UrlbarUtils.RESULT_SOURCE).includes(resultSource)) {
       throw new Error("Invalid result source");
     }
     this.source = resultSource;
@@ -108,11 +109,11 @@ class UrlbarResult {
    */
   get _titleAndHighlights() {
     switch (this.type) {
-      case UrlbarUtils.RESULT_TYPE.KEYWORD:
-      case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-      case UrlbarUtils.RESULT_TYPE.URL:
-      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
-      case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+      case lazy.UrlbarUtils.RESULT_TYPE.KEYWORD:
+      case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+      case lazy.UrlbarUtils.RESULT_TYPE.URL:
+      case lazy.UrlbarUtils.RESULT_TYPE.OMNIBOX:
+      case lazy.UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
         if (this.payload.qsSuggestion) {
           return [
             // We will initially only be targetting en-US users with this experiment
@@ -124,7 +125,7 @@ class UrlbarResult {
         return this.payload.title
           ? [this.payload.title, this.payloadHighlights.title]
           : [this.payload.url || "", this.payloadHighlights.url || []];
-      case UrlbarUtils.RESULT_TYPE.SEARCH:
+      case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
         if (this.payload.providesSearchMode) {
           return ["", []];
         }
@@ -165,14 +166,14 @@ class UrlbarResult {
    * @returns {object} `payload` if it's valid.
    */
   validatePayload(payload) {
-    let schema = UrlbarUtils.getPayloadSchema(this.type);
+    let schema = lazy.UrlbarUtils.getPayloadSchema(this.type);
     if (!schema) {
       throw new Error(`Unrecognized result type: ${this.type}`);
     }
-    let result = JsonSchemaValidator.validate(payload, schema, {
+    let result = lazy.JsonSchemaValidator.validate(payload, schema, {
       allowExplicitUndefinedProperties: true,
       allowNullAsUndefinedProperties: true,
-      allowExtraProperties: this.type == UrlbarUtils.RESULT_TYPE.DYNAMIC,
+      allowExtraProperties: this.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
     });
     if (!result.valid) {
       throw result.error;
@@ -227,7 +228,7 @@ class UrlbarResult {
       // have a domain.
       payloadInfo.title = payloadInfo.title || [
         "",
-        UrlbarUtils.HIGHLIGHT.TYPED,
+        lazy.UrlbarUtils.HIGHLIGHT.TYPED,
       ];
       try {
         payloadInfo.title[0] = new URL(payloadInfo.url[0]).host;
@@ -238,8 +239,8 @@ class UrlbarResult {
       // For display purposes we need to unescape the url.
       payloadInfo.displayUrl = [...payloadInfo.url];
       let url = payloadInfo.displayUrl[0];
-      if (url && UrlbarPrefs.get("trimURLs")) {
-        url = BrowserUIUtils.removeSingleTrailingSlashFromURL(url);
+      if (url && lazy.UrlbarPrefs.get("trimURLs")) {
+        url = lazy.BrowserUIUtils.removeSingleTrailingSlashFromURL(url);
         if (url.startsWith("https://")) {
           url = url.substring(8);
           if (url.startsWith("www.")) {
@@ -247,7 +248,7 @@ class UrlbarResult {
           }
         }
       }
-      payloadInfo.displayUrl[0] = UrlbarUtils.unEscapeURIForUI(url);
+      payloadInfo.displayUrl[0] = lazy.UrlbarUtils.unEscapeURIForUI(url);
     }
 
     // For performance reasons limit excessive string lengths, to reduce the
@@ -256,7 +257,10 @@ class UrlbarResult {
     for (let prop of ["displayUrl", "title", "suggestion"]) {
       let val = payloadInfo[prop]?.[0];
       if (typeof val == "string") {
-        payloadInfo[prop][0] = val.substring(0, UrlbarUtils.MAX_TEXT_LENGTH);
+        payloadInfo[prop][0] = val.substring(
+          0,
+          lazy.UrlbarUtils.MAX_TEXT_LENGTH
+        );
       }
     }
 
@@ -269,9 +273,9 @@ class UrlbarResult {
       entries.reduce((highlights, [name, [val, highlightType]]) => {
         if (highlightType) {
           highlights[name] = !Array.isArray(val)
-            ? UrlbarUtils.getTokenMatches(tokens, val || "", highlightType)
+            ? lazy.UrlbarUtils.getTokenMatches(tokens, val || "", highlightType)
             : val.map(subval =>
-                UrlbarUtils.getTokenMatches(tokens, subval, highlightType)
+                lazy.UrlbarUtils.getTokenMatches(tokens, subval, highlightType)
               );
         }
         return highlights;

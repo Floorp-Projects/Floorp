@@ -247,6 +247,33 @@ LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
   return result;
 }
 
+int32_t HyperTextAccessibleBase::OffsetAtPoint(int32_t aX, int32_t aY,
+                                               uint32_t aCoordType) {
+  Accessible* thisAcc = Acc();
+  LayoutDeviceIntPoint coords =
+      nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordType, thisAcc);
+  if (!thisAcc->Bounds().Contains(coords.x, coords.y)) {
+    // The requested point does not exist in this accessible.
+    return -1;
+  }
+
+  TextLeafPoint point = ToTextLeafPoint(0, false);
+  // As with TextBounds, we walk to the very end of the text contained in this
+  // hypertext and then step backwards to make our endPoint inclusive.
+  TextLeafPoint endPoint =
+      ToTextLeafPoint(static_cast<int32_t>(CharacterCount()), true);
+  endPoint =
+      endPoint.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious,
+                            /* aIncludeOrigin */ false);
+  // XXX: We should create a TextLeafRange object for this hypertext and move
+  // this search inside the TextLeafRange class.
+  for (; !point.ContainsPoint(coords.x, coords.y) && point != endPoint;
+       point = point.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirNext,
+                                  /* aIncludeOrigin */ false)) {
+  };
+  return point.ContainsPoint(coords.x, coords.y) ? point.mOffset : -1;
+}
+
 TextLeafPoint HyperTextAccessibleBase::ToTextLeafPoint(int32_t aOffset,
                                                        bool aDescendToEnd) {
   Accessible* thisAcc = Acc();

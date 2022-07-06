@@ -17,7 +17,6 @@ root:
       transform: rotate(0.25)
       items:
        - type: clip
-         bounds: [0, 0, 2400, 900]
          id: 3
          complex:
            - rect: [ 0, 0, 2400, 900 ]

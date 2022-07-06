@@ -14,18 +14,23 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
+
+const { UrlbarMuxer, UrlbarUtils } = ChromeUtils.import(
+  "resource:///modules/UrlbarUtils.jsm"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarProviderTabToSearch:
     "resource:///modules/UrlbarProviderTabToSearch.jsm",
-  UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   UrlbarUtils.getLogger({ prefix: "MuxerUnifiedComplete" })
 );
 
@@ -116,7 +121,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       );
     }
     if (state.maxHeuristicResultSpan) {
-      if (UrlbarPrefs.get("experimental.hideHeuristic")) {
+      if (lazy.UrlbarPrefs.get("experimental.hideHeuristic")) {
         // The heuristic is hidden. The muxer will include it but the view will
         // hide it. Increase the available span to compensate so that the total
         // visible span accurately reflects `context.maxResults`.
@@ -134,9 +139,9 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // Determine the result groups to use for this sort.  In search mode with
     // an engine, show search suggestions first.
     let rootGroup = context.searchMode?.engineName
-      ? UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: true })
-      : UrlbarPrefs.get("resultGroups");
-    logger.debug(`Groups: ${rootGroup}`);
+      ? lazy.UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: true })
+      : lazy.UrlbarPrefs.get("resultGroups");
+    lazy.logger.debug(`Groups: ${rootGroup}`);
 
     // Fill the root group.
     let [sortedResults] = this._fillGroup(
@@ -536,7 +541,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         while (summedFillableLimit != fillableLimit) {
           if (!fractionalDataArray.length) {
             // This shouldn't happen, but don't let it break us.
-            logger.error("fractionalDataArray is empty!");
+            lazy.logger.error("fractionalDataArray is empty!");
             break;
           }
           let data = flexDataArray[fractionalDataArray.shift().index];
@@ -583,7 +588,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // are ignored and we use the flex defined on the form history group.
     if (
       groupConst == UrlbarUtils.RESULT_GROUP.FORM_HISTORY &&
-      !UrlbarPrefs.get("maxHistoricalSearchSuggestions")
+      !lazy.UrlbarPrefs.get("maxHistoricalSearchSuggestions")
     ) {
       // Create a new `limits` object so we don't modify the caller's.
       limits = { ...limits };
@@ -641,7 +646,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
   _canAddResult(result, state) {
     // Never discard quick suggest results. We may want to change this logic at
     // some point, but for all current use cases, they should always be shown.
-    if (result.providerName == UrlbarProviderQuickSuggest.name) {
+    if (result.providerName == lazy.UrlbarProviderQuickSuggest.name) {
       return true;
     }
 
@@ -699,7 +704,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       !result.autofill &&
       state.context.heuristicResult.payload?.url == result.payload.url &&
       state.context.heuristicResult.type == result.type &&
-      !UrlbarPrefs.get("experimental.hideHeuristic")
+      !lazy.UrlbarPrefs.get("experimental.hideHeuristic")
     ) {
       return false;
     }
@@ -714,7 +719,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       return false;
     }
 
-    if (result.providerName == UrlbarProviderTabToSearch.name) {
+    if (result.providerName == lazy.UrlbarProviderTabToSearch.name) {
       // Discard the result if a tab-to-search result was added already.
       if (!state.canAddTabToSearch) {
         return false;
@@ -843,7 +848,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
             submission.terms
           );
           if (
-            UrlbarSearchUtils.serpsAreEquivalent(result.payload.url, newSerpURL)
+            lazy.UrlbarSearchUtils.serpsAreEquivalent(
+              result.payload.url,
+              newSerpURL
+            )
           ) {
             return false;
           }
@@ -858,7 +866,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         state.context.searchMode.engineName
       );
       if (engine) {
-        let searchModeRootDomain = UrlbarSearchUtils.getRootDomainFromEngine(
+        let searchModeRootDomain = lazy.UrlbarSearchUtils.getRootDomainFromEngine(
           engine
         );
         let resultUrl = new URL(result.payload.url);
@@ -877,7 +885,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       state.quickSuggestResult &&
       !result.heuristic &&
       result.type == UrlbarUtils.RESULT_TYPE.URL &&
-      UrlbarProviderQuickSuggest.isURLEquivalentToResultURL(
+      lazy.UrlbarProviderQuickSuggest.isURLEquivalentToResultURL(
         result.payload.url,
         state.quickSuggestResult
       )
@@ -966,7 +974,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       this._canAddResult(result, state)
     ) {
       let span = UrlbarUtils.getSpanForResult(result);
-      if (result.providerName == UrlbarProviderTabToSearch.name) {
+      if (result.providerName == lazy.UrlbarProviderTabToSearch.name) {
         state.maxTabToSearchResultSpan = Math.max(
           state.maxTabToSearchResultSpan,
           span
@@ -984,7 +992,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       (result.type == UrlbarUtils.RESULT_TYPE.URL ||
         result.type == UrlbarUtils.RESULT_TYPE.KEYWORD) &&
       result.payload.url &&
-      (!result.heuristic || !UrlbarPrefs.get("experimental.hideHeuristic"))
+      (!result.heuristic || !lazy.UrlbarPrefs.get("experimental.hideHeuristic"))
     ) {
       let [strippedUrl, prefix] = UrlbarUtils.stripPrefixAndTrim(
         result.payload.url,
@@ -1006,7 +1014,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         // the quick suggest: The URL is added to history and later both a
         // history result and the quick suggest may match a query.
         (topPrefixRank == prefixRank &&
-          result.providerName == UrlbarProviderQuickSuggest.name)
+          result.providerName == lazy.UrlbarProviderQuickSuggest.name)
       ) {
         // strippedUrl => { prefix, title, rank, providerName }
         state.strippedUrlToTopPrefixAndTitle.set(strippedUrl, {
@@ -1041,7 +1049,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       state.canShowTailSuggestions = false;
     }
 
-    if (result.providerName == UrlbarProviderQuickSuggest.name) {
+    if (result.providerName == lazy.UrlbarProviderQuickSuggest.name) {
       state.quickSuggestResult = result;
     }
 
@@ -1066,7 +1074,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       if (
         result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
         result.payload.query &&
-        !UrlbarPrefs.get("experimental.hideHeuristic")
+        !lazy.UrlbarPrefs.get("experimental.hideHeuristic")
       ) {
         let query = result.payload.query.trim().toLocaleLowerCase();
         if (query) {
@@ -1100,17 +1108,17 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     // Avoid multiple tab-to-search results.
     // TODO (Bug 1670185): figure out better strategies to manage this case.
-    if (result.providerName == UrlbarProviderTabToSearch.name) {
+    if (result.providerName == lazy.UrlbarProviderTabToSearch.name) {
       state.canAddTabToSearch = false;
       // We want to record in urlbar.tips once per engagement per engine. Since
       // whether these results are shown is dependent on the Muxer, we must
       // add to `enginesShown` here.
       if (result.payload.dynamicType) {
-        UrlbarProviderTabToSearch.enginesShown.onboarding.add(
+        lazy.UrlbarProviderTabToSearch.enginesShown.onboarding.add(
           result.payload.engine
         );
       } else {
-        UrlbarProviderTabToSearch.enginesShown.regular.add(
+        lazy.UrlbarProviderTabToSearch.enginesShown.regular.add(
           result.payload.engine
         );
       }
@@ -1183,16 +1191,16 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       // If same suggestedIndex, change the displaying order along to following
       // provider priority.
       // TabToSearch > QuickSuggest > Other providers
-      if (a.providerName === UrlbarProviderTabToSearch.name) {
+      if (a.providerName === lazy.UrlbarProviderTabToSearch.name) {
         return 1;
       }
-      if (b.providerName === UrlbarProviderTabToSearch.name) {
+      if (b.providerName === lazy.UrlbarProviderTabToSearch.name) {
         return -1;
       }
-      if (a.providerName === UrlbarProviderQuickSuggest.name) {
+      if (a.providerName === lazy.UrlbarProviderQuickSuggest.name) {
         return 1;
       }
-      if (b.providerName === UrlbarProviderQuickSuggest.name) {
+      if (b.providerName === lazy.UrlbarProviderQuickSuggest.name) {
         return -1;
       }
 

@@ -195,13 +195,11 @@ class BlockReflowState {
       nsIFrame* aFloatAvoidingBlock,
       const nsFlowAreaRect& aFloatAvailableSpace) const;
 
-  bool IsAdjacentWithTop() const {
-    return mBCoord == mBorderPadding.BStart(mReflowInput.GetWritingMode());
-  }
+  // True if the current block-direction coordinate, for placing the children
+  // within the content area, is still adjacent with the block-start of the
+  // content area.
+  bool IsAdjacentWithBStart() const { return mBCoord == ContentBStart(); }
 
-  /**
-   * Return mBlock's computed physical border+padding with GetSkipSides applied.
-   */
   const LogicalMargin& BorderPadding() const { return mBorderPadding; }
 
   // Reconstruct the previous block-end margin that goes before |aLine|.
@@ -337,7 +335,8 @@ class BlockReflowState {
   // The current block-direction coordinate in the block
   nscoord mBCoord;
 
-  // mBlock's computed physical border+padding with GetSkipSides applied.
+  // mBlock's computed logical border+padding with pre-reflow skip sides applied
+  // (See the constructor and nsIFrame::PreReflowBlockLevelLogicalSkipSides).
   LogicalMargin mBorderPadding;
 
   // The overflow areas of all floats placed so far

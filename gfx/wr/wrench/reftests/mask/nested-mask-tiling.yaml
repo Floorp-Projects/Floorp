@@ -3,7 +3,6 @@ root:
   items:
     - type: clip
       id: 2
-      bounds: [0, 0, 95, 88]
       image-mask:
         image: "mask.png"
         rect: [0, 0, 35, 35]
@@ -11,7 +10,6 @@ root:
         tile-size: 5
     - type: clip
       id: 3
-      bounds: [0, 0, 95, 88]
       image-mask:
         image: "mask.png"
         rect: [4, 4, 35, 35]

@@ -73,8 +73,7 @@ void FuzzProtocol(T* aProtocol, const uint8_t* aData, size_t aSize,
           break;
         }
         RefPtr<Shmem::SharedMemory> segment(
-            Shmem::Alloc(Shmem::PrivateIPDLCaller(), shmem_size,
-                         SharedMemory::TYPE_BASIC, false));
+            Shmem::Alloc(Shmem::PrivateIPDLCaller(), shmem_size, false));
         if (!segment) {
           break;
         }
