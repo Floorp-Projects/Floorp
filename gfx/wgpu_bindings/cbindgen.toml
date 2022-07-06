@@ -15,8 +15,6 @@ autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated usi
  * - $CBINDGEN is the path to the cbindgen executable provided by mozbuild (the exact version often matters)
  */
 
-#include "nsString.h"
-
 struct WGPUByteBuf;
 typedef uint64_t WGPUNonZeroU64;
 typedef uint64_t WGPUOption_BufferSize;
@@ -29,7 +27,6 @@ typedef uint64_t WGPUOption_BindGroupLayoutId;
 typedef uint64_t WGPUOption_SamplerId;
 typedef uint64_t WGPUOption_SurfaceId;
 typedef uint64_t WGPUOption_TextureViewId;
-typedef nsString WGPUnsString;
 """
 include_version = true
 braces = "SameLine"

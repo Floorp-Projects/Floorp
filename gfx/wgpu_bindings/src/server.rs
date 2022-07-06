@@ -7,14 +7,10 @@ use crate::{
     CommandEncoderAction, DeviceAction, DropAction, QueueWriteAction, RawString, TextureAction,
 };
 
-use nsstring::nsString;
-
 use wgc::{gfx_select, id};
-use wgc::pipeline::CreateShaderModuleError;
 
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::{error::Error, os::raw::c_char, ptr, slice};
-use std::borrow::Cow;
 
 /// A fixed-capacity, null-terminated error buffer owned by C++.
 ///
@@ -209,86 +205,6 @@ pub extern "C" fn wgpu_server_adapter_drop(global: &Global, adapter_id: id::Adap
 #[no_mangle]
 pub extern "C" fn wgpu_server_device_drop(global: &Global, self_id: id::DeviceId) {
     gfx_select!(self_id => global.device_drop(self_id))
-}
-
-impl ShaderModuleCompilationMessage {
-    fn set_error(&mut self, error: &CreateShaderModuleError, source: &str) {
-        // The WebGPU spec says that if the message doesn't point to a particular position in
-        // the source, the line number, position, offset and lengths should be zero.
-        self.line_number = 0;
-        self.line_pos = 0;
-        self.utf16_offset = 0;
-        self.utf16_length = 0;
-
-        if let Some(location) = error.location(source) {
-            self.line_number = location.line_number as u64;
-            self.line_pos = location.line_position as u64;
-
-            let start = location.offset as usize;
-            let end = start + location.length as usize;
-            self.utf16_offset = source[0..start].chars().map(|c| c.len_utf16() as u64).sum();
-            self.utf16_length = source[start..end].chars().map(|c| c.len_utf16() as u64).sum();
-        }
-
-        let error_string = error.to_string();
-
-        if !error_string.is_empty() {
-            self.message = nsString::from(&error_string[..]);
-        }
-    }
-}
-
-/// A compilation message representation for the ffi boundary.
-/// the message is immediately copied into an equivalent C++
-/// structure that owns its strings.
-#[repr(C)]
-#[derive(Clone)]
-pub struct ShaderModuleCompilationMessage {
-    pub line_number: u64,
-    pub line_pos: u64,
-    pub utf16_offset: u64,
-    pub utf16_length: u64,
-    pub message: nsString,
-}
-
-/// Creates a shader module and returns an object describing the errors if any.
-///
-/// If there was no error, the returned pointer is nil.
-#[no_mangle]
-pub extern "C" fn wgpu_server_device_create_shader_module(
-    global: &Global,
-    self_id: id::DeviceId,
-    module_id: id::ShaderModuleId,
-    label: RawString,
-    code: *const u8,
-    code_length: usize,
-    out_message: &mut ShaderModuleCompilationMessage
-) -> bool {
-    unsafe {
-        let label = cow_label(&label);
-
-        let source_str = std::str::from_utf8(std::slice::from_raw_parts(code, code_length)).unwrap();
-        let source = wgc::pipeline::ShaderModuleSource::Wgsl(Cow::from(source_str));
-
-        let desc = wgc::pipeline::ShaderModuleDescriptor {
-            label,
-            shader_bound_checks: wgt::ShaderBoundChecks::new(),
-        };
-
-        let (_, error) = gfx_select!(
-            self_id => global.device_create_shader_module(
-                self_id, &desc, source, module_id
-            )
-        );
-
-        if let Some(err) = error {
-            out_message.set_error(&err, source_str);
-            return false;
-        }
-
-        // Avoid allocating the structure that holds errors in the common case (no errors).
-        return true;
-    }
 }
 
 #[no_mangle]
