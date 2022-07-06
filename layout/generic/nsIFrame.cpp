@@ -4383,7 +4383,7 @@ void nsIFrame::MarkAbsoluteFramesForDisplayList(
   }
 }
 
-nsresult nsIFrame::GetContentForEvent(WidgetEvent* aEvent,
+nsresult nsIFrame::GetContentForEvent(const WidgetEvent* aEvent,
                                       nsIContent** aContent) {
   nsIFrame* f = nsLayoutUtils::GetNonGeneratedAncestor(this);
   *aContent = f->GetContent();

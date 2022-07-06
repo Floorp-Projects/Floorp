@@ -86,7 +86,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
               nsReflowStatus&) override;
   bool IsLeafDynamic() const override;
 
-  nsresult GetContentForEvent(mozilla::WidgetEvent*,
+  nsresult GetContentForEvent(const mozilla::WidgetEvent*,
                               nsIContent** aContent) final;
   nsresult HandleEvent(nsPresContext*, mozilla::WidgetGUIEvent*,
                        nsEventStatus*) override;
