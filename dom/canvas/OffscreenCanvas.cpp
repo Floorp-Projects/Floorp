@@ -280,7 +280,9 @@ OffscreenCanvas::CreateEncodeCompleteCallback(Promise* aPromise) {
   class EncodeCallback : public EncodeCompleteCallback {
    public:
     explicit EncodeCallback(Promise* aPromise)
-        : mPromise(aPromise), mCanceled(false) {
+        : mPromise(aPromise), mCanceled(false) {}
+
+    void MaybeInitWorkerRef() {
       WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
       if (wp) {
         mWorkerRef = WeakWorkerRef::Create(
@@ -327,7 +329,9 @@ OffscreenCanvas::CreateEncodeCompleteCallback(Promise* aPromise) {
     Atomic<bool> mCanceled;
   };
 
-  return MakeAndAddRef<EncodeCallback>(aPromise);
+  RefPtr<EncodeCallback> p = MakeAndAddRef<EncodeCallback>(aPromise);
+  p->MaybeInitWorkerRef();
+  return p.forget();
 }
 
 already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
