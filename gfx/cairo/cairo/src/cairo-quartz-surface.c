@@ -873,8 +873,12 @@ _cairo_surface_to_cgimage (cairo_surface_t       *source,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
+    // The last row of data may have less than stride bytes so make sure we
+    // only copy the minimum amount required from that row.
     memcpy (image_data, image_surface->data,
-	    image_surface->height * image_surface->stride);
+	    (image_surface->height - 1) * image_surface->stride +
+	    cairo_format_stride_for_width (image_surface->format,
+					   image_surface->width));
     *image_out = CairoQuartzCreateCGImage (image_surface->format,
 					   image_surface->width,
 					   image_surface->height,
