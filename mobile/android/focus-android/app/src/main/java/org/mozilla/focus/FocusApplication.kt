@@ -28,6 +28,7 @@ import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.focus.biometrics.LockObserver
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.navigation.StoreLink
+import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
 import org.mozilla.focus.telemetry.FactsProcessor
 import org.mozilla.focus.telemetry.ProfilerMarkerFactProcessor
@@ -114,6 +115,9 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             // experiment on features close to startup.
             // But we need viaduct (the RustHttp client) to be ready before we do.
             components.experiments.initialize()
+            // This is the recommended way(Nimbus.api will be deprecated) to establish
+            // the connection between the Nimbus SDK (and thus the Nimbus server) and the generated code
+            FocusNimbus.initialize { components.experiments }
         }
     }
 

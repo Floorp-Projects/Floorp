@@ -68,7 +68,11 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
             channel = BuildConfig.BUILD_TYPE
         )
         Nimbus(context, appInfo, serverSettings, errorReporter).apply {
-            register(EventsObserver)
+            val isTheFirstLaunch = context.settings.getAppLaunchCount() == 0
+            if (isTheFirstLaunch) {
+                register(EventsObserver)
+            }
+
             // This performs the minimal amount of work required to load branch and enrolment data
             // into memory. If `getExperimentBranch` is called from another thread between here
             // and the next nimbus disk write (setting `globalUserParticipation` or
@@ -86,13 +90,17 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
                 setExperimentsLocally(R.raw.initial_experiments)
             }
 
-            NimbusExperiments.nimbusInitialFetch.start()
+            if (isTheFirstLaunch) {
+                NimbusExperiments.nimbusInitialFetch.start()
+            }
             fetchExperiments()
 
             register(object : NimbusInterface.Observer {
                 override fun onExperimentsFetched() {
                     applyPendingExperiments()
-                    NimbusExperiments.nimbusInitialFetch.stop()
+                    if (isTheFirstLaunch) {
+                        NimbusExperiments.nimbusInitialFetch.stop()
+                    }
                     // Remove lingering observer when we're done fetching experiments on startup.
                     unregister(this)
                 }
