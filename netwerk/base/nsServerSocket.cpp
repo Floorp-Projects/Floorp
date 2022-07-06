@@ -19,7 +19,7 @@
 #include "nsIFile.h"
 #if defined(XP_WIN)
 #  include "private/pprio.h"
-#  include <Winsock2.h>
+#  include <winsock2.h>
 #  include <mstcpip.h>
 
 #  ifndef IPV6_V6ONLY
