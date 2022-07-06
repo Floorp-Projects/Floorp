@@ -275,7 +275,7 @@
 
     <string name="preference_category_privacy">Privetter</string>
     <string name="preference_privacy_block_ads">Lettya helerghellow argemynnow</string>
-    <string name="preference_privacy_block_ads_summary">Neb argemynnow a helergh vysytyansow dhe wiasvaow, kyn na glyckyowgh warnedha</string>
+    <string name="preference_privacy_block_ads_summary">Nebes argemynnow a helergh vysytyansow gwiasvaow, hwath mar ny glyckydh an argemynnow</string>
     <string name="preference_privacy_block_analytics">Lettya helerghellow dielvenna</string>
     <string name="preference_privacy_block_analytics_summary">Usys dhe guntel, dielvenna, ha musura gwriansow kepar ha tappya ha rolya</string>
     <string name="preference_privacy_block_social">Lettya helerghellow sosyel</string>
@@ -451,7 +451,7 @@
     <string name="external_app_prompt_title">Ygeri kevren yn app aral</string>
     <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
          Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
-    <string name="external_app_prompt">Hwi a yll gasa %1$s rag ygeri an gevren ma yn %2$s.</string>
+    <string name="external_app_prompt">Ty a yll diberth a %1$s dhe ygeri an gevren ma yn %2$s.</string>
     <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
     <string name="external_app_prompt_no_app_title">Kavos app a yll ygeri an gevren ma</string>
     <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
@@ -525,7 +525,7 @@
     <string name="onboarding_start_browsing">Dalleth peuri</string>
 
     <!-- First run tour (Default browser): Title -->
-    <string name="firstrun_defaultbrowser_title">Kenerthowgh agas privetter</string>
+    <string name="firstrun_defaultbrowser_title">Kennerth dha brivetter</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Herdhya peuri privedh dres an kemmyn. Lettya argemynnow ha dalgh aral a yll dha holya dres gwivaow ha poshe prys karga folennow.</string>
 
@@ -537,7 +537,7 @@
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">Keworra skochfordhow dhe\'th pennskrin</string>
     <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-    <string name="firstrun_shortcut_text">Dehwelowgh dhe\'gas gwiasvaow meurgerys yn %1$s yn uskis. Dewisowgh \&quot;Keworra dhe\'n skrin dre\&quot; y\'n rol %1$s.</string>
+    <string name="firstrun_shortcut_text">Dehweles dhe\'th re drudh yn %1$s yn uskis. Dewis \&quot;Keworra dhe Bennskrin\&quot; a\'n rol %1$s.</string>
 
     <!-- First run tour (Privacy): Title -->
     <string name="firstrun_privacy_title">Gwra privetter dhe us</string>
@@ -628,7 +628,7 @@
     <string name="security_popup_secure_connection">Junyans Diogel</string>
     <string name="security_popup_insecure_connection">Junyans Andhiogel</string>
     <!-- %1$s will be replaced with organization that granted the SSL certificate -->
-    <string name="security_popup_security_verified">Gwiryes gans: %1$s</string>
+    <string name="security_popup_security_verified">Gwirhes gans: %1$s</string>
 
     <!-- Content Description of Security Icon in toolbar -->
     <string name="site_security_icon_content_description">Diogeledh an wiasva</string>
@@ -791,7 +791,7 @@
 
     <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
     This is displayed during the authentication flow as the app launches.-->
-    <string name="biometric_auth_moved_too_quickly">Agas bys a wayas re uskis. Assayowgh arta.</string>
+    <string name="biometric_auth_moved_too_quickly">Bys gwayys re uskis. Assay arta.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
     <string name="enable_search_suggestion_title2">Diskwedhes profyansow hwilas?</string>
@@ -880,7 +880,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Nammow</string>
     <!-- Description for the exceptions preference screen-->
-    <string name="preference_exceptions_description">Hwi re dhiallosegis lettya dalgh rag an wiasvaow ma.</string>
+    <string name="preference_exceptions_description">Ty a dhisweythresas lettya dalgh y\'n gwiasvaow ma.</string>
     <!-- Menu item to remove existing exceptions. -->
     <string name="preference_exceptions_menu_remove">Dilea</string>
     <!-- Button to remove all websites from the exception list -->
