@@ -112,7 +112,9 @@ async function setup(configuration) {
     }
   );
 
-  const cleanup = () => client.db.clear();
+  // Simulate a state where no experiment exists.
+  const cleanup = () =>
+    client.db.importChanges({}, Date.now(), [], { clear: true });
   return { client, cleanup };
 }
 
@@ -148,7 +150,7 @@ add_task(async function test_remote_fetch_and_ready() {
 
   await ExperimentAPI.ready();
 
-  let { client: rsClient, cleanup } = await setup();
+  let { cleanup } = await setup();
 
   // Fake being initialized so we can update recipes
   // we don't need to start any timers
@@ -224,7 +226,7 @@ add_task(async function test_remote_fetch_and_ready() {
   Assert.equal(barInstance.getVariable("remoteValue"), 3, "Has rollout value");
 
   // Clear RS db and load again. No configurations so should clear the cache.
-  await rsClient.db.clear();
+  await cleanup();
   await RemoteSettingsExperimentLoader.updateRecipes(
     "browser_rsel_remote_defaults"
   );

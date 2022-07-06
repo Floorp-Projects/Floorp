@@ -279,6 +279,8 @@ const ExperimentAPI = {
         filters: { slug },
       });
     } catch (e) {
+      // If an error occurs in .get(), an empty list is returned and the destructuring
+      // assignment will throw.
       Cu.reportError(e);
       recipe = undefined;
     }

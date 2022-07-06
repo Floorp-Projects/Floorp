@@ -19,6 +19,9 @@ const { ExperimentFakes } = ChromeUtils.import(
 let rsClient;
 
 add_setup(async function() {
+  rsClient = RemoteSettings("nimbus-desktop-experiments");
+  await rsClient.db.importChanges({}, Date.now(), [], { clear: true });
+
   await SpecialPowers.pushPrefEnv({
     set: [
       ["messaging-system.log", "all"],
@@ -26,7 +29,6 @@ add_setup(async function() {
       ["app.shield.optoutstudies.enabled", true],
     ],
   });
-  rsClient = RemoteSettings("nimbus-desktop-experiments");
 
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
