@@ -24,6 +24,7 @@
 #include "mozilla/Unused.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#include "platform.h"
 
 #include <utility>
 
@@ -77,6 +78,10 @@ class ProfileBufferGlobalController final {
   static bool IsLockedOnCurrentThread();
 
  private:
+  // Calls aF(Json::Value&).
+  template <typename F>
+  void Log(F&& aF);
+
   void HandleChunkManagerNonFinalUpdate(
       base::ProcessId aProcessId,
       ProfileBufferControlledChunkManager::Update&& aUpdate,
@@ -196,10 +201,30 @@ class ProfilerParentTracker final {
   Maybe<ProfileBufferGlobalController> mMaybeController;
 };
 
+static const Json::StaticString logRoot{"bufferGlobalController"};
+
+template <typename F>
+void ProfileBufferGlobalController::Log(F&& aF) {
+  ProfilingLog::Access([&](Json::Value& aLog) {
+    Json::Value& root = aLog[logRoot];
+    if (!root.isObject()) {
+      root = Json::Value(Json::objectValue);
+      root[Json::StaticString{"logBegin" TIMESTAMP_JSON_SUFFIX}] =
+          ProfilingLog::Timestamp();
+    }
+    std::forward<F>(aF)(root);
+  });
+}
+
 ProfileBufferGlobalController::ProfileBufferGlobalController(
     size_t aMaximumBytes)
     : mMaximumBytes(aMaximumBytes) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  Log([](Json::Value& aRoot) {
+    aRoot[Json::StaticString{"controllerCreationTime" TIMESTAMP_JSON_SUFFIX}] =
+        ProfilingLog::Timestamp();
+  });
 
   // This is the local chunk manager for this parent process, so updates can be
   // handled here.
@@ -207,6 +232,10 @@ ProfileBufferGlobalController::ProfileBufferGlobalController(
       profiler_get_controlled_chunk_manager();
 
   if (NS_WARN_IF(!parentChunkManager)) {
+    Log([](Json::Value& aRoot) {
+      aRoot[Json::StaticString{"controllerCreationFailureReason"}] =
+          "No parent chunk manager";
+    });
     return;
   }
 
@@ -829,6 +858,8 @@ RefPtr<GenericPromise> ProfilerParent::ProfilerStarted(
     filtersCStrings.AppendElement(filter.Data());
   }
   aParams->GetActiveTabID(&ipcParams.activeTabID());
+
+  ProfilerParentTracker::ProfilerStarted(ipcParams.entries());
 
   return SendAndConvertPromise([&](ProfilerParent* profilerParent) {
     if (profiler::detail::FiltersExcludePid(
