@@ -297,7 +297,7 @@
                     },
                     "matches": {
                       "type": "array",
-                      "items": { "$ref": "MatchPattern" }
+                      "items": { "$ref": "MatchPatternRestricted" }
                     }
                   }
                 }
