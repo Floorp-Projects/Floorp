@@ -166,7 +166,7 @@ features:
               text: default_browser_experiment_card_text
               action: "MAKE_DEFAULT_BROWSER"
               trigger: [ "I_AM_NOT_DEFAULT_BROWSER","USER_ESTABLISHED_INSTALL" ]
-              style: "DEFAULT"
+              style: "PERSISTENT"
               button-label: preferences_set_as_default_browser
 
       - channel: developer
