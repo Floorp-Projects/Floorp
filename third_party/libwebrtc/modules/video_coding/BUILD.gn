@@ -506,7 +506,10 @@ rtc_library("webrtc_vp8") {
     "../../system_wrappers:metrics",
     #"//third_party/libyuv",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
   if (rtc_build_libvpx) {
     deps += [ rtc_libvpx_dir ]
   }
