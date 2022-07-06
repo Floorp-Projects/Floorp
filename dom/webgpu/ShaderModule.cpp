@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/WebGPUBinding.h"
 #include "ShaderModule.h"
+#include "CompilationInfo.h"
 #include "ipc/WebGPUChild.h"
 
 #include "Device.h"
@@ -14,8 +15,9 @@ namespace mozilla::webgpu {
 GPU_IMPL_CYCLE_COLLECTION(ShaderModule, mParent)
 GPU_IMPL_JS_WRAP(ShaderModule)
 
-ShaderModule::ShaderModule(Device* const aParent, RawId aId)
-    : ChildOf(aParent), mId(aId) {}
+ShaderModule::ShaderModule(Device* const aParent, RawId aId,
+                           const RefPtr<dom::Promise>& aCompilationInfo)
+    : ChildOf(aParent), mId(aId), mCompilationInfo(aCompilationInfo) {}
 
 ShaderModule::~ShaderModule() { Cleanup(); }
 
@@ -27,6 +29,11 @@ void ShaderModule::Cleanup() {
       bridge->SendShaderModuleDestroy(mId);
     }
   }
+}
+
+already_AddRefed<dom::Promise> ShaderModule::CompilationInfo(ErrorResult& aRv) {
+  RefPtr<dom::Promise> tmp = mCompilationInfo;
+  return tmp.forget();
 }
 
 }  // namespace mozilla::webgpu
