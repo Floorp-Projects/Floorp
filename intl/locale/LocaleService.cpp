@@ -23,9 +23,6 @@
 #ifdef XP_WIN
 #  include "WinUtils.h"
 #endif
-#ifdef MOZ_WIDGET_GTK
-#  include "mozilla/WidgetUtilsGtk.h"
-#endif
 
 #define INTL_SYSTEM_LOCALES_CHANGED "intl:system-locales-changed"
 
@@ -72,8 +69,6 @@ static void ReadRequestedLocales(nsTArray<nsCString>& aRetVal) {
   const bool isRepack =
 #ifdef XP_WIN
       !mozilla::widget::WinUtils::HasPackageIdentity();
-#elif defined(MOZ_WIDGET_GTK)
-      !widget::IsRunningUnderSnap();
 #else
       true;
 #endif
