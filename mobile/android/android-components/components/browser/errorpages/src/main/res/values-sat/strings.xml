@@ -41,6 +41,27 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">ᱡᱤᱢᱟ ᱦᱟᱛᱟᱣ ᱢᱮ ᱟᱨ ᱥᱮᱱᱚᱜ ᱢᱮ</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">ᱱᱚᱶᱟ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱫᱚ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱵᱟᱹᱱᱩᱜᱼᱟ ᱾</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>ᱟᱢ ᱧᱮᱞ ᱥᱮᱱᱟ ᱥᱟᱦᱴᱟ ᱫᱚ ᱵᱟᱝ ᱧᱮᱞ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ ᱪᱮᱫᱟᱜ ᱥᱮ ᱱᱚᱶᱟ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱫᱚ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱡᱩᱲᱟᱹᱣ ᱫᱚᱨᱠᱟᱨ ᱠᱟᱱᱟ ᱾</li>
+         <li>ᱱᱚᱶᱟ ᱫᱚ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱨᱮᱭᱟᱜ ᱵᱤᱥᱚᱭ ᱛᱮ ᱠᱟᱱᱟ, ᱱᱚᱶᱟ ᱵᱟᱵᱚᱛ ᱥᱩᱡᱷᱟᱹᱣ ᱫᱚ ᱟᱢ ᱯᱟᱦᱴᱟ ᱠᱷᱚᱱ ᱪᱮᱫ ᱥᱩᱡᱷᱟᱹᱣ ᱠᱟᱹᱢᱤ ᱵᱟᱭ ᱮᱢᱟ ᱾</li>
+         <li>ᱱᱚᱶᱟ ᱰᱤᱜᱟᱹᱣ ᱫᱚ ᱟᱢ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱮᱰᱢᱤᱱᱥᱴᱨᱮᱴᱚᱨ ᱠᱷᱚᱵᱚᱨ ᱫᱟᱲᱮ ᱠᱚᱣᱟᱢ ᱾</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ᱞᱟᱦᱟᱱᱛᱤ…</string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[
+        <label> <b>%1$s</b> ᱴᱷᱮᱱ ᱫᱚ ᱢᱤᱫ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱱᱤᱛᱤ ᱱᱤᱭᱚᱢ ᱢᱮᱱᱟᱜᱼᱟ ᱡᱟᱦᱟᱸ ᱫᱚ HTTP ᱥᱴᱨᱤᱠᱴ ᱴᱨᱟᱱᱥᱯᱚᱴ ᱥᱮᱠᱭᱚᱨᱤᱴᱤ (HSTS) ᱢᱮᱱᱛᱮ ᱠᱚ ᱢᱮᱱᱟ, ᱡᱟᱦᱟᱸ ᱢᱮᱱ ᱫᱚ <b>%2$s</b> ᱜᱟᱱ ᱜᱮ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱥᱟᱹᱦᱤᱡ ᱠᱚ ᱡᱩᱲᱟᱹᱣ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱨᱮ ᱪᱟᱞᱟᱣ ᱞᱟᱹᱛᱤᱫ ᱪᱷᱟᱰ ᱵᱟᱝ ᱥᱮᱞᱮᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ ᱾
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">ᱛᱟᱭᱚᱢ ᱥᱮᱫ ᱪᱟᱞᱟᱣ</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">ᱡᱚᱲᱟᱣ ᱵᱟᱝ ᱧᱮᱞ ᱞᱮᱱᱟ</string>
 
@@ -131,9 +152,8 @@
     <string name="mozac_browser_errorpages_corrupted_content_title">ᱨᱟᱹᱯᱩᱫ ᱡᱤᱱᱤᱥ ᱦᱩᱲᱟᱹᱜ</string>
 
     <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
-    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[     <p>ᱚᱠᱟ ᱥᱟᱦᱴᱟ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱸᱡ ᱚᱱᱟ ᱫᱚ ᱰᱟᱴᱟ ᱴᱨᱟᱱᱥᱢᱤᱥᱥᱚᱱ ᱨᱮ ᱵᱷᱩᱞ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱝ ᱫᱮᱠᱷᱟᱣᱞᱮᱱᱟ᱾</p>
       <ul>
-        <li>ᱚᱠᱟ ᱥᱟᱦᱴᱟ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱸᱡ ᱚᱱᱟ ᱫᱚ ᱰᱟᱴᱟ ᱴᱨᱟᱱᱥᱢᱤᱥᱥᱚᱱ ᱨᱮ ᱵᱷᱩᱞ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱝ ᱫᱮᱠᱷᱟᱣᱞᱮᱱᱟ᱾</li>
         <li>ᱫᱚᱭᱟᱠᱟᱛᱮ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱢᱟᱞᱤᱠ ᱡᱩᱜᱟᱡᱩᱜ ᱮᱢ ᱟᱨ ᱦᱩᱲᱟᱹᱜ ᱵᱟᱵᱚᱫ ᱠᱷᱚᱵᱚᱨ ᱮᱢ ᱾</li>
       </ul>
     ]]></string>
@@ -142,8 +162,8 @@
     <string name="mozac_browser_errorpages_content_crashed_title">ᱡᱤᱱᱤᱥ ᱠᱨᱟᱥ</string>
 
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>ᱚᱠᱟ ᱥᱟᱦᱴᱟ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱸᱡ ᱚᱱᱟ ᱫᱚ ᱰᱟᱴᱟ ᱴᱨᱟᱱᱥᱢᱤᱥᱥᱚᱱ ᱨᱮ ᱵᱷᱩᱞ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱞᱮ ᱫᱮᱠᱷᱟᱣ ᱫᱟᱲᱮᱭᱟᱞᱮᱢ ᱠᱟᱱᱟ ᱾</p>
       <ul>
-        <li>ᱚᱠᱟ ᱥᱟᱦᱴᱟ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱ ᱛᱟᱦᱮᱸᱡ ᱚᱱᱟ ᱫᱚ ᱰᱟᱴᱟ ᱴᱨᱟᱱᱥᱢᱤᱥᱥᱚᱱ ᱨᱮ ᱵᱷᱩᱞ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱞᱮ ᱫᱮᱠᱷᱟᱣ ᱫᱟᱲᱮᱭᱟᱞᱮᱢ ᱠᱟᱱᱟ ᱾</li>
         <li>ᱫᱚᱭᱟᱠᱟᱛᱮ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱢᱟᱞᱤᱠ ᱡᱩᱜᱟᱡᱩᱜ ᱮᱢ ᱟᱨ ᱦᱩᱲᱟᱹᱜ ᱵᱟᱵᱚᱫ ᱠᱷᱚᱵᱚᱨ ᱮᱢ ᱾</li>     
       </ul>
     ]]></string>
