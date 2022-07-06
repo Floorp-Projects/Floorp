@@ -146,12 +146,6 @@ class GlobalObjectData {
     WrapForValidIteratorProto,
     IteratorHelperProto,
     AsyncIteratorHelperProto,
-    ModuleProto,
-    ImportEntryProto,
-    ExportEntryProto,
-    RequestedModuleProto,
-    ModuleRequestProto,
-    ResolvedBindingProto,
 
     Limit
   };
@@ -687,45 +681,6 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(JSProto_WeakSet).as<NativeObject>();
   }
 
-  static bool ensureModulePrototypesCreated(JSContext* cx,
-                                            Handle<GlobalObject*> global);
-
-  static JSObject* getOrCreateModulePrototype(JSContext* cx,
-                                              Handle<GlobalObject*> global) {
-    return getOrCreateBuiltinProto(cx, global, ProtoKind::ModuleProto,
-                                   initModuleProto);
-  }
-
-  static JSObject* getOrCreateImportEntryPrototype(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateBuiltinProto(cx, global, ProtoKind::ImportEntryProto,
-                                   initImportEntryProto);
-  }
-
-  static JSObject* getOrCreateExportEntryPrototype(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateBuiltinProto(cx, global, ProtoKind::ExportEntryProto,
-                                   initExportEntryProto);
-  }
-
-  static JSObject* getOrCreateRequestedModulePrototype(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateBuiltinProto(cx, global, ProtoKind::RequestedModuleProto,
-                                   initRequestedModuleProto);
-  }
-
-  static JSObject* getOrCreateModuleRequestPrototype(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateBuiltinProto(cx, global, ProtoKind::ModuleRequestProto,
-                                   initModuleRequestProto);
-  }
-
-  static JSObject* getOrCreateResolvedBindingPrototype(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateBuiltinProto(cx, global, ProtoKind::ResolvedBindingProto,
-                                   initResolvedBindingProto);
-  }
-
   static JSFunction* getOrCreateTypedArrayConstructor(
       JSContext* cx, Handle<GlobalObject*> global) {
     if (!ensureConstructor(cx, global, JSProto_TypedArray)) {
@@ -1045,17 +1000,6 @@ class GlobalObject : public NativeObject {
   // Implemented in builtin/MapObject.cpp.
   static bool initMapIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
   static bool initSetIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
-
-  // Implemented in builtin/ModuleObject.cpp
-  static bool initModuleProto(JSContext* cx, Handle<GlobalObject*> global);
-  static bool initImportEntryProto(JSContext* cx, Handle<GlobalObject*> global);
-  static bool initExportEntryProto(JSContext* cx, Handle<GlobalObject*> global);
-  static bool initRequestedModuleProto(JSContext* cx,
-                                       Handle<GlobalObject*> global);
-  static bool initModuleRequestProto(JSContext* cx,
-                                     Handle<GlobalObject*> global);
-  static bool initResolvedBindingProto(JSContext* cx,
-                                       Handle<GlobalObject*> global);
 
   static bool initStandardClasses(JSContext* cx, Handle<GlobalObject*> global);
 

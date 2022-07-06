@@ -34,9 +34,15 @@ class LightweightThemeChild extends JSWindowActorChild {
       }
     } catch (ex) {}
 
-    // We don't have a message manager, so presumable we're running in a sidebar
-    // in the parent process.
-    return this.contentWindow.top?.docShell?.outerWindowID;
+    if (
+      Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT
+    ) {
+      return this.browsingContext.topChromeWindow.docShell.outerWindowID;
+    }
+
+    // Return a false-y outerWindowID if we can't manage to get a proper one.
+    // Note that no outerWindowID will ever have this ID.
+    return 0;
   }
 
   /**

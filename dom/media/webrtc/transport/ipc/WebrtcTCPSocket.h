@@ -58,11 +58,6 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
 
   size_t CountUnwrittenBytes() const;
 
-  nsresult OnWebSocketConnectionAvailable(
-      WebSocketConnectionBase* aConnection) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
  protected:
   virtual ~WebrtcTCPSocket();
 

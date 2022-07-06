@@ -1463,10 +1463,14 @@ nsIFrame* SVGObserverUtils::GetAndObserveTemplate(
 
     // Convert href to an nsIURI
     nsIContent* content = aFrame->GetContent();
+
+    nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
+    if (nsContentUtils::IsLocalRefURL(href)) {
+      baseURI = GetBaseURLForLocalRef(content, baseURI);
+    }
     nsCOMPtr<nsIURI> targetURI;
-    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
-                                              content->GetUncomposedDoc(),
-                                              content->GetBaseURI());
+    nsContentUtils::NewURIWithDocumentCharset(
+        getter_AddRefs(targetURI), href, content->GetUncomposedDoc(), baseURI);
 
     // There's no clear refererer policy spec about non-CSS SVG resource
     // references.  Bug 1415044 to investigate which referrer we should use.

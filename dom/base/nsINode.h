@@ -252,7 +252,6 @@ class nsNodeWeakReference final : public nsIWeakReference {
 
   // nsIWeakReference
   NS_DECL_NSIWEAKREFERENCE
-  size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
   void NoticeNodeDestruction() { mObject = nullptr; }
 

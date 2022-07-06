@@ -636,6 +636,11 @@ pref("browser.privatebrowsing.enable-new-indicator", false);
 // Whether the user is opted-in to privacy segmentation.
 pref("browser.privacySegmentation.enabled", false);
 
+// Temporary pref to control whether or not Private Browsing windows show up
+// as separate icons in the Windows taskbar. This will be removed and become
+// the default behaviour with 106.
+pref("browser.privacySegmentation.windowSeparation.enabled", false);
+
 // Use dark theme variant for PBM windows. This is only supported if the theme
 // sets darkTheme data.
 pref("browser.theme.dark-private-windows", false);

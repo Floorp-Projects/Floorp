@@ -140,7 +140,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
       "main.AW_STEP1",
       "div.onboardingContainer",
       "div.proton[style*='chrome://activity-stream/content/data/content/assets']",
-      "div.section-left",
+      "div.section-secondary",
       "span.attrib-text",
       "div.secondary-cta.top",
     ],
@@ -148,11 +148,20 @@ add_task(async function test_multistage_aboutwelcome_proton() {
     [
       "main.AW_STEP2",
       "main.AW_STEP3",
-      "nav.steps",
       "main.dialog-initial",
       "main.dialog-last",
       "div.indicator.current",
     ]
+  );
+
+  // Ensure step indicator is not displayed
+  await test_element_styles(
+    browser,
+    "nav.steps",
+    // Expected styles:
+    {
+      display: "none",
+    }
   );
 
   await onButtonClick(browser, "button.primary");
@@ -186,7 +195,12 @@ add_task(async function test_multistage_aboutwelcome_proton() {
       "div.indicator.current",
     ],
     // Unexpected selectors:
-    ["main.AW_STEP1", "main.AW_STEP3", "div.section-left", "main.dialog-last"]
+    [
+      "main.AW_STEP1",
+      "main.AW_STEP3",
+      "div.section-secondary",
+      "main.dialog-last",
+    ]
   );
 
   await onButtonClick(browser, "button.primary");
@@ -211,7 +225,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
     [
       "main.AW_STEP2",
       "main.AW_STEP1",
-      "div.section-left",
+      "div.section-secondary",
       "main.dialog-initial",
       "main.dialog-last",
     ]

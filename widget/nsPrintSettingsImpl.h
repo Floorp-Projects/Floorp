@@ -69,8 +69,6 @@ class nsPrintSettings : public nsIPrintSettings {
    */
   virtual void InitWithInitializer(const PrintSettingsInitializer& aSettings);
 
-  PrintSettingsInitializer GetSettingsInitializer() final;
-
   nsPrintSettings& operator=(const nsPrintSettings& rhs);
 
   // Sets a default file name for the print settings.

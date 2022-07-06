@@ -26,6 +26,7 @@ class nsITimer;
 typedef void (*nsTimerCallbackFunc) (nsITimer *aTimer, void *aClosure);
 %}
 
+native MallocSizeOf(mozilla::MallocSizeOf);
 native nsTimerCallbackFunc(nsTimerCallbackFunc);
 [ref] native TimeDuration(mozilla::TimeDuration);
 
@@ -242,9 +243,7 @@ interface nsITimer : nsISupports
    */
   [noscript] readonly attribute unsigned long allowedEarlyFiringMicroseconds;
 
-%{C++
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
-%}
+  [notxpcom, nostdcall] size_t sizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
 };
 
 %{C++

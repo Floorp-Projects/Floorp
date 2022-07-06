@@ -1008,10 +1008,6 @@ static ModuleObject* CompileModuleImpl(
     SourceText<Unit>& srcBuf) {
   AutoAssertReportedException assertException(cx);
 
-  if (!GlobalObject::ensureModulePrototypesCreated(cx, cx->global())) {
-    return nullptr;
-  }
-
   CompileOptions options(cx, optionsInput);
   options.setModule();
 

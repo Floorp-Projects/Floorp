@@ -13,13 +13,15 @@ interface nsISimpleEnumerator;
 #include "mozilla/MemoryReporting.h"
 %}
 
+native MallocSizeOf(mozilla::MallocSizeOf);
+
 [scriptable, uuid(283EE646-1AEF-11D4-98B3-00C04fA0CE9A)]
 interface nsIPropertyElement : nsISupports {
   attribute AUTF8String key;
   attribute AString value;
 };
 
-[scriptable, uuid(706867af-0400-4faa-beb1-0dae87308784)]
+[scriptable, builtinclass, uuid(706867af-0400-4faa-beb1-0dae87308784)]
 interface nsIPersistentProperties : nsIProperties
 {
   /**
@@ -53,8 +55,6 @@ interface nsIPersistentProperties : nsIProperties
    */
   AString setStringProperty(in AUTF8String key, in AString value);
 
-%{C++
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
-%}
+  [notxpcom, nostdcall] size_t sizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
 };
 

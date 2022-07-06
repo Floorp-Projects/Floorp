@@ -142,14 +142,6 @@ class ImageDecoderListener final : public nsIStreamListener,
   // imgIContainer
   NS_FORWARD_IMGICONTAINER(mImage->)
 
-  nsresult GetNativeSizes(nsTArray<nsIntSize>& aNativeSizes) const override {
-    return mImage->GetNativeSizes(aNativeSizes);
-  }
-
-  size_t GetNativeSizesLength() const override {
-    return mImage->GetNativeSizesLength();
-  }
-
  private:
   virtual ~ImageDecoderListener() = default;
 

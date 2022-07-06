@@ -33,7 +33,7 @@ xpcAccessibleMacNSObjectWrapper::xpcAccessibleMacNSObjectWrapper(id aNativeObj)
 
 xpcAccessibleMacNSObjectWrapper::~xpcAccessibleMacNSObjectWrapper() { [mNativeObject release]; }
 
-id xpcAccessibleMacNSObjectWrapper::GetNativeObject() const { return mNativeObject; }
+id xpcAccessibleMacNSObjectWrapper::GetNativeObject() { return mNativeObject; }
 
 // xpcAccessibleMacInterface
 

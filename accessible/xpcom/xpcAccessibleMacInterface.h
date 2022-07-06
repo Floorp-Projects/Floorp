@@ -20,10 +20,7 @@ class xpcAccessibleMacNSObjectWrapper : public nsIAccessibleMacNSObjectWrapper {
   explicit xpcAccessibleMacNSObjectWrapper(id aTextMarker);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIACCESSIBLEMACNSOBJECTWRAPPER;
-
-  // Get the wrapped NSObject for this interface.
-  id GetNativeObject() const final;
+  NS_DECL_NSIACCESSIBLEMACNSOBJECTWRAPPER
 
  protected:
   virtual ~xpcAccessibleMacNSObjectWrapper();

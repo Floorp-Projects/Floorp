@@ -485,9 +485,9 @@ struct Extent {
     mLen = len;
     mDictIx = dictIx;
   }
-  uint32_t offset() const { return mOffset; }
-  uint32_t len() const { return mLen; }
-  uint32_t dictIx() const { return mDictIx; }
+  inline uint32_t offset() const { return mOffset; }
+  inline uint32_t len() const { return mLen; }
+  inline uint32_t dictIx() const { return mDictIx; }
   void setLen(uint32_t len) {
     MOZ_RELEASE_ASSERT(len < (1 << 16));
     mLen = len;

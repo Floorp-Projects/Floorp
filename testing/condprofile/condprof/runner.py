@@ -206,5 +206,7 @@ def run(
         runner.save()
         if failures > 0:
             raise Exception("At least one scenario failed")
+    except Exception as e:
+        raise e
     finally:
         loop.close()

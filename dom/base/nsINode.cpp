@@ -3546,6 +3546,6 @@ nsNodeWeakReference::QueryReferentFromScript(const nsIID& aIID,
 }
 
 size_t nsNodeWeakReference::SizeOfOnlyThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+    mozilla::MallocSizeOf aMallocSizeOf) {
   return aMallocSizeOf(this);
 }

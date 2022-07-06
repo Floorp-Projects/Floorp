@@ -117,20 +117,48 @@ class StringBundleProxy : public nsIStringBundle {
   explicit StringBundleProxy(already_AddRefed<nsIStringBundle> aTarget)
       : mMutex("StringBundleProxy::mMutex"), mTarget(aTarget) {}
 
-  NS_FORWARD_NSISTRINGBUNDLE(Target()->);
-
   void Retarget(nsIStringBundle* aTarget) {
     MutexAutoLock automon(mMutex);
     mTarget = aTarget;
   }
 
-  size_t SizeOfIncludingThis(
-      mozilla::MallocSizeOf aMallocSizeOf) const override {
+  // Forward nsIStringBundle methods (other than the `SizeOf*` methods) to
+  // `Target()`.
+  NS_IMETHOD GetStringFromID(int32_t aID, nsAString& _retval) override {
+    return Target()->GetStringFromID(aID, _retval);
+  }
+  NS_IMETHOD GetStringFromAUTF8Name(const nsACString& aName,
+                                    nsAString& _retval) override {
+    return Target()->GetStringFromAUTF8Name(aName, _retval);
+  }
+  NS_IMETHOD GetStringFromName(const char* aName, nsAString& _retval) override {
+    return Target()->GetStringFromName(aName, _retval);
+  }
+  NS_IMETHOD FormatStringFromID(int32_t aID, const nsTArray<nsString>& params,
+                                nsAString& _retval) override {
+    return Target()->FormatStringFromID(aID, params, _retval);
+  }
+  NS_IMETHOD FormatStringFromAUTF8Name(const nsACString& aName,
+                                       const nsTArray<nsString>& params,
+                                       nsAString& _retval) override {
+    return Target()->FormatStringFromAUTF8Name(aName, params, _retval);
+  }
+  NS_IMETHOD FormatStringFromName(const char* aName,
+                                  const nsTArray<nsString>& params,
+                                  nsAString& _retval) override {
+    return Target()->FormatStringFromName(aName, params, _retval);
+  }
+  NS_IMETHOD GetSimpleEnumeration(nsISimpleEnumerator** _retval) override {
+    return Target()->GetSimpleEnumeration(_retval);
+  }
+  NS_IMETHOD AsyncPreload() override { return Target()->AsyncPreload(); }
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) override {
     return aMallocSizeOf(this);
   }
 
   size_t SizeOfIncludingThisIfUnshared(
-      mozilla::MallocSizeOf aMallocSizeOf) const override {
+      mozilla::MallocSizeOf aMallocSizeOf) override {
     return mRefCnt == 1 ? SizeOfIncludingThis(aMallocSizeOf) : 0;
   }
 
@@ -220,8 +248,7 @@ class SharedStringBundle final : public nsStringBundleBase {
     return descriptor;
   }
 
-  size_t SizeOfIncludingThis(
-      mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) override;
 
   static SharedStringBundle* Cast(nsIStringBundle* aStringBundle) {
     return static_cast<SharedStringBundle*>(aStringBundle);
@@ -322,7 +349,7 @@ nsStringBundleBase::AsyncPreload() {
 }
 
 size_t nsStringBundle::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+    mozilla::MallocSizeOf aMallocSizeOf) {
   size_t n = 0;
   if (mProps) {
     n += mProps->SizeOfIncludingThis(aMallocSizeOf);
@@ -330,8 +357,13 @@ size_t nsStringBundle::SizeOfIncludingThis(
   return aMallocSizeOf(this) + n;
 }
 
+size_t nsStringBundleBase::SizeOfIncludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) {
+  return 0;
+}
+
 size_t nsStringBundleBase::SizeOfIncludingThisIfUnshared(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+    mozilla::MallocSizeOf aMallocSizeOf) {
   if (mRefCnt == 1) {
     return SizeOfIncludingThis(aMallocSizeOf);
   } else {
@@ -340,7 +372,7 @@ size_t nsStringBundleBase::SizeOfIncludingThisIfUnshared(
 }
 
 size_t SharedStringBundle::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+    mozilla::MallocSizeOf aMallocSizeOf) {
   size_t n = 0;
   if (mStringMap) {
     n += aMallocSizeOf(mStringMap);
@@ -733,7 +765,7 @@ nsresult nsStringBundleService::Init() {
 }
 
 size_t nsStringBundleService::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+    mozilla::MallocSizeOf aMallocSizeOf) {
   size_t n = mBundleMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (const auto& data : mBundleMap.Values()) {
     n += aMallocSizeOf(data);
@@ -779,8 +811,7 @@ nsStringBundleService::FlushBundles() {
   return NS_OK;
 }
 
-void nsStringBundleService::SendContentBundles(
-    ContentParent* aContentParent) const {
+void nsStringBundleService::SendContentBundles(ContentParent* aContentParent) {
   nsTArray<StringBundleDescriptor> bundles;
 
   for (auto* entry : mSharedBundles) {
@@ -795,7 +826,7 @@ void nsStringBundleService::SendContentBundles(
 }
 
 void nsStringBundleService::RegisterContentBundle(
-    const nsCString& aBundleURL, const FileDescriptor& aMapFile,
+    const nsACString& aBundleURL, const FileDescriptor& aMapFile,
     size_t aMapSize) {
   RefPtr<StringBundleProxy> proxy;
 
@@ -812,7 +843,8 @@ void nsStringBundleService::RegisterContentBundle(
     delete cacheEntry;
   }
 
-  auto bundle = MakeBundleRefPtr<SharedStringBundle>(aBundleURL.get());
+  auto bundle = MakeBundleRefPtr<SharedStringBundle>(
+      PromiseFlatCString(aBundleURL).get());
   bundle->SetMapFile(aMapFile, aMapSize);
 
   if (proxy) {

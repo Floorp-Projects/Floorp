@@ -37,7 +37,7 @@ export const MultiStageProtonScreen = props => {
       handleAction={props.handleAction}
       isFirstCenteredScreen={props.isFirstCenteredScreen}
       isLastCenteredScreen={props.isLastCenteredScreen}
-      startsWithCorner={props.startsWithCorner}
+      stepOrder={props.stepOrder}
       autoAdvance={props.autoAdvance}
       isRtamo={props.isRtamo}
       addonName={props.addonName}
@@ -55,15 +55,10 @@ export class ProtonScreen extends React.PureComponent {
     this.mainContentHeader.focus();
   }
 
-  getLogoStyle({
-    imageURL = "chrome://branding/content/about-logo.svg",
-    height = "80px",
-  }) {
-    return {
-      background:
-        imageURL === "" ? null : `url(${imageURL}) no-repeat center / contain`,
-      height,
-    };
+  getLogoStyle({ imageURL, height }) {
+    let style = { height };
+    style.backgroundImage = imageURL ? `url(${imageURL})` : null;
+    return style;
   }
 
   getScreenClassName(
@@ -111,14 +106,14 @@ export class ProtonScreen extends React.PureComponent {
     );
   }
 
-  renderNoodles(includeNoodles, isCornerPosition) {
+  renderNoodles() {
     return (
       <React.Fragment>
-        {includeNoodles ? <div className={`noodle orange-L`} /> : null}
-        {includeNoodles ? <div className={`noodle purple-C`} /> : null}
-        {isCornerPosition ? <div className={`noodle solid-L`} /> : null}
-        {includeNoodles ? <div className={`noodle outline-L`} /> : null}
-        {includeNoodles ? <div className={`noodle yellow-circle`} /> : null}
+        <div className={"noodle orange-L"} />
+        <div className={"noodle purple-C"} />
+        <div className={"noodle solid-L"} />
+        <div className={"noodle outline-L"} />
+        <div className={"noodle yellow-circle"} />
       </React.Fragment>
     );
   }
@@ -146,6 +141,26 @@ export class ProtonScreen extends React.PureComponent {
     );
   }
 
+  renderSecondarySection(content) {
+    return (
+      <div
+        className="section-secondary"
+        style={content.background ? { background: content.background } : {}}
+      >
+        <div className="message-text">
+          <div className="spacer-top" />
+          <Localized text={content.hero_text}>
+            <h1 />
+          </Localized>
+          <div className="spacer-bottom" />
+        </div>
+        <Localized text={content.help_text}>
+          <span className="attrib-text" />
+        </Localized>
+      </div>
+    );
+  }
+
   render() {
     const {
       autoAdvance,
@@ -157,23 +172,22 @@ export class ProtonScreen extends React.PureComponent {
       totalNumberOfScreens: total,
     } = this.props;
     const includeNoodles = content.has_noodles;
-    const isCornerPosition = content.position === "corner";
+    // The default screen position is "center"
+    const isCenterPosition = content.position === "center" || !content.position;
     const hideStepsIndicator =
-      autoAdvance ||
-      isCornerPosition ||
-      (isFirstCenteredScreen && isLastCenteredScreen);
+      autoAdvance || (isFirstCenteredScreen && isLastCenteredScreen);
     const textColorClass = content.text_color
       ? `${content.text_color}-text`
       : "";
     // Assign proton screen style 'screen-1' or 'screen-2' to centered screens
     // by checking if screen order is even or odd.
-    const screenClassName = isCornerPosition
-      ? ""
-      : this.getScreenClassName(
+    const screenClassName = isCenterPosition
+      ? this.getScreenClassName(
           isFirstCenteredScreen,
           isLastCenteredScreen,
           includeNoodles
-        );
+        )
+      : "";
 
     return (
       <main
@@ -187,20 +201,7 @@ export class ProtonScreen extends React.PureComponent {
           this.mainContentHeader = input;
         }}
       >
-        {isCornerPosition ? (
-          <div className="section-left">
-            <div className="message-text">
-              <div className="spacer-top" />
-              <Localized text={content.hero_text}>
-                <h1 />
-              </Localized>
-              <div className="spacer-bottom" />
-            </div>
-            <Localized text={content.help_text}>
-              <span className="attrib-text" />
-            </Localized>
-          </div>
-        ) : null}
+        {isCenterPosition ? null : this.renderSecondarySection(content)}
         <div className="section-main">
           {content.secondary_button_top ? (
             <SecondaryCTA
@@ -209,10 +210,14 @@ export class ProtonScreen extends React.PureComponent {
               position="top"
             />
           ) : null}
-          {this.renderNoodles(includeNoodles, isCornerPosition)}
+          {includeNoodles ? this.renderNoodles() : null}
           <div
             className={`main-content ${hideStepsIndicator ? "no-steps" : ""}`}
-            style={content.background ? { background: content.background } : {}}
+            style={
+              content.background && isCenterPosition
+                ? { background: content.background }
+                : {}
+            }
           >
             {content.dismiss_button ? this.renderDismissButton() : null}
             {content.logo ? (
@@ -245,7 +250,7 @@ export class ProtonScreen extends React.PureComponent {
               </div>
               {this.renderContentTiles()}
               {this.renderLanguageSwitcher()}
-              <div>
+              <div className="action-buttons">
                 <Localized text={content.primary_button?.label}>
                   <button
                     className="primary"
@@ -274,13 +279,8 @@ export class ProtonScreen extends React.PureComponent {
                 {/* These empty elements are here to help trigger the nav for screen readers. */}
                 <br />
                 <p />
-                {/* If total doesn't include starting corner screen, reduce the screen order by 1 */}
                 <StepsIndicator
-                  order={
-                    this.props.startsWithCorner
-                      ? this.props.order - 1
-                      : this.props.order
-                  }
+                  order={this.props.stepOrder}
                   totalNumberOfScreens={total}
                 />
               </nav>

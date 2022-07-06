@@ -129,6 +129,16 @@ add_task(async function test_AWMultistage_RemovePinScreen() {
     // Expected selectors:
     ["main.AW_ONLY_DEFAULT"],
     // Unexpected selectors:
-    ["main.AW_PIN_FIREFOX_STEP1", "nav.steps"]
+    ["main.AW_PIN_FIREFOX_STEP1"]
+  );
+
+  // Ensure step indicator is not displayed
+  await test_element_styles(
+    browser,
+    "nav.steps",
+    // Expected styles:
+    {
+      display: "none",
+    }
   );
 });

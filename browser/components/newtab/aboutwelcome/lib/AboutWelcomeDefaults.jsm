@@ -249,6 +249,196 @@ const DEFAULT_WELCOME_CONTENT = {
   ],
 };
 
+// Message to be updated based on finalized MR designs
+const MR_ABOUT_WELCOME_DEFAULT = {
+  id: "MR_WELCOME_DEFAULT",
+  template: "multistage",
+  // Allow tests to easily disable transitions.
+  transitions: Services.prefs.getBoolPref(
+    "browser.aboutwelcome.transitions",
+    true
+  ),
+  backdrop: "#438ab6",
+  screens: [
+    {
+      id: "AW_SET_DEFAULT",
+      content: {
+        position: "split",
+        background: "#3191f8",
+        logo: {},
+        hero_text: {
+          string_id: "mr1-welcome-screen-hero-text",
+        },
+        title: {
+          string_id: "mr1-onboarding-default-header",
+        },
+        subtitle: {
+          string_id: "mr1-onboarding-default-subtitle",
+        },
+        primary_button: {
+          label: {
+            string_id: "mr1-onboarding-default-primary-button-label",
+          },
+          action: {
+            navigate: true,
+            type: "SET_DEFAULT_BROWSER",
+          },
+        },
+        secondary_button: {
+          label: {
+            string_id: "mr1-onboarding-set-default-secondary-button-label",
+          },
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
+      id: "AW_LANGUAGE_MISMATCH",
+      content: {
+        position: "split",
+        background: "#3191f8",
+        logo: {},
+        title: { string_id: "onboarding-live-language-header" },
+        languageSwitcher: {
+          downloading: {
+            string_id: "onboarding-live-language-button-label-downloading",
+          },
+          cancel: {
+            string_id: "onboarding-live-language-secondary-cancel-download",
+          },
+          waiting: { string_id: "onboarding-live-language-waiting-button" },
+          skip: { string_id: "onboarding-live-language-skip-button-label" },
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
+      id: "AW_IMPORT_SETTINGS",
+      content: {
+        position: "split",
+        background: "#3191f8",
+        logo: {},
+        title: {
+          string_id: "mr1-onboarding-import-header",
+        },
+        subtitle: {
+          string_id: "mr1-onboarding-import-subtitle",
+        },
+        primary_button: {
+          label: {
+            string_id:
+              "mr1-onboarding-import-primary-button-label-no-attribution",
+          },
+          action: {
+            type: "SHOW_MIGRATION_WIZARD",
+            data: {},
+            navigate: true,
+          },
+        },
+        secondary_button: {
+          label: {
+            string_id: "mr1-onboarding-import-secondary-button-label",
+          },
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
+      id: "AW_CHOOSE_THEME",
+      content: {
+        position: "split",
+        background: "#3191f8",
+        logo: {},
+        title: {
+          string_id: "mr1-onboarding-theme-header",
+        },
+        subtitle: {
+          string_id: "mr1-onboarding-theme-subtitle",
+        },
+        tiles: {
+          type: "theme",
+          action: {
+            theme: "<event>",
+          },
+          data: [
+            {
+              theme: "automatic",
+              label: {
+                string_id: "mr1-onboarding-theme-label-system",
+              },
+              tooltip: {
+                string_id: "mr1-onboarding-theme-tooltip-system",
+              },
+              description: {
+                string_id: "mr1-onboarding-theme-description-system",
+              },
+            },
+            {
+              theme: "light",
+              label: {
+                string_id: "mr1-onboarding-theme-label-light",
+              },
+              tooltip: {
+                string_id: "mr1-onboarding-theme-tooltip-light",
+              },
+              description: {
+                string_id: "mr1-onboarding-theme-description-light",
+              },
+            },
+            {
+              theme: "dark",
+              label: {
+                string_id: "mr1-onboarding-theme-label-dark",
+              },
+              tooltip: {
+                string_id: "mr1-onboarding-theme-tooltip-dark",
+              },
+              description: {
+                string_id: "mr1-onboarding-theme-description-dark",
+              },
+            },
+            {
+              theme: "alpenglow",
+              label: {
+                string_id: "mr1-onboarding-theme-label-alpenglow",
+              },
+              tooltip: {
+                string_id: "mr1-onboarding-theme-tooltip-alpenglow",
+              },
+              description: {
+                string_id: "mr1-onboarding-theme-description-alpenglow",
+              },
+            },
+          ],
+        },
+        primary_button: {
+          label: {
+            string_id: "onboarding-theme-primary-button-label",
+          },
+          action: {
+            navigate: true,
+          },
+        },
+        secondary_button: {
+          label: {
+            string_id: "mr1-onboarding-theme-secondary-button-label",
+          },
+          action: {
+            theme: "automatic",
+            navigate: true,
+          },
+        },
+      },
+    },
+  ],
+};
+
 async function getAddonFromRepository(data) {
   const [addonInfo] = await lazy.AddonRepository.getAddonsByIDs([data]);
   if (addonInfo.sourceURI.scheme !== "https") {
@@ -315,8 +505,11 @@ async function getAttributionContent() {
 }
 
 // Return default multistage welcome content
-function getDefaults() {
-  return Cu.cloneInto(DEFAULT_WELCOME_CONTENT, {});
+function getDefaults(templateMR = false) {
+  const defaultContent = templateMR
+    ? MR_ABOUT_WELCOME_DEFAULT
+    : DEFAULT_WELCOME_CONTENT;
+  return Cu.cloneInto(defaultContent, {});
 }
 
 let gSourceL10n = null;
@@ -335,9 +528,18 @@ function getLocalizedUA(ua) {
   return null;
 }
 
+function prepareMRContent(content) {
+  // Expand with logic for finalized MR designs
+  return content;
+}
+
 async function prepareContentForReact(content) {
   if (content?.template === "return_to_amo") {
     return content;
+  }
+
+  if (content.templateMR) {
+    return prepareMRContent(content);
   }
 
   // Helper to find screens and remove them where applicable.

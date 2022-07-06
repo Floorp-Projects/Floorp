@@ -796,5 +796,8 @@ ClassifierDummyChannel::SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void ClassifierDummyChannel::SetConnectionInfo(
+    mozilla::net::nsHttpConnectionInfo* aInfo) {}
+
 }  // namespace net
 }  // namespace mozilla
