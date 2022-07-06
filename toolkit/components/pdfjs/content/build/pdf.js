@@ -1361,7 +1361,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.15.208',
+    apiVersion: '2.15.224',
     source: {
       data: source.data,
       url: source.url,
@@ -3394,9 +3394,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.15.208';
+const version = '2.15.224';
 exports.version = version;
-const build = '13c01b6d4';
+const build = 'bde46632d';
 exports.build = build;
 
 /***/ }),
@@ -3694,8 +3694,14 @@ class AnnotationEditor {
     this.div.tabIndex = 100;
     const [tx, ty] = this.getInitialTranslation();
     this.translate(tx, ty);
-    (0, _tools.bindEvents)(this, this.div, ["dragstart", "focusin", "focusout"]);
+    (0, _tools.bindEvents)(this, this.div, ["dragstart", "focusin", "focusout", "mousedown"]);
     return this.div;
+  }
+
+  mousedown(event) {
+    if (event.button !== 0) {
+      event.preventDefault();
+    }
   }
 
   getRect(tx, ty) {
@@ -3765,6 +3771,10 @@ class AnnotationEditor {
   }
 
   remove() {
+    if (!this.isEmpty()) {
+      this.commit();
+    }
+
     this.parent.remove(this);
   }
 
@@ -3907,6 +3917,19 @@ class CommandManager {
     }
   }
 
+  hasSomethingToUndo() {
+    return !isNaN(this.#position);
+  }
+
+  hasSomethingToRedo() {
+    if (isNaN(this.#position) && this.#start < this.#commands.length) {
+      return true;
+    }
+
+    const next = (this.#position + 1) % this.#maxSize;
+    return next !== this.#start && next < this.#commands.length;
+  }
+
   #setCommands(cmds) {
     if (this.#commands.length < this.#maxSize) {
       this.#commands.push(cmds);
@@ -3925,6 +3948,10 @@ class CommandManager {
     }
 
     this.#commands[this.#position] = cmds;
+  }
+
+  destroy() {
+    this.#commands = null;
   }
 
 }
@@ -4014,6 +4041,14 @@ class ClipboardManager {
     return this.element?.copy() || null;
   }
 
+  isEmpty() {
+    return this.element === null;
+  }
+
+  destroy() {
+    this.element = null;
+  }
+
 }
 
 class ColorManager {
@@ -4058,7 +4093,7 @@ exports.ColorManager = ColorManager;
 class AnnotationEditorUIManager {
   #activeEditor = null;
   #allEditors = new Map();
-  #allLayers = new Set();
+  #allLayers = new Map();
   #allowClick = true;
   #clipboardManager = new ClipboardManager();
   #commandManager = new CommandManager();
@@ -4069,9 +4104,56 @@ class AnnotationEditorUIManager {
   #isEnabled = false;
   #mode = _util.AnnotationEditorType.NONE;
   #previousActiveEditor = null;
+  #boundOnEditingAction = this.onEditingAction.bind(this);
+  #previousStates = {
+    isEditing: false,
+    isEmpty: true,
+    hasEmptyClipboard: true,
+    hasSomethingToUndo: false,
+    hasSomethingToRedo: false,
+    hasSelectedEditor: false
+  };
 
   constructor(eventBus) {
     this.#eventBus = eventBus;
+
+    this.#eventBus._on("editingaction", this.#boundOnEditingAction);
+  }
+
+  destroy() {
+    this.#eventBus._off("editingaction", this.#boundOnEditingAction);
+
+    for (const layer of this.#allLayers.values()) {
+      layer.destroy();
+    }
+
+    this.#allLayers.clear();
+
+    for (const editor of this.#allEditors.values()) {
+      editor.destroy();
+    }
+
+    this.#allEditors.clear();
+    this.#activeEditor = null;
+    this.#clipboardManager.destroy();
+    this.#commandManager.destroy();
+  }
+
+  onEditingAction(details) {
+    if (["undo", "redo", "cut", "copy", "paste", "delete", "selectAll"].includes(details.name)) {
+      this[details.name]();
+    }
+  }
+
+  #dispatchUpdateStates(details) {
+    const hasChanged = Object.entries(details).some(([key, value]) => this.#previousStates[key] !== value);
+
+    if (hasChanged) {
+      this.#eventBus.dispatch("annotationeditorstateschanged", {
+        source: this,
+        details: Object.assign(this.#previousStates, details)
+      });
+    }
   }
 
   #dispatchUpdateUI(details) {
@@ -4079,6 +4161,23 @@ class AnnotationEditorUIManager {
       source: this,
       details
     });
+  }
+
+  setEditingState(isEditing) {
+    if (isEditing) {
+      this.#dispatchUpdateStates({
+        isEditing: this.#mode !== _util.AnnotationEditorType.NONE,
+        isEmpty: this.#isEmpty(),
+        hasSomethingToUndo: this.#commandManager.hasSomethingToUndo(),
+        hasSomethingToRedo: this.#commandManager.hasSomethingToRedo(),
+        hasSelectedEditor: false,
+        hasEmptyClipboard: this.#clipboardManager.isEmpty()
+      });
+    } else {
+      this.#dispatchUpdateStates({
+        isEditing: false
+      });
+    }
   }
 
   registerEditorTypes(types) {
@@ -4094,7 +4193,7 @@ class AnnotationEditorUIManager {
   }
 
   addLayer(layer) {
-    this.#allLayers.add(layer);
+    this.#allLayers.set(layer.pageIndex, layer);
 
     if (this.#isEnabled) {
       layer.enable();
@@ -4104,18 +4203,20 @@ class AnnotationEditorUIManager {
   }
 
   removeLayer(layer) {
-    this.#allLayers.delete(layer);
+    this.#allLayers.delete(layer.pageIndex);
   }
 
   updateMode(mode) {
     this.#mode = mode;
 
     if (mode === _util.AnnotationEditorType.NONE) {
+      this.setEditingState(false);
       this.#disableAll();
     } else {
+      this.setEditingState(true);
       this.#enableAll();
 
-      for (const layer of this.#allLayers) {
+      for (const layer of this.#allLayers.values()) {
         layer.updateMode(mode);
       }
     }
@@ -4144,7 +4245,7 @@ class AnnotationEditorUIManager {
     if (!this.#isEnabled) {
       this.#isEnabled = true;
 
-      for (const layer of this.#allLayers) {
+      for (const layer of this.#allLayers.values()) {
         layer.enable();
       }
     }
@@ -4154,7 +4255,7 @@ class AnnotationEditorUIManager {
     if (this.#isEnabled) {
       this.#isEnabled = false;
 
-      for (const layer of this.#allLayers) {
+      for (const layer of this.#allLayers.values()) {
         layer.disable();
       }
     }
@@ -4184,6 +4285,16 @@ class AnnotationEditorUIManager {
     this.#allEditors.delete(editor.id);
   }
 
+  #addEditorToLayer(editor) {
+    const layer = this.#allLayers.get(editor.pageIndex);
+
+    if (layer) {
+      layer.addOrRebuild(editor);
+    } else {
+      this.addEditor(editor);
+    }
+  }
+
   setActiveEditor(editor) {
     if (this.#activeEditor === editor) {
       return;
@@ -4194,7 +4305,14 @@ class AnnotationEditorUIManager {
 
     if (editor) {
       this.#dispatchUpdateUI(editor.propertiesToUpdate);
+      this.#dispatchUpdateStates({
+        hasSelectedEditor: true
+      });
     } else {
+      this.#dispatchUpdateStates({
+        hasSelectedEditor: false
+      });
+
       if (this.#previousActiveEditor) {
         this.#dispatchUpdateUI(this.#previousActiveEditor.propertiesToUpdate);
       } else {
@@ -4207,14 +4325,43 @@ class AnnotationEditorUIManager {
 
   undo() {
     this.#commandManager.undo();
+    this.#dispatchUpdateStates({
+      hasSomethingToUndo: this.#commandManager.hasSomethingToUndo(),
+      hasSomethingToRedo: true,
+      isEmpty: this.#isEmpty()
+    });
   }
 
   redo() {
     this.#commandManager.redo();
+    this.#dispatchUpdateStates({
+      hasSomethingToUndo: true,
+      hasSomethingToRedo: this.#commandManager.hasSomethingToRedo(),
+      isEmpty: this.#isEmpty()
+    });
   }
 
   addCommands(params) {
     this.#commandManager.add(params);
+    this.#dispatchUpdateStates({
+      hasSomethingToUndo: true,
+      hasSomethingToRedo: false,
+      isEmpty: this.#isEmpty()
+    });
+  }
+
+  #isEmpty() {
+    if (this.#allEditors.size === 0) {
+      return true;
+    }
+
+    if (this.#allEditors.size === 1) {
+      for (const editor of this.#allEditors.values()) {
+        return editor.isEmpty();
+      }
+    }
+
+    return false;
   }
 
   get allowClick() {
@@ -4233,7 +4380,7 @@ class AnnotationEditorUIManager {
     this.#allowClick = true;
   }
 
-  suppress(layer) {
+  delete() {
     let cmd, undo;
 
     if (this.#isAllSelected) {
@@ -4247,7 +4394,7 @@ class AnnotationEditorUIManager {
 
       undo = () => {
         for (const editor of editors) {
-          layer.addOrRebuild(editor);
+          this.#addEditorToLayer(editor);
         }
       };
 
@@ -4268,7 +4415,7 @@ class AnnotationEditorUIManager {
       };
 
       undo = () => {
-        layer.addOrRebuild(editor);
+        this.#addEditorToLayer(editor);
       };
     }
 
@@ -4282,10 +4429,13 @@ class AnnotationEditorUIManager {
   copy() {
     if (this.#activeEditor) {
       this.#clipboardManager.copy(this.#activeEditor);
+      this.#dispatchUpdateStates({
+        hasEmptyClipboard: false
+      });
     }
   }
 
-  cut(layer) {
+  cut() {
     if (this.#activeEditor) {
       this.#clipboardManager.copy(this.#activeEditor);
       const editor = this.#activeEditor;
@@ -4295,7 +4445,7 @@ class AnnotationEditorUIManager {
       };
 
       const undo = () => {
-        layer.addOrRebuild(editor);
+        this.#addEditorToLayer(editor);
       };
 
       this.addCommands({
@@ -4306,7 +4456,7 @@ class AnnotationEditorUIManager {
     }
   }
 
-  paste(layer) {
+  paste() {
     const editor = this.#clipboardManager.paste();
 
     if (!editor) {
@@ -4314,7 +4464,7 @@ class AnnotationEditorUIManager {
     }
 
     const cmd = () => {
-      layer.addOrRebuild(editor);
+      this.#addEditorToLayer(editor);
     };
 
     const undo = () => {
@@ -4334,6 +4484,10 @@ class AnnotationEditorUIManager {
     for (const editor of this.#allEditors.values()) {
       editor.select();
     }
+
+    this.#dispatchUpdateStates({
+      hasSelectedEditor: true
+    });
   }
 
   unselectAll() {
@@ -4342,6 +4496,10 @@ class AnnotationEditorUIManager {
     for (const editor of this.#allEditors.values()) {
       editor.unselect();
     }
+
+    this.#dispatchUpdateStates({
+      hasSelectedEditor: this.hasActive()
+    });
   }
 
   isActive(editor) {
@@ -10189,7 +10347,7 @@ class AnnotationEditorLayer {
   #editors = new Map();
   #uiManager;
   static _initialized = false;
-  static _keyboardManager = new _tools.KeyboardManager([[["ctrl+a", "mac+meta+a"], AnnotationEditorLayer.prototype.selectAll], [["ctrl+c", "mac+meta+c"], AnnotationEditorLayer.prototype.copy], [["ctrl+v", "mac+meta+v"], AnnotationEditorLayer.prototype.paste], [["ctrl+x", "mac+meta+x"], AnnotationEditorLayer.prototype.cut], [["ctrl+z", "mac+meta+z"], AnnotationEditorLayer.prototype.undo], [["ctrl+y", "ctrl+shift+Z", "mac+meta+shift+Z"], AnnotationEditorLayer.prototype.redo], [["ctrl+Backspace", "mac+Backspace", "mac+ctrl+Backspace", "mac+alt+Backspace"], AnnotationEditorLayer.prototype.suppress]]);
+  static _keyboardManager = new _tools.KeyboardManager([[["ctrl+a", "mac+meta+a"], AnnotationEditorLayer.prototype.selectAll], [["ctrl+c", "mac+meta+c"], AnnotationEditorLayer.prototype.copy], [["ctrl+v", "mac+meta+v"], AnnotationEditorLayer.prototype.paste], [["ctrl+x", "mac+meta+x"], AnnotationEditorLayer.prototype.cut], [["ctrl+z", "mac+meta+z"], AnnotationEditorLayer.prototype.undo], [["ctrl+y", "ctrl+shift+Z", "mac+meta+shift+Z"], AnnotationEditorLayer.prototype.redo], [["ctrl+Backspace", "mac+Backspace", "mac+ctrl+Backspace", "mac+alt+Backspace"], AnnotationEditorLayer.prototype.delete]]);
 
   constructor(options) {
     if (!AnnotationEditorLayer._initialized) {
@@ -10238,6 +10396,10 @@ class AnnotationEditorLayer {
     this.setActiveEditor(null);
   }
 
+  setEditingState(isEditing) {
+    this.#uiManager.setEditingState(isEditing);
+  }
+
   mouseover(event) {
     if (event.target === this.div && event.buttons === 0 && !this.#uiManager.hasActive()) {
       const editor = this.#createAndAddNewEditor(event);
@@ -10257,8 +10419,8 @@ class AnnotationEditorLayer {
     this.#uiManager.redo();
   }
 
-  suppress() {
-    this.#uiManager.suppress();
+  delete() {
+    this.#uiManager.delete();
   }
 
   copy() {
@@ -10266,11 +10428,11 @@ class AnnotationEditorLayer {
   }
 
   cut() {
-    this.#uiManager.cut(this);
+    this.#uiManager.cut();
   }
 
   paste() {
-    this.#uiManager.paste(this);
+    this.#uiManager.paste();
   }
 
   selectAll() {
@@ -10686,6 +10848,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   }
 
   enableEditMode() {
+    this.parent.setEditingState(false);
     this.parent.updateToolbar(_util.AnnotationEditorType.FREETEXT);
     super.enableEditMode();
     this.overlayDiv.classList.remove("enabled");
@@ -10694,6 +10857,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   }
 
   disableEditMode() {
+    this.parent.setEditingState(true);
     super.disableEditMode();
     this.overlayDiv.classList.add("enabled");
     this.editorDiv.contentEditable = false;
@@ -10712,6 +10876,11 @@ class FreeTextEditor extends _editor.AnnotationEditor {
 
   isEmpty() {
     return this.editorDiv.innerText.trim() === "";
+  }
+
+  remove() {
+    this.parent.setEditingState(true);
+    super.remove();
   }
 
   #extractText() {
@@ -10994,7 +11163,11 @@ class InkEditor extends _editor.AnnotationEditor {
       return;
     }
 
-    this.canvas.width = this.canvas.heigth = 0;
+    if (!this.isEmpty()) {
+      this.commit();
+    }
+
+    this.canvas.width = this.canvas.height = 0;
     this.canvas.remove();
     this.canvas = null;
     this.#observer.disconnect();
@@ -11033,7 +11206,7 @@ class InkEditor extends _editor.AnnotationEditor {
   }
 
   isEmpty() {
-    return this.paths.length === 0;
+    return this.paths.length === 0 || this.paths.length === 1 && this.paths[0].length === 0;
   }
 
   #getInitialBBox() {
@@ -11165,7 +11338,7 @@ class InkEditor extends _editor.AnnotationEditor {
   }
 
   canvasMousedown(event) {
-    if (!this.isInEditMode() || this.#disableEditing) {
+    if (event.button !== 0 || !this.isInEditMode() || this.#disableEditing) {
       return;
     }
 
@@ -11182,6 +11355,10 @@ class InkEditor extends _editor.AnnotationEditor {
   }
 
   canvasMouseup(event) {
+    if (event.button !== 0) {
+      return;
+    }
+
     if (this.isInEditMode() && this.currentPath.length !== 0) {
       event.stopPropagation();
       this.#endDrawing(event);
@@ -14007,8 +14184,7 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
   render() {
     this.container.className = "fileAttachmentAnnotation";
     const trigger = document.createElement("div");
-    trigger.style.height = this.container.style.height;
-    trigger.style.width = this.container.style.width;
+    trigger.className = "popupTriggerArea";
     trigger.addEventListener("dblclick", this._download.bind(this));
 
     if (!this.data.hasPopup && (this.data.titleObj?.str || this.data.contentsObj?.str || this.data.richText)) {
@@ -14027,10 +14203,16 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
 
 class AnnotationLayer {
   static render(parameters) {
+    const {
+      annotations,
+      div,
+      viewport
+    } = parameters;
+    this.#setDimensions(div, viewport);
     const sortedAnnotations = [],
           popupAnnotations = [];
 
-    for (const data of parameters.annotations) {
+    for (const data of annotations) {
       if (!data) {
         continue;
       }
@@ -14056,14 +14238,12 @@ class AnnotationLayer {
       sortedAnnotations.push(...popupAnnotations);
     }
 
-    const div = parameters.div;
-
     for (const data of sortedAnnotations) {
       const element = AnnotationElementFactory.create({
         data,
         layer: div,
         page: parameters.page,
-        viewport: parameters.viewport,
+        viewport,
         linkService: parameters.linkService,
         downloadManager: parameters.downloadManager,
         imageResourcesPath: parameters.imageResourcesPath || "",
@@ -14105,13 +14285,15 @@ class AnnotationLayer {
   static update(parameters) {
     const {
       annotationCanvasMap,
-      div
+      div,
+      viewport
     } = parameters;
+    this.#setDimensions(div, viewport);
     this.#setAnnotationCanvasMap(div, annotationCanvasMap);
     div.hidden = false;
   }
 
-  static setDimensions(div, {
+  static #setDimensions(div, {
     width,
     height,
     rotation
@@ -15568,8 +15750,8 @@ var _svg = __w_pdfjs_require__(29);
 
 var _xfa_layer = __w_pdfjs_require__(27);
 
-const pdfjsVersion = '2.15.208';
-const pdfjsBuild = '13c01b6d4';
+const pdfjsVersion = '2.15.224';
+const pdfjsBuild = 'bde46632d';
 ;
 })();
 
