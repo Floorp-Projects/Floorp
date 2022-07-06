@@ -958,6 +958,25 @@ function handleRequest(req, res) {
       return;
     }
 
+    if (u.query.nxdomain) {
+      let nxConent = dnsPacket.encode({
+        id: 0,
+        type: "response",
+        flags: dnsPacket.rcodes.toRcode("NXDOMAIN"),
+        questions: [
+          {
+            name: "nxdomain.example.com",
+            type: "A",
+            class: "IN",
+          },
+        ],
+        answers: [],
+      });
+
+      writeDNSResponse(res, nxConent, 0, "application/dns-message");
+      return;
+    }
+
     if (u.query.push) {
       // push.example.org has AAAA entry 2018::2018
       let pcontent = dnsPacket.encode({
