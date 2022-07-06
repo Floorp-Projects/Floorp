@@ -12,7 +12,6 @@
 #include "nsICookieJarSettings.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "nsIPrincipal.h"
 #include "nsILoadInfo.h"
 
@@ -31,10 +30,6 @@ void EarlyHintsService::EarlyHint(const nsACString& aLinkHeader,
   mEarlyHintsCount++;
   if (!mFirstEarlyHint) {
     mFirstEarlyHint.emplace(TimeStamp::NowLoRes());
-  }
-
-  if (!StaticPrefs::network_early_hints_enabled()) {
-    return;
   }
 
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
