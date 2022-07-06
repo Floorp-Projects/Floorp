@@ -27,7 +27,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.ok(wrapper.exists());
     });
 
-    it("should render section left for corner positioned screens", () => {
+    it("should render secondary section for corner positioned screens", () => {
       const SCREEN_PROPS = {
         content: {
           position: "corner",
@@ -38,11 +38,32 @@ describe("MultiStageAboutWelcomeProton module", () => {
       const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
       assert.ok(wrapper.exists());
       assert.equal(wrapper.find(".welcome-text h1").text(), "test title");
-      assert.equal(wrapper.find(".section-left h1").text(), "test subtitle");
+      assert.equal(
+        wrapper.find(".section-secondary h1").text(),
+        "test subtitle"
+      );
       assert.equal(wrapper.find("main").prop("pos"), "corner");
     });
 
-    it("should render with no section left for center positioned screens", () => {
+    it("should render with secondary section for split positioned screens", () => {
+      const SCREEN_PROPS = {
+        content: {
+          position: "split",
+          title: "test title",
+          hero_text: "test subtitle",
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.equal(wrapper.find(".welcome-text h1").text(), "test title");
+      assert.equal(
+        wrapper.find(".section-secondary h1").text(),
+        "test subtitle"
+      );
+      assert.equal(wrapper.find("main").prop("pos"), "split");
+    });
+
+    it("should render with no secondary section for center positioned screens", () => {
       const SCREEN_PROPS = {
         content: {
           position: "center",
@@ -51,7 +72,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
       };
       const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
       assert.ok(wrapper.exists());
-      assert.equal(wrapper.find(".section-left").exists(), false);
+      assert.equal(wrapper.find(".section-secondary").exists(), false);
       assert.equal(wrapper.find(".welcome-text h1").text(), "test title");
       assert.equal(wrapper.find("main").prop("pos"), "center");
     });
@@ -154,6 +175,25 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.notProperty(data.screens[0].content, "help_text");
     });
   });
+
+  describe("AboutWelcomeDefaults for MR split template proton", () => {
+    // Pass true as argument for templateMR parameter
+    const getData = () => AboutWelcomeDefaults.getDefaults(true);
+    beforeEach(() => {
+      sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
+    });
+
+    it("should use 'split' position template by default", async () => {
+      const data = await getData();
+      assert.propertyVal(data.screens[0].content, "position", "split");
+    });
+
+    it("should not include noodles by default", async () => {
+      const data = await getData();
+      assert.notProperty(data.screens[0].content, "has_noodles");
+    });
+  });
+
   describe("AboutWelcomeDefaults prepareContentForReact", () => {
     it("should not set action without screens", async () => {
       const data = await AboutWelcomeDefaults.prepareContentForReact({

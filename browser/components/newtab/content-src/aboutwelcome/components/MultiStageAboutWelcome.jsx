@@ -174,6 +174,10 @@ export const MultiStageAboutWelcome = props => {
             screens[0].content.position === "corner"
               ? screens.length - 1
               : screens.length;
+          /* Don't include a starting corner screen when determining step indicator order */
+          const stepOrder =
+            screens[0].content.position === "corner" ? order - 1 : order;
+
           return index === order ? (
             <WelcomeScreen
               key={screen.id + order}
@@ -181,7 +185,7 @@ export const MultiStageAboutWelcome = props => {
               totalNumberOfScreens={totalNumberOfScreens}
               isFirstCenteredScreen={isFirstCenteredScreen}
               isLastCenteredScreen={isLastCenteredScreen}
-              startsWithCorner={screens[0].content.position === "corner"}
+              stepOrder={stepOrder}
               order={order}
               content={screen.content}
               navigate={handleTransition}
@@ -322,6 +326,7 @@ export class WelcomeScreen extends React.PureComponent {
         content={this.props.content}
         id={this.props.id}
         order={this.props.order}
+        stepOrder={this.props.stepOrder}
         activeTheme={this.props.activeTheme}
         totalNumberOfScreens={this.props.totalNumberOfScreens}
         appAndSystemLocaleInfo={this.props.appAndSystemLocaleInfo}
