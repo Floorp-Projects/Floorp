@@ -9,7 +9,7 @@
 class ProcessPower final : public BaseProfilerCount {
  public:
   ProcessPower()
-      : BaseProfilerCount("task_energy", nullptr, nullptr, "power",
+      : BaseProfilerCount("Process Power", nullptr, nullptr, "power",
                           "Power utilization") {}
 
   CountSample Sample() override {
