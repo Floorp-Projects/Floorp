@@ -22,7 +22,7 @@ import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBehavior
 import mozilla.components.browser.toolbar.display.DisplayToolbar
-import mozilla.components.support.utils.URLStringUtils
+import mozilla.components.support.ktx.util.URLStringUtils
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.customtabs.CustomTabToolbarIntegration
