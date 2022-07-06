@@ -249,10 +249,16 @@ class ScriptModule extends Module {
         );
       }
 
+      if (!context.currentWindowGlobal) {
+        throw new lazy.error.NoSuchFrameError(
+          `No window found for BrowsingContext with id ${contextId}`
+        );
+      }
+
       // TODO: Return an actual realm once we have proper realm support.
       // See Bug 1766240.
       return {
-        realm: null,
+        realm: String(context.currentWindowGlobal.innerWindowId),
         origin: null,
         type: RealmType.Window,
         context,
