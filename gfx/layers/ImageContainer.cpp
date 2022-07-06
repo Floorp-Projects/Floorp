@@ -895,13 +895,13 @@ UniquePtr<uint8_t[]> NVImage::AllocateBuffer(uint32_t aSize) {
 
 SourceSurfaceImage::SourceSurfaceImage(const gfx::IntSize& aSize,
                                        gfx::SourceSurface* aSourceSurface)
-    : Image(nullptr, ImageFormat::CAIRO_SURFACE),
+    : Image(nullptr, ImageFormat::MOZ2D_SURFACE),
       mSize(aSize),
       mSourceSurface(aSourceSurface),
       mTextureFlags(TextureFlags::DEFAULT) {}
 
 SourceSurfaceImage::SourceSurfaceImage(gfx::SourceSurface* aSourceSurface)
-    : Image(nullptr, ImageFormat::CAIRO_SURFACE),
+    : Image(nullptr, ImageFormat::MOZ2D_SURFACE),
       mSize(aSourceSurface->GetSize()),
       mSourceSurface(aSourceSurface),
       mTextureFlags(TextureFlags::DEFAULT) {}
