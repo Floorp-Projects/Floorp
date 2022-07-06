@@ -38,8 +38,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">ᱡᱷᱚᱛᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">ᱡᱷᱚᱛᱚ ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
@@ -1075,8 +1073,6 @@
     <string name="snackbar_tabs_closed">ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭᱮᱱᱟ</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">ᱵᱩᱻᱠᱢᱟᱨᱠ ᱠᱚ ᱥᱟᱺᱪᱟᱣ ᱮᱱᱟ!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">ᱪᱮᱛᱟᱱ ᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱮᱱᱥ!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">!ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱛᱮ ᱥᱮᱞᱮᱫᱽ ᱮᱱᱟ!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1183,7 +1179,7 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">%s ᱨᱮ ᱥᱟᱹᱜᱩᱱ ᱫᱟᱨᱟᱢ!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱭ ᱨᱮ Firefox ᱥᱭᱝᱠ ᱢᱮ</string>
+    <string name="onboarding_account_sign_in_header_1">ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱤ ᱨᱮ Firefox ᱥᱭᱝᱠ ᱢᱮ</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">%1$s ᱨᱮ ᱵᱩᱠᱢᱟᱨᱠᱥ, ᱦᱤᱛᱟᱹᱞ, ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱨᱮ ᱟᱹᱜᱩ ᱪᱷᱚᱭ ᱢᱮ ᱾</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1251,7 +1247,7 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">ᱵᱟᱹᱫᱟᱹᱞ ᱛᱮ ᱮᱢᱮᱞ ᱵᱮᱵᱷᱟᱨ ᱢᱮ</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
-    <string name="sign_in_create_account_text"><![CDATA[ᱠᱷᱟᱛᱟ ᱵᱟᱹᱱᱩᱜᱼᱟ? <u>ᱢᱤᱫᱴᱟᱹᱝ ᱛᱮᱭᱟᱨ ᱢᱮ</u> ᱰᱥᱫᱷᱚᱱ ᱠᱚ ᱵᱷᱤᱛᱨᱭ ᱨᱮ Firefox ᱥᱭᱝᱠ ᱞᱟᱹᱜᱤᱫ ᱾]]></string>
+    <string name="sign_in_create_account_text"><![CDATA[ᱠᱷᱟᱛᱟ ᱵᱟᱹᱱᱩᱜᱼᱟ? <u>ᱢᱤᱫᱴᱟᱹᱝ ᱛᱮᱭᱟᱨ ᱢᱮ</u> ᱰᱥᱫᱷᱚᱱ ᱠᱚ ᱵᱷᱤᱛᱨᱤ ᱨᱮ Firefox ᱥᱭᱝᱠ ᱞᱟᱹᱜᱤᱫ ᱾]]></string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s ᱫᱚ ᱟᱢᱟᱜ ᱠᱷᱟᱛᱟ ᱥᱟᱞᱟᱜ ᱥᱭᱝᱠ ᱵᱚᱸᱫᱽᱚᱭ ᱟ , ᱦᱮᱞᱮ ᱟᱢᱟᱜ ᱚᱠᱟ ᱵᱨᱟᱩᱡᱤᱸᱝ ᱰᱟᱴᱟ ᱦᱚᱸ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱵᱟᱭ ᱢᱮᱴᱟᱣᱜᱼᱟ ᱾</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1695,10 +1691,6 @@
     <string name="no_site_exceptions">ᱥᱟᱭᱤᱴ ᱨᱮᱭᱟᱜ ᱪᱷᱟᱰᱟ ᱠᱚ ᱵᱚᱱᱩᱜ-ᱟ</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱶᱟ ᱵᱩᱠᱢᱟᱨᱠ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱫ ᱛᱮ?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">ᱪᱮᱛᱟᱱ ᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">ᱪᱮᱛᱟᱱ ᱨᱤᱱ ᱥᱟᱭᱤᱴ ᱠᱷᱚᱱ ᱚᱪᱚᱜ ᱠᱟᱜ ᱢᱮ</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱛᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1774,12 +1766,8 @@
     <string name="synced_tabs_collapse_group">ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱴᱮᱵᱽ ᱠᱚ ᱨᱮᱭᱟᱜ ᱫᱳᱞ ᱦᱚᱯᱚᱱ ᱪᱷᱚᱭ ᱢᱮ</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">ᱴᱚᱯ ᱥᱟᱭᱤᱴ ᱞᱤᱢᱤᱴ ᱥᱮᱴᱮᱨᱮᱱᱟ</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱞᱤᱢᱤᱴ ᱥᱮᱴᱮᱨ ᱦᱩᱭ ᱮᱱᱟ</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">ᱱᱟᱶᱟ ᱴᱟᱹᱯ ᱥᱟᱭᱤᱴ ᱥᱮᱞᱮᱫᱽ ᱞᱟᱹᱜᱤᱫ, ᱢᱤᱫᱴᱟᱹᱝ ᱚᱰᱚᱠ ᱢᱮ ᱾ ᱥᱟᱭᱤᱴ ᱴᱤᱯᱟᱹᱣ ᱟᱨ ᱚᱛᱟ ᱛᱷᱤᱨ ᱠᱟᱛᱮ ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱟᱨ ᱚᱰᱚᱠ ᱢᱮ ᱾</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">ᱢᱤᱫ ᱱᱟᱶᱟ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱞᱟᱹᱜᱤᱫ, ᱢᱤᱫᱴᱟᱹᱝ ᱚᱰᱚᱠ ᱢᱮ ᱾ ᱥᱟᱭᱤᱴ ᱴᱤᱯᱟᱹᱣ ᱟᱨ ᱚᱛᱟ ᱛᱷᱤᱨ ᱠᱟᱛᱮ ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱟᱨ ᱚᱰᱚᱠ ᱢᱮ ᱾</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1789,8 +1777,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱠᱚ</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">ᱧᱩᱛᱩᱢ</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">ᱴᱳᱯ ᱥᱟᱭᱤᱴ ᱧᱩᱛᱩᱢ</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱧᱩᱛᱩᱢ</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
