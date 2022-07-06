@@ -36,13 +36,6 @@ fn make_byte_buf<T: serde::Serialize>(data: &T) -> ByteBuf {
 }
 
 #[repr(C)]
-pub struct ShaderModuleDescriptor {
-    label: RawString,
-    code: *const u8,
-    code_length: usize,
-}
-
-#[repr(C)]
 pub struct ProgrammableStageDescriptor {
     module: id::ShaderModuleId,
     entry_point: RawString,
@@ -894,30 +887,17 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wgpu_client_create_shader_module(
+pub extern "C" fn wgpu_client_make_shader_module_id(
     client: &Client,
     device_id: id::DeviceId,
-    desc: &ShaderModuleDescriptor,
-    bb: &mut ByteBuf,
 ) -> id::ShaderModuleId {
     let backend = device_id.backend();
-    let id = client
+    client
         .identities
         .lock()
         .select(backend)
         .shader_modules
-        .alloc(backend);
-
-    let code =
-        std::str::from_utf8_unchecked(std::slice::from_raw_parts(desc.code, desc.code_length));
-    let desc = wgc::pipeline::ShaderModuleDescriptor {
-        label: cow_label(&desc.label),
-        shader_bound_checks: wgt::ShaderBoundChecks::new(),
-    };
-
-    let action = DeviceAction::CreateShaderModule(id, desc, Cow::Borrowed(code));
-    *bb = make_byte_buf(&action);
-    id
+        .alloc(backend)
 }
 
 #[no_mangle]
