@@ -560,6 +560,9 @@ NS_IMPL_ISUPPORTS(nsIconChannel, nsIChannel, nsIRequest, nsIRequestObserver,
 nsIconChannel::nsIconChannel() {}
 
 nsIconChannel::~nsIconChannel() {
+  if (mLoadInfo) {
+    NS_ReleaseOnMainThread("nsIconChannel::mLoadInfo", mLoadInfo.forget());
+  }
   if (mLoadGroup) {
     NS_ReleaseOnMainThread("nsIconChannel::mLoadGroup", mLoadGroup.forget());
   }
