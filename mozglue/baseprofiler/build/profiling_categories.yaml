@@ -135,6 +135,8 @@
       label: JIT (baseline)
     - name: JS_IonMonkey
       label: JIT (ion)
+    - name: JS_Builtin
+      label: Builtin API
 
 - name: GCCC
   label: GC / CC
