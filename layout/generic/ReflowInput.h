@@ -327,8 +327,13 @@ struct ReflowInput : public SizeComputationInput {
     return mComputedMaxSize.BSize(mWritingMode);
   }
 
-  nscoord& AvailableISize() { return mAvailableSize.ISize(mWritingMode); }
-  nscoord& AvailableBSize() { return mAvailableSize.BSize(mWritingMode); }
+  void SetAvailableISize(nscoord aAvailableISize) {
+    mAvailableSize.ISize(mWritingMode) = aAvailableISize;
+  }
+  void SetAvailableBSize(nscoord aAvailableBSize) {
+    mAvailableSize.BSize(mWritingMode) = aAvailableBSize;
+  }
+
   nscoord& ComputedISize() { return mComputedSize.ISize(mWritingMode); }
   nscoord& ComputedBSize() { return mComputedSize.BSize(mWritingMode); }
   nscoord& ComputedMinISize() { return mComputedMinSize.ISize(mWritingMode); }

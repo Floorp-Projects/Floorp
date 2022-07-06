@@ -797,15 +797,16 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
                              LogicalSize(wm, availISize, availBSize),
                              Some(logicalCBSize), initFlags);
 
-  if (kidReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
+  if (nscoord kidAvailBSize = kidReflowInput.AvailableBSize();
+      kidAvailBSize != NS_UNCONSTRAINEDSIZE) {
     // Shrink available block-size if it's constrained.
-    kidReflowInput.AvailableBSize() -=
-        kidReflowInput.ComputedLogicalMargin(wm).BStart(wm);
+    kidAvailBSize -= kidReflowInput.ComputedLogicalMargin(wm).BStart(wm);
     const nscoord kidOffsetBStart =
         kidReflowInput.ComputedLogicalOffsets(wm).BStart(wm);
     if (NS_AUTOOFFSET != kidOffsetBStart) {
-      kidReflowInput.AvailableBSize() -= kidOffsetBStart;
+      kidAvailBSize -= kidOffsetBStart;
     }
+    kidReflowInput.SetAvailableBSize(kidAvailBSize);
   }
 
   // Do the reflow

@@ -818,7 +818,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
     reflowInput.mLineLayout = this;
     reflowInput.mFlags.mIsTopOfPage = mIsTopOfPage;
     if (reflowInput.ComputedISize() == NS_UNCONSTRAINEDSIZE) {
-      reflowInput.AvailableISize() = availableSpaceOnLine;
+      reflowInput.SetAvailableISize(availableSpaceOnLine);
     }
     pfd->mMargin = reflowInput.ComputedLogicalMargin(lineWM);
     pfd->mBorderPadding = reflowInput.ComputedLogicalBorderPadding(lineWM);
@@ -1126,8 +1126,9 @@ void nsLineLayout::AllowForStartMargin(PerFrameData* pfd,
     // for the start margin. The end margin will be accounted for when
     // we finish flowing the frame.
     WritingMode wm = aReflowInput.GetWritingMode();
-    aReflowInput.AvailableISize() -=
-        pfd->mMargin.ConvertTo(wm, lineWM).IStart(wm);
+    aReflowInput.SetAvailableISize(
+        aReflowInput.AvailableISize() -
+        pfd->mMargin.ConvertTo(wm, lineWM).IStart(wm));
   }
 }
 
