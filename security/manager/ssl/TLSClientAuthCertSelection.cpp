@@ -721,6 +721,8 @@ SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
   *pRetKey = nullptr;
 
   RefPtr<nsNSSSocketInfo> info(static_cast<nsNSSSocketInfo*>(arg));
+  Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_CLIENT_AUTH_CERT_USAGE,
+                       u"requested"_ns, 1);
 
   if (info->GetDenyClientCert()) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
