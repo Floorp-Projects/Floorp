@@ -1787,4 +1787,5 @@
     <string name="experiments_snackbar">Enable telemetry to send data.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Go to settings</string>
+    <string name="firefox_suggest_header">Firefox Suggest</string>
 </resources>

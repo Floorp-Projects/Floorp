@@ -57,7 +57,8 @@ class AwesomeBarWrapper @JvmOverloads constructor(
                     background = Color.Transparent,
                     title = ThemeManager.resolveAttributeColor(R.attr.textPrimary),
                     description = ThemeManager.resolveAttributeColor(R.attr.textSecondary),
-                    autocompleteIcon = ThemeManager.resolveAttributeColor(R.attr.textSecondary)
+                    autocompleteIcon = ThemeManager.resolveAttributeColor(R.attr.textSecondary),
+                    groupTitle = ThemeManager.resolveAttributeColor(R.attr.textSecondary),
                 ),
                 onSuggestionClicked = { suggestion ->
                     suggestion.onSuggestionClicked?.invoke()

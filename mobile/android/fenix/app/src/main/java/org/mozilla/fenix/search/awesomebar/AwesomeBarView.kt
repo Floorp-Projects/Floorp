@@ -107,7 +107,8 @@ class AwesomeBarView(
                 selectTabUseCase,
                 components.core.icons,
                 getDrawable(activity, R.drawable.ic_search_results_tab),
-                excludeSelectedSession = !fromHomeFragment
+                excludeSelectedSession = !fromHomeFragment,
+                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             )
 
         historyStorageProvider =
@@ -115,7 +116,8 @@ class AwesomeBarView(
                 components.core.historyStorage,
                 loadUrlUseCase,
                 components.core.icons,
-                engineForSpeculativeConnects
+                engineForSpeculativeConnects,
+                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             )
 
         combinedHistoryProvider =
@@ -125,7 +127,8 @@ class AwesomeBarView(
                 loadUrlUseCase = loadUrlUseCase,
                 icons = components.core.icons,
                 engine = engineForSpeculativeConnects,
-                maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT
+                maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
+                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             )
 
         bookmarksStorageSuggestionProvider =
@@ -134,7 +137,8 @@ class AwesomeBarView(
                 loadUrlUseCase = loadUrlUseCase,
                 icons = components.core.icons,
                 indicatorIcon = getDrawable(activity, R.drawable.ic_search_results_bookmarks),
-                engine = engineForSpeculativeConnects
+                engine = engineForSpeculativeConnects,
+                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             )
 
         syncedTabsStorageSuggestionProvider =
@@ -146,7 +150,8 @@ class AwesomeBarView(
                     getDrawable(activity, R.drawable.ic_search_results_device_desktop),
                     getDrawable(activity, R.drawable.ic_search_results_device_mobile),
                     getDrawable(activity, R.drawable.ic_search_results_device_tablet)
-                )
+                ),
+                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             )
 
         val searchBitmap = getDrawable(activity, R.drawable.ic_search)!!.apply {
