@@ -91,12 +91,12 @@ add_task(async function test_profile_fission_no_private_browsing() {
     info("Check that the profiling logs exist with the expected properties.");
     Assert.equal(typeof profile.profilingLog, "object");
     Assert.equal(typeof profile.profilingLog[parentPid], "object");
+    const parentLog = profile.profilingLog[parentPid];
+    Assert.equal(typeof parentLog.profilingLogBegin_TSms, "number");
+    Assert.equal(typeof parentLog.profilingLogEnd_TSms, "number");
+    Assert.equal(typeof parentLog.bufferGlobalController, "object");
     Assert.equal(
-      typeof profile.profilingLog[parentPid].profilingLogBegin_TSms,
-      "number"
-    );
-    Assert.equal(
-      typeof profile.profilingLog[parentPid].profilingLogEnd_TSms,
+      typeof parentLog.bufferGlobalController.controllerCreationTime_TSms,
       "number"
     );
 
