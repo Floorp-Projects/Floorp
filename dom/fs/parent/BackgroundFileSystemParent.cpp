@@ -5,64 +5,110 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BackgroundFileSystemParent.h"
-#include "mozilla/dom/FileSystemTypes.h"
+#include "OriginPrivateFileSystemParent.h"
 
-using IPCResult = mozilla::ipc::IPCResult;
+#include "nsNetCID.h"
+#include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/ipc/Endpoint.h"
+#include "mozilla/ipc/FileDescriptorUtils.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "nsServiceManagerUtils.h"
+
+namespace mozilla {
+LazyLogModule gOPFSLog("OPFS");
+}
+
+#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
+
+#define LOG_DEBUG(args) \
+  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla::dom {
 
-IPCResult BackgroundFileSystemParent::RecvGetRoot(GetRootResolver&& aResolver) {
-  FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
-  aResolver(response);
+namespace fs::data {
 
-  return IPC_OK();
+EntryId GetRootHandle(const Origin& aOrigin) { return "not implemented"_ns; }
+
+// TODO: Replace with real FileSystemDataManager
+class FileSystemDataManager : public FileSystemDataManagerBase {
+ public:
+  using result_t = Result<FileSystemDataManager*, nsresult>;
+  static FileSystemDataManager::result_t CreateFileSystemDataManager(
+      const fs::Origin& aOrigin);
+};
+
+FileSystemDataManager::result_t
+FileSystemDataManager::CreateFileSystemDataManager(
+    const fs::Origin& /*aOrigin*/) {
+  return nullptr;
 }
 
-IPCResult BackgroundFileSystemParent::RecvGetDirectoryHandle(
-    FileSystemGetHandleRequest&& /* aRequest */,
-    GetDirectoryHandleResolver&& aResolver) {
-  FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
-  aResolver(response);
+}  // namespace fs::data
 
-  return IPC_OK();
-}
+using RootPromise = MozPromise<fs::FileSystemGetRootResponse, nsresult, false>;
 
-IPCResult BackgroundFileSystemParent::RecvGetFileHandle(
-    FileSystemGetHandleRequest&& aRequest, GetFileHandleResolver&& aResolver) {
-  FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
-  aResolver(response);
+mozilla::ipc::IPCResult BackgroundFileSystemParent::RecvGetRoot(
+    Endpoint<POriginPrivateFileSystemParent>&& aParentEp,
+    GetRootResolver&& aResolver) {
+  if (!StaticPrefs::dom_fs_enabled()) {
+    return IPC_FAIL(this, "OPFS is disabled");
+  }
+  if (!aParentEp.IsValid()) {
+    return IPC_FAIL(this, "Invalid endpoint");
+  }
 
-  return IPC_OK();
-}
+  nsAutoCString origin =
+      quota::QuotaManager::GetOriginFromValidatedPrincipalInfo(mPrincipalInfo);
 
-IPCResult BackgroundFileSystemParent::RecvGetFile(
-    FileSystemGetFileRequest&& aRequest, GetFileResolver&& aResolver) {
-  FileSystemGetFileResponse response(NS_ERROR_NOT_IMPLEMENTED);
-  aResolver(response);
+  // This opens the quota manager, which has to be done on PBackground
+  auto res =
+      fs::data::FileSystemDataManager::CreateFileSystemDataManager(origin);
+  if (NS_WARN_IF(res.isErr())) {
+    MOZ_ASSERT(false, "Can't create FileSystemDataManager");
+    aResolver(fs::FileSystemGetRootResponse(NS_ERROR_FAILURE));
 
-  return IPC_OK();
-}
+    return IPC_OK();
+  }
+  nsCOMPtr<nsIThread> pbackground = NS_GetCurrentThread();
 
-IPCResult BackgroundFileSystemParent::RecvResolve(
-    FileSystemResolveRequest&& aRequest, ResolveResolver&& aResolver) {
-  FileSystemResolveResponse response(NS_ERROR_NOT_IMPLEMENTED);
-  aResolver(response);
+  nsCOMPtr<nsIEventTarget> target =
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  MOZ_ASSERT(target);
 
-  return IPC_OK();
-}
+  nsCString name("OPFS ");
+  name += origin;
+  RefPtr<TaskQueue> taskqueue =
+      TaskQueue::Create(target.forget(), PromiseFlatCString(name).get());
+  // We'll have to thread-hop back to this thread to respond.  We could
+  // just have the create be one-way, then send the actual request on the
+  // new channel, but that's an extra IPC instead.
+  InvokeAsync(
+      taskqueue, __func__,
+      [origin, parentEp = std::move(aParentEp), aResolver, data = res.unwrap(),
+       taskqueue, pbackground]() mutable {
+        RefPtr<OriginPrivateFileSystemParent> parent =
+            new OriginPrivateFileSystemParent(taskqueue);
+        if (!parentEp.Bind(parent)) {
+          auto response = fs::FileSystemGetRootResponse(NS_ERROR_FAILURE);
+          return RootPromise::CreateAndReject(response, __func__);
+        }
 
-IPCResult BackgroundFileSystemParent::RecvGetEntries(
-    FileSystemGetEntriesRequest&& aRequest, GetEntriesResolver&& aResolver) {
-  FileSystemGetEntriesResponse response(NS_ERROR_NOT_IMPLEMENTED);
-  aResolver(response);
-
-  return IPC_OK();
-}
-
-IPCResult BackgroundFileSystemParent::RecvRemoveEntry(
-    FileSystemRemoveEntryRequest&& aRequest, RemoveEntryResolver&& aResolver) {
-  FileSystemRemoveEntryResponse response(NS_ERROR_NOT_IMPLEMENTED);
-  aResolver(response);
+        // Send response back to pbackground to send to child
+        auto response =
+            fs::FileSystemGetRootResponse(fs::data::GetRootHandle(origin));
+        return RootPromise::CreateAndResolve(response, __func__);
+      })
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [aResolver](const RootPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsReject()) {
+                 aResolver(aValue.RejectValue());
+               } else {
+                 aResolver(aValue.ResolveValue());
+               }
+             });
 
   return IPC_OK();
 }

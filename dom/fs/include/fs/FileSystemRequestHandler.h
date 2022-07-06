@@ -8,6 +8,7 @@
 #define DOM_FS_CHILD_FILESYSTEMREQUESTHANDLER_H_
 
 #include "nsStringFwd.h"
+#include "mozilla/dom/FileSystemActorHolder.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/FileSystemHandle.h"
 
@@ -15,13 +16,6 @@ template <class T>
 class RefPtr;
 
 namespace mozilla::dom {
-
-// TODO: Replace this dummy class with real implementation
-class FileSystemActorHolder {
-  NS_INLINE_DECL_REFCOUNTING(FileSystemActorHolder)
- protected:
-  virtual ~FileSystemActorHolder() = default;
-};
 
 class FileSystemHandle;
 class Promise;
