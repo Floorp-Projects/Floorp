@@ -3003,6 +3003,20 @@ void AppWindow::WindowDeactivated() {
 }
 
 #ifdef USE_NATIVE_MENUS
+
+struct LoadNativeMenusListener {
+  LoadNativeMenusListener(Document* aDoc, nsIWidget* aParentWindow)
+      : mDocument(aDoc), mParentWindow(aParentWindow) {}
+
+  RefPtr<Document> mDocument;
+  nsCOMPtr<nsIWidget> mParentWindow;
+};
+
+static bool sHiddenWindowLoadedNativeMenus = true;
+static nsTArray<LoadNativeMenusListener> sLoadNativeMenusListeners;
+
+static void BeginLoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow);
+
 static void LoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
   if (gfxPlatform::IsHeadless()) {
     return;
@@ -3026,6 +3040,14 @@ static void LoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
     NativeMenuSupport::CreateNativeMenuBar(aParentWindow, menubarContent);
   } else {
     NativeMenuSupport::CreateNativeMenuBar(aParentWindow, nullptr);
+  }
+
+  if (!sHiddenWindowLoadedNativeMenus) {
+    sHiddenWindowLoadedNativeMenus = true;
+    for (auto& listener : sLoadNativeMenusListeners) {
+      BeginLoadNativeMenus(listener.mDocument, listener.mParentWindow);
+    }
+    sLoadNativeMenusListeners.Clear();
   }
 }
 
@@ -3058,6 +3080,23 @@ class L10nReadyPromiseHandler final : public dom::PromiseNativeHandler {
 };
 
 NS_IMPL_ISUPPORTS0(L10nReadyPromiseHandler)
+
+static void BeginLoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
+  RefPtr<DocumentL10n> l10n = aDoc->GetL10n();
+  if (l10n) {
+    // Wait for l10n to be ready so the menus are localized.
+    RefPtr<Promise> promise = l10n->Ready();
+    MOZ_ASSERT(promise);
+    RefPtr<L10nReadyPromiseHandler> handler =
+        new L10nReadyPromiseHandler(aDoc, aParentWindow);
+    promise->AppendNativeHandler(handler);
+  } else {
+    // Something went wrong loading the doc and l10n wasn't created. This
+    // shouldn't really happen, but if it does fallback to trying to load
+    // the menus as is.
+    LoadNativeMenus(aDoc, aParentWindow);
+  }
+}
 
 #endif
 
@@ -3157,19 +3196,10 @@ AppWindow::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
   if (cv) {
     RefPtr<Document> menubarDoc = cv->GetDocument();
     if (menubarDoc) {
-      RefPtr<DocumentL10n> l10n = menubarDoc->GetL10n();
-      if (l10n) {
-        // Wait for l10n to be ready so the menus are localized.
-        RefPtr<Promise> promise = l10n->Ready();
-        MOZ_ASSERT(promise);
-        RefPtr<L10nReadyPromiseHandler> handler =
-            new L10nReadyPromiseHandler(menubarDoc, mWindow);
-        promise->AppendNativeHandler(handler);
+      if (mIsHiddenWindow || sHiddenWindowLoadedNativeMenus) {
+        BeginLoadNativeMenus(menubarDoc, mWindow);
       } else {
-        // Something went wrong loading the doc and l10n wasn't created. This
-        // shouldn't really happen, but if it does fallback to trying to load
-        // the menus as is.
-        LoadNativeMenus(menubarDoc, mWindow);
+        sLoadNativeMenusListeners.EmplaceBack(menubarDoc, mWindow);
       }
     }
   }
