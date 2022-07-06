@@ -71,7 +71,7 @@ object SupportUtils {
     ): String {
         val escapedTopic = getEncodedTopicUTF8(topic.topicStr)
         // Remove the whitespace so a search is not triggered:
-        val appVersion = context.appVersionName?.replace(" ", "")
+        val appVersion = context.appVersionName.replace(" ", "")
         val osTarget = "Android"
         val langTag = getLanguageTag(locale)
         return "https://support.mozilla.org/1/mobile/$appVersion/$osTarget/$langTag/$escapedTopic"
