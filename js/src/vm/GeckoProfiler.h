@@ -19,6 +19,7 @@
 #include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/ProfilingCategory.h"
+#include "js/ProfilingStack.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 #include "threading/ProtectedData.h"
@@ -179,6 +180,8 @@ class MOZ_RAII GeckoProfilerEntryMarker {
 
 /*
  * RAII class to automatically add Gecko Profiler profiling stack frames.
+ * It retrieves the ProfilingStack from the JSContext and does nothing if the
+ * profiler is inactive.
  *
  * NB: The `label` string must be statically allocated.
  */
@@ -191,8 +194,9 @@ class MOZ_NONHEAP_CLASS AutoGeckoProfilerEntry {
   MOZ_ALWAYS_INLINE ~AutoGeckoProfilerEntry();
 
  private:
-  GeckoProfilerThread* profiler_;
+  ProfilingStack* profilingStack_;
 #ifdef DEBUG
+  GeckoProfilerThread* profiler_;
   uint32_t spBefore_;
 #endif
 };

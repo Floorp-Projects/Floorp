@@ -83,31 +83,33 @@ GeckoProfilerEntryMarker::~GeckoProfilerEntryMarker() {
 MOZ_ALWAYS_INLINE
 AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(
     JSContext* cx, const char* label, JS::ProfilingCategoryPair categoryPair,
-    uint32_t flags)
-    : profiler_(&cx->geckoProfiler()) {
-  if (MOZ_LIKELY(!profiler_->infraInstalled())) {
-    profiler_ = nullptr;
+    uint32_t flags) {
+  profilingStack_ = GetContextProfilingStackIfEnabled(cx);
+  if (MOZ_LIKELY(!profilingStack_)) {
 #ifdef DEBUG
+    profiler_ = nullptr;
     spBefore_ = 0;
 #endif
     return;
   }
+
 #ifdef DEBUG
+  profiler_ = &cx->geckoProfiler();
   spBefore_ = profiler_->stackPointer();
 #endif
-  profiler_->profilingStack_->pushLabelFrame(label,
-                                             /* dynamicString = */ nullptr,
-                                             /* sp = */ this, categoryPair,
-                                             flags);
+
+  profilingStack_->pushLabelFrame(label,
+                                  /* dynamicString = */ nullptr,
+                                  /* sp = */ this, categoryPair, flags);
 }
 
 MOZ_ALWAYS_INLINE
 AutoGeckoProfilerEntry::~AutoGeckoProfilerEntry() {
-  if (MOZ_LIKELY(!profiler_)) {
+  if (MOZ_LIKELY(!profilingStack_)) {
     return;
   }
 
-  profiler_->profilingStack_->pop();
+  profilingStack_->pop();
   MOZ_ASSERT(spBefore_ == profiler_->stackPointer());
 }
 
