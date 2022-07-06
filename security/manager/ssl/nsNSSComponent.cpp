@@ -2173,6 +2173,11 @@ nsresult nsNSSComponent::Init() {
 
   Telemetry::AutoScalarTimer<Telemetry::ScalarID::NETWORKING_NSS_INITIALIZATION>
       timer;
+  uint32_t zero = 0;  // Directly using 0 makes the call to ScalarSet ambiguous.
+  Telemetry::ScalarSet(Telemetry::ScalarID::SECURITY_CLIENT_AUTH_CERT_USAGE,
+                       u"requested"_ns, zero);
+  Telemetry::ScalarSet(Telemetry::ScalarID::SECURITY_CLIENT_AUTH_CERT_USAGE,
+                       u"sent"_ns, zero);
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Beginning NSS initialization\n"));
 
