@@ -15,7 +15,6 @@
 #include "Adapter.h"
 #include "DeviceLostInfo.h"
 #include "Sampler.h"
-#include "CompilationInfo.h"
 
 namespace mozilla::webgpu {
 
@@ -706,34 +705,20 @@ RawId WebGPUChild::DeviceCreateBindGroup(
   return id;
 }
 
-already_AddRefed<ShaderModule> WebGPUChild::DeviceCreateShaderModule(
-    Device* aDevice, const dom::GPUShaderModuleDescriptor& aDesc,
-    RefPtr<dom::Promise> aPromise) {
-  RawId deviceId = aDevice->mId;
-  RawId moduleId =
-      ffi::wgpu_client_make_shader_module_id(mClient.get(), deviceId);
+RawId WebGPUChild::DeviceCreateShaderModule(
+    RawId aSelfId, const dom::GPUShaderModuleDescriptor& aDesc) {
+  ffi::WGPUShaderModuleDescriptor desc = {};
 
-  RefPtr<ShaderModule> shaderModule =
-      new ShaderModule(aDevice, moduleId, aPromise);
+  desc.code = reinterpret_cast<const uint8_t*>(aDesc.mCode.get());
+  desc.code_length = aDesc.mCode.Length();
 
-  nsString noLabel;
-  const nsString& label =
-      aDesc.mLabel.WasPassed() ? aDesc.mLabel.Value() : noLabel;
-  SendDeviceCreateShaderModule(deviceId, moduleId, label, aDesc.mCode)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [aPromise,
-           shaderModule](nsTArray<WebGPUCompilationMessage>&& messages) {
-            RefPtr<CompilationInfo> infoObject(
-                new CompilationInfo(shaderModule));
-            infoObject->SetMessages(messages);
-            aPromise->MaybeResolve(infoObject);
-          },
-          [aPromise](const ipc::ResponseRejectReason& aReason) {
-            aPromise->MaybeRejectWithNotSupportedError("IPC error");
-          });
-
-  return shaderModule.forget();
+  ByteBuf bb;
+  RawId id = ffi::wgpu_client_create_shader_module(mClient.get(), aSelfId,
+                                                   &desc, ToFFI(&bb));
+  if (!SendDeviceAction(aSelfId, std::move(bb))) {
+    MOZ_CRASH("IPC failure");
+  }
+  return id;
 }
 
 RawId WebGPUChild::DeviceCreateComputePipelineImpl(

@@ -633,37 +633,6 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvDeviceCreateShaderModule(
-    RawId aSelfId, RawId aBufferId, const nsString& aLabel,
-    const nsCString& aCode, DeviceCreateShaderModuleResolver&& aOutMessage) {
-  NS_ConvertUTF16toUTF8 label(aLabel);
-
-  ffi::WGPUShaderModuleCompilationMessage message;
-
-  bool ok = ffi::wgpu_server_device_create_shader_module(
-      mContext.get(), aSelfId, aBufferId, label.get(),
-      reinterpret_cast<const uint8_t*>(aCode.get()), aCode.Length(), &message);
-
-  nsTArray<WebGPUCompilationMessage> messages;
-
-  if (!ok) {
-    WebGPUCompilationMessage msg;
-    msg.lineNum = message.line_number;
-    msg.linePos = message.line_pos;
-    msg.offset = message.utf16_offset;
-    msg.length = message.utf16_length;
-    msg.message = message.message;
-    // wgpu currently only returns errors.
-    msg.messageType = WebGPUCompilationMessageType::Error;
-
-    messages.AppendElement(msg);
-  }
-
-  aOutMessage(messages);
-
-  return IPC_OK();
-}
-
 struct PresentRequest {
   const ffi::WGPUGlobal* mContext;
   RefPtr<PresentationData> mData;

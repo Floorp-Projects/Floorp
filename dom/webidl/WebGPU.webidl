@@ -627,8 +627,9 @@ interface GPUCompilationMessage {
 [Pref="dom.webgpu.enabled",
  Exposed=(Window,DedicatedWorker)]
 interface GPUCompilationInfo {
-    [Cached, Frozen, Pure]
-    readonly attribute sequence<GPUCompilationMessage> messages;
+    //TODO:
+    //[Cached, Frozen, Pure]
+    //readonly attribute sequence<GPUCompilationMessage> messages;
 };
 
 // ShaderModule
@@ -642,8 +643,8 @@ dictionary GPUShaderModuleDescriptor : GPUObjectDescriptorBase {
 [Pref="dom.webgpu.enabled",
  Exposed=(Window,DedicatedWorker)]
 interface GPUShaderModule {
-    [Throws]
-    Promise<GPUCompilationInfo> compilationInfo();
+    //TODO:
+    //Promise<GPUCompilationInfo> compilationInfo();
 };
 GPUShaderModule includes GPUObjectBase;
 
