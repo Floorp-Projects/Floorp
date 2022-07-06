@@ -61,6 +61,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    disneyplus: {
+      "https://*.disneyplus.com/*": {
+        videoWrapperScriptPath: "video-wrappers/disneyplus.js",
+      },
+    },
+
     funimation: {
       "https://*.funimation.com/*": {
         videoWrapperScriptPath: "video-wrappers/funimation.js",
