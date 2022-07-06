@@ -41,7 +41,8 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   SpecialPowers.pushPrefEnv({
     "set":[["general.smoothScroll", false],
-           ["mousewheel.system_scroll_override.enabled", false]]
+           ["mousewheel.system_scroll_override.enabled", false],
+           ["test.events.async.enabled", true]]
     }, runTests)
   }, window);
 
