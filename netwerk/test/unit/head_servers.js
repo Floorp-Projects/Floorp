@@ -409,14 +409,75 @@ class HTTP2ProxyCode {
       key: fs.readFileSync(__dirname + "/http2-cert.key"),
       cert: fs.readFileSync(__dirname + "/http2-cert.pem"),
     };
-    const https = require("https");
-    global.proxy = https.createServer(options, BaseProxyCode.proxyHandler);
-    global.proxy.on("connect", BaseProxyCode.onConnect);
+    const http2 = require("http2");
+    global.proxy = http2.createSecureServer(options);
+    this.setupProxy();
 
     await global.proxy.listen(port);
     let proxyPort = global.proxy.address().port;
     await ADB.forwardPort(proxyPort);
     return proxyPort;
+  }
+
+  static setupProxy() {
+    if (!global.proxy) {
+      throw new Error("proxy is null");
+    }
+
+    global.proxy.on("stream", (stream, headers) => {
+      if (headers[":scheme"] === "http") {
+        const http = require("http");
+        let url = `${headers[":scheme"]}://${headers[":authority"]}${headers[":path"]}`;
+        http
+          .get(url, { method: headers[":method"] }, proxyresp => {
+            let headers = Object.assign({}, proxyresp.headers);
+            // Filter out some prohibited headers.
+            ["connection", "transfer-encoding", "keep-alive"].forEach(prop => {
+              delete headers[prop];
+            });
+            stream.respond(
+              Object.assign({ ":status": proxyresp.statusCode }, headers)
+            );
+            proxyresp.on("data", chunk => {
+              stream.write(chunk);
+            });
+            proxyresp.on("end", () => {
+              stream.end();
+            });
+          })
+          .on("error", e => {
+            console.log(`sock err: ${e}`);
+          });
+        return;
+      }
+      if (headers[":method"] !== "CONNECT") {
+        // Only accept CONNECT requests
+        stream.respond({ ":status": 405 });
+        stream.end();
+        return;
+      }
+
+      const target = headers[":authority"];
+      const { port } = new URL(`https://${target}`);
+      const net = require("net");
+      const socket = net.connect(port, "127.0.0.1", () => {
+        try {
+          stream.respond({ ":status": 200 });
+          socket.pipe(stream);
+          stream.pipe(socket);
+        } catch (exception) {
+          console.log(exception);
+          stream.close();
+        }
+      });
+      socket.on("error", error => {
+        // On windows platform, the sockeet is closed with ECONNRESET in the end.
+        if (error.errno == "ECONNRESET") {
+          return;
+        }
+        throw `Unxpected error when conneting the HTTP/2 server from the HTTP/2 proxy during CONNECT handling: '${error}'`;
+      });
+    });
   }
 }
 
