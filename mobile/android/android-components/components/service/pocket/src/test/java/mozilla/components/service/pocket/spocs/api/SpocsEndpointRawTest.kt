@@ -6,6 +6,7 @@ package mozilla.components.service.pocket.spocs.api
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.service.pocket.helpers.MockResponses
 import mozilla.components.service.pocket.helpers.assertClassVisibility
@@ -16,6 +17,7 @@ import mozilla.components.service.pocket.stories.api.PocketEndpointRaw
 import mozilla.components.service.pocket.stories.api.PocketEndpointRaw.Companion
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -61,7 +63,8 @@ class SpocsEndpointRawTest {
     }
 
     @Test
-    fun `WHEN requesting spocs THEN the pocket proxy url is used`() {
+    fun `GIVEN a debug build WHEN requesting spocs THEN the appropriate pocket proxy url is used`() {
+        SpocsEndpointRaw.isDebugBuild = true
         val expectedUrl = "https://spocs.getpocket.dev/spocs"
 
         assertRequestParams(
@@ -71,6 +74,50 @@ class SpocsEndpointRawTest {
             },
             assertParams = { request ->
                 assertEquals(expectedUrl, request.url)
+                assertEquals(Request.Method.POST, request.method)
+
+                val requestBody = JSONObject(
+                    request.body!!.useStream {
+                        it.bufferedReader().readText()
+                    }
+                )
+                assertEquals(2, requestBody["version"])
+                assertEquals(appId, requestBody["consumer_key"])
+                assertEquals(profileId.toString(), requestBody["pocket_id"])
+
+                request.headers!!.first {
+                    it.name.equals("Content-Type", true)
+                }.value.contains("application/json", true)
+            }
+        )
+    }
+
+    @Test
+    fun `GIVEN a release build WHEN requesting spocs THEN the appropriate pocket proxy url is used`() {
+        SpocsEndpointRaw.isDebugBuild = false
+        val expectedUrl = "https://spocs.getpocket.com/spocs"
+
+        assertRequestParams(
+            client,
+            makeRequest = {
+                endpoint.getSponsoredStories()
+            },
+            assertParams = { request ->
+                assertEquals(expectedUrl, request.url)
+                assertEquals(Request.Method.POST, request.method)
+
+                val requestBody = JSONObject(
+                    request.body!!.useStream {
+                        it.bufferedReader().readText()
+                    }
+                )
+                assertEquals(2, requestBody["version"])
+                assertEquals(appId, requestBody["consumer_key"])
+                assertEquals(profileId.toString(), requestBody["pocket_id"])
+
+                request.headers!!.first {
+                    it.name.equals("Content-Type", true)
+                }.value.contains("application/json", true)
             }
         )
     }
@@ -94,6 +141,40 @@ class SpocsEndpointRawTest {
         doReturn(errorResponse).`when`(client).fetch(any())
 
         assertNull(endpoint.getSponsoredStories())
+    }
+
+    @Test
+    fun `GIVEN a debug build WHEN requesting profile deletion THEN the appropriate pocket proxy url is used`() {
+        SpocsEndpointRaw.isDebugBuild = true
+        val expectedUrl = "https://spocs.getpocket.dev/user"
+
+        assertRequestParams(
+            client,
+            makeRequest = {
+                endpoint.deleteProfile()
+            },
+            assertParams = { request ->
+                assertEquals(expectedUrl, request.url)
+                assertEquals(Request.Method.DELETE, request.method)
+            }
+        )
+    }
+
+    @Test
+    fun `GIVEN a release build WHEN requesting profile deletion THEN the appropriate pocket proxy url is used`() {
+        SpocsEndpointRaw.isDebugBuild = false
+        val expectedUrl = "https://spocs.getpocket.com/user"
+
+        assertRequestParams(
+            client,
+            makeRequest = {
+                endpoint.deleteProfile()
+            },
+            assertParams = { request ->
+                assertEquals(expectedUrl, request.url)
+                assertEquals(Request.Method.DELETE, request.method)
+            }
+        )
     }
 
     @Test
@@ -153,5 +234,21 @@ class SpocsEndpointRawTest {
         val result = Companion.newInstance(client)
 
         assertSame(client, result.client)
+    }
+
+    @Test
+    fun `GIVEN a debug build WHEN querying the base url THEN use the development endpoint`() {
+        SpocsEndpointRaw.isDebugBuild = true
+        val expectedUrl = "https://spocs.getpocket.dev/"
+
+        assertEquals(expectedUrl, SpocsEndpointRaw.baseUrl)
+    }
+
+    @Test
+    fun `GIVEN a release build WHEN querying the base url THEN use the production endpoint`() {
+        SpocsEndpointRaw.isDebugBuild = false
+        val expectedUrl = "https://spocs.getpocket.com/"
+
+        assertEquals(expectedUrl, SpocsEndpointRaw.baseUrl)
     }
 }

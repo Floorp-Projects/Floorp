@@ -13,6 +13,7 @@ import mozilla.components.concept.fetch.Request.Body
 import mozilla.components.concept.fetch.Request.Method
 import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.fetch.isSuccess
+import mozilla.components.service.pocket.BuildConfig
 import mozilla.components.service.pocket.ext.fetchBodyOrNull
 import mozilla.components.service.pocket.logger
 import mozilla.components.service.pocket.spocs.api.SpocsEndpointRaw.Companion.newInstance
@@ -21,11 +22,12 @@ import org.json.JSONObject
 import java.io.IOException
 import java.util.UUID
 
-private const val SPOCS_ENDPOINT_BASE_URL = "https://spocs.getpocket.dev/"
+private const val SPOCS_ENDPOINT_DEV_BASE_URL = "https://spocs.getpocket.dev/"
+private const val SPOCS_ENDPOINT_PROD_BASE_URL = "https://spocs.getpocket.com/"
 private const val SPOCS_ENDPOINT_DOWNLOAD_SPOCS_PATH = "spocs"
 private const val SPOCS_ENDPOINT_DELETE_PROFILE_PATH = "user"
 private const val SPOCS_PROXY_VERSION_KEY = "version"
-private const val SPOCS_PROXY_VERSION_VALUE = "2"
+private const val SPOCS_PROXY_VERSION_VALUE = 2
 private const val SPOCS_PROXY_PROFILE_KEY = "pocket_id"
 private const val SPOCS_PROXY_APP_KEY = "consumer_key"
 
@@ -48,7 +50,7 @@ internal class SpocsEndpointRaw internal constructor(
     @WorkerThread
     fun getSponsoredStories(): String? {
         val request = Request(
-            url = SPOCS_ENDPOINT_BASE_URL + SPOCS_ENDPOINT_DOWNLOAD_SPOCS_PATH,
+            url = baseUrl + SPOCS_ENDPOINT_DOWNLOAD_SPOCS_PATH,
             method = Method.POST,
             headers = getRequestHeaders(),
             body = getDownloadStoriesRequestBody()
@@ -64,7 +66,7 @@ internal class SpocsEndpointRaw internal constructor(
     @WorkerThread
     fun deleteProfile(): Boolean {
         val request = Request(
-            url = SPOCS_ENDPOINT_BASE_URL + SPOCS_ENDPOINT_DELETE_PROFILE_PATH,
+            url = baseUrl + SPOCS_ENDPOINT_DELETE_PROFILE_PATH,
             method = Method.DELETE,
             headers = getRequestHeaders(),
             body = getDeleteProfileRequestBody()
@@ -114,5 +116,22 @@ internal class SpocsEndpointRaw internal constructor(
         fun newInstance(client: Client, profileId: UUID, appId: String): SpocsEndpointRaw {
             return SpocsEndpointRaw(client, profileId, appId)
         }
+
+        /**
+         * Convenience for checking whether the current build is a debug build and overwriting this in tests.
+         */
+        @VisibleForTesting
+        internal var isDebugBuild = BuildConfig.DEBUG
+
+        /**
+         * Get the base url for sponsored stories specific to development or production.
+         */
+        @VisibleForTesting
+        internal val baseUrl
+            get() = if (isDebugBuild) {
+                SPOCS_ENDPOINT_DEV_BASE_URL
+            } else {
+                SPOCS_ENDPOINT_PROD_BASE_URL
+            }
     }
 }

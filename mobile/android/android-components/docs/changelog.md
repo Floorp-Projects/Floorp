@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **service-pocket**
+  * Fix recent breakage of the sponsored stories feature and allow to dynamically make requests to either the development server or the production one. [Issue #12432](https://github.com/mozilla-mobile/android-components/issues/12432)
+
 * **feature-top-sites**
   * Replaced `frecencyConfig` from `TopSitesConfig` with `TopSitesFrecencyConfig`, which specifies the `FrecencyTresholdOption` and the frecency filter, an optional function used to filter the top frecent sites. [#12384] (https://github.com/mozilla-mobile/android-components/issues/12384)
 
