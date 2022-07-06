@@ -25,7 +25,7 @@ add_task(async function setup() {
 
 async function checkOrder(type, expectedOrder) {
   // Reset the sorted list.
-  Services.search.wrappedJSObject.__sortedEngines = null;
+  Services.search.wrappedJSObject._cachedSortedEngines = null;
 
   const sortedEngines = await Services.search[type]();
   Assert.deepEqual(
