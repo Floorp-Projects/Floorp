@@ -8,6 +8,7 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.utils.Settings
@@ -76,7 +77,7 @@ internal class DefaultMetricsStorage(
 
         fun shouldSendGenerally(context: Context): Boolean {
             val installedTime = context.packageManager
-                .getPackageInfo(context.packageName, 0)
+                .getPackageInfoCompat(context.packageName, 0)
                 .firstInstallTime
             val timeDifference = System.currentTimeMillis() - installedTime
             val withinWindow = timeDifference in windowStartMillis..windowEndMillis

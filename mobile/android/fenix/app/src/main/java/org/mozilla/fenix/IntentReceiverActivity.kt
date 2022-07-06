@@ -15,6 +15,7 @@ import mozilla.components.feature.intent.ext.sanitize
 import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.support.utils.EXTRA_ACTIVITY_REFERRER_CATEGORY
 import mozilla.components.support.utils.EXTRA_ACTIVITY_REFERRER_PACKAGE
+import mozilla.components.support.utils.ext.getApplicationInfoCompat
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity.Companion.PRIVATE_BROWSING_MODE
 import org.mozilla.fenix.components.IntentProcessorType
@@ -125,7 +126,7 @@ class IntentReceiverActivity : Activity() {
             // Category is supported for API>=26.
             r.host?.let { host ->
                 try {
-                    val category = packageManager.getApplicationInfo(host, 0).category
+                    val category = packageManager.getApplicationInfoCompat(host, 0).category
                     intent.putExtra(EXTRA_ACTIVITY_REFERRER_CATEGORY, category)
                 } catch (e: PackageManager.NameNotFoundException) {
                     // At least we tried.

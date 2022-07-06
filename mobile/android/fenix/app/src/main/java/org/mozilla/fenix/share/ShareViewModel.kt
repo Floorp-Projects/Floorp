@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.feature.share.RecentAppsStorage
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.support.utils.ext.queryIntentActivitiesCompat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
@@ -162,7 +163,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
     @VisibleForTesting
     @WorkerThread
     fun getIntentActivities(shareIntent: Intent, context: Context): List<ResolveInfo>? {
-        return context.packageManager.queryIntentActivities(shareIntent, 0)
+        return context.packageManager.queryIntentActivitiesCompat(shareIntent, 0)
     }
 
     /**
