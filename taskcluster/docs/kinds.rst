@@ -726,3 +726,7 @@ fxrecord
 
 Visual metrics computation of desktop Firefox startup. The performance team
 monitors this task to watch for regressions in Firefox startup performance.
+
+are-we-esmified-yet
+---------------------
+Collects data about the transition to ECMAScript Modules from JSMs.

@@ -1322,3 +1322,13 @@ def target_tasks_l10n_cross_channel(full_task_graph, parameters, graph_config):
         return task.kind in ["l10n-cross-channel"]
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
+
+
+@_target_task("are-we-esmified-yet")
+def target_tasks_are_we_esmified_yet(full_task_graph, parameters, graph_config):
+    """
+    select the task to track the progress of the esmification project
+    """
+    return [
+        l for l, t in full_task_graph.tasks.items() if t.kind == "are-we-esmified-yet"
+    ]
