@@ -83,6 +83,7 @@ module.exports = {
       files: ["**/*.mjs"],
       rules: {
         "mozilla/reject-import-system-module-from-non-system": "error",
+        "mozilla/reject-lazy-imports-into-globals": "error",
       },
     },
     {

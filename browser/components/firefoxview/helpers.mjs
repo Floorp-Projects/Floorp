@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(globalThis, {
-  Services: "resource://gre/modules/Services.jsm",
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
-});
 
 export function formatURIForDisplay(uriString) {
   // TODO: Bug 1764816: Make sure we handle file:///, jar:, blob, IP4/IP6 etc. addresses
@@ -53,7 +54,7 @@ export function convertTimestamp(timestamp, fluentStrings) {
 
 export function createFaviconElement(image) {
   const imageUrl = image
-    ? PlacesUIUtils.getImageURL(image)
+    ? lazy.PlacesUIUtils.getImageURL(image)
     : "chrome://global/skin/icons/defaultFavicon.svg";
   let favicon = document.createElement("div");
 
