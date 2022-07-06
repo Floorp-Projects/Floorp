@@ -105,34 +105,11 @@ bool ImportEntryObject::isInstance(HandleValue value) {
 }
 
 /* static */
-bool GlobalObject::initImportEntryProto(JSContext* cx,
-                                        Handle<GlobalObject*> global) {
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto) {
-    return false;
-  }
-
-  if (!DefinePropertiesAndFunctions(cx, proto, nullptr, nullptr)) {
-    return false;
-  }
-
-  global->initBuiltinProto(ProtoKind::ImportEntryProto, proto);
-  return true;
-}
-
-/* static */
 ImportEntryObject* ImportEntryObject::create(
     JSContext* cx, HandleObject moduleRequest, Handle<JSAtom*> maybeImportName,
     Handle<JSAtom*> localName, uint32_t lineNumber, uint32_t columnNumber) {
-  RootedObject proto(
-      cx, GlobalObject::getOrCreateImportEntryPrototype(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
   ImportEntryObject* self =
-      NewObjectWithGivenProto<ImportEntryObject>(cx, proto);
+      NewObjectWithGivenProto<ImportEntryObject>(cx, nullptr);
   if (!self) {
     return nullptr;
   }
@@ -170,23 +147,6 @@ bool ExportEntryObject::isInstance(HandleValue value) {
 }
 
 /* static */
-bool GlobalObject::initExportEntryProto(JSContext* cx,
-                                        Handle<GlobalObject*> global) {
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto) {
-    return false;
-  }
-
-  if (!DefinePropertiesAndFunctions(cx, proto, nullptr, nullptr)) {
-    return false;
-  }
-
-  global->initBuiltinProto(ProtoKind::ExportEntryProto, proto);
-  return true;
-}
-
-/* static */
 ExportEntryObject* ExportEntryObject::create(
     JSContext* cx, Handle<JSAtom*> maybeExportName, HandleObject moduleRequest,
     Handle<JSAtom*> maybeImportName, Handle<JSAtom*> maybeLocalName,
@@ -194,14 +154,8 @@ ExportEntryObject* ExportEntryObject::create(
   // Line and column numbers are optional for export entries since direct
   // entries are checked at parse time.
 
-  RootedObject proto(
-      cx, GlobalObject::getOrCreateExportEntryPrototype(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
   ExportEntryObject* self =
-      NewObjectWithGivenProto<ExportEntryObject>(cx, proto);
+      NewObjectWithGivenProto<ExportEntryObject>(cx, nullptr);
   if (!self) {
     return nullptr;
   }
@@ -237,35 +191,12 @@ bool RequestedModuleObject::isInstance(HandleValue value) {
 }
 
 /* static */
-bool GlobalObject::initRequestedModuleProto(JSContext* cx,
-                                            Handle<GlobalObject*> global) {
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto) {
-    return false;
-  }
-
-  if (!DefinePropertiesAndFunctions(cx, proto, nullptr, nullptr)) {
-    return false;
-  }
-
-  global->initBuiltinProto(ProtoKind::RequestedModuleProto, proto);
-  return true;
-}
-
-/* static */
 RequestedModuleObject* RequestedModuleObject::create(JSContext* cx,
                                                      HandleObject moduleRequest,
                                                      uint32_t lineNumber,
                                                      uint32_t columnNumber) {
-  RootedObject proto(
-      cx, GlobalObject::getOrCreateRequestedModulePrototype(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
   RequestedModuleObject* self =
-      NewObjectWithGivenProto<RequestedModuleObject>(cx, proto);
+      NewObjectWithGivenProto<RequestedModuleObject>(cx, nullptr);
   if (!self) {
     return nullptr;
   }
@@ -299,33 +230,10 @@ bool ResolvedBindingObject::isInstance(HandleValue value) {
 }
 
 /* static */
-bool GlobalObject::initResolvedBindingProto(JSContext* cx,
-                                            Handle<GlobalObject*> global) {
-  Rooted<JSObject*> proto(
-      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto) {
-    return false;
-  }
-
-  if (!DefinePropertiesAndFunctions(cx, proto, nullptr, nullptr)) {
-    return false;
-  }
-
-  global->initBuiltinProto(ProtoKind::ResolvedBindingProto, proto);
-  return true;
-}
-
-/* static */
 ResolvedBindingObject* ResolvedBindingObject::create(
     JSContext* cx, Handle<ModuleObject*> module, Handle<JSAtom*> bindingName) {
-  Rooted<JSObject*> proto(
-      cx, GlobalObject::getOrCreateResolvedBindingPrototype(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
   ResolvedBindingObject* self =
-      NewObjectWithGivenProto<ResolvedBindingObject>(cx, proto);
+      NewObjectWithGivenProto<ResolvedBindingObject>(cx, nullptr);
   if (!self) {
     return nullptr;
   }
@@ -359,34 +267,11 @@ bool ModuleRequestObject::isInstance(HandleValue value) {
 }
 
 /* static */
-bool GlobalObject::initModuleRequestProto(JSContext* cx,
-                                          Handle<GlobalObject*> global) {
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto) {
-    return false;
-  }
-
-  if (!DefinePropertiesAndFunctions(cx, proto, nullptr, nullptr)) {
-    return false;
-  }
-
-  global->initBuiltinProto(ProtoKind::ModuleRequestProto, proto);
-  return true;
-}
-
-/* static */
 ModuleRequestObject* ModuleRequestObject::create(
     JSContext* cx, Handle<JSAtom*> specifier,
     Handle<ArrayObject*> maybeAssertions) {
-  RootedObject proto(
-      cx, GlobalObject::getOrCreateModuleRequestPrototype(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
   ModuleRequestObject* self =
-      NewObjectWithGivenProto<ModuleRequestObject>(cx, proto);
+      NewObjectWithGivenProto<ModuleRequestObject>(cx, nullptr);
   if (!self) {
     return nullptr;
   }
@@ -841,14 +726,8 @@ static void InitFunctionDeclarations(
 
 /* static */
 ModuleObject* ModuleObject::create(JSContext* cx) {
-  RootedObject proto(
-      cx, GlobalObject::getOrCreateModulePrototype(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
-  Rooted<ModuleObject*> self(cx,
-                             NewObjectWithGivenProto<ModuleObject>(cx, proto));
+  Rooted<ModuleObject*> self(
+      cx, NewObjectWithGivenProto<ModuleObject>(cx, nullptr));
   if (!self) {
     return nullptr;
   }
@@ -1384,23 +1263,6 @@ bool ModuleObject::createEnvironment(JSContext* cx,
   }
 
   self->setInitialEnvironment(env);
-  return true;
-}
-
-/* static */
-bool GlobalObject::initModuleProto(JSContext* cx,
-                                   Handle<GlobalObject*> global) {
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto) {
-    return false;
-  }
-
-  if (!DefinePropertiesAndFunctions(cx, proto, nullptr, nullptr)) {
-    return false;
-  }
-
-  global->initBuiltinProto(ProtoKind::ModuleProto, proto);
   return true;
 }
 
