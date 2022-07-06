@@ -47,6 +47,7 @@ dependencies {
     implementation Dependencies.kotlin_coroutines
 
     implementation Dependencies.androidx_work_runtime
+    implementation Dependencies.androidx_lifecycle_process
 
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')

@@ -31,6 +31,7 @@ data class SyncState(
  * Becomes [Started] during the length of a Sync.
  * Becomes [Idle] when a Sync is completed.
  * Becomes [Error] when a Sync encounters an error.
+ * Becomes [LoggedOut] when Sync is logged out.
  *
  * See [WorkManagerSyncManager] for implementation details.
  */
@@ -38,7 +39,8 @@ enum class SyncStatus {
     Started,
     Idle,
     Error,
-    NotInitialized
+    NotInitialized,
+    LoggedOut,
 }
 
 /**

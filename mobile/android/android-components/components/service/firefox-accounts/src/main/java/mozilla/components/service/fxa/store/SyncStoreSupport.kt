@@ -5,6 +5,7 @@
 package mozilla.components.service.fxa.store
 
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,9 +33,9 @@ import java.lang.Exception
 class SyncStoreSupport(
     private val store: SyncStore,
     private val fxaAccountManager: Lazy<FxaAccountManager>,
-    private val lifecycleOwner: LifecycleOwner,
+    private val lifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get(),
     private val autoPause: Boolean = false,
-    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) {
     /**
      * Initialize the integration. This will cause it to register itself as an observer
@@ -95,15 +96,21 @@ internal class FxaAccountObserver(
     private val coroutineScope: CoroutineScope,
 ) : AccountObserver {
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-        account.deviceConstellation().registerDeviceObserver(
-            deviceConstellationObserver,
-            owner = lifecycleOwner,
-            autoPause = autoPause
-        )
+        coroutineScope.launch(Dispatchers.Main) {
+            account.deviceConstellation().registerDeviceObserver(
+                deviceConstellationObserver,
+                owner = lifecycleOwner,
+                autoPause = autoPause
+            )
+        }
         coroutineScope.launch {
             val syncAccount = account.getProfile()?.toAccount(account) ?: return@launch
             store.dispatch(SyncAction.UpdateAccount(syncAccount))
         }
+    }
+
+    override fun onLoggedOut() {
+        store.dispatch(SyncAction.UpdateSyncStatus(SyncStatus.LoggedOut))
     }
 }
 

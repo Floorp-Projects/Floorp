@@ -1,10 +1,13 @@
 package mozilla.components.service.fxa.store
 
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import mozilla.components.concept.sync.Avatar
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceConstellation
@@ -39,6 +42,8 @@ class SyncStoreSupportTest {
 
     @Before
     fun setup() {
+        Dispatchers.setMain(StandardTestDispatcher())
+
         store = SyncStore()
         syncObserver = AccountSyncObserver(store)
         constellationObserver = ConstellationObserver(store)
@@ -92,13 +97,14 @@ class SyncStoreSupportTest {
     }
 
     @Test
-    fun `GIVEN account observer WHEN onAuthenticated observed THEN device observer registered`() {
+    fun `GIVEN account observer WHEN onAuthenticated observed THEN device observer registered`() = runTest {
         val constellation = mock<DeviceConstellation>()
         val account = mock<OAuthAccount> {
             whenever(deviceConstellation()).thenReturn(constellation)
         }
 
         accountObserver.onAuthenticated(account, mock())
+        runCurrent()
 
         verify(constellation).registerDeviceObserver(constellationObserver, lifecycleOwner, autoPause)
     }
@@ -142,6 +148,14 @@ class SyncStoreSupportTest {
 
         store.waitUntilIdle()
         assertEquals(null, store.state.account)
+    }
+
+    @Test
+    fun `GIVEN account observer WHEN onLoggedOut observed THEN sync status updated`() {
+        accountObserver.onLoggedOut()
+
+        store.waitUntilIdle()
+        assertEquals(SyncStatus.LoggedOut, store.state.status)
     }
 
     @Test
