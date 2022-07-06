@@ -10,6 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemFileHandleBinding.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
+#include "mozilla/dom/POriginPrivateFileSystem.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla::dom {
@@ -19,13 +20,15 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(FileSystemFileHandle,
 NS_IMPL_CYCLE_COLLECTION_INHERITED(FileSystemFileHandle, FileSystemHandle)
 
 FileSystemFileHandle::FileSystemFileHandle(
-    nsIGlobalObject* aGlobal, const fs::FileSystemEntryMetadata& aMetadata,
+    nsIGlobalObject* aGlobal, RefPtr<FileSystemActorHolder>& aActor,
+    const fs::FileSystemEntryMetadata& aMetadata,
     fs::FileSystemRequestHandler* aRequestHandler)
-    : FileSystemHandle(aGlobal, aMetadata, aRequestHandler) {}
+    : FileSystemHandle(aGlobal, aActor, aMetadata, aRequestHandler) {}
 
 FileSystemFileHandle::FileSystemFileHandle(
-    nsIGlobalObject* aGlobal, const fs::FileSystemEntryMetadata& aMetadata)
-    : FileSystemFileHandle(aGlobal, aMetadata,
+    nsIGlobalObject* aGlobal, RefPtr<FileSystemActorHolder>& aActor,
+    const fs::FileSystemEntryMetadata& aMetadata)
+    : FileSystemFileHandle(aGlobal, aActor, aMetadata,
                            new fs::FileSystemRequestHandler()) {}
 
 // WebIDL Boilerplate
