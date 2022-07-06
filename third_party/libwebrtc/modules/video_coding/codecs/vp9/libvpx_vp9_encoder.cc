@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
 #include "api/video/color_space.h"
@@ -1049,37 +1050,17 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
   // doing this.
   input_image_ = &input_image;
 
-  // Keep reference to buffer until encode completes.
-  rtc::scoped_refptr<const VideoFrameBuffer> video_frame_buffer;
+  // In case we need to map the buffer, |mapped_buffer| is used to keep it alive
+  // through reference counting until after encoding has finished.
+  rtc::scoped_refptr<const VideoFrameBuffer> mapped_buffer;
   const I010BufferInterface* i010_buffer;
   rtc::scoped_refptr<const I010BufferInterface> i010_copy;
   switch (profile_) {
     case VP9Profile::kProfile0: {
-      if (input_image.video_frame_buffer()->type() ==
-          VideoFrameBuffer::Type::kNV12) {
-        const NV12BufferInterface* nv12_buffer =
-            input_image.video_frame_buffer()->GetNV12();
-        video_frame_buffer = nv12_buffer;
-        MaybeRewrapRawWithFormat(VPX_IMG_FMT_NV12);
-        raw_->planes[VPX_PLANE_Y] = const_cast<uint8_t*>(nv12_buffer->DataY());
-        raw_->planes[VPX_PLANE_U] = const_cast<uint8_t*>(nv12_buffer->DataUV());
-        raw_->planes[VPX_PLANE_V] = raw_->planes[VPX_PLANE_U] + 1;
-        raw_->stride[VPX_PLANE_Y] = nv12_buffer->StrideY();
-        raw_->stride[VPX_PLANE_U] = nv12_buffer->StrideUV();
-        raw_->stride[VPX_PLANE_V] = nv12_buffer->StrideUV();
-      } else {
-        rtc::scoped_refptr<I420BufferInterface> i420_buffer =
-            input_image.video_frame_buffer()->ToI420();
-        video_frame_buffer = i420_buffer;
-        MaybeRewrapRawWithFormat(VPX_IMG_FMT_I420);
-        // Image in vpx_image_t format.
-        // Input image is const. VPX's raw image is not defined as const.
-        raw_->planes[VPX_PLANE_Y] = const_cast<uint8_t*>(i420_buffer->DataY());
-        raw_->planes[VPX_PLANE_U] = const_cast<uint8_t*>(i420_buffer->DataU());
-        raw_->planes[VPX_PLANE_V] = const_cast<uint8_t*>(i420_buffer->DataV());
-        raw_->stride[VPX_PLANE_Y] = i420_buffer->StrideY();
-        raw_->stride[VPX_PLANE_U] = i420_buffer->StrideU();
-        raw_->stride[VPX_PLANE_V] = i420_buffer->StrideV();
+      mapped_buffer =
+          PrepareBufferForProfile0(input_image.video_frame_buffer());
+      if (!mapped_buffer) {
+        return WEBRTC_VIDEO_CODEC_ERROR;
       }
       break;
     }
@@ -1941,6 +1922,90 @@ void LibvpxVp9Encoder::MaybeRewrapRawWithFormat(const vpx_img_fmt fmt) {
                              nullptr);
   }
   // else no-op since the image is already in the right format.
+}
+
+rtc::scoped_refptr<VideoFrameBuffer> LibvpxVp9Encoder::PrepareBufferForProfile0(
+    rtc::scoped_refptr<VideoFrameBuffer> buffer) {
+  absl::InlinedVector<VideoFrameBuffer::Type, kMaxPreferredPixelFormats>
+      supported_formats = {VideoFrameBuffer::Type::kI420,
+                           VideoFrameBuffer::Type::kNV12};
+
+  rtc::scoped_refptr<VideoFrameBuffer> mapped_buffer;
+  if (buffer->type() != VideoFrameBuffer::Type::kNative) {
+    // |buffer| is already mapped.
+    mapped_buffer = buffer;
+  } else {
+    // Attempt to map to one of the supported formats.
+    mapped_buffer = buffer->GetMappedFrameBuffer(supported_formats);
+  }
+  if (!mapped_buffer ||
+      (absl::c_find(supported_formats, mapped_buffer->type()) ==
+           supported_formats.end() &&
+       mapped_buffer->type() != VideoFrameBuffer::Type::kI420A)) {
+    // Unknown pixel format or unable to map, convert to I420 and prepare that
+    // buffer instead to ensure Scale() is safe to use.
+    rtc::scoped_refptr<VideoFrameBuffer> converted_buffer = buffer->ToI420();
+    if (!converted_buffer) {
+      RTC_LOG(LS_ERROR) << "Failed to convert "
+                        << VideoFrameBufferTypeToString(buffer->type())
+                        << " image to I420. Can't encode frame.";
+      return {};
+    }
+    // The buffer should now be a mapped I420 or I420A format, but some buffer
+    // implementations incorrectly return the wrong buffer format, such as
+    // kNative. As a workaround to this, we retry GetMappedFrameBuffer+ToI420.
+    // TODO(https://crbug.com/webrtc/12602): When Android buffers have a correct
+    // ToI420() implementaion, remove his workaround.
+    if (converted_buffer->type() != VideoFrameBuffer::Type::kI420 &&
+        converted_buffer->type() != VideoFrameBuffer::Type::kI420A) {
+      if (converted_buffer->type() == VideoFrameBuffer::Type::kNative) {
+        auto mapped_converted_buffer =
+            converted_buffer->GetMappedFrameBuffer(supported_formats);
+        if (mapped_converted_buffer)
+          converted_buffer = mapped_converted_buffer;
+      }
+      if (converted_buffer->type() != VideoFrameBuffer::Type::kI420 &&
+          converted_buffer->type() != VideoFrameBuffer::Type::kI420A) {
+        converted_buffer = converted_buffer->ToI420();
+      }
+      RTC_CHECK(converted_buffer->type() == VideoFrameBuffer::Type::kI420 ||
+                converted_buffer->type() == VideoFrameBuffer::Type::kI420A);
+    }
+    // Because |buffer| had to be converted, use |converted_buffer| instead.
+    buffer = mapped_buffer = converted_buffer;
+  }
+
+  // Prepare |raw_| from |mapped_buffer|.
+  switch (mapped_buffer->type()) {
+    case VideoFrameBuffer::Type::kI420:
+    case VideoFrameBuffer::Type::kI420A: {
+      MaybeRewrapRawWithFormat(VPX_IMG_FMT_I420);
+      const I420BufferInterface* i420_buffer = mapped_buffer->GetI420();
+      RTC_DCHECK(i420_buffer);
+      raw_->planes[VPX_PLANE_Y] = const_cast<uint8_t*>(i420_buffer->DataY());
+      raw_->planes[VPX_PLANE_U] = const_cast<uint8_t*>(i420_buffer->DataU());
+      raw_->planes[VPX_PLANE_V] = const_cast<uint8_t*>(i420_buffer->DataV());
+      raw_->stride[VPX_PLANE_Y] = i420_buffer->StrideY();
+      raw_->stride[VPX_PLANE_U] = i420_buffer->StrideU();
+      raw_->stride[VPX_PLANE_V] = i420_buffer->StrideV();
+      break;
+    }
+    case VideoFrameBuffer::Type::kNV12: {
+      MaybeRewrapRawWithFormat(VPX_IMG_FMT_NV12);
+      const NV12BufferInterface* nv12_buffer = mapped_buffer->GetNV12();
+      RTC_DCHECK(nv12_buffer);
+      raw_->planes[VPX_PLANE_Y] = const_cast<uint8_t*>(nv12_buffer->DataY());
+      raw_->planes[VPX_PLANE_U] = const_cast<uint8_t*>(nv12_buffer->DataUV());
+      raw_->planes[VPX_PLANE_V] = raw_->planes[VPX_PLANE_U] + 1;
+      raw_->stride[VPX_PLANE_Y] = nv12_buffer->StrideY();
+      raw_->stride[VPX_PLANE_U] = nv12_buffer->StrideUV();
+      raw_->stride[VPX_PLANE_V] = nv12_buffer->StrideUV();
+      break;
+    }
+    default:
+      RTC_NOTREACHED();
+  }
+  return mapped_buffer;
 }
 
 }  // namespace webrtc
