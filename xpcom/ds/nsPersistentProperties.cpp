@@ -410,7 +410,7 @@ nsPersistentProperties::nsPersistentProperties()
 nsPersistentProperties::~nsPersistentProperties() = default;
 
 size_t nsPersistentProperties::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+    mozilla::MallocSizeOf aMallocSizeOf) {
   // The memory used by mTable is accounted for in mArena.
   size_t n = 0;
   n += mArena.SizeOfExcludingThis(aMallocSizeOf);

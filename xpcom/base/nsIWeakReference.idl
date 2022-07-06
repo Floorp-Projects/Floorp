@@ -31,6 +31,8 @@
 
 %}
 
+native MallocSizeOf(mozilla::MallocSizeOf);
+
 /**
  * An instance of |nsIWeakReference| is a proxy object that cooperates with
  * its referent to give clients a non-owning, non-dangling reference.  Clients
@@ -45,7 +47,7 @@
  * @see nsWeakReference
  * @see nsWeakPtr
  */
-[scriptable, uuid(9188bc85-f92e-11d2-81ef-0060083a0bcf)]
+[scriptable, builtinclass, uuid(9188bc85-f92e-11d2-81ef-0060083a0bcf)]
 interface nsIWeakReference : nsISupports
   {
     /**
@@ -57,9 +59,8 @@ interface nsIWeakReference : nsISupports
     [binaryname(QueryReferentFromScript)]
     void QueryReferent( in nsIIDRef uuid, [iid_is(uuid), retval] out nsQIResult result );
 
+    [notxpcom, nostdcall] size_t sizeOfOnlyThis(in MallocSizeOf aMallocSizeOf);
 %{C++
-  virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
-
   /**
    * Returns true if the referring object is alive.  Otherwise, false.
    */

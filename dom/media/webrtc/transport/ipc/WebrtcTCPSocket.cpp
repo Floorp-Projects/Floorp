@@ -618,6 +618,12 @@ WebrtcTCPSocket::OnUpgradeFailed(nsresult aErrorCode) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WebrtcTCPSocket::OnWebSocketConnectionAvailable(
+    WebSocketConnectionBase* aConnection) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // nsIRequestObserver (from nsIStreamListener)
 NS_IMETHODIMP
 WebrtcTCPSocket::OnStartRequest(nsIRequest* aRequest) {

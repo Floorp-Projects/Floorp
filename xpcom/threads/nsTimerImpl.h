@@ -209,9 +209,6 @@ class nsTimer final : public nsITimer {
                  : NS_ERROR_NULL_POINTER;
   }
 
-  virtual size_t SizeOfIncludingThis(
-      mozilla::MallocSizeOf aMallocSizeOf) const override;
-
   // Create a timer targeting the given target.  nullptr indicates that the
   // current thread should be used as the timer's target.
   static RefPtr<nsTimer> WithEventTarget(nsIEventTarget* aTarget);

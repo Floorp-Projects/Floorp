@@ -280,6 +280,9 @@ NullHttpChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void NullHttpChannel::SetSource(
+    mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource) {}
+
 //-----------------------------------------------------------------------------
 // NullHttpChannel::nsIChannel
 //-----------------------------------------------------------------------------

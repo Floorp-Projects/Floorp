@@ -60,9 +60,6 @@ class nsProfiler final : public nsIProfiler {
   RefPtr<SymbolTablePromise> GetSymbolTableMozPromise(
       const nsACString& aDebugPath, const nsACString& aBreakpadID);
 
-  RefPtr<nsProfiler::GatheringPromiseAndroid>
-  GetProfileDataAsGzippedArrayBufferAndroid(double aSinceTime) override;
-
   struct ExitProfile {
     nsCString mJSON;
     uint64_t mBufferPositionAtGatherTime;

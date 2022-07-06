@@ -21,9 +21,11 @@ enum class RequestMode : uint8_t;
 }
 }
 %}
+[ptr] native nsHttpConnectionInfo(mozilla::net::nsHttpConnectionInfo);
 [ptr] native StringArray(nsTArray<nsCString>);
 [ref] native CStringArrayRef(const nsTArray<nsCString>);
 [ref] native securityMessagesArray(nsCOMArray<nsISecurityConsoleMessage>);
+[ptr] native WebSocketConnectionBase(mozilla::net::WebSocketConnectionBase);
 
 native TimeStamp(mozilla::TimeStamp);
 native RequestMode(mozilla::dom::RequestMode);
@@ -50,9 +52,7 @@ interface nsIHttpUpgradeListener : nsISupports
 
     [must_use] void onUpgradeFailed(in nsresult aErrorCode);
 
-%{C++
-    virtual nsresult OnWebSocketConnectionAvailable(mozilla::net::WebSocketConnectionBase* aConnection) = 0;
-%}
+    void onWebSocketConnectionAvailable(in WebSocketConnectionBase aConnection);
 };
 
 /**
@@ -468,8 +468,6 @@ interface nsIHttpChannelInternal : nsISupports
      */
     [must_use] void setEarlyHintObserver(in nsIEarlyHintObserver aObserver);
 
-%{ C++
-    virtual void SetConnectionInfo(mozilla::net::nsHttpConnectionInfo* aInfo) {}
-%}
+    [notxpcom, nostdcall] void setConnectionInfo(in nsHttpConnectionInfo aInfo);
 
 };

@@ -1054,6 +1054,11 @@ nsViewSourceChannel::LogMimeTypeMismatch(const nsACString& aMessageName,
                                            aContentType);
 }
 
+// FIXME: Should this forward to mHttpChannel? This was previously handled by a
+// default empty implementation.
+void nsViewSourceChannel::SetSource(
+    mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource) {}
+
 const nsTArray<mozilla::net::PreferredAlternativeDataTypeParams>&
 nsViewSourceChannel::PreferredAlternativeDataTypes() {
   if (mCacheInfoChannel) {
@@ -1079,6 +1084,11 @@ void nsViewSourceChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {
     mHttpChannelInternal->DoDiagnosticAssertWhenOnStopNotCalledOnDestroy();
   }
 }
+
+// FIXME: Should this forward to mHttpChannelInternal? This was previously
+// handled by a default empty implementation.
+void nsViewSourceChannel::SetConnectionInfo(
+    mozilla::net::nsHttpConnectionInfo* aInfo) {}
 
 // nsIChildChannel methods
 

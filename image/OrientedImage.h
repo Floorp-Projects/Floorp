@@ -29,7 +29,7 @@ class OrientedImage : public ImageWrapper {
 
   NS_IMETHOD GetWidth(int32_t* aWidth) override;
   NS_IMETHOD GetHeight(int32_t* aHeight) override;
-  nsresult GetNativeSizes(nsTArray<gfx::IntSize>& aNativeSizes) const override;
+  nsresult GetNativeSizes(nsTArray<gfx::IntSize>& aNativeSizes) override;
   NS_IMETHOD GetIntrinsicSize(nsSize* aSize) override;
   Maybe<AspectRatio> GetIntrinsicRatio() override;
   NS_IMETHOD_(already_AddRefed<SourceSurface>)

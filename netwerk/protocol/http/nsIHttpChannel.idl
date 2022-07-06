@@ -12,6 +12,8 @@ interface nsIReferrerInfo;
 #include "GeckoProfiler.h"
 %}
 
+native UniqueProfileChunkedBuffer(mozilla::UniquePtr<mozilla::ProfileChunkedBuffer>);
+
 /**
  * nsIHttpChannel
  *
@@ -489,7 +491,5 @@ interface nsIHttpChannel : nsIIdentChannel
                              in AString aURL,
                              in AString aContentType);
 
-%{ C++
-  virtual void SetSource(mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource) {}
-%}
+    [notxpcom, nostdcall] void setSource(in UniqueProfileChunkedBuffer aSource);
 };

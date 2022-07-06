@@ -22,6 +22,9 @@ class LocalAccessible;
 }
 %}
 
+[ptr] native InternalAccessible(mozilla::a11y::Accessible);
+[ptr] native InternalLocalAccessible(mozilla::a11y::LocalAccessible);
+
 /**
  * A cross-platform interface that supports platform-specific
  * accessibility APIs like MSAA and ATK. Contains the sum of what's needed
@@ -342,10 +345,8 @@ interface nsIAccessible : nsISupports
    */
   void announce(in AString announcement, in unsigned short priority);
 
-  %{C++
-  virtual mozilla::a11y::LocalAccessible* ToInternalAccessible() const = 0;
-  virtual mozilla::a11y::Accessible* ToInternalGeneric() const = 0;
-  %}
+  [notxpcom, nostdcall] InternalLocalAccessible toInternalAccessible();
+  [notxpcom, nostdcall] InternalAccessible toInternalGeneric();
 
 };
 

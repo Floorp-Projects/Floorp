@@ -103,11 +103,14 @@ ImageWrapper::GetHeight(int32_t* aHeight) {
   return mInnerImage->GetHeight(aHeight);
 }
 
-nsresult ImageWrapper::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) const {
+void ImageWrapper::MediaFeatureValuesChangedAllDocuments(
+    const mozilla::MediaFeatureChange& aChange) {}
+
+nsresult ImageWrapper::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) {
   return mInnerImage->GetNativeSizes(aNativeSizes);
 }
 
-size_t ImageWrapper::GetNativeSizesLength() const {
+size_t ImageWrapper::GetNativeSizesLength() {
   return mInnerImage->GetNativeSizesLength();
 }
 

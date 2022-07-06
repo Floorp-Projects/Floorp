@@ -118,8 +118,6 @@ class WebSocketChannel : public BaseWebSocketChannel,
   bool IsEncrypted() const override;
 
   nsresult OnTransportAvailableInternal();
-  nsresult OnWebSocketConnectionAvailable(
-      WebSocketConnectionBase* aConnection) override;
   void OnError(nsresult aStatus) override;
   void OnTCPClosed() override;
   nsresult OnDataReceived(uint8_t* aData, uint32_t aCount) override;
