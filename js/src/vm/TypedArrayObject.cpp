@@ -60,6 +60,7 @@
 #include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/Compartment-inl.h"
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
@@ -591,6 +592,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   // 22.2.4.4 TypedArray ( object )
   // 22.2.4.5 TypedArray ( buffer [ , byteOffset [ , length ] ] )
   static bool class_constructor(JSContext* cx, unsigned argc, Value* vp) {
+    AutoJSConstructorProfilerEntry pseudoFrame(cx, "[TypedArray]");
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1 (22.2.4.1) or 2 (22.2.4.2-5).
@@ -1978,6 +1980,8 @@ bool TypedArrayObject::copyWithin_impl(JSContext* cx, const CallArgs& args) {
 
 /* static */
 bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "[TypedArray].prototype",
+                                        "copyWithin");
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<TypedArrayObject::is,
                               TypedArrayObject::copyWithin_impl>(cx, args);
