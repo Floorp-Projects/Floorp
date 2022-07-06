@@ -158,26 +158,25 @@ bool SRIMetadata::CanTrustBeDelegatedTo(const SRIMetadata& aOther) const {
   }
 
   if (aOther.IsEmpty()) {
-    // This SRI requires a check and the other has none, can't delegate.
+    // This metadata requires a check and the other has none, can't delegate.
     return false;
   }
 
-  if (mAlgorithmType < aOther.mAlgorithmType) {
-    // The other SRI is stronger than this one, we can (have to) delegate trust
-    // to it.
-    return true;
+  if (mAlgorithmType != aOther.mAlgorithmType) {
+    // They must use the same hash algorithm.
+    return false;
   }
-  if (mAlgorithmType > aOther.mAlgorithmType) {
-    // This SRI is stronger than the other, we can't delegate the trust.
+
+  // They must be completely identical, except for the order of hashes.
+  // We don't know which hash is the one passing eventually the check, so only
+  // option is to require this metadata to contain the same set of hashes as the
+  // one we want to delegate the trust to.
+  if (mHashes.Length() != aOther.mHashes.Length()) {
     return false;
   }
 
   for (const auto& hash : mHashes) {
     if (!aOther.mHashes.Contains(hash)) {
-      // Both SRIs must be completely identical.  We don't know which hash is
-      // the one passing eventually the check, so only option is to require this
-      // SRI to contain the same set of hashes as the one we want to delegate
-      // the trust to.
       return false;
     }
   }

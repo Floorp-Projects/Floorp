@@ -67,14 +67,14 @@ class SRIMetadata final {
   const nsString& GetIntegrityString() const { return mIntegrityString; }
 
   // Return true if:
-  // * this SRI is empty
-  // * the other SRI has a stronger hash algorithm
-  // * the other SRI has the same hash algorithm and also the same set of values
-  // otherwise, return false.
+  // - this integrity metadata is empty, or
+  // - the other integrity metadata has the same hash algorithm and also the
+  // same set of values otherwise, return false.
   //
-  // This method simply checks if the other SRI is stronger or identical to this
-  // one, so that a load that has been checked against that other SRI has the
-  // same or higher level of trust than this SRI provides.
+  // This method simply checks if the other integrity metadata is identical to
+  // this one (if it exists), so that a load that has been checked against that
+  // other integrity metadata implies that the current integrity metadata is
+  // also satisfied.
   bool CanTrustBeDelegatedTo(const SRIMetadata& aOther) const;
 
  private:
