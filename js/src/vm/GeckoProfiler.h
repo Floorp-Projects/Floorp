@@ -185,8 +185,12 @@ class MOZ_RAII GeckoProfilerEntryMarker {
  *
  * NB: The `label` string must be statically allocated.
  */
-class MOZ_NONHEAP_CLASS AutoGeckoProfilerEntry {
+class MOZ_RAII AutoGeckoProfilerEntry {
  public:
+  explicit MOZ_ALWAYS_INLINE AutoGeckoProfilerEntry(
+      JSContext* cx, const char* label, const char* dynamicString,
+      JS::ProfilingCategoryPair categoryPair = JS::ProfilingCategoryPair::JS,
+      uint32_t flags = 0);
   explicit MOZ_ALWAYS_INLINE AutoGeckoProfilerEntry(
       JSContext* cx, const char* label,
       JS::ProfilingCategoryPair categoryPair = JS::ProfilingCategoryPair::JS,

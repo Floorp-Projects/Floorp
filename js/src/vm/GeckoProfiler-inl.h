@@ -82,8 +82,8 @@ GeckoProfilerEntryMarker::~GeckoProfilerEntryMarker() {
 
 MOZ_ALWAYS_INLINE
 AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(
-    JSContext* cx, const char* label, JS::ProfilingCategoryPair categoryPair,
-    uint32_t flags) {
+    JSContext* cx, const char* label, const char* dynamicString,
+    JS::ProfilingCategoryPair categoryPair, uint32_t flags) {
   profilingStack_ = GetContextProfilingStackIfEnabled(cx);
   if (MOZ_LIKELY(!profilingStack_)) {
 #ifdef DEBUG
@@ -98,8 +98,7 @@ AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(
   spBefore_ = profiler_->stackPointer();
 #endif
 
-  profilingStack_->pushLabelFrame(label,
-                                  /* dynamicString = */ nullptr,
+  profilingStack_->pushLabelFrame(label, dynamicString,
                                   /* sp = */ this, categoryPair, flags);
 }
 
@@ -112,6 +111,13 @@ AutoGeckoProfilerEntry::~AutoGeckoProfilerEntry() {
   profilingStack_->pop();
   MOZ_ASSERT(spBefore_ == profiler_->stackPointer());
 }
+
+MOZ_ALWAYS_INLINE
+AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(
+    JSContext* cx, const char* label, JS::ProfilingCategoryPair categoryPair,
+    uint32_t flags)
+    : AutoGeckoProfilerEntry(cx, label, /* dynamicString */ nullptr,
+                             categoryPair, flags) {}
 
 }  // namespace js
 
