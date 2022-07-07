@@ -656,6 +656,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "bug_numbers": [677411, 764184],
     "description": "Reason (enum value) for initiating a GC"
   },
   "GC_IS_COMPARTMENTAL": {
@@ -664,6 +665,7 @@
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [677411, 1297026],
     "description": "Is it a zone GC?"
   },
   "GC_MS": {
@@ -765,6 +767,7 @@
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
+    "bug_numbers": [677411],
     "description": "Time spent running JS GC mark phase (ms)"
   },
   "GC_SWEEP_MS": {
@@ -775,6 +778,7 @@
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
+    "bug_numbers": [677411],
     "description": "Time spent running JS GC sweep phase (ms)"
   },
   "GC_COMPACT_MS": {
@@ -785,6 +789,7 @@
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
+    "bug_numbers": [1247955],
     "description": "Time spent running JS GC compact phase (ms)"
   },
   "GC_MARK_ROOTS_US": {
@@ -831,6 +836,7 @@
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
+    "bug_numbers": [641025],
     "description": "Time spent running a JS GC slice (ms)"
   },
   "GC_SLOW_PHASE": {
@@ -840,6 +846,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 75,
+    "bug_numbers": [1052728],
     "description": "The longest phase in any slice that goes over 2x the budget. The phase values are defined in js/src/gc/GenerateStatsPhases.py."
   },
   "GC_SLOW_TASK": {
@@ -860,6 +867,7 @@
     "kind": "linear",
     "high": 100,
     "n_buckets": 20,
+    "bug_numbers": [641025],
     "description": "Minimum percentage of time spent outside GC over any 50ms window"
   },
   "GC_RESET": {
@@ -868,6 +876,7 @@
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [641025],
     "description": "Was an incremental GC canceled?"
   },
   "GC_RESET_REASON": {
@@ -886,6 +895,7 @@
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [731052],
     "description": "Was the GC non-incremental?"
   },
   "GC_NON_INCREMENTAL_REASON": {
@@ -905,6 +915,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "bug_numbers": [1052716],
     "description": "Reason (enum value) for initiating a minor GC"
   },
   "GC_MINOR_REASON_LONG": {
@@ -914,6 +925,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "bug_numbers": [1052716],
     "description": "Reason (enum value) that caused a long (>1ms) minor GC"
   },
   "GC_MINOR_US": {
@@ -924,6 +936,7 @@
     "kind": "exponential",
     "high": 1000000,
     "n_buckets": 100,
+    "bug_numbers": [1052716],
     "description": "Time spent running JS minor GC (us)"
   },
   "GC_NURSERY_BYTES_2": {
