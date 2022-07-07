@@ -82,7 +82,12 @@ debugger-tests:
         cache-dotcache: true
         cwd: '{checkout}'
         command: >
-            npm install &&
+            # Re-use rather than re-installing to avoid hitting/requiring
+            # nodejs servers for downloads
+            cp -r /build/node_modules_eslint node_modules &&
+            cp -r /build/node_modules_eslint-plugin-mozilla/ tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
             cd devtools/client/debugger/ &&
             yarn &&
             node bin/try-runner.js
@@ -108,7 +113,12 @@ devtools-tests:
         cache-dotcache: true
         cwd: '{checkout}'
         command: >
-            npm install &&
+            # Re-use rather than re-installing to avoid hitting/requiring
+            # nodejs servers for downloads
+            cp -r /build/node_modules_eslint node_modules &&
+            cp -r /build/node_modules_eslint-plugin-mozilla/ tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
             cd devtools/client/bin/ &&
             node devtools-node-test-runner.js --suite=aboutdebugging &&
             node devtools-node-test-runner.js --suite=accessibility &&
@@ -140,7 +150,12 @@ devtools-verify-bundle:
         cache-dotcache: true
         cwd: '{checkout}'
         command: >
-            npm install &&
+            # Re-use rather than re-installing to avoid hitting/requiring
+            # nodejs servers for downloads
+            cp -r /build/node_modules_eslint node_modules &&
+            cp -r /build/node_modules_eslint-plugin-mozilla/ tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
+            ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
             cd devtools/client/debugger &&
             yarn &&
             node bin/bundle.js &&
