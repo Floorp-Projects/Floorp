@@ -64,7 +64,10 @@ nsFontFaceLoader::nsFontFaceLoader(gfxUserFontEntry* aUserFontEntry,
   // We add an explicit load block rather than just rely on the network
   // request's block, since we need to do some OMT work after the load
   // is finished before we unblock load.
-  mFontFaceSet->Document()->BlockOnload();
+  auto* doc = mFontFaceSet->GetDocument();
+  if (doc) {
+    doc->BlockOnload();
+  }
 }
 
 nsFontFaceLoader::~nsFontFaceLoader() {
@@ -79,7 +82,10 @@ nsFontFaceLoader::~nsFontFaceLoader() {
   }
   if (mFontFaceSet) {
     mFontFaceSet->RemoveLoader(this);
-    mFontFaceSet->Document()->UnblockOnload(false);
+    auto* doc = mFontFaceSet->GetDocument();
+    if (doc) {
+      doc->UnblockOnload(false);
+    }
   }
 }
 
@@ -94,10 +100,16 @@ void nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader) {
   }
 
   if (loadTimeout > 0) {
+    nsIEventTarget* target;
+    auto* doc = mFontFaceSet->GetDocument();
+    if (doc) {
+      target = doc->EventTargetFor(TaskCategory::Other);
+    } else {
+      target = GetMainThreadEventTarget();
+    }
     NS_NewTimerWithFuncCallback(
         getter_AddRefs(mLoadTimer), LoadTimerCallback, static_cast<void*>(this),
-        loadTimeout, nsITimer::TYPE_ONE_SHOT, "LoadTimerCallback",
-        mFontFaceSet->Document()->EventTargetFor(TaskCategory::Other));
+        loadTimeout, nsITimer::TYPE_ONE_SHOT, "LoadTimerCallback", target);
   } else {
     mUserFontEntry->mFontDataLoadingState = gfxUserFontEntry::LOADING_SLOWLY;
   }
@@ -310,7 +322,10 @@ nsresult nsFontFaceLoader::FontLoadComplete() {
 
   MOZ_DIAGNOSTIC_ASSERT(mFontFaceSet);
   mFontFaceSet->RemoveLoader(this);
-  mFontFaceSet->Document()->UnblockOnload(false);
+  auto* doc = mFontFaceSet->GetDocument();
+  if (doc) {
+    doc->UnblockOnload(false);
+  }
   mFontFaceSet = nullptr;
 
   return NS_OK;
@@ -344,7 +359,10 @@ void nsFontFaceLoader::Cancel() {
 
   mUserFontEntry->LoadCanceled();
   mUserFontEntry = nullptr;
-  mFontFaceSet->Document()->UnblockOnload(false);
+  auto* doc = mFontFaceSet->GetDocument();
+  if (doc) {
+    doc->UnblockOnload(false);
+  }
   mFontFaceSet = nullptr;
   if (mLoadTimer) {
     mLoadTimer->Cancel();

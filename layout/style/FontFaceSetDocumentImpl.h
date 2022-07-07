@@ -32,7 +32,7 @@ class FontFaceSetDocumentImpl final : public FontFaceSetImpl,
 
   void RefreshStandardFontLoadPrincipal() override;
 
-  dom::Document* Document() const override { return mDocument; }
+  dom::Document* GetDocument() const override { return mDocument; }
 
   already_AddRefed<URLExtraData> GetURLExtraData() override;
 
