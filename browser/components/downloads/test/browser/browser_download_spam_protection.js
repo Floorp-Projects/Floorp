@@ -110,6 +110,7 @@ add_task(async function check_download_spam_ui() {
   );
 
   ok(browserWin.DownloadsPanel.isPanelShowing, "Download panel should open");
+  await Downloads.getList(Downloads.PUBLIC);
 
   let listbox = document.getElementById("downloadsListBox");
   ok(listbox, "Download list box present");
