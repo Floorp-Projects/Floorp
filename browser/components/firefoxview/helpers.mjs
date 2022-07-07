@@ -62,3 +62,9 @@ export function createFaviconElement(image) {
   favicon.classList.add("favicon");
   return favicon;
 }
+
+export function toggleContainer(collapsibleButton, collapsibleContainer) {
+  const arrowDown = "arrow-down";
+  collapsibleButton.classList.toggle(arrowDown);
+  collapsibleContainer.hidden = collapsibleButton.classList.contains(arrowDown);
+}

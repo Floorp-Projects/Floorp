@@ -88,6 +88,10 @@
           <tab-pickup-list>
             <ol hidden="true" class="synced-tabs-list"></ol>
           </tab-pickup-list>
+          <div hidden id="synced-tabs-placeholder" class="placeholder-content">
+            <icon class="icon synced-tabs"></icon>
+            <p data-l10n-id="firefoxview-synced-tabs-placeholder" class="placeholder-text"></p>
+          </div>
           <p class="loading-content" data-l10n-id="firefoxview-tabpickup-syncing"></p>
         </div>
       </template>
@@ -95,7 +99,7 @@
       <section class="content-container" is="tabs-pickup-container" id="tabs-pickup-container">
         <header class="page-section-header">
           <h1 data-l10n-id="firefoxview-tabpickup-header"></h1>
-          <button class="ghost-button twisty icon arrow-up"></button>
+          <button id="collapsible-synced-tabs-button" class="ghost-button twisty icon arrow-up" hidden></button>
           <p class="section-description" data-l10n-id="firefoxview-tabpickup-description"></p>
         </header>
       </section>
@@ -128,7 +132,7 @@
           </recently-closed-tabs-list>
           <div hidden="true" id="recently-closed-tabs-placeholder" class="placeholder-content">
             <icon class="icon history"></icon>
-            <p data-l10n-id="firefoxview-closed-tabs-placeholder"></p>
+            <p data-l10n-id="firefoxview-closed-tabs-placeholder" class="placeholder-text"></p>
           </div>
         </div>
       </section>

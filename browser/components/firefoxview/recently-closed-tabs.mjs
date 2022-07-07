@@ -16,6 +16,7 @@ import {
   formatURIForDisplay,
   convertTimestamp,
   createFaviconElement,
+  toggleContainer,
 } from "./helpers.mjs";
 
 const SS_NOTIFY_CLOSED_OBJECTS_CHANGED = "sessionstore-closed-objects-changed";
@@ -251,7 +252,7 @@ class RecentlyClosedTabsContainer extends HTMLElement {
 
   handleEvent(event) {
     if (event.type == "click" && event.target == this.collapsibleButton) {
-      this.toggleTabs();
+      toggleContainer(this.collapsibleButton, this.collapsibleContainer);
     } else if (event.type == "TabSelect") {
       this.handleObservers(event.target.linkedBrowser.contentDocument);
     }
@@ -268,16 +269,6 @@ class RecentlyClosedTabsContainer extends HTMLElement {
     } catch (ex) {
       return 0;
     }
-  };
-
-  toggleTabs = () => {
-    const arrowUp = "arrow-up";
-    const arrowDown = "arrow-down";
-    const isOpen = this.collapsibleButton.classList.contains(arrowUp);
-
-    this.collapsibleButton.classList.toggle(arrowUp, !isOpen);
-    this.collapsibleButton.classList.toggle(arrowDown, isOpen);
-    this.collapsibleContainer.hidden = isOpen;
   };
 }
 customElements.define(
