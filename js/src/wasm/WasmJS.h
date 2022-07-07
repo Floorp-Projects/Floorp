@@ -63,10 +63,10 @@ namespace js {
 class ArrayBufferObject;
 class ArrayBufferObjectMaybeShared;
 class JSStringBuilder;
-class SharedArrayRawBuffer;
 class TypedArrayObject;
 class WasmFunctionScope;
 class WasmInstanceScope;
+class WasmSharedArrayRawBuffer;
 
 namespace wasm {
 
@@ -433,7 +433,7 @@ class WasmMemoryObject : public NativeObject {
   size_t boundsCheckLimit() const;
 
   // If isShared() is true then obtain the underlying buffer object.
-  SharedArrayRawBuffer* sharedArrayRawBuffer() const;
+  WasmSharedArrayRawBuffer* sharedArrayRawBuffer() const;
 
   bool addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance);
   static uint64_t grow(Handle<WasmMemoryObject*> memory, uint64_t delta,
