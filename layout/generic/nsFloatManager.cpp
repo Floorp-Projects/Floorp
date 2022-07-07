@@ -432,7 +432,7 @@ void nsFloatManager::PopState(SavedState* aState) {
   mFloats.TruncateLength(aState->mFloatInfoCount);
 }
 
-nscoord nsFloatManager::GetLowestFloatTop() const {
+nscoord nsFloatManager::LowestFloatBStart() const {
   if (mPushedLeftFloatPastBreak || mPushedRightFloatPastBreak) {
     return nscoord_MAX;
   }

@@ -720,7 +720,7 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
 
   // Enforce CSS2 9.5.1 rule [2], i.e., make sure that a float isn't
   // ``above'' another float that preceded it in the flow.
-  mBCoord = std::max(FloatManager()->GetLowestFloatTop(), mBCoord);
+  mBCoord = std::max(FloatManager()->LowestFloatBStart(), mBCoord);
 
   // See if the float should clear any preceding floats...
   // XXX We need to mark this float somehow so that it gets reflowed
