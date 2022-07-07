@@ -1017,12 +1017,6 @@ BlockReflowState::ClearFloats(nscoord aBCoord, StyleClear aBreakType,
   }
 #endif
 
-#ifdef NOISY_FLOAT_CLEARING
-  printf("BlockReflowState::ClearFloats: aBCoord=%d breakType=%s\n", aBCoord,
-         nsLineBox::BreakTypeToString(aBreakType));
-  FloatManager()->List(stdout);
-#endif
-
   if (!FloatManager()->HasAnyFloats()) {
     return {aBCoord, ClearFloatsResult::BCoordNoChange};
   }

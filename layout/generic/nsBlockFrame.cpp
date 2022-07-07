@@ -6658,12 +6658,6 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
              "aFloat must be an out-of-flow frame");
 
   WritingMode wm = aState.mReflowInput.GetWritingMode();
-#ifdef NOISY_FLOAT
-  printf("Reflow Float %p in parent %p, availSpace(%d,%d,%d,%d)\n", aFloat,
-         this, aAdjustedAvailableSpace.IStart(wm),
-         aAdjustedAvailableSpace.BStart(wm), aAdjustedAvailableSpace.ISize(wm),
-         aAdjustedAvailableSpace.BSize(wm));
-#endif
 
   ReflowInput floatRS(
       aState.mPresContext, aState.mReflowInput, aFloat,
@@ -6749,11 +6743,6 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
   // Pass floatRS so the frame hierarchy can be used (redoFloatRS has the same
   // hierarchy)
   aFloat->DidReflow(aState.mPresContext, &floatRS);
-
-#ifdef NOISY_FLOAT
-  printf("end ReflowFloat %p, sized to %d,%d\n", aFloat, metrics.Width(),
-         metrics.Height());
-#endif
 }
 
 StyleClear nsBlockFrame::FindTrailingClear() {
