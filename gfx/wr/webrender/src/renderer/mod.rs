@@ -2723,6 +2723,28 @@ impl Renderer {
         for (source, instances) in scalings {
             let buffer_kind = source.image_buffer_kind();
 
+            // When the source texture is an external texture, the UV rect is not known
+            // when the external surface descriptor is created, because external textures
+            // are not resolved until the lock() callback is invoked at the start of the
+            // frame render. We must therefore override the source rects now.
+            let uv_override_instances;
+            let instances = match source {
+                TextureSource::External(..) => {
+                    uv_override_instances = instances.iter().map(|instance| {
+                        let texel_rect: TexelRect = self.texture_resolver.get_uv_rect(
+                            &source,
+                            instance.source_rect.cast().into()
+                        ).into();
+                        ScalingInstance {
+                            target_rect: instance.target_rect,
+                            source_rect: DeviceRect::new(texel_rect.uv0, texel_rect.uv1),
+                        }
+                    }).collect::<Vec<_>>();
+                    &uv_override_instances
+                }
+                _ => &instances
+            };
+
             self.shaders
                 .borrow_mut()
                 .get_scale_shader(buffer_kind)
