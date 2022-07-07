@@ -330,6 +330,7 @@ void SharedArrayBufferObject::dropRawBuffer() {
   size_t size = SharedArrayMappedSize(byteLength());
   zoneFromAnyThread()->removeSharedMemory(rawBufferObject(), size,
                                           MemoryUse::SharedArrayRawBuffer);
+  rawBufferObject()->dropReference();
   setFixedSlot(RAWBUF_SLOT, UndefinedValue());
 }
 
@@ -350,7 +351,6 @@ void SharedArrayBufferObject::Finalize(JS::GCContext* gcx, JSObject* obj) {
   // which causes a SharedArrayRawBuffer to never be attached.
   Value v = buf.getFixedSlot(RAWBUF_SLOT);
   if (!v.isUndefined()) {
-    buf.rawBufferObject()->dropReference();
     buf.dropRawBuffer();
   }
 }
