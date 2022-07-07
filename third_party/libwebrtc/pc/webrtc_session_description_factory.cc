@@ -132,13 +132,10 @@ WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
     bool dtls_enabled,
     std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator,
     const rtc::scoped_refptr<rtc::RTCCertificate>& certificate,
-    UniqueRandomIdGenerator* ssrc_generator,
     std::function<void(const rtc::scoped_refptr<rtc::RTCCertificate>&)>
         on_certificate_ready)
     : signaling_thread_(signaling_thread),
-      session_desc_factory_(channel_manager,
-                            &transport_desc_factory_,
-                            ssrc_generator),
+      session_desc_factory_(channel_manager, &transport_desc_factory_),
       // RFC 4566 suggested a Network Time Protocol (NTP) format timestamp
       // as the session id and session version. To simplify, it should be fine
       // to just use a random number as session id and start version from

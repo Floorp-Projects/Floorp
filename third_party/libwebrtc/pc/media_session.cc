@@ -1534,9 +1534,9 @@ MediaSessionDescriptionFactory::MediaSessionDescriptionFactory(
 
 MediaSessionDescriptionFactory::MediaSessionDescriptionFactory(
     ChannelManager* channel_manager,
-    const TransportDescriptionFactory* transport_desc_factory,
-    rtc::UniqueRandomIdGenerator* ssrc_generator)
-    : MediaSessionDescriptionFactory(transport_desc_factory, ssrc_generator) {
+    const TransportDescriptionFactory* transport_desc_factory)
+    : MediaSessionDescriptionFactory(transport_desc_factory,
+                                     &channel_manager->ssrc_generator()) {
   channel_manager->GetSupportedAudioSendCodecs(&audio_send_codecs_);
   channel_manager->GetSupportedAudioReceiveCodecs(&audio_recv_codecs_);
   channel_manager->GetSupportedVideoSendCodecs(&video_send_codecs_);

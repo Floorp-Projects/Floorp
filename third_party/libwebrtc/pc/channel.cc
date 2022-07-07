@@ -117,7 +117,7 @@ BaseChannel::BaseChannel(rtc::Thread* worker_thread,
                          rtc::Thread* network_thread,
                          rtc::Thread* signaling_thread,
                          std::unique_ptr<MediaChannel> media_channel,
-                         const std::string& content_name,
+                         const std::string& mid,
                          bool srtp_required,
                          webrtc::CryptoOptions crypto_options,
                          UniqueRandomIdGenerator* ssrc_generator)
@@ -131,7 +131,7 @@ BaseChannel::BaseChannel(rtc::Thread* worker_thread,
               ? webrtc::RtpExtension::kPreferEncryptedExtension
               : webrtc::RtpExtension::kDiscardEncryptedExtension),
       media_channel_(std::move(media_channel)),
-      demuxer_criteria_(content_name),
+      demuxer_criteria_(mid),
       ssrc_generator_(ssrc_generator) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_DCHECK(media_channel_);
@@ -151,7 +151,7 @@ BaseChannel::~BaseChannel() {
 }
 
 std::string BaseChannel::ToString() const {
-  return StringFormat("{mid: %s, media_type: %s}", content_name().c_str(),
+  return StringFormat("{mid: %s, media_type: %s}", mid().c_str(),
                       MediaTypeToString(media_channel_->media_type()).c_str());
 }
 
@@ -618,7 +618,7 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
       error_desc = StringFormat(
           "Failed to remove send stream with ssrc %u from m-section with "
           "mid='%s'.",
-          old_stream.first_ssrc(), content_name().c_str());
+          old_stream.first_ssrc(), mid().c_str());
       ret = false;
     }
   }
@@ -644,7 +644,7 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
       error_desc = StringFormat(
           "Failed to add send stream: %u into m-section with mid='%s'. Stream "
           "has both SSRCs and RIDs.",
-          new_stream.first_ssrc(), content_name().c_str());
+          new_stream.first_ssrc(), mid().c_str());
       ret = false;
       continue;
     }
@@ -663,7 +663,7 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
     } else {
       error_desc = StringFormat(
           "Failed to add send stream ssrc: %u into m-section with mid='%s'",
-          new_stream.first_ssrc(), content_name().c_str());
+          new_stream.first_ssrc(), mid().c_str());
       ret = false;
     }
   }
@@ -706,7 +706,7 @@ bool BaseChannel::UpdateRemoteStreams_w(const MediaContentDescription* content,
         error_desc = StringFormat(
             "Failed to remove remote stream with ssrc %u from m-section with "
             "mid='%s'.",
-            old_stream.first_ssrc(), content_name().c_str());
+            old_stream.first_ssrc(), mid().c_str());
         return false;
       }
     }
@@ -750,7 +750,7 @@ bool BaseChannel::UpdateRemoteStreams_w(const MediaContentDescription* content,
   // Re-register the sink to update after changing the demuxer criteria.
   if (needs_re_registration && !RegisterRtpDemuxerSink_w()) {
     error_desc = StringFormat("Failed to set up audio demuxing for mid='%s'.",
-                              content_name().c_str());
+                              mid().c_str());
     return false;
   }
 
@@ -800,7 +800,7 @@ VoiceChannel::VoiceChannel(rtc::Thread* worker_thread,
                            rtc::Thread* network_thread,
                            rtc::Thread* signaling_thread,
                            std::unique_ptr<VoiceMediaChannel> media_channel,
-                           const std::string& content_name,
+                           const std::string& mid,
                            bool srtp_required,
                            webrtc::CryptoOptions crypto_options,
                            UniqueRandomIdGenerator* ssrc_generator)
@@ -808,7 +808,7 @@ VoiceChannel::VoiceChannel(rtc::Thread* worker_thread,
                   network_thread,
                   signaling_thread,
                   std::move(media_channel),
-                  content_name,
+                  mid,
                   srtp_required,
                   crypto_options,
                   ssrc_generator) {}
@@ -858,7 +858,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
     error_desc = StringFormat(
         "Failed to set local audio description recv parameters for m-section "
         "with mid='%s'.",
-        content_name().c_str());
+        mid().c_str());
     return false;
   }
 
@@ -903,14 +903,14 @@ bool VoiceChannel::SetRemoteContent_w(const MediaContentDescription* content,
   AudioSendParameters send_params = last_send_params_;
   RtpSendParametersFromMediaDescription(content->as_audio(),
                                         extensions_filter(), &send_params);
-  send_params.mid = content_name();
+  send_params.mid = mid();
 
   bool parameters_applied = media_channel()->SetSendParameters(send_params);
   if (!parameters_applied) {
     error_desc = StringFormat(
         "Failed to set remote audio description send parameters for m-section "
         "with mid='%s'.",
-        content_name().c_str());
+        mid().c_str());
     return false;
   }
   last_send_params_ = send_params;
@@ -922,7 +922,7 @@ VideoChannel::VideoChannel(rtc::Thread* worker_thread,
                            rtc::Thread* network_thread,
                            rtc::Thread* signaling_thread,
                            std::unique_ptr<VideoMediaChannel> media_channel,
-                           const std::string& content_name,
+                           const std::string& mid,
                            bool srtp_required,
                            webrtc::CryptoOptions crypto_options,
                            UniqueRandomIdGenerator* ssrc_generator)
@@ -930,7 +930,7 @@ VideoChannel::VideoChannel(rtc::Thread* worker_thread,
                   network_thread,
                   signaling_thread,
                   std::move(media_channel),
-                  content_name,
+                  mid,
                   srtp_required,
                   crypto_options,
                   ssrc_generator) {}
@@ -990,7 +990,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
           error_desc = StringFormat(
               "Failed to set local answer due to invalid codec packetization "
               "specified in m-section with mid='%s'.",
-              content_name().c_str());
+              mid().c_str());
           return false;
         }
       }
@@ -1001,7 +1001,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
     error_desc = StringFormat(
         "Failed to set local video description recv parameters for m-section "
         "with mid='%s'.",
-        content_name().c_str());
+        mid().c_str());
     return false;
   }
 
@@ -1019,7 +1019,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
     if (!media_channel()->SetSendParameters(send_params)) {
       error_desc = StringFormat(
           "Failed to set send parameters for m-section with mid='%s'.",
-          content_name().c_str());
+          mid().c_str());
       return false;
     }
     last_send_params_ = send_params;
@@ -1057,7 +1057,7 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
   VideoSendParameters send_params = last_send_params_;
   RtpSendParametersFromMediaDescription(video, extensions_filter(),
                                         &send_params);
-  send_params.mid = content_name();
+  send_params.mid = mid();
   send_params.conference_mode = video->conference_mode();
 
   VideoRecvParameters recv_params = last_recv_params_;
@@ -1074,7 +1074,7 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
           error_desc = StringFormat(
               "Failed to set remote answer due to invalid codec packetization "
               "specifid in m-section with mid='%s'.",
-              content_name().c_str());
+              mid().c_str());
           return false;
         }
       }
@@ -1085,7 +1085,7 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
     error_desc = StringFormat(
         "Failed to set remote video description send parameters for m-section "
         "with mid='%s'.",
-        content_name().c_str());
+        mid().c_str());
     return false;
   }
   last_send_params_ = send_params;
@@ -1094,7 +1094,7 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
     if (!media_channel()->SetRecvParameters(recv_params)) {
       error_desc = StringFormat(
           "Failed to set recv parameters for m-section with mid='%s'.",
-          content_name().c_str());
+          mid().c_str());
       return false;
     }
     last_recv_params_ = recv_params;

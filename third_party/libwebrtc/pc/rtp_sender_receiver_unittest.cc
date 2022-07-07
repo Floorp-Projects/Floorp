@@ -122,13 +122,11 @@ class RtpSenderReceiverTest
     rtp_transport_ = CreateDtlsSrtpTransport();
 
     voice_channel_ = channel_manager_->CreateVoiceChannel(
-        &fake_call_, cricket::MediaConfig(), rtc::Thread::Current(),
-        cricket::CN_AUDIO, srtp_required, webrtc::CryptoOptions(),
-        &ssrc_generator_, cricket::AudioOptions());
+        &fake_call_, cricket::MediaConfig(), cricket::CN_AUDIO, srtp_required,
+        webrtc::CryptoOptions(), cricket::AudioOptions());
     video_channel_ = channel_manager_->CreateVideoChannel(
-        &fake_call_, cricket::MediaConfig(), rtc::Thread::Current(),
-        cricket::CN_VIDEO, srtp_required, webrtc::CryptoOptions(),
-        &ssrc_generator_, cricket::VideoOptions(),
+        &fake_call_, cricket::MediaConfig(), cricket::CN_VIDEO, srtp_required,
+        webrtc::CryptoOptions(), cricket::VideoOptions(),
         video_bitrate_allocator_factory_.get());
 
     voice_channel_->SetRtpTransport(rtp_transport_.get());
@@ -177,11 +175,8 @@ class RtpSenderReceiverTest
     voice_channel_->SetRtpTransport(nullptr);
     video_channel_->SetRtpTransport(nullptr);
 
-    channel_manager_->DestroyVoiceChannel(voice_channel_);
-    channel_manager_->DestroyVideoChannel(video_channel_);
-
-    worker_thread_->Invoke<void>(RTC_FROM_HERE,
-                                 [&]() { channel_manager_.reset(); });
+    channel_manager_->DestroyChannel(voice_channel_);
+    channel_manager_->DestroyChannel(video_channel_);
   }
 
   std::unique_ptr<webrtc::RtpTransportInternal> CreateDtlsSrtpTransport() {
@@ -542,7 +537,6 @@ class RtpSenderReceiverTest
   rtc::scoped_refptr<VideoTrackInterface> video_track_;
   rtc::scoped_refptr<AudioTrackInterface> audio_track_;
   bool audio_sender_destroyed_signal_fired_ = false;
-  rtc::UniqueRandomIdGenerator ssrc_generator_;
 };
 
 // Test that `voice_channel_` is updated when an audio track is associated

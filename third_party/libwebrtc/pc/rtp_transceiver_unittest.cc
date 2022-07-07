@@ -41,7 +41,7 @@ TEST(RtpTransceiverTest, CannotSetChannelOnStoppedTransceiver) {
   cricket::MockChannelInterface channel1;
   EXPECT_CALL(channel1, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
-  EXPECT_CALL(channel1, content_name()).WillRepeatedly(ReturnRef(content_name));
+  EXPECT_CALL(channel1, mid()).WillRepeatedly(ReturnRef(content_name));
   EXPECT_CALL(channel1, SetFirstPacketReceivedCallback(_));
   EXPECT_CALL(channel1, SetRtpTransport(_)).WillRepeatedly(Return(true));
 
@@ -73,7 +73,7 @@ TEST(RtpTransceiverTest, CanUnsetChannelOnStoppedTransceiver) {
   cricket::MockChannelInterface channel;
   EXPECT_CALL(channel, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_VIDEO));
-  EXPECT_CALL(channel, content_name()).WillRepeatedly(ReturnRef(content_name));
+  EXPECT_CALL(channel, mid()).WillRepeatedly(ReturnRef(content_name));
   EXPECT_CALL(channel, SetFirstPacketReceivedCallback(_))
       .WillRepeatedly(testing::Return());
   EXPECT_CALL(channel, SetRtpTransport(_)).WillRepeatedly(Return(true));
@@ -302,8 +302,7 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
   EXPECT_CALL(mock_channel, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
   EXPECT_CALL(mock_channel, media_channel()).WillRepeatedly(Return(nullptr));
-  EXPECT_CALL(mock_channel, content_name())
-      .WillRepeatedly(ReturnRef(content_name));
+  EXPECT_CALL(mock_channel, mid()).WillRepeatedly(ReturnRef(content_name));
   EXPECT_CALL(mock_channel, SetRtpTransport(_)).WillRepeatedly(Return(true));
   transceiver_.SetChannel(&mock_channel,
                           [](const std::string&) { return nullptr; });
@@ -323,8 +322,7 @@ TEST_F(RtpTransceiverTestForHeaderExtensions, ReturnsNegotiatedHdrExts) {
   EXPECT_CALL(mock_channel, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
   EXPECT_CALL(mock_channel, media_channel()).WillRepeatedly(Return(nullptr));
-  EXPECT_CALL(mock_channel, content_name())
-      .WillRepeatedly(ReturnRef(content_name));
+  EXPECT_CALL(mock_channel, mid()).WillRepeatedly(ReturnRef(content_name));
   EXPECT_CALL(mock_channel, SetRtpTransport(_)).WillRepeatedly(Return(true));
 
   cricket::RtpHeaderExtensions extensions = {webrtc::RtpExtension("uri1", 1),

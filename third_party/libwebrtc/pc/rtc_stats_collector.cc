@@ -2152,7 +2152,7 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
         continue;
       }
 
-      stats.mid = channel->content_name();
+      stats.mid = channel->mid();
       stats.transport_name = std::string(channel->transport_name());
 
       if (media_type == cricket::MEDIA_TYPE_AUDIO) {

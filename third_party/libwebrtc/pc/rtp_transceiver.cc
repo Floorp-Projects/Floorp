@@ -198,7 +198,7 @@ void RtpTransceiver::SetChannel(
     channel_ = channel;
 
     if (channel_) {
-      channel_->SetRtpTransport(transport_lookup(channel_->content_name()));
+      channel_->SetRtpTransport(transport_lookup(channel_->mid()));
       channel_->SetFirstPacketReceivedCallback(
           [thread = thread_, flag = signaling_thread_safety_, this]() mutable {
             thread->PostTask(ToQueuedTask(
