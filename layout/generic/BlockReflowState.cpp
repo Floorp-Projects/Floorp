@@ -581,14 +581,14 @@ bool BlockReflowState::AddFloat(nsLineLayout* aLineLayout, nsIFrame* aFloat,
   // If one or more floats has already been pushed to the next line,
   // don't let this one go on the current line, since that would violate
   // float ordering.
-  LogicalRect floatAvailableSpace =
-      GetFloatAvailableSpaceForPlacingFloat(mBCoord).mRect;
-  if (mBelowCurrentLineFloats.IsEmpty() &&
-      (aLineLayout->LineIsEmpty() ||
-       mBlock->ComputeFloatISize(*this, floatAvailableSpace, aFloat) <=
-           aAvailableISize)) {
-    // And then place it
-    PlaceFloatResult result = FlowAndPlaceFloat(aFloat);
+  bool shouldPlaceFloatBelowCurrentLine = false;
+  if (mBelowCurrentLineFloats.IsEmpty()) {
+    // If the current line is empty, we don't impose any inline-size constraint
+    // from the line layout.
+    Maybe<nscoord> availableISizeInCurrentLine =
+        aLineLayout->LineIsEmpty() ? Nothing() : Some(aAvailableISize);
+    PlaceFloatResult result =
+        FlowAndPlaceFloat(aFloat, availableISizeInCurrentLine);
     if (result == PlaceFloatResult::Placed) {
       placed = true;
       // Pass on updated available space to the current inline reflow engine
@@ -608,8 +608,15 @@ bool BlockReflowState::AddFloat(nsLineLayout* aLineLayout, nsIFrame* aFloat,
       mCurrentLineFloats.Append(mFloatCacheFreeList.Alloc(aFloat));
     } else if (result == PlaceFloatResult::ShouldPlaceInNextContinuation) {
       (*aLineLayout->GetLine())->SetHadFloatPushed();
+    } else {
+      MOZ_ASSERT(result == PlaceFloatResult::ShouldPlaceBelowCurrentLine);
+      shouldPlaceFloatBelowCurrentLine = true;
     }
   } else {
+    shouldPlaceFloatBelowCurrentLine = true;
+  }
+
+  if (shouldPlaceFloatBelowCurrentLine) {
     // Always claim to be placed; we don't know whether we fit yet, so we
     // deal with this in PlaceBelowCurrentLineFloats
     placed = true;
@@ -707,11 +714,11 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(ShapeInvalidationDataProperty,
                                     ShapeInvalidationData)
 
 BlockReflowState::PlaceFloatResult BlockReflowState::FlowAndPlaceFloat(
-    nsIFrame* aFloat) {
+    nsIFrame* aFloat, Maybe<nscoord> aAvailableISizeInCurrentLine) {
   MOZ_ASSERT(aFloat->GetParent() == mBlock, "Float frame has wrong parent");
 
   WritingMode wm = mReflowInput.GetWritingMode();
-  // Save away the Y coordinate before placing the float. We will
+  // Save away the block-dir coordinate before placing the float. We will
   // restore mBCoord at the end after placing the float. This is
   // necessary because any adjustments to mBCoord during the float
   // placement are for the float only, not for any non-floating
@@ -772,6 +779,15 @@ BlockReflowState::PlaceFloatResult BlockReflowState::FlowAndPlaceFloat(
                  "letter frames and orthogonal floats with auto block-size "
                  "shouldn't break, and if they do now, then they're breaking "
                  "at the wrong point");
+  }
+
+  // Now we've computed the float's margin inline-size.
+  if (mBCoord == restoreBCoord.SavedValue() && aAvailableISizeInCurrentLine &&
+      floatMarginISize > *aAvailableISizeInCurrentLine) {
+    // The block-dir coordinate stays the same, e.g. it doesn't increase due to
+    // clearance, but the float cannot fit in the available inline-size of the
+    // current line. Let's notify our caller to place it later.
+    return PlaceFloatResult::ShouldPlaceBelowCurrentLine;
   }
 
   // Find a place to place the float. The CSS2 spec doesn't want

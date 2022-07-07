@@ -6613,21 +6613,6 @@ const nsStyleText* nsBlockFrame::StyleTextForLineLayout() {
   return StyleText();
 }
 
-nscoord nsBlockFrame::ComputeFloatISize(BlockReflowState& aState,
-                                        const LogicalRect& aFloatAvailableSpace,
-                                        nsIFrame* aFloat) {
-  MOZ_ASSERT(aFloat->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
-             "aFloat must be an out-of-flow frame");
-
-  LogicalSize availSize = aState.ComputeAvailableSizeForFloat();
-  WritingMode blockWM = aState.mReflowInput.GetWritingMode();
-  WritingMode floatWM = aFloat->GetWritingMode();
-  ReflowInput floatRS(aState.mPresContext, aState.mReflowInput, aFloat,
-                      availSize.ConvertTo(floatWM, blockWM));
-
-  return floatRS.ComputedSizeWithMarginBorderPadding(blockWM).ISize(blockWM);
-}
-
 void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
                                const LogicalSize& aAvailableSize,
                                nsIFrame* aFloat, LogicalMargin& aFloatMargin,
