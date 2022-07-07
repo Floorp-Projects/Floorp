@@ -65,8 +65,8 @@ class NotificationRobot {
     }
 
     fun verifyPrivateTabsNotification() {
-        mDevice.waitNotNull(Until.hasObject(text("Close private tabs")), waitingTime)
-        assertPrivateTabsNotification()
+        verifySystemNotificationExists("$appName (Private)")
+        verifySystemNotificationExists("Close private tabs")
     }
 
     fun clickMediaNotificationControlButton(action: String) {
@@ -115,7 +115,14 @@ class NotificationRobot {
     class Transition {
 
         fun clickClosePrivateTabsNotification(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            NotificationRobot().verifySystemNotificationExists("Close private tabs")
+            try {
+                assertTrue(
+                    closePrivateTabsNotification().exists()
+                )
+            } catch (e: AssertionError) {
+                notificationTray().flingToEnd(1)
+            }
+
             closePrivateTabsNotification().click()
 
             HomeScreenRobot().interact()
@@ -127,11 +134,6 @@ class NotificationRobot {
 fun notificationShade(interact: NotificationRobot.() -> Unit): NotificationRobot.Transition {
     NotificationRobot().interact()
     return NotificationRobot.Transition()
-}
-
-private fun assertPrivateTabsNotification() {
-    mDevice.findObject(UiSelector().text("Firefox Preview (Private)")).exists()
-    mDevice.findObject(UiSelector().text("Close private tabs")).exists()
 }
 
 private fun closePrivateTabsNotification() =
