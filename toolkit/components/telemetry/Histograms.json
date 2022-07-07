@@ -651,7 +651,7 @@
   },
   "GC_REASON_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -660,7 +660,7 @@
   },
   "GC_IS_COMPARTMENTAL": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -668,7 +668,7 @@
   },
   "GC_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -680,7 +680,7 @@
   },
   "GC_IN_PROGRESS_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "smaug@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -723,7 +723,7 @@
   },
   "GC_ANIMATION_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com", "sdetar@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -735,7 +735,7 @@
   },
   "GC_MAX_PAUSE_MS_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "bug_numbers": [1364503],
     "expires_in_version": "never",
@@ -759,7 +759,7 @@
   },
   "GC_MARK_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -769,7 +769,7 @@
   },
   "GC_SWEEP_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -779,7 +779,7 @@
   },
   "GC_COMPACT_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -825,7 +825,7 @@
   },
   "GC_SLICE_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -835,7 +835,7 @@
   },
   "GC_SLOW_PHASE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -844,7 +844,7 @@
   },
   "GC_SLOW_TASK": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org","jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -854,7 +854,7 @@
   },
   "GC_MMU_50": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -864,7 +864,7 @@
   },
   "GC_RESET": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -872,7 +872,7 @@
   },
   "GC_RESET_REASON": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -882,7 +882,7 @@
   },
   "GC_NON_INCREMENTAL": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -890,7 +890,7 @@
   },
   "GC_NON_INCREMENTAL_REASON": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -900,7 +900,7 @@
   },
   "GC_MINOR_REASON": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -909,7 +909,7 @@
   },
   "GC_MINOR_REASON_LONG": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -918,7 +918,7 @@
   },
   "GC_MINOR_US": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -928,7 +928,7 @@
   },
   "GC_NURSERY_BYTES_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "pbone@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -952,7 +952,7 @@
   },
   "GC_SLICE_DURING_IDLE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -963,7 +963,7 @@
   },
   "GC_BUDGET_OVERRUN": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -974,7 +974,7 @@
   },
   "GC_NURSERY_PROMOTION_RATE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -985,7 +985,7 @@
   },
   "GC_TENURED_SURVIVAL_RATE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -1009,7 +1009,7 @@
   },
   "GC_TIME_BETWEEN_S": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -1021,7 +1021,7 @@
   },
   "GC_TIME_BETWEEN_SLICES_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -1033,7 +1033,7 @@
   },
   "GC_SLICE_COUNT": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -1045,7 +1045,7 @@
   },
   "GC_EFFECTIVENESS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
