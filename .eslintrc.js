@@ -219,7 +219,6 @@ module.exports = {
         "dom/**",
         "netwerk/**",
         "security/manager/ssl/tests/unit/**",
-        "services/**",
         "testing/xpcshell/**",
         "toolkit/components/**",
         "toolkit/modules/**",
