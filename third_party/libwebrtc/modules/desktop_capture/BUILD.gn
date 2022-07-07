@@ -557,6 +557,10 @@ rtc_library("desktop_capture_generic") {
       "linux/wayland/base_capturer_pipewire.h",
       "linux/wayland/egl_dmabuf.cc",
       "linux/wayland/egl_dmabuf.h",
+      "linux/wayland/screencast_portal.cc",
+      "linux/wayland/screencast_portal.h",
+      "linux/wayland/shared_screencast_stream.cc",
+      "linux/wayland/shared_screencast_stream.h",
     ]
     } else {
     sources += [
@@ -566,7 +570,6 @@ rtc_library("desktop_capture_generic") {
     }
 
     configs += [
-      #":pipewire_config",
       #":gio",
       #":pipewire",
       #":gbm",
@@ -588,6 +591,8 @@ rtc_library("desktop_capture_generic") {
         include_dirs += [ "/third_party/pipewire" ]
       }
     }
+
+    public_configs += [ ":pipewire_config" ]
 
     deps += [ "../../rtc_base:sanitizer" ]
   }
