@@ -37,6 +37,12 @@ class FontFaceSet final : public DOMEventTargetHelper {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FontFaceSet, DOMEventTargetHelper)
 
+  static bool IsEnabled();
+
+  static bool IsEnabled(JSContext* aCx, JSObject* aObj) {
+    return IsEnabled();
+  }
+
   static already_AddRefed<FontFaceSet> CreateForDocument(
       dom::Document* aDocument);
 
@@ -54,11 +60,6 @@ class FontFaceSet final : public DOMEventTargetHelper {
    * were just flushed.
    */
   void DidRefresh();
-
-  /**
-   * Returns whether the "layout.css.font-loading-api.enabled" pref is true.
-   */
-  static bool PrefEnabled();
 
   void FlushUserFontSet();
 

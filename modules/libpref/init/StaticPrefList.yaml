@@ -7738,8 +7738,14 @@
 
 # Is support for document.fonts enabled?
 - name: layout.css.font-loading-api.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# Is support for workerGlobalScope.fonts enabled?
+- name: layout.css.font-loading-api.workers.enabled
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 # Is support for the @font-face metrics override descriptors enabled?

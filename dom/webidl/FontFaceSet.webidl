@@ -19,7 +19,7 @@ dictionary FontFaceSetIteratorResult
 
 // To implement FontFaceSet's iterator until we can use setlike.
 [LegacyNoInterfaceObject,
- Exposed=Window]
+ Exposed=(Window,Worker)]
 interface FontFaceSetIterator {
   [Throws] FontFaceSetIteratorResult next();
 };
@@ -28,8 +28,8 @@ callback FontFaceSetForEachCallback = void (FontFace value, FontFace key, FontFa
 
 enum FontFaceSetLoadStatus { "loading", "loaded" };
 
-[Pref="layout.css.font-loading-api.enabled",
- Exposed=Window]
+[Func="FontFaceSet::IsEnabled",
+ Exposed=(Window,Worker)]
 interface FontFaceSet : EventTarget {
   // Bug 1072762 is for the FontFaceSet constructor.
   // constructor(sequence<FontFace> initialFaces);

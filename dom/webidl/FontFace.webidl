@@ -31,8 +31,8 @@ enum FontFaceLoadStatus { "unloaded", "loading", "loaded", "error" };
 
 // Bug 1072107 is for exposing this in workers.
 // [Exposed=(Window,Worker)]
-[Pref="layout.css.font-loading-api.enabled",
- Exposed=Window]
+[Func="FontFaceSet::IsEnabled",
+ Exposed=(Window,Worker)]
 interface FontFace {
   [Throws]
   constructor(UTF8String family,
