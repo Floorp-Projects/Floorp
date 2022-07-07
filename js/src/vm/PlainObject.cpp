@@ -309,7 +309,7 @@ static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
   }
 
   if (canCache && !obj->inDictionaryMode()) {
-    MOZ_ASSERT(!obj->isIndexed());
+    MOZ_ASSERT(obj->getDenseInitializedLength() == 0);
     MOZ_ASSERT(obj->slotSpan() == nproperties);
     cache.add(obj->shape());
   }
