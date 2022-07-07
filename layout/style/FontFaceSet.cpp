@@ -67,7 +67,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(FontFaceSet)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FontFaceSet,
                                                   DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mImpl->Document());
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mImpl->GetDocument());
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReady);
   for (size_t i = 0; i < tmp->mRuleFaces.Length(); i++) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRuleFaces[i].mFontFace);
