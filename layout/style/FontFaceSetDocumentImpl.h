@@ -26,6 +26,10 @@ class FontFaceSetDocumentImpl final : public FontFaceSetImpl,
   void Initialize();
   void Destroy() override;
 
+  bool IsOnOwningThread() override;
+  void DispatchToOwningThread(const char* aName,
+                              std::function<void()>&& aFunc) override;
+
   void RefreshStandardFontLoadPrincipal() override;
 
   dom::Document* Document() const override { return mDocument; }
