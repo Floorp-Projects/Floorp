@@ -9,6 +9,17 @@ $col4-header-font-size: 14;
     grid-gap: 20px;
   }
 
+  &.ds-card-grid-recent-saves {
+    .ds-card {
+      // Hide the second row orphan on narrow screens.
+      @media (min-width: $break-point-medium) and (max-width: $break-point-large) {
+        &:last-child:nth-child(2n - 1) {
+          display: none;
+        }
+      }
+    }
+  }
+
   .ds-card {
     @include dark-theme-only {
       background: none;
