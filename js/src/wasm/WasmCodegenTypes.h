@@ -215,14 +215,6 @@ struct CallableOffsets : Offsets {
 
 WASM_DECLARE_CACHEABLE_POD(CallableOffsets);
 
-struct JitExitOffsets : CallableOffsets {
-  MOZ_IMPLICIT JitExitOffsets() : CallableOffsets() {}
-
-  WASM_CHECK_CACHEABLE_POD_WITH_PARENT(CallableOffsets);
-};
-
-WASM_DECLARE_CACHEABLE_POD(JitExitOffsets);
-
 struct FuncOffsets : CallableOffsets {
   MOZ_IMPLICIT FuncOffsets()
       : CallableOffsets(), uncheckedCallEntry(0), tierEntry(0) {}
@@ -298,7 +290,6 @@ class CodeRange {
   CodeRange(Kind kind, uint32_t funcIndex, Offsets offsets);
   CodeRange(Kind kind, CallableOffsets offsets);
   CodeRange(Kind kind, uint32_t funcIndex, CallableOffsets);
-  CodeRange(uint32_t funcIndex, JitExitOffsets offsets);
   CodeRange(uint32_t funcIndex, uint32_t lineOrBytecode, FuncOffsets offsets);
 
   void offsetBy(uint32_t offset) {
