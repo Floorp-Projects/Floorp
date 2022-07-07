@@ -43,11 +43,11 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FontFace)
 
-  nsISupports* GetParentObject() const { return mParent; }
+  nsIGlobalObject* GetParentObject() const { return mParent; }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<FontFace> CreateForRule(nsISupports* aGlobal,
+  static already_AddRefed<FontFace> CreateForRule(nsIGlobalObject* aGlobal,
                                                   FontFaceSet* aFontFaceSet,
                                                   RawServoFontFaceRule* aRule);
 
@@ -97,7 +97,7 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   already_AddRefed<URLExtraData> GetURLExtraData() const;
 
  private:
-  explicit FontFace(nsISupports* aParent);
+  explicit FontFace(nsIGlobalObject* aParent);
   ~FontFace();
 
   /**
@@ -109,7 +109,7 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   // reject mLoaded based on mStatus and mLoadedRejection.
   void EnsurePromise();
 
-  nsCOMPtr<nsISupports> mParent;
+  nsCOMPtr<nsIGlobalObject> mParent;
 
   RefPtr<FontFaceImpl> mImpl;
 

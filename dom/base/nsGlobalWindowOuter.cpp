@@ -1683,6 +1683,13 @@ OriginTrials nsGlobalWindowOuter::Trials() const {
                       : OriginTrials();
 }
 
+FontFaceSet* nsGlobalWindowOuter::Fonts() {
+  if (mDoc) {
+    return mDoc->Fonts();
+  }
+  return nullptr;
+}
+
 nsresult nsGlobalWindowOuter::EnsureScriptEnvironment() {
   if (GetWrapperPreserveColor()) {
     return NS_OK;

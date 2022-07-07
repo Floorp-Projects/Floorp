@@ -20,7 +20,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/dom/Document.h"
 #include "nsStyleUtil.h"
 
 namespace mozilla {
@@ -72,7 +71,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FontFace)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FontFace)
 
-FontFace::FontFace(nsISupports* aParent)
+FontFace::FontFace(nsIGlobalObject* aParent)
     : mParent(aParent), mLoadedRejection(NS_OK) {}
 
 FontFace::~FontFace() {
@@ -90,7 +89,7 @@ JSObject* FontFace::WrapObject(JSContext* aCx,
 }
 
 already_AddRefed<FontFace> FontFace::CreateForRule(
-    nsISupports* aGlobal, FontFaceSet* aFontFaceSet,
+    nsIGlobalObject* aGlobal, FontFaceSet* aFontFaceSet,
     RawServoFontFaceRule* aRule) {
   FontFaceSetImpl* setImpl = aFontFaceSet->GetImpl();
   MOZ_ASSERT(setImpl);
@@ -104,21 +103,19 @@ already_AddRefed<FontFace> FontFace::Constructor(
     const GlobalObject& aGlobal, const nsACString& aFamily,
     const UTF8StringOrArrayBufferOrArrayBufferView& aSource,
     const FontFaceDescriptors& aDescriptors, ErrorResult& aRv) {
-  nsISupports* global = aGlobal.GetAsSupports();
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
-  if (!window) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+
+  FontFaceSet* set = global->Fonts();
+  if (!set) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  Document* doc = window->GetDoc();
-  if (!doc) {
+  FontFaceSetImpl* setImpl = set->GetImpl();
+  if (!setImpl) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-
-  FontFaceSetImpl* setImpl = doc->Fonts()->GetImpl();
-  MOZ_ASSERT(setImpl);
 
   RefPtr<FontFace> obj = new FontFace(global);
   obj->mImpl = new FontFaceImpl(obj, setImpl);
@@ -321,18 +318,16 @@ already_AddRefed<URLExtraData> FontFace::GetURLExtraData() const {
 void FontFace::EnsurePromise() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mLoaded || !mImpl) {
+  if (mLoaded || !mImpl || !mParent) {
     return;
   }
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
 
   // If the pref is not set, don't create the Promise (which the page wouldn't
   // be able to get to anyway) as it causes the window.FontFace constructor
   // to be created.
-  if (global && FontFaceSet::PrefEnabled()) {
+  if (FontFaceSet::PrefEnabled()) {
     ErrorResult rv;
-    mLoaded = Promise::Create(global, rv);
+    mLoaded = Promise::Create(mParent, rv);
 
     if (mImpl->Status() == FontFaceLoadStatus::Loaded) {
       mLoaded->MaybeResolve(this);
