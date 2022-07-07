@@ -3,7 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 config = {
-    # We bake this directly into the tester image now...
-    "nodejs_path": "/usr/local/bin/node",
     "exes": {},
 }
