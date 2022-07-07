@@ -9,6 +9,7 @@
 
 #include "nsIScriptObjectPrincipal.h"
 #include "mozilla/dom/BackgroundFileSystemChild.h"
+#include "mozilla/dom/OriginPrivateFileSystemChild.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemFileHandle.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
@@ -16,17 +17,23 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 
-using namespace mozilla::ipc;
-
 namespace mozilla::dom::fs {
+
+using mozilla::ipc::RejectCallback;
 
 namespace {
 
 // Not static: BackgroundFileSystemChild must be owned by calling thread
 RefPtr<mozilla::dom::BackgroundFileSystemChild> GetRootProvider(
     nsIGlobalObject* aGlobal) {
+  using mozilla::dom::BackgroundFileSystemChild;
+  using mozilla::ipc::BackgroundChild;
+  using mozilla::ipc::PBackgroundChild;
+  using mozilla::ipc::PrincipalInfo;
+
   // TODO: It would be nice to convert all error checks to QM_TRY some time
   //       later.
 
@@ -61,7 +68,7 @@ RefPtr<mozilla::dom::BackgroundFileSystemChild> GetRootProvider(
       return nullptr;
     }
 
-    BackgroundFileSystemChild* actor = new BackgroundFileSystemChild();
+    auto* actor = new BackgroundFileSystemChild();
 
     result = static_cast<BackgroundFileSystemChild*>(
         backgroundActor->SendPBackgroundFileSystemConstructor(actor,
@@ -88,11 +95,11 @@ RefPtr<mozilla::dom::BackgroundFileSystemChild> GetRootProvider(
 }
 
 // TODO: This is just a dummy implementation
-RefPtr<File> MakeGetFileResult(const nsString& aName, const nsString& aType,
+RefPtr<File> MakeGetFileResult(nsIGlobalObject* aGlobal, const nsString& aName,
+                               const nsString& aType,
                                int64_t aLastModifiedMilliSeconds,
-                               nsTArray<Name>&& aPath,
-                               mozilla::ipc::FileDescriptor&& aFile,
-                               nsIGlobalObject* aGlobal) {
+                               nsTArray<Name>&& aPath, IPCBlob&& /* aFile */,
+                               RefPtr<FileSystemActorHolder>& aActor) {
   // TODO: Replace with a real implementation
   RefPtr<File> result = File::CreateMemoryFileWithCustomLastModified(
       aGlobal, static_cast<void*>(new uint8_t[1]), sizeof(uint8_t), aName,
@@ -102,22 +109,31 @@ RefPtr<File> MakeGetFileResult(const nsString& aName, const nsString& aType,
 }
 
 void GetDirectoryContentsResponseHandler(
-    RefPtr<FileSystemActorHolder>& /* aActor */,
-    FileSystemDirectoryListing&& aResponse, nsIGlobalObject* aGlobal,
-    ArrayAppendable& /* aSink */) {
+    nsIGlobalObject* aGlobal, FileSystemDirectoryListing&& aResponse,
+    ArrayAppendable& /* aSink */, RefPtr<FileSystemActorHolder>& aActor) {
   // TODO: Add page size to FileSystemConstants, preallocate and handle overflow
   nsTArray<RefPtr<FileSystemHandle>> batch;
 
   for (const auto& it : aResponse.files()) {
-    RefPtr<FileSystemHandle> handle = new FileSystemFileHandle(aGlobal, it);
+    RefPtr<FileSystemHandle> handle =
+        new FileSystemFileHandle(aGlobal, aActor, it);
     batch.AppendElement(handle);
   }
 
   for (const auto& it : aResponse.directories()) {
     RefPtr<FileSystemHandle> handle =
-        new FileSystemDirectoryHandle(aGlobal, it);
+        new FileSystemDirectoryHandle(aGlobal, aActor, it);
     batch.AppendElement(handle);
   }
+}
+
+RefPtr<FileSystemDirectoryHandle> MakeResolution(
+    nsIGlobalObject* aGlobal, FileSystemGetRootResponse&& aResponse,
+    const RefPtr<FileSystemDirectoryHandle>& /* aResolution */,
+    const Name& aName, RefPtr<FileSystemActorHolder>& aActor) {
+  RefPtr<FileSystemDirectoryHandle> result = new FileSystemDirectoryHandle(
+      aGlobal, aActor, FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
+  return result;
 }
 
 RefPtr<FileSystemDirectoryHandle> MakeResolution(
@@ -125,7 +141,8 @@ RefPtr<FileSystemDirectoryHandle> MakeResolution(
     const RefPtr<FileSystemDirectoryHandle>& /* aResolution */,
     const Name& aName, RefPtr<FileSystemActorHolder>& aActor) {
   RefPtr<FileSystemDirectoryHandle> result = new FileSystemDirectoryHandle(
-      aGlobal, FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
+      aGlobal, aActor, FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
+
   return result;
 }
 
@@ -134,7 +151,7 @@ RefPtr<FileSystemFileHandle> MakeResolution(
     const RefPtr<FileSystemFileHandle>& /* aResolution */, const Name& aName,
     RefPtr<FileSystemActorHolder>& aActor) {
   RefPtr<FileSystemFileHandle> result = new FileSystemFileHandle(
-      aGlobal, FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
+      aGlobal, aActor, FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
   return result;
 }
 
@@ -144,10 +161,10 @@ RefPtr<File> MakeResolution(nsIGlobalObject* aGlobal,
                             const Name& aName,
                             RefPtr<FileSystemActorHolder>& aActor) {
   auto& fileProperties = aResponse.get_FileSystemFileProperties();
-  return MakeGetFileResult(aName, fileProperties.type(),
+  return MakeGetFileResult(aGlobal, aName, fileProperties.type(),
                            fileProperties.last_modified_ms(),
                            std::move(fileProperties.path()),
-                           std::move(fileProperties.file()), aGlobal);
+                           std::move(fileProperties.file()), aActor);
 }
 
 template <class TResponse, class... Args>
@@ -204,10 +221,10 @@ void ResolveCallback(FileSystemGetEntriesResponse&& aResponse,
   }
 
   GetDirectoryContentsResponseHandler(
-      aActor,
+      aPromise->GetParentObject(),
       std::forward<FileSystemDirectoryListing>(
           aResponse.get_FileSystemDirectoryListing()),
-      aPromise->GetParentObject(), aSink);
+      aSink, aActor);
 
   // TODO: Remove this when sink is ready
   aPromise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
@@ -281,16 +298,26 @@ mozilla::ipc::RejectCallback GetRejectCallback(
 
 void FileSystemRequestHandler::GetRoot(
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  using mozilla::ipc::Endpoint;
+
   MOZ_ASSERT(aPromise);
 
-  RefPtr<FileSystemActorHolder> dummyActor =
-      MakeAndAddRef<FileSystemActorHolder>();
+  // Create a new IPC connection
+  Endpoint<POriginPrivateFileSystemParent> parentEp;
+  Endpoint<POriginPrivateFileSystemChild> childEp;
+  MOZ_ALWAYS_SUCCEEDS(
+      POriginPrivateFileSystem::CreateEndpoints(&parentEp, &childEp));
 
-  Name name = kRootName;
-  auto&& onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
+  RefPtr<FileSystemActorHolder> actor =
+      MakeAndAddRef<FileSystemActorHolder>(new OriginPrivateFileSystemChild());
+  if (!childEp.Bind(actor->Actor())) {
+    aPromise->MaybeRejectWithUndefined();
+    return;
+  }
+
+  auto&& onResolve = SelectResolveCallback<FileSystemGetRootResponse,
                                            RefPtr<FileSystemDirectoryHandle>>(
-      aPromise, name, dummyActor);
-
+      aPromise, kRootName, actor);
   auto&& onReject = GetRejectCallback(aPromise);
 
   // XXX do something (register with global?) so that we can Close() the actor
@@ -302,7 +329,8 @@ void FileSystemRequestHandler::GetRoot(
     aPromise->MaybeRejectWithUnknownError("Could not access the file system");
     return;
   }
-  rootProvider->SendGetRoot(std::move(onResolve), std::move(onReject));
+  rootProvider->SendGetRoot(std::move(parentEp), std::move(onResolve),
+                            std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetDirectoryHandle(
@@ -320,10 +348,11 @@ void FileSystemRequestHandler::GetDirectoryHandle(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  auto actor = GetRootProvider(aPromise->GetGlobalObject());
-  QM_TRY(OkIf(actor), QM_VOID);
-  actor->SendGetDirectoryHandle(request, std::move(onResolve),
-                                std::move(onReject));
+  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aActor->Actor()->SendGetDirectoryHandle(request, std::move(onResolve),
+                                          std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetFileHandle(
@@ -341,9 +370,11 @@ void FileSystemRequestHandler::GetFileHandle(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  auto actor = GetRootProvider(aPromise->GetGlobalObject());
-  QM_TRY(OkIf(actor), QM_VOID);
-  actor->SendGetFileHandle(request, std::move(onResolve), std::move(onReject));
+  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aActor->Actor()->SendGetFileHandle(request, std::move(onResolve),
+                                     std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetFile(
@@ -360,9 +391,11 @@ void FileSystemRequestHandler::GetFile(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  auto actor = GetRootProvider(aPromise->GetGlobalObject());
-  QM_TRY(OkIf(actor), QM_VOID);
-  actor->SendGetFile(request, std::move(onResolve), std::move(onReject));
+  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aActor->Actor()->SendGetFile(request, std::move(onResolve),
+                               std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetEntries(
@@ -387,13 +420,15 @@ void FileSystemRequestHandler::GetEntries(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  auto actor = GetRootProvider(aPromise->GetGlobalObject());
-  QM_TRY(OkIf(actor), QM_VOID);
-  actor->SendGetEntries(request, std::move(onResolve), std::move(onReject));
+  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aActor->Actor()->SendGetEntries(request, std::move(onResolve),
+                                  std::move(onReject));
 }
 
 void FileSystemRequestHandler::RemoveEntry(
-    RefPtr<FileSystemActorHolder>& /* aActor */,
+    RefPtr<FileSystemActorHolder>& aActor,
     const FileSystemChildMetadata& aEntry, bool aRecursive,
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
   MOZ_ASSERT(!aEntry.parentId().IsEmpty());
@@ -406,9 +441,11 @@ void FileSystemRequestHandler::RemoveEntry(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  auto actor = GetRootProvider(aPromise->GetGlobalObject());
-  QM_TRY(OkIf(actor), QM_VOID);
-  actor->SendRemoveEntry(request, std::move(onResolve), std::move(onReject));
+  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aActor->Actor()->SendRemoveEntry(request, std::move(onResolve),
+                                   std::move(onReject));
 }
 
 }  // namespace mozilla::dom::fs

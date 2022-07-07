@@ -20,10 +20,12 @@ struct FileSystemCreateWritableOptions;
 class FileSystemFileHandle final : public FileSystemHandle {
  public:
   FileSystemFileHandle(nsIGlobalObject* aGlobal,
+                       RefPtr<FileSystemActorHolder>& aActor,
                        const fs::FileSystemEntryMetadata& aMetadata,
                        fs::FileSystemRequestHandler* aRequestHandler);
 
   FileSystemFileHandle(nsIGlobalObject* aGlobal,
+                       RefPtr<FileSystemActorHolder>& aActor,
                        const fs::FileSystemEntryMetadata& aMetadata);
 
   NS_DECL_ISUPPORTS_INHERITED
