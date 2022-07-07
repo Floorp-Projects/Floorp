@@ -55,6 +55,9 @@ ffi::WGPURenderPass* BeginRenderPass(
     CommandEncoder* const aParent, const dom::GPURenderPassDescriptor& aDesc) {
   ffi::WGPURenderPassDescriptor desc = {};
 
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
+
   ffi::WGPURenderPassDepthStencilAttachment dsDesc = {};
   if (aDesc.mDepthStencilAttachment.WasPassed()) {
     const auto& dsa = aDesc.mDepthStencilAttachment.Value();

@@ -29,7 +29,6 @@ typedef uint64_t WGPUOption_BindGroupLayoutId;
 typedef uint64_t WGPUOption_SamplerId;
 typedef uint64_t WGPUOption_SurfaceId;
 typedef uint64_t WGPUOption_TextureViewId;
-typedef nsString WGPUnsString;
 """
 include_version = true
 braces = "SameLine"
@@ -40,6 +39,7 @@ style = "tag"
 
 [export]
 prefix = "WGPU"
+renaming_overrides_prefixing = true
 exclude = [
 	"Option_AdapterId", "Option_BufferId", "Option_PipelineLayoutId", "Option_BindGroupLayoutId",
 	"Option_SamplerId", "Option_SurfaceId", "Option_TextureViewId",
@@ -49,13 +49,17 @@ exclude = [
 include = ["BufferUsages"]
 
 [export.rename]
-"BufferDescriptor_RawString" = "BufferDescriptor"
-"CommandBufferDescriptor_RawString" = "CommandBufferDescriptor"
-"CommandEncoderDescriptor_RawString" = "CommandEncoderDescriptor"
-"RenderBundleDescriptor_RawString" = "RenderBundleDescriptor"
-"DeviceDescriptor_RawString" = "DeviceDescriptor"
-"TextureDescriptor_RawString" = "TextureDescriptor"
-"SamplerDescriptor_RawString" = "SamplerDescriptor"
+"nsString" = "nsString"
+"nsCString" = "nsCString"
+"nsAString" = "nsAString"
+"nsACString" = "nsACString"
+"BufferDescriptor______nsACString" = "WGPUBufferDescriptor"
+"CommandBufferDescriptor______nsACString" = "WGPUCommandBufferDescriptor"
+"CommandEncoderDescriptor______nsACString" = "WGPUCommandEncoderDescriptor"
+"RenderBundleDescriptor______nsACString" = "WGPURenderBundleDescriptor"
+"DeviceDescriptor______nsACString" = "WGPUDeviceDescriptor"
+"TextureDescriptor______nsACString" = "WGPUTextureDescriptor"
+"SamplerDescriptor______nsACString" = "WGPUSamplerDescriptor"
 
 [parse]
 parse_deps = true
