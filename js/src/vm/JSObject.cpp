@@ -1273,9 +1273,7 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
   MOZ_RELEASE_ASSERT(js::ObjectMayBeSwapped(a));
   MOZ_RELEASE_ASSERT(js::ObjectMayBeSwapped(b));
 
-  if (!Watchtower::watchObjectSwap(cx, a, b)) {
-    oomUnsafe.crash("Watchtower::watchObjectSwap");
-  }
+  Watchtower::watchObjectSwap(cx, a, b);
 
   // Ensure we update any embedded nursery pointers in either object.
   gc::StoreBuffer& storeBuffer = cx->runtime()->gc.storeBuffer();
