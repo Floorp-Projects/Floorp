@@ -778,11 +778,6 @@ class nsBlockFrame : public nsContainerFrame {
                          LineIterator aLine, nsIFrame* aFrame,
                          LineReflowStatus* aLineReflowStatus);
 
-  // Computes the border-box inline size of the float
-  nscoord ComputeFloatISize(BlockReflowState& aState,
-                            const mozilla::LogicalRect& aFloatAvailableSpace,
-                            nsIFrame* aFloat);
-
   // @param aAvailableSize the result of
   //        BlockReflowState::ComputeAvailableSizeForFloat().
   // @param aFloatPushedDown whether the block-direction position available to
