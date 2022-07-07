@@ -95,7 +95,8 @@ fun MessageCard(
                 Text(
                     text = message.data.text,
                     modifier = Modifier.fillMaxWidth(),
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    color = FirefoxTheme.colors.textSecondary,
                 )
             } else {
                 Row(
@@ -104,7 +105,8 @@ fun MessageCard(
                     Text(
                         text = message.data.text,
                         modifier = Modifier.weight(1f),
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = FirefoxTheme.colors.textPrimary,
                     )
 
                     IconButton(
