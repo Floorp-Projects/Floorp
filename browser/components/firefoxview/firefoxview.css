@@ -188,7 +188,11 @@ body > main > aside {
 
 .placeholder-content {
   text-align: center;
-  padding: 10px 0;
+  padding: 20px 0 10px;
+}
+
+.placeholder-text, .synced-tabs, .history {
+  color: var(--in-content-deemphasized-text);
 }
 
 .page-section-header {
@@ -275,6 +279,13 @@ body > main > aside {
 
 .setup-step > footer > progress {
   margin-block: 0 8px;
+}
+
+/* 117px is the total height of the collapsible-tabs-container; setting that size
+ for the second row stabilizes the layout so it doesn't shift when collapsibled */
+#recently-closed-tabs-container {
+  display: grid;
+  grid-template-rows: max-content 117px;
 }
 
 #recently-closed-tabs-container > p {
@@ -521,28 +532,33 @@ body > main > aside {
   fill: currentColor;
 }
 
-.icon.arrow-down {
-  background-image: url("chrome://global/skin/icons/arrow-down.svg");
-}
-
-.icon.arrow-up {
+/* the ordering of these two arrow icons is important for the toggleContainer to work correctly */
+.arrow-up {
   background-image: url("chrome://global/skin/icons/arrow-up.svg");
 }
 
-.icon.history {
+.arrow-down {
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+}
+
+.history {
   background-image: url('chrome://browser/skin/history.svg');
 }
 
-.icon.phone {
+.phone {
   background-image: url('chrome://browser/skin/device-phone.svg');
 }
 
-.icon.desktop {
+.desktop {
   background-image: url('chrome://browser/skin/device-desktop.svg');
 }
 
-.icon.tablet {
+.tablet {
   background-image: url('chrome://browser/skin/device-tablet.svg');
+}
+
+.synced-tabs {
+  background-image: url('chrome://browser/skin/synced-tabs.svg');
 }
 
 .favicon {

@@ -7,7 +7,7 @@ const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 XPCOMUtils.defineLazyModuleGetters(globalThis, {
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
 });
-
+const sandbox = sinon.createSandbox();
 const syncedTabsData1 = [
   {
     id: 1,
@@ -101,7 +101,6 @@ const syncedTabsData4 = structuredClone(syncedTabsData3);
 syncedTabsData4[0].tabs = [...syncedTabsData4[0].tabs, ...twoTabs];
 
 function setupMocks(mockData1, mockData2) {
-  const sandbox = sinon.createSandbox();
   sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => [
     {
       id: 1,
@@ -124,8 +123,6 @@ function setupMocks(mockData1, mockData2) {
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getTabClients");
   syncedTabsMock.onFirstCall().returns(mockData1);
   syncedTabsMock.onSecondCall().returns(mockData2);
-
-  return sandbox;
 }
 
 async function setupListState(browser) {
@@ -154,6 +151,16 @@ async function setupListState(browser) {
   );
 }
 
+function cleanup() {
+  sandbox.restore();
+  Services.prefs.clearUserPref("services.sync.engine.tabs");
+  Services.prefs.clearUserPref("services.sync.lastTabFetch");
+}
+
+registerCleanupFunction(async function() {
+  cleanup();
+});
+
 add_task(async function test_tab_list_ordering() {
   await BrowserTestUtils.withNewTab(
     {
@@ -163,7 +170,7 @@ add_task(async function test_tab_list_ordering() {
     async browser => {
       const { document } = browser.contentWindow;
 
-      const sandbox = setupMocks(syncedTabsData1, syncedTabsData2);
+      setupMocks(syncedTabsData1, syncedTabsData2);
       await setupListState(browser);
 
       testVisibility(browser, {
@@ -220,9 +227,7 @@ add_task(async function test_tab_list_ordering() {
           .children[2].textContent.includes("Internet for people, not profits"),
         "Last list item in synced-tabs-list has been updated"
       );
-      sandbox.restore();
-      Services.prefs.clearUserPref("services.sync.engine.tabs");
-      Services.prefs.clearUserPref("services.sync.lastTabFetch");
+      cleanup();
     }
   );
 });
@@ -236,7 +241,7 @@ add_task(async function test_empty_list_items() {
     async browser => {
       const { document } = browser.contentWindow;
 
-      const sandbox = setupMocks(syncedTabsData3, syncedTabsData4);
+      setupMocks(syncedTabsData3, syncedTabsData4);
       await setupListState(browser);
 
       testVisibility(browser, {
@@ -299,9 +304,55 @@ add_task(async function test_empty_list_items() {
         "Last list item in synced-tabs-list has been updated"
       );
 
-      sandbox.restore();
-      Services.prefs.clearUserPref("services.sync.engine.tabs");
-      Services.prefs.clearUserPref("services.sync.lastTabFetch");
+      cleanup();
+    }
+  );
+});
+
+add_task(async function test_empty_list() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      setupMocks([], syncedTabsData4);
+      await setupListState(browser);
+
+      testVisibility(browser, {
+        expectedVisible: {
+          "#synced-tabs-placeholder": true,
+          "ol.synced-tabs-list": false,
+        },
+      });
+
+      ok(
+        document
+          .querySelector("#synced-tabs-placeholder")
+          .classList.contains("empty-container"),
+        "collapsible container should have correct styling when the list is empty"
+      );
+
+      // Initiate a synced tabs update
+      Services.obs.notifyObservers(null, "services.sync.tabs.changed");
+
+      const syncedTabsList = document.querySelector("ol.synced-tabs-list");
+      await BrowserTestUtils.waitForMutationCondition(
+        syncedTabsList,
+        { childList: true },
+        () => syncedTabsList.children.length
+      );
+
+      testVisibility(browser, {
+        expectedVisible: {
+          "#synced-tabs-placeholder": false,
+          "ol.synced-tabs-list": true,
+        },
+      });
+
+      cleanup();
     }
   );
 });
