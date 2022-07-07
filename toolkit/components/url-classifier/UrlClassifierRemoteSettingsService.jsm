@@ -74,22 +74,6 @@ UrlClassifierRemoteSettingsService.prototype = {
     return requests;
   },
 
-  /**
-   * Parse the response data of the update request
-   *
-   * @param aData string response data for list data request
-   * @return the chunk number
-   */
-  _parseChunkNumFromShavarData(aData) {
-    // The data in shavar chunk looks like
-    // CHUNKTYPE ":" NUMBER ":" PREFIXLENGTH ":" NUMBER LF(\n) CHUNKDATA
-    // For example, a:1597417364:32:864\n^&*()_+}:?...
-
-    let line = aData.split("\n", 1)[0];
-    // Get the chunk number
-    return line?.split(":", 2)[1];
-  },
-
   async _getLists(aRequest, aListener) {
     await this.lazyInit();
 
@@ -104,22 +88,19 @@ UrlClassifierRemoteSettingsService.prototype = {
         continue;
       }
 
-      let rsChunkNum;
+      // If the request version is the same as what we have in Remote Settings,
+      // we are up-to-date now.
+      if (entry.Version == reqChunkNum) {
+        continue;
+      }
+
       let downloadError = false;
       try {
-        let { buffer } = await rs.attachments.download(entry, {
-          useCache: true,
-        });
+        // SafeBrowsing maintains its own files, so we can remove the downloaded
+        // files after SafeBrowsing processes the data.
+        let buffer = await rs.attachments.downloadAsBytes(entry);
         let bytes = new Uint8Array(buffer);
         let strData = String.fromCharCode.apply(String, bytes);
-
-        // We use chunk number as the version. Only need to do safe browsing update
-        // when the chunk number is different.
-        rsChunkNum = this._parseChunkNumFromShavarData(strData);
-
-        if (rsChunkNum == reqChunkNum) {
-          continue;
-        }
 
         // Construct the payload
         payload += "i:" + reqTableName + "\n";
