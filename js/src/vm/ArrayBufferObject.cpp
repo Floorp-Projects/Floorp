@@ -26,6 +26,7 @@
 #  include <sys/mman.h>
 #endif
 #include <tuple>  // std::tuple
+#include <type_traits>
 #ifdef MOZ_VALGRIND
 #  include <valgrind/memcheck.h>
 #endif
@@ -721,6 +722,9 @@ void WasmArrayRawBuffer::Release(void* mem) {
 
   MOZ_RELEASE_ASSERT(header->mappedSize() <= SIZE_MAX - gc::SystemPageSize());
   size_t mappedSizeWithHeader = header->mappedSize() + gc::SystemPageSize();
+
+  static_assert(std::is_trivially_destructible_v<WasmArrayRawBuffer>,
+                "no need to call the destructor");
 
   UnmapBufferMemory(header->indexType(), header->basePointer(),
                     mappedSizeWithHeader);

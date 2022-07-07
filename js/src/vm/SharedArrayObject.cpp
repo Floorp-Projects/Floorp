@@ -204,10 +204,13 @@ void SharedArrayRawBuffer::dropReference() {
   // This was the final reference, so release the buffer.
   if (isWasm()) {
     WasmSharedArrayRawBuffer* wasmBuf = toWasmBuffer();
+    wasm::IndexType indexType = wasmBuf->wasmIndexType();
+    uint8_t* basePointer = wasmBuf->basePointer();
     size_t mappedSizeWithHeader =
         wasmBuf->wasmMappedSize() + gc::SystemPageSize();
-    UnmapBufferMemory(wasmBuf->wasmIndexType(), wasmBuf->basePointer(),
-                      mappedSizeWithHeader);
+    // Call the destructor to destroy the growLock_ Mutex.
+    wasmBuf->~WasmSharedArrayRawBuffer();
+    UnmapBufferMemory(indexType, basePointer, mappedSizeWithHeader);
   } else {
     js_delete(this);
   }
