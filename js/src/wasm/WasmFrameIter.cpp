@@ -1261,16 +1261,6 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         AssertMatchesCallSite(fixedPC, fixedFP);
 #endif
       } else {
-        if (codeRange->kind() == CodeRange::ImportJitExit) {
-          // The jit exit contains a range where the value of FP can't be
-          // trusted. Technically, we could recover fp from sp, but since
-          // the range is so short, for now just drop the stack.
-          if (offsetInCode >= codeRange->jitExitUntrustedFPStart() &&
-              offsetInCode < codeRange->jitExitUntrustedFPEnd()) {
-            return false;
-          }
-        }
-
         if (isSignatureCheckFail(offsetInCode, codeRange)) {
           // Frame has been pushed and FP has been set.
           const auto* frame = Frame::fromUntaggedWasmExitFP(fp);
