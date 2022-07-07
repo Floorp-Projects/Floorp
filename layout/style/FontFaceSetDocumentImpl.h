@@ -26,6 +26,8 @@ class FontFaceSetDocumentImpl final : public FontFaceSetImpl,
   void Initialize();
   void Destroy() override;
 
+  void RefreshStandardFontLoadPrincipal() override;
+
   dom::Document* Document() const override { return mDocument; }
 
   already_AddRefed<URLExtraData> GetURLExtraData() override;
@@ -99,9 +101,6 @@ class FontFaceSetDocumentImpl final : public FontFaceSetImpl,
 #ifdef DEBUG
   bool HasRuleFontFace(FontFaceImpl* aFontFace);
 #endif
-
-  already_AddRefed<gfxFontSrcPrincipal> CreateStandardFontLoadPrincipal()
-      const override;
 
   TimeStamp GetNavigationStartTimeStamp() override;
 

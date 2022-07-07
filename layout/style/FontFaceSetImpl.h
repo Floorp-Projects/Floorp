@@ -126,7 +126,7 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
     return set ? set->GetPresContext() : nullptr;
   }
 
-  void RefreshStandardFontLoadPrincipal();
+  virtual void RefreshStandardFontLoadPrincipal();
 
   virtual dom::Document* Document() const { return nullptr; }
 
@@ -231,9 +231,6 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
                                      FontSlantStyle& aStyle, ErrorResult& aRv);
 
   virtual TimeStamp GetNavigationStartTimeStamp() = 0;
-
-  virtual already_AddRefed<gfxFontSrcPrincipal>
-  CreateStandardFontLoadPrincipal() const = 0;
 
   FontFaceSet* MOZ_NON_OWNING_REF mOwner;
 
