@@ -574,7 +574,7 @@ bool BlockReflowState::AddFloat(nsLineLayout* aLineLayout, nsIFrame* aFloat,
   nscoord dB = oB - mFloatManagerB;
   FloatManager()->Translate(-dI, -dB);
 
-  bool placed;
+  bool placed = false;
 
   // Now place the float immediately if possible. Otherwise stash it
   // away in mBelowCurrentLineFloats and place it later.
@@ -588,8 +588,9 @@ bool BlockReflowState::AddFloat(nsLineLayout* aLineLayout, nsIFrame* aFloat,
        mBlock->ComputeFloatISize(*this, floatAvailableSpace, aFloat) <=
            aAvailableISize)) {
     // And then place it
-    placed = FlowAndPlaceFloat(aFloat);
-    if (placed) {
+    PlaceFloatResult result = FlowAndPlaceFloat(aFloat);
+    if (result == PlaceFloatResult::Placed) {
+      placed = true;
       // Pass on updated available space to the current inline reflow engine
       WritingMode wm = mReflowInput.GetWritingMode();
       // If we have mLineBSize, we are reflowing the line again due to
@@ -605,7 +606,7 @@ bool BlockReflowState::AddFloat(nsLineLayout* aLineLayout, nsIFrame* aFloat,
       aLineLayout->UpdateBand(wm, availSpace, aFloat);
       // Record this float in the current-line list
       mCurrentLineFloats.Append(mFloatCacheFreeList.Alloc(aFloat));
-    } else {
+    } else if (result == PlaceFloatResult::ShouldPlaceInNextContinuation) {
       (*aLineLayout->GetLine())->SetHadFloatPushed();
     }
   } else {
@@ -705,7 +706,8 @@ struct ShapeInvalidationData {
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(ShapeInvalidationDataProperty,
                                     ShapeInvalidationData)
 
-bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
+BlockReflowState::PlaceFloatResult BlockReflowState::FlowAndPlaceFloat(
+    nsIFrame* aFloat) {
   MOZ_ASSERT(aFloat->GetParent() == mBlock, "Float frame has wrong parent");
 
   WritingMode wm = mReflowInput.GetWritingMode();
@@ -738,7 +740,7 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
     auto [bCoord, result] = ClearFloats(mBCoord, floatDisplay->mBreakType);
     if (result == ClearFloatsResult::FloatsPushedOrSplit) {
       PushFloatPastBreak(aFloat);
-      return false;
+      return PlaceFloatResult::ShouldPlaceInNextContinuation;
     }
     mBCoord = bCoord;
   }
@@ -794,7 +796,7 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
         floatAvailableSpace.mRect.BSize(wm) <= 0 && !mustPlaceFloat) {
       // No space, nowhere to put anything.
       PushFloatPastBreak(aFloat);
-      return false;
+      return PlaceFloatResult::ShouldPlaceInNextContinuation;
     }
 
     if (CanPlaceFloat(floatMarginISize, floatAvailableSpace)) {
@@ -850,7 +852,7 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
   // next page, we need to bail.
   if (reflowStatus.IsTruncated() || reflowStatus.IsInlineBreakBefore()) {
     PushFloatPastBreak(aFloat);
-    return false;
+    return PlaceFloatResult::ShouldPlaceInNextContinuation;
   }
 
   // We can't use aFloat->ShouldAvoidBreakInside(mReflowInput) here since
@@ -864,7 +866,7 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
            ContentBEnd() - floatPos.B(wm)) &&
       !aFloat->GetPrevInFlow()) {
     PushFloatPastBreak(aFloat);
-    return false;
+    return PlaceFloatResult::ShouldPlaceInNextContinuation;
   }
 
   // Calculate the actual origin of the float frame's border rect
@@ -959,7 +961,7 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
   }
 #endif
 
-  return true;
+  return PlaceFloatResult::Placed;
 }
 
 void BlockReflowState::PushFloatPastBreak(nsIFrame* aFloat) {
@@ -999,9 +1001,11 @@ void BlockReflowState::PlaceBelowCurrentLineFloats(nsLineBox* aLine) {
     }
 #endif
     // Place the float
-    bool placed = FlowAndPlaceFloat(fc->mFloat);
+    PlaceFloatResult result = FlowAndPlaceFloat(fc->mFloat);
+    MOZ_ASSERT(result != PlaceFloatResult::ShouldPlaceBelowCurrentLine,
+               "We are already dealing with below current line floats!");
     nsFloatCache* next = fc->Next();
-    if (!placed) {
+    if (result == PlaceFloatResult::ShouldPlaceInNextContinuation) {
       mBelowCurrentLineFloats.Remove(fc);
       delete fc;
       aLine->SetHadFloatPushed();

@@ -6794,7 +6794,8 @@ void nsBlockFrame::ReflowPushedFloats(BlockReflowState& aState,
     // the float doesn't get placed, we don't consider its overflow areas.
     // (Not-getting-placed means it didn't fit and we pushed it instead of
     // placing it, and its position could be stale.)
-    if (aState.FlowAndPlaceFloat(f)) {
+    if (aState.FlowAndPlaceFloat(f) ==
+        BlockReflowState::PlaceFloatResult::Placed) {
       ConsiderChildOverflow(aOverflowAreas, f);
     }
 
