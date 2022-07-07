@@ -38,6 +38,7 @@ enum class StorageAccess;
 namespace dom {
 class VoidFunction;
 class DebuggerNotificationManager;
+class FontFaceSet;
 class Function;
 class Report;
 class ReportBody;
@@ -251,6 +252,8 @@ class nsIGlobalObject : public nsISupports,
   virtual JS::loader::ModuleLoaderBase* GetModuleLoader(JSContext* aCx) {
     return nullptr;
   }
+
+  virtual mozilla::dom::FontFaceSet* Fonts() { return nullptr; }
 
  protected:
   virtual ~nsIGlobalObject();
