@@ -5998,10 +5998,10 @@ Atomic<bool, Relaxed> sCrashOnBlocklistedPref(false);
 void OnFissionBlocklistPrefChange(const char* aPref, void* aData) {
   if (strcmp(aPref, kFissionEnforceBlockList) == 0) {
     sCrashOnBlocklistedPref =
-        StaticPrefs::fission_enforceBlocklistedPrefsInSubprocesses_tmp();
+        StaticPrefs::fission_enforceBlocklistedPrefsInSubprocesses();
   } else if (strcmp(aPref, kFissionOmitBlockListValues) == 0) {
     sOmitBlocklistedPrefValues =
-        StaticPrefs::fission_omitBlocklistedPrefsInSubprocesses_tmp();
+        StaticPrefs::fission_omitBlocklistedPrefsInSubprocesses();
   } else {
     MOZ_CRASH("Unknown pref passed to callback");
   }
