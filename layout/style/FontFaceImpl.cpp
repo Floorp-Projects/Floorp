@@ -7,6 +7,7 @@
 #include "mozilla/dom/FontFaceImpl.h"
 
 #include <algorithm>
+#include "gfxFontUtils.h"
 #include "gfxPlatformFontList.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/FontFaceBinding.h"
@@ -15,7 +16,6 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCSSParser.h"
-#include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/Document.h"
@@ -69,7 +69,7 @@ FontFaceImpl::FontFaceImpl(FontFace* aOwner, FontFaceSetImpl* aFontFaceSet)
 FontFaceImpl::~FontFaceImpl() {
   // Assert that we don't drop any FontFace objects during a Servo traversal,
   // since PostTraversalTask objects can hold raw pointers to FontFaces.
-  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
+  MOZ_ASSERT(!gfxFontUtils::IsInServoTraversal());
 
   SetUserFontEntry(nullptr);
 }
@@ -298,8 +298,6 @@ void FontFaceImpl::DescriptorUpdated() {
 FontFaceLoadStatus FontFaceImpl::Status() { return mStatus; }
 
 void FontFaceImpl::Load(ErrorResult& aRv) {
-  MOZ_ASSERT(NS_IsMainThread());
-
   mFontFaceSet->FlushUserFontSet();
 
   // Calling Load on a FontFace constructed with an ArrayBuffer data source,
@@ -335,6 +333,12 @@ gfxUserFontEntry* FontFaceImpl::CreateUserFontEntry() {
 }
 
 void FontFaceImpl::DoLoad() {
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "FontFaceImpl::DoLoad", [self = RefPtr{this}]() { self->DoLoad(); }));
+    return;
+  }
+
   if (!CreateUserFontEntry()) {
     return;
   }
@@ -342,7 +346,7 @@ void FontFaceImpl::DoLoad() {
 }
 
 void FontFaceImpl::SetStatus(FontFaceLoadStatus aStatus) {
-  AssertIsMainThreadOrServoFontMetricsLocked();
+  gfxFontUtils::AssertSafeThreadOrServoFontMetricsLocked();
 
   if (mStatus == aStatus) {
     return;
@@ -365,6 +369,17 @@ void FontFaceImpl::SetStatus(FontFaceLoadStatus aStatus) {
 
   for (FontFaceSetImpl* otherSet : mOtherFontFaceSets) {
     otherSet->OnFontFaceStatusChanged(this);
+  }
+
+  UpdateOwnerPromise();
+}
+
+void FontFaceImpl::UpdateOwnerPromise() {
+  if (!mFontFaceSet->IsOnOwningThread()) {
+    mFontFaceSet->DispatchToOwningThread(
+        "FontFaceImpl::UpdateOwnerPromise",
+        [self = RefPtr{this}] { self->UpdateOwnerPromise(); });
+    return;
   }
 
   if (NS_WARN_IF(!mOwner)) {
@@ -695,8 +710,17 @@ gfxCharacterMap* FontFaceImpl::GetUnicodeRangeAsCharacterMap() {
 void FontFaceImpl::Entry::SetLoadState(UserFontLoadState aLoadState) {
   gfxUserFontEntry::SetLoadState(aLoadState);
 
+  FontFaceLoadStatus status = LoadStateToStatus(aLoadState);
   for (size_t i = 0; i < mFontFaces.Length(); i++) {
-    mFontFaces[i]->SetStatus(LoadStateToStatus(aLoadState));
+    auto* impl = mFontFaces[i];
+    auto* setImpl = impl->GetPrimaryFontFaceSet();
+    if (setImpl->IsOnOwningThread()) {
+      mFontFaces[i]->SetStatus(status);
+    } else {
+      setImpl->DispatchToOwningThread(
+          "FontFaceImpl::Entry::SetLoadState",
+          [self = RefPtr{impl}, status] { self->SetStatus(status); });
+    }
   }
 }
 

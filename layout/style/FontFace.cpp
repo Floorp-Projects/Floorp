@@ -7,6 +7,7 @@
 #include "mozilla/dom/FontFace.h"
 
 #include <algorithm>
+#include "gfxFontUtils.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/FontFaceBinding.h"
 #include "mozilla/dom/FontFaceImpl.h"
@@ -77,7 +78,7 @@ FontFace::FontFace(nsIGlobalObject* aParent)
 FontFace::~FontFace() {
   // Assert that we don't drop any FontFace objects during a Servo traversal,
   // since PostTraversalTask objects can hold raw pointers to FontFaces.
-  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
+  MOZ_ASSERT(!gfxFontUtils::IsInServoTraversal());
   Destroy();
 }
 
@@ -239,8 +240,6 @@ void FontFace::SetSizeAdjust(const nsACString& aValue, ErrorResult& aRv) {
 FontFaceLoadStatus FontFace::Status() { return mImpl->Status(); }
 
 Promise* FontFace::Load(ErrorResult& aRv) {
-  MOZ_ASSERT(NS_IsMainThread());
-
   EnsurePromise();
 
   if (!mLoaded) {
@@ -253,8 +252,6 @@ Promise* FontFace::Load(ErrorResult& aRv) {
 }
 
 Promise* FontFace::GetLoaded(ErrorResult& aRv) {
-  MOZ_ASSERT(NS_IsMainThread());
-
   EnsurePromise();
 
   if (!mLoaded) {
@@ -266,13 +263,13 @@ Promise* FontFace::GetLoaded(ErrorResult& aRv) {
 }
 
 void FontFace::MaybeResolve() {
-  AssertIsMainThreadOrServoFontMetricsLocked();
+  gfxFontUtils::AssertSafeThreadOrServoFontMetricsLocked();
 
   if (!mLoaded) {
     return;
   }
 
-  if (ServoStyleSet* ss = ServoStyleSet::Current()) {
+  if (ServoStyleSet* ss = gfxFontUtils::CurrentServoStyleSet()) {
     // See comments in Gecko_GetFontMetrics.
     ss->AppendTask(PostTraversalTask::ResolveFontFaceLoadedPromise(this));
     return;
@@ -282,9 +279,9 @@ void FontFace::MaybeResolve() {
 }
 
 void FontFace::MaybeReject(nsresult aResult) {
-  AssertIsMainThreadOrServoFontMetricsLocked();
+  gfxFontUtils::AssertSafeThreadOrServoFontMetricsLocked();
 
-  if (ServoStyleSet* ss = ServoStyleSet::Current()) {
+  if (ServoStyleSet* ss = gfxFontUtils::CurrentServoStyleSet()) {
     // See comments in Gecko_GetFontMetrics.
     ss->AppendTask(
         PostTraversalTask::RejectFontFaceLoadedPromise(this, aResult));
@@ -299,8 +296,6 @@ void FontFace::MaybeReject(nsresult aResult) {
 }
 
 void FontFace::EnsurePromise() {
-  MOZ_ASSERT(NS_IsMainThread());
-
   if (mLoaded || !mImpl || !mParent) {
     return;
   }

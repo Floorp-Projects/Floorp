@@ -103,6 +103,30 @@ void FontFaceSetDocumentImpl::Destroy() {
   mDocument = nullptr;
 }
 
+bool FontFaceSetDocumentImpl::IsOnOwningThread() { return NS_IsMainThread(); }
+
+void FontFaceSetDocumentImpl::DispatchToOwningThread(
+    const char* aName, std::function<void()>&& aFunc) {
+  class FontFaceSetDocumentRunnable final : public Runnable {
+   public:
+    FontFaceSetDocumentRunnable(const char* aName,
+                                std::function<void()>&& aFunc)
+        : Runnable(aName), mFunc(std::move(aFunc)) {}
+
+    NS_IMETHOD Run() final {
+      mFunc();
+      return NS_OK;
+    }
+
+   private:
+    std::function<void()> mFunc;
+  };
+
+  RefPtr<FontFaceSetDocumentRunnable> runnable =
+      new FontFaceSetDocumentRunnable(aName, std::move(aFunc));
+  NS_DispatchToMainThread(runnable.forget());
+}
+
 uint64_t FontFaceSetDocumentImpl::GetInnerWindowID() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mDocument) {

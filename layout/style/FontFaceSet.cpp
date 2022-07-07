@@ -9,6 +9,7 @@
 #include "gfxFontConstants.h"
 #include "gfxFontSrcPrincipal.h"
 #include "gfxFontSrcURI.h"
+#include "gfxFontUtils.h"
 #include "FontPreloader.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
@@ -100,7 +101,7 @@ FontFaceSet::FontFaceSet(nsIGlobalObject* aParent)
 FontFaceSet::~FontFaceSet() {
   // Assert that we don't drop any FontFaceSet objects during a Servo traversal,
   // since PostTraversalTask objects can hold raw pointers to FontFaceSets.
-  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
+  MOZ_ASSERT(!gfxFontUtils::IsInServoTraversal());
 
   Destroy();
 }
@@ -175,8 +176,6 @@ bool FontFaceSet::ReadyPromiseIsPending() const {
 }
 
 Promise* FontFaceSet::GetReady(ErrorResult& aRv) {
-  MOZ_ASSERT(NS_IsMainThread());
-
   mImpl->EnsureReady();
 
   if (!mReady) {
@@ -358,9 +357,9 @@ void FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, StyleOrigin aOrigin) {
 void FontFaceSet::DidRefresh() { mImpl->CheckLoadingFinished(); }
 
 void FontFaceSet::DispatchLoadingEventAndReplaceReadyPromise() {
-  AssertIsMainThreadOrServoFontMetricsLocked();
+  gfxFontUtils::AssertSafeThreadOrServoFontMetricsLocked();
 
-  if (ServoStyleSet* set = ServoStyleSet::Current()) {
+  if (ServoStyleSet* set = gfxFontUtils::CurrentServoStyleSet()) {
     // See comments in Gecko_GetFontMetrics.
     //
     // We can't just dispatch the runnable below if we're not on the main

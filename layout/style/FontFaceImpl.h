@@ -200,6 +200,7 @@ class FontFaceImpl final {
 
   // Helper function for Load.
   void DoLoad();
+  void UpdateOwnerPromise();
 
   // Helper function for the descriptor setter methods.
   // Returns true if the descriptor was modified, false if descriptor is

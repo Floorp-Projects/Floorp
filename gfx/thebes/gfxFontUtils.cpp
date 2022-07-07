@@ -22,6 +22,9 @@
 #include "nsIUUIDGenerator.h"
 #include "mozilla/Encoding.h"
 
+#include "mozilla/ServoStyleSet.h"
+#include "mozilla/dom/WorkerCommon.h"
+
 #include "harfbuzz/hb.h"
 
 #include "plbase64.h"
@@ -1967,6 +1970,40 @@ bool gfxFontUtils::IsCffFont(const uint8_t* aFontData) {
   return (sfntHeader->sfntVersion == TRUETYPE_TAG('O', 'T', 'T', 'O'));
 }
 
+#endif
+
+/* static */ bool gfxFontUtils::IsInServoTraversal() {
+  if (NS_IsMainThread()) {
+    return ServoStyleSet::IsInServoTraversal();
+  }
+
+  if (dom::GetCurrentThreadWorkerPrivate()) {
+    return false;
+  }
+
+  // The only permissible threads are the main thread, the worker thread, the
+  // servo threads. If the latter, we must be traversing.
+  bool traversing = ServoStyleSet::IsInServoTraversal();
+  MOZ_ASSERT(traversing);
+  return traversing;
+}
+
+/* static */ ServoStyleSet* gfxFontUtils::CurrentServoStyleSet() {
+  // If we are on a worker thread, we must not check for the current set since
+  // the main/servo threads may be busy in parallel.
+  if (dom::GetCurrentThreadWorkerPrivate()) {
+    return nullptr;
+  }
+
+  return ServoStyleSet::Current();
+}
+
+#ifdef DEBUG
+/* static */ void gfxFontUtils::AssertSafeThreadOrServoFontMetricsLocked() {
+  if (!dom::GetCurrentThreadWorkerPrivate()) {
+    AssertIsMainThreadOrServoFontMetricsLocked();
+  }
+}
 #endif
 
 #undef acceptablePlatform
