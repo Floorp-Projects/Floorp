@@ -216,17 +216,9 @@ struct CallableOffsets : Offsets {
 WASM_DECLARE_CACHEABLE_POD(CallableOffsets);
 
 struct JitExitOffsets : CallableOffsets {
-  MOZ_IMPLICIT JitExitOffsets()
-      : CallableOffsets(), untrustedFPStart(0), untrustedFPEnd(0) {}
+  MOZ_IMPLICIT JitExitOffsets() : CallableOffsets() {}
 
-  // There are a few instructions in the Jit exit where FP may be trash
-  // (because it may have been clobbered by the JS Jit), known as the
-  // untrusted FP zone.
-  uint32_t untrustedFPStart;
-  uint32_t untrustedFPEnd;
-
-  WASM_CHECK_CACHEABLE_POD_WITH_PARENT(CallableOffsets, untrustedFPStart,
-                                       untrustedFPEnd);
+  WASM_CHECK_CACHEABLE_POD_WITH_PARENT(CallableOffsets);
 };
 
 WASM_DECLARE_CACHEABLE_POD(JitExitOffsets);
@@ -289,10 +281,6 @@ class CodeRange {
           uint8_t beginToUncheckedCallEntry_;
           uint8_t beginToTierEntry_;
         } func;
-        struct {
-          uint16_t beginToUntrustedFPStart_;
-          uint16_t beginToUntrustedFPEnd_;
-        } jitExit;
       };
     };
     Trap trap_;
@@ -302,9 +290,7 @@ class CodeRange {
   WASM_CHECK_CACHEABLE_POD(begin_, ret_, end_, u.funcIndex_,
                            u.func.lineOrBytecode_,
                            u.func.beginToUncheckedCallEntry_,
-                           u.func.beginToTierEntry_,
-                           u.jitExit.beginToUntrustedFPStart_,
-                           u.jitExit.beginToUntrustedFPEnd_, u.trap_, kind_);
+                           u.func.beginToTierEntry_, u.trap_, kind_);
 
  public:
   CodeRange() = default;
@@ -395,18 +381,6 @@ class CodeRange {
   uint32_t funcLineOrBytecode() const {
     MOZ_ASSERT(isFunction());
     return u.func.lineOrBytecode_;
-  }
-
-  // ImportJitExit have a particular range where the value of FP can't be
-  // trusted for profiling and thus must be ignored.
-
-  uint32_t jitExitUntrustedFPStart() const {
-    MOZ_ASSERT(isImportJitExit());
-    return begin_ + u.jitExit.beginToUntrustedFPStart_;
-  }
-  uint32_t jitExitUntrustedFPEnd() const {
-    MOZ_ASSERT(isImportJitExit());
-    return begin_ + u.jitExit.beginToUntrustedFPEnd_;
   }
 
   // A sorted array of CodeRanges can be looked up via BinarySearch and

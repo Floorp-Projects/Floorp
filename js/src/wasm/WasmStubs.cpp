@@ -2344,17 +2344,11 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   // - or the value needs to be rooted, but nothing can cause a GC between
   //   here and CoerceInPlace, which roots before coercing to a primitive.
 
-  // The JIT callee clobbers all registers, including InstanceReg and
-  // FramePointer, so restore those here. During this sequence of
-  // instructions, FP can't be trusted by the profiling frame iterator.
-  offsets->untrustedFPStart = masm.currentOffset();
+  // The JIT callee clobbers all registers other than the frame pointer, so
+  // restore InstanceReg here.
   AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddrAndFP);
-
   masm.loadPtr(Address(masm.getStackPointer(), savedInstanceOffset),
                InstanceReg);
-  masm.moveStackPtrTo(FramePointer);
-  masm.addPtr(Imm32(masm.framePushed()), FramePointer);
-  offsets->untrustedFPEnd = masm.currentOffset();
 
   // The frame was aligned for the JIT ABI such that
   //   (sp - 2 * sizeof(void*)) % JitStackAlignment == 0

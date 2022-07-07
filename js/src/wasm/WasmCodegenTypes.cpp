@@ -154,10 +154,6 @@ CodeRange::CodeRange(uint32_t funcIndex, JitExitOffsets offsets)
   MOZ_ASSERT(begin_ < ret_);
   MOZ_ASSERT(ret_ < end_);
   u.funcIndex_ = funcIndex;
-  u.jitExit.beginToUntrustedFPStart_ = offsets.untrustedFPStart - begin_;
-  u.jitExit.beginToUntrustedFPEnd_ = offsets.untrustedFPEnd - begin_;
-  MOZ_ASSERT(jitExitUntrustedFPStart() == offsets.untrustedFPStart);
-  MOZ_ASSERT(jitExitUntrustedFPEnd() == offsets.untrustedFPEnd);
 }
 
 CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode,
