@@ -857,7 +857,8 @@ bool js::CreateWasmBuffer(JSContext* cx, const wasm::MemoryDesc& memory,
       return false;
     }
     return CreateSpecificWasmBuffer<SharedArrayBufferObject,
-                                    SharedArrayRawBuffer>(cx, memory, buffer);
+                                    WasmSharedArrayRawBuffer>(cx, memory,
+                                                              buffer);
   }
   return CreateSpecificWasmBuffer<ArrayBufferObject, WasmArrayRawBuffer>(
       cx, memory, buffer);
