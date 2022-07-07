@@ -221,7 +221,6 @@ void TimingParams::Normalize() {
   mDelay = TimeDuration::FromMilliseconds(0);
   mIterations = std::numeric_limits<double>::infinity();
   mDirection = dom::PlaybackDirection::Alternate;
-  mFill = dom::FillMode::Both;
 
   Update();
 }

@@ -299,7 +299,8 @@ void CSSTransition::UpdateStartValueFromReplacedTransition() {
       CSSTransition::GetCurrentTimeAt(*mTimeline, TimeStamp::Now(),
                                       mReplacedTransition->mStartTime,
                                       mReplacedTransition->mPlaybackRate),
-      mReplacedTransition->mTiming, mReplacedTransition->mPlaybackRate);
+      mReplacedTransition->mTiming, mReplacedTransition->mPlaybackRate,
+      Animation::ProgressTimelinePosition::NotBoundary);
 
   if (!computedTiming.mProgress.IsNull()) {
     double valuePosition = ComputedTimingFunction::GetPortion(

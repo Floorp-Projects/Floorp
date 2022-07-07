@@ -31,8 +31,8 @@ namespace layers {
 
 static dom::Nullable<TimeDuration> CalculateElapsedTimeForScrollTimeline(
     const Maybe<APZSampler::ScrollOffsetAndRange> aScrollMeta,
-    const ScrollTimelineOptions& aOptions,
-    const Maybe<TimeDuration>& aDuration) {
+    const ScrollTimelineOptions& aOptions, const Maybe<TimeDuration>& aDuration,
+    const TimeDuration& aStartTime, float aPlaybackRate) {
   MOZ_ASSERT(aDuration);
 
   // We return Nothing If the associated APZ controller is not available
@@ -60,10 +60,9 @@ static dom::Nullable<TimeDuration> CalculateElapsedTimeForScrollTimeline(
   // Just in case to avoid getting a progress more than 100%, for overscrolling.
   progress = std::min(progress, 1.0);
 
-  // FIXME: Bug 1744850: should we take the playback rate into account? For now
-  // it is always 1.0 from ScrollTimeline::Timing(). We may have to update here
-  // in Bug 1744850.
-  return TimeDuration::FromMilliseconds(progress * aDuration->ToMilliseconds());
+  auto timelineTime = aDuration->MultDouble(progress);
+  return dom::Animation::CurrentTimeFromTimelineTime(timelineTime, aStartTime,
+                                                     aPlaybackRate);
 }
 
 static dom::Nullable<TimeDuration> CalculateElapsedTime(
@@ -84,7 +83,9 @@ static dom::Nullable<TimeDuration> CalculateElapsedTime(
             aLayersId, aAnimation.mScrollTimelineOptions.value().source(),
             aProofOfMapLock),
         aAnimation.mScrollTimelineOptions.value(),
-        aAnimation.mTiming.Duration());
+        aAnimation.mTiming.Duration(),
+        aAnimation.mStartTime.refOr(aAnimation.mHoldTime),
+        aAnimation.mPlaybackRate);
   }
 
   // -------------------------------------
@@ -173,9 +174,24 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
         aAPZSampler, aLayersId, aProofOfMapLock, animation, aPreviousFrameTime,
         aCurrentFrameTime, aPreviousValue);
 
-    ComputedTiming computedTiming = dom::AnimationEffect::GetComputedTimingAt(
-        elapsedDuration, animation.mTiming, animation.mPlaybackRate);
+    const auto progressTimelinePosition =
+        animation.mScrollTimelineOptions
+            ? dom::Animation::AtProgressTimelineBoundary(
+                  TimeDuration::FromMilliseconds(
+                      PROGRESS_TIMELINE_DURATION_MILLISEC),
+                  elapsedDuration, animation.mStartTime.refOr(TimeDuration()),
+                  animation.mPlaybackRate)
+            : dom::Animation::ProgressTimelinePosition::NotBoundary;
 
+    ComputedTiming computedTiming = dom::AnimationEffect::GetComputedTimingAt(
+        elapsedDuration, animation.mTiming, animation.mPlaybackRate,
+        progressTimelinePosition);
+
+    // FIXME: Bug 1776077, for the scroll-linked animations, it's possible to
+    // let it go from the active phase to the before phase, and its progress
+    // becomes null. In this case, we shouldn't just skip this animation.
+    // Instead, we have to reset the sampled result to that without this
+    // animation.
     if (computedTiming.mProgress.IsNull()) {
       continue;
     }

@@ -106,6 +106,13 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   virtual bool IsScrollTimeline() const { return false; }
   virtual const ScrollTimeline* AsScrollTimeline() const { return nullptr; }
 
+  // For a monotonic timeline, there is no upper bound on current time, and
+  // timeline duration is unresolved. For a non-monotonic (e.g. scroll)
+  // timeline, the duration has a fixed upper bound.
+  //
+  // https://drafts.csswg.org/web-animations-2/#timeline-duration
+  virtual Nullable<TimeDuration> TimelineDuration() const { return nullptr; }
+
  protected:
   nsCOMPtr<nsIGlobalObject> mWindow;
 

@@ -94,6 +94,21 @@ class AnimationUtils {
     return aType == PseudoStyleType::before ||
            aType == PseudoStyleType::after || aType == PseudoStyleType::marker;
   }
+
+  /**
+   * Returns true if the difference between |aFirst| and |aSecond| is within
+   * the animation time tolerance (i.e. 1 microsecond).
+   */
+  static bool IsWithinAnimationTimeTolerance(const TimeDuration& aFirst,
+                                             const TimeDuration& aSecond) {
+    if (aFirst == TimeDuration::Forever() ||
+        aSecond == TimeDuration::Forever()) {
+      return aFirst == aSecond;
+    }
+
+    TimeDuration diff = aFirst >= aSecond ? aFirst - aSecond : aSecond - aFirst;
+    return diff <= TimeDuration::FromMicroseconds(1);
+  }
 };
 
 }  // namespace mozilla
