@@ -14,6 +14,7 @@
 #include "nsIObserverService.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCID.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_widget.h"
@@ -336,7 +337,7 @@ bool WindowsUIUtils::ComputeOverlayScrollbars() {
 #ifndef __MINGW32__
   // We need to keep this alive for ~ever so that change callbacks work as
   // expected, sigh.
-  static ComPtr<IUISettings5> sUiSettings;
+  static StaticRefPtr<IUISettings5> sUiSettings;
 
   if (!IsWin11OrLater()) {
     // While in theory Windows 10 supports overlay scrollbar settings, it's off
@@ -359,7 +360,8 @@ bool WindowsUIUtils::ComputeOverlayScrollbars() {
       return false;
     }
 
-    if (NS_WARN_IF(FAILED(uiSettingsAsInspectable.As(&sUiSettings)))) {
+    ComPtr<IUISettings5> uiSettings;
+    if (NS_WARN_IF(FAILED(uiSettingsAsInspectable.As(&uiSettings)))) {
       return false;
     }
 
@@ -372,8 +374,11 @@ bool WindowsUIUtils::ComputeOverlayScrollbars() {
               widget::ThemeChangeKind::StyleAndLayout);
           return S_OK;
         });
-    (void)NS_WARN_IF(FAILED(sUiSettings->add_AutoHideScrollBarsChanged(
+    (void)NS_WARN_IF(FAILED(uiSettings->add_AutoHideScrollBarsChanged(
         callback.Get(), &unusedToken)));
+
+    sUiSettings = dont_AddRef(uiSettings.Detach());
+    ClearOnShutdown(&sUiSettings);
   }
 
   boolean autoHide = false;
