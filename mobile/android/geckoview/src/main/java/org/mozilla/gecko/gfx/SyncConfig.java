@@ -8,13 +8,13 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /* package */ final class SyncConfig implements Parcelable {
-  final int sourceTextureHandle;
+  final long sourceTextureHandle;
   final GeckoSurface targetSurface;
   final int width;
   final int height;
 
   /* package */ SyncConfig(
-      final int sourceTextureHandle,
+      final long sourceTextureHandle,
       final GeckoSurface targetSurface,
       final int width,
       final int height) {
@@ -38,7 +38,7 @@ import android.os.Parcelable;
       };
 
   private SyncConfig(final Parcel parcel) {
-    sourceTextureHandle = parcel.readInt();
+    sourceTextureHandle = parcel.readLong();
     targetSurface = GeckoSurface.CREATOR.createFromParcel(parcel);
     width = parcel.readInt();
     height = parcel.readInt();
@@ -51,7 +51,7 @@ import android.os.Parcelable;
 
   @Override
   public void writeToParcel(final Parcel parcel, final int flags) {
-    parcel.writeInt(sourceTextureHandle);
+    parcel.writeLong(sourceTextureHandle);
     targetSurface.writeToParcel(parcel, flags);
     parcel.writeInt(width);
     parcel.writeInt(height);

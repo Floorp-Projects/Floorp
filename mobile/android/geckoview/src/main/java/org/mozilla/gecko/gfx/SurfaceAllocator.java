@@ -8,7 +8,7 @@ package org.mozilla.gecko.gfx;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
-import android.util.SparseArray;
+import android.util.LongSparseArray;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.process.GeckoProcessManager;
@@ -21,7 +21,8 @@ import org.mozilla.gecko.process.GeckoServiceChildProcess;
 
   // Keep a reference to all allocated Surfaces, so that we can release them if we lose the
   // connection to the allocator service.
-  private static final SparseArray<GeckoSurface> sSurfaces = new SparseArray<GeckoSurface>();
+  private static final LongSparseArray<GeckoSurface> sSurfaces =
+      new LongSparseArray<GeckoSurface>();
 
   private static synchronized void ensureConnection() {
     if (sAllocator != null) {
@@ -125,7 +126,7 @@ import org.mozilla.gecko.process.GeckoServiceChildProcess;
     }
   }
 
-  public static synchronized void sync(final int upstream) {
+  public static synchronized void sync(final long upstream) {
     // Sync from the SurfaceTexture on the other side. If we have lost connection then do nothing,
     // as there is nothing on the other side to sync from.
     try {
