@@ -132,7 +132,6 @@ const DEFAULT_WELCOME_CONTENT = {
       id: "AW_IMPORT_SETTINGS",
       content: {
         logo: {},
-        progress_bar: true,
         title: {
           string_id: "mr1-onboarding-import-header",
         },
