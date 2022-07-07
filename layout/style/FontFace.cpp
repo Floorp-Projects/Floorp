@@ -298,23 +298,6 @@ void FontFace::MaybeReject(nsresult aResult) {
   }
 }
 
-already_AddRefed<URLExtraData> FontFace::GetURLExtraData() const {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
-  nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull();
-
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mParent);
-  nsCOMPtr<nsIURI> docURI = window->GetDocumentURI();
-  nsCOMPtr<nsIURI> base = window->GetDocBaseURI();
-
-  // We pass RP_Unset when creating ReferrerInfo object here because it's not
-  // going to result to change referer policy in a resource request.
-  nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      new ReferrerInfo(docURI, ReferrerPolicy::_empty);
-
-  RefPtr<URLExtraData> url = new URLExtraData(base, referrerInfo, principal);
-  return url.forget();
-}
-
 void FontFace::EnsurePromise() {
   MOZ_ASSERT(NS_IsMainThread());
 

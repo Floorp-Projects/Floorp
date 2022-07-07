@@ -28,6 +28,8 @@ class FontFaceSetDocumentImpl final : public FontFaceSetImpl,
 
   dom::Document* Document() const override { return mDocument; }
 
+  already_AddRefed<URLExtraData> GetURLExtraData() override;
+
   // gfxUserFontSet
 
   nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
