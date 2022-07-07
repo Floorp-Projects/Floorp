@@ -1812,12 +1812,10 @@ pref("browser.contentblocking.database.enabled", true);
 
 pref("dom.storage_access.enabled", true);
 
-// Enable URL query stripping in regular browsing in Nightly.
+// Enable URL query stripping in Nightly.
 #ifdef NIGHTLY_BUILD
 pref("privacy.query_stripping.enabled", true);
 #endif
-// Enable URL query stripping in Private Browsing Mode for all desktop channels.
-pref("privacy.query_stripping.enabled.pbmode", true);
 
 pref("browser.contentblocking.cryptomining.preferences.ui.enabled", true);
 pref("browser.contentblocking.fingerprinting.preferences.ui.enabled", true);
