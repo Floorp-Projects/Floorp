@@ -145,6 +145,9 @@ const TEST_GLOBAL = {
     import() {
       return global;
     },
+    importESModule() {
+      return global;
+    },
   },
   ClientEnvironment: {
     get userId() {
