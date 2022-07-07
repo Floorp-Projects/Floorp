@@ -114,7 +114,7 @@ float SimpleVelocityTracker::ApplyFlingCurveToVelocity(float aVelocity) const {
         float scale = maxVelocity - curveThreshold;
         float funcInput = (newVelocity - curveThreshold) / scale;
         float funcOutput = gVelocityCurveFunction->GetValue(
-            funcInput, ComputedTimingFunction::BeforeFlag::Unset);
+            funcInput, StyleEasingBeforeFlag::Unset);
         float curvedVelocity = (funcOutput * scale) + curveThreshold;
         SVT_LOG("%p|%s curving up velocity from %f to %f\n",
                 mAxis->OpaqueApzcPointer(), mAxis->Name(), newVelocity,

@@ -65,7 +65,7 @@ ComputedTimingFunction::ComputedTimingFunction(
 
 double ComputedTimingFunction::StepTiming(
     const ComputedTimingFunction::StepFunc& aStepFunc, double aPortion,
-    ComputedTimingFunction::BeforeFlag aBeforeFlag) {
+    StyleEasingBeforeFlag aBeforeFlag) {
   // Use the algorithm defined in the spec:
   // https://drafts.csswg.org/css-easing-1/#step-timing-function-algo
 
@@ -85,7 +85,7 @@ double ComputedTimingFunction::StepTiming(
 
   // If the "before flag" is set and we are at a transition point,
   // drop back a step
-  if (aBeforeFlag == ComputedTimingFunction::BeforeFlag::Set &&
+  if (aBeforeFlag == StyleEasingBeforeFlag::Set &&
       fmod(aPortion * aStepFunc.mSteps, 1) == 0) {
     --checkedCurrentStep;
   }
@@ -171,7 +171,7 @@ static inline double GetSplineValue(double aPortion,
 }
 
 double ComputedTimingFunction::GetValue(
-    double aPortion, ComputedTimingFunction::BeforeFlag aBeforeFlag) const {
+    double aPortion, StyleEasingBeforeFlag aBeforeFlag) const {
   return mFunction.match(
       [aPortion](const KeywordFunction& aFunction) {
         return GetSplineValue(aPortion, aFunction.mFunction);
