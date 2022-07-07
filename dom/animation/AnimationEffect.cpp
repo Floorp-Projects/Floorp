@@ -101,7 +101,8 @@ void AnimationEffect::SetSpecifiedTiming(TimingParams&& aTiming) {
 
 ComputedTiming AnimationEffect::GetComputedTimingAt(
     const Nullable<TimeDuration>& aLocalTime, const TimingParams& aTiming,
-    double aPlaybackRate) {
+    double aPlaybackRate,
+    Animation::ProgressTimelinePosition aProgressTimelinePosition) {
   static const StickyTimeDuration zeroDuration;
 
   // Always return the same object to benefit from return-value optimization.
@@ -134,6 +135,9 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
     return result;
   }
   const TimeDuration& localTime = aLocalTime.Value();
+  const bool atProgressTimelineBoundary =
+      aProgressTimelinePosition ==
+      Animation::ProgressTimelinePosition::Boundary;
 
   StickyTimeDuration beforeActiveBoundary =
       std::max(std::min(StickyTimeDuration(aTiming.Delay()), result.mEndTime),
@@ -145,7 +149,8 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
       zeroDuration);
 
   if (localTime > activeAfterBoundary ||
-      (aPlaybackRate >= 0 && localTime == activeAfterBoundary)) {
+      (aPlaybackRate >= 0 && localTime == activeAfterBoundary &&
+       !atProgressTimelineBoundary)) {
     result.mPhase = ComputedTiming::AnimationPhase::After;
     if (!result.FillsForwards()) {
       // The animation isn't active or filling at this time.
@@ -156,7 +161,8 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
                           result.mActiveDuration),
                  zeroDuration);
   } else if (localTime < beforeActiveBoundary ||
-             (aPlaybackRate < 0 && localTime == beforeActiveBoundary)) {
+             (aPlaybackRate < 0 && localTime == beforeActiveBoundary &&
+              !atProgressTimelineBoundary)) {
     result.mPhase = ComputedTiming::AnimationPhase::Before;
     if (!result.FillsBackwards()) {
       // The animation isn't active or filling at this time.
@@ -165,8 +171,8 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
     result.mActiveTime =
         std::max(StickyTimeDuration(localTime - aTiming.Delay()), zeroDuration);
   } else {
-    MOZ_ASSERT(result.mActiveDuration,
-               "How can we be in the middle of a zero-duration interval?");
+    // Note: For progress-based timeline, it's possible to have a zero active
+    // duration with active phase.
     result.mPhase = ComputedTiming::AnimationPhase::Active;
     result.mActiveTime = localTime - aTiming.Delay();
   }
@@ -267,9 +273,13 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
 
 ComputedTiming AnimationEffect::GetComputedTiming(
     const TimingParams* aTiming) const {
-  double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
-  return GetComputedTimingAt(
-      GetLocalTime(), aTiming ? *aTiming : NormalizedTiming(), playbackRate);
+  const double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
+  const auto progressTimelinePosition =
+      mAnimation ? mAnimation->AtProgressTimelineBoundary()
+                 : Animation::ProgressTimelinePosition::NotBoundary;
+  return GetComputedTimingAt(GetLocalTime(),
+                             aTiming ? *aTiming : NormalizedTiming(),
+                             playbackRate, progressTimelinePosition);
 }
 
 // Helper function for generating an (Computed)EffectTiming dictionary
@@ -303,8 +313,11 @@ void AnimationEffect::GetComputedTimingAsDict(
   // Computed timing
   double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
   const Nullable<TimeDuration> currentTime = GetLocalTime();
-  ComputedTiming computedTiming =
-      GetComputedTimingAt(currentTime, SpecifiedTiming(), playbackRate);
+  const auto progressTimelinePosition =
+      mAnimation ? mAnimation->AtProgressTimelineBoundary()
+                 : Animation::ProgressTimelinePosition::NotBoundary;
+  ComputedTiming computedTiming = GetComputedTimingAt(
+      currentTime, SpecifiedTiming(), playbackRate, progressTimelinePosition);
 
   aRetVal.mDuration.SetAsUnrestrictedDouble() =
       computedTiming.mDuration.ToMilliseconds();

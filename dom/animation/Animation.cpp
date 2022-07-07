@@ -1741,6 +1741,53 @@ void Animation::ReschedulePendingTasks() {
   }
 }
 
+// https://drafts.csswg.org/web-animations-2/#at-progress-timeline-boundary
+/* static*/ Animation::ProgressTimelinePosition
+Animation::AtProgressTimelineBoundary(
+    const Nullable<TimeDuration>& aTimelineDuration,
+    const Nullable<TimeDuration>& aCurrentTime,
+    const TimeDuration& aEffectStartTime, const double aPlaybackRate) {
+  // Based on changed defined in: https://github.com/w3c/csswg-drafts/pull/6702
+  // 1.  If any of the following conditions are true:
+  //     * the associated animation's timeline is not a progress-based timeline,
+  //     or
+  //     * the associated animation's timeline duration is unresolved or zero,
+  //     or
+  //     * the animation's playback rate is zero
+  //     return false
+  // Note: We can detect a progress-based timeline by relying on the fact that
+  // monotonic timelines (i.e. non-progress-based timelines) have an unresolved
+  // timeline duration.
+  if (aTimelineDuration.IsNull() || aTimelineDuration.Value().IsZero() ||
+      aPlaybackRate == 0.0) {
+    return ProgressTimelinePosition::NotBoundary;
+  }
+
+  // 2.  Let effective start time be the animation's start time if resolved, or
+  // zero otherwise.
+  const TimeDuration& effectiveStartTime = aEffectStartTime;
+
+  // 3.  Let effective timeline time be (animation's current time / animation's
+  // playback rate) + effective start time.
+  // Note: we use zero if the current time is unresolved. See the spec issue:
+  // https://github.com/w3c/csswg-drafts/issues/7458
+  const TimeDuration effectiveTimelineTime =
+      (aCurrentTime.IsNull()
+           ? TimeDuration()
+           : aCurrentTime.Value().MultDouble(1.0 / aPlaybackRate)) +
+      effectiveStartTime;
+
+  // 4.  Let effective timeline progress be (effective timeline time / timeline
+  // duration)
+  // 5.  If effective timeline progress is 0 or 1, return true,
+  // We avoid the division here but it is effectively the same as 4 & 5 above.
+  return effectiveTimelineTime.IsZero() ||
+                 (AnimationUtils::IsWithinAnimationTimeTolerance(
+                     effectiveTimelineTime, aTimelineDuration.Value()))
+             ? ProgressTimelinePosition::Boundary
+             : ProgressTimelinePosition::NotBoundary;
+}
+
 bool Animation::IsPossiblyOrphanedPendingAnimation() const {
   // Check if we are pending but might never start because we are not being
   // tracked.

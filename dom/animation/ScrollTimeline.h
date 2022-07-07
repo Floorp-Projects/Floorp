@@ -12,6 +12,7 @@
 #include "mozilla/HashTable.h"
 #include "mozilla/PairHash.h"
 #include "mozilla/ServoStyleConsts.h"
+#include "mozilla/TimingParams.h"
 #include "mozilla/WritingModes.h"
 
 class nsIScrollableFrame;
@@ -144,6 +145,11 @@ class ScrollTimeline final : public AnimationTimeline {
   bool IsMonotonicallyIncreasing() const override { return false; }
   bool IsScrollTimeline() const override { return true; }
   const ScrollTimeline* AsScrollTimeline() const override { return this; }
+  Nullable<TimeDuration> TimelineDuration() const override {
+    // We are using this magic number for progress-based timeline duration
+    // because we don't support percentage for duration.
+    return TimeDuration::FromMilliseconds(PROGRESS_TIMELINE_DURATION_MILLISEC);
+  }
 
   void ScheduleAnimations() {
     // FIXME: Bug 1737927: Need to check the animation mutation observers for

@@ -79,7 +79,8 @@ class AnimationEffect : public nsISupports, public nsWrapperCache {
   // (because it is not currently active and is not filling at this time).
   static ComputedTiming GetComputedTimingAt(
       const Nullable<TimeDuration>& aLocalTime, const TimingParams& aTiming,
-      double aPlaybackRate);
+      double aPlaybackRate,
+      Animation::ProgressTimelinePosition aProgressTimelinePosition);
   // Shortcut that gets the computed timing using the current local time as
   // calculated from the timeline time.
   ComputedTiming GetComputedTiming(const TimingParams* aTiming = nullptr) const;
