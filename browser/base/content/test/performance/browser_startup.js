@@ -57,8 +57,6 @@ const startupPhases = {
   "before first paint": {
     denylist: {
       modules: new Set([
-        "chrome://webcompat/content/data/ua_overrides.jsm",
-        "chrome://webcompat/content/lib/ua_overrider.jsm",
         "resource:///modules/AboutNewTab.jsm",
         "resource:///modules/BrowserUsageTelemetry.jsm",
         "resource:///modules/ContentCrashHandlers.jsm",
@@ -94,10 +92,7 @@ const startupPhases = {
         "resource://gre/modules/PlacesSyncUtils.jsm",
         "resource://gre/modules/PushComponents.jsm",
       ]),
-      services: new Set([
-        "@mozilla.org/browser/annotation-service;1",
-        "@mozilla.org/browser/nav-bookmarks-service;1",
-      ]),
+      services: new Set(["@mozilla.org/browser/nav-bookmarks-service;1"]),
     },
   },
 
@@ -217,6 +212,29 @@ add_task(async function() {
           } else {
             record(false, message, undefined, getStack(scriptType, file));
           }
+        }
+      }
+
+      if (denylist.modules) {
+        let results = await PerfTestHelpers.throttledMapPromises(
+          denylist.modules,
+          async uri => ({
+            uri,
+            exists: await PerfTestHelpers.checkURIExists(uri),
+          })
+        );
+
+        for (let { uri, exists } of results) {
+          ok(exists, `denylist entry ${uri} for phase "${phase}" must exist`);
+        }
+      }
+
+      if (denylist.services) {
+        for (let contract of denylist.services) {
+          ok(
+            contract in Cc,
+            `denylist entry ${contract} for phase "${phase}" must exist`
+          );
         }
       }
     }
