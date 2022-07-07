@@ -43,8 +43,8 @@ import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
-import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -842,6 +842,7 @@ class BrowserRobot {
             // Test page used for testing permissions located at https://mozilla-mobile.github.io/testapp/permissions
             notificationButton.waitForExists(waitingTime)
             notificationButton.click()
+            mDevice.waitForObjects(mDevice.findObject(UiSelector().textContains("Allow to send notifications?")))
 
             SitePermissionsRobot().interact()
             return SitePermissionsRobot.Transition()
