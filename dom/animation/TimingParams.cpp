@@ -214,13 +214,78 @@ bool TimingParams::operator==(const TimingParams& aOther) const {
          mFunction == aOther.mFunction;
 }
 
-void TimingParams::Normalize() {
-  // FIXME: Bug 1775327, do normalization, instead of using these magic numbers.
-  mDuration = Some(StickyTimeDuration::FromMilliseconds(
-      PROGRESS_TIMELINE_DURATION_MILLISEC));
-  mDelay = TimeDuration::FromMilliseconds(0);
+// FIXME: This is a tentative way to normalize the timing which is defined in
+// [web-animations-2] [1]. I borrow this implementation and some concepts for
+// the edge cases from Chromium [2] so we can match the behavior with them. The
+// implementation here ignores the case of percentage of start delay, end delay,
+// and duration because Gecko doesn't support them. We may have to update the
+// calculation if the spec issue [3] gets any update.
+//
+// [1]
+// https://drafts.csswg.org/web-animations-2/#time-based-animation-to-a-proportional-animation
+// [2] https://chromium-review.googlesource.com/c/chromium/src/+/2992387
+// [3] https://github.com/w3c/csswg-drafts/issues/4862
+TimingParams TimingParams::Normalize(
+    const TimeDuration& aTimelineDuration) const {
+  MOZ_ASSERT(aTimelineDuration,
+             "the timeline duration of scroll-timeline is always non-zero now");
 
-  Update();
+  TimingParams normalizedTiming(*this);
+
+  // Handle iteration duration value of "auto" first.
+  // FIXME: Bug 1676794: Gecko doesn't support `animation-duration:auto` and we
+  // don't support JS-generated scroll animations, so we don't fall into this
+  // case for now. Need to check this again after we support ScrollTimeline
+  // interface.
+  if (!mDuration) {
+    // If the iteration duration is auto, then:
+    //   Set start delay and end delay to 0, as it is not possible to mix time
+    //   and proportions.
+    normalizedTiming.mDelay = TimeDuration();
+    normalizedTiming.mEndDelay = TimeDuration();
+    normalizedTiming.Update();
+    return normalizedTiming;
+  }
+
+  if (mEndTime.IsZero()) {
+    // mEndTime of zero causes division by zero so we handle it here.
+    //
+    // FIXME: The spec doesn't mention this case, so we might have to update
+    // this based on the spec issue,
+    // https://github.com/w3c/csswg-drafts/issues/7459.
+    normalizedTiming.mDelay = TimeDuration();
+    normalizedTiming.mEndDelay = TimeDuration();
+    normalizedTiming.mDuration = Some(TimeDuration());
+  } else if (mEndTime == TimeDuration::Forever()) {
+    // The iteration count or duration may be infinite; however, start and
+    // end delays are strictly finite. Thus, in the limit when end time
+    // approaches infinity:
+    //    start delay / end time = finite / infinite = 0
+    //    end delay / end time = finite / infinite = 0
+    //    iteration duration / end time = 1 / iteration count
+    // This condition can be reached by switching to a scroll timeline on
+    // an existing infinite duration animation.
+    //
+    // FIXME: The spec doesn't mention this case, so we might have to update
+    // this based on the spec issue,
+    // https://github.com/w3c/csswg-drafts/issues/7459.
+    normalizedTiming.mDelay = TimeDuration();
+    normalizedTiming.mEndDelay = TimeDuration();
+    normalizedTiming.mDuration =
+        Some(aTimelineDuration.MultDouble(1.0 / mIterations));
+  } else {
+    // Convert to percentages then multiply by the timeline duration.
+    const double endTimeInSec = mEndTime.ToSeconds();
+    normalizedTiming.mDelay =
+        aTimelineDuration.MultDouble(mDelay.ToSeconds() / endTimeInSec);
+    normalizedTiming.mEndDelay =
+        aTimelineDuration.MultDouble(mEndDelay.ToSeconds() / endTimeInSec);
+    normalizedTiming.mDuration = Some(StickyTimeDuration(
+        aTimelineDuration.MultDouble(mDuration->ToSeconds() / endTimeInSec)));
+  }
+
+  normalizedTiming.Update();
+  return normalizedTiming;
 }
 
 }  // namespace mozilla

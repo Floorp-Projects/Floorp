@@ -356,8 +356,10 @@ void AnimationEffect::UpdateNormalizedTiming() {
     return;
   }
 
-  mNormalizedTiming.emplace(mTiming);
-  mNormalizedTiming->Normalize();
+  // Since `mAnimation` has a scroll timeline, we can be sure `GetTimeline()`
+  // and `TimelineDuration()` will not return null.
+  mNormalizedTiming.emplace(
+      mTiming.Normalize(mAnimation->GetTimeline()->TimelineDuration().Value()));
 }
 
 Nullable<TimeDuration> AnimationEffect::GetLocalTime() const {
