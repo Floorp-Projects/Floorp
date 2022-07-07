@@ -1981,8 +1981,8 @@ void LibvpxVp9Encoder::MaybeRewrapRawWithFormat(const vpx_img_fmt fmt) {
     raw_ = libvpx_->img_wrap(nullptr, fmt, codec_.width, codec_.height, 1,
                              nullptr);
   } else if (raw_->fmt != fmt) {
-    RTC_LOG(INFO) << "Switching VP9 encoder pixel format to "
-                  << (fmt == VPX_IMG_FMT_NV12 ? "NV12" : "I420");
+    RTC_LOG(LS_INFO) << "Switching VP9 encoder pixel format to "
+                     << (fmt == VPX_IMG_FMT_NV12 ? "NV12" : "I420");
     libvpx_->img_free(raw_);
     raw_ = libvpx_->img_wrap(nullptr, fmt, codec_.width, codec_.height, 1,
                              nullptr);

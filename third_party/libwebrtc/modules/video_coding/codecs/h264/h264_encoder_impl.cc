@@ -586,8 +586,8 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
     // theoretically use all available reference buffers.
     encoder_params.iNumRefFrame = encoder_params.iTemporalLayerNum - 1;
   }
-  RTC_LOG(INFO) << "OpenH264 version is " << OPENH264_MAJOR << "."
-                << OPENH264_MINOR;
+  RTC_LOG(LS_INFO) << "OpenH264 version is " << OPENH264_MAJOR << "."
+                   << OPENH264_MINOR;
   switch (packetization_mode_) {
     case H264PacketizationMode::SingleNalUnit:
       // Limit the size of the packets produced.
@@ -596,8 +596,8 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
           SM_SIZELIMITED_SLICE;
       encoder_params.sSpatialLayers[0].sSliceArgument.uiSliceSizeConstraint =
           static_cast<unsigned int>(max_payload_size_);
-      RTC_LOG(INFO) << "Encoder is configured with NALU constraint: "
-                    << max_payload_size_ << " bytes";
+      RTC_LOG(LS_INFO) << "Encoder is configured with NALU constraint: "
+                       << max_payload_size_ << " bytes";
       break;
     case H264PacketizationMode::NonInterleaved:
       // When uiSliceMode = SM_FIXEDSLCNUM_SLICE, uiSliceNum = 0 means auto

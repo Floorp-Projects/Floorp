@@ -83,7 +83,7 @@ class ScopedMMCSSRegistration {
   }
 
   explicit ScopedMMCSSRegistration(const wchar_t* task_name) {
-    RTC_DLOG(INFO) << "ScopedMMCSSRegistration: " << rtc::ToUtf8(task_name);
+    RTC_DLOG(LS_INFO) << "ScopedMMCSSRegistration: " << rtc::ToUtf8(task_name);
     // Register the calling thread with MMCSS for the supplied `task_name`.
     DWORD mmcss_task_index = 0;
     mmcss_handle_ = AvSetMmThreadCharacteristicsW(task_name, &mmcss_task_index);
@@ -93,18 +93,18 @@ class ScopedMMCSSRegistration {
     } else {
       const DWORD priority_class = GetPriorityClass(GetCurrentProcess());
       const int priority = GetThreadPriority(GetCurrentThread());
-      RTC_DLOG(INFO) << "priority class: "
-                     << PriorityClassToString(priority_class) << "("
-                     << priority_class << ")";
-      RTC_DLOG(INFO) << "priority: " << PriorityToString(priority) << "("
-                     << priority << ")";
+      RTC_DLOG(LS_INFO) << "priority class: "
+                        << PriorityClassToString(priority_class) << "("
+                        << priority_class << ")";
+      RTC_DLOG(LS_INFO) << "priority: " << PriorityToString(priority) << "("
+                        << priority << ")";
     }
   }
 
   ~ScopedMMCSSRegistration() {
     if (Succeeded()) {
       // Deregister with MMCSS.
-      RTC_DLOG(INFO) << "~ScopedMMCSSRegistration";
+      RTC_DLOG(LS_INFO) << "~ScopedMMCSSRegistration";
       AvRevertMmThreadCharacteristics(mmcss_handle_);
     }
   }

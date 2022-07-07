@@ -297,7 +297,7 @@ bool PeerConnectionClient::ReadIntoBuffer(rtc::Socket* socket,
   bool ret = false;
   size_t i = data->find("\r\n\r\n");
   if (i != std::string::npos) {
-    RTC_LOG(INFO) << "Headers received";
+    RTC_LOG(LS_INFO) << "Headers received";
     if (GetHeaderValue(*data, i, "\r\nContent-Length: ", content_length)) {
       size_t total_response_size = (i + 4) + *content_length;
       if (data->length() >= total_response_size) {
@@ -374,7 +374,7 @@ void PeerConnectionClient::OnRead(rtc::Socket* socket) {
 }
 
 void PeerConnectionClient::OnHangingGetRead(rtc::Socket* socket) {
-  RTC_LOG(INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __FUNCTION__;
   size_t content_length = 0;
   if (ReadIntoBuffer(socket, &notification_data_, &content_length)) {
     size_t peer_id = 0, eoh = 0;
@@ -472,7 +472,7 @@ bool PeerConnectionClient::ParseServerResponse(const std::string& response,
 }
 
 void PeerConnectionClient::OnClose(rtc::Socket* socket, int err) {
-  RTC_LOG(INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __FUNCTION__;
 
   socket->Close();
 

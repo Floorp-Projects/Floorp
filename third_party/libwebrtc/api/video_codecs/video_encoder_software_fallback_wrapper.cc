@@ -358,8 +358,8 @@ int32_t VideoEncoderSoftwareFallbackWrapper::EncodeWithMainEncoder(
         fallback_encoder_->GetEncoderInfo().supports_native_handle) {
       return fallback_encoder_->Encode(frame, frame_types);
     } else {
-      RTC_LOG(INFO) << "Fallback encoder does not support native handle - "
-                       "converting frame to I420";
+      RTC_LOG(LS_INFO) << "Fallback encoder does not support native handle - "
+                          "converting frame to I420";
       rtc::scoped_refptr<I420BufferInterface> src_buffer =
           frame.video_frame_buffer()->ToI420();
       if (!src_buffer) {

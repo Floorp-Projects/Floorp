@@ -104,10 +104,10 @@ bool IvfFileReader::Reset() {
   has_error_ = false;
 
   const char* codec_name = CodecTypeToPayloadString(codec_type_);
-  RTC_LOG(INFO) << "Opened IVF file with codec data of type " << codec_name
-                << " at resolution " << width_ << " x " << height_ << ", using "
-                << (using_capture_timestamps_ ? "1" : "90")
-                << "kHz clock resolution.";
+  RTC_LOG(LS_INFO) << "Opened IVF file with codec data of type " << codec_name
+                   << " at resolution " << width_ << " x " << height_
+                   << ", using " << (using_capture_timestamps_ ? "1" : "90")
+                   << "kHz clock resolution.";
 
   return true;
 }

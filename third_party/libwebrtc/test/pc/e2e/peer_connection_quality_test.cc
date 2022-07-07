@@ -202,17 +202,18 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
   test::ScopedFieldTrials field_trials(GetFieldTrials(run_params));
 
   // Print test summary
-  RTC_LOG(INFO) << "Media quality test: " << *alice_configurer->params()->name
-                << " will make a call to " << *bob_configurer->params()->name
-                << " with media video="
-                << !alice_configurer->params()->video_configs.empty()
-                << "; audio="
-                << alice_configurer->params()->audio_config.has_value() << ". "
-                << *bob_configurer->params()->name
-                << " will respond with media video="
-                << !bob_configurer->params()->video_configs.empty()
-                << "; audio="
-                << bob_configurer->params()->audio_config.has_value();
+  RTC_LOG(LS_INFO) << "Media quality test: "
+                   << *alice_configurer->params()->name
+                   << " will make a call to " << *bob_configurer->params()->name
+                   << " with media video="
+                   << !alice_configurer->params()->video_configs.empty()
+                   << "; audio="
+                   << alice_configurer->params()->audio_config.has_value()
+                   << ". " << *bob_configurer->params()->name
+                   << " will respond with media video="
+                   << !bob_configurer->params()->video_configs.empty()
+                   << "; audio="
+                   << bob_configurer->params()->audio_config.has_value();
 
   const std::unique_ptr<rtc::Thread> signaling_thread =
       time_controller_.CreateThread(kSignalThreadName);
@@ -276,7 +277,7 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
   }
   video_analyzer_threads =
       std::min(video_analyzer_threads, kMaxVideoAnalyzerThreads);
-  RTC_LOG(INFO) << "video_analyzer_threads=" << video_analyzer_threads;
+  RTC_LOG(LS_INFO) << "video_analyzer_threads=" << video_analyzer_threads;
   quality_metrics_reporters_.push_back(
       std::make_unique<VideoQualityMetricsReporter>(
           time_controller_.GetClock()));
@@ -315,8 +316,8 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
                                       return kAliveMessageLogInterval;
                                     });
 
-  RTC_LOG(INFO) << "Configuration is done. Now " << *alice_->params()->name
-                << " is calling to " << *bob_->params()->name << "...";
+  RTC_LOG(LS_INFO) << "Configuration is done. Now " << *alice_->params()->name
+                   << " is calling to " << *bob_->params()->name << "...";
 
   // Setup stats poller.
   std::vector<StatsObserverInterface*> observers = {
@@ -359,7 +360,7 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
     time_controller_.AdvanceTime(run_params.run_duration);
   }
 
-  RTC_LOG(INFO) << "Test is done, initiating disconnect sequence.";
+  RTC_LOG(LS_INFO) << "Test is done, initiating disconnect sequence.";
 
   // Stop all client started tasks to prevent their access to any call related
   // objects after these objects will be destroyed during call tear down.
@@ -382,7 +383,7 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
                                  [this] { TearDownCallOnSignalingThread(); });
 
   Timestamp end_time = Now();
-  RTC_LOG(INFO) << "All peers are disconnected.";
+  RTC_LOG(LS_INFO) << "All peers are disconnected.";
   {
     MutexLock lock(&lock_);
     real_test_duration_ = end_time - start_time;
@@ -619,13 +620,13 @@ void PeerConnectionE2EQualityTest::ExchangeOfferAnswer(
   auto offer = alice_->CreateOffer();
   RTC_CHECK(offer);
   offer->ToString(&log_output);
-  RTC_LOG(INFO) << "Original offer: " << log_output;
+  RTC_LOG(LS_INFO) << "Original offer: " << log_output;
   LocalAndRemoteSdp patch_result = signaling_interceptor->PatchOffer(
       std::move(offer), alice_->params()->video_codecs[0]);
   patch_result.local_sdp->ToString(&log_output);
-  RTC_LOG(INFO) << "Offer to set as local description: " << log_output;
+  RTC_LOG(LS_INFO) << "Offer to set as local description: " << log_output;
   patch_result.remote_sdp->ToString(&log_output);
-  RTC_LOG(INFO) << "Offer to set as remote description: " << log_output;
+  RTC_LOG(LS_INFO) << "Offer to set as remote description: " << log_output;
 
   bool set_local_offer =
       alice_->SetLocalDescription(std::move(patch_result.local_sdp));
@@ -636,13 +637,13 @@ void PeerConnectionE2EQualityTest::ExchangeOfferAnswer(
   auto answer = bob_->CreateAnswer();
   RTC_CHECK(answer);
   answer->ToString(&log_output);
-  RTC_LOG(INFO) << "Original answer: " << log_output;
+  RTC_LOG(LS_INFO) << "Original answer: " << log_output;
   patch_result = signaling_interceptor->PatchAnswer(
       std::move(answer), bob_->params()->video_codecs[0]);
   patch_result.local_sdp->ToString(&log_output);
-  RTC_LOG(INFO) << "Answer to set as local description: " << log_output;
+  RTC_LOG(LS_INFO) << "Answer to set as local description: " << log_output;
   patch_result.remote_sdp->ToString(&log_output);
-  RTC_LOG(INFO) << "Answer to set as remote description: " << log_output;
+  RTC_LOG(LS_INFO) << "Answer to set as remote description: " << log_output;
 
   bool set_local_answer =
       bob_->SetLocalDescription(std::move(patch_result.local_sdp));
@@ -661,9 +662,9 @@ void PeerConnectionE2EQualityTest::ExchangeIceCandidates(
   for (auto& candidate : alice_candidates) {
     std::string candidate_str;
     RTC_CHECK(candidate->ToString(&candidate_str));
-    RTC_LOG(INFO) << *alice_->params()->name
-                  << " ICE candidate(mid= " << candidate->sdp_mid()
-                  << "): " << candidate_str;
+    RTC_LOG(LS_INFO) << *alice_->params()->name
+                     << " ICE candidate(mid= " << candidate->sdp_mid()
+                     << "): " << candidate_str;
   }
   ASSERT_TRUE(bob_->AddIceCandidates(std::move(alice_candidates)));
   std::vector<std::unique_ptr<IceCandidateInterface>> bob_candidates =
@@ -672,9 +673,9 @@ void PeerConnectionE2EQualityTest::ExchangeIceCandidates(
   for (auto& candidate : bob_candidates) {
     std::string candidate_str;
     RTC_CHECK(candidate->ToString(&candidate_str));
-    RTC_LOG(INFO) << *bob_->params()->name
-                  << " ICE candidate(mid= " << candidate->sdp_mid()
-                  << "): " << candidate_str;
+    RTC_LOG(LS_INFO) << *bob_->params()->name
+                     << " ICE candidate(mid= " << candidate->sdp_mid()
+                     << "): " << candidate_str;
   }
   ASSERT_TRUE(alice_->AddIceCandidates(std::move(bob_candidates)));
 }
