@@ -6693,7 +6693,10 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
       }
     }
 
-    brc.ReflowBlock(aAdjustedAvailableSpace, true, margin, 0, nullptr, floatRS,
+    // When reflowing a float, aSpace argument doesn't matter because we pass
+    // nullptr to aLine and we don't call nsBlockReflowContext::PlaceBlock()
+    // later.
+    brc.ReflowBlock(LogicalRect(wm), true, margin, 0, nullptr, floatRS,
                     aReflowStatus, aState);
   } while (clearanceFrame);
 
