@@ -5,7 +5,6 @@
         "unpoison-thread-stacks_clang_10.patch",
         "downgrade-mangling-error_clang_12.patch",
         "bug47258-extract-symbols-mbcs.patch",
-        "Remove-FlushViewOfFile-when-unmaping-gcda-files-clang-15.patch",
         "fuzzing_ccov_build_clang_12.patch",
         "win64-no-symlink.patch",
         "D116995.diff",
