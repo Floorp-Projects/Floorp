@@ -1223,7 +1223,7 @@ void SdpOfferAnswerHandler::Initialize(
       std::make_unique<WebRtcSessionDescriptionFactory>(
           signaling_thread(), channel_manager(), this, pc_->session_id(),
           pc_->dtls_enabled(), std::move(dependencies.cert_generator),
-          certificate, &ssrc_generator_,
+          certificate,
           [this](const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
             transport_controller()->SetLocalCertificate(certificate);
           });
@@ -3523,7 +3523,7 @@ RTCError SdpOfferAnswerHandler::UpdateTransceiverChannel(
   if (content.rejected) {
     if (channel) {
       transceiver->internal()->SetChannel(nullptr, nullptr);
-      DestroyChannelInterface(channel);
+      channel_manager()->DestroyChannel(channel);
     }
   } else {
     if (!channel) {
@@ -4760,9 +4760,8 @@ cricket::VoiceChannel* SdpOfferAnswerHandler::CreateVoiceChannel(
   // worker thread. We shouldn't be using the `call_ptr_` hack here but simply
   // be on the worker thread and use `call_` (update upstream code).
   return channel_manager()->CreateVoiceChannel(
-      pc_->call_ptr(), pc_->configuration()->media_config, signaling_thread(),
-      mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(), &ssrc_generator_,
-      audio_options());
+      pc_->call_ptr(), pc_->configuration()->media_config, mid,
+      pc_->SrtpRequired(), pc_->GetCryptoOptions(), audio_options());
 }
 
 // TODO(steveanton): Perhaps this should be managed by the RtpTransceiver.
@@ -4777,9 +4776,9 @@ cricket::VideoChannel* SdpOfferAnswerHandler::CreateVideoChannel(
   // worker thread. We shouldn't be using the `call_ptr_` hack here but simply
   // be on the worker thread and use `call_` (update upstream code).
   return channel_manager()->CreateVideoChannel(
-      pc_->call_ptr(), pc_->configuration()->media_config, signaling_thread(),
-      mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(), &ssrc_generator_,
-      video_options(), video_bitrate_allocator_factory_.get());
+      pc_->call_ptr(), pc_->configuration()->media_config, mid,
+      pc_->SrtpRequired(), pc_->GetCryptoOptions(), video_options(),
+      video_bitrate_allocator_factory_.get());
 }
 
 bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
@@ -4806,13 +4805,6 @@ void SdpOfferAnswerHandler::DestroyTransceiverChannel(
   RTC_DCHECK(transceiver);
   RTC_LOG_THREAD_BLOCK_COUNT();
 
-  // TODO(tommi): We're currently on the signaling thread.
-  // There are multiple hops to the worker ahead.
-  // Consider if we can make the call to SetChannel() on the worker thread
-  // (and require that to be the context it's always called in) and also
-  // call DestroyChannelInterface there, since it also needs to hop to the
-  // worker.
-
   cricket::ChannelInterface* channel = transceiver->internal()->channel();
   RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(0);
   if (channel) {
@@ -4825,11 +4817,7 @@ void SdpOfferAnswerHandler::DestroyTransceiverChannel(
     // un-set the channel pointer and uninitialize/destruct the channel object
     // at the same time, rather than in separate steps.
     transceiver->internal()->SetChannel(nullptr, nullptr);
-    // TODO(tommi): All channel objects end up getting deleted on the
-    // worker thread (ideally should be on the network thread but the
-    // MediaChannel objects are tied to the worker. Can the teardown be done
-    // asynchronously across the threads rather than blocking?
-    DestroyChannelInterface(channel);
+    channel_manager()->DestroyChannel(channel);
   }
 }
 
@@ -4847,45 +4835,6 @@ void SdpOfferAnswerHandler::DestroyDataChannelTransport(RTCError error) {
 
   if (has_sctp)
     pc_->ResetSctpDataMid();
-}
-
-void SdpOfferAnswerHandler::DestroyChannelInterface(
-    cricket::ChannelInterface* channel) {
-  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::DestroyChannelInterface");
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  RTC_DCHECK(channel_manager()->media_engine());
-  RTC_DCHECK(channel);
-
-  // TODO(bugs.webrtc.org/11992): All the below methods should be called on the
-  // worker thread. (they switch internally anyway). Change
-  // DestroyChannelInterface to either be called on the worker thread, or do
-  // this asynchronously on the worker.
-  RTC_LOG_THREAD_BLOCK_COUNT();
-
-  switch (channel->media_type()) {
-    case cricket::MEDIA_TYPE_AUDIO:
-      channel_manager()->DestroyVoiceChannel(
-          static_cast<cricket::VoiceChannel*>(channel));
-      break;
-    case cricket::MEDIA_TYPE_VIDEO:
-      channel_manager()->DestroyVideoChannel(
-          static_cast<cricket::VideoChannel*>(channel));
-      break;
-    case cricket::MEDIA_TYPE_DATA:
-      RTC_DCHECK_NOTREACHED()
-          << "Trying to destroy datachannel through DestroyChannelInterface";
-      break;
-    default:
-      RTC_DCHECK_NOTREACHED()
-          << "Unknown media type: " << channel->media_type();
-      break;
-  }
-
-  // TODO(tommi): Figure out why we can get 2 blocking calls when running
-  // PeerConnectionCryptoTest.CreateAnswerWithDifferentSslRoles.
-  // and 3 when running
-  // PeerConnectionCryptoTest.CreateAnswerWithDifferentSslRoles
-  // RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(1);
 }
 
 void SdpOfferAnswerHandler::DestroyAllChannels() {
@@ -5142,7 +5091,7 @@ bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
       local_direction = RtpTransceiverDirectionReversed(local_direction);
     }
 
-    auto bundle_it = bundle_groups_by_mid.find(channel->content_name());
+    auto bundle_it = bundle_groups_by_mid.find(channel->mid());
     const cricket::ContentGroup* bundle_group =
         bundle_it != bundle_groups_by_mid.end() ? bundle_it->second : nullptr;
     bool pt_demux_enabled = RtpTransceiverDirectionHasRecv(local_direction);

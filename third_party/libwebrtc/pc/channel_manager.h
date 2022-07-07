@@ -43,7 +43,7 @@ namespace cricket {
 // voice or just video channels.
 // ChannelManager also allows the application to discover what devices it has
 // using device manager.
-class ChannelManager final {
+class ChannelManager final : public ChannelFactoryInterface {
  public:
   // Returns an initialized instance of ChannelManager.
   // If media_engine is non-nullptr, then the returned ChannelManager instance
@@ -55,11 +55,12 @@ class ChannelManager final {
       rtc::Thread* network_thread);
 
   ChannelManager() = delete;
-  ~ChannelManager();
+  ~ChannelManager() override;
 
   rtc::Thread* worker_thread() const { return worker_thread_; }
   rtc::Thread* network_thread() const { return network_thread_; }
   MediaEngineInterface* media_engine() { return media_engine_.get(); }
+  rtc::UniqueRandomIdGenerator& ssrc_generator() { return ssrc_generator_; }
 
   // Retrieves the list of supported audio & video codec types.
   // Can be called before starting the media engine.
@@ -81,14 +82,10 @@ class ChannelManager final {
   // Creates a voice channel, to be associated with the specified session.
   VoiceChannel* CreateVoiceChannel(webrtc::Call* call,
                                    const MediaConfig& media_config,
-                                   rtc::Thread* signaling_thread,
-                                   const std::string& content_name,
+                                   const std::string& mid,
                                    bool srtp_required,
                                    const webrtc::CryptoOptions& crypto_options,
-                                   rtc::UniqueRandomIdGenerator* ssrc_generator,
-                                   const AudioOptions& options);
-  // Destroys a voice channel created by CreateVoiceChannel.
-  void DestroyVoiceChannel(VoiceChannel* voice_channel);
+                                   const AudioOptions& options) override;
 
   // Creates a video channel, synced with the specified voice channel, and
   // associated with the specified session.
@@ -96,15 +93,14 @@ class ChannelManager final {
   VideoChannel* CreateVideoChannel(
       webrtc::Call* call,
       const MediaConfig& media_config,
-      rtc::Thread* signaling_thread,
-      const std::string& content_name,
+      const std::string& mid,
       bool srtp_required,
       const webrtc::CryptoOptions& crypto_options,
-      rtc::UniqueRandomIdGenerator* ssrc_generator,
       const VideoOptions& options,
-      webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory);
-  // Destroys a video channel created by CreateVideoChannel.
-  void DestroyVideoChannel(VideoChannel* video_channel);
+      webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory)
+      override;
+
+  void DestroyChannel(ChannelInterface* channel) override;
 
   // Starts AEC dump using existing file, with a specified maximum file size in
   // bytes. When the limit is reached, logging will stop and the file will be
@@ -120,9 +116,22 @@ class ChannelManager final {
                  rtc::Thread* worker_thread,
                  rtc::Thread* network_thread);
 
+  // Destroys a voice channel created by CreateVoiceChannel.
+  void DestroyVoiceChannel(VoiceChannel* voice_channel);
+
+  // Destroys a video channel created by CreateVideoChannel.
+  void DestroyVideoChannel(VideoChannel* video_channel);
+
   const std::unique_ptr<MediaEngineInterface> media_engine_;  // Nullable.
+  rtc::Thread* const signaling_thread_;
   rtc::Thread* const worker_thread_;
   rtc::Thread* const network_thread_;
+
+  // This object should be used to generate any SSRC that is not explicitly
+  // specified by the user (or by the remote party).
+  // TODO(bugs.webrtc.org/12666): This variable is used from both the signaling
+  // and worker threads. See if we can't restrict usage to a single thread.
+  rtc::UniqueRandomIdGenerator ssrc_generator_;
 
   // Vector contents are non-null.
   std::vector<std::unique_ptr<VoiceChannel>> voice_channels_

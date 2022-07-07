@@ -129,11 +129,9 @@ ConnectionContext::ConnectionContext(
   default_socket_factory_ = std::make_unique<rtc::BasicPacketSocketFactory>(
       network_thread()->socketserver());
 
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&]() {
-    channel_manager_ = cricket::ChannelManager::Create(
-        std::move(dependencies->media_engine),
-        /*enable_rtx=*/true, worker_thread(), network_thread());
-  });
+  channel_manager_ = cricket::ChannelManager::Create(
+      std::move(dependencies->media_engine),
+      /*enable_rtx=*/true, worker_thread(), network_thread());
 
   // Set warning levels on the threads, to give warnings when response
   // may be slower than is expected of the thread.
@@ -147,8 +145,7 @@ ConnectionContext::ConnectionContext(
 
 ConnectionContext::~ConnectionContext() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  worker_thread_->Invoke<void>(RTC_FROM_HERE,
-                               [&]() { channel_manager_.reset(nullptr); });
+  channel_manager_.reset(nullptr);
 
   // Make sure `worker_thread()` and `signaling_thread()` outlive
   // `default_socket_factory_` and `default_network_manager_`.

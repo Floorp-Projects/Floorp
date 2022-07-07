@@ -27,7 +27,7 @@ class MockChannelInterface : public cricket::ChannelInterface {
   MOCK_METHOD(cricket::MediaType, media_type, (), (const, override));
   MOCK_METHOD(MediaChannel*, media_channel, (), (const, override));
   MOCK_METHOD(absl::string_view, transport_name, (), (const, override));
-  MOCK_METHOD(const std::string&, content_name, (), (const, override));
+  MOCK_METHOD(const std::string&, mid, (), (const, override));
   MOCK_METHOD(void, Enable, (bool), (override));
   MOCK_METHOD(void,
               SetFirstPacketReceivedCallback,

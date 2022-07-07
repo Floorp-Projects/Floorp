@@ -886,7 +886,7 @@ StatsCollector::SessionStats StatsCollector::ExtractSessionInfo_n(
   for (auto& transceiver : transceivers) {
     cricket::ChannelInterface* channel = transceiver->internal()->channel();
     if (channel) {
-      stats.transport_names_by_mid[channel->content_name()] =
+      stats.transport_names_by_mid[channel->mid()] =
           std::string(channel->transport_name());
     }
   }
@@ -1182,7 +1182,7 @@ void StatsCollector::ExtractMediaInfo(
       }
       std::unique_ptr<MediaChannelStatsGatherer> gatherer =
           CreateMediaChannelStatsGatherer(channel->media_channel());
-      gatherer->mid = channel->content_name();
+      gatherer->mid = channel->mid();
       gatherer->transport_name = transport_names_by_mid.at(gatherer->mid);
 
       for (const auto& sender : transceiver->internal()->senders()) {
@@ -1209,7 +1209,7 @@ void StatsCollector::ExtractMediaInfo(
       if (!channel)
         continue;
       MediaChannelStatsGatherer* gatherer = gatherers[i++].get();
-      RTC_DCHECK_EQ(gatherer->mid, channel->content_name());
+      RTC_DCHECK_EQ(gatherer->mid, channel->mid());
 
       for (const auto& receiver : transceiver->internal()->receivers()) {
         gatherer->receiver_track_id_by_ssrc.insert(std::make_pair(

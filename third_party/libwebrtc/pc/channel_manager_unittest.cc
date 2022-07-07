@@ -69,20 +69,18 @@ class ChannelManagerTest : public ::testing::Test {
   void TestCreateDestroyChannels(webrtc::RtpTransportInternal* rtp_transport) {
     RTC_DCHECK_RUN_ON(worker_);
     cricket::VoiceChannel* voice_channel = cm_->CreateVoiceChannel(
-        &fake_call_, cricket::MediaConfig(), rtc::Thread::Current(),
-        cricket::CN_AUDIO, kDefaultSrtpRequired, webrtc::CryptoOptions(),
-        &ssrc_generator_, AudioOptions());
+        &fake_call_, cricket::MediaConfig(), cricket::CN_AUDIO,
+        kDefaultSrtpRequired, webrtc::CryptoOptions(), AudioOptions());
     ASSERT_TRUE(voice_channel != nullptr);
 
     cricket::VideoChannel* video_channel = cm_->CreateVideoChannel(
-        &fake_call_, cricket::MediaConfig(), rtc::Thread::Current(),
-        cricket::CN_VIDEO, kDefaultSrtpRequired, webrtc::CryptoOptions(),
-        &ssrc_generator_, VideoOptions(),
+        &fake_call_, cricket::MediaConfig(), cricket::CN_VIDEO,
+        kDefaultSrtpRequired, webrtc::CryptoOptions(), VideoOptions(),
         video_bitrate_allocator_factory_.get());
     ASSERT_TRUE(video_channel != nullptr);
 
-    cm_->DestroyVideoChannel(video_channel);
-    cm_->DestroyVoiceChannel(voice_channel);
+    cm_->DestroyChannel(video_channel);
+    cm_->DestroyChannel(voice_channel);
   }
 
   std::unique_ptr<rtc::Thread> network_;
@@ -91,7 +89,6 @@ class ChannelManagerTest : public ::testing::Test {
       video_bitrate_allocator_factory_;
   std::unique_ptr<cricket::ChannelManager> cm_;
   cricket::FakeCall fake_call_;
-  rtc::UniqueRandomIdGenerator ssrc_generator_;
 };
 
 TEST_F(ChannelManagerTest, SetVideoRtxEnabled) {

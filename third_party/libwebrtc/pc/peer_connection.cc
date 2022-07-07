@@ -2111,11 +2111,10 @@ void PeerConnection::StopRtcEventLog_w() {
   }
 }
 
-cricket::ChannelInterface* PeerConnection::GetChannel(
-    const std::string& content_name) {
+cricket::ChannelInterface* PeerConnection::GetChannel(const std::string& mid) {
   for (const auto& transceiver : rtp_manager()->transceivers()->UnsafeList()) {
     cricket::ChannelInterface* channel = transceiver->internal()->channel();
-    if (channel && channel->content_name() == content_name) {
+    if (channel && channel->mid() == mid) {
       return channel;
     }
   }
