@@ -12,8 +12,9 @@
 #include "mozilla/HashTable.h"
 #include "mozilla/PairHash.h"
 #include "mozilla/ServoStyleConsts.h"
-#include "mozilla/TimingParams.h"
 #include "mozilla/WritingModes.h"
+
+#define PROGRESS_TIMELINE_DURATION_MILLISEC 100000
 
 class nsIScrollableFrame;
 
