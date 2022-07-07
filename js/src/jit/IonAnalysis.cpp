@@ -4012,6 +4012,9 @@ bool jit::EliminateRedundantShapeGuards(MIRGraph& graph) {
       }
 
 #ifdef DEBUG
+      if (!graph.alloc().ensureBallast()) {
+        return false;
+      }
       auto* assert = MAssertShape::New(graph.alloc(), guard->object(),
                                        const_cast<Shape*>(guard->shape()));
       guard->block()->insertBefore(guard, assert);
