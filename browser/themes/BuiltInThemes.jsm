@@ -21,6 +21,12 @@ const ColorwayL10n = new Localization(["preview/colorways.ftl"], true);
 const kActiveThemePref = "extensions.activeThemeID";
 const kRetainedThemesPref = "browser.theme.retainedExpiredThemes";
 
+const ColorwayIntensityIdPostfixToL10nMap = [
+  ["-soft-colorway@mozilla.org", "colorway-intensity-soft"],
+  ["-balanced-colorway@mozilla.org", "colorway-intensity-balanced"],
+  ["-bold-colorway@mozilla.org", "colorway-intensity-bold"],
+];
+
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "retainedThemes",
@@ -241,6 +247,20 @@ class _BuiltInThemes {
    */
   getLocalizedColorwayGroupName(colorwayId) {
     return this._getColorwayString(colorwayId, "groupName");
+  }
+
+  /**
+   * @param {string} id
+   *   The ID of the colorway add-on.
+   * @return {string}
+   *   L10nId for intensity value of the colorway with the provided id, null if
+   *   there's none.
+   */
+  getColorwayIntensityL10nId(colorwayId) {
+    const result = ColorwayIntensityIdPostfixToL10nMap.find(
+      ([postfix, l10nId]) => colorwayId.endsWith(postfix)
+    );
+    return result ? result[1] : null;
   }
 
   /**

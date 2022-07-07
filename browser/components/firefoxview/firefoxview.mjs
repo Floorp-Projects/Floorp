@@ -19,55 +19,37 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
 });
 
-function titleCase(str) {
-  if (str) {
-    return str[0].toUpperCase() + str.slice(1);
-  }
-  return undefined;
-}
-
 async function getColorway() {
-  const colorwaysCollection = BuiltInThemes.findActiveColorwayCollection();
-  if (!colorwaysCollection) {
+  const collection = BuiltInThemes.findActiveColorwayCollection();
+  if (!collection) {
     return {};
   }
-  BuiltInThemes.ensureBuiltInThemes();
-  let colorwayProperties = {};
-  const colorway = (await lazy.AddonManager.getAddonsByTypes(["theme"])).find(
+  await BuiltInThemes.ensureBuiltInThemes();
+  let colorway = null;
+  let l10nIds = [collection.l10nId.title];
+  const colorwayId = (await lazy.AddonManager.getAddonsByTypes(["theme"])).find(
     theme => theme.isActive && BuiltInThemes.isMonochromaticTheme(theme.id)
-  );
-  if (colorway) {
-    // The colorway.id has the format
-    // `{colorName}-{intensitytName}-colorway@mozilla.org`
-    // or `{colorName}-colorway@mozilla.org` where intensitytName is optional
-    // Bug 1776682 will localize these strings
-    const re = /^([a-z\.]+)(-(soft|balanced|bold))?-colorway@mozilla.org$/;
-    let [, colorwayName, , intensity] = re.exec(colorway.id);
-    // Apply title casing until Bug 1770030 is completed
-    colorwayProperties = {
-      colorwayName: titleCase(colorwayName),
-      intensity: titleCase(intensity),
-      figureUrl: BuiltInThemes.builtInThemeMap.get(colorway.id).figureUrl,
+  )?.id;
+  if (colorwayId) {
+    l10nIds.push(BuiltInThemes.getColorwayIntensityL10nId(colorwayId));
+    colorway = {
+      name: BuiltInThemes.getLocalizedColorwayGroupName(colorwayId),
+      figureUrl: BuiltInThemes.builtInThemeMap.get(colorwayId).figureUrl,
     };
   }
-  const collectionName = await document.l10n.formatValue(
-    colorwaysCollection.l10nId.title
-  );
+  const l10nValues = await document.l10n.formatValues(l10nIds);
+  collection.name = l10nValues[0];
+  if (colorway) {
+    colorway.intensity = l10nValues[1];
+  }
   return {
-    ...colorwaysCollection,
-    ...colorwayProperties,
-    collectionName,
+    collection,
+    colorway,
+    figureUrl: colorway?.figureUrl || collection.figureUrl,
   };
 }
 
-function showColorway({
-  colorwayName,
-  intensity,
-  collectionName,
-  expiry,
-  l10nId,
-  figureUrl,
-}) {
+function showColorway({ collection, colorway, figureUrl }) {
   const el = {
     button: document.getElementById("colorways-button"),
     title: document.getElementById("colorways-collection-title"),
@@ -81,32 +63,35 @@ function showColorway({
     el.expiry,
     "colorway-collection-expiry-date-span",
     {
-      expiryDate: expiry.getTime(),
+      expiryDate: collection.expiry.getTime(),
     }
   );
-  if (colorwayName) {
-    el.title.textContent = colorwayName;
-    if (intensity) {
+  if (colorway) {
+    el.title.textContent = colorway.name;
+    if (colorway.intensity) {
       document.l10n.setAttributes(
         el.description,
         "firefoxview-colorway-description",
         {
-          intensity,
-          collection: collectionName,
+          intensity: colorway.intensity,
+          collection: collection.name,
         }
       );
     } else {
-      document.l10n.setAttributes(el.description, l10nId.title);
+      document.l10n.setAttributes(el.description, collection.l10nId.title);
     }
     document.l10n.setAttributes(
       el.button,
       "firefoxview-change-colorway-button"
     );
   } else {
-    if (l10nId.description) {
-      document.l10n.setAttributes(el.description, l10nId.description);
+    if (collection.l10nId.description) {
+      document.l10n.setAttributes(
+        el.description,
+        collection.l10nId.description
+      );
     }
-    document.l10n.setAttributes(el.title, l10nId.title);
+    document.l10n.setAttributes(el.title, collection.l10nId.title);
     document.l10n.setAttributes(el.button, "firefoxview-try-colorways-button");
   }
   document.getElementById("colorways-collection-graphic").src = figureUrl || "";
