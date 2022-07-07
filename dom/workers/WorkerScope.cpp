@@ -57,6 +57,7 @@
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/Fetch.h"
+#include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/IDBFactory.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapSource.h"
@@ -383,6 +384,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WorkerGlobalScope,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebTaskScheduler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNavigator)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCacheStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDebuggerNotificationManager)
@@ -398,6 +400,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WorkerGlobalScope,
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNavigator)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCacheStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDebuggerNotificationManager)
@@ -465,6 +468,17 @@ already_AddRefed<WorkerNavigator> WorkerGlobalScope::GetExistingNavigator()
 
   RefPtr<WorkerNavigator> navigator = mNavigator;
   return navigator.forget();
+}
+
+FontFaceSet* WorkerGlobalScope::Fonts() {
+  AssertIsOnWorkerThread();
+
+  if (!mFontFaceSet) {
+    mFontFaceSet = FontFaceSet::CreateForWorker(this, mWorkerPrivate);
+    MOZ_ASSERT(mFontFaceSet);
+  }
+
+  return mFontFaceSet;
 }
 
 OnErrorEventHandlerNonNull* WorkerGlobalScope::GetOnerror() {

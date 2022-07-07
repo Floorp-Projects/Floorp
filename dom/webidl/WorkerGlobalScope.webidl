@@ -33,10 +33,8 @@ interface WorkerGlobalScope : EventTarget {
 };
 
 WorkerGlobalScope includes GlobalCrypto;
+WorkerGlobalScope includes FontFaceSource;
 WorkerGlobalScope includes WindowOrWorkerGlobalScope;
-
-// Not implemented yet: bug 1072107.
-// WorkerGlobalScope implements FontFaceSource;
 
 // Mozilla extensions
 partial interface WorkerGlobalScope {

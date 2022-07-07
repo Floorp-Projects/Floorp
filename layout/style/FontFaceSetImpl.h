@@ -121,11 +121,6 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
    */
   virtual void DidRefresh() { MOZ_ASSERT_UNREACHABLE("Not implemented!"); }
 
-  /**
-   * Returns whether the "layout.css.font-loading-api.enabled" pref is true.
-   */
-  static bool PrefEnabled();
-
   virtual void FlushUserFontSet() {}
 
   static nsPresContext* GetPresContextFor(gfxUserFontSet* aUserFontSet) {
