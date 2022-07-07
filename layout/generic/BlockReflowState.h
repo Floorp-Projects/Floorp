@@ -134,18 +134,20 @@ class BlockReflowState {
       nscoord aBCoord, nscoord aBSize,
       nsFloatManager::SavedState* aState) const;
 
-  /*
-   * The following functions all return true if they were able to place the
-   * float, false if the float did not fit in available space.
-   *
-   * Note: if these functions return false, then the float's position and size
-   * should be considered stale/invalid (until the float is successfully
-   * placed).
-   */
+  // @return true if AddFloat was able to place the float; false if the float
+  // did not fit in available space.
+  //
+  // Note: if it returns false, then the float's position and size should be
+  // considered stale/invalid (until the float is successfully placed).
   bool AddFloat(nsLineLayout* aLineLayout, nsIFrame* aFloat,
                 nscoord aAvailableISize);
 
-  bool FlowAndPlaceFloat(nsIFrame* aFloat);
+  enum class PlaceFloatResult : uint8_t {
+    Placed,
+    ShouldPlaceBelowCurrentLine,
+    ShouldPlaceInNextContinuation,
+  };
+  PlaceFloatResult FlowAndPlaceFloat(nsIFrame* aFloat);
 
   void PlaceBelowCurrentLineFloats(nsLineBox* aLine);
 
