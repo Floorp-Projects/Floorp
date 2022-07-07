@@ -3401,9 +3401,13 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
         if (aOriginalURI) {
           nsCOMPtr<nsIURL> originalURL(do_QueryInterface(aOriginalURI));
           if (originalURL) {
-            originalURL->GetFileExtension(extension);
-            if (!extension.IsEmpty()) {
-              mimeInfo->ExtensionExists(extension, &useOldExtension);
+            nsAutoCString uriExtension;
+            originalURL->GetFileExtension(uriExtension);
+            if (!uriExtension.IsEmpty()) {
+              mimeInfo->ExtensionExists(uriExtension, &useOldExtension);
+              if (useOldExtension) {
+                extension = uriExtension;
+              }
             }
           }
         }
@@ -3413,7 +3417,11 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
           // the extension, try to use the primary extension for the type. If we
           // don't know the primary extension for the type, just continue with
           // the existing extension, or leave the filename with no extension.
-          mimeInfo->GetPrimaryExtension(extension);
+          nsAutoCString primaryExtension;
+          mimeInfo->GetPrimaryExtension(primaryExtension);
+          if (!primaryExtension.IsEmpty()) {
+            extension = primaryExtension;
+          }
         }
 
         ModifyExtensionType modify =
@@ -3440,6 +3448,15 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
 #ifdef XP_WIN
   nsLocalFile::CheckForReservedFileName(fileName);
 #endif
+
+  // If the extension is .lnk or .local, replace it with .download, as these
+  // types of files can have signifance on Windows. This happens for any file,
+  // not just those with the shortcut mime type.
+  if (StringEndsWith(fileName, u".lnk"_ns) ||
+      StringEndsWith(fileName, u".local"_ns)) {
+    fileName.AppendLiteral(".download");
+    extension.AssignLiteral("download");
+  }
 
   // If no filename is present, use a default filename.
   if (!(aFlags & VALIDATE_NO_DEFAULT_FILENAME) &&
