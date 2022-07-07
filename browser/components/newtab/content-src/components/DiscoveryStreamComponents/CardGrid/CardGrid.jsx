@@ -171,7 +171,9 @@ export function RecentSavesContainer({
           <FluentOrText message="View My List" />
         </SafeAnchor>
       </DSSubHeader>
-      <div className={gridClassName}>{recentSavesCards}</div>
+      <div className={`ds-card-grid-recent-saves ${gridClassName}`}>
+        {recentSavesCards}
+      </div>
     </>
   );
 }
