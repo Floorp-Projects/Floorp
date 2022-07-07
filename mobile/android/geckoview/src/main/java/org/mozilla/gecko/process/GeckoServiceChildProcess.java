@@ -163,7 +163,7 @@ public class GeckoServiceChildProcess extends Service {
     }
 
     @Override
-    public ISurfaceAllocator getSurfaceAllocator() {
+    public ISurfaceAllocator getSurfaceAllocator(final int allocatorId) {
       Log.e(LOGTAG, "Invalid call to IChildProcess.getSurfaceAllocator for non-GPU process");
       throw new AssertionError(
           "Invalid call to IChildProcess.getSurfaceAllocator for non-GPU process.");

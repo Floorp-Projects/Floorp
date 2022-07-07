@@ -16,7 +16,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 public final class GeckoSurface extends Surface {
   private static final String LOGTAG = "GeckoSurface";
 
-  private int mHandle;
+  private long mHandle;
   private boolean mIsSingleBuffer;
   private volatile boolean mIsAvailable;
   private boolean mOwned = true;
@@ -42,7 +42,7 @@ public final class GeckoSurface extends Surface {
     super(dummy);
 
     readFromParcel(p);
-    mHandle = p.readInt();
+    mHandle = p.readLong();
     mIsSingleBuffer = p.readByte() == 1 ? true : false;
     mIsAvailable = (p.readByte() == 1 ? true : false);
     mMyPid = p.readInt();
@@ -76,7 +76,7 @@ public final class GeckoSurface extends Surface {
     }
     mOwned = false;
 
-    out.writeInt(mHandle);
+    out.writeLong(mHandle);
     out.writeByte((byte) (mIsSingleBuffer ? 1 : 0));
     out.writeByte((byte) (mIsAvailable ? 1 : 0));
     out.writeInt(mMyPid);
@@ -104,7 +104,7 @@ public final class GeckoSurface extends Surface {
   }
 
   @WrapForJNI
-  public int getHandle() {
+  public long getHandle() {
     return mHandle;
   }
 

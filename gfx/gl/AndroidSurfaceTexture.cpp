@@ -157,7 +157,7 @@ class GLBlitterSupport final
   using Base::GetNative;
 
   static java::GeckoSurfaceTexture::NativeGLBlitHelper::LocalRef NativeCreate(
-      jint sourceTextureHandle, jni::Object::Param targetSurface, jint width,
+      jlong sourceTextureHandle, jni::Object::Param targetSurface, jint width,
       jint height) {
     AndroidNativeWindow win(java::GeckoSurface::Ref::From(targetSurface));
     auto helper = java::GeckoSurfaceTexture::NativeGLBlitHelper::New();
@@ -170,7 +170,7 @@ class GLBlitterSupport final
   }
 
   GLBlitterSupport(UniquePtr<AndroidSharedBlitGL>&& gl,
-                   jint sourceTextureHandle, jint width, jint height)
+                   jlong sourceTextureHandle, jint width, jint height)
       : mGl(std::move(gl)),
         mSourceTextureHandle(sourceTextureHandle),
         mSize(width, height) {}
