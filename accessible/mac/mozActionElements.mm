@@ -152,6 +152,23 @@ enum CheckboxValue {
 
 @implementation mozIncrementableAccessible
 
+- (id)moxValue {
+  return [NSNumber numberWithDouble:mGeckoAccessible->CurValue()];
+}
+
+- (NSString*)moxValueDescription {
+  nsAutoString valueDesc;
+  mGeckoAccessible->Value(valueDesc);
+  return nsCocoaUtils::ToNSString(valueDesc);
+}
+- (id)moxMinValue {
+  return [NSNumber numberWithDouble:mGeckoAccessible->MinValue()];
+}
+
+- (id)moxMaxValue {
+  return [NSNumber numberWithDouble:mGeckoAccessible->MaxValue()];
+}
+
 - (void)moxSetValue:(id)value {
   [self setValue:([value doubleValue])];
 }
@@ -162,6 +179,21 @@ enum CheckboxValue {
 
 - (void)moxPerformDecrement {
   [self changeValueBySteps:-1];
+}
+
+- (NSString*)moxOrientation {
+  RefPtr<AccAttributes> attributes = mGeckoAccessible->Attributes();
+  if (attributes) {
+    nsAutoString result;
+    attributes->GetAttribute(nsGkAtoms::aria_orientation, result);
+    if (result.Equals(u"horizontal"_ns)) {
+      return NSAccessibilityHorizontalOrientationValue;
+    } else if (result.Equals(u"vertical"_ns)) {
+      return NSAccessibilityVerticalOrientationValue;
+    }
+  }
+
+  return NSAccessibilityUnknownOrientationValue;
 }
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {

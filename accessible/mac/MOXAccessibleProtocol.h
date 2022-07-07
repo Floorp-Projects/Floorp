@@ -99,6 +99,9 @@
 // AXValue
 - (id _Nullable)moxValue;
 
+// AXValueDescription
+- (NSString* _Nullable)moxValueDescription;
+
 // AXSize
 - (NSValue* _Nullable)moxSize;
 
@@ -188,6 +191,12 @@
 
 // AXLoadingProgress
 - (NSNumber* _Nullable)moxLoadingProgress;
+
+// AXMinValue
+- (id _Nullable)moxMinValue;
+
+// AXMaxValue
+- (id _Nullable)moxMaxValue;
 
 // Webkit also implements the following:
 // // AXCaretBrowsingEnabled
