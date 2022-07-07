@@ -77,7 +77,8 @@ function test() {
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, test);
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false],
+                                    ["test.events.async.enabled", true]]}, test);
 });
 </script>
 </pre>

@@ -9,6 +9,9 @@ const { Provider } = require("react-redux");
 
 import ToolboxProvider from "devtools/client/framework/store-provider";
 import flags from "devtools/shared/flags";
+const {
+  registerStoreObserver,
+} = require("devtools/client/shared/redux/subscriber");
 
 const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 
@@ -100,15 +103,6 @@ function getMountElement() {
 // This is the opposite of bootstrapApp
 export function unmountRoot() {
   ReactDOM.unmountComponentAtNode(getMountElement());
-}
-
-function registerStoreObserver(store, subscriber) {
-  let oldState = store.getState();
-  store.subscribe(() => {
-    const state = store.getState();
-    subscriber(state, oldState);
-    oldState = state;
-  });
 }
 
 function updatePrefs(state, oldState) {

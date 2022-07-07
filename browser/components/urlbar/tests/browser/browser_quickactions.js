@@ -78,6 +78,10 @@ add_task(async function enter_search_mode_button() {
     source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
     entry: "oneoff",
   });
+
+  await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+  Assert.ok(true, "Actions are shown when we enter actions search mode.");
+
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_Escape");
 });

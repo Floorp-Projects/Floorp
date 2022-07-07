@@ -239,13 +239,13 @@ void nsBlockReflowContext::ReflowBlock(const LogicalRect& aSpace,
     // child frame doesn't think it can reflow into its margin area.
     if (mWritingMode.IsOrthogonalTo(mFrame->GetWritingMode())) {
       if (NS_UNCONSTRAINEDSIZE != aFrameRI.AvailableISize()) {
-        aFrameRI.AvailableISize() -= mBStartMargin.get() + aClearance;
-        aFrameRI.AvailableISize() = std::max(0, aFrameRI.AvailableISize());
+        aFrameRI.SetAvailableISize(std::max(
+            0, aFrameRI.AvailableISize() - mBStartMargin.get() - aClearance));
       }
     } else {
       if (NS_UNCONSTRAINEDSIZE != aFrameRI.AvailableBSize()) {
-        aFrameRI.AvailableBSize() -= mBStartMargin.get() + aClearance;
-        aFrameRI.AvailableBSize() = std::max(0, aFrameRI.AvailableBSize());
+        aFrameRI.SetAvailableBSize(std::max(
+            0, aFrameRI.AvailableBSize() - mBStartMargin.get() - aClearance));
       }
     }
   } else {

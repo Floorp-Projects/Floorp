@@ -22,6 +22,12 @@ body > header {
   margin: 2em 2em 0;
 }
 
+fieldset {
+  border: unset;
+  margin: 0;
+  padding: 0;
+}
+
 figure {
   grid-area: figure;
   margin: 0;
@@ -39,7 +45,7 @@ figure > img {
   display: inline-block;
   margin: 0;
   padding: 0;
-  font-size: 1.8em;
+  font-size: 1.7em;
   font-weight: bold;
 }
 
@@ -88,10 +94,8 @@ figure > img {
 }
 
 #colorway-selector {
-  border: none;
   display: flex;
   flex-direction: row;
-  padding: 0;
 }
 
 #colorway-selector > input[type="radio"],
@@ -127,34 +131,42 @@ figure > img {
 #colorway-customization-panel {
   grid-area: main;
   padding-inline: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#colorway-name,
+#modal-buttons {
+  margin-block: 4rem 0;
+}
+
+#colorway-description,
+#colorway-intensities {
+  margin-block: 2rem 0;
 }
 
 #colorway-name {
-  font-size: 2em;
-  margin-block: 0 37px;
-  margin-top: 50px;
+  font-size: 2.5em;
 }
 
 #colorway-description {
   font-size: 1.1em;
-  margin-block: 0 24px;
+  line-height: 1.5;
 }
 
 /* Intensity Picker */
-#colorway-intensities {
-  border: unset;
-  margin-inline: 0;
-  padding-inline: 0;
-}
 
 #colorway-intensities > legend {
+  font-size: 1.1em;
   padding-inline-start: 0;
+  margin-bottom: .5em;
 }
 
 #colorway-intensity-radios {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: .5em;
 }
 
 #colorway-intensity-radios > label {
@@ -164,8 +176,12 @@ figure > img {
   color: var(--in-content-text-color);
   display: flex;
   overflow: clip;
-  padding: 4px 8px;
+  padding: .5em;
   width: 100%;
+}
+
+.colorway-intensity-radio {
+  margin-block: 0 !important;
 }
 
 #set-colorway {

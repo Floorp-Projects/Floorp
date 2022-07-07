@@ -19,6 +19,8 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   addDebuggerToGlobal: "resource://gre/modules/jsdebugger.jsm",
 
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+  getFramesFromStack: "chrome://remote/content/shared/Stack.jsm",
+  isChromeFrame: "chrome://remote/content/shared/Stack.jsm",
   serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
 });
 
@@ -28,17 +30,118 @@ XPCOMUtils.defineLazyGetter(lazy, "dbg", () => {
   return new Debugger();
 });
 
+/**
+ * @typedef {Object} EvaluationStatus
+ **/
+
+/**
+ * Enum of possible evaluation states.
+ *
+ * @readonly
+ * @enum {EvaluationStatus}
+ **/
+const EvaluationStatus = {
+  Normal: "normal",
+  Throw: "throw",
+};
+
 class ScriptModule extends Module {
   #global;
 
   constructor(messageHandler) {
     super(messageHandler);
+
     this.#global = lazy.dbg.makeGlobalObjectReference(
       this.messageHandler.window
     );
+    lazy.dbg.enableAsyncStack(this.messageHandler.window);
   }
+
   destroy() {
+    if (this.messageHandler.window) {
+      lazy.dbg.disableAsyncStack(this.messageHandler.window);
+    }
     this.#global = null;
+  }
+
+  #buildExceptionDetails(exception, stack) {
+    exception = this.#toRawObject(exception);
+    const frames = lazy.getFramesFromStack(stack) || [];
+
+    const callFrames = frames
+      // Remove chrome/internal frames
+      .filter(frame => !lazy.isChromeFrame(frame))
+      // Translate frames from getFramesFromStack to frames expected by
+      // WebDriver BiDi.
+      .map(frame => {
+        return {
+          columnNumber: frame.columnNumber,
+          functionName: frame.functionName,
+          lineNumber: frame.lineNumber - 1,
+          url: frame.filename,
+        };
+      });
+
+    return {
+      columnNumber: stack.column,
+      exception: lazy.serialize(exception, 1),
+      lineNumber: stack.line - 1,
+      stackTrace: { callFrames },
+      text:
+        typeof exception === "object"
+          ? exception.toString()
+          : String(exception),
+    };
+  }
+
+  async #buildReturnValue(rv, awaitPromise) {
+    let evaluationStatus, exception, result, stack;
+    if ("return" in rv) {
+      evaluationStatus = EvaluationStatus.Normal;
+      if (
+        awaitPromise &&
+        // Only non-primitive return values are wrapped in Debugger.Object.
+        rv.return instanceof Debugger.Object &&
+        rv.return.isPromise
+      ) {
+        try {
+          // Force wrapping the promise resolution result in a Debugger.Object
+          // wrapper for consistency with the synchronous codepath.
+          const asyncResult = await rv.return.unsafeDereference();
+          result = this.#global.makeDebuggeeValue(asyncResult);
+        } catch (asyncException) {
+          evaluationStatus = EvaluationStatus.Throw;
+          exception = this.#global.makeDebuggeeValue(asyncException);
+          stack = rv.return.promiseResolutionSite;
+        }
+      } else {
+        // rv.return is a Debugger.Object or a primitive.
+        result = rv.return;
+      }
+    } else if ("throw" in rv) {
+      // rv.throw will be set if the evaluation synchronously failed, either if
+      // the script contains a syntax error or throws an exception.
+      evaluationStatus = EvaluationStatus.Throw;
+      exception = rv.throw;
+      stack = rv.stack;
+    }
+
+    switch (evaluationStatus) {
+      case EvaluationStatus.Normal:
+        return {
+          evaluationStatus,
+          result: lazy.serialize(this.#toRawObject(result), 1),
+        };
+      case EvaluationStatus.Throw:
+        return {
+          evaluationStatus,
+          exceptionDetails: this.#buildExceptionDetails(exception, stack),
+        };
+      default:
+        throw new lazy.error.UnsupportedOperationError(
+          `Unsupported completion value for expression evaluation`
+        );
+    }
   }
 
   #toRawObject(maybeDebuggerObject) {
@@ -61,6 +164,33 @@ class ScriptModule extends Module {
   }
 
   /**
+   * Call a function in the current window global.
+   *
+   * @param {Object} options
+   * @param {boolean} awaitPromise
+   *     Determines if the command should wait for the return value of the
+   *     expression to resolve, if this return value is a Promise.
+   * @param {Array<RemoteValue>} commandArguments
+   *     The arguments to pass to the function call.
+   * @param {string} functionDeclaration
+   *     The body of the function to call.
+   *
+   * @return {Object}
+   *     - evaluationStatus {EvaluationStatus} One of "normal", "throw".
+   *     - exceptionDetails {ExceptionDetails=} the details of the exception if
+   *     the evaluation status was "throw".
+   *     - result {RemoteValue=} the result of the evaluation serialized as a
+   *     RemoteValue if the evaluation status was "normal".
+   */
+  async callFunctionDeclaration(options) {
+    const { awaitPromise, functionDeclaration } = options;
+    const rv = this.#global.executeInGlobal(`(${functionDeclaration})()`, {
+      url: this.messageHandler.window.document.baseURI,
+    });
+    return this.#buildReturnValue(rv, awaitPromise);
+  }
+
+  /**
    * Evaluate a provided expression in the current window global.
    *
    * @param {Object} options
@@ -71,43 +201,19 @@ class ScriptModule extends Module {
    *     The expression to evaluate.
    *
    * @return {Object}
-   *     - result {RemoteValue} the result of the evaluation serialized as a
-   *     RemoteValue.
+   *     - evaluationStatus {EvaluationStatus} One of "normal", "throw".
+   *     - exceptionDetails {ExceptionDetails=} the details of the exception if
+   *     the evaluation status was "throw".
+   *     - result {RemoteValue=} the result of the evaluation serialized as a
+   *     RemoteValue if the evaluation status was "normal".
    */
   async evaluateExpression(options) {
     const { awaitPromise, expression } = options;
-    const rv = this.#global.executeInGlobal(expression);
+    const rv = this.#global.executeInGlobal(expression, {
+      url: this.messageHandler.window.document.baseURI,
+    });
 
-    if ("return" in rv) {
-      let result = rv.return;
-      if (
-        awaitPromise &&
-        // Only non-primitive return values are wrapped in Debugger.Object.
-        result instanceof Debugger.Object &&
-        result.isPromise
-      ) {
-        try {
-          // Force wrapping the promise resolution result in a Debugger.Object
-          // wrapper for consistency with the synchronous codepath.
-          result = this.#global.makeDebuggeeValue(
-            await result.unsafeDereference()
-          );
-        } catch (e) {
-          // Errors will be handled in Bug 1770477.
-          throw new lazy.error.UnsupportedOperationError(
-            `Unsupported promise rejection for expression evaluation`
-          );
-        }
-      }
-
-      return {
-        result: lazy.serialize(this.#toRawObject(result), 1),
-      };
-    }
-
-    throw new lazy.error.UnsupportedOperationError(
-      `Unsupported completion value for expression evaluation`
-    );
+    return this.#buildReturnValue(rv, awaitPromise);
   }
 }
 

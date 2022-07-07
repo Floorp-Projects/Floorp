@@ -61,7 +61,21 @@ class PowerMeterChannel final : public BaseProfilerCount {
         mPreviousValue(aInitialValue),
         mPreviousTime(aInitialTime),
         mIsSampleNew(true) {
-    mLabel = mChannelName.get();
+    if (mChannelName.Equals("RAPL_Package0_PKG")) {
+      mLabel = "Power: CPU package";
+      mDescription = mChannelName.get();
+    } else if (mChannelName.Equals("RAPL_Package0_PP0")) {
+      mLabel = "Power: CPU cores";
+      mDescription = mChannelName.get();
+    } else if (mChannelName.Equals("RAPL_Package0_PP1")) {
+      mLabel = "Power: iGPU";
+      mDescription = mChannelName.get();
+    } else if (mChannelName.Equals("RAPL_Package0_DRAM")) {
+      mLabel = "Power: DRAM";
+      mDescription = mChannelName.get();
+    } else {
+      mLabel = mChannelName.get();
+    }
   }
 
   CountSample Sample() override {

@@ -42,7 +42,7 @@
         ]
       },
       "then": {
-        "$ref": "#/$defs/CFRUrlbarChiclet"
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/CFRUrlbarChiclet"
       }
     },
     {
@@ -62,7 +62,7 @@
         ]
       },
       "then": {
-        "$ref": "#/$defs/ExtensionDoorhanger"
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ExtensionDoorhanger"
       }
     },
     {
@@ -81,7 +81,7 @@
         ]
       },
       "then": {
-        "$ref": "#/$defs/InfoBar"
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/InfoBar"
       }
     },
     {
@@ -100,7 +100,7 @@
         ]
       },
       "then": {
-        "$ref": "#/$defs/NewtabPromoMessage"
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/NewtabPromoMessage"
       }
     },
     {
@@ -119,7 +119,7 @@
         ]
       },
       "then": {
-        "$ref": "#/$defs/Spotlight"
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Spotlight"
       }
     },
     {
@@ -138,7 +138,7 @@
         ]
       },
       "then": {
-        "$ref": "#/$defs/ToolbarBadgeMessage"
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ToolbarBadgeMessage"
       }
     },
     {
@@ -157,7 +157,7 @@
         ]
       },
       "then": {
-        "$ref": "#/$defs/UpdateAction"
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/UpdateAction"
       }
     },
     {
@@ -176,7 +176,7 @@
         ]
       },
       "then": {
-        "$ref": "#/$defs/WhatsNewMessage"
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/WhatsNewMessage"
       }
     }
   ],
@@ -262,7 +262,7 @@
                   "description": "The page to open when the button is clicked.",
                   "allOf": [
                     {
-                      "$ref": "#/definitions/linkUrl"
+                      "$ref": "file:///CFRUrlbarChiclet.schema.json#/definitions/linkUrl"
                     },
                     {
                       "description": "Icon associated with the message"
@@ -523,7 +523,7 @@
               "description": "The icon displayed in the pop-over. Should be 32x32px or 64x64px and png/svg.",
               "allOf": [
                 {
-                  "$ref": "#/definitions/linkUrl"
+                  "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/linkUrl"
                 },
                 {
                   "description": "Icon associated with the message"
@@ -545,7 +545,7 @@
                 "id": {
                   "allOf": [
                     {
-                      "$ref": "#/definitions/plainText"
+                      "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
                     },
                     {
                       "description": "Unique addon ID"
@@ -555,7 +555,7 @@
                 "title": {
                   "allOf": [
                     {
-                      "$ref": "#/definitions/plainText"
+                      "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
                     },
                     {
                       "description": "Addon name"
@@ -565,7 +565,7 @@
                 "author": {
                   "allOf": [
                     {
-                      "$ref": "#/definitions/plainText"
+                      "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
                     },
                     {
                       "description": "Addon author"
@@ -576,7 +576,7 @@
                   "description": "The icon displayed in the pop-over. Should be 64x64px and png/svg.",
                   "allOf": [
                     {
-                      "$ref": "#/definitions/linkUrl"
+                      "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/linkUrl"
                     },
                     {
                       "description": "Addon icon"
@@ -597,7 +597,7 @@
                 "amo_url": {
                   "allOf": [
                     {
-                      "$ref": "#/definitions/linkUrl"
+                      "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/linkUrl"
                     },
                     {
                       "description": "Link that offers more information related to the addon."
@@ -673,7 +673,7 @@
                             "value": {
                               "allOf": [
                                 {
-                                  "$ref": "#/definitions/plainText"
+                                  "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
                                 },
                                 {
                                   "description": "Button label override used when a localized version is not available."
@@ -704,7 +704,7 @@
                             "string_id": {
                               "allOf": [
                                 {
-                                  "$ref": "#/definitions/plainText"
+                                  "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
                                 },
                                 {
                                   "description": "Id of localized string for button"
@@ -1936,7 +1936,7 @@
             "title": {
               "allOf": [
                 {
-                  "$ref": "#/definitions/localizableText"
+                  "$ref": "file:///WhatsNewMessage.schema.json#/definitions/localizableText"
                 },
                 {
                   "description": "Id of localized string or message override of What's New message title"
@@ -1946,7 +1946,7 @@
             "subtitle": {
               "allOf": [
                 {
-                  "$ref": "#/definitions/localizableText"
+                  "$ref": "file:///WhatsNewMessage.schema.json#/definitions/localizableText"
                 },
                 {
                   "description": "Id of localized string or message override of What's New message subtitle"
@@ -1956,7 +1956,7 @@
             "body": {
               "allOf": [
                 {
-                  "$ref": "#/definitions/localizableText"
+                  "$ref": "file:///WhatsNewMessage.schema.json#/definitions/localizableText"
                 },
                 {
                   "description": "Id of localized string or message override of What's New message body"
@@ -1966,7 +1966,7 @@
             "link_text": {
               "allOf": [
                 {
-                  "$ref": "#/definitions/localizableText"
+                  "$ref": "file:///WhatsNewMessage.schema.json#/definitions/localizableText"
                 },
                 {
                   "description": "(optional) Id of localized string or message override of What's New message link text"
@@ -2004,7 +2004,7 @@
             "icon_alt": {
               "allOf": [
                 {
-                  "$ref": "#/definitions/localizableText"
+                  "$ref": "file:///WhatsNewMessage.schema.json#/definitions/localizableText"
                 },
                 {
                   "description": "Alt text for image."

@@ -322,6 +322,17 @@ body {
 
           .steps {
             z-index: 1;
+
+            &.progress-bar {
+              width: 400px;
+              margin-inline: -35px;
+
+              .indicator {
+                border-radius: 0;
+                width: -moz-available;
+                margin-inline: 0;
+              }
+            }
           }
         }
       }
@@ -428,6 +439,15 @@ body {
             .primary,
             .secondary {
               width: 240px;
+            }
+
+            .steps {
+              padding-block: 0;
+              margin: 0;
+
+              &.progress-bar {
+                margin-inline: 0;
+              }
             }
           }
 
@@ -1156,6 +1176,29 @@ body {
         &:last-of-type:first-of-type {
           opacity: 0;
         }
+      }
+    }
+
+    &.progress-bar {
+      height: 6px;
+      padding-block: 0;
+      margin-block: 42px 0;
+
+      .indicator {
+        border-radius: 0;
+        width: -moz-available;
+        margin-inline: 0;
+      }
+    }
+
+    & .indicator.current,
+    &.progress-bar .indicator.complete {
+      opacity: 1;
+      border-color: var(--checkbox-checked-bgcolor);
+
+      // This is the only step shown, so visually hide it to maintain spacing.
+      &:last-of-type:first-of-type {
+        opacity: 0;
       }
     }
   }

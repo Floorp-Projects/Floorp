@@ -64,6 +64,12 @@ function update(state = initialBreakpointsState(), action) {
     case "DISABLE_XHR_BREAKPOINT": {
       return updateXHRBreakpoint(state, action);
     }
+    case "CLEAR_XHR_BREAKPOINTS": {
+      if (action.status == "start") {
+        return state;
+      }
+      return { ...state, xhrBreakpoints: [] };
+    }
   }
 
   return state;
