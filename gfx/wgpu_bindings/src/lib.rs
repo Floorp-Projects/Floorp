@@ -14,8 +14,6 @@ pub use wgc::device::trace::Command as CommandEncoderAction;
 
 use std::{borrow::Cow, mem, slice};
 
-use nsstring::nsACString;
-
 type RawString = *const std::os::raw::c_char;
 
 //TODO: figure out why 'a and 'b have to be different here
@@ -28,12 +26,6 @@ fn cow_label<'a, 'b>(raw: &'a RawString) -> Option<Cow<'b, str>> {
         cstr.to_str().ok().map(Cow::Borrowed)
     }
 }
-
-// Hides the repeated boilerplate of turning a `Option<&nsACString>` into a `Option<Cow<str>`.
-pub fn wgpu_string(gecko_string: Option<&nsACString>) -> Option<Cow<str>> {
-    gecko_string.map(|s| s.to_utf8())
-}
-
 
 #[repr(C)]
 pub struct ByteBuf {

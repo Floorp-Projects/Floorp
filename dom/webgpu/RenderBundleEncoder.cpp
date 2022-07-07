@@ -37,8 +37,11 @@ ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
   ffi::WGPURenderBundleEncoderDescriptor desc = {};
   desc.sample_count = aDesc.mSampleCount;
 
-  webgpu::StringHelper label(aDesc.mLabel);
-  desc.label = label.Get();
+  nsCString label;
+  if (aDesc.mLabel.WasPassed()) {
+    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
+    desc.label = label.get();
+  }
 
   ffi::WGPUTextureFormat depthStencilFormat = {ffi::WGPUTextureFormat_Sentinel};
   if (aDesc.mDepthStencilFormat.WasPassed()) {

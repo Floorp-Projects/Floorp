@@ -9,7 +9,6 @@
 #include <cstdint>
 #include "mozilla/Maybe.h"
 #include "nsString.h"
-#include "mozilla/dom/BindingDeclarations.h"
 
 namespace mozilla::webgpu {
 
@@ -26,41 +25,6 @@ struct ScopedError {
   nsCString validationMessage;
 };
 using MaybeScopedError = Maybe<ScopedError>;
-
-enum class WebGPUCompilationMessageType { Error, Warning, Info };
-
-// TODO: Better name? CompilationMessage alread taken by the dom object.
-/// The serializable counterpart of the dom object CompilationMessage.
-struct WebGPUCompilationMessage {
-  nsString message;
-  uint64_t lineNum = 0;
-  uint64_t linePos = 0;
-  // In utf16 code units.
-  uint64_t offset = 0;
-  // In utf16 code units.
-  uint64_t length = 0;
-  WebGPUCompilationMessageType messageType =
-      WebGPUCompilationMessageType::Error;
-};
-
-class StringHelper {
- public:
-  StringHelper(const dom::Optional<nsString>& aWide) {
-    if (aWide.WasPassed()) {
-      mNarrow = Some(NS_ConvertUTF16toUTF8(aWide.Value()));
-    }
-  }
-
-  const nsACString* Get() const {
-    if (mNarrow.isSome()) {
-      return mNarrow.ptr();
-    }
-    return nullptr;
-  }
-
- private:
-  Maybe<NS_ConvertUTF16toUTF8> mNarrow;
-};
 
 }  // namespace mozilla::webgpu
 

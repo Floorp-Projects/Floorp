@@ -336,11 +336,15 @@ ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aSelfId) {
 
 ipc::IPCResult WebGPUParent::RecvCreateBuffer(
     RawId aSelfId, RawId aBufferId, dom::GPUBufferDescriptor&& aDesc) {
-  webgpu::StringHelper label(aDesc.mLabel);
-
+  nsCString label;
+  const char* labelOrNull = nullptr;
+  if (aDesc.mLabel.WasPassed()) {
+    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
+    labelOrNull = label.get();
+  }
   ErrorBuffer error;
   ffi::wgpu_server_device_create_buffer(mContext.get(), aSelfId, aBufferId,
-                                        label.Get(), aDesc.mSize, aDesc.mUsage,
+                                        labelOrNull, aDesc.mSize, aDesc.mUsage,
                                         aDesc.mMappedAtCreation, error.ToFFI());
   ForwardError(aSelfId, error);
   return IPC_OK();
@@ -469,10 +473,6 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderFinish(
     const dom::GPUCommandBufferDescriptor& aDesc) {
   Unused << aDesc;
   ffi::WGPUCommandBufferDescriptor desc = {};
-
-  webgpu::StringHelper label(aDesc.mLabel);
-  desc.label = label.Get();
-
   ErrorBuffer error;
   ffi::wgpu_server_encoder_finish(mContext.get(), aSelfId, &desc,
                                   error.ToFFI());
@@ -630,41 +630,6 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
   if (!mCanvasMap.insert({aHandle.Value(), data}).second) {
     NS_ERROR("External image is already registered as WebGPU canvas!");
   }
-  return IPC_OK();
-}
-
-ipc::IPCResult WebGPUParent::RecvDeviceCreateShaderModule(
-    RawId aSelfId, RawId aBufferId, const nsString& aLabel,
-    const nsCString& aCode, DeviceCreateShaderModuleResolver&& aOutMessage) {
-  // TODO: this should probably be an optional label in the IPC message.
-  const nsACString* label = nullptr;
-  NS_ConvertUTF16toUTF8 utf8Label(aLabel);
-  if (!utf8Label.IsEmpty()) {
-    label = &utf8Label;
-  }
-
-  ffi::WGPUShaderModuleCompilationMessage message;
-
-  bool ok = ffi::wgpu_server_device_create_shader_module(
-      mContext.get(), aSelfId, aBufferId, label, &aCode, &message);
-
-  nsTArray<WebGPUCompilationMessage> messages;
-
-  if (!ok) {
-    WebGPUCompilationMessage msg;
-    msg.lineNum = message.line_number;
-    msg.linePos = message.line_pos;
-    msg.offset = message.utf16_offset;
-    msg.length = message.utf16_length;
-    msg.message = message.message;
-    // wgpu currently only returns errors.
-    msg.messageType = WebGPUCompilationMessageType::Error;
-
-    messages.AppendElement(msg);
-  }
-
-  aOutMessage(messages);
-
   return IPC_OK();
 }
 

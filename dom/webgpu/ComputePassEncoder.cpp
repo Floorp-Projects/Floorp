@@ -28,10 +28,7 @@ void ScopedFfiComputeTraits::release(ffi::WGPUComputePass* raw) {
 ffi::WGPUComputePass* BeginComputePass(
     RawId aEncoderId, const dom::GPUComputePassDescriptor& aDesc) {
   ffi::WGPUComputePassDescriptor desc = {};
-
-  webgpu::StringHelper label(aDesc.mLabel);
-  desc.label = label.Get();
-
+  Unused << aDesc;  // no useful fields
   return ffi::wgpu_command_encoder_begin_compute_pass(aEncoderId, &desc);
 }
 

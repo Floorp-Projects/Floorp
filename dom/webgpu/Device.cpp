@@ -266,18 +266,12 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
 already_AddRefed<ShaderModule> Device::CreateShaderModule(
     JSContext* aCx, const dom::GPUShaderModuleDescriptor& aDesc) {
   Unused << aCx;
-
-  if (!mBridge->CanSend()) {
-    return nullptr;
+  RawId id = 0;
+  if (mBridge->CanSend()) {
+    id = mBridge->DeviceCreateShaderModule(mId, aDesc);
   }
-
-  ErrorResult err;
-  RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), err);
-  if (NS_WARN_IF(err.Failed())) {
-    return nullptr;
-  }
-
-  return mBridge->DeviceCreateShaderModule(this, aDesc, promise);
+  RefPtr<ShaderModule> object = new ShaderModule(this, id);
+  return object.forget();
 }
 
 already_AddRefed<ComputePipeline> Device::CreateComputePipeline(

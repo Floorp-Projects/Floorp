@@ -3,18 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::{
-    wgpu_string, identity::IdentityRecyclerFactory, AdapterInformation, ByteBuf,
-    CommandEncoderAction, DeviceAction, DropAction, QueueWriteAction, TextureAction,
+    cow_label, identity::IdentityRecyclerFactory, AdapterInformation, ByteBuf,
+    CommandEncoderAction, DeviceAction, DropAction, QueueWriteAction, RawString, TextureAction,
 };
 
-use nsstring::{nsString, nsACString, nsCString};
-
 use wgc::{gfx_select, id};
-use wgc::pipeline::CreateShaderModuleError;
 
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::{error::Error, os::raw::c_char, ptr, slice};
-use std::borrow::Cow;
 
 /// A fixed-capacity, null-terminated error buffer owned by C++.
 ///
@@ -211,99 +207,18 @@ pub extern "C" fn wgpu_server_device_drop(global: &Global, self_id: id::DeviceId
     gfx_select!(self_id => global.device_drop(self_id))
 }
 
-impl ShaderModuleCompilationMessage {
-    fn set_error(&mut self, error: &CreateShaderModuleError, source: &str) {
-        // The WebGPU spec says that if the message doesn't point to a particular position in
-        // the source, the line number, position, offset and lengths should be zero.
-        self.line_number = 0;
-        self.line_pos = 0;
-        self.utf16_offset = 0;
-        self.utf16_length = 0;
-
-        if let Some(location) = error.location(source) {
-            self.line_number = location.line_number as u64;
-            self.line_pos = location.line_position as u64;
-
-            let start = location.offset as usize;
-            let end = start + location.length as usize;
-            self.utf16_offset = source[0..start].chars().map(|c| c.len_utf16() as u64).sum();
-            self.utf16_length = source[start..end].chars().map(|c| c.len_utf16() as u64).sum();
-        }
-
-        let error_string = error.to_string();
-
-        if !error_string.is_empty() {
-            self.message = nsString::from(&error_string[..]);
-        }
-    }
-}
-
-/// A compilation message representation for the ffi boundary.
-/// the message is immediately copied into an equivalent C++
-/// structure that owns its strings.
-#[repr(C)]
-#[derive(Clone)]
-pub struct ShaderModuleCompilationMessage {
-    pub line_number: u64,
-    pub line_pos: u64,
-    pub utf16_offset: u64,
-    pub utf16_length: u64,
-    pub message: nsString,
-}
-
-/// Creates a shader module and returns an object describing the errors if any.
-///
-/// If there was no error, the returned pointer is nil.
-#[no_mangle]
-pub extern "C" fn wgpu_server_device_create_shader_module(
-    global: &Global,
-    self_id: id::DeviceId,
-    module_id: id::ShaderModuleId,
-    label: Option<&nsACString>,
-    code: &nsCString,
-    out_message: &mut ShaderModuleCompilationMessage
-) -> bool {
-    let utf8_label = label.map(|utf16| utf16.to_string());
-    let label = utf8_label.as_ref().map(|s| Cow::from(&s[..]));
-
-    let source_str = code.to_utf8();
-
-    let source = wgc::pipeline::ShaderModuleSource::Wgsl(Cow::from(&source_str[..]));
-
-    let desc = wgc::pipeline::ShaderModuleDescriptor {
-        label,
-        shader_bound_checks: wgt::ShaderBoundChecks::new(),
-    };
-
-    let (_, error) = gfx_select!(
-        self_id => global.device_create_shader_module(
-            self_id, &desc, source, module_id
-        )
-    );
-
-    if let Some(err) = error {
-        out_message.set_error(&err, &source_str[..]);
-        return false;
-    }
-
-    // Avoid allocating the structure that holds errors in the common case (no errors).
-    return true;
-}
-
 #[no_mangle]
 pub extern "C" fn wgpu_server_device_create_buffer(
     global: &Global,
     self_id: id::DeviceId,
     buffer_id: id::BufferId,
-    label: Option<&nsACString>,
+    label_or_null: RawString,
     size: wgt::BufferAddress,
     usage: u32,
     mapped_at_creation: bool,
     mut error_buf: ErrorBuffer,
 ) {
-    let utf8_label = label.map(|utf16| utf16.to_string());
-    let label = utf8_label.as_ref().map(|s| Cow::from(&s[..]));
-
+    let label = cow_label(&label_or_null);
     let usage = match wgt::BufferUsages::from_bits(usage) {
         Some(usage) => usage,
         None => {
@@ -649,14 +564,11 @@ pub unsafe extern "C" fn wgpu_server_command_encoder_action(
 pub extern "C" fn wgpu_server_device_create_encoder(
     global: &Global,
     self_id: id::DeviceId,
-    desc: &wgt::CommandEncoderDescriptor<Option<&nsACString>>,
+    desc: &wgt::CommandEncoderDescriptor<RawString>,
     new_id: id::CommandEncoderId,
     mut error_buf: ErrorBuffer,
 ) {
-    let utf8_label = desc.label.map(|utf16| utf16.to_string());
-    let label = utf8_label.as_ref().map(|s| Cow::from(&s[..]));
-
-    let desc = desc.map_label(|_| label);
+    let desc = desc.map_label(cow_label);
     let (_, error) =
         gfx_select!(self_id => global.device_create_command_encoder(self_id, &desc, new_id));
     if let Some(err) = error {
@@ -668,11 +580,10 @@ pub extern "C" fn wgpu_server_device_create_encoder(
 pub extern "C" fn wgpu_server_encoder_finish(
     global: &Global,
     self_id: id::CommandEncoderId,
-    desc: &wgt::CommandBufferDescriptor<Option<&nsACString>>,
+    desc: &wgt::CommandBufferDescriptor<RawString>,
     mut error_buf: ErrorBuffer,
 ) {
-    let label = wgpu_string(desc.label);
-    let desc = desc.map_label(|_| label);
+    let desc = desc.map_label(cow_label);
     let (_, error) = gfx_select!(self_id => global.command_encoder_finish(self_id, &desc));
     if let Some(err) = error {
         error_buf.init(err);
