@@ -40,6 +40,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   delay => Math.min(Math.max(delay, 100), 5 * 60 * 1000)
 );
 
+// eslint-disable-next-line mozilla/reject-importGlobalProperties
+Cu.importGlobalProperties(["DOMException"]);
+
 function notifyBackgroundScriptStatus(addonId, isRunning) {
   // Notify devtools when the background scripts is started or stopped
   // (used to show the current status in about:debugging).
@@ -424,7 +427,10 @@ this.backgroundPage = class extends ExtensionAPI {
       }
 
       const childId = extension.backgroundContext?.childId;
-      if (childId !== undefined) {
+      if (
+        childId !== undefined &&
+        extension.hasPermission("webRequestBlocking")
+      ) {
         // Ask to the background page context in the child process to check if there are
         // StreamFilter instances active (e.g. ones with status "transferringdata" or "suspended",
         // see StreamFilterStatus enum defined in StreamFilter.webidl).
@@ -432,9 +438,29 @@ this.backgroundPage = class extends ExtensionAPI {
         // inactive state from preventing an even page from being ever suspended.
         const hasActiveStreamFilter = await ExtensionParent.ParentAPIManager.queryStreamFilterSuspendCancel(
           extension.backgroundContext.childId
-        );
+        ).catch(err => {
+          // an AbortError raised from the JSWindowActor is expected if the background page was already been
+          // terminated in the meantime, and so we only log the errors that don't match these particular conditions.
+          if (
+            extension.backgroundState == BACKGROUND_STATE.STOPPED &&
+            DOMException.isInstance(err) &&
+            err.name === "AbortError"
+          ) {
+            return false;
+          }
+          Cu.reportError(err);
+          return false;
+        });
         if (hasActiveStreamFilter) {
           extension.emit("background-script-reset-idle");
+          return;
+        }
+
+        // Return earlier if extension have started or completed its shutdown in the meantime.
+        if (
+          extension.backgroundState !== BACKGROUND_STATE.RUNNING ||
+          extension.hasShutdown
+        ) {
           return;
         }
       }
