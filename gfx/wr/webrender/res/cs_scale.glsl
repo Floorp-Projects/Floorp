@@ -34,8 +34,9 @@ void main(void) {
     vec2 texture_size = vec2(TEX_SIZE(sColor0));
 #endif
 
-    vUvRect = vec4(src_offset + vec2(0.5),
-                   src_offset + src_size - vec2(0.5)) / texture_size.xyxy;
+    // The uvs may be inverted, so use the min and max for the bounds
+    vUvRect = vec4(min(aScaleSourceRect.xy, aScaleSourceRect.zw) + vec2(0.5),
+                   max(aScaleSourceRect.xy, aScaleSourceRect.zw) - vec2(0.5)) / texture_size.xyxy;
 
     vec2 pos = mix(aScaleTargetRect.xy, aScaleTargetRect.zw, aPosition.xy);
     vUv = (src_offset + src_size * aPosition.xy) / texture_size;
