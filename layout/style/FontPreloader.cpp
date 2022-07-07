@@ -8,6 +8,7 @@
 
 #include "gfxUserFontSet.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "nsContentSecurityManager.h"
 #include "nsIClassOfService.h"
 #include "nsIHttpChannel.h"
@@ -37,6 +38,67 @@ void FontPreloader::PrioritizeAsPreload(nsIChannel* aChannel) {
   }
 }
 
+/* static */ void FontPreloader::BuildChannelFlags(
+    nsIURI* aURI, bool aIsPreload,
+    nsContentSecurityManager::CORSSecurityMapping& aCorsMapping,
+    nsSecurityFlags& aSecurityFlags, nsContentPolicyType& aContentPolicyType) {
+  // aCORSMode is ignored.  We always load as crossorigin=anonymous, but a
+  // preload started with anything other then "anonymous" will never be found.
+  aCorsMapping =
+      aURI->SchemeIs("file")
+          ? nsContentSecurityManager::CORSSecurityMapping::
+                CORS_NONE_MAPS_TO_INHERITED_CONTEXT
+          : nsContentSecurityManager::CORSSecurityMapping::REQUIRE_CORS_CHECKS;
+
+  aSecurityFlags = nsContentSecurityManager::ComputeSecurityFlags(
+      CORSMode::CORS_NONE, aCorsMapping);
+
+  aContentPolicyType = aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD
+                                  : nsIContentPolicy::TYPE_FONT;
+}
+
+/* static */ nsresult FontPreloader::BuildChannelSetup(
+    nsIChannel* aChannel, nsIHttpChannel* aHttpChannel,
+    nsIReferrerInfo* aReferrerInfo, const gfxFontFaceSrc* aFontFaceSrc) {
+  if (aHttpChannel) {
+    nsresult rv = aHttpChannel->SetRequestHeader(
+        "Accept"_ns,
+        "application/font-woff2;q=1.0,application/font-woff;q=0.9,*/*;q=0.8"_ns,
+        false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (aReferrerInfo) {
+      rv = aHttpChannel->SetReferrerInfoWithoutClone(aReferrerInfo);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    } else {
+      MOZ_ASSERT(aFontFaceSrc);
+
+      rv = aHttpChannel->SetReferrerInfo(aFontFaceSrc->mReferrerInfo);
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+
+      // For WOFF and WOFF2, we should tell servers/proxies/etc NOT to try
+      // and apply additional compression at the content-encoding layer
+      if (aFontFaceSrc->mFormatFlags & (gfxUserFontSet::FLAG_FORMAT_WOFF |
+                                        gfxUserFontSet::FLAG_FORMAT_WOFF2)) {
+        rv = aHttpChannel->SetRequestHeader("Accept-Encoding"_ns, "identity"_ns,
+                                            false);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+  }
+
+  nsCOMPtr<nsISupportsPriority> priorityChannel(do_QueryInterface(aChannel));
+  if (priorityChannel) {
+    priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGH);
+  }
+  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(aChannel));
+  if (cos) {
+    cos->AddClassFlags(nsIClassOfService::TailForbidden);
+  }
+
+  return NS_OK;
+}
+
 // static
 nsresult FontPreloader::BuildChannel(
     nsIChannel** aChannel, nsIURI* aURI, const CORSMode aCORSMode,
@@ -52,21 +114,11 @@ nsresult FontPreloader::BuildChannel(
                             : nullptr)
                      : aDocument->NodePrincipal();
 
-  // aCORSMode is ignored.  We always load as crossorigin=anonymous, but a
-  // preload started with anything other then "anonymous" will never be found.
-  nsContentSecurityManager::CORSSecurityMapping corsMapping =
-      aURI->SchemeIs("file")
-          ? nsContentSecurityManager::CORSSecurityMapping::
-                CORS_NONE_MAPS_TO_INHERITED_CONTEXT
-          : nsContentSecurityManager::CORSSecurityMapping::REQUIRE_CORS_CHECKS;
-
-  nsSecurityFlags securityFlags =
-      nsContentSecurityManager::ComputeSecurityFlags(CORSMode::CORS_NONE,
-                                                     corsMapping);
-
-  nsContentPolicyType contentPolicyType =
-      aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD
-                 : nsIContentPolicy::TYPE_FONT;
+  nsContentSecurityManager::CORSSecurityMapping corsMapping;
+  nsSecurityFlags securityFlags;
+  nsContentPolicyType contentPolicyType;
+  BuildChannelFlags(aURI, aIsPreload, corsMapping, securityFlags,
+                    contentPolicyType);
 
   nsCOMPtr<nsIChannel> channel;
   // Note we are calling NS_NewChannelWithTriggeringPrincipal() with both a
@@ -81,42 +133,60 @@ nsresult FontPreloader::BuildChannel(
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-  if (httpChannel) {
-    rv = httpChannel->SetRequestHeader(
-        "Accept"_ns,
-        nsLiteralCString("application/font-woff2;q=1.0,application/"
-                         "font-woff;q=0.9,*/*;q=0.8"),
-        false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (aFontFaceSrc) {
-      rv = httpChannel->SetReferrerInfo(aFontFaceSrc->mReferrerInfo);
-      Unused << NS_WARN_IF(NS_FAILED(rv));
-
-      // For WOFF and WOFF2, we should tell servers/proxies/etc NOT to try
-      // and apply additional compression at the content-encoding layer
-      if (aFontFaceSrc->mFormatFlags & (gfxUserFontSet::FLAG_FORMAT_WOFF |
-                                        gfxUserFontSet::FLAG_FORMAT_WOFF2)) {
-        rv = httpChannel->SetRequestHeader("Accept-Encoding"_ns, "identity"_ns,
-                                           false);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    } else {
-      nsCOMPtr<nsIReferrerInfo> referrerInfo = new dom::ReferrerInfo(
-          aDocument->GetDocumentURIAsReferrer(), aReferrerPolicy);
-      rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+  if (httpChannel && !aFontFaceSrc) {
+    referrerInfo = new dom::ReferrerInfo(aDocument->GetDocumentURIAsReferrer(),
+                                         aReferrerPolicy);
+    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  nsCOMPtr<nsISupportsPriority> priorityChannel(do_QueryInterface(channel));
-  if (priorityChannel) {
-    priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGH);
+  rv = BuildChannelSetup(channel, httpChannel, referrerInfo, aFontFaceSrc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  channel.forget(aChannel);
+  return NS_OK;
+}
+
+// static
+nsresult FontPreloader::BuildChannel(
+    nsIChannel** aChannel, nsIURI* aURI, const CORSMode aCORSMode,
+    const dom::ReferrerPolicy& aReferrerPolicy,
+    gfxUserFontEntry* aUserFontEntry, const gfxFontFaceSrc* aFontFaceSrc,
+    dom::WorkerPrivate* aWorkerPrivate, nsILoadGroup* aLoadGroup,
+    nsIInterfaceRequestor* aCallbacks, bool aIsPreload) {
+  nsresult rv;
+
+  nsIPrincipal* principal =
+      aUserFontEntry ? (aUserFontEntry->GetPrincipal()
+                            ? aUserFontEntry->GetPrincipal()->NodePrincipal()
+                            : nullptr)
+                     : aWorkerPrivate->GetPrincipal();
+
+  nsContentSecurityManager::CORSSecurityMapping corsMapping;
+  nsSecurityFlags securityFlags;
+  nsContentPolicyType contentPolicyType;
+  BuildChannelFlags(aURI, aIsPreload, corsMapping, securityFlags,
+                    contentPolicyType);
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannelWithTriggeringPrincipal(
+      getter_AddRefs(channel), aURI, aWorkerPrivate->GetLoadingPrincipal(),
+      principal, securityFlags, contentPolicyType, nullptr, nullptr,
+      aLoadGroup);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+  if (httpChannel && !aFontFaceSrc) {
+    referrerInfo =
+        static_cast<dom::ReferrerInfo*>(aWorkerPrivate->GetReferrerInfo())
+            ->CloneWithNewPolicy(aReferrerPolicy);
   }
-  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
-  if (cos) {
-    cos->AddClassFlags(nsIClassOfService::TailForbidden);
-  }
+
+  rv = BuildChannelSetup(channel, httpChannel, referrerInfo, aFontFaceSrc);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   channel.forget(aChannel);
   return NS_OK;
