@@ -66,3 +66,5 @@ firefoxview-change-colorway-button = Change colorway
 #  $intensity (String): Colorway intensity
 #  $collection (String): Colorway Collection name
 firefoxview-colorway-description = { $intensity } · { $collection }
+
+firefoxview-synced-tabs-placeholder = No tabs open on other devices <br/> When you use { -brand-product-name } on another device, those tabs will show up here.

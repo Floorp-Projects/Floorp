@@ -651,24 +651,26 @@
   },
   "GC_REASON_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "bug_numbers": [677411, 764184],
     "description": "Reason (enum value) for initiating a GC"
   },
   "GC_IS_COMPARTMENTAL": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [677411, 1297026],
     "description": "Is it a zone GC?"
   },
   "GC_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -680,7 +682,7 @@
   },
   "GC_IN_PROGRESS_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "smaug@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -723,7 +725,7 @@
   },
   "GC_ANIMATION_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com", "sdetar@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -735,7 +737,7 @@
   },
   "GC_MAX_PAUSE_MS_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "bug_numbers": [1364503],
     "expires_in_version": "never",
@@ -759,32 +761,35 @@
   },
   "GC_MARK_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
+    "bug_numbers": [677411],
     "description": "Time spent running JS GC mark phase (ms)"
   },
   "GC_SWEEP_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
+    "bug_numbers": [677411],
     "description": "Time spent running JS GC sweep phase (ms)"
   },
   "GC_COMPACT_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
+    "bug_numbers": [1247955],
     "description": "Time spent running JS GC compact phase (ms)"
   },
   "GC_MARK_ROOTS_US": {
@@ -825,26 +830,28 @@
   },
   "GC_SLICE_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
+    "bug_numbers": [641025],
     "description": "Time spent running a JS GC slice (ms)"
   },
   "GC_SLOW_PHASE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 75,
+    "bug_numbers": [1052728],
     "description": "The longest phase in any slice that goes over 2x the budget. The phase values are defined in js/src/gc/GenerateStatsPhases.py."
   },
   "GC_SLOW_TASK": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org","jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -854,25 +861,27 @@
   },
   "GC_MMU_50": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
     "n_buckets": 20,
+    "bug_numbers": [641025],
     "description": "Minimum percentage of time spent outside GC over any 50ms window"
   },
   "GC_RESET": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [641025],
     "description": "Was an incremental GC canceled?"
   },
   "GC_RESET_REASON": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -882,15 +891,16 @@
   },
   "GC_NON_INCREMENTAL": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [731052],
     "description": "Was the GC non-incremental?"
   },
   "GC_NON_INCREMENTAL_REASON": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -900,35 +910,38 @@
   },
   "GC_MINOR_REASON": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "bug_numbers": [1052716],
     "description": "Reason (enum value) for initiating a minor GC"
   },
   "GC_MINOR_REASON_LONG": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "bug_numbers": [1052716],
     "description": "Reason (enum value) that caused a long (>1ms) minor GC"
   },
   "GC_MINOR_US": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000000,
     "n_buckets": 100,
+    "bug_numbers": [1052716],
     "description": "Time spent running JS minor GC (us)"
   },
   "GC_NURSERY_BYTES_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "pbone@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -952,7 +965,7 @@
   },
   "GC_SLICE_DURING_IDLE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -963,7 +976,7 @@
   },
   "GC_BUDGET_OVERRUN": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -974,7 +987,7 @@
   },
   "GC_NURSERY_PROMOTION_RATE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -985,7 +998,7 @@
   },
   "GC_TENURED_SURVIVAL_RATE": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -1009,7 +1022,7 @@
   },
   "GC_TIME_BETWEEN_S": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -1021,7 +1034,7 @@
   },
   "GC_TIME_BETWEEN_SLICES_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -1033,7 +1046,7 @@
   },
   "GC_SLICE_COUNT": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -1045,7 +1058,7 @@
   },
   "GC_EFFECTIVENESS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -6502,6 +6515,17 @@
     "n_values": 30,
     "bug_numbers": [1332780, 1531034],
     "description": "Network error from SafeBrowsing database updates. (0=sucess, 1=unknown error, 2=already connected, 3=not connected, 4=connection refused,5=net timeout, 6=offline, 7=port access not allowed, 8=net reset, 9=net interrupt, 10=proxy connection refused,11=partial transfer,12=inadequate security,13=unknown host,14=dns lookup queue full,15=unknown proxy host"
+  },
+  "URLCLASSIFIER_UPDATE_REMOTE_SETTINGS_RESULT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["dlee@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "106",
+    "releaseChannelCollection": "opt-out",
+    "kind": "enumerated",
+    "n_values": 4,
+    "bug_numbers": [1728871],
+    "description": "Update result when updating SafeBrowsing database via RemoteSettings. (0=success, 1=update error, 2=download error)"
   },
   "URLCLASSIFIER_UPDATE_REMOTE_STATUS2": {
     "record_in_processes": ["main"],

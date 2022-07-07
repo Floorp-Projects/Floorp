@@ -73,7 +73,7 @@ Maybe<int32_t> SVGTextContentElement::GetNonLayoutDependentNumberOfChars() {
   SVGTextFrame* frame = GetSVGTextFrameForNonLayoutDependentQuery();
   if (!frame || frame != GetPrimaryFrame()) {
     // Only support this fast path on <text>, not child <tspan>s, etc.
-    return Some(0);
+    return Nothing();
   }
 
   uint32_t num = 0;

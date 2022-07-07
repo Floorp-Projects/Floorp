@@ -1,0 +1,1 @@
+assertEq(parseModule("").evaluationError, undefined);

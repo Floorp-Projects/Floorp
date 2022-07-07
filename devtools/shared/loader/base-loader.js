@@ -47,6 +47,9 @@ function isJSONURI(uri) {
 function isJSMURI(uri) {
   return uri.endsWith(".jsm");
 }
+function isSYSMJSURI(uri) {
+  return uri.endsWith(".sys.mjs");
+}
 function isJSURI(uri) {
   return uri.endsWith(".js");
 }
@@ -194,7 +197,7 @@ function load(loader, module) {
 
 // Utility function to normalize module `uri`s so they have `.js` extension.
 function normalizeExt(uri) {
-  if (isJSURI(uri) || isJSONURI(uri) || isJSMURI(uri)) {
+  if (isJSURI(uri) || isJSONURI(uri) || isJSMURI(uri) || isSYSMJSURI(uri)) {
     return uri;
   }
   return uri + ".js";
@@ -315,6 +318,9 @@ function Require(loader, requirer) {
     } else if (isJSMURI(uri)) {
       module = modules[uri] = Module(requirement, uri);
       module.exports = ChromeUtils.import(uri);
+    } else if (isSYSMJSURI(uri)) {
+      module = modules[uri] = Module(requirement, uri);
+      module.exports = ChromeUtils.importESModule(uri);
     } else if (isJSONURI(uri)) {
       let data;
 

@@ -1116,9 +1116,13 @@ void ModuleObject::setEvaluationError(HandleValue newValue) {
   return setReservedSlot(EvaluationErrorSlot, newValue);
 }
 
+Value ModuleObject::maybeEvaluationError() const {
+  return getReservedSlot(EvaluationErrorSlot);
+}
+
 Value ModuleObject::evaluationError() const {
   MOZ_ASSERT(hadEvaluationError());
-  return getReservedSlot(EvaluationErrorSlot);
+  return maybeEvaluationError();
 }
 
 JSObject* ModuleObject::metaObject() const {

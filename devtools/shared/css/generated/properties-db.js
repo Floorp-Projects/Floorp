@@ -348,6 +348,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -385,6 +386,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -498,6 +500,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -535,6 +538,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -1887,6 +1891,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -2431,6 +2436,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -2472,6 +2478,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -2499,6 +2506,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -2732,6 +2740,7 @@ exports.CSS_PROPERTIES = {
     "values": [
       "COLOR",
       "auto",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -3639,6 +3648,7 @@ exports.CSS_PROPERTIES = {
       "border-box",
       "bottom",
       "center",
+      "color-mix",
       "conic-gradient",
       "contain",
       "content-box",
@@ -3754,6 +3764,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -3957,6 +3968,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -3999,6 +4011,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -4037,6 +4050,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -4063,6 +4077,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -4100,6 +4115,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -4167,6 +4183,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -4204,6 +4221,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -4314,6 +4332,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -4351,6 +4370,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -4463,6 +4483,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -4664,6 +4685,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -4702,6 +4724,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -4728,6 +4751,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -4765,6 +4789,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -4832,6 +4857,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -4869,6 +4895,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -4979,6 +5006,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -5016,6 +5044,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -5100,6 +5129,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -5137,6 +5167,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -5273,6 +5304,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -5310,6 +5342,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -5454,6 +5487,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -5575,6 +5609,7 @@ exports.CSS_PROPERTIES = {
     "values": [
       "COLOR",
       "auto",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -5679,6 +5714,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -5819,6 +5855,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -5856,6 +5893,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -6262,6 +6300,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "context-fill",
       "context-stroke",
       "currentColor",
@@ -6494,6 +6533,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -7745,6 +7785,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -8930,6 +8971,7 @@ exports.CSS_PROPERTIES = {
     "values": [
       "COLOR",
       "auto",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -8967,6 +9009,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -10272,6 +10315,7 @@ exports.CSS_PROPERTIES = {
     "values": [
       "COLOR",
       "auto",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -10447,6 +10491,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -10485,6 +10530,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "context-fill",
       "context-stroke",
       "currentColor",
@@ -10738,6 +10784,7 @@ exports.CSS_PROPERTIES = {
       "-moz-none",
       "auto",
       "blink",
+      "color-mix",
       "currentColor",
       "dashed",
       "dotted",
@@ -10772,6 +10819,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -10870,6 +10918,7 @@ exports.CSS_PROPERTIES = {
     "values": [
       "COLOR",
       "circle",
+      "color-mix",
       "currentColor",
       "dot",
       "double-circle",
@@ -10901,6 +10950,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
@@ -11050,6 +11100,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
+      "color-mix",
       "currentColor",
       "hsl",
       "hsla",
