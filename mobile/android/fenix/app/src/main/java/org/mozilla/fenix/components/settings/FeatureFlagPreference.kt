@@ -26,15 +26,12 @@ fun featureFlagPreference(key: String, default: Boolean, featureFlag: Boolean) =
 
 private class LazyPreference(val key: String, val default: () -> Boolean) :
     ReadWriteProperty<PreferencesHolder, Boolean> {
-    private val property: ReadWriteProperty<PreferencesHolder, Boolean> by lazy {
-        booleanPreference(key, default())
-    }
 
     override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>) =
-        this.property.getValue(thisRef, property)
+        thisRef.preferences.getBoolean(key, default())
 
     override fun setValue(thisRef: PreferencesHolder, property: KProperty<*>, value: Boolean) =
-        this.property.setValue(thisRef, property, value)
+        thisRef.preferences.edit().putBoolean(key, value).apply()
 }
 
 /**

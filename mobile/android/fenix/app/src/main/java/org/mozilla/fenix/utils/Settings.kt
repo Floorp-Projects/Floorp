@@ -1233,9 +1233,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
-    private val homescreenSections: Map<HomeScreenSection, Boolean> by lazy {
+    private val homescreenSections: Map<HomeScreenSection, Boolean> get() =
         FxNimbus.features.homescreen.value().sectionsEnabled
-    }
 
     var historyMetadataUIFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
