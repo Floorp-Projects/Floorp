@@ -39,6 +39,9 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPUBufferDescriptor, mSize,
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ScopedError, operationError,
                                   validationMessage);
 
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::WebGPUCompilationMessage,
+                                  message, lineNum, linePos);
+
 #undef DEFINE_IPC_SERIALIZER_FFI_ENUM
 #undef DEFINE_IPC_SERIALIZER_DOM_ENUM
 #undef DEFINE_IPC_SERIALIZER_ENUM_GUARD
