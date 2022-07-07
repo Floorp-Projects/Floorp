@@ -19,7 +19,7 @@ enum IDBTransactionMode {
     "versionchange"
 };
 
-[Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
+[Exposed=(Window,Worker)]
 interface IDBTransaction : EventTarget {
     [Throws]
     readonly    attribute IDBTransactionMode mode;

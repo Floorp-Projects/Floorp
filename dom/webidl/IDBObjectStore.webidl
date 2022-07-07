@@ -12,7 +12,7 @@ dictionary IDBObjectStoreParameters {
     boolean                             autoIncrement = false;
 };
 
-[Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
+[Exposed=(Window,Worker)]
 interface IDBObjectStore {
     [SetterThrows]
     attribute DOMString name;

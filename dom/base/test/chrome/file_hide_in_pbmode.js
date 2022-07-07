@@ -20,16 +20,19 @@ function checkCaches(content, expected) {
 
 function checkIDB(content, expected) {
   check(content, expected, "indexedDB");
-  check(content, expected, "IDBCursor");
-  check(content, expected, "IDBDatabase");
   check(content, expected, "IDBFactory");
-  check(content, expected, "IDBIndex");
   check(content, expected, "IDBKeyRange");
-  check(content, expected, "IDBObjectStore");
   check(content, expected, "IDBOpenDBRequest");
   check(content, expected, "IDBRequest");
-  check(content, expected, "IDBTransaction");
   check(content, expected, "IDBVersionChangeEvent");
+
+  // These are always accessed by jakearchibald/idb@v3 without existence checks.
+  // https://github.com/jakearchibald/idb/blob/e1c7c44dbba38415745afc782b8e247da8c833f2/lib/idb.mjs#L152
+  check(content, true, "IDBCursor");
+  check(content, true, "IDBDatabase");
+  check(content, true, "IDBIndex");
+  check(content, true, "IDBObjectStore");
+  check(content, true, "IDBTransaction");
 }
 
 function checkSW(content, expected) {
