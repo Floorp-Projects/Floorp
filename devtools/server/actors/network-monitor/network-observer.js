@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-console.log("hello");
+
 /**
  * NetworkObserver is the main class in DevTools to observe network requests
  * out of many events fired by the platform code.
