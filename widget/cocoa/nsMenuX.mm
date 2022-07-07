@@ -581,9 +581,21 @@ void nsMenuX::MenuClosedAsync() {
 
 void nsMenuX::ActivateItemAfterClosing(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers,
                                        int16_t aButton) {
-  // Queue the event into mPendingCommandEvents. We will call aItem->DoCommand in MenuClosedAsync().
-  // We rely on the assumption that MenuClosedAsync will run soon.
-  mPendingCommandEvents.AppendElement(PendingCommandEvent{std::move(aItem), aModifiers, aButton});
+  if (mIsOpenForGecko) {
+    // Queue the event into mPendingCommandEvents. We will call aItem->DoCommand in
+    // MenuClosedAsync(). We rely on the assumption that MenuClosedAsync will run soon.
+    mPendingCommandEvents.AppendElement(PendingCommandEvent{std::move(aItem), aModifiers, aButton});
+  } else {
+    // The menu item was activated outside of a regular open / activate / close sequence.
+    // This happens in multiple cases:
+    //  - When a menu item is activated by a keyboard shortcut while all windows are closed
+    //    (otherwise those shortcuts go through Gecko's manual keyboard handling)
+    //  - When a menu item in the Dock menu is clicked
+    //  - During native menu tests
+    //
+    // Run the command synchronously.
+    aItem->DoCommand(aModifiers, aButton);
+  }
 }
 
 bool nsMenuX::Close() {
