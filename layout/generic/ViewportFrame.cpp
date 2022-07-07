@@ -303,7 +303,8 @@ nsPoint ViewportFrame::AdjustReflowInputForScrollbars(
     LogicalMargin scrollbars(wm, scrollingFrame->GetActualScrollbarSizes());
     aReflowInput->SetComputedISize(aReflowInput->ComputedISize() -
                                    scrollbars.IStartEnd(wm));
-    aReflowInput->AvailableISize() -= scrollbars.IStartEnd(wm);
+    aReflowInput->SetAvailableISize(aReflowInput->AvailableISize() -
+                                    scrollbars.IStartEnd(wm));
     aReflowInput->SetComputedBSizeWithoutResettingResizeFlags(
         aReflowInput->ComputedBSize() - scrollbars.BStartEnd(wm));
     return nsPoint(scrollbars.Left(wm), scrollbars.Top(wm));
@@ -401,9 +402,10 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
     ReflowInput reflowInput(aReflowInput);
 
     if (reflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
-      // We have an intrinsic-height document with abs-pos/fixed-pos children.
-      // Set the available height and mComputedHeight to our chosen height.
-      reflowInput.AvailableBSize() = maxSize.BSize(wm);
+      // We have an intrinsic-block-size document with abs-pos/fixed-pos
+      // children. Set the available block-size and computed block-size to our
+      // chosen block-size.
+      reflowInput.SetAvailableBSize(maxSize.BSize(wm));
       // Not having border/padding simplifies things
       NS_ASSERTION(
           reflowInput.ComputedPhysicalBorderPadding() == nsMargin(0, 0, 0, 0),

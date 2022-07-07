@@ -10,6 +10,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Event.h"
+#include "nsContentUtils.h"
 #include "nsIDocShell.h"
 #include <algorithm>
 
@@ -167,16 +168,18 @@ void PerformanceEventTiming::BufferEntryIfNeeded() {
 }
 
 nsINode* PerformanceEventTiming::GetTarget() const {
-  if (!mTarget) {
+  nsCOMPtr<Element> element = do_QueryReferent(mTarget);
+  if (!element) {
     return nullptr;
   }
 
-  nsCOMPtr<nsINode> target = do_QueryReferent(mTarget);
-  if (!target || !target->IsInUncomposedDoc()) {
+  nsCOMPtr<nsPIDOMWindowInner> global =
+      do_QueryInterface(element->GetOwnerGlobal());
+  if (!global) {
     return nullptr;
   }
-
-  return target;
+  return nsContentUtils::GetAnElementForTiming(element, global->GetExtantDoc(),
+                                               mPerformance->GetParentObject());
 }
 
 void PerformanceEventTiming::FinalizeEventTiming(EventTarget* aTarget) {
@@ -191,36 +194,13 @@ void PerformanceEventTiming::FinalizeEventTiming(EventTarget* aTarget) {
 
   mProcessingEnd = mPerformance->NowUnclamped();
 
-  nsINode* node = nsINode::FromEventTarget(aTarget);
-  if (!node || node->ChromeOnlyAccess()) {
+  Element* element = Element::FromEventTarget(aTarget);
+  if (!element || element->ChromeOnlyAccess()) {
     return;
   }
 
-  mTarget = do_GetWeakReference(GetAnElement(node, global->GetExtantDoc()));
+  mTarget = do_GetWeakReference(element);
 
   mPerformance->InsertEventTimingEntry(this);
-}
-
-nsINode* PerformanceEventTiming::GetAnElement(nsINode* aTarget,
-                                              const Document* aDocument) {
-  if (!aTarget->IsInUncomposedDoc()) {
-    return nullptr;
-  }
-
-  if (!aDocument) {
-    nsCOMPtr<nsPIDOMWindowInner> inner =
-        do_QueryInterface(mPerformance->GetParentObject());
-    MOZ_ASSERT(inner);
-    aDocument = inner->GetExtantDoc();
-  }
-
-  MOZ_ASSERT(aDocument);
-
-  if (aTarget->GetComposedDoc() != aDocument ||
-      !aDocument->IsCurrentActiveDocument()) {
-    return nullptr;
-  }
-
-  return aTarget;
 }
 }  // namespace mozilla::dom

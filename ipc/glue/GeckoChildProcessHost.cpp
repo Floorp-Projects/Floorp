@@ -427,6 +427,7 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     // with sandboxing.  Because we shouldn't need shader caching in
     // this process, we just disable the cache to prevent that.
     mLaunchOptions->env_map["MESA_GLSL_CACHE_DISABLE"] = "true";
+    mLaunchOptions->env_map["MESA_SHADER_CACHE_DISABLE"] = "true";
   }
 #endif
 #if defined(MOZ_ENABLE_FORKSERVER)

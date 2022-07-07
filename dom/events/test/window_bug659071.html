@@ -33,7 +33,10 @@ function hitEventLoop(aFunc, aTimes)
 }
 
 function startTests() {
-  SpecialPowers.pushPrefEnv({"set": [["mousewheel.with_control.action", 3]]}, runTests);
+  SpecialPowers.pushPrefEnv(
+    {"set": [["mousewheel.with_control.action", 3],
+             ["test.events.async.enabled", true]]},
+  runTests);
 }
 
 function runTests()

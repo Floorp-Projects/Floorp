@@ -56,7 +56,11 @@
   }
 
   SimpleTest.waitForExplicitFinish();
-  SimpleTest.waitForFocus(test);
+  SimpleTest.waitForFocus(() => {
+    SpecialPowers.pushPrefEnv({
+      "set":[["test.events.async.enabled", true]]
+    }, test)
+  });
 </script>
 </body>
 </html>

@@ -1330,6 +1330,24 @@ security:
       - 'firefox'
     record_in_processes:
       - 'main'
+  client_auth_cert_usage:
+    bug_numbers:
+      - 1749884
+    description: >
+      Measures how many servers have requested a client authentication
+      certificate (key: "requested") and how many times the user has opted to
+      send one in response (key: "sent").
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dkeeler@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - main
 
 pwmgr:
   potentially_breached_passwords:

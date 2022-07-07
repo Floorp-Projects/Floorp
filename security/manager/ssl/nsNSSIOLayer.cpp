@@ -489,10 +489,8 @@ void nsNSSSocketInfo::ClientAuthCertificateSelected(
   bool sendingClientAuthCert = cert && key;
   if (sendingClientAuthCert) {
     mSentClientCert = true;
-    if (GetSSLVersionUsed() == nsISSLSocketControl::TLS_VERSION_1_3) {
-      Telemetry::Accumulate(Telemetry::TLS_1_3_CLIENT_AUTH_USES_PHA,
-                            IsHandshakeCompleted());
-    }
+    Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_CLIENT_AUTH_CERT_USAGE,
+                         u"sent"_ns, 1);
   }
 
   Unused << SSL_ClientCertCallbackComplete(

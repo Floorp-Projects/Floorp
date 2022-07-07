@@ -1318,7 +1318,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     if (effectiveContentBoxBSize + blockDirExtras.BStartEnd(wm) <=
         aReflowInput.AvailableBSize()) {
       mutableReflowInput.emplace(aReflowInput);
-      mutableReflowInput->AvailableBSize() = NS_UNCONSTRAINEDSIZE;
+      mutableReflowInput->SetAvailableBSize(NS_UNCONSTRAINEDSIZE);
       reflowInput = mutableReflowInput.ptr();
     }
   }

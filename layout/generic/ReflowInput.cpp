@@ -188,7 +188,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
     // in preference to leaving it unconstrained.
     if (AvailableISize() == NS_UNCONSTRAINEDSIZE &&
         aParentReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
-      AvailableISize() = aParentReflowInput.ComputedBSize();
+      SetAvailableISize(aParentReflowInput.ComputedBSize());
     }
   }
 
@@ -323,7 +323,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
          parent = parent->mParentReflowInput) {
       if (parent->GetWritingMode().IsOrthogonalTo(mWritingMode) &&
           parent->mOrthogonalLimit != NS_UNCONSTRAINEDSIZE) {
-        AvailableISize() = parent->mOrthogonalLimit;
+        SetAvailableISize(parent->mOrthogonalLimit);
         break;
       }
     }
@@ -418,15 +418,15 @@ void ReflowInput::Init(nsPresContext* aPresContext,
         mStylePosition->ISize(mWritingMode).IsAuto()) {
       ComputedISize() = NS_UNCONSTRAINEDSIZE;
     } else {
-      AvailableBSize() = NS_UNCONSTRAINEDSIZE;
+      SetAvailableBSize(NS_UNCONSTRAINEDSIZE);
     }
   }
 
   if (mStyleDisplay->GetContainSizeAxes().mBContained) {
     // In the case that a box is size contained in block axis, we want to ensure
-    // that it is also monolithic. We do this by unsetting
-    // AvailableBSize() to avoid fragmentaiton.
-    AvailableBSize() = NS_UNCONSTRAINEDSIZE;
+    // that it is also monolithic. We do this by setting AvailableBSize() to an
+    // unconstrained size to avoid fragmentation.
+    SetAvailableBSize(NS_UNCONSTRAINEDSIZE);
   }
 
   LAYOUT_WARN_IF_FALSE((mStyleDisplay->IsInlineOutsideStyle() &&

@@ -2636,6 +2636,11 @@ main.has-snippet {
 .ds-card-grid.ds-card-grid-compact {
   grid-gap: 20px;
 }
+@media (min-width: 610px) and (max-width: 866px) {
+  .ds-card-grid.ds-card-grid-recent-saves .ds-card:last-child:nth-child(2n-1) {
+    display: none;
+  }
+}
 .ds-card-grid .ds-card {
   background: #FFF;
   border-radius: 4px;

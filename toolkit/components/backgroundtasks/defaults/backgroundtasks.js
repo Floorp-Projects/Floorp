@@ -31,5 +31,9 @@ pref("network.cookie.noPersistentStorage", true);
 // the temporary profile directory.
 pref("toolkit.shutdown.fastShutdownStage", 0);
 
+// Avoid a race between initializing font lists and rapid shutdown,
+// particularly on macOS.  Compare Bug 1777332.
+pref("gfx.font-list-omt.enabled", false);
+
 // Prevent key#.db and cert#.db from being created in the temporary profile.
 pref("security.nocertdb", true);

@@ -8,6 +8,7 @@
  */
 
 import { PROMISE } from "../utils/middleware/promise";
+import { asyncStore } from "../../utils/prefs";
 import {
   getBreakpointsList,
   getXHRBreakpoints,
@@ -131,6 +132,7 @@ export function removeAllBreakpoints(cx) {
       breakpointList.map(bp => dispatch(removeBreakpoint(cx, bp)))
     );
     dispatch({ type: "CLEAR_BREAKPOINTS" });
+    asyncStore.pendingBreakpoints = {};
   };
 }
 
@@ -386,6 +388,20 @@ export function setXHRBreakpoint(path, method) {
       breakpoint,
       [PROMISE]: client.setXHRBreakpoint(path, method),
     });
+  };
+}
+
+export function removeAllXHRBreakpoints() {
+  return async ({ dispatch, getState, client }) => {
+    const xhrBreakpoints = getXHRBreakpoints(getState());
+    const promises = xhrBreakpoints.map(breakpoint =>
+      client.removeXHRBreakpoint(breakpoint.path, breakpoint.method)
+    );
+    await dispatch({
+      type: "CLEAR_XHR_BREAKPOINTS",
+      [PROMISE]: Promise.all(promises),
+    });
+    asyncStore.xhrBreakpoints = [];
   };
 }
 

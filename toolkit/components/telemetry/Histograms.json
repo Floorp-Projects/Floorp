@@ -16470,16 +16470,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Tracking the use of the custom IDBFactory.open overload accepting an options dictionary in one of the categories."
   },
-  "TLS_1_3_CLIENT_AUTH_USES_PHA": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["mbirghan@mozilla.com", "seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1649472],
-    "releaseChannelCollection": "opt-out",
-    "expires_in_version": "99",
-    "kind": "boolean",
-    "description": "Whether TLS 1.3 client authentication uses PHA (true) or regular in-handshake authentication (false)"
-  },
   "PRESSHELL_LAYOUT_TOTAL_MS_PER_TICK": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

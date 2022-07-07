@@ -353,10 +353,10 @@ class PlacesFeed {
       let utmContent = pocketNewtabExperiment?.branch?.slug;
 
       const url = new URL(`https://${pocketSiteHost}/ff_signup`);
-      url.searchParams.append("utmSource", utmSource);
+      url.searchParams.append("utm_source", utmSource);
       if (utmCampaign && utmContent) {
-        url.searchParams.append("utmCampaign", utmCampaign);
-        url.searchParams.append("utmContent", utmContent);
+        url.searchParams.append("utm_campaign", utmCampaign);
+        url.searchParams.append("utm_content", utmContent);
       }
 
       const win = browser.ownerGlobal;

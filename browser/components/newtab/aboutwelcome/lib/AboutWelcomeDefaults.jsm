@@ -132,6 +132,7 @@ const DEFAULT_WELCOME_CONTENT = {
       id: "AW_IMPORT_SETTINGS",
       content: {
         logo: {},
+        progress_bar: true,
         title: {
           string_id: "mr1-onboarding-import-header",
         },
@@ -265,6 +266,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       content: {
         position: "split",
         background: "#3191f8",
+        progress_bar: true,
         logo: {},
         hero_text: {
           string_id: "mr1-welcome-screen-hero-text",
@@ -299,6 +301,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       content: {
         position: "split",
         background: "#3191f8",
+        progress_bar: true,
         logo: {},
         title: { string_id: "onboarding-live-language-header" },
         languageSwitcher: {
@@ -321,6 +324,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       content: {
         position: "split",
         background: "#3191f8",
+        progress_bar: true,
         logo: {},
         title: {
           string_id: "mr1-onboarding-import-header",
@@ -354,6 +358,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       content: {
         position: "split",
         background: "#3191f8",
+        progress_bar: true,
         logo: {},
         title: {
           string_id: "mr1-onboarding-theme-header",
