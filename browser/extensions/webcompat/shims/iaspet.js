@@ -17,9 +17,14 @@ if (!window.__iasPET?.VERSION) {
     queue = [];
   }
 
+  const response = JSON.stringify({
+    brandSafety: {},
+    slots: {},
+  });
+
   function run(cmd) {
     try {
-      cmd?.dataHandler?.();
+      cmd?.dataHandler?.(response);
     } catch (_) {}
   }
 
