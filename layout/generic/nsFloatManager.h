@@ -306,7 +306,7 @@ class nsFloatManager {
    *
    * The result is relative to the current translation.
    */
-  nscoord GetLowestFloatTop() const;
+  nscoord LowestFloatBStart() const;
 
   /**
    * Return the coordinate of the lowest float matching aBreakType in
