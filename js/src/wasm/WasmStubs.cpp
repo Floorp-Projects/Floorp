@@ -2241,7 +2241,7 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
 // having boxed all the ABI arguments into the JIT stack frame layout.
 static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
                                   unsigned funcImportIndex, Label* throwLabel,
-                                  JitExitOffsets* offsets) {
+                                  CallableOffsets* offsets) {
   AutoCreatedBy acb(masm, "GenerateImportJitExit");
 
   AssertExpectedSP(masm);
@@ -3072,11 +3072,12 @@ bool wasm::GenerateStubs(const ModuleEnvironment& env,
       continue;
     }
 
-    JitExitOffsets jitOffsets;
+    CallableOffsets jitOffsets;
     if (!GenerateImportJitExit(masm, fi, funcIndex, &throwLabel, &jitOffsets)) {
       return false;
     }
-    if (!code->codeRanges.emplaceBack(funcIndex, jitOffsets)) {
+    if (!code->codeRanges.emplaceBack(CodeRange::ImportJitExit, funcIndex,
+                                      jitOffsets)) {
       return false;
     }
   }

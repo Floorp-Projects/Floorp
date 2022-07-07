@@ -136,24 +136,13 @@ CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
 
 CodeRange::CodeRange(Kind kind, uint32_t funcIndex, CallableOffsets offsets)
     : begin_(offsets.begin), ret_(offsets.ret), end_(offsets.end), kind_(kind) {
-  MOZ_ASSERT((isImportExit() && !isImportJitExit()) || isJitEntry());
+  MOZ_ASSERT(isImportExit() || isJitEntry());
   MOZ_ASSERT(begin_ < ret_);
   MOZ_ASSERT(ret_ < end_);
   u.funcIndex_ = funcIndex;
   u.func.lineOrBytecode_ = 0;
   u.func.beginToUncheckedCallEntry_ = 0;
   u.func.beginToTierEntry_ = 0;
-}
-
-CodeRange::CodeRange(uint32_t funcIndex, JitExitOffsets offsets)
-    : begin_(offsets.begin),
-      ret_(offsets.ret),
-      end_(offsets.end),
-      kind_(ImportJitExit) {
-  MOZ_ASSERT(isImportJitExit());
-  MOZ_ASSERT(begin_ < ret_);
-  MOZ_ASSERT(ret_ < end_);
-  u.funcIndex_ = funcIndex;
 }
 
 CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode,
