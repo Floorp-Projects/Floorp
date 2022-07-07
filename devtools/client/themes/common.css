@@ -20,20 +20,21 @@
 
   --searchbox-no-match-background-color: #ffe5e5;
   --searchbox-no-match-stroke-color: var(--red-60);
+}
 
-  /* Default to light form controls */
+:root.theme-light {
   color-scheme: light;
 }
 
 :root.theme-dark {
+  color-scheme: dark;
+
   --tab-line-hover-color: rgba(255,255,255,.2);
   --toggle-thumb-color: var(--grey-40);
   --toggle-track-color: var(--grey-60);
 
   --searchbox-no-match-background-color: #402325;
   --searchbox-no-match-stroke-color: var(--red-50);
-
-  color-scheme: dark;
 }
 
 :root[platform="mac"] {
