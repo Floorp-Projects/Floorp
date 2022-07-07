@@ -12,7 +12,13 @@ namespace mozilla::webgpu {
 GPU_IMPL_CYCLE_COLLECTION(CompilationMessage, mParent)
 GPU_IMPL_JS_WRAP(CompilationMessage)
 
-CompilationMessage::CompilationMessage(CompilationInfo* const aParent)
-    : ChildOf(aParent) {}
+CompilationMessage::CompilationMessage(CompilationInfo* const aParent,
+                                       uint64_t aLineNum, uint64_t aLinePos,
+                                       uint64_t aOffset, nsString&& aMessage)
+    : ChildOf(aParent),
+      mLineNum(aLineNum),
+      mLinePos(aLinePos),
+      mOffset(aOffset),
+      mMessage(std::move(aMessage)) {}
 
 }  // namespace mozilla::webgpu
