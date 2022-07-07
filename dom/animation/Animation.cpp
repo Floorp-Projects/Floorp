@@ -1610,30 +1610,32 @@ void Animation::UpdateTiming(SeekFlag aSeekFlag,
 // https://drafts.csswg.org/web-animations/#update-an-animations-finished-state
 void Animation::UpdateFinishedState(SeekFlag aSeekFlag,
                                     SyncNotifyFlag aSyncNotifyFlag) {
-  Nullable<TimeDuration> currentTime = GetCurrentTimeAsDuration();
+  Nullable<TimeDuration> unconstrainedCurrentTime =
+      aSeekFlag == SeekFlag::NoSeek ? GetUnconstrainedCurrentTime()
+                                    : GetCurrentTimeAsDuration();
   TimeDuration effectEnd = TimeDuration(EffectEnd());
 
-  if (!mStartTime.IsNull() && mPendingState == PendingState::NotPending) {
-    if (mPlaybackRate > 0.0 && !currentTime.IsNull() &&
-        currentTime.Value() >= effectEnd) {
+  if (!unconstrainedCurrentTime.IsNull() && !mStartTime.IsNull() &&
+      mPendingState == PendingState::NotPending) {
+    if (mPlaybackRate > 0.0 && unconstrainedCurrentTime.Value() >= effectEnd) {
       if (aSeekFlag == SeekFlag::DidSeek) {
-        mHoldTime = currentTime;
+        mHoldTime = unconstrainedCurrentTime;
       } else if (!mPreviousCurrentTime.IsNull()) {
         mHoldTime.SetValue(std::max(mPreviousCurrentTime.Value(), effectEnd));
       } else {
         mHoldTime.SetValue(effectEnd);
       }
-    } else if (mPlaybackRate < 0.0 && !currentTime.IsNull() &&
-               currentTime.Value() <= TimeDuration()) {
+    } else if (mPlaybackRate < 0.0 &&
+               unconstrainedCurrentTime.Value() <= TimeDuration()) {
       if (aSeekFlag == SeekFlag::DidSeek) {
-        mHoldTime = currentTime;
+        mHoldTime = unconstrainedCurrentTime;
       } else if (!mPreviousCurrentTime.IsNull()) {
         mHoldTime.SetValue(
             std::min(mPreviousCurrentTime.Value(), TimeDuration(0)));
       } else {
         mHoldTime.SetValue(0);
       }
-    } else if (mPlaybackRate != 0.0 && !currentTime.IsNull() && mTimeline &&
+    } else if (mPlaybackRate != 0.0 && mTimeline &&
                !mTimeline->GetCurrentTimeAsDuration().IsNull()) {
       if (aSeekFlag == SeekFlag::DidSeek && !mHoldTime.IsNull()) {
         mStartTime = StartTimeFromTimelineTime(
@@ -1644,15 +1646,16 @@ void Animation::UpdateFinishedState(SeekFlag aSeekFlag,
     }
   }
 
+  // We must recalculate the current time to take account of any mHoldTime
+  // changes the code above made.
+  mPreviousCurrentTime = GetCurrentTimeAsDuration();
+
   bool currentFinishedState = PlayState() == AnimationPlayState::Finished;
   if (currentFinishedState && !mFinishedIsResolved) {
     DoFinishNotification(aSyncNotifyFlag);
   } else if (!currentFinishedState && mFinishedIsResolved) {
     ResetFinishedPromise();
   }
-  // We must recalculate the current time to take account of any mHoldTime
-  // changes the code above made.
-  mPreviousCurrentTime = GetCurrentTimeAsDuration();
 }
 
 void Animation::UpdateEffect(PostRestyleMode aPostRestyle) {
