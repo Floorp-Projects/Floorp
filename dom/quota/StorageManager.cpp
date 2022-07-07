@@ -360,6 +360,7 @@ already_AddRefed<Promise> ExecuteOpOnMainOrWorkerThread(
   RefPtr<PromiseWorkerProxy> promiseProxy =
       PromiseWorkerProxy::Create(workerPrivate, promise);
   if (NS_WARN_IF(!promiseProxy)) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
