@@ -80,7 +80,8 @@ void FontFaceSetDocumentImpl::Initialize() {
 
   mDocument->CSSLoader()->AddObserver(this);
 
-  mStandardFontLoadPrincipal = CreateStandardFontLoadPrincipal();
+  mStandardFontLoadPrincipal = MakeRefPtr<gfxFontSrcPrincipal>(
+      mDocument->NodePrincipal(), mDocument->PartitionedPrincipal());
 }
 
 void FontFaceSetDocumentImpl::Destroy() {
@@ -120,11 +121,11 @@ nsPresContext* FontFaceSetDocumentImpl::GetPresContext() const {
   return mDocument->GetPresContext();
 }
 
-already_AddRefed<gfxFontSrcPrincipal>
-FontFaceSetDocumentImpl::CreateStandardFontLoadPrincipal() const {
+void FontFaceSetDocumentImpl::RefreshStandardFontLoadPrincipal() {
   MOZ_ASSERT(NS_IsMainThread());
-  return MakeAndAddRef<gfxFontSrcPrincipal>(mDocument->NodePrincipal(),
-                                            mDocument->PartitionedPrincipal());
+  mStandardFontLoadPrincipal = MakeRefPtr<gfxFontSrcPrincipal>(
+      mDocument->NodePrincipal(), mDocument->PartitionedPrincipal());
+  FontFaceSetImpl::RefreshStandardFontLoadPrincipal();
 }
 
 already_AddRefed<URLExtraData> FontFaceSetDocumentImpl::GetURLExtraData() {

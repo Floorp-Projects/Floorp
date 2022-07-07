@@ -874,7 +874,6 @@ bool FontFaceSetImpl::PrefEnabled() {
 }
 
 void FontFaceSetImpl::RefreshStandardFontLoadPrincipal() {
-  mStandardFontLoadPrincipal = CreateStandardFontLoadPrincipal();
   mAllowedFontLoads.Clear();
   IncrementGeneration(false);
 }
@@ -884,9 +883,6 @@ void FontFaceSetImpl::RefreshStandardFontLoadPrincipal() {
 
 already_AddRefed<gfxFontSrcPrincipal>
 FontFaceSetImpl::GetStandardFontLoadPrincipal() const {
-  if (!mStandardFontLoadPrincipal) {
-    mStandardFontLoadPrincipal = CreateStandardFontLoadPrincipal();
-  }
   return RefPtr{mStandardFontLoadPrincipal}.forget();
 }
 
