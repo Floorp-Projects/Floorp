@@ -15,6 +15,7 @@ XPIDL_SOURCES += [
     "nsIUrlClassifierHashCompleter.idl",
     "nsIUrlClassifierInfo.idl",
     "nsIUrlClassifierPrefixSet.idl",
+    "nsIUrlClassifierRemoteSettingsService.idl",
     "nsIUrlClassifierStreamUpdater.idl",
     "nsIUrlClassifierUtils.idl",
     "nsIUrlListManager.idl",
@@ -58,6 +59,7 @@ EXTRA_JS_MODULES += [
     "UrlClassifierHashCompleter.jsm",
     "UrlClassifierLib.jsm",
     "UrlClassifierListManager.jsm",
+    "UrlClassifierRemoteSettingsService.jsm",
 ]
 
 XPCOM_MANIFESTS += [

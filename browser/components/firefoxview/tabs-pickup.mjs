@@ -4,6 +4,8 @@
 
 /* eslint-env mozilla/frame-script */
 
+import { toggleContainer } from "./helpers.mjs";
+
 const { switchToTabHavingURI } = window.docShell.chromeEventHandler.ownerGlobal;
 
 const { XPCOMUtils } = ChromeUtils.import(
@@ -215,9 +217,25 @@ class TabsPickupContainer extends HTMLElement {
   get setupContainerElem() {
     return this.querySelector(".sync-setup-container");
   }
+
   get tabsContainerElem() {
     return this.querySelector(".synced-tabs-container");
   }
+
+  get collapsibleButton() {
+    return this.querySelector("#collapsible-synced-tabs-button");
+  }
+
+  connectedCallback() {
+    this.collapsibleButton.addEventListener("click", this);
+  }
+
+  handleEvent(event) {
+    if (event.type == "click" && event.target == this.collapsibleButton) {
+      toggleContainer(this.collapsibleButton, this.tabsContainerElem);
+    }
+  }
+
   appendTemplatedElement(templateId, elementId) {
     const template = document.getElementById(templateId);
     const templateContent = template.content;
@@ -287,6 +305,7 @@ class TabsPickupContainer extends HTMLElement {
 
     if (stateIndex == 4) {
       tabsElem.classList.toggle("loading", false);
+      this.collapsibleButton.hidden = false;
     }
   }
 }

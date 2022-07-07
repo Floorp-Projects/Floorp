@@ -76,7 +76,9 @@ class Actor extends Pool {
 
     // This can really be a hot path, even computing the marker label can
     // have some performance impact.
-    if (Services.profiler.IsActive()) {
+    // Guard against missing `Services.profiler` because Services is mocked to
+    // an empty object in the worker loader.
+    if (Services.profiler?.IsActive()) {
       ChromeUtils.addProfilerMarker(
         "DevTools:RDP Actor",
         null,
