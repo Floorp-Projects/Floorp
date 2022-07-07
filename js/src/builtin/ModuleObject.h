@@ -321,6 +321,7 @@ class ModuleObject : public NativeObject {
   mozilla::Maybe<uint32_t> maybeDfsAncestorIndex() const;
   uint32_t dfsAncestorIndex() const;
   bool hadEvaluationError() const;
+  Value maybeEvaluationError() const;
   Value evaluationError() const;
   JSObject* metaObject() const;
   ScriptSourceObject* scriptSourceObject() const;

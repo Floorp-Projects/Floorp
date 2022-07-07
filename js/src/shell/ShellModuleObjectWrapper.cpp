@@ -290,7 +290,7 @@ static const JSPropertySpec ShellRequestedModuleObjectWrapper_accessors[] = {
 DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, ObjectOrNullValue,
                         IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, status, StatusValue, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluationError, Value, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeEvaluationError, Value, IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, ObjectValue,
                         ArrayFilter<ShellRequestedModuleObjectWrapper>)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, importEntries, ObjectValue,
@@ -318,8 +318,8 @@ DEFINE_GETTER_FUNCTIONS(ModuleObject, maybePendingAsyncDependencies,
 static const JSPropertySpec ShellModuleObjectWrapper_accessors[] = {
     JS_PSG("namespace", ShellModuleObjectWrapper_namespace_Getter, 0),
     JS_PSG("status", ShellModuleObjectWrapper_statusGetter, 0),
-    JS_PSG("evaluationError", ShellModuleObjectWrapper_evaluationErrorGetter,
-           0),
+    JS_PSG("evaluationError",
+           ShellModuleObjectWrapper_maybeEvaluationErrorGetter, 0),
     JS_PSG("requestedModules", ShellModuleObjectWrapper_requestedModulesGetter,
            0),
     JS_PSG("importEntries", ShellModuleObjectWrapper_importEntriesGetter, 0),
