@@ -48,6 +48,12 @@ function getAddonIdForWindowGlobal(windowGlobal) {
     ? windowGlobal.documentPrincipal
     : browsingContext.window.document.nodePrincipal;
 
+  // On Android we can get parent process windows where `documentPrincipal` and
+  // `documentURI` are both unavailable. Bail out early.
+  if (!principal) {
+    return null;
+  }
+
   // Most webextension documents are loaded from moz-extension://{addonId} and
   // the principal provides the addon id.
   if (principal.addonId) {
@@ -57,7 +63,7 @@ function getAddonIdForWindowGlobal(windowGlobal) {
   // If no addon id was available on the principal, check if the window is the
   // DevTools fallback window and extract the addon id from the URL.
   const href = isParent
-    ? windowGlobal.documentURI.displaySpec
+    ? windowGlobal.documentURI?.displaySpec
     : browsingContext.window.document.location.href;
 
   if (href && href.startsWith(WEBEXTENSION_FALLBACK_DOC_URL)) {
