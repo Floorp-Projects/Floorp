@@ -7654,6 +7654,8 @@
 # on Mac). If browser.display.os-zoom-behavior == 1, then a positive value
 # will be multiplied by the text scale factor; otherwise a positive value is
 # used as-is. This controls the size of a CSS "px" at 100% full-zoom.
+# The size of system fonts is also changed in proportion with the change in
+# "px" sizes. Use "ui.textScaleFactor" instead to only change the size of "px".
 # This is only used for windows on the screen, not for printing.
 - name: layout.css.devPixelsPerPx
   type: AtomicFloat
