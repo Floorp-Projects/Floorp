@@ -8,6 +8,10 @@
 
 #include "FileSystemMocks.h"
 
+#include "fs/FileSystemChildFactory.h"
+
+#include "mozilla/dom/FileSystemActorHolder.h"
+#include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
 #include "mozilla/dom/FileSystemFileHandle.h"
 #include "mozilla/dom/FileSystemHandle.h"
@@ -21,8 +25,11 @@ class TestFileSystemHandle : public ::testing::Test {
   void SetUp() override {
     mDirMetadata = FileSystemEntryMetadata("dir"_ns, u"Directory"_ns);
     mFileMetadata = FileSystemEntryMetadata("file"_ns, u"File"_ns);
-    mActor = MakeAndAddRef<FileSystemActorHolder>(nullptr);
+    mActor = MakeAndAddRef<FileSystemActorHolder>(
+        MakeUnique<FileSystemChildFactory>()->Create().take());
   }
+
+  void TearDown() override { mActor->RemoveActor(); }
 
   nsIGlobalObject* mGlobal = GetGlobal();
   FileSystemEntryMetadata mDirMetadata;

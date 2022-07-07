@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_IPC_ACTORHOLDER_H
-#define MOZILLA_IPC_ACTORHOLDER_H
+#ifndef MOZILLA_IPC_TOPLEVELACTORHOLDER_H
+#define MOZILLA_IPC_TOPLEVELACTORHOLDER_H
 
 #include "nsISupports.h"
 
@@ -21,17 +21,17 @@ namespace mozilla::ipc {
 // You can avoid calling Close() on an un-connected Actor (for example if
 // Bind() fails) by calling RemoveActor();
 template <typename T>
-class TopLevelActorHolder final {
+class ToplevelActorHolder final {
  public:
-  NS_INLINE_DECL_REFCOUNTING_ONEVENTTARGET(TopLevelActorHolder)
+  NS_INLINE_DECL_REFCOUNTING_ONEVENTTARGET(ToplevelActorHolder)
 
-  explicit TopLevelActorHolder(T* aActor) : mActor(aActor) {}
+  explicit ToplevelActorHolder(T* aActor) : mActor(aActor) {}
 
   constexpr T* Actor() const { return mActor; }
   inline void RemoveActor() { mActor = nullptr; }
 
  private:
-  inline ~TopLevelActorHolder() {
+  inline ~ToplevelActorHolder() {
     if (mActor) {
       mActor->Close();
     }
@@ -42,4 +42,4 @@ class TopLevelActorHolder final {
 
 }  // namespace mozilla::ipc
 
-#endif  // MOZILLA_IPC_ACTORHOLDER_H
+#endif  // MOZILLA_IPC_TOPLEVELACTORHOLDER_H
