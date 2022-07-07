@@ -253,3 +253,49 @@ add_task(async function test_wakeupBackground_after_extension_hasShutdown() {
 
   await extension.unload();
 });
+
+async function testSuspendShutdownRace({ manifest_version }) {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version,
+      background: manifest_version === 2 ? { persistent: false } : {},
+      permissions: ["webRequest", "webRequestBlocking"],
+      host_permissions: ["*://example.com/*"],
+      granted_host_permissions: true,
+    },
+    // Define an empty background script.
+    background() {},
+  });
+
+  await extension.startup();
+  await extension.extension.promiseBackgroundStarted();
+  const promiseTerminateBackground = extension.extension.terminateBackground();
+  // Wait one tick to leave to terminateBackground async method time to get
+  // past the first check that returns earlier if extension.hasShutdown is true.
+  await Promise.resolve();
+  const promiseUnload = extension.unload();
+
+  await promiseUnload;
+  try {
+    await promiseTerminateBackground;
+    ok(true, "extension.terminateBackground should not have been rejected");
+  } catch (err) {
+    ok(
+      false,
+      `extension.terminateBackground should not have been rejected: ${err} :: ${err.stack}`
+    );
+  }
+}
+
+add_task(function test_mv2_suspend_shutdown_race() {
+  return testSuspendShutdownRace({ manifest_version: 2 });
+});
+
+add_task(
+  {
+    pref_set: [["extensions.manifestV3.enabled", true]],
+  },
+  function test_mv3_suspend_shutdown_race() {
+    return testSuspendShutdownRace({ manifest_version: 3 });
+  }
+);
