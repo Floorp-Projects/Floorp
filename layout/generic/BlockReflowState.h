@@ -219,6 +219,8 @@ class BlockReflowState {
                                      const nsFlowAreaRect& aFloatAvailableSpace,
                                      bool aBlockAvoidsFloats);
 
+  LogicalSize ComputeAvailableSizeForFloat() const;
+
   void RecoverStateFrom(nsLineList::iterator aLine, nscoord aDeltaBCoord);
 
   void AdvanceToNextLine() {

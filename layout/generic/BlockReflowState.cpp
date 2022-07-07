@@ -265,6 +265,14 @@ LogicalRect BlockReflowState::ComputeBlockAvailSpace(
   return result;
 }
 
+LogicalSize BlockReflowState::ComputeAvailableSizeForFloat() const {
+  const auto wm = mReflowInput.GetWritingMode();
+  const nscoord availBSize = ContentBSize() == NS_UNCONSTRAINEDSIZE
+                                 ? NS_UNCONSTRAINEDSIZE
+                                 : std::max(0, ContentBEnd() - mBCoord);
+  return LogicalSize(wm, ContentISize(), availBSize);
+}
+
 bool BlockReflowState::FloatAvoidingBlockFitsInAvailSpace(
     nsIFrame* aFloatAvoidingBlock,
     const nsFlowAreaRect& aFloatAvailableSpace) const {
@@ -735,17 +743,12 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
     mBCoord = bCoord;
   }
 
-  // Get the band of available space with respect to margin box.
-  nsFlowAreaRect floatAvailableSpace =
-      GetFloatAvailableSpaceForPlacingFloat(mBCoord);
-  LogicalRect adjustedAvailableSpace =
-      mBlock->AdjustFloatAvailableSpace(*this, floatAvailableSpace.mRect);
-
+  LogicalSize availSize = ComputeAvailableSizeForFloat();
   SizeComputationInput sizingInput(aFloat, mReflowInput.mRenderingContext, wm,
                                    mReflowInput.ComputedISize());
 
-  nscoord floatMarginISize = FloatMarginISize(
-      mReflowInput, adjustedAvailableSpace.ISize(wm), aFloat, sizingInput);
+  nscoord floatMarginISize =
+      FloatMarginISize(mReflowInput, availSize.ISize(wm), aFloat, sizingInput);
 
   LogicalMargin floatMargin(wm);  // computed margin
   LogicalMargin floatOffsets(wm);
@@ -760,8 +763,8 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
   bool earlyFloatReflow =
       aFloat->IsLetterFrame() || floatMarginISize == NS_UNCONSTRAINEDSIZE;
   if (earlyFloatReflow) {
-    mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat, floatMargin,
-                        floatOffsets, false, reflowStatus);
+    mBlock->ReflowFloat(*this, availSize, aFloat, floatMargin, floatOffsets,
+                        false, reflowStatus);
     floatMarginISize = aFloat->ISize(wm) + floatMargin.IStartEnd(wm);
     NS_ASSERTION(reflowStatus.IsComplete(),
                  "letter frames and orthogonal floats with auto block-size "
@@ -782,6 +785,10 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
   bool mustPlaceFloat =
       mReflowInput.mFlags.mIsTopOfPage && IsAdjacentWithBStart();
 
+  // Get the band of available space with respect to margin box.
+  nsFlowAreaRect floatAvailableSpace =
+      GetFloatAvailableSpaceForPlacingFloat(mBCoord);
+
   for (;;) {
     if (mReflowInput.AvailableHeight() != NS_UNCONSTRAINEDSIZE &&
         floatAvailableSpace.mRect.BSize(wm) <= 0 && !mustPlaceFloat) {
@@ -797,9 +804,6 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
 
     // Nope. try to advance to the next band.
     mBCoord += floatAvailableSpace.mRect.BSize(wm);
-    if (adjustedAvailableSpace.BSize(wm) != NS_UNCONSTRAINEDSIZE) {
-      adjustedAvailableSpace.BSize(wm) -= floatAvailableSpace.mRect.BSize(wm);
-    }
     floatAvailableSpace = GetFloatAvailableSpaceForPlacingFloat(mBCoord);
     mustPlaceFloat = false;
   }
@@ -832,8 +836,8 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
   // where to break.
   if (!earlyFloatReflow) {
     bool pushedDown = mBCoord != restoreBCoord.SavedValue();
-    mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat, floatMargin,
-                        floatOffsets, pushedDown, reflowStatus);
+    mBlock->ReflowFloat(*this, ComputeAvailableSizeForFloat(), aFloat,
+                        floatMargin, floatOffsets, pushedDown, reflowStatus);
   }
   if (aFloat->GetPrevInFlow()) {
     floatMargin.BStart(wm) = 0;

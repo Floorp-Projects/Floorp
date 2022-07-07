@@ -778,26 +778,23 @@ class nsBlockFrame : public nsContainerFrame {
                          LineIterator aLine, nsIFrame* aFrame,
                          LineReflowStatus* aLineReflowStatus);
 
-  // Compute the available size for a float.
-  mozilla::LogicalRect AdjustFloatAvailableSpace(
-      BlockReflowState& aState,
-      const mozilla::LogicalRect& aFloatAvailableSpace);
   // Computes the border-box inline size of the float
   nscoord ComputeFloatISize(BlockReflowState& aState,
                             const mozilla::LogicalRect& aFloatAvailableSpace,
                             nsIFrame* aFloat);
-  // An incomplete aReflowStatus indicates the float should be split
-  // but only if the available height is constrained.
-  // aAdjustedAvailableSpace is the result of calling
-  // nsBlockFrame::AdjustFloatAvailableSpace.
+
+  // @param aAvailableSize the result of
+  //        BlockReflowState::ComputeAvailableSizeForFloat().
+  // @param aFloatPushedDown whether the block-direction position available to
+  //        place a float has been pushed down due to the presence of other
+  //        floats.
+  // @param aReflowStatus an incomplete status indicates the float should be
+  //        split but only if the available block-size is constrained.
   void ReflowFloat(BlockReflowState& aState,
-                   const mozilla::LogicalRect& aAdjustedAvailableSpace,
-                   nsIFrame* aFloat, mozilla::LogicalMargin& aFloatMargin,
-                   mozilla::LogicalMargin& aFloatOffsets,
-                   // Whether the float's position
-                   // (aAdjustedAvailableSpace) has been pushed down
-                   // due to the presence of other floats.
-                   bool aFloatPushedDown, nsReflowStatus& aReflowStatus);
+                   const mozilla::LogicalSize& aAvailableSize, nsIFrame* aFloat,
+                   mozilla::LogicalMargin& aFloatMargin,
+                   mozilla::LogicalMargin& aFloatOffsets, bool aFloatPushedDown,
+                   nsReflowStatus& aReflowStatus);
 
   //----------------------------------------
   // Methods for pushing/pulling lines/frames
