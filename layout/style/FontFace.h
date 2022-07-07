@@ -94,8 +94,6 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   void MaybeResolve();
   void MaybeReject(nsresult aResult);
 
-  already_AddRefed<URLExtraData> GetURLExtraData() const;
-
  private:
   explicit FontFace(nsIGlobalObject* aParent);
   ~FontFace();

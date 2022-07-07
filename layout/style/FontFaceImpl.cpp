@@ -393,13 +393,9 @@ bool FontFaceImpl::SetDescriptor(nsCSSFontDesc aFontDesc,
     return false;
   }
 
-  if (NS_WARN_IF(!mOwner)) {
-    return false;
-  }
-
   // FIXME(heycam): Should not allow modification of FontFaces that are
   // CSS-connected and whose rule is read only.
-  RefPtr<URLExtraData> url = mOwner->GetURLExtraData();
+  RefPtr<URLExtraData> url = mFontFaceSet->GetURLExtraData();
   bool changed;
   if (!Servo_FontFaceRule_SetDescriptor(GetData(), aFontDesc, &aValue, url,
                                         &changed)) {

@@ -130,6 +130,8 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
 
   virtual dom::Document* Document() const { return nullptr; }
 
+  virtual already_AddRefed<URLExtraData> GetURLExtraData() = 0;
+
   // -- Web IDL --------------------------------------------------------------
 
   virtual void EnsureReady() {}

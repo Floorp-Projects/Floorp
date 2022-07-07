@@ -98,13 +98,12 @@ void FontFaceSetImpl::ParseFontShorthandForMatching(
     const nsACString& aFont, StyleFontFamilyList& aFamilyList,
     FontWeight& aWeight, FontStretch& aStretch, FontSlantStyle& aStyle,
     ErrorResult& aRv) {
-  auto* doc = Document();
-  if (NS_WARN_IF(!doc)) {
-    aRv.ThrowInvalidStateError("Missing document");
+  RefPtr<URLExtraData> url = GetURLExtraData();
+  if (!url) {
+    aRv.ThrowInvalidStateError("Missing URLExtraData");
     return;
   }
 
-  RefPtr<URLExtraData> url = ServoCSSParser::GetURLExtraData(doc);
   if (!ServoCSSParser::ParseFontShorthandForMatching(
           aFont, url, aFamilyList, aStyle, aStretch, aWeight)) {
     aRv.ThrowSyntaxError("Invalid font shorthand");
