@@ -594,15 +594,6 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
 nsresult FontFaceSetImpl::LogMessage(gfxUserFontEntry* aUserFontEntry,
                                      uint32_t aSrcIndex, const char* aMessage,
                                      uint32_t aFlags, nsresult aStatus) {
-  MOZ_ASSERT(NS_IsMainThread() ||
-             ServoStyleSet::IsCurrentThreadInServoTraversal());
-
-  nsCOMPtr<nsIConsoleService> console(
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-  if (!console) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsAutoCString familyName;
   nsAutoCString fontURI;
   aUserFontEntry->GetFamilyNameAndURIForLogging(aSrcIndex, familyName, fontURI);
@@ -637,6 +628,17 @@ nsresult FontFaceSetImpl::LogMessage(gfxUserFontEntry* aUserFontEntry,
   message.Append(fontURI);
 
   LOG(("userfonts (%p) %s", this, message.get()));
+
+  if (!NS_IsMainThread() && !ServoStyleSet::IsCurrentThreadInServoTraversal()) {
+    // TODO(aosmond): Log to the console for workers. See bug 1778537.
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIConsoleService> console(
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (!console) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   // try to give the user an indication of where the rule came from
   RawServoFontFaceRule* rule = FindRuleForUserFontEntry(aUserFontEntry);
