@@ -219,8 +219,6 @@ void TimingParams::Normalize() {
   mDuration = Some(StickyTimeDuration::FromMilliseconds(
       PROGRESS_TIMELINE_DURATION_MILLISEC));
   mDelay = TimeDuration::FromMilliseconds(0);
-  mIterations = std::numeric_limits<double>::infinity();
-  mDirection = dom::PlaybackDirection::Alternate;
 
   Update();
 }

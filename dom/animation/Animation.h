@@ -164,7 +164,13 @@ class Animation : public DOMEventTargetHelper,
             // won't be relevant and hence won't be returned by GetAnimations().
             // We don't want its timeline to keep it alive (which would happen
             // if we return true) since otherwise it will effectively be leaked.
-            PlaybackRate() != 0.0);
+            PlaybackRate() != 0.0) ||
+           // Always return true for not idle animations attached to not
+           // monotonically increasing timelines even if the animation is
+           // finished. This is required to accommodate cases where timeline
+           // ticks back in time.
+           (mTimeline && !mTimeline->IsMonotonicallyIncreasing() &&
+            PlayState() != AnimationPlayState::Idle);
   }
 
   /**

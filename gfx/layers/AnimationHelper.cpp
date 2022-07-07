@@ -31,10 +31,8 @@ namespace layers {
 
 static dom::Nullable<TimeDuration> CalculateElapsedTimeForScrollTimeline(
     const Maybe<APZSampler::ScrollOffsetAndRange> aScrollMeta,
-    const ScrollTimelineOptions& aOptions, const Maybe<TimeDuration>& aDuration,
+    const ScrollTimelineOptions& aOptions, const StickyTimeDuration& aEndTime,
     const TimeDuration& aStartTime, float aPlaybackRate) {
-  MOZ_ASSERT(aDuration);
-
   // We return Nothing If the associated APZ controller is not available
   // (because it may be destroyed but this animation is still alive).
   if (!aScrollMeta) {
@@ -59,8 +57,7 @@ static dom::Nullable<TimeDuration> CalculateElapsedTimeForScrollTimeline(
   double progress = position / range;
   // Just in case to avoid getting a progress more than 100%, for overscrolling.
   progress = std::min(progress, 1.0);
-
-  auto timelineTime = aDuration->MultDouble(progress);
+  auto timelineTime = TimeDuration(aEndTime.MultDouble(progress));
   return dom::Animation::CurrentTimeFromTimelineTime(timelineTime, aStartTime,
                                                      aPlaybackRate);
 }
@@ -82,8 +79,7 @@ static dom::Nullable<TimeDuration> CalculateElapsedTime(
         aAPZSampler->GetCurrentScrollOffsetAndRange(
             aLayersId, aAnimation.mScrollTimelineOptions.value().source(),
             aProofOfMapLock),
-        aAnimation.mScrollTimelineOptions.value(),
-        aAnimation.mTiming.Duration(),
+        aAnimation.mScrollTimelineOptions.value(), aAnimation.mTiming.EndTime(),
         aAnimation.mStartTime.refOr(aAnimation.mHoldTime),
         aAnimation.mPlaybackRate);
   }
