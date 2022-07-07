@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.components.settings
 
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.booleanPreference
+import org.mozilla.experiments.nimbus.internal.NimbusFeatureException
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -27,8 +29,16 @@ fun featureFlagPreference(key: String, default: Boolean, featureFlag: Boolean) =
 private class LazyPreference(val key: String, val default: () -> Boolean) :
     ReadWriteProperty<PreferencesHolder, Boolean> {
 
-    override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>) =
-        thisRef.preferences.getBoolean(key, default())
+    override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>): Boolean {
+        val defValue = try {
+            default()
+        } catch (e: NimbusFeatureException) {
+            Logger.error("Failed fetch default value for $key", e)
+            false
+        }
+
+        return thisRef.preferences.getBoolean(key, defValue)
+    }
 
     override fun setValue(thisRef: PreferencesHolder, property: KProperty<*>, value: Boolean) =
         thisRef.preferences.edit().putBoolean(key, value).apply()
