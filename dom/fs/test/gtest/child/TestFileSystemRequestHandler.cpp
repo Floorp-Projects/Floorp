@@ -8,6 +8,7 @@
 
 #include "FileSystemMocks.h"
 #include "fs/FileSystemRequestHandler.h"
+#include "mozilla/dom/OriginPrivateFileSystemChild.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/UniquePtr.h"
 
@@ -23,7 +24,7 @@ class TestFileSystemRequestHandler : public ::testing::Test {
     mChild = FileSystemChildMetadata("parent"_ns, u"ChildName"_ns);
     mEntry = FileSystemEntryMetadata("myid"_ns, u"EntryName"_ns);
     mName = u"testDir"_ns;
-    mActor = MakeAndAddRef<FileSystemActorHolder>();
+    mActor = MakeAndAddRef<FileSystemActorHolder>(nullptr);
   }
 
   already_AddRefed<Promise> GetDefaultPromise() {

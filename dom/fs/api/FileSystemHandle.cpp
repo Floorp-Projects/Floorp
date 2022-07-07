@@ -9,6 +9,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
+#include "mozilla/dom/OriginPrivateFileSystemChild.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla::dom {
@@ -22,11 +23,15 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemHandle);
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystemHandle, mGlobal);
 
 FileSystemHandle::FileSystemHandle(
-    nsIGlobalObject* aGlobal, const fs::FileSystemEntryMetadata& aMetadata,
+    nsIGlobalObject* aGlobal, RefPtr<FileSystemActorHolder>& aActor,
+    const fs::FileSystemEntryMetadata& aMetadata,
     fs::FileSystemRequestHandler* aRequestHandler)
     : mGlobal(aGlobal),
+      mActor(aActor),
       mMetadata(aMetadata),
-      mRequestHandler(aRequestHandler) {}
+      mRequestHandler(aRequestHandler) {
+  MOZ_ASSERT(!mMetadata.entryId().IsEmpty());
+}
 
 // WebIDL Boilerplate
 
@@ -53,6 +58,10 @@ already_AddRefed<Promise> FileSystemHandle::IsSameEntry(
   promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
 
   return promise.forget();
+}
+
+OriginPrivateFileSystemChild* FileSystemHandle::Actor() const {
+  return mActor->Actor();
 }
 
 }  // namespace mozilla::dom
