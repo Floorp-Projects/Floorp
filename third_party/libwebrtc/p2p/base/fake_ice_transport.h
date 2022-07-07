@@ -364,7 +364,7 @@ class FakeIceTransport : public IceTransportInternal {
     if (writable_ == writable) {
       return;
     }
-    RTC_LOG(INFO) << "Change writable_ to " << writable;
+    RTC_LOG(LS_INFO) << "Change writable_ to " << writable;
     writable_ = writable;
     if (writable_) {
       SignalReadyToSend(this);

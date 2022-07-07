@@ -366,7 +366,7 @@ void JsepTransportController::SetActiveResetSrtpParams(
     return;
   }
   RTC_DCHECK_RUN_ON(network_thread_);
-  RTC_LOG(INFO)
+  RTC_LOG(LS_INFO)
       << "Updating the active_reset_srtp_params for JsepTransportController: "
       << active_reset_srtp_params;
   active_reset_srtp_params_ = active_reset_srtp_params;

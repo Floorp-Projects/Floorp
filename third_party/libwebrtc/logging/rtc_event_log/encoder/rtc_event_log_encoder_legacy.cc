@@ -674,7 +674,7 @@ std::string RtcEventLogEncoderLegacy::EncodeVideoSendStreamConfig(
     encoder->set_payload_type(codec.payload_type);
 
     if (event.config().codecs.size() > 1) {
-      RTC_LOG(WARNING)
+      RTC_LOG(LS_WARNING)
           << "LogVideoSendStreamConfig currently only supports one "
              "codec. Logging codec :"
           << codec.payload_name;

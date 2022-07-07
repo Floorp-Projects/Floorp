@@ -378,7 +378,7 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
     }
   }
 
-  RTC_LOG(INFO) << log.str();
+  RTC_LOG(LS_INFO) << log.str();
 }
 
 }  // namespace webrtc_pc_e2e

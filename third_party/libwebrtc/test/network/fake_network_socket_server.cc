@@ -132,7 +132,7 @@ int FakeNetworkSocket::Bind(const rtc::SocketAddress& addr) {
   endpoint_ = socket_server_->GetEndpointNode(local_addr_.ipaddr());
   if (!endpoint_) {
     local_addr_.Clear();
-    RTC_LOG(INFO) << "No endpoint for address: " << ToString(addr);
+    RTC_LOG(LS_INFO) << "No endpoint for address: " << ToString(addr);
     error_ = EADDRNOTAVAIL;
     return 2;
   }
@@ -140,7 +140,7 @@ int FakeNetworkSocket::Bind(const rtc::SocketAddress& addr) {
       endpoint_->BindReceiver(local_addr_.port(), this);
   if (!port) {
     local_addr_.Clear();
-    RTC_LOG(INFO) << "Cannot bind to in-use address: " << ToString(addr);
+    RTC_LOG(LS_INFO) << "Cannot bind to in-use address: " << ToString(addr);
     error_ = EADDRINUSE;
     return 1;
   }

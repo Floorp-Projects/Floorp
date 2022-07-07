@@ -107,7 +107,7 @@ OpenSLEngineManager::OpenSLEngineManager() {
 }
 
 SLObjectItf OpenSLEngineManager::GetOpenSLEngine() {
-  RTC_LOG(INFO) << "GetOpenSLEngine";
+  RTC_LOG(LS_INFO) << "GetOpenSLEngine";
   RTC_DCHECK(thread_checker_.IsCurrent());
   // OpenSL ES for Android only supports a single engine per application.
   // If one already has been created, return existing object instead of

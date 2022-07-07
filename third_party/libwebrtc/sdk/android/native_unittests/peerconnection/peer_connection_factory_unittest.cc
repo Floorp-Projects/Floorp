@@ -77,10 +77,10 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> CreateTestPCF(
 TEST(PeerConnectionFactoryTest, NativeToJavaPeerConnectionFactory) {
   JNIEnv* jni = AttachCurrentThreadIfNeeded();
 
-  RTC_LOG(INFO) << "Initializing java peer connection factory.";
+  RTC_LOG(LS_INFO) << "Initializing java peer connection factory.";
   jni::Java_PeerConnectionFactoryInitializationHelper_initializeFactoryForTests(
       jni);
-  RTC_LOG(INFO) << "Java peer connection factory initialized.";
+  RTC_LOG(LS_INFO) << "Java peer connection factory initialized.";
 
   auto socket_server = std::make_unique<rtc::PhysicalSocketServer>();
 
@@ -105,7 +105,7 @@ TEST(PeerConnectionFactoryTest, NativeToJavaPeerConnectionFactory) {
       jni, factory, std::move(socket_server), std::move(network_thread),
       std::move(worker_thread), std::move(signaling_thread));
 
-  RTC_LOG(INFO) << java_factory;
+  RTC_LOG(LS_INFO) << java_factory;
 
   EXPECT_NE(java_factory, nullptr);
 }

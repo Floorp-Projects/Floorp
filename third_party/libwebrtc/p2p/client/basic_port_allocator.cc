@@ -103,9 +103,9 @@ void FilterNetworks(NetworkList* networks, NetworkFilter filter) {
   if (start_to_remove == networks->end()) {
     return;
   }
-  RTC_LOG(INFO) << "Filtered out " << filter.description << " networks:";
+  RTC_LOG(LS_INFO) << "Filtered out " << filter.description << " networks:";
   for (auto it = start_to_remove; it != networks->end(); ++it) {
-    RTC_LOG(INFO) << (*it)->ToString();
+    RTC_LOG(LS_INFO) << (*it)->ToString();
   }
   networks->erase(start_to_remove, networks->end());
 }

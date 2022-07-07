@@ -101,10 +101,10 @@ class DummySetSessionDescriptionObserver
   static DummySetSessionDescriptionObserver* Create() {
     return new rtc::RefCountedObject<DummySetSessionDescriptionObserver>();
   }
-  virtual void OnSuccess() { RTC_LOG(INFO) << __FUNCTION__; }
+  virtual void OnSuccess() { RTC_LOG(LS_INFO) << __FUNCTION__; }
   virtual void OnFailure(webrtc::RTCError error) {
-    RTC_LOG(INFO) << __FUNCTION__ << " " << ToString(error.type()) << ": "
-                  << error.message();
+    RTC_LOG(LS_INFO) << __FUNCTION__ << " " << ToString(error.type()) << ": "
+                     << error.message();
   }
 
  protected:
@@ -278,7 +278,7 @@ void SimplePeerConnection::OnFailure(webrtc::RTCError error) {
 
 void SimplePeerConnection::OnIceCandidate(
     const webrtc::IceCandidateInterface* candidate) {
-  RTC_LOG(INFO) << __FUNCTION__ << " " << candidate->sdp_mline_index();
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " " << candidate->sdp_mline_index();
 
   std::string sdp;
   if (!candidate->ToString(&sdp)) {
@@ -348,7 +348,7 @@ bool SimplePeerConnection::SetRemoteDescription(const char* type,
                      << error.description;
     return false;
   }
-  RTC_LOG(INFO) << " Received session description :" << remote_desc;
+  RTC_LOG(LS_INFO) << " Received session description :" << remote_desc;
   peer_connection_->SetRemoteDescription(
       DummySetSessionDescriptionObserver::Create(), session_description);
 
@@ -374,7 +374,7 @@ bool SimplePeerConnection::AddIceCandidate(const char* candidate,
     RTC_LOG(WARNING) << "Failed to apply the received candidate";
     return false;
   }
-  RTC_LOG(INFO) << " Received candidate :" << candidate;
+  RTC_LOG(LS_INFO) << " Received candidate :" << candidate;
   return true;
 }
 
@@ -409,7 +409,7 @@ void SimplePeerConnection::SetAudioControl() {
 
 void SimplePeerConnection::OnAddStream(
     rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) {
-  RTC_LOG(INFO) << __FUNCTION__ << " " << stream->id();
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " " << stream->id();
   remote_stream_ = stream;
   if (remote_video_observer_ && !remote_stream_->GetVideoTracks().empty()) {
     remote_stream_->GetVideoTracks()[0]->AddOrUpdateSink(

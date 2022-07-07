@@ -39,13 +39,13 @@ constexpr absl::string_view kSkipRenderedFrameReasonDropped =
     "considered dropped";
 
 void LogFrameCounters(const std::string& name, const FrameCounters& counters) {
-  RTC_LOG(INFO) << "[" << name << "] Captured    : " << counters.captured;
-  RTC_LOG(INFO) << "[" << name << "] Pre encoded : " << counters.pre_encoded;
-  RTC_LOG(INFO) << "[" << name << "] Encoded     : " << counters.encoded;
-  RTC_LOG(INFO) << "[" << name << "] Received    : " << counters.received;
-  RTC_LOG(INFO) << "[" << name << "] Decoded     : " << counters.decoded;
-  RTC_LOG(INFO) << "[" << name << "] Rendered    : " << counters.rendered;
-  RTC_LOG(INFO) << "[" << name << "] Dropped     : " << counters.dropped;
+  RTC_LOG(LS_INFO) << "[" << name << "] Captured    : " << counters.captured;
+  RTC_LOG(LS_INFO) << "[" << name << "] Pre encoded : " << counters.pre_encoded;
+  RTC_LOG(LS_INFO) << "[" << name << "] Encoded     : " << counters.encoded;
+  RTC_LOG(LS_INFO) << "[" << name << "] Received    : " << counters.received;
+  RTC_LOG(LS_INFO) << "[" << name << "] Decoded     : " << counters.decoded;
+  RTC_LOG(LS_INFO) << "[" << name << "] Rendered    : " << counters.rendered;
+  RTC_LOG(LS_INFO) << "[" << name << "] Dropped     : " << counters.dropped;
 }
 
 absl::string_view ToString(FrameDropPhase phase) {
@@ -67,8 +67,8 @@ void LogStreamInternalStats(const std::string& name,
                             const StreamStats& stats,
                             Timestamp start_time) {
   for (const auto& entry : stats.dropped_by_phase) {
-    RTC_LOG(INFO) << "[" << name << "] Dropped at " << ToString(entry.first)
-                  << ": " << entry.second;
+    RTC_LOG(LS_INFO) << "[" << name << "] Dropped at " << ToString(entry.first)
+                     << ": " << entry.second;
   }
   Timestamp first_encoded_frame_time = Timestamp::PlusInfinity();
   for (const StreamCodecInfo& encoder : stats.encoders) {
@@ -77,32 +77,32 @@ void LogStreamInternalStats(const std::string& name,
     if (first_encoded_frame_time.IsInfinite()) {
       first_encoded_frame_time = encoder.switched_on_at;
     }
-    RTC_LOG(INFO) << "[" << name << "] Used encoder: \"" << encoder.codec_name
-                  << "\" used from (frame_id=" << encoder.first_frame_id
-                  << "; from_stream_start="
-                  << (encoder.switched_on_at - stats.stream_started_time).ms()
-                  << "ms, from_call_start="
-                  << (encoder.switched_on_at - start_time).ms()
-                  << "ms) until (frame_id=" << encoder.last_frame_id
-                  << "; from_stream_start="
-                  << (encoder.switched_from_at - stats.stream_started_time).ms()
-                  << "ms, from_call_start="
-                  << (encoder.switched_from_at - start_time).ms() << "ms)";
+    RTC_LOG(LS_INFO)
+        << "[" << name << "] Used encoder: \"" << encoder.codec_name
+        << "\" used from (frame_id=" << encoder.first_frame_id
+        << "; from_stream_start="
+        << (encoder.switched_on_at - stats.stream_started_time).ms()
+        << "ms, from_call_start=" << (encoder.switched_on_at - start_time).ms()
+        << "ms) until (frame_id=" << encoder.last_frame_id
+        << "; from_stream_start="
+        << (encoder.switched_from_at - stats.stream_started_time).ms()
+        << "ms, from_call_start="
+        << (encoder.switched_from_at - start_time).ms() << "ms)";
   }
   for (const StreamCodecInfo& decoder : stats.decoders) {
     RTC_DCHECK(decoder.switched_on_at.IsFinite());
     RTC_DCHECK(decoder.switched_from_at.IsFinite());
-    RTC_LOG(INFO) << "[" << name << "] Used decoder: \"" << decoder.codec_name
-                  << "\" used from (frame_id=" << decoder.first_frame_id
-                  << "; from_stream_start="
-                  << (decoder.switched_on_at - stats.stream_started_time).ms()
-                  << "ms, from_call_start="
-                  << (decoder.switched_on_at - start_time).ms()
-                  << "ms) until (frame_id=" << decoder.last_frame_id
-                  << "; from_stream_start="
-                  << (decoder.switched_from_at - stats.stream_started_time).ms()
-                  << "ms, from_call_start="
-                  << (decoder.switched_from_at - start_time).ms() << "ms)";
+    RTC_LOG(LS_INFO)
+        << "[" << name << "] Used decoder: \"" << decoder.codec_name
+        << "\" used from (frame_id=" << decoder.first_frame_id
+        << "; from_stream_start="
+        << (decoder.switched_on_at - stats.stream_started_time).ms()
+        << "ms, from_call_start=" << (decoder.switched_on_at - start_time).ms()
+        << "ms) until (frame_id=" << decoder.last_frame_id
+        << "; from_stream_start="
+        << (decoder.switched_from_at - stats.stream_started_time).ms()
+        << "ms, from_call_start="
+        << (decoder.switched_from_at - start_time).ms() << "ms)";
   }
 }
 
@@ -668,8 +668,8 @@ std::set<StatsKey> DefaultVideoQualityAnalyzer::GetKnownVideoStreams() const {
   MutexLock lock(&mutex_);
   std::set<StatsKey> out;
   for (auto& item : frames_comparator_.stream_stats()) {
-    RTC_LOG(INFO) << item.first.ToString() << " ==> "
-                  << ToStatsKey(item.first).ToString();
+    RTC_LOG(LS_INFO) << item.first.ToString() << " ==> "
+                     << ToStatsKey(item.first).ToString();
     out.insert(ToStatsKey(item.first));
   }
   return out;
@@ -722,17 +722,19 @@ void DefaultVideoQualityAnalyzer::ReportResults() {
                            start_time_);
   }
   if (!analyzer_stats_.comparisons_queue_size.IsEmpty()) {
-    RTC_LOG(INFO) << "comparisons_queue_size min="
-                  << analyzer_stats_.comparisons_queue_size.GetMin()
-                  << "; max=" << analyzer_stats_.comparisons_queue_size.GetMax()
-                  << "; 99%="
-                  << analyzer_stats_.comparisons_queue_size.GetPercentile(0.99);
+    RTC_LOG(LS_INFO) << "comparisons_queue_size min="
+                     << analyzer_stats_.comparisons_queue_size.GetMin()
+                     << "; max="
+                     << analyzer_stats_.comparisons_queue_size.GetMax()
+                     << "; 99%="
+                     << analyzer_stats_.comparisons_queue_size.GetPercentile(
+                            0.99);
   }
-  RTC_LOG(INFO) << "comparisons_done=" << analyzer_stats_.comparisons_done;
-  RTC_LOG(INFO) << "cpu_overloaded_comparisons_done="
-                << analyzer_stats_.cpu_overloaded_comparisons_done;
-  RTC_LOG(INFO) << "memory_overloaded_comparisons_done="
-                << analyzer_stats_.memory_overloaded_comparisons_done;
+  RTC_LOG(LS_INFO) << "comparisons_done=" << analyzer_stats_.comparisons_done;
+  RTC_LOG(LS_INFO) << "cpu_overloaded_comparisons_done="
+                   << analyzer_stats_.cpu_overloaded_comparisons_done;
+  RTC_LOG(LS_INFO) << "memory_overloaded_comparisons_done="
+                   << analyzer_stats_.memory_overloaded_comparisons_done;
 }
 
 void DefaultVideoQualityAnalyzer::ReportResults(

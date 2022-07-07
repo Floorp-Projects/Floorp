@@ -2173,9 +2173,9 @@ void VideoStreamEncoder::OnVideoSourceRestrictionsUpdated(
     rtc::scoped_refptr<Resource> reason,
     const VideoSourceRestrictions& unfiltered_restrictions) {
   RTC_DCHECK_RUN_ON(&encoder_queue_);
-  RTC_LOG(INFO) << "Updating sink restrictions from "
-                << (reason ? reason->Name() : std::string("<null>")) << " to "
-                << restrictions.ToString();
+  RTC_LOG(LS_INFO) << "Updating sink restrictions from "
+                   << (reason ? reason->Name() : std::string("<null>"))
+                   << " to " << restrictions.ToString();
   worker_queue_->PostTask(ToQueuedTask(
       task_safety_, [this, restrictions = std::move(restrictions)]() {
         RTC_DCHECK_RUN_ON(worker_queue_);

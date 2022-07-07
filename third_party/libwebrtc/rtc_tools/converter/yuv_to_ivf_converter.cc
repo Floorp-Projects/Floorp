@@ -81,8 +81,8 @@ class IvfFileWriterEncodedCallback : public EncodedImageCallback {
     received_frames_count_++;
     RTC_CHECK_LE(received_frames_count_, expected_frames_count_);
     if (received_frames_count_ % kFrameLogInterval == 0) {
-      RTC_LOG(INFO) << received_frames_count_ << " out of "
-                    << expected_frames_count_ << " frames written";
+      RTC_LOG(LS_INFO) << received_frames_count_ << " out of "
+                       << expected_frames_count_ << " frames written";
     }
     next_frame_written_.Set();
     return Result(Result::Error::OK);
@@ -231,11 +231,11 @@ void WriteVideoFile(std::string input_file_name,
     encoder.WaitNextFrameWritten(kMaxFrameEncodeWaitTimeoutMs);
 
     if ((i + 1) % kFrameLogInterval == 0) {
-      RTC_LOG(INFO) << i + 1 << " out of " << frames_count
-                    << " frames are sent for encoding";
+      RTC_LOG(LS_INFO) << i + 1 << " out of " << frames_count
+                       << " frames are sent for encoding";
     }
   }
-  RTC_LOG(INFO) << "All " << frames_count << " frame are sent for encoding";
+  RTC_LOG(LS_INFO) << "All " << frames_count << " frame are sent for encoding";
 }
 
 }  // namespace

@@ -510,9 +510,9 @@ class AdaptingFrameForwarder : public test::FrameForwarder {
     int out_width = 0;
     int out_height = 0;
     if (adaption_enabled()) {
-      RTC_DLOG(INFO) << "IncomingCapturedFrame: AdaptFrameResolution()"
-                     << "w=" << video_frame.width()
-                     << "h=" << video_frame.height();
+      RTC_DLOG(LS_INFO) << "IncomingCapturedFrame: AdaptFrameResolution()"
+                        << "w=" << video_frame.width()
+                        << "h=" << video_frame.height();
       if (adapter_.AdaptFrameResolution(
               video_frame.width(), video_frame.height(),
               video_frame.timestamp_us() * 1000, &cropped_width,
@@ -540,7 +540,7 @@ class AdaptingFrameForwarder : public test::FrameForwarder {
         last_height_ = absl::nullopt;
       }
     } else {
-      RTC_DLOG(INFO) << "IncomingCapturedFrame: adaptation not enabled";
+      RTC_DLOG(LS_INFO) << "IncomingCapturedFrame: adaptation not enabled";
       test::FrameForwarder::IncomingCapturedFrame(video_frame);
       last_width_.emplace(video_frame.width());
       last_height_.emplace(video_frame.height());
@@ -1352,7 +1352,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
         }
         log << "]";
       }
-      RTC_DLOG(INFO) << "OnVideoLayersAllocationUpdated " << log.str();
+      RTC_DLOG(LS_INFO) << "OnVideoLayersAllocationUpdated " << log.str();
     }
 
     TimeController* const time_controller_;

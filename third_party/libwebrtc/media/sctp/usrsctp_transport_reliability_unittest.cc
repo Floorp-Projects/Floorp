@@ -259,8 +259,8 @@ class SctpDataReceiver final : public sigslot::has_slots<> {
     }
 
     if (num_messages_received_ % kLogPerMessagesCount == 0) {
-      RTC_LOG(INFO) << receiver_id_ << " receiver got "
-                    << num_messages_received_ << " messages";
+      RTC_LOG(LS_INFO) << receiver_id_ << " receiver got "
+                       << num_messages_received_ << " messages";
     }
   }
 

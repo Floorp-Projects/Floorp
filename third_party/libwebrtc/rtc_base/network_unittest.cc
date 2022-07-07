@@ -128,11 +128,11 @@ class FakeNetworkMonitorFactory : public NetworkMonitorFactory {
 
 bool SameNameAndPrefix(const rtc::Network& a, const rtc::Network& b) {
   if (a.name() != b.name()) {
-    RTC_LOG(INFO) << "Different interface names.";
+    RTC_LOG(LS_INFO) << "Different interface names.";
     return false;
   }
   if (a.prefix_length() != b.prefix_length() || a.prefix() != b.prefix()) {
-    RTC_LOG(INFO) << "Different IP prefixes.";
+    RTC_LOG(LS_INFO) << "Different IP prefixes.";
     return false;
   }
   return true;
