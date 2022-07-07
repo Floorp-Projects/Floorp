@@ -698,7 +698,7 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(ShapeInvalidationDataProperty,
                                     ShapeInvalidationData)
 
 bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
-  MOZ_ASSERT(aFloat->GetParent() == mBlock);
+  MOZ_ASSERT(aFloat->GetParent() == mBlock, "Float frame has wrong parent");
 
   WritingMode wm = mReflowInput.GetWritingMode();
   // Save away the Y coordinate before placing the float. We will
@@ -740,8 +740,6 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
       GetFloatAvailableSpaceForPlacingFloat(mBCoord);
   LogicalRect adjustedAvailableSpace =
       mBlock->AdjustFloatAvailableSpace(*this, floatAvailableSpace.mRect);
-
-  NS_ASSERTION(aFloat->GetParent() == mBlock, "Float frame has wrong parent");
 
   SizeComputationInput sizingInput(aFloat, mReflowInput.mRenderingContext, wm,
                                    mReflowInput.ComputedISize());
