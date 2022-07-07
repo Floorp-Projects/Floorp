@@ -18,6 +18,7 @@
 #include "mozilla/dom/FontFaceImpl.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
 #include "mozilla/dom/FontFaceSetDocumentImpl.h"
+#include "mozilla/dom/FontFaceSetWorkerImpl.h"
 #include "mozilla/dom/FontFaceSetIterator.h"
 #include "mozilla/dom/FontFaceSetLoadEvent.h"
 #include "mozilla/dom/FontFaceSetLoadEventBinding.h"
@@ -112,6 +113,17 @@ FontFaceSet::~FontFaceSet() {
   RefPtr<FontFaceSetDocumentImpl> impl =
       new FontFaceSetDocumentImpl(set, aDocument);
   impl->Initialize();
+  set->mImpl = std::move(impl);
+  return set.forget();
+}
+
+/* static */ already_AddRefed<FontFaceSet> FontFaceSet::CreateForWorker(
+    nsIGlobalObject* aParent, WorkerPrivate* aWorkerPrivate) {
+  RefPtr<FontFaceSet> set = new FontFaceSet(aParent);
+  RefPtr<FontFaceSetWorkerImpl> impl = new FontFaceSetWorkerImpl(set);
+  if (NS_WARN_IF(!impl->Initialize(aWorkerPrivate))) {
+    return nullptr;
+  }
   set->mImpl = std::move(impl);
   return set.forget();
 }
