@@ -46,13 +46,7 @@ static size_t SharedArrayMappedSize(size_t length) {
   return SharedArrayAccessibleSize(length) + gc::SystemPageSize();
 }
 
-// `wasmSourceMaxPages` must always be something for wasm and nothing for
-// other users.
-SharedArrayRawBuffer* SharedArrayRawBuffer::AllocateInternal(
-    wasm::IndexType wasmIndexType, size_t length,
-    const Maybe<wasm::Pages>& wasmClampedMaxPages,
-    const Maybe<wasm::Pages>& wasmSourceMaxPages,
-    const Maybe<size_t>& wasmMappedSize) {
+SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(size_t length) {
   MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::maxBufferByteLength());
 
   size_t accessibleSize = SharedArrayAccessibleSize(length);
@@ -60,22 +54,12 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::AllocateInternal(
     return nullptr;
   }
 
-  bool preparedForWasm = wasmClampedMaxPages.isSome();
-  size_t computedMappedSize;
-  if (preparedForWasm) {
-    computedMappedSize = wasmMappedSize.isSome()
-                             ? *wasmMappedSize
-                             : wasm::ComputeMappedSize(*wasmClampedMaxPages);
-  } else {
-    MOZ_ASSERT(wasmMappedSize.isNothing());
-    computedMappedSize = accessibleSize;
-  }
-  MOZ_ASSERT(accessibleSize <= computedMappedSize);
+  size_t computedMappedSize = accessibleSize;
 
   uint64_t mappedSizeWithHeader = computedMappedSize + gc::SystemPageSize();
   uint64_t accessibleSizeWithHeader = accessibleSize + gc::SystemPageSize();
 
-  void* p = MapBufferMemory(wasmIndexType, mappedSizeWithHeader,
+  void* p = MapBufferMemory(wasm::IndexType::I32, mappedSizeWithHeader,
                             accessibleSizeWithHeader);
   if (!p) {
     return nullptr;
@@ -83,17 +67,12 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::AllocateInternal(
 
   uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
   uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
-  SharedArrayRawBuffer* rawbuf = new (base) SharedArrayRawBuffer(
-      wasmIndexType, buffer, length, wasmClampedMaxPages.valueOr(Pages(0)),
-      wasmSourceMaxPages.valueOr(Pages(0)), computedMappedSize,
-      preparedForWasm);
+  SharedArrayRawBuffer* rawbuf =
+      new (base) SharedArrayRawBuffer(wasm::IndexType::I32, buffer, length,
+                                      Pages(0), Pages(0), computedMappedSize,
+                                      /* preparedForWasm = */ false);
   MOZ_ASSERT(rawbuf->length_ == length);  // Deallocation needs this
   return rawbuf;
-}
-
-SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(size_t length) {
-  return SharedArrayRawBuffer::AllocateInternal(
-      wasm::IndexType::I32, length, Nothing(), Nothing(), Nothing());
 }
 
 SharedArrayRawBuffer* SharedArrayRawBuffer::AllocateWasm(
@@ -104,8 +83,36 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::AllocateWasm(
   // limits (wasm::MaxMemoryPages()) and we can assume it is a valid size_t.
   MOZ_ASSERT(initialPages.hasByteLength());
   size_t length = initialPages.byteLength();
-  return SharedArrayRawBuffer::AllocateInternal(
-      indexType, length, Some(clampedMaxPages), sourceMaxPages, mappedSize);
+
+  MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::maxBufferByteLength());
+
+  size_t accessibleSize = SharedArrayAccessibleSize(length);
+  if (accessibleSize < length) {
+    return nullptr;
+  }
+
+  size_t computedMappedSize = mappedSize.isSome()
+                                  ? *mappedSize
+                                  : wasm::ComputeMappedSize(clampedMaxPages);
+  MOZ_ASSERT(accessibleSize <= computedMappedSize);
+
+  uint64_t mappedSizeWithHeader = computedMappedSize + gc::SystemPageSize();
+  uint64_t accessibleSizeWithHeader = accessibleSize + gc::SystemPageSize();
+
+  void* p = MapBufferMemory(indexType, mappedSizeWithHeader,
+                            accessibleSizeWithHeader);
+  if (!p) {
+    return nullptr;
+  }
+
+  uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
+  uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
+  SharedArrayRawBuffer* rawbuf = new (base)
+      SharedArrayRawBuffer(indexType, buffer, length, clampedMaxPages,
+                           sourceMaxPages.valueOr(Pages(0)), computedMappedSize,
+                           /* preparedForWasm = */ true);
+  MOZ_ASSERT(rawbuf->length_ == length);  // Deallocation needs this
+  return rawbuf;
 }
 
 void SharedArrayRawBuffer::tryGrowMaxPagesInPlace(Pages deltaMaxPages) {

@@ -87,15 +87,6 @@ class SharedArrayRawBuffer {
     MOZ_ASSERT(buffer == dataPointerShared());
   }
 
-  // Allocate a SharedArrayRawBuffer for either Wasm or other users.
-  // `wasmClampedMaxPages` and `wasmSourceMaxPages` must always be something
-  // for wasm and nothing for other users.
-  static SharedArrayRawBuffer* AllocateInternal(
-      wasm::IndexType wasmIndexType, size_t length,
-      const mozilla::Maybe<wasm::Pages>& wasmClampedMaxPages,
-      const mozilla::Maybe<wasm::Pages>& wasmSourceMaxPages,
-      const mozilla::Maybe<size_t>& wasmMappedSize);
-
  public:
   class Lock;
   friend class Lock;
