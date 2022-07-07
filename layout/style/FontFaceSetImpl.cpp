@@ -86,6 +86,8 @@ FontFaceSetImpl::~FontFaceSetImpl() {
 }
 
 void FontFaceSetImpl::Destroy() {
+  RecursiveMutexAutoLock lock(mMutex);
+
   for (const auto& key : mLoaders.Keys()) {
     key->Cancel();
   }
@@ -192,6 +194,7 @@ void FontFaceSetImpl::FindMatchingFontFaces(const nsACString& aFont,
 void FontFaceSetImpl::FindMatchingFontFaces(
     const nsTHashSet<FontFace*>& aMatchingFaces,
     nsTArray<FontFace*>& aFontFaces) {
+  RecursiveMutexAutoLock lock(mMutex);
   for (FontFaceRecord& record : mNonRuleFaces) {
     FontFace* owner = record.mFontFace->GetOwner();
     if (owner && aMatchingFaces.Contains(owner)) {
@@ -201,10 +204,12 @@ void FontFaceSetImpl::FindMatchingFontFaces(
 }
 
 bool FontFaceSetImpl::ReadyPromiseIsPending() const {
+  RecursiveMutexAutoLock lock(mMutex);
   return mOwner && mOwner->ReadyPromiseIsPending();
 }
 
 FontFaceSetLoadStatus FontFaceSetImpl::Status() {
+  RecursiveMutexAutoLock lock(mMutex);
   FlushUserFontSet();
   return mStatus;
 }
@@ -833,12 +838,14 @@ void FontFaceSetImpl::CheckLoadingStarted() {
 }
 
 void FontFaceSetImpl::OnLoadingStarted() {
+  RecursiveMutexAutoLock lock(mMutex);
   if (mOwner) {
     mOwner->DispatchLoadingEventAndReplaceReadyPromise();
   }
 }
 
 void FontFaceSetImpl::UpdateHasLoadingFontFaces() {
+  RecursiveMutexAutoLock lock(mMutex);
   mHasLoadingFontFacesIsDirty = false;
   mHasLoadingFontFaces = false;
   for (size_t i = 0; i < mNonRuleFaces.Length(); i++) {
@@ -850,6 +857,7 @@ void FontFaceSetImpl::UpdateHasLoadingFontFaces() {
 }
 
 bool FontFaceSetImpl::HasLoadingFontFaces() {
+  RecursiveMutexAutoLock lock(mMutex);
   if (mHasLoadingFontFacesIsDirty) {
     UpdateHasLoadingFontFaces();
   }
@@ -862,6 +870,7 @@ bool FontFaceSetImpl::MightHavePendingFontLoads() {
 }
 
 void FontFaceSetImpl::CheckLoadingFinished() {
+  RecursiveMutexAutoLock lock(mMutex);
   if (mDelayedLoadCheck) {
     // Wait until the runnable posted in OnFontFaceStatusChanged calls us.
     return;
@@ -891,6 +900,7 @@ void FontFaceSetImpl::CheckLoadingFinished() {
 }
 
 void FontFaceSetImpl::OnLoadingFinished() {
+  RecursiveMutexAutoLock lock(mMutex);
   if (mOwner) {
     mOwner->MaybeResolve();
   }
@@ -902,6 +912,7 @@ bool FontFaceSetImpl::PrefEnabled() {
 }
 
 void FontFaceSetImpl::RefreshStandardFontLoadPrincipal() {
+  RecursiveMutexAutoLock lock(mMutex);
   mAllowedFontLoads.Clear();
   IncrementGeneration(false);
 }
