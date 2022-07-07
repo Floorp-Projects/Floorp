@@ -17,6 +17,10 @@
 #include "modules/desktop_capture/linux/x11/shared_x_display.h"
 #endif
 
+#if defined(WEBRTC_USE_PIPEWIRE)
+#include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
+#endif
+
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
 #include "modules/desktop_capture/mac/desktop_configuration_monitor.h"
 #endif
@@ -165,13 +169,26 @@ class RTC_EXPORT DesktopCaptureOptions {
 #if defined(WEBRTC_USE_PIPEWIRE)
   bool allow_pipewire() const { return allow_pipewire_; }
   void set_allow_pipewire(bool allow) { allow_pipewire_ = allow; }
+
+  const rtc::scoped_refptr<SharedScreenCastStream>& screencast_stream() const {
+    return screencast_stream_;
+  }
+  void set_screencast_stream(
+      rtc::scoped_refptr<SharedScreenCastStream> stream) {
+    screencast_stream_ = stream;
+  }
 #endif
 
  private:
 #if defined(WEBRTC_USE_X11)
   rtc::scoped_refptr<SharedXDisplay> x_display_;
 #endif
-
+#if defined(WEBRTC_USE_PIPEWIRE)
+  // An instance of shared PipeWire ScreenCast stream we share between
+  // BaseCapturerPipeWire and MouseCursorMonitorPipeWire as cursor information
+  // is sent together with screen content.
+  rtc::scoped_refptr<SharedScreenCastStream> screencast_stream_;
+#endif
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
   rtc::scoped_refptr<DesktopConfigurationMonitor> configuration_monitor_;
   bool allow_iosurface_ = false;

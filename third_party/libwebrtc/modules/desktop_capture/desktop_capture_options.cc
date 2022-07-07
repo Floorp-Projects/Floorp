@@ -14,6 +14,9 @@
 #elif defined(WEBRTC_WIN)
 #include "modules/desktop_capture/win/full_screen_win_application_handler.h"
 #endif
+#if defined(WEBRTC_USE_PIPEWIRE)
+#include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
+#endif
 
 #include "rtc_base/ref_counted_object.h"
 
@@ -36,6 +39,9 @@ DesktopCaptureOptions DesktopCaptureOptions::CreateDefault() {
   DesktopCaptureOptions result;
 #if defined(WEBRTC_USE_X11)
   result.set_x_display(SharedXDisplay::CreateDefault());
+#endif
+#if defined(WEBRTC_USE_PIPEWIRE)
+  result.set_screencast_stream(SharedScreenCastStream::CreateDefault());
 #endif
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
   result.set_configuration_monitor(
