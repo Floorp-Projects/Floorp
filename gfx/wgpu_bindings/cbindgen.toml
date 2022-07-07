@@ -15,8 +15,6 @@ autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated usi
  * - $CBINDGEN is the path to the cbindgen executable provided by mozbuild (the exact version often matters)
  */
 
-#include "nsString.h"
-
 struct WGPUByteBuf;
 typedef uint64_t WGPUNonZeroU64;
 typedef uint64_t WGPUOption_BufferSize;
@@ -39,7 +37,6 @@ style = "tag"
 
 [export]
 prefix = "WGPU"
-renaming_overrides_prefixing = true
 exclude = [
 	"Option_AdapterId", "Option_BufferId", "Option_PipelineLayoutId", "Option_BindGroupLayoutId",
 	"Option_SamplerId", "Option_SurfaceId", "Option_TextureViewId",
@@ -49,17 +46,13 @@ exclude = [
 include = ["BufferUsages"]
 
 [export.rename]
-"nsString" = "nsString"
-"nsCString" = "nsCString"
-"nsAString" = "nsAString"
-"nsACString" = "nsACString"
-"BufferDescriptor______nsACString" = "WGPUBufferDescriptor"
-"CommandBufferDescriptor______nsACString" = "WGPUCommandBufferDescriptor"
-"CommandEncoderDescriptor______nsACString" = "WGPUCommandEncoderDescriptor"
-"RenderBundleDescriptor______nsACString" = "WGPURenderBundleDescriptor"
-"DeviceDescriptor______nsACString" = "WGPUDeviceDescriptor"
-"TextureDescriptor______nsACString" = "WGPUTextureDescriptor"
-"SamplerDescriptor______nsACString" = "WGPUSamplerDescriptor"
+"BufferDescriptor_RawString" = "BufferDescriptor"
+"CommandBufferDescriptor_RawString" = "CommandBufferDescriptor"
+"CommandEncoderDescriptor_RawString" = "CommandEncoderDescriptor"
+"RenderBundleDescriptor_RawString" = "RenderBundleDescriptor"
+"DeviceDescriptor_RawString" = "DeviceDescriptor"
+"TextureDescriptor_RawString" = "TextureDescriptor"
+"SamplerDescriptor_RawString" = "SamplerDescriptor"
 
 [parse]
 parse_deps = true
