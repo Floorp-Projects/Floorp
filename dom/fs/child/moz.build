@@ -10,6 +10,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    "FileSystemChildFactory.cpp",
     "FileSystemRequestHandler.cpp",
 ]
 

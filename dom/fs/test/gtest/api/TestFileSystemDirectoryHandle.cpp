@@ -8,6 +8,7 @@
 
 #include "FileSystemMocks.h"
 
+#include "mozilla/dom/FileSystemActorHolder.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
 #include "mozilla/dom/FileSystemDirectoryHandleBinding.h"
 #include "mozilla/dom/FileSystemDirectoryIterator.h"
@@ -26,8 +27,11 @@ class TestFileSystemDirectoryHandle : public ::testing::Test {
     mRequestHandler = MakeUnique<MockFileSystemRequestHandler>();
     mMetadata = FileSystemEntryMetadata("dir"_ns, u"Directory"_ns);
     mName = u"testDir"_ns;
-    mActor = MakeAndAddRef<FileSystemActorHolder>(nullptr);
+    mActor = MakeAndAddRef<FileSystemActorHolder>(
+        MakeUnique<FileSystemChildFactory>()->Create().take());
   }
+
+  void TearDown() override { mActor->RemoveActor(); }
 
   nsIGlobalObject* mGlobal = GetGlobal();
   UniquePtr<MockFileSystemRequestHandler> mRequestHandler;

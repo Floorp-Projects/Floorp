@@ -9,11 +9,11 @@
 
 #include "nsNetCID.h"
 #include "mozilla/dom/FileSystemTypes.h"
-#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsServiceManagerUtils.h"
 
@@ -68,12 +68,11 @@ mozilla::ipc::IPCResult BackgroundFileSystemParent::RecvGetRoot(
   // This opens the quota manager, which has to be done on PBackground
   auto res =
       fs::data::FileSystemDataManager::CreateFileSystemDataManager(origin);
-  if (NS_WARN_IF(res.isErr())) {
-    MOZ_ASSERT(false, "Can't create FileSystemDataManager");
-    aResolver(fs::FileSystemGetRootResponse(NS_ERROR_FAILURE));
+  QM_TRY(OkIf(res.isErr()), IPC_OK(), [aResolver](const auto&) {
+    aResolver(fs::FileSystemGetRootResponse(NS_ERROR_UNEXPECTED));
+  });
 
-    return IPC_OK();
-  }
+  UniquePtr<fs::data::FileSystemDataManager> data(res.unwrap());
   nsCOMPtr<nsIThread> pbackground = NS_GetCurrentThread();
 
   nsCOMPtr<nsIEventTarget> target =
@@ -89,8 +88,8 @@ mozilla::ipc::IPCResult BackgroundFileSystemParent::RecvGetRoot(
   // new channel, but that's an extra IPC instead.
   InvokeAsync(
       taskqueue, __func__,
-      [origin, parentEp = std::move(aParentEp), aResolver, data = res.unwrap(),
-       taskqueue, pbackground]() mutable {
+      [origin, parentEp = std::move(aParentEp), aResolver,
+       data = std::move(data), taskqueue, pbackground]() mutable {
         RefPtr<OriginPrivateFileSystemParent> parent =
             new OriginPrivateFileSystemParent(taskqueue);
         if (!parentEp.Bind(parent)) {

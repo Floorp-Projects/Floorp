@@ -9,8 +9,8 @@
 
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/dom/PBackgroundFileSystemParent.h"
-#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/dom/POriginPrivateFileSystemParent.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/TaskQueue.h"
 #include "nsISupports.h"
 
@@ -23,7 +23,7 @@ class BackgroundFileSystemParent : public PBackgroundFileSystemParent {
       : mPrincipalInfo(aPrincipalInfo) {}
 
   mozilla::ipc::IPCResult RecvGetRoot(
-      Endpoint<POriginPrivateFileSystemParent>&& aParentEp,
+      mozilla::ipc::Endpoint<POriginPrivateFileSystemParent>&& aParentEp,
       GetRootResolver&& aResolver);
 
   NS_INLINE_DECL_REFCOUNTING(BackgroundFileSystemParent)
