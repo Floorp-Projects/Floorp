@@ -34,6 +34,9 @@ typedef EGLContext (*eglCreateContext_func)(EGLDisplay dpy,
                                             EGLConfig config,
                                             EGLContext share_context,
                                             const EGLint* attrib_list);
+typedef EGLBoolean (*eglDestroyContext_func)(EGLDisplay display,
+                                             EGLContext context);
+typedef EGLBoolean (*eglTerminate_func)(EGLDisplay display);
 typedef EGLImageKHR (*eglCreateImageKHR_func)(EGLDisplay dpy,
                                               EGLContext ctx,
                                               EGLenum target,
@@ -73,6 +76,8 @@ typedef void (*glEGLImageTargetTexture2DOES_func)(GLenum target,
 // consistency.
 eglBindAPI_func EglBindAPI = nullptr;
 eglCreateContext_func EglCreateContext = nullptr;
+eglDestroyContext_func EglDestroyContext = nullptr;
+eglTerminate_func EglTerminate = nullptr;
 eglCreateImageKHR_func EglCreateImageKHR = nullptr;
 eglDestroyImageKHR_func EglDestroyImageKHR = nullptr;
 eglGetError_func EglGetError = nullptr;
@@ -129,7 +134,42 @@ static const std::string FormatGLError(GLenum err) {
     case GL_OUT_OF_MEMORY:
       return "GL_OUT_OF_MEMORY";
     default:
-      return std::string("0x") + std::to_string(err);
+      return "GL error code: " + std::to_string(err);
+  }
+}
+
+static const std::string FormatEGLError(EGLint err) {
+  switch (err) {
+    case EGL_NOT_INITIALIZED:
+      return "EGL_NOT_INITIALIZED";
+    case EGL_BAD_ACCESS:
+      return "EGL_BAD_ACCESS";
+    case EGL_BAD_ALLOC:
+      return "EGL_BAD_ALLOC";
+    case EGL_BAD_ATTRIBUTE:
+      return "EGL_BAD_ATTRIBUTE";
+    case EGL_BAD_CONTEXT:
+      return "EGL_BAD_CONTEXT";
+    case EGL_BAD_CONFIG:
+      return "EGL_BAD_CONFIG";
+    case EGL_BAD_CURRENT_SURFACE:
+      return "EGL_BAD_CURRENT_SURFACE";
+    case EGL_BAD_DISPLAY:
+      return "EGL_BAD_DISPLAY";
+    case EGL_BAD_SURFACE:
+      return "EGL_BAD_SURFACE";
+    case EGL_BAD_MATCH:
+      return "EGL_BAD_MATCH";
+    case EGL_BAD_PARAMETER:
+      return "EGL_BAD_PARAMETER";
+    case EGL_BAD_NATIVE_PIXMAP:
+      return "EGL_BAD_NATIVE_PIXMAP";
+    case EGL_BAD_NATIVE_WINDOW:
+      return "EGL_BAD_NATIVE_WINDOW";
+    case EGL_CONTEXT_LOST:
+      return "EGL_CONTEXT_LOST";
+    default:
+      return "EGL error code: " + std::to_string(err);
   }
 }
 
@@ -175,6 +215,9 @@ static bool LoadEGL() {
     EglBindAPI = (eglBindAPI_func)EglGetProcAddress("eglBindAPI");
     EglCreateContext =
         (eglCreateContext_func)EglGetProcAddress("eglCreateContext");
+    EglDestroyContext =
+        (eglDestroyContext_func)EglGetProcAddress("eglDestroyContext");
+    EglTerminate = (eglTerminate_func)EglGetProcAddress("eglTerminate");
     EglCreateImageKHR =
         (eglCreateImageKHR_func)EglGetProcAddress("eglCreateImageKHR");
     EglDestroyImageKHR =
@@ -190,9 +233,9 @@ static bool LoadEGL() {
             "glEGLImageTargetTexture2DOES");
 
     return EglBindAPI && EglCreateContext && EglCreateImageKHR &&
-           EglDestroyImageKHR && EglGetError && EglGetPlatformDisplayEXT &&
-           EglInitialize && EglMakeCurrent && EglQueryString &&
-           GlEGLImageTargetTexture2DOES;
+           EglTerminate && EglDestroyContext && EglDestroyImageKHR &&
+           EglGetError && EglGetPlatformDisplayEXT && EglInitialize &&
+           EglMakeCurrent && EglQueryString && GlEGLImageTargetTexture2DOES;
   }
 
   return false;
@@ -262,11 +305,13 @@ EglDmaBuf::EglDmaBuf() {
 
   if (!LoadEGL()) {
     RTC_LOG(LS_ERROR) << "Unable to load EGL entry functions.";
+    CloseLibrary(g_lib_egl);
     return;
   }
 
   if (!LoadGL()) {
     RTC_LOG(LS_ERROR) << "Failed to load OpenGL entry functions.";
+    CloseLibrary(g_lib_gl);
     return;
   }
 
@@ -278,7 +323,7 @@ EglDmaBuf::EglDmaBuf() {
     // If eglQueryString() returned NULL, the implementation doesn't support
     // EGL_EXT_client_extensions. Expect an EGL_BAD_DISPLAY error.
     RTC_LOG(LS_ERROR) << "No client extensions defined! "
-                      << FormatGLError(EglGetError());
+                      << FormatEGLError(EglGetError());
     return;
   }
 
@@ -314,14 +359,14 @@ EglDmaBuf::EglDmaBuf() {
 
   if (egl_.display == EGL_NO_DISPLAY) {
     RTC_LOG(LS_ERROR) << "Error during obtaining EGL display: "
-                      << FormatGLError(EglGetError());
+                      << FormatEGLError(EglGetError());
     return;
   }
 
   EGLint major, minor;
   if (EglInitialize(egl_.display, &major, &minor) == EGL_FALSE) {
     RTC_LOG(LS_ERROR) << "Error during eglInitialize: "
-                      << FormatGLError(EglGetError());
+                      << FormatEGLError(EglGetError());
     return;
   }
 
@@ -378,8 +423,21 @@ EglDmaBuf::~EglDmaBuf() {
     gbm_device_destroy(gbm_device_);
   }
 
-  CloseLibrary(g_lib_egl);
-  CloseLibrary(g_lib_gl);
+  if (egl_.context != EGL_NO_CONTEXT) {
+    EglDestroyContext(egl_.display, egl_.context);
+  }
+
+  if (egl_.display != EGL_NO_DISPLAY) {
+    EglTerminate(egl_.display);
+  }
+
+  // BUG: crbug.com/1290566
+  // Closing libEGL.so.1 when using NVidia drivers causes a crash
+  // when EglGetPlatformDisplayEXT() is used, at least this one is enough
+  // to be called to make it crash.
+  // It also looks that libepoxy and glad don't dlclose it either
+  // CloseLibrary(g_lib_egl);
+  // CloseLibrary(g_lib_gl);
 }
 
 RTC_NO_SANITIZE("cfi-icall")
@@ -400,6 +458,7 @@ std::unique_ptr<uint8_t[]> EglDmaBuf::ImageFromDmaBuf(
   }
 
   gbm_bo* imported;
+
   if (modifier == DRM_FORMAT_MOD_INVALID) {
     gbm_import_fd_data import_info = {
         plane_datas[0].fd, static_cast<uint32_t>(size.width()),
@@ -436,11 +495,11 @@ std::unique_ptr<uint8_t[]> EglDmaBuf::ImageFromDmaBuf(
 
   // create EGL image from imported BO
   EGLImageKHR image = EglCreateImageKHR(
-      egl_.display, nullptr, EGL_NATIVE_PIXMAP_KHR, imported, nullptr);
+      egl_.display, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, imported, nullptr);
 
-  if (image == EGL_NO_IMAGE_KHR) {
-    RTC_LOG(LS_ERROR) << "Failed to record frame: Error creating EGLImageKHR - "
-                      << FormatGLError(GlGetError());
+  if (image == EGL_NO_IMAGE) {
+    RTC_LOG(LS_ERROR) << "Failed to record frame: Error creating EGLImage - "
+                      << FormatEGLError(EglGetError());
     gbm_bo_destroy(imported);
     return src;
   }
