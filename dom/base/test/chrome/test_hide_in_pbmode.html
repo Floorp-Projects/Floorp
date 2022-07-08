@@ -27,11 +27,11 @@
     });
   }
 
-  function runWorkerTest(content, expected) {
+  function runWorkerTest(content, inPrivateBrowsing) {
     return new Promise((resolve, reject) => {
       /** @type {Worker} */
       const worker = content.eval("new Worker('/chrome/dom/base/test/chrome/file_hide_in_pbmode.js')");
-      worker.postMessage({ expected });
+      worker.postMessage({ inPrivateBrowsing });
       worker.onerror = reject;
       listenForTests(worker);
       worker.addEventListener("message", ev => {
@@ -46,13 +46,13 @@
   async function runTest() {
     // sanity check
     let win = await openBrowserWindow(contentPage, { private: false });
-    checkAll(win.content, true);
-    await runWorkerTest(win.content, true);
+    checkAll(win.content, false);
+    await runWorkerTest(win.content, false);
     win.close();
 
     win = await openBrowserWindow(contentPage, { private: true });
-    checkAll(win.content, false);
-    await runWorkerTest(win.content, false);
+    checkAll(win.content, true);
+    await runWorkerTest(win.content, true);
     win.close();
 
     SimpleTest.finish();
