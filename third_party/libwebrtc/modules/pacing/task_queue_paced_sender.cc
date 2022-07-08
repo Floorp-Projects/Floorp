@@ -271,7 +271,7 @@ void TaskQueuePacedSender::MaybeProcessPackets(
     // Set a new scheduled process time and post a delayed task.
     next_process_time_ = next_process_time;
 
-    task_queue_.PostDelayedTask(
+    task_queue_.PostDelayedHighPrecisionTask(
         [this, next_process_time]() { MaybeProcessPackets(next_process_time); },
         time_to_next_process->ms<uint32_t>());
   }
