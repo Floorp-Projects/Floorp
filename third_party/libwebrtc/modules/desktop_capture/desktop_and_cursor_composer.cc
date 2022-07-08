@@ -21,7 +21,6 @@
 #include "modules/desktop_capture/mouse_cursor.h"
 #include "modules/desktop_capture/mouse_cursor_monitor.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -72,6 +71,9 @@ class DesktopFrameWithCursor : public DesktopFrame {
                          bool cursor_changed);
   ~DesktopFrameWithCursor() override;
 
+  DesktopFrameWithCursor(const DesktopFrameWithCursor&) = delete;
+  DesktopFrameWithCursor& operator=(const DesktopFrameWithCursor&) = delete;
+
   DesktopRect cursor_rect() const { return cursor_rect_; }
 
  private:
@@ -80,8 +82,6 @@ class DesktopFrameWithCursor : public DesktopFrame {
   DesktopVector restore_position_;
   std::unique_ptr<DesktopFrame> restore_frame_;
   DesktopRect cursor_rect_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(DesktopFrameWithCursor);
 };
 
 DesktopFrameWithCursor::DesktopFrameWithCursor(

@@ -13,7 +13,6 @@
 
 #include <memory>
 
-#include "rtc_base/constructor_magic.h"
 // TODO(zijiehe): These headers are not used in this file, but to avoid build
 // break in remoting/host. We should add headers in each individual files.
 #include "modules/desktop_capture/desktop_frame.h"         // Remove
@@ -39,6 +38,9 @@ class ScreenCaptureFrameQueue {
  public:
   ScreenCaptureFrameQueue() : current_(0) {}
   ~ScreenCaptureFrameQueue() = default;
+
+  ScreenCaptureFrameQueue(const ScreenCaptureFrameQueue&) = delete;
+  ScreenCaptureFrameQueue& operator=(const ScreenCaptureFrameQueue&) = delete;
 
   // Moves to the next frame in the queue, moving the 'current' frame to become
   // the 'previous' one.
@@ -71,8 +73,6 @@ class ScreenCaptureFrameQueue {
 
   static const int kQueueLength = 2;
   std::unique_ptr<FrameType> frames_[kQueueLength];
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCaptureFrameQueue);
 };
 
 }  // namespace webrtc

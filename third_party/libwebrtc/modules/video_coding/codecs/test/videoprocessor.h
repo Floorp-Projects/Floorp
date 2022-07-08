@@ -37,7 +37,6 @@
 #include "modules/video_coding/utility/ivf_file_writer.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 #include "test/testsupport/frame_reader.h"
@@ -69,6 +68,9 @@ class VideoProcessor {
                  IvfFileWriterMap* encoded_frame_writers,
                  FrameWriterList* decoded_frame_writers);
   ~VideoProcessor();
+
+  VideoProcessor(const VideoProcessor&) = delete;
+  VideoProcessor& operator=(const VideoProcessor&) = delete;
 
   // Reads a frame and sends it to the encoder. When the encode callback
   // is received, the encoded frame is buffered. After encoding is finished
@@ -270,8 +272,6 @@ class VideoProcessor {
 
   // This class must be operated on a TaskQueue.
   RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(VideoProcessor);
 };
 
 }  // namespace test

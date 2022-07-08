@@ -16,7 +16,6 @@
 #include <string>
 
 #include "modules/audio_coding/neteq/tools/audio_sink.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 namespace test {
@@ -34,6 +33,9 @@ class OutputAudioFile : public AudioSink {
       fclose(out_file_);
   }
 
+  OutputAudioFile(const OutputAudioFile&) = delete;
+  OutputAudioFile& operator=(const OutputAudioFile&) = delete;
+
   bool WriteArray(const int16_t* audio, size_t num_samples) override {
     RTC_DCHECK(out_file_);
     return fwrite(audio, sizeof(*audio), num_samples, out_file_) == num_samples;
@@ -41,8 +43,6 @@ class OutputAudioFile : public AudioSink {
 
  private:
   FILE* out_file_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(OutputAudioFile);
 };
 
 }  // namespace test

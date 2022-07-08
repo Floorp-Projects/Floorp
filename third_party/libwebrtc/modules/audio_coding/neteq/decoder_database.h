@@ -20,7 +20,6 @@
 #include "api/scoped_refptr.h"
 #include "modules/audio_coding/codecs/cng/webrtc_cng.h"
 #include "modules/audio_coding/neteq/packet.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -122,6 +121,9 @@ class DecoderDatabase {
 
   virtual ~DecoderDatabase();
 
+  DecoderDatabase(const DecoderDatabase&) = delete;
+  DecoderDatabase& operator=(const DecoderDatabase&) = delete;
+
   // Returns true if the database is empty.
   virtual bool Empty() const;
 
@@ -208,8 +210,6 @@ class DecoderDatabase {
   mutable std::unique_ptr<ComfortNoiseDecoder> active_cng_decoder_;
   rtc::scoped_refptr<AudioDecoderFactory> decoder_factory_;
   const absl::optional<AudioCodecPairId> codec_pair_id_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(DecoderDatabase);
 };
 
 }  // namespace webrtc

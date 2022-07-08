@@ -21,7 +21,6 @@
 #include "modules/desktop_capture/mouse_cursor.h"
 #include "modules/desktop_capture/mouse_cursor_monitor.h"
 #include "modules/desktop_capture/shared_memory.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
@@ -40,6 +39,9 @@ class RTC_EXPORT DesktopAndCursorComposer
                            const DesktopCaptureOptions& options);
 
   ~DesktopAndCursorComposer() override;
+
+  DesktopAndCursorComposer(const DesktopAndCursorComposer&) = delete;
+  DesktopAndCursorComposer& operator=(const DesktopAndCursorComposer&) = delete;
 
   // Creates a new composer that relies on an external source for cursor shape
   // and position information via the MouseCursorMonitor::Callback interface.
@@ -84,8 +86,6 @@ class RTC_EXPORT DesktopAndCursorComposer
   DesktopVector cursor_position_;
   DesktopRect previous_cursor_rect_;
   bool cursor_changed_ = false;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(DesktopAndCursorComposer);
 };
 
 }  // namespace webrtc

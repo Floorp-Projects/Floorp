@@ -19,7 +19,6 @@
 
 #include "api/fec_controller.h"
 #include "modules/video_coding/media_opt_util.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
@@ -32,6 +31,10 @@ class FecControllerDefault : public FecController {
                        VCMProtectionCallback* protection_callback);
   explicit FecControllerDefault(Clock* clock);
   ~FecControllerDefault() override;
+
+  FecControllerDefault(const FecControllerDefault&) = delete;
+  FecControllerDefault& operator=(const FecControllerDefault&) = delete;
+
   void SetProtectionCallback(
       VCMProtectionCallback* protection_callback) override;
   void SetProtectionMethod(bool enable_fec, bool enable_nack) override;
@@ -58,7 +61,7 @@ class FecControllerDefault : public FecController {
   std::unique_ptr<media_optimization::VCMLossProtectionLogic> loss_prot_logic_
       RTC_GUARDED_BY(mutex_);
   size_t max_payload_size_ RTC_GUARDED_BY(mutex_);
-  RTC_DISALLOW_COPY_AND_ASSIGN(FecControllerDefault);
+
   const float overhead_threshold_;
 };
 

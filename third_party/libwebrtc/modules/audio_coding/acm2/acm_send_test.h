@@ -17,7 +17,6 @@
 #include "api/audio/audio_frame.h"
 #include "modules/audio_coding/include/audio_coding_module.h"
 #include "modules/audio_coding/neteq/tools/packet_source.h"
-#include "rtc_base/constructor_magic.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -34,6 +33,9 @@ class AcmSendTestOldApi : public AudioPacketizationCallback,
                     int source_rate_hz,
                     int test_duration_ms);
   ~AcmSendTestOldApi() override;
+
+  AcmSendTestOldApi(const AcmSendTestOldApi&) = delete;
+  AcmSendTestOldApi& operator=(const AcmSendTestOldApi&) = delete;
 
   // Registers the send codec. Returns true on success, false otherwise.
   bool RegisterCodec(const char* payload_name,
@@ -81,8 +83,6 @@ class AcmSendTestOldApi : public AudioPacketizationCallback,
   uint16_t sequence_number_;
   std::vector<uint8_t> last_payload_vec_;
   bool data_to_send_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(AcmSendTestOldApi);
 };
 
 }  // namespace test

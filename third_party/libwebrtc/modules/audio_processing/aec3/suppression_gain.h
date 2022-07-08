@@ -25,7 +25,6 @@
 #include "modules/audio_processing/aec3/nearend_detector.h"
 #include "modules/audio_processing/aec3/render_signal_analyzer.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -36,6 +35,10 @@ class SuppressionGain {
                   int sample_rate_hz,
                   size_t num_capture_channels);
   ~SuppressionGain();
+
+  SuppressionGain(const SuppressionGain&) = delete;
+  SuppressionGain& operator=(const SuppressionGain&) = delete;
+
   void GetGain(
       rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>>
           nearend_spectrum,
@@ -134,8 +137,6 @@ class SuppressionGain {
   // echo spectrum.
   const bool use_unbounded_echo_spectrum_;
   std::unique_ptr<NearendDetector> dominant_nearend_detector_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(SuppressionGain);
 };
 
 }  // namespace webrtc

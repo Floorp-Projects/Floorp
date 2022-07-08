@@ -42,6 +42,9 @@ class ScreenCapturerMac final : public DesktopCapturer {
       bool allow_iosurface);
   ~ScreenCapturerMac() override;
 
+  ScreenCapturerMac(const ScreenCapturerMac&) = delete;
+  ScreenCapturerMac& operator=(const ScreenCapturerMac&) = delete;
+
   // TODO(julien.isorce): Remove Init() or make it private.
   bool Init();
 
@@ -118,8 +121,6 @@ class ScreenCapturerMac final : public DesktopCapturer {
   // both the VideoCapture thread and ScreenCapture thread.
   // Protected by desktop_config_monitor_.
   bool update_screen_configuration_ = false;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerMac);
 };
 
 }  // namespace webrtc
