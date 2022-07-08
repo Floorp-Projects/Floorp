@@ -603,10 +603,12 @@ class ActivePS {
     return aFeatures;
   }
 
-  ActivePS(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
-           uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount,
+  ActivePS(PSLockRef aLock, const TimeStamp& aProfilingStartTime,
+           PowerOfTwo32 aCapacity, double aInterval, uint32_t aFeatures,
+           const char** aFilters, uint32_t aFilterCount,
            const Maybe<double>& aDuration)
-      : mGeneration(sNextGeneration++),
+      : mProfilingStartTime(aProfilingStartTime),
+        mGeneration(sNextGeneration++),
         mCapacity(aCapacity),
         mDuration(aDuration),
         mInterval(aInterval),
@@ -674,12 +676,13 @@ class ActivePS {
   }
 
  public:
-  static void Create(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
+  static void Create(PSLockRef aLock, const TimeStamp& aProfilingStartTime,
+                     PowerOfTwo32 aCapacity, double aInterval,
                      uint32_t aFeatures, const char** aFilters,
                      uint32_t aFilterCount, const Maybe<double>& aDuration) {
     MOZ_ASSERT(!sInstance);
-    sInstance = new ActivePS(aLock, aCapacity, aInterval, aFeatures, aFilters,
-                             aFilterCount, aDuration);
+    sInstance = new ActivePS(aLock, aProfilingStartTime, aCapacity, aInterval,
+                             aFeatures, aFilters, aFilterCount, aDuration);
   }
 
   [[nodiscard]] static SamplerThread* Destroy(PSLockRef aLock) {
@@ -740,6 +743,8 @@ class ActivePS {
     MOZ_ASSERT(sInstance);
     return sInstance->ThreadSelected(aInfo->Name());
   }
+
+  PS_GET_LOCKLESS(TimeStamp, ProfilingStartTime)
 
   PS_GET(uint32_t, Generation)
 
@@ -981,6 +986,8 @@ class ActivePS {
   // The singleton instance.
   static ActivePS* sInstance;
 
+  const TimeStamp mProfilingStartTime;
+
   // We need to track activity generations. If we didn't we could have the
   // following scenario.
   //
@@ -1064,6 +1071,17 @@ uint32_t ActivePS::sNextGeneration = 0;
 #undef PS_GET_AND_SET
 
 namespace detail {
+
+TimeStamp GetProfilingStartTime() {
+  if (!CorePS::Exists()) {
+    return {};
+  }
+  PSAutoLock lock;
+  if (!ActivePS::Exists(lock)) {
+    return {};
+  }
+  return ActivePS::ProfilingStartTime();
+}
 
 [[nodiscard]] MFBT_API UniquePtr<ProfileBufferChunkManagerWithLocalLimit>
 ExtractBaseProfilerChunkManager() {
@@ -1831,13 +1849,16 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
   // ProcessStartTime)) to convert CorePS::ProcessStartTime() into that form.
+  // Note: This is the only absolute time in the profile! All other timestamps
+  // are relative to this startTime.
   TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
   aWriter.DoubleProperty(
       "startTime", MicrosecondsSince1970() / 1000.0 - delta.ToMilliseconds());
 
-  // Write the shutdownTime field. Unlike startTime, shutdownTime is not an
-  // absolute time stamp: It's relative to startTime. This is consistent with
-  // all other (non-"startTime") times anywhere in the profile JSON.
+  aWriter.DoubleProperty("profilingStartTime", (ActivePS::ProfilingStartTime() -
+                                                CorePS::ProcessStartTime())
+                                                   .ToMilliseconds());
+
   if (aIsShuttingDown) {
     aWriter.DoubleProperty("shutdownTime", profiler_time());
   } else {
@@ -3068,6 +3089,8 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters, uint32_t aFilterCount,
                                   const Maybe<double>& aDuration) {
+  const TimeStamp profilingStartTime = TimeStamp::Now();
+
   if (LOG_TEST) {
     LOG("locked_profiler_start");
     LOG("- capacity  = %d", int(aCapacity.Value()));
@@ -3111,8 +3134,8 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   }
   double interval = aInterval > 0 ? aInterval : BASE_PROFILER_DEFAULT_INTERVAL;
 
-  ActivePS::Create(aLock, capacity, interval, aFeatures, aFilters, aFilterCount,
-                   duration);
+  ActivePS::Create(aLock, profilingStartTime, capacity, interval, aFeatures,
+                   aFilters, aFilterCount, duration);
 
   // Set up profiling for each registered thread, if appropriate.
   const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
