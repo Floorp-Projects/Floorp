@@ -52,7 +52,7 @@ class PocketRecommendationsDatabaseTest {
     @After
     fun tearDown() {
         executor.shutdown()
-        database.close()
+        database.clearAllTables()
     }
 
     @Test
@@ -388,6 +388,303 @@ class PocketRecommendationsDatabaseTest {
             assertEquals(impression.spocId, cursor.getInt(0))
             assertEquals(impression.impressionId, cursor.getInt(1))
             assertEquals(impression.impressionDateInSeconds, cursor.getLong(2))
+        }
+    }
+
+    @Test
+    fun `test3To4MigrationAddsNewIndexKeepsOldDataAndAllowsNewData`() = runBlocking {
+        // Create the database with the version 3 schema
+        val dbVersion3 = helper.createDatabase(MIGRATION_TEST_DB, 3).apply {
+            execSQL(
+                "INSERT INTO " +
+                    "'${Companion.TABLE_NAME_STORIES}' " +
+                    "(url, title, imageUrl, publisher, category, timeToRead, timesShown) " +
+                    "VALUES (" +
+                    "'${story.url}'," +
+                    "'${story.title}'," +
+                    "'${story.imageUrl}'," +
+                    "'${story.publisher}'," +
+                    "'${story.category}'," +
+                    "'${story.timeToRead}'," +
+                    "'${story.timesShown}'" +
+                    ")"
+            )
+            execSQL(
+                "INSERT INTO " +
+                    "'${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}' (" +
+                    "id, url, title, imageUrl, sponsor, clickShim, impressionShim, " +
+                    "priority, lifetimeCapCount, flightCapCount, flightCapPeriod" +
+                    ") VALUES (" +
+                    "'${spoc.id}'," +
+                    "'${spoc.url}'," +
+                    "'${spoc.title}'," +
+                    "'${spoc.imageUrl}'," +
+                    "'${spoc.sponsor}'," +
+                    "'${spoc.clickShim}'," +
+                    "'${spoc.impressionShim}'," +
+                    "'${spoc.priority}'," +
+                    "'${spoc.lifetimeCapCount}'," +
+                    "'${spoc.flightCapCount}'," +
+                    "'${spoc.flightCapPeriod}'" +
+                    ")"
+            )
+            execSQL(
+                "INSERT INTO " +
+                    "'${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}' (" +
+                    "spocId, impressionId, impressionDateInSeconds" +
+                    ") VALUES (" +
+                    "${spoc.id}, 0, 1" +
+                    ")"
+            )
+            // Add a new impression of the same spoc to test proper the index uniqueness
+            execSQL(
+                "INSERT INTO " +
+                    "'${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}' (" +
+                    "spocId, impressionId, impressionDateInSeconds" +
+                    ") VALUES (" +
+                    "${spoc.id}, 1, 2" +
+                    ")"
+            )
+        }
+
+        // Validate the data before migration
+        dbVersion3.query(
+            "SELECT * FROM ${Companion.TABLE_NAME_STORIES}"
+        ).use { cursor ->
+            assertEquals(1, cursor.count)
+
+            cursor.moveToFirst()
+            assertEquals(
+                story,
+                PocketStoryEntity(
+                    url = cursor.getString(0),
+                    title = cursor.getString(1),
+                    imageUrl = cursor.getString(2),
+                    publisher = cursor.getString(3),
+                    category = cursor.getString(4),
+                    timeToRead = cursor.getInt(5),
+                    timesShown = cursor.getLong(6),
+                )
+            )
+        }
+        dbVersion3.query(
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS}"
+        ).use { cursor ->
+            assertEquals(1, cursor.count)
+
+            cursor.moveToFirst()
+            assertEquals(
+                spoc,
+                SpocEntity(
+                    id = cursor.getInt(0),
+                    url = cursor.getString(1),
+                    title = cursor.getString(2),
+                    imageUrl = cursor.getString(3),
+                    sponsor = cursor.getString(4),
+                    clickShim = cursor.getString(5),
+                    impressionShim = cursor.getString(6),
+                    priority = cursor.getInt(7),
+                    lifetimeCapCount = cursor.getInt(8),
+                    flightCapCount = cursor.getInt(9),
+                    flightCapPeriod = cursor.getInt(10),
+                )
+            )
+        }
+        dbVersion3.query(
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS_IMPRESSIONS}"
+        ).use { cursor ->
+            assertEquals(2, cursor.count)
+
+            cursor.moveToFirst()
+            assertEquals(spoc.id, cursor.getInt(0))
+            cursor.moveToNext()
+            assertEquals(spoc.id, cursor.getInt(0))
+        }
+
+        // Migrate to v4 database
+        val dbVersion4 = helper.runMigrationsAndValidate(
+            MIGRATION_TEST_DB, 4, true, Migrations.migration_3_4
+        )
+
+        // Check that we have the same data as before. Just that a new index was added for faster queries.
+        dbVersion4.query(
+            "SELECT * FROM ${Companion.TABLE_NAME_STORIES}"
+        ).use { cursor ->
+            assertEquals(1, cursor.count)
+
+            cursor.moveToFirst()
+            assertEquals(
+                story,
+                PocketStoryEntity(
+                    url = cursor.getString(0),
+                    title = cursor.getString(1),
+                    imageUrl = cursor.getString(2),
+                    publisher = cursor.getString(3),
+                    category = cursor.getString(4),
+                    timeToRead = cursor.getInt(5),
+                    timesShown = cursor.getLong(6),
+                )
+            )
+        }
+        dbVersion4.query(
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS}"
+        ).use { cursor ->
+            assertEquals(1, cursor.count)
+
+            cursor.moveToFirst()
+            assertEquals(
+                spoc,
+                SpocEntity(
+                    id = cursor.getInt(0),
+                    url = cursor.getString(1),
+                    title = cursor.getString(2),
+                    imageUrl = cursor.getString(3),
+                    sponsor = cursor.getString(4),
+                    clickShim = cursor.getString(5),
+                    impressionShim = cursor.getString(6),
+                    priority = cursor.getInt(7),
+                    lifetimeCapCount = cursor.getInt(8),
+                    flightCapCount = cursor.getInt(9),
+                    flightCapPeriod = cursor.getInt(10),
+                )
+            )
+        }
+        dbVersion4.query(
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS_IMPRESSIONS}"
+        ).use { cursor ->
+            assertEquals(2, cursor.count)
+
+            cursor.moveToFirst()
+            assertEquals(spoc.id, cursor.getInt(0))
+            cursor.moveToNext()
+            assertEquals(spoc.id, cursor.getInt(0))
+        }
+
+        // After adding an index check that inserting new data works as expected
+        val otherSpoc = spoc.copy(
+            id = spoc.id + 2,
+            url = spoc.url + "2",
+            title = spoc.title + "2",
+            imageUrl = spoc.imageUrl + "2",
+            sponsor = spoc.sponsor + "2",
+            clickShim = spoc.clickShim + "2",
+            impressionShim = spoc.impressionShim + "2",
+            priority = spoc.priority + 2,
+            lifetimeCapCount = spoc.lifetimeCapCount - 2,
+            flightCapCount = spoc.flightCapPeriod * 2,
+            flightCapPeriod = spoc.flightCapPeriod / 2,
+        )
+        dbVersion4.execSQL(
+            "INSERT INTO " +
+                "'${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}' (" +
+                "id, url, title, imageUrl, sponsor, clickShim, impressionShim, " +
+                "priority, lifetimeCapCount, flightCapCount, flightCapPeriod" +
+                ") VALUES (" +
+                "'${otherSpoc.id}'," +
+                "'${otherSpoc.url}'," +
+                "'${otherSpoc.title}'," +
+                "'${otherSpoc.imageUrl}'," +
+                "'${otherSpoc.sponsor}'," +
+                "'${otherSpoc.clickShim}'," +
+                "'${otherSpoc.impressionShim}'," +
+                "'${otherSpoc.priority}'," +
+                "'${otherSpoc.lifetimeCapCount}'," +
+                "'${otherSpoc.flightCapCount}'," +
+                "'${otherSpoc.flightCapPeriod}'" +
+                ")"
+        )
+        dbVersion4.execSQL(
+            "INSERT INTO " +
+                "'${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}' (" +
+                "spocId, impressionId, impressionDateInSeconds" +
+                ") VALUES (" +
+                "${spoc.id}, 22, 33" +
+                ")"
+        )
+        // Test a new spoc and a new impressions of it are properly recorded.Z
+        dbVersion4.execSQL(
+            "INSERT INTO " +
+                "'${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}' (" +
+                "spocId, impressionId, impressionDateInSeconds" +
+                ") VALUES (" +
+                "${otherSpoc.id}, 23, 34" +
+                ")"
+        )
+        // Add a new impression of the same spoc to test proper the index uniqueness
+        dbVersion4.execSQL(
+            "INSERT INTO " +
+                "'${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}' (" +
+                "spocId, impressionId, impressionDateInSeconds" +
+                ") VALUES (" +
+                "${otherSpoc.id}, 24, 35" +
+                ")"
+        )
+        dbVersion4.query(
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS} ORDER BY 'id'"
+        ).use { cursor ->
+            assertEquals(2, cursor.count)
+
+            cursor.moveToFirst()
+            assertEquals(
+                spoc,
+                SpocEntity(
+                    id = cursor.getInt(0),
+                    url = cursor.getString(1),
+                    title = cursor.getString(2),
+                    imageUrl = cursor.getString(3),
+                    sponsor = cursor.getString(4),
+                    clickShim = cursor.getString(5),
+                    impressionShim = cursor.getString(6),
+                    priority = cursor.getInt(7),
+                    lifetimeCapCount = cursor.getInt(8),
+                    flightCapCount = cursor.getInt(9),
+                    flightCapPeriod = cursor.getInt(10),
+                )
+            )
+
+            cursor.moveToNext()
+            assertEquals(
+                otherSpoc,
+                SpocEntity(
+                    id = cursor.getInt(0),
+                    url = cursor.getString(1),
+                    title = cursor.getString(2),
+                    imageUrl = cursor.getString(3),
+                    sponsor = cursor.getString(4),
+                    clickShim = cursor.getString(5),
+                    impressionShim = cursor.getString(6),
+                    priority = cursor.getInt(7),
+                    lifetimeCapCount = cursor.getInt(8),
+                    flightCapCount = cursor.getInt(9),
+                    flightCapPeriod = cursor.getInt(10),
+                )
+            )
+        }
+        dbVersion4.query(
+            "SELECT * FROM ${Companion.TABLE_NAME_SPOCS_IMPRESSIONS} ORDER BY 'impressionId'"
+        ).use { cursor ->
+            assertEquals(5, cursor.count)
+
+            cursor.moveToFirst()
+            assertEquals(spoc.id, cursor.getInt(0))
+            assertEquals(0, cursor.getInt(1))
+            assertEquals(1, cursor.getInt(2))
+            cursor.moveToNext()
+            assertEquals(spoc.id, cursor.getInt(0))
+            assertEquals(1, cursor.getInt(1))
+            assertEquals(2, cursor.getInt(2))
+            cursor.moveToNext()
+            assertEquals(spoc.id, cursor.getInt(0))
+            assertEquals(22, cursor.getInt(1))
+            assertEquals(33, cursor.getInt(2))
+            cursor.moveToNext()
+            assertEquals(otherSpoc.id, cursor.getInt(0))
+            assertEquals(23, cursor.getInt(1))
+            assertEquals(34, cursor.getInt(2))
+            cursor.moveToNext()
+            assertEquals(otherSpoc.id, cursor.getInt(0))
+            assertEquals(24, cursor.getInt(1))
+            assertEquals(35, cursor.getInt(2))
         }
     }
 }

@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
 * **service-pocket**
+  * Add an index for sponsored stories foreign key to resolve a compilation warning. [#12406](https://github.com/mozilla-mobile/android-components/issues/12406)
+
+* **service-pocket**
   * Fix recent breakage of the sponsored stories feature and allow to dynamically make requests to either the development server or the production one. [Issue #12432](https://github.com/mozilla-mobile/android-components/issues/12432)
 
 * **feature-top-sites**

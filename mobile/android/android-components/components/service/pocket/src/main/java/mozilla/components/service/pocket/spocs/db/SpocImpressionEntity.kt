@@ -6,6 +6,7 @@ package mozilla.components.service.pocket.spocs.db
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabase
 
@@ -30,6 +31,9 @@ import mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabas
             childColumns = arrayOf("spocId"),
             onDelete = ForeignKey.CASCADE,
         )
+    ],
+    indices = [
+        Index(value = ["spocId"], unique = false)
     ]
 )
 internal data class SpocImpressionEntity(
