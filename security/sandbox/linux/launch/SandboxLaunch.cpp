@@ -468,21 +468,8 @@ static void RestoreSignals(const sigset_t* aOldSigs) {
   }
 }
 
-static bool IsSignalIgnored(int aSig) {
-  struct sigaction sa {};
-
-  if (sigaction(aSig, nullptr, &sa) != 0) {
-    SANDBOX_LOG_ERROR("sigaction(%d): %s", aSig, strerror(errno));
-    return false;
-  }
-  return sa.sa_handler == SIG_IGN;
-}
-
 static void ResetSignalHandlers() {
   for (int signum = 1; signum <= SIGRTMAX; ++signum) {
-    if (IsSignalIgnored(signum)) {
-      continue;
-    }
     if (signal(signum, SIG_DFL) == SIG_ERR) {
       MOZ_DIAGNOSTIC_ASSERT(errno == EINVAL);
     }
