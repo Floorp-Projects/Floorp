@@ -497,7 +497,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   // Search for existing cmap that matches the input; return the input if no
   // match is found.
-  gfxCharacterMap* FindCharMap(gfxCharacterMap* aCmap);
+  already_AddRefed<gfxCharacterMap> FindCharMap(gfxCharacterMap* aCmap);
 
   // Remove the cmap from the shared cmap set.
   void RemoveCmap(const gfxCharacterMap* aCharMap);

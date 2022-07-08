@@ -1884,12 +1884,13 @@ fontlist::Pointer gfxPlatformFontList::GetShmemCharMapLocked(
 }
 
 // lookup cmap in the shared cmap set, adding if not already present
-gfxCharacterMap* gfxPlatformFontList::FindCharMap(gfxCharacterMap* aCmap) {
+already_AddRefed<gfxCharacterMap> gfxPlatformFontList::FindCharMap(
+    gfxCharacterMap* aCmap) {
   AutoLock lock(mLock);
   aCmap->CalcHash();
   gfxCharacterMap* cmap = mSharedCmaps.PutEntry(aCmap)->GetKey();
   cmap->mShared = true;
-  return cmap;
+  return do_AddRef(cmap);
 }
 
 // remove the cmap from the shared cmap set
