@@ -278,17 +278,22 @@ static void MaybeSanitizeException(JSContext* cx,
   // to less-privileged code.
   nsIPrincipal* callerPrincipal = nsContentUtils::SubjectPrincipal(cx);
 
+  // No need to sanitize uncatchable exceptions, just return.
+  if (!JS_IsExceptionPending(cx)) {
+    return;
+  }
+
   // Re-enter the unwrappedFun Realm to do get the current exception, so we
   // don't end up unnecessarily wrapping exceptions.
   {  // Scope for JSAutoRealm
     JSAutoRealm ar(cx, unwrappedFun);
 
     JS::ExceptionStack exnStack(cx);
-    // If JS::GetPendingExceptionStack returns false, this was an uncatchable
-    // exception, or we somehow failed to wrap the exception into our
-    // compartment.  In either case, treating this as uncatchable exception,
-    // by returning without setting any exception on the JSContext,
-    // seems fine.
+
+    // If JS::GetPendingExceptionStack returns false, we somehow failed to wrap
+    // the exception into our compartment. It seems fine to treat this as an
+    // uncatchable exception by returning without setting any exception on the
+    // JS context.
     if (!JS::GetPendingExceptionStack(cx, &exnStack)) {
       JS_ClearPendingException(cx);
       return;
