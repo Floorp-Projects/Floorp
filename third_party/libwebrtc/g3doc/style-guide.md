@@ -28,7 +28,7 @@ WebRTC is written in C++17, but with some restrictions:
 * We only allow the subset of C++17 that is also valid C++20; otherwise, users
   would not be able to compile WebRTC in C++20 mode.
 
-[chr-style-cpp]: https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++11.md
+[chr-style-cpp]: https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++-features.md
 
 Unlike the Chromium and Google C++ style guides, we do not allow C++20-style
 designated initializers, because we want to stay compatible with compilers that
@@ -146,7 +146,7 @@ In most cases, one will want to explicitly control lifetimes, and therefore use
 exist both from the API users and internally, with no way to invalidate pointers
 held by the API user, `rtc::scoped_refptr` can be appropriate.
 
-[chr-std-shared-ptr]: https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++11.md#shared-pointers-banned
+[chr-std-shared-ptr]: https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++-features.md#shared-pointers-banned
 
 ### `std::bind`
 
