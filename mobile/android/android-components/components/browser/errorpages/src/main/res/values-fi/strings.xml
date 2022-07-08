@@ -123,7 +123,7 @@
     <string name="mozac_browser_errorpages_port_blocked_title">Portin käyttöä rajoitettu tietoturvasyistä</string>
 
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
-    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Pyydetty osoite sisältää käytettävän portin (esim. <q>mozilla.org:80</q> ottaa yhteyden mozilla.orgin porttiin 80), joka ei normaalisti ole tarpeen selatessa verkkosivuja. Selain on perunut verkkopyynnön turvallisuussyistä.</p>]]></string>
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Pyydetty osoite sisältää käytettävän portin (esim. <q>mozilla.org:80</q> ottaa yhteyden mozilla.orgin porttiin 80), jota tavallisesti käytetään <em>muuhun</em> kuin verkkosivujen selaamiseen. Selain on perunut verkkopyynnön turvallisuussyistä.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Yhteys keskeytyi</string>
