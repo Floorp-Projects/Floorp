@@ -13,6 +13,7 @@
 #include "api/test/network_emulation/create_cross_traffic.h"
 #include "api/test/network_emulation/cross_traffic.h"
 #include "api/transport/goog_cc_factory.h"
+#include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "test/field_trial.h"
@@ -357,6 +358,57 @@ TEST(GoogCcNetworkControllerTest, UpdatesDelayBasedEstimate) {
       PacketTransmissionAndFeedbackBlock(controller.get(), kRunTimeMs, 50,
                                          current_time);
   EXPECT_LT(*target_bitrate_after_delay, *target_bitrate_before_delay);
+}
+
+TEST(GoogCcNetworkControllerTest, PaceAtMaxOfLowerLinkCapacityAndBwe) {
+  ScopedFieldTrials trial(
+      "WebRTC-Bwe-PaceAtMaxOfBweAndLowerLinkCapacity/Enabled/");
+  NetworkControllerTestFixture fixture;
+  std::unique_ptr<NetworkControllerInterface> controller =
+      fixture.CreateController();
+  Timestamp current_time = Timestamp::Millis(123);
+  NetworkControlUpdate update =
+      controller->OnProcessInterval({.at_time = current_time});
+  current_time += TimeDelta::Millis(100);
+  NetworkStateEstimate network_estimate = {.link_capacity_lower =
+                                               10 * kInitialBitrate};
+  update = controller->OnNetworkStateEstimate(network_estimate);
+  // OnNetworkStateEstimate does not trigger processing a new estimate. So add a
+  // dummy loss report to trigger a BWE update in the next process interval.
+  TransportLossReport loss_report;
+  loss_report.start_time = current_time;
+  loss_report.end_time = current_time;
+  loss_report.receive_time = current_time;
+  loss_report.packets_received_delta = 50;
+  loss_report.packets_lost_delta = 1;
+  update = controller->OnTransportLossReport(loss_report);
+  update = controller->OnProcessInterval({.at_time = current_time});
+  ASSERT_TRUE(update.pacer_config);
+  ASSERT_TRUE(update.target_rate);
+  ASSERT_LT(update.target_rate->target_rate,
+            network_estimate.link_capacity_lower);
+  EXPECT_EQ(update.pacer_config->data_rate().kbps(),
+            network_estimate.link_capacity_lower.kbps() * kDefaultPacingRate);
+
+  current_time += TimeDelta::Millis(100);
+  // Set a low link capacity estimate and verify that pacing rate is set
+  // relative to loss based/delay based estimate.
+  network_estimate = {.link_capacity_lower = 0.5 * kInitialBitrate};
+  update = controller->OnNetworkStateEstimate(network_estimate);
+  // Again, we need to inject a dummy loss report to trigger an update of the
+  // BWE in the next process interval.
+  loss_report.start_time = current_time;
+  loss_report.end_time = current_time;
+  loss_report.receive_time = current_time;
+  loss_report.packets_received_delta = 50;
+  loss_report.packets_lost_delta = 0;
+  update = controller->OnTransportLossReport(loss_report);
+  update = controller->OnProcessInterval({.at_time = current_time});
+  ASSERT_TRUE(update.target_rate);
+  ASSERT_GT(update.target_rate->target_rate,
+            network_estimate.link_capacity_lower);
+  EXPECT_EQ(update.pacer_config->data_rate().kbps(),
+            update.target_rate->target_rate.kbps() * kDefaultPacingRate);
 }
 
 // Test congestion window pushback on network delay happens.
