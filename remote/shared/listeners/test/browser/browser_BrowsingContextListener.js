@@ -28,6 +28,32 @@ add_task(async function test_attachedOnNewTab() {
   gBrowser.removeTab(tab);
 });
 
+add_task(async function test_attachedValidEmbedderElement() {
+  const listener = new BrowsingContextListener();
+
+  let hasEmbedderElement = false;
+  listener.on(
+    "attached",
+    (evtName, { browsingContext }) => {
+      hasEmbedderElement = !!browsingContext.embedderElement;
+    },
+    { once: true }
+  );
+
+  listener.startListening();
+
+  const tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+  ok(
+    hasEmbedderElement,
+    "Attached browsing context has a valid embedder element"
+  );
+
+  listener.stopListening();
+  gBrowser.removeTab(tab);
+});
+
 add_task(async function test_discardedOnCloseTab() {
   const listener = new BrowsingContextListener();
   const discarded = listener.once("discarded");
