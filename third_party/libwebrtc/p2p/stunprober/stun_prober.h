@@ -121,7 +121,7 @@ class RTC_EXPORT StunProber : public sigslot::has_slots<> {
              int stun_ta_interval_ms,
              int requests_per_ip,
              int timeout_ms,
-             const AsyncCallback finish_callback);
+             AsyncCallback finish_callback);
 
   // TODO(guoweis): The combination of Prepare() and Run() are equivalent to the
   // Start() above. Remove Start() once everything is migrated.

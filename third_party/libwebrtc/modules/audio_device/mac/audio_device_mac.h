@@ -169,16 +169,16 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   static void AtomicSet32(int32_t* theValue, int32_t newValue);
   static int32_t AtomicGet32(int32_t* theValue);
 
-  static void logCAMsg(const rtc::LoggingSeverity sev,
+  static void logCAMsg(rtc::LoggingSeverity sev,
                        const char* msg,
                        const char* err);
 
-  int32_t GetNumberDevices(const AudioObjectPropertyScope scope,
+  int32_t GetNumberDevices(AudioObjectPropertyScope scope,
                            AudioDeviceID scopedDeviceIds[],
-                           const uint32_t deviceListLength);
+                           uint32_t deviceListLength);
 
-  int32_t GetDeviceName(const AudioObjectPropertyScope scope,
-                        const uint16_t index,
+  int32_t GetDeviceName(AudioObjectPropertyScope scope,
+                        uint16_t index,
                         char* name);
 
   int32_t InitDevice(uint16_t userDeviceIndex,

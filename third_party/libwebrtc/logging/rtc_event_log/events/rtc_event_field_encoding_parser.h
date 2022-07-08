@@ -132,7 +132,7 @@ class EventParser {
   uint64_t ReadOptionalValuePositions();
   void ReadDeltasAndPopulateValues(FixedLengthEncodingParametersV3 params,
                                    uint64_t num_deltas,
-                                   const uint64_t base);
+                                   uint64_t base);
   RtcEventLogParseStatus ParseNumericFieldInternal(uint64_t value_bit_width,
                                                    FieldType field_type);
   RtcEventLogParseStatus ParseStringFieldInternal();

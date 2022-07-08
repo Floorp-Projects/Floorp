@@ -31,7 +31,7 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
   ~SimplePeerConnection() {}
 
   bool InitializePeerConnection(const char** turn_urls,
-                                const int no_of_urls,
+                                int no_of_urls,
                                 const char* username,
                                 const char* credential,
                                 bool is_receiver);
@@ -56,13 +56,13 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
       ICECANDIDATEREADYTOSEND_CALLBACK callback);
   bool SetRemoteDescription(const char* type, const char* sdp);
   bool AddIceCandidate(const char* sdp,
-                       const int sdp_mlineindex,
+                       int sdp_mlineindex,
                        const char* sdp_mid);
 
  protected:
   // create a peerconneciton and add the turn servers info to the configuration.
   bool CreatePeerConnection(const char** turn_urls,
-                            const int no_of_urls,
+                            int no_of_urls,
                             const char* username,
                             const char* credential);
   void CloseDataChannel();

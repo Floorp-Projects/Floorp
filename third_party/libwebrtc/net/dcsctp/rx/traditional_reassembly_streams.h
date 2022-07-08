@@ -55,8 +55,7 @@ class TraditionalReassemblyStreams : public ReassemblyStreams {
     explicit StreamBase(TraditionalReassemblyStreams* parent)
         : parent_(*parent) {}
 
-    size_t AssembleMessage(const ChunkMap::iterator start,
-                           const ChunkMap::iterator end);
+    size_t AssembleMessage(ChunkMap::iterator start, ChunkMap::iterator end);
     TraditionalReassemblyStreams& parent_;
   };
 

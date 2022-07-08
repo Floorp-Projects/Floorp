@@ -32,7 +32,7 @@ class Demuxer {
   explicit Demuxer(const std::map<uint8_t, MediaType>& payload_type_map);
   ~Demuxer() = default;
   MediaType GetMediaType(const uint8_t* packet_data,
-                         const size_t packet_length) const;
+                         size_t packet_length) const;
   const std::map<uint8_t, MediaType> payload_type_map_;
   RTC_DISALLOW_COPY_AND_ASSIGN(Demuxer);
 };

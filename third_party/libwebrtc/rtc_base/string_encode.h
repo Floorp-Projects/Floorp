@@ -80,7 +80,7 @@ size_t tokenize(absl::string_view source,
 // duplicates of delimiter ignored. Return false if the delimiter could not be
 // found, otherwise return true.
 bool tokenize_first(absl::string_view source,
-                    const char delimiter,
+                    char delimiter,
                     std::string* token,
                     std::string* rest);
 

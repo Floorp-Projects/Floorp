@@ -28,11 +28,11 @@ class TestPacketization : public AudioPacketizationCallback {
  public:
   TestPacketization(RTPStream* rtpStream, uint16_t frequency);
   ~TestPacketization();
-  int32_t SendData(const AudioFrameType frameType,
-                   const uint8_t payloadType,
-                   const uint32_t timeStamp,
+  int32_t SendData(AudioFrameType frameType,
+                   uint8_t payloadType,
+                   uint32_t timeStamp,
                    const uint8_t* payloadData,
-                   const size_t payloadSize,
+                   size_t payloadSize,
                    int64_t absolute_capture_timestamp_ms) override;
 
  private:
