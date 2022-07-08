@@ -30,14 +30,14 @@ window.onload = function() {
 
   const stacktrace = [
     {
-      filename: "http://myfile.com/mahscripts.js",
+      filename: "https://myfile.com/mahscripts.js",
       lineNumber: 55,
       columnNumber: 10,
       functionName: null,
     },
     {
       functionName: "loadFunc",
-      filename: "http://myfile.com/loader.js -> http://myfile.com/loadee.js",
+      filename: "https://myfile.com/loader.js -> https://myfile.com/loadee.js",
       lineNumber: 10,
     },
   ];
@@ -153,16 +153,16 @@ window.onload = function() {
     checkSmartFrameString({
       el: frameEls[0],
       functionName: "<anonymous>",
-      location: "http://myfile.com/mahscripts.js:55",
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55",
+      location: "https://myfile.com/mahscripts.js:55",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js:55",
     });
 
     // Check the third frame, the source should be parsed into a valid source URL
     checkSmartFrameString({
       el: frameEls[1],
       functionName: "loadFunc",
-      location: "http://myfile.com/loadee.js:10",
-      tooltip: "View source in Debugger → http://myfile.com/loadee.js:10",
+      location: "https://myfile.com/loadee.js:10",
+      tooltip: "View source in Debugger → https://myfile.com/loadee.js:10",
     });
   }
 

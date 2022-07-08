@@ -27,13 +27,13 @@ window.onload = function() {
   add_task(async function testHappyPath() {
     const stacktrace = [
       {
-        filename: "http://myfile.com/bundle.js",
+        filename: "https://myfile.com/bundle.js",
         lineNumber: 1,
         columnNumber: 10,
       },
       {
         functionName: "loadFunc",
-        filename: "http://myfile.com/bundle.js",
+        filename: "https://myfile.com/bundle.js",
         lineNumber: 2,
       },
     ];
@@ -92,13 +92,13 @@ window.onload = function() {
   add_task(async function testSlowSourcemapService() {
     const stacktrace = [
       {
-        filename: "http://myfile.com/bundle.js",
+        filename: "https://myfile.com/bundle.js",
         functionName: "last",
         lineNumber: 1,
         columnNumber: 10,
       },
       {
-        filename: "http://myfile.com/bundle.js",
+        filename: "https://myfile.com/bundle.js",
         functionName: "first",
         lineNumber: 2,
         columnNumber: 10,
@@ -123,7 +123,7 @@ window.onload = function() {
           setTimeout(() => {
             const newLine = Number(line.toString().repeat(2));
             callback({
-              url: "http://myfile.com/react.js",
+              url: "https://myfile.com/react.js",
               line: newLine,
               column,
             });
@@ -155,15 +155,15 @@ window.onload = function() {
     checkSmartFrameString({
       el: frameEls[0],
       functionName: "last",
-      location: "http://myfile.com/bundle.js:1",
-      tooltip: "View source in Debugger → http://myfile.com/bundle.js:1",
+      location: "https://myfile.com/bundle.js:1",
+      tooltip: "View source in Debugger → https://myfile.com/bundle.js:1",
     });
 
     checkSmartFrameString({
       el: frameEls[1],
       functionName: "first",
-      location: "http://myfile.com/bundle.js:2",
-      tooltip: "View source in Debugger → http://myfile.com/bundle.js:2",
+      location: "https://myfile.com/bundle.js:2",
+      tooltip: "View source in Debugger → https://myfile.com/bundle.js:2",
     });
 
     is(onReadyCount, 1, "onReady was called once");
@@ -184,19 +184,19 @@ window.onload = function() {
   add_task(async function testFlakySourcemapService() {
     const stacktrace = [
       {
-        filename: "http://myfile.com/bundle.js",
+        filename: "https://myfile.com/bundle.js",
         functionName: "last",
         lineNumber: 1,
         columnNumber: 10,
       },
       {
-        filename: "http://myfile.com/bundle.js",
+        filename: "https://myfile.com/bundle.js",
         functionName: "pending",
         lineNumber: 2,
         columnNumber: 10,
       },
       {
-        filename: "http://myfile.com/bundle.js",
+        filename: "https://myfile.com/bundle.js",
         functionName: "first",
         lineNumber: 3,
         columnNumber: 10,
@@ -226,7 +226,7 @@ window.onload = function() {
 
           const newLine = Number(line.toString().repeat(2));
           callback({
-            url: `http://myfile.com/file-${line}.js`,
+            url: `https://myfile.com/file-${line}.js`,
             line: newLine,
             column,
           });
@@ -261,21 +261,21 @@ window.onload = function() {
       el: frameEls[0],
       functionName: "last",
       location: "file-1.js:11",
-      tooltip: "View source in Debugger → http://myfile.com/file-1.js:11",
+      tooltip: "View source in Debugger → https://myfile.com/file-1.js:11",
     });
 
     checkSmartFrameString({
       el: frameEls[1],
       functionName: "pending",
       location: "bundle.js:2",
-      tooltip: "View source in Debugger → http://myfile.com/bundle.js:2",
+      tooltip: "View source in Debugger → https://myfile.com/bundle.js:2",
     });
 
     checkSmartFrameString({
       el: frameEls[2],
       functionName: "first",
       location: "file-3.js:33",
-      tooltip: "View source in Debugger → http://myfile.com/file-3.js:33",
+      tooltip: "View source in Debugger → https://myfile.com/file-3.js:33",
     });
 
     is(onReadyCount, 1, "onReady was only called once");

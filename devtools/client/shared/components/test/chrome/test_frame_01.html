@@ -34,7 +34,7 @@ window.onload = async function () {
     // Check when there's a column
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: 55,
         column: 10,
       }
@@ -43,26 +43,26 @@ window.onload = async function () {
       line: 55,
       column: 10,
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55:10",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js:55:10",
     });
 
     // Check when there's no column
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: 55,
       }
     }, {
       file: "mahscripts.js",
       line: 55,
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js:55",
     });
 
     // Check when column === 0
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: 55,
         column: 0,
       }
@@ -70,13 +70,13 @@ window.onload = async function () {
       file: "mahscripts.js",
       line: 55,
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js:55",
     });
 
     // Check when there's an error in CSS (View source in Style Editor)
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/cafebabe.css",
+        source: "https://myfile.com/cafebabe.css",
         line: 13,
       },
       messageSource: "css",
@@ -84,7 +84,7 @@ window.onload = async function () {
         file: "cafebabe.css",
         line: 13,
         shouldLink: true,
-        tooltip: "View source in Style Editor → http://myfile.com/cafebabe.css:13",
+        tooltip: "View source in Style Editor → https://myfile.com/cafebabe.css:13",
     });
 
 
@@ -144,33 +144,33 @@ window.onload = async function () {
     // no line/column info should render
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         column: 55,
       }
     }, {
       file: "mahscripts.js",
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js",
     });
 
     // Check when line is 0; this should be an invalid
     // line option, so don't render line/column
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: 0,
         column: 55,
       }
     }, {
       file: "mahscripts.js",
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js",
     });
 
     // Check that line and column can be strings
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: "10",
         column: "55",
       }
@@ -179,54 +179,54 @@ window.onload = async function () {
       line: 10,
       column: 55,
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:10:55",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js:10:55",
     });
 
     // Check that line and column can be strings,
     // and that the `0` rendering rules apply when they are strings as well
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: "0",
         column: "55",
       }
     }, {
       file: "mahscripts.js",
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js",
     });
 
     // Check that the showFullSourceUrl option works correctly
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: 0,
       },
       showFullSourceUrl: true
     }, {
-      file: "http://myfile.com/mahscripts.js",
+      file: "https://myfile.com/mahscripts.js",
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js",
     });
 
     // Check that the showFunctionName option works correctly
     await checkFrameComponent({
       frame: {
         functionDisplayName: "myfun",
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: 0,
       }
     }, {
       functionName: null,
       file: "mahscripts.js",
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js",
     });
 
     await checkFrameComponent({
       frame: {
         functionDisplayName: "myfun",
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: 0,
       },
       showFunctionName: true
@@ -234,13 +234,13 @@ window.onload = async function () {
       functionName: "myfun",
       file: "mahscripts.js",
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js",
     });
 
     // Check that anonymous function name is not displayed unless explicitly enabled
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: 0,
       },
       showFunctionName: true
@@ -248,12 +248,12 @@ window.onload = async function () {
       functionName: null,
       file: "mahscripts.js",
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js",
     });
 
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: 0,
       },
       showFunctionName: true,
@@ -262,13 +262,13 @@ window.onload = async function () {
       functionName: "<anonymous>",
       file: "mahscripts.js",
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js",
     });
 
     // Check if file is rendered with "/" for root documents when showEmptyPathAsHost is false
     await checkFrameComponent({
       frame: {
-        source: "http://www.cnn.com/",
+        source: "https://www.cnn.com/",
         line: "1",
       },
       showEmptyPathAsHost: false,
@@ -276,13 +276,13 @@ window.onload = async function () {
       file: "/",
       line: "1",
       shouldLink: true,
-      tooltip: "View source in Debugger → http://www.cnn.com/:1",
+      tooltip: "View source in Debugger → https://www.cnn.com/:1",
     });
 
     // Check if file is rendered with hostname for root documents when showEmptyPathAsHost is true
     await checkFrameComponent({
       frame: {
-        source: "http://www.cnn.com/",
+        source: "https://www.cnn.com/",
         line: "1",
       },
       showEmptyPathAsHost: true,
@@ -290,7 +290,7 @@ window.onload = async function () {
       file: "www.cnn.com",
       line: "1",
       shouldLink: true,
-      tooltip: "View source in Debugger → http://www.cnn.com/:1",
+      tooltip: "View source in Debugger → https://www.cnn.com/:1",
     });
 
     const resolvedLocation = {
@@ -327,7 +327,7 @@ window.onload = async function () {
     // a prefix should render before source
     await checkFrameComponent({
       frame: {
-        source: "http://myfile.com/mahscripts.js",
+        source: "https://myfile.com/mahscripts.js",
         line: 55,
         column: 10,
         options: { logPoint: true },
@@ -337,7 +337,7 @@ window.onload = async function () {
       line: 55,
       column: 10,
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55:10",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js:55:10",
     });
 
     function checkFrameComponent(input, expected) {

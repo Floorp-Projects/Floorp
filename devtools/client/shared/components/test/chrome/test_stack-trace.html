@@ -28,14 +28,14 @@ window.onload = function() {
   add_task(async function() {
     const stacktrace = [
       {
-        filename: "http://myfile.com/mahscripts.js",
+        filename: "https://myfile.com/mahscripts.js",
         lineNumber: 55,
         columnNumber: 10,
       },
       {
         asyncCause: "because",
         functionName: "loadFunc",
-        filename: "http://myfile.com/loadee.js",
+        filename: "https://myfile.com/loadee.js",
         lineNumber: 10,
       },
     ];
@@ -61,12 +61,12 @@ window.onload = function() {
     checkFrameString({
       el: frameEls[0],
       functionName: "<anonymous>",
-      source: "http://myfile.com/mahscripts.js",
-      file: "http://myfile.com/mahscripts.js",
+      source: "https://myfile.com/mahscripts.js",
+      file: "https://myfile.com/mahscripts.js",
       line: 55,
       column: 10,
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55:10",
+      tooltip: "View source in Debugger → https://myfile.com/mahscripts.js:55:10",
     });
 
     // Check the async cause node
@@ -78,12 +78,12 @@ window.onload = function() {
     checkFrameString({
       el: frameEls[2],
       functionName: "loadFunc",
-      source: "http://myfile.com/loadee.js",
-      file: "http://myfile.com/loadee.js",
+      source: "https://myfile.com/loadee.js",
+      file: "https://myfile.com/loadee.js",
       line: 10,
       column: null,
       shouldLink: true,
-      tooltip: "View source in Debugger → http://myfile.com/loadee.js:10",
+      tooltip: "View source in Debugger → https://myfile.com/loadee.js:10",
     });
 
     // Check the tabs and newlines in the stack trace textContent

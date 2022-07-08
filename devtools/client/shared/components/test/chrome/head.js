@@ -40,7 +40,7 @@ const TestRenderer = browserRequire(
   "devtools/client/shared/vendor/react-test-renderer"
 );
 
-var EXAMPLE_URL = "http://example.com/browser/browser/devtools/shared/test/";
+var EXAMPLE_URL = "https://example.com/browser/browser/devtools/shared/test/";
 
 SimpleTest.registerCleanupFunction(() => {
   window._snapshots = null;
