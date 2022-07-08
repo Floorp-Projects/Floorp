@@ -15,7 +15,7 @@
             android:id="@+id/icon"
             android:layout_width="@dimen/history_favicon_width_height"
             android:layout_height="@dimen/history_favicon_width_height"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="8dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent">
@@ -40,7 +40,7 @@
             android:id="@+id/title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="24dp"
             android:ellipsize="end"
             android:singleLine="true"
             android:textAlignment="viewStart"
@@ -58,7 +58,8 @@
             android:id="@+id/url"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:singleLine="true"
             android:textAlignment="viewStart"
@@ -77,9 +78,10 @@
             android:layout_height="@dimen/glyph_button_height"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_menu"
-            app:srcCompat="@drawable/ic_menu"
+            app:srcCompat="@drawable/ic_close"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginEnd="4dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
