@@ -4,20 +4,18 @@
 
 package org.mozilla.fenix.home.recentsyncedtabs
 
-import android.content.Context
-import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.concept.sync.DeviceType
-import mozilla.components.feature.syncedtabs.SyncedTabsFeature
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
-import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.lib.state.ext.flow
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.ext.withConstellation
 import mozilla.components.service.fxa.store.SyncStatus
 import mozilla.components.service.fxa.store.SyncStore
+import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.components.AppStore
@@ -29,40 +27,61 @@ import org.mozilla.fenix.GleanMetrics.RecentSyncedTabs
  * Delegate to handle layout updates and dispatch actions related to the recent synced tab.
  *
  * @property appStore Store to dispatch actions to when synced tabs are updated or errors encountered.
- * @property syncStore Store to observe Sync state from.
+ * @property syncStore Store to observe for changes to Sync and account status.
+ * @property storage Storage layer for synced tabs.
+ * @property accountManager Account manager to initiate Syncs and refresh devices.
  * @property coroutineScope The scope to collect Sync state Flow updates in.
- * @param accountManager Account manager used to retrieve synced tab state.
- * @param context [Context] used for retrieving the sync engine storage state.
- * @param storage Storage layer for synced tabs.
- * @param lifecycleOwner View lifecycle owner to determine start/stop state for feature.
  */
-@Suppress("LongParameterList")
 class RecentSyncedTabFeature(
     private val appStore: AppStore,
     private val syncStore: SyncStore,
+    private val storage: SyncedTabsStorage,
+    private val accountManager: FxaAccountManager,
     private val coroutineScope: CoroutineScope,
-    accountManager: FxaAccountManager,
-    context: Context,
-    storage: SyncedTabsStorage,
-    lifecycleOwner: LifecycleOwner,
-) : SyncedTabsView, LifecycleAwareFeature {
-    private val syncedTabsFeature by lazy {
-        SyncedTabsFeature(
-            view = this,
-            context = context,
-            storage = storage,
-            accountManager = accountManager,
-            lifecycleOwner = lifecycleOwner,
-            onTabClicked = {}
-        )
-    }
-
-    override var listener: SyncedTabsView.Listener? = null
+) : LifecycleAwareFeature {
 
     private var syncStartId: GleanTimerId? = null
     private var lastSyncedTab: RecentSyncedTab? = null
 
-    override fun startLoading() {
+    override fun start() {
+        collectAccountUpdates()
+        collectStatusUpdates()
+    }
+
+    override fun stop() = Unit
+
+    private fun collectAccountUpdates() {
+        syncStore.flow()
+            .ifChanged { state ->
+                state.account != null
+            }.onEach { state ->
+                if (state.account != null) {
+                    dispatchLoading()
+                    // Sync tabs storage will fail to retrieve tabs aren't refreshed, as that action
+                    // is what populates the device constellation state
+                    accountManager.withConstellation { refreshDevices() }
+                    accountManager.syncNow(SyncReason.User, customEngineSubset = listOf(SyncEngine.Tabs))
+                }
+            }.launchIn(coroutineScope)
+    }
+
+    private fun collectStatusUpdates() {
+        syncStore.flow()
+            .ifChanged { state ->
+                state.status
+            }.onEach { state ->
+                when (state.status) {
+                    SyncStatus.Idle -> dispatchSyncedTabs()
+                    SyncStatus.Error -> onError()
+                    SyncStatus.LoggedOut -> appStore.dispatch(
+                        AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)
+                    )
+                    else -> Unit
+                }
+            }.launchIn(coroutineScope)
+    }
+
+    private fun dispatchLoading() {
         syncStartId?.let { RecentSyncedTabs.recentSyncedTabTimeToLoad.cancel(it) }
         syncStartId = RecentSyncedTabs.recentSyncedTabTimeToLoad.start()
         if (appStore.state.recentSyncedTabState == RecentSyncedTabState.None) {
@@ -70,8 +89,8 @@ class RecentSyncedTabFeature(
         }
     }
 
-    override fun displaySyncedTabs(syncedTabs: List<SyncedDeviceTabs>) {
-        val syncedTab = syncedTabs
+    private suspend fun dispatchSyncedTabs() {
+        val syncedTab = storage.getSyncedDeviceTabs()
             .filterNot { it.device.isCurrentDevice || it.tabs.isEmpty() }
             .maxByOrNull { it.device.lastAccessTime ?: 0 }
             ?.let {
@@ -91,40 +110,10 @@ class RecentSyncedTabFeature(
         lastSyncedTab = syncedTab
     }
 
-    /**
-     * Note: This is called in success cases as well, but the state should only change if there
-     * isn't a tab displayed. The store's state isn't updated in time to rely on it for this
-     * condition, so local state is used instead.
-     */
-    override fun stopLoading() {
-        if (lastSyncedTab == null) {
-            appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None))
-        }
-    }
-
-    override fun onError(error: SyncedTabsView.ErrorType) {
+    private fun onError() {
         if (appStore.state.recentSyncedTabState == RecentSyncedTabState.Loading) {
             appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None))
         }
-    }
-
-    override fun start() {
-        syncedTabsFeature.start()
-        syncStore.flow()
-            .ifChanged { state -> state.status }
-            .onEach { state ->
-                when (state.status) {
-                    SyncStatus.LoggedOut -> appStore.dispatch(
-                        AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)
-                    )
-                    else -> Unit
-                }
-            }
-            .launchIn(coroutineScope)
-    }
-
-    override fun stop() {
-        syncedTabsFeature.stop()
     }
 
     private fun recordMetrics(

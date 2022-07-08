@@ -5,6 +5,8 @@
 package org.mozilla.fenix.home.recentsyncedtabs
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -19,11 +21,15 @@ import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
-import mozilla.components.feature.syncedtabs.view.SyncedTabsView
+import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.ext.withConstellation
+import mozilla.components.service.fxa.store.Account
 import mozilla.components.service.fxa.store.SyncAction
 import mozilla.components.service.fxa.store.SyncStatus
 import mozilla.components.service.fxa.store.SyncStore
+import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
@@ -80,6 +86,7 @@ class RecentSyncedTabFeatureTest {
 
     private val appStore: AppStore = mockk()
     private val accountManager: FxaAccountManager = mockk(relaxed = true)
+    private val storage: SyncedTabsStorage = mockk()
 
     private val syncStore = SyncStore()
 
@@ -94,198 +101,280 @@ class RecentSyncedTabFeatureTest {
         feature = RecentSyncedTabFeature(
             appStore = appStore,
             syncStore = syncStore,
-            coroutineScope = TestScope(),
             accountManager = accountManager,
-            context = mockk(relaxed = true),
-            storage = mockk(),
-            lifecycleOwner = mockk(),
+            storage = storage,
+            coroutineScope = TestScope(),
         )
     }
 
     @Test
-    fun `GIVEN that there is no current state WHEN loading is started THEN loading state is dispatched`() {
-        every { appStore.state } returns mockk {
-            every { recentSyncedTabState } returns RecentSyncedTabState.None
-        }
-
-        feature.startLoading()
-
-        verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Loading)) }
-    }
-
-    @Test
-    fun `WHEN empty synced tabs are displayed THEN no action is dispatched`() {
-        feature.displaySyncedTabs(listOf())
+    fun `GIVEN account is not available WHEN started THEN nothing is dispatched`() {
+        feature.start()
 
         verify(exactly = 0) { appStore.dispatch(any()) }
     }
 
     @Test
-    fun `WHEN displaying synced tabs THEN first active tab is used`() {
-        val tab = createActiveTab("title", "https://mozilla.org", null)
-        val displayedTabs = listOf(SyncedDeviceTabs(deviceAccessed1, listOf(tab)))
+    fun `GIVEN current tab state is none WHEN account becomes available THEN loading state is dispatched, devices are refreshed, and a sync is started`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
 
-        feature.displaySyncedTabs(displayedTabs)
-
-        val expectedTab = tab.toRecentSyncedTab(deviceAccessed1)
-
-        verify {
-            appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTab))
-            )
-        }
-    }
-
-    @Test
-    fun `WHEN displaying synced tabs THEN current device is filtered out`() {
-        val localTab = createActiveTab("local", "https://local.com", null)
-        val remoteTab = createActiveTab("remote", "https://mozilla.org", null)
-        val displayedTabs = listOf(
-            SyncedDeviceTabs(currentDevice, listOf(localTab)),
-            SyncedDeviceTabs(deviceAccessed1, listOf(remoteTab))
-        )
-
-        feature.displaySyncedTabs(displayedTabs)
-
-        val expectedTab = remoteTab.toRecentSyncedTab(deviceAccessed1)
-
-        verify {
-            appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTab))
-            )
-        }
-    }
-
-    @Test
-    fun `WHEN displaying synced tabs THEN any devices with empty tabs list are filtered out`() {
-        val remoteTab = createActiveTab("remote", "https://mozilla.org", null)
-        val displayedTabs = listOf(
-            SyncedDeviceTabs(deviceAccessed2, listOf()),
-            SyncedDeviceTabs(deviceAccessed1, listOf(remoteTab))
-        )
-
-        feature.displaySyncedTabs(displayedTabs)
-
-        val expectedTab = remoteTab.toRecentSyncedTab(deviceAccessed1)
-
-        verify {
-            appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTab))
-            )
-        }
-    }
-
-    @Test
-    fun `WHEN displaying synced tabs THEN most recently accessed device is used`() {
-        val firstTab = createActiveTab("first", "https://local.com", null)
-        val secondTab = createActiveTab("remote", "https://mozilla.org", null)
-        val displayedTabs = listOf(
-            SyncedDeviceTabs(deviceAccessed1, listOf(firstTab)),
-            SyncedDeviceTabs(deviceAccessed2, listOf(secondTab))
-        )
-
-        feature.displaySyncedTabs(displayedTabs)
-
-        val expectedTab = secondTab.toRecentSyncedTab(deviceAccessed2)
-
-        verify {
-            appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTab))
-            )
-        }
-    }
-
-    @Test
-    fun `WHEN synced tab displayed THEN labeled counter metric recorded with device type`() {
-        val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
-
-        feature.displaySyncedTabs(listOf(tab))
-
-        assertEquals(1, RecentSyncedTabs.recentSyncedTabShown["desktop"].testGetValue())
-    }
-
-    @Test
-    fun `GIVEN that tab previously started loading WHEN synced tab displayed THEN load time metric recorded`() {
-        every { appStore.state } returns mockk {
-            every { recentSyncedTabState } returns RecentSyncedTabState.None
-        }
-        val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
-
-        feature.startLoading()
-        feature.displaySyncedTabs(listOf(tab))
-
-        assertNotNull(RecentSyncedTabs.recentSyncedTabTimeToLoad.testGetValue())
-    }
-
-    @Test
-    fun `GIVEN that the displayed tab was the last displayed tab WHEN displayed THEN recorded as stale`() {
-        val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
-
-        feature.displaySyncedTabs(listOf(tab))
-        feature.displaySyncedTabs(listOf(tab))
-
-        assertEquals(1, RecentSyncedTabs.latestSyncedTabIsStale.testGetValue())
-    }
-
-    @Test
-    fun `GIVEN that the displayed tab was not the last displayed tab WHEN displayed THEN not recorded as stale`() {
-        val tab1 = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
-        val tab2 = SyncedDeviceTabs(deviceAccessed2, listOf(createActiveTab()))
-
-        feature.displaySyncedTabs(listOf(tab1))
-        feature.displaySyncedTabs(listOf(tab2))
-
-        assertNull(RecentSyncedTabs.latestSyncedTabIsStale.testGetValue())
-    }
-
-    @Test
-    fun `GIVEN that no tab is displayed WHEN stopLoading is called THEN none state dispatched`() {
-        feature.stopLoading()
-
-        verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
-    }
-
-    @Test
-    fun `GIVEN that a tab is displayed WHEN stopLoading is called THEN nothing dispatched`() {
-        val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
-
-        feature.displaySyncedTabs(listOf(tab))
-        feature.stopLoading()
-
-        verify(exactly = 0) { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
-    }
-
-    @Test
-    fun `GIVEN that feature is not loading WHEN error received THEN does not dispatch NONE state`() {
-        every { appStore.state } returns mockk {
-            every { recentSyncedTabState } returns RecentSyncedTabState.None
-        }
-        feature.onError(SyncedTabsView.ErrorType.NO_TABS_AVAILABLE)
-
-        verify(exactly = 0) { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
-    }
-
-    @Test
-    fun `GIVEN that feature is loading WHEN error received THEN dispatches NONE state`() {
-        every { appStore.state } returns mockk {
-            every { recentSyncedTabState } returns RecentSyncedTabState.Loading
-        }
-
-        feature.onError(SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE)
-
-        verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
-    }
-
-    @Test
-    fun `WHEN LoggedOut is observed THEN tab state is dispatched as none`() = runTest {
         every { appStore.state } returns mockk {
             every { recentSyncedTabState } returns RecentSyncedTabState.None
         }
 
         feature.start()
-        syncStore.setState(SyncStatus.LoggedOut)
         runCurrent()
 
+        verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Loading)) }
+        coVerify { accountManager.withConstellation { refreshDevices() } }
+        coVerify { accountManager.syncNow(reason = SyncReason.User, debounce = false, customEngineSubset = listOf(SyncEngine.Tabs)) }
+    }
+
+    @Test
+    fun `GIVEN current tab state is not none WHEN account becomes available THEN loading state is not dispatched`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.Loading
+        }
+
+        feature.start()
+        runCurrent()
+
+        verify(exactly = 0) { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Loading)) }
+    }
+
+    @Test
+    fun `GIVEN synced tabs WHEN status becomes idle THEN recent synced tab is dispatched`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.Loading
+        }
+        val activeTab = createActiveTab()
+        coEvery { storage.getSyncedDeviceTabs() } returns listOf(
+            SyncedDeviceTabs(
+                device = deviceAccessed1,
+                tabs = listOf(activeTab)
+            )
+        )
+
+        feature.start()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+
+        val expected = activeTab.toRecentSyncedTab(deviceAccessed1)
+        verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expected))) }
+    }
+
+    @Test
+    fun `GIVEN tabs from remote and current devices WHEN dispatching recent synced tab THEN current device is filtered out of dispatch`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.Loading
+        }
+        val localTab = createActiveTab("local", "https://local.com", null)
+        val remoteTab = createActiveTab("remote", "https://mozilla.org", null)
+        val syncedTabs = listOf(
+            SyncedDeviceTabs(currentDevice, listOf(localTab)),
+            SyncedDeviceTabs(deviceAccessed1, listOf(remoteTab))
+        )
+        coEvery { storage.getSyncedDeviceTabs() } returns syncedTabs
+
+        feature.start()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+
+        val expectedTab = remoteTab.toRecentSyncedTab(deviceAccessed1)
+        verify {
+            appStore.dispatch(
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTab))
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN there are devices with empty tabs list WHEN dispatching recent synced tab THEN devices with empty tabs list are filtered out`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.Loading
+        }
+        val remoteTab = createActiveTab("remote", "https://mozilla.org", null)
+        val syncedTabs = listOf(
+            SyncedDeviceTabs(deviceAccessed2, listOf()),
+            SyncedDeviceTabs(deviceAccessed1, listOf(remoteTab))
+        )
+        coEvery { storage.getSyncedDeviceTabs() } returns syncedTabs
+
+        feature.start()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+
+        val expectedTab = remoteTab.toRecentSyncedTab(deviceAccessed1)
+        verify {
+            appStore.dispatch(
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTab))
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN tabs from different remote devices WHEN dispatching recent synced tab THEN most recently accessed device is used`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.Loading
+        }
+        val firstTab = createActiveTab("first", "https://local.com", null)
+        val secondTab = createActiveTab("remote", "https://mozilla.org", null)
+        val syncedTabs = listOf(
+            SyncedDeviceTabs(deviceAccessed1, listOf(firstTab)),
+            SyncedDeviceTabs(deviceAccessed2, listOf(secondTab))
+        )
+        coEvery { storage.getSyncedDeviceTabs() } returns syncedTabs
+
+        feature.start()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+
+        val expectedTab = secondTab.toRecentSyncedTab(deviceAccessed2)
+        verify {
+            appStore.dispatch(
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTab))
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN synced tab dispatched THEN labeled counter metric recorded with device type`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.Loading
+        }
+        val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
+        coEvery { storage.getSyncedDeviceTabs() } returns listOf(tab)
+
+        feature.start()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+
+        assertEquals(1, RecentSyncedTabs.recentSyncedTabShown["desktop"].testGetValue())
+    }
+
+    @Test
+    fun `WHEN synced tab dispatched THEN load time metric recorded`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.None
+        }
+        val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
+        coEvery { storage.getSyncedDeviceTabs() } returns listOf(tab)
+
+        feature.start()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+
+        assertNotNull(RecentSyncedTabs.recentSyncedTabTimeToLoad.testGetValue())
+    }
+
+    @Test
+    fun `GIVEN that the dispatched tab was the last dispatched tab WHEN dispatched THEN recorded as stale`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.None
+        }
+        val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
+        coEvery { storage.getSyncedDeviceTabs() } returns listOf(tab)
+
+        feature.start()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+        syncStore.setState(status = SyncStatus.Started)
+        runCurrent()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+
+        assertEquals(1, RecentSyncedTabs.latestSyncedTabIsStale.testGetValue())
+    }
+
+    @Test
+    fun `GIVEN that the dispatched tab was not the last dispatched tab WHEN dispatched THEN not recorded as stale`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.None
+        }
+        val tabs1 = listOf(SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab())))
+        val tabs2 = listOf(SyncedDeviceTabs(deviceAccessed2, listOf(createActiveTab())))
+        coEvery { storage.getSyncedDeviceTabs() } returnsMany listOf(tabs1, tabs2)
+
+        feature.start()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+        syncStore.setState(status = SyncStatus.Started)
+        runCurrent()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+
+        assertNull(RecentSyncedTabs.latestSyncedTabIsStale.testGetValue())
+    }
+
+    @Test
+    fun `GIVEN current tab state is loading WHEN error is observed THEN tab state is dispatched as none`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returnsMany listOf(
+                RecentSyncedTabState.None,
+                RecentSyncedTabState.Loading
+            )
+        }
+
+        feature.start()
+        runCurrent()
+        syncStore.setState(status = SyncStatus.Error)
+        runCurrent()
+
+        verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
+    }
+
+    @Test
+    fun `GIVEN current tab state is not loading WHEN error is observed THEN nothing is dispatched`() = runTest {
+        feature.start()
+        syncStore.setState(status = SyncStatus.Error)
+        runCurrent()
+
+        verify(exactly = 0) { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
+    }
+
+    @Test
+    fun `GIVEN that a tab has been dispatched WHEN LoggedOut is observed THEN tab state is dispatched as none`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.None
+        }
+        val tab = createActiveTab()
+        coEvery { storage.getSyncedDeviceTabs() } returns listOf(
+            SyncedDeviceTabs(deviceAccessed1, listOf(tab))
+        )
+
+        feature.start()
+        runCurrent()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+        syncStore.setState(status = SyncStatus.LoggedOut)
+        runCurrent()
+
+        val expected = tab.toRecentSyncedTab(deviceAccessed1)
+        verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expected))) }
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
     }
 
@@ -310,9 +399,13 @@ class RecentSyncedTabFeatureTest {
 
     private fun SyncStore.setState(
         status: SyncStatus? = null,
+        account: Account? = null,
     ) {
         status?.let {
             this.dispatch(SyncAction.UpdateSyncStatus(status))
+        }
+        account?.let {
+            this.dispatch(SyncAction.UpdateAccount(account))
         }
         this.waitUntilIdle()
     }

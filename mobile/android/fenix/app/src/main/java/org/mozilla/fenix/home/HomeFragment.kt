@@ -275,11 +275,9 @@ class HomeFragment : Fragment() {
                     feature = RecentSyncedTabFeature(
                         appStore = requireComponents.appStore,
                         syncStore = requireComponents.backgroundServices.syncStore,
-                        coroutineScope = viewLifecycleOwner.lifecycleScope,
-                        context = requireContext(),
                         storage = requireComponents.backgroundServices.syncedTabsStorage,
                         accountManager = requireComponents.backgroundServices.accountManager,
-                        lifecycleOwner = viewLifecycleOwner,
+                        coroutineScope = viewLifecycleOwner.lifecycleScope,
                     ),
                     owner = viewLifecycleOwner,
                     view = binding.root
