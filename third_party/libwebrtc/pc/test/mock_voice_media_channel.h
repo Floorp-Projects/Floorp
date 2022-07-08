@@ -50,7 +50,7 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
   MOCK_METHOD(void, ResetUnsignaledRecvStream, (), (override));
   MOCK_METHOD(void, OnDemuxerCriteriaUpdatePending, (), (override));
   MOCK_METHOD(void, OnDemuxerCriteriaUpdateComplete, (), (override));
-  MOCK_METHOD(int, GetRtpSendTimeExtnId, (), (const override));
+  MOCK_METHOD(int, GetRtpSendTimeExtnId, (), (const, override));
   MOCK_METHOD(
       void,
       SetFrameEncryptor,
@@ -67,7 +67,7 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
   MOCK_METHOD(webrtc::RtpParameters,
               GetRtpSendParameters,
               (uint32_t ssrc),
-              (const override));
+              (const, override));
   MOCK_METHOD(webrtc::RTCError,
               SetRtpSendParameters,
               (uint32_t ssrc, const webrtc::RtpParameters& parameters),
@@ -96,11 +96,11 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
   MOCK_METHOD(webrtc::RtpParameters,
               GetRtpReceiveParameters,
               (uint32_t ssrc),
-              (const override));
+              (const, override));
   MOCK_METHOD(webrtc::RtpParameters,
               GetDefaultRtpReceiveParameters,
               (),
-              (const override));
+              (const, override));
   MOCK_METHOD(void, SetPlayout, (bool playout), (override));
   MOCK_METHOD(void, SetSend, (bool send), (override));
   MOCK_METHOD(bool,
@@ -135,7 +135,7 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
   MOCK_METHOD(std::vector<webrtc::RtpSource>,
               GetSources,
               (uint32_t ssrc),
-              (const override));
+              (const, override));
 
   MOCK_METHOD(bool,
               SetBaseMinimumPlayoutDelayMs,
@@ -144,7 +144,7 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
   MOCK_METHOD(absl::optional<int>,
               GetBaseMinimumPlayoutDelayMs,
               (uint32_t ssrc),
-              (const override));
+              (const, override));
 };
 }  // namespace cricket
 

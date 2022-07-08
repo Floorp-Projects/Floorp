@@ -48,11 +48,11 @@ class MockPeerConnectionFactoryInterface final
   MOCK_METHOD(RtpCapabilities,
               GetRtpSenderCapabilities,
               (cricket::MediaType),
-              (const override));
+              (const, override));
   MOCK_METHOD(RtpCapabilities,
               GetRtpReceiverCapabilities,
               (cricket::MediaType),
-              (const override));
+              (const, override));
   MOCK_METHOD(rtc::scoped_refptr<MediaStreamInterface>,
               CreateLocalMediaStream,
               (const std::string&),

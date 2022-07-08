@@ -40,7 +40,7 @@ constexpr int kSampleRate8kHz = 8000;
 
 class MockVad : public VoiceActivityDetectorWrapper::MonoVad {
  public:
-  MOCK_METHOD(int, SampleRateHz, (), (const override));
+  MOCK_METHOD(int, SampleRateHz, (), (const, override));
   MOCK_METHOD(void, Reset, (), (override));
   MOCK_METHOD(float, Analyze, (rtc::ArrayView<const float> frame), (override));
 };

@@ -67,7 +67,7 @@ class MockAudioTrack final : public rtc::RefCountedObject<AudioTrackInterface> {
               (ObserverInterface * observer),
               (override));
   MOCK_METHOD(std::string, kind, (), (const, override));
-  MOCK_METHOD(std::string, id, (), (const override));
+  MOCK_METHOD(std::string, id, (), (const, override));
   MOCK_METHOD(bool, enabled, (), (const, override));
   MOCK_METHOD(bool, set_enabled, (bool enable), (override));
   MOCK_METHOD(TrackState, state, (), (const, override));
