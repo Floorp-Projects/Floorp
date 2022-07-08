@@ -173,7 +173,12 @@ function Article(props) {
     utmParams,
     openInPocketReader
   } = props;
-  const url = new URL(article.url || article.resolved_url || "");
+
+  if (!article.url && !article.resolved_url && !article.given_url) {
+    return null;
+  }
+
+  const url = new URL(article.url || article.resolved_url || article.given_url);
   const urlSearchParams = new URLSearchParams(utmParams);
 
   if (openInPocketReader && article.item_id && !url.href.match(/getpocket\.com\/read/)) {
@@ -187,7 +192,7 @@ function Article(props) {
 
   const thumbnail = article.thumbnail || encodeThumbnail(article?.top_image_url || article?.images?.["1"]?.src);
   const alt = article.alt || "thumbnail image";
-  const title = article.title || article.resolved_title; // Sometimes domain_metadata is not there, depending on the source.
+  const title = article.title || article.resolved_title || article.given_title; // Sometimes domain_metadata is not there, depending on the source.
 
   const publisher = article.publisher || article.domain_metadata?.name || article.resolved_domain;
   return /*#__PURE__*/react.createElement("li", {
