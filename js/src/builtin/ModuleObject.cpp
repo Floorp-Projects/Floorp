@@ -805,9 +805,9 @@ ScriptSourceObject* ModuleObject::scriptSourceObject() const {
               .as<ScriptSourceObject>();
 }
 
-bool ModuleObject::initAsyncSlots(JSContext* cx, bool isAsync,
+bool ModuleObject::initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
                                   HandleObject asyncParentModulesList) {
-  initReservedSlot(AsyncSlot, BooleanValue(isAsync));
+  initReservedSlot(HasTopLevelAwaitSlot, BooleanValue(hasTopLevelAwait));
   initReservedSlot(AsyncParentModulesSlot,
                    ObjectValue(*asyncParentModulesList));
   return true;
@@ -961,8 +961,8 @@ void ModuleObject::setStatus(ModuleStatus newStatus) {
   setReservedSlot(StatusSlot, ModuleStatusValue(newStatus));
 }
 
-bool ModuleObject::isAsync() const {
-  return getReservedSlot(AsyncSlot).toBoolean();
+bool ModuleObject::hasTopLevelAwait() const {
+  return getReservedSlot(HasTopLevelAwaitSlot).toBoolean();
 }
 
 bool ModuleObject::isAsyncEvaluating() const {
@@ -1212,7 +1212,7 @@ bool ModuleObject::execute(JSContext* cx, Handle<ModuleObject*> self) {
   RootedScript script(cx, self->script());
 
   auto guardA = mozilla::MakeScopeExit([&] {
-    if (self->isAsync()) {
+    if (self->hasTopLevelAwait()) {
       // Handled in AsyncModuleExecutionFulfilled and
       // AsyncModuleExecutionRejected.
       return;

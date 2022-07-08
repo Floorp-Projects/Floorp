@@ -305,7 +305,8 @@ DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeDfsIndex, Uint32OrUndefinedValue,
                         IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeDfsAncestorIndex,
                         Uint32OrUndefinedValue, IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, isAsync, BooleanValue, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, hasTopLevelAwait, BooleanValue,
+                        IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeTopLevelCapability,
                         ObjectOrUndefinedValue, IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeAsyncEvaluatingPostOrder,
@@ -332,7 +333,8 @@ static const JSPropertySpec ShellModuleObjectWrapper_accessors[] = {
     JS_PSG("dfsIndex", ShellModuleObjectWrapper_maybeDfsIndexGetter, 0),
     JS_PSG("dfsAncestorIndex",
            ShellModuleObjectWrapper_maybeDfsAncestorIndexGetter, 0),
-    JS_PSG("async", ShellModuleObjectWrapper_isAsyncGetter, 0),
+    JS_PSG("hasTopLevelAwait", ShellModuleObjectWrapper_hasTopLevelAwaitGetter,
+           0),
     JS_PSG("topLevelCapability",
            ShellModuleObjectWrapper_maybeTopLevelCapabilityGetter, 0),
     JS_PSG("asyncEvaluatingPostOrder",

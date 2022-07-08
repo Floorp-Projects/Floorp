@@ -1449,7 +1449,7 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
 
   // Step 12. If module.[[PendingAsyncDependencies]] > 0 or module.[[HasTLA]] is
   //          true, then:
-  if (module->pendingAsyncDependencies() > 0 || module->isAsync()) {
+  if (module->pendingAsyncDependencies() > 0 || module->hasTopLevelAwait()) {
     // Step 12.a. Assert: module.[[AsyncEvaluation]] is false and was never
     //            previously set to true.
     MOZ_ASSERT(!module->isAsyncEvaluating() && !module->wasAsyncEvaluating());
@@ -1521,7 +1521,7 @@ static bool ExecuteAsyncModule(JSContext* cx, Handle<ModuleObject*> module) {
              module->status() == ModuleStatus::Evaluated);
 
   // Step 2. Assert: module.[[HasTLA]] is true.
-  MOZ_ASSERT(module->isAsync());
+  MOZ_ASSERT(module->hasTopLevelAwait());
 
   // Steps 3 - 8 are performed by the AsyncAwait opcode.
 
@@ -1609,7 +1609,7 @@ static bool GatherAvailableModuleAncestors(
 
         // Step 1.a.vi.2. If m.[[HasTLA]] is false, perform
         //                GatherAvailableAncestors(m, execList).
-        if (!m->isAsync() &&
+        if (!m->hasTopLevelAwait() &&
             !::GatherAvailableModuleAncestors(cx, m, execList)) {
           return false;
         }
@@ -1671,7 +1671,7 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
       return;
     }
 
-    if (m->isAsync()) {
+    if (m->hasTopLevelAwait()) {
       MOZ_ALWAYS_TRUE(ExecuteAsyncModule(cx, m));
     } else {
       if (!ModuleObject::execute(cx, m)) {
