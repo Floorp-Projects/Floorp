@@ -1380,7 +1380,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvReloadWithHttpsOnlyException() {
 
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(insecureURI);
   loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
-  loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY);
+  loadState->SetLoadType(LOAD_NORMAL_REPLACE);
 
   BrowsingContext()->Top()->LoadURI(loadState, /* setNavigating */ true);
 
