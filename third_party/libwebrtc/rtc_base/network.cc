@@ -1168,6 +1168,51 @@ uint16_t Network::GetCost() const {
                                   add_network_cost_to_vpn_);
 }
 
+// This is the inverse of ComputeNetworkCostByType().
+std::pair<rtc::AdapterType, bool /* vpn */>
+Network::GuessAdapterFromNetworkCost(int network_cost) {
+  switch (network_cost) {
+    case kNetworkCostMin:
+      return {rtc::ADAPTER_TYPE_ETHERNET, false};
+    case kNetworkCostMin + kNetworkCostVpn:
+      return {rtc::ADAPTER_TYPE_ETHERNET, true};
+    case kNetworkCostLow:
+      return {rtc::ADAPTER_TYPE_WIFI, false};
+    case kNetworkCostLow + kNetworkCostVpn:
+      return {rtc::ADAPTER_TYPE_WIFI, true};
+    case kNetworkCostCellular:
+      return {rtc::ADAPTER_TYPE_CELLULAR, false};
+    case kNetworkCostCellular + kNetworkCostVpn:
+      return {rtc::ADAPTER_TYPE_CELLULAR, true};
+    case kNetworkCostCellular2G:
+      return {rtc::ADAPTER_TYPE_CELLULAR_2G, false};
+    case kNetworkCostCellular2G + kNetworkCostVpn:
+      return {rtc::ADAPTER_TYPE_CELLULAR_2G, true};
+    case kNetworkCostCellular3G:
+      return {rtc::ADAPTER_TYPE_CELLULAR_3G, false};
+    case kNetworkCostCellular3G + kNetworkCostVpn:
+      return {rtc::ADAPTER_TYPE_CELLULAR_3G, true};
+    case kNetworkCostCellular4G:
+      return {rtc::ADAPTER_TYPE_CELLULAR_4G, false};
+    case kNetworkCostCellular4G + kNetworkCostVpn:
+      return {rtc::ADAPTER_TYPE_CELLULAR_4G, true};
+    case kNetworkCostCellular5G:
+      return {rtc::ADAPTER_TYPE_CELLULAR_5G, false};
+    case kNetworkCostCellular5G + kNetworkCostVpn:
+      return {rtc::ADAPTER_TYPE_CELLULAR_5G, true};
+    case kNetworkCostUnknown:
+      return {rtc::ADAPTER_TYPE_UNKNOWN, false};
+    case kNetworkCostUnknown + kNetworkCostVpn:
+      return {rtc::ADAPTER_TYPE_UNKNOWN, true};
+    case kNetworkCostMax:
+      return {rtc::ADAPTER_TYPE_ANY, false};
+    case kNetworkCostMax + kNetworkCostVpn:
+      return {rtc::ADAPTER_TYPE_ANY, true};
+  }
+  RTC_LOG(LS_VERBOSE) << "Unknown network cost: " << network_cost;
+  return {rtc::ADAPTER_TYPE_UNKNOWN, false};
+}
+
 std::string Network::ToString() const {
   rtc::StringBuilder ss;
   // Print out the first space-terminated token of the network desc, plus
