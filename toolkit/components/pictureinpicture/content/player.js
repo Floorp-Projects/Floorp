@@ -98,6 +98,7 @@ let Player = {
     "MozDOMFullscreen:Exited",
     "resize",
     "unload",
+    "draggableregionleftmousedown",
   ],
   actor: null,
   /**
@@ -366,6 +367,11 @@ let Player = {
 
       case "unload": {
         this.uninit();
+        break;
+      }
+
+      case "draggableregionleftmousedown": {
+        document.querySelector("#settings").classList.add("hide");
         break;
       }
     }
