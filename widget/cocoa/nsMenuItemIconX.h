@@ -13,6 +13,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "mozilla/widget/IconLoader.h"
+#include "mozilla/WeakPtr.h"
 
 class nsIconLoaderService;
 class nsIURI;
@@ -62,7 +63,7 @@ class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
   Listener* mListener;  // [weak]
   nsIntRect mImageRegionRect;
   RefPtr<const mozilla::ComputedStyle> mComputedStyle;
-  RefPtr<nsPresContext> mPresContext;
+  mozilla::WeakPtr<nsPresContext> mPresContext;
   NSImage* mIconImage = nil;  // [strong]
   RefPtr<mozilla::widget::IconLoader> mIconLoader;
 };
