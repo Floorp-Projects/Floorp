@@ -98,6 +98,14 @@ bool AndroidCompositorWidget::OnResumeComposition() {
 
   ANativeWindow_release(nativeWindow);
 
+  // A negative return value from ANativeWindow_getWidth/Height can indicate the
+  // underlying BufferQueue has been abandoned, and subsequent EGLSurface
+  // creation will fail.
+  if (mClientSize.width < 0 || mClientSize.height < 0) {
+    gfxCriticalNote << "ANativeWindow_getWidth/Height returned error: "
+                    << mClientSize;
+  }
+
   return true;
 }
 
