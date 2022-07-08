@@ -604,6 +604,20 @@ bool gfxPlatformFontList::InitFontList() {
   }
   mDefaultFontEntry = fe;
 
+  // initialize lang group pref font defaults (i.e. serif/sans-serif)
+  mDefaultGenericsLangGroup.AppendElements(ArrayLength(gPrefLangNames));
+  for (uint32_t i = 0; i < ArrayLength(gPrefLangNames); i++) {
+    nsAutoCString prefDefaultFontType("font.default.");
+    prefDefaultFontType.Append(GetPrefLangName(eFontPrefLang(i)));
+    nsAutoCString serifOrSans;
+    Preferences::GetCString(prefDefaultFontType.get(), serifOrSans);
+    if (serifOrSans.EqualsLiteral("sans-serif")) {
+      mDefaultGenericsLangGroup[i] = StyleGenericFontFamily::SansSerif;
+    } else {
+      mDefaultGenericsLangGroup[i] = StyleGenericFontFamily::Serif;
+    }
+  }
+
   return true;
 }
 
@@ -2394,22 +2408,6 @@ StyleGenericFontFamily gfxPlatformFontList::GetDefaultGeneric(
   }
 
   AutoLock lock(mLock);
-
-  // initialize lang group pref font defaults (i.e. serif/sans-serif)
-  if (MOZ_UNLIKELY(mDefaultGenericsLangGroup.IsEmpty())) {
-    mDefaultGenericsLangGroup.AppendElements(ArrayLength(gPrefLangNames));
-    for (uint32_t i = 0; i < ArrayLength(gPrefLangNames); i++) {
-      nsAutoCString prefDefaultFontType("font.default.");
-      prefDefaultFontType.Append(GetPrefLangName(eFontPrefLang(i)));
-      nsAutoCString serifOrSans;
-      Preferences::GetCString(prefDefaultFontType.get(), serifOrSans);
-      if (serifOrSans.EqualsLiteral("sans-serif")) {
-        mDefaultGenericsLangGroup[i] = StyleGenericFontFamily::SansSerif;
-      } else {
-        mDefaultGenericsLangGroup[i] = StyleGenericFontFamily::Serif;
-      }
-    }
-  }
 
   if (uint32_t(aLang) < ArrayLength(gPrefLangNames)) {
     return mDefaultGenericsLangGroup[uint32_t(aLang)];
