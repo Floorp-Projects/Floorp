@@ -34,6 +34,7 @@ void RepeatingTaskImplDTraceProbeRun();
 class RepeatingTaskBase : public QueuedTask {
  public:
   RepeatingTaskBase(TaskQueueBase* task_queue,
+                    TaskQueueBase::DelayPrecision precision,
                     TimeDelta first_delay,
                     Clock* clock,
                     rtc::scoped_refptr<PendingTaskSafetyFlag> alive_flag);
@@ -45,6 +46,7 @@ class RepeatingTaskBase : public QueuedTask {
   bool Run() final;
 
   TaskQueueBase* const task_queue_;
+  const TaskQueueBase::DelayPrecision precision_;
   Clock* const clock_;
   // This is always finite.
   Timestamp next_run_time_ RTC_GUARDED_BY(task_queue_);
@@ -60,11 +62,13 @@ template <class Closure>
 class RepeatingTaskImpl final : public RepeatingTaskBase {
  public:
   RepeatingTaskImpl(TaskQueueBase* task_queue,
+                    TaskQueueBase::DelayPrecision precision,
                     TimeDelta first_delay,
                     Closure&& closure,
                     Clock* clock,
                     rtc::scoped_refptr<PendingTaskSafetyFlag> alive_flag)
       : RepeatingTaskBase(task_queue,
+                          precision,
                           first_delay,
                           clock,
                           std::move(alive_flag)),
@@ -106,17 +110,20 @@ class RepeatingTaskHandle {
   // owned by the TaskQueue and will live until it has been stopped or the
   // TaskQueue deletes it. It's perfectly fine to destroy the handle while the
   // task is running, since the repeated task is owned by the TaskQueue.
+  // The tasks are scheduled onto the task queue using the specified precision.
   template <class Closure>
   static RepeatingTaskHandle Start(TaskQueueBase* task_queue,
                                    Closure&& closure,
+                                   TaskQueueBase::DelayPrecision precision =
+                                       TaskQueueBase::DelayPrecision::kLow,
                                    Clock* clock = Clock::GetRealTimeClockRaw()) {
     auto alive_flag = PendingTaskSafetyFlag::CreateDetached();
     webrtc_repeating_task_impl::RepeatingTaskHandleDTraceProbeStart();
     task_queue->PostTask(
         std::make_unique<
             webrtc_repeating_task_impl::RepeatingTaskImpl<Closure>>(
-            task_queue, TimeDelta::Zero(), std::forward<Closure>(closure),
-            clock, alive_flag));
+            task_queue, precision, TimeDelta::Zero(),
+            std::forward<Closure>(closure), clock, alive_flag));
     return RepeatingTaskHandle(std::move(alive_flag));
   }
 
@@ -127,14 +134,17 @@ class RepeatingTaskHandle {
       TaskQueueBase* task_queue,
       TimeDelta first_delay,
       Closure&& closure,
+      TaskQueueBase::DelayPrecision precision =
+          TaskQueueBase::DelayPrecision::kLow,
       Clock* clock = Clock::GetRealTimeClockRaw()) {
     auto alive_flag = PendingTaskSafetyFlag::CreateDetached();
     webrtc_repeating_task_impl::RepeatingTaskHandleDTraceProbeDelayedStart();
-    task_queue->PostDelayedTask(
+    task_queue->PostDelayedTaskWithPrecision(
+        precision,
         std::make_unique<
             webrtc_repeating_task_impl::RepeatingTaskImpl<Closure>>(
-            task_queue, first_delay, std::forward<Closure>(closure), clock,
-            alive_flag),
+            task_queue, precision, first_delay, std::forward<Closure>(closure),
+            clock, alive_flag),
         first_delay.ms());
     return RepeatingTaskHandle(std::move(alive_flag));
   }

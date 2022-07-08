@@ -21,10 +21,12 @@ namespace webrtc_repeating_task_impl {
 
 RepeatingTaskBase::RepeatingTaskBase(
     TaskQueueBase* task_queue,
+    TaskQueueBase::DelayPrecision precision,
     TimeDelta first_delay,
     Clock* clock,
     rtc::scoped_refptr<PendingTaskSafetyFlag> alive_flag)
     : task_queue_(task_queue),
+      precision_(precision),
       clock_(clock),
       next_run_time_(clock_->CurrentTime() + first_delay),
       alive_flag_(std::move(alive_flag)) {}
@@ -51,7 +53,8 @@ bool RepeatingTaskBase::Run() {
   delay -= lost_time;
   delay = std::max(delay, TimeDelta::Zero());
 
-  task_queue_->PostDelayedTask(absl::WrapUnique(this), delay.ms());
+  task_queue_->PostDelayedTaskWithPrecision(precision_, absl::WrapUnique(this),
+                                            delay.ms());
 
   // Return false to tell the TaskQueue to not destruct this object since we
   // have taken ownership with absl::WrapUnique.
