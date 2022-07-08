@@ -2497,18 +2497,42 @@ void SdpOfferAnswerHandler::AddIceCandidate(
                 : kAddIceCandidateFailClosed;
         NoteAddIceCandidateResult(result);
         operations_chain_callback();
-        if (result == kAddIceCandidateFailClosed) {
-          callback(RTCError(
-              RTCErrorType::INVALID_STATE,
-              "AddIceCandidate failed because the session was shut down"));
-        } else if (result != kAddIceCandidateSuccess &&
-                   result != kAddIceCandidateFailNotReady) {
-          // Fail with an error type and message consistent with Chromium.
-          // TODO(hbos): Fail with error types according to spec.
-          callback(RTCError(RTCErrorType::UNSUPPORTED_OPERATION,
-                            "Error processing ICE candidate"));
-        } else {
-          callback(RTCError::OK());
+        switch (result) {
+          case AddIceCandidateResult::kAddIceCandidateSuccess:
+          case AddIceCandidateResult::kAddIceCandidateFailNotReady:
+            // Success!
+            callback(RTCError::OK());
+            break;
+          case AddIceCandidateResult::kAddIceCandidateFailClosed:
+            // Note that the spec says to just abort without resolving the
+            // promise in this case, but this layer must return an RTCError.
+            callback(RTCError(
+                RTCErrorType::INVALID_STATE,
+                "AddIceCandidate failed because the session was shut down"));
+            break;
+          case AddIceCandidateResult::kAddIceCandidateFailNoRemoteDescription:
+            // Spec: "If remoteDescription is null return a promise rejected
+            // with a newly created InvalidStateError."
+            callback(RTCError(RTCErrorType::INVALID_STATE,
+                              "The remote description was null"));
+            break;
+          case AddIceCandidateResult::kAddIceCandidateFailNullCandidate:
+            // TODO(https://crbug.com/935898): Handle end-of-candidates instead
+            // of treating null candidate as an error.
+            callback(RTCError(RTCErrorType::UNSUPPORTED_OPERATION,
+                              "Error processing ICE candidate"));
+            break;
+          case AddIceCandidateResult::kAddIceCandidateFailNotValid:
+          case AddIceCandidateResult::kAddIceCandidateFailInAddition:
+          case AddIceCandidateResult::kAddIceCandidateFailNotUsable:
+            // Spec: "If candidate could not be successfully added [...] Reject
+            // p with a newly created OperationError and abort these steps."
+            // UNSUPPORTED_OPERATION maps to OperationError.
+            callback(RTCError(RTCErrorType::UNSUPPORTED_OPERATION,
+                              "Error processing ICE candidate"));
+            break;
+          default:
+            RTC_DCHECK_NOTREACHED();
         }
       });
 }
