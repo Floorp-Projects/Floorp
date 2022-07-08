@@ -2805,8 +2805,11 @@ static void StreamMetaJSCustomObject(
     aWriter.NullProperty("contentEarliestTime");
   }
 
+  const double profilingEndTime = profiler_time();
+  aWriter.DoubleProperty("profilingEndTime", profilingEndTime);
+
   if (aIsShuttingDown) {
-    aWriter.DoubleProperty("shutdownTime", profiler_time());
+    aWriter.DoubleProperty("shutdownTime", profilingEndTime);
   } else {
     aWriter.NullProperty("shutdownTime");
   }
