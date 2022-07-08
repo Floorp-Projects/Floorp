@@ -14,6 +14,7 @@
 #include <stdint.h>
 
 #include <functional>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <set>
