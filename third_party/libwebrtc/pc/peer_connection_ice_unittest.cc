@@ -800,7 +800,7 @@ TEST_P(PeerConnectionIceTest,
       std::move(jsep_candidate), [&operation_completed](RTCError result) {
         EXPECT_FALSE(result.ok());
         EXPECT_EQ(result.message(),
-                  std::string("Error processing ICE candidate"));
+                  std::string("The remote description was null"));
         operation_completed = true;
       });
   EXPECT_TRUE_WAIT(operation_completed, kWaitTimeout);
