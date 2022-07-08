@@ -61,6 +61,7 @@ rtc_library("transport_feedback") {
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/network:sent_packet",
     "../../../rtc_base/synchronization:mutex",
+    "../../../rtc_base/system:no_unique_address",
     "../../../system_wrappers",
     "../../../system_wrappers:field_trial",
     "../../rtp_rtcp:rtp_rtcp_format",
