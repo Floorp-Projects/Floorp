@@ -1859,6 +1859,18 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
                                                 CorePS::ProcessStartTime())
                                                    .ToMilliseconds());
 
+  if (const TimeStamp contentEarliestTime =
+          ActivePS::Buffer(aLock)
+              .UnderlyingChunkedBuffer()
+              .GetEarliestChunkStartTimeStamp();
+      !contentEarliestTime.IsNull()) {
+    aWriter.DoubleProperty(
+        "contentEarliestTime",
+        (contentEarliestTime - CorePS::ProcessStartTime()).ToMilliseconds());
+  } else {
+    aWriter.NullProperty("contentEarliestTime");
+  }
+
   if (aIsShuttingDown) {
     aWriter.DoubleProperty("shutdownTime", profiler_time());
   } else {
