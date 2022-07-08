@@ -282,7 +282,8 @@ int ConnectionRequest::resend_delay() {
 Connection::Connection(Port* port,
                        size_t index,
                        const Candidate& remote_candidate)
-    : id_(rtc::CreateRandomId()),
+    : network_thread_(port->thread()),
+      id_(rtc::CreateRandomId()),
       port_(port),
       local_candidate_index_(index),
       remote_candidate_(remote_candidate),
@@ -304,6 +305,7 @@ Connection::Connection(Port* port,
       time_created_ms_(rtc::TimeMillis()),
       field_trials_(&kDefaultFieldTrials),
       rtt_estimate_(DEFAULT_RTT_ESTIMATE_HALF_TIME_MS) {
+  RTC_DCHECK_RUN_ON(network_thread());
   // All of our connections start in WAITING state.
   // TODO(mallinath) - Start connections from STATE_FROZEN.
   // Wire up to send stun packets
@@ -311,7 +313,13 @@ Connection::Connection(Port* port,
   RTC_LOG(LS_INFO) << ToString() << ": Connection created";
 }
 
-Connection::~Connection() {}
+Connection::~Connection() {
+  RTC_DCHECK_RUN_ON(network_thread());
+}
+
+webrtc::TaskQueueBase* Connection::network_thread() const {
+  return network_thread_;
+}
 
 const Candidate& Connection::local_candidate() const {
   RTC_DCHECK(local_candidate_index_ < port_->Candidates().size());
@@ -750,6 +758,7 @@ void Connection::Destroy() {
   // tests, with a workaround in
   // AutoSocketServerThread::~AutoSocketServerThread.
   RTC_LOG(LS_VERBOSE) << ToString() << ": Connection destroyed";
+  // TODO(bugs.webrtc.org/11988): Use PostTask.
   port_->thread()->Post(RTC_FROM_HERE, this, MSG_DELETE);
   LogCandidatePairConfig(webrtc::IceCandidatePairConfigType::kDestroyed);
 }
