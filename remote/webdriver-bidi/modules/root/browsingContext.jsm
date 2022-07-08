@@ -514,11 +514,6 @@ class BrowsingContextModule extends Module {
       return;
     }
 
-    // Wait until navigation starts, so that an active document is attached.
-    await lazy.waitForInitialNavigationCompleted(browsingContext.webProgress, {
-      resolveWhenStarted: true,
-    });
-
     const contextInfo = this.#getBrowsingContextInfo(browsingContext, {
       maxDepth: 0,
     });
