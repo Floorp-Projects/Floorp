@@ -49,6 +49,13 @@ class AntiTrackingUtils final {
   static bool CreateStoragePermissionKey(nsIPrincipal* aPrincipal,
                                          nsACString& aKey);
 
+  // Given and embedded URI, returns the permission for allowing storage access
+  // requests from that URI's site. This permission is site-scoped in two ways:
+  // the principal it is stored under and the suffix built from aURI are both
+  // the Site rather than Origin.
+  static bool CreateStorageRequestPermissionKey(nsIURI* aURI,
+                                                nsACString& aPermissionKey);
+
   // Returns true if the permission passed in is a storage access permission
   // for the passed in principal argument.
   static bool IsStorageAccessPermission(nsIPermission* aPermission,
