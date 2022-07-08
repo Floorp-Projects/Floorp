@@ -171,8 +171,8 @@ void CommandEncoder::CopyTextureToTexture(
 void CommandEncoder::PushDebugGroup(const nsAString& aString) {
   if (mValid && mBridge->IsOpen()) {
     ipc::ByteBuf bb;
-    const NS_ConvertUTF16toUTF8 utf8(aString);
-    ffi::wgpu_command_encoder_push_debug_group(utf8.get(), ToFFI(&bb));
+    NS_ConvertUTF16toUTF8 marker(aString);
+    ffi::wgpu_command_encoder_push_debug_group(&marker, ToFFI(&bb));
     mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }
 }
@@ -186,8 +186,8 @@ void CommandEncoder::PopDebugGroup() {
 void CommandEncoder::InsertDebugMarker(const nsAString& aString) {
   if (mValid && mBridge->IsOpen()) {
     ipc::ByteBuf bb;
-    const NS_ConvertUTF16toUTF8 utf8(aString);
-    ffi::wgpu_command_encoder_insert_debug_marker(utf8.get(), ToFFI(&bb));
+    NS_ConvertUTF16toUTF8 marker(aString);
+    ffi::wgpu_command_encoder_insert_debug_marker(&marker, ToFFI(&bb));
     mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }
 }
