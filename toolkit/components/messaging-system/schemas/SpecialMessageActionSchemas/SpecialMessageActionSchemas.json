@@ -455,6 +455,37 @@
           "required": ["data", "type"],
           "additionalProperties": false,
           "description": "Opens a spotlight dialog"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "pref": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": ["boolean", "string", "number", "null"]
+                    }
+                  },
+                  "description": "An object representing a pref containing a name and a value."
+                }
+              },
+              "required": ["pref"],
+              "additionalProperties": false
+            },
+            "type": {
+              "type": "string",
+              "enum": ["SET_PREF"]
+            }
+          },
+          "required": ["data", "type"],
+          "additionalProperties": false,
+          "description": "Sets prefs from special message actions"
         }
       ]
     }
