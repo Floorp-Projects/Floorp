@@ -167,10 +167,10 @@ nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
     [mIconImage release];
     mIconImage = nil;
   }
-
+  RefPtr<nsPresContext> pc = mPresContext.get();
   mIconImage = [[MOZIconHelper iconImageFromImageContainer:aImage
                                                   withSize:NSMakeSize(kIconSize, kIconSize)
-                                               presContext:mPresContext
+                                               presContext:pc
                                              computedStyle:mComputedStyle
                                                    subrect:mImageRegionRect
                                                scaleFactor:0.0f] retain];
