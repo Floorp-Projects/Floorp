@@ -773,16 +773,20 @@ class ProviderAutofill extends UrlbarProvider {
       queryType != QUERYTYPE.AUTOFILL_ORIGIN &&
       queryContext.searchString.length == autofilledValue.length
     ) {
+      // Use `new URL().href` to lowercase the domain in the final completed
+      // URL. This isn't necessary since domains are case insensitive, but it
+      // looks nicer because it means the domain will remain lowercased in the
+      // input, and it also reflects the fact that Firefox will visit the
+      // lowercased name.
       const originalCompleteValue = new URL(finalCompleteValue).href;
-      // Make sure the domain is lowercased in the final URL. This isn't
-      // necessary since domains are case insensitive, but it looks nicer
-      // because it means the domain will remain lowercased in the input, and it
-      // also reflects the fact that Firefox will visit the lowercased name.
+      let strippedAutofilledValue = autofilledValue.substring(
+        this._strippedPrefix.length
+      );
       finalCompleteValue = new URL(
         finalCompleteValue.substring(
           0,
-          finalCompleteValue.length - autofilledValue.length
-        ) + autofilledValue
+          finalCompleteValue.length - strippedAutofilledValue.length
+        ) + strippedAutofilledValue
       ).href;
 
       // If the character case of except origin part of the original

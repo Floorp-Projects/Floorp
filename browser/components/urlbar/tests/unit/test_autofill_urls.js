@@ -814,3 +814,95 @@ add_task(async function aboutAsPrefix() {
 
   await cleanupPlaces();
 });
+
+// Checks a URL that has www name in history.
+add_task(async function wwwHistory() {
+  const testData = [
+    {
+      input: "example.com/",
+      visitHistory: [{ uri: "http://www.example.com/", title: "Example" }],
+      expected: {
+        autofilled: "example.com/",
+        completed: "http://www.example.com/",
+        hasAutofillTitle: true,
+        results: [
+          context =>
+            makeVisitResult(context, {
+              uri: "http://www.example.com/",
+              title: "Example",
+              heuristic: true,
+            }),
+        ],
+      },
+    },
+    {
+      input: "https://example.com/",
+      visitHistory: [{ uri: "https://www.example.com/", title: "Example" }],
+      expected: {
+        autofilled: "https://example.com/",
+        completed: "https://www.example.com/",
+        hasAutofillTitle: true,
+        results: [
+          context =>
+            makeVisitResult(context, {
+              uri: "https://www.example.com/",
+              title: "Example",
+              heuristic: true,
+            }),
+        ],
+      },
+    },
+    {
+      input: "https://example.com/abc",
+      visitHistory: [{ uri: "https://www.example.com/abc", title: "Example" }],
+      expected: {
+        autofilled: "https://example.com/abc",
+        completed: "https://www.example.com/abc",
+        hasAutofillTitle: true,
+        results: [
+          context =>
+            makeVisitResult(context, {
+              uri: "https://www.example.com/abc",
+              title: "Example",
+              heuristic: true,
+            }),
+        ],
+      },
+    },
+    {
+      input: "https://example.com/ABC",
+      visitHistory: [{ uri: "https://www.example.com/abc", title: "Example" }],
+      expected: {
+        autofilled: "https://example.com/ABC",
+        completed: "https://www.example.com/ABC",
+        hasAutofillTitle: false,
+        results: [
+          context =>
+            makeVisitResult(context, {
+              uri: "https://www.example.com/ABC",
+              title: "https://www.example.com/ABC",
+              heuristic: true,
+            }),
+          context =>
+            makeVisitResult(context, {
+              uri: "https://www.example.com/abc",
+              title: "Example",
+            }),
+        ],
+      },
+    },
+  ];
+
+  for (const { input, visitHistory, expected } of testData) {
+    await PlacesTestUtils.addVisits(visitHistory);
+    const context = createContext(input, { isPrivate: false });
+    await check_results({
+      context,
+      completed: expected.completed,
+      autofilled: expected.autofilled,
+      hasAutofillTitle: expected.hasAutofillTitle,
+      matches: expected.results.map(f => f(context)),
+    });
+    await cleanupPlaces();
+  }
+});
