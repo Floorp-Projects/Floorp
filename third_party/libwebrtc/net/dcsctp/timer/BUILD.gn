@@ -11,6 +11,7 @@ import("../../../webrtc.gni")
 rtc_library("timer") {
   deps = [
     "../../../api:array_view",
+    "../../../api/task_queue:task_queue",
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
@@ -57,6 +58,8 @@ if (rtc_include_tests) {
       ":task_queue_timeout",
       ":timer",
       "../../../api:array_view",
+      "../../../api/task_queue:task_queue",
+      "../../../api/task_queue/test:mock_task_queue_base",
       "../../../rtc_base:checks",
       "../../../rtc_base:gunit_helpers",
       "../../../rtc_base:rtc_base_approved",

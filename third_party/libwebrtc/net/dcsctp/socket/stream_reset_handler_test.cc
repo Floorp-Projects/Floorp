@@ -17,6 +17,7 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/task_queue/task_queue_base.h"
 #include "net/dcsctp/common/handover_testing.h"
 #include "net/dcsctp/common/internal_types.h"
 #include "net/dcsctp/packet/chunk/reconfig_chunk.h"
@@ -87,7 +88,9 @@ class StreamResetHandlerTest : public testing::Test {
  protected:
   StreamResetHandlerTest()
       : ctx_(&callbacks_),
-        timer_manager_([this]() { return callbacks_.CreateTimeout(); }),
+        timer_manager_([this](webrtc::TaskQueueBase::DelayPrecision precision) {
+          return callbacks_.CreateTimeout(precision);
+        }),
         delayed_ack_timer_(timer_manager_.CreateTimer(
             "test/delayed_ack",
             []() { return absl::nullopt; },

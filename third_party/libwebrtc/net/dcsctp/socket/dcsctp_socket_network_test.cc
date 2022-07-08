@@ -18,6 +18,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/test/create_network_emulation_manager.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/units/time_delta.h"
@@ -187,8 +188,9 @@ class SctpActor : public rtc::MessageHandlerAutoCleanup,
     emulated_socket_.SendPacket(data);
   }
 
-  std::unique_ptr<Timeout> CreateTimeout() override {
-    return timeout_factory_.CreateTimeout();
+  std::unique_ptr<Timeout> CreateTimeout(
+      webrtc::TaskQueueBase::DelayPrecision precision) override {
+    return timeout_factory_.CreateTimeout(precision);
   }
 
   TimeMs TimeMillis() override { return TimeMs(rtc::TimeMillis()); }

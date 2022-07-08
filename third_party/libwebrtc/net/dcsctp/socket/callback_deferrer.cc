@@ -61,9 +61,10 @@ SendPacketStatus CallbackDeferrer::SendPacketWithStatus(
   return underlying_.SendPacketWithStatus(data);
 }
 
-std::unique_ptr<Timeout> CallbackDeferrer::CreateTimeout() {
+std::unique_ptr<Timeout> CallbackDeferrer::CreateTimeout(
+    webrtc::TaskQueueBase::DelayPrecision precision) {
   // Will not be deferred - call directly.
-  return underlying_.CreateTimeout();
+  return underlying_.CreateTimeout(precision);
 }
 
 TimeMs CallbackDeferrer::TimeMillis() {

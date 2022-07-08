@@ -146,6 +146,7 @@ if (rtc_include_tests) {
       ":rr_send_queue",
       ":send_queue",
       "../../../api:array_view",
+      "../../../api/task_queue:task_queue",
       "../../../rtc_base:checks",
       "../../../rtc_base:gunit_helpers",
       "../../../rtc_base:rtc_base_approved",

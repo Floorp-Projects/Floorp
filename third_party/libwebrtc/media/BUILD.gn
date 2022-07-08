@@ -393,6 +393,7 @@ if (rtc_build_dcsctp) {
     deps = [
       ":rtc_data_sctp_transport_internal",
       "../api:array_view",
+      "../api/task_queue:task_queue",
       "../media:rtc_media_base",
       "../net/dcsctp/public:factory",
       "../net/dcsctp/public:socket",

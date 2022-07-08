@@ -136,6 +136,7 @@ rtc_library("dcsctp_socket") {
     "../../../api:array_view",
     "../../../api:refcountedbase",
     "../../../api:scoped_refptr",
+    "../../../api/task_queue:task_queue",
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
@@ -180,6 +181,7 @@ if (rtc_include_tests) {
     sources = [ "mock_dcsctp_socket_callbacks.h" ]
     deps = [
       "../../../api:array_view",
+      "../../../api/task_queue:task_queue",
       "../../../rtc_base:logging",
       "../../../rtc_base:rtc_base_approved",
       "../../../test:test_support",
@@ -224,6 +226,7 @@ if (rtc_include_tests) {
       "../../../api:array_view",
       "../../../api:create_network_emulation_manager",
       "../../../api:network_emulation_manager_api",
+      "../../../api/task_queue:task_queue",
       "../../../api/units:time_delta",
       "../../../call:simulated_network",
       "../../../rtc_base:checks",
