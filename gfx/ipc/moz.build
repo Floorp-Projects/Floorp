@@ -12,6 +12,7 @@ EXPORTS.mozilla += ["D3DMessageUtils.h", "GfxMessageUtils.h"]
 EXPORTS.mozilla.gfx += [
     "CanvasManagerChild.h",
     "CanvasManagerParent.h",
+    "CanvasRenderThread.h",
     "CrossProcessPaint.h",
     "GPUChild.h",
     "GPUParent.h",
@@ -39,6 +40,7 @@ EXPORTS.mozilla.widget += [
 UNIFIED_SOURCES += [
     "CanvasManagerChild.cpp",
     "CanvasManagerParent.cpp",
+    "CanvasRenderThread.cpp",
     "CompositorSession.cpp",
     "CompositorWidgetVsyncObserver.cpp",
     "CrossProcessPaint.cpp",
