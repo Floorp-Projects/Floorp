@@ -57,6 +57,7 @@ class FrameBuffer {
 
   int GetTotalNumberOfContinuousTemporalUnits() const;
   int GetTotalNumberOfDroppedFrames() const;
+  size_t CurrentSize() const;
 
  private:
   struct FrameInfo {

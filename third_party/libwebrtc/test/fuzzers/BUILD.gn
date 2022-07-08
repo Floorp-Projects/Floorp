@@ -587,6 +587,7 @@ webrtc_fuzzer_test("rtp_frame_reference_finder_fuzzer") {
 webrtc_fuzzer_test("frame_buffer2_fuzzer") {
   sources = [ "frame_buffer2_fuzzer.cc" ]
   deps = [
+    "../../modules/video_coding:timing",
     "../../modules/video_coding/",
     "../time_controller:time_controller",
   ]

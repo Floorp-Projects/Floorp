@@ -20,11 +20,14 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "absl/container/inlined_vector.h"
+#include "absl/functional/bind_front.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/crypto/frame_decryptor_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
 #include "api/video/encoded_image.h"
 #include "api/video_codecs/h264_profile_level_id.h"
@@ -36,12 +39,17 @@
 #include "call/rtx_receive_stream.h"
 #include "common_video/include/incoming_video_stream.h"
 #include "modules/video_coding/frame_buffer2.h"
+#include "modules/video_coding/frame_buffer3.h"
+#include "modules/video_coding/frame_helpers.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/include/video_error_codes.h"
+#include "modules/video_coding/inter_frame_delay.h"
+#include "modules/video_coding/jitter_estimator.h"
 #include "modules/video_coding/timing.h"
 #include "modules/video_coding/utility/vp8_header_parser.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/rtt_mult_experiment.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
@@ -50,13 +58,16 @@
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/task_utils/to_queued_task.h"
+#include "rtc_base/thread_annotations.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/clock.h"
 #include "system_wrappers/include/field_trial.h"
 #include "video/call_stats2.h"
+#include "video/frame_decode_scheduler.h"
 #include "video/frame_dumping_decoder.h"
 #include "video/receive_statistics_proxy2.h"
+#include "video/video_receive_stream_timeout_tracker.h"
 
 namespace webrtc {
 
@@ -260,7 +271,7 @@ VideoReceiveStream2::VideoReceiveStream2(
   timing_->set_render_delay(config_.render_delay_ms);
 
   frame_buffer_ = FrameBufferProxy::CreateFromFieldTrial(
-      clock_, call->worker_thread(), timing_.get(), &stats_proxy_,
+      clock_, call_->worker_thread(), timing_.get(), &stats_proxy_,
       &decode_queue_, this, TimeDelta::Millis(max_wait_for_keyframe_ms_),
       TimeDelta::Millis(max_wait_for_frame_ms_));
 
@@ -406,8 +417,8 @@ void VideoReceiveStream2::Start() {
     RTC_DCHECK_RUN_ON(&decode_queue_);
     decoder_stopped_ = false;
     frame_buffer_->Start();
-    StartNextDecode();
   });
+  frame_buffer_->StartNextDecode(true);
   decoder_running_ = true;
 
   {
@@ -657,6 +668,9 @@ void VideoReceiveStream2::OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
 
   // TODO(https://bugs.webrtc.org/9974): Consider removing this workaround.
+  // TODO(https://bugs.webrtc.org/13343): Remove this check when FrameBuffer3 is
+  // deployed. With FrameBuffer3, this case is properly handled and tested in
+  // the FrameBufferProxyTest.PausedStream unit test.
   int64_t time_now_ms = clock_->TimeInMilliseconds();
   if (last_complete_frame_time_ms_ > 0 &&
       time_now_ms - last_complete_frame_time_ms_ > kInactiveStreamThresholdMs) {
@@ -741,8 +755,10 @@ void VideoReceiveStream2::OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) {
     return;
   }
   RTC_DCHECK_RUN_ON(&decode_queue_);
+  if (decoder_stopped_)
+    return;
   HandleEncodedFrame(std::move(frame));
-  StartNextDecode();
+  frame_buffer_->StartNextDecode(keyframe_required_);
 }
 
 void VideoReceiveStream2::OnDecodableFrameTimeout(TimeDelta wait_time) {
@@ -760,12 +776,8 @@ void VideoReceiveStream2::OnDecodableFrameTimeout(TimeDelta wait_time) {
 
   decode_queue_.PostTask([this] {
     RTC_DCHECK_RUN_ON(&decode_queue_);
-    StartNextDecode();
+    frame_buffer_->StartNextDecode(keyframe_required_);
   });
-}
-
-void VideoReceiveStream2::StartNextDecode() {
-  frame_buffer_->StartNextDecode(keyframe_required_);
 }
 
 void VideoReceiveStream2::HandleEncodedFrame(
