@@ -19,6 +19,19 @@
 
 namespace webrtc {
 
+struct LoggedAudioNetworkAdaptationEvent {
+  LoggedAudioNetworkAdaptationEvent() = default;
+  LoggedAudioNetworkAdaptationEvent(Timestamp timestamp,
+                                    const AudioEncoderRuntimeConfig& config)
+      : timestamp(timestamp), config(config) {}
+
+  int64_t log_time_us() const { return timestamp.us(); }
+  int64_t log_time_ms() const { return timestamp.ms(); }
+
+  Timestamp timestamp = Timestamp::MinusInfinity();
+  AudioEncoderRuntimeConfig config;
+};
+
 struct AudioEncoderRuntimeConfig;
 
 class RtcEventAudioNetworkAdaptation final : public RtcEvent {
@@ -40,19 +53,6 @@ class RtcEventAudioNetworkAdaptation final : public RtcEvent {
   RtcEventAudioNetworkAdaptation(const RtcEventAudioNetworkAdaptation& other);
 
   const std::unique_ptr<const AudioEncoderRuntimeConfig> config_;
-};
-
-struct LoggedAudioNetworkAdaptationEvent {
-  LoggedAudioNetworkAdaptationEvent() = default;
-  LoggedAudioNetworkAdaptationEvent(Timestamp timestamp,
-                                    const AudioEncoderRuntimeConfig& config)
-      : timestamp(timestamp), config(config) {}
-
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
-
-  Timestamp timestamp = Timestamp::MinusInfinity();
-  AudioEncoderRuntimeConfig config;
 };
 
 }  // namespace webrtc

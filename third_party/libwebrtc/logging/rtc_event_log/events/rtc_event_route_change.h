@@ -18,6 +18,19 @@
 
 namespace webrtc {
 
+struct LoggedRouteChangeEvent {
+  LoggedRouteChangeEvent() = default;
+  LoggedRouteChangeEvent(Timestamp timestamp, bool connected, uint32_t overhead)
+      : timestamp(timestamp), connected(connected), overhead(overhead) {}
+
+  int64_t log_time_us() const { return timestamp.us(); }
+  int64_t log_time_ms() const { return timestamp.ms(); }
+
+  Timestamp timestamp = Timestamp::MinusInfinity();
+  bool connected;
+  uint32_t overhead;
+};
+
 class RtcEventRouteChange final : public RtcEvent {
  public:
   static constexpr Type kType = Type::RouteChangeEvent;
@@ -38,19 +51,6 @@ class RtcEventRouteChange final : public RtcEvent {
 
   const bool connected_;
   const uint32_t overhead_;
-};
-
-struct LoggedRouteChangeEvent {
-  LoggedRouteChangeEvent() = default;
-  LoggedRouteChangeEvent(Timestamp timestamp, bool connected, uint32_t overhead)
-      : timestamp(timestamp), connected(connected), overhead(overhead) {}
-
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
-
-  Timestamp timestamp = Timestamp::MinusInfinity();
-  bool connected;
-  uint32_t overhead;
 };
 
 }  // namespace webrtc

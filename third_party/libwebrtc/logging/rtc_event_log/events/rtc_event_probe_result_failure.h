@@ -27,6 +27,21 @@ enum class ProbeFailureReason {
   kLast
 };
 
+struct LoggedBweProbeFailureEvent {
+  LoggedBweProbeFailureEvent() = default;
+  LoggedBweProbeFailureEvent(Timestamp timestamp,
+                             int32_t id,
+                             ProbeFailureReason failure_reason)
+      : timestamp(timestamp), id(id), failure_reason(failure_reason) {}
+
+  int64_t log_time_us() const { return timestamp.us(); }
+  int64_t log_time_ms() const { return timestamp.ms(); }
+
+  Timestamp timestamp = Timestamp::MinusInfinity();
+  int32_t id;
+  ProbeFailureReason failure_reason;
+};
+
 class RtcEventProbeResultFailure final : public RtcEvent {
  public:
   static constexpr Type kType = Type::ProbeResultFailure;
@@ -47,21 +62,6 @@ class RtcEventProbeResultFailure final : public RtcEvent {
 
   const int32_t id_;
   const ProbeFailureReason failure_reason_;
-};
-
-struct LoggedBweProbeFailureEvent {
-  LoggedBweProbeFailureEvent() = default;
-  LoggedBweProbeFailureEvent(Timestamp timestamp,
-                             int32_t id,
-                             ProbeFailureReason failure_reason)
-      : timestamp(timestamp), id(id), failure_reason(failure_reason) {}
-
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
-
-  Timestamp timestamp = Timestamp::MinusInfinity();
-  int32_t id;
-  ProbeFailureReason failure_reason;
 };
 
 }  // namespace webrtc

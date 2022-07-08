@@ -20,6 +20,21 @@
 
 namespace webrtc {
 
+struct LoggedBweProbeSuccessEvent {
+  LoggedBweProbeSuccessEvent() = default;
+  LoggedBweProbeSuccessEvent(Timestamp timestamp,
+                             int32_t id,
+                             int32_t bitrate_bps)
+      : timestamp(timestamp), id(id), bitrate_bps(bitrate_bps) {}
+
+  int64_t log_time_us() const { return timestamp.us(); }
+  int64_t log_time_ms() const { return timestamp.ms(); }
+
+  Timestamp timestamp = Timestamp::MinusInfinity();
+  int32_t id;
+  int32_t bitrate_bps;
+};
+
 class RtcEventProbeResultSuccess final : public RtcEvent {
  public:
   static constexpr Type kType = Type::ProbeResultSuccess;
@@ -40,21 +55,6 @@ class RtcEventProbeResultSuccess final : public RtcEvent {
 
   const int32_t id_;
   const int32_t bitrate_bps_;
-};
-
-struct LoggedBweProbeSuccessEvent {
-  LoggedBweProbeSuccessEvent() = default;
-  LoggedBweProbeSuccessEvent(Timestamp timestamp,
-                             int32_t id,
-                             int32_t bitrate_bps)
-      : timestamp(timestamp), id(id), bitrate_bps(bitrate_bps) {}
-
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
-
-  Timestamp timestamp = Timestamp::MinusInfinity();
-  int32_t id;
-  int32_t bitrate_bps;
 };
 
 }  // namespace webrtc
