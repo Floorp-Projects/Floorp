@@ -17,6 +17,7 @@
 #include "api/sequence_checker.h"
 #include "modules/include/module_common_types_public.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
 
 namespace webrtc {
@@ -44,14 +45,15 @@ class TransportFeedbackDemuxer final : public StreamFeedbackProvider {
   void OnTransportFeedback(const rtcp::TransportFeedback& feedback);
 
  private:
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker observer_checker_;
-  SequenceNumberUnwrapper seq_num_unwrapper_ RTC_GUARDED_BY(&observer_checker_);
+  Mutex lock_;
+  SequenceNumberUnwrapper seq_num_unwrapper_ RTC_GUARDED_BY(&lock_);
   std::map<int64_t, StreamFeedbackObserver::StreamPacketInfo> history_
-      RTC_GUARDED_BY(&observer_checker_);
+      RTC_GUARDED_BY(&lock_);
 
   // Maps a set of ssrcs to corresponding observer. Vectors are used rather than
   // set/map to ensure that the processing order is consistent independently of
   // the randomized ssrcs.
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker observer_checker_;
   std::vector<std::pair<std::vector<uint32_t>, StreamFeedbackObserver*>>
       observers_ RTC_GUARDED_BY(&observer_checker_);
 };
