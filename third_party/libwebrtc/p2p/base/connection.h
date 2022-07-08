@@ -88,6 +88,8 @@ class Connection : public CandidatePairInterface,
   // A unique ID assigned when the connection is created.
   uint32_t id() const { return id_; }
 
+  webrtc::TaskQueueBase* network_thread() const;
+
   // Implementation of virtual methods in CandidatePairInterface.
   // Returns the description of the local port
   const Candidate& local_candidate() const override;
@@ -369,8 +371,14 @@ class Connection : public CandidatePairInterface,
   Port* port() { return port_; }
   const Port* port() const { return port_; }
 
-  uint32_t id_;
-  Port* port_;
+  // NOTE: A pointer to the network thread is held by `port_` so in theory we
+  // shouldn't need to hold on to this pointer here, but rather defer to
+  // port_->thread(). However, some tests delete the classes in the wrong order
+  // so `port_` may be deleted before an instance of this class is deleted.
+  // TODO(tommi): This ^^^ should be fixed.
+  webrtc::TaskQueueBase* const network_thread_;
+  const uint32_t id_;
+  Port* const port_;
   size_t local_candidate_index_;
   Candidate remote_candidate_;
 
