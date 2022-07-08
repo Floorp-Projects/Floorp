@@ -334,12 +334,12 @@ TEST_F(APZCAxisLockTester, BreakStickyAxisLock) {
   BreakStickyAxisLockTest(ScrollDirections(ScrollDirection::eHorizontal,
                                            ScrollDirection::eVertical));
 
-  // We should be in a panning state.
+  // Once we're no longer locked onto an axis, there is no way back. Run a
+  // gesture that would normally lock us onto the X axis, but we should stay
+  // in a panning state.
+  BreakStickyAxisLockTestGesture(ScrollDirection::eHorizontal);
   apzc->AssertStateIsPanning();
   apzc->AssertNotAxisLocked();
-
-  // Lock back to the X axis.
-  BreakStickyAxisLockTestGesture(ScrollDirection::eHorizontal);
 
   // End the gesture.
   QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
@@ -361,13 +361,6 @@ TEST_F(APZCAxisLockTester, BreakStickyAxisLock) {
   // Test breaking all axis locks from a X axis lock.
   BreakStickyAxisLockTest(ScrollDirections(ScrollDirection::eHorizontal,
                                            ScrollDirection::eVertical));
-
-  // We should be in a panning state.
-  apzc->AssertStateIsPanning();
-  apzc->AssertNotAxisLocked();
-
-  // Test switch back to locking onto the Y axis.
-  BreakStickyAxisLockTest(ScrollDirection::eVertical);
 }
 
 TEST_F(APZCAxisLockTester, BreakAxisLockByLockAngle) {
