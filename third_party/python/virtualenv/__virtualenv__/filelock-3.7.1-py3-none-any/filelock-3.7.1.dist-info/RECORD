@@ -1,0 +1,15 @@
+filelock/__init__.py,sha256=XE-RanOqTbJkFCKJbe3PqzNCkVgLQXqs_Yp1rrUPF58,1246
+filelock/_api.py,sha256=bwQbBjCWXfBhR5e6I9lRgSZPiuBWF8bkMqrr2NdmYIo,8860
+filelock/_error.py,sha256=Gaxp2TfdmgdvYFkllGCBOE37vYIXnHKKW3RYfKH7DYM,399
+filelock/_soft.py,sha256=rSpmt4Oi0Eb4JeKzyWImeqf5MYCJR0Dyc_kUN3kHj7Y,1650
+filelock/_unix.py,sha256=gM4-5mqDtamGp5qwWkaZNSTuv9p7vwBa4diVmI1ZBwQ,1578
+filelock/_util.py,sha256=BZKOAYTQdmcHmF34-Ft4kMdEvk3a8NGtsAhe6kfxZuU,594
+filelock/_windows.py,sha256=wvg-_SfJEDyxDeDVH8wBqxbPquXaycoYXgXJOBmm-G4,1890
+filelock/py.typed,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+filelock/version.py,sha256=9aLd-KoN-y8Y2gRKw7z6WVYrMEaHPtFGPxC-kvG_yik,142
+filelock-3.7.1.dist-info/LICENSE,sha256=iNm062BXnBkew5HKBMFhMFctfu3EqG2qWL8oxuFMm80,1210
+filelock-3.7.1.dist-info/METADATA,sha256=n-u0JPDchi3eN4uFCRQvsNkKC_C10Qw7Pqy9WQxwAhM,2537
+filelock-3.7.1.dist-info/WHEEL,sha256=G16H4A3IeoQmnOrYV4ueZGKSjhipXx8zc8nu9FGlvMA,92
+filelock-3.7.1.dist-info/top_level.txt,sha256=NDrf9i5BNogz4hEdsr6Hi7Ws3TlSSKY4Q2Y9_-i2GwU,9
+filelock-3.7.1.dist-info/zip-safe,sha256=AbpHGcgLb-kRsJGnwFEktk7uzpZOCcBY74-YBdrKVGs,1
+filelock-3.7.1.dist-info/RECORD,,
