@@ -86,7 +86,12 @@ ProfileChunkedBuffer* GetClearedBufferForMainThreadAddMarker() {
   }
 
   if (sBufferForMainThreadAddMarker) {
+    MOZ_ASSERT(sBufferForMainThreadAddMarker->IsInSession(),
+               "sBufferForMainThreadAddMarker should always be in-session");
     sBufferForMainThreadAddMarker->Clear();
+    MOZ_ASSERT(
+        sBufferForMainThreadAddMarker->IsInSession(),
+        "Cleared sBufferForMainThreadAddMarker should still be in-session");
   }
 
   return sBufferForMainThreadAddMarker;
@@ -104,6 +109,8 @@ MFBT_API void EnsureBufferForMainThreadAddMarker() {
         ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
         MakeUnique<ProfileBufferChunkManagerSingle>(
             ProfileBufferChunkManager::scExpectedMaximumStackSize));
+    MOZ_ASSERT(sBufferForMainThreadAddMarker);
+    MOZ_ASSERT(sBufferForMainThreadAddMarker->IsInSession());
   }
 }
 
@@ -119,6 +126,7 @@ MFBT_API void ReleaseBufferForMainThreadAddMarker() {
   }
 
   MOZ_ASSERT(sBufferForMainThreadAddMarker);
+  MOZ_ASSERT(sBufferForMainThreadAddMarker->IsInSession());
   if (--sBufferForMainThreadAddMarkerRefCount == 0) {
     // Last `Release`, destroy the buffer.
     delete sBufferForMainThreadAddMarker;
