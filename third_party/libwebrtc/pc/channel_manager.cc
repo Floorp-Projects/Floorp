@@ -61,18 +61,20 @@ ChannelManager::ChannelManager(
 
 ChannelManager::~ChannelManager() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (media_engine_) {
-    // While `media_engine_` is const throughout the ChannelManager's lifetime,
-    // it requires destruction to happen on the worker thread. Instead of
-    // marking the pointer as non-const, we live with this const_cast<> in the
-    // destructor.
-    worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
-      const_cast<std::unique_ptr<MediaEngineInterface>&>(media_engine_).reset();
-    });
-  }
-
-  RTC_DCHECK(voice_channels_.empty());
-  RTC_DCHECK(video_channels_.empty());
+  // While `media_engine_` is const throughout the ChannelManager's lifetime,
+  // it requires destruction to happen on the worker thread. Instead of
+  // marking the pointer as non-const, we live with this const_cast<> in the
+  // destructor.
+  // NOTE: Before removing this Invoke(), consider that it has a dual purpose.
+  // Besides resetting the media engine pointer, it also ensures that any
+  // potentially outstanding calls to `DestroyChannel` on the worker, will be
+  // completed.
+  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+    RTC_DCHECK_RUN_ON(worker_thread_);
+    RTC_DCHECK(voice_channels_.empty());
+    RTC_DCHECK(video_channels_.empty());
+    const_cast<std::unique_ptr<MediaEngineInterface>&>(media_engine_).reset();
+  });
 }
 
 void ChannelManager::GetSupportedAudioSendCodecs(
@@ -248,11 +250,13 @@ void ChannelManager::DestroyVideoChannel(VideoChannel* channel) {
 void ChannelManager::DestroyChannel(ChannelInterface* channel) {
   RTC_DCHECK(channel);
 
-  // TODO(bugs.webrtc.org/11992): Change to either be called on the worker
-  // thread, or do this asynchronously on the worker.
   if (!worker_thread_->IsCurrent()) {
-    worker_thread_->Invoke<void>(RTC_FROM_HERE,
-                                 [&] { DestroyChannel(channel); });
+    // Delete the channel asynchronously on the worker thread.
+    // NOTE: This is made safe by a call to `worker_thread_->Invoke()` from
+    // the destructor, which acts as a 'flush' for any pending calls to
+    // DestroyChannel. If that Invoke() gets removed, we'll need to make
+    // adjustments here.
+    worker_thread_->PostTask([this, channel] { DestroyChannel(channel); });
     return;
   }
 

@@ -43,7 +43,7 @@ namespace cricket {
 // voice or just video channels.
 // ChannelManager also allows the application to discover what devices it has
 // using device manager.
-class ChannelManager final : public ChannelFactoryInterface {
+class ChannelManager : public ChannelFactoryInterface {
  public:
   // Returns an initialized instance of ChannelManager.
   // If media_engine is non-nullptr, then the returned ChannelManager instance
@@ -110,7 +110,7 @@ class ChannelManager final : public ChannelFactoryInterface {
   // Stops recording AEC dump.
   void StopAecDump();
 
- private:
+ protected:
   ChannelManager(std::unique_ptr<MediaEngineInterface> media_engine,
                  bool enable_rtx,
                  rtc::Thread* worker_thread,
@@ -122,6 +122,7 @@ class ChannelManager final : public ChannelFactoryInterface {
   // Destroys a video channel created by CreateVideoChannel.
   void DestroyVideoChannel(VideoChannel* video_channel);
 
+ private:
   const std::unique_ptr<MediaEngineInterface> media_engine_;  // Nullable.
   rtc::Thread* const signaling_thread_;
   rtc::Thread* const worker_thread_;

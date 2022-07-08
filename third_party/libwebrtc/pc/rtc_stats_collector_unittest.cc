@@ -531,7 +531,7 @@ class RTCStatsCollectorWrapper {
           rtc::scoped_refptr<MediaStreamTrackInterface>(local_audio_track),
           voice_sender_info.local_stats[0].ssrc,
           voice_sender_info.local_stats[0].ssrc + 10, local_stream_ids);
-      EXPECT_CALL(*rtp_sender, SetMediaChannel(_));
+      EXPECT_CALL(*rtp_sender, SetMediaChannel(_)).WillRepeatedly(Return());
       pc_->AddSender(rtp_sender);
     }
 
@@ -568,7 +568,7 @@ class RTCStatsCollectorWrapper {
           rtc::scoped_refptr<MediaStreamTrackInterface>(local_video_track),
           video_sender_info.local_stats[0].ssrc,
           video_sender_info.local_stats[0].ssrc + 10, local_stream_ids);
-      EXPECT_CALL(*rtp_sender, SetMediaChannel(_));
+      EXPECT_CALL(*rtp_sender, SetMediaChannel(_)).WillRepeatedly(Return());
       pc_->AddSender(rtp_sender);
     }
 

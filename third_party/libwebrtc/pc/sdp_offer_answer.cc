@@ -2893,7 +2893,7 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
     }
 
     RTC_DCHECK(transceiver->internal()->mid().has_value());
-    DestroyTransceiverChannel(transceiver);
+    transceiver->internal()->SetChannel(nullptr, nullptr);
 
     if (signaling_state() == PeerConnectionInterface::kHaveRemoteOffer &&
         transceiver->receiver()) {
@@ -3547,7 +3547,6 @@ RTCError SdpOfferAnswerHandler::UpdateTransceiverChannel(
   if (content.rejected) {
     if (channel) {
       transceiver->internal()->SetChannel(nullptr, nullptr);
-      channel_manager()->DestroyChannel(channel);
     }
   } else {
     if (!channel) {
@@ -4541,12 +4540,14 @@ void SdpOfferAnswerHandler::RemoveUnusedChannels(
   // voice channel.
   const cricket::ContentInfo* video_info = cricket::GetFirstVideoContent(desc);
   if (!video_info || video_info->rejected) {
-    DestroyTransceiverChannel(rtp_manager()->GetVideoTransceiver());
+    rtp_manager()->GetVideoTransceiver()->internal()->SetChannel(nullptr,
+                                                                 nullptr);
   }
 
   const cricket::ContentInfo* audio_info = cricket::GetFirstAudioContent(desc);
   if (!audio_info || audio_info->rejected) {
-    DestroyTransceiverChannel(rtp_manager()->GetAudioTransceiver());
+    rtp_manager()->GetAudioTransceiver()->internal()->SetChannel(nullptr,
+                                                                 nullptr);
   }
 
   const cricket::ContentInfo* data_info = cricket::GetFirstDataContent(desc);
@@ -4822,29 +4823,6 @@ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
   return true;
 }
 
-void SdpOfferAnswerHandler::DestroyTransceiverChannel(
-    rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
-        transceiver) {
-  TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::DestroyTransceiverChannel");
-  RTC_DCHECK(transceiver);
-  RTC_LOG_THREAD_BLOCK_COUNT();
-
-  cricket::ChannelInterface* channel = transceiver->internal()->channel();
-  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(0);
-  if (channel) {
-    // TODO(tommi): VideoRtpReceiver::SetMediaChannel blocks and jumps to the
-    // worker thread. When being set to nullptr, there are additional
-    // blocking calls to e.g. ClearRecordableEncodedFrameCallback which triggers
-    // another blocking call or Stop() for video channels.
-    // The channel object also needs to be de-initialized on the network thread
-    // so if ownership of the channel object lies with the transceiver, we could
-    // un-set the channel pointer and uninitialize/destruct the channel object
-    // at the same time, rather than in separate steps.
-    transceiver->internal()->SetChannel(nullptr, nullptr);
-    channel_manager()->DestroyChannel(channel);
-  }
-}
-
 void SdpOfferAnswerHandler::DestroyDataChannelTransport(RTCError error) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   const bool has_sctp = pc_->sctp_mid().has_value();
@@ -4876,12 +4854,12 @@ void SdpOfferAnswerHandler::DestroyAllChannels() {
 
   for (const auto& transceiver : list) {
     if (transceiver->media_type() == cricket::MEDIA_TYPE_VIDEO) {
-      DestroyTransceiverChannel(transceiver);
+      transceiver->internal()->SetChannel(nullptr, nullptr);
     }
   }
   for (const auto& transceiver : list) {
     if (transceiver->media_type() == cricket::MEDIA_TYPE_AUDIO) {
-      DestroyTransceiverChannel(transceiver);
+      transceiver->internal()->SetChannel(nullptr, nullptr);
     }
   }
 

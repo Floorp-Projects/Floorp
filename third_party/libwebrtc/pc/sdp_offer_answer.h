@@ -533,12 +533,6 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   cricket::VideoChannel* CreateVideoChannel(const std::string& mid);
   bool CreateDataChannel(const std::string& mid);
 
-  // Destroys and clears the BaseChannel associated with the given transceiver,
-  // if such channel is set.
-  void DestroyTransceiverChannel(
-      rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
-          transceiver);
-
   // Destroys the RTP data channel transport and/or the SCTP data channel
   // transport and clears it.
   void DestroyDataChannelTransport(RTCError error);
