@@ -62,7 +62,10 @@ size_t hex_decode_with_delimiter(char* buffer,
 std::string join(const std::vector<std::string>& source, char delimiter);
 
 // Splits the source string into multiple fields separated by delimiter,
-// with duplicates of delimiter creating empty fields.
+// with duplicates of delimiter creating empty fields. Empty input produces a
+// single, empty, field.
+std::vector<absl::string_view> split(absl::string_view source, char delimiter);
+
 size_t split(absl::string_view source,
              char delimiter,
              std::vector<std::string>* fields);
