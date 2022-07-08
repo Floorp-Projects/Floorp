@@ -21,6 +21,23 @@
 
 namespace webrtc {
 
+struct LoggedBweDelayBasedUpdate {
+  LoggedBweDelayBasedUpdate() = default;
+  LoggedBweDelayBasedUpdate(Timestamp timestamp,
+                            int32_t bitrate_bps,
+                            BandwidthUsage detector_state)
+      : timestamp(timestamp),
+        bitrate_bps(bitrate_bps),
+        detector_state(detector_state) {}
+
+  int64_t log_time_us() const { return timestamp.us(); }
+  int64_t log_time_ms() const { return timestamp.ms(); }
+
+  Timestamp timestamp = Timestamp::MinusInfinity();
+  int32_t bitrate_bps;
+  BandwidthUsage detector_state;
+};
+
 class RtcEventBweUpdateDelayBased final : public RtcEvent {
  public:
   static constexpr Type kType = Type::BweUpdateDelayBased;
@@ -42,23 +59,6 @@ class RtcEventBweUpdateDelayBased final : public RtcEvent {
 
   const int32_t bitrate_bps_;
   const BandwidthUsage detector_state_;
-};
-
-struct LoggedBweDelayBasedUpdate {
-  LoggedBweDelayBasedUpdate() = default;
-  LoggedBweDelayBasedUpdate(Timestamp timestamp,
-                            int32_t bitrate_bps,
-                            BandwidthUsage detector_state)
-      : timestamp(timestamp),
-        bitrate_bps(bitrate_bps),
-        detector_state(detector_state) {}
-
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
-
-  Timestamp timestamp = Timestamp::MinusInfinity();
-  int32_t bitrate_bps;
-  BandwidthUsage detector_state;
 };
 
 }  // namespace webrtc

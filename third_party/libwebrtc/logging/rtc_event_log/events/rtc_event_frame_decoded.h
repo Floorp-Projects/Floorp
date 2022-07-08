@@ -21,6 +21,19 @@
 
 namespace webrtc {
 
+struct LoggedFrameDecoded {
+  int64_t log_time_us() const { return timestamp.us(); }
+  int64_t log_time_ms() const { return timestamp.ms(); }
+
+  Timestamp timestamp = Timestamp::MinusInfinity();
+  int64_t render_time_ms;
+  uint32_t ssrc;
+  int width;
+  int height;
+  VideoCodecType codec;
+  uint8_t qp;
+};
+
 class RtcEventFrameDecoded final : public RtcEvent {
  public:
   static constexpr Type kType = Type::FrameDecoded;
@@ -54,19 +67,6 @@ class RtcEventFrameDecoded final : public RtcEvent {
   const int height_;
   const VideoCodecType codec_;
   const uint8_t qp_;
-};
-
-struct LoggedFrameDecoded {
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
-
-  Timestamp timestamp = Timestamp::MinusInfinity();
-  int64_t render_time_ms;
-  uint32_t ssrc;
-  int width;
-  int height;
-  VideoCodecType codec;
-  uint8_t qp;
 };
 
 }  // namespace webrtc

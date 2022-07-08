@@ -28,6 +28,26 @@ enum class IceCandidatePairEventType {
   kNumValues,
 };
 
+struct LoggedIceCandidatePairEvent {
+  LoggedIceCandidatePairEvent() = default;
+  LoggedIceCandidatePairEvent(Timestamp timestamp,
+                              IceCandidatePairEventType type,
+                              uint32_t candidate_pair_id,
+                              uint32_t transaction_id)
+      : timestamp(timestamp),
+        type(type),
+        candidate_pair_id(candidate_pair_id),
+        transaction_id(transaction_id) {}
+
+  int64_t log_time_us() const { return timestamp.us(); }
+  int64_t log_time_ms() const { return timestamp.ms(); }
+
+  Timestamp timestamp = Timestamp::MinusInfinity();
+  IceCandidatePairEventType type;
+  uint32_t candidate_pair_id;
+  uint32_t transaction_id;
+};
+
 class RtcEventIceCandidatePair final : public RtcEvent {
  public:
   static constexpr Type kType = Type::IceCandidatePairEvent;
@@ -53,26 +73,6 @@ class RtcEventIceCandidatePair final : public RtcEvent {
   const IceCandidatePairEventType type_;
   const uint32_t candidate_pair_id_;
   const uint32_t transaction_id_;
-};
-
-struct LoggedIceCandidatePairEvent {
-  LoggedIceCandidatePairEvent() = default;
-  LoggedIceCandidatePairEvent(Timestamp timestamp,
-                              IceCandidatePairEventType type,
-                              uint32_t candidate_pair_id,
-                              uint32_t transaction_id)
-      : timestamp(timestamp),
-        type(type),
-        candidate_pair_id(candidate_pair_id),
-        transaction_id(transaction_id) {}
-
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
-
-  Timestamp timestamp = Timestamp::MinusInfinity();
-  IceCandidatePairEventType type;
-  uint32_t candidate_pair_id;
-  uint32_t transaction_id;
 };
 
 }  // namespace webrtc

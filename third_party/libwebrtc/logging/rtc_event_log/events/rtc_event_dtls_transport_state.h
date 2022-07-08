@@ -19,6 +19,14 @@
 
 namespace webrtc {
 
+struct LoggedDtlsTransportState {
+  int64_t log_time_us() const { return timestamp.us(); }
+  int64_t log_time_ms() const { return timestamp.ms(); }
+
+  Timestamp timestamp = Timestamp::MinusInfinity();
+  DtlsTransportState dtls_transport_state;
+};
+
 class RtcEventDtlsTransportState : public RtcEvent {
  public:
   static constexpr Type kType = Type::DtlsTransportState;
@@ -39,14 +47,6 @@ class RtcEventDtlsTransportState : public RtcEvent {
   RtcEventDtlsTransportState(const RtcEventDtlsTransportState& other);
 
   const DtlsTransportState dtls_transport_state_;
-};
-
-struct LoggedDtlsTransportState {
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
-
-  Timestamp timestamp = Timestamp::MinusInfinity();
-  DtlsTransportState dtls_transport_state;
 };
 
 }  // namespace webrtc

@@ -19,6 +19,18 @@
 
 namespace webrtc {
 
+struct LoggedVideoRecvConfig {
+  LoggedVideoRecvConfig() = default;
+  LoggedVideoRecvConfig(Timestamp timestamp, const rtclog::StreamConfig config)
+      : timestamp(timestamp), config(config) {}
+
+  int64_t log_time_us() const { return timestamp.us(); }
+  int64_t log_time_ms() const { return timestamp.ms(); }
+
+  Timestamp timestamp = Timestamp::MinusInfinity();
+  rtclog::StreamConfig config;
+};
+
 class RtcEventVideoReceiveStreamConfig final : public RtcEvent {
  public:
   static constexpr Type kType = Type::VideoReceiveStreamConfig;
@@ -39,18 +51,6 @@ class RtcEventVideoReceiveStreamConfig final : public RtcEvent {
       const RtcEventVideoReceiveStreamConfig& other);
 
   const std::unique_ptr<const rtclog::StreamConfig> config_;
-};
-
-struct LoggedVideoRecvConfig {
-  LoggedVideoRecvConfig() = default;
-  LoggedVideoRecvConfig(Timestamp timestamp, const rtclog::StreamConfig config)
-      : timestamp(timestamp), config(config) {}
-
-  int64_t log_time_us() const { return timestamp.us(); }
-  int64_t log_time_ms() const { return timestamp.ms(); }
-
-  Timestamp timestamp = Timestamp::MinusInfinity();
-  rtclog::StreamConfig config;
 };
 
 }  // namespace webrtc
