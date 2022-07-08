@@ -3248,34 +3248,45 @@ void AsyncPanZoomController::HandlePanningUpdate(
 
     if (fabs(aPanDistance.x) > breakThreshold ||
         fabs(aPanDistance.y) > breakThreshold) {
-      if (mState == PANNING_LOCKED_X) {
-        if (!apz::IsCloseToHorizontal(
-                angle, StaticPrefs::apz_axis_lock_breakout_angle())) {
-          mY.SetAxisLocked(false);
-          // If we are within the lock angle from the Y axis, lock
-          // onto the Y axis.
-          if (apz::IsCloseToVertical(angle,
-                                     StaticPrefs::apz_axis_lock_lock_angle())) {
-            mX.SetAxisLocked(true);
-            SetState(PANNING_LOCKED_Y);
-          } else {
-            SetState(PANNING);
+      switch (mState) {
+        case PANNING_LOCKED_X:
+          if (!apz::IsCloseToHorizontal(
+                  angle, StaticPrefs::apz_axis_lock_breakout_angle())) {
+            mY.SetAxisLocked(false);
+            // If we are within the lock angle from the Y axis, lock
+            // onto the Y axis.
+            if (apz::IsCloseToVertical(
+                    angle, StaticPrefs::apz_axis_lock_lock_angle())) {
+              mX.SetAxisLocked(true);
+              SetState(PANNING_LOCKED_Y);
+            } else {
+              SetState(PANNING);
+            }
           }
-        }
-      } else if (mState == PANNING_LOCKED_Y) {
-        if (!apz::IsCloseToVertical(
-                angle, StaticPrefs::apz_axis_lock_breakout_angle())) {
-          mX.SetAxisLocked(false);
-          // If we are within the lock angle from the X axis, lock
-          // onto the X axis.
-          if (apz::IsCloseToHorizontal(
-                  angle, StaticPrefs::apz_axis_lock_lock_angle())) {
-            mY.SetAxisLocked(true);
-            SetState(PANNING_LOCKED_X);
-          } else {
-            SetState(PANNING);
+          break;
+
+        case PANNING_LOCKED_Y:
+          if (!apz::IsCloseToVertical(
+                  angle, StaticPrefs::apz_axis_lock_breakout_angle())) {
+            mX.SetAxisLocked(false);
+            // If we are within the lock angle from the X axis, lock
+            // onto the X axis.
+            if (apz::IsCloseToHorizontal(
+                    angle, StaticPrefs::apz_axis_lock_lock_angle())) {
+              mY.SetAxisLocked(true);
+              SetState(PANNING_LOCKED_X);
+            } else {
+              SetState(PANNING);
+            }
           }
-        }
+          break;
+
+        case PANNING:
+          HandlePanning(angle);
+          break;
+
+        default:
+          break;
       }
     }
   }
