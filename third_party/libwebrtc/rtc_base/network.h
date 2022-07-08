@@ -526,6 +526,9 @@ class RTC_EXPORT Network {
     SignalNetworkPreferenceChanged(this);
   }
 
+  static std::pair<rtc::AdapterType, bool /* vpn */>
+  GuessAdapterFromNetworkCost(int network_cost);
+
   // Debugging description of this network
   std::string ToString() const;
 

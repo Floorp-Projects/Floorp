@@ -1421,6 +1421,45 @@ TEST_F(NetworkTest, NetworkCostVpn_VpnMoreExpensive) {
   delete net2;
 }
 
+TEST_F(NetworkTest, GuessAdapterFromNetworkCost) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-AddNetworkCostToVpn/Enabled/"
+      "WebRTC-UseDifferentiatedCellularCosts/Enabled/");
+
+  IPAddress ip1;
+  EXPECT_TRUE(IPFromString("2400:4030:1:2c00:be30:0:0:1", &ip1));
+
+  for (auto type : kAllAdapterTypes) {
+    if (type == rtc::ADAPTER_TYPE_VPN)
+      continue;
+    Network net1("em1", "em1", TruncateIP(ip1, 64), 64);
+    net1.set_type(type);
+    auto [guess, vpn] = Network::GuessAdapterFromNetworkCost(net1.GetCost());
+    EXPECT_FALSE(vpn);
+    if (type == rtc::ADAPTER_TYPE_LOOPBACK) {
+      EXPECT_EQ(guess, rtc::ADAPTER_TYPE_ETHERNET);
+    } else {
+      EXPECT_EQ(type, guess);
+    }
+  }
+
+  // VPN
+  for (auto type : kAllAdapterTypes) {
+    if (type == rtc::ADAPTER_TYPE_VPN)
+      continue;
+    Network net1("em1", "em1", TruncateIP(ip1, 64), 64);
+    net1.set_type(rtc::ADAPTER_TYPE_VPN);
+    net1.set_underlying_type_for_vpn(type);
+    auto [guess, vpn] = Network::GuessAdapterFromNetworkCost(net1.GetCost());
+    EXPECT_TRUE(vpn);
+    if (type == rtc::ADAPTER_TYPE_LOOPBACK) {
+      EXPECT_EQ(guess, rtc::ADAPTER_TYPE_ETHERNET);
+    } else {
+      EXPECT_EQ(type, guess);
+    }
+  }
+}
+
 TEST_F(NetworkTest, VpnList) {
   PhysicalSocketServer socket_server;
   {
