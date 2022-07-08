@@ -34,4 +34,6 @@ jobs:
         run:
             using: run-task
             command: >-
-                ./taskcluster/scripts/misc/run-esmification-check.sh
+                mkdir -p /builds/worker/artifacts &&
+                cd ${GECKO_PATH} &&
+                python3 ./taskcluster/scripts/misc/are-we-esmified-yet.py > /builds/worker/artifacts/are-we-esmified-yet.json
