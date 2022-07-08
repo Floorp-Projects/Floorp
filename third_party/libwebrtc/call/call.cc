@@ -346,6 +346,9 @@ class Call final : public webrtc::Call,
   DeliveryStatus DeliverRtp(MediaType media_type,
                             rtc::CopyOnWriteBuffer packet,
                             int64_t packet_time_us) RTC_RUN_ON(worker_thread_);
+
+  AudioReceiveStream* FindAudioStreamForSyncGroup(const std::string& sync_group)
+      RTC_RUN_ON(worker_thread_);
   void ConfigureSync(const std::string& sync_group) RTC_RUN_ON(worker_thread_);
 
   void NotifyBweOfReceivedPacket(const RtpPacketReceived& packet,
@@ -390,14 +393,11 @@ class Call final : public webrtc::Call,
   // Audio, Video, and FlexFEC receive streams are owned by the client that
   // creates them.
   // TODO(bugs.webrtc.org/11993): Move audio_receive_streams_,
-  // video_receive_streams_ and sync_stream_mapping_ over to the network thread.
+  // video_receive_streams_ over to the network thread.
   std::set<AudioReceiveStream*> audio_receive_streams_
       RTC_GUARDED_BY(worker_thread_);
   std::set<VideoReceiveStream2*> video_receive_streams_
       RTC_GUARDED_BY(worker_thread_);
-  std::map<std::string, AudioReceiveStream*> sync_stream_mapping_
-      RTC_GUARDED_BY(worker_thread_);
-
   // TODO(nisse): Should eventually be injected at creation,
   // with a single object in the bundled case.
   RtpStreamReceiverController audio_receiver_controller_
@@ -998,11 +998,11 @@ void Call::DestroyAudioReceiveStream(
 
   audio_receive_streams_.erase(audio_receive_stream);
 
-  const auto it = sync_stream_mapping_.find(config.sync_group);
-  if (it != sync_stream_mapping_.end() && it->second == audio_receive_stream) {
-    sync_stream_mapping_.erase(it);
-    ConfigureSync(config.sync_group);
-  }
+  // After calling erase(), call ConfigureSync. This will clear associated
+  // video streams or associate them with a different audio stream if one exists
+  // for this sync_group.
+  ConfigureSync(audio_receive_stream->config().sync_group);
+
   UnregisterReceiveStream(ssrc);
 
   UpdateAggregateNetworkState();
@@ -1448,51 +1448,37 @@ void Call::OnAllocationLimitsChanged(BitrateAllocationLimits limits) {
 }
 
 // RTC_RUN_ON(worker_thread_)
-void Call::ConfigureSync(const std::string& sync_group) {
-  // TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
-  // Set sync only if there was no previous one.
-  if (sync_group.empty())
-    return;
-
-  AudioReceiveStream* sync_audio_stream = nullptr;
-  // Find existing audio stream.
-  const auto it = sync_stream_mapping_.find(sync_group);
-  if (it != sync_stream_mapping_.end()) {
-    sync_audio_stream = it->second;
-  } else {
-    // No configured audio stream, see if we can find one.
+AudioReceiveStream* Call::FindAudioStreamForSyncGroup(
+    const std::string& sync_group) {
+  RTC_DCHECK_RUN_ON(&receive_11993_checker_);
+  if (!sync_group.empty()) {
     for (AudioReceiveStream* stream : audio_receive_streams_) {
-      if (stream->config().sync_group == sync_group) {
-        if (sync_audio_stream != nullptr) {
-          RTC_LOG(LS_WARNING)
-              << "Attempting to sync more than one audio stream "
-                 "within the same sync group. This is not "
-                 "supported in the current implementation.";
-          break;
-        }
-        sync_audio_stream = stream;
-      }
+      if (stream->config().sync_group == sync_group)
+        return stream;
     }
   }
-  if (sync_audio_stream)
-    sync_stream_mapping_[sync_group] = sync_audio_stream;
+
+  return nullptr;
+}
+
+// TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
+// RTC_RUN_ON(worker_thread_)
+void Call::ConfigureSync(const std::string& sync_group) {
+  // `audio_stream` may be nullptr when clearing the audio stream for a group.
+  AudioReceiveStream* audio_stream = FindAudioStreamForSyncGroup(sync_group);
+
   size_t num_synced_streams = 0;
   for (VideoReceiveStream2* video_stream : video_receive_streams_) {
     if (video_stream->sync_group() != sync_group)
       continue;
     ++num_synced_streams;
-    if (num_synced_streams > 1) {
-      // TODO(pbos): Support synchronizing more than one A/V pair.
-      // https://code.google.com/p/webrtc/issues/detail?id=4762
-      RTC_LOG(LS_WARNING)
-          << "Attempting to sync more than one audio/video pair "
-             "within the same sync group. This is not supported in "
-             "the current implementation.";
-    }
+    // TODO(bugs.webrtc.org/4762): Support synchronizing more than one A/V pair.
+    // Attempting to sync more than one audio/video pair within the same sync
+    // group is not supported in the current implementation.
     // Only sync the first A/V pair within this sync group.
     if (num_synced_streams == 1) {
       // sync_audio_stream may be null and that's ok.
-      video_stream->SetSync(sync_audio_stream);
+      video_stream->SetSync(audio_stream);
     } else {
       video_stream->SetSync(nullptr);
     }
