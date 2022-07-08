@@ -41,10 +41,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
+            android:layout_marginEnd="16dp"
             android:ellipsize="end"
             android:singleLine="true"
             android:textAlignment="viewStart"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:textColor="?attr/textPrimary"
             tools:text="Example site"
             app:layout_constraintEnd_toStartOf="@id/overflow_menu"
@@ -59,12 +60,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
-            android:layout_marginTop="2dp"
+            android:layout_marginEnd="16dp"
             android:ellipsize="end"
             android:singleLine="true"
             android:textAlignment="viewStart"
             android:textColor="?attr/textSecondary"
-            android:textSize="12sp"
+            android:textSize="14sp"
             tools:text="https://example.com/"
             app:layout_constraintEnd_toStartOf="@id/overflow_menu"
             app:layout_constraintStart_toEndOf="@id/icon"
@@ -74,14 +75,14 @@
 
     <ImageButton
             android:id="@+id/overflow_menu"
-            android:layout_width="@dimen/glyph_button_width"
-            android:layout_height="@dimen/glyph_button_height"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_menu"
             app:srcCompat="@drawable/ic_close"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginEnd="4dp"/>
+            android:layout_marginEnd="16dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
