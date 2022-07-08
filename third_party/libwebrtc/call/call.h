@@ -35,9 +35,16 @@
 
 namespace webrtc {
 
+// A Call represents a two-way connection carrying zero or more outgoing
+// and incoming media streams, transported over one or more RTP transports.
+
 // A Call instance can contain several send and/or receive streams. All streams
 // are assumed to have the same remote endpoint and will share bitrate estimates
 // etc.
+
+// When using the PeerConnection API, there is an one to one relationship
+// between the PeerConnection and the Call.
+
 class Call {
  public:
   using Config = CallConfig;
