@@ -92,7 +92,8 @@ class gfxVarReceiver;
   _(UseVP9HwDecode, bool, false)                                   \
   _(HwDecodedVideoZeroCopy, bool, false)                           \
   _(UseDMABufSurfaceExport, bool, true)                            \
-  _(ReuseDecoderDevice, bool, false)
+  _(ReuseDecoderDevice, bool, false)                               \
+  _(UseCanvasRenderThread, bool, false)
 
 /* Add new entries above this line. */
 

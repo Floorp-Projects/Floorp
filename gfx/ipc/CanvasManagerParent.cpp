@@ -6,6 +6,7 @@
 
 #include "CanvasManagerParent.h"
 #include "mozilla/dom/WebGLParent.h"
+#include "mozilla/gfx/CanvasRenderThread.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -23,9 +24,7 @@ CanvasManagerParent::ManagerSet CanvasManagerParent::sManagers;
 
   auto manager = MakeRefPtr<CanvasManagerParent>();
 
-  if (gfxVars::SupportsThreadsafeGL()) {
-    manager->Bind(std::move(aEndpoint));
-  } else {
+  if (!gfxVars::SupportsThreadsafeGL()) {
     nsCOMPtr<nsIThread> owningThread;
     owningThread = wr::RenderThread::GetRenderThread();
     MOZ_ASSERT(owningThread);
@@ -33,6 +32,16 @@ CanvasManagerParent::ManagerSet CanvasManagerParent::sManagers;
     owningThread->Dispatch(NewRunnableMethod<Endpoint<PCanvasManagerParent>&&>(
         "CanvasManagerParent::Bind", manager, &CanvasManagerParent::Bind,
         std::move(aEndpoint)));
+  } else if (gfxVars::UseCanvasRenderThread()) {
+    nsCOMPtr<nsIThread> owningThread;
+    owningThread = gfx::CanvasRenderThread::GetCanvasRenderThread();
+    MOZ_ASSERT(owningThread);
+
+    owningThread->Dispatch(NewRunnableMethod<Endpoint<PCanvasManagerParent>&&>(
+        "CanvasManagerParent::Bind", manager, &CanvasManagerParent::Bind,
+        std::move(aEndpoint)));
+  } else {
+    manager->Bind(std::move(aEndpoint));
   }
 }
 
@@ -40,10 +49,12 @@ CanvasManagerParent::ManagerSet CanvasManagerParent::sManagers;
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsISerialEventTarget> owningThread;
-  if (gfxVars::SupportsThreadsafeGL()) {
-    owningThread = layers::CompositorThread();
-  } else {
+  if (!gfxVars::SupportsThreadsafeGL()) {
     owningThread = wr::RenderThread::GetRenderThread();
+  } else if (gfxVars::UseCanvasRenderThread()) {
+    owningThread = gfx::CanvasRenderThread::GetCanvasRenderThread();
+  } else {
+    owningThread = layers::CompositorThread();
   }
   if (!owningThread) {
     return;

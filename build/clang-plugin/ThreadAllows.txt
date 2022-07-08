@@ -12,6 +12,7 @@ COM Intcpt Log
 COM MTA
 Cache I/O
 Cameras IPC
+CanvasRenderer
 ChainedPipePump
 ChainedPipeRecv
 Checker Test
