@@ -1257,12 +1257,18 @@ class Document : public nsINode,
   RefPtr<MozPromise<int, bool, true>> RequestStorageAccessAsyncHelper(
       nsPIDOMWindowInner* aInnerWindow, BrowsingContext* aBrowsingContext,
       nsIPrincipal* aPrincipal, bool aHasUserInteraction,
-      ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier);
+      ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier,
+      bool performFinalChecks);
   already_AddRefed<Promise> RequestStorageAccess(ErrorResult& aRv);
 
   already_AddRefed<Promise> RequestStorageAccessForOrigin(
       const nsAString& aThirdPartyOrigin, const bool aRequireUserInteraction,
       ErrorResult& aRv);
+
+  already_AddRefed<Promise> RequestStorageAccessUnderSite(
+      const nsAString& aSerializedSite, ErrorResult& aRv);
+  already_AddRefed<Promise> CompleteStorageAccessRequestFromSite(
+      const nsAString& aSerializedOrigin, ErrorResult& aRv);
 
   bool UseRegularPrincipal() const;
 
