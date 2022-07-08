@@ -64,12 +64,22 @@ class FakeTaskQueue : public TaskQueueBase {
   void Delete() override {}
 
   void PostTask(std::unique_ptr<QueuedTask> task) override {
-    PostDelayedTask(std::move(task), 0);
+    last_task_ = std::move(task);
+    last_precision_ = absl::nullopt;
+    last_delay_ = 0;
   }
 
   void PostDelayedTask(std::unique_ptr<QueuedTask> task,
                        uint32_t milliseconds) override {
     last_task_ = std::move(task);
+    last_precision_ = TaskQueueBase::DelayPrecision::kLow;
+    last_delay_ = milliseconds;
+  }
+
+  void PostDelayedHighPrecisionTask(std::unique_ptr<QueuedTask> task,
+                                    uint32_t milliseconds) override {
+    last_task_ = std::move(task);
+    last_precision_ = TaskQueueBase::DelayPrecision::kHigh;
     last_delay_ = milliseconds;
   }
 
@@ -94,11 +104,16 @@ class FakeTaskQueue : public TaskQueueBase {
     return last_delay_.value_or(-1);
   }
 
+  absl::optional<TaskQueueBase::DelayPrecision> last_precision() const {
+    return last_precision_;
+  }
+
  private:
   CurrentTaskQueueSetter task_queue_setter_;
   SimulatedClock* clock_;
   std::unique_ptr<QueuedTask> last_task_;
   absl::optional<uint32_t> last_delay_;
+  absl::optional<TaskQueueBase::DelayPrecision> last_precision_;
 };
 
 // NOTE: Since this utility class holds a raw pointer to a variable that likely
@@ -165,7 +180,7 @@ TEST(RepeatingTaskTest, CompensatesForLongRunTime) {
         clock.AdvanceTime(kSleepDuration);
         return kRepeatInterval;
       },
-      &clock);
+      TaskQueueBase::DelayPrecision::kLow, &clock);
 
   EXPECT_EQ(task_queue.last_delay(), 0u);
   EXPECT_FALSE(task_queue.AdvanceTimeAndRunLastTask());
@@ -188,7 +203,7 @@ TEST(RepeatingTaskTest, CompensatesForShortRunTime) {
         clock.AdvanceTime(TimeDelta::Millis(100));
         return TimeDelta::Millis(300);
       },
-      &clock);
+      TaskQueueBase::DelayPrecision::kLow, &clock);
 
   // Expect instant post task.
   EXPECT_EQ(task_queue.last_delay(), 0u);
@@ -338,7 +353,7 @@ TEST(RepeatingTaskTest, ClockIntegration) {
         clock.AdvanceTimeMilliseconds(10);
         return TimeDelta::Millis(100);
       },
-      &clock);
+      TaskQueueBase::DelayPrecision::kLow, &clock);
 
   clock.AdvanceTimeMilliseconds(100);
   QueuedTask* task_to_run = delayed_task.release();
@@ -364,6 +379,68 @@ TEST(RepeatingTaskTest, CanBeStoppedAfterTaskQueueDeletedTheRepeatingTask) {
   // shutdown task queue: delete all pending tasks and run 'regular' task.
   repeating_task = nullptr;
   handle.Stop();
+}
+
+TEST(RepeatingTaskTest, DefaultPrecisionIsLow) {
+  SimulatedClock clock(Timestamp::Zero());
+  FakeTaskQueue task_queue(&clock);
+  // Closure that repeats twice.
+  MockFunction<TimeDelta()> closure;
+  EXPECT_CALL(closure, Call())
+      .WillOnce(Return(TimeDelta::Millis(1)))
+      .WillOnce(Return(TimeDelta::PlusInfinity()));
+  RepeatingTaskHandle::Start(&task_queue, closure.AsStdFunction());
+  // Initial task is a PostTask().
+  EXPECT_FALSE(task_queue.last_precision().has_value());
+  EXPECT_FALSE(task_queue.AdvanceTimeAndRunLastTask());
+  // Repeated task is a delayed task with the default precision: low.
+  EXPECT_TRUE(task_queue.last_precision().has_value());
+  EXPECT_EQ(task_queue.last_precision().value(),
+            TaskQueueBase::DelayPrecision::kLow);
+  // No more tasks.
+  EXPECT_TRUE(task_queue.AdvanceTimeAndRunLastTask());
+}
+
+TEST(RepeatingTaskTest, CanSpecifyToPostTasksWithLowPrecision) {
+  SimulatedClock clock(Timestamp::Zero());
+  FakeTaskQueue task_queue(&clock);
+  // Closure that repeats twice.
+  MockFunction<TimeDelta()> closure;
+  EXPECT_CALL(closure, Call())
+      .WillOnce(Return(TimeDelta::Millis(1)))
+      .WillOnce(Return(TimeDelta::PlusInfinity()));
+  RepeatingTaskHandle::Start(&task_queue, closure.AsStdFunction(),
+                             TaskQueueBase::DelayPrecision::kLow);
+  // Initial task is a PostTask().
+  EXPECT_FALSE(task_queue.last_precision().has_value());
+  EXPECT_FALSE(task_queue.AdvanceTimeAndRunLastTask());
+  // Repeated task is a delayed task with the specified precision.
+  EXPECT_TRUE(task_queue.last_precision().has_value());
+  EXPECT_EQ(task_queue.last_precision().value(),
+            TaskQueueBase::DelayPrecision::kLow);
+  // No more tasks.
+  EXPECT_TRUE(task_queue.AdvanceTimeAndRunLastTask());
+}
+
+TEST(RepeatingTaskTest, CanSpecifyToPostTasksWithHighPrecision) {
+  SimulatedClock clock(Timestamp::Zero());
+  FakeTaskQueue task_queue(&clock);
+  // Closure that repeats twice.
+  MockFunction<TimeDelta()> closure;
+  EXPECT_CALL(closure, Call())
+      .WillOnce(Return(TimeDelta::Millis(1)))
+      .WillOnce(Return(TimeDelta::PlusInfinity()));
+  RepeatingTaskHandle::Start(&task_queue, closure.AsStdFunction(),
+                             TaskQueueBase::DelayPrecision::kHigh);
+  // Initial task is a PostTask().
+  EXPECT_FALSE(task_queue.last_precision().has_value());
+  EXPECT_FALSE(task_queue.AdvanceTimeAndRunLastTask());
+  // Repeated task is a delayed task with the specified precision.
+  EXPECT_TRUE(task_queue.last_precision().has_value());
+  EXPECT_EQ(task_queue.last_precision().value(),
+            TaskQueueBase::DelayPrecision::kHigh);
+  // No more tasks.
+  EXPECT_TRUE(task_queue.AdvanceTimeAndRunLastTask());
 }
 
 }  // namespace webrtc
