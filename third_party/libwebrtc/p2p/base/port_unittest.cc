@@ -284,7 +284,6 @@ class TestChannel : public sigslot::has_slots<> {
     conn_ = port_->CreateConnection(remote_candidate, Port::ORIGIN_MESSAGE);
     IceMode remote_ice_mode =
         (ice_mode_ == ICEMODE_FULL) ? ICEMODE_LITE : ICEMODE_FULL;
-    conn_->set_remote_ice_mode(remote_ice_mode);
     conn_->set_use_candidate_attr(remote_ice_mode == ICEMODE_FULL);
     conn_->SignalStateChange.connect(this,
                                      &TestChannel::OnConnectionStateChange);

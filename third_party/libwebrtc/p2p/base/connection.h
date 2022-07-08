@@ -189,7 +189,6 @@ class Connection : public CandidatePairInterface,
   // a nomination value. The controlling agent gets its `acked_nomination_` set
   // when receiving a response to a nominating ping.
   bool nominated() const { return acked_nomination_ || remote_nomination_; }
-  void set_remote_ice_mode(IceMode mode) { remote_ice_mode_ = mode; }
 
   int receiving_timeout() const;
   void set_receiving_timeout(absl::optional<int> receiving_timeout_ms) {
@@ -271,8 +270,6 @@ class Connection : public CandidatePairInterface,
   IceCandidatePairState state() const { return state_; }
 
   int num_pings_sent() const { return num_pings_sent_; }
-
-  IceMode remote_ice_mode() const { return remote_ice_mode_; }
 
   uint32_t ComputeNetworkCost() const;
 
@@ -419,7 +416,6 @@ class Connection : public CandidatePairInterface,
   // value will be 1 if the connection has been nominated.
   uint32_t remote_nomination_ = 0;
 
-  IceMode remote_ice_mode_;
   StunRequestManager requests_;
   int rtt_;
   int rtt_samples_ = 0;
