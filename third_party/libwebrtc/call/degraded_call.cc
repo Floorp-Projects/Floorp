@@ -66,7 +66,7 @@ bool DegradedCall::FakeNetworkPipeOnTaskQueue::Process() {
     int64_t next_process_time = *time_to_next + clock_->TimeInMilliseconds();
     if (!next_process_ms_ || next_process_time < *next_process_ms_) {
       next_process_ms_ = next_process_time;
-      task_queue_.PostDelayedTask(
+      task_queue_.PostDelayedHighPrecisionTask(
           [this]() {
             RTC_DCHECK_RUN_ON(&task_queue_);
             if (!Process()) {
