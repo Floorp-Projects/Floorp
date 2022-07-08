@@ -12,21 +12,28 @@
 
 #include <stdint.h>
 
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/types/optional.h"
+#include "absl/types/variant.h"
+#include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_content_type.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/event.h"
+#include "system_wrappers/include/field_trial.h"
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/run_loop.h"
 #include "test/time_controller/simulated_time_controller.h"
 
+using ::testing::_;
 using ::testing::AllOf;
 using ::testing::Contains;
 using ::testing::Each;
@@ -38,6 +45,7 @@ using ::testing::Not;
 using ::testing::Optional;
 using ::testing::Pointee;
 using ::testing::SizeIs;
+using ::testing::VariantWith;
 
 namespace webrtc {
 
@@ -62,20 +70,31 @@ constexpr Timestamp kClockStart = Timestamp::Millis(1000);
 class FakeEncodedFrame : public EncodedFrame {
  public:
   // Always 10ms delay and on time.
-  int64_t ReceivedTime() const override {
-    if (Timestamp() == 0)
-      return kClockStart.ms();
-    return TimeDelta::Seconds(Timestamp() / 90000.0).ms() + kClockStart.ms();
-  }
+  int64_t ReceivedTime() const override { return received_time_; }
   int64_t RenderTime() const override { return _renderTimeMs; }
+
+  void SetReceivedTime(int64_t received_time) {
+    received_time_ = received_time;
+  }
+
+ private:
+  int64_t received_time_;
 };
 
-MATCHER_P(FrameWithId, id, "") {
+MATCHER_P(WithId, id, "") {
   return Matches(Eq(id))(arg.Id());
 }
 
 MATCHER_P(FrameWithSize, id, "") {
   return Matches(Eq(id))(arg.size());
+}
+
+auto TimedOut() {
+  return Optional(VariantWith<TimeDelta>(_));
+}
+
+auto Frame(testing::Matcher<EncodedFrame> m) {
+  return Optional(VariantWith<std::unique_ptr<EncodedFrame>>(Pointee(m)));
 }
 
 class Builder {
@@ -104,6 +123,10 @@ class Builder {
     spatial_layer_ = spatial_layer;
     return *this;
   }
+  Builder& ReceivedTime(Timestamp receive_time) {
+    received_time_ = receive_time;
+    return *this;
+  }
 
   std::unique_ptr<FakeEncodedFrame> Build() {
     RTC_CHECK_LE(references_.size(), EncodedFrame::kMaxFrameReferences);
@@ -126,6 +149,15 @@ class Builder {
     if (spatial_layer_) {
       frame->SetSpatialIndex(spatial_layer_);
     }
+    if (received_time_) {
+      frame->SetReceivedTime(received_time_->ms());
+    } else {
+      if (*rtp_timestamp_ == 0)
+        frame->SetReceivedTime(kClockStart.ms());
+      frame->SetReceivedTime(
+          TimeDelta::Seconds(*rtp_timestamp_ / 90000.0).ms() +
+          kClockStart.ms());
+    }
 
     return frame;
   }
@@ -135,6 +167,7 @@ class Builder {
   absl::optional<int64_t> frame_id_;
   absl::optional<VideoPlayoutDelay> playout_delay_;
   absl::optional<int> spatial_layer_;
+  absl::optional<Timestamp> received_time_;
   bool last_spatial_layer_ = false;
   std::vector<int64_t> references_;
 };
@@ -200,31 +233,40 @@ class FrameBufferProxyTest : public ::testing::TestWithParam<std::string>,
   }
 
   void OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) override {
-    last_frame_ = std::move(frame);
-    run_loop_.Quit();
+    RTC_DCHECK(frame);
+    SetWaitResult(std::move(frame));
   }
 
   void OnDecodableFrameTimeout(TimeDelta wait_time) override {
-    timeouts_++;
-    run_loop_.Quit();
+    SetWaitResult(wait_time);
   }
 
-  bool WaitForFrameOrTimeout(TimeDelta wait) {
-    if (NewFrameOrTimeout()) {
-      return true;
+  using WaitResult =
+      absl::variant<std::unique_ptr<EncodedFrame>, TimeDelta /*wait_time*/>;
+
+  absl::optional<WaitResult> WaitForFrameOrTimeout(TimeDelta wait) {
+    if (wait_result_) {
+      return std::move(wait_result_);
     }
     run_loop_.PostTask([&] { time_controller_.AdvanceTime(wait); });
     run_loop_.PostTask([&] {
-      // If run loop posted to a task queue, flush that.
+      if (wait_result_)
+        return;
+
+      // If run loop posted to a task queue, flush that if there is no result.
       time_controller_.AdvanceTime(TimeDelta::Zero());
+      if (wait_result_)
+        return;
 
       run_loop_.PostTask([&] {
         time_controller_.AdvanceTime(TimeDelta::Zero());
-        run_loop_.Quit();
+        // Quit if there is no result set.
+        if (!wait_result_)
+          run_loop_.Quit();
       });
     });
     run_loop_.Run();
-    return NewFrameOrTimeout();
+    return std::move(wait_result_);
   }
 
   void StartNextDecode() {
@@ -239,13 +281,8 @@ class FrameBufferProxyTest : public ::testing::TestWithParam<std::string>,
     time_controller_.AdvanceTime(TimeDelta::Zero());
   }
 
-  void ResetLastResult() {
-    last_frame_.reset();
-    last_timeouts_ = timeouts_;
-  }
+  void ResetLastResult() { wait_result_.reset(); }
 
-  int timeouts() const { return timeouts_; }
-  EncodedFrame* last_frame() const { return last_frame_.get(); }
   int dropped_frames() const { return dropped_frames_; }
 
  protected:
@@ -259,31 +296,31 @@ class FrameBufferProxyTest : public ::testing::TestWithParam<std::string>,
   std::unique_ptr<FrameBufferProxy> proxy_;
 
  private:
-  bool NewFrameOrTimeout() const {
-    return last_frame_ || timeouts_ != last_timeouts_;
+  void SetWaitResult(WaitResult result) {
+    RTC_DCHECK(!wait_result_);
+    if (absl::holds_alternative<std::unique_ptr<EncodedFrame>>(result)) {
+      RTC_DCHECK(absl::get<std::unique_ptr<EncodedFrame>>(result));
+    }
+    wait_result_.emplace(std::move(result));
+    run_loop_.Quit();
   }
 
-  int timeouts_ = 0;
-  int last_timeouts_ = 0;
-  std::unique_ptr<EncodedFrame> last_frame_;
   uint32_t dropped_frames_ = 0;
+  absl::optional<WaitResult> wait_result_;
 };
 
 TEST_P(FrameBufferProxyTest, InitialTimeoutAfterKeyframeTimeoutPeriod) {
   StartNextDecodeForceKeyframe();
   // No frame insterted. Timeout expected.
-  EXPECT_TRUE(WaitForFrameOrTimeout(kMaxWaitForKeyframe));
-  EXPECT_EQ(timeouts(), 1);
+  EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForKeyframe), TimedOut());
 
   // No new timeout set since receiver has not started new decode.
   ResetLastResult();
-  EXPECT_FALSE(WaitForFrameOrTimeout(kMaxWaitForKeyframe));
-  EXPECT_EQ(timeouts(), 1);
+  EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForKeyframe), Eq(absl::nullopt));
 
   // Now that receiver has asked for new frame, a new timeout can occur.
   StartNextDecodeForceKeyframe();
-  EXPECT_TRUE(WaitForFrameOrTimeout(kMaxWaitForKeyframe));
-  EXPECT_EQ(timeouts(), 2);
+  EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForKeyframe), TimedOut());
 }
 
 TEST_P(FrameBufferProxyTest, KeyFramesAreScheduled) {
@@ -293,10 +330,7 @@ TEST_P(FrameBufferProxyTest, KeyFramesAreScheduled) {
   auto frame = Builder().Id(0).Time(0).AsLast().Build();
   proxy_->InsertFrame(std::move(frame));
 
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Zero()));
-
-  ASSERT_THAT(last_frame(), Pointee(FrameWithId(0)));
-  EXPECT_EQ(timeouts(), 0);
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
 }
 
 TEST_P(FrameBufferProxyTest, DeltaFrameTimeoutAfterKeyframeExtracted) {
@@ -305,8 +339,7 @@ TEST_P(FrameBufferProxyTest, DeltaFrameTimeoutAfterKeyframeExtracted) {
   time_controller_.AdvanceTime(TimeDelta::Millis(50));
   auto frame = Builder().Id(0).Time(0).AsLast().Build();
   proxy_->InsertFrame(std::move(frame));
-  EXPECT_TRUE(WaitForFrameOrTimeout(kMaxWaitForKeyframe));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForKeyframe), Frame(WithId(0)));
 
   StartNextDecode();
   time_controller_.AdvanceTime(TimeDelta::Millis(50));
@@ -314,28 +347,22 @@ TEST_P(FrameBufferProxyTest, DeltaFrameTimeoutAfterKeyframeExtracted) {
   // Timeouts should now happen at the normal frequency.
   const int expected_timeouts = 5;
   for (int i = 0; i < expected_timeouts; ++i) {
-    EXPECT_TRUE(WaitForFrameOrTimeout(kMaxWaitForFrame));
+    EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), TimedOut());
     StartNextDecode();
   }
-
-  EXPECT_EQ(timeouts(), expected_timeouts);
 }
 
 TEST_P(FrameBufferProxyTest, DependantFramesAreScheduled) {
   StartNextDecodeForceKeyframe();
   proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Zero()));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
 
   StartNextDecode();
 
   time_controller_.AdvanceTime(kFps30Delay);
   proxy_->InsertFrame(
       Builder().Id(1).Time(kFps30Rtp).AsLast().Refs({0}).Build());
-  EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay));
-
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(1)));
-  EXPECT_EQ(timeouts(), 0);
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(1)));
 }
 
 TEST_P(FrameBufferProxyTest, SpatialLayersAreScheduled) {
@@ -343,9 +370,8 @@ TEST_P(FrameBufferProxyTest, SpatialLayersAreScheduled) {
   proxy_->InsertFrame(Builder().Id(0).SpatialLayer(0).Time(0).Build());
   proxy_->InsertFrame(Builder().Id(1).SpatialLayer(1).Time(0).Build());
   proxy_->InsertFrame(Builder().Id(2).SpatialLayer(2).Time(0).AsLast().Build());
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Zero()));
-  EXPECT_THAT(last_frame(),
-              Pointee(AllOf(FrameWithId(0), FrameWithSize(3 * kFrameSize))));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()),
+              Frame(AllOf(WithId(0), FrameWithSize(3 * kFrameSize))));
 
   proxy_->InsertFrame(Builder().Id(3).Time(kFps30Rtp).SpatialLayer(0).Build());
   proxy_->InsertFrame(Builder().Id(4).Time(kFps30Rtp).SpatialLayer(1).Build());
@@ -353,18 +379,15 @@ TEST_P(FrameBufferProxyTest, SpatialLayersAreScheduled) {
       Builder().Id(5).Time(kFps30Rtp).SpatialLayer(2).AsLast().Build());
 
   StartNextDecode();
-  EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay * 10));
-  EXPECT_THAT(last_frame(),
-              Pointee(AllOf(FrameWithId(3), FrameWithSize(3 * kFrameSize))));
-  EXPECT_EQ(timeouts(), 0);
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay * 10),
+              Frame(AllOf(WithId(3), FrameWithSize(3 * kFrameSize))));
 }
 
 TEST_P(FrameBufferProxyTest, OutstandingFrameTasksAreCancelledAfterDeletion) {
   StartNextDecodeForceKeyframe();
   proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
   // Get keyframe. Delta frame should now be scheduled.
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Zero()));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
 
   StartNextDecode();
   proxy_->InsertFrame(
@@ -372,8 +395,7 @@ TEST_P(FrameBufferProxyTest, OutstandingFrameTasksAreCancelledAfterDeletion) {
   proxy_->StopOnWorker();
   // Wait for 2x max wait time. Since we stopped, this should cause no timeouts
   // or frame-ready callbacks.
-  EXPECT_FALSE(WaitForFrameOrTimeout(kMaxWaitForFrame * 2));
-  EXPECT_EQ(timeouts(), 0);
+  EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame * 2), Eq(absl::nullopt));
 }
 
 TEST_P(FrameBufferProxyTest, FramesWaitForDecoderToComplete) {
@@ -381,8 +403,7 @@ TEST_P(FrameBufferProxyTest, FramesWaitForDecoderToComplete) {
 
   // Start with a keyframe.
   proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Zero()));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
 
   ResetLastResult();
   // Insert a delta frame.
@@ -391,11 +412,10 @@ TEST_P(FrameBufferProxyTest, FramesWaitForDecoderToComplete) {
 
   // Advancing time should not result in a frame since the scheduler has not
   // been signalled that we are ready.
-  EXPECT_FALSE(WaitForFrameOrTimeout(kFps30Delay));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Eq(absl::nullopt));
   // Signal ready.
   StartNextDecode();
-  EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(1)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(1)));
 }
 
 TEST_P(FrameBufferProxyTest, LateFrameDropped) {
@@ -405,8 +425,7 @@ TEST_P(FrameBufferProxyTest, LateFrameDropped) {
   // F0 --> F2
   proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
   // Start with a keyframe.
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Zero()));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
 
   StartNextDecode();
 
@@ -414,16 +433,14 @@ TEST_P(FrameBufferProxyTest, LateFrameDropped) {
   time_controller_.AdvanceTime(kFps30Delay * 2);
   proxy_->InsertFrame(
       Builder().Id(2).Time(2 * kFps30Rtp).AsLast().Refs({0}).Build());
-  EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(2)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(2)));
 
   StartNextDecode();
 
   proxy_->InsertFrame(
       Builder().Id(1).Time(1 * kFps30Rtp).AsLast().Refs({0}).Build());
-  EXPECT_TRUE(WaitForFrameOrTimeout(kMaxWaitForFrame));
   // Confirm frame 1 is never scheduled by timing out.
-  EXPECT_EQ(timeouts(), 1);
+  EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), TimedOut());
 }
 
 TEST_P(FrameBufferProxyTest, FramesFastForwardOnSystemHalt) {
@@ -434,8 +451,7 @@ TEST_P(FrameBufferProxyTest, FramesFastForwardOnSystemHalt) {
   proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
 
   // Start with a keyframe.
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Zero()));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
 
   time_controller_.AdvanceTime(kFps30Delay);
   proxy_->InsertFrame(
@@ -447,8 +463,7 @@ TEST_P(FrameBufferProxyTest, FramesFastForwardOnSystemHalt) {
   // Halting time should result in F1 being skipped.
   time_controller_.AdvanceTime(kFps30Delay * 2);
   StartNextDecode();
-  EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(2)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(2)));
   EXPECT_EQ(dropped_frames(), 1);
 }
 
@@ -456,8 +471,7 @@ TEST_P(FrameBufferProxyTest, ForceKeyFrame) {
   StartNextDecodeForceKeyframe();
   // Initial keyframe.
   proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Zero()));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
 
   StartNextDecodeForceKeyframe();
 
@@ -467,8 +481,7 @@ TEST_P(FrameBufferProxyTest, ForceKeyFrame) {
       Builder().Id(1).Time(kFps30Rtp).AsLast().Refs({0}).Build());
   proxy_->InsertFrame(Builder().Id(2).Time(kFps30Rtp * 2).AsLast().Build());
 
-  EXPECT_TRUE(WaitForFrameOrTimeout(kMaxWaitForFrame));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(2)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay * 3), Frame(WithId(2)));
 }
 
 TEST_P(FrameBufferProxyTest, SlowDecoderDropsTemporalLayers) {
@@ -480,9 +493,8 @@ TEST_P(FrameBufferProxyTest, SlowDecoderDropsTemporalLayers) {
   // F0 --> F2 --> F4
   proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
   // Keyframe received.
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Zero()));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
   // Don't start next decode until slow delay.
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
 
   time_controller_.AdvanceTime(kFps30Delay);
   proxy_->InsertFrame(
@@ -494,9 +506,8 @@ TEST_P(FrameBufferProxyTest, SlowDecoderDropsTemporalLayers) {
   // Simulate decode taking 3x FPS rate.
   time_controller_.AdvanceTime(kFps30Delay * 1.5);
   StartNextDecode();
-  EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay * 2));
   // F2 is the best frame since decoding was so slow that F1 is too old.
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(2)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay * 2), Frame(WithId(2)));
   EXPECT_EQ(dropped_frames(), 1);
   time_controller_.AdvanceTime(kFps30Delay / 2);
 
@@ -510,8 +521,7 @@ TEST_P(FrameBufferProxyTest, SlowDecoderDropsTemporalLayers) {
   // F4 is the best frame since decoding was so slow that F1 is too old.
   time_controller_.AdvanceTime(kFps30Delay);
   StartNextDecode();
-  EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(4)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(4)));
 
   proxy_->InsertFrame(
       Builder().Id(5).Time(5 * kFps30Rtp).Refs({3, 4}).AsLast().Build());
@@ -520,8 +530,7 @@ TEST_P(FrameBufferProxyTest, SlowDecoderDropsTemporalLayers) {
   // F5 is not decodable since F4 was decoded, so a timeout is expected.
   time_controller_.AdvanceTime(TimeDelta::Millis(10));
   StartNextDecode();
-  EXPECT_TRUE(WaitForFrameOrTimeout(kMaxWaitForFrame));
-  EXPECT_EQ(timeouts(), 1);
+  EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), TimedOut());
   // TODO(bugs.webrtc.org/13343): This should be 2 dropped frames since frames 1
   // and 3 were dropped. However, frame_buffer2 does not mark frame 3 as dropped
   // which is a bug. Uncomment below when that is fixed for frame_buffer2 is
@@ -529,41 +538,23 @@ TEST_P(FrameBufferProxyTest, SlowDecoderDropsTemporalLayers) {
   // EXPECT_EQ(dropped_frames(), 2);
 }
 
-TEST_P(FrameBufferProxyTest, OldTimestampNotDecodable) {
-  StartNextDecodeForceKeyframe();
-
-  proxy_->InsertFrame(Builder().Id(0).Time(kFps30Rtp).AsLast().Build());
-  EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
-
-  // Timestamp is before previous frame's.
-  proxy_->InsertFrame(Builder().Id(1).Time(0).AsLast().Build());
-  StartNextDecode();
-  // F1 should be dropped since its timestamp went backwards.
-  EXPECT_TRUE(WaitForFrameOrTimeout(kMaxWaitForFrame));
-  EXPECT_EQ(timeouts(), 1);
-}
-
 TEST_P(FrameBufferProxyTest, NewFrameInsertedWhileWaitingToReleaseFrame) {
   StartNextDecodeForceKeyframe();
   // Initial keyframe.
   proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Zero()));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
 
   time_controller_.AdvanceTime(kFps30Delay);
   proxy_->InsertFrame(
       Builder().Id(1).Time(kFps30Rtp).Refs({0}).AsLast().Build());
   StartNextDecode();
-  EXPECT_FALSE(WaitForFrameOrTimeout(TimeDelta::Zero()));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Eq(absl::nullopt));
 
   // Scheduler is waiting to deliver Frame 1 now. Insert Frame 2. Frame 1 should
   // be delivered still.
   proxy_->InsertFrame(
       Builder().Id(2).Time(kFps30Rtp * 2).Refs({0}).AsLast().Build());
-
-  EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(1)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(1)));
 }
 
 TEST_P(FrameBufferProxyTest, SameFrameNotScheduledTwice) {
@@ -580,16 +571,14 @@ TEST_P(FrameBufferProxyTest, SameFrameNotScheduledTwice) {
 
   // First keyframe.
   proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Millis(15)));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Millis(15)), Frame(WithId(0)));
 
   StartNextDecode();
 
   // Warmup VCMTiming for 30fps.
   for (int i = 1; i <= 30; ++i) {
     proxy_->InsertFrame(Builder().Id(i).Time(i * kFps30Rtp).AsLast().Build());
-    EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay));
-    EXPECT_THAT(last_frame(), Pointee(FrameWithId(i)));
+    EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(i)));
     StartNextDecode();
   }
 
@@ -605,12 +594,10 @@ TEST_P(FrameBufferProxyTest, SameFrameNotScheduledTwice) {
   time_controller_.AdvanceTime(kFps30Delay / 2);
   proxy_->InsertFrame(Builder().Id(31).Time(31 * kFps30Rtp).AsLast().Build());
 
-  EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(32)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(32)));
   StartNextDecode();
 
-  EXPECT_TRUE(WaitForFrameOrTimeout(kFps30Delay));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(33)));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(33)));
   EXPECT_EQ(dropped_frames(), 1);
 }
 
@@ -624,15 +611,73 @@ TEST_P(FrameBufferProxyTest, TestStatsCallback) {
                           clock_->TimeInMilliseconds());
   StartNextDecodeForceKeyframe();
   proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
-  EXPECT_TRUE(WaitForFrameOrTimeout(TimeDelta::Zero()));
-  EXPECT_THAT(last_frame(), Pointee(FrameWithId(0)));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
 
   // Flush stats posted on the decode queue.
   time_controller_.AdvanceTime(TimeDelta::Zero());
 }
 
+TEST_P(FrameBufferProxyTest, NextFrameWithOldTimestamp) {
+  // Test inserting 31 frames and pause the stream for a long time before
+  // frame 32.
+  StartNextDecodeForceKeyframe();
+  constexpr uint32_t kBaseRtp = std::numeric_limits<uint32_t>::max() / 2;
+
+  // First keyframe. The receive time must be explicitly set in this test since
+  // the RTP derived time used in all tests does not work when the long pause
+  // happens later in the test.
+  proxy_->InsertFrame(Builder()
+                          .Id(0)
+                          .Time(kBaseRtp)
+                          .ReceivedTime(clock_->CurrentTime())
+                          .AsLast()
+                          .Build());
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(0)));
+
+  // 1 more frame to warmup VCMTiming for 30fps.
+  StartNextDecode();
+  proxy_->InsertFrame(Builder()
+                          .Id(1)
+                          .Time(kBaseRtp + kFps30Rtp)
+                          .ReceivedTime(clock_->CurrentTime())
+                          .AsLast()
+                          .Build());
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(1)));
+
+  // Pause the stream for such a long time it incurs an RTP timestamp rollover
+  // by over half.
+  constexpr uint32_t kLastRtp = kBaseRtp + kFps30Rtp;
+  constexpr uint32_t kRolloverRtp =
+      kLastRtp + std::numeric_limits<uint32_t>::max() / 2 + 1;
+  constexpr Frequency kRtpHz = Frequency::KiloHertz(90);
+  // Pause for corresponding delay such that RTP timestamp would increase this
+  // much at 30fps.
+  constexpr TimeDelta kRolloverDelay =
+      (std::numeric_limits<uint32_t>::max() / 2 + 1) / kRtpHz;
+
+  // Avoid timeout being set while waiting for the frame and before the receiver
+  // is ready.
+  ResetLastResult();
+  EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), Eq(absl::nullopt));
+  time_controller_.AdvanceTime(kRolloverDelay - kMaxWaitForFrame);
+  StartNextDecode();
+  proxy_->InsertFrame(Builder()
+                          .Id(2)
+                          .Time(kRolloverRtp)
+                          .ReceivedTime(clock_->CurrentTime())
+                          .AsLast()
+                          .Build());
+  // FrameBuffer2 drops the frame, while FrameBuffer3 will continue the stream.
+  if (field_trial::IsEnabled("WebRTC-FrameBuffer3")) {
+    EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(2)));
+  } else {
+    EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), TimedOut());
+  }
+}
+
 INSTANTIATE_TEST_SUITE_P(FrameBufferProxy,
                          FrameBufferProxyTest,
-                         ::testing::Values("WebRTC-FrameBuffer3/Disabled/"));
+                         ::testing::Values("WebRTC-FrameBuffer3/Disabled/",
+                                           "WebRTC-FrameBuffer3/Enabled/"));
 
 }  // namespace webrtc

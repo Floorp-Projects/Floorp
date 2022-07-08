@@ -189,7 +189,6 @@ class VideoReceiveStream2
   void OnDecodableFrameTimeout(TimeDelta wait_time) override;
   void CreateAndRegisterExternalDecoder(const Decoder& decoder);
   int64_t GetMaxWaitMs() const RTC_RUN_ON(decode_queue_);
-  void StartNextDecode() RTC_RUN_ON(decode_queue_);
   void HandleEncodedFrame(std::unique_ptr<EncodedFrame> frame)
       RTC_RUN_ON(decode_queue_);
   void HandleFrameBufferTimeout(int64_t now_ms, int64_t wait_ms)

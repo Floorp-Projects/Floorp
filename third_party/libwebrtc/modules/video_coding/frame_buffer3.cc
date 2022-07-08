@@ -177,6 +177,10 @@ int FrameBuffer::GetTotalNumberOfDroppedFrames() const {
   return num_dropped_frames_;
 }
 
+size_t FrameBuffer::CurrentSize() const {
+  return frames_.size();
+}
+
 bool FrameBuffer::IsContinuous(const FrameIterator& it) const {
   for (int64_t reference : GetReferences(it)) {
     if (decoded_frame_history_.WasDecoded(reference)) {

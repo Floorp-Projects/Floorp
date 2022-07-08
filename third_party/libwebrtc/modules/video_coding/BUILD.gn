@@ -180,11 +180,30 @@ rtc_library("frame_buffer") {
   ]
 }
 
-rtc_library("video_coding") {
-  visibility = [ "*" ]
+rtc_library("timing") {
   sources = [
     "codec_timer.cc",
     "codec_timer.h",
+    "timing.cc",
+    "timing.h",
+  ]
+  deps = [
+    "../../api/units:time_delta",
+    "../../api/video:video_rtp_headers",
+    "../../rtc_base:macromagic",
+    "../../rtc_base:rtc_numerics",
+    "../../rtc_base/experiments:field_trial_parser",
+    "../../rtc_base/synchronization:mutex",
+    "../../rtc_base/time:timestamp_extrapolator",
+    "../../system_wrappers",
+    "../../system_wrappers:field_trial",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+rtc_library("video_coding") {
+  visibility = [ "*" ]
+  sources = [
     "decoder_database.cc",
     "decoder_database.h",
     "event_wrapper.cc",
@@ -228,8 +247,6 @@ rtc_library("video_coding") {
     "rtt_filter.h",
     "timestamp_map.cc",
     "timestamp_map.h",
-    "timing.cc",
-    "timing.h",
     "unique_timestamp_counter.cc",
     "unique_timestamp_counter.h",
     "video_codec_initializer.cc",
@@ -243,6 +260,7 @@ rtc_library("video_coding") {
     ":frame_buffer",
     ":frame_helpers",
     ":packet_buffer",
+    ":timing",
     ":video_codec_interface",
     ":video_coding_utility",
     ":webrtc_vp9_helpers",
@@ -353,6 +371,7 @@ rtc_library("video_coding_legacy") {
   deps = [
     ":codec_globals_headers",
     ":encoded_frame",
+    ":timing",
     ":video_codec_interface",
     ":video_coding",
     "..:module_api",
@@ -1124,6 +1143,7 @@ if (rtc_include_tests) {
       ":nack_requester",
       ":packet_buffer",
       ":simulcast_test_fixture_impl",
+      ":timing",
       ":video_codec_interface",
       ":video_codecs_test_framework",
       ":video_coding",
@@ -1148,6 +1168,7 @@ if (rtc_include_tests) {
       "../../api:videocodec_test_fixture_api",
       "../../api/task_queue:default_task_queue_factory",
       "../../api/test/video:function_video_factory",
+      "../../api/units:time_delta",
       "../../api/video:builtin_video_bitrate_allocator_factory",
       "../../api/video:encoded_frame",
       "../../api/video:render_resolution",
