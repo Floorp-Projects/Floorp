@@ -677,11 +677,10 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   rtcp_report_block.last_sender_report_timestamp = report_block.last_sr();
   // Number of seconds since 1900 January 1 00:00 GMT (see
   // https://tools.ietf.org/html/rfc868).
-  constexpr int64_t kNtpJan1970Millisecs =
-      2208988800 * rtc::kNumMillisecsPerSec;
-  report_block_data->SetReportBlock(rtcp_report_block,
-      (clock_->CurrentNtpInMilliseconds() - kNtpJan1970Millisecs) *
-      rtc::kNumMicrosecsPerMillisec);
+  report_block_data->SetReportBlock(
+      rtcp_report_block,
+      (clock_->CurrentNtpInMilliseconds() - rtc::kNtpJan1970Millisecs) *
+          rtc::kNumMicrosecsPerMillisec);
 
   int64_t rtt_ms = 0;
   uint32_t send_time_ntp = report_block.last_sr();

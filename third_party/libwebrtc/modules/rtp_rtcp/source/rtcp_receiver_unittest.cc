@@ -1573,12 +1573,8 @@ TEST(RtcpReceiverTest,
   const uint32_t kCumulativeLoss = 7;
   const uint32_t kJitter = 9;
   const uint16_t kSequenceNumber = 1234;
-  const int64_t kUtcNowUs = 42;
-
-  // The "report_block_timestamp_utc_us" is obtained from the global UTC clock
-  // (not the simulcated `mocks.clock`) and requires a scoped fake clock.
-  rtc::ScopedFakeClock fake_clock;
-  fake_clock.SetTime(Timestamp::Micros(kUtcNowUs));
+  const int64_t kNtpNowMs =
+      mocks.clock.CurrentNtpInMilliseconds() - rtc::kNtpJan1970Millisecs;
 
   rtcp::ReportBlock rtcp_block;
   rtcp_block.SetMediaSsrc(kReceiverMainSsrc);
@@ -1601,7 +1597,8 @@ TEST(RtcpReceiverTest,
         EXPECT_EQ(rtcp_block.extended_high_seq_num(),
                   report_block.extended_highest_sequence_number);
         EXPECT_EQ(rtcp_block.jitter(), report_block.jitter);
-        EXPECT_EQ(kUtcNowUs, report_block_data.report_block_timestamp_utc_us());
+        EXPECT_EQ(kNtpNowMs * rtc::kNumMicrosecsPerMillisec,
+                  report_block_data.report_block_timestamp_utc_us());
         // No RTT is calculated in this test.
         EXPECT_EQ(0u, report_block_data.num_rtts());
       });
