@@ -638,7 +638,7 @@ std::vector<RtpSenderInfo>* RtpTransmissionManager::GetLocalSenderInfos(
 const RtpSenderInfo* RtpTransmissionManager::FindSenderInfo(
     const std::vector<RtpSenderInfo>& infos,
     const std::string& stream_id,
-    const std::string sender_id) const {
+    const std::string& sender_id) const {
   for (const RtpSenderInfo& sender_info : infos) {
     if (sender_info.stream_id == stream_id &&
         sender_info.sender_id == sender_id) {
