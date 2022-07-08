@@ -21,7 +21,7 @@ namespace test {
 // Class for handling a looping input audio file.
 class InputAudioFile {
  public:
-  explicit InputAudioFile(const std::string file_name, bool loop_at_end = true);
+  explicit InputAudioFile(std::string file_name, bool loop_at_end = true);
 
   virtual ~InputAudioFile();
 

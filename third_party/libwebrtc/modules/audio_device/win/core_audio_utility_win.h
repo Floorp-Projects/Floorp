@@ -537,7 +537,7 @@ bool FillRenderEndpointBufferWithSilence(IAudioClient* client,
 
 // Prints/logs all fields of the format structure in `format`.
 // Also supports extended versions (WAVEFORMATEXTENSIBLE).
-std::string WaveFormatToString(const WaveFormatWrapper format);
+std::string WaveFormatToString(WaveFormatWrapper format);
 
 // Converts Windows internal REFERENCE_TIME (100 nanosecond units) into
 // generic webrtc::TimeDelta which then can be converted to any time unit.

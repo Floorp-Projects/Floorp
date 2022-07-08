@@ -25,11 +25,11 @@ class RTPStream {
  public:
   virtual ~RTPStream() {}
 
-  virtual void Write(const uint8_t payloadType,
-                     const uint32_t timeStamp,
-                     const int16_t seqNo,
+  virtual void Write(uint8_t payloadType,
+                     uint32_t timeStamp,
+                     int16_t seqNo,
                      const uint8_t* payloadData,
-                     const size_t payloadSize,
+                     size_t payloadSize,
                      uint32_t frequency) = 0;
 
   // Returns the packet's payload size. Zero should be treated as an
@@ -75,11 +75,11 @@ class RTPBuffer : public RTPStream {
 
   ~RTPBuffer() = default;
 
-  void Write(const uint8_t payloadType,
-             const uint32_t timeStamp,
-             const int16_t seqNo,
+  void Write(uint8_t payloadType,
+             uint32_t timeStamp,
+             int16_t seqNo,
              const uint8_t* payloadData,
-             const size_t payloadSize,
+             size_t payloadSize,
              uint32_t frequency) override;
 
   size_t Read(RTPHeader* rtp_header,
@@ -108,11 +108,11 @@ class RTPFile : public RTPStream {
 
   void ReadHeader();
 
-  void Write(const uint8_t payloadType,
-             const uint32_t timeStamp,
-             const int16_t seqNo,
+  void Write(uint8_t payloadType,
+             uint32_t timeStamp,
+             int16_t seqNo,
              const uint8_t* payloadData,
-             const size_t payloadSize,
+             size_t payloadSize,
              uint32_t frequency) override;
 
   size_t Read(RTPHeader* rtp_header,

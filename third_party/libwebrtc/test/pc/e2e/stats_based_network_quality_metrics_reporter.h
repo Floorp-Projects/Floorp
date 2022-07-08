@@ -103,7 +103,7 @@ class StatsBasedNetworkQualityMetricsReporter
                    const Timestamp& end_time);
   void ReportResult(const std::string& metric_name,
                     const std::string& network_label,
-                    const double value,
+                    double value,
                     const std::string& unit) const;
   void ReportResult(const std::string& metric_name,
                     const std::string& network_label,

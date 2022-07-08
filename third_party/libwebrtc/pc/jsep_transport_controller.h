@@ -135,7 +135,7 @@ class JsepTransportController : public sigslot::has_slots<> {
 
     // Factory for SCTP transports.
     SctpTransportFactoryInterface* sctp_factory = nullptr;
-    std::function<void(const rtc::SSLHandshakeError)> on_dtls_handshake_error_;
+    std::function<void(rtc::SSLHandshakeError)> on_dtls_handshake_error_;
   };
 
   // The ICE related events are fired on the `network_thread`.

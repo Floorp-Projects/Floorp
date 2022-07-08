@@ -36,7 +36,7 @@ class AudioLoop {
   // greater. Otherwise, the loop length is the same as the file length.
   // The audio will be delivered in blocks of `block_length_samples`.
   // Returns false if the initialization failed, otherwise true.
-  bool Init(const std::string file_name,
+  bool Init(std::string file_name,
             size_t max_loop_length_samples,
             size_t block_length_samples);
 

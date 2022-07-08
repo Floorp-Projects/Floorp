@@ -26,7 +26,7 @@ inline CFDictionaryRef CreateCFTypeDictionary(CFTypeRef* keys,
 }
 
 // Copies characters from a CFStringRef into a std::string.
-std::string CFStringToString(const CFStringRef cf_string);
+std::string CFStringToString(CFStringRef cf_string);
 
 // Convenience function for setting a VT property.
 void SetVTSessionProperty(VTSessionRef session, CFStringRef key, int32_t value);
