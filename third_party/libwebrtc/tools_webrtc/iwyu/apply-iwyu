@@ -14,8 +14,14 @@
 #
 # To get iwyu on Debian/glinux, do "sudo apt-get install iwyu".
 
+# Set this to 1 to get more debug information.
+# Set this to 2 to also get a dump of the iwyu tool output.
+DEBUG=1
+
 set -e
-set -x
+if [ $DEBUG -gt 0 ]; then
+  set -x
+fi
 
 IWYU_TOOL="${IWYU_TOOL:-/usr/bin/iwyu_tool}"
 FIX_INCLUDE="${FIX_INCLUDE:-/usr/bin/fix_include}"
@@ -57,13 +63,17 @@ if [ ! -f $FILE ]; then
   fi
   FILE_CC=$FILE.cc
 else
-  # Exact file, no .h file
+  # Exact cc file, no .h file - but iwyu will modify .h anyway if it exists.
   FILE_CC=$FILE
-  FILE_H=""
+  if [ -f $(dirname $FILE)/$(basename -s .cc $FILE).h ]; then
+    FILE_H=$(dirname $FILE)/$(basename -s .cc $FILE).h
+  else
+    FILE_H=""
+  fi
 fi
 
 # IWYU has a confusing set of exit codes. Discard it.
-"$IWYU_TOOL" -p "$COMPILE_COMMANDS" "$FILE_CC" \
+"$IWYU_TOOL" -p "$COMPILE_COMMANDS" "$FILE_CC" -- -Xiwyu --no_fwd_decls \
   >& /tmp/includefixes$$ || echo "IWYU done, code $?"
 
 if grep 'fatal error' /tmp/includefixes$$; then
@@ -72,6 +82,9 @@ if grep 'fatal error' /tmp/includefixes$$; then
   rm /tmp/includefixes$$
   exit 1
 else
+  if [ $DEBUG -gt 1 ]; then
+    cat /tmp/includefixes$$
+  fi
   # In compile_commands.json, the file name is recorded
   # as a relative path to the build directory.
   pushd "$(dirname "$COMPILE_COMMANDS")" || error "pushd failed"
