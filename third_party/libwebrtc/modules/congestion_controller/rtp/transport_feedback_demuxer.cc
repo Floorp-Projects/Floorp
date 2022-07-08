@@ -15,10 +15,17 @@ namespace webrtc {
 namespace {
 static const size_t kMaxPacketsInHistory = 5000;
 }
+
+TransportFeedbackDemuxer::TransportFeedbackDemuxer() {
+  // In case the construction thread is different from where the registration
+  // and callbacks occur, detach from the construction thread.
+  observer_checker_.Detach();
+}
+
 void TransportFeedbackDemuxer::RegisterStreamFeedbackObserver(
     std::vector<uint32_t> ssrcs,
     StreamFeedbackObserver* observer) {
-  MutexLock lock(&observers_lock_);
+  RTC_DCHECK_RUN_ON(&observer_checker_);
   RTC_DCHECK(observer);
   RTC_DCHECK(absl::c_find_if(observers_, [=](const auto& pair) {
                return pair.second == observer;
@@ -28,7 +35,7 @@ void TransportFeedbackDemuxer::RegisterStreamFeedbackObserver(
 
 void TransportFeedbackDemuxer::DeRegisterStreamFeedbackObserver(
     StreamFeedbackObserver* observer) {
-  MutexLock lock(&observers_lock_);
+  RTC_DCHECK_RUN_ON(&observer_checker_);
   RTC_DCHECK(observer);
   const auto it = absl::c_find_if(
       observers_, [=](const auto& pair) { return pair.second == observer; });
@@ -65,14 +72,14 @@ void TransportFeedbackDemuxer::OnTransportFeedback(
       if (it != history_.end()) {
         auto packet_info = it->second;
         packet_info.received = packet.received();
-        stream_feedbacks.push_back(packet_info);
+        stream_feedbacks.push_back(std::move(packet_info));
         if (packet.received())
           history_.erase(it);
       }
     }
   }
 
-  MutexLock lock(&observers_lock_);
+  RTC_DCHECK_RUN_ON(&observer_checker_);
   for (auto& observer : observers_) {
     std::vector<StreamFeedbackObserver::StreamPacketInfo> selected_feedback;
     for (const auto& packet_info : stream_feedbacks) {
