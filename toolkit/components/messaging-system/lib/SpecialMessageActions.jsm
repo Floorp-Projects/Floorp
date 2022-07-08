@@ -173,6 +173,48 @@ const SpecialMessageActions = {
   },
 
   /**
+   * Set prefs with special message actions
+   *
+   * @param {Object} pref - A pref to be updated.
+   * @param {string} pref.name - The name of the pref to be updated
+   * @param {string} [pref.value] - The value of the pref to be updated. If not included, the pref will be reset.
+   */
+  setPref(pref) {
+    // Array of prefs that are allowed to be edited by SET_PREF
+    const allowedPrefs = [
+      "browser.privacySegmentation.enabled",
+      "browser.startup.homepage",
+      "browser.privacySegmentation.windowSeparation.enabled",
+    ];
+
+    if (!allowedPrefs.includes(pref.name)) {
+      throw new Error(
+        `Special message action with type SET_PREF and pref of "${pref.name}" is unsupported.`
+      );
+    }
+    // If pref has no value, reset it, otherwise set it to desired value
+    switch (typeof pref.value) {
+      case "object":
+      case "undefined":
+        Services.prefs.clearUserPref(pref.name);
+        break;
+      case "string":
+        Services.prefs.setStringPref(pref.name, pref.value);
+        break;
+      case "number":
+        Services.prefs.setIntPref(pref.name, pref.value);
+        break;
+      case "boolean":
+        Services.prefs.setBoolPref(pref.name, pref.value);
+        break;
+      default:
+        throw new Error(
+          `Special message action with type SET_PREF, pref of "${pref.name}" is an unsupported type.`
+        );
+    }
+  },
+
+  /**
    * Processes "Special Message Actions", which are definitions of behaviors such as opening tabs
    * installing add-ons, or focusing the awesome bar that are allowed to can be triggered from
    * Messaging System interactions.
@@ -330,6 +372,9 @@ const SpecialMessageActions = {
         break;
       case "SHOW_SPOTLIGHT":
         lazy.Spotlight.showSpotlightDialog(browser, action.data);
+        break;
+      case "SET_PREF":
+        this.setPref(action.data.pref);
         break;
       default:
         throw new Error(
