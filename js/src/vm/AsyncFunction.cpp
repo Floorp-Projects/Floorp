@@ -16,6 +16,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/Modules.h"
 #include "vm/NativeObject.h"
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Realm.h"
