@@ -203,7 +203,7 @@ def _RunPolqa(executable_path, reference_file, degraded_file):
   out, err = process.communicate()
 
   # Find the scores in stdout of POLQA.
-  match = re.search(r'\bMOS-LQO:\s+([\d.]+)', out)
+  match = re.search(r'\bMOS-LQO:\s+([\d.]+)', out.decode('utf-8'))
 
   if process.returncode != 0 or not match:
     if process.returncode == 2:
