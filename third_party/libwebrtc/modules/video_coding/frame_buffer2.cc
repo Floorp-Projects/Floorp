@@ -106,7 +106,8 @@ void FrameBuffer::StartWaitForNextFrameOnQueue() {
   RTC_DCHECK(!callback_task_.Running());
   int64_t wait_ms = FindNextFrame(clock_->TimeInMilliseconds());
   callback_task_ = RepeatingTaskHandle::DelayedStart(
-      callback_queue_->Get(), TimeDelta::Millis(wait_ms), [this] {
+      callback_queue_->Get(), TimeDelta::Millis(wait_ms),
+      [this] {
         RTC_DCHECK_RUN_ON(&callback_checker_);
         // If this task has not been cancelled, we did not get any new frames
         // while waiting. Continue with frame delivery.
@@ -132,7 +133,8 @@ void FrameBuffer::StartWaitForNextFrameOnQueue() {
         // Deliver frame, if any. Otherwise signal timeout.
         frame_handler(std::move(frame));
         return TimeDelta::Zero();  // Ignored.
-      });
+      },
+      TaskQueueBase::DelayPrecision::kHigh);
 }
 
 int64_t FrameBuffer::FindNextFrame(int64_t now_ms) {
