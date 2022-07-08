@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
+import fnmatch
 import os
 import platform
 from contextlib import contextmanager
@@ -10,7 +11,7 @@ IS_PYPY = platform.python_implementation() == "PyPy"
 
 
 class Path(object):
-    def __init__(self, path):
+    def __init__(self, path=""):
         if isinstance(path, Path):
             _path = path._path
         else:
@@ -48,6 +49,9 @@ class Path(object):
 
     def __hash__(self):
         return hash(self._path)
+
+    def as_posix(self):
+        return str(self).replace(os.sep, "/")
 
     def exists(self):
         return os.path.exists(self._path)
@@ -143,6 +147,14 @@ class Path(object):
 
     def absolute(self):
         return Path(os.path.abspath(self._path))
+
+    def rglob(self, pattern):
+        """
+        Rough emulation of the origin method. Just for searching fixture files.
+        """
+        for root, _dirs, files in os.walk(self._path):
+            for filename in fnmatch.filter(files, pattern):
+                yield Path(os.path.join(root, filename))
 
 
 __all__ = ("Path",)
