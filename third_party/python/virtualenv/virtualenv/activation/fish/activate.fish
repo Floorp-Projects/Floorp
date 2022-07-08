@@ -21,7 +21,7 @@ function deactivate -d 'Exit virtualenv mode and return to the normal environmen
         if test (echo $FISH_VERSION | head -c 1) -lt 3
             set -gx PATH (_fishify_path "$_OLD_VIRTUAL_PATH")
         else
-            set -gx PATH "$_OLD_VIRTUAL_PATH"
+            set -gx PATH $_OLD_VIRTUAL_PATH
         end
         set -e _OLD_VIRTUAL_PATH
     end
@@ -63,7 +63,7 @@ set -gx VIRTUAL_ENV '__VIRTUAL_ENV__'
 if test (echo $FISH_VERSION | head -c 1) -lt 3
    set -gx _OLD_VIRTUAL_PATH (_bashify_path $PATH)
 else
-    set -gx _OLD_VIRTUAL_PATH "$PATH"
+    set -gx _OLD_VIRTUAL_PATH $PATH
 end
 set -gx PATH "$VIRTUAL_ENV"'/__BIN_NAME__' $PATH
 
@@ -88,9 +88,9 @@ if test -z "$VIRTUAL_ENV_DISABLE_PROMPT"
         # Prompt override provided?
         # If not, just prepend the environment name.
         if test -n '__VIRTUAL_PROMPT__'
-            printf '%s%s' '__VIRTUAL_PROMPT__' (set_color normal)
+            printf '(%s) ' '__VIRTUAL_PROMPT__'
         else
-            printf '%s(%s) ' (set_color normal) (basename "$VIRTUAL_ENV")
+            printf '(%s) ' (basename "$VIRTUAL_ENV")
         end
 
         string join -- \n $prompt # handle multi-line prompts
