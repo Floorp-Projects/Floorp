@@ -333,6 +333,9 @@ def initialize(topsrcdir):
         "data-review": MachCommandReference(
             "toolkit/components/glean/build_scripts/mach_commands.py"
         ),
+        "perf-data-review": MachCommandReference(
+            "toolkit/components/glean/build_scripts/mach_commands.py"
+        ),
         "update-glean-tags": MachCommandReference(
             "toolkit/components/glean/build_scripts/mach_commands.py"
         ),

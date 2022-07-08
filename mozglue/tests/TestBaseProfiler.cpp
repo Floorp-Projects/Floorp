@@ -1312,6 +1312,7 @@ static void TestChunk() {
       sizeof(ProfileBufferChunk::Header) ==
           sizeof(ProfileBufferChunk::Header::mOffsetFirstBlock) +
               sizeof(ProfileBufferChunk::Header::mOffsetPastLastBlock) +
+              sizeof(ProfileBufferChunk::Header::mStartTimeStamp) +
               sizeof(ProfileBufferChunk::Header::mDoneTimeStamp) +
               sizeof(ProfileBufferChunk::Header::mBufferBytes) +
               sizeof(ProfileBufferChunk::Header::mBlockCount) +

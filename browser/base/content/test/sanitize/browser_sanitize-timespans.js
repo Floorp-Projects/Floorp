@@ -94,41 +94,41 @@ async function onHistoryReady() {
   await downloadPromise;
 
   ok(
-    !(await PlacesUtils.history.hasVisits("http://10minutes.com")),
+    !(await PlacesUtils.history.hasVisits("https://10minutes.com")),
     "Pretend visit to 10minutes.com should now be deleted"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://1hour.com"),
+    await PlacesUtils.history.hasVisits("https://1hour.com"),
     "Pretend visit to 1hour.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://1hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://1hour10minutes.com"),
     "Pretend visit to 1hour10minutes.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://2hour.com"),
+    await PlacesUtils.history.hasVisits("https://2hour.com"),
     "Pretend visit to 2hour.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://2hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://2hour10minutes.com"),
     "Pretend visit to 2hour10minutes.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://4hour.com"),
+    await PlacesUtils.history.hasVisits("https://4hour.com"),
     "Pretend visit to 4hour.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://4hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://4hour10minutes.com"),
     "Pretend visit to 4hour10minutes.com should should still exist"
   );
   if (minutesSinceMidnight > 10) {
     ok(
-      await PlacesUtils.history.hasVisits("http://today.com"),
+      await PlacesUtils.history.hasVisits("https://today.com"),
       "Pretend visit to today.com should still exist"
     );
   }
   ok(
-    await PlacesUtils.history.hasVisits("http://before-today.com"),
+    await PlacesUtils.history.hasVisits("https://before-today.com"),
     "Pretend visit to before-today.com should still exist"
   );
 
@@ -226,37 +226,37 @@ async function onHistoryReady() {
   await downloadPromise;
 
   ok(
-    !(await PlacesUtils.history.hasVisits("http://1hour.com")),
+    !(await PlacesUtils.history.hasVisits("https://1hour.com")),
     "Pretend visit to 1hour.com should now be deleted"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://1hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://1hour10minutes.com"),
     "Pretend visit to 1hour10minutes.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://2hour.com"),
+    await PlacesUtils.history.hasVisits("https://2hour.com"),
     "Pretend visit to 2hour.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://2hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://2hour10minutes.com"),
     "Pretend visit to 2hour10minutes.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://4hour.com"),
+    await PlacesUtils.history.hasVisits("https://4hour.com"),
     "Pretend visit to 4hour.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://4hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://4hour10minutes.com"),
     "Pretend visit to 4hour10minutes.com should should still exist"
   );
   if (hoursSinceMidnight > 1) {
     ok(
-      await PlacesUtils.history.hasVisits("http://today.com"),
+      await PlacesUtils.history.hasVisits("https://today.com"),
       "Pretend visit to today.com should still exist"
     );
   }
   ok(
-    await PlacesUtils.history.hasVisits("http://before-today.com"),
+    await PlacesUtils.history.hasVisits("https://before-today.com"),
     "Pretend visit to before-today.com should still exist"
   );
 
@@ -338,33 +338,33 @@ async function onHistoryReady() {
   await downloadPromise;
 
   ok(
-    !(await PlacesUtils.history.hasVisits("http://1hour10minutes.com")),
+    !(await PlacesUtils.history.hasVisits("https://1hour10minutes.com")),
     "Pretend visit to 1hour10minutes.com should now be deleted"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://2hour.com"),
+    await PlacesUtils.history.hasVisits("https://2hour.com"),
     "Pretend visit to 2hour.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://2hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://2hour10minutes.com"),
     "Pretend visit to 2hour10minutes.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://4hour.com"),
+    await PlacesUtils.history.hasVisits("https://4hour.com"),
     "Pretend visit to 4hour.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://4hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://4hour10minutes.com"),
     "Pretend visit to 4hour10minutes.com should should still exist"
   );
   if (minutesSinceMidnight > 70) {
     ok(
-      await PlacesUtils.history.hasVisits("http://today.com"),
+      await PlacesUtils.history.hasVisits("https://today.com"),
       "Pretend visit to today.com should still exist"
     );
   }
   ok(
-    await PlacesUtils.history.hasVisits("http://before-today.com"),
+    await PlacesUtils.history.hasVisits("https://before-today.com"),
     "Pretend visit to before-today.com should still exist"
   );
 
@@ -440,29 +440,29 @@ async function onHistoryReady() {
   await downloadPromise;
 
   ok(
-    !(await PlacesUtils.history.hasVisits("http://2hour.com")),
+    !(await PlacesUtils.history.hasVisits("https://2hour.com")),
     "Pretend visit to 2hour.com should now be deleted"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://2hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://2hour10minutes.com"),
     "Pretend visit to 2hour10minutes.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://4hour.com"),
+    await PlacesUtils.history.hasVisits("https://4hour.com"),
     "Pretend visit to 4hour.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://4hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://4hour10minutes.com"),
     "Pretend visit to 4hour10minutes.com should should still exist"
   );
   if (hoursSinceMidnight > 2) {
     ok(
-      await PlacesUtils.history.hasVisits("http://today.com"),
+      await PlacesUtils.history.hasVisits("https://today.com"),
       "Pretend visit to today.com should still exist"
     );
   }
   ok(
-    await PlacesUtils.history.hasVisits("http://before-today.com"),
+    await PlacesUtils.history.hasVisits("https://before-today.com"),
     "Pretend visit to before-today.com should still exist"
   );
 
@@ -529,25 +529,25 @@ async function onHistoryReady() {
   await downloadPromise;
 
   ok(
-    !(await PlacesUtils.history.hasVisits("http://2hour10minutes.com")),
+    !(await PlacesUtils.history.hasVisits("https://2hour10minutes.com")),
     "Pretend visit to 2hour10minutes.com should now be deleted"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://4hour.com"),
+    await PlacesUtils.history.hasVisits("https://4hour.com"),
     "Pretend visit to 4hour.com should should still exist"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://4hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://4hour10minutes.com"),
     "Pretend visit to 4hour10minutes.com should should still exist"
   );
   if (minutesSinceMidnight > 130) {
     ok(
-      await PlacesUtils.history.hasVisits("http://today.com"),
+      await PlacesUtils.history.hasVisits("https://today.com"),
       "Pretend visit to today.com should still exist"
     );
   }
   ok(
-    await PlacesUtils.history.hasVisits("http://before-today.com"),
+    await PlacesUtils.history.hasVisits("https://before-today.com"),
     "Pretend visit to before-today.com should still exist"
   );
 
@@ -609,21 +609,21 @@ async function onHistoryReady() {
   await downloadPromise;
 
   ok(
-    !(await PlacesUtils.history.hasVisits("http://4hour.com")),
+    !(await PlacesUtils.history.hasVisits("https://4hour.com")),
     "Pretend visit to 4hour.com should now be deleted"
   );
   ok(
-    await PlacesUtils.history.hasVisits("http://4hour10minutes.com"),
+    await PlacesUtils.history.hasVisits("https://4hour10minutes.com"),
     "Pretend visit to 4hour10minutes.com should should still exist"
   );
   if (hoursSinceMidnight > 4) {
     ok(
-      await PlacesUtils.history.hasVisits("http://today.com"),
+      await PlacesUtils.history.hasVisits("https://today.com"),
       "Pretend visit to today.com should still exist"
     );
   }
   ok(
-    await PlacesUtils.history.hasVisits("http://before-today.com"),
+    await PlacesUtils.history.hasVisits("https://before-today.com"),
     "Pretend visit to before-today.com should still exist"
   );
 
@@ -676,17 +676,17 @@ async function onHistoryReady() {
   await downloadPromise;
 
   ok(
-    !(await PlacesUtils.history.hasVisits("http://4hour10minutes.com")),
+    !(await PlacesUtils.history.hasVisits("https://4hour10minutes.com")),
     "Pretend visit to 4hour10minutes.com should now be deleted"
   );
   if (minutesSinceMidnight > 250) {
     ok(
-      await PlacesUtils.history.hasVisits("http://today.com"),
+      await PlacesUtils.history.hasVisits("https://today.com"),
       "Pretend visit to today.com should still exist"
     );
   }
   ok(
-    await PlacesUtils.history.hasVisits("http://before-today.com"),
+    await PlacesUtils.history.hasVisits("https://before-today.com"),
     "Pretend visit to before-today.com should still exist"
   );
 
@@ -747,7 +747,7 @@ async function onHistoryReady() {
   var today = isToday(new Date(now_mSec));
   if (today) {
     ok(
-      !(await PlacesUtils.history.hasVisits("http://today.com")),
+      !(await PlacesUtils.history.hasVisits("https://today.com")),
       "Pretend visit to today.com should now be deleted"
     );
 
@@ -763,7 +763,7 @@ async function onHistoryReady() {
   }
 
   ok(
-    await PlacesUtils.history.hasVisits("http://before-today.com"),
+    await PlacesUtils.history.hasVisits("https://before-today.com"),
     "Pretend visit to before-today.com should still exist"
   );
   await countEntries(
@@ -787,7 +787,7 @@ async function onHistoryReady() {
   await downloadPromise;
 
   ok(
-    !(await PlacesUtils.history.hasVisits("http://before-today.com")),
+    !(await PlacesUtils.history.hasVisits("https://before-today.com")),
     "Pretend visit to before-today.com should now be deleted"
   );
 
@@ -816,37 +816,37 @@ async function setupHistory() {
   }
 
   addPlace(
-    "http://10minutes.com/",
+    "https://10minutes.com/",
     "10 minutes ago",
     now_uSec - 10 * kUsecPerMin
   );
   addPlace(
-    "http://1hour.com/",
+    "https://1hour.com/",
     "Less than 1 hour ago",
     now_uSec - 45 * kUsecPerMin
   );
   addPlace(
-    "http://1hour10minutes.com/",
+    "https://1hour10minutes.com/",
     "1 hour 10 minutes ago",
     now_uSec - 70 * kUsecPerMin
   );
   addPlace(
-    "http://2hour.com/",
+    "https://2hour.com/",
     "Less than 2 hours ago",
     now_uSec - 90 * kUsecPerMin
   );
   addPlace(
-    "http://2hour10minutes.com/",
+    "https://2hour10minutes.com/",
     "2 hours 10 minutes ago",
     now_uSec - 130 * kUsecPerMin
   );
   addPlace(
-    "http://4hour.com/",
+    "https://4hour.com/",
     "Less than 4 hours ago",
     now_uSec - 180 * kUsecPerMin
   );
   addPlace(
-    "http://4hour10minutes.com/",
+    "https://4hour10minutes.com/",
     "4 hours 10 minutesago",
     now_uSec - 250 * kUsecPerMin
   );
@@ -856,12 +856,12 @@ async function setupHistory() {
   today.setMinutes(0);
   today.setSeconds(0);
   today.setMilliseconds(1);
-  addPlace("http://today.com/", "Today", today.getTime() * 1000);
+  addPlace("https://today.com/", "Today", today.getTime() * 1000);
 
   let lastYear = new Date();
   lastYear.setFullYear(lastYear.getFullYear() - 1);
   addPlace(
-    "http://before-today.com/",
+    "https://before-today.com/",
     "Before Today",
     lastYear.getTime() * 1000
   );
