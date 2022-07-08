@@ -592,7 +592,7 @@ rtc_library("desktop_capture_generic") {
       }
     }
 
-    public_configs += [ ":pipewire_config" ]
+    #public_configs += [ ":pipewire_config" ]
 
     deps += [ "../../rtc_base:sanitizer" ]
   }

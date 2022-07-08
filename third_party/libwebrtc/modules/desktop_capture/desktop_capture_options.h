@@ -17,7 +17,7 @@
 #include "modules/desktop_capture/linux/x11/shared_x_display.h"
 #endif
 
-#if defined(WEBRTC_USE_PIPEWIRE)
+#if defined(WEBRTC_USE_PIPEWIRE) && !defined(WEBRTC_MOZILLA_BUILD)
 #include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
 #endif
 
@@ -170,6 +170,7 @@ class RTC_EXPORT DesktopCaptureOptions {
   bool allow_pipewire() const { return allow_pipewire_; }
   void set_allow_pipewire(bool allow) { allow_pipewire_ = allow; }
 
+#if !defined(WEBRTC_MOZILLA_BUILD)
   const rtc::scoped_refptr<SharedScreenCastStream>& screencast_stream() const {
     return screencast_stream_;
   }
@@ -178,12 +179,13 @@ class RTC_EXPORT DesktopCaptureOptions {
     screencast_stream_ = stream;
   }
 #endif
+#endif
 
  private:
 #if defined(WEBRTC_USE_X11)
   rtc::scoped_refptr<SharedXDisplay> x_display_;
 #endif
-#if defined(WEBRTC_USE_PIPEWIRE)
+#if defined(WEBRTC_USE_PIPEWIRE) && !defined(WEBRTC_MOZILLA_BUILD)
   // An instance of shared PipeWire ScreenCast stream we share between
   // BaseCapturerPipeWire and MouseCursorMonitorPipeWire as cursor information
   // is sent together with screen content.
