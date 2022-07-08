@@ -278,12 +278,17 @@ function nodeHasEntries(item) {
     return false;
   }
 
+  const className = value.class;
   return (
-    value.class === "Map" ||
-    value.class === "Set" ||
-    value.class === "WeakMap" ||
-    value.class === "WeakSet" ||
-    value.class === "Storage"
+    className === "Map" ||
+    className === "Set" ||
+    className === "WeakMap" ||
+    className === "WeakSet" ||
+    className === "Storage" ||
+    // @backward-compat { version 104 } Support for enumerate URLSearchParams entries was
+    // added in 104. When connecting to older server, we don't want to show the <entries>
+    // node for them. The extra check can be removed once 104 hits release.
+    (className === "URLSearchParams" && Array.isArray(value.preview?.entries))
   );
 }
 

@@ -70,6 +70,7 @@ const debuggerSandbox = (exports.internalSandbox = Cu.Sandbox(systemPrincipal, {
     "TextDecoder",
     "TextEncoder",
     "URL",
+    "URLSearchParams",
     "Window",
     "XMLHttpRequest",
   ],
@@ -95,6 +96,7 @@ const {
   TextDecoder,
   TextEncoder,
   URL,
+  URLSearchParams,
   Window,
   XMLHttpRequest,
 } = debuggerSandbox;
@@ -296,6 +298,7 @@ exports.globals = {
   TextDecoder,
   TextEncoder,
   URL,
+  URLSearchParams,
   Window,
   XMLHttpRequest,
 };

@@ -70,7 +70,9 @@ define(function(require, exports, module) {
     }
     return (
       grip &&
-      (grip.type === "mapEntry" || grip.type === "storageEntry") &&
+      (grip.type === "mapEntry" ||
+        grip.type === "storageEntry" ||
+        grip.type === "urlSearchParamsEntry") &&
       grip.preview
     );
   }
