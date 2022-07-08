@@ -259,6 +259,28 @@ enum class ModuleStatus : int32_t {
   Evaluated_Error  // Sub-state of Evaluated with error value set.
 };
 
+// Special values for ModuleObject's AsyncEvaluatingPostOrderSlot slot, which is
+// used to implement the AsyncEvaluation field of cyclic module records.
+//
+// The spec requires us to distinguish true, false, and 'never previously set to
+// true', as well as the order in which the field was set to true for async
+// evaluating modules.
+//
+// This is arranged by using an integer to record the order. Both undefined and
+// ASYNC_EVALUATING_POST_ORDER_FALSE are used to mean false, with undefined also
+// meaning never previously set to true.
+//
+// See https://tc39.es/ecma262/#sec-cyclic-module-records for field defintion.
+// See https://tc39.es/ecma262/#sec-async-module-execution-fulfilled for sort
+// requirement.
+
+// False value that also indicates that the field was previously true.
+constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_FALSE = 0;
+
+// Initial value for the runtime's counter used to generate these values; the
+// first non-false value.
+constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_INIT = 1;
+
 class ModuleObject : public NativeObject {
  public:
   enum ModuleSlot {

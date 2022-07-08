@@ -813,20 +813,28 @@ bool ModuleObject::initAsyncSlots(JSContext* cx, bool isAsync,
   return true;
 }
 
-constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_FALSE = 0;
-constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_INIT = 1;
-uint32_t AsyncPostOrder = ASYNC_EVALUATING_POST_ORDER_INIT;
-
-uint32_t nextPostOrder() {
-  uint32_t ordinal = AsyncPostOrder;
-  MOZ_ASSERT(AsyncPostOrder < MAX_UINT32);
-  AsyncPostOrder++;
+static uint32_t NextPostOrder(JSRuntime* rt) {
+  uint32_t ordinal = rt->moduleAsyncEvaluatingPostOrder;
+  MOZ_ASSERT(ordinal < MAX_UINT32);
+  rt->moduleAsyncEvaluatingPostOrder++;
   return ordinal;
+}
+
+// Reset the runtime's moduleAsyncEvaluatingPostOrder counter when the last
+// module that was async evaluating is finished.
+//
+// The graph is not re-entrant and any future modules will be independent from
+// this one.
+static void MaybeResetPostOrderCounter(JSRuntime* rt,
+                                       uint32_t finishedPostOrder) {
+  if (rt->moduleAsyncEvaluatingPostOrder == finishedPostOrder) {
+    rt->moduleAsyncEvaluatingPostOrder = ASYNC_EVALUATING_POST_ORDER_INIT;
+  }
 }
 
 void ModuleObject::setAsyncEvaluating() {
   initReservedSlot(AsyncEvaluatingPostOrderSlot,
-                   PrivateUint32Value(nextPostOrder()));
+                   PrivateUint32Value(NextPostOrder(runtimeFromMainThread())));
 }
 
 void ModuleObject::initScriptSlots(HandleScript script) {
@@ -968,12 +976,8 @@ bool ModuleObject::wasAsyncEvaluating() const {
 }
 
 void ModuleObject::setAsyncEvaluatingFalse() {
-  if (AsyncPostOrder == getAsyncEvaluatingPostOrder()) {
-    // If this condition is true, we can reset postOrder.
-    // Graph is not re-entrant and any future modules will be independent from
-    // this one.
-    AsyncPostOrder = ASYNC_EVALUATING_POST_ORDER_INIT;
-  }
+  JSRuntime* rt = runtimeFromMainThread();
+  MaybeResetPostOrderCounter(rt, getAsyncEvaluatingPostOrder());
   return setReservedSlot(AsyncEvaluatingPostOrderSlot,
                          PrivateUint32Value(ASYNC_EVALUATING_POST_ORDER_FALSE));
 }
