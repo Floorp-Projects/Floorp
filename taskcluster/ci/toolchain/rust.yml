@@ -86,7 +86,7 @@ linux64-rust-dev:
         ]
     fetches:
         fetch:
-            - rust-1.63.0-dev
+            - rust-1.62.0
         toolchain:
             - linux64-clang-toolchain
             - linux64-binutils
