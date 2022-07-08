@@ -3640,19 +3640,6 @@
   value: false
   mirror: always
 
-# Forward-Declared Storage-access API.
-- name: dom.storage_access.forward_declared.enabled
-  type: bool
-  value: false
-  mirror: always
-
-# How long the Forward-Declared Storage-access API allows between pair requests
-# in seconds
-- name: dom.storage_access.forward_declared.lifetime
-  type: uint32_t
-  value: 15 * 60
-  mirror: always
-
 # The maximum number of origins that a given third-party tracker is allowed
 # to have concurrent access to before the user is presented with a storage
 # access prompt.  Only effective when the auto_grants pref is turned on.

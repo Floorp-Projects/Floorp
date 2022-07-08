@@ -544,11 +544,6 @@ partial interface Document {
   Promise<boolean> hasStorageAccess();
   [Pref="dom.storage_access.enabled", NewObject]
   Promise<void> requestStorageAccess();
-  // https://github.com/privacycg/storage-access/pull/100
-  [Pref="dom.storage_access.forward_declared.enabled", NewObject]
-  Promise<void> requestStorageAccessUnderSite(DOMString serializedSite);
-  [Pref="dom.storage_access.forward_declared.enabled", NewObject]
-  Promise<void> completeStorageAccessRequestFromSite(DOMString serializedSite);
 };
 
 // A privileged API to give chrome privileged code and the content script of the
