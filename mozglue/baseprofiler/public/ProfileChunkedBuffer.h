@@ -254,6 +254,26 @@ class ProfileChunkedBuffer {
             mFailedPutBytes};
   }
 
+  // In in-session, return the start TimeStamp of the earliest chunk.
+  // If out-of-session, return a null TimeStamp.
+  [[nodiscard]] TimeStamp GetEarliestChunkStartTimeStamp() const {
+    baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
+    if (MOZ_UNLIKELY(!mChunkManager)) {
+      // Out-of-session.
+      return {};
+    }
+    return mChunkManager->PeekExtantReleasedChunks(
+        [&](const ProfileBufferChunk* aOldestChunk) -> TimeStamp {
+          if (aOldestChunk) {
+            return aOldestChunk->ChunkHeader().mStartTimeStamp;
+          }
+          if (mCurrentChunk) {
+            return mCurrentChunk->ChunkHeader().mStartTimeStamp;
+          }
+          return {};
+        });
+  }
+
   [[nodiscard]] bool IsEmpty() const {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
     return mRangeStart == mRangeEnd;
