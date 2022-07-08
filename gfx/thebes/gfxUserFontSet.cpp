@@ -8,6 +8,7 @@
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
 #include "gfxFontConstants.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
@@ -34,7 +35,7 @@ mozilla::LogModule* gfxUserFontSet::GetUserFontsLog() {
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(gfxUserFontSet::GetUserFontsLog(), mozilla::LogLevel::Debug)
 
-static uint64_t sFontSetGeneration = 0;
+static Atomic<uint64_t> sFontSetGeneration(0);
 
 gfxUserFontEntry::gfxUserFontEntry(
     gfxUserFontSet* aFontSet, const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
@@ -1039,9 +1040,9 @@ void gfxUserFontSet::AddUserFontEntry(const nsCString& aFamilyName,
 
 void gfxUserFontSet::IncrementGeneration(bool aIsRebuild) {
   // add one, increment again if zero
-  ++sFontSetGeneration;
-  if (sFontSetGeneration == 0) ++sFontSetGeneration;
-  mGeneration = sFontSetGeneration;
+  do {
+    mGeneration = ++sFontSetGeneration;
+  } while (mGeneration == 0);
   if (aIsRebuild) {
     mRebuildGeneration = mGeneration;
   }
