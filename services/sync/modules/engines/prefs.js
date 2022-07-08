@@ -4,7 +4,28 @@
 
 var EXPORTED_SYMBOLS = ["PrefsEngine", "PrefRec", "getPrefsGUIDForTest"];
 
+// Prefs which start with this prefix are our "control" prefs - they indicate
+// which preferences should be synced.
 const PREF_SYNC_PREFS_PREFIX = "services.sync.prefs.sync.";
+
+// Prefs which have a default value are usually not synced - however, if the
+// preference exists under this prefix and the value is:
+// * `true`, then we do sync default values.
+// * `false`, then as soon as we ever sync a non-default value out, or sync
+//    any value in, then we toggle the value to `true`.
+//
+// We never explicitly set this pref back to false, so it's one-shot.
+// Some preferences which are known to have a different default value on
+// different platforms have this preference with a default value of `false`,
+// so they don't sync until one device changes to the non-default value, then
+// that value forever syncs, even if it gets reset back to the default.
+// Note that preferences handled this way *must also* have the "normal"
+// control pref set.
+// A possible future enhancement would be to sync these prefs so that
+// other distributions can flag them if they change the default, but that
+// doesn't seem worthwhile until we can be confident they'd actually create
+// this special control pref at the same time they flip the default.
+const PREF_SYNC_SEEN_PREFIX = "services.sync.prefs.sync-seen.";
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -204,10 +225,20 @@ PrefStore.prototype = {
       // us not to apply (syncable) changes to preferences that are set locally
       // which have unsyncable urls.
       if (this._isSynced(pref) && !isUnsyncableURLPref(pref)) {
-        // Missing and default prefs get the null value.
-        values[pref] = this._prefs.isSet(pref)
-          ? this._prefs.get(pref, null)
-          : null;
+        let isSet = this._prefs.isSet(pref);
+        // Missing and default prefs get the null value, unless that `seen`
+        // pref is set, in which case it always gets the value.
+        let forceValue = this._prefs.get(PREF_SYNC_SEEN_PREFIX + pref, false);
+        values[pref] = isSet || forceValue ? this._prefs.get(pref, null) : null;
+        // If this is a special "sync-seen" pref, and it's not the default value,
+        // set the seen pref to true.
+        if (
+          isSet &&
+          this._prefs.get(PREF_SYNC_SEEN_PREFIX + pref, false) === false
+        ) {
+          this._log.trace(`toggling sync-seen pref for '${pref}' to true`);
+          this._prefs.set(PREF_SYNC_SEEN_PREFIX + pref, true);
+        }
       }
     }
     return values;
@@ -285,6 +316,12 @@ PrefStore.prototype = {
             } catch (ex) {
               this._log.trace(`Failed to set pref: ${pref}`, ex);
             }
+          }
+          // If there's a "sync-seen" pref for this it gets toggled to true
+          // regardless of the value.
+          let seenPref = PREF_SYNC_SEEN_PREFIX + pref;
+          if (this._prefs.get(seenPref, undefined) === false) {
+            this._prefs.set(PREF_SYNC_SEEN_PREFIX + pref, true);
           }
       }
     }
