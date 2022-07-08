@@ -43,6 +43,9 @@ class BaseCapturerPipeWire : public DesktopCapturer {
   explicit BaseCapturerPipeWire(CaptureSourceType source_type);
   ~BaseCapturerPipeWire() override;
 
+  BaseCapturerPipeWire(const BaseCapturerPipeWire&) = delete;
+  BaseCapturerPipeWire& operator=(const BaseCapturerPipeWire&) = delete;
+
   static std::unique_ptr<DesktopCapturer> CreateRawCapturer(
       const DesktopCaptureOptions& options);
 
@@ -172,8 +175,6 @@ class BaseCapturerPipeWire : public DesktopCapturer {
   static void OnOpenPipeWireRemoteRequested(GDBusProxy *proxy,
                                             GAsyncResult* result,
                                             gpointer user_data);
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(BaseCapturerPipeWire);
 };
 
 }  // namespace webrtc
