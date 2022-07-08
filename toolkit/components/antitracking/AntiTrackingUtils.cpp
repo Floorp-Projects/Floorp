@@ -19,6 +19,7 @@
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/PermissionManager.h"
 #include "mozIThirdPartyUtil.h"
+#include "nsEffectiveTLDService.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
@@ -119,6 +120,28 @@ bool AntiTrackingUtils::CreateStoragePermissionKey(nsIPrincipal* aPrincipal,
   }
 
   CreateStoragePermissionKey(origin, aKey);
+  return true;
+}
+
+// static
+bool AntiTrackingUtils::CreateStorageRequestPermissionKey(
+    nsIURI* aURI, nsACString& aPermissionKey) {
+  MOZ_ASSERT(aPermissionKey.IsEmpty());
+  RefPtr<nsEffectiveTLDService> eTLDService =
+      nsEffectiveTLDService::GetInstance();
+  if (!eTLDService) {
+    return false;
+  }
+  nsCString site;
+  nsresult rv = eTLDService->GetSite(aURI, site);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  static const nsLiteralCString prefix =
+      nsLiteralCString("AllowStorageAccessRequest^");
+  aPermissionKey.SetCapacity(prefix.Length() + site.Length());
+  aPermissionKey.Append(prefix);
+  aPermissionKey.Append(site);
   return true;
 }
 
