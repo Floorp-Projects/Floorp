@@ -560,11 +560,10 @@ void RtpTransportControllerSend::OnReceivedRtcpReceiverReport(
 
 void RtpTransportControllerSend::OnAddPacket(
     const RtpPacketSendInfo& packet_info) {
-  feedback_demuxer_.AddPacket(packet_info);
-
   Timestamp creation_time = Timestamp::Millis(clock_->TimeInMilliseconds());
   task_queue_.PostTask([this, packet_info, creation_time]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
+    feedback_demuxer_.AddPacket(packet_info);
     transport_feedback_adapter_.AddPacket(
         packet_info,
         send_side_bwe_with_overhead_ ? transport_overhead_bytes_per_packet_ : 0,
