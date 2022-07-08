@@ -336,7 +336,7 @@ const SnapshotScorer = new (class SnapshotScorer {
    * @param {Snapshot} snapshot
    * @returns {number}
    */
-  _scoreIsUsedRemoved(snapshot) {
+  _scoreIsUserRemoved(snapshot) {
     return snapshot.removedAt ? 1 : 0;
   }
 })();
