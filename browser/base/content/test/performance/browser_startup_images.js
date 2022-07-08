@@ -82,6 +82,19 @@ add_task(async function() {
     return el.platforms.includes(AppConstants.platform);
   });
 
+  {
+    let results = await PerfTestHelpers.throttledMapPromises(
+      knownImagesForPlatform,
+      async image => ({
+        uri: image.file,
+        exists: await PerfTestHelpers.checkURIExists(image.file),
+      })
+    );
+    for (let { uri, exists } of results) {
+      ok(exists, `Unshown image entry ${uri} must exist`);
+    }
+  }
+
   let loadedImages = data["image-loading"];
   let shownImages = data["image-drawing"];
 
