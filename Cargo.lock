@@ -6180,6 +6180,7 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "log",
+ "nsstring",
  "parking_lot 0.11.2",
  "serde",
  "wgpu-core",

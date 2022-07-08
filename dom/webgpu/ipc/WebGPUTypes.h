@@ -26,6 +26,22 @@ struct ScopedError {
 };
 using MaybeScopedError = Maybe<ScopedError>;
 
+enum class WebGPUCompilationMessageType { Error, Warning, Info };
+
+// TODO: Better name? CompilationMessage alread taken by the dom object.
+/// The serializable counterpart of the dom object CompilationMessage.
+struct WebGPUCompilationMessage {
+  nsString message;
+  uint64_t lineNum = 0;
+  uint64_t linePos = 0;
+  // In utf16 code units.
+  uint64_t offset = 0;
+  // In utf16 code units.
+  uint64_t length = 0;
+  WebGPUCompilationMessageType messageType =
+      WebGPUCompilationMessageType::Error;
+};
+
 }  // namespace mozilla::webgpu
 
 #endif  // WEBGPU_TYPES_H_

@@ -69,6 +69,10 @@ class WebGPUParent final : public PWebGPUParent {
                                            const layers::RGBDescriptor& aDesc,
                                            const nsTArray<RawId>& aBufferIds,
                                            const CompositableHandle& aHandle);
+  ipc::IPCResult RecvDeviceCreateShaderModule(
+      RawId aSelfId, RawId aModuleId, const nsString& aLabel,
+      const nsCString& aCode, DeviceCreateShaderModuleResolver&& aOutMessage);
+
   ipc::IPCResult RecvSwapChainPresent(const CompositableHandle& aHandle,
                                       RawId aTextureId,
                                       RawId aCommandEncoderId);
