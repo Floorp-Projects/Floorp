@@ -29,7 +29,7 @@ window.onload = function() {
 
     const stacktrace = [
       {
-        filename: "http://myfile.com/mahscripts.js",
+        filename: "https://myfile.com/mahscripts.js",
         lineNumber: 55,
         columnNumber: 10,
         functionName: null,
@@ -37,22 +37,22 @@ window.onload = function() {
       // Simulated Redux frame
       {
         functionName: "rootReducer",
-        filename: "http://myfile.com/loader.js -> http://myfile.com/redux.js",
+        filename: "https://myfile.com/loader.js -> https://myfile.com/redux.js",
         lineNumber: 2,
       },
       {
         functionName: "loadFunc",
-        filename: "http://myfile.com/loader.js -> http://myfile.com/loadee.js",
+        filename: "https://myfile.com/loader.js -> https://myfile.com/loadee.js",
         lineNumber: 10,
       },
       // Simulated react frames
       ...(Array.from({length: REACT_FRAMES_COUNT}, (_, i) => ({
         functionName: "internalReact" + (REACT_FRAMES_COUNT - i),
-        filename: "http://myfile.com/loader.js -> http://myfile.com/react.js",
+        filename: "https://myfile.com/loader.js -> https://myfile.com/react.js",
         lineNumber: Number(i.toString().repeat(2)),
       }))),
       {
-        filename: "http://myfile.com/mahscripts.js",
+        filename: "https://myfile.com/mahscripts.js",
         lineNumber: 10,
         columnNumber: 3,
         functionName: "onClick",
@@ -71,11 +71,11 @@ window.onload = function() {
     ok(traceEl, "Rendered SmartTrace has an element");
 
     isDeeply(getStacktraceText(traceEl), [
-      `<anonymous> http://myfile.com/mahscripts.js:55`,
+      `<anonymous> https://myfile.com/mahscripts.js:55`,
       `rootReducer Redux`,
-      `loadFunc http://myfile.com/loadee.js:10`,
+      `loadFunc https://myfile.com/loadee.js:10`,
       `▶︎ React 10`,
-      `onClick http://myfile.com/mahscripts.js:10`,
+      `onClick https://myfile.com/mahscripts.js:10`,
     ], "React frames are grouped - Redux frame is not");
 
     info("Expand React group");
@@ -85,9 +85,9 @@ window.onload = function() {
     await onReactGroupExpanded;
 
     isDeeply(getStacktraceText(traceEl), [
-      `<anonymous> http://myfile.com/mahscripts.js:55`,
+      `<anonymous> https://myfile.com/mahscripts.js:55`,
       `rootReducer Redux`,
-      `loadFunc http://myfile.com/loadee.js:10`,
+      `loadFunc https://myfile.com/loadee.js:10`,
       `▼ React 10`,
       `| internalReact10`,
       `| internalReact9`,
@@ -99,7 +99,7 @@ window.onload = function() {
       `| internalReact3`,
       `| internalReact2`,
       `| internalReact1`,
-      `onClick http://myfile.com/mahscripts.js:10`,
+      `onClick https://myfile.com/mahscripts.js:10`,
     ], "React frames can be expanded");
 
     info("Collapse React group");
@@ -109,11 +109,11 @@ window.onload = function() {
     await onReactGroupExpanded;
 
     isDeeply(getStacktraceText(traceEl), [
-      `<anonymous> http://myfile.com/mahscripts.js:55`,
+      `<anonymous> https://myfile.com/mahscripts.js:55`,
       `rootReducer Redux`,
-      `loadFunc http://myfile.com/loadee.js:10`,
+      `loadFunc https://myfile.com/loadee.js:10`,
       `▶︎ React 10`,
-      `onClick http://myfile.com/mahscripts.js:10`,
+      `onClick https://myfile.com/mahscripts.js:10`,
     ], "React frames can be collapsed");
   });
 
