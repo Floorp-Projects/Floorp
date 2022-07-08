@@ -636,8 +636,8 @@ Section "Uninstall"
   ${If} ${FileExists} "$INSTDIR\installation_telemetry.json"
     Delete /REBOOTOK "$INSTDIR\installation_telemetry.json"
   ${EndIf}
-  ${If} ${FileExists} "$INSTDIR\postSigningData.json"
-    Delete /REBOOTOK "$INSTDIR\postSigningData.json"
+  ${If} ${FileExists} "$INSTDIR\postSigningData"
+    Delete /REBOOTOK "$INSTDIR\postSigningData"
   ${EndIf}
 
   ; Explicitly remove empty webapprt dir in case it exists (bug 757978).
