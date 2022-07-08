@@ -39,6 +39,10 @@ class PdfjsChild extends JSWindowActorChild {
         break;
       }
 
+      case "PDFJS:Editing":
+        let data = Cu.cloneInto(msg.data, this.contentWindow);
+        this.dispatchEvent("editingaction", data);
+        break;
       case "PDFJS:ZoomIn":
       case "PDFJS:ZoomOut":
       case "PDFJS:ZoomReset":
