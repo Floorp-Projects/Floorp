@@ -649,7 +649,7 @@ class ZoomAnimation : public AsyncPanZoomAnimation {
     // Sample the zoom at the current time point.  The sampled zoom
     // will affect the final computed resolution.
     float sampledPosition = gZoomAnimationFunction->GetValue(
-        animPosition, StyleEasingBeforeFlag::Unset);
+        animPosition, ComputedTimingFunction::BeforeFlag::Unset);
 
     // We scale the scrollOffset linearly with sampledPosition, so the zoom
     // needs to scale inversely to match.

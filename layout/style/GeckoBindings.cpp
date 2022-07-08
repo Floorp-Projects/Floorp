@@ -639,9 +639,9 @@ double Gecko_GetProgressFromComputedTiming(const ComputedTiming* aTiming) {
   return aTiming->mProgress.Value();
 }
 
-double Gecko_GetPositionInSegment(const AnimationPropertySegment* aSegment,
-                                  double aProgress,
-                                  StyleEasingBeforeFlag aBeforeFlag) {
+double Gecko_GetPositionInSegment(
+    const AnimationPropertySegment* aSegment, double aProgress,
+    ComputedTimingFunction::BeforeFlag aBeforeFlag) {
   MOZ_ASSERT(aSegment->mFromKey < aSegment->mToKey,
              "The segment from key should be less than to key");
 

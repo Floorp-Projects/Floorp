@@ -104,6 +104,7 @@ use style::invalidation::element::restyle_hints::RestyleHint;
 use style::invalidation::stylesheets::RuleChangeKind;
 use style::media_queries::MediaList;
 use style::parser::{self, Parse, ParserContext};
+use style::piecewise_linear::PiecewiseLinearFunction;
 use style::properties::animated_properties::{AnimationValue, AnimationValueMap};
 use style::properties::{parse_one_declaration_into, parse_style_attribute};
 use style::properties::{ComputedValues, CountedUnknownProperty, Importance, NonCustomPropertyId};
@@ -137,7 +138,7 @@ use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::animated::color::AnimatedRGBA;
 use style::values::generics::color::ColorInterpolationMethod;
-use style::values::generics::easing::BeforeFlag;
+use style::values::computed::easing::ComputedLinearStop;
 use style::values::computed::font::{FontFamily, FontFamilyList, GenericFontFamily, FontWeight, FontStyle, FontStretch};
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
@@ -7504,6 +7505,26 @@ pub unsafe extern "C" fn Servo_InvalidateForViewportUnits(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_CreatePiecewiseLinearFunction(
+    entries: &style::OwnedSlice<ComputedLinearStop>,
+    result: &mut PiecewiseLinearFunction,
+) {
+    *result = PiecewiseLinearFunction::from_iter(
+        entries
+            .iter()
+            .map(ComputedLinearStop::to_piecewise_linear_build_parameters),
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_PiecewiseLinearFunctionAt(
+    function: &PiecewiseLinearFunction,
+    progress: f32,
+) -> f32 {
+    function.at(progress)
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_InterpolateColor(
     interpolation: &ColorInterpolationMethod,
     left: &AnimatedRGBA,
@@ -7518,13 +7539,4 @@ pub extern "C" fn Servo_InterpolateColor(
         1.0 - progress,
         /* normalize_weights = */ false,
     )
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_EasingFunctionAt(
-    easing_function: &computed::easing::ComputedTimingFunction,
-    progress: f64,
-    before_flag: BeforeFlag
-) -> f64 {
-    easing_function.calculate_output(progress, before_flag, 1e-6)
 }
