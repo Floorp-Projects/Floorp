@@ -267,11 +267,6 @@ class PeerConnection : public PeerConnectionInternal,
     return context_->signaling_thread();
   }
 
-  // PeerConnectionInternal implementation.
-  rtc::Thread* signaling_thread_internal() const final {
-    return context_->signaling_thread();
-  }
-
   rtc::Thread* network_thread() const final {
     return context_->network_thread();
   }
@@ -360,7 +355,7 @@ class PeerConnection : public PeerConnectionInternal,
   const RtpTransmissionManager* rtp_manager() const override {
     return rtp_manager_.get();
   }
-  cricket::ChannelManager* channel_manager() override;
+  cricket::ChannelManager* channel_manager();
 
   JsepTransportController* transport_controller() override {
     return transport_controller_.get();

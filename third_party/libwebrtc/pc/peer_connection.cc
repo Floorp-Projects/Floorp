@@ -629,8 +629,8 @@ RTCError PeerConnection::Initialize(
   stats_ = std::make_unique<StatsCollector>(this);
   stats_collector_ = RTCStatsCollector::Create(this);
 
-  sdp_handler_ =
-      SdpOfferAnswerHandler::Create(this, configuration, dependencies);
+  sdp_handler_ = SdpOfferAnswerHandler::Create(this, configuration,
+                                               dependencies, context_);
 
   rtp_manager_ = std::make_unique<RtpTransmissionManager>(
       IsUnifiedPlan(), signaling_thread(), worker_thread(), channel_manager(),
@@ -1648,6 +1648,10 @@ void PeerConnection::AddAdaptationResource(
   call_->AddAdaptationResource(resource);
 }
 
+cricket::ChannelManager* PeerConnection::channel_manager() {
+  return context_->channel_manager();
+}
+
 bool PeerConnection::StartRtcEventLog(std::unique_ptr<RtcEventLogOutput> output,
                                       int64_t output_period_ms) {
   return worker_thread()->Invoke<bool>(
@@ -2088,10 +2092,6 @@ bool PeerConnection::ReconfigurePortAllocator_n(
       stun_servers, std::move(turn_servers_copy), candidate_pool_size,
       turn_port_prune_policy, turn_customizer,
       stun_candidate_keepalive_interval);
-}
-
-cricket::ChannelManager* PeerConnection::channel_manager() {
-  return context_->channel_manager();
 }
 
 bool PeerConnection::StartRtcEventLog_w(
