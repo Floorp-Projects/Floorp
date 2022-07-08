@@ -26,7 +26,10 @@ class ComputedTimingFunction {
   static StyleComputedTimingFunction ToStyleComputedTimingFunction(
       const ComputedTimingFunction& aComputedTimingFunction);
 
-  double GetValue(double aPortion, StyleEasingBeforeFlag aBeforeFlag) const;
+  // BeforeFlag is used in step timing function.
+  // https://drafts.csswg.org/css-easing/#before-flag
+  enum class BeforeFlag { Unset, Set };
+  double GetValue(double aPortion, BeforeFlag aBeforeFlag) const;
   bool operator==(const ComputedTimingFunction& aOther) const {
     return mFunction == aOther.mFunction;
   }
@@ -42,12 +45,48 @@ class ComputedTimingFunction {
   void AppendToString(nsACString& aResult) const;
 
   static double GetPortion(const Maybe<ComputedTimingFunction>& aFunction,
-                           double aPortion, StyleEasingBeforeFlag aBeforeFlag) {
+                           double aPortion, BeforeFlag aBeforeFlag) {
     return aFunction ? aFunction->GetValue(aPortion, aBeforeFlag) : aPortion;
   }
 
  private:
-  StyleComputedTimingFunction mFunction;
+  struct StepFunc {
+    uint32_t mSteps = 1;
+    StyleStepPosition mPos = StyleStepPosition::End;
+    constexpr StepFunc() = default;
+    constexpr StepFunc(uint32_t aSteps, StyleStepPosition aPos)
+        : mSteps(aSteps), mPos(aPos){};
+    bool operator==(const StepFunc& aOther) const {
+      return mSteps == aOther.mSteps && mPos == aOther.mPos;
+    }
+  };
+
+  struct KeywordFunction {
+    KeywordFunction(mozilla::StyleTimingKeyword aKeyword,
+                    SMILKeySpline aFunction)
+        : mKeyword{aKeyword}, mFunction{aFunction} {}
+
+    bool operator==(const KeywordFunction& aOther) const {
+      return mKeyword == aOther.mKeyword && mFunction == aOther.mFunction;
+    }
+    mozilla::StyleTimingKeyword mKeyword;
+    SMILKeySpline mFunction;
+  };
+
+  using Function = mozilla::Variant<KeywordFunction, SMILKeySpline, StepFunc,
+                                    StylePiecewiseLinearFunction>;
+
+  static Function ConstructFunction(
+      const StyleComputedTimingFunction& aFunction);
+  ComputedTimingFunction(double x1, double y1, double x2, double y2)
+      : mFunction{AsVariant(SMILKeySpline{x1, y1, x2, y2})} {}
+  ComputedTimingFunction(uint32_t aSteps, StyleStepPosition aPos)
+      : mFunction{AsVariant(StepFunc{aSteps, aPos})} {}
+  explicit ComputedTimingFunction(StylePiecewiseLinearFunction aFunction)
+      : mFunction{AsVariant(std::move(aFunction))} {}
+  static double StepTiming(const StepFunc& aStepFunc, double aPortion,
+                           BeforeFlag aBeforeFlag);
+  Function mFunction;
 };
 
 inline bool operator==(const Maybe<ComputedTimingFunction>& aLHS,

@@ -64,7 +64,8 @@ struct ComputedTiming {
   };
   AnimationPhase mPhase = AnimationPhase::Idle;
 
-  StyleEasingBeforeFlag mBeforeFlag = StyleEasingBeforeFlag::Unset;
+  ComputedTimingFunction::BeforeFlag mBeforeFlag =
+      ComputedTimingFunction::BeforeFlag::Unset;
 };
 
 }  // namespace mozilla

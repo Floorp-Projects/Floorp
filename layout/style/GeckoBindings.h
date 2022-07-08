@@ -242,9 +242,9 @@ const RawServoAnimationValue* Gecko_ElementTransitions_EndValueAt(
 
 double Gecko_GetProgressFromComputedTiming(const mozilla::ComputedTiming*);
 
-double Gecko_GetPositionInSegment(const mozilla::AnimationPropertySegment*,
-                                  double aProgress,
-                                  mozilla::StyleEasingBeforeFlag aBeforeFlag);
+double Gecko_GetPositionInSegment(
+    const mozilla::AnimationPropertySegment*, double aProgress,
+    mozilla::ComputedTimingFunction::BeforeFlag aBeforeFlag);
 
 // Get servo's AnimationValue for |aProperty| from the cached base style
 // |aBaseStyles|.

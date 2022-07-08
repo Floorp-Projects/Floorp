@@ -247,8 +247,7 @@ include = [
   "ScrollDirection",
   "HyphenateCharacter",
   "ComputedLinearStop",
-  "PiecewiseLinearFunction",
-  "BeforeFlag"
+  "PiecewiseLinearFunction"
 ]
 item_types = ["enums", "structs", "unions", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
@@ -303,7 +302,6 @@ renaming_overrides_prefixing = true
 "OriginFlags" = "OriginFlags"
 "ServoTraversalFlags" = "ServoTraversalFlags"
 "ServoStyleSetSizes" = "ServoStyleSetSizes"
-"BeforeFlag" = "StyleEasingBeforeFlag"
 
 [export.body]
 "CSSPixelLength" = """
