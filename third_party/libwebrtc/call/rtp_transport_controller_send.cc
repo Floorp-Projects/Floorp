@@ -573,10 +573,10 @@ void RtpTransportControllerSend::OnAddPacket(
 
 void RtpTransportControllerSend::OnTransportFeedback(
     const rtcp::TransportFeedback& feedback) {
-  feedback_demuxer_.OnTransportFeedback(feedback);
   auto feedback_time = Timestamp::Millis(clock_->TimeInMilliseconds());
   task_queue_.PostTask([this, feedback, feedback_time]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
+    feedback_demuxer_.OnTransportFeedback(feedback);
     absl::optional<TransportPacketsFeedback> feedback_msg =
         transport_feedback_adapter_.ProcessTransportFeedback(feedback,
                                                              feedback_time);

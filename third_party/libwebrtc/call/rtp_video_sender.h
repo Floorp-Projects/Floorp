@@ -180,6 +180,7 @@ class RtpVideoSender : public RtpVideoSenderInterface,
   // transport task queue.
   mutable Mutex mutex_;
   bool active_ RTC_GUARDED_BY(mutex_);
+  bool registered_for_feedback_ RTC_GUARDED_BY(transport_checker_) = false;
 
   const std::unique_ptr<FecController> fec_controller_;
   bool fec_allowed_ RTC_GUARDED_BY(mutex_);
