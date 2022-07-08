@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "test/fake_encoder.h"
 #include "test/fake_videorenderer.h"
@@ -32,8 +31,11 @@ namespace test {
 // states at run time.
 class SendVideoStream {
  public:
-  RTC_DISALLOW_COPY_AND_ASSIGN(SendVideoStream);
   ~SendVideoStream();
+
+  SendVideoStream(const SendVideoStream&) = delete;
+  SendVideoStream& operator=(const SendVideoStream&) = delete;
+
   void SetCaptureFramerate(int framerate);
   VideoSendStream::Stats GetStats() const;
   ColumnPrinter StatsPrinter();
@@ -72,8 +74,11 @@ class SendVideoStream {
 // ReceiveVideoStream represents a video receiver. It can't be used directly.
 class ReceiveVideoStream {
  public:
-  RTC_DISALLOW_COPY_AND_ASSIGN(ReceiveVideoStream);
   ~ReceiveVideoStream();
+
+  ReceiveVideoStream(const ReceiveVideoStream&) = delete;
+  ReceiveVideoStream& operator=(const ReceiveVideoStream&) = delete;
+
   void Start();
   void Stop();
   VideoReceiveStream::Stats GetStats() const;
@@ -103,8 +108,11 @@ class ReceiveVideoStream {
 // the Scenario class.
 class VideoStreamPair {
  public:
-  RTC_DISALLOW_COPY_AND_ASSIGN(VideoStreamPair);
   ~VideoStreamPair();
+
+  VideoStreamPair(const VideoStreamPair&) = delete;
+  VideoStreamPair& operator=(const VideoStreamPair&) = delete;
+
   SendVideoStream* send() { return &send_stream_; }
   ReceiveVideoStream* receive() { return &receive_stream_; }
   VideoFrameMatcher* matcher() { return &matcher_; }

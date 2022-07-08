@@ -15,8 +15,6 @@
 
 #include <string>
 
-#include "rtc_base/constructor_magic.h"
-
 typedef void* HANDLE;
 
 namespace rtc {
@@ -105,6 +103,9 @@ class OSInfo {
     WOW64_UNKNOWN,
   };
 
+  OSInfo(const OSInfo&) = delete;
+  OSInfo& operator=(const OSInfo&) = delete;
+
   static OSInfo* GetInstance();
 
   Version version() const { return version_; }
@@ -140,8 +141,6 @@ class OSInfo {
   size_t allocation_granularity_;
   WOW64Status wow64_status_;
   std::string processor_model_name_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(OSInfo);
 };
 
 // Because this is by far the most commonly-requested value from the above

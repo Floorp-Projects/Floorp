@@ -26,7 +26,6 @@
 #include "modules/desktop_capture/linux/x11/window_finder_x11.h"
 #include "modules/desktop_capture/linux/x11/x_atom_cache.h"
 #include "modules/desktop_capture/linux/x11/x_server_pixel_buffer.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -35,6 +34,9 @@ class WindowCapturerX11 : public DesktopCapturer,
  public:
   explicit WindowCapturerX11(const DesktopCaptureOptions& options);
   ~WindowCapturerX11() override;
+
+  WindowCapturerX11(const WindowCapturerX11&) = delete;
+  WindowCapturerX11& operator=(const WindowCapturerX11&) = delete;
 
   static std::unique_ptr<DesktopCapturer> CreateRawWindowCapturer(
       const DesktopCaptureOptions& options);
@@ -69,8 +71,6 @@ class WindowCapturerX11 : public DesktopCapturer,
   XServerPixelBuffer x_server_pixel_buffer_;
   XAtomCache atom_cache_;
   WindowFinderX11 window_finder_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(WindowCapturerX11);
 };
 
 }  // namespace webrtc

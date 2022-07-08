@@ -14,8 +14,6 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
-#include "rtc_base/constructor_magic.h"
-
 namespace webrtc {
 
 class XWindowPropertyBase {
@@ -25,6 +23,9 @@ class XWindowPropertyBase {
                       Atom property,
                       int expected_size);
   virtual ~XWindowPropertyBase();
+
+  XWindowPropertyBase(const XWindowPropertyBase&) = delete;
+  XWindowPropertyBase& operator=(const XWindowPropertyBase&) = delete;
 
   // True if we got properly value successfully.
   bool is_valid() const { return is_valid_; }
@@ -38,8 +39,6 @@ class XWindowPropertyBase {
  private:
   bool is_valid_ = false;
   unsigned long size_ = 0;  // NOLINT: type required by XGetWindowProperty
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(XWindowPropertyBase);
 };
 
 // Convenience wrapper for XGetWindowProperty() results.
@@ -50,12 +49,13 @@ class XWindowProperty : public XWindowPropertyBase {
       : XWindowPropertyBase(display, window, property, sizeof(PropertyType)) {}
   ~XWindowProperty() override = default;
 
+  XWindowProperty(const XWindowProperty&) = delete;
+  XWindowProperty& operator=(const XWindowProperty&) = delete;
+
   const PropertyType* data() const {
     return reinterpret_cast<PropertyType*>(data_);
   }
   PropertyType* data() { return reinterpret_cast<PropertyType*>(data_); }
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(XWindowProperty);
 };
 
 }  // namespace webrtc

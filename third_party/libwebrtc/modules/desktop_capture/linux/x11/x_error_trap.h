@@ -15,8 +15,6 @@
 #undef max // Xlibint.h defines this and it breaks std::max
 #undef min // Xlibint.h defines this and it breaks std::min
 
-#include "rtc_base/constructor_magic.h"
-
 namespace webrtc {
 
 // Helper class that registers X Window error handler. Caller can use
@@ -28,6 +26,9 @@ class XErrorTrap {
  public:
   explicit XErrorTrap(Display* display);
   ~XErrorTrap();
+
+  XErrorTrap(const XErrorTrap&) = delete;
+  XErrorTrap& operator=(const XErrorTrap&) = delete;
 
   // Returns last error and removes unregisters the error handler.
   // Must not be called more than once.
@@ -43,8 +44,6 @@ class XErrorTrap {
   unsigned long last_ignored_request_;
   int last_xserver_error_code_;
   bool enabled_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(XErrorTrap);
 };
 
 }  // namespace webrtc
