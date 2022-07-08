@@ -53,6 +53,7 @@ rtc_library("video") {
   ]
 
   deps = [
+    ":frame_buffer_proxy",
     ":frame_cadence_adapter",
     ":frame_dumping_decoder",
     ":video_stream_encoder_impl",
@@ -283,6 +284,22 @@ rtc_library("frame_cadence_adapter") {
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
   ]
+}
+
+rtc_library("frame_buffer_proxy") {
+  sources = [
+    "frame_buffer_proxy.cc",
+    "frame_buffer_proxy.h",
+  ]
+  deps = [
+    "../api/task_queue",
+    "../api/video:encoded_frame",
+    "../modules/video_coding",
+    "../modules/video_coding:video_codec_interface",
+    "../rtc_base:rtc_task_queue",
+    "../system_wrappers",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("video_stream_encoder_impl") {
@@ -640,6 +657,7 @@ if (rtc_include_tests) {
       "end_to_end_tests/ssrc_tests.cc",
       "end_to_end_tests/stats_tests.cc",
       "end_to_end_tests/transport_feedback_tests.cc",
+      "frame_buffer_proxy_unittest.cc",
       "frame_cadence_adapter_unittest.cc",
       "frame_encode_metadata_writer_unittest.cc",
       "picture_id_tests.cc",
@@ -662,6 +680,7 @@ if (rtc_include_tests) {
       "video_stream_encoder_unittest.cc",
     ]
     deps = [
+      ":frame_buffer_proxy",
       ":frame_cadence_adapter",
       ":video",
       ":video_mocks",
@@ -690,6 +709,7 @@ if (rtc_include_tests) {
       "../api/task_queue:default_task_queue_factory",
       "../api/test/video:function_video_factory",
       "../api/units:data_rate",
+      "../api/units:time_delta",
       "../api/units:timestamp",
       "../api/video:builtin_video_bitrate_allocator_factory",
       "../api/video:encoded_image",

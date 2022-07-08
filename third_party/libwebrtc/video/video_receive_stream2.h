@@ -25,7 +25,6 @@
 #include "call/video_receive_stream.h"
 #include "modules/rtp_rtcp/include/flexfec_receiver.h"
 #include "modules/rtp_rtcp/source/source_tracker.h"
-#include "modules/video_coding/frame_buffer2.h"
 #include "modules/video_coding/nack_requester.h"
 #include "modules/video_coding/video_receiver2.h"
 #include "rtc_base/system/no_unique_address.h"
@@ -33,6 +32,7 @@
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
+#include "video/frame_buffer_proxy.h"
 #include "video/receive_statistics_proxy2.h"
 #include "video/rtp_streams_synchronizer2.h"
 #include "video/rtp_video_stream_receiver2.h"
@@ -83,7 +83,8 @@ class VideoReceiveStream2
       public NackSender,
       public RtpVideoStreamReceiver2::OnCompleteFrameCallback,
       public Syncable,
-      public CallStatsObserver {
+      public CallStatsObserver,
+      public FrameSchedulingReceiver {
  public:
   // The default number of milliseconds to pass before re-requesting a key frame
   // to be sent.
@@ -184,6 +185,8 @@ class VideoReceiveStream2
   void GenerateKeyFrame() override;
 
  private:
+  void OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) override;
+  void OnDecodableFrameTimeout(TimeDelta wait_time) override;
   void CreateAndRegisterExternalDecoder(const Decoder& decoder);
   int64_t GetMaxWaitMs() const RTC_RUN_ON(decode_queue_);
   void StartNextDecode() RTC_RUN_ON(decode_queue_);
@@ -247,8 +250,7 @@ class VideoReceiveStream2
   // moved to the new VideoStreamDecoder.
   std::vector<std::unique_ptr<VideoDecoder>> video_decoders_;
 
-  // Members for the new jitter buffer experiment.
-  std::unique_ptr<video_coding::FrameBuffer> frame_buffer_;
+  std::unique_ptr<FrameBufferProxy> frame_buffer_;
 
   std::unique_ptr<RtpStreamReceiverInterface> media_receiver_
       RTC_GUARDED_BY(packet_sequence_checker_);
