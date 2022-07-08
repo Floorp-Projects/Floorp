@@ -42,8 +42,8 @@ void ReportWarningHelper::Report(const char* aMessageName,
 }
 
 // https://wicg.github.io/import-maps/#parse-a-url-like-import-specifier
-static already_AddRefed<nsIURI> ParseURLLikeImportSpecifier(
-    const nsAString& aSpecifier, nsIURI* aBaseURL) {
+static ResolveResult ParseURLLikeImportSpecifier(const nsAString& aSpecifier,
+                                                 nsIURI* aBaseURL) {
   nsCOMPtr<nsIURI> uri;
   nsresult rv;
 
@@ -56,22 +56,22 @@ static already_AddRefed<nsIURI> ParseURLLikeImportSpecifier(
     rv = NS_NewURI(getter_AddRefs(uri), aSpecifier, nullptr, aBaseURL);
     // Step 1.2. If url is failure, then return null.
     if (NS_FAILED(rv)) {
-      return nullptr;
+      return Err(ResolveError::Failure);
     }
 
     // Step 1.3. Return url.
-    return uri.forget();
+    return WrapNotNull(uri);
   }
 
   // Step 2. Let url be the result of parsing specifier (with no base URL).
   rv = NS_NewURI(getter_AddRefs(uri), aSpecifier);
   // Step 3. If url is failure, then return null.
   if (NS_FAILED(rv)) {
-    return nullptr;
+    return Err(ResolveError::FailureMayBeBare);
   }
 
   // Step 4. Return url.
-  return uri.forget();
+  return WrapNotNull(uri);
 }
 
 // https://wicg.github.io/import-maps/#normalize-a-specifier-key
@@ -92,10 +92,11 @@ static void NormalizeSpecifierKey(const nsAString& aSpecifierKey,
 
   // Step 2. Let url be the result of parsing a URL-like import specifier, given
   // specifierKey and baseURL.
-  nsCOMPtr<nsIURI> url = ParseURLLikeImportSpecifier(aSpecifierKey, aBaseURL);
+  auto parseResult = ParseURLLikeImportSpecifier(aSpecifierKey, aBaseURL);
 
   // Step 3. If url is not null, then return the serialization of url.
-  if (url) {
+  if (parseResult.isOk()) {
+    nsCOMPtr<nsIURI> url = parseResult.unwrap();
     aRetVal = NS_ConvertUTF8toUTF16(url->GetSpecOrDefault());
     return;
   }
@@ -154,10 +155,10 @@ static UniquePtr<SpecifierMap> SortAndNormalizeSpecifierMap(
 
     // Step 2.4. Let addressURL be the result of parsing a URL-like import
     // specifier given value and baseURL.
-    nsCOMPtr<nsIURI> addressURL = ParseURLLikeImportSpecifier(value, aBaseURL);
+    auto parseResult = ParseURLLikeImportSpecifier(value, aBaseURL);
 
     // Step 2.5. If addressURL is null, then:
-    if (!addressURL) {
+    if (parseResult.isErr()) {
       // Step 2.5.1. Report a warning to the console that the address was
       // invalid.
       AutoTArray<nsString, 1> params;
@@ -171,6 +172,7 @@ static UniquePtr<SpecifierMap> SortAndNormalizeSpecifierMap(
       continue;
     }
 
+    nsCOMPtr<nsIURI> addressURL = parseResult.unwrap();
     nsCString address = addressURL->GetSpecOrDefault();
     // Step 2.6. If specifierKey ends with U+002F (/), and the serialization
     // of addressURL does not end with U+002F (/), then:
@@ -587,7 +589,11 @@ ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
   // given specifier and baseURL.
   //
   // Impl note: Step 5 is done below if aImportMap exists.
-  nsCOMPtr<nsIURI> asURL = ParseURLLikeImportSpecifier(aSpecifier, baseURL);
+  auto parseResult = ParseURLLikeImportSpecifier(aSpecifier, baseURL);
+  nsCOMPtr<nsIURI> asURL;
+  if (parseResult.isOk()) {
+    asURL = parseResult.unwrap();
+  }
 
   if (aImportMap) {
     // Step 5. Let baseURLString be baseURL, serialized.
@@ -655,6 +661,11 @@ ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
 
   // Step 12. Throw a TypeError indicating that specifier was a bare specifier,
   // but was not remapped to anything by importMap.
+  if (parseResult.unwrapErr() != ResolveError::FailureMayBeBare) {
+    // We may have failed to parse a non-bare specifier for another reason.
+    return Err(ResolveError::Failure);
+  }
+
   return Err(ResolveError::InvalidBareSpecifier);
 }
 
