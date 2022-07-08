@@ -52,6 +52,7 @@
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/ContentBlockingUserInteraction.h"
+#include "mozilla/ContentPrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DocLoadingTimelineMarker.h"
@@ -16795,7 +16796,14 @@ Document::GetContentBlockingEvents() {
 RefPtr<MozPromise<int, bool, true>> Document::RequestStorageAccessAsyncHelper(
     nsPIDOMWindowInner* aInnerWindow, BrowsingContext* aBrowsingContext,
     nsIPrincipal* aPrincipal, bool aHasUserInteraction,
-    ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier) {
+    ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier,
+    bool requireFinalChecks) {
+  if (!requireFinalChecks) {
+    // Try to allow access for the given principal.
+    return StorageAccessAPIHelper::AllowAccessFor(aPrincipal, aBrowsingContext,
+                                                  aNotifier);
+  }
+
   RefPtr<Document> self(this);
   RefPtr<nsPIDOMWindowInner> inner(aInnerWindow);
   RefPtr<nsIPrincipal> principal(aPrincipal);
@@ -17031,7 +17039,8 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   // on work changing state to reflect the result of the API. If it resolves,
   // the request was granted. If it rejects it was denied.
   RequestStorageAccessAsyncHelper(inner, bc, NodePrincipal(), true,
-                                  ContentBlockingNotifier::eStorageAccessAPI)
+                                  ContentBlockingNotifier::eStorageAccessAPI,
+                                  true)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self, inner, promise] {
@@ -17186,7 +17195,8 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
             // typical requestStorageAccess function.
             return self->RequestStorageAccessAsyncHelper(
                 inner, bc, principal, hasUserActivation,
-                ContentBlockingNotifier::ePrivilegeStorageAccessForOriginAPI);
+                ContentBlockingNotifier::ePrivilegeStorageAccessForOriginAPI,
+                true);
           },
           // If the IPC rejects, we should reject our promise here which will
           // cause a rejection of the promise we already returned
@@ -17209,6 +17219,271 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
 
   // Step 5: While the async stuff is happening, we should return the promise so
   // our caller can continue executing.
+  return promise.forget();
+}
+
+already_AddRefed<Promise> Document::RequestStorageAccessUnderSite(
+    const nsAString& aSerializedSite, ErrorResult& aRv) {
+  nsIGlobalObject* global = GetScopeObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Check that we have user activation before proceeding to prevent
+  // rapid calls to the API to leak information.
+  if (!ConsumeTransientUserGestureActivation()) {
+    // Report an error to the console for this case
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::errorFlag, "requestStorageAccess"_ns, this,
+        nsContentUtils::eDOM_PROPERTIES, "RequestStorageAccessUserGesture");
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Check if the provided URI is different-site to this Document
+  nsCOMPtr<nsIURI> siteURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(siteURI), aSerializedSite);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+  bool isCrossSiteArgument;
+  rv = NodePrincipal()->IsThirdPartyURI(siteURI, &isCrossSiteArgument);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+  if (!isCrossSiteArgument) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Check if this party has broad cookie permissions.
+  Maybe<bool> resultBecauseCookiesApproved =
+      StorageAccessAPIHelper::CheckCookiesPermittedDecidesStorageAccessAPI(
+          CookieJarSettings(), NodePrincipal());
+  if (resultBecauseCookiesApproved.isSome()) {
+    if (resultBecauseCookiesApproved.value()) {
+      promise->MaybeResolveWithUndefined();
+      return promise.forget();
+    }
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Check if browser settings preclude this document getting storage
+  // access under the provided site
+  bool isOnRejectForeignAllowList = RejectForeignAllowList::Check(this);
+  Maybe<bool> resultBecauseBrowserSettings =
+      StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
+          CookieJarSettings(), true, isOnRejectForeignAllowList, false, true);
+  if (resultBecauseBrowserSettings.isSome()) {
+    if (resultBecauseBrowserSettings.value()) {
+      promise->MaybeResolveWithUndefined();
+      return promise.forget();
+    }
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Check that this Document is same-site to the top
+  Maybe<bool> resultBecauseCallContext = StorageAccessAPIHelper::
+      CheckSameSiteCallingContextDecidesStorageAccessAPI(this, false);
+  if (resultBecauseCallContext.isSome()) {
+    if (resultBecauseCallContext.value()) {
+      promise->MaybeResolveWithUndefined();
+      return promise.forget();
+    }
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Set a permission in the parent process that this document wants storage
+  // access under the argument's site, resolving our returned promise on success
+  ContentChild* cc = ContentChild::GetSingleton();
+  if (!cc) {
+    // TODO(bug 1778561): Make this work in non-content processes.
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+  cc->SendSetAllowStorageAccessRequestFlag(NodePrincipal(), siteURI)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise](bool success) {
+            if (success) {
+              promise->MaybeResolveWithUndefined();
+            } else {
+              promise->MaybeRejectWithUndefined();
+            }
+          },
+          [promise](mozilla::ipc::ResponseRejectReason reason) {
+            promise->MaybeRejectWithUndefined();
+          });
+
+  // Return the promise that is resolved in the async handler above
+  return promise.forget();
+}
+
+already_AddRefed<Promise> Document::CompleteStorageAccessRequestFromSite(
+    const nsAString& aSerializedOrigin, ErrorResult& aRv) {
+  nsIGlobalObject* global = GetScopeObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Check that the provided URI is different-site to this Document
+  nsCOMPtr<nsIURI> argumentURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(argumentURI), aSerializedOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+  bool isCrossSiteArgument;
+  rv = NodePrincipal()->IsThirdPartyURI(argumentURI, &isCrossSiteArgument);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+  if (!isCrossSiteArgument) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Check if browser settings preclude this document getting storage
+  // access under the provided site
+  bool isOnRejectForeignAllowList = RejectForeignAllowList::Check(argumentURI);
+  Maybe<bool> resultBecauseBrowserSettings =
+      StorageAccessAPIHelper::CheckBrowserSettingsDecidesStorageAccessAPI(
+          CookieJarSettings(), true, isOnRejectForeignAllowList, false, true);
+  if (resultBecauseBrowserSettings.isSome()) {
+    if (resultBecauseBrowserSettings.value()) {
+      promise->MaybeResolveWithUndefined();
+      return promise.forget();
+    }
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Check that this Document is same-site to the top
+  Maybe<bool> resultBecauseCallContext = StorageAccessAPIHelper::
+      CheckSameSiteCallingContextDecidesStorageAccessAPI(this, false);
+  if (resultBecauseCallContext.isSome()) {
+    if (resultBecauseCallContext.value()) {
+      promise->MaybeResolveWithUndefined();
+      return promise.forget();
+    }
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Create principal of the embedded site requesting storage access
+  nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
+      argumentURI, NodePrincipal()->OriginAttributesRef());
+  if (!principal) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Get versions of these objects that we can use in lambdas for callbacks
+  RefPtr<Document> self(this);
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  nsCOMPtr<nsPIDOMWindowInner> inner = GetInnerWindow();
+
+  // Test that the permission was set by a call to RequestStorageAccessUnderSite
+  // from a top level document that is same-site with the argument
+  ContentChild* cc = ContentChild::GetSingleton();
+  if (!cc) {
+    // TODO(bug 1778561): Make this work in non-content processes.
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+  cc->SendTestAllowStorageAccessRequestFlag(NodePrincipal(), argumentURI)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [inner, bc, self, principal](bool success) {
+            if (success) {
+              // If that resolved with true, check that we don't already have a
+              // permission that gives cookie access.
+              return StorageAccessAPIHelper::
+                  AsyncCheckCookiesPermittedDecidesStorageAccessAPI(bc,
+                                                                    principal);
+            }
+            return MozPromise<Maybe<bool>, nsresult, true>::CreateAndReject(
+                NS_ERROR_FAILURE, __func__);
+          },
+          [](mozilla::ipc::ResponseRejectReason reason) {
+            return MozPromise<Maybe<bool>, nsresult, true>::CreateAndReject(
+                NS_ERROR_FAILURE, __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [inner, bc, principal, self, promise](Maybe<bool> cookieResult) {
+            // Handle the result of the cookie permission check that took place
+            // in the ContentParent.
+            if (cookieResult.isSome()) {
+              if (cookieResult.value()) {
+                return StorageAccessAPIHelper::
+                    StorageAccessPermissionGrantPromise::CreateAndResolve(
+                        StorageAccessAPIHelper::eAllowAutoGrant, __func__);
+              }
+              return StorageAccessAPIHelper::
+                  StorageAccessPermissionGrantPromise::CreateAndReject(
+                      false, __func__);
+            }
+
+            // Check for the existing storage access permission
+            nsAutoCString type;
+            bool ok =
+                AntiTrackingUtils::CreateStoragePermissionKey(principal, type);
+            if (!ok) {
+              return StorageAccessAPIHelper::
+                  StorageAccessPermissionGrantPromise::CreateAndReject(
+                      false, __func__);
+            }
+            if (AntiTrackingUtils::CheckStoragePermission(
+                    self->NodePrincipal(), type,
+                    nsContentUtils::IsInPrivateBrowsing(self), nullptr, 0)) {
+              return StorageAccessAPIHelper::
+                  StorageAccessPermissionGrantPromise::CreateAndResolve(
+                      StorageAccessAPIHelper::eAllowAutoGrant, __func__);
+            }
+
+            // Try to request storage access, ignoring the final checks.
+            // We ignore the final checks because this is where the "grant"
+            // either by prompt doorhanger or autogrant takes place. We already
+            // gathered an equivalent grant in requestStorageAccessUnderSite.
+            return self->RequestStorageAccessAsyncHelper(
+                inner, bc, principal, true,
+                ContentBlockingNotifier::eStorageAccessAPI, false);
+          },
+          // If the IPC rejects, we should reject our promise here which will
+          // cause a rejection of the promise we already returned
+          [promise]() {
+            return MozPromise<int, bool, true>::CreateAndReject(false,
+                                                                __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          // If the previous handlers resolved, we should reinstate user
+          // activation and resolve the promise we returned in Step 5.
+          [self, inner, promise] {
+            inner->SaveStorageAccessPermissionGranted();
+            promise->MaybeResolveWithUndefined();
+          },
+          // If the previous handler rejected, we should reject the promise
+          // returned by this function.
+          [promise] { promise->MaybeRejectWithUndefined(); });
+
   return promise.forget();
 }
 
