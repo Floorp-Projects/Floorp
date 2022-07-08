@@ -919,10 +919,10 @@ class MetaBuildWrapper(object):
 
     cmdline = []
     extra_files = [
-        '../../.vpython',
+        '../../.vpython3',
         '../../testing/test_env.py',
     ]
-    vpython_exe = 'vpython'
+    vpython_exe = 'vpython3'
 
     must_retry = False
     if test_type == 'script':
