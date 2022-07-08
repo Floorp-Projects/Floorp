@@ -279,6 +279,33 @@ JSFunction* NewHandler(JSContext* cx, Native handler,
   return handlerFun;
 }
 
+static bool AsyncModuleExecutionFulfilledHandler(JSContext* cx, unsigned argc,
+                                                 Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  JSFunction& func = args.callee().as<JSFunction>();
+
+  Rooted<ModuleObject*> module(
+      cx, &func.getExtendedSlot(FunctionExtended::MODULE_SLOT)
+               .toObject()
+               .as<ModuleObject>());
+  AsyncModuleExecutionFulfilled(cx, module);
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool AsyncModuleExecutionRejectedHandler(JSContext* cx, unsigned argc,
+                                                Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  JSFunction& func = args.callee().as<JSFunction>();
+  Rooted<ModuleObject*> module(
+      cx, &func.getExtendedSlot(FunctionExtended::MODULE_SLOT)
+               .toObject()
+               .as<ModuleObject>());
+  AsyncModuleExecutionRejected(cx, module, args.get(0));
+  args.rval().setUndefined();
+  return true;
+}
+
 AsyncFunctionGeneratorObject* AsyncFunctionGeneratorObject::create(
     JSContext* cx, Handle<ModuleObject*> module) {
   // TODO: Module is currently hitching a ride with

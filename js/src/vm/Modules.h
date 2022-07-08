@@ -41,6 +41,11 @@ bool ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
 bool GatherAvailableModuleAncestors(JSContext* cx, Handle<ModuleObject*> module,
                                     MutableHandle<ModuleVector> sortedList);
 
+void AsyncModuleExecutionFulfilled(JSContext* cx, Handle<ModuleObject*> module);
+
+void AsyncModuleExecutionRejected(JSContext* cx, Handle<ModuleObject*> module,
+                                  HandleValue error);
+
 }  // namespace js
 
 #endif  // vm_Modules_h

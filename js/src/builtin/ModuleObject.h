@@ -427,21 +427,6 @@ ModuleObject* CallModuleResolveHook(JSContext* cx,
                                     HandleValue referencingPrivate,
                                     HandleObject moduleRequest);
 
-// https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionfulfilled
-void AsyncModuleExecutionFulfilled(JSContext* cx, Handle<ModuleObject*> module);
-
-// https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionrejected
-void AsyncModuleExecutionRejected(JSContext* cx, Handle<ModuleObject*> module,
-                                  HandleValue error);
-
-// https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionfulfilled
-bool AsyncModuleExecutionFulfilledHandler(JSContext* cx, unsigned argc,
-                                          Value* vp);
-
-// https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionrejected
-bool AsyncModuleExecutionRejectedHandler(JSContext* cx, unsigned argc,
-                                         Value* vp);
-
 JSObject* StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                    HandleValue specifier, HandleValue options);
 
