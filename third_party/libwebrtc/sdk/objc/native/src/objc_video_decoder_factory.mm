@@ -56,8 +56,7 @@ class ObjCVideoDecoder : public VideoDecoder {
 
   int32_t RegisterDecodeCompleteCallback(DecodedImageCallback *callback) override {
     [decoder_ setCallback:^(RTC_OBJC_TYPE(RTCVideoFrame) * frame) {
-      const rtc::scoped_refptr<VideoFrameBuffer> buffer =
-          rtc::make_ref_counted<ObjCFrameBuffer>(frame.buffer);
+      const auto buffer = rtc::make_ref_counted<ObjCFrameBuffer>(frame.buffer);
       VideoFrame videoFrame =
           VideoFrame::Builder()
               .set_video_frame_buffer(buffer)
