@@ -154,16 +154,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private val syncedTabFeature by lazy {
-        RecentSyncedTabFeature(
-            store = requireComponents.appStore,
-            context = requireContext(),
-            storage = requireComponents.backgroundServices.syncedTabsStorage,
-            accountManager = requireComponents.backgroundServices.accountManager,
-            lifecycleOwner = viewLifecycleOwner,
-        )
-    }
-
     private var _sessionControlInteractor: SessionControlInteractor? = null
     private val sessionControlInteractor: SessionControlInteractor
         get() = _sessionControlInteractor!!
@@ -282,7 +272,15 @@ class HomeFragment : Fragment() {
 
             if (requireContext().settings().enableTaskContinuityEnhancements) {
                 recentSyncedTabFeature.set(
-                    feature = syncedTabFeature,
+                    feature = RecentSyncedTabFeature(
+                        appStore = requireComponents.appStore,
+                        syncStore = requireComponents.backgroundServices.syncStore,
+                        coroutineScope = viewLifecycleOwner.lifecycleScope,
+                        context = requireContext(),
+                        storage = requireComponents.backgroundServices.syncedTabsStorage,
+                        accountManager = requireComponents.backgroundServices.accountManager,
+                        lifecycleOwner = viewLifecycleOwner,
+                    ),
                     owner = viewLifecycleOwner,
                     view = binding.root
                 )

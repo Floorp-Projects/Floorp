@@ -30,6 +30,8 @@ import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.SCOPE_SESSION
 import mozilla.components.service.fxa.manager.SCOPE_SYNC
+import mozilla.components.service.fxa.store.SyncStore
+import mozilla.components.service.fxa.store.SyncStoreSupport
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
@@ -130,6 +132,12 @@ class BackgroundServices(
 
     val accountAbnormalities = AccountAbnormalities(context, crashReporter, strictMode)
 
+    val syncStore by lazyMonitored {
+        SyncStore()
+    }
+
+    private lateinit var syncStoreSupport: SyncStoreSupport
+
     val accountManager by lazyMonitored {
         makeAccountManager(context, serverConfig, deviceConfig, syncConfig, crashReporter)
     }
@@ -182,6 +190,10 @@ class BackgroundServices(
         }
 
         SyncedTabsIntegration(context, accountManager).launch()
+
+        syncStoreSupport = SyncStoreSupport(syncStore, lazyOf(accountManager)).also {
+            it.initialize()
+        }
 
         MainScope().launch {
             accountManager.start()
