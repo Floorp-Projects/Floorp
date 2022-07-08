@@ -29,7 +29,6 @@
 #include "modules/desktop_capture/screen_capture_frame_queue.h"
 #include "modules/desktop_capture/screen_capturer_helper.h"
 #include "modules/desktop_capture/shared_desktop_frame.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -45,6 +44,9 @@ class ScreenCapturerX11 : public DesktopCapturer,
  public:
   ScreenCapturerX11();
   ~ScreenCapturerX11() override;
+
+  ScreenCapturerX11(const ScreenCapturerX11&) = delete;
+  ScreenCapturerX11& operator=(const ScreenCapturerX11&) = delete;
 
   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
       const DesktopCaptureOptions& options);
@@ -138,8 +140,6 @@ class ScreenCapturerX11 : public DesktopCapturer,
   DesktopRegion last_invalid_region_;
 
   std::unique_ptr<XAtomCache> atom_cache_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerX11);
 };
 
 }  // namespace webrtc

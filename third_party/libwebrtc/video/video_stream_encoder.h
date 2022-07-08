@@ -82,6 +82,9 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
       BitrateAllocationCallbackType allocation_cb_type);
   ~VideoStreamEncoder() override;
 
+  VideoStreamEncoder(const VideoStreamEncoder&) = delete;
+  VideoStreamEncoder& operator=(const VideoStreamEncoder&) = delete;
+
   void AddAdaptationResource(rtc::scoped_refptr<Resource> resource) override;
   std::vector<rtc::scoped_refptr<Resource>> GetAdaptationResources() override;
 
@@ -440,8 +443,6 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
 
   // Used to cancel any potentially pending tasks to the worker thread.
   ScopedTaskSafety task_safety_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(VideoStreamEncoder);
 };
 
 }  // namespace webrtc

@@ -17,7 +17,6 @@
 #include "api/units/timestamp.h"
 #include "modules/include/module_common_types.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/task_utils/repeating_task.h"
@@ -34,6 +33,9 @@ class CallStats {
   // Must be created and destroyed on the same task_queue.
   CallStats(Clock* clock, TaskQueueBase* task_queue);
   ~CallStats();
+
+  CallStats(const CallStats&) = delete;
+  CallStats& operator=(const CallStats&) = delete;
 
   // Ensure that necessary repeating tasks are started.
   void EnsureStarted();
@@ -125,8 +127,6 @@ class CallStats {
 
   // Used to signal destruction to potentially pending tasks.
   ScopedTaskSafety task_safety_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(CallStats);
 };
 
 }  // namespace internal

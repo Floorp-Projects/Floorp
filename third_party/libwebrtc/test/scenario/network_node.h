@@ -20,7 +20,6 @@
 #include "api/units/timestamp.h"
 #include "call/call.h"
 #include "call/simulated_network.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue.h"

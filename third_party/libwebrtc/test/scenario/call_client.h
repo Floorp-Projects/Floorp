@@ -22,7 +22,6 @@
 #include "call/call.h"
 #include "modules/audio_device/include/test_audio_device.h"
 #include "modules/congestion_controller/goog_cc/test/goog_cc_printer.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "test/logging/log_writer.h"
 #include "test/network/network_emulation.h"
@@ -68,8 +67,14 @@ class LoggingNetworkControllerFactory
  public:
   LoggingNetworkControllerFactory(LogWriterFactoryInterface* log_writer_factory,
                                   TransportControllerConfig config);
-  RTC_DISALLOW_COPY_AND_ASSIGN(LoggingNetworkControllerFactory);
+
   ~LoggingNetworkControllerFactory();
+
+  LoggingNetworkControllerFactory(const LoggingNetworkControllerFactory&) =
+      delete;
+  LoggingNetworkControllerFactory& operator=(
+      const LoggingNetworkControllerFactory&) = delete;
+
   std::unique_ptr<NetworkControllerInterface> Create(
       NetworkControllerConfig config) override;
   TimeDelta GetProcessInterval() const override;
@@ -99,9 +104,12 @@ class CallClient : public EmulatedNetworkReceiverInterface {
   CallClient(TimeController* time_controller,
              std::unique_ptr<LogWriterFactoryInterface> log_writer_factory,
              CallClientConfig config);
-  RTC_DISALLOW_COPY_AND_ASSIGN(CallClient);
 
   ~CallClient();
+
+  CallClient(const CallClient&) = delete;
+  CallClient& operator=(const CallClient&) = delete;
+
   ColumnPrinter StatsPrinter();
   Call::Stats GetStats();
   DataRate send_bandwidth() {
@@ -165,8 +173,11 @@ class CallClient : public EmulatedNetworkReceiverInterface {
 
 class CallClientPair {
  public:
-  RTC_DISALLOW_COPY_AND_ASSIGN(CallClientPair);
   ~CallClientPair();
+
+  CallClientPair(const CallClientPair&) = delete;
+  CallClientPair& operator=(const CallClientPair&) = delete;
+
   CallClient* first() { return first_; }
   CallClient* second() { return second_; }
   std::pair<CallClient*, CallClient*> forward() { return {first(), second()}; }

@@ -15,7 +15,6 @@
 #include <random>
 
 #include "rtc_base/checks.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/null_socket_server.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
@@ -88,6 +87,9 @@ class IncrementThread : public Thread {
   explicit IncrementThread(int* value)
       : Thread(std::make_unique<NullSocketServer>()), value_(value) {}
 
+  IncrementThread(const IncrementThread&) = delete;
+  IncrementThread& operator=(const IncrementThread&) = delete;
+
   void Run() override {
     ++*value_;
     Thread::Current()->SleepMs(100);
@@ -98,8 +100,6 @@ class IncrementThread : public Thread {
 
  private:
   int* value_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(IncrementThread);
 };
 
 void DataRace() {

@@ -23,7 +23,6 @@
 #include "modules/desktop_capture/screen_capture_frame_queue.h"
 #include "modules/desktop_capture/win/dxgi_duplicator_controller.h"
 #include "modules/desktop_capture/win/dxgi_frame.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
@@ -74,6 +73,9 @@ class RTC_EXPORT ScreenCapturerWinDirectx : public DesktopCapturer {
 
   ~ScreenCapturerWinDirectx() override;
 
+  ScreenCapturerWinDirectx(const ScreenCapturerWinDirectx&) = delete;
+  ScreenCapturerWinDirectx& operator=(const ScreenCapturerWinDirectx&) = delete;
+
   // DesktopCapturer implementation.
   void Start(Callback* callback) override;
   void SetSharedMemoryFactory(
@@ -88,8 +90,6 @@ class RTC_EXPORT ScreenCapturerWinDirectx : public DesktopCapturer {
   std::unique_ptr<SharedMemoryFactory> shared_memory_factory_;
   Callback* callback_ = nullptr;
   SourceId current_screen_id_ = kFullDesktopScreenId;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerWinDirectx);
 };
 
 }  // namespace webrtc
