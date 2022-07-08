@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const url =
-  "http://example.org/browser/browser/base/content/test/sanitize/dummy_page.html";
+  "https://example.org/browser/browser/base/content/test/sanitize/dummy_page.html";
 
 add_task(async function purgeHistoryTest() {
   await BrowserTestUtils.withNewTab(
