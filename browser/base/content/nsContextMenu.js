@@ -193,6 +193,7 @@ class nsContextMenu {
     this.isDesignMode = context.isDesignMode;
     this.inFrame = context.inFrame;
     this.inPDFViewer = context.inPDFViewer;
+    this.inPDFEditor = context.inPDFEditor;
     this.inSrcdocFrame = context.inSrcdocFrame;
     this.inSyntheticDoc = context.inSyntheticDoc;
     this.inTabBrowser = context.inTabBrowser;
@@ -225,6 +226,8 @@ class nsContextMenu {
     this.onSpellcheckable = context.onSpellcheckable;
     this.onTextInput = context.onTextInput;
     this.onVideo = context.onVideo;
+
+    this.pdfEditorStates = context.pdfEditorStates;
 
     this.target = context.target;
     this.targetIdentifier = context.targetIdentifier;
@@ -338,6 +341,7 @@ class nsContextMenu {
     this.initViewSourceItems();
     this.initScreenshotItem();
     this.initPasswordControlItems();
+    this.initPDFItems();
 
     this.showHideSeparators(aXulMenu);
     if (!aXulMenu.showHideSeparators) {
@@ -348,6 +352,60 @@ class nsContextMenu {
         this.showHideSeparators(aXulMenu);
       };
     }
+  }
+
+  initPDFItems() {
+    for (const id of [
+      "context-pdfjs-undo",
+      "context-pdfjs-redo",
+      "context-sep-pdfjs-redo",
+      "context-pdfjs-cut",
+      "context-pdfjs-copy",
+      "context-pdfjs-paste",
+      "context-pdfjs-delete",
+      "context-pdfjs-selectall",
+      "context-sep-pdfjs-selectall",
+    ]) {
+      this.showItem(id, this.inPDFEditor);
+    }
+
+    if (!this.inPDFEditor) {
+      return;
+    }
+
+    const {
+      isEmpty,
+      hasEmptyClipboard,
+      hasSomethingToUndo,
+      hasSomethingToRedo,
+      hasSelectedEditor,
+    } = this.pdfEditorStates;
+
+    this.setItemAttr("context-pdfjs-undo", "disabled", !hasSomethingToUndo);
+    this.setItemAttr("context-pdfjs-redo", "disabled", !hasSomethingToRedo);
+    this.setItemAttr(
+      "context-sep-pdfjs-redo",
+      "disabled",
+      !hasSomethingToUndo && !hasSomethingToRedo
+    );
+    this.setItemAttr(
+      "context-pdfjs-cut",
+      "disabled",
+      isEmpty || !hasSelectedEditor
+    );
+    this.setItemAttr(
+      "context-pdfjs-copy",
+      "disabled",
+      isEmpty || !hasSelectedEditor
+    );
+    this.setItemAttr("context-pdfjs-paste", "disabled", hasEmptyClipboard);
+    this.setItemAttr(
+      "context-pdfjs-delete",
+      "disabled",
+      isEmpty || !hasSelectedEditor
+    );
+    this.setItemAttr("context-pdfjs-selectall", "disabled", isEmpty);
+    this.setItemAttr("context-sep-pdfjs-selectall", "disabled", isEmpty);
   }
 
   initOpenItems() {
@@ -551,7 +609,9 @@ class nsContextMenu {
     // (or is in a frame), or a canvas. If this isn't an image, check
     // if there is a background image.
     let showViewImage =
-      (this.onImage && (!this.inSyntheticDoc || this.inFrame)) || this.onCanvas;
+      ((this.onImage && (!this.inSyntheticDoc || this.inFrame)) ||
+        this.onCanvas) &&
+      !this.inPDFViewer;
     let showBGImage =
       this.hasBGImage &&
       !this.hasMultipleBGImages &&
@@ -567,7 +627,10 @@ class nsContextMenu {
     this.showItem("context-viewimage", showViewImage || showBGImage);
 
     // Save image depends on having loaded its content.
-    this.showItem("context-saveimage", this.onLoadedImage || this.onCanvas);
+    this.showItem(
+      "context-saveimage",
+      (this.onLoadedImage || this.onCanvas) && !this.inPDFEditor
+    );
 
     // Copy image contents depends on whether we're on an image.
     // Note: the element doesn't exist on all platforms, but showItem() takes
@@ -879,7 +942,8 @@ class nsContextMenu {
         this.onImage ||
         this.onVideo ||
         this.onAudio ||
-        this.inSyntheticDoc
+        this.inSyntheticDoc ||
+        this.inPDFEditor
       ) || this.isDesignMode
     );
 
@@ -1400,6 +1464,10 @@ class nsContextMenu {
         "contextMenu"
       );
     }
+  }
+
+  pdfJSCmd(name) {
+    this.browser.sendMessageToActor("PDFJS:Editing", { name }, "Pdfjs");
   }
 
   // View Partial Source

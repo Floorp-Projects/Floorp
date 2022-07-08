@@ -310,6 +310,31 @@
                 data-l10n-id="main-context-menu-print-selection"
                 oncommand="gContextMenu.printSelection();"/>
       <menuseparator id="context-sep-selectall"/>
+
+      <menuitem id="context-pdfjs-undo"
+                data-l10n-id="text-action-undo"
+                oncommand="gContextMenu.pdfJSCmd('undo');"/>
+      <menuitem id="context-pdfjs-redo"
+                data-l10n-id="text-action-redo"
+                oncommand="gContextMenu.pdfJSCmd('redo');"/>
+      <menuseparator id="context-sep-pdfjs-redo"/>
+      <menuitem id="context-pdfjs-cut"
+                data-l10n-id="text-action-cut"
+                oncommand="gContextMenu.pdfJSCmd('cut');"/>
+      <menuitem id="context-pdfjs-copy"
+                data-l10n-id="text-action-copy"
+                oncommand="gContextMenu.pdfJSCmd('copy');"/>
+      <menuitem id="context-pdfjs-paste"
+                data-l10n-id="text-action-paste"
+                oncommand="gContextMenu.pdfJSCmd('paste');"/>
+      <menuitem id="context-pdfjs-delete"
+                data-l10n-id="text-action-delete"
+                oncommand="gContextMenu.pdfJSCmd('delete');"/>
+      <menuitem id="context-pdfjs-selectall"
+                data-l10n-id="text-action-select-all"
+                oncommand="gContextMenu.pdfJSCmd('selectAll');"/>
+      <menuseparator id="context-sep-pdfjs-selectall"/>
+
       <menuitem id="context-take-screenshot"
                 data-l10n-id="main-context-menu-take-screenshot"
                 oncommand="gContextMenu.takeScreenshot();"/>

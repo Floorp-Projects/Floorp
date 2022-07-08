@@ -605,6 +605,31 @@ class ChromeActions {
     }
     return result;
   }
+
+  /**
+   * Set the different editor states in order to be able to update the context
+   * menu.
+   * @param {Object} details
+   */
+  updateEditorStates({ details }) {
+    const doc = this.domWindow.document;
+    if (!doc.editorStates) {
+      doc.editorStates = {
+        isEditing: false,
+        isEmpty: true,
+        hasEmptyClipboard: true,
+        hasSomethingToUndo: false,
+        hasSomethingToRedo: false,
+        hasSelectedEditor: false,
+      };
+    }
+    const { editorStates } = doc;
+    for (const [key, value] of Object.entries(details)) {
+      if (typeof value === "boolean" && key in editorStates) {
+        editorStates[key] = value;
+      }
+    }
+  }
 }
 
 /**
