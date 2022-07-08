@@ -191,6 +191,33 @@ uint64_t FontFaceSetWorkerImpl::GetInnerWindowID() {
   return mWorkerRef->Private()->WindowID();
 }
 
+void FontFaceSetWorkerImpl::FlushUserFontSet() {
+  RecursiveMutexAutoLock lock(mMutex);
+
+  // If there was a change to the mNonRuleFaces array, then there could
+  // have been a modification to the user font set.
+  bool modified = mNonRuleFacesDirty;
+  mNonRuleFacesDirty = false;
+
+  for (size_t i = 0, i_end = mNonRuleFaces.Length(); i < i_end; ++i) {
+    InsertNonRuleFontFace(mNonRuleFaces[i].mFontFace, modified);
+  }
+
+  // Remove any residual families that have no font entries.
+  for (auto it = mFontFamilies.Iter(); !it.Done(); it.Next()) {
+    if (!it.Data()->FontListLength()) {
+      it.Remove();
+    }
+  }
+
+  if (modified) {
+    IncrementGeneration(true);
+    mHasLoadingFontFacesIsDirty = true;
+    CheckLoadingStarted();
+    CheckLoadingFinished();
+  }
+}
+
 nsresult FontFaceSetWorkerImpl::StartLoad(gfxUserFontEntry* aUserFontEntry,
                                           uint32_t aSrcIndex) {
   RecursiveMutexAutoLock lock(mMutex);
