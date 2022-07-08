@@ -6,7 +6,7 @@ const ON_LOAD = `
   <body>
   send onload message...
   <script type="application/javascript">
-    window.opener.postMessage({result: 'you entered the http page'}, '*');
+    window.opener.postMessage({result: 'you entered the http page', historyLength: history.length}, '*');
   </script>
   </body>
   </html>`;

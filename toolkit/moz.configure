@@ -367,6 +367,10 @@ include("../js/moz.configure")
 # ==============================================================
 include("../build/moz.configure/node.configure")
 
+# JsonCpp
+# ==============================================================
+set_define("JSON_USE_EXCEPTION", 0)
+
 # L10N
 # ==============================================================
 option("--with-l10n-base", nargs=1, env="L10NBASEDIR", help="Path to l10n repositories")

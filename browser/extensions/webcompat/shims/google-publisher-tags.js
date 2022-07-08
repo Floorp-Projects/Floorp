@@ -76,13 +76,22 @@ if (window.googletag?.apiReady === undefined) {
     await fireSlotEvent("impressionViewable", slot);
   };
 
-  const display = id => {
-    const parent = document.getElementById(id);
-    if (parent) {
-      parent.appendChild(document.createElement("div"));
+  const display = arg => {
+    let id;
+    if (arg?.getSlotElementId) {
+      id = arg.getSlotElementId();
+    } else if (arg?.nodeType) {
+      id = arg.id;
+    } else {
+      id = String(arg);
     }
 
     if (slotsById.has(id)) {
+      const parent = document.getElementById(id);
+      if (parent) {
+        parent.appendChild(document.createElement("div"));
+      }
+
       displayedSlots.add(id);
       callbackIfSlotReady(id);
     }
@@ -156,7 +165,7 @@ if (window.googletag?.apiReady === undefined) {
   const newSlot = (adUnitPath, size, opt_div) => {
     if (slotsById.has(opt_div)) {
       document.getElementById(opt_div)?.remove();
-      return undefined;
+      return slotsById.get(opt_div);
     }
     const attributes = new Map();
     const targeting = new Map();

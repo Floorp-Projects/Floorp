@@ -48,8 +48,9 @@ async function verifyErrorPage() {
 // the https-only error page
 async function receiveMessage(event) {
   // read event
-  let result = event.data.result;
+  let { result, historyLength } = event.data;
   is(result, "you entered the http page", "The requested page should be shown");
+  is(historyLength, 1, "History should contain one item");
   window.removeEventListener("message",receiveMessage);
   winTest.close();
   SimpleTest.finish();

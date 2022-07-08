@@ -46,12 +46,12 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <map>
 #include <stack>
 #include <string>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/Vector.h"
 
 #include "LulCommonExt.h"
 #include "LulDwarfInt.h"
@@ -61,6 +61,7 @@
 
 namespace lul {
 
+using std::pair;
 using std::string;
 
 ByteReader::ByteReader(enum Endianness endian)
@@ -632,7 +633,135 @@ class CallFrameInfo::Rule final {
   }
 };
 
-// A map from register numbers to rules.
+// `RuleMapLowLevel` is a simple class that maps from `int` (register numbers)
+// to `Rule`.  This is implemented as a vector of `<int, Rule>` pairs, with a
+// 12-element inline capacity.  From a big-O perspective this is obviously a
+// terrible way to implement an associative map.  This workload is however
+// quite special in that the maximum number of elements is normally 7 (on
+// x86_64-linux), and so this implementation is much faster than one based on
+// std::map with its attendant R-B-tree node allocation and balancing
+// overheads.
+//
+// An iterator that enumerates the mapping in increasing order of the `int`
+// keys is provided.  This ordered iteration facility is required by
+// CallFrameInfo::RuleMap::HandleTransitionTo, which needs to iterate through
+// two such maps simultaneously and in-order so as to compare them.
+
+// All `Rule`s in the map must satisfy `isVALID()`.  That conveniently means
+// that `Rule::mkINVALID()` can be used to indicate "not found` in `get()`.
+
+class CallFrameInfo::RuleMapLowLevel {
+  using Entry = pair<int, Rule>;
+
+  // The inline capacity of 12 is carefully chosen.  It would be wise to make
+  // careful measurements of time, instruction count, allocation count and
+  // allocated bytes before changing it.  For x86_64-linux, a value of 8 is
+  // marginally better; using 12 increases the total heap bytes allocated by
+  // around 20%.  For arm64-linux, a value of 24 is better; using 12 increases
+  // the total blocks allocated by around 20%.  But it's a not bad tradeoff
+  // for both targets, and in any case is vastly superior to the previous
+  // scheme of using `std::map`.
+  mozilla::Vector<Entry, 12> entries_;
+
+ public:
+  void clear() { entries_.clear(); }
+
+  RuleMapLowLevel() { clear(); }
+
+  RuleMapLowLevel& operator=(const RuleMapLowLevel& rhs) {
+    entries_.clear();
+    for (size_t i = 0; i < rhs.entries_.length(); i++) {
+      bool ok = entries_.append(rhs.entries_[i]);
+      MOZ_RELEASE_ASSERT(ok);
+    }
+    return *this;
+  }
+
+  void set(int reg, Rule rule) {
+    MOZ_ASSERT(rule.isVALID());
+    // Find the place where it should go, if any
+    size_t i = 0;
+    size_t nEnt = entries_.length();
+    while (i < nEnt && entries_[i].first < reg) {
+      i++;
+    }
+    if (i == nEnt) {
+      // No entry exists, and all the existing ones are for lower register
+      // numbers.  So just add it at the end.
+      bool ok = entries_.append(Entry(reg, rule));
+      MOZ_RELEASE_ASSERT(ok);
+    } else {
+      // It needs to live at location `i`, and ..
+      MOZ_ASSERT(i < nEnt);
+      if (entries_[i].first == reg) {
+        // .. there's already an old entry, so just update it.
+        entries_[i].second = rule;
+      } else {
+        // .. there's no previous entry, so shift `i` and all those following
+        // it one place to the right, and put the new entry at `i`.  Doing it
+        // manually is measurably cheaper than using `Vector::insert`.
+        MOZ_ASSERT(entries_[i].first > reg);
+        bool ok = entries_.append(Entry(999999, Rule::mkINVALID()));
+        MOZ_RELEASE_ASSERT(ok);
+        for (size_t j = nEnt; j >= i + 1; j--) {
+          entries_[j] = entries_[j - 1];
+        }
+        entries_[i] = Entry(reg, rule);
+      }
+    }
+    // Check in-order-ness and validity.
+    for (size_t i = 0; i < entries_.length(); i++) {
+      MOZ_ASSERT(entries_[i].second.isVALID());
+      MOZ_ASSERT_IF(i > 0, entries_[i - 1].first < entries_[i].first);
+    }
+    MOZ_ASSERT(get(reg).isVALID());
+  }
+
+  // Find the entry for `reg`, or return `Rule::mkINVALID()` if not found.
+  Rule get(int reg) const {
+    size_t nEnt = entries_.length();
+    // "early exit" in the case where `entries_[i].first > reg` was tested on
+    // x86_64 and found to be slightly slower than just testing all entries,
+    // presumably because the reduced amount of searching was not offset by
+    // the cost of an extra test per iteration.
+    for (size_t i = 0; i < nEnt; i++) {
+      if (entries_[i].first == reg) {
+        CallFrameInfo::Rule ret = entries_[i].second;
+        MOZ_ASSERT(ret.isVALID());
+        return ret;
+      }
+    }
+    return CallFrameInfo::Rule::mkINVALID();
+  }
+
+  // A very simple in-order iteration facility.
+  class Iter {
+    const RuleMapLowLevel* rmll_;
+    size_t nextIx_;
+
+   public:
+    explicit Iter(const RuleMapLowLevel* rmll) : rmll_(rmll), nextIx_(0) {}
+    bool avail() const { return nextIx_ < rmll_->entries_.length(); }
+    bool finished() const { return !avail(); }
+    // Move the iterator to the next entry.
+    void step() {
+      MOZ_RELEASE_ASSERT(nextIx_ < rmll_->entries_.length());
+      nextIx_++;
+    }
+    // Get the value at the current iteration point, but don't advance to the
+    // next entry.
+    pair<int, Rule> peek() {
+      MOZ_RELEASE_ASSERT(nextIx_ < rmll_->entries_.length());
+      return rmll_->entries_[nextIx_];
+    }
+  };
+};
+
+// A map from register numbers to rules.  This is a wrapper around
+// `RuleMapLowLevel`, with added logic for dealing with the "special" CFA
+// rule, and with `HandleTransitionTo`, which effectively computes the
+// difference between two `RuleMaps`.
+
 class CallFrameInfo::RuleMap {
  public:
   RuleMap() : cfa_rule_(Rule::mkINVALID()) {}
@@ -666,9 +795,6 @@ class CallFrameInfo::RuleMap {
                           const RuleMap& new_rules) const;
 
  private:
-  // A map from register numbers to Rules.
-  typedef std::map<int, Rule> RuleByNumber;
-
   // Remove all register rules and clear cfa_rule_.
   void Clear();
 
@@ -677,31 +803,25 @@ class CallFrameInfo::RuleMap {
 
   // A map from register numbers to postfix expressions to recover
   // their values.
-  RuleByNumber registers_;
+  RuleMapLowLevel registers_;
 };
 
 CallFrameInfo::RuleMap& CallFrameInfo::RuleMap::operator=(const RuleMap& rhs) {
   Clear();
   if (rhs.cfa_rule_.isVALID()) cfa_rule_ = rhs.cfa_rule_;
-  for (RuleByNumber::const_iterator it = rhs.registers_.begin();
-       it != rhs.registers_.end(); it++)
-    registers_[it->first] = it->second;
+  registers_ = rhs.registers_;
   return *this;
 }
 
 CallFrameInfo::Rule CallFrameInfo::RuleMap::RegisterRule(int reg) const {
   MOZ_ASSERT(reg != Handler::kCFARegister);
-  RuleByNumber::const_iterator it = registers_.find(reg);
-  if (it != registers_.end())
-    return it->second;
-  else
-    return Rule::mkINVALID();
+  return registers_.get(reg);
 }
 
 void CallFrameInfo::RuleMap::SetRegisterRule(int reg, Rule rule) {
   MOZ_ASSERT(reg != Handler::kCFARegister);
   MOZ_ASSERT(rule.isVALID());
-  registers_[reg] = rule;
+  registers_.set(reg, rule);
 }
 
 bool CallFrameInfo::RuleMap::HandleTransitionTo(
@@ -727,43 +847,48 @@ bool CallFrameInfo::RuleMap::HandleTransitionTo(
 
   // Traverse the two maps in order by register number, and report
   // whatever differences we find.
-  RuleByNumber::const_iterator old_it = registers_.begin();
-  RuleByNumber::const_iterator new_it = new_rules.registers_.begin();
-  while (old_it != registers_.end() && new_it != new_rules.registers_.end()) {
-    if (old_it->first < new_it->first) {
-      // This RuleMap has an entry for old_it->first, but NEW_RULES
-      // doesn't.
+  RuleMapLowLevel::Iter old_it(&registers_);
+  RuleMapLowLevel::Iter new_it(&new_rules.registers_);
+  while (!old_it.finished() && !new_it.finished()) {
+    pair<int, Rule> old_pair = old_it.peek();
+    pair<int, Rule> new_pair = new_it.peek();
+    if (old_pair.first < new_pair.first) {
+      // This RuleMap has an entry for old.first, but NEW_RULES doesn't.
       //
       // This isn't really the right thing to do, but since CFI generally
       // only mentions callee-saves registers, and GCC's convention for
       // callee-saves registers is that they are unchanged, it's a good
       // approximation.
-      if (!handler->SameValueRule(address, old_it->first)) return false;
-      old_it++;
-    } else if (old_it->first > new_it->first) {
-      // NEW_RULES has entry for new_it->first, but this RuleMap
+      if (!handler->SameValueRule(address, old_pair.first)) {
+        return false;
+      }
+      old_it.step();
+    } else if (old_pair.first > new_pair.first) {
+      // NEW_RULES has an entry for new_pair.first, but this RuleMap
       // doesn't. This shouldn't be possible: NEW_RULES is some prior
       // state, and there's no way to remove entries.
       MOZ_ASSERT(0);
     } else {
       // Both maps have an entry for this register. Report the new
       // rule if it is different.
-      if (old_it->second != new_it->second &&
-          !new_it->second.Handle(handler, address, new_it->first))
+      if (old_pair.second != new_pair.second &&
+          !new_pair.second.Handle(handler, address, new_pair.first)) {
         return false;
-      new_it++;
-      old_it++;
+      }
+      new_it.step();
+      old_it.step();
     }
   }
   // Finish off entries from this RuleMap with no counterparts in new_rules.
-  while (old_it != registers_.end()) {
-    if (!handler->SameValueRule(address, old_it->first)) return false;
-    old_it++;
+  while (!old_it.finished()) {
+    pair<int, Rule> old_pair = old_it.peek();
+    if (!handler->SameValueRule(address, old_pair.first)) return false;
+    old_it.step();
   }
   // Since we only make transitions from a rule set to some previously
   // saved rule set, and we can only add rules to the map, NEW_RULES
   // must have fewer rules than *this.
-  MOZ_ASSERT(new_it == new_rules.registers_.end());
+  MOZ_ASSERT(new_it.finished());
 
   return true;
 }

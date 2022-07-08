@@ -16,6 +16,15 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::{error::Error, os::raw::c_char, ptr, slice};
 use std::borrow::Cow;
 
+/// We limit the size of buffer allocations for stability reason.
+/// We can reconsider this limit in the future. Note that some drivers (mesa for example),
+/// have issues when the size of a buffer, mapping or copy command does not fit into a
+/// signed 32 bits integer, so beyond a certain size, large allocations will need some form
+/// of driver allow/blocklist.
+const MAX_BUFFER_SIZE: wgt::BufferAddress = 1 << 30;
+// Mesa has issues with height/depth that don't fit in a 16 bits signed integers.
+const MAX_TEXTURE_EXTENT: u32 = std::i16::MAX as u32;
+
 /// A fixed-capacity, null-terminated error buffer owned by C++.
 ///
 /// This type points to space owned by a C++ `mozilla::webgpu::ErrorBuffer`
@@ -315,6 +324,14 @@ pub extern "C" fn wgpu_server_device_create_buffer(
             return;
         }
     };
+
+    // Don't trust the graphics driver with buffer sizes larger than our conservative max texture size.
+    if size > MAX_BUFFER_SIZE {
+        error_buf.init_str("Out of memory");
+        gfx_select!(self_id => global.create_buffer_error(buffer_id, label));
+        return;
+    }
+
     let desc = wgc::resource::BufferDescriptor {
         label,
         size,
@@ -391,6 +408,12 @@ impl Global {
     ) {
         match action {
             DeviceAction::CreateTexture(id, desc) => {
+                let max = MAX_TEXTURE_EXTENT;
+                if desc.size.width > max || desc.size.height > max || desc.size.depth_or_array_layers > max {
+                    gfx_select!(self_id => self.create_texture_error(id, desc.label));
+                    error_buf.init_str("Out of memory");
+                    return;
+                }
                 let (_, error) = self.device_create_texture::<A>(self_id, &desc, id);
                 if let Some(err) = error {
                     error_buf.init(err);
