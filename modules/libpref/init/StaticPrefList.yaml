@@ -13480,6 +13480,11 @@
   value: false
   mirror: once
 
+- name: webgl.use-canvas-render-thread
+  type: bool
+  value: @IS_NOT_ANDROID@
+  mirror: once
+
 - name: webgl.override-unmasked-renderer
   type: String
   value: ""
