@@ -2,7 +2,6 @@
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
-  PerfTestHelpers: "resource://testing-common/PerfTestHelpers.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
@@ -844,7 +843,7 @@ async function runUrlbarTest(
  *        If true, dump the stacks for all loaded modules. Makes the output
  *        noisy.
  */
-async function checkLoadedScripts({
+function checkLoadedScripts({
   loadedInfo,
   known,
   intermittent,
@@ -852,32 +851,6 @@ async function checkLoadedScripts({
   dumpAllStacks,
 }) {
   let loadedList = {};
-
-  async function checkAllExist(scriptType, list, listType) {
-    if (scriptType == "services") {
-      for (let contract of list) {
-        ok(
-          contract in Cc,
-          `${listType} entry ${contract} for content process startup must exist`
-        );
-      }
-    } else {
-      let results = await PerfTestHelpers.throttledMapPromises(
-        list,
-        async uri => ({
-          uri,
-          exists: await PerfTestHelpers.checkURIExists(uri),
-        })
-      );
-
-      for (let { uri, exists } of results) {
-        ok(
-          exists,
-          `${listType} entry ${uri} for content process startup must exist`
-        );
-      }
-    }
-  }
 
   for (let scriptType in known) {
     loadedList[scriptType] = Object.keys(loadedInfo[scriptType]).filter(c => {
@@ -906,8 +879,6 @@ async function checkLoadedScripts({
         loadedInfo[scriptType][script]
       );
     }
-
-    await checkAllExist(scriptType, intermittent[scriptType], "intermittent");
 
     is(
       known[scriptType].size,
@@ -948,7 +919,5 @@ async function checkLoadedScripts({
         );
       }
     }
-
-    await checkAllExist(scriptType, forbidden[scriptType], "forbidden");
   }
 }

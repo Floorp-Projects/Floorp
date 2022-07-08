@@ -744,13 +744,30 @@ function convertToCodeURI(fileUri) {
   }
 }
 
-async function chromeFileExists(aURI) {
+function chromeFileExists(aURI) {
+  let available = 0;
   try {
-    return await PerfTestHelpers.checkURIExists(aURI);
+    let channel = NetUtil.newChannel({
+      uri: aURI,
+      loadUsingSystemPrincipal: true,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_FETCH,
+    });
+    let stream = channel.open();
+    let sstream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+      Ci.nsIScriptableInputStream
+    );
+    sstream.init(stream);
+    available = sstream.available();
+    sstream.close();
   } catch (e) {
-    todo(false, `Failed to check if ${aURI} exists: ${e}`);
-    return false;
+    if (
+      e.result != Cr.NS_ERROR_FILE_NOT_FOUND &&
+      e.result != Cr.NS_ERROR_NOT_AVAILABLE
+    ) {
+      todo(false, "Failed to check if " + aURI + "exists: " + e);
+    }
   }
+  return available > 0;
 }
 
 function findChromeUrlsFromArray(array, prefix) {
@@ -858,7 +875,7 @@ add_task(async function checkAllTheFiles() {
   });
 
   // Wait for all manifest to be parsed
-  await PerfTestHelpers.throttledMapPromises(manifestURIs, parseManifest);
+  await throttledMapPromises(manifestURIs, parseManifest);
 
   for (let jsm of Components.manager.getComponentJSMs()) {
     gReferencesFromCode.set(jsm, null);
@@ -891,9 +908,7 @@ add_task(async function checkAllTheFiles() {
   }
 
   // Wait for all the files to have actually loaded:
-  await PerfTestHelpers.throttledMapPromises(allPromises, ([task, uri]) =>
-    task(uri)
-  );
+  await throttledMapPromises(allPromises, ([task, uri]) => task(uri));
 
   // Keep only chrome:// files, and filter out either the devtools paths or
   // the non-devtools paths:
@@ -1054,7 +1069,7 @@ add_task(async function checkAllTheFiles() {
 
     if (
       (file.startsWith("chrome://") || file.startsWith("resource://")) &&
-      !(await chromeFileExists(file))
+      !chromeFileExists(file)
     ) {
       // Ignore chrome prefixes that have been automatically expanded.
       let pathParts =
