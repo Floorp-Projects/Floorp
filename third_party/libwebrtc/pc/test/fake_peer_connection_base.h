@@ -291,6 +291,75 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
                   rtc::SSLRole* role) override {
     return false;
   }
+  const PeerConnectionInterface::RTCConfiguration* configuration()
+      const override {
+    return nullptr;
+  }
+
+  rtc::Thread* signaling_thread_internal() const override { return nullptr; }
+  void ReportSdpFormatReceived(
+      const SessionDescriptionInterface& remote_description) override {}
+
+  void ReportSdpBundleUsage(
+      const SessionDescriptionInterface& remote_description) override {}
+
+  PeerConnectionMessageHandler* message_handler() override { return nullptr; }
+  RtpTransmissionManager* rtp_manager() override { return nullptr; }
+  const RtpTransmissionManager* rtp_manager() const override { return nullptr; }
+  bool dtls_enabled() const override { return false; }
+  const PeerConnectionFactoryInterface::Options* options() const override {
+    return nullptr;
+  }
+
+  CryptoOptions GetCryptoOptions() override { return CryptoOptions(); }
+  cricket::ChannelManager* channel_manager() override { return nullptr; }
+  JsepTransportController* transport_controller() override { return nullptr; }
+  DataChannelController* data_channel_controller() override { return nullptr; }
+  cricket::PortAllocator* port_allocator() override { return nullptr; }
+  StatsCollector* stats() override { return nullptr; }
+  PeerConnectionObserver* Observer() const override { return nullptr; }
+  bool GetSctpSslRole(rtc::SSLRole* role) override { return false; }
+  PeerConnectionInterface::IceConnectionState ice_connection_state_internal()
+      override {
+    return PeerConnectionInterface::IceConnectionState::kIceConnectionNew;
+  }
+  void SetIceConnectionState(
+      PeerConnectionInterface::IceConnectionState new_state) override {}
+  void NoteUsageEvent(UsageEvent event) override {}
+  bool IsClosed() const override { return false; }
+  bool IsUnifiedPlan() const override { return true; }
+  bool ValidateBundleSettings(
+      const cricket::SessionDescription* desc,
+      const std::map<std::string, const cricket::ContentGroup*>&
+          bundle_groups_by_mid) override {
+    return false;
+  }
+
+  absl::optional<std::string> GetDataMid() const override {
+    return absl::nullopt;
+  }
+  RTCErrorOr<rtc::scoped_refptr<RtpTransceiverInterface>> AddTransceiver(
+      cricket::MediaType media_type,
+      rtc::scoped_refptr<MediaStreamTrackInterface> track,
+      const RtpTransceiverInit& init,
+      bool fire_callback = true) override {
+    return RTCError(RTCErrorType::INTERNAL_ERROR, "");
+  }
+  void StartSctpTransport(int local_port,
+                          int remote_port,
+                          int max_message_size) override {}
+
+  void AddRemoteCandidate(const std::string& mid,
+                          const cricket::Candidate& candidate) override {}
+
+  Call* call_ptr() override { return nullptr; }
+  bool SrtpRequired() const override { return false; }
+  bool SetupDataChannelTransport_n(const std::string& mid) override {
+    return false;
+  }
+  void TeardownDataChannelTransport_n() override {}
+  void SetSctpDataMid(const std::string& mid) override {}
+  void ResetSctpDataMid() override {}
 
  protected:
   sigslot::signal1<SctpDataChannel*> SignalSctpDataChannelCreated_;

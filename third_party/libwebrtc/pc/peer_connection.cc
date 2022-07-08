@@ -2090,7 +2090,7 @@ bool PeerConnection::ReconfigurePortAllocator_n(
       stun_candidate_keepalive_interval);
 }
 
-cricket::ChannelManager* PeerConnection::channel_manager() const {
+cricket::ChannelManager* PeerConnection::channel_manager() {
   return context_->channel_manager();
 }
 

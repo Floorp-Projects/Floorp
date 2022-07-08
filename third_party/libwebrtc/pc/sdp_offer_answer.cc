@@ -1161,7 +1161,7 @@ class SdpOfferAnswerHandler::LocalIceCredentialsToReplace {
   std::set<std::pair<std::string, std::string>> ice_credentials_;
 };
 
-SdpOfferAnswerHandler::SdpOfferAnswerHandler(PeerConnection* pc)
+SdpOfferAnswerHandler::SdpOfferAnswerHandler(PeerConnectionSdpMethods* pc)
     : pc_(pc),
       local_streams_(StreamCollection::Create()),
       remote_streams_(StreamCollection::Create()),
@@ -1181,7 +1181,7 @@ SdpOfferAnswerHandler::~SdpOfferAnswerHandler() {}
 
 // Static
 std::unique_ptr<SdpOfferAnswerHandler> SdpOfferAnswerHandler::Create(
-    PeerConnection* pc,
+    PeerConnectionSdpMethods* pc,
     const PeerConnectionInterface::RTCConfiguration& configuration,
     PeerConnectionDependencies& dependencies) {
   auto handler = absl::WrapUnique(new SdpOfferAnswerHandler(pc));
@@ -1308,7 +1308,7 @@ void SdpOfferAnswerHandler::RestartIce() {
 }
 
 rtc::Thread* SdpOfferAnswerHandler::signaling_thread() const {
-  return pc_->signaling_thread();
+  return pc_->signaling_thread_internal();
 }
 
 void SdpOfferAnswerHandler::CreateOffer(
@@ -1857,7 +1857,7 @@ void SdpOfferAnswerHandler::ApplyRemoteDescription(
   // actually means "gathering candidates", so cannot be be used here.
   if (remote_description()->GetType() != SdpType::kOffer &&
       remote_description()->number_of_mediasections() > 0u &&
-      pc_->ice_connection_state() ==
+      pc_->ice_connection_state_internal() ==
           PeerConnectionInterface::kIceConnectionNew) {
     pc_->SetIceConnectionState(PeerConnectionInterface::kIceConnectionChecking);
   }

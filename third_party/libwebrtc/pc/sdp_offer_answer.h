@@ -94,7 +94,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
 
   // Creates an SdpOfferAnswerHandler. Modifies dependencies.
   static std::unique_ptr<SdpOfferAnswerHandler> Create(
-      PeerConnection* pc,
+      PeerConnectionSdpMethods* pc,
       const PeerConnectionInterface::RTCConfiguration& configuration,
       PeerConnectionDependencies& dependencies);
 
@@ -205,7 +205,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   class LocalIceCredentialsToReplace;
 
   // Only called by the Create() function.
-  explicit SdpOfferAnswerHandler(PeerConnection* pc);
+  explicit SdpOfferAnswerHandler(PeerConnectionSdpMethods* pc);
   // Called from the `Create()` function. Can only be called
   // once. Modifies dependencies.
   void Initialize(
@@ -591,7 +591,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   const cricket::AudioOptions& audio_options() { return audio_options_; }
   const cricket::VideoOptions& video_options() { return video_options_; }
 
-  PeerConnection* const pc_;
+  PeerConnectionSdpMethods* const pc_;
 
   std::unique_ptr<WebRtcSessionDescriptionFactory> webrtc_session_desc_factory_
       RTC_GUARDED_BY(signaling_thread());
