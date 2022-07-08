@@ -6,8 +6,6 @@
 
 #include "OffscreenCanvasRenderingContext2D.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
-#include "mozilla/dom/FontFaceSetImpl.h"
-#include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/OffscreenCanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/WorkerCommon.h"
@@ -127,17 +125,6 @@ static void SerializeFontForCanvas(const StyleFontFamilyList& aList,
 
 bool OffscreenCanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
                                                         ErrorResult& aError) {
-  nsIGlobalObject* global = GetParentObject();
-  FontFaceSet* fontFaceSet = global ? global->Fonts() : nullptr;
-  FontFaceSetImpl* fontFaceSetImpl =
-      fontFaceSet ? fontFaceSet->GetImpl() : nullptr;
-  RefPtr<URLExtraData> urlExtraData =
-      fontFaceSetImpl ? fontFaceSetImpl->GetURLExtraData() : nullptr;
-
-  if (fontFaceSetImpl) {
-    fontFaceSetImpl->FlushUserFontSet();
-  }
-
   // In the OffscreenCanvas case we don't have the context necessary to call
   // GetFontStyleForServo(), as we do in the main-thread canvas context, so
   // instead we borrow ParseFontShorthandForMatching to parse the attribute.
@@ -147,7 +134,7 @@ bool OffscreenCanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   gfxFontStyle fontStyle;
   float size = 0.0f;
   if (!ServoCSSParser::ParseFontShorthandForMatching(
-          aFont, urlExtraData, list, fontStyle.style, fontStyle.stretch,
+          aFont, nullptr, list, fontStyle.style, fontStyle.stretch,
           fontStyle.weight, &size)) {
     return false;
   }
@@ -157,15 +144,15 @@ bool OffscreenCanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   // TODO: Get a userFontSet from the Worker and pass to the fontGroup
   // TODO: Should we be passing a language? Where from?
   // TODO: Cache fontGroups in the Worker (use an nsFontCache?)
-  gfxFontGroup* fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(
-      nullptr,          // aPresContext
-      list,             // aFontFamilyList
-      &fontStyle,       // aStyle
-      nullptr,          // aLanguage
-      false,            // aExplicitLanguage
-      nullptr,          // aTextPerf
-      fontFaceSetImpl,  // aUserFontSet
-      1.0);             // aDevToCssSize
+  gfxFontGroup* fontGroup =
+      gfxPlatform::GetPlatform()->CreateFontGroup(nullptr,  // aPresContext
+                                                  list,     // aFontFamilyList
+                                                  &fontStyle,  // aStyle
+                                                  nullptr,     // aLanguage
+                                                  false,    // aExplicitLanguage
+                                                  nullptr,  // aTextPerf
+                                                  nullptr,  // aUserFontSet
+                                                  1.0);     // aDevToCssSize
   CurrentState().fontGroup = fontGroup;
   SerializeFontForCanvas(list, fontStyle, CurrentState().font);
   CurrentState().fontFont = nsFont(StyleFontFamily{list, false, false},

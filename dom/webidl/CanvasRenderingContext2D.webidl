@@ -362,7 +362,7 @@ interface CanvasPattern {
   void setTransform(optional DOMMatrix2DInit matrix = {});
 };
 
-[Exposed=(Window,Worker)]
+[Exposed=Window]
 interface TextMetrics {
 
   // x-direction

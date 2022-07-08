@@ -8,7 +8,6 @@
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
 #include "gfxFontConstants.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
@@ -35,7 +34,7 @@ mozilla::LogModule* gfxUserFontSet::GetUserFontsLog() {
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(gfxUserFontSet::GetUserFontsLog(), mozilla::LogLevel::Debug)
 
-static Atomic<uint64_t> sFontSetGeneration(0);
+static uint64_t sFontSetGeneration = 0;
 
 gfxUserFontEntry::gfxUserFontEntry(
     gfxUserFontSet* aFontSet, const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
@@ -251,7 +250,7 @@ size_t gfxUserFontData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 /*virtual*/
 gfxUserFontFamily::~gfxUserFontFamily() {
   // Should not be dropped by stylo
-  MOZ_ASSERT(!gfxFontUtils::IsInServoTraversal());
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 already_AddRefed<gfxFontSrcPrincipal> gfxFontFaceSrc::LoadPrincipal(
@@ -1040,9 +1039,9 @@ void gfxUserFontSet::AddUserFontEntry(const nsCString& aFamilyName,
 
 void gfxUserFontSet::IncrementGeneration(bool aIsRebuild) {
   // add one, increment again if zero
-  do {
-    mGeneration = ++sFontSetGeneration;
-  } while (mGeneration == 0);
+  ++sFontSetGeneration;
+  if (sFontSetGeneration == 0) ++sFontSetGeneration;
+  mGeneration = sFontSetGeneration;
   if (aIsRebuild) {
     mRebuildGeneration = mGeneration;
   }
