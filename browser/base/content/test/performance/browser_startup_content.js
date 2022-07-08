@@ -170,7 +170,7 @@ add_task(async function() {
     loadedInfo.processScripts[uri] = "";
   }
 
-  await checkLoadedScripts({
+  checkLoadedScripts({
     loadedInfo,
     known: known_scripts,
     intermittent: intermittently_loaded_scripts,

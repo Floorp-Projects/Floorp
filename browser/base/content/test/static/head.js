@@ -17,9 +17,6 @@ const ZipReader = new Components.Constructor(
 
 const IS_ALPHA = /^[a-z]+$/i;
 
-var { PerfTestHelpers } = ChromeUtils.import(
-  "resource://testing-common/PerfTestHelpers.jsm"
-);
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { OS, require } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
@@ -158,6 +155,23 @@ function fetchFile(uri) {
     };
     xhr.send(null);
   });
+}
+
+async function throttledMapPromises(iterable, task, limit = 64) {
+  let promises = new Set();
+  for (let data of iterable) {
+    while (promises.size >= limit) {
+      await Promise.race(promises);
+    }
+
+    let promise = task(data);
+    if (promise) {
+      promise.finally(() => promises.delete(promise));
+      promises.add(promise);
+    }
+  }
+
+  await Promise.all(promises);
 }
 
 /**
