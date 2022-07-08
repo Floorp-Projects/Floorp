@@ -1918,7 +1918,7 @@ void gfxFontFamily::SearchAllFontsForChar(GlobalFontMatch* aMatchData) {
 gfxFontFamily::~gfxFontFamily() {
   // Should not be dropped by stylo, but the InitFontList thread might use
   // a transient gfxFontFamily and that's OK.
-  MOZ_ASSERT(NS_IsMainThread() || gfxPlatformFontList::IsInitFontListThread());
+  MOZ_ASSERT(!gfxFontUtils::IsInServoTraversal());
 }
 
 // returns true if other names were found, false otherwise
