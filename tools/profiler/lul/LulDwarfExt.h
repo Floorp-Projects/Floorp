@@ -872,6 +872,7 @@ class CallFrameInfo {
 
   // Internal use.
   class Rule;
+  class RuleMapLowLevel;
   class RuleMap;
   class State;
 
