@@ -250,7 +250,7 @@ size_t gfxUserFontData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 /*virtual*/
 gfxUserFontFamily::~gfxUserFontFamily() {
   // Should not be dropped by stylo
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!gfxFontUtils::IsInServoTraversal());
 }
 
 already_AddRefed<gfxFontSrcPrincipal> gfxFontFaceSrc::LoadPrincipal(

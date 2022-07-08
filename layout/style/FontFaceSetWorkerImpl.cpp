@@ -135,6 +135,36 @@ void FontFaceSetWorkerImpl::InitializeOnMainThread() {
 
 void FontFaceSetWorkerImpl::Destroy() {
   RecursiveMutexAutoLock lock(mMutex);
+
+  class DestroyRunnable final : public Runnable {
+   public:
+    DestroyRunnable(FontFaceSetWorkerImpl* aFontFaceSet,
+                    nsTHashtable<nsPtrHashKey<nsFontFaceLoader>>&& aLoaders)
+        : Runnable("FontFaceSetWorkerImpl::Destroy"),
+          mFontFaceSet(aFontFaceSet),
+          mLoaders(std::move(aLoaders)) {}
+
+   protected:
+    ~DestroyRunnable() override = default;
+
+    NS_IMETHOD Run() override {
+      for (const auto& key : mLoaders.Keys()) {
+        key->Cancel();
+      }
+      return NS_OK;
+    }
+
+    // We save a reference to the FontFaceSetWorkerImpl because the loaders
+    // contain a non-owning reference to it.
+    RefPtr<FontFaceSetWorkerImpl> mFontFaceSet;
+    nsTHashtable<nsPtrHashKey<nsFontFaceLoader>> mLoaders;
+  };
+
+  if (!mLoaders.IsEmpty() && !NS_IsMainThread()) {
+    auto runnable = MakeRefPtr<DestroyRunnable>(this, std::move(mLoaders));
+    NS_DispatchToMainThread(runnable);
+  }
+
   mWorkerRef = nullptr;
   FontFaceSetImpl::Destroy();
 }
