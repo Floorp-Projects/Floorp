@@ -44,6 +44,10 @@ void TransportFeedbackDemuxer::DeRegisterStreamFeedbackObserver(
 }
 
 void TransportFeedbackDemuxer::AddPacket(const RtpPacketSendInfo& packet_info) {
+  // Currently called on the send transport queue.
+  // TODO(tommi): When registration/unregistration as well as
+  // OnTransportFeedback callbacks occur on the transport queue, we can remove
+  // this lock.
   MutexLock lock(&lock_);
 
   StreamFeedbackObserver::StreamPacketInfo info;
