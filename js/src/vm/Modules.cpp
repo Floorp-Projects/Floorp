@@ -1641,7 +1641,7 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
   }
 
   Rooted<ModuleVector> sortedList(cx);
-  if (!GatherAvailableModuleAncestors(cx, module, &sortedList)) {
+  if (!js::GatherAvailableModuleAncestors(cx, module, &sortedList)) {
     // We have been interrupted or have OOM'd -- all bets are off, reject the
     // promise. Not much more we can do.
     if (!cx->isExceptionPending()) {
@@ -1672,12 +1672,7 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
     }
 
     if (m->isAsync()) {
-      // Steps for ExecuteAsyncModule
-      MOZ_ASSERT(m->status() == ModuleStatus::Evaluating ||
-                 m->status() == ModuleStatus::Evaluated);
-      MOZ_ASSERT(m->isAsync());
-      MOZ_ASSERT(m->isAsyncEvaluating());
-      MOZ_ALWAYS_TRUE(ModuleObject::execute(cx, m));
+      MOZ_ALWAYS_TRUE(ExecuteAsyncModule(cx, m));
     } else {
       if (!ModuleObject::execute(cx, m)) {
         MOZ_ASSERT(cx->isExceptionPending());
