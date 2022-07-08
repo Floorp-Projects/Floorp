@@ -99,7 +99,7 @@ class DummySetSessionDescriptionObserver
     : public webrtc::SetSessionDescriptionObserver {
  public:
   static DummySetSessionDescriptionObserver* Create() {
-    return new rtc::RefCountedObject<DummySetSessionDescriptionObserver>();
+    return rtc::make_ref_counted<DummySetSessionDescriptionObserver>();
   }
   virtual void OnSuccess() { RTC_LOG(LS_INFO) << __FUNCTION__; }
   virtual void OnFailure(webrtc::RTCError error) {
@@ -446,10 +446,9 @@ void SimplePeerConnection::AddStreams(bool audio_only) {
     RTC_DCHECK(texture_helper != nullptr)
         << "Cannot get the Surface Texture Helper.";
 
-    rtc::scoped_refptr<webrtc::jni::AndroidVideoTrackSource> source(
-        new rtc::RefCountedObject<webrtc::jni::AndroidVideoTrackSource>(
-            g_signaling_thread.get(), env, /* is_screencast= */ false,
-            /* align_timestamps= */ true));
+    auto source = rtc::make_ref_counted<webrtc::jni::AndroidVideoTrackSource>(
+        g_signaling_thread.get(), env, /*is_screencast=*/false,
+        /*align_timestamps=*/true);
 
     // link with VideoCapturer (Camera);
     jmethodID link_camera_method = webrtc::GetStaticMethodID(

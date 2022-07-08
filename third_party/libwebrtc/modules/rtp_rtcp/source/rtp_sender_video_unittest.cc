@@ -775,8 +775,7 @@ TEST_P(RtpSenderVideoTest,
 
   rtp_module_->RegisterRtpHeaderExtension(
       RtpDependencyDescriptorExtension::Uri(), kDependencyDescriptorId);
-  rtc::scoped_refptr<MockFrameEncryptor> encryptor(
-      new rtc::RefCountedObject<NiceMock<MockFrameEncryptor>>);
+  auto encryptor = rtc::make_ref_counted<NiceMock<MockFrameEncryptor>>();
   ON_CALL(*encryptor, GetMaxCiphertextByteSize).WillByDefault(ReturnArg<1>());
   ON_CALL(*encryptor, Encrypt)
       .WillByDefault(WithArgs<3, 5>(
