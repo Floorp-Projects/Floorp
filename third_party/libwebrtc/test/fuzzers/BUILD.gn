@@ -416,6 +416,7 @@ if (!build_with_chromium) {
       "../../pc:libjingle_peerconnection",
       "../../test:test_support",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
     seed_corpus = "corpora/sdp-corpus"
   }
 }
