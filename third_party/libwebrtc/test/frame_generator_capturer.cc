@@ -167,10 +167,12 @@ bool FrameGeneratorCapturer::Init() {
 
   frame_task_ = RepeatingTaskHandle::DelayedStart(
       task_queue_.Get(),
-      TimeDelta::Seconds(1) / GetCurrentConfiguredFramerate(), [this] {
+      TimeDelta::Seconds(1) / GetCurrentConfiguredFramerate(),
+      [this] {
         InsertFrame();
         return TimeDelta::Seconds(1) / GetCurrentConfiguredFramerate();
-      });
+      },
+      TaskQueueBase::DelayPrecision::kHigh);
   return true;
 }
 
@@ -226,10 +228,13 @@ void FrameGeneratorCapturer::Start() {
     sending_ = true;
   }
   if (!frame_task_.Running()) {
-    frame_task_ = RepeatingTaskHandle::Start(task_queue_.Get(), [this] {
-      InsertFrame();
-      return TimeDelta::Seconds(1) / GetCurrentConfiguredFramerate();
-    });
+    frame_task_ = RepeatingTaskHandle::Start(
+        task_queue_.Get(),
+        [this] {
+          InsertFrame();
+          return TimeDelta::Seconds(1) / GetCurrentConfiguredFramerate();
+        },
+        TaskQueueBase::DelayPrecision::kHigh);
   }
 }
 
