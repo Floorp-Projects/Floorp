@@ -359,8 +359,9 @@ SendPacketStatus DcSctpTransport::SendPacketWithStatus(
   return SendPacketStatus::kSuccess;
 }
 
-std::unique_ptr<dcsctp::Timeout> DcSctpTransport::CreateTimeout() {
-  return task_queue_timeout_factory_.CreateTimeout();
+std::unique_ptr<dcsctp::Timeout> DcSctpTransport::CreateTimeout(
+    webrtc::TaskQueueBase::DelayPrecision precision) {
+  return task_queue_timeout_factory_.CreateTimeout(precision);
 }
 
 dcsctp::TimeMs DcSctpTransport::TimeMillis() {

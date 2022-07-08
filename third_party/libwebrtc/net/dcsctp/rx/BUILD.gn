@@ -104,6 +104,7 @@ if (rtc_include_tests) {
       ":reassembly_streams",
       ":traditional_reassembly_streams",
       "../../../api:array_view",
+      "../../../api/task_queue:task_queue",
       "../../../rtc_base:checks",
       "../../../rtc_base:gunit_helpers",
       "../../../rtc_base:rtc_base_approved",
