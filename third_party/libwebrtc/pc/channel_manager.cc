@@ -61,18 +61,14 @@ ChannelManager::ChannelManager(
 
 ChannelManager::~ChannelManager() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  // While `media_engine_` is const throughout the ChannelManager's lifetime,
-  // it requires destruction to happen on the worker thread. Instead of
-  // marking the pointer as non-const, we live with this const_cast<> in the
-  // destructor.
-  // NOTE: Before removing this Invoke(), consider that it has a dual purpose.
-  // Besides resetting the media engine pointer, it also ensures that any
-  // potentially outstanding calls to `DestroyChannel` on the worker, will be
-  // completed.
   worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
     RTC_DCHECK_RUN_ON(worker_thread_);
     RTC_DCHECK(voice_channels_.empty());
     RTC_DCHECK(video_channels_.empty());
+    // While `media_engine_` is const throughout the ChannelManager's lifetime,
+    // it requires destruction to happen on the worker thread. Instead of
+    // marking the pointer as non-const, we live with this const_cast<> in the
+    // destructor.
     const_cast<std::unique_ptr<MediaEngineInterface>&>(media_engine_).reset();
   });
 }
@@ -251,12 +247,11 @@ void ChannelManager::DestroyChannel(ChannelInterface* channel) {
   RTC_DCHECK(channel);
 
   if (!worker_thread_->IsCurrent()) {
-    // Delete the channel asynchronously on the worker thread.
-    // NOTE: This is made safe by a call to `worker_thread_->Invoke()` from
-    // the destructor, which acts as a 'flush' for any pending calls to
-    // DestroyChannel. If that Invoke() gets removed, we'll need to make
-    // adjustments here.
-    worker_thread_->PostTask([this, channel] { DestroyChannel(channel); });
+    // TODO(tommi): Do this asynchronously when we have a way to make sure that
+    // the call to DestroyChannel runs before ~Call() runs, which today happens
+    // inside an Invoke from the signaling thread in PeerConnectin::Close().
+    worker_thread_->Invoke<void>(RTC_FROM_HERE,
+                                 [&] { DestroyChannel(channel); });
     return;
   }
 
