@@ -26,7 +26,6 @@
 #include "modules/video_coding/inter_frame_delay.h"
 #include "modules/video_coding/jitter_buffer_common.h"
 #include "modules/video_coding/jitter_estimator.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -74,6 +73,9 @@ class VCMJitterBuffer {
   VCMJitterBuffer(Clock* clock, std::unique_ptr<EventWrapper> event);
 
   ~VCMJitterBuffer();
+
+  VCMJitterBuffer(const VCMJitterBuffer&) = delete;
+  VCMJitterBuffer& operator=(const VCMJitterBuffer&) = delete;
 
   // Initializes and starts jitter buffer.
   void Start();
@@ -265,8 +267,6 @@ class VCMJitterBuffer {
   // average_packets_per_frame converges fast if we have fewer than this many
   // frames.
   int frame_counter_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(VCMJitterBuffer);
 };
 }  // namespace webrtc
 

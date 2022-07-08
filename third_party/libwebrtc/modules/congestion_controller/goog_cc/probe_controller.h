@@ -22,7 +22,6 @@
 #include "api/transport/network_control.h"
 #include "api/transport/webrtc_key_value_config.h"
 #include "api/units/data_rate.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 
 namespace webrtc {
@@ -62,6 +61,9 @@ class ProbeController {
   explicit ProbeController(const WebRtcKeyValueConfig* key_value_config,
                            RtcEventLog* event_log);
   ~ProbeController();
+
+  ProbeController(const ProbeController&) = delete;
+  ProbeController& operator=(const ProbeController&) = delete;
 
   ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> SetBitrates(
       int64_t min_bitrate_bps,
@@ -143,8 +145,6 @@ class ProbeController {
   int32_t next_probe_cluster_id_ = 1;
 
   ProbeControllerConfig config_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ProbeController);
 };
 
 }  // namespace webrtc

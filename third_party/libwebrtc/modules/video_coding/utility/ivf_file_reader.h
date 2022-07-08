@@ -17,7 +17,6 @@
 #include "absl/types/optional.h"
 #include "api/video/encoded_image.h"
 #include "api/video_codecs/video_codec.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/system/file_wrapper.h"
 
 namespace webrtc {
@@ -27,6 +26,10 @@ class IvfFileReader {
   // Creates IvfFileReader. Returns nullptr if error acquired.
   static std::unique_ptr<IvfFileReader> Create(FileWrapper file);
   ~IvfFileReader();
+
+  IvfFileReader(const IvfFileReader&) = delete;
+  IvfFileReader& operator=(const IvfFileReader&) = delete;
+
   // Reinitializes reader. Returns false if any error acquired.
   bool Reset();
 
@@ -72,8 +75,6 @@ class IvfFileReader {
 
   absl::optional<FrameHeader> next_frame_header_;
   bool has_error_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(IvfFileReader);
 };
 
 }  // namespace webrtc

@@ -15,7 +15,6 @@
 #include <string>
 
 #include "api/array_view.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 namespace test {
@@ -28,6 +27,9 @@ class AudioLoop {
       : next_index_(0), loop_length_samples_(0), block_length_samples_(0) {}
 
   virtual ~AudioLoop() {}
+
+  AudioLoop(const AudioLoop&) = delete;
+  AudioLoop& operator=(const AudioLoop&) = delete;
 
   // Initializes the AudioLoop by reading from `file_name`. The loop will be no
   // longer than `max_loop_length_samples`, if the length of the file is
@@ -47,8 +49,6 @@ class AudioLoop {
   size_t loop_length_samples_;
   size_t block_length_samples_;
   std::unique_ptr<int16_t[]> audio_array_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(AudioLoop);
 };
 
 }  // namespace test

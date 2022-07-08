@@ -24,7 +24,6 @@
 #include "modules/audio_processing/test/conversational_speech/timing.h"
 #include "modules/audio_processing/test/conversational_speech/wavreader_abstract_factory.h"
 #include "modules/audio_processing/test/conversational_speech/wavreader_interface.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 namespace test {
@@ -56,6 +55,9 @@ class MultiEndCall {
       const std::string& audiotracks_path,
       std::unique_ptr<WavReaderAbstractFactory> wavreader_abstract_factory);
   ~MultiEndCall();
+
+  MultiEndCall(const MultiEndCall&) = delete;
+  MultiEndCall& operator=(const MultiEndCall&) = delete;
 
   const std::set<std::string>& speaker_names() const { return speaker_names_; }
   const std::map<std::string, std::unique_ptr<WavReaderInterface>>&
@@ -92,8 +94,6 @@ class MultiEndCall {
   int sample_rate_hz_;
   size_t total_duration_samples_;
   std::vector<SpeakingTurn> speaking_turns_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(MultiEndCall);
 };
 
 }  // namespace conversational_speech

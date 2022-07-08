@@ -15,7 +15,6 @@
 #include <string>
 
 #include "api/neteq/neteq.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -27,6 +26,9 @@ class StatisticsCalculator {
   StatisticsCalculator();
 
   virtual ~StatisticsCalculator();
+
+  StatisticsCalculator(const StatisticsCalculator&) = delete;
+  StatisticsCalculator& operator=(const StatisticsCalculator&) = delete;
 
   // Resets most of the counters.
   void Reset();
@@ -197,8 +199,6 @@ class StatisticsCalculator {
   PeriodicUmaAverage excess_buffer_delay_;
   PeriodicUmaCount buffer_full_counter_;
   bool decoded_output_played_ = false;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(StatisticsCalculator);
 };
 
 }  // namespace webrtc

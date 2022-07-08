@@ -23,7 +23,6 @@
 #include "common_audio/smoothing_filter.h"
 #include "modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor.h"
 #include "modules/audio_coding/codecs/opus/opus_interface.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -60,6 +59,9 @@ class AudioEncoderOpusImpl final : public AudioEncoder {
 
   AudioEncoderOpusImpl(int payload_type, const SdpAudioFormat& format);
   ~AudioEncoderOpusImpl() override;
+
+  AudioEncoderOpusImpl(const AudioEncoderOpusImpl&) = delete;
+  AudioEncoderOpusImpl& operator=(const AudioEncoderOpusImpl&) = delete;
 
   int SampleRateHz() const override;
   size_t NumChannels() const override;
@@ -175,7 +177,6 @@ class AudioEncoderOpusImpl final : public AudioEncoder {
   int consecutive_dtx_frames_;
 
   friend struct AudioEncoderOpus;
-  RTC_DISALLOW_COPY_AND_ASSIGN(AudioEncoderOpusImpl);
 };
 
 }  // namespace webrtc
