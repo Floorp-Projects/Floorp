@@ -32,7 +32,14 @@ class VideoChannel;
 class VoiceChannel;
 struct MediaConfig;
 
-// ChannelInterface contains methods common to voice, video and data channels.
+// A Channel is a construct that groups media streams of the same type
+// (audio or video), both outgoing and incoming.
+// When the PeerConnection API is used, a Channel corresponds one to one
+// to an RtpTransceiver.
+// When Unified Plan is used, there can only be at most one outgoing and
+// one incoming stream. With Plan B, there can be more than one.
+
+// ChannelInterface contains methods common to voice and video channels.
 // As more methods are added to BaseChannel, they should be included in the
 // interface as well.
 class ChannelInterface {
