@@ -2796,6 +2796,14 @@ BrowserGlue.prototype = {
               lazy.RemoteAgent.running) &&
             Services.prefs.getBoolPref("app.update.disabledForTesting", false);
           if (!disabledForTesting) {
+            try {
+              lazy.BackgroundUpdate.scheduleFirefoxMessagingSystemTargetingSnapshotting();
+            } catch (e) {
+              Cu.reportError(
+                "There was an error scheduling Firefox Messaging System targeting snapshotting: " +
+                  e
+              );
+            }
             lazy.BackgroundUpdate.maybeScheduleBackgroundUpdateTask();
           }
         },
