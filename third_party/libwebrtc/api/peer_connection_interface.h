@@ -1625,7 +1625,8 @@ inline constexpr absl::string_view PeerConnectionInterface::AsString(
     case SignalingState::kClosed:
       return "closed";
   }
-  RTC_CHECK_NOTREACHED();
+  // This cannot happen.
+  // Not using "RTC_CHECK_NOTREACHED()" because AsString() is constexpr.
   return "";
 }
 
@@ -1640,7 +1641,8 @@ inline constexpr absl::string_view PeerConnectionInterface::AsString(
     case IceGatheringState::kIceGatheringComplete:
       return "complete";
   }
-  RTC_CHECK_NOTREACHED();
+  // This cannot happen.
+  // Not using "RTC_CHECK_NOTREACHED()" because AsString() is constexpr.
   return "";
 }
 
@@ -1661,7 +1663,8 @@ inline constexpr absl::string_view PeerConnectionInterface::AsString(
     case PeerConnectionState::kClosed:
       return "closed";
   }
-  RTC_CHECK_NOTREACHED();
+  // This cannot happen.
+  // Not using "RTC_CHECK_NOTREACHED()" because AsString() is constexpr.
   return "";
 }
 
@@ -1683,10 +1686,12 @@ inline constexpr absl::string_view PeerConnectionInterface::AsString(
     case kIceConnectionClosed:
       return "closed";
     case kIceConnectionMax:
-      RTC_CHECK_NOTREACHED();
+      // This cannot happen.
+      // Not using "RTC_CHECK_NOTREACHED()" because AsString() is constexpr.
       return "";
   }
-  RTC_CHECK_NOTREACHED();
+  // This cannot happen.
+  // Not using "RTC_CHECK_NOTREACHED()" because AsString() is constexpr.
   return "";
 }
 
