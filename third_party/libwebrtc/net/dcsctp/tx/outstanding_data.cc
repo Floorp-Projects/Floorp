@@ -74,14 +74,14 @@ bool OutstandingData::IsConsistent() const {
   size_t actual_outstanding_items = 0;
 
   std::set<UnwrappedTSN> actual_to_be_retransmitted;
-  for (const auto& elem : outstanding_data_) {
-    if (elem.second.is_outstanding()) {
-      actual_outstanding_bytes += GetSerializedChunkSize(elem.second.data());
+  for (const auto& [tsn, item] : outstanding_data_) {
+    if (item.is_outstanding()) {
+      actual_outstanding_bytes += GetSerializedChunkSize(item.data());
       ++actual_outstanding_items;
     }
 
-    if (elem.second.should_be_retransmitted()) {
-      actual_to_be_retransmitted.insert(elem.first);
+    if (item.should_be_retransmitted()) {
+      actual_to_be_retransmitted.insert(tsn);
     }
   }
 
@@ -263,10 +263,7 @@ void OutstandingData::AbandonAllFor(const Item& item) {
                          << *tsn.Wrap();
   }
 
-  for (auto& elem : outstanding_data_) {
-    UnwrappedTSN tsn = elem.first;
-    Item& other = elem.second;
-
+  for (auto& [tsn, other] : outstanding_data_) {
     if (!other.is_abandoned() &&
         other.data().stream_id == item.data().stream_id &&
         other.data().is_unordered == item.data().is_unordered &&
@@ -318,10 +315,7 @@ std::vector<std::pair<TSN, Data>> OutstandingData::GetChunksToBeRetransmitted(
 }
 
 void OutstandingData::ExpireOutstandingChunks(TimeMs now) {
-  for (const auto& elem : outstanding_data_) {
-    UnwrappedTSN tsn = elem.first;
-    const Item& item = elem.second;
-
+  for (const auto& [tsn, item] : outstanding_data_) {
     // Chunks that are nacked can be expired. Care should be taken not to expire
     // unacked (in-flight) chunks as they might have been received, but the SACK
     // is either delayed or in-flight and may be received later.
@@ -378,9 +372,7 @@ absl::optional<UnwrappedTSN> OutstandingData::Insert(
 }
 
 void OutstandingData::NackAll() {
-  for (auto& elem : outstanding_data_) {
-    UnwrappedTSN tsn = elem.first;
-    Item& item = elem.second;
+  for (auto& [tsn, item] : outstanding_data_) {
     if (!item.is_acked()) {
       NackItem(tsn, item, /*retransmit_now=*/true);
     }
@@ -406,21 +398,21 @@ std::vector<std::pair<TSN, OutstandingData::State>>
 OutstandingData::GetChunkStatesForTesting() const {
   std::vector<std::pair<TSN, State>> states;
   states.emplace_back(last_cumulative_tsn_ack_.Wrap(), State::kAcked);
-  for (const auto& elem : outstanding_data_) {
+  for (const auto& [tsn, item] : outstanding_data_) {
     State state;
-    if (elem.second.is_abandoned()) {
+    if (item.is_abandoned()) {
       state = State::kAbandoned;
-    } else if (elem.second.should_be_retransmitted()) {
+    } else if (item.should_be_retransmitted()) {
       state = State::kToBeRetransmitted;
-    } else if (elem.second.is_acked()) {
+    } else if (item.is_acked()) {
       state = State::kAcked;
-    } else if (elem.second.is_outstanding()) {
+    } else if (item.is_outstanding()) {
       state = State::kInFlight;
     } else {
       state = State::kNacked;
     }
 
-    states.emplace_back(elem.first.Wrap(), state);
+    states.emplace_back(tsn.Wrap(), state);
   }
   return states;
 }
@@ -438,10 +430,7 @@ ForwardTsnChunk OutstandingData::CreateForwardTsn() const {
   std::map<StreamID, SSN> skipped_per_ordered_stream;
   UnwrappedTSN new_cumulative_ack = last_cumulative_tsn_ack_;
 
-  for (const auto& elem : outstanding_data_) {
-    UnwrappedTSN tsn = elem.first;
-    const Item& item = elem.second;
-
+  for (const auto& [tsn, item] : outstanding_data_) {
     if ((tsn != new_cumulative_ack.next_value()) || !item.is_abandoned()) {
       break;
     }
@@ -454,8 +443,8 @@ ForwardTsnChunk OutstandingData::CreateForwardTsn() const {
 
   std::vector<ForwardTsnChunk::SkippedStream> skipped_streams;
   skipped_streams.reserve(skipped_per_ordered_stream.size());
-  for (const auto& elem : skipped_per_ordered_stream) {
-    skipped_streams.emplace_back(elem.first, elem.second);
+  for (const auto& [stream_id, ssn] : skipped_per_ordered_stream) {
+    skipped_streams.emplace_back(stream_id, ssn);
   }
   return ForwardTsnChunk(new_cumulative_ack.Wrap(), std::move(skipped_streams));
 }
@@ -464,10 +453,7 @@ IForwardTsnChunk OutstandingData::CreateIForwardTsn() const {
   std::map<std::pair<IsUnordered, StreamID>, MID> skipped_per_stream;
   UnwrappedTSN new_cumulative_ack = last_cumulative_tsn_ack_;
 
-  for (const auto& elem : outstanding_data_) {
-    UnwrappedTSN tsn = elem.first;
-    const Item& item = elem.second;
-
+  for (const auto& [tsn, item] : outstanding_data_) {
     if ((tsn != new_cumulative_ack.next_value()) || !item.is_abandoned()) {
       break;
     }
@@ -482,9 +468,7 @@ IForwardTsnChunk OutstandingData::CreateIForwardTsn() const {
 
   std::vector<IForwardTsnChunk::SkippedStream> skipped_streams;
   skipped_streams.reserve(skipped_per_stream.size());
-  for (const auto& elem : skipped_per_stream) {
-    const std::pair<IsUnordered, StreamID>& stream = elem.first;
-    MID message_id = elem.second;
+  for (const auto& [stream, message_id] : skipped_per_stream) {
     skipped_streams.emplace_back(stream.first, stream.second, message_id);
   }
 

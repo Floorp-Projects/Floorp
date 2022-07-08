@@ -105,12 +105,12 @@ TraditionalReassemblyStreams::TraditionalReassemblyStreams(
 int TraditionalReassemblyStreams::UnorderedStream::Add(UnwrappedTSN tsn,
                                                        Data data) {
   int queued_bytes = data.size();
-  auto p = chunks_.emplace(tsn, std::move(data));
-  if (!p.second /* !inserted */) {
+  auto [it, inserted] = chunks_.emplace(tsn, std::move(data));
+  if (!inserted) {
     return 0;
   }
 
-  queued_bytes -= TryToAssembleMessage(p.first);
+  queued_bytes -= TryToAssembleMessage(it);
 
   return queued_bytes;
 }
@@ -225,8 +225,8 @@ int TraditionalReassemblyStreams::OrderedStream::Add(UnwrappedTSN tsn,
   int queued_bytes = data.size();
 
   UnwrappedSSN ssn = ssn_unwrapper_.Unwrap(data.ssn);
-  auto p = chunks_by_ssn_[ssn].emplace(tsn, std::move(data));
-  if (!p.second /* !inserted */) {
+  auto [unused, inserted] = chunks_by_ssn_[ssn].emplace(tsn, std::move(data));
+  if (!inserted) {
     return 0;
   }
 
@@ -275,8 +275,8 @@ size_t TraditionalReassemblyStreams::HandleForwardTsn(
   size_t bytes_removed = 0;
   // The `skipped_streams` only cover ordered messages - need to
   // iterate all unordered streams manually to remove those chunks.
-  for (auto& entry : unordered_streams_) {
-    bytes_removed += entry.second.EraseTo(new_cumulative_ack_tsn);
+  for (auto& [unused, stream] : unordered_streams_) {
+    bytes_removed += stream.EraseTo(new_cumulative_ack_tsn);
   }
 
   for (const auto& skipped_stream : skipped_streams) {
@@ -292,9 +292,7 @@ size_t TraditionalReassemblyStreams::HandleForwardTsn(
 void TraditionalReassemblyStreams::ResetStreams(
     rtc::ArrayView<const StreamID> stream_ids) {
   if (stream_ids.empty()) {
-    for (auto& entry : ordered_streams_) {
-      const StreamID& stream_id = entry.first;
-      OrderedStream& stream = entry.second;
+    for (auto& [stream_id, stream] : ordered_streams_) {
       RTC_DLOG(LS_VERBOSE) << log_prefix_
                            << "Resetting implicit stream_id=" << *stream_id;
       stream.Reset();
@@ -314,14 +312,14 @@ void TraditionalReassemblyStreams::ResetStreams(
 HandoverReadinessStatus TraditionalReassemblyStreams::GetHandoverReadiness()
     const {
   HandoverReadinessStatus status;
-  for (const auto& entry : ordered_streams_) {
-    if (entry.second.has_unassembled_chunks()) {
+  for (const auto& [unused, stream] : ordered_streams_) {
+    if (stream.has_unassembled_chunks()) {
       status.Add(HandoverUnreadinessReason::kOrderedStreamHasUnassembledChunks);
       break;
     }
   }
-  for (const auto& entry : unordered_streams_) {
-    if (entry.second.has_unassembled_chunks()) {
+  for (const auto& [unused, stream] : unordered_streams_) {
+    if (stream.has_unassembled_chunks()) {
       status.Add(
           HandoverUnreadinessReason::kUnorderedStreamHasUnassembledChunks);
       break;
@@ -332,15 +330,15 @@ HandoverReadinessStatus TraditionalReassemblyStreams::GetHandoverReadiness()
 
 void TraditionalReassemblyStreams::AddHandoverState(
     DcSctpSocketHandoverState& state) {
-  for (const auto& entry : ordered_streams_) {
+  for (const auto& [stream_id, stream] : ordered_streams_) {
     DcSctpSocketHandoverState::OrderedStream state_stream;
-    state_stream.id = entry.first.value();
-    state_stream.next_ssn = entry.second.next_ssn().value();
+    state_stream.id = stream_id.value();
+    state_stream.next_ssn = stream.next_ssn().value();
     state.rx.ordered_streams.push_back(std::move(state_stream));
   }
-  for (const auto& entry : unordered_streams_) {
+  for (const auto& [stream_id, unused] : unordered_streams_) {
     DcSctpSocketHandoverState::UnorderedStream state_stream;
-    state_stream.id = entry.first.value();
+    state_stream.id = stream_id.value();
     state.rx.unordered_streams.push_back(std::move(state_stream));
   }
 }
