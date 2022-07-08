@@ -36,13 +36,6 @@ class PeerConnectionSdpMethods {
  public:
   virtual ~PeerConnectionSdpMethods() = default;
 
-  // NOTE - signaling_thread() is a member of PeerConnectionInterface,
-  // so we have to use a different name for this function as long as
-  // PeerConnection is a subclass of PeerConnectionSdpMethods.
-  virtual rtc::Thread* signaling_thread_internal() const = 0;
-  virtual rtc::Thread* network_thread() const = 0;
-  virtual rtc::Thread* worker_thread() const = 0;
-
   // The SDP session ID as defined by RFC 3264.
   virtual std::string session_id() const = 0;
 
@@ -78,7 +71,6 @@ class PeerConnectionSdpMethods {
   // return the RTCConfiguration.crypto_options if set and will only default
   // back to the PeerConnectionFactory settings if nothing was set.
   virtual CryptoOptions GetCryptoOptions() = 0;
-  virtual cricket::ChannelManager* channel_manager() = 0;
   virtual JsepTransportController* transport_controller() = 0;
   virtual DataChannelController* data_channel_controller() = 0;
   virtual cricket::PortAllocator* port_allocator() = 0;
@@ -137,6 +129,9 @@ class PeerConnectionSdpMethods {
 class PeerConnectionInternal : public PeerConnectionInterface,
                                public PeerConnectionSdpMethods {
  public:
+  virtual rtc::Thread* network_thread() const = 0;
+  virtual rtc::Thread* worker_thread() const = 0;
+
   // Returns true if we were the initial offerer.
   virtual bool initial_offerer() const = 0;
 

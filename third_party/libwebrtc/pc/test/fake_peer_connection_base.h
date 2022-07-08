@@ -296,7 +296,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
     return nullptr;
   }
 
-  rtc::Thread* signaling_thread_internal() const override { return nullptr; }
   void ReportSdpFormatReceived(
       const SessionDescriptionInterface& remote_description) override {}
 
@@ -312,7 +311,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   }
 
   CryptoOptions GetCryptoOptions() override { return CryptoOptions(); }
-  cricket::ChannelManager* channel_manager() override { return nullptr; }
   JsepTransportController* transport_controller() override { return nullptr; }
   DataChannelController* data_channel_controller() override { return nullptr; }
   cricket::PortAllocator* port_allocator() override { return nullptr; }
