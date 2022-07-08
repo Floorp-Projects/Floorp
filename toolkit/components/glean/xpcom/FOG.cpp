@@ -26,17 +26,14 @@ namespace mozilla {
 using glean::LogToBrowserConsole;
 
 #ifdef MOZ_GLEAN_ANDROID
-// Defined by `glean_ffi`. We reexport it here for later use.
+// Defined by `glean-core`. We reexport it here for later use.
 extern "C" NS_EXPORT void glean_enable_logging(void);
 
-// Defined by `glean`. We reexport it here for use by the Glean Core SDK.
-extern "C" NS_EXPORT void rlb_flush_dispatcher(void);
-
-// Workaround to force a re-export of the `no_mangle` symbols from `glean_ffi`
+// Workaround to force a re-export of the `no_mangle` symbols from `glean-core`
 //
-// Due to how linking works and hides symbols the symbols from `glean_ffi` might
-// not be re-exported and thus not usable. By forcing use of _at least one_
-// symbol in an exported function the functions will also be rexported.
+// Due to how linking works and hides symbols the symbols from `glean-core`
+// might not be re-exported and thus not usable. By forcing use of _at least
+// one_ symbol in an exported function the functions will also be rexported.
 //
 // See also https://github.com/rust-lang/rust/issues/50007
 extern "C" NS_EXPORT void _fog_force_reexport_donotcall(void) {
