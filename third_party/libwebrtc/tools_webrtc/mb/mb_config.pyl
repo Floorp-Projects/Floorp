@@ -155,6 +155,8 @@
       'mac_dbg': 'debug_bot_x64',
       'mac_rel': 'release_bot_x64',
       'mac_asan': 'mac_asan_clang_release_bot_x64',
+      'mac_rel_m1': 'release_bot_arm64',
+      'mac_dbg_m1': 'debug_bot_arm64',
 
       # Linux
       'linux_compile_dbg': 'debug_bot_x64',
