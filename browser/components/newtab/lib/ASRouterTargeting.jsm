@@ -449,6 +449,13 @@ const TargetingGetters = {
     return lazy.isXPIInstallEnabled;
   },
   get addonsInfo() {
+    let bts = Cc["@mozilla.org/backgroundtasks;1"]?.getService(
+      Ci.nsIBackgroundTasks
+    );
+    if (bts?.isBackgroundTaskMode) {
+      return { addons: {}, isFullData: true };
+    }
+
     return lazy.AddonManager.getActiveAddons(["extension", "service"]).then(
       ({ addons, fullData }) => {
         const info = {};
@@ -472,6 +479,13 @@ const TargetingGetters = {
     );
   },
   get searchEngines() {
+    const NONE = { installed: [], current: "" };
+    let bts = Cc["@mozilla.org/backgroundtasks;1"]?.getService(
+      Ci.nsIBackgroundTasks
+    );
+    if (bts?.isBackgroundTaskMode) {
+      return Promise.resolve(NONE);
+    }
     return new Promise(resolve => {
       // Note: calling init ensures this code is only executed after Search has been initialized
       Services.search
@@ -482,7 +496,7 @@ const TargetingGetters = {
             installed: engines.map(engine => engine.identifier),
           });
         })
-        .catch(() => resolve({ installed: [], current: "" }));
+        .catch(() => resolve(NONE));
     });
   },
   get isDefaultBrowser() {
@@ -611,6 +625,12 @@ const TargetingGetters = {
     return lazy.ClientEnvironment.userId;
   },
   get profileRestartCount() {
+    let bts = Cc["@mozilla.org/backgroundtasks;1"]?.getService(
+      Ci.nsIBackgroundTasks
+    );
+    if (bts?.isBackgroundTaskMode) {
+      return 0;
+    }
     // Counter starts at 1 when a profile is created, substract 1 so the value
     // returned matches expectations
     return (
@@ -649,6 +669,15 @@ const TargetingGetters = {
     );
   },
   get activeNotifications() {
+    let bts = Cc["@mozilla.org/backgroundtasks;1"]?.getService(
+      Ci.nsIBackgroundTasks
+    );
+    if (bts?.isBackgroundTaskMode) {
+      // This might need to hook into the alert service to enumerate relevant
+      // persistent native notifications.
+      return false;
+    }
+
     let window = lazy.BrowserWindowTracker.getTopWindow();
 
     // Technically this doesn't mean we have active notifications,
