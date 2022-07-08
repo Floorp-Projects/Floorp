@@ -1380,6 +1380,7 @@ static void JSONRootCheck(const Json::Value& aRoot,
   EXPECT_HAS_JSON(meta["startTime"], Double);
   EXPECT_HAS_JSON(meta["profilingStartTime"], Double);
   EXPECT_HAS_JSON(meta["contentEarliestTime"], Double);
+  EXPECT_HAS_JSON(meta["profilingEndTime"], Double);
 
   EXPECT_HAS_JSON(aRoot["pages"], Array);
 
