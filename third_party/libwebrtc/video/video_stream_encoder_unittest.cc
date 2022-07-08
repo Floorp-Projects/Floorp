@@ -8863,6 +8863,58 @@ TEST_F(ReconfigureEncoderTest, ReconfiguredIfScalabilityModeChanges) {
   RunTest({config1, config2}, /*expected_num_init_encode=*/2);
 }
 
+// Simple test that just creates and then immediately destroys an encoder.
+// The purpose of the test is to make sure that nothing bad happens if the
+// initialization step on the encoder queue, doesn't run.
+TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
+  class SuperLazyTaskQueue : public webrtc::TaskQueueBase {
+   public:
+    SuperLazyTaskQueue() = default;
+    ~SuperLazyTaskQueue() override = default;
+
+   private:
+    void Delete() override { delete this; }
+    void PostTask(std::unique_ptr<QueuedTask> task) override {
+      // meh.
+    }
+    void PostDelayedTask(std::unique_ptr<QueuedTask> task,
+                         uint32_t milliseconds) override {
+      ASSERT_TRUE(false);
+    }
+  };
+
+  // Lots of boiler plate.
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
+  auto stats_proxy = std::make_unique<MockableSendStatisticsProxy>(
+      time_controller.GetClock(), VideoSendStream::Config(nullptr),
+      webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo);
+  SimpleVideoStreamEncoderFactory::MockFakeEncoder mock_fake_encoder(
+      time_controller.GetClock());
+  test::VideoEncoderProxyFactory encoder_factory(&mock_fake_encoder);
+  std::unique_ptr<VideoBitrateAllocatorFactory> bitrate_allocator_factory =
+      CreateBuiltinVideoBitrateAllocatorFactory();
+  VideoStreamEncoderSettings encoder_settings{
+      VideoEncoder::Capabilities(/*loss_notification=*/false)};
+  encoder_settings.encoder_factory = &encoder_factory;
+  encoder_settings.bitrate_allocator_factory = bitrate_allocator_factory.get();
+
+  auto adapter = std::make_unique<MockFrameCadenceAdapter>();
+  EXPECT_CALL((*adapter.get()), Initialize).WillOnce(Return());
+
+  std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
+      encoder_queue(new SuperLazyTaskQueue());
+
+  // Construct a VideoStreamEncoder instance and let it go out of scope without
+  // doing anything else (including calling Stop()). This should be fine since
+  // the posted init task will simply be deleted.
+  auto encoder = std::make_unique<VideoStreamEncoder>(
+      time_controller.GetClock(), 1, stats_proxy.get(), encoder_settings,
+      std::make_unique<CpuOveruseDetectorProxy>(stats_proxy.get()),
+      std::move(adapter), std::move(encoder_queue),
+      VideoStreamEncoder::BitrateAllocationCallbackType::
+          kVideoBitrateAllocation);
+}
+
 TEST(VideoStreamEncoderFrameCadenceTest, ActivatesFrameCadenceOnContentType) {
   auto adapter = std::make_unique<MockFrameCadenceAdapter>();
   auto* adapter_ptr = adapter.get();

@@ -58,8 +58,6 @@ class ResourceAdaptationProcessor : public ResourceAdaptationProcessorInterface,
       VideoStreamAdapter* video_stream_adapter);
   ~ResourceAdaptationProcessor() override;
 
-  void SetTaskQueue(TaskQueueBase* task_queue) override;
-
   // ResourceAdaptationProcessorInterface implementation.
   void AddResourceLimitationsListener(
       ResourceLimitationsListener* limitations_listener) override;
@@ -90,7 +88,6 @@ class ResourceAdaptationProcessor : public ResourceAdaptationProcessorInterface,
    public:
     explicit ResourceListenerDelegate(ResourceAdaptationProcessor* processor);
 
-    void SetTaskQueue(TaskQueueBase* task_queue);
     void OnProcessorDestroyed();
 
     // ResourceListener implementation.
