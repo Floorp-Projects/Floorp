@@ -22,6 +22,7 @@
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/CanvasManagerParent.h"
+#include "mozilla/gfx/CanvasRenderThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_apz.h"
@@ -1291,6 +1292,9 @@ void gfxPlatform::InitLayersIPC() {
 #endif
     if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) && UseWebRender()) {
       RemoteTextureMap::Init();
+      if (gfxVars::UseCanvasRenderThread()) {
+        gfx::CanvasRenderThread::Start();
+      }
       wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
       image::ImageMemoryReporter::InitForWebRender();
     }
@@ -1339,6 +1343,9 @@ void gfxPlatform::ShutdownLayersIPC() {
           WebRenderBlobTileSizePrefChangeCallback,
           nsDependentCString(
               StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size()));
+    }
+    if (gfx::CanvasRenderThread::Get()) {
+      gfx::CanvasRenderThread::ShutDown();
     }
 #if defined(XP_WIN)
     widget::WinWindowOcclusionTracker::ShutDown();
@@ -2854,6 +2861,10 @@ void gfxPlatform::InitWebGLConfig() {
   threadsafeGL &= !StaticPrefs::webgl_threadsafe_gl_force_disabled_AtStartup();
   gfxVars::SetSupportsThreadsafeGL(threadsafeGL);
 
+  bool useCanvasRenderThread =
+      threadsafeGL && StaticPrefs::webgl_use_canvas_render_thread_AtStartup();
+  gfxVars::SetUseCanvasRenderThread(useCanvasRenderThread);
+
   if (kIsAndroid) {
     // Don't enable robust buffer access on Adreno 630 devices.
     // It causes the linking of some shaders to fail. See bug 1485441.
@@ -3520,6 +3531,9 @@ void gfxPlatform::DisableGPUProcess() {
 
   RemoteTextureMap::Init();
   if (gfxVars::UseWebRender()) {
+    if (gfxVars::UseCanvasRenderThread()) {
+      gfx::CanvasRenderThread::Start();
+    }
     // We need to initialize the parent process to prepare for WebRender if we
     // did not end up disabling it, despite losing the GPU process.
     wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());

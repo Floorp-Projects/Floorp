@@ -39,10 +39,6 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/pageActions/browser.ini",
     "content/test/pageinfo/browser.ini",
     "content/test/pageStyle/browser.ini",
-    "content/test/performance/browser.ini",
-    "content/test/performance/hidpi/browser.ini",
-    "content/test/performance/io/browser.ini",
-    "content/test/performance/lowdpi/browser.ini",
     "content/test/permissions/browser.ini",
     "content/test/plugins/browser.ini",
     "content/test/popupNotifications/browser.ini",
@@ -69,6 +65,10 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/webrtc/gracePeriod/browser.ini",
     "content/test/webrtc/legacyIndicator/browser.ini",
     "content/test/zoom/browser.ini",
+]
+
+DIRS += [
+    "content/test/performance/",
 ]
 
 PERFTESTS_MANIFESTS += ["content/test/perftest.ini"]
