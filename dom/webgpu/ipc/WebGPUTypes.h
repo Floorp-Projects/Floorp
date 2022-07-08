@@ -9,6 +9,7 @@
 #include <cstdint>
 #include "mozilla/Maybe.h"
 #include "nsString.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 namespace mozilla::webgpu {
 
@@ -40,6 +41,27 @@ struct WebGPUCompilationMessage {
   uint64_t length = 0;
   WebGPUCompilationMessageType messageType =
       WebGPUCompilationMessageType::Error;
+};
+
+/// A helper to reduce the boiler plate of turning the many Optional<nsAString>
+/// we get from the dom to the nullable nsACString* we pass to the wgpu ffi.
+class StringHelper {
+ public:
+  explicit StringHelper(const dom::Optional<nsString>& aWide) {
+    if (aWide.WasPassed()) {
+      mNarrow = Some(NS_ConvertUTF16toUTF8(aWide.Value()));
+    }
+  }
+
+  const nsACString* Get() const {
+    if (mNarrow.isSome()) {
+      return mNarrow.ptr();
+    }
+    return nullptr;
+  }
+
+ private:
+  Maybe<NS_ConvertUTF16toUTF8> mNarrow;
 };
 
 }  // namespace mozilla::webgpu

@@ -265,6 +265,9 @@ Maybe<DeviceRequest> WebGPUChild::AdapterRequestDevice(
   ffi::WGPUDeviceDescriptor desc = {};
   ffi::wgpu_client_fill_default_limits(&desc.limits);
 
+  // webgpu::StringHelper label(aDesc.mLabel);
+  // desc.label = label.Get();
+
   const auto featureBits = Adapter::MakeFeatureBits(aDesc.mRequiredFeatures);
   if (!featureBits) {
     return Nothing();
@@ -363,11 +366,10 @@ RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
 RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
                                        const dom::GPUTextureDescriptor& aDesc) {
   ffi::WGPUTextureDescriptor desc = {};
-  nsCString label;
-  if (aDesc.mLabel.WasPassed()) {
-    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
-    desc.label = label.get();
-  }
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
+
   if (aDesc.mSize.IsRangeEnforcedUnsignedLongSequence()) {
     const auto& seq = aDesc.mSize.GetAsRangeEnforcedUnsignedLongSequence();
     desc.size.width = seq.Length() > 0 ? seq[0] : 1;
@@ -400,11 +402,9 @@ RawId WebGPUChild::TextureCreateView(
     RawId aSelfId, RawId aDeviceId,
     const dom::GPUTextureViewDescriptor& aDesc) {
   ffi::WGPUTextureViewDescriptor desc = {};
-  nsCString label;
-  if (aDesc.mLabel.WasPassed()) {
-    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
-    desc.label = label.get();
-  }
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
 
   ffi::WGPUTextureFormat format = {ffi::WGPUTextureFormat_Sentinel};
   if (aDesc.mFormat.WasPassed()) {
@@ -438,12 +438,9 @@ RawId WebGPUChild::TextureCreateView(
 RawId WebGPUChild::DeviceCreateSampler(RawId aSelfId,
                                        const dom::GPUSamplerDescriptor& aDesc) {
   ffi::WGPUSamplerDescriptor desc = {};
-  nsCString label;
-  if (aDesc.mLabel.WasPassed()) {
-    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
-    desc.label = label.get();
-  }
 
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
   desc.address_modes[0] = ffi::WGPUAddressMode(aDesc.mAddressModeU);
   desc.address_modes[1] = ffi::WGPUAddressMode(aDesc.mAddressModeV);
   desc.address_modes[2] = ffi::WGPUAddressMode(aDesc.mAddressModeW);
@@ -471,11 +468,9 @@ RawId WebGPUChild::DeviceCreateSampler(RawId aSelfId,
 RawId WebGPUChild::DeviceCreateCommandEncoder(
     RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc) {
   ffi::WGPUCommandEncoderDescriptor desc = {};
-  nsCString label;
-  if (aDesc.mLabel.WasPassed()) {
-    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
-    desc.label = label.get();
-  }
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
 
   ByteBuf bb;
   RawId id = ffi::wgpu_client_create_command_encoder(mClient.get(), aSelfId,
@@ -503,11 +498,9 @@ RawId WebGPUChild::RenderBundleEncoderFinish(
     ffi::WGPURenderBundleEncoder& aEncoder, RawId aDeviceId,
     const dom::GPURenderBundleDescriptor& aDesc) {
   ffi::WGPURenderBundleDescriptor desc = {};
-  nsCString label;
-  if (aDesc.mLabel.WasPassed()) {
-    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
-    desc.label = label.get();
-  }
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
 
   ipc::ByteBuf bb;
   RawId id = ffi::wgpu_client_create_render_bundle(
@@ -616,11 +609,9 @@ RawId WebGPUChild::DeviceCreateBindGroupLayout(
   }
 
   ffi::WGPUBindGroupLayoutDescriptor desc = {};
-  nsCString label;
-  if (aDesc.mLabel.WasPassed()) {
-    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
-    desc.label = label.get();
-  }
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
   desc.entries = entries.Elements();
   desc.entries_length = entries.Length();
 
@@ -645,11 +636,9 @@ RawId WebGPUChild::DeviceCreatePipelineLayout(
   }
 
   ffi::WGPUPipelineLayoutDescriptor desc = {};
-  nsCString label;
-  if (aDesc.mLabel.WasPassed()) {
-    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
-    desc.label = label.get();
-  }
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
   desc.bind_group_layouts = bindGroupLayouts.Elements();
   desc.bind_group_layouts_length = bindGroupLayouts.Length();
 
@@ -688,11 +677,9 @@ RawId WebGPUChild::DeviceCreateBindGroup(
   }
 
   ffi::WGPUBindGroupDescriptor desc = {};
-  nsCString label;
-  if (aDesc.mLabel.WasPassed()) {
-    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
-    desc.label = label.get();
-  }
+
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
   desc.layout = aDesc.mLayout->mId;
   desc.entries = entries.Elements();
   desc.entries_length = entries.Length();
@@ -846,7 +833,7 @@ RawId WebGPUChild::DeviceCreateRenderPipelineImpl(
   nsTArray<ffi::WGPUVertexBufferLayout> vertexBuffers;
   nsTArray<ffi::WGPUVertexAttribute> vertexAttributes;
   ffi::WGPURenderPipelineDescriptor desc = {};
-  nsCString label, vsEntry, fsEntry;
+  nsCString vsEntry, fsEntry;
   ffi::WGPUIndexFormat stripIndexFormat = ffi::WGPUIndexFormat_Uint16;
   ffi::WGPUFace cullFace = ffi::WGPUFace_Front;
   ffi::WGPUVertexState vertexState = {};
@@ -854,10 +841,9 @@ RawId WebGPUChild::DeviceCreateRenderPipelineImpl(
   nsTArray<ffi::WGPUColorTargetState> colorStates;
   nsTArray<ffi::WGPUBlendState> blendStates;
 
-  if (aDesc.mLabel.WasPassed()) {
-    LossyCopyUTF16toASCII(aDesc.mLabel.Value(), label);
-    desc.label = label.get();
-  }
+  webgpu::StringHelper label(aDesc.mLabel);
+  desc.label = label.Get();
+
   if (aDesc.mLayout.WasPassed()) {
     desc.layout = aDesc.mLayout.Value().mId;
   }
