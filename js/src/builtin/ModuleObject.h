@@ -300,7 +300,7 @@ class ModuleObject : public NativeObject {
     FunctionDeclarationsSlot,
     DFSIndexSlot,
     DFSAncestorIndexSlot,
-    AsyncSlot,
+    HasTopLevelAwaitSlot,
     AsyncEvaluatingPostOrderSlot,
     TopLevelCapabilitySlot,
     AsyncParentModulesSlot,
@@ -361,7 +361,7 @@ class ModuleObject : public NativeObject {
 
   static PromiseObject* createTopLevelCapability(JSContext* cx,
                                                  Handle<ModuleObject*> module);
-  bool isAsync() const;
+  bool hasTopLevelAwait() const;
   bool isAsyncEvaluating() const;
   bool wasAsyncEvaluating() const;
   void setAsyncEvaluating();
@@ -403,7 +403,7 @@ class ModuleObject : public NativeObject {
 
   static bool createEnvironment(JSContext* cx, Handle<ModuleObject*> self);
 
-  bool initAsyncSlots(JSContext* cx, bool isAsync,
+  bool initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
                       HandleObject asyncParentModulesList);
 
   static bool GatherAsyncParentCompletions(
