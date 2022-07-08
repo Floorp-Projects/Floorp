@@ -193,7 +193,7 @@ void NetEqDecodingTest::PopulateRtpInfo(int frame_index,
   rtp_info->timestamp = timestamp;
   rtp_info->ssrc = 0x1234;     // Just an arbitrary SSRC.
   rtp_info->payloadType = 94;  // PCM16b WB codec.
-  rtp_info->markerBit = 0;
+  rtp_info->markerBit = false;
 }
 
 void NetEqDecodingTest::PopulateCng(int frame_index,
@@ -205,7 +205,7 @@ void NetEqDecodingTest::PopulateCng(int frame_index,
   rtp_info->timestamp = timestamp;
   rtp_info->ssrc = 0x1234;     // Just an arbitrary SSRC.
   rtp_info->payloadType = 98;  // WB CNG.
-  rtp_info->markerBit = 0;
+  rtp_info->markerBit = false;
   payload[0] = 64;   // Noise level -64 dBov, quite arbitrarily chosen.
   *payload_len = 1;  // Only noise level, no spectral parameters.
 }
