@@ -260,8 +260,6 @@ rtc_library("peerconnection") {
     "track_media_info_map.h",
     "webrtc_sdp.cc",
     "webrtc_sdp.h",
-    "webrtc_session_description_factory.cc",
-    "webrtc_session_description_factory.h",
   ]
 
   deps = [
@@ -527,6 +525,31 @@ rtc_source_set("webrtc_sdp") {
 }
 rtc_source_set("webrtc_session_description_factory") {
   visibility = [ ":*" ]
+  sources = [
+    "webrtc_session_description_factory.cc",
+    "webrtc_session_description_factory.h",
+  ]
+  deps = [
+    ":sdp_state_provider",
+    ":session_description",
+    "../api:libjingle_peerconnection_api",
+    "../api:rtc_error",
+    "../api:scoped_refptr",
+    "../p2p:rtc_p2p",
+    "../pc:rtc_pc_base",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:refcount",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:stringutils",
+    "../rtc_base:threading",
+    "../rtc_base/third_party/sigslot:sigslot",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("ice_server_parsing") {
