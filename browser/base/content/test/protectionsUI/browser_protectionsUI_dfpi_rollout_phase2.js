@@ -163,7 +163,7 @@ add_task(async function test_phase2() {
   );
 
   ok(
-    !NimbusFeatures.tcpByDefault.isEnabled(),
+    !NimbusFeatures.tcpByDefault.getVariable("enabled"),
     "tcpByDefault Nimbus feature is disabled initially."
   );
   ok(
@@ -202,7 +202,7 @@ add_task(async function test_phase2() {
   );
 
   ok(
-    NimbusFeatures.tcpByDefault.isEnabled(),
+    NimbusFeatures.tcpByDefault.getVariable("enabled"),
     "tcpByDefault Nimbus feature is enabled."
   );
   ok(
@@ -240,7 +240,7 @@ add_task(async function test_phase1_opt_out_to_phase2() {
   );
 
   ok(
-    !NimbusFeatures.tcpByDefault.isEnabled(),
+    !NimbusFeatures.tcpByDefault.getVariable("enabled"),
     "tcpByDefault Nimbus feature is disabled initially."
   );
   ok(
@@ -270,7 +270,7 @@ add_task(async function test_phase1_opt_out_to_phase2() {
   testTelemetryState(0, false, "Telemetry indicates opt-out.");
 
   ok(
-    !NimbusFeatures.tcpByDefault.isEnabled(),
+    !NimbusFeatures.tcpByDefault.getVariable("enabled"),
     "tcpByDefault Nimbus feature is still disabled."
   );
   ok(
@@ -336,7 +336,7 @@ add_task(async function test_phase1_opt_in_to_phase2() {
   );
 
   ok(
-    !NimbusFeatures.tcpByDefault.isEnabled(),
+    !NimbusFeatures.tcpByDefault.getVariable("enabled"),
     "tcpByDefault Nimbus feature is disabled initially."
   );
   ok(
@@ -365,7 +365,7 @@ add_task(async function test_phase1_opt_in_to_phase2() {
   testTelemetryState(1, false, "Telemetry indicates opt-in.");
 
   ok(
-    !NimbusFeatures.tcpByDefault.isEnabled(),
+    !NimbusFeatures.tcpByDefault.getVariable("enabled"),
     "tcpByDefault Nimbus feature is still disabled."
   );
   // ROLLOUT_PREF_PHASE1_PREFERENCES controls the tcpPreferences feature state,
@@ -395,7 +395,7 @@ add_task(async function test_phase1_opt_in_to_phase2() {
   // Instead, wait for the Nimbus feature update callback.
   await featureUpdatePromise;
   ok(
-    NimbusFeatures.tcpByDefault.isEnabled(),
+    NimbusFeatures.tcpByDefault.getVariable("enabled"),
     "tcpByDefault Nimbus feature is now enabled."
   );
 

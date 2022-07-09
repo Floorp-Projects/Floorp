@@ -1780,7 +1780,7 @@ BrowserGlue.prototype = {
     // rollout.
     // Avoid overwriting cookie behavior set by enterprise policy.
     if (
-      lazy.NimbusFeatures.tcpByDefault.isEnabled() &&
+      lazy.NimbusFeatures.tcpByDefault.getVariable("enabled") &&
       !hasCookieBehaviorPolicy()
     ) {
       Services.telemetry.scalarSet(
