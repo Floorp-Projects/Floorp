@@ -253,8 +253,6 @@ rtc_library("peerconnection") {
     "sctp_data_channel.h",
     "sdp_offer_answer.cc",  # TODO: Make separate target when not circular
     "sdp_offer_answer.h",  # dependent on peerconnection.h
-    "sdp_utils.cc",
-    "sdp_utils.h",
     "stats_collector.cc",
     "stats_collector.h",
     "stream_collection.h",
@@ -499,7 +497,21 @@ rtc_source_set("sdp_serializer") {
   ]
 }
 rtc_source_set("sdp_utils") {
-  visibility = [ ":*" ]
+  visibility = [
+    ":*",
+    "../test/pc/e2e:*",
+  ]
+  sources = [
+    "sdp_utils.cc",
+    "sdp_utils.h",
+  ]
+  deps = [
+    "../api:libjingle_peerconnection_api",
+    "../p2p:rtc_p2p",
+    "../pc:session_description",
+    "../rtc_base:checks",
+    "../rtc_base/system:rtc_export",
+  ]
 }
 rtc_source_set("stats_collector") {
   visibility = [ ":*" ]
@@ -1144,6 +1156,7 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
     deps = [
       ":pc_test_utils",
+      ":sdp_utils",
       "../api:function_view",
       "../api:libjingle_peerconnection_api",
       "../api:media_stream_interface",
@@ -1226,6 +1239,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":rtp_sender",
       ":rtp_transceiver",
       ":sdp_serializer",
+      ":sdp_utils",
       ":session_description",
       ":usage_pattern",
       ":video_rtp_receiver",
