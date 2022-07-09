@@ -13,6 +13,7 @@
 #include <gio/gunixfdlist.h>
 #include <glib-object.h>
 
+#include "modules/desktop_capture/linux/wayland/scoped_glib.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -25,75 +26,6 @@ const char kDesktopRequestObjectPath[] =
 const char kSessionInterfaceName[] = "org.freedesktop.portal.Session";
 const char kRequestInterfaceName[] = "org.freedesktop.portal.Request";
 const char kScreenCastInterfaceName[] = "org.freedesktop.portal.ScreenCast";
-
-template <class T>
-class Scoped {
- public:
-  Scoped() {}
-  explicit Scoped(T* val) { ptr_ = val; }
-  ~Scoped() { RTC_DCHECK_NOTREACHED(); }
-
-  T* operator->() { return ptr_; }
-
-  bool operator!() { return ptr_ == nullptr; }
-
-  T* get() { return ptr_; }
-
-  T** receive() {
-    RTC_CHECK(!ptr_);
-    return &ptr_;
-  }
-
-  Scoped& operator=(T* val) {
-    ptr_ = val;
-    return *this;
-  }
-
- protected:
-  T* ptr_ = nullptr;
-};
-
-template <>
-Scoped<GError>::~Scoped() {
-  if (ptr_) {
-    g_error_free(ptr_);
-  }
-}
-
-template <>
-Scoped<char>::~Scoped() {
-  if (ptr_) {
-    g_free(ptr_);
-  }
-}
-
-template <>
-Scoped<GVariant>::~Scoped() {
-  if (ptr_) {
-    g_variant_unref(ptr_);
-  }
-}
-
-template <>
-Scoped<GVariantIter>::~Scoped() {
-  if (ptr_) {
-    g_variant_iter_free(ptr_);
-  }
-}
-
-template <>
-Scoped<GDBusMessage>::~Scoped() {
-  if (ptr_) {
-    g_object_unref(ptr_);
-  }
-}
-
-template <>
-Scoped<GUnixFDList>::~Scoped() {
-  if (ptr_) {
-    g_object_unref(ptr_);
-  }
-}
 
 ScreenCastPortal::ScreenCastPortal(CaptureSourceType source_type,
                                    PortalNotifier* notifier)
