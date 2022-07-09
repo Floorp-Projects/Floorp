@@ -61,6 +61,9 @@ struct IceFieldTrials {
 
   // Stop gathering when having a strong connection.
   bool stop_gather_on_strongly_connected = true;
+
+  // DSCP taging.
+  absl::optional<int> override_dscp;
 };
 
 }  // namespace cricket

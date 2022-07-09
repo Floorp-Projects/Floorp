@@ -775,6 +775,16 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
 
   ice_controller_->SetIceConfig(config_);
 
+  // DSCP override, allow user to specify (any) int value
+  // that will be used for tagging all packets.
+  webrtc::StructParametersParser::Create("override_dscp",
+                                         &field_trials_.override_dscp)
+      ->Parse(webrtc::field_trial::FindFullName("WebRTC-DscpFieldTrial"));
+
+  if (field_trials_.override_dscp) {
+    SetOption(rtc::Socket::OPT_DSCP, *field_trials_.override_dscp);
+  }
+
   RTC_DCHECK(ValidateIceConfig(config_).ok());
 }
 
@@ -1529,6 +1539,10 @@ void P2PTransportChannel::RememberRemoteCandidate(
 // port objects.
 int P2PTransportChannel::SetOption(rtc::Socket::Option opt, int value) {
   RTC_DCHECK_RUN_ON(network_thread_);
+  if (field_trials_.override_dscp && opt == rtc::Socket::OPT_DSCP) {
+    value = *field_trials_.override_dscp;
+  }
+
   OptionMap::iterator it = options_.find(opt);
   if (it == options_.end()) {
     options_.insert(std::make_pair(opt, value));
