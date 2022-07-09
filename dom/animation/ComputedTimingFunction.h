@@ -26,10 +26,7 @@ class ComputedTimingFunction {
   static StyleComputedTimingFunction ToStyleComputedTimingFunction(
       const ComputedTimingFunction& aComputedTimingFunction);
 
-  // BeforeFlag is used in step timing function.
-  // https://drafts.csswg.org/css-easing/#before-flag
-  enum class BeforeFlag { Unset, Set };
-  double GetValue(double aPortion, BeforeFlag aBeforeFlag) const;
+  double GetValue(double aPortion, StyleEasingBeforeFlag aBeforeFlag) const;
   bool operator==(const ComputedTimingFunction& aOther) const {
     return mFunction == aOther.mFunction;
   }
@@ -45,7 +42,7 @@ class ComputedTimingFunction {
   void AppendToString(nsACString& aResult) const;
 
   static double GetPortion(const Maybe<ComputedTimingFunction>& aFunction,
-                           double aPortion, BeforeFlag aBeforeFlag) {
+                           double aPortion, StyleEasingBeforeFlag aBeforeFlag) {
     return aFunction ? aFunction->GetValue(aPortion, aBeforeFlag) : aPortion;
   }
 
@@ -85,7 +82,7 @@ class ComputedTimingFunction {
   explicit ComputedTimingFunction(StylePiecewiseLinearFunction aFunction)
       : mFunction{AsVariant(std::move(aFunction))} {}
   static double StepTiming(const StepFunc& aStepFunc, double aPortion,
-                           BeforeFlag aBeforeFlag);
+                           StyleEasingBeforeFlag aBeforeFlag);
   Function mFunction;
 };
 
