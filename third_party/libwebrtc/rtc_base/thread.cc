@@ -1236,11 +1236,6 @@ AutoSocketServerThread::AutoSocketServerThread(SocketServer* ss)
 
 AutoSocketServerThread::~AutoSocketServerThread() {
   RTC_DCHECK(ThreadManager::Instance()->CurrentThread() == this);
-  // Some tests post destroy messages to this thread. To avoid memory
-  // leaks, we have to process those messages. In particular
-  // P2PTransportChannelPingTest, relying on the message posted in
-  // cricket::Connection::Destroy.
-  ProcessMessages(0);
   // Stop and destroy the thread before clearing it as the current thread.
   // Sometimes there are messages left in the Thread that will be
   // destroyed by DoDestroy, and sometimes the destructors of the message and/or
