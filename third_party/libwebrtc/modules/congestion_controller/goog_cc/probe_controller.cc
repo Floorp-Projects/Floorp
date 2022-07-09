@@ -226,7 +226,7 @@ std::vector<ProbeClusterConfig> ProbeController::OnMaxTotalAllocatedBitrate(
     }
     return InitiateProbing(
         at_time_ms, probes,
-        static_cast<bool>(config_.allocation_allow_further_probing.Get()));
+        static_cast<bool>(config_.allocation_allow_further_probing));
   }
   max_total_allocated_bitrate_ = max_total_allocated_bitrate;
   return std::vector<ProbeClusterConfig>();

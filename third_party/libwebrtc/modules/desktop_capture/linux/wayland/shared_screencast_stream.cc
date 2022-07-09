@@ -149,7 +149,7 @@ class ScopedBuf {
     }
   }
 
-  explicit operator bool() { return map_ != MAP_FAILED; }
+  operator bool() { return map_ != MAP_FAILED; }
 
   void initialize(uint8_t* map, int map_size, int fd) {
     map_ = map;
