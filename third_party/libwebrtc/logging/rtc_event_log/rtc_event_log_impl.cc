@@ -39,10 +39,10 @@ std::unique_ptr<RtcEventLogEncoder> CreateEncoder(
     RtcEventLog::EncodingType type) {
   switch (type) {
     case RtcEventLog::EncodingType::Legacy:
-      RTC_LOG(LS_INFO) << "Creating legacy encoder for RTC event log.";
+      RTC_DLOG(LS_INFO) << "Creating legacy encoder for RTC event log.";
       return std::make_unique<RtcEventLogEncoderLegacy>();
     case RtcEventLog::EncodingType::NewFormat:
-      RTC_LOG(LS_INFO) << "Creating new format encoder for RTC event log.";
+      RTC_DLOG(LS_INFO) << "Creating new format encoder for RTC event log.";
       return std::make_unique<RtcEventLogEncoderNewFormat>();
     default:
       RTC_LOG(LS_ERROR) << "Unknown RtcEventLog encoder type (" << int(type)
@@ -91,8 +91,7 @@ bool RtcEventLogImpl::StartLogging(std::unique_ptr<RtcEventLogOutput> output,
 
   const int64_t timestamp_us = rtc::TimeMillis() * 1000;
   const int64_t utc_time_us = rtc::TimeUTCMillis() * 1000;
-  RTC_LOG(LS_INFO) << "Starting WebRTC event log. (Timestamp, UTC) = "
-                      "("
+  RTC_LOG(LS_INFO) << "Starting WebRTC event log. (Timestamp, UTC) = ("
                    << timestamp_us << ", " << utc_time_us << ").";
 
   RTC_DCHECK_RUN_ON(&logging_state_checker_);
@@ -113,7 +112,7 @@ bool RtcEventLogImpl::StartLogging(std::unique_ptr<RtcEventLogOutput> output,
 }
 
 void RtcEventLogImpl::StopLogging() {
-  RTC_LOG(LS_INFO) << "Stopping WebRTC event log.";
+  RTC_DLOG(LS_INFO) << "Stopping WebRTC event log.";
   // TODO(danilchap): Do not block current thread waiting on the task queue.
   // It might work for now, for current callers, but disallows caller to share
   // threads with the `task_queue_`.
@@ -121,7 +120,7 @@ void RtcEventLogImpl::StopLogging() {
   StopLogging([&output_stopped]() { output_stopped.Set(); });
   output_stopped.Wait(rtc::Event::kForever);
 
-  RTC_LOG(LS_INFO) << "WebRTC event log successfully stopped.";
+  RTC_DLOG(LS_INFO) << "WebRTC event log successfully stopped.";
 }
 
 void RtcEventLogImpl::StopLogging(std::function<void()> callback) {

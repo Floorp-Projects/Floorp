@@ -1664,13 +1664,13 @@ const RtpHeaderExtensionMap* ParsedRtcEventLog::GetRtpHeaderExtensionMap(
   }
   if (parse_unconfigured_header_extensions_ ==
       UnconfiguredHeaderExtensions::kAttemptWebrtcDefaultConfig) {
-    RTC_LOG(LS_WARNING) << "Using default header extension map for SSRC "
-                        << ssrc;
+    RTC_DLOG(LS_WARNING) << "Using default header extension map for SSRC "
+                         << ssrc;
     extensions_maps.insert(std::make_pair(ssrc, default_extension_map_));
     return &default_extension_map_;
   }
-  RTC_LOG(LS_WARNING) << "Not parsing header extensions for SSRC " << ssrc
-                      << ". No header extension map found.";
+  RTC_DLOG(LS_WARNING) << "Not parsing header extensions for SSRC " << ssrc
+                       << ". No header extension map found.";
   return nullptr;
 }
 
