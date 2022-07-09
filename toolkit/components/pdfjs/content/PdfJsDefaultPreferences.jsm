@@ -33,6 +33,7 @@ var PdfJsDefaultPreferences = Object.freeze({
  "externalLinkTarget": 0,
  "historyUpdateUrl": false,
  "ignoreDestinationZoom": false,
+ "forcePageColors": false,
  "pageColorsBackground": "Canvas",
  "pageColorsForeground": "CanvasText",
  "pdfBugEnabled": false,
