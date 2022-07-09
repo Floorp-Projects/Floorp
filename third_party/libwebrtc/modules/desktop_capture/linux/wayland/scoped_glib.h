@@ -11,6 +11,8 @@
 #ifndef MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_SCOPED_GLIB_H_
 #define MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_SCOPED_GLIB_H_
 
+#include <gio/gio.h>
+
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -44,6 +46,48 @@ class Scoped {
  protected:
   T* ptr_ = nullptr;
 };
+
+template <>
+Scoped<GError>::~Scoped() {
+  if (ptr_) {
+    g_error_free(ptr_);
+  }
+}
+
+template <>
+Scoped<char>::~Scoped() {
+  if (ptr_) {
+    g_free(ptr_);
+  }
+}
+
+template <>
+Scoped<GVariant>::~Scoped() {
+  if (ptr_) {
+    g_variant_unref(ptr_);
+  }
+}
+
+template <>
+Scoped<GVariantIter>::~Scoped() {
+  if (ptr_) {
+    g_variant_iter_free(ptr_);
+  }
+}
+
+template <>
+Scoped<GDBusMessage>::~Scoped() {
+  if (ptr_) {
+    g_object_unref(ptr_);
+  }
+}
+
+template <>
+Scoped<GUnixFDList>::~Scoped() {
+  if (ptr_) {
+    g_object_unref(ptr_);
+  }
+}
 
 }  // namespace webrtc
 
