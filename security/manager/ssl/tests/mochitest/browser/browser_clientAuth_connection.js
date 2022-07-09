@@ -3,6 +3,8 @@
 // http://creativecommons.org/publicdomain/zero/1.0/
 "use strict";
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 // Tests various scenarios connecting to a server that requires client cert
 // authentication. Also tests that nsIClientAuthDialogs.chooseCertificate
 // is called at the appropriate times and with the correct arguments.

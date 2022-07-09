@@ -2,6 +2,8 @@
 // Test for bug 1170531
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1170531
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 add_task(async function() {
   // Get a bunch of DOM nodes
   let editMenu = document.getElementById("edit-menu");

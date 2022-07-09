@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 const kClsidTestShellEx = "{10a9521e-0205-4cc7-93a1-62f30a9a54b3}";
 const kFriendlyName = "Minimum Shell Extension for Firefox testing";
 const kExtensionSubkeys = [".zzz\\shellex\\IconHandler"];

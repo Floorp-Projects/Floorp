@@ -3,6 +3,8 @@
 /* import-globals-from browser_content_sandbox_utils.js */
 "use strict";
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 // Test if the content process can create in $HOME, this should fail
 async function createFileInHome() {
   let browser = gBrowser.selectedBrowser;
