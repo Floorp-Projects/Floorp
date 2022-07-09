@@ -733,6 +733,7 @@ const std::string& ProduceIceCandidateStats(int64_t timestamp_us,
           NetworkAdapterTypeToStatsType(candidate.network_type());
       const std::string& candidate_type = candidate.type();
       const std::string& relay_protocol = candidate.relay_protocol();
+      const std::string& url = candidate.url();
       if (candidate_type == cricket::RELAY_PORT_TYPE ||
           (candidate_type == cricket::PRFLX_PORT_TYPE &&
            !relay_protocol.empty())) {
@@ -740,6 +741,13 @@ const std::string& ProduceIceCandidateStats(int64_t timestamp_us,
                    relay_protocol.compare("tcp") == 0 ||
                    relay_protocol.compare("tls") == 0);
         candidate_stats->relay_protocol = relay_protocol;
+        if (!url.empty()) {
+          candidate_stats->url = url;
+        }
+      } else if (candidate_type == cricket::STUN_PORT_TYPE) {
+        if (!url.empty()) {
+          candidate_stats->url = url;
+        }
       }
     } else {
       // We don't expect to know the adapter type of remote candidates.
