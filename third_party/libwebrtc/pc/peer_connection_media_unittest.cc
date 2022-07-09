@@ -312,8 +312,8 @@ TEST_F(PeerConnectionMediaTestPlanB, EmptyRemoteOfferRemovesRecvStreams) {
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
 
   // Remove both tracks from caller.
-  caller->pc()->RemoveTrack(caller_audio_track);
-  caller->pc()->RemoveTrack(caller_video_track);
+  caller->pc()->RemoveTrackOrError(caller_audio_track);
+  caller->pc()->RemoveTrackOrError(caller_video_track);
 
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
 
@@ -410,8 +410,8 @@ TEST_F(PeerConnectionMediaTestPlanB, EmptyLocalAnswerRemovesSendStreams) {
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
 
   // Remove both tracks from callee.
-  callee->pc()->RemoveTrack(callee_audio_track);
-  callee->pc()->RemoveTrack(callee_video_track);
+  callee->pc()->RemoveTrackOrError(callee_audio_track);
+  callee->pc()->RemoveTrackOrError(callee_video_track);
 
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
 
@@ -1083,7 +1083,7 @@ TEST_P(PeerConnectionMediaTest, TestAVOfferWithAudioOnlyAnswer) {
   EXPECT_EQ(1u, callee_video->send_streams().size());
 
   // Callee removes video but keeps audio and rejects the video once again.
-  callee->pc()->RemoveTrack(callee_video_track);
+  callee->pc()->RemoveTrackOrError(callee_video_track);
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
   ASSERT_TRUE(
       callee->SetLocalDescription(callee->CreateAnswer(options_reject_video)));
@@ -1153,7 +1153,7 @@ TEST_P(PeerConnectionMediaTest, TestAVOfferWithVideoOnlyAnswer) {
   EXPECT_EQ(1u, callee_video->send_streams().size());
 
   // Callee removes audio but keeps video and rejects the audio once again.
-  callee->pc()->RemoveTrack(callee_audio_track);
+  callee->pc()->RemoveTrackOrError(callee_audio_track);
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
   ASSERT_TRUE(
       callee->SetLocalDescription(callee->CreateAnswer(options_reject_audio)));
