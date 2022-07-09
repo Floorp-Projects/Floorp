@@ -240,8 +240,6 @@ rtc_library("peerconnection") {
     "data_channel_utils.h",
     "jsep_ice_candidate.cc",
     "jsep_session_description.cc",
-    "local_audio_source.cc",
-    "local_audio_source.h",
     "peer_connection.cc",
     "peer_connection.h",
     "peer_connection_factory.cc",
@@ -462,6 +460,16 @@ rtc_source_set("jsep_session_description") {
 }
 rtc_source_set("local_audio_source") {
   visibility = [ ":*" ]
+  sources = [
+    "local_audio_source.cc",
+    "local_audio_source.h",
+  ]
+  deps = [
+    "../api:audio_options_api",
+    "../api:media_stream_interface",
+    "../api:scoped_refptr",
+    "../rtc_base:refcount",
+  ]
 }
 rtc_source_set("peer_connection") {
   visibility = [ ":*" ]
@@ -1207,6 +1215,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":ice_server_parsing",
       ":integration_test_helpers",
       ":jitter_buffer_delay",
+      ":local_audio_source",
       ":media_stream",
       ":peerconnection",
       ":proxy",
@@ -1369,6 +1378,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":audio_track",
       ":dtmf_sender",
       ":jitter_buffer_delay",
+      ":local_audio_source",
       ":media_stream",
       ":pc_test_utils",
       ":peerconnection",
