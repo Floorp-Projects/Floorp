@@ -41,11 +41,6 @@ class AudioTrack : public MediaStreamTrack<AudioTrackInterface>,
   // MediaStreamTrack implementation.
   std::string kind() const override;
 
-  // NOTE: `set_enabled` and `enabled` are overridden only to ensure threading
-  // expectations consistent with what's declared in media_stream_track_proxy.h.
-  bool set_enabled(bool enable) override;
-  bool enabled() const override;
-
   // AudioTrackInterface implementation.
   AudioSourceInterface* GetSource() const override;
 
