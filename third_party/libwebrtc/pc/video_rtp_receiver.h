@@ -141,8 +141,6 @@ class VideoRtpReceiver : public RtpReceiverInternal {
   rtc::Thread* const worker_thread_;
 
   const std::string id_;
-  // See documentation for `stopped_` below for when a valid media channel
-  // has been assigned and when this pointer will be null.
   cricket::VideoMediaChannel* media_channel_ RTC_GUARDED_BY(worker_thread_) =
       nullptr;
   absl::optional<uint32_t> ssrc_ RTC_GUARDED_BY(worker_thread_);
@@ -152,15 +150,6 @@ class VideoRtpReceiver : public RtpReceiverInternal {
   const rtc::scoped_refptr<VideoTrackProxyWithInternal<VideoTrack>> track_;
   std::vector<rtc::scoped_refptr<MediaStreamInterface>> streams_
       RTC_GUARDED_BY(&signaling_thread_checker_);
-  // `stopped` is state that's used on the signaling thread to indicate whether
-  // a valid `media_channel_` has been assigned and configured. When an instance
-  // of VideoRtpReceiver is initially created, `stopped_` is true and will
-  // remain true until either `SetupMediaChannel` or
-  // `SetupUnsignaledMediaChannel` is called after assigning a media channel.
-  // After that, `stopped_` will remain false until `Stop()` is called.
-  // Note, for checking the state of the class on the worker thread,
-  // check `media_channel_` instead, as that's the main worker thread state.
-  bool stopped_ RTC_GUARDED_BY(&signaling_thread_checker_) = true;
   RtpReceiverObserverInterface* observer_
       RTC_GUARDED_BY(&signaling_thread_checker_) = nullptr;
   bool received_first_packet_ RTC_GUARDED_BY(&signaling_thread_checker_) =
