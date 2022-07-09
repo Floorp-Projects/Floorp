@@ -862,10 +862,9 @@ void TurnPort::OnAllocateSuccess(const rtc::SocketAddress& address,
              related_address,  // Related address.
              UDP_PROTOCOL_NAME,
              ProtoToString(server_address_.proto),  // The first hop protocol.
-             "",  // TCP canddiate type, empty for turn candidates.
+             "",  // TCP candidate type, empty for turn candidates.
              RELAY_PORT_TYPE, GetRelayPreference(server_address_.proto),
-             server_priority_, ReconstructedServerUrl(false /* use_hostname */),
-             true);
+             server_priority_, ReconstructedServerUrl(), true);
 }
 
 void TurnPort::OnAllocateError(int error_code, const std::string& reason) {
@@ -881,9 +880,8 @@ void TurnPort::OnAllocateError(int error_code, const std::string& reason) {
     port = 0;
   }
   SignalCandidateError(
-      this, IceCandidateErrorEvent(
-                address, port, ReconstructedServerUrl(true /* use_hostname */),
-                error_code, reason));
+      this, IceCandidateErrorEvent(address, port, ReconstructedServerUrl(),
+                                   error_code, reason));
 }
 
 void TurnPort::OnRefreshError() {
@@ -1291,7 +1289,7 @@ bool TurnPort::SetEntryChannelId(const rtc::SocketAddress& address,
   return true;
 }
 
-std::string TurnPort::ReconstructedServerUrl(bool use_hostname) {
+std::string TurnPort::ReconstructedServerUrl() {
   // draft-petithuguenin-behave-turn-uris-01
   // turnURI       = scheme ":" turn-host [ ":" turn-port ]
   //                 [ "?transport=" transport ]
@@ -1314,10 +1312,8 @@ std::string TurnPort::ReconstructedServerUrl(bool use_hostname) {
       break;
   }
   rtc::StringBuilder url;
-  url << scheme << ":"
-      << (use_hostname ? server_address_.address.hostname()
-                       : server_address_.address.ipaddr().ToString())
-      << ":" << server_address_.address.port() << "?transport=" << transport;
+  url << scheme << ":" << server_address_.address.hostname() << ":"
+      << server_address_.address.port() << "?transport=" << transport;
   return url.Release();
 }
 
