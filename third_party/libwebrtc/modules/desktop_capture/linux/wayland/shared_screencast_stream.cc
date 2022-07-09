@@ -26,6 +26,7 @@
 #include "modules/desktop_capture/linux/wayland/egl_dmabuf.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/sanitizer.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/string_to_number.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -422,6 +423,7 @@ SharedScreenCastStreamPrivate::~SharedScreenCastStreamPrivate() {
   }
 }
 
+RTC_NO_SANITIZE("cfi-icall")
 bool SharedScreenCastStreamPrivate::StartScreenCastStream(
     uint32_t stream_node_id,
     int fd) {
