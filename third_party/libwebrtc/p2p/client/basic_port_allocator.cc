@@ -179,6 +179,7 @@ BasicPortAllocator::BasicPortAllocator(rtc::NetworkManager* network_manager,
     : network_manager_(network_manager), socket_factory_(socket_factory) {
   InitRelayPortFactory(nullptr);
   RTC_DCHECK(relay_port_factory_ != nullptr);
+  RTC_DCHECK(network_manager_ != nullptr);
   SetConfiguration(stun_servers, std::vector<RelayServerConfig>(), 0,
                    webrtc::NO_PRUNE, nullptr);
 }

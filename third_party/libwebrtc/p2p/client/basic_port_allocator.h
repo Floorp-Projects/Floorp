@@ -30,8 +30,12 @@ namespace cricket {
 
 class RTC_EXPORT BasicPortAllocator : public PortAllocator {
  public:
-  // note: The (optional) relay_port_factory is owned by caller
-  // and must have a life time that exceeds that of BasicPortAllocator.
+  // The NetworkManager is a mandatory argument. The other arguments are
+  // optional. All these objects are owned by caller and must have a life time
+  // that exceeds that of BasicPortAllocator.
+  // TODO(bugs.webrtc.org/13145): The SocketFactory should be mandatory, but
+  // currenly isn't. When not specified, one is created internally, based on the
+  // socket server associated with the thread calling CreateSession.
   BasicPortAllocator(rtc::NetworkManager* network_manager,
                      rtc::PacketSocketFactory* socket_factory,
                      webrtc::TurnCustomizer* customizer = nullptr,
