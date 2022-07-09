@@ -295,10 +295,13 @@ class BaseChannel : public ChannelInterface,
   // function simply returns. If either of these is set, the function updates
   // the transport with either or both of the demuxer criteria and the supplied
   // rtp header extensions.
-  void MaybeUpdateDemuxerAndRtpExtensions_w(
+  // Returns `true` if either an update wasn't needed or one was successfully
+  // applied. If the return value is `false`, then updating the demuxer criteria
+  // failed, which needs to be treated as an error.
+  bool MaybeUpdateDemuxerAndRtpExtensions_w(
       bool update_demuxer,
-      absl::optional<RtpHeaderExtensions> extensions)
-      RTC_RUN_ON(worker_thread());
+      absl::optional<RtpHeaderExtensions> extensions,
+      std::string& error_desc) RTC_RUN_ON(worker_thread());
 
   bool RegisterRtpDemuxerSink_w() RTC_RUN_ON(worker_thread());
 
