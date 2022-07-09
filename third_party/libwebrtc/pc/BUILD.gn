@@ -278,19 +278,28 @@ rtc_library("peerconnection") {
     ":audio_rtp_receiver",
     ":audio_track",
     ":connection_context",
+    ":data_channel_controller",
+    ":data_channel_utils",
     ":dtmf_sender",
+    ":ice_server_parsing",
     ":jitter_buffer_delay",
     ":media_protocol_names",
     ":media_stream",
+    ":media_stream_observer",
+    ":peer_connection_factory",
+    ":peer_connection_internal",
     ":peer_connection_message_handler",
     ":proxy",
     ":remote_audio_source",
     ":rtc_pc_base",
+    ":rtc_stats_collector",
     ":rtp_parameters_conversion",
     ":rtp_receiver",
     ":rtp_sender",
     ":rtp_transceiver",
     ":rtp_transmission_manager",
+    ":sctp_data_channel",
+    ":sdp_offer_answer",
     ":sdp_state_provider",
     ":session_description",
     ":simulcast_description",
@@ -412,6 +421,38 @@ rtc_library("connection_context") {
     "../rtc_base:threading",
     "../rtc_base/task_utils:to_queued_task",
   ]
+}
+
+# These empty targets are the future homes of files moved out of
+# the peerconnection target. They are broken out so that other
+# projects and modules can add dependencies as needed.
+# TODO(bugs.webrtc.org/13634): Fill these targets with files.
+rtc_source_set("data_channel_controller") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("data_channel_utils") {
+  visibility = [ "*" ]  # Known to be used externally
+}
+rtc_source_set("sctp_data_channel") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("ice_server_parsing") {
+  visibility = [ "*" ]  # Known to be used externally
+}
+rtc_source_set("media_stream_observer") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("peer_connection_factory") {
+  visibility = [ "*" ]  # Known to be used externally
+}
+rtc_source_set("peer_connection_internal") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("rtc_stats_collector") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("sdp_offer_answer") {
+  visibility = [ "*" ]  # Known to be used externally
 }
 
 rtc_library("peer_connection_message_handler") {
