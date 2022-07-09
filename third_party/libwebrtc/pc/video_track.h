@@ -21,7 +21,6 @@
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
 #include "media/base/video_source_base.h"
-#include "pc/video_track_source_proxy.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -50,11 +49,9 @@ class VideoTrack : public MediaStreamTrack<VideoTrackInterface>,
   std::string kind() const override;
 
  protected:
-  VideoTrack(
-      const std::string& id,
-      rtc::scoped_refptr<
-          VideoTrackSourceProxyWithInternal<VideoTrackSourceInterface>> source,
-      rtc::Thread* worker_thread);
+  VideoTrack(const std::string& id,
+             VideoTrackSourceInterface* video_source,
+             rtc::Thread* worker_thread);
   ~VideoTrack();
 
  private:
@@ -63,10 +60,7 @@ class VideoTrack : public MediaStreamTrack<VideoTrackInterface>,
 
   RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker signaling_thread_;
   rtc::Thread* const worker_thread_;
-  const rtc::scoped_refptr<
-      VideoTrackSourceProxyWithInternal<VideoTrackSourceInterface>>
-      video_source_;
-
+  const rtc::scoped_refptr<VideoTrackSourceInterface> video_source_;
   ContentHint content_hint_ RTC_GUARDED_BY(worker_thread_);
 };
 
