@@ -16,7 +16,7 @@ namespace {
 struct TestType {
   TestType() : has_value(true) {}
   TestType(bool b) : has_value(b) {}
-  explicit operator bool() { return has_value; }
+  operator bool() { return has_value; }
   bool has_value;
   int retain_count = 0;
 };
