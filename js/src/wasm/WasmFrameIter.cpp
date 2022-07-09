@@ -1000,8 +1000,7 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
       break;
     case CodeRange::JitEntry:
       callerPC_ = nullptr;
-      callerFP_ = nullptr;
-      unwoundJitCallerFP_ = fp->rawCaller();
+      callerFP_ = fp->rawCaller();
       break;
     case CodeRange::Function:
       fp = fp->wasmCaller();
@@ -1369,29 +1368,9 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
   if (unwoundCaller) {
     callerFP_ = unwindState.fp;
     callerPC_ = unwindState.pc;
-    // In the case of a function call, if the original FP value is tagged,
-    // then we're being called through a direct JIT call (the interpreter
-    // and the jit entry don't set FP's low bit). We can't observe
-    // transient tagged values of FP (during wasm::SetExitFP) here because
-    // StartUnwinding would not have unwound then.
-    if (unwindState.codeRange->isFunction() &&
-        Frame::isExitOrJitEntryFP(reinterpret_cast<uint8_t*>(state.fp))) {
-      unwoundJitCallerFP_ = callerFP_;
-    }
   } else {
     callerFP_ = Frame::fromUntaggedWasmExitFP(unwindState.fp)->rawCaller();
     callerPC_ = Frame::fromUntaggedWasmExitFP(unwindState.fp)->returnAddress();
-    // See comment above. The only way to get a tagged FP here means that
-    // the caller is a fast JIT caller which called into a wasm function.
-    if (Frame::isExitOrJitEntryFP(callerFP_)) {
-      MOZ_ASSERT(unwindState.codeRange->isFunction());
-      unwoundJitCallerFP_ = Frame::toJitEntryCaller(callerFP_);
-    }
-  }
-
-  if (unwindState.codeRange->isJitEntry()) {
-    MOZ_ASSERT(!unwoundJitCallerFP_);
-    unwoundJitCallerFP_ = callerFP_;
   }
 
   code_ = unwindState.code;
@@ -1401,6 +1380,9 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
 }
 
 void ProfilingFrameIterator::operator++() {
+  MOZ_ASSERT(!done());
+  MOZ_ASSERT(!unwoundJitCallerFP_);
+
   if (!exitReason_.isNone()) {
     exitReason_ = ExitReason::None();
     MOZ_ASSERT(codeRange_);
@@ -1414,8 +1396,9 @@ void ProfilingFrameIterator::operator++() {
     return;
   }
 
-  if (unwoundJitCallerFP_) {
-    MOZ_ASSERT(codeRange_->isFunction() || codeRange_->isJitEntry());
+  if (codeRange_->isJitEntry()) {
+    MOZ_ASSERT(callerFP_);
+    unwoundJitCallerFP_ = callerFP_;
     callerPC_ = nullptr;
     callerFP_ = nullptr;
     codeRange_ = nullptr;
@@ -1423,21 +1406,18 @@ void ProfilingFrameIterator::operator++() {
     return;
   }
 
-  if (!callerPC_) {
-    MOZ_ASSERT(!callerFP_);
-    codeRange_ = nullptr;
-    MOZ_ASSERT(done());
-    return;
-  }
+  MOZ_RELEASE_ASSERT(callerPC_);
 
   code_ = LookupCode(callerPC_, &codeRange_);
 
-  if (!code_ && Frame::isExitOrJitEntryFP(callerFP_)) {
+  if (!code_) {
     // The parent frame is an inlined wasm call, the tagged FP points to
     // the fake exit frame.
     MOZ_ASSERT(!codeRange_);
     AssertDirectJitCall(callerFP_);
-    unwoundJitCallerFP_ = Frame::toJitEntryCaller(callerFP_);
+    unwoundJitCallerFP_ = Frame::isExitOrJitEntryFP(callerFP_)
+                              ? Frame::toJitEntryCaller(callerFP_)
+                              : callerFP_;
     MOZ_ASSERT(done());
     return;
   }
@@ -1452,7 +1432,6 @@ void ProfilingFrameIterator::operator++() {
   }
 
   if (codeRange_->isJitEntry()) {
-    unwoundJitCallerFP_ = callerFP_;
     MOZ_ASSERT(!done());
     return;
   }
