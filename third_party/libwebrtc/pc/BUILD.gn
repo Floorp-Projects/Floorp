@@ -923,7 +923,6 @@ rtc_library("video_track") {
     "../api:sequence_checker",
     "../api/video:video_frame",
     "../media:rtc_media_base",
-    "../pc:rtc_pc_base",
     "../rtc_base",
     "../rtc_base:checks",
     "../rtc_base:refcount",
