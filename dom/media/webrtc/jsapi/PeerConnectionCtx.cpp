@@ -57,10 +57,6 @@ class DummyAudioProcessing : public AudioProcessing {
     return kNoError;
   }
   int Initialize(const ProcessingConfig&) override { return Initialize(); }
-  int Initialize(int, int, int, ChannelLayout, ChannelLayout,
-                 ChannelLayout) override {
-    return Initialize();
-  }
   void ApplyConfig(const Config&) override { MOZ_CRASH("Unexpected call"); }
   int proc_sample_rate_hz() const override {
     MOZ_CRASH("Unexpected call");

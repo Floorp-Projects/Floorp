@@ -819,7 +819,7 @@ void AudioInputProcessing::ProcessOutputData(MediaTrackGraphImpl* aGraph,
 
     // Having the same config for input and output means we potentially save
     // some CPU.
-    StreamConfig inputConfig(aRate, channelCountFarend, false);
+    StreamConfig inputConfig(aRate, channelCountFarend);
     StreamConfig outputConfig = inputConfig;
 
     // Passing the same pointers here saves a copy inside this function.
@@ -941,8 +941,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
                    deinterleavedPacketizedInputDataChannelPointers.Elements());
     }
 
-    StreamConfig inputConfig(aGraph->GraphRate(), channelCountInput,
-                             false /* we don't use typing detection*/);
+    StreamConfig inputConfig(aGraph->GraphRate(), channelCountInput);
     StreamConfig outputConfig = inputConfig;
 
     // Bug 1404965: Get the right delay here, it saves some work down the line.
