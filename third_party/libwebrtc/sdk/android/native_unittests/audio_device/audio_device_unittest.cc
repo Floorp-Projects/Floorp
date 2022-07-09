@@ -893,7 +893,7 @@ TEST_F(AudioDeviceTest, StartRecordingVerifyCallbacks) {
   EXPECT_CALL(
       mock, RecordedDataIsAvailable(NotNull(), record_frames_per_10ms_buffer(),
                                     kBytesPerSample, record_channels(),
-                                    record_sample_rate(), _, 0, 0, false, _))
+                                    record_sample_rate(), _, 0, 0, false, _, _))
       .Times(AtLeast(kNumCallbacks));
 
   EXPECT_EQ(0, audio_device()->RegisterAudioCallback(&mock));
@@ -914,7 +914,7 @@ TEST_F(AudioDeviceTest, StartPlayoutAndRecordingVerifyCallbacks) {
   EXPECT_CALL(
       mock, RecordedDataIsAvailable(NotNull(), record_frames_per_10ms_buffer(),
                                     kBytesPerSample, record_channels(),
-                                    record_sample_rate(), _, 0, 0, false, _))
+                                    record_sample_rate(), _, 0, 0, false, _, _))
       .Times(AtLeast(kNumCallbacks));
   EXPECT_EQ(0, audio_device()->RegisterAudioCallback(&mock));
   StartPlayout();
