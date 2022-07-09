@@ -418,6 +418,7 @@ EglDmaBuf::EglDmaBuf() {
   egl_initialized_ = true;
 }
 
+RTC_NO_SANITIZE("cfi-icall")
 EglDmaBuf::~EglDmaBuf() {
   if (gbm_device_) {
     gbm_device_destroy(gbm_device_);
