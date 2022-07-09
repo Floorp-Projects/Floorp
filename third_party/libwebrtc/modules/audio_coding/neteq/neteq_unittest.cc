@@ -44,36 +44,10 @@ ABSL_FLAG(bool, gen_ref, false, "Generate reference files.");
 
 namespace webrtc {
 
-namespace {
-
-const std::string& PlatformChecksum(const std::string& checksum_general,
-                                    const std::string& checksum_android_32,
-                                    const std::string& checksum_android_64,
-                                    const std::string& checksum_win_32,
-                                    const std::string& checksum_win_64) {
-#if defined(WEBRTC_ANDROID)
-#ifdef WEBRTC_ARCH_64_BITS
-  return checksum_android_64;
-#else
-  return checksum_android_32;
-#endif  // WEBRTC_ARCH_64_BITS
-#elif defined(WEBRTC_WIN)
-#ifdef WEBRTC_ARCH_64_BITS
-  return checksum_win_64;
-#else
-  return checksum_win_32;
-#endif  // WEBRTC_ARCH_64_BITS
-#else
-  return checksum_general;
-#endif  // WEBRTC_WIN
-}
-
-}  // namespace
-
-
-#if !defined(WEBRTC_IOS) && defined(WEBRTC_NETEQ_UNITTEST_BITEXACT) && \
-    (defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)) &&    \
-    defined(WEBRTC_CODEC_ILBC) && !defined(WEBRTC_ARCH_ARM64)
+#if defined(WEBRTC_LINUX) && defined(WEBRTC_ARCH_X86_64) &&         \
+    defined(WEBRTC_NETEQ_UNITTEST_BITEXACT) &&                      \
+    (defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)) && \
+    defined(WEBRTC_CODEC_ILBC)
 #define MAYBE_TestBitExactness TestBitExactness
 #else
 #define MAYBE_TestBitExactness DISABLED_TestBitExactness
@@ -83,66 +57,56 @@ TEST_F(NetEqDecodingTest, MAYBE_TestBitExactness) {
       webrtc::test::ResourcePath("audio_coding/neteq_universal_new", "rtp");
 
   const std::string output_checksum =
-      PlatformChecksum("ba4fae83a52f5e9d95b0910f05d540114285697b",
-                       "aa557f30f7fdcebbbbf99d7f235ccba3a1c98983", "not used",
-                       "ba4fae83a52f5e9d95b0910f05d540114285697b",
-                       "64b46bb3c1165537a880ae8404afce2efba456c0");
+      "ba4fae83a52f5e9d95b0910f05d540114285697b";
 
   const std::string network_stats_checksum =
-      PlatformChecksum("fa878a8464ef1cb3d01503b7f927c3e2ce6f02c4",
-                       "300ccc2aaee7ed1971afb2f9a20247ed8760441d", "not used",
-                       "fa878a8464ef1cb3d01503b7f927c3e2ce6f02c4",
-                       "fa878a8464ef1cb3d01503b7f927c3e2ce6f02c4");
+      "fa878a8464ef1cb3d01503b7f927c3e2ce6f02c4";
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
                    absl::GetFlag(FLAGS_gen_ref));
 }
 
-#if !defined(WEBRTC_IOS) && defined(WEBRTC_NETEQ_UNITTEST_BITEXACT) && \
-    defined(WEBRTC_CODEC_OPUS)
+#if defined(WEBRTC_LINUX) && defined(WEBRTC_ARCH_X86_64) && \
+    defined(WEBRTC_NETEQ_UNITTEST_BITEXACT) && defined(WEBRTC_CODEC_OPUS)
 #define MAYBE_TestOpusBitExactness TestOpusBitExactness
 #else
 #define MAYBE_TestOpusBitExactness DISABLED_TestOpusBitExactness
 #endif
-// TODO(http://bugs.webrtc.org/12518): Enable the test after Opus has been
-// updated.
-TEST_F(NetEqDecodingTest, DISABLED_TestOpusBitExactness) {
+TEST_F(NetEqDecodingTest, MAYBE_TestOpusBitExactness) {
   const std::string input_rtp_file =
       webrtc::test::ResourcePath("audio_coding/neteq_opus", "rtp");
 
-  const std::string maybe_sse =
-      "c7887ff60eecf460332c6c7a28c81561f9e8a40f"
-      "|673dd422cfc174152536d3b13af64f9722520ab5";
-  const std::string output_checksum = PlatformChecksum(
-      maybe_sse, "e39283dd61a89cead3786ef8642d2637cc447296",
-      "53d8073eb848b70974cba9e26424f4946508fd19", maybe_sse, maybe_sse);
+  // The checksum depends on SSE being enabled, the second part is the non-SSE
+  // checksum.
+  const std::string output_checksum =
+      "6e23d8827ae54ca352e1448ae363bdfd2878c78e|"
+      "47cddbf3494b0233f48cb350676e704807237545";
 
   const std::string network_stats_checksum =
-      PlatformChecksum("c438bfa3b018f77691279eb9c63730569f54585c",
-                       "8a474ed0992591e0c84f593824bb05979c3de157",
-                       "9a05378dbf7e6edd56cdeb8ec45bcd6d8589623c",
-                       "c438bfa3b018f77691279eb9c63730569f54585c",
-                       "c438bfa3b018f77691279eb9c63730569f54585c");
+      "f89a9533dbb35a4c449b44c3ed120f7f1c7f90b6";
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
                    absl::GetFlag(FLAGS_gen_ref));
 }
 
-// TODO(http://bugs.webrtc.org/12518): Enable the test after Opus has been
-// updated.
-TEST_F(NetEqDecodingTest, DISABLED_TestOpusDtxBitExactness) {
+#if defined(WEBRTC_LINUX) && defined(WEBRTC_ARCH_X86_64) && \
+    defined(WEBRTC_NETEQ_UNITTEST_BITEXACT) && defined(WEBRTC_CODEC_OPUS)
+#define MAYBE_TestOpusDtxBitExactness TestOpusDtxBitExactness
+#else
+#define MAYBE_TestOpusDtxBitExactness DISABLED_TestOpusDtxBitExactness
+#endif
+TEST_F(NetEqDecodingTest, MAYBE_TestOpusDtxBitExactness) {
   const std::string input_rtp_file =
       webrtc::test::ResourcePath("audio_coding/neteq_opus_dtx", "rtp");
 
-  const std::string maybe_sse =
-      "0fb0a3d6b3758ca6e108368bb777cd38d0a865af"
-      "|79cfb99a21338ba977eb0e15eb8464e2db9436f8";
-  const std::string output_checksum = PlatformChecksum(
-      maybe_sse, "b6632690f8d7c2340c838df2821fc014f1cc8360",
-      "f890b9eb9bc5ab8313489230726b297f6a0825af", maybe_sse, maybe_sse);
+  // The checksum depends on SSE being enabled, the second part is the non-SSE
+  // checksum.
+  const std::string output_checksum =
+      "5cea4a8e750842ac67b79e8e2ce6a0a1c01f8130|"
+      "e97e32a77355e7ce46a2dc2f43bf1c2805530fcb";
 
   const std::string network_stats_checksum =
-      "18983bb67a57628c604dbdefa99574c6e0c5bb48";
+      "dc8447b9fee1a21fd5d1f4045d62b982a3fb0215";
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
                    absl::GetFlag(FLAGS_gen_ref));
