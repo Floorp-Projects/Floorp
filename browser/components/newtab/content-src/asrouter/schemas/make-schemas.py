@@ -159,10 +159,11 @@ def main(check=False):
             b_keys = set(templates[b])
             intersection = a_keys.intersection(b_keys)
 
-        if len(intersection):
-            raise ValueError(
-                f"Schema {a} and {b} have overlapping template values: {', '.join(intersection)}"
-            )
+            if len(intersection):
+                raise ValueError(
+                    f"Schema {a} and {b} have overlapping template values: "
+                    f"{', '.join(intersection)}"
+                )
 
     all_templates = list(chain.from_iterable(templates.values()))
 
