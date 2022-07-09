@@ -99,7 +99,7 @@ class StunBindingRequest : public StunRequest {
                       << port_->Network()->name() << ")";
     port_->OnStunBindingOrResolveRequestFailed(
         server_addr_, SERVER_NOT_REACHABLE_ERROR,
-        "STUN allocate request timed out.");
+        "STUN binding request timed out.");
   }
 
  private:
