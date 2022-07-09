@@ -483,6 +483,9 @@ class P2PTransportChannelTestBase : public ::testing::Test,
     ep2_.cd1_.ch_.reset();
     ep1_.cd2_.ch_.reset();
     ep2_.cd2_.ch_.reset();
+    // Process pending tasks that need to run for cleanup purposes such as
+    // pending deletion of Connection objects (see Connection::Destroy).
+    rtc::Thread::Current()->ProcessMessages(0);
   }
   P2PTransportChannel* ep1_ch1() { return ep1_.cd1_.ch_.get(); }
   P2PTransportChannel* ep1_ch2() { return ep1_.cd2_.ch_.get(); }
