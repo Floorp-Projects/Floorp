@@ -997,8 +997,6 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
     case CodeRange::InterpEntry:
       callerPC_ = nullptr;
       callerFP_ = nullptr;
-      codeRange_ = nullptr;
-      exitReason_ = ExitReason(ExitReason::Fixed::FakeInterpEntry);
       break;
     case CodeRange::JitEntry:
       callerPC_ = nullptr;
@@ -1396,11 +1394,6 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
     unwoundJitCallerFP_ = callerFP_;
   }
 
-  if (unwindState.codeRange->isInterpEntry()) {
-    unwindState.codeRange = nullptr;
-    exitReason_ = ExitReason(ExitReason::Fixed::FakeInterpEntry);
-  }
-
   code_ = unwindState.code;
   codeRange_ = unwindState.codeRange;
   stackAddress_ = state.sp;
@@ -1409,10 +1402,15 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
 
 void ProfilingFrameIterator::operator++() {
   if (!exitReason_.isNone()) {
-    DebugOnly<bool> wasInterpEntry = exitReason_.isInterpEntry();
     exitReason_ = ExitReason::None();
-    MOZ_ASSERT((!codeRange_) == wasInterpEntry);
-    MOZ_ASSERT(done() == wasInterpEntry);
+    MOZ_ASSERT(codeRange_);
+    MOZ_ASSERT(!done());
+    return;
+  }
+
+  if (codeRange_->isInterpEntry()) {
+    codeRange_ = nullptr;
+    MOZ_ASSERT(done());
     return;
   }
 
@@ -1447,8 +1445,6 @@ void ProfilingFrameIterator::operator++() {
   MOZ_ASSERT(codeRange_);
 
   if (codeRange_->isInterpEntry()) {
-    exitReason_ = ExitReason(ExitReason::Fixed::FakeInterpEntry);
-    codeRange_ = nullptr;
     callerPC_ = nullptr;
     callerFP_ = nullptr;
     MOZ_ASSERT(!done());
@@ -1705,15 +1701,13 @@ const char* ProfilingFrameIterator::label() const {
       return trapDescription;
     case ExitReason::Fixed::DebugTrap:
       return debugTrapDescription;
-    case ExitReason::Fixed::FakeInterpEntry:
-      return "slow entry trampoline (in wasm)";
   }
 
   switch (codeRange_->kind()) {
     case CodeRange::Function:
       return code_->profilingLabel(codeRange_->funcIndex());
     case CodeRange::InterpEntry:
-      MOZ_CRASH("should be an ExitReason");
+      return "slow entry trampoline (in wasm)";
     case CodeRange::JitEntry:
       return "fast entry trampoline (in wasm)";
     case CodeRange::ImportJitExit:
