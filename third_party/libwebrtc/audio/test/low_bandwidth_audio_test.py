@@ -130,7 +130,7 @@ def ExtractTestRuns(lines, echo=False):
     test_re = r'^' + android_prefix_re + (r'TEST (\w+) ([^ ]+?) ([^\s]+)'
                                           r' ?([^\s]+)?\s*$')
 
-    match = re.search(test_re, line)
+    match = re.search(test_re, line.decode('utf-8'))
     if match:
       yield match.groups()
 
@@ -183,7 +183,8 @@ def _RunPesq(executable_path,
 
   # Find the scores in stdout of PESQ.
   match = re.search(
-      r'Prediction \(Raw MOS, MOS-LQO\):\s+=\s+([\d.]+)\s+([\d.]+)', out)
+      r'Prediction \(Raw MOS, MOS-LQO\):\s+=\s+([\d.]+)\s+([\d.]+)',
+      out.decode('utf-8'))
   if match:
     raw_mos, _ = match.groups()
     return {'pesq_mos': (raw_mos, 'unitless')}
