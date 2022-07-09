@@ -238,8 +238,6 @@ rtc_library("peerconnection") {
     "data_channel_controller.h",
     "data_channel_utils.cc",
     "data_channel_utils.h",
-    "ice_server_parsing.cc",
-    "ice_server_parsing.h",
     "jsep_ice_candidate.cc",
     "jsep_session_description.cc",
     "local_audio_source.cc",
@@ -281,9 +279,13 @@ rtc_library("peerconnection") {
     ":dtmf_sender",
     ":ice_server_parsing",
     ":jitter_buffer_delay",
+    ":jsep_ice_candidate",
+    ":jsep_session_description",
+    ":local_audio_source",
     ":media_protocol_names",
     ":media_stream",
     ":media_stream_observer",
+    ":peer_connection",
     ":peer_connection_factory",
     ":peer_connection_internal",
     ":peer_connection_message_handler",
@@ -291,6 +293,7 @@ rtc_library("peerconnection") {
     ":remote_audio_source",
     ":rtc_pc_base",
     ":rtc_stats_collector",
+    ":rtc_stats_traversal",
     ":rtp_parameters_conversion",
     ":rtp_receiver",
     ":rtp_sender",
@@ -298,15 +301,22 @@ rtc_library("peerconnection") {
     ":rtp_transmission_manager",
     ":sctp_data_channel",
     ":sdp_offer_answer",
+    ":sdp_serializer",
     ":sdp_state_provider",
+    ":sdp_utils",
     ":session_description",
     ":simulcast_description",
+    ":stats_collector",
     ":stats_collector_interface",
+    ":stream_collection",
+    ":track_media_info_map",
     ":transceiver_list",
     ":usage_pattern",
     ":video_rtp_receiver",
     ":video_track",
     ":video_track_source",
+    ":webrtc_sdp",
+    ":webrtc_session_description_factory",
     "../api:array_view",
     "../api:async_dns_resolver",
     "../api:audio_options_api",
@@ -434,10 +444,76 @@ rtc_source_set("data_channel_utils") {
 rtc_source_set("sctp_data_channel") {
   visibility = [ ":*" ]
 }
-rtc_source_set("ice_server_parsing") {
+rtc_source_set("peer_connection_factory") {
   visibility = [ "*" ]  # Known to be used externally
 }
-rtc_source_set("media_stream_observer") {
+rtc_source_set("peer_connection_internal") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("rtc_stats_collector") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("sdp_offer_answer") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("jsep_ice_candidate") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("jsep_session_description") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("local_audio_source") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("peer_connection") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("rtc_stats_traversal") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("sdp_serializer") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("sdp_utils") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("stats_collector") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("stream_collection") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("track_media_info_map") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("webrtc_sdp") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("webrtc_session_description_factory") {
+  visibility = [ ":*" ]
+}
+
+rtc_library("ice_server_parsing") {
+  visibility = [ "*" ]  # Known to be used externally
+  sources = [
+    "ice_server_parsing.cc",
+    "ice_server_parsing.h",
+  ]
+  deps = [
+    "../api:libjingle_peerconnection_api",
+    "../api:rtc_error",
+    "../p2p:rtc_p2p",
+    "../rtc_base:checks",
+    "../rtc_base:ip_address",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:socket_address",
+    "../rtc_base:stringutils",
+    "../rtc_base/system:rtc_export",
+  ]
+}
+
+rtc_library("media_stream_observer") {
   visibility = [
     ":*",
     "../sdk/android:*",
@@ -451,18 +527,6 @@ rtc_source_set("media_stream_observer") {
     "../api:scoped_refptr",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
-}
-rtc_source_set("peer_connection_factory") {
-  visibility = [ "*" ]  # Known to be used externally
-}
-rtc_source_set("peer_connection_internal") {
-  visibility = [ ":*" ]
-}
-rtc_source_set("rtc_stats_collector") {
-  visibility = [ ":*" ]
-}
-rtc_source_set("sdp_offer_answer") {
-  visibility = [ "*" ]  # Known to be used externally
 }
 
 rtc_library("peer_connection_message_handler") {
@@ -1124,6 +1188,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":audio_rtp_receiver",
       ":audio_track",
       ":dtmf_sender",
+      ":ice_server_parsing",
       ":integration_test_helpers",
       ":jitter_buffer_delay",
       ":media_stream",
