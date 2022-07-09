@@ -42,7 +42,7 @@ void RunBitexactnessTest(int sample_rate_hz,
                                  VoiceDetection::kLowLikelihood);
 
   int samples_per_channel = rtc::CheckedDivExact(sample_rate_hz, 100);
-  const StreamConfig capture_config(sample_rate_hz, num_channels, false);
+  const StreamConfig capture_config(sample_rate_hz, num_channels);
   AudioBuffer capture_buffer(
       capture_config.sample_rate_hz(), capture_config.num_channels(),
       capture_config.sample_rate_hz(), capture_config.num_channels(),

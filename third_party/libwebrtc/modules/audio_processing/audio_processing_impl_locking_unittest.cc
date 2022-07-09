@@ -607,8 +607,7 @@ void CaptureProcessor::PrepareFrame() {
 
   // Prepare the audio data.
   StreamConfig input_stream_config(frame_data_.input_sample_rate_hz,
-                                   frame_data_.input_number_of_channels,
-                                   /*has_keyboard=*/false);
+                                   frame_data_.input_number_of_channels);
 
   PopulateAudioFrame(kCaptureInputFixLevel, input_stream_config.num_channels(),
                      input_stream_config.num_frames(), frame_data_.frame,
@@ -632,11 +631,9 @@ void CaptureProcessor::CallApmCaptureSide() {
 
   // Call the specified capture side API processing method.
   StreamConfig input_stream_config(frame_data_.input_sample_rate_hz,
-                                   frame_data_.input_number_of_channels,
-                                   /*has_keyboard=*/false);
+                                   frame_data_.input_number_of_channels);
   StreamConfig output_stream_config(frame_data_.output_sample_rate_hz,
-                                    frame_data_.output_number_of_channels,
-                                    /*has_keyboard=*/false);
+                                    frame_data_.output_number_of_channels);
   int result = AudioProcessing::kNoError;
   switch (test_config_->capture_api_function) {
     case CaptureApiImpl::ProcessStreamImplInteger:
@@ -847,8 +844,7 @@ void RenderProcessor::PrepareFrame() {
 
   // Prepare the audio data.
   StreamConfig input_stream_config(frame_data_.input_sample_rate_hz,
-                                   frame_data_.input_number_of_channels,
-                                   /*has_keyboard=*/false);
+                                   frame_data_.input_number_of_channels);
 
   PopulateAudioFrame(kRenderInputFixLevel, input_stream_config.num_channels(),
                      input_stream_config.num_frames(), frame_data_.frame,
@@ -866,11 +862,9 @@ void RenderProcessor::CallApmRenderSide() {
 
   // Call the specified render side API processing method.
   StreamConfig input_stream_config(frame_data_.input_sample_rate_hz,
-                                   frame_data_.input_number_of_channels,
-                                   /*has_keyboard=*/false);
+                                   frame_data_.input_number_of_channels);
   StreamConfig output_stream_config(frame_data_.output_sample_rate_hz,
-                                    frame_data_.output_number_of_channels,
-                                    /*has_keyboard=*/false);
+                                    frame_data_.output_number_of_channels);
   int result = AudioProcessing::kNoError;
   switch (test_config_->render_api_function) {
     case RenderApiImpl::ProcessReverseStreamImplInteger:

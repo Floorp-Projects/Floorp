@@ -97,15 +97,6 @@ class MockAudioProcessing : public AudioProcessing {
   MOCK_METHOD(int, Initialize, (), (override));
   MOCK_METHOD(int,
               Initialize,
-              (int capture_input_sample_rate_hz,
-               int capture_output_sample_rate_hz,
-               int render_sample_rate_hz,
-               ChannelLayout capture_input_layout,
-               ChannelLayout capture_output_layout,
-               ChannelLayout render_input_layout),
-              (override));
-  MOCK_METHOD(int,
-              Initialize,
               (const ProcessingConfig& processing_config),
               (override));
   MOCK_METHOD(void, ApplyConfig, (const Config& config), (override));
