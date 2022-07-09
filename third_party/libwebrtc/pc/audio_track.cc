@@ -42,6 +42,16 @@ std::string AudioTrack::kind() const {
   return kAudioKind;
 }
 
+bool AudioTrack::set_enabled(bool enable) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  return MediaStreamTrack<AudioTrackInterface>::set_enabled(enable);
+}
+
+bool AudioTrack::enabled() const {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  return MediaStreamTrack<AudioTrackInterface>::enabled();
+}
+
 AudioSourceInterface* AudioTrack::GetSource() const {
   // Callable from any thread.
   return audio_source_.get();
