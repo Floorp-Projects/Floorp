@@ -191,6 +191,7 @@ rtc_library("libjingle_peerconnection_api") {
     "crypto:frame_decryptor_interface",
     "crypto:frame_encryptor_interface",
     "crypto:options",
+    "metronome",
     "neteq:neteq_api",
     "rtc_event_log",
     "task_queue",
