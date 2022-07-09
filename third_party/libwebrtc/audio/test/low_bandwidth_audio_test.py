@@ -177,14 +177,19 @@ def _RunPesq(executable_path,
   # Need to provide paths in the current directory due to a bug in PESQ:
   # On Mac, for some 'path/to/file.wav', if 'file.wav' is longer than
   # 'path/to', PESQ crashes.
+  # The bufsize is set to 0 to keep the default Python 2.7 behaviour (it
+  # changed to -1 in Python >3.3.1 but this is causing issues).
   process = subprocess.Popen(_LogCommand(command),
+                             bufsize=0,
                              cwd=directory,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
 
   try:
+    logging.info('Waiting for termination ...')
     out, err = process.communicate(timeout=120)
   except TimeoutExpired:
+    logging.error('Timeout, killing the process.')
     process.kill()
     out, err = process.communicate()
 
