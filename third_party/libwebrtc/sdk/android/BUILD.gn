@@ -516,10 +516,7 @@ if (is_android) {
   rtc_android_library("dav1d_java") {
     visibility = [ "*" ]
     sources = [ "api/org/webrtc/Dav1dDecoder.java" ]
-    deps = [
-      ":dav1d_av1_jni",
-      ":video_java",
-    ]
+    deps = [ ":video_java" ]
   }
 
   rtc_android_library("swcodecs_java") {
