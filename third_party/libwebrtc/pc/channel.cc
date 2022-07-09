@@ -443,9 +443,10 @@ void BaseChannel::OnRtpPacket(const webrtc::RtpPacketReceived& parsed_packet) {
       packet_time.IsMinusInfinity() ? -1 : packet_time.us());
 }
 
-void BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w(
+bool BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w(
     bool update_demuxer,
-    absl::optional<RtpHeaderExtensions> extensions) {
+    absl::optional<RtpHeaderExtensions> extensions,
+    std::string& error_desc) {
   if (extensions) {
     if (rtp_header_extensions_ == extensions) {
       extensions.reset();  // No need to update header extensions.
@@ -455,26 +456,37 @@ void BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w(
   }
 
   if (!update_demuxer && !extensions)
-    return;
+    return true;  // No update needed.
 
   // TODO(bugs.webrtc.org/13536): See if we can do this asynchronously.
 
   if (update_demuxer)
     media_channel()->OnDemuxerCriteriaUpdatePending();
 
-  network_thread()->Invoke<void>(RTC_FROM_HERE, [&]() mutable {
+  bool success = network_thread()->Invoke<bool>(RTC_FROM_HERE, [&]() mutable {
     RTC_DCHECK_RUN_ON(network_thread());
     // NOTE: This doesn't take the BUNDLE case in account meaning the RTP header
     // extension maps are not merged when BUNDLE is enabled. This is fine
     // because the ID for MID should be consistent among all the RTP transports.
     if (extensions)
       rtp_transport_->UpdateRtpHeaderExtensionMap(*extensions);
-    if (update_demuxer)
-      rtp_transport_->RegisterRtpDemuxerSink(demuxer_criteria_, this);
+
+    if (!update_demuxer)
+      return true;
+
+    if (!rtp_transport_->RegisterRtpDemuxerSink(demuxer_criteria_, this)) {
+      error_desc =
+          StringFormat("Failed to apply demuxer criteria for '%s': '%s'.",
+                       mid().c_str(), demuxer_criteria_.ToString().c_str());
+      return false;
+    }
+    return true;
   });
 
   if (update_demuxer)
     media_channel()->OnDemuxerCriteriaUpdateComplete();
+
+  return success;
 }
 
 bool BaseChannel::RegisterRtpDemuxerSink_w() {
@@ -883,15 +895,16 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(0);
 
-  MaybeUpdateDemuxerAndRtpExtensions_w(
+  bool success = MaybeUpdateDemuxerAndRtpExtensions_w(
       criteria_modified,
       update_header_extensions
           ? absl::optional<RtpHeaderExtensions>(std::move(header_extensions))
-          : absl::nullopt);
+          : absl::nullopt,
+      error_desc);
 
   RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(1);
 
-  return true;
+  return success;
 }
 
 bool VoiceChannel::SetRemoteContent_w(const MediaContentDescription* content,
@@ -1035,15 +1048,16 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(0);
 
-  MaybeUpdateDemuxerAndRtpExtensions_w(
+  bool success = MaybeUpdateDemuxerAndRtpExtensions_w(
       criteria_modified,
       update_header_extensions
           ? absl::optional<RtpHeaderExtensions>(std::move(header_extensions))
-          : absl::nullopt);
+          : absl::nullopt,
+      error_desc);
 
   RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(1);
 
-  return true;
+  return success;
 }
 
 bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
