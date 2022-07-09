@@ -273,6 +273,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   void UpdateState();
   void HandleAllTimedOut();
   void MaybeStopPortAllocatorSessions();
+  void OnSelectedConnectionDestroyed() RTC_RUN_ON(network_thread_);
 
   // ComputeIceTransportState computes the RTCIceTransportState as described in
   // https://w3c.github.io/webrtc-pc/#dom-rtcicetransportstate. ComputeState
