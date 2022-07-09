@@ -180,6 +180,7 @@ if (rtc_include_tests) {
       "../../../rtc_base:checks",
       "../../../rtc_base:rtc_base_approved",
       "../../../rtc_base:safe_conversions",
+      "../../../rtc_base:stringutils",
       "../../../system_wrappers:metrics",
       "../../../test:field_trial",
       "../../../test:fileutils",
