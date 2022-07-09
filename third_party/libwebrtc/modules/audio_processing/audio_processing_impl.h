@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/function_view.h"
 #include "modules/audio_processing/aec3/echo_canceller3.h"
 #include "modules/audio_processing/agc/agc_manager_direct.h"

@@ -191,8 +191,7 @@ void void_main() {
       in_file, audio_buffer_size, absl::GetFlag(FLAGS_num_channels),
       audio_buffer_i.get(), detection_file, detection_buffer_size,
       detection_buffer.get(), reference_file, reference_buffer.get())) {
-    agc.Process(audio_buffer_i.get(), static_cast<int>(audio_buffer_size),
-                absl::GetFlag(FLAGS_sample_rate_hz));
+    agc.Process({audio_buffer_i.get(), audio_buffer_size});
 
     for (size_t i = 0;
          i < absl::GetFlag(FLAGS_num_channels) * audio_buffer_size; ++i) {

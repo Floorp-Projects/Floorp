@@ -10,6 +10,8 @@
 
 #include "modules/audio_processing/agc/agc_manager_direct.h"
 
+#include <limits>
+
 #include "modules/audio_processing/agc/gain_control.h"
 #include "modules/audio_processing/agc/mock_agc.h"
 #include "modules/audio_processing/include/mock_audio_processing.h"
@@ -69,7 +71,7 @@ std::unique_ptr<AgcManagerDirect> CreateAgcManagerDirect(
     int clipped_wait_frames) {
   return std::make_unique<AgcManagerDirect>(
       /*num_capture_channels=*/1, startup_min_level, kClippedMin,
-      /*disable_digital_adaptive=*/true, kSampleRateHz, clipped_level_step,
+      /*disable_digital_adaptive=*/true, clipped_level_step,
       clipped_ratio_threshold, clipped_wait_frames, ClippingPredictorConfig());
 }
 
@@ -81,7 +83,7 @@ std::unique_ptr<AgcManagerDirect> CreateAgcManagerDirect(
     const ClippingPredictorConfig& clipping_cfg) {
   return std::make_unique<AgcManagerDirect>(
       /*num_capture_channels=*/1, startup_min_level, kClippedMin,
-      /*disable_digital_adaptive=*/true, kSampleRateHz, clipped_level_step,
+      /*disable_digital_adaptive=*/true, clipped_level_step,
       clipped_ratio_threshold, clipped_wait_frames, clipping_cfg);
 }
 
@@ -112,6 +114,16 @@ void CallPreProcessAudioBuffer(int num_calls,
   }
 }
 
+void WriteAudioBufferSamples(float samples_value, AudioBuffer& audio_buffer) {
+  RTC_DCHECK_GE(samples_value, std::numeric_limits<int16_t>::min());
+  RTC_DCHECK_LE(samples_value, std::numeric_limits<int16_t>::max());
+  for (size_t ch = 0; ch < audio_buffer.num_channels(); ++ch) {
+    for (size_t i = 0; i < audio_buffer.num_frames(); ++i) {
+      audio_buffer.channels()[ch][i] = samples_value;
+    }
+  }
+}
+
 }  // namespace
 
 class AgcManagerDirectTest : public ::testing::Test {
@@ -121,11 +133,16 @@ class AgcManagerDirectTest : public ::testing::Test {
         manager_(agc_,
                  kInitialVolume,
                  kClippedMin,
-                 kSampleRateHz,
                  kClippedLevelStep,
                  kClippedRatioThreshold,
                  kClippedWaitFrames,
                  ClippingPredictorConfig()),
+        audio_buffer(kSampleRateHz,
+                     kNumChannels,
+                     kSampleRateHz,
+                     kNumChannels,
+                     kSampleRateHz,
+                     kNumChannels),
         audio(kNumChannels),
         audio_data(kNumChannels * kSamplesPerChannel, 0.f) {
     ExpectInitialize();
@@ -134,6 +151,7 @@ class AgcManagerDirectTest : public ::testing::Test {
     for (size_t ch = 0; ch < kNumChannels; ++ch) {
       audio[ch] = &audio_data[ch * kSamplesPerChannel];
     }
+    WriteAudioBufferSamples(/*samples_value=*/0.0f, audio_buffer);
   }
 
   void FirstProcess() {
@@ -161,8 +179,8 @@ class AgcManagerDirectTest : public ::testing::Test {
 
   void CallProcess(int num_calls) {
     for (int i = 0; i < num_calls; ++i) {
-      EXPECT_CALL(*agc_, Process(_, _, _)).WillOnce(Return());
-      manager_.Process(nullptr);
+      EXPECT_CALL(*agc_, Process(_)).WillOnce(Return());
+      manager_.Process(&audio_buffer);
       absl::optional<int> new_digital_gain =
           manager_.GetDigitalComressionGain();
       if (new_digital_gain) {
@@ -209,6 +227,7 @@ class AgcManagerDirectTest : public ::testing::Test {
   MockAgc* agc_;
   MockGainControl gctrl_;
   AgcManagerDirect manager_;
+  AudioBuffer audio_buffer;
   std::vector<float*> audio;
   std::vector<float> audio_data;
 };
@@ -452,7 +471,7 @@ TEST_F(AgcManagerDirectTest, CompressorReachesMinimum) {
 
 TEST_F(AgcManagerDirectTest, NoActionWhileMuted) {
   manager_.HandleCaptureOutputUsedChange(false);
-  manager_.Process(nullptr);
+  manager_.Process(&audio_buffer);
   absl::optional<int> new_digital_gain = manager_.GetDigitalComressionGain();
   if (new_digital_gain) {
     gctrl_.set_compression_gain_db(*new_digital_gain);
@@ -931,17 +950,20 @@ TEST(AgcManagerDirectStandaloneTest,
 
 TEST(AgcManagerDirectStandaloneTest,
      DisableClippingPredictorDoesNotLowerVolume) {
+  AudioBuffer audio_buffer(kSampleRateHz, kNumChannels, kSampleRateHz,
+                           kNumChannels, kSampleRateHz, kNumChannels);
+
   // TODO(bugs.webrtc.org/12874): Use designated initializers one fixed.
   constexpr ClippingPredictorConfig kConfig{/*enabled=*/false};
   AgcManagerDirect manager(new ::testing::NiceMock<MockAgc>(), kInitialVolume,
-                           kClippedMin, kSampleRateHz, kClippedLevelStep,
+                           kClippedMin, kClippedLevelStep,
                            kClippedRatioThreshold, kClippedWaitFrames, kConfig);
   manager.Initialize();
   manager.set_stream_analog_level(/*level=*/255);
   EXPECT_FALSE(manager.clipping_predictor_enabled());
   EXPECT_FALSE(manager.use_clipping_predictor_step());
   EXPECT_EQ(manager.stream_analog_level(), 255);
-  manager.Process(nullptr);
+  manager.Process(&audio_buffer);
   CallPreProcessAudioBuffer(/*num_calls=*/10, /*peak_ratio=*/0.99f, manager);
   EXPECT_EQ(manager.stream_analog_level(), 255);
   CallPreProcessAudioBuffer(/*num_calls=*/300, /*peak_ratio=*/0.99f, manager);
@@ -952,20 +974,23 @@ TEST(AgcManagerDirectStandaloneTest,
 
 TEST(AgcManagerDirectStandaloneTest,
      UsedClippingPredictionsProduceLowerAnalogLevels) {
+  AudioBuffer audio_buffer(kSampleRateHz, kNumChannels, kSampleRateHz,
+                           kNumChannels, kSampleRateHz, kNumChannels);
+
   // TODO(bugs.webrtc.org/12874): Use designated initializers once fixed.
   ClippingPredictorConfig config_with_prediction;
   config_with_prediction.enabled = true;
   config_with_prediction.use_predicted_step = true;
   AgcManagerDirect manager_with_prediction(
       new ::testing::NiceMock<MockAgc>(), kInitialVolume, kClippedMin,
-      kSampleRateHz, kClippedLevelStep, kClippedRatioThreshold,
-      kClippedWaitFrames, config_with_prediction);
+      kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames,
+      config_with_prediction);
   ClippingPredictorConfig config_without_prediction;
   config_without_prediction.enabled = false;
   AgcManagerDirect manager_without_prediction(
       new ::testing::NiceMock<MockAgc>(), kInitialVolume, kClippedMin,
-      kSampleRateHz, kClippedLevelStep, kClippedRatioThreshold,
-      kClippedWaitFrames, config_without_prediction);
+      kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames,
+      config_without_prediction);
   manager_with_prediction.Initialize();
   manager_without_prediction.Initialize();
   constexpr int kInitialLevel = 255;
@@ -974,8 +999,8 @@ TEST(AgcManagerDirectStandaloneTest,
   constexpr float kZeroPeakRatio = 0.0f;
   manager_with_prediction.set_stream_analog_level(kInitialLevel);
   manager_without_prediction.set_stream_analog_level(kInitialLevel);
-  manager_with_prediction.Process(nullptr);
-  manager_without_prediction.Process(nullptr);
+  manager_with_prediction.Process(&audio_buffer);
+  manager_without_prediction.Process(&audio_buffer);
   EXPECT_TRUE(manager_with_prediction.clipping_predictor_enabled());
   EXPECT_FALSE(manager_without_prediction.clipping_predictor_enabled());
   EXPECT_TRUE(manager_with_prediction.use_clipping_predictor_step());
@@ -1044,20 +1069,23 @@ TEST(AgcManagerDirectStandaloneTest,
 
 TEST(AgcManagerDirectStandaloneTest,
      UnusedClippingPredictionsProduceEqualAnalogLevels) {
+  AudioBuffer audio_buffer(kSampleRateHz, kNumChannels, kSampleRateHz,
+                           kNumChannels, kSampleRateHz, kNumChannels);
+
   // TODO(bugs.webrtc.org/12874): Use designated initializers once fixed.
   ClippingPredictorConfig config_with_prediction;
   config_with_prediction.enabled = true;
   config_with_prediction.use_predicted_step = false;
   AgcManagerDirect manager_with_prediction(
       new ::testing::NiceMock<MockAgc>(), kInitialVolume, kClippedMin,
-      kSampleRateHz, kClippedLevelStep, kClippedRatioThreshold,
-      kClippedWaitFrames, config_with_prediction);
+      kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames,
+      config_with_prediction);
   ClippingPredictorConfig config_without_prediction;
   config_without_prediction.enabled = false;
   AgcManagerDirect manager_without_prediction(
       new ::testing::NiceMock<MockAgc>(), kInitialVolume, kClippedMin,
-      kSampleRateHz, kClippedLevelStep, kClippedRatioThreshold,
-      kClippedWaitFrames, config_without_prediction);
+      kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames,
+      config_without_prediction);
   constexpr int kInitialLevel = 255;
   constexpr float kClippingPeakRatio = 1.0f;
   constexpr float kCloseToClippingPeakRatio = 0.99f;
@@ -1066,8 +1094,8 @@ TEST(AgcManagerDirectStandaloneTest,
   manager_without_prediction.Initialize();
   manager_with_prediction.set_stream_analog_level(kInitialLevel);
   manager_without_prediction.set_stream_analog_level(kInitialLevel);
-  manager_with_prediction.Process(nullptr);
-  manager_without_prediction.Process(nullptr);
+  manager_with_prediction.Process(&audio_buffer);
+  manager_without_prediction.Process(&audio_buffer);
   EXPECT_TRUE(manager_with_prediction.clipping_predictor_enabled());
   EXPECT_FALSE(manager_without_prediction.clipping_predictor_enabled());
   EXPECT_FALSE(manager_with_prediction.use_clipping_predictor_step());

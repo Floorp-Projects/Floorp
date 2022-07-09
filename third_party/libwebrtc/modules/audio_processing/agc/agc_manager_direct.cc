@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "api/array_view.h"
 #include "common_audio/include/audio_util.h"
 #include "modules/audio_processing/agc/gain_control.h"
 #include "modules/audio_processing/agc/gain_map_internal.h"
@@ -204,9 +205,7 @@ void MonoAgc::Initialize() {
   check_volume_on_next_process_ = true;
 }
 
-void MonoAgc::Process(const int16_t* audio,
-                      size_t samples_per_channel,
-                      int sample_rate_hz) {
+void MonoAgc::Process(rtc::ArrayView<const int16_t> audio) {
   new_compression_to_set_ = absl::nullopt;
 
   if (check_volume_on_next_process_) {
@@ -216,7 +215,7 @@ void MonoAgc::Process(const int16_t* audio,
     CheckVolumeAndReset();
   }
 
-  agc_->Process(audio, samples_per_channel, sample_rate_hz);
+  agc_->Process(audio);
 
   UpdateGain();
   if (!disable_digital_adaptive_) {
@@ -447,7 +446,6 @@ AgcManagerDirect::AgcManagerDirect(
     Agc* agc,
     int startup_min_level,
     int clipped_level_min,
-    int sample_rate_hz,
     int clipped_level_step,
     float clipped_ratio_threshold,
     int clipped_wait_frames,
@@ -456,7 +454,6 @@ AgcManagerDirect::AgcManagerDirect(
                        startup_min_level,
                        clipped_level_min,
                        /*disable_digital_adaptive*/ false,
-                       sample_rate_hz,
                        clipped_level_step,
                        clipped_ratio_threshold,
                        clipped_wait_frames,
@@ -471,7 +468,6 @@ AgcManagerDirect::AgcManagerDirect(
     int startup_min_level,
     int clipped_level_min,
     bool disable_digital_adaptive,
-    int sample_rate_hz,
     int clipped_level_step,
     float clipped_ratio_threshold,
     int clipped_wait_frames,
@@ -479,7 +475,6 @@ AgcManagerDirect::AgcManagerDirect(
     : data_dumper_(
           new ApmDataDumper(rtc::AtomicOps::Increment(&instance_counter_))),
       use_min_channel_level_(!UseMaxAnalogChannelLevel()),
-      sample_rate_hz_(sample_rate_hz),
       num_capture_channels_(num_capture_channels),
       disable_digital_adaptive_(disable_digital_adaptive),
       frames_since_clipped_(clipped_wait_frames),
@@ -652,27 +647,20 @@ void AgcManagerDirect::AnalyzePreProcess(const float* const* audio,
 }
 
 void AgcManagerDirect::Process(const AudioBuffer* audio) {
+  RTC_DCHECK(audio);
   AggregateChannelLevels();
 
   if (!capture_output_used_) {
     return;
   }
 
+  const size_t num_frames_per_band = audio->num_frames_per_band();
   for (size_t ch = 0; ch < channel_agcs_.size(); ++ch) {
-    int16_t* audio_use = nullptr;
     std::array<int16_t, AudioBuffer::kMaxSampleRate / 100> audio_data;
-    int num_frames_per_band;
-    if (audio) {
-      FloatS16ToS16(audio->split_bands_const_f(ch)[0],
-                    audio->num_frames_per_band(), audio_data.data());
-      audio_use = audio_data.data();
-      num_frames_per_band = audio->num_frames_per_band();
-    } else {
-      // Only used for testing.
-      // TODO(peah): Change unittests to only allow on non-null audio input.
-      num_frames_per_band = 320;
-    }
-    channel_agcs_[ch]->Process(audio_use, num_frames_per_band, sample_rate_hz_);
+    int16_t* audio_use = audio_data.data();
+    FloatS16ToS16(audio->split_bands_const_f(ch)[0], num_frames_per_band,
+                  audio_use);
+    channel_agcs_[ch]->Process({audio_use, num_frames_per_band});
     new_compressions_to_set_[ch] = channel_agcs_[ch]->new_compression();
   }
 
