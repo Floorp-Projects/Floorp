@@ -123,14 +123,14 @@ def ExtractTestRuns(lines, echo=False):
   """
   for line in lines:
     if echo:
-      sys.stdout.write(line.decode('utf-8'))
+      sys.stdout.write(line)
 
     # Output from Android has a prefix with the device name.
     android_prefix_re = r'(?:I\b.+\brun_tests_on_device\((.+?)\)\s*)?'
     test_re = r'^' + android_prefix_re + (r'TEST (\w+) ([^ ]+?) ([^\s]+)'
                                           r' ?([^\s]+)?\s*$')
 
-    match = re.search(test_re, line.decode('utf-8'))
+    match = re.search(test_re, line)
     if match:
       yield match.groups()
 
@@ -177,31 +177,14 @@ def _RunPesq(executable_path,
   # Need to provide paths in the current directory due to a bug in PESQ:
   # On Mac, for some 'path/to/file.wav', if 'file.wav' is longer than
   # 'path/to', PESQ crashes.
-  # The bufsize is set to 0 to keep the default Python 2.7 behaviour (it
-  # changed to -1 in Python >3.3.1 but this is causing issues).
-  process = subprocess.Popen(_LogCommand(command),
-                             bufsize=0,
-                             cwd=directory,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-
-  try:
-    logging.info('Waiting for termination ...')
-    out, err = process.communicate(timeout=120)
-  except TimeoutExpired:
-    logging.error('Timeout, killing the process.')
-    process.kill()
-    out, err = process.communicate()
-
-  if process.returncode != 0:
-    logging.error('%s (exit_code: %d)',
-                  err.decode('utf-8').strip(), process.returncode)
-    return {}
+  out = subprocess.check_output(_LogCommand(command),
+                                cwd=directory,
+                                universal_newlines=True,
+                                stderr=subprocess.STDOUT)
 
   # Find the scores in stdout of PESQ.
   match = re.search(
-      r'Prediction \(Raw MOS, MOS-LQO\):\s+=\s+([\d.]+)\s+([\d.]+)',
-      out.decode('utf-8'))
+      r'Prediction \(Raw MOS, MOS-LQO\):\s+=\s+([\d.]+)\s+([\d.]+)', out)
   if match:
     raw_mos, _ = match.groups()
     return {'pesq_mos': (raw_mos, 'unitless')}
@@ -216,12 +199,13 @@ def _RunPolqa(executable_path, reference_file, degraded_file):
       degraded_file
   ]
   process = subprocess.Popen(_LogCommand(command),
+                             universal_newlines=True,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
   out, err = process.communicate()
 
   # Find the scores in stdout of POLQA.
-  match = re.search(r'\bMOS-LQO:\s+([\d.]+)', out.decode('utf-8'))
+  match = re.search(r'\bMOS-LQO:\s+([\d.]+)', out)
 
   if process.returncode != 0 or not match:
     if process.returncode == 2:
@@ -326,6 +310,7 @@ def main():
         '--sample_rate_hz=%d' % analyzer.sample_rate_hz,
         '--test_case_prefix=%s' % analyzer.name,
     ] + args.extra_test_args),
+                                    universal_newlines=True,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
     perf_results_file = None
