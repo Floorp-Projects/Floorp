@@ -3,6 +3,8 @@
 
 "use strict";
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 var MockFilePicker = SpecialPowers.MockFilePicker;
 
 function createTemporarySaveDirectory() {

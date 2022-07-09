@@ -62,6 +62,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/SharedPromptUtils.jsm"
 );
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 var PrintUtils = {
   SAVE_TO_PDF_PRINTER: "Mozilla Save to PDF",
 
