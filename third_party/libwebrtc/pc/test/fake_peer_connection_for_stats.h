@@ -203,7 +203,8 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
 
   FakeVoiceMediaChannelForStats* AddVoiceChannel(
       const std::string& mid,
-      const std::string& transport_name) {
+      const std::string& transport_name,
+      cricket::VoiceMediaInfo initial_stats = cricket::VoiceMediaInfo()) {
     RTC_DCHECK(!voice_channel_);
     auto voice_media_channel =
         std::make_unique<FakeVoiceMediaChannelForStats>(network_thread_);
@@ -217,12 +218,14 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
         ->internal()
         ->SetChannel(voice_channel_.get(),
                      [](const std::string&) { return nullptr; });
+    voice_media_channel_ptr->SetStats(initial_stats);
     return voice_media_channel_ptr;
   }
 
   FakeVideoMediaChannelForStats* AddVideoChannel(
       const std::string& mid,
-      const std::string& transport_name) {
+      const std::string& transport_name,
+      cricket::VideoMediaInfo initial_stats = cricket::VideoMediaInfo()) {
     RTC_DCHECK(!video_channel_);
     auto video_media_channel =
         std::make_unique<FakeVideoMediaChannelForStats>(network_thread_);
@@ -236,6 +239,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
         ->internal()
         ->SetChannel(video_channel_.get(),
                      [](const std::string&) { return nullptr; });
+    video_media_channel_ptr->SetStats(initial_stats);
     return video_media_channel_ptr;
   }
 
