@@ -312,7 +312,8 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase {
 
   bool IsSecureContext() const;
 
-  already_AddRefed<IDBFactory> GetIndexedDB(ErrorResult& aErrorResult);
+  already_AddRefed<IDBFactory> GetIndexedDB(JSContext* aCx,
+                                            ErrorResult& aErrorResult);
 
   already_AddRefed<cache::CacheStorage> GetCaches(ErrorResult& aRv);
 

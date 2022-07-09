@@ -7,6 +7,14 @@
 const { BackgroundTasksUtils } = ChromeUtils.import(
   "resource://gre/modules/BackgroundTasksUtils.jsm"
 );
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
+});
 
 setupProfileService();
 
@@ -135,3 +143,56 @@ add_task(async function test_readTelemetryClientID() {
   );
   Assert.deepEqual(state, expected.clientID, "State read is correct");
 });
+
+add_task(
+  {
+    skip_if: () => AppConstants.MOZ_BUILD_APP !== "browser", // ASRouter is Firefox-only.
+  },
+  async function test_readFirefoxMessagingSystemTargetingSnapshot() {
+    let profileService = Cc[
+      "@mozilla.org/toolkit/profile-service;1"
+    ].getService(Ci.nsIToolkitProfileService);
+
+    let profilePath = do_get_profile();
+    profilePath.append(`test_readFirefoxMessagingSystemTargetingSnapshot`);
+    let profile = profileService.createUniqueProfile(
+      profilePath,
+      "test_readFirefoxMessagingSystemTargetingSnapshot"
+    );
+
+    // Before we write any state, we fail to read.
+    await Assert.rejects(
+      BackgroundTasksUtils.withProfileLock(
+        lock =>
+          BackgroundTasksUtils.readFirefoxMessagingSystemTargetingSnapshot(
+            lock
+          ),
+        profile
+      ),
+      /NotFoundError/
+    );
+
+    // We can't take a full environment snapshot under `xpcshell`.  Select a few
+    // items that do work.
+    let target = {
+      // `Date` instances and strings do not `deepEqual` each other.
+      currentDate: JSON.stringify(
+        await lazy.ASRouterTargeting.Environment.currentDate
+      ),
+      firefoxVersion: lazy.ASRouterTargeting.Environment.firefoxVersion,
+    };
+    let expected = await lazy.ASRouterTargeting.getEnvironmentSnapshot(target);
+
+    let snapshotFile = profile.rootDir.clone();
+    snapshotFile.append("targeting.snapshot.json");
+    await IOUtils.writeUTF8(snapshotFile.path, JSON.stringify(expected));
+
+    // Now we can read the state.
+    let state = await BackgroundTasksUtils.withProfileLock(
+      lock =>
+        BackgroundTasksUtils.readFirefoxMessagingSystemTargetingSnapshot(lock),
+      profile
+    );
+    Assert.deepEqual(state, expected, "State read is correct");
+  }
+);

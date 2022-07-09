@@ -131,7 +131,7 @@ Scheduling background tasks
 
 We use OS-level scheduling mechanisms to schedule the command ``firefox
 --backgroundtask backgroundupdate`` to run on a particular cadence. This cadence
-is controlled by the ``app.background.update.interval`` preference, which
+is controlled by the ``app.update.background.interval`` preference, which
 defaults to 7 hours.
 
 On Windows, we use the `Task Scheduler

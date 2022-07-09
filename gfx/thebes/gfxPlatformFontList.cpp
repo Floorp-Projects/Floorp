@@ -301,6 +301,20 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
   }
 
   RegisterStrongMemoryReporter(new MemoryReporter());
+
+  // initialize lang group pref font defaults (i.e. serif/sans-serif)
+  mDefaultGenericsLangGroup.AppendElements(ArrayLength(gPrefLangNames));
+  for (uint32_t i = 0; i < ArrayLength(gPrefLangNames); i++) {
+    nsAutoCString prefDefaultFontType("font.default.");
+    prefDefaultFontType.Append(GetPrefLangName(eFontPrefLang(i)));
+    nsAutoCString serifOrSans;
+    Preferences::GetCString(prefDefaultFontType.get(), serifOrSans);
+    if (serifOrSans.EqualsLiteral("sans-serif")) {
+      mDefaultGenericsLangGroup[i] = StyleGenericFontFamily::SansSerif;
+    } else {
+      mDefaultGenericsLangGroup[i] = StyleGenericFontFamily::Serif;
+    }
+  }
 }
 
 gfxPlatformFontList::~gfxPlatformFontList() {
@@ -1870,12 +1884,13 @@ fontlist::Pointer gfxPlatformFontList::GetShmemCharMapLocked(
 }
 
 // lookup cmap in the shared cmap set, adding if not already present
-gfxCharacterMap* gfxPlatformFontList::FindCharMap(gfxCharacterMap* aCmap) {
+already_AddRefed<gfxCharacterMap> gfxPlatformFontList::FindCharMap(
+    gfxCharacterMap* aCmap) {
   AutoLock lock(mLock);
   aCmap->CalcHash();
   gfxCharacterMap* cmap = mSharedCmaps.PutEntry(aCmap)->GetKey();
   cmap->mShared = true;
-  return cmap;
+  return do_AddRef(cmap);
 }
 
 // remove the cmap from the shared cmap set
@@ -2394,22 +2409,6 @@ StyleGenericFontFamily gfxPlatformFontList::GetDefaultGeneric(
   }
 
   AutoLock lock(mLock);
-
-  // initialize lang group pref font defaults (i.e. serif/sans-serif)
-  if (MOZ_UNLIKELY(mDefaultGenericsLangGroup.IsEmpty())) {
-    mDefaultGenericsLangGroup.AppendElements(ArrayLength(gPrefLangNames));
-    for (uint32_t i = 0; i < ArrayLength(gPrefLangNames); i++) {
-      nsAutoCString prefDefaultFontType("font.default.");
-      prefDefaultFontType.Append(GetPrefLangName(eFontPrefLang(i)));
-      nsAutoCString serifOrSans;
-      Preferences::GetCString(prefDefaultFontType.get(), serifOrSans);
-      if (serifOrSans.EqualsLiteral("sans-serif")) {
-        mDefaultGenericsLangGroup[i] = StyleGenericFontFamily::SansSerif;
-      } else {
-        mDefaultGenericsLangGroup[i] = StyleGenericFontFamily::Serif;
-      }
-    }
-  }
 
   if (uint32_t(aLang) < ArrayLength(gPrefLangNames)) {
     return mDefaultGenericsLangGroup[uint32_t(aLang)];

@@ -53,6 +53,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "gfxPlatform.h"
 #include "gfxPlatformFontList.h"
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
@@ -6497,6 +6498,93 @@ mozilla::ipc::IPCResult ContentParent::RecvCompleteAllowAccessFor(
                }
                aResolver(choice);
              });
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvSetAllowStorageAccessRequestFlag(
+    nsIPrincipal* aEmbeddedPrincipal, nsIURI* aEmbeddingOrigin,
+    SetAllowStorageAccessRequestFlagResolver&& aResolver) {
+  MOZ_ASSERT(aEmbeddedPrincipal);
+  MOZ_ASSERT(aEmbeddingOrigin);
+
+  // Get the permission manager and build the key.
+  RefPtr<PermissionManager> permManager = PermissionManager::GetInstance();
+  if (!permManager) {
+    aResolver(false);
+    return IPC_OK();
+  }
+  nsCOMPtr<nsIURI> embeddedURI = aEmbeddedPrincipal->GetURI();
+  nsCString permissionKey;
+  bool success = AntiTrackingUtils::CreateStorageRequestPermissionKey(
+      embeddedURI, permissionKey);
+  if (!success) {
+    aResolver(false);
+    return IPC_OK();
+  }
+
+  // Set the permission to ALLOW for a prefence specified amount of seconds.
+  // Time units are inconsistent, be careful
+  int64_t when = (PR_Now() / PR_USEC_PER_MSEC) +
+                 StaticPrefs::dom_storage_access_forward_declared_lifetime() *
+                     PR_MSEC_PER_SEC;
+  nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
+      aEmbeddingOrigin, aEmbeddedPrincipal->OriginAttributesRef());
+  nsresult rv = permManager->AddFromPrincipal(
+      principal, permissionKey, nsIPermissionManager::ALLOW_ACTION,
+      nsIPermissionManager::EXPIRE_TIME, when);
+  if (NS_FAILED(rv)) {
+    aResolver(false);
+    return IPC_OK();
+  }
+
+  // Resolve with success if we set the permission.
+  aResolver(true);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvTestAllowStorageAccessRequestFlag(
+    nsIPrincipal* aEmbeddingPrincipal, nsIURI* aEmbeddedOrigin,
+    TestAllowStorageAccessRequestFlagResolver&& aResolver) {
+  MOZ_ASSERT(aEmbeddingPrincipal);
+  MOZ_ASSERT(aEmbeddedOrigin);
+
+  // Get the permission manager and build the key.
+  RefPtr<PermissionManager> permManager = PermissionManager::GetInstance();
+  if (!permManager) {
+    aResolver(false);
+    return IPC_OK();
+  }
+  nsCString requestPermissionKey;
+  bool success = AntiTrackingUtils::CreateStorageRequestPermissionKey(
+      aEmbeddedOrigin, requestPermissionKey);
+  if (!success) {
+    aResolver(false);
+    return IPC_OK();
+  }
+
+  // Get the permission and resolve false if it is not set to ALLOW.
+  uint32_t access = nsIPermissionManager::UNKNOWN_ACTION;
+  nsresult rv = permManager->TestPermissionFromPrincipal(
+      aEmbeddingPrincipal, requestPermissionKey, &access);
+  if (NS_FAILED(rv)) {
+    aResolver(false);
+    return IPC_OK();
+  }
+  if (access != nsIPermissionManager::ALLOW_ACTION) {
+    aResolver(false);
+    return IPC_OK();
+  }
+
+  // Remove the permission, failing if the permission manager fails
+  rv = permManager->RemoveFromPrincipal(aEmbeddingPrincipal,
+                                        requestPermissionKey);
+  if (NS_FAILED(rv)) {
+    aResolver(false);
+    return IPC_OK();
+  }
+
+  // At this point, signal to our caller that the permission was set
+  aResolver(true);
   return IPC_OK();
 }
 

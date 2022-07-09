@@ -329,8 +329,11 @@
                     }
                   }
                 }
-              },
-              "secondary": {
+              }
+            },
+            "secondary": {
+              "type": "array",
+              "items": {
                 "type": "object",
                 "properties": {
                   "label": {

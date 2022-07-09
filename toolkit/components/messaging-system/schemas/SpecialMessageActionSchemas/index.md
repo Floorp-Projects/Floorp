@@ -255,3 +255,23 @@ additional privacy section in about:preferences.
 ### `SHOW_SPOTLIGHT`
 
 Action for opening a spotlight tab or window modal using the content passed to the dialog.
+
+### `SET_PREF`
+
+Action for setting various browser prefs
+
+Prefs that can be changed with this action are:
+
+- `browser.privacySegmentation.enabled`
+- `browser.privacySegmentation.windowSeparation.enabled`
+- `browser.startup.homepage`
+
+* args:
+```ts
+{
+  pref: {
+    name: string;
+    value: string | boolean | number;
+  }
+}
+```

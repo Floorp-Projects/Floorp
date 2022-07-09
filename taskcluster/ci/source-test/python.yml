@@ -431,7 +431,7 @@ fxms-schemas:
         cwd: '{checkout}'
         command: >
             cd browser/components/newtab/content-src/asrouter/schemas &&
-            python3 make-schemas.py --check
+            ../../../../../../mach python -- make-schemas.py --check
     when:
         files-changed:
             - 'browser/components/newtab/content-src/asrouter/schemas/make-schemas.py'

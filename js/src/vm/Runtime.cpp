@@ -158,6 +158,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       stackFormat_(parentRuntime ? js::StackFormat::Default
                                  : js::StackFormat::SpiderMonkey),
       wasmInstances(mutexid::WasmRuntimeInstances),
+      moduleAsyncEvaluatingPostOrder(ASYNC_EVALUATING_POST_ORDER_INIT),
       moduleResolveHook(),
       moduleMetadataHook(),
       moduleDynamicImportHook(),

@@ -13,7 +13,9 @@ const { AddonManager } = ChromeUtils.import(
 const INTENSITY_SOFT = "soft";
 const INTENSITY_BALANCED = "balanced";
 const INTENSITY_BOLD = "bold";
-const ID_SUFFIX_FOR_PRIMARY_INTENSITY = `-${INTENSITY_BALANCED}-colorway@mozilla.org`;
+const ID_SUFFIX_COLORWAY = "-colorway@mozilla.org";
+const ID_SUFFIX_PRIMARY_INTENSITY = `-${INTENSITY_BALANCED}${ID_SUFFIX_COLORWAY}`;
+const ID_SUFFIX_DARK_COLORWAY = `-${INTENSITY_BOLD}${ID_SUFFIX_COLORWAY}`;
 const ID_SUFFIXES_FOR_SECONDARY_INTENSITIES = new RegExp(
   `-(${INTENSITY_SOFT}|${INTENSITY_BOLD})-colorway@mozilla\\.org$`
 );
@@ -89,12 +91,21 @@ const ColorwayCloset = {
     }
 
     // If the current active theme is part of our collection, make the UI reflect
-    // that. Otherwise go ahead and enable the first theme in our list.
+    // that. Otherwise go ahead and enable the first colorway in our list.
     this.selectedColorway = this.colorways.find(colorway => colorway.isActive);
     if (this.selectedColorway) {
       this.refresh();
     } else {
-      this.colorwayGroups[0].enable();
+      let colorwayToEnable = this.colorwayGroups[0];
+      // If the user has been using a theme with a dark color scheme, make an
+      // effort to default to a colorway with a dark color scheme as well.
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        let firstDarkColorway = this.colorways.find(colorway =>
+          colorway.id.endsWith(ID_SUFFIX_DARK_COLORWAY)
+        );
+        colorwayToEnable = firstDarkColorway || colorwayToEnable;
+      }
+      colorwayToEnable.enable();
     }
   },
 
@@ -174,7 +185,7 @@ const ColorwayCloset = {
   _getColorwayGroupId(colorwayId) {
     let groupId = colorwayId.replace(
       ID_SUFFIXES_FOR_SECONDARY_INTENSITIES,
-      ID_SUFFIX_FOR_PRIMARY_INTENSITY
+      ID_SUFFIX_PRIMARY_INTENSITY
     );
     return this.colorwayGroups.map(addon => addon.id).includes(groupId)
       ? groupId
@@ -184,7 +195,7 @@ const ColorwayCloset = {
   _changeIntensity(colorwayId, intensity) {
     return colorwayId.replace(
       MATCH_INTENSITY_FROM_ID,
-      `-${intensity}-colorway@mozilla.org`
+      `-${intensity}${ID_SUFFIX_COLORWAY}`
     );
   },
 
@@ -233,7 +244,7 @@ const ColorwayCloset = {
       this.selectedColorway.id
     );
     this.hasIntensities = this.groupIdForSelectedColorway.endsWith(
-      ID_SUFFIX_FOR_PRIMARY_INTENSITY
+      ID_SUFFIX_PRIMARY_INTENSITY
     );
     for (let input of this.el.colorwayRadios.children) {
       if (input.value == this.groupIdForSelectedColorway) {

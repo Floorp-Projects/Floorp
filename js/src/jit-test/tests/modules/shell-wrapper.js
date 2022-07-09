@@ -163,12 +163,12 @@ assertEq(l.dfsAncestorIndex, 0);
 // ==== async and promises getters ====
 const m = parseModule(`
 `);
-assertEq(m.async, false);
+assertEq(m.hasTopLevelAwait, false);
 assertEq(m.topLevelCapability, undefined);
 assertEq(m.asyncEvaluatingPostOrder, undefined);
 assertEq(m.asyncParentModules[0], undefined);
 assertEq(m.pendingAsyncDependencies, undefined);
-testGetter(m, "async");
+testGetter(m, "hasTopLevelAwait");
 testGetter(m, "topLevelCapability");
 testGetter(m, "asyncEvaluatingPostOrder");
 testGetter(m, "asyncParentModules");

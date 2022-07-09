@@ -37,6 +37,8 @@ using mozilla::Utf8Unit;
 ////////////////////////////////////////////////////////////////////////////////
 // Public API
 
+using NameList = GCVector<JSAtom*, 0, SystemAllocPolicy>;
+
 JS_PUBLIC_API JS::SupportedAssertionsHook JS::GetSupportedAssertionsHook(
     JSRuntime* rt) {
   AssertHeapIsIdle();
@@ -332,10 +334,9 @@ static ArrayObject* NewList(JSContext* cx) {
   return NewArrayWithNullProto(cx);
 }
 
-static bool ArrayContainsName(Handle<ArrayObject*> array,
-                              Handle<JSAtom*> name) {
-  for (uint32_t i = 0; i < array->length(); i++) {
-    if (array->getDenseElement(i) == StringValue(name)) {
+static bool ContainsElement(Handle<NameList> list, JSAtom* atom) {
+  for (JSAtom* a : list) {
+    if (a == atom) {
       return true;
     }
   }
@@ -368,26 +369,23 @@ static size_t CountElements(Handle<ModuleVector> stack, ModuleObject* module) {
 
 // https://tc39.es/ecma262/#sec-getexportednames
 // ES2023 16.2.1.6.2 GetExportedNames
-static ArrayObject* ModuleGetExportedNames(
-    JSContext* cx, Handle<ModuleObject*> module,
-    MutableHandle<ModuleSet> exportStarSet) {
+static bool ModuleGetExportedNames(JSContext* cx, Handle<ModuleObject*> module,
+                                   MutableHandle<ModuleSet> exportStarSet,
+                                   MutableHandle<NameList> exportedNames) {
   // Step 4. Let exportedNames be a new empty List.
-  Rooted<ArrayObject*> exportedNames(cx, NewList(cx));
-  if (!exportedNames) {
-    return nullptr;
-  }
+  MOZ_ASSERT(exportedNames.empty());
 
   // Step 2. If exportStarSet contains module, then:
   if (exportStarSet.has(module)) {
     // Step 2.a. We've reached the starting point of an export * circularity.
     // Step 2.b. Return a new empty List.
-    return exportedNames;
+    return true;
   }
 
   // Step 3. Append module to exportStarSet.
   if (!exportStarSet.put(module)) {
     ReportOutOfMemory(cx);
-    return nullptr;
+    return false;
   }
 
   // Step 5. For each ExportEntry Record e of module.[[LocalExportEntries]], do:
@@ -399,8 +397,9 @@ static ArrayObject* ModuleGetExportedNames(
              .as<ExportEntryObject>();
     // Step 5.a. Assert: module provides the direct binding for this export.
     // Step 5.b. Append e.[[ExportName]] to exportedNames.
-    if (!NewbornArrayPush(cx, exportedNames, StringValue(e->exportName()))) {
-      return nullptr;
+    if (!exportedNames.append(e->exportName())) {
+      ReportOutOfMemory(cx);
+      return false;
     }
   }
 
@@ -414,8 +413,9 @@ static ArrayObject* ModuleGetExportedNames(
              .as<ExportEntryObject>();
     // Step 6.a. Assert: module imports a specific binding for this export.
     // Step 6.b. Append e.[[ExportName]] to exportedNames.
-    if (!NewbornArrayPush(cx, exportedNames, StringValue(e->exportName()))) {
-      return nullptr;
+    if (!exportedNames.append(e->exportName())) {
+      ReportOutOfMemory(cx);
+      return false;
     }
   }
 
@@ -436,27 +436,27 @@ static ArrayObject* ModuleGetExportedNames(
     requestedModule = HostResolveImportedModule(cx, module, moduleRequest,
                                                 ModuleStatus::Unlinked);
     if (!requestedModule) {
-      return nullptr;
+      return false;
     }
 
     // Step 7.b. Let starNames be ?
     //           requestedModule.GetExportedNames(exportStarSet).
-    starNames = ModuleGetExportedNames(cx, requestedModule, exportStarSet);
-    if (!starNames) {
-      return nullptr;
+    Rooted<NameList> starNames(cx);
+    if (!ModuleGetExportedNames(cx, requestedModule, exportStarSet,
+                                &starNames)) {
+      return false;
     }
 
     // Step 7.c. For each element n of starNames, do:
-    for (uint32_t j = 0; j != starNames->length(); j++) {
-      name = &starNames->getDenseElement(j).toString()->asAtom();
-
+    for (JSAtom* name : starNames) {
       // Step 7.c.i. If SameValue(n, "default") is false, then:
       if (name != cx->names().default_) {
         // Step 7.c.i.1. If n is not an element of exportedNames, then:
-        if (!ArrayContainsName(exportedNames, name)) {
+        if (!ContainsElement(exportedNames, name)) {
           // Step 7.c.i.1.a. Append n to exportedNames.
-          if (!NewbornArrayPush(cx, exportedNames, StringValue(name))) {
-            return nullptr;
+          if (!exportedNames.append(name)) {
+            ReportOutOfMemory(cx);
+            return false;
           }
         }
       }
@@ -464,7 +464,7 @@ static ArrayObject* ModuleGetExportedNames(
   }
 
   // Step 8. Return exportedNames.
-  return exportedNames;
+  return true;
 }
 
 static ModuleObject* HostResolveImportedModule(
@@ -710,9 +710,8 @@ ModuleNamespaceObject* js::GetOrCreateModuleNamespace(
   if (!ns) {
     // Step 3.a. Let exportedNames be ? module.GetExportedNames().
     Rooted<ModuleSet> exportStarSet(cx);
-    Rooted<ArrayObject*> exportedNames(cx);
-    exportedNames = ModuleGetExportedNames(cx, module, &exportStarSet);
-    if (!exportedNames) {
+    Rooted<NameList> exportedNames(cx);
+    if (!ModuleGetExportedNames(cx, module, &exportStarSet, &exportedNames)) {
       return nullptr;
     }
 
@@ -725,8 +724,8 @@ ModuleNamespaceObject* js::GetOrCreateModuleNamespace(
     // Step 3.c. For each element name of exportedNames, do:
     Rooted<JSAtom*> name(cx);
     Rooted<Value> resolution(cx);
-    for (uint32_t i = 0; i != exportedNames->length(); i++) {
-      name = &exportedNames->getDenseElement(i).toString()->asAtom();
+    for (JSAtom* atom : exportedNames) {
+      name = atom;
 
       // Step 3.c.i. Let resolution be ? module.ResolveExport(name).
       if (!ModuleResolveExport(cx, module, name, &resolution)) {
@@ -1450,7 +1449,7 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
 
   // Step 12. If module.[[PendingAsyncDependencies]] > 0 or module.[[HasTLA]] is
   //          true, then:
-  if (module->pendingAsyncDependencies() > 0 || module->isAsync()) {
+  if (module->pendingAsyncDependencies() > 0 || module->hasTopLevelAwait()) {
     // Step 12.a. Assert: module.[[AsyncEvaluation]] is false and was never
     //            previously set to true.
     MOZ_ASSERT(!module->isAsyncEvaluating() && !module->wasAsyncEvaluating());
@@ -1522,7 +1521,7 @@ static bool ExecuteAsyncModule(JSContext* cx, Handle<ModuleObject*> module) {
              module->status() == ModuleStatus::Evaluated);
 
   // Step 2. Assert: module.[[HasTLA]] is true.
-  MOZ_ASSERT(module->isAsync());
+  MOZ_ASSERT(module->hasTopLevelAwait());
 
   // Steps 3 - 8 are performed by the AsyncAwait opcode.
 
@@ -1610,7 +1609,7 @@ static bool GatherAvailableModuleAncestors(
 
         // Step 1.a.vi.2. If m.[[HasTLA]] is false, perform
         //                GatherAvailableAncestors(m, execList).
-        if (!m->isAsync() &&
+        if (!m->hasTopLevelAwait() &&
             !::GatherAvailableModuleAncestors(cx, m, execList)) {
           return false;
         }
@@ -1620,4 +1619,128 @@ static bool GatherAvailableModuleAncestors(
 
   // Step 2. Return unused.
   return true;
+}
+
+// https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionfulfilled
+void js::AsyncModuleExecutionFulfilled(JSContext* cx,
+                                       Handle<ModuleObject*> module) {
+  // Step 1.
+  MOZ_ASSERT(module->status() == ModuleStatus::Evaluated);
+
+  // Step 2.
+  MOZ_ASSERT(module->isAsyncEvaluating());
+
+  ModuleObject::onTopLevelEvaluationFinished(module);
+
+  if (module->hasTopLevelCapability()) {
+    MOZ_ASSERT(module->getCycleRoot() == module);
+    if (!ModuleObject::topLevelCapabilityResolve(cx, module)) {
+      // If Resolve fails, there's nothing more we can do here.
+      cx->clearPendingException();
+    }
+  }
+
+  Rooted<ModuleVector> sortedList(cx);
+  if (!js::GatherAvailableModuleAncestors(cx, module, &sortedList)) {
+    // We have been interrupted or have OOM'd -- all bets are off, reject the
+    // promise. Not much more we can do.
+    if (!cx->isExceptionPending()) {
+      AsyncModuleExecutionRejected(cx, module, UndefinedHandleValue);
+      return;
+    }
+
+    RootedValue exception(cx);
+    if (!cx->getPendingException(&exception)) {
+      return;
+    }
+    cx->clearPendingException();
+    AsyncModuleExecutionRejected(cx, module, exception);
+  }
+
+  // this is out of step with the spec in order to be able to OOM
+  module->setAsyncEvaluatingFalse();
+
+  Rooted<ModuleObject*> m(cx);
+
+  for (ModuleObject* obj : sortedList) {
+    m = obj;
+
+    // Step 2.
+    if (!m->isAsyncEvaluating()) {
+      MOZ_ASSERT(m->hadEvaluationError());
+      return;
+    }
+
+    if (m->hasTopLevelAwait()) {
+      MOZ_ALWAYS_TRUE(ExecuteAsyncModule(cx, m));
+    } else {
+      if (!ModuleObject::execute(cx, m)) {
+        MOZ_ASSERT(cx->isExceptionPending());
+        RootedValue exception(cx);
+        if (!cx->getPendingException(&exception)) {
+          return;
+        }
+        cx->clearPendingException();
+        AsyncModuleExecutionRejected(cx, m, exception);
+      } else {
+        m->setAsyncEvaluatingFalse();
+        if (m->hasTopLevelCapability()) {
+          MOZ_ASSERT(m->getCycleRoot() == m);
+          if (!ModuleObject::topLevelCapabilityResolve(cx, m)) {
+            // If Resolve fails, there's nothing more we can do here.
+            cx->clearPendingException();
+          }
+        }
+      }
+    }
+  }
+
+  // Step 6.
+  // Return undefined.
+}
+
+// https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionrejected
+void js::AsyncModuleExecutionRejected(JSContext* cx,
+                                      Handle<ModuleObject*> module,
+                                      HandleValue error) {
+  // Step 1.
+  MOZ_ASSERT(module->status() == ModuleStatus::Evaluated ||
+             module->status() == ModuleStatus::Evaluated_Error);
+
+  // Step 2.
+  if (!module->isAsyncEvaluating()) {
+    MOZ_ASSERT(module->hadEvaluationError());
+    return;
+  }
+
+  ModuleObject::onTopLevelEvaluationFinished(module);
+
+  // Step 3.
+  MOZ_ASSERT(!module->hadEvaluationError());
+
+  // Step 4.
+  module->setEvaluationError(error);
+
+  // Step 5.
+  module->setAsyncEvaluatingFalse();
+
+  // Step 6.
+  uint32_t length = module->asyncParentModules()->length();
+  Rooted<ModuleObject*> parent(cx);
+  for (uint32_t i = 0; i < length; i++) {
+    parent =
+        &module->asyncParentModules()->get(i).toObject().as<ModuleObject>();
+    AsyncModuleExecutionRejected(cx, parent, error);
+  }
+
+  // Step 7.
+  if (module->hasTopLevelCapability()) {
+    MOZ_ASSERT(module->getCycleRoot() == module);
+    if (!ModuleObject::topLevelCapabilityReject(cx, module, error)) {
+      // If Reject fails, there's nothing more we can do here.
+      cx->clearPendingException();
+    }
+  }
+
+  // Return undefined.
 }
