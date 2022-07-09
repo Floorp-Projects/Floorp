@@ -19,7 +19,6 @@
 
 #include "api/peer_connection_interface.h"
 #include "call/call.h"
-#include "pc/data_channel_controller.h"
 #include "pc/jsep_transport_controller.h"
 #include "pc/peer_connection_message_handler.h"
 #include "pc/rtp_transceiver.h"
@@ -28,6 +27,7 @@
 
 namespace webrtc {
 
+class DataChannelController;
 class StatsCollector;
 
 // This interface defines the functions that are needed for

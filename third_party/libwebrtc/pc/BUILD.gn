@@ -242,7 +242,6 @@ rtc_library("peerconnection") {
     "peer_connection.h",
     "peer_connection_factory.cc",
     "peer_connection_factory.h",
-    "peer_connection_internal.h",
     "rtc_stats_collector.cc",
     "rtc_stats_collector.h",
     "rtc_stats_traversal.cc",
@@ -473,6 +472,16 @@ rtc_source_set("peer_connection_factory") {
 }
 rtc_source_set("peer_connection_internal") {
   visibility = [ ":*" ]
+  sources = [ "peer_connection_internal.h" ]
+  deps = [
+    ":peer_connection_message_handler",
+    ":rtc_pc_base",
+    ":rtp_transceiver",
+    ":rtp_transmission_manager",
+    ":sctp_data_channel",
+    "../api:libjingle_peerconnection_api",
+    "../call:call_interfaces",
+  ]
 }
 rtc_source_set("rtc_stats_collector") {
   visibility = [ ":*" ]
@@ -536,9 +545,9 @@ rtc_source_set("sdp_utils") {
     "sdp_utils.h",
   ]
   deps = [
+    ":session_description",
     "../api:libjingle_peerconnection_api",
     "../p2p:rtc_p2p",
-    "../pc:session_description",
     "../rtc_base:checks",
     "../rtc_base/system:rtc_export",
   ]
@@ -580,13 +589,13 @@ rtc_source_set("webrtc_session_description_factory") {
     "webrtc_session_description_factory.h",
   ]
   deps = [
+    ":rtc_pc_base",
     ":sdp_state_provider",
     ":session_description",
     "../api:libjingle_peerconnection_api",
     "../api:rtc_error",
     "../api:scoped_refptr",
     "../p2p:rtc_p2p",
-    "../pc:rtc_pc_base",
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:refcount",
@@ -1190,6 +1199,7 @@ if (rtc_include_tests && !build_with_chromium) {
     sources = [ "peer_connection_rampup_tests.cc" ]
     deps = [
       ":pc_test_utils",
+      ":peerconnection",
       ":peerconnection_wrapper",
       "../api:audio_options_api",
       "../api:create_peerconnection_factory",
@@ -1209,7 +1219,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../modules/audio_processing:api",
       "../p2p:p2p_test_utils",
       "../p2p:rtc_p2p",
-      "../pc:peerconnection",
       "../rtc_base",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
@@ -1231,6 +1240,7 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
     deps = [
       ":pc_test_utils",
+      ":peerconnection",
       ":sdp_utils",
       "../api:function_view",
       "../api:libjingle_peerconnection_api",
@@ -1239,7 +1249,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:rtc_stats_api",
       "../api:rtp_parameters",
       "../api:scoped_refptr",
-      "../pc:peerconnection",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
       "../rtc_base:rtc_base_approved",
@@ -1395,6 +1404,7 @@ if (rtc_include_tests && !build_with_chromium) {
     deps += [
       ":libjingle_peerconnection",
       ":pc_test_utils",
+      ":rtc_pc",
       "../api:callfactory_api",
       "../api:rtc_event_log_output_file",
       "../api:rtc_stats_api",
@@ -1418,7 +1428,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../modules/utility",
       "../p2p:p2p_test_utils",
       "../p2p:rtc_p2p",
-      "../pc:rtc_pc",
       "../rtc_base",
       "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_task_queue",
@@ -1594,6 +1603,7 @@ if (rtc_include_tests && !build_with_chromium) {
     deps = [
       ":jitter_buffer_delay",
       ":libjingle_peerconnection",
+      ":peer_connection_internal",
       ":peerconnection",
       ":rtc_pc_base",
       ":rtp_receiver",
