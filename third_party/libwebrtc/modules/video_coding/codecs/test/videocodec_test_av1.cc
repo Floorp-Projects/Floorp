@@ -99,7 +99,7 @@ TEST_P(VideoCodecTestAv1, Hd) {
   std::vector<RateControlThresholds> rc_thresholds = {
       {13, 3, 0, 1, 0.3, 0.1, 0, 1}};
 
-  std::vector<QualityThresholds> quality_thresholds = {{36, 31.7, 0.93, 0.87}};
+  std::vector<QualityThresholds> quality_thresholds = {{36, 31.6, 0.93, 0.87}};
 
   fixture->RunTest(rate_profiles, &rc_thresholds, &quality_thresholds, nullptr);
 }
