@@ -134,9 +134,6 @@ static inline void AssertDirectJitCall(const void* fp) {
   // pointing in the middle of the exit frame, right before the exit
   // footer; ensure the exit frame type is the expected one.
 #ifdef DEBUG
-  if (Frame::isExitOrJitEntryFP(fp)) {
-    fp = Frame::toJitEntryCaller(fp);
-  }
   auto* jitCaller = (ExitFrameLayout*)fp;
   MOZ_ASSERT(jitCaller->footer()->type() ==
              jit::ExitFrameType::DirectWasmJitCall);
@@ -148,21 +145,19 @@ void WasmFrameIter::popFrame() {
   code_ = LookupCode(returnAddress, &codeRange_);
 
   if (!code_) {
-    // We run into a frame pointer which has the low bit set,
-    // indicating this is a direct call from the jit into the wasm
-    // function's body. The call stack resembles this at this point:
+    // This is a direct call from the jit into the wasm function's body. The
+    // call stack resembles this at this point:
     //
     // |---------------------|
     // |      JIT FRAME      |
-    // | JIT FAKE EXIT FRAME | <-- tagged fp_->callerFP_
+    // | JIT FAKE EXIT FRAME | <-- fp_->callerFP_
     // |      WASM FRAME     | <-- fp_
     // |---------------------|
     //
     // fp_->callerFP_ points to the fake exit frame set up by the jit caller,
     // and the return-address-to-fp is in JIT code, thus doesn't belong to any
     // wasm instance's code (in particular, there's no associated CodeRange).
-    // Mark the frame as such and untag FP.
-    MOZ_ASSERT(fp_->callerIsExitOrJitEntryFP());
+    // Mark the frame as such.
     AssertDirectJitCall(fp_->jitEntryCaller());
 
     unwoundJitCallerFP_ = fp_->jitEntryCaller();
@@ -427,10 +422,10 @@ void wasm::SetExitFP(MacroAssembler& masm, ExitReason reason,
       Imm32(reason.encode()),
       Address(scratch, JitActivation::offsetOfEncodedWasmExitReason()));
 
-  masm.orPtr(Imm32(ExitOrJitEntryFPTag), FramePointer);
+  masm.orPtr(Imm32(ExitFPTag), FramePointer);
   masm.storePtr(FramePointer,
                 Address(scratch, JitActivation::offsetOfPackedExitFP()));
-  masm.andPtr(Imm32(int32_t(~ExitOrJitEntryFPTag)), FramePointer);
+  masm.andPtr(Imm32(int32_t(~ExitFPTag)), FramePointer);
 }
 
 void wasm::ClearExitFP(MacroAssembler& masm, Register scratch) {
@@ -793,7 +788,7 @@ static void AssertNoWasmExitFPInJitExit(MacroAssembler& masm) {
   Label ok;
   masm.branchTestPtr(Assembler::Zero,
                      Address(scratch, JitActivation::offsetOfPackedExitFP()),
-                     Imm32(ExitOrJitEntryFPTag), &ok);
+                     Imm32(ExitFPTag), &ok);
   masm.breakpoint();
   masm.bind(&ok);
 #endif
@@ -978,8 +973,8 @@ void ProfilingFrameIterator::initFromExitFP(const Frame* fp) {
   code_ = LookupCode(fp->returnAddress(), &codeRange_);
 
   if (!code_) {
-    // This is a direct call from the JIT, the caller FP is pointing to a
-    // tagged JIT caller's frame.
+    // This is a direct call from the JIT, the caller FP is pointing to the JIT
+    // caller's frame.
     AssertDirectJitCall(fp->jitEntryCaller());
 
     unwoundJitCallerFP_ = fp->jitEntryCaller();
@@ -1047,7 +1042,6 @@ const Instance* js::wasm::GetNearestEffectiveInstance(const Frame* fp) {
 
     if (!code) {
       // It is a direct call from JIT.
-      MOZ_ASSERT(fp->callerIsExitOrJitEntryFP());
       AssertDirectJitCall(fp->jitEntryCaller());
       return ExtractCalleeInstanceFromFrameWithInstances(fp);
     }
@@ -1081,12 +1075,11 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
   void** const sp = (void**)registers.sp;
 
   // The frame pointer might be:
-  // - in the process of tagging/untagging when calling into the JITs;
-  // make sure it's untagged.
-  // - tagged by an direct JIT call.
+  // - in the process of tagging/untagging when calling into C++ code (this
+  //   happens in wasm::SetExitFP); make sure it's untagged.
   // - unreliable if it's not been set yet, in prologues.
-  uint8_t* fp = Frame::isExitOrJitEntryFP(registers.fp)
-                    ? Frame::toJitEntryCaller(registers.fp)
+  uint8_t* fp = Frame::isExitFP(registers.fp)
+                    ? Frame::untagExitFP(registers.fp)
                     : reinterpret_cast<uint8_t*>(registers.fp);
 
   // Get the CodeRange describing pc and the base address to which the
@@ -1214,10 +1207,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
       } else if (offsetFromEntry == PushedFP) {
         // The full Frame has been pushed; fp is still the caller's fp.
         const auto* frame = Frame::fromUntaggedWasmExitFP(sp);
-        DebugOnly<const uint8_t*> caller = frame->callerIsExitOrJitEntryFP()
-                                               ? frame->jitEntryCaller()
-                                               : frame->rawCaller();
-        MOZ_ASSERT(caller == fp);
+        MOZ_ASSERT(frame->rawCaller() == fp);
         fixedPC = frame->returnAddress();
         fixedFP = fp;
         AssertMatchesCallSite(fixedPC, fixedFP);
@@ -1317,7 +1307,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
       }
       // On the error return path, FP might be set to FailFP. Ignore these
       // transient frames.
-      if (intptr_t(fp) == (FailFP & ~ExitOrJitEntryFPTag)) {
+      if (intptr_t(fp) == (FailFP & ~ExitFPTag)) {
         return false;
       }
       // Set fixedFP to the address of the JitFrameLayout on the stack.
@@ -1415,13 +1405,11 @@ void ProfilingFrameIterator::operator++() {
   code_ = LookupCode(callerPC_, &codeRange_);
 
   if (!code_) {
-    // The parent frame is an inlined wasm call, the tagged FP points to
-    // the fake exit frame.
+    // The parent frame is an inlined wasm call, callerFP_ points to the fake
+    // exit frame.
     MOZ_ASSERT(!codeRange_);
     AssertDirectJitCall(callerFP_);
-    unwoundJitCallerFP_ = Frame::isExitOrJitEntryFP(callerFP_)
-                              ? Frame::toJitEntryCaller(callerFP_)
-                              : callerFP_;
+    unwoundJitCallerFP_ = callerFP_;
     MOZ_ASSERT(done());
     return;
   }

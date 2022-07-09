@@ -817,10 +817,10 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   SetupABIArguments(masm, fe, argv, scratch);
 
   // Setup wasm register state. Ensure the frame pointer passed by the C++
-  // caller doesn't have the ExitOrJitEntryFPTag bit set to not confuse frame
-  // iterators. This bit shouldn't be set if C++ code is using frame pointers,
-  // so this has no effect on native stack unwinders.
-  masm.andPtr(Imm32(int32_t(~ExitOrJitEntryFPTag)), FramePointer);
+  // caller doesn't have the ExitFPTag bit set to not confuse frame iterators.
+  // This bit shouldn't be set if C++ code is using frame pointers, so this has
+  // no effect on native stack unwinders.
+  masm.andPtr(Imm32(int32_t(~ExitFPTag)), FramePointer);
 
   masm.loadWasmPinnedRegsFromInstance();
 
@@ -1452,12 +1452,10 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   // frame pointer. We also use this to restore the frame pointer after the
   // call.
   *callOffset = masm.buildFakeExitFrame(scratch);
+  // FP := ExitFrameLayout*
+  masm.moveStackPtrTo(FramePointer);
   masm.loadJSContext(scratch);
   masm.enterFakeExitFrame(scratch, scratch, ExitFrameType::DirectWasmJitCall);
-  // FP := ExitFrameLayout* | ExitOrJitEntryFPTag
-  masm.moveStackPtrTo(FramePointer);
-  masm.addPtr(Imm32(ExitFooterFrame::Size()), FramePointer);
-  masm.orPtr(Imm32(ExitOrJitEntryFPTag), FramePointer);
 
   // Move stack arguments to their final locations.
   unsigned bytesNeeded = StackArgBytesForWasmABI(fe.funcType());
