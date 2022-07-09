@@ -244,8 +244,6 @@ rtc_library("peerconnection") {
     "jsep_session_description.cc",
     "local_audio_source.cc",
     "local_audio_source.h",
-    "media_stream_observer.cc",
-    "media_stream_observer.h",
     "peer_connection.cc",
     "peer_connection.h",
     "peer_connection_factory.cc",
@@ -440,7 +438,19 @@ rtc_source_set("ice_server_parsing") {
   visibility = [ "*" ]  # Known to be used externally
 }
 rtc_source_set("media_stream_observer") {
-  visibility = [ ":*" ]
+  visibility = [
+    ":*",
+    "../sdk/android:*",
+  ]
+  sources = [
+    "media_stream_observer.cc",
+    "media_stream_observer.h",
+  ]
+  deps = [
+    "../api:media_stream_interface",
+    "../api:scoped_refptr",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
 }
 rtc_source_set("peer_connection_factory") {
   visibility = [ "*" ]  # Known to be used externally
