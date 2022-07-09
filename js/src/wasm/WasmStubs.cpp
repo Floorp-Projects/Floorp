@@ -816,9 +816,12 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   // Copy parameters out of argv and into the wasm ABI registers/stack-slots.
   SetupABIArguments(masm, fe, argv, scratch);
 
-  // Setup wasm register state. The nullness of the frame pointer is used to
-  // determine whether the call ended in success or failure.
-  masm.movePtr(ImmWord(0), FramePointer);
+  // Setup wasm register state. Ensure the frame pointer passed by the C++
+  // caller doesn't have the ExitOrJitEntryFPTag bit set to not confuse frame
+  // iterators. This bit shouldn't be set if C++ code is using frame pointers,
+  // so this has no effect on native stack unwinders.
+  masm.andPtr(Imm32(int32_t(~ExitOrJitEntryFPTag)), FramePointer);
+
   masm.loadWasmPinnedRegsFromInstance();
 
   masm.storePtr(InstanceReg, Address(masm.getStackPointer(),
@@ -853,16 +856,9 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
 
   // After the ReturnReg is stored into argv[0] but before fp is clobbered by
   // the PopRegsInMask(NonVolatileRegs) below, set the return value based on
-  // whether fp is null (which is the case for successful returns) or the
-  // FailFP magic value (set by the throw stub);
+  // whether fp is the FailFP magic value (set by the throw stub).
   Label success, join;
-  masm.branchTestPtr(Assembler::Zero, FramePointer, FramePointer, &success);
-#ifdef DEBUG
-  Label ok;
-  masm.branchPtr(Assembler::Equal, FramePointer, Imm32(FailFP), &ok);
-  masm.breakpoint();
-  masm.bind(&ok);
-#endif
+  masm.branchPtr(Assembler::NotEqual, FramePointer, Imm32(FailFP), &success);
   masm.move32(Imm32(false), ReturnReg);
   masm.jump(&join);
   masm.bind(&success);

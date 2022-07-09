@@ -955,7 +955,8 @@ static inline void AssertMatchesCallSite(void* callerPC, uint8_t* callerFP) {
   MOZ_ASSERT(callerCodeRange);
 
   if (callerCodeRange->isInterpEntry()) {
-    MOZ_ASSERT(callerFP == nullptr);
+    // callerFP is the value of the frame pointer register when we were called
+    // from C++.
     return;
   }
 
