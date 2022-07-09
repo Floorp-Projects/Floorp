@@ -37,6 +37,13 @@ namespace {
 // All tests in this file require SCTP support.
 #ifdef WEBRTC_HAVE_SCTP
 
+#if defined(WEBRTC_ANDROID)
+// Disable heavy tests running on low-end Android devices.
+#define DISABLED_ON_ANDROID(t) DISABLED_##t
+#else
+#define DISABLED_ON_ANDROID(t) t
+#endif
+
 class DataChannelIntegrationTest : public PeerConnectionIntegrationBaseTest,
                                    public ::testing::WithParamInterface<
                                        std::tuple<SdpSemantics, std::string>> {
@@ -704,7 +711,7 @@ TEST_P(DataChannelIntegrationTest,
 }
 
 TEST_P(DataChannelIntegrationTest,
-       SomeQueuedPacketsGetDroppedInMaxRetransmitsMode) {
+       DISABLED_ON_ANDROID(SomeQueuedPacketsGetDroppedInMaxRetransmitsMode)) {
   CreatePeerConnectionWrappers();
   ConnectFakeSignaling();
   DataChannelInit init;
