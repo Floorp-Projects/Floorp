@@ -256,8 +256,6 @@ rtc_library("peerconnection") {
     "stats_collector.cc",
     "stats_collector.h",
     "stream_collection.h",
-    "track_media_info_map.cc",
-    "track_media_info_map.h",
     "webrtc_sdp.cc",
     "webrtc_sdp.h",
   ]
@@ -519,6 +517,22 @@ rtc_source_set("stream_collection") {
 }
 rtc_source_set("track_media_info_map") {
   visibility = [ ":*" ]
+  sources = [
+    "track_media_info_map.cc",
+    "track_media_info_map.h",
+  ]
+  deps = [
+    ":rtp_receiver",
+    ":rtp_sender",
+    "../api:media_stream_interface",
+    "../api:rtp_parameters",
+    "../api:scoped_refptr",
+    "../media:rtc_media_base",
+    "../rtc_base:checks",
+    "../rtc_base:refcount",
+    "../rtc_base:threading",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 rtc_source_set("webrtc_sdp") {
   visibility = [ ":*" ]
@@ -1264,6 +1278,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":sdp_serializer",
       ":sdp_utils",
       ":session_description",
+      ":track_media_info_map",
       ":usage_pattern",
       ":video_rtp_receiver",
       ":video_rtp_track_source",
