@@ -13,6 +13,7 @@
 #include <atomic>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "call/rtp_transport_controller_send.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -177,9 +178,32 @@ class RtpVideoSenderTestFixture {
                                   /*frame_count_observer=*/nullptr,
                                   /*frame_transformer=*/nullptr) {}
 
+  ~RtpVideoSenderTestFixture() { SetActive(false); }
+
   RtpVideoSender* router() { return router_.get(); }
   MockTransport& transport() { return transport_; }
   void AdvanceTime(TimeDelta delta) { time_controller_.AdvanceTime(delta); }
+
+  void SetActive(bool active) {
+    RunOnTransportQueue([&]() { router_->SetActive(active); });
+  }
+
+  void SetActiveModules(const std::vector<bool>& active_modules) {
+    RunOnTransportQueue([&]() { router_->SetActiveModules(active_modules); });
+  }
+
+  // Several RtpVideoSender methods expect to be called on the task queue as
+  // owned by the send transport. While the SequenceChecker may pick up the
+  // default thread as the transport queue, explicit checks for the transport
+  // queue (not just using a SequenceChecker) aren't possible unless such a
+  // queue is actually active. So RunOnTransportQueue is a convenience function
+  // that allow for running a closure on the transport queue, similar to
+  // SendTask().
+  template <typename Closure>
+  void RunOnTransportQueue(Closure&& task) {
+    transport_controller_.GetWorkerQueue()->PostTask(std::move(task));
+    AdvanceTime(TimeDelta::Millis(0));
+  }
 
  private:
   NiceMock<MockTransport> transport_;
@@ -217,15 +241,15 @@ TEST(RtpVideoSenderTest, SendOnOneModule) {
   EXPECT_NE(EncodedImageCallback::Result::OK,
             test.router()->OnEncodedImage(encoded_image, nullptr).error);
 
-  test.router()->SetActive(true);
+  test.SetActive(true);
   EXPECT_EQ(EncodedImageCallback::Result::OK,
             test.router()->OnEncodedImage(encoded_image, nullptr).error);
 
-  test.router()->SetActive(false);
+  test.SetActive(false);
   EXPECT_NE(EncodedImageCallback::Result::OK,
             test.router()->OnEncodedImage(encoded_image, nullptr).error);
 
-  test.router()->SetActive(true);
+  test.SetActive(true);
   EXPECT_EQ(EncodedImageCallback::Result::OK,
             test.router()->OnEncodedImage(encoded_image, nullptr).error);
 }
@@ -244,7 +268,7 @@ TEST(RtpVideoSenderTest, SendSimulcastSetActive) {
   CodecSpecificInfo codec_info;
   codec_info.codecType = kVideoCodecVP8;
 
-  test.router()->SetActive(true);
+  test.SetActive(true);
   EXPECT_EQ(EncodedImageCallback::Result::OK,
             test.router()->OnEncodedImage(encoded_image_1, &codec_info).error);
 
@@ -254,7 +278,7 @@ TEST(RtpVideoSenderTest, SendSimulcastSetActive) {
             test.router()->OnEncodedImage(encoded_image_2, &codec_info).error);
 
   // Inactive.
-  test.router()->SetActive(false);
+  test.SetActive(false);
   EXPECT_NE(EncodedImageCallback::Result::OK,
             test.router()->OnEncodedImage(encoded_image_1, &codec_info).error);
   EXPECT_NE(EncodedImageCallback::Result::OK,
@@ -284,14 +308,14 @@ TEST(RtpVideoSenderTest, SendSimulcastSetActiveModules) {
   // Only setting one stream to active will still set the payload router to
   // active and allow sending data on the active stream.
   std::vector<bool> active_modules({true, false});
-  test.router()->SetActiveModules(active_modules);
+  test.SetActiveModules(active_modules);
   EXPECT_EQ(EncodedImageCallback::Result::OK,
             test.router()->OnEncodedImage(encoded_image_1, &codec_info).error);
 
   // Setting both streams to inactive will turn the payload router to
   // inactive.
   active_modules = {false, false};
-  test.router()->SetActiveModules(active_modules);
+  test.SetActiveModules(active_modules);
   // An incoming encoded image will not ask the module to send outgoing data
   // because the payload router is inactive.
   EXPECT_NE(EncodedImageCallback::Result::OK,
@@ -303,7 +327,7 @@ TEST(RtpVideoSenderTest, SendSimulcastSetActiveModules) {
 TEST(RtpVideoSenderTest, CreateWithNoPreviousStates) {
   RtpVideoSenderTestFixture test({kSsrc1, kSsrc2}, {kRtxSsrc1, kRtxSsrc2},
                                  kPayloadType, {});
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   std::map<uint32_t, RtpPayloadState> initial_states =
       test.router()->GetRtpPayloadStates();
@@ -328,7 +352,7 @@ TEST(RtpVideoSenderTest, CreateWithPreviousStates) {
 
   RtpVideoSenderTestFixture test({kSsrc1, kSsrc2}, {kRtxSsrc1, kRtxSsrc2},
                                  kPayloadType, states);
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   std::map<uint32_t, RtpPayloadState> initial_states =
       test.router()->GetRtpPayloadStates();
@@ -368,7 +392,7 @@ TEST(RtpVideoSenderTest, FrameCountCallbacks) {
             test.router()->OnEncodedImage(encoded_image, nullptr).error);
   ::testing::Mock::VerifyAndClearExpectations(&callback);
 
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   FrameCounts frame_counts;
   EXPECT_CALL(callback, FrameCountUpdated(_, kSsrc1))
@@ -397,7 +421,7 @@ TEST(RtpVideoSenderTest, FrameCountCallbacks) {
 TEST(RtpVideoSenderTest, DoesNotRetrasmitAckedPackets) {
   RtpVideoSenderTestFixture test({kSsrc1, kSsrc2}, {kRtxSsrc1, kRtxSsrc2},
                                  kPayloadType, {});
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   constexpr uint8_t kPayload = 'a';
   EncodedImage encoded_image;
@@ -496,8 +520,8 @@ TEST(RtpVideoSenderTest, DoesNotRetrasmitAckedPackets) {
 }
 
 // This tests that we utilize transport wide feedback to retransmit lost
-// packets. This is tested by dropping all ordirary packets from a "lossy"
-// stream send along with an secondary untouched stream. The transport wide
+// packets. This is tested by dropping all ordinary packets from a "lossy"
+// stream sent along with a secondary untouched stream. The transport wide
 // feedback packets from the secondary stream allows the sending side to
 // detect and retreansmit the lost packets from the lossy stream.
 TEST(RtpVideoSenderTest, RetransmitsOnTransportWideLossInfo) {
@@ -562,7 +586,7 @@ TEST(RtpVideoSenderTest, RetransmitsOnTransportWideLossInfo) {
 TEST(RtpVideoSenderTest, EarlyRetransmits) {
   RtpVideoSenderTestFixture test({kSsrc1, kSsrc2}, {kRtxSsrc1, kRtxSsrc2},
                                  kPayloadType, {});
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   const uint8_t kPayload[1] = {'a'};
   EncodedImage encoded_image;
@@ -657,7 +681,7 @@ TEST(RtpVideoSenderTest, EarlyRetransmits) {
 
 TEST(RtpVideoSenderTest, SupportsDependencyDescriptor) {
   RtpVideoSenderTestFixture test({kSsrc1}, {}, kPayloadType, {});
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   RtpHeaderExtensionMap extensions;
   extensions.Register<RtpDependencyDescriptorExtension>(
@@ -717,7 +741,7 @@ TEST(RtpVideoSenderTest, SupportsDependencyDescriptor) {
 
 TEST(RtpVideoSenderTest, SupportsDependencyDescriptorForVp9) {
   RtpVideoSenderTestFixture test({kSsrc1}, {}, kPayloadType, {});
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   RtpHeaderExtensionMap extensions;
   extensions.Register<RtpDependencyDescriptorExtension>(
@@ -773,7 +797,7 @@ TEST(RtpVideoSenderTest, SupportsDependencyDescriptorForVp9) {
 TEST(RtpVideoSenderTest,
      SupportsDependencyDescriptorForVp9NotProvidedByEncoder) {
   RtpVideoSenderTestFixture test({kSsrc1}, {}, kPayloadType, {});
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   RtpHeaderExtensionMap extensions;
   extensions.Register<RtpDependencyDescriptorExtension>(
@@ -828,7 +852,7 @@ TEST(RtpVideoSenderTest, GenerateDependecyDescriptorForGenericCodecs) {
   test::ScopedFieldTrials field_trials(
       "WebRTC-GenericCodecDependencyDescriptor/Enabled/");
   RtpVideoSenderTestFixture test({kSsrc1}, {}, kPayloadType, {});
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   RtpHeaderExtensionMap extensions;
   extensions.Register<RtpDependencyDescriptorExtension>(
@@ -874,7 +898,7 @@ TEST(RtpVideoSenderTest, GenerateDependecyDescriptorForGenericCodecs) {
 
 TEST(RtpVideoSenderTest, SupportsStoppingUsingDependencyDescriptor) {
   RtpVideoSenderTestFixture test({kSsrc1}, {}, kPayloadType, {});
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   RtpHeaderExtensionMap extensions;
   extensions.Register<RtpDependencyDescriptorExtension>(
@@ -932,7 +956,7 @@ TEST(RtpVideoSenderTest, SupportsStoppingUsingDependencyDescriptor) {
 TEST(RtpVideoSenderTest,
      SupportsStoppingUsingDependencyDescriptorForVp8Simulcast) {
   RtpVideoSenderTestFixture test({kSsrc1, kSsrc2}, {}, kPayloadType, {});
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   RtpHeaderExtensionMap extensions;
   extensions.Register<RtpDependencyDescriptorExtension>(
@@ -1017,7 +1041,7 @@ TEST(RtpVideoSenderTest, OverheadIsSubtractedFromTargetBitrate) {
       kRtpHeaderSizeBytes + kTransportPacketOverheadBytes;
   RtpVideoSenderTestFixture test({kSsrc1}, {}, kPayloadType, {});
   test.router()->OnTransportOverheadChanged(kTransportPacketOverheadBytes);
-  test.router()->SetActive(true);
+  test.SetActive(true);
 
   {
     test.router()->OnBitrateUpdated(CreateBitrateAllocationUpdate(300000),
