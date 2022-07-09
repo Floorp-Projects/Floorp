@@ -95,21 +95,6 @@ void ConvertToFloat(const Int16FrameData& frame, ChannelBuffer<float>* cb) {
   ConvertToFloat(frame.data.data(), cb);
 }
 
-// Number of channels including the keyboard channel.
-size_t TotalChannelsFromLayout(AudioProcessing::ChannelLayout layout) {
-  switch (layout) {
-    case AudioProcessing::kMono:
-      return 1;
-    case AudioProcessing::kMonoAndKeyboard:
-    case AudioProcessing::kStereo:
-      return 2;
-    case AudioProcessing::kStereoAndKeyboard:
-      return 3;
-  }
-  RTC_DCHECK_NOTREACHED();
-  return 0;
-}
-
 void MixStereoToMono(const float* stereo,
                      float* mono,
                      size_t samples_per_channel) {
@@ -1885,44 +1870,6 @@ TEST_F(ApmTest, Process) {
   }
 }
 
-TEST_F(ApmTest, NoErrorsWithKeyboardChannel) {
-  struct ChannelFormat {
-    AudioProcessing::ChannelLayout in_layout;
-    AudioProcessing::ChannelLayout out_layout;
-  };
-  ChannelFormat cf[] = {
-      {AudioProcessing::kMonoAndKeyboard, AudioProcessing::kMono},
-      {AudioProcessing::kStereoAndKeyboard, AudioProcessing::kMono},
-      {AudioProcessing::kStereoAndKeyboard, AudioProcessing::kStereo},
-  };
-
-  rtc::scoped_refptr<AudioProcessing> ap =
-      AudioProcessingBuilderForTesting().Create();
-  // Enable one component just to ensure some processing takes place.
-  AudioProcessing::Config config;
-  config.noise_suppression.enabled = true;
-  ap->ApplyConfig(config);
-  for (size_t i = 0; i < arraysize(cf); ++i) {
-    const int in_rate = 44100;
-    const int out_rate = 48000;
-    ChannelBuffer<float> in_cb(SamplesFromRate(in_rate),
-                               TotalChannelsFromLayout(cf[i].in_layout));
-    ChannelBuffer<float> out_cb(SamplesFromRate(out_rate),
-                                ChannelsFromLayout(cf[i].out_layout));
-    bool has_keyboard = cf[i].in_layout == AudioProcessing::kMonoAndKeyboard ||
-                        cf[i].in_layout == AudioProcessing::kStereoAndKeyboard;
-    StreamConfig in_sc(in_rate, ChannelsFromLayout(cf[i].in_layout),
-                       has_keyboard);
-    StreamConfig out_sc(out_rate, ChannelsFromLayout(cf[i].out_layout));
-
-    // Run over a few chunks.
-    for (int j = 0; j < 10; ++j) {
-      EXPECT_NOERR(ap->ProcessStream(in_cb.channels(), in_sc, out_sc,
-                                     out_cb.channels()));
-    }
-  }
-}
-
 // Compares the reference and test arrays over a region around the expected
 // delay. Finds the highest SNR in that region and adds the variance and squared
 // error results to the supplied accumulators.
@@ -2443,7 +2390,6 @@ void RunApmRateAndChannelTest(
                                              std::vector<float*>* frame_data) {
                 cfg->set_sample_rate_hz(sample_rate_hz);
                 cfg->set_num_channels(num_channels);
-                cfg->set_has_keyboard(false);
 
                 size_t max_frame_size = ceil(sample_rate_hz / 100.f);
                 channels_data->resize(num_channels * max_frame_size);

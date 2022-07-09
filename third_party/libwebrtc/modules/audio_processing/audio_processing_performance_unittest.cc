@@ -343,7 +343,6 @@ class TimedThreadApiProcessor {
     frame_data_.input_stream_config.set_sample_rate_hz(
         simulation_config_->sample_rate_hz);
     frame_data_.input_stream_config.set_num_channels(num_channels_);
-    frame_data_.input_stream_config.set_has_keyboard(false);
     populate_audio_frame(input_level_, num_channels_,
                          (simulation_config_->sample_rate_hz *
                           AudioProcessing::kChunkSizeMs / 1000),
@@ -353,7 +352,6 @@ class TimedThreadApiProcessor {
     frame_data_.output_stream_config.set_sample_rate_hz(
         simulation_config_->sample_rate_hz);
     frame_data_.output_stream_config.set_num_channels(1);
-    frame_data_.output_stream_config.set_has_keyboard(false);
   }
 
   bool ReadyToProcess() {
