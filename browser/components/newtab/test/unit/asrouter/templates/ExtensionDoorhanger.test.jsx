@@ -39,13 +39,15 @@ const DEFAULT_CONTENT = {
         data: { url: "https://example.com" },
       },
     },
-    secondary: {
-      label: {
-        value: "Not Now",
-        attributes: { accesskey: "N" },
+    secondary: [
+      {
+        label: {
+          value: "Not Now",
+          attributes: { accesskey: "N" },
+        },
+        action: { type: "CANCEL" },
       },
-      action: { type: "CANCEL" },
-    },
+    ],
   },
 };
 
@@ -75,10 +77,12 @@ const L10N_CONTENT = {
         data: { url: "https://example.com" },
       },
     },
-    secondary: {
-      label: { string_id: "btn_cancel_id" },
-      action: { type: "CANCEL" },
-    },
+    secondary: [
+      {
+        label: { string_id: "btn_cancel_id" },
+        action: { type: "CANCEL" },
+      },
+    ],
   },
 };
 
