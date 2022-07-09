@@ -236,8 +236,6 @@ rtc_library("peerconnection") {
   sources = [
     "data_channel_controller.cc",
     "data_channel_controller.h",
-    "data_channel_utils.cc",
-    "data_channel_utils.h",
     "jsep_ice_candidate.cc",
     "jsep_session_description.cc",
     "peer_connection.cc",
@@ -249,8 +247,6 @@ rtc_library("peerconnection") {
     "rtc_stats_collector.h",
     "rtc_stats_traversal.cc",
     "rtc_stats_traversal.h",
-    "sctp_data_channel.cc",
-    "sctp_data_channel.h",
     "sdp_offer_answer.cc",  # TODO: Make separate target when not circular
     "sdp_offer_answer.h",  # dependent on peerconnection.h
     "stats_collector.cc",
@@ -394,6 +390,51 @@ rtc_library("peerconnection") {
   ]
 }
 
+rtc_library("sctp_data_channel") {
+  sources = [
+    "sctp_data_channel.cc",
+    "sctp_data_channel.h",
+  ]
+  deps = [
+    ":data_channel_utils",
+    ":proxy",
+    ":rtc_pc_base",
+    "../api:libjingle_peerconnection_api",
+    "../api:priority",
+    "../api:rtc_error",
+    "../api:scoped_refptr",
+    "../api/transport:datagram_transport_interface",
+    "../media:rtc_data_sctp_transport_internal",
+    "../media:rtc_media_base",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:refcount",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:threading",
+    "../rtc_base:threading",
+    "../rtc_base/system:unused",
+    "../rtc_base/task_utils:to_queued_task",
+    "../rtc_base/third_party/sigslot:sigslot",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+rtc_library("data_channel_utils") {
+  visibility = [ "*" ]  # Known to be used externally
+  sources = [
+    "data_channel_utils.cc",
+    "data_channel_utils.h",
+  ]
+  deps = [
+    "../api:libjingle_peerconnection_api",
+    "../media:rtc_media_base",
+    "../rtc_base:checks",
+  ]
+}
+
 rtc_library("connection_context") {
   sources = [
     "connection_context.cc",
@@ -426,12 +467,6 @@ rtc_library("connection_context") {
 # projects and modules can add dependencies as needed.
 # TODO(bugs.webrtc.org/13634): Fill these targets with files.
 rtc_source_set("data_channel_controller") {
-  visibility = [ ":*" ]
-}
-rtc_source_set("data_channel_utils") {
-  visibility = [ "*" ]  # Known to be used externally
-}
-rtc_source_set("sctp_data_channel") {
   visibility = [ ":*" ]
 }
 rtc_source_set("peer_connection_factory") {
@@ -1276,6 +1311,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":rtp_receiver",
       ":rtp_sender",
       ":rtp_transceiver",
+      ":sctp_data_channel",
       ":sdp_serializer",
       ":sdp_utils",
       ":session_description",
@@ -1559,6 +1595,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":rtc_pc_base",
       ":rtp_receiver",
       ":rtp_sender",
+      ":sctp_data_channel",
       ":video_track_source",
       "../api:audio_options_api",
       "../api:create_frame_generator",
