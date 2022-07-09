@@ -894,7 +894,6 @@ if (is_android) {
     deps = [
       ":AppRTCMobile_javalib",
       "../sdk/android:peerconnection_java",
-      "//base:base_java_test_support",
       "//third_party/androidx:androidx_test_core_java",
       "//third_party/google-truth:google_truth_java",
     ]
