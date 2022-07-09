@@ -1858,9 +1858,7 @@ void AudioProcessingImpl::InitializeGainController1() {
 
   if (!submodules_.agc_manager.get() ||
       submodules_.agc_manager->num_channels() !=
-          static_cast<int>(num_proc_channels()) ||
-      submodules_.agc_manager->sample_rate_hz() !=
-          capture_nonlocked_.split_rate) {
+          static_cast<int>(num_proc_channels())) {
     int stream_analog_level = -1;
     const bool re_creation = !!submodules_.agc_manager;
     if (re_creation) {
@@ -1872,7 +1870,6 @@ void AudioProcessingImpl::InitializeGainController1() {
         config_.gain_controller1.analog_gain_controller.clipped_level_min,
         !config_.gain_controller1.analog_gain_controller
              .enable_digital_adaptive,
-        capture_nonlocked_.split_rate,
         config_.gain_controller1.analog_gain_controller.clipped_level_step,
         config_.gain_controller1.analog_gain_controller.clipped_ratio_threshold,
         config_.gain_controller1.analog_gain_controller.clipped_wait_frames,
