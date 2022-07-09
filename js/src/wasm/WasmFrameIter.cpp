@@ -167,7 +167,12 @@ void WasmFrameIter::popFrame() {
   fp_ = fp_->wasmCaller();
   resumePCinCurrentFrame_ = prevFP->returnAddress();
 
-  if (!fp_) {
+  void* returnAddress = prevFP->returnAddress();
+  code_ = LookupCode(returnAddress, &codeRange_);
+  MOZ_ASSERT(codeRange_);
+
+  if (codeRange_->isInterpEntry()) {
+    fp_ = nullptr;
     code_ = nullptr;
     codeRange_ = nullptr;
 
@@ -181,10 +186,6 @@ void WasmFrameIter::popFrame() {
     MOZ_ASSERT(done());
     return;
   }
-
-  void* returnAddress = prevFP->returnAddress();
-  code_ = LookupCode(returnAddress, &codeRange_);
-  MOZ_ASSERT(codeRange_);
 
   if (codeRange_->isJitEntry()) {
     // This wasm function has been called through the generic JIT entry by
@@ -1430,16 +1431,6 @@ void ProfilingFrameIterator::operator++() {
     return;
   }
 
-  if (!callerFP_) {
-    MOZ_ASSERT(LookupCode(callerPC_, &codeRange_) == code_);
-    MOZ_ASSERT(codeRange_->kind() == CodeRange::InterpEntry);
-    exitReason_ = ExitReason(ExitReason::Fixed::FakeInterpEntry);
-    codeRange_ = nullptr;
-    callerPC_ = nullptr;
-    MOZ_ASSERT(!done());
-    return;
-  }
-
   code_ = LookupCode(callerPC_, &codeRange_);
 
   if (!code_ && Frame::isExitOrJitEntryFP(callerFP_)) {
@@ -1453,6 +1444,15 @@ void ProfilingFrameIterator::operator++() {
   }
 
   MOZ_ASSERT(codeRange_);
+
+  if (codeRange_->isInterpEntry()) {
+    exitReason_ = ExitReason(ExitReason::Fixed::FakeInterpEntry);
+    codeRange_ = nullptr;
+    callerPC_ = nullptr;
+    callerFP_ = nullptr;
+    MOZ_ASSERT(!done());
+    return;
+  }
 
   if (codeRange_->isJitEntry()) {
     unwoundJitCallerFP_ = callerFP_;
@@ -1480,7 +1480,6 @@ void ProfilingFrameIterator::operator++() {
       break;
     }
     case CodeRange::InterpEntry:
-      MOZ_CRASH("should have had null caller fp");
     case CodeRange::JitEntry:
       MOZ_CRASH("should have been guarded above");
     case CodeRange::Throw:
