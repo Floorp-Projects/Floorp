@@ -274,6 +274,12 @@ class TestChannel : public sigslot::has_slots<> {
         [this](PortInterface* port) { OnSrcPortDestroyed(port); });
   }
 
+  ~TestChannel() {
+    if (conn_) {
+      conn_->SignalDestroyed.disconnect(this);
+    }
+  }
+
   int complete_count() { return complete_count_; }
   Connection* conn() { return conn_; }
   const SocketAddress& remote_address() { return remote_address_; }
@@ -311,7 +317,9 @@ class TestChannel : public sigslot::has_slots<> {
   void Ping(int64_t now) { conn_->Ping(now); }
   void Stop() {
     if (conn_) {
+      conn_->SignalDestroyed.disconnect(this);
       conn_->Destroy();
+      conn_ = nullptr;
     }
   }
 

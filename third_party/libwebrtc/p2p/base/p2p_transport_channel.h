@@ -212,6 +212,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
 
   // Public for unit tests.
   rtc::ArrayView<Connection*> connections() const;
+  void RemoveConnectionForTest(Connection* connection);
 
   // Public for unit tests.
   PortAllocatorSession* allocator_session() const {
