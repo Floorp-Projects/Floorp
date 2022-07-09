@@ -21,13 +21,15 @@ namespace webrtc {
 struct Garment {
   int price = 0;
   std::string color = "";
+  bool has_glitter = false;
 
   // Only needed for testing.
   Garment() = default;
-  Garment(int p, std::string c) : price(p), color(c) {}
+  Garment(int p, std::string c, bool g) : price(p), color(c), has_glitter(g) {}
 
   bool operator==(const Garment& other) const {
-    return price == other.price && color == other.color;
+    return price == other.price && color == other.color &&
+           has_glitter == other.has_glitter;
   }
 };
 
@@ -60,17 +62,20 @@ TEST(FieldTrialListTest, ParsesListParameter) {
 TEST(FieldTrialListTest, ParsesStructList) {
   FieldTrialStructList<Garment> my_list(
       {FieldTrialStructMember("color", [](Garment* g) { return &g->color; }),
-       FieldTrialStructMember("price", [](Garment* g) { return &g->price; })},
-      {{1, "blue"}, {2, "red"}});
+       FieldTrialStructMember("price", [](Garment* g) { return &g->price; }),
+       FieldTrialStructMember("has_glitter",
+                              [](Garment* g) { return &g->has_glitter; })},
+      {{1, "blue", false}, {2, "red", true}});
 
   ParseFieldTrial({&my_list},
                   "color:mauve|red|gold,"
                   "price:10|20|30,"
+                  "has_glitter:1|0|1,"
                   "other_param:asdf");
 
   ASSERT_THAT(my_list.Get(),
-              ElementsAre(Garment{10, "mauve"}, Garment{20, "red"},
-                          Garment{30, "gold"}));
+              ElementsAre(Garment{10, "mauve", true}, Garment{20, "red", false},
+                          Garment{30, "gold", true}));
 }
 
 // One FieldTrialList has the wrong length, so we use the user-provided default
@@ -80,7 +85,7 @@ TEST(FieldTrialListTest, StructListKeepsDefaultWithMismatchingLength) {
       {FieldTrialStructMember("wrong_length",
                               [](Garment* g) { return &g->color; }),
        FieldTrialStructMember("price", [](Garment* g) { return &g->price; })},
-      {{1, "blue"}, {2, "red"}});
+      {{1, "blue", true}, {2, "red", false}});
 
   ParseFieldTrial({&my_list},
                   "wrong_length:mauve|magenta|chartreuse|indigo,"
@@ -88,7 +93,7 @@ TEST(FieldTrialListTest, StructListKeepsDefaultWithMismatchingLength) {
                   "price:10|20|30");
 
   ASSERT_THAT(my_list.Get(),
-              ElementsAre(Garment{1, "blue"}, Garment{2, "red"}));
+              ElementsAre(Garment{1, "blue", true}, Garment{2, "red", false}));
 }
 
 // One list is missing. We set the values we're given, and the others remain
@@ -97,12 +102,13 @@ TEST(FieldTrialListTest, StructListUsesDefaultForMissingList) {
   FieldTrialStructList<Garment> my_list(
       {FieldTrialStructMember("color", [](Garment* g) { return &g->color; }),
        FieldTrialStructMember("price", [](Garment* g) { return &g->price; })},
-      {{1, "blue"}, {2, "red"}});
+      {{1, "blue", true}, {2, "red", false}});
 
   ParseFieldTrial({&my_list}, "price:10|20|30");
 
   ASSERT_THAT(my_list.Get(),
-              ElementsAre(Garment{10, ""}, Garment{20, ""}, Garment{30, ""}));
+              ElementsAre(Garment{10, "", false}, Garment{20, "", false},
+                          Garment{30, "", false}));
 }
 
 // The user haven't provided values for any lists, so we use the default list.
@@ -110,12 +116,12 @@ TEST(FieldTrialListTest, StructListUsesDefaultListWithoutValues) {
   FieldTrialStructList<Garment> my_list(
       {FieldTrialStructMember("color", [](Garment* g) { return &g->color; }),
        FieldTrialStructMember("price", [](Garment* g) { return &g->price; })},
-      {{1, "blue"}, {2, "red"}});
+      {{1, "blue", true}, {2, "red", false}});
 
   ParseFieldTrial({&my_list}, "");
 
   ASSERT_THAT(my_list.Get(),
-              ElementsAre(Garment{1, "blue"}, Garment{2, "red"}));
+              ElementsAre(Garment{1, "blue", true}, Garment{2, "red", false}));
 }
 
 // Some lists are provided and all are empty, so we return a empty list.
@@ -123,7 +129,7 @@ TEST(FieldTrialListTest, StructListHandlesEmptyLists) {
   FieldTrialStructList<Garment> my_list(
       {FieldTrialStructMember("color", [](Garment* g) { return &g->color; }),
        FieldTrialStructMember("price", [](Garment* g) { return &g->price; })},
-      {{1, "blue"}, {2, "red"}});
+      {{1, "blue", true}, {2, "red", false}});
 
   ParseFieldTrial({&my_list}, "color,price");
 
