@@ -177,9 +177,21 @@ def _RunPesq(executable_path,
   # Need to provide paths in the current directory due to a bug in PESQ:
   # On Mac, for some 'path/to/file.wav', if 'file.wav' is longer than
   # 'path/to', PESQ crashes.
-  out = subprocess.check_output(_LogCommand(command),
-                                cwd=directory,
-                                stderr=subprocess.STDOUT)
+  process = subprocess.Popen(_LogCommand(command),
+                             cwd=directory,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+
+  try:
+    out, err = process.communicate(timeout=120)
+  except TimeoutExpired:
+    process.kill()
+    out, err = process.communicate()
+
+  if process.returncode != 0:
+    logging.error('%s (exit_code: %d)',
+                  err.decode('utf-8').strip(), process.returncode)
+    return {}
 
   # Find the scores in stdout of PESQ.
   match = re.search(
