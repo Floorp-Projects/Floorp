@@ -44,11 +44,7 @@ void TransportFeedbackDemuxer::DeRegisterStreamFeedbackObserver(
 }
 
 void TransportFeedbackDemuxer::AddPacket(const RtpPacketSendInfo& packet_info) {
-  // Currently called on the send transport queue.
-  // TODO(tommi): When registration/unregistration as well as
-  // OnTransportFeedback callbacks occur on the transport queue, we can remove
-  // this lock.
-  MutexLock lock(&lock_);
+  RTC_DCHECK_RUN_ON(&observer_checker_);
 
   StreamFeedbackObserver::StreamPacketInfo info;
   info.ssrc = packet_info.media_ssrc;
@@ -66,24 +62,22 @@ void TransportFeedbackDemuxer::AddPacket(const RtpPacketSendInfo& packet_info) {
 
 void TransportFeedbackDemuxer::OnTransportFeedback(
     const rtcp::TransportFeedback& feedback) {
+  RTC_DCHECK_RUN_ON(&observer_checker_);
+
   std::vector<StreamFeedbackObserver::StreamPacketInfo> stream_feedbacks;
-  {
-    MutexLock lock(&lock_);
-    for (const auto& packet : feedback.GetAllPackets()) {
-      int64_t seq_num =
-          seq_num_unwrapper_.UnwrapWithoutUpdate(packet.sequence_number());
-      auto it = history_.find(seq_num);
-      if (it != history_.end()) {
-        auto packet_info = it->second;
-        packet_info.received = packet.received();
-        stream_feedbacks.push_back(std::move(packet_info));
-        if (packet.received())
-          history_.erase(it);
-      }
+  for (const auto& packet : feedback.GetAllPackets()) {
+    int64_t seq_num =
+        seq_num_unwrapper_.UnwrapWithoutUpdate(packet.sequence_number());
+    auto it = history_.find(seq_num);
+    if (it != history_.end()) {
+      auto packet_info = it->second;
+      packet_info.received = packet.received();
+      stream_feedbacks.push_back(std::move(packet_info));
+      if (packet.received())
+        history_.erase(it);
     }
   }
 
-  RTC_DCHECK_RUN_ON(&observer_checker_);
   for (auto& observer : observers_) {
     std::vector<StreamFeedbackObserver::StreamPacketInfo> selected_feedback;
     for (const auto& packet_info : stream_feedbacks) {
