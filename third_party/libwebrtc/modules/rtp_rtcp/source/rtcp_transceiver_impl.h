@@ -104,14 +104,24 @@ class RtcpTransceiverImpl {
 
   void ReschedulePeriodicCompoundPackets();
   void SchedulePeriodicCompoundPackets(int64_t delay_ms);
+  // Appends RTCP receiver reports with attached report blocks to the `sender`.
+  // Uses up to `config_.max_packet_size - reserved_bytes`
+  void FillReports(Timestamp now,
+                   size_t reserved_bytes,
+                   PacketSender& rtcp_sender);
+
   // Creates compound RTCP packet, as defined in
   // https://tools.ietf.org/html/rfc5506#section-2
-  void CreateCompoundPacket(PacketSender* sender);
+  void CreateCompoundPacket(Timestamp now,
+                            size_t reserved_bytes,
+                            PacketSender& rtcp_sender);
+
   // Sends RTCP packets.
   void SendPeriodicCompoundPacket();
   void SendImmediateFeedback(const rtcp::RtcpPacket& rtcp_packet);
-  // Generate Report Blocks to be send in Sender or Receiver Report.
-  std::vector<rtcp::ReportBlock> CreateReportBlocks(Timestamp now);
+  // Generate Report Blocks to be send in Sender or Receiver Reports.
+  std::vector<rtcp::ReportBlock> CreateReportBlocks(Timestamp now,
+                                                    size_t num_max_blocks);
 
   const RtcpTransceiverConfig config_;
 

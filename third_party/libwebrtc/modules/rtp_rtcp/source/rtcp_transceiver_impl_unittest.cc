@@ -40,6 +40,7 @@ namespace {
 
 using ::testing::_;
 using ::testing::ElementsAre;
+using ::testing::Ge;
 using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::SizeIs;
@@ -947,6 +948,61 @@ TEST(RtcpTransceiverImplTest,
 
   ASSERT_EQ(report_blocks[1].source_ssrc(), kRemoteSsrc2);
   EXPECT_EQ(CompactNtpRttToMs(report_blocks[1].delay_since_last_sr()), 100);
+}
+
+TEST(RtcpTransceiverImplTest, MaySendMultipleReceiverReportInSinglePacket) {
+  std::vector<ReportBlock> statistics_report_blocks(40);
+  MockReceiveStatisticsProvider receive_statistics;
+  EXPECT_CALL(receive_statistics, RtcpReportBlocks(/*max_blocks=*/Ge(40u)))
+      .WillOnce(Return(statistics_report_blocks));
+
+  SimulatedClock clock(0);
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.clock = &clock;
+  RtcpPacketParser rtcp_parser;
+  RtcpParserTransport transport(&rtcp_parser);
+  config.outgoing_transport = &transport;
+  config.receive_statistics = &receive_statistics;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  // Trigger ReceiverReports.
+  rtcp_transceiver.SendCompoundPacket();
+
+  // Expect a single RTCP packet with multiple receiver reports in it.
+  EXPECT_EQ(transport.num_packets(), 1);
+  // Receiver report may contain up to 31 report blocks, thus 2 reports are
+  // needed to carry 40 blocks: 31 in the first, 9 in the last.
+  EXPECT_EQ(rtcp_parser.receiver_report()->num_packets(), 2);
+  // RtcpParser remembers just the last receiver report, thus can't check number
+  // of blocks in the first receiver report.
+  EXPECT_THAT(rtcp_parser.receiver_report()->report_blocks(), SizeIs(9));
+}
+
+TEST(RtcpTransceiverImplTest, AttachMaxNumberOfReportBlocksToCompoundPacket) {
+  MockReceiveStatisticsProvider receive_statistics;
+  EXPECT_CALL(receive_statistics, RtcpReportBlocks)
+      .WillOnce([](size_t max_blocks) {
+        return std::vector<ReportBlock>(max_blocks);
+      });
+  SimulatedClock clock(0);
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.clock = &clock;
+  config.rtcp_mode = RtcpMode::kCompound;
+  RtcpPacketParser rtcp_parser;
+  RtcpParserTransport transport(&rtcp_parser);
+  config.outgoing_transport = &transport;
+  config.receive_statistics = &receive_statistics;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  EXPECT_EQ(transport.num_packets(), 0);
+  // Send some fast feedback message. Because of compound mode, report blocks
+  // should be attached.
+  rtcp_transceiver.SendPictureLossIndication(/*ssrc=*/123);
+
+  // Expect single RTCP packet with multiple receiver reports and a PLI.
+  EXPECT_EQ(transport.num_packets(), 1);
+  EXPECT_GT(rtcp_parser.receiver_report()->num_packets(), 1);
+  EXPECT_EQ(rtcp_parser.pli()->num_packets(), 1);
 }
 
 TEST(RtcpTransceiverImplTest, SendsNack) {
