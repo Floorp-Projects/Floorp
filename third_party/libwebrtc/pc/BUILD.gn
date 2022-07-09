@@ -255,8 +255,6 @@ rtc_library("peerconnection") {
     "sctp_data_channel.h",
     "sdp_offer_answer.cc",  # TODO: Make separate target when not circular
     "sdp_offer_answer.h",  # dependent on peerconnection.h
-    "sdp_serializer.cc",
-    "sdp_serializer.h",
     "sdp_utils.cc",
     "sdp_utils.h",
     "stats_collector.cc",
@@ -473,6 +471,24 @@ rtc_source_set("rtc_stats_traversal") {
 }
 rtc_source_set("sdp_serializer") {
   visibility = [ ":*" ]
+  sources = [
+    "sdp_serializer.cc",
+    "sdp_serializer.h",
+  ]
+  deps = [
+    ":session_description",
+    ":simulcast_description",
+    "../api:rtc_error",
+    "../media:rtc_media_base",
+    "../modules/rtp_rtcp:rtp_rtcp_format",
+    "../rtc_base:checks",
+    "../rtc_base:stringutils",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings:strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 rtc_source_set("sdp_utils") {
   visibility = [ ":*" ]
@@ -1200,6 +1216,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":rtp_receiver",
       ":rtp_sender",
       ":rtp_transceiver",
+      ":sdp_serializer",
       ":session_description",
       ":usage_pattern",
       ":video_rtp_receiver",
