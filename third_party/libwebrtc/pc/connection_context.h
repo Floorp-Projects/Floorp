@@ -103,6 +103,7 @@ class ConnectionContext final
   // Note: Since owned_network_thread_ and owned_worker_thread_ are used
   // in the initialization of network_thread_ and worker_thread_, they
   // must be declared before them, so that they are initialized first.
+  std::unique_ptr<rtc::SocketFactory> owned_socket_factory_;
   std::unique_ptr<rtc::Thread> owned_network_thread_
       RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<rtc::Thread> owned_worker_thread_
