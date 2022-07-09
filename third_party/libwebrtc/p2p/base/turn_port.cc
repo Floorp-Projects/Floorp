@@ -922,9 +922,7 @@ void TurnPort::Close() {
   // Stop the port from creating new connections.
   state_ = STATE_DISCONNECTED;
   // Delete all existing connections; stop sending data.
-  for (auto kv : connections()) {
-    kv.second->Destroy();
-  }
+  DestroyAllConnections();
 
   SignalTurnPortClosed(this);
 }
@@ -1272,10 +1270,6 @@ void TurnPort::HandleConnectionDestroyed(Connection* conn) {
   const rtc::SocketAddress& remote_address = conn->remote_candidate().address();
   TurnEntry* entry = FindEntry(remote_address);
   RTC_DCHECK(entry != NULL);
-  ScheduleEntryDestruction(entry);
-}
-
-void TurnPort::ScheduleEntryDestruction(TurnEntry* entry) {
   RTC_DCHECK(!entry->destruction_timestamp().has_value());
   int64_t timestamp = rtc::TimeMillis();
   entry->set_destruction_timestamp(timestamp);

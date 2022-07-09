@@ -361,7 +361,6 @@ class TurnPort : public Port {
   // Destroys the entry only if `timestamp` matches the destruction timestamp
   // in `entry`.
   void DestroyEntryIfNotCancelled(TurnEntry* entry, int64_t timestamp);
-  void ScheduleEntryDestruction(TurnEntry* entry);
 
   // Marks the connection with remote address `address` failed and
   // pruned (a.k.a. write-timed-out). Returns true if a connection is found.
