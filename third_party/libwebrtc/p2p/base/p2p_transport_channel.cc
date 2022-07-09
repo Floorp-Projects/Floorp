@@ -1656,6 +1656,17 @@ rtc::ArrayView<Connection*> P2PTransportChannel::connections() const {
                                      res.size());
 }
 
+void P2PTransportChannel::RemoveConnectionForTest(Connection* connection) {
+  RTC_DCHECK_RUN_ON(network_thread_);
+  RTC_DCHECK(FindConnection(connection));
+  connection->SignalDestroyed.disconnect(this);
+  ice_controller_->OnConnectionDestroyed(connection);
+  RTC_DCHECK(!FindConnection(connection));
+  if (selected_connection_ == connection)
+    selected_connection_ = nullptr;
+  connection->Destroy();
+}
+
 // Monitor connection states.
 void P2PTransportChannel::UpdateConnectionStates() {
   RTC_DCHECK_RUN_ON(network_thread_);

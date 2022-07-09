@@ -151,6 +151,12 @@ class TestConnectionWrapper : public sigslot::has_slots<> {
         this, &TestConnectionWrapper::OnConnectionDestroyed);
   }
 
+  ~TestConnectionWrapper() {
+    if (connection_) {
+      connection_->SignalDestroyed.disconnect(this);
+    }
+  }
+
   Connection* connection() { return connection_; }
 
  private:
