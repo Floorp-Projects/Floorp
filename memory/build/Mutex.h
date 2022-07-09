@@ -16,6 +16,7 @@
 #  include <pthread.h>
 #endif
 #include "mozilla/Attributes.h"
+#include "mozilla/ThreadSafety.h"
 
 #if defined(XP_DARWIN)
 // For information about the following undocumented flags and functions see
@@ -40,11 +41,10 @@ static_assert(sizeof(os_unfair_lock) == sizeof(OSSpinLock),
 #endif  // defined(XP_DARWIN)
 
 // Mutexes based on spinlocks.  We can't use normal pthread spinlocks in all
-// places, because they require malloc()ed memory, which causes
-// bootstrapping issues in some cases.  We also can't use constructors,
-// because for statics, they would fire after the first use of malloc,
-// resetting the locks.
-struct Mutex {
+// places, because they require malloc()ed memory, which causes bootstrapping
+// issues in some cases.  We also can't use constructors, because for statics,
+// they would fire after the first use of malloc, resetting the locks.
+struct CAPABILITY Mutex {
 #if defined(XP_WIN)
   CRITICAL_SECTION mMutex;
 #elif defined(XP_DARWIN)
@@ -86,7 +86,7 @@ struct Mutex {
     return true;
   }
 
-  inline void Lock() {
+  inline void Lock() CAPABILITY_ACQUIRE() {
 #if defined(XP_WIN)
     EnterCriticalSection(&mMutex);
 #elif defined(XP_DARWIN)
@@ -109,7 +109,7 @@ struct Mutex {
 #endif
   }
 
-  inline void Unlock() {
+  inline void Unlock() CAPABILITY_RELEASE() {
 #if defined(XP_WIN)
     LeaveCriticalSection(&mMutex);
 #elif defined(XP_DARWIN)
@@ -137,12 +137,14 @@ struct Mutex {
 // Ideally, we'd use the same type of locks everywhere, but SRWLocks
 // everywhere incur a performance penalty. See bug 1418389.
 #if defined(XP_WIN)
-struct StaticMutex {
+struct CAPABILITY StaticMutex {
   SRWLOCK mMutex;
 
-  inline void Lock() { AcquireSRWLockExclusive(&mMutex); }
+  inline void Lock() CAPABILITY_ACQUIRE() { AcquireSRWLockExclusive(&mMutex); }
 
-  inline void Unlock() { ReleaseSRWLockExclusive(&mMutex); }
+  inline void Unlock() CAPABILITY_RELEASE() {
+    ReleaseSRWLockExclusive(&mMutex);
+  }
 };
 
 // Normally, we'd use a constexpr constructor, but MSVC likes to create
@@ -166,10 +168,15 @@ typedef Mutex StaticMutex;
 #endif
 
 template <typename T>
-struct MOZ_RAII AutoLock {
-  explicit AutoLock(T& aMutex) : mMutex(aMutex) { mMutex.Lock(); }
+struct SCOPED_CAPABILITY MOZ_RAII AutoLock {
+  explicit AutoLock(T& aMutex) CAPABILITY_ACQUIRE(aMutex) : mMutex(aMutex) {
+    mMutex.Lock();
+  }
 
-  ~AutoLock() { mMutex.Unlock(); }
+  ~AutoLock() CAPABILITY_RELEASE() { mMutex.Unlock(); }
+
+  AutoLock(const AutoLock&) = delete;
+  AutoLock(AutoLock&&) = delete;
 
  private:
   T& mMutex;

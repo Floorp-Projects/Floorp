@@ -1131,7 +1131,9 @@ bool DCSurfaceVideo::CallVideoProcessorBlt() {
           : DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
   hr = swapChain3->SetColorSpace1(outputColorSpace);
   if (FAILED(hr)) {
-    gfxCriticalNote << "SetColorSpace1 failed: " << gfx::hexa(hr);
+    gfxCriticalNoteOnce << "SetColorSpace1 failed: " << gfx::hexa(hr);
+    RenderThread::Get()->NotifyWebRenderError(
+        wr::WebRenderError::VIDEO_OVERLAY);
     return false;
   }
   videoContext1->VideoProcessorSetOutputColorSpace1(videoProcessor,

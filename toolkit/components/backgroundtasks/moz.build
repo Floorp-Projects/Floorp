@@ -76,6 +76,12 @@ TESTING_JS_MODULES.backgroundtasks += [
     "tests/BackgroundTask_wait.jsm",
 ]
 
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    # ASRouter is Firefox-only.
+    TESTING_JS_MODULES.backgroundtasks += [
+        "tests/BackgroundTask_targeting.jsm",
+    ]
+
 FINAL_TARGET_FILES.defaults.backgroundtasks += [
     "defaults/backgroundtasks.js",
 ]

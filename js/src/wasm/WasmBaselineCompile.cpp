@@ -651,7 +651,7 @@ void BaseCompiler::insertBreakablePoint(CallSiteDesc::Kind kind) {
               CodeOffset(masm.currentOffset()));
 
   // Branch destination
-  MOZ_ASSERT(masm.currentOffset() == uint32_t(L.offset()));
+  MOZ_ASSERT_IF(!masm.oom(), masm.currentOffset() == uint32_t(L.offset()));
 #elif defined(JS_CODEGEN_X86)
   // 83 MODRM OFFS IB
   static_assert(Instance::offsetOfDebugTrapHandler() < 128);
@@ -669,7 +669,7 @@ void BaseCompiler::insertBreakablePoint(CallSiteDesc::Kind kind) {
               CodeOffset(masm.currentOffset()));
 
   // Branch destination
-  MOZ_ASSERT(masm.currentOffset() == uint32_t(L.offset()));
+  MOZ_ASSERT_IF(!masm.oom(), masm.currentOffset() == uint32_t(L.offset()));
 #elif defined(JS_CODEGEN_ARM64)
   ScratchPtr scratch(*this);
   ARMRegister tmp(scratch, 64);

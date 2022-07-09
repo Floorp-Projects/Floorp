@@ -805,28 +805,36 @@ ScriptSourceObject* ModuleObject::scriptSourceObject() const {
               .as<ScriptSourceObject>();
 }
 
-bool ModuleObject::initAsyncSlots(JSContext* cx, bool isAsync,
+bool ModuleObject::initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
                                   HandleObject asyncParentModulesList) {
-  initReservedSlot(AsyncSlot, BooleanValue(isAsync));
+  initReservedSlot(HasTopLevelAwaitSlot, BooleanValue(hasTopLevelAwait));
   initReservedSlot(AsyncParentModulesSlot,
                    ObjectValue(*asyncParentModulesList));
   return true;
 }
 
-constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_FALSE = 0;
-constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_INIT = 1;
-uint32_t AsyncPostOrder = ASYNC_EVALUATING_POST_ORDER_INIT;
-
-uint32_t nextPostOrder() {
-  uint32_t ordinal = AsyncPostOrder;
-  MOZ_ASSERT(AsyncPostOrder < MAX_UINT32);
-  AsyncPostOrder++;
+static uint32_t NextPostOrder(JSRuntime* rt) {
+  uint32_t ordinal = rt->moduleAsyncEvaluatingPostOrder;
+  MOZ_ASSERT(ordinal < MAX_UINT32);
+  rt->moduleAsyncEvaluatingPostOrder++;
   return ordinal;
+}
+
+// Reset the runtime's moduleAsyncEvaluatingPostOrder counter when the last
+// module that was async evaluating is finished.
+//
+// The graph is not re-entrant and any future modules will be independent from
+// this one.
+static void MaybeResetPostOrderCounter(JSRuntime* rt,
+                                       uint32_t finishedPostOrder) {
+  if (rt->moduleAsyncEvaluatingPostOrder == finishedPostOrder) {
+    rt->moduleAsyncEvaluatingPostOrder = ASYNC_EVALUATING_POST_ORDER_INIT;
+  }
 }
 
 void ModuleObject::setAsyncEvaluating() {
   initReservedSlot(AsyncEvaluatingPostOrderSlot,
-                   PrivateUint32Value(nextPostOrder()));
+                   PrivateUint32Value(NextPostOrder(runtimeFromMainThread())));
 }
 
 void ModuleObject::initScriptSlots(HandleScript script) {
@@ -953,8 +961,8 @@ void ModuleObject::setStatus(ModuleStatus newStatus) {
   setReservedSlot(StatusSlot, ModuleStatusValue(newStatus));
 }
 
-bool ModuleObject::isAsync() const {
-  return getReservedSlot(AsyncSlot).toBoolean();
+bool ModuleObject::hasTopLevelAwait() const {
+  return getReservedSlot(HasTopLevelAwaitSlot).toBoolean();
 }
 
 bool ModuleObject::isAsyncEvaluating() const {
@@ -968,12 +976,8 @@ bool ModuleObject::wasAsyncEvaluating() const {
 }
 
 void ModuleObject::setAsyncEvaluatingFalse() {
-  if (AsyncPostOrder == getAsyncEvaluatingPostOrder()) {
-    // If this condition is true, we can reset postOrder.
-    // Graph is not re-entrant and any future modules will be independent from
-    // this one.
-    AsyncPostOrder = ASYNC_EVALUATING_POST_ORDER_INIT;
-  }
+  JSRuntime* rt = runtimeFromMainThread();
+  MaybeResetPostOrderCounter(rt, getAsyncEvaluatingPostOrder());
   return setReservedSlot(AsyncEvaluatingPostOrderSlot,
                          PrivateUint32Value(ASYNC_EVALUATING_POST_ORDER_FALSE));
 }
@@ -1208,7 +1212,7 @@ bool ModuleObject::execute(JSContext* cx, Handle<ModuleObject*> self) {
   RootedScript script(cx, self->script());
 
   auto guardA = mozilla::MakeScopeExit([&] {
-    if (self->isAsync()) {
+    if (self->hasTopLevelAwait()) {
       // Handled in AsyncModuleExecutionFulfilled and
       // AsyncModuleExecutionRejected.
       return;
@@ -2066,163 +2070,6 @@ ModuleObject* js::CallModuleResolveHook(JSContext* cx,
   }
 
   return &result->as<ModuleObject>();
-}
-
-bool js::AsyncModuleExecutionFulfilledHandler(JSContext* cx, unsigned argc,
-                                              Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  JSFunction& func = args.callee().as<JSFunction>();
-
-  Rooted<ModuleObject*> module(
-      cx, &func.getExtendedSlot(FunctionExtended::MODULE_SLOT)
-               .toObject()
-               .as<ModuleObject>());
-  AsyncModuleExecutionFulfilled(cx, module);
-  args.rval().setUndefined();
-  return true;
-}
-
-bool js::AsyncModuleExecutionRejectedHandler(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  JSFunction& func = args.callee().as<JSFunction>();
-  Rooted<ModuleObject*> module(
-      cx, &func.getExtendedSlot(FunctionExtended::MODULE_SLOT)
-               .toObject()
-               .as<ModuleObject>());
-  AsyncModuleExecutionRejected(cx, module, args.get(0));
-  args.rval().setUndefined();
-  return true;
-}
-
-// Top Level Await
-// https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionfulfilled
-void js::AsyncModuleExecutionFulfilled(JSContext* cx,
-                                       Handle<ModuleObject*> module) {
-  // Step 1.
-  MOZ_ASSERT(module->status() == ModuleStatus::Evaluated);
-
-  // Step 2.
-  MOZ_ASSERT(module->isAsyncEvaluating());
-
-  ModuleObject::onTopLevelEvaluationFinished(module);
-
-  if (module->hasTopLevelCapability()) {
-    MOZ_ASSERT(module->getCycleRoot() == module);
-    if (!ModuleObject::topLevelCapabilityResolve(cx, module)) {
-      // If Resolve fails, there's nothing more we can do here.
-      cx->clearPendingException();
-    }
-  }
-
-  Rooted<ModuleVector> sortedList(cx);
-  if (!GatherAvailableModuleAncestors(cx, module, &sortedList)) {
-    // We have been interrupted or have OOM'd -- all bets are off, reject the
-    // promise. Not much more we can do.
-    if (!cx->isExceptionPending()) {
-      AsyncModuleExecutionRejected(cx, module, UndefinedHandleValue);
-      return;
-    }
-
-    RootedValue exception(cx);
-    if (!cx->getPendingException(&exception)) {
-      return;
-    }
-    cx->clearPendingException();
-    AsyncModuleExecutionRejected(cx, module, exception);
-  }
-
-  // this is out of step with the spec in order to be able to OOM
-  module->setAsyncEvaluatingFalse();
-
-  Rooted<ModuleObject*> m(cx);
-
-  for (ModuleObject* obj : sortedList) {
-    m = obj;
-
-    // Step 2.
-    if (!m->isAsyncEvaluating()) {
-      MOZ_ASSERT(m->hadEvaluationError());
-      return;
-    }
-
-    if (m->isAsync()) {
-      // Steps for ExecuteAsyncModule
-      MOZ_ASSERT(m->status() == ModuleStatus::Evaluating ||
-                 m->status() == ModuleStatus::Evaluated);
-      MOZ_ASSERT(m->isAsync());
-      MOZ_ASSERT(m->isAsyncEvaluating());
-      MOZ_ALWAYS_TRUE(ModuleObject::execute(cx, m));
-    } else {
-      if (!ModuleObject::execute(cx, m)) {
-        MOZ_ASSERT(cx->isExceptionPending());
-        RootedValue exception(cx);
-        if (!cx->getPendingException(&exception)) {
-          return;
-        }
-        cx->clearPendingException();
-        AsyncModuleExecutionRejected(cx, m, exception);
-      } else {
-        m->setAsyncEvaluatingFalse();
-        if (m->hasTopLevelCapability()) {
-          MOZ_ASSERT(m->getCycleRoot() == m);
-          if (!ModuleObject::topLevelCapabilityResolve(cx, m)) {
-            // If Resolve fails, there's nothing more we can do here.
-            cx->clearPendingException();
-          }
-        }
-      }
-    }
-  }
-
-  // Step 6.
-  // Return undefined.
-}
-
-// https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionrejected
-void js::AsyncModuleExecutionRejected(JSContext* cx,
-                                      Handle<ModuleObject*> module,
-                                      HandleValue error) {
-  // Step 1.
-  MOZ_ASSERT(module->status() == ModuleStatus::Evaluated ||
-             module->status() == ModuleStatus::Evaluated_Error);
-
-  // Step 2.
-  if (!module->isAsyncEvaluating()) {
-    MOZ_ASSERT(module->hadEvaluationError());
-    return;
-  }
-
-  ModuleObject::onTopLevelEvaluationFinished(module);
-
-  // Step 3.
-  MOZ_ASSERT(!module->hadEvaluationError());
-
-  // Step 4.
-  module->setEvaluationError(error);
-
-  // Step 5.
-  module->setAsyncEvaluatingFalse();
-
-  // Step 6.
-  uint32_t length = module->asyncParentModules()->length();
-  Rooted<ModuleObject*> parent(cx);
-  for (uint32_t i = 0; i < length; i++) {
-    parent =
-        &module->asyncParentModules()->get(i).toObject().as<ModuleObject>();
-    AsyncModuleExecutionRejected(cx, parent, error);
-  }
-
-  // Step 7.
-  if (module->hasTopLevelCapability()) {
-    MOZ_ASSERT(module->getCycleRoot() == module);
-    if (!ModuleObject::topLevelCapabilityReject(cx, module, error)) {
-      // If Reject fails, there's nothing more we can do here.
-      cx->clearPendingException();
-    }
-  }
-
-  // Return undefined.
 }
 
 bool ModuleObject::topLevelCapabilityResolve(JSContext* cx,

@@ -2427,7 +2427,7 @@ void DebugEnvironmentProxy::initSnapshot(ArrayObject& o) {
     } else {
       auto* moduleEnv = ModuleEnvironmentObject::find(&environment());
       MOZ_ASSERT(moduleEnv);
-      MOZ_ASSERT(moduleEnv->module().isAsync());
+      MOZ_ASSERT(moduleEnv->module().hasTopLevelAwait());
     }
   }
 #endif

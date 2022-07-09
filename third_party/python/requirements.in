@@ -13,7 +13,7 @@ fluent.syntax==0.18.1
 glean_parser==6.1.1
 # Pin importlib-metadata to a version compatible with poetry
 importlib-metadata==1.7.0
-jsmin==2.1.0
+jsmin==3.0.0
 json-e==2.7.0
 mozilla-version==0.3.4
 packaging==20.9

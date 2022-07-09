@@ -737,8 +737,11 @@
                         }
                       }
                     }
-                  },
-                  "secondary": {
+                  }
+                },
+                "secondary": {
+                  "type": "array",
+                  "items": {
                     "type": "object",
                     "properties": {
                       "label": {
@@ -749,7 +752,7 @@
                               "value": {
                                 "allOf": [
                                   {
-                                    "$ref": "#/definitions/plainText"
+                                    "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
                                   },
                                   {
                                     "description": "Button label override used when a localized version is not available."
@@ -780,7 +783,7 @@
                               "string_id": {
                                 "allOf": [
                                   {
-                                    "$ref": "#/definitions/plainText"
+                                    "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
                                   },
                                   {
                                     "description": "Id of localized string for button"
@@ -807,7 +810,7 @@
                               "url": {
                                 "allOf": [
                                   {
-                                    "$ref": "#/definitions/linkUrl"
+                                    "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/linkUrl"
                                   },
                                   {
                                     "description": "URL used in combination with the primary action dispatched."
