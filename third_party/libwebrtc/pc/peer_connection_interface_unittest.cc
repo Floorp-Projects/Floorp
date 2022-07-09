@@ -1561,8 +1561,8 @@ TEST_F(PeerConnectionInterfaceTestPlanB, AddTrackRemoveTrack) {
   EXPECT_TRUE(DoSetLocalDescription(std::move(offer)));
 
   // Now try removing the tracks.
-  EXPECT_TRUE(pc_->RemoveTrack(audio_sender));
-  EXPECT_TRUE(pc_->RemoveTrack(video_sender));
+  EXPECT_TRUE(pc_->RemoveTrackOrError(audio_sender).ok());
+  EXPECT_TRUE(pc_->RemoveTrackOrError(video_sender).ok());
 
   // Create a new offer and ensure it doesn't contain the removed senders.
   ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
@@ -1579,8 +1579,8 @@ TEST_F(PeerConnectionInterfaceTestPlanB, AddTrackRemoveTrack) {
 
   // Calling RemoveTrack on a sender no longer attached to a PeerConnection
   // should return false.
-  EXPECT_FALSE(pc_->RemoveTrack(audio_sender));
-  EXPECT_FALSE(pc_->RemoveTrack(video_sender));
+  EXPECT_FALSE(pc_->RemoveTrackOrError(audio_sender).ok());
+  EXPECT_FALSE(pc_->RemoveTrackOrError(video_sender).ok());
 }
 
 // Test creating senders without a stream specified,
@@ -1867,7 +1867,7 @@ TEST_P(PeerConnectionInterfaceTest, GetStatsForSpecificTrack) {
 
   // Remove the stream. Since we are sending to our selves the local
   // and the remote stream is the same.
-  pc_->RemoveTrack(pc_->GetSenders()[0]);
+  pc_->RemoveTrackOrError(pc_->GetSenders()[0]);
   // Do a re-negotiation.
   CreateOfferReceiveAnswer();
 

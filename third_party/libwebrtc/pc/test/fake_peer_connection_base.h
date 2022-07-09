@@ -50,8 +50,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
     return RTCError(RTCErrorType::UNSUPPORTED_OPERATION, "Not implemented");
   }
 
-  bool RemoveTrack(RtpSenderInterface* sender) override { return false; }
-
   RTCError RemoveTrackOrError(
       rtc::scoped_refptr<RtpSenderInterface> sender) override {
     return RTCError(RTCErrorType::UNSUPPORTED_OPERATION);

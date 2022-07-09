@@ -826,22 +826,6 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     return RTCError();
   }
 
-  // Legacy API for removing a track from the PeerConnection.
-  // Returns true on success.
-  // TODO(bugs.webrtc.org/9534): Replace with signature that returns RTCError.
-  ABSL_DEPRECATED("Use RemoveTrackOrError")
-  virtual bool RemoveTrack(RtpSenderInterface* sender) {
-    return RemoveTrackOrError(rtc::scoped_refptr<RtpSenderInterface>(sender))
-        .ok();
-  }
-
-  // Old name for the new API. Will be removed when clients are updated.
-  ABSL_DEPRECATED("Use RemoveTrackOrError")
-  virtual RTCError RemoveTrackNew(
-      rtc::scoped_refptr<RtpSenderInterface> sender) {
-    return RemoveTrackOrError(sender);
-  }
-
   // AddTransceiver creates a new RtpTransceiver and adds it to the set of
   // transceivers. Adding a transceiver will cause future calls to CreateOffer
   // to add a media description for the corresponding transceiver.
