@@ -788,8 +788,7 @@ class StreamConfig {
  public:
   // sample_rate_hz: The sampling rate of the stream.
   // num_channels: The number of audio channels in the stream.
-  StreamConfig(int sample_rate_hz = 0,
-               size_t num_channels = 0)
+  StreamConfig(int sample_rate_hz = 0, size_t num_channels = 0)
       : sample_rate_hz_(sample_rate_hz),
         num_channels_(num_channels),
         num_frames_(calculate_frames(sample_rate_hz)) {}

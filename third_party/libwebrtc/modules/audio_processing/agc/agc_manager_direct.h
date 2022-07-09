@@ -126,6 +126,7 @@ class AgcManagerDirect final {
 
   void AggregateChannelLevels();
 
+  const absl::optional<int> min_mic_level_override_;
   std::unique_ptr<ApmDataDumper> data_dumper_;
   static int instance_counter_;
   const bool use_min_channel_level_;
