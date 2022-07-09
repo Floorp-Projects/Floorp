@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/memory/memory.h"
 #include "absl/strings/match.h"
 #include "p2p/base/port_allocator.h"
 #include "rtc_base/checks.h"
@@ -833,15 +834,25 @@ void Connection::Prune() {
 
 void Connection::Destroy() {
   RTC_DCHECK_RUN_ON(network_thread_);
-  // TODO(deadbeef, nisse): This may leak if an application closes a
-  // PeerConnection and then quickly destroys the PeerConnectionFactory (along
-  // with the networking thread on which this message is posted). Also affects
-  // tests, with a workaround in
-  // AutoSocketServerThread::~AutoSocketServerThread.
-  RTC_LOG(LS_VERBOSE) << ToString() << ": Connection destroyed";
-  // TODO(bugs.webrtc.org/11988): Use PostTask.
-  port_->thread()->Post(RTC_FROM_HERE, this, MSG_DELETE);
+  RTC_DLOG(LS_VERBOSE) << ToString() << ": Connection destroyed";
+
+  // Fire the 'destroyed' event before deleting the object. This is done
+  // intentionally to avoid a situation whereby the signal might have dangling
+  // pointers to objects that have been deleted by the time the async task
+  // that deletes the connection object runs.
+  SignalDestroyed(this);
+  SignalDestroyed.disconnect_all();
+
   LogCandidatePairConfig(webrtc::IceCandidatePairConfigType::kDestroyed);
+
+  // Unwind the stack before deleting the object in case upstream callers
+  // need to refer to the Connection's state as part of teardown.
+  // NOTE: We move ownership of 'this' into the capture section of the lambda
+  // so that the object will always be deleted, including if PostTask fails.
+  // In such a case (only tests), deletion would happen inside of the call
+  // to `Destroy()`.
+  network_thread_->PostTask(
+      webrtc::ToQueuedTask([me = absl::WrapUnique(this)]() {}));
 }
 
 void Connection::FailAndDestroy() {
@@ -1420,15 +1431,6 @@ void Connection::MaybeUpdatePeerReflexiveCandidate(
       remote_candidate_.generation() == new_candidate.generation()) {
     remote_candidate_ = new_candidate;
   }
-}
-
-void Connection::OnMessage(rtc::Message* pmsg) {
-  RTC_DCHECK_RUN_ON(network_thread_);
-  RTC_DCHECK(pmsg->message_id == MSG_DELETE);
-  RTC_LOG(LS_INFO) << "Connection deleted with number of pings sent: "
-                   << num_pings_sent_;
-  SignalDestroyed(this);
-  delete this;
 }
 
 int64_t Connection::last_received() const {

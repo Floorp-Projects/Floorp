@@ -100,6 +100,9 @@ TEST(GoogCcPeerScenarioTest, MAYBE_NoBweChangeFromVideoUnmute) {
     s.ProcessMessages(TimeDelta::Seconds(1));
     EXPECT_GE(get_bwe(), initial_bwe);
   }
+
+  caller->pc()->Close();
+  callee->pc()->Close();
 }
 
 }  // namespace test
