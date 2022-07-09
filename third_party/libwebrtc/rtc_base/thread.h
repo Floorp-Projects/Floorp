@@ -141,8 +141,6 @@ class RTC_EXPORT ThreadManager {
   Thread* WrapCurrentThread();
   void UnwrapCurrentThread();
 
-  bool IsMainThread();
-
 #if RTC_DCHECK_IS_ON
   // Registers that a Send operation is to be performed between `source` and
   // `target`, while checking that this does not cause a send cycle that could
@@ -188,9 +186,6 @@ class RTC_EXPORT ThreadManager {
 #if defined(WEBRTC_WIN)
   const DWORD key_;
 #endif
-
-  // The thread to potentially autowrap.
-  const PlatformThreadRef main_thread_ref_;
 };
 
 // WARNING! SUBCLASSES MUST CALL Stop() IN THEIR DESTRUCTORS!  See ~Thread().
