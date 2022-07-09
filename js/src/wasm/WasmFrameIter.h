@@ -192,7 +192,11 @@ class ProfilingFrameIterator {
                          const RegisterState& state);
 
   void operator++();
-  bool done() const { return !codeRange_ && exitReason_.isNone(); }
+
+  bool done() const {
+    MOZ_ASSERT_IF(!exitReason_.isNone(), codeRange_);
+    return !codeRange_;
+  }
 
   void* stackAddress() const {
     MOZ_ASSERT(!done());
