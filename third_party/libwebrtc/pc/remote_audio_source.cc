@@ -55,7 +55,7 @@ RemoteAudioSource::RemoteAudioSource(
     : main_thread_(rtc::Thread::Current()),
       worker_thread_(worker_thread),
       on_audio_channel_gone_action_(on_audio_channel_gone_action),
-      state_(MediaSourceInterface::kLive) {
+      state_(MediaSourceInterface::kInitializing) {
   RTC_DCHECK(main_thread_);
   RTC_DCHECK(worker_thread_);
 }

@@ -133,7 +133,6 @@ class AudioRtpReceiver : public ObserverInterface,
       RTC_GUARDED_BY(&signaling_thread_checker_);
   bool cached_track_enabled_ RTC_GUARDED_BY(&signaling_thread_checker_);
   double cached_volume_ RTC_GUARDED_BY(&signaling_thread_checker_) = 1.0;
-  bool stopped_ RTC_GUARDED_BY(&signaling_thread_checker_) = true;
   RtpReceiverObserverInterface* observer_
       RTC_GUARDED_BY(&signaling_thread_checker_) = nullptr;
   bool received_first_packet_ RTC_GUARDED_BY(&signaling_thread_checker_) =
