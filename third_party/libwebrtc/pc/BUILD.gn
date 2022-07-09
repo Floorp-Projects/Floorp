@@ -251,7 +251,6 @@ rtc_library("peerconnection") {
     "sdp_offer_answer.h",  # dependent on peerconnection.h
     "stats_collector.cc",
     "stats_collector.h",
-    "stream_collection.h",
     "webrtc_sdp.cc",
     "webrtc_sdp.h",
   ]
@@ -549,6 +548,8 @@ rtc_source_set("stats_collector") {
 }
 rtc_source_set("stream_collection") {
   visibility = [ ":*" ]
+  sources = [ "stream_collection.h" ]
+  deps = [ "../api:libjingle_peerconnection_api" ]
 }
 rtc_source_set("track_media_info_map") {
   visibility = [ ":*" ]
@@ -1316,6 +1317,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":sdp_serializer",
       ":sdp_utils",
       ":session_description",
+      ":stream_collection",
       ":track_media_info_map",
       ":usage_pattern",
       ":video_rtp_receiver",
@@ -1597,6 +1599,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":rtp_receiver",
       ":rtp_sender",
       ":sctp_data_channel",
+      ":stream_collection",
       ":video_track_source",
       "../api:audio_options_api",
       "../api:create_frame_generator",
