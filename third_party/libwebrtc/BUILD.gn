@@ -128,10 +128,6 @@ config("common_inherited_config") {
     defines += [ "WEBRTC_ENABLE_OBJC_SYMBOL_EXPORT" ]
   }
 
-  if (build_with_mozilla) {
-    defines += [ "WEBRTC_MOZILLA_BUILD" ]
-  }
-
   if (!rtc_builtin_ssl_root_certificates) {
     defines += [ "WEBRTC_EXCLUDE_BUILT_IN_SSL_ROOT_CERTS" ]
   }
