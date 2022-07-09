@@ -1169,6 +1169,9 @@ bool PeerConnection::GetStats(StatsObserver* observer,
   RTC_LOG_THREAD_BLOCK_COUNT();
 
   stats_->UpdateStats(level);
+
+  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(4);
+
   // The StatsCollector is used to tell if a track is valid because it may
   // remember tracks that the PeerConnection previously removed.
   if (track && !stats_->IsValidTrack(track->id())) {

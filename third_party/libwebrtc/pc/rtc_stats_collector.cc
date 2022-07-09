@@ -974,7 +974,7 @@ void ProduceSenderMediaTrackStats(
         if (sender_info) {
           voice_sender_info = sender_info;
         } else {
-          RTC_LOG(LS_INFO)
+          RTC_DLOG(LS_INFO)
               << "RTCStatsCollector: No voice sender info for sender with ssrc "
               << sender->ssrc();
         }
@@ -1002,8 +1002,8 @@ void ProduceSenderMediaTrackStats(
         if (sender_info) {
           video_sender_info = sender_info;
         } else {
-          RTC_LOG(LS_INFO) << "No video sender info for sender with ssrc "
-                           << sender->ssrc();
+          RTC_DLOG(LS_INFO)
+              << "No video sender info for sender with ssrc " << sender->ssrc();
         }
       }
       std::unique_ptr<RTCMediaStreamTrackStats> video_track_stats =
