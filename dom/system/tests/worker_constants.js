@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint-env mozilla/chrome-worker */
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 function log(text) {
   dump("WORKER " + text + "\n");
 }
