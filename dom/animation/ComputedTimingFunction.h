@@ -47,43 +47,7 @@ class ComputedTimingFunction {
   }
 
  private:
-  struct StepFunc {
-    uint32_t mSteps = 1;
-    StyleStepPosition mPos = StyleStepPosition::End;
-    constexpr StepFunc() = default;
-    constexpr StepFunc(uint32_t aSteps, StyleStepPosition aPos)
-        : mSteps(aSteps), mPos(aPos){};
-    bool operator==(const StepFunc& aOther) const {
-      return mSteps == aOther.mSteps && mPos == aOther.mPos;
-    }
-  };
-
-  struct KeywordFunction {
-    KeywordFunction(mozilla::StyleTimingKeyword aKeyword,
-                    SMILKeySpline aFunction)
-        : mKeyword{aKeyword}, mFunction{aFunction} {}
-
-    bool operator==(const KeywordFunction& aOther) const {
-      return mKeyword == aOther.mKeyword && mFunction == aOther.mFunction;
-    }
-    mozilla::StyleTimingKeyword mKeyword;
-    SMILKeySpline mFunction;
-  };
-
-  using Function = mozilla::Variant<KeywordFunction, SMILKeySpline, StepFunc,
-                                    StylePiecewiseLinearFunction>;
-
-  static Function ConstructFunction(
-      const StyleComputedTimingFunction& aFunction);
-  ComputedTimingFunction(double x1, double y1, double x2, double y2)
-      : mFunction{AsVariant(SMILKeySpline{x1, y1, x2, y2})} {}
-  ComputedTimingFunction(uint32_t aSteps, StyleStepPosition aPos)
-      : mFunction{AsVariant(StepFunc{aSteps, aPos})} {}
-  explicit ComputedTimingFunction(StylePiecewiseLinearFunction aFunction)
-      : mFunction{AsVariant(std::move(aFunction))} {}
-  static double StepTiming(const StepFunc& aStepFunc, double aPortion,
-                           StyleEasingBeforeFlag aBeforeFlag);
-  Function mFunction;
+  StyleComputedTimingFunction mFunction;
 };
 
 inline bool operator==(const Maybe<ComputedTimingFunction>& aLHS,
