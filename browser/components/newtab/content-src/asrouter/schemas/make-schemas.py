@@ -10,8 +10,12 @@ from itertools import chain
 from pathlib import Path
 from urllib.parse import urlparse
 
+import jsonschema
+
+
 SCHEMA_BASE_DIR = Path("..", "templates")
 
+PANEL_TEST_PROVIDER_MESSAGES = Path("PanelTestProvider.messages.json")
 
 MESSAGE_TYPES = {
     "CFRUrlbarChiclet": Path("CFR", "templates", "CFRUrlbarChiclet.schema.json"),
@@ -23,6 +27,24 @@ MESSAGE_TYPES = {
     "UpdateAction": Path("OnboardingMessage", "UpdateAction.schema.json"),
     "WhatsNewMessage": Path("OnboardingMessage", "WhatsNewMessage.schema.json"),
 }
+
+
+class NestedRefResolver(jsonschema.RefResolver):
+    """A custom ref resolver that handles bundled schema.
+
+    This is the resolver used by Experimenter.
+    """
+
+    def __init__(self, schema):
+        super().__init__(base_uri=None, referrer=None)
+
+        if "$id" in schema:
+            self.store[schema["$id"]] = schema
+
+        if "$defs" in schema:
+            for dfn in schema["$defs"].values():
+                if "$id" in dfn:
+                    self.store[dfn["$id"]] = dfn
 
 
 def read_schema(path):
@@ -45,7 +67,12 @@ def extract_template_values(template):
 def patch_schema(schema):
     """Patch the given schema.
 
-    All relative references will be re-mapped to absolute references.
+    The JSON schema validator that Experimenter uses
+    (https://pypi.org/project/jsonschema/) does not support relative references,
+    nor does it support bundled schemas. We rewrite the schema so that all
+    relative refs are transformed into absolute refs via the schema's `$id`.
+
+    See-also: https://github.com/python-jsonschema/jsonschema/issues/313
     """
     schema_id = schema["$id"]
 
@@ -194,11 +221,35 @@ def main(check=False):
 
             raise ValueError("Schemas do not match!")
 
+        check_schema(filename, schema=on_disk)
+
     else:
         with filename.open("wb") as f:
             print(f"Generating {filename} ...")
             f.write(json.dumps(feature_schema, indent=2).encode("utf-8"))
             f.write(b"\n")
+
+
+def check_schema(filename, schema):
+    """Check that the schema validates.
+
+    This uses the same validation configuration that is used in Experimenter.
+    """
+    print("Validating messages with Experimenter JSON Schema validator...")
+
+    resolver = NestedRefResolver(schema)
+
+    with PANEL_TEST_PROVIDER_MESSAGES.open("r") as f:
+        messages = json.load(f)
+
+    for message in messages:
+        # PanelTestProvider overrides the targeting of all messages. Some
+        # messages are missing targeting and will fail without this patch.
+        message["targeting"] = 'providerCohorts.panel_local_testing == "SHOW_TEST"'
+        msg_id = message["id"]
+
+        print(f"Validating {msg_id} with {filename}...")
+        jsonschema.validate(instance=message, schema=schema, resolver=resolver)
 
 
 if __name__ == "__main__":
