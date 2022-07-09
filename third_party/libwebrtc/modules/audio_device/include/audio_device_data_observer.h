@@ -29,7 +29,7 @@ class AudioDeviceDataObserver {
                              size_t num_samples,
                              size_t bytes_per_sample,
                              size_t num_channels,
-                             const uint32_t samples_per_sec) = 0;
+                             uint32_t samples_per_sec) = 0;
 
   virtual void OnRenderData(const void* audio_samples,
                             size_t num_samples,

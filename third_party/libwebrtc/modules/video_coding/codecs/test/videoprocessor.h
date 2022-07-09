@@ -185,7 +185,7 @@ class VideoProcessor {
   // lower layer frames, we merge and store the layer frames in this method.
   const webrtc::EncodedImage* BuildAndStoreSuperframe(
       const EncodedImage& encoded_image,
-      const VideoCodecType codec,
+      VideoCodecType codec,
       size_t frame_number,
       size_t simulcast_svc_idx,
       bool inter_layer_predicted) RTC_RUN_ON(sequence_checker_);
