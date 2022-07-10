@@ -246,8 +246,17 @@ int32_t AudioDeviceBuffer::SetRecordedBuffer(const void* audio_buffer,
     RTC_LOG(LS_INFO) << "Size of recording buffer: " << rec_buffer_.size();
   }
 
-  capture_timestamp_ns_ = capture_timestamp_ns;
-
+  // If the timestamp is less then or equal to zero, it's not valid and are
+  // ignored. If we do antimestamp alignment on them they might accidentally
+  // become greater then zero, and will be handled as if they were a correct
+  // timestamp.
+  capture_timestamp_ns_ =
+      (capture_timestamp_ns > 0)
+          ? rtc::kNumNanosecsPerMicrosec *
+                timestamp_aligner_.TranslateTimestamp(
+                    capture_timestamp_ns_ / rtc::kNumNanosecsPerMicrosec,
+                    rtc::TimeMicros())
+          : capture_timestamp_ns;
   // Derive a new level value twice per second and check if it is non-zero.
   int16_t max_abs = 0;
   RTC_DCHECK_LT(rec_stat_count_, 50);
