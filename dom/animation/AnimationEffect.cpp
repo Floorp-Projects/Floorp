@@ -258,7 +258,7 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
        thisIterationReverse) ||
       (result.mPhase == ComputedTiming::AnimationPhase::Before &&
        !thisIterationReverse)) {
-    result.mBeforeFlag = ComputedTimingFunction::BeforeFlag::Set;
+    result.mBeforeFlag = StyleEasingBeforeFlag::Set;
   }
 
   // Apply the easing.

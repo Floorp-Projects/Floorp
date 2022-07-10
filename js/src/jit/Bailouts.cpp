@@ -103,7 +103,7 @@ static constexpr uint32_t FAKE_EXITFP_FOR_BAILOUT_ADDR = 0xba2;
 static uint8_t* const FAKE_EXITFP_FOR_BAILOUT =
     reinterpret_cast<uint8_t*>(FAKE_EXITFP_FOR_BAILOUT_ADDR);
 
-static_assert(!(FAKE_EXITFP_FOR_BAILOUT_ADDR & wasm::ExitOrJitEntryFPTag),
+static_assert(!(FAKE_EXITFP_FOR_BAILOUT_ADDR & wasm::ExitFPTag),
               "FAKE_EXITFP_FOR_BAILOUT could be mistaken as a low-bit tagged "
               "wasm exit fp");
 

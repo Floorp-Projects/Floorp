@@ -104,6 +104,10 @@ const defaultOptions = {
     value: 16777216,
     kind: OptionKind.VIEWER
   },
+  forcePageColors: {
+    value: false,
+    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
+  },
   pageColorsBackground: {
     value: "Canvas",
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
@@ -678,10 +682,10 @@ const PDFViewerApplication = {
 
     const annotationEditorMode = _app_options.AppOptions.get("annotationEditorMode");
 
-    const pageColors = {
+    const pageColors = _app_options.AppOptions.get("forcePageColors") || window.matchMedia("(forced-colors: active)").matches ? {
       background: _app_options.AppOptions.get("pageColorsBackground"),
       foreground: _app_options.AppOptions.get("pageColorsForeground")
-    };
+    } : null;
     this.pdfViewer = new _pdf_viewer.PDFViewer({
       container,
       viewer,
@@ -9747,7 +9751,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.15.224';
+    const viewerVersion = '2.15.244';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -14524,6 +14528,7 @@ class BasePreferences {
     "externalLinkTarget": 0,
     "historyUpdateUrl": false,
     "ignoreDestinationZoom": false,
+    "forcePageColors": false,
     "pageColorsBackground": "Canvas",
     "pageColorsForeground": "CanvasText",
     "pdfBugEnabled": false,
@@ -14862,8 +14867,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.15.224';
-const pdfjsBuild = 'bde46632d';
+const pdfjsVersion = '2.15.244';
+const pdfjsBuild = '220f980e1';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
