@@ -127,7 +127,7 @@ const AboutHomeStartupCacheChild = {
       );
     }
 
-    if (!lazy.NimbusFeatures.abouthomecache.isEnabled()) {
+    if (!lazy.NimbusFeatures.abouthomecache.getVariable("enabled")) {
       return;
     }
 
