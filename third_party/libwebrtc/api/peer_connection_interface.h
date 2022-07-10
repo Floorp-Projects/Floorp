@@ -1395,7 +1395,6 @@ struct RTC_EXPORT PeerConnectionDependencies final {
   std::unique_ptr<rtc::SSLCertificateVerifier> tls_cert_verifier;
   std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
       video_bitrate_allocator_factory;
-  std::unique_ptr<webrtc::Metronome> metronome;
 };
 
 // PeerConnectionFactoryDependencies holds all of the PeerConnectionFactory
@@ -1439,6 +1438,7 @@ struct RTC_EXPORT PeerConnectionFactoryDependencies final {
   std::unique_ptr<WebRtcKeyValueConfig> trials;
   std::unique_ptr<RtpTransportControllerSendFactoryInterface>
       transport_controller_send_factory;
+  std::unique_ptr<Metronome> metronome;
 };
 
 // PeerConnectionFactoryInterface is the factory interface used for creating
