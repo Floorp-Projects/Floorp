@@ -1,4 +1,5 @@
 let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+let { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 let { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const RELATIVE_PATH = "browser/toolkit/mozapps/extensions/test/xpinstall";
@@ -50,7 +51,7 @@ function handleRequest(aRequest, aResponse) {
       LOG("Completing download");
 
       try {
-        // Doesn't seem to be a sane way to read using IOUtils and write to an
+        // Doesn't seem to be a sane way to read using OS.File and write to an
         // nsIOutputStream so here we are.
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.initWithPath(xpiFile);
@@ -79,16 +80,17 @@ function handleRequest(aRequest, aResponse) {
 
     aResponse.processAsync();
 
-    const dir = Services.dirsvc.get("CurWorkD", Ci.nsIFile).path;
-    xpiFile = PathUtils.join(dir, ...RELATIVE_PATH.split("/"), params.file);
-    LOG("Starting slow download of " + xpiFile);
+    OS.File.getCurrentDirectory().then(dir => {
+      xpiFile = OS.Path.join(dir, ...RELATIVE_PATH.split("/"), params.file);
+      LOG("Starting slow download of " + xpiFile);
 
-    IOUtils.stat(xpiFile).then(info => {
-      aResponse.setHeader("Content-Type", "binary/octet-stream");
-      aResponse.setHeader("Content-Length", info.size.toString());
+      OS.File.stat(xpiFile).then(info => {
+        aResponse.setHeader("Content-Type", "binary/octet-stream");
+        aResponse.setHeader("Content-Length", info.size.toString());
 
-      LOG("Download paused");
-      waitForComplete.then(complete_download);
+        LOG("Download paused");
+        waitForComplete.then(complete_download);
+      });
     });
   } else if (params.continue) {
     dump(

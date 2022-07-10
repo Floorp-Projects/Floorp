@@ -28,6 +28,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const lazy = {};
 
@@ -657,14 +658,13 @@ var AddonTestUtils = {
     let loadedData = {};
     let fileSuffix = "extensions";
     const fileName = `${prefix}-${fileSuffix}.json`;
-
-    try {
-      loadedData[fileSuffix] = await IOUtils.readJSON(
-        PathUtils.join(dir.path, fileName)
-      );
+    let jsonStr = await OS.File.read(OS.Path.join(dir.path, fileName), {
+      encoding: "UTF-8",
+    }).catch(() => {});
+    if (jsonStr) {
       this.info(`Loaded ${fileName}`);
-    } catch (e) {}
-
+      loadedData[fileSuffix] = JSON.parse(jsonStr);
+    }
     return this.loadBlocklistRawData(loadedData);
   },
 
@@ -935,6 +935,32 @@ var AddonTestUtils = {
   },
 
   /**
+   * Recursively create all directories up to and including the given
+   * path, if they do not exist.
+   *
+   * @param {string} path The path of the directory to create.
+   * @returns {Promise} Resolves when all directories have been created.
+   */
+  recursiveMakeDir(path) {
+    let paths = [];
+    for (
+      let lastPath;
+      path != lastPath;
+      lastPath = path, path = OS.Path.dirname(path)
+    ) {
+      paths.push(path);
+    }
+
+    return Promise.all(
+      paths
+        .reverse()
+        .map(path =>
+          OS.File.makeDir(path, { ignoreExisting: true }).catch(() => {})
+        )
+    );
+  },
+
+  /**
    * Writes the given data to a file in the given zip file.
    *
    * @param {string|nsIFile} zipFile
@@ -983,7 +1009,7 @@ var AddonTestUtils = {
   },
 
   async promiseWriteFilesToZip(zip, files, flags) {
-    await IOUtils.makeDirectory(PathUtils.parent(zip));
+    await this.recursiveMakeDir(OS.Path.dirname(zip));
 
     this.writeFilesToZip(zip, files, flags);
 
@@ -991,7 +1017,7 @@ var AddonTestUtils = {
   },
 
   async promiseWriteFilesToDir(dir, files) {
-    await IOUtils.makeDirectory(dir);
+    await this.recursiveMakeDir(dir);
 
     for (let [path, data] of Object.entries(files)) {
       path = path.split("/");
@@ -1000,19 +1026,21 @@ var AddonTestUtils = {
       // Create parent directories, if necessary.
       let dirPath = dir;
       for (let subDir of path) {
-        dirPath = PathUtils.join(dirPath, subDir);
-        await PathUtils.makeDirectory(dirPath);
+        dirPath = OS.Path.join(dirPath, subDir);
+        await OS.File.makeDir(dirPath, { ignoreExisting: true });
       }
 
-      const leafPath = PathUtils.join(dirPath, leafName);
       if (
         typeof data == "object" &&
         ChromeUtils.getClassName(data) == "Object"
       ) {
-        await IOUtils.writeJSON(leafPath, data);
-      } else if (typeof data == "string") {
-        await IOUtils.writeUTF8(leafPath, data);
+        data = JSON.stringify(data);
       }
+      if (typeof data == "string") {
+        data = new TextEncoder("utf-8").encode(data);
+      }
+
+      await OS.File.writeAtomic(OS.Path.join(dirPath, leafName), data);
     }
 
     return nsFile(dir);
@@ -1020,12 +1048,12 @@ var AddonTestUtils = {
 
   promiseWriteFilesToExtension(dir, id, files, unpacked = this.testUnpacked) {
     if (unpacked) {
-      let path = PathUtils.join(dir, id);
+      let path = OS.Path.join(dir, id);
 
       return this.promiseWriteFilesToDir(path, files);
     }
 
-    let xpi = PathUtils.join(dir, `${id}.xpi`);
+    let xpi = OS.Path.join(dir, `${id}.xpi`);
 
     return this.promiseWriteFilesToZip(xpi, files);
   },
@@ -1241,16 +1269,18 @@ var AddonTestUtils = {
   async promiseSetExtensionModifiedTime(path, time) {
     await IOUtils.setModificationTime(path, time);
 
-    const children = await IOUtils.getChildren(path);
+    let iterator = new OS.File.DirectoryIterator(path);
     try {
-      await Promise.all(
-        children.map(entry => this.promiseSetExtensionModifiedTime(entry, time))
-      );
+      await iterator.forEach(entry => {
+        return this.promiseSetExtensionModifiedTime(entry.path, time);
+      });
     } catch (ex) {
-      if (DOMException.isInstance(ex)) {
+      if (ex instanceof OS.File.Error) {
         return;
       }
       throw ex;
+    } finally {
+      iterator.close().catch(() => {});
     }
   },
 
@@ -1763,7 +1793,10 @@ var AddonTestUtils = {
     this.tempXPIs.push(file);
 
     let manifest = Services.io.newFileURI(file);
-    await IOUtils.writeJSON(file.path, data);
+    await OS.File.writeAtomic(
+      file.path,
+      new TextEncoder().encode(JSON.stringify(data))
+    );
     this.overrideEntry = lazy.aomStartup.registerChrome(manifest, [
       [
         "override",

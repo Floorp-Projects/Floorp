@@ -947,7 +947,10 @@ async function test_checkForAddons_installAddon(
   let data = "e~=0.5772156649";
   let zipFile = createNewZipFile(zipFileName, data);
   let hashFunc = "sha256";
-  let expectedDigest = await IOUtils.computeHexDigest(zipFile.path, hashFunc);
+  let expectedDigest = await ProductAddonCheckerTestUtils.computeHash(
+    hashFunc,
+    zipFile.path
+  );
   let fileSize = zipFile.fileSize;
   if (wantInstallReject) {
     fileSize = 1;
