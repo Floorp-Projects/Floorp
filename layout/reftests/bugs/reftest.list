@@ -2129,3 +2129,4 @@ skip-if(Android) test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-
 # test-pref(ui.textScaleFactor,50) test-pref(browser.display.os-zoom-behavior,1) == 1773633.html 1773633-full-zoom.html
 # This works (but not on macOS for some reason).
 skip-if(Android) test-pref(ui.textScaleFactor,50) test-pref(browser.display.os-zoom-behavior,1) != 1773633.html 1773633.html
+test-pref(widget.non-native-theme.use-theme-accent,false) == 1778834.html 1778834-ref.html
