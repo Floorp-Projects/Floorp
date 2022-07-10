@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 let gMimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 let gHandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
   Ci.nsIHandlerService

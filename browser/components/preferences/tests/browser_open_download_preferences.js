@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 const { HandlerServiceTestUtils } = ChromeUtils.import(
   "resource://testing-common/HandlerServiceTestUtils.jsm"
 );

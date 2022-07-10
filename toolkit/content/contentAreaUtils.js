@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
   DownloadLastDir: "resource://gre/modules/DownloadLastDir.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Deprecated: "resource://gre/modules/Deprecated.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -661,7 +662,7 @@ function promiseTargetFile(
     // Default to the user's default downloads directory configured
     // through download prefs.
     let dirPath = await Downloads.getPreferredDownloadsDirectory();
-    let dirExists = await IOUtils.exists(dirPath);
+    let dirExists = await OS.File.exists(dirPath);
     let dir = new FileUtils.File(dirPath);
 
     if (useDownloadDir && dirExists) {
@@ -686,7 +687,7 @@ function promiseTargetFile(
         });
       }
     });
-    if (file && (await IOUtils.exists(file.path))) {
+    if (file && (await OS.File.exists(file.path))) {
       dir = file;
       dirExists = true;
     }
