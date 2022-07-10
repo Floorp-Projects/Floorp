@@ -22,9 +22,7 @@ def main():
 
   test_command = _ForcePythonInterpreter(unrecognized_args)
   if args.isolated_script_test_output:
-    test_command += [
-        '--isolated_script_test_output', args.isolated_script_test_output
-    ]
+    test_command += ['--gtest_output=json:' + args.isolated_script_test_output]
   if args.isolated_script_test_perf_output:
     test_command += [
         '--isolated_script_test_perf_output=' +
