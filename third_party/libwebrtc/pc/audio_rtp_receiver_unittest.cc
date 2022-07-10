@@ -63,7 +63,6 @@ TEST_F(AudioRtpReceiverTest, SetOutputVolumeIsCalled) {
   receiver_->track();
   receiver_->track()->set_enabled(true);
   receiver_->SetMediaChannel(&media_channel_);
-  EXPECT_CALL(media_channel_, SetDefaultRawAudioSink(_)).Times(0);
   receiver_->SetupMediaChannel(kSsrc);
 
   EXPECT_CALL(media_channel_, SetOutputVolume(kSsrc, kVolume))
