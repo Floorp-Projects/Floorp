@@ -247,10 +247,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
     return {};
   }
 
-  sigslot::signal1<SctpDataChannel*>& SignalSctpDataChannelCreated() override {
-    return SignalSctpDataChannelCreated_;
-  }
-
   absl::optional<std::string> sctp_transport_name() const override {
     return absl::nullopt;
   }
@@ -289,6 +285,9 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
                   rtc::SSLRole* role) override {
     return false;
   }
+  void SubscribeDataChannelCreated(
+      std::function<void(SctpDataChannel*)> callback) override {}
+
   const PeerConnectionInterface::RTCConfiguration* configuration()
       const override {
     return nullptr;
@@ -356,6 +355,8 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   void TeardownDataChannelTransport_n() override {}
   void SetSctpDataMid(const std::string& mid) override {}
   void ResetSctpDataMid() override {}
+  void NoteDataAddedEvent() override {}
+  void OnSctpDataChannelClosed(DataChannelInterface* channel) override {}
 
  protected:
   sigslot::signal1<SctpDataChannel*> SignalSctpDataChannelCreated_;
