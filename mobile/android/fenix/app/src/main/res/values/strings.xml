@@ -627,7 +627,7 @@
     <!-- Title to show in alert when a lot of tabs are to be opened -->
     <string name="open_all_warning_title">Confirm open</string>
     <!-- Message to show in alert when a lot of tabs are to be opened -->
-    <string name="open_all_warning_message">You are about to open %d tabs. This might slow down Firefox. Are you sure you want to continue ?</string>
+    <string name="open_all_warning_message">You are about to open %d tabs. This might slow down Firefox while the pages are loading. Are you sure you want to continue?</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Open tabs</string>
     <!-- Dialog button text for canceling open all tabs -->
