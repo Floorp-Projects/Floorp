@@ -1183,7 +1183,7 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
     }
     // There are platforms where we want the content-exposed accent color to be
     // the windows blue rather than the system accent color, for now.
-    return StaticPrefs::widget_non_native_theme_use_theme_accent() &&
+    return !StaticPrefs::widget_non_native_theme_use_theme_accent() &&
            (aColor == LookAndFeel::ColorID::Accentcolor ||
             aColor == LookAndFeel::ColorID::Accentcolortext);
   }();
