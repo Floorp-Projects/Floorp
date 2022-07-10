@@ -21,8 +21,6 @@ const {
   ExtensionUtils: { promiseEvent, promiseObserved },
 } = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 AddonTestUtils.initMochitest(this);
 
 // The response to the discovery API, as documented at:
@@ -44,7 +42,7 @@ async function readAPIResponseFixture(
   amoTestHost,
   fixtureFilePath = DISCOAPI_DEFAULT_FIXTURE
 ) {
-  let apiText = await OS.File.read(fixtureFilePath, { encoding: "utf-8" });
+  let apiText = await IOUtils.readUTF8(fixtureFilePath);
   apiText = apiText.replace(/\bhttps?:\/\/[^"]+(?=")/g, url => {
     try {
       url = new URL(url);
