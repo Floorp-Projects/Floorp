@@ -5620,7 +5620,7 @@ var AboutHomeStartupCache = {
 
     this.setDeferredResult(this.CACHE_RESULT_SCALARS.UNSET);
 
-    this._enabled = lazy.NimbusFeatures.abouthomecache.isEnabled();
+    this._enabled = !!lazy.NimbusFeatures.abouthomecache.getVariable("enabled");
 
     if (!this._enabled) {
       this.recordResult(this.CACHE_RESULT_SCALARS.DISABLED);
