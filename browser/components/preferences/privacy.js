@@ -338,7 +338,7 @@ function initTCPRolloutSection() {
     }
 
     let onboardingEnabled =
-      NimbusFeatures.tcpPreferences.isEnabled() ||
+      NimbusFeatures.tcpPreferences.getVariable("enabled") ||
       (dfpiPref.value && dfpiPref.hasUserValue);
     document.getElementById(
       "etpStandardTCPRolloutBox"
