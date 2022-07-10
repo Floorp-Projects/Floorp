@@ -793,6 +793,7 @@ if (current_os == "linux" || is_android) {
       "../../modules/utility",
       "../../pc:media_stream_observer",
       "../../pc:peerconnection",
+      "../../pc:webrtc_sdp",
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:rtc_base_approved",
