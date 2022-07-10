@@ -84,10 +84,6 @@ class RTCStatsCollector : public rtc::RefCountInterface,
   // completed. Must be called on the signaling thread.
   void WaitForPendingRequest();
 
-  // Callback that is called on data channel creation.
-  // Exposed for testing.
-  void OnSctpDataChannelCreated(SctpDataChannel* channel);
-
  protected:
   RTCStatsCollector(PeerConnectionInternal* pc, int64_t cache_lifetime_us);
   ~RTCStatsCollector();
@@ -242,6 +238,8 @@ class RTCStatsCollector : public rtc::RefCountInterface,
   // This is a NO-OP if `network_report_` is null.
   void MergeNetworkReport_s();
 
+  // Slots for signals (sigslot) that are wired up to `pc_`.
+  void OnSctpDataChannelCreated(SctpDataChannel* channel);
   // Slots for signals (sigslot) that are wired up to `channel`.
   void OnDataChannelOpened(DataChannelInterface* channel);
   void OnDataChannelClosed(DataChannelInterface* channel);
