@@ -1173,8 +1173,8 @@ RTCStatsCollector::RTCStatsCollector(PeerConnectionInternal* pc,
   RTC_DCHECK(worker_thread_);
   RTC_DCHECK(network_thread_);
   RTC_DCHECK_GE(cache_lifetime_us_, 0);
-  pc_->SubscribeDataChannelCreated(
-      [this](SctpDataChannel* channel) { OnSctpDataChannelCreated(channel); });
+  pc_->SignalSctpDataChannelCreated().connect(
+      this, &RTCStatsCollector::OnSctpDataChannelCreated);
 }
 
 RTCStatsCollector::~RTCStatsCollector() {

@@ -1602,11 +1602,11 @@ TEST_F(RTCStatsCollectorTest, CollectRTCPeerConnectionStats) {
   rtc::scoped_refptr<SctpDataChannel> dummy_channel_a = SctpDataChannel::Create(
       &provider, "DummyChannelA", InternalDataChannelInit(),
       rtc::Thread::Current(), rtc::Thread::Current());
-  stats_->stats_collector()->OnSctpDataChannelCreated(dummy_channel_a.get());
+  pc_->SignalSctpDataChannelCreated()(dummy_channel_a.get());
   rtc::scoped_refptr<SctpDataChannel> dummy_channel_b = SctpDataChannel::Create(
       &provider, "DummyChannelB", InternalDataChannelInit(),
       rtc::Thread::Current(), rtc::Thread::Current());
-  stats_->stats_collector()->OnSctpDataChannelCreated(dummy_channel_b.get());
+  pc_->SignalSctpDataChannelCreated()(dummy_channel_b.get());
 
   dummy_channel_a->SignalOpened(dummy_channel_a.get());
   // Closing a channel that is not opened should not affect the counts.

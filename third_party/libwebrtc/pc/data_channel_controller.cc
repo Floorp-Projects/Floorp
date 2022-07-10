@@ -49,33 +49,14 @@ bool DataChannelController::ConnectDataChannel(
     // whether or not the underlying transport is ready.
     return false;
   }
-  data_transport_writable_callbacks_.AddReceiver(
-      webrtc_data_channel, [webrtc_data_channel](bool ready) {
-        webrtc_data_channel->OnTransportReady(ready);
-      });
-  data_channel_transport_received_data_callbacks_.AddReceiver(
-      webrtc_data_channel,
-      [webrtc_data_channel](const cricket::ReceiveDataParams& params,
-                            const rtc::CopyOnWriteBuffer& data) {
-        webrtc_data_channel->OnDataReceived(params, data);
-      });
-  data_channel_transport_channel_closing_callbacks_.AddReceiver(
-      webrtc_data_channel, [webrtc_data_channel](int num) {
-        webrtc_data_channel->OnClosingProcedureStartedRemotely(num);
-      });
-  // When a datachannel is closed, it may get deleted, so we have to make
-  // sure the closed callback isn't called again.
-  // This takes advantage of the fact that a channel is never closed twice.
-  // Unfortunately it doesn't work for pre-opened datachannels, since these
-  // have id = -1 (unassigned) at registration time, so they must be called
-  // upon anyway.
-  int channel_id = webrtc_data_channel->id();
-  data_channel_transport_channel_closed_callbacks_.AddReceiver(
-      webrtc_data_channel, [webrtc_data_channel, channel_id](int num) {
-        if (num == channel_id || channel_id < 0) {
-          webrtc_data_channel->OnClosingProcedureComplete(num);
-        }
-      });
+  SignalDataChannelTransportWritable_s.connect(
+      webrtc_data_channel, &SctpDataChannel::OnTransportReady);
+  SignalDataChannelTransportReceivedData_s.connect(
+      webrtc_data_channel, &SctpDataChannel::OnDataReceived);
+  SignalDataChannelTransportChannelClosing_s.connect(
+      webrtc_data_channel, &SctpDataChannel::OnClosingProcedureStartedRemotely);
+  SignalDataChannelTransportChannelClosed_s.connect(
+      webrtc_data_channel, &SctpDataChannel::OnClosingProcedureComplete);
   return true;
 }
 
@@ -87,24 +68,10 @@ void DataChannelController::DisconnectDataChannel(
         << "DisconnectDataChannel called when sctp_transport_ is NULL.";
     return;
   }
-  data_transport_writable_callbacks_.RemoveReceivers(webrtc_data_channel);
-  data_channel_transport_received_data_callbacks_.RemoveReceivers(
-      webrtc_data_channel);
-  data_channel_transport_channel_closing_callbacks_.RemoveReceivers(
-      webrtc_data_channel);
-  // This function is being called from the OnClosingProcedureComplete
-  // function, which is called from the data_channel_transport_channel_closed
-  // CallbackList.
-  // Since CallbackList does not permit removing receivers in a callback,
-  // schedule the disconnect to happen later.
-  signaling_thread()->PostTask(ToQueuedTask([self = weak_factory_.GetWeakPtr(),
-                                             webrtc_data_channel]() {
-    if (self) {
-      RTC_DCHECK_RUN_ON(self->signaling_thread());
-      self->data_channel_transport_channel_closed_callbacks_.RemoveReceivers(
-          webrtc_data_channel);
-    }
-  }));
+  SignalDataChannelTransportWritable_s.disconnect(webrtc_data_channel);
+  SignalDataChannelTransportReceivedData_s.disconnect(webrtc_data_channel);
+  SignalDataChannelTransportChannelClosing_s.disconnect(webrtc_data_channel);
+  SignalDataChannelTransportChannelClosed_s.disconnect(webrtc_data_channel);
 }
 
 void DataChannelController::AddSctpDataStream(int sid) {
@@ -153,8 +120,7 @@ void DataChannelController::OnDataReceived(
           // SignalDataChannelTransportReceivedData_s to
           // SignalDataChannelTransportReceivedData_n).
           if (!self->HandleOpenMessage_s(params, buffer)) {
-            self->data_channel_transport_received_data_callbacks_.Send(params,
-                                                                       buffer);
+            self->SignalDataChannelTransportReceivedData_s(params, buffer);
           }
         }
       }));
@@ -166,8 +132,7 @@ void DataChannelController::OnChannelClosing(int channel_id) {
       ToQueuedTask([self = weak_factory_.GetWeakPtr(), channel_id] {
         if (self) {
           RTC_DCHECK_RUN_ON(self->signaling_thread());
-          self->data_channel_transport_channel_closing_callbacks_.Send(
-              channel_id);
+          self->SignalDataChannelTransportChannelClosing_s(channel_id);
         }
       }));
 }
@@ -178,8 +143,7 @@ void DataChannelController::OnChannelClosed(int channel_id) {
       ToQueuedTask([self = weak_factory_.GetWeakPtr(), channel_id] {
         if (self) {
           RTC_DCHECK_RUN_ON(self->signaling_thread());
-          self->data_channel_transport_channel_closed_callbacks_.Send(
-              channel_id);
+          self->SignalDataChannelTransportChannelClosed_s(channel_id);
         }
       }));
 }
@@ -191,7 +155,7 @@ void DataChannelController::OnReadyToSend() {
         if (self) {
           RTC_DCHECK_RUN_ON(self->signaling_thread());
           self->data_channel_transport_ready_to_send_ = true;
-          self->data_transport_writable_callbacks_.Send(
+          self->SignalDataChannelTransportWritable_s(
               self->data_channel_transport_ready_to_send_);
         }
       }));
@@ -334,9 +298,8 @@ DataChannelController::InternalCreateSctpDataChannel(
     return nullptr;
   }
   sctp_data_channels_.push_back(channel);
-  channel->SignalClosed.connect(
-      pc_, &PeerConnectionInternal::OnSctpDataChannelClosed);
-  sctp_data_channel_created_callbacks_.Send(channel.get());
+  channel->SignalClosed.connect(pc_, &PeerConnection::OnSctpDataChannelClosed);
+  SignalSctpDataChannelCreated_(channel.get());
   return channel;
 }
 
