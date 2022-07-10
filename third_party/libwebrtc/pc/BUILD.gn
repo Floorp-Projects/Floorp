@@ -240,8 +240,6 @@ rtc_library("peerconnection") {
   sources = [
     "data_channel_controller.cc",
     "data_channel_controller.h",
-    "jsep_ice_candidate.cc",
-    "jsep_session_description.cc",
     "peer_connection.cc",
     "peer_connection.h",
     "peer_connection_factory.cc",
@@ -254,8 +252,6 @@ rtc_library("peerconnection") {
     "sdp_offer_answer.h",  # dependent on peerconnection.h
     "stats_collector.cc",
     "stats_collector.h",
-    "webrtc_sdp.cc",
-    "webrtc_sdp.h",
   ]
 
   deps = [
@@ -588,7 +584,41 @@ rtc_source_set("track_media_info_map") {
 }
 rtc_source_set("webrtc_sdp") {
   visibility = [ "*" ]  # Used by Chrome and more
+
   # TODO(bugs.webrtc.org/13661): Reduce visibility if possible
+  sources = [
+    "jsep_ice_candidate.cc",
+    "jsep_session_description.cc",
+    "webrtc_sdp.cc",
+    "webrtc_sdp.h",
+  ]
+  deps = [
+    ":media_protocol_names",
+    ":rtc_pc_base",
+    ":sdp_serializer",
+    ":session_description",
+    ":simulcast_description",
+    "../api:libjingle_peerconnection_api",
+    "../api:rtc_error",
+    "../api:rtp_parameters",
+    "../api:rtp_transceiver_direction",
+    "../media:rtc_data_sctp_transport_internal",
+    "../media:rtc_media_base",
+    "../p2p:rtc_p2p",
+    "../rtc_base:checks",
+    "../rtc_base:ip_address",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:network_constants",
+    "../rtc_base:rtc_base",
+    "../rtc_base:socket_address",
+    "../rtc_base:stringutils",
+    "../rtc_base/system:rtc_export",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 rtc_source_set("webrtc_session_description_factory") {
   visibility = [ ":*" ]
@@ -1343,6 +1373,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":video_rtp_track_source",
       ":video_track",
       ":video_track_source",
+      ":webrtc_sdp",
       "../api:array_view",
       "../api:audio_options_api",
       "../api:create_peerconnection_factory",
