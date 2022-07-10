@@ -2175,6 +2175,11 @@ bool PeerConnection::GetSslRole(const std::string& content_name,
   return false;
 }
 
+void PeerConnection::SubscribeDataChannelCreated(
+    std::function<void(SctpDataChannel*)> callback) {
+  data_channel_controller()->SubscribeDataChannelCreated(callback);
+}
+
 bool PeerConnection::GetTransportDescription(
     const SessionDescription* description,
     const std::string& content_name,

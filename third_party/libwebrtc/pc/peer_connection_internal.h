@@ -127,7 +127,8 @@ class PeerConnectionSdpMethods {
 // Functions defined in this class are called by other objects,
 // but not by SdpOfferAnswerHandler.
 class PeerConnectionInternal : public PeerConnectionInterface,
-                               public PeerConnectionSdpMethods {
+                               public PeerConnectionSdpMethods,
+                               public sigslot::has_slots<> {
  public:
   virtual rtc::Thread* network_thread() const = 0;
   virtual rtc::Thread* worker_thread() const = 0;
@@ -138,9 +139,6 @@ class PeerConnectionInternal : public PeerConnectionInterface,
   virtual std::vector<
       rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>>
   GetTransceiversInternal() const = 0;
-
-  virtual sigslot::signal1<SctpDataChannel*>&
-  SignalSctpDataChannelCreated() = 0;
 
   // Call on the network thread to fetch stats for all the data channels.
   // TODO(tommi): Make pure virtual after downstream updates.
@@ -172,6 +170,14 @@ class PeerConnectionInternal : public PeerConnectionInterface,
   // Get SSL role for an arbitrary m= section (handles bundling correctly).
   virtual bool GetSslRole(const std::string& content_name,
                           rtc::SSLRole* role) = 0;
+
+  // Subscribe to the creation of datachannels. Used by the rtc-stats module.
+  virtual void SubscribeDataChannelCreated(
+      std::function<void(SctpDataChannel*)> callback) = 0;
+  // Functions needed by DataChannelController
+  virtual void NoteDataAddedEvent() = 0;
+  // Handler for the "channel closed" signal
+  virtual void OnSctpDataChannelClosed(DataChannelInterface* channel) = 0;
 };
 
 }  // namespace webrtc
