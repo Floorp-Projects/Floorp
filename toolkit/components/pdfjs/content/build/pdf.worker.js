@@ -117,7 +117,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.15.224';
+    const workerVersion = '2.15.244';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -3804,7 +3804,9 @@ class Page {
   }
 
   get resources() {
-    return (0, _util.shadow)(this, "resources", this._getInheritableProperty("Resources") || _primitives.Dict.empty);
+    const resources = this._getInheritableProperty("Resources");
+
+    return (0, _util.shadow)(this, "resources", resources instanceof _primitives.Dict ? resources : _primitives.Dict.empty);
   }
 
   _getBoundingBox(name) {
@@ -63235,8 +63237,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.15.224';
-const pdfjsBuild = 'bde46632d';
+const pdfjsVersion = '2.15.244';
+const pdfjsBuild = '220f980e1';
 })();
 
 /******/ 	return __webpack_exports__;

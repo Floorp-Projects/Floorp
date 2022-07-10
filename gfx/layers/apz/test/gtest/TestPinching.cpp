@@ -338,6 +338,8 @@ TEST_F(APZCPinchTester, Panning_TwoFinger_ZoomDisabled) {
 }
 
 TEST_F(APZCPinchTester, Panning_Beyond_LayoutViewport) {
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 0);
+
   apzc->SetFrameMetrics(GetPinchableFrameMetrics());
   MakeApzcZoomable();
 

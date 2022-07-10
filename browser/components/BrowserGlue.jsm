@@ -1780,7 +1780,7 @@ BrowserGlue.prototype = {
     // rollout.
     // Avoid overwriting cookie behavior set by enterprise policy.
     if (
-      lazy.NimbusFeatures.tcpByDefault.isEnabled() &&
+      lazy.NimbusFeatures.tcpByDefault.getVariable("enabled") &&
       !hasCookieBehaviorPolicy()
     ) {
       Services.telemetry.scalarSet(
@@ -4359,7 +4359,9 @@ BrowserGlue.prototype = {
         return "disallow-postUpdate";
       }
 
-      return lazy.NimbusFeatures.upgradeDialog.isEnabled() ? "" : "disabled";
+      return lazy.NimbusFeatures.upgradeDialog.getVariable("enabled")
+        ? ""
+        : "disabled";
     })();
 
     // Record why the dialog is showing or not.
