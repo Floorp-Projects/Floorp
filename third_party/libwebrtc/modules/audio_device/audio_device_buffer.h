@@ -23,6 +23,7 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
+#include "rtc_base/timestamp_aligner.h"
 
 namespace webrtc {
 
@@ -226,6 +227,10 @@ class AudioDeviceBuffer {
   // Setting this member to false prevents (possiby invalid) log messages from
   // being printed in the LogStats() task.
   bool log_stats_ RTC_GUARDED_BY(task_queue_);
+
+  // Used for converting capture timestaps (recieved from AudioRecordThread
+  // via AudioRecordJni::DataIsRecorded) to RTC clock.
+  rtc::TimestampAligner timestamp_aligner_;
 
 // Should *never* be defined in production builds. Only used for testing.
 // When defined, the output signal will be replaced by a sinus tone at 440Hz.
