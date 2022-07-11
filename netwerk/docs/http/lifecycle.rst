@@ -46,7 +46,6 @@ Attaching a listener for a request is pretty simple::
     }
   }
 
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   Services.obs.addObserver(observer, "http-on-modify-request", false);
 
 See nsIObserverService_ for the details.
@@ -85,7 +84,6 @@ The response: http-on-examine-response
 
 Firefox fires a "http-on-examine-response" observer notification after parsing the HTTP response status and headers, but **before** reading the response body.  Attaching a listener for this phase is also very easy::
 
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   Services.obs.addObserver(observer, "http-on-examine-response", false);
 
 If you use the same observer for "http-on-modify-request" and "http-on-examine-response", make sure you check the topic argument before interacting with the channel.

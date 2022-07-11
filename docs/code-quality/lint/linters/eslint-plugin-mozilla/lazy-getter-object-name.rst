@@ -11,7 +11,7 @@ Examples of incorrect code for this rule:
 
     const obj = {};
     ChromeUtils.defineESModuleGetters(obj, {
-      Services: “resource://gre/modules/Services.sys.mjs”,
+      AppConstants: “resource://gre/modules/AppConstants.sys.mjs”,
     });
 
 Examples of correct code for this rule:
@@ -21,5 +21,5 @@ Examples of correct code for this rule:
 
     const lazy = {};
     ChromeUtils.defineESModuleGetters(lazy, {
-      Services: “resource://gre/modules/Services.sys.mjs”,
+      AppConstants: “resource://gre/modules/AppConstants.sys.mjs”,
     });
