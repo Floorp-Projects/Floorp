@@ -244,10 +244,6 @@ rtc_library("peerconnection") {
     "peer_connection.h",
     "peer_connection_factory.cc",
     "peer_connection_factory.h",
-    "rtc_stats_collector.cc",
-    "rtc_stats_collector.h",
-    "rtc_stats_traversal.cc",
-    "rtc_stats_traversal.h",
     "sdp_offer_answer.cc",  # TODO: Make separate target when not circular
     "sdp_offer_answer.h",  # dependent on peerconnection.h
     "stats_collector.cc",
@@ -488,7 +484,66 @@ rtc_source_set("peer_connection_internal") {
 }
 rtc_source_set("rtc_stats_collector") {
   visibility = [ ":*" ]
+  sources = [
+    "rtc_stats_collector.cc",
+    "rtc_stats_collector.h",
+  ]
+  deps = [
+    ":data_channel_utils",
+    ":peer_connection_internal",
+    ":rtc_pc_base",
+    ":rtc_stats_traversal",
+    ":rtp_receiver",
+    ":rtp_sender",
+    ":rtp_transceiver",
+    ":sctp_data_channel",
+    ":track_media_info_map",
+    ":webrtc_sdp",
+    "../api:array_view",
+    "../api:libjingle_peerconnection_api",
+    "../api:media_stream_interface",
+    "../api:rtc_stats_api",
+    "../api:rtp_parameters",
+    "../api:scoped_refptr",
+    "../api:sequence_checker",
+    "../api/task_queue:task_queue",
+    "../api/video:video_rtp_headers",
+    "../call:call_interfaces",
+    "../common_video:common_video",
+    "../media:rtc_media_base",
+    "../modules/audio_processing:audio_processing_statistics",
+    "../modules/rtp_rtcp:rtp_rtcp_format",
+    "../p2p:rtc_p2p",
+    "../rtc_base:checks",
+    "../rtc_base:ip_address",
+    "../rtc_base:logging",
+    "../rtc_base:network_constants",
+    "../rtc_base:refcount",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:rtc_event",
+    "../rtc_base:socket_address",
+    "../rtc_base:stringutils",
+    "../rtc_base:threading",
+    "../rtc_base:timeutils",
+    "../rtc_base/third_party/sigslot:sigslot",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
+
+rtc_source_set("rtc_stats_traversal") {
+  visibility = [ ":*" ]
+  sources = [
+    "rtc_stats_traversal.cc",
+    "rtc_stats_traversal.h",
+  ]
+  deps = [
+    "../api:rtc_stats_api",
+    "../api:scoped_refptr",
+    "../rtc_base:checks",
+  ]
+}
+
 rtc_source_set("sdp_offer_answer") {
   visibility = [ ":*" ]
 }
@@ -514,9 +569,7 @@ rtc_source_set("local_audio_source") {
 rtc_source_set("peer_connection") {
   visibility = [ ":*" ]
 }
-rtc_source_set("rtc_stats_traversal") {
-  visibility = [ ":*" ]
-}
+
 rtc_source_set("sdp_serializer") {
   visibility = [ ":*" ]
   sources = [
@@ -1358,6 +1411,8 @@ if (rtc_include_tests && !build_with_chromium) {
       ":proxy",
       ":remote_audio_source",
       ":rtc_pc_base",
+      ":rtc_stats_collector",
+      ":rtc_stats_traversal",
       ":rtp_parameters_conversion",
       ":rtp_receiver",
       ":rtp_sender",
