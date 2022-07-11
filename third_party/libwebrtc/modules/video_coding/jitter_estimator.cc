@@ -58,32 +58,6 @@ VCMJitterEstimator::VCMJitterEstimator(Clock* clock)
 
 VCMJitterEstimator::~VCMJitterEstimator() {}
 
-VCMJitterEstimator& VCMJitterEstimator::operator=(
-    const VCMJitterEstimator& rhs) {
-  if (this != &rhs) {
-    memcpy(_thetaCov, rhs._thetaCov, sizeof(_thetaCov));
-    memcpy(_Qcov, rhs._Qcov, sizeof(_Qcov));
-
-    _avgFrameSize = rhs._avgFrameSize;
-    _varFrameSize = rhs._varFrameSize;
-    _maxFrameSize = rhs._maxFrameSize;
-    _fsSum = rhs._fsSum;
-    _fsCount = rhs._fsCount;
-    _lastUpdateT = rhs._lastUpdateT;
-    _prevEstimate = rhs._prevEstimate;
-    _prevFrameSize = rhs._prevFrameSize;
-    _avgNoise = rhs._avgNoise;
-    _alphaCount = rhs._alphaCount;
-    _filterJitterEstimate = rhs._filterJitterEstimate;
-    _startupCount = rhs._startupCount;
-    _latestNackTimestamp = rhs._latestNackTimestamp;
-    _nackCount = rhs._nackCount;
-    _rttFilter = rhs._rttFilter;
-    clock_ = rhs.clock_;
-  }
-  return *this;
-}
-
 // Resets the JitterEstimate.
 void VCMJitterEstimator::Reset() {
   _theta[0] = 1 / (512e3 / 8);

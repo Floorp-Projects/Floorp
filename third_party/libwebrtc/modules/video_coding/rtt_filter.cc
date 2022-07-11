@@ -26,21 +26,6 @@ VCMRttFilter::VCMRttFilter()
   Reset();
 }
 
-VCMRttFilter& VCMRttFilter::operator=(const VCMRttFilter& rhs) {
-  if (this != &rhs) {
-    _gotNonZeroUpdate = rhs._gotNonZeroUpdate;
-    _avgRtt = rhs._avgRtt;
-    _varRtt = rhs._varRtt;
-    _maxRtt = rhs._maxRtt;
-    _filtFactCount = rhs._filtFactCount;
-    _jumpCount = rhs._jumpCount;
-    _driftCount = rhs._driftCount;
-    memcpy(_jumpBuf, rhs._jumpBuf, sizeof(_jumpBuf));
-    memcpy(_driftBuf, rhs._driftBuf, sizeof(_driftBuf));
-  }
-  return *this;
-}
-
 void VCMRttFilter::Reset() {
   _gotNonZeroUpdate = false;
   _avgRtt = 0;
