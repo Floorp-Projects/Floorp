@@ -227,6 +227,10 @@ module.exports = {
       description: "Measure the time to take a fullpage screenshot",
     },
     {
+      name: "browser-toolbox",
+      path: "toolbox/browser-toolbox.js",
+    },
+    {
       name: "server.protocoljs",
       path: "server/protocol.js",
       description: "Measure RDP/protocol.js performance",
