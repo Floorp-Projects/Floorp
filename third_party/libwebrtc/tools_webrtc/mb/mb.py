@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env vpython3
+
 # Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
 #
 # Use of this source code is governed by a BSD-style license
@@ -13,8 +14,6 @@ MB is a wrapper script for GN that can be used to generate build files
 for sets of canned configurations and analyze them.
 """
 
-from __future__ import print_function
-
 import argparse
 import ast
 import errno
@@ -28,10 +27,7 @@ import sys
 import subprocess
 import tempfile
 import traceback
-try:
-  from urllib2 import urlopen  # for Python2
-except ImportError:
-  from urllib.request import urlopen  # for Python3
+from urllib.request import urlopen
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 SRC_DIR = os.path.dirname(os.path.dirname(SCRIPT_DIR))
@@ -280,7 +276,7 @@ class MetaBuildWrapper(object):
   def CmdExport(self):
     self.ReadConfigFile()
     obj = {}
-    for builder_group, builders in self.builder_groups.items():
+    for builder_group, builders in list(self.builder_groups.items()):
       obj[builder_group] = {}
       for builder in builders:
         config = self.builder_groups[builder_group][builder]
@@ -290,7 +286,7 @@ class MetaBuildWrapper(object):
         if isinstance(config, dict):
           args = {
               k: self.FlattenConfig(v)['gn_args']
-              for k, v in config.items()
+              for k, v in list(config.items())
           }
         elif config.startswith('//'):
           args = config
@@ -476,15 +472,15 @@ class MetaBuildWrapper(object):
     # Build a list of all of the configs referenced by builders.
     all_configs = {}
     for builder_group in self.builder_groups:
-      for config in self.builder_groups[builder_group].values():
+      for config in list(self.builder_groups[builder_group].values()):
         if isinstance(config, dict):
-          for c in config.values():
+          for c in list(config.values()):
             all_configs[c] = builder_group
         else:
           all_configs[config] = builder_group
 
     # Check that every referenced args file or config actually exists.
-    for config, loc in all_configs.items():
+    for config, loc in list(all_configs.items()):
       if config.startswith('//'):
         if not self.Exists(self.ToAbsPath(config)):
           errs.append('Unknown args file "%s" referenced from "%s".' %
@@ -500,7 +496,7 @@ class MetaBuildWrapper(object):
     # Figure out the whole list of mixins, and check that every mixin
     # listed by a config or another mixin actually exists.
     referenced_mixins = set()
-    for config, mixins in self.configs.items():
+    for config, mixins in list(self.configs.items()):
       for mixin in mixins:
         if not mixin in self.mixins:
           errs.append('Unknown mixin "%s" referenced by config "%s".' %
@@ -1172,7 +1168,7 @@ class MetaBuildWrapper(object):
       self.Print('%s%s=%s' % (env_prefix, var, env_quoter(env[var])))
 
     if cmd[0] == self.executable:
-      cmd = ['python'] + cmd[1:]
+      cmd = ['vpython3'] + cmd[1:]
     self.Print(*[shell_quoter(arg) for arg in cmd])
 
   def PrintJSON(self, obj):

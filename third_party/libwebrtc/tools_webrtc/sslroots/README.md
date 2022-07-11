@@ -9,7 +9,7 @@ by WebRTC follow this instructions:
 2. Launch the script:
 
 ```
-$ python tools_webrtc/sslroots/generate_sslroots.py roots.pem
+$ vpython3 tools_webrtc/sslroots/generate_sslroots.py roots.pem
 ```
 
 3. Step 2 should have generated an ssl_roots.h file right next to roots.pem.

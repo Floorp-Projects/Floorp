@@ -53,7 +53,7 @@ For example:
 
 Will be converted into:
 
-  python gtest-parallel \
+  vpython3 gtest-parallel \
       --shard_index 0 \
       --shard_count 1 \
       --output_dir=SOME_OUTPUT_DIR \
@@ -82,8 +82,8 @@ Args = collections.namedtuple(
     ['gtest_parallel_args', 'test_env', 'output_dir', 'test_artifacts_dir'])
 
 
-def _CatFiles(file_list, output_file):
-  with open(output_file, 'w') as output_file:
+def _CatFiles(file_list, output_file_destination):
+  with open(output_file_destination, 'w') as output_file:
     for filename in file_list:
       with open(filename) as input_file:
         output_file.write(input_file.read())
@@ -100,7 +100,7 @@ def _ParseWorkersOption(workers):
   return max(result, 1)  # Sanitize when using e.g. '0.5x'.
 
 
-class ReconstructibleArgumentGroup(object):
+class ReconstructibleArgumentGroup:
   """An argument group that can be converted back into a command line.
 
   This acts like ArgumentParser.add_argument_group, but names of arguments added
@@ -154,7 +154,7 @@ def ParseArgs(argv=None):
   parser.add_argument('--store-test-artifacts', action='store_true')
 
   # No-sandbox is a Chromium-specific flag, ignore it.
-  # TODO(oprypin): Remove (bugs.webrtc.org/8115)
+  # TODO(bugs.webrtc.org/8115): Remove workaround when fixed.
   parser.add_argument('--no-sandbox',
                       action='store_true',
                       help=argparse.SUPPRESS)
@@ -171,7 +171,7 @@ def ParseArgs(argv=None):
   }
   args_to_pass = []
   for arg in unrecognized_args:
-    if any(arg.startswith(k) for k in webrtc_flags_to_change.keys()):
+    if any(arg.startswith(k) for k in list(webrtc_flags_to_change.keys())):
       arg_split = arg.split('=')
       args_to_pass.append(webrtc_flags_to_change[arg_split[0]] + '=' +
                           arg_split[1])
