@@ -327,7 +327,8 @@ def write_yml_file(yml_file, yml_data):
 def get_version(firefox):
     p = Popen([firefox, "--version"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
     output, __ = p.communicate()
-    res = output.strip().split()[-1]
+    first_line = output.strip().split(b"\n")[0]
+    res = first_line.split()[-1]
     return res.decode("utf-8")
 
 

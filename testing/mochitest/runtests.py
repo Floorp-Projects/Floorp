@@ -2151,9 +2151,9 @@ toolbar#nav-bar {
         self.log.info("Created a conditioned-profile copy: %s" % condprof_copy)
         return condprof_copy
 
-    def downloadConditionedProfile(self, profile_scenario):
+    def downloadConditionedProfile(self, profile_scenario, app):
         from condprof.client import get_profile
-        from condprof.util import get_current_platform
+        from condprof.util import get_current_platform, get_version
 
         if self.conditioned_profile_dir:
             # We already have a directory, so provide a copy that
@@ -2169,12 +2169,36 @@ toolbar#nav-bar {
         if not profile_scenario:
             profile_scenario = "settled"
 
-        cond_prof_target_dir = get_profile(
-            temp_download_dir,
-            platform,
-            profile_scenario,
-            repo="mozilla-central",
-        )
+        version = get_version(app)
+        try:
+            cond_prof_target_dir = get_profile(
+                temp_download_dir,
+                platform,
+                profile_scenario,
+                repo="mozilla-central",
+                version=version,
+                retries=2,  # quicker failure
+            )
+        except Exception:
+            if version is None:
+                # any other error is a showstopper
+                self.log.critical("Could not get the conditioned profile")
+                traceback.print_exc()
+                raise
+            version = None
+            try:
+                self.log.info("retrying a profile with no version specified")
+                cond_prof_target_dir = get_profile(
+                    temp_download_dir,
+                    platform,
+                    profile_scenario,
+                    repo="mozilla-central",
+                    version=version,
+                )
+            except Exception:
+                self.log.critical("Could not get the conditioned profile")
+                traceback.print_exc()
+                raise
 
         # Now get the full directory path to our fetched conditioned profile
         self.conditioned_profile_dir = os.path.join(
@@ -2216,7 +2240,7 @@ toolbar#nav-bar {
         if options.conditionedProfile:
             if options.profilePath and os.path.exists(options.profilePath):
                 shutil.rmtree(options.profilePath, ignore_errors=True)
-            options.profilePath = self.downloadConditionedProfile("full")
+            options.profilePath = self.downloadConditionedProfile("full", options.app)
 
             # This is causing `certutil -N -d -f`` to not use -f (pwd file)
             try:
