@@ -13,6 +13,9 @@
 
 #include <stdint.h>
 
+#include "absl/container/inlined_vector.h"
+#include "api/units/time_delta.h"
+
 namespace webrtc {
 
 class VCMRttFilter {
@@ -24,41 +27,41 @@ class VCMRttFilter {
   // Resets the filter.
   void Reset();
   // Updates the filter with a new sample.
-  void Update(int64_t rttMs);
-  // A getter function for the current RTT level in ms.
-  int64_t RttMs() const;
+  void Update(TimeDelta rtt);
+  // A getter function for the current RTT level.
+  TimeDelta Rtt() const;
 
  private:
   // The size of the drift and jump memory buffers
   // and thus also the detection threshold for these
   // detectors in number of samples.
-  enum { kMaxDriftJumpCount = 5 };
+  static constexpr int kMaxDriftJumpCount = 5;
+  using BufferList = absl::InlinedVector<TimeDelta, kMaxDriftJumpCount>;
+
   // Detects RTT jumps by comparing the difference between
   // samples and average to the standard deviation.
   // Returns true if the long time statistics should be updated
   // and false otherwise
-  bool JumpDetection(int64_t rttMs);
+  bool JumpDetection(TimeDelta rtt);
+
   // Detects RTT drifts by comparing the difference between
   // max and average to the standard deviation.
   // Returns true if the long time statistics should be updated
   // and false otherwise
-  bool DriftDetection(int64_t rttMs);
-  // Computes the short time average and maximum of the vector buf.
-  void ShortRttFilter(int64_t* buf, uint32_t length);
+  bool DriftDetection(TimeDelta rtt);
 
-  bool _gotNonZeroUpdate;
-  double _avgRtt;
-  double _varRtt;
-  int64_t _maxRtt;
-  uint32_t _filtFactCount;
-  const uint32_t _filtFactMax;
-  const double _jumpStdDevs;
-  const double _driftStdDevs;
-  int32_t _jumpCount;
-  int32_t _driftCount;
-  const int32_t _detectThreshold;
-  int64_t _jumpBuf[kMaxDriftJumpCount];
-  int64_t _driftBuf[kMaxDriftJumpCount];
+  // Computes the short time average and maximum of the vector buf.
+  void ShortRttFilter(const BufferList& buf);
+
+  bool got_non_zero_update_;
+  TimeDelta avg_rtt_;
+  // Variance units are TimeDelta^2. Store as ms^2.
+  int64_t var_rtt_;
+  TimeDelta max_rtt_;
+  uint32_t filt_fact_count_;
+  bool last_jump_positive_ = false;
+  BufferList jump_buf_;
+  BufferList drift_buf_;
 };
 
 }  // namespace webrtc
