@@ -719,10 +719,10 @@ static OPUS_INLINE void silk_nsq_scale_states_sse4_1(
 
     /* Adjust for changing gain */
     if( Gains_Q16[ subfr ] != NSQ->prev_gain_Q16 ) {
+        __m128i xmm_gain_adj_Q16, xmm_sLTP_shp_Q14_x2x0, xmm_sLTP_shp_Q14_x3x1;
         gain_adj_Q16 =  silk_DIV32_varQ( NSQ->prev_gain_Q16, Gains_Q16[ subfr ], 16 );
 
         /* Scale long-term shaping state */
-        __m128i xmm_gain_adj_Q16, xmm_sLTP_shp_Q14_x2x0, xmm_sLTP_shp_Q14_x3x1;
 
         /* prepare gain_adj_Q16 in packed 4 32-bits */
         xmm_gain_adj_Q16 = _mm_set1_epi32(gain_adj_Q16);
