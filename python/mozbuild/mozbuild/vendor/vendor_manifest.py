@@ -509,8 +509,12 @@ class VendorManifest(MozbuildObject):
                 path = self.get_full_path(update["path"])
                 self.logInfo({"path": path}, "action: delete-path path: {path}")
                 mozfile.remove(path)
-            elif update["action"] == "run-script":
-                script = self.get_full_path(update["script"], support_cwd=True)
+            elif update["action"] in ["run-script", "run-command"]:
+                if update["action"] == "run-script":
+                    command = self.get_full_path(update["script"], support_cwd=True)
+                else:
+                    command = update["command"]
+
                 run_dir = self.get_full_path(update["cwd"], support_cwd=True)
 
                 args = []
@@ -531,13 +535,18 @@ class VendorManifest(MozbuildObject):
                         args.append(a)
 
                 self.logInfo(
-                    {"script": script, "run_dir": run_dir, "args": args},
-                    "action: run-script script: {script} working dir: {run_dir} args: {args}",
+                    {
+                        "command": command,
+                        "run_dir": run_dir,
+                        "args": args,
+                        "type": update["action"],
+                    },
+                    "action: {type} command: {command} working dir: {run_dir} args: {args}",
                 )
                 self.run_process(
-                    args=[script] + args,
+                    args=[command] + args,
                     cwd=run_dir,
-                    log_name=script,
+                    log_name=command,
                     require_unix_environment=True,
                 )
             else:
