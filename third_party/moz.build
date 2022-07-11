@@ -20,13 +20,13 @@ with Files('googletest/**'):
     BUG_COMPONENT = ('Testing', 'GTest')
 
 with Files('highway/**'):
-    BUG_COMPONENT = ('Core', 'ImageLib')
+    BUG_COMPONENT = ('Core', 'Graphics: ImageLib')
 
 with Files('intgemm/**'):
     BUG_COMPONENT = ('Core', 'Javascript: WebAssembly')
 
 with Files('jpeg-xl/**'):
-    BUG_COMPONENT = ('Core', 'ImageLib')
+    BUG_COMPONENT = ('Core', 'Graphics: ImageLib')
 
 with Files('js/d3/**'):
     BUG_COMPONENT = ('Toolkit', 'General')

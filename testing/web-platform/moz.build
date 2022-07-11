@@ -126,7 +126,7 @@ with Files("tests/annotation-vocab/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("tests/apng/**"):
-    BUG_COMPONENT = ("Core", "ImageLib")
+    BUG_COMPONENT = ("Core", "Graphics: ImageLib")
 
 with Files("tests/audio-output/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
@@ -713,7 +713,7 @@ with Files("tests/webdriver/**"):
     BUG_COMPONENT = ("Testing", "geckodriver")
 
 with Files("tests/webgl/**"):
-    BUG_COMPONENT = ("Core", "Graphics: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: CanvasWebGL")
 
 with Files("tests/webmessaging/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")

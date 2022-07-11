@@ -356,7 +356,7 @@ with Files("WebAuthentication.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Web Authentication")
 
 with Files("WebGL*"):
-    BUG_COMPONENT = ("Core", "Graphics: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: CanvasWebGL")
 
 with Files("WebGPU*"):
     BUG_COMPONENT = ("Core", "Graphics: WebGPU")

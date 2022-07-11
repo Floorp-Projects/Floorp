@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Audio/Video")
 
 with Files("update-libjpeg.sh"):
-    BUG_COMPONENT = ("Core", "ImageLib")
+    BUG_COMPONENT = ("Core", "Graphics: ImageLib")
 
 with Files("openmax_dl/**"):
     BUG_COMPONENT = ("Core", "Web Audio")
