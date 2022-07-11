@@ -14,7 +14,6 @@
 #include <memory>
 
 #include "api/scoped_refptr.h"
-#include "modules/audio_processing/common.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/optionally_built_submodule_creators.h"
 #include "modules/audio_processing/test/audio_processing_builder_for_testing.h"

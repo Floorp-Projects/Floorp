@@ -51,6 +51,10 @@ namespace webrtc {
 class ApmDataDumper;
 class AudioConverter;
 
+constexpr int RuntimeSettingQueueSize() {
+  return 100;
+}
+
 class AudioProcessingImpl : public AudioProcessing {
  public:
   // Methods forcing APM to run in a single-threaded manner.

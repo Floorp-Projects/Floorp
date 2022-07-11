@@ -384,17 +384,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
     std::string ToString() const;
   };
 
-  // TODO(mgraczyk): Remove once all methods that use ChannelLayout are gone.
-  enum ChannelLayout {
-    kMono,
-    // Left, right.
-    kStereo,
-    // Mono, keyboard, and mic.
-    kMonoAndKeyboard,
-    // Left, right, keyboard, and mic.
-    kStereoAndKeyboard
-  };
-
   // Specifies the properties of a setting to be passed to AudioProcessing at
   // runtime.
   class RuntimeSetting {

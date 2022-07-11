@@ -24,7 +24,6 @@
 #include "common_audio/include/audio_util.h"
 #include "modules/audio_processing/aec_dump/aec_dump_factory.h"
 #include "modules/audio_processing/audio_buffer.h"
-#include "modules/audio_processing/common.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "modules/audio_processing/optionally_built_submodule_creators.h"
