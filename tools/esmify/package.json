@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "jscodeshift": "^0.13.1"
+  },
+  "scripts": {
+    "rewrite_exports": "jscodeshift -t exported_symbols-to-declarations.js --stdin --verbose=2",
+    "rewrite_imports": "jscodeshift -t import-to-import_esmodule.js --stdin --verbose=2"
+  }
+}
