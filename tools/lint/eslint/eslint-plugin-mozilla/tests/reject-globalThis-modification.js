@@ -65,22 +65,22 @@ ruleTester.run("reject-globalThis-modification", rule, {
 `),
     invalidCall(`
     ChromeUtils.defineModuleGetter(
-      globalThis, "Services", "resource://gre/modules/Services.jsm"
+      globalThis, "AppConstants", "resource://gre/modules/AppConstants.jsm"
     );
 `),
     invalidCall(`
     ChromeUtils.defineESMGetters(globalThis, {
-      Services: "resource://gre/modules/Services.sys.mjs",
+      AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
     });
 `),
     invalidCall(`
     XPCOMUtils.defineLazyModuleGetter(
-      globalThis, "Services", "resource://gre/modules/Services.jsm"
+      globalThis, "AppConstants", "resource://gre/modules/AppConstants.jsm"
     );
 `),
     invalidCall(`
     XPCOMUtils.defineLazyModuleGetters(globalThis, {
-      Services: "resource://gre/modules/Services.jsm",
+      AppConstants: "resource://gre/modules/AppConstants.jsm",
     });
 `),
     invalidCall(`
