@@ -238,8 +238,6 @@ rtc_library("peerconnection") {
   visibility = [ "*" ]
   cflags = []
   sources = [
-    "data_channel_controller.cc",
-    "data_channel_controller.h",
     "peer_connection.cc",
     "peer_connection.h",
     "peer_connection_factory.cc",
@@ -462,6 +460,35 @@ rtc_library("connection_context") {
 # TODO(bugs.webrtc.org/13634): Fill these targets with files.
 rtc_source_set("data_channel_controller") {
   visibility = [ ":*" ]
+  sources = [
+    "data_channel_controller.cc",
+    "data_channel_controller.h",
+  ]
+  deps = [
+    ":data_channel_utils",
+    ":peer_connection_internal",
+    ":rtc_pc_base",
+    ":sctp_data_channel",
+    "../api:libjingle_peerconnection_api",
+    "../api:rtc_error",
+    "../api:scoped_refptr",
+    "../api:sequence_checker",
+    "../api/transport:datagram_transport_interface",
+    "../media:rtc_media_base",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:threading",
+    "../rtc_base:weak_ptr",
+    "../rtc_base/task_utils:to_queued_task",
+    "../rtc_base/third_party/sigslot:sigslot",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 rtc_source_set("peer_connection_factory") {
   visibility = [ "*" ]  # Known to be used externally
