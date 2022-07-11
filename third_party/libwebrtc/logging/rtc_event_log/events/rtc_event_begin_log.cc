@@ -54,14 +54,18 @@ RtcEventLogParseStatus RtcEventBeginLog::Parse(
       parser.ParseNumericField(timestamp_params);
   if (!result.ok())
     return result.status();
-  PopulateRtcEventTimestamp(result.value(), &LoggedStartEvent::timestamp,
-                            output_batch);
+  status = PopulateRtcEventTimestamp(
+      result.value(), &LoggedStartEvent::timestamp, output_batch);
+  if (!status.ok())
+    return status;
 
   result = parser.ParseNumericField(utc_start_time_params_);
   if (!result.ok())
     return result.status();
-  PopulateRtcEventTimestamp(result.value(), &LoggedStartEvent::utc_start_time,
-                            output_batch);
+  status = PopulateRtcEventTimestamp(
+      result.value(), &LoggedStartEvent::utc_start_time, output_batch);
+  if (!status.ok())
+    return status;
 
   return RtcEventLogParseStatus::Success();
 }

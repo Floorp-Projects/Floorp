@@ -67,7 +67,10 @@ class RtcEventDefinitionImpl<EventType, LoggedType, T, Ts...> {
         parser.ParseNumericField(field_.params);
     if (!result.ok())
       return result.status();
-    PopulateRtcEventMember(result.value(), field_.logged_member, output_batch);
+    auto status = PopulateRtcEventMember(result.value(), field_.logged_member,
+                                         output_batch);
+    if (!status.ok())
+      return status;
 
     return rest_.ParseImpl(parser, output_batch);
   }
@@ -131,12 +134,12 @@ class RtcEventDefinition {
         parser.ParseNumericField(timestamp_params);
     if (!result.ok())
       return result.status();
-    PopulateRtcEventTimestamp(result.value(), &LoggedType::timestamp,
-                              output_batch);
+    status = PopulateRtcEventTimestamp(result.value(), &LoggedType::timestamp,
+                                       output_batch);
+    if (!status.ok())
+      return status;
 
     return fields_.ParseImpl(parser, output_batch);
-
-    return RtcEventLogParseStatus::Success();
   }
 
  private:

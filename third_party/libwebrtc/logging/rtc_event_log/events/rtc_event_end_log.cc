@@ -47,8 +47,10 @@ RtcEventLogParseStatus RtcEventEndLog::Parse(
       parser.ParseNumericField(timestamp_params);
   if (!result.ok())
     return result.status();
-  PopulateRtcEventTimestamp(result.value(), &LoggedStopEvent::timestamp,
-                            output_batch);
+  status = PopulateRtcEventTimestamp(result.value(),
+                                     &LoggedStopEvent::timestamp, output_batch);
+  if (!status.ok())
+    return status;
 
   return RtcEventLogParseStatus::Success();
 }

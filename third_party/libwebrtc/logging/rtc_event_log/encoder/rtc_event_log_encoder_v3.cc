@@ -75,6 +75,9 @@ std::string RtcEventLogEncoderV3::EncodeLogEnd(int64_t timestamp_us) {
 
 RtcEventLogEncoderV3::RtcEventLogEncoderV3() {
   encoders_[RtcEvent::Type::AlrStateEvent] = RtcEventAlrState::Encode;
+  encoders_[RtcEvent::Type::AudioPlayout] = RtcEventAudioPlayout::Encode;
+  encoders_[RtcEvent::Type::BweUpdateDelayBased] =
+      RtcEventBweUpdateDelayBased::Encode;
 }
 
 std::string RtcEventLogEncoderV3::EncodeBatch(
