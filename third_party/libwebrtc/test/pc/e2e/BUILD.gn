@@ -60,6 +60,7 @@ if (!build_with_chromium) {
       "../../../api/transport:network_control",
       "../../../api/transport:webrtc_key_value_config",
       "../../../api/video_codecs:video_codecs_api",
+      "../../../p2p:rtc_p2p",
       "../../../rtc_base",
       "../../../rtc_base:threading",
     ]

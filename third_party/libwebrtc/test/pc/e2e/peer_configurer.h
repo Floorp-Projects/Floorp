@@ -195,6 +195,11 @@ class PeerConfigurerImpl final
     components_->pc_dependencies->ice_transport_factory = std::move(factory);
     return this;
   }
+
+  PeerConfigurer* SetPortAllocatorExtraFlags(uint32_t extra_flags) override {
+    params_->port_allocator_extra_flags = extra_flags;
+    return this;
+  }
   // Implementation of PeerConnectionE2EQualityTestFixture::PeerConfigurer end.
 
   InjectableComponents* components() { return components_.get(); }

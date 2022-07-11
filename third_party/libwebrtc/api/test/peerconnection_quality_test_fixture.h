@@ -371,6 +371,11 @@ class PeerConnectionE2EQualityTestFixture {
         std::unique_ptr<rtc::SSLCertificateVerifier> tls_cert_verifier) = 0;
     virtual PeerConfigurer* SetIceTransportFactory(
         std::unique_ptr<IceTransportFactory> factory) = 0;
+    // Flags to set on `cricket::PortAllocator`. These flags will be added
+    // to the default ones that are presented on the port allocator.
+    // For possible values check p2p/base/port_allocator.h.
+    virtual PeerConfigurer* SetPortAllocatorExtraFlags(
+        uint32_t extra_flags) = 0;
 
     // Add new video stream to the call that will be sent from this peer.
     // Default implementation of video frames generator will be used.
