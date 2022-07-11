@@ -48,18 +48,11 @@ class GeckoViewAutoFillChild extends GeckoViewActorChild {
         break;
       }
       case "focusin": {
-        const element = aEvent.composedTarget;
-        if (!this.contentWindow.HTMLInputElement.isInstance(element)) {
-          break;
+        if (
+          this.contentWindow.HTMLInputElement.isInstance(aEvent.composedTarget)
+        ) {
+          this.onFocus(aEvent.composedTarget);
         }
-        GeckoViewUtils.waitForPanZoomState(this.contentWindow).finally(() => {
-          const focusedElement =
-            Services.focus.focusedElement ||
-            element.ownerDocument?.activeElement;
-          if (element == focusedElement) {
-            this.onFocus(focusedElement);
-          }
-        });
         break;
       }
       case "focusout": {
