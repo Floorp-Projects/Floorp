@@ -450,7 +450,7 @@ def CalculateChangedClang(new_cr_rev):
     raise RollError('Could not parse Clang revision!')
 
   with open(CLANG_UPDATE_SCRIPT_LOCAL_PATH, 'rb') as f:
-    current_lines = f.readlines()
+    current_lines = f.readlines().decode('utf-8')
   current_rev = GetClangRev(current_lines)
 
   new_clang_update_py = ReadRemoteCrFile(CLANG_UPDATE_SCRIPT_URL_PATH,
