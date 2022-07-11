@@ -56,18 +56,18 @@ void VideoTrack::AddOrUpdateSink(rtc::VideoSinkInterface<VideoFrame>* sink,
   VideoSourceBaseGuarded::AddOrUpdateSink(sink, wants);
   rtc::VideoSinkWants modified_wants = wants;
   modified_wants.black_frames = !enabled();
-  video_source_->internal()->AddOrUpdateSink(sink, modified_wants);
+  video_source_->AddOrUpdateSink(sink, modified_wants);
 }
 
 void VideoTrack::RemoveSink(rtc::VideoSinkInterface<VideoFrame>* sink) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   VideoSourceBaseGuarded::RemoveSink(sink);
-  video_source_->internal()->RemoveSink(sink);
+  video_source_->RemoveSink(sink);
 }
 
 void VideoTrack::RequestRefreshFrame() {
   RTC_DCHECK_RUN_ON(worker_thread_);
-  video_source_->internal()->RequestRefreshFrame();
+  video_source_->RequestRefreshFrame();
 }
 
 VideoTrackSourceInterface* VideoTrack::GetSource() const {
@@ -90,7 +90,7 @@ void VideoTrack::set_content_hint(ContentHint hint) {
 
 bool VideoTrack::set_enabled(bool enable) {
   RTC_DCHECK_RUN_ON(worker_thread_);
-  auto* source = video_source_->internal();
+  auto* source = video_source_.get();
   for (auto& sink_pair : sink_pairs()) {
     rtc::VideoSinkWants modified_wants = sink_pair.wants;
     modified_wants.black_frames = !enable;
@@ -112,7 +112,6 @@ MediaStreamTrackInterface::TrackState VideoTrack::state() const {
 
 void VideoTrack::OnChanged() {
   RTC_DCHECK_RUN_ON(&signaling_thread_);
-  rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
   auto* source = video_source_->internal();
   auto state = source->state();
   set_state(state == MediaSourceInterface::kEnded ? kEnded : kLive);
