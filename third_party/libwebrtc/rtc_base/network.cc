@@ -34,6 +34,7 @@
 #include "rtc_base/string_encode.h"
 #include "rtc_base/string_utils.h"
 #include "rtc_base/strings/string_builder.h"
+#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 #include "system_wrappers/include/field_trial.h"
 
@@ -47,9 +48,6 @@ constexpr uint8_t kVpns[2][6] = {
     // GlobalProtect Virtual Ethernet.
     {0x2, 0x50, 0x41, 0x0, 0x0, 0x1},
 };
-
-const uint32_t kUpdateNetworksMessage = 1;
-const uint32_t kSignalNetworksMessage = 2;
 
 // Fetch list of networks every two seconds.
 const int kNetworksUpdateIntervalMs = 2000;
@@ -528,7 +526,11 @@ BasicNetworkManager::BasicNetworkManager(
       bind_using_ifname_(
           !webrtc::field_trial::IsDisabled("WebRTC-BindUsingInterfaceName")) {}
 
-BasicNetworkManager::~BasicNetworkManager() {}
+BasicNetworkManager::~BasicNetworkManager() {
+  if (task_safety_flag_) {
+    task_safety_flag_->SetNotAlive();
+  }
+}
 
 void BasicNetworkManager::OnNetworksChanged() {
   RTC_DCHECK_RUN_ON(thread_);
@@ -897,9 +899,17 @@ void BasicNetworkManager::StartUpdating() {
     // we should trigger network signal immediately for the new clients
     // to start allocating ports.
     if (sent_first_update_)
-      thread_->Post(RTC_FROM_HERE, this, kSignalNetworksMessage);
+      thread_->PostTask(ToQueuedTask(task_safety_flag_, [this] {
+        RTC_DCHECK_RUN_ON(thread_);
+        SignalNetworksChanged();
+      }));
   } else {
-    thread_->Post(RTC_FROM_HERE, this, kUpdateNetworksMessage);
+    RTC_DCHECK(task_safety_flag_ == nullptr);
+    task_safety_flag_ = webrtc::PendingTaskSafetyFlag::Create();
+    thread_->PostTask(ToQueuedTask(task_safety_flag_, [this] {
+      RTC_DCHECK_RUN_ON(thread_);
+      UpdateNetworksContinually();
+    }));
     StartNetworkMonitor();
   }
   ++start_count_;
@@ -912,7 +922,8 @@ void BasicNetworkManager::StopUpdating() {
 
   --start_count_;
   if (!start_count_) {
-    thread_->Clear(this);
+    task_safety_flag_->SetNotAlive();
+    task_safety_flag_ = nullptr;
     sent_first_update_ = false;
     StopNetworkMonitor();
   }
@@ -953,22 +964,6 @@ void BasicNetworkManager::StopNetworkMonitor() {
     if (thread_->socketserver()->network_binder() == this) {
       thread_->socketserver()->set_network_binder(nullptr);
     }
-  }
-}
-
-void BasicNetworkManager::OnMessage(Message* msg) {
-  RTC_DCHECK_RUN_ON(thread_);
-  switch (msg->message_id) {
-    case kUpdateNetworksMessage: {
-      UpdateNetworksContinually();
-      break;
-    }
-    case kSignalNetworksMessage: {
-      SignalNetworksChanged();
-      break;
-    }
-    default:
-      RTC_DCHECK_NOTREACHED();
   }
 }
 
@@ -1026,8 +1021,12 @@ void BasicNetworkManager::UpdateNetworksOnce() {
 
 void BasicNetworkManager::UpdateNetworksContinually() {
   UpdateNetworksOnce();
-  thread_->PostDelayed(RTC_FROM_HERE, kNetworksUpdateIntervalMs, this,
-                       kUpdateNetworksMessage);
+  thread_->PostDelayedTask(ToQueuedTask(task_safety_flag_,
+                                        [this] {
+                                          RTC_DCHECK_RUN_ON(thread_);
+                                          UpdateNetworksContinually();
+                                        }),
+                           kNetworksUpdateIntervalMs);
 }
 
 void BasicNetworkManager::DumpNetworks() {
