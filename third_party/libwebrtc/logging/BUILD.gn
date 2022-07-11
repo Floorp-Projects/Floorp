@@ -85,7 +85,10 @@ rtc_library("rtc_event_pacing") {
     "../api/rtc_event_log",
     "../api/units:timestamp",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
 }
 
 rtc_library("rtc_event_audio") {
@@ -101,13 +104,17 @@ rtc_library("rtc_event_audio") {
   ]
 
   deps = [
+    ":rtc_event_field",
     ":rtc_stream_config",
     "../api/rtc_event_log",
     "../api/units:timestamp",
     "../modules/audio_coding:audio_network_adaptor_config",
     "../rtc_base:checks",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
 }
 
 rtc_library("rtc_event_begin_end") {
@@ -144,6 +151,7 @@ rtc_library("rtc_event_bwe") {
   ]
 
   deps = [
+    ":rtc_event_field",
     "../api:network_state_predictor_api",
     "../api/rtc_event_log",
     "../api/units:data_rate",
@@ -151,6 +159,7 @@ rtc_library("rtc_event_bwe") {
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
 }

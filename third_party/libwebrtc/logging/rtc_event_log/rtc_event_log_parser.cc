@@ -1425,7 +1425,14 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStreamInternalV3(
       case static_cast<uint32_t>(RtcEvent::Type::AlrStateEvent):
         RtcEventAlrState::Parse(event_fields, batched, alr_state_events_);
         break;
-        // ADD NEW EVENTS HERE
+      case static_cast<uint32_t>(RtcEvent::Type::AudioPlayout):
+        RtcEventAudioPlayout::Parse(event_fields, batched,
+                                    audio_playout_events_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::BweUpdateDelayBased):
+        RtcEventBweUpdateDelayBased::Parse(event_fields, batched,
+                                           bwe_delay_updates_);
+        break;
     }
   }
 
