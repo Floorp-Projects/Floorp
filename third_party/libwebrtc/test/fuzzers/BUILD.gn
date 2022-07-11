@@ -600,6 +600,7 @@ webrtc_fuzzer_test("frame_buffer3_fuzzer") {
     "../../api:array_view",
     "../../api/video:encoded_frame",
     "../../modules/video_coding:frame_buffer",
+    "../../rtc_base:rtc_numerics",
   ]
 }
 
