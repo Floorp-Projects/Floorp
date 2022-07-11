@@ -35,9 +35,7 @@ var gStringBundle;
 
 W3CTest.runner.requestLongerTimeout(2);
 
-const { Services } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/Services.jsm"
-);
+const Services = SpecialPowers.Services;
 Services.locale.requestedLocales = ["en-US"];
 
 SpecialPowers.pushPrefEnv({ "set": [
