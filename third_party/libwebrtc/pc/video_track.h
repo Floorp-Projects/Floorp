@@ -62,6 +62,11 @@ class VideoTrack : public MediaStreamTrack<VideoTrackInterface>,
   rtc::Thread* const worker_thread_;
   const rtc::scoped_refptr<VideoTrackSourceInterface> video_source_;
   ContentHint content_hint_ RTC_GUARDED_BY(worker_thread_);
+  // Cached `enabled` state for the worker thread. This is kept in sync with
+  // the state maintained on the signaling thread via set_enabled() but can
+  // be queried without blocking on the worker thread by callers that don't
+  // use an api proxy to call the `enabled()` method.
+  bool enabled_w_ RTC_GUARDED_BY(worker_thread_) = true;
 };
 
 }  // namespace webrtc
