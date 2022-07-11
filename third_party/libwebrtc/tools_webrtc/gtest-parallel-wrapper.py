@@ -135,9 +135,11 @@ def ParseArgs(argv=None):
   # These options will be passed unchanged to gtest-parallel.
   gtest_group.AddArgument('-d', '--output_dir')
   gtest_group.AddArgument('-r', '--repeat')
-  # TODO(webrtc:13556): use isolated-script-test-output argument instead
-  # of dump_json_test_results as it was done prior to chromium:1051927.
-  gtest_group.AddArgument('--dump_json_test_results')
+  # --isolated-script-test-output is used to upload results to the flakiness
+  # dashboard. This translation is made because gtest-parallel expects the flag
+  # to be called --dump_json_test_results instead.
+  gtest_group.AddArgument('--isolated-script-test-output',
+                          dest='dump_json_test_results')
   gtest_group.AddArgument('--retry_failed')
   gtest_group.AddArgument('--gtest_color')
   gtest_group.AddArgument('--gtest_filter')

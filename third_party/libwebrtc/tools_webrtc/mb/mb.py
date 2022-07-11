@@ -41,7 +41,7 @@ def main(args):
   return mbw.Main(args)
 
 
-class MetaBuildWrapper(object):
+class MetaBuildWrapper:
   def __init__(self):
     self.src_dir = SRC_DIR
     self.default_config = os.path.join(SCRIPT_DIR, 'mb_config.pyl')
@@ -580,8 +580,8 @@ class MetaBuildWrapper(object):
     try:
       contents = ast.literal_eval(self.ReadFile(self.args.config_file))
     except SyntaxError as e:
-      raise MBErr('Failed to parse config file "%s": %s' %
-                  (self.args.config_file, e))
+      raise MBErr('Failed to parse config file "%s"' %
+                  self.args.config_file) from e
 
     self.configs = contents['configs']
     self.builder_groups = contents['builder_groups']
@@ -594,8 +594,7 @@ class MetaBuildWrapper(object):
     try:
       return ast.literal_eval(self.ReadFile(isolate_map))
     except SyntaxError as e:
-      raise MBErr('Failed to parse isolate map file "%s": %s' %
-                  (isolate_map, e))
+      raise MBErr('Failed to parse isolate map file "%s"' % isolate_map) from e
 
   def ConfigFromArgs(self):
     if self.args.config:
@@ -962,12 +961,10 @@ class MetaBuildWrapper(object):
         ]
         sep = '\\' if self.platform == 'win32' else '/'
         output_dir = '${ISOLATED_OUTDIR}' + sep + 'test_logs'
-        test_results = '${ISOLATED_OUTDIR}' + sep + 'gtest_output.json'
         timeout = isolate_map[target].get('timeout', 900)
         cmdline += [
             '../../tools_webrtc/gtest-parallel-wrapper.py',
             '--output_dir=%s' % output_dir,
-            '--dump_json_test_results=%s' % test_results,
             '--gtest_color=no',
             # We tell gtest-parallel to interrupt the test after 900
             # seconds, so it can exit cleanly and report results,
@@ -1151,7 +1148,7 @@ class MetaBuildWrapper(object):
                      json.dumps(obj, indent=2, sort_keys=True) + '\n',
                      force_verbose=force_verbose)
     except Exception as e:
-      raise MBErr('Error %s writing to the output path "%s"' % (e, path))
+      raise MBErr('Error writing to the output path "%s"' % path) from e
 
   def PrintCmd(self, cmd, env):
     if self.platform == 'win32':
