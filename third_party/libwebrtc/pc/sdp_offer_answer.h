@@ -182,6 +182,14 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   rtc::scoped_refptr<StreamCollectionInterface> local_streams();
   rtc::scoped_refptr<StreamCollectionInterface> remote_streams();
 
+  bool initial_offerer() {
+    RTC_DCHECK_RUN_ON(signaling_thread());
+    if (initial_offerer_) {
+      return *initial_offerer_;
+    }
+    return false;
+  }
+
  private:
   class RemoteDescriptionOperation;
   class ImplicitCreateSessionDescriptionObserver;
@@ -215,6 +223,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
       PeerConnectionDependencies& dependencies);
 
   rtc::Thread* signaling_thread() const;
+  rtc::Thread* network_thread() const;
   // Non-const versions of local_description()/remote_description(), for use
   // internally.
   SessionDescriptionInterface* mutable_local_description()
@@ -587,8 +596,14 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   const cricket::PortAllocator* port_allocator() const;
   RtpTransmissionManager* rtp_manager();
   const RtpTransmissionManager* rtp_manager() const;
-  JsepTransportController* transport_controller();
-  const JsepTransportController* transport_controller() const;
+  JsepTransportController* transport_controller_s()
+      RTC_RUN_ON(signaling_thread());
+  const JsepTransportController* transport_controller_s() const
+      RTC_RUN_ON(signaling_thread());
+  JsepTransportController* transport_controller_n()
+      RTC_RUN_ON(network_thread());
+  const JsepTransportController* transport_controller_n() const
+      RTC_RUN_ON(network_thread());
   // ===================================================================
   const cricket::AudioOptions& audio_options() { return audio_options_; }
   const cricket::VideoOptions& video_options() { return video_options_; }
@@ -682,6 +697,10 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // if one wants too.
   std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
       video_bitrate_allocator_factory_ RTC_GUARDED_BY(signaling_thread());
+
+  // Whether we are the initial offerer on the association. This
+  // determines the SSL role.
+  absl::optional<bool> initial_offerer_ RTC_GUARDED_BY(signaling_thread());
 
   rtc::WeakPtrFactory<SdpOfferAnswerHandler> weak_ptr_factory_
       RTC_GUARDED_BY(signaling_thread());

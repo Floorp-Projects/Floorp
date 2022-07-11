@@ -71,7 +71,8 @@ class PeerConnectionSdpMethods {
   // return the RTCConfiguration.crypto_options if set and will only default
   // back to the PeerConnectionFactory settings if nothing was set.
   virtual CryptoOptions GetCryptoOptions() = 0;
-  virtual JsepTransportController* transport_controller() = 0;
+  virtual JsepTransportController* transport_controller_s() = 0;
+  virtual JsepTransportController* transport_controller_n() = 0;
   virtual DataChannelController* data_channel_controller() = 0;
   virtual cricket::PortAllocator* port_allocator() = 0;
   virtual StatsCollector* stats() = 0;

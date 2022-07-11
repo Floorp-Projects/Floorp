@@ -309,7 +309,8 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   }
 
   CryptoOptions GetCryptoOptions() override { return CryptoOptions(); }
-  JsepTransportController* transport_controller() override { return nullptr; }
+  JsepTransportController* transport_controller_s() override { return nullptr; }
+  JsepTransportController* transport_controller_n() override { return nullptr; }
   DataChannelController* data_channel_controller() override { return nullptr; }
   cricket::PortAllocator* port_allocator() override { return nullptr; }
   StatsCollector* stats() override { return nullptr; }

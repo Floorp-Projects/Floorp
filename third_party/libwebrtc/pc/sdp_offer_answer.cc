@@ -1228,7 +1228,8 @@ void SdpOfferAnswerHandler::Initialize(
           pc_->dtls_enabled(), std::move(dependencies.cert_generator),
           certificate,
           [this](const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
-            transport_controller()->SetLocalCertificate(certificate);
+            RTC_DCHECK_RUN_ON(signaling_thread());
+            transport_controller_s()->SetLocalCertificate(certificate);
           });
 
   if (pc_->options()->disable_encryption) {
@@ -1265,12 +1266,19 @@ const TransceiverList* SdpOfferAnswerHandler::transceivers() const {
   }
   return pc_->rtp_manager()->transceivers();
 }
-JsepTransportController* SdpOfferAnswerHandler::transport_controller() {
-  return pc_->transport_controller();
+JsepTransportController* SdpOfferAnswerHandler::transport_controller_s() {
+  return pc_->transport_controller_s();
 }
-const JsepTransportController* SdpOfferAnswerHandler::transport_controller()
+JsepTransportController* SdpOfferAnswerHandler::transport_controller_n() {
+  return pc_->transport_controller_n();
+}
+const JsepTransportController* SdpOfferAnswerHandler::transport_controller_s()
     const {
-  return pc_->transport_controller();
+  return pc_->transport_controller_s();
+}
+const JsepTransportController* SdpOfferAnswerHandler::transport_controller_n()
+    const {
+  return pc_->transport_controller_n();
 }
 DataChannelController* SdpOfferAnswerHandler::data_channel_controller() {
   return pc_->data_channel_controller();
@@ -1312,6 +1320,10 @@ void SdpOfferAnswerHandler::RestartIce() {
 
 rtc::Thread* SdpOfferAnswerHandler::signaling_thread() const {
   return context_->signaling_thread();
+}
+
+rtc::Thread* SdpOfferAnswerHandler::network_thread() const {
+  return context_->network_thread();
 }
 
 void SdpOfferAnswerHandler::CreateOffer(
@@ -1502,6 +1514,9 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
     replaced_local_description = std::move(pending_local_description_);
     pending_local_description_ = std::move(desc);
   }
+  if (!initial_offerer_) {
+    initial_offerer_.emplace(type == SdpType::kOffer);
+  }
   // The session description to apply now must be accessed by
   // `local_description()`.
   RTC_DCHECK(local_description());
@@ -1547,7 +1562,7 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
       // information about DTLS transports.
       if (transceiver->mid()) {
         auto dtls_transport = LookupDtlsTransportByMid(
-            context_->network_thread(), transport_controller(),
+            context_->network_thread(), transport_controller_s(),
             *transceiver->mid());
         transceiver->sender_internal()->set_transport(dtls_transport);
         transceiver->receiver_internal()->set_transport(dtls_transport);
@@ -1792,7 +1807,7 @@ RTCError SdpOfferAnswerHandler::ReplaceRemoteDescription(
                             *session_desc);
 
   // NOTE: This will perform an Invoke() to the network thread.
-  return transport_controller()->SetRemoteDescription(sdp_type, session_desc);
+  return transport_controller_s()->SetRemoteDescription(sdp_type, session_desc);
 }
 
 void SdpOfferAnswerHandler::ApplyRemoteDescription(
@@ -1982,7 +1997,7 @@ void SdpOfferAnswerHandler::ApplyRemoteDescriptionUpdateTransceiverState(
       // 2.2.8.1.11.[3-6]: Set the transport internal slots.
       if (transceiver->mid()) {
         auto dtls_transport = LookupDtlsTransportByMid(
-            context_->network_thread(), transport_controller(),
+            context_->network_thread(), transport_controller_s(),
             *transceiver->mid());
         transceiver->sender_internal()->set_transport(dtls_transport);
         transceiver->receiver_internal()->set_transport(dtls_transport);
@@ -2190,7 +2205,7 @@ void SdpOfferAnswerHandler::DoSetLocalDescription(
   // MaybeStartGathering needs to be called after informing the observer so that
   // we don't signal any candidates before signaling that SetLocalDescription
   // completed.
-  transport_controller()->MaybeStartGathering();
+  transport_controller_s()->MaybeStartGathering();
 }
 
 void SdpOfferAnswerHandler::DoCreateOffer(
@@ -2572,7 +2587,7 @@ bool SdpOfferAnswerHandler::RemoveIceCandidates(
   }
 
   // Remove the candidates from the transport controller.
-  RTCError error = transport_controller()->RemoveRemoteCandidates(candidates);
+  RTCError error = transport_controller_s()->RemoveRemoteCandidates(candidates);
   if (!error.ok()) {
     RTC_LOG(LS_ERROR)
         << "RemoveIceCandidates: Error when removing remote candidates: "
@@ -2920,7 +2935,7 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
     transceiver->internal()->set_mid(state.mid());
     transceiver->internal()->set_mline_index(state.mline_index());
   }
-  RTCError e = transport_controller()->RollbackTransports();
+  RTCError e = transport_controller_s()->RollbackTransports();
   if (!e.ok()) {
     return e;
   }
@@ -2995,7 +3010,8 @@ bool SdpOfferAnswerHandler::NeedsIceRestart(
 
 absl::optional<rtc::SSLRole> SdpOfferAnswerHandler::GetDtlsRole(
     const std::string& mid) const {
-  return transport_controller()->GetDtlsRole(mid);
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  return transport_controller_s()->GetDtlsRole(mid);
 }
 
 void SdpOfferAnswerHandler::UpdateNegotiationNeeded() {
@@ -3565,8 +3581,11 @@ RTCError SdpOfferAnswerHandler::UpdateTransceiverChannel(
         return RTCError(RTCErrorType::INTERNAL_ERROR,
                         "Failed to create channel for mid=" + content.name);
       }
+      // Note: this is a thread hop; the lambda will be executed
+      // on the network thread.
       transceiver->internal()->SetChannel(channel, [&](const std::string& mid) {
-        return transport_controller()->GetRtpTransport(mid);
+        RTC_DCHECK_RUN_ON(network_thread());
+        return transport_controller_n()->GetRtpTransport(mid);
       });
     }
   }
@@ -4491,13 +4510,13 @@ RTCError SdpOfferAnswerHandler::PushdownTransportDescription(
   if (source == cricket::CS_LOCAL) {
     const SessionDescriptionInterface* sdesc = local_description();
     RTC_DCHECK(sdesc);
-    return transport_controller()->SetLocalDescription(type,
-                                                       sdesc->description());
+    return transport_controller_s()->SetLocalDescription(type,
+                                                         sdesc->description());
   } else {
     const SessionDescriptionInterface* sdesc = remote_description();
     RTC_DCHECK(sdesc);
-    return transport_controller()->SetRemoteDescription(type,
-                                                        sdesc->description());
+    return transport_controller_s()->SetRemoteDescription(type,
+                                                          sdesc->description());
   }
 }
 
@@ -4749,7 +4768,8 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
     }
     rtp_manager()->GetAudioTransceiver()->internal()->SetChannel(
         voice_channel, [&](const std::string& mid) {
-          return transport_controller()->GetRtpTransport(mid);
+          RTC_DCHECK_RUN_ON(network_thread());
+          return transport_controller_n()->GetRtpTransport(mid);
         });
   }
 
@@ -4763,7 +4783,8 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
     }
     rtp_manager()->GetVideoTransceiver()->internal()->SetChannel(
         video_channel, [&](const std::string& mid) {
-          return transport_controller()->GetRtpTransport(mid);
+          RTC_DCHECK_RUN_ON(network_thread());
+          return transport_controller_n()->GetRtpTransport(mid);
         });
   }
 
