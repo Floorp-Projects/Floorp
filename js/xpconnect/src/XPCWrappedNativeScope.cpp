@@ -19,6 +19,7 @@
 #include "js/Object.h"              // JS::GetCompartment
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "js/RealmIterators.h"
+#include "mozJSModuleLoader.h"
 
 #include "mozilla/dom/BindingUtils.h"
 
@@ -168,6 +169,11 @@ bool XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx) {
 #undef DEFINE_SUBCOMPONENT_PROPERTY
 
   return true;
+}
+
+bool XPCWrappedNativeScope::AttachJSServices(JSContext* aCx) {
+  RootedObject global(aCx, CurrentGlobalOrNull(aCx));
+  return mozJSModuleLoader::Get()->DefineJSServices(aCx, global);
 }
 
 bool XPCWrappedNativeScope::XBLScopeStateMatches(nsIPrincipal* aPrincipal) {

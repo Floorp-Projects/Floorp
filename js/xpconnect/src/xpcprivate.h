@@ -825,6 +825,8 @@ class XPCWrappedNativeScope final
 
   bool AttachComponentsObject(JSContext* aCx);
 
+  bool AttachJSServices(JSContext* aCx);
+
   // Returns the JS object reflection of the Components object.
   bool GetComponentsJSObject(JSContext* cx, JS::MutableHandleObject obj);
 
