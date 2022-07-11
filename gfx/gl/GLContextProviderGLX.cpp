@@ -100,7 +100,7 @@ bool GLXLibrary::EnsureInitialized(Display* aDisplay) {
     reporter.SetSuccessful();
   }
 
-  if (gfxEnv::GlxDebug()) {
+  if (gfxEnv::MOZ_GLX_DEBUG()) {
     mDebug = true;
   }
 

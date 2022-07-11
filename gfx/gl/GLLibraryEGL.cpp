@@ -587,7 +587,7 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
   const SymbolLoader pfnLoader(mSymbols.fGetProcAddress);
 
   const auto fnLoadSymbols = [&](const SymLoadStruct* symbols) {
-    const bool shouldWarn = gfxEnv::GlSpew();
+    const bool shouldWarn = gfxEnv::MOZ_GL_SPEW();
     if (pfnLoader.LoadSymbols(symbols, shouldWarn)) return true;
 
     ClearSymbols(symbols);
@@ -1016,7 +1016,7 @@ void EglDisplay::DumpEGLConfigs() const {
 }
 
 static bool ShouldTrace() {
-  static bool ret = gfxEnv::GlDebugVerbose();
+  static bool ret = gfxEnv::MOZ_GL_DEBUG_VERBOSE();
   return ret;
 }
 

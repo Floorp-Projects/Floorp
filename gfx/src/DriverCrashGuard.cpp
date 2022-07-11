@@ -74,11 +74,11 @@ static inline bool AreCrashGuardsEnabled(CrashGuardType aType) {
   // We handle the WMFVPXVideo crash guard differently to the other and always
   // enable it as it completely breaks playback and there's no way around it.
   if (aType != CrashGuardType::WMFVPXVideo) {
-    return gfxEnv::ForceCrashGuardNightly();
+    return gfxEnv::MOZ_FORCE_CRASH_GUARD_NIGHTLY();
   }
 #endif
   // Check to see if all guards have been disabled through the environment.
-  return !gfxEnv::DisableCrashGuard();
+  return !gfxEnv::MOZ_DISABLE_CRASH_GUARD();
 }
 
 void DriverCrashGuard::Initialize() {

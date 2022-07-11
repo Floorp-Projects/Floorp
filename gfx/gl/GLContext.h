@@ -21,10 +21,10 @@
 #  undef GetClassName
 #endif
 
-// Define MOZ_GL_DEBUG unconditionally to enable GL debugging in opt
+// Define MOZ_GL_DEBUG_BUILD unconditionally to enable GL debugging in opt
 // builds.
 #ifdef DEBUG
-#  define MOZ_GL_DEBUG 1
+#  define MOZ_GL_DEBUG_BUILD 1
 #endif
 
 #include "mozilla/IntegerRange.h"
@@ -625,7 +625,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
                                              const GLvoid* userParam);
 
   // -----------------------------------------------------------------------------
-  // MOZ_GL_DEBUG implementation
+  // Debugging implementation
  private:
 #ifndef MOZ_FUNCTION_NAME
 #  ifdef __GNUC__
@@ -693,7 +693,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
 
   static void AssertNotPassingStackBufferToTheGL(const void* ptr);
 
-#ifdef MOZ_GL_DEBUG
+#ifdef MOZ_GL_DEBUG_BUILD
 
 #  define TRACKING_CONTEXT(a) \
     do {                      \
@@ -714,7 +714,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
       }                                                                  \
     } while (0)
 
-#else  // ifdef MOZ_GL_DEBUG
+#else  // ifdef MOZ_GL_DEBUG_BUILD
 
 #  define TRACKING_CONTEXT(a) \
     do {                      \
@@ -726,7 +726,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     do {                              \
     } while (0)
 
-#endif  // ifdef MOZ_GL_DEBUG
+#endif  // ifdef MOZ_GL_DEBUG_BUILD
 
   // Do whatever setup is necessary to draw to our offscreen FBO, if it's
   // bound.
@@ -3681,7 +3681,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   auto MaxRenderbufferSize() const { return uint32_t(mMaxRenderbufferSize); }
   auto MaxTexOrRbSize() const { return mMaxTexOrRbSize; }
 
-#ifdef MOZ_GL_DEBUG
+#ifdef MOZ_GL_DEBUG_BUILD
   void CreatedProgram(GLContext* aOrigin, GLuint aName);
   void CreatedShader(GLContext* aOrigin, GLuint aName);
   void CreatedBuffers(GLContext* aOrigin, GLsizei aCount, GLuint* aNames);
