@@ -11,6 +11,7 @@
 #include "api/array_view.h"
 #include "api/video/encoded_frame.h"
 #include "modules/video_coding/frame_buffer3.h"
+#include "rtc_base/numerics/sequence_number_util.h"
 #include "test/fuzzers/fuzz_data_helper.h"
 
 namespace webrtc {
@@ -20,6 +21,9 @@ class FuzzyFrameObject : public EncodedFrame {
   int64_t ReceivedTime() const override { return 0; }
   int64_t RenderTime() const override { return 0; }
 };
+
+constexpr int kFrameIdLength = 1 << 15;
+
 }  // namespace
 
 void FuzzOneInput(const uint8_t* data, size_t size) {
@@ -29,6 +33,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
 
   FrameBuffer buffer(/*max_frame_slots=*/100, /*max_decode_history=*/1000);
   test::FuzzDataHelper helper(rtc::MakeArrayView(data, size));
+  SeqNumUnwrapper<uint16_t, kFrameIdLength> unwrapper;
 
   while (helper.BytesLeft() > 0) {
     int action = helper.ReadOrDefaultValue<uint8_t>(0) % 7;
@@ -61,7 +66,9 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
       case 6: {
         auto frame = std::make_unique<FuzzyFrameObject>();
         frame->SetTimestamp(helper.ReadOrDefaultValue<uint32_t>(0));
-        frame->SetId(helper.ReadOrDefaultValue<int64_t>(0));
+        int64_t wire_id =
+            helper.ReadOrDefaultValue<uint16_t>(0) & (kFrameIdLength - 1);
+        frame->SetId(unwrapper.Unwrap(wire_id));
         frame->is_last_spatial_layer = helper.ReadOrDefaultValue<bool>(false);
 
         frame->num_references = helper.ReadOrDefaultValue<uint8_t>(0) %
