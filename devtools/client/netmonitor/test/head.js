@@ -338,6 +338,12 @@ function initNetMonitor(
     startNetworkEventUpdateObserver(monitor.panelWin);
 
     if (!enableCache) {
+      const panel = monitor.panelWin;
+      const { store, windowRequire } = panel;
+      const Actions = windowRequire(
+        "devtools/client/netmonitor/src/actions/index"
+      );
+
       info("Disabling cache and reloading page.");
 
       const requestsDone = waitForNetworkEvents(monitor, requestCount, {
@@ -346,7 +352,8 @@ function initNetMonitor(
       const markersDone = waitForTimelineMarkers(monitor);
       await toggleCache(toolbox, true);
       await Promise.all([requestsDone, markersDone]);
-      await clearNetworkEvents(monitor);
+      info("Clearing requests in the UI.");
+      store.dispatch(Actions.clearRequests());
     }
 
     return { tab, monitor, toolbox };
@@ -369,23 +376,6 @@ function restartNetMonitor(monitor, { requestCount }) {
 
     return initNetMonitor(url, { requestCount });
   })();
-}
-
-/**
- * Clears the network requests in the UI
- * @param {Object} monitor
- *         The netmonitor instance used for retrieving a context menu element.
- */
-async function clearNetworkEvents(monitor) {
-  const { store, windowRequire, document } = monitor.panelWin;
-  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-
-  info("Clearing the network requests in the UI");
-  await waitForAllNetworkUpdateEvents();
-  store.dispatch(Actions.clearRequests());
-
-  info("Waiting for the request list to clear");
-  await waitFor(() => !!document.querySelector(".request-list-empty-notice"));
 }
 
 function teardown(monitor) {

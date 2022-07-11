@@ -60,15 +60,6 @@ class NetworkEventWatcher {
     Services.obs.addObserver(this, "window-global-destroyed");
   }
 
-  /**
-   * Clear all the network events and the related actors.
-   */
-  clear() {
-    this.networkEvents.clear();
-    this.listener.clear();
-    this.pool.destroy();
-  }
-
   get conn() {
     return this.watcherActor.conn;
   }
@@ -331,9 +322,9 @@ class NetworkEventWatcher {
    */
   destroy() {
     if (this.listener) {
-      this.clear();
       this.listener.destroy();
       Services.obs.removeObserver(this, "window-global-destroyed");
+      this.pool.destroy();
     }
   }
 }

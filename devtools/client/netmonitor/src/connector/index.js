@@ -15,8 +15,6 @@ const {
   getDisplayedTimingMarker,
 } = require("devtools/client/netmonitor/src/selectors/index");
 
-const { TYPES } = require("devtools/shared/commands/resource/resource-command");
-
 // Network throttling
 loader.lazyRequireGetter(
   this,
@@ -53,13 +51,6 @@ class Connector {
 
     this.networkFront = null;
   }
-
-  static NETWORK_RESOURCES = [
-    TYPES.NETWORK_EVENT,
-    TYPES.NETWORK_EVENT_STACKTRACE,
-    TYPES.WEBSOCKET,
-    TYPES.SERVER_SENT_EVENT,
-  ];
 
   get currentTarget() {
     return this.commands.targetCommand.targetFront;
@@ -106,6 +97,8 @@ class Connector {
       onAvailable: this.onTargetAvailable,
     });
 
+    const { TYPES } = this.toolbox.resourceCommand;
+
     await this.toolbox.resourceCommand.watchResources([TYPES.DOCUMENT_EVENT], {
       onAvailable: this.onResourceAvailable,
     });
@@ -136,6 +129,7 @@ class Connector {
       onAvailable: this.onTargetAvailable,
     });
 
+    const { TYPES } = this.toolbox.resourceCommand;
     this.toolbox.resourceCommand.unwatchResources([TYPES.DOCUMENT_EVENT], {
       onAvailable: this.onResourceAvailable,
     });
@@ -157,19 +151,15 @@ class Connector {
     this.dataProvider = null;
   }
 
-  clear() {
-    // Clear all the caches in the data provider
-    this.dataProvider.destroy();
-
-    this.toolbox.resourceCommand.clearResources(Connector.NETWORK_RESOURCES);
-
-    // Disable the realted network logs in the webconsole
-    this.toolbox.disableAllConsoleNetworkLogs();
-  }
-
   pause() {
-    return this.toolbox.resourceCommand.unwatchResources(
-      Connector.NETWORK_RESOURCES,
+    const { resourceCommand } = this.toolbox;
+    return resourceCommand.unwatchResources(
+      [
+        resourceCommand.TYPES.NETWORK_EVENT,
+        resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+        resourceCommand.TYPES.WEBSOCKET,
+        resourceCommand.TYPES.SERVER_SENT_EVENT,
+      ],
       {
         onAvailable: this.onResourceAvailable,
         onUpdated: this.onResourceUpdated,
@@ -178,8 +168,15 @@ class Connector {
   }
 
   resume(ignoreExistingResources = true) {
-    return this.toolbox.resourceCommand.watchResources(
-      Connector.NETWORK_RESOURCES,
+    const { resourceCommand } = this.toolbox;
+
+    return resourceCommand.watchResources(
+      [
+        resourceCommand.TYPES.NETWORK_EVENT,
+        resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE,
+        resourceCommand.TYPES.WEBSOCKET,
+        resourceCommand.TYPES.SERVER_SENT_EVENT,
+      ],
       {
         onAvailable: this.onResourceAvailable,
         onUpdated: this.onResourceUpdated,
@@ -204,6 +201,8 @@ class Connector {
 
   async onResourceAvailable(resources, { areExistingResources }) {
     for (const resource of resources) {
+      const { TYPES } = this.toolbox.resourceCommand;
+
       if (resource.resourceType === TYPES.DOCUMENT_EVENT) {
         this.onDocEvent(resource, { areExistingResources });
         continue;
