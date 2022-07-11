@@ -56,6 +56,7 @@ struct RtcpTransceiverImpl::RemoteSenderState {
 
 struct RtcpTransceiverImpl::LocalSenderState {
   uint32_t ssrc;
+  size_t last_num_sent_bytes = 0;
   RtpStreamRtcpHandler* handler = nullptr;
 };
 
@@ -526,6 +527,17 @@ RtcpTransceiverImpl::CompoundPacketInfo RtcpTransceiverImpl::FillReports(
        ++it) {
     LocalSenderState& rtp_sender = *it;
     RtpStreamRtcpHandler::RtpStats stats = rtp_sender.handler->SentStats();
+
+    if (stats.num_sent_bytes() < rtp_sender.last_num_sent_bytes) {
+      RTC_LOG(LS_ERROR) << "Inconsistent SR for SSRC " << rtp_sender.ssrc
+                        << ". Number of total sent bytes decreased.";
+      rtp_sender.last_num_sent_bytes = 0;
+    }
+    if (stats.num_sent_bytes() == rtp_sender.last_num_sent_bytes) {
+      // Skip because no RTP packet was send for this SSRC since last report.
+      continue;
+    }
+    rtp_sender.last_num_sent_bytes = stats.num_sent_bytes();
 
     last_handled_sender_it = it;
     rtcp::SenderReport sender_report;

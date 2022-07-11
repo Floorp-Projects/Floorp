@@ -69,7 +69,21 @@ class MockMediaReceiverRtcpObserver : public MediaReceiverRtcpObserver {
 
 class MockRtpStreamRtcpHandler : public RtpStreamRtcpHandler {
  public:
+  MockRtpStreamRtcpHandler() {
+    // With each next call increase number of sent packets and bytes to simulate
+    // active RTP sender.
+    ON_CALL(*this, SentStats).WillByDefault([this] {
+      RtpStats stats;
+      stats.set_num_sent_packets(++num_calls_);
+      stats.set_num_sent_bytes(1'000 * num_calls_);
+      return stats;
+    });
+  }
+
   MOCK_METHOD(RtpStats, SentStats, (), (override));
+
+ private:
+  int num_calls_ = 0;
 };
 
 class MockNetworkLinkRtcpObserver : public NetworkLinkRtcpObserver {
@@ -1473,6 +1487,57 @@ TEST(RtcpTransceiverImplTest, RotatesSendersWhenAllSenderReportDoNotFit) {
     SCOPED_TRACE(i);
     rtcp_transceiver.SendCompoundPacket();
   }
+}
+
+TEST(RtcpTransceiverImplTest, SkipsSenderReportForInactiveSender) {
+  static constexpr uint32_t kSenderSsrc[] = {12345, 23456};
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  RtcpPacketParser rtcp_parser;
+  RtcpParserTransport transport(&rtcp_parser);
+  config.outgoing_transport = &transport;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  RtpStreamRtcpHandler::RtpStats sender_stats[2];
+  NiceMock<MockRtpStreamRtcpHandler> sender[2];
+  ON_CALL(sender[0], SentStats).WillByDefault([&] { return sender_stats[0]; });
+  ON_CALL(sender[1], SentStats).WillByDefault([&] { return sender_stats[1]; });
+  rtcp_transceiver.AddMediaSender(kSenderSsrc[0], &sender[0]);
+  rtcp_transceiver.AddMediaSender(kSenderSsrc[1], &sender[1]);
+
+  // Start with both senders beeing active.
+  sender_stats[0].set_num_sent_packets(10);
+  sender_stats[0].set_num_sent_bytes(1'000);
+  sender_stats[1].set_num_sent_packets(5);
+  sender_stats[1].set_num_sent_bytes(2'000);
+  rtcp_transceiver.SendCompoundPacket();
+  EXPECT_EQ(transport.num_packets(), 1);
+  EXPECT_EQ(rtcp_parser.sender_report()->num_packets(), 2);
+
+  // Keep 1st sender active, but make 2nd second look inactive by returning the
+  // same RtpStats.
+  sender_stats[0].set_num_sent_packets(15);
+  sender_stats[0].set_num_sent_bytes(2'000);
+  rtcp_transceiver.SendCompoundPacket();
+  EXPECT_EQ(transport.num_packets(), 2);
+  EXPECT_EQ(rtcp_parser.sender_report()->num_packets(), 3);
+  EXPECT_EQ(rtcp_parser.sender_report()->sender_ssrc(), kSenderSsrc[0]);
+
+  // Swap active sender.
+  sender_stats[1].set_num_sent_packets(20);
+  sender_stats[1].set_num_sent_bytes(3'000);
+  rtcp_transceiver.SendCompoundPacket();
+  EXPECT_EQ(transport.num_packets(), 3);
+  EXPECT_EQ(rtcp_parser.sender_report()->num_packets(), 4);
+  EXPECT_EQ(rtcp_parser.sender_report()->sender_ssrc(), kSenderSsrc[1]);
+
+  // Activate both senders again.
+  sender_stats[0].set_num_sent_packets(20);
+  sender_stats[0].set_num_sent_bytes(3'000);
+  sender_stats[1].set_num_sent_packets(25);
+  sender_stats[1].set_num_sent_bytes(3'500);
+  rtcp_transceiver.SendCompoundPacket();
+  EXPECT_EQ(transport.num_packets(), 4);
+  EXPECT_EQ(rtcp_parser.sender_report()->num_packets(), 6);
 }
 
 }  // namespace
