@@ -16,6 +16,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.engine.gecko.ext.isExcludedForTrackingProtection
 import mozilla.components.browser.engine.gecko.fetch.toResponse
+import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
 import mozilla.components.browser.engine.gecko.mediasession.GeckoMediaSessionDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
@@ -1100,6 +1101,7 @@ class GeckoEngineSession(
         geckoSession.contentBlockingDelegate = createContentBlockingDelegate()
         geckoSession.permissionDelegate = createPermissionDelegate()
         geckoSession.promptDelegate = GeckoPromptDelegate(this)
+        geckoSession.mediaDelegate = GeckoMediaDelegate(this)
         geckoSession.historyDelegate = createHistoryDelegate()
         geckoSession.mediaSessionDelegate = GeckoMediaSessionDelegate(this)
         geckoSession.scrollDelegate = createScrollDelegate()

@@ -113,6 +113,7 @@ class GeckoEngineSessionTest {
 
     private lateinit var navigationDelegate: ArgumentCaptor<GeckoSession.NavigationDelegate>
     private lateinit var progressDelegate: ArgumentCaptor<GeckoSession.ProgressDelegate>
+    private lateinit var mediaDelegate: ArgumentCaptor<GeckoSession.MediaDelegate>
     private lateinit var contentDelegate: ArgumentCaptor<GeckoSession.ContentDelegate>
     private lateinit var permissionDelegate: ArgumentCaptor<GeckoSession.PermissionDelegate>
     private lateinit var contentBlockingDelegate: ArgumentCaptor<ContentBlocking.Delegate>
@@ -140,6 +141,7 @@ class GeckoEngineSessionTest {
         whenever(runtime.settings).thenReturn(mock())
         navigationDelegate = ArgumentCaptor.forClass(GeckoSession.NavigationDelegate::class.java)
         progressDelegate = ArgumentCaptor.forClass(GeckoSession.ProgressDelegate::class.java)
+        mediaDelegate = ArgumentCaptor.forClass(GeckoSession.MediaDelegate::class.java)
         contentDelegate = ArgumentCaptor.forClass(GeckoSession.ContentDelegate::class.java)
         permissionDelegate = ArgumentCaptor.forClass(GeckoSession.PermissionDelegate::class.java)
         contentBlockingDelegate = ArgumentCaptor.forClass(ContentBlocking.Delegate::class.java)
@@ -156,6 +158,7 @@ class GeckoEngineSessionTest {
         verify(geckoSession).permissionDelegate = permissionDelegate.capture()
         verify(geckoSession).contentBlockingDelegate = contentBlockingDelegate.capture()
         verify(geckoSession).historyDelegate = historyDelegate.capture()
+        verify(geckoSession).mediaDelegate = mediaDelegate.capture()
     }
 
     @Test
