@@ -43,8 +43,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Marque-pages récents</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Tout afficher</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Afficher tous les marque-pages enregistrés</string>
 
@@ -361,7 +359,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personnaliser</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Synchronisez les marque-pages, l’historique et davantage avec votre compte Firefox</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Synchronisez les marque-pages, l’historique et davantage avec votre compte Firefox</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Connectez-vous pour synchroniser onglets, marque-pages, mots de passe et bien plus.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Compte Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -537,7 +537,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Activer Sync</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Activer Sync</string>
 
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">S’identifier pour se reconnecter</string>
@@ -1098,8 +1098,6 @@
     <string name="snackbar_tabs_closed">Onglets fermés</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Marque-pages enregistrés !</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Ajouté aux sites principaux !</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Ajouté aux raccourcis !</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1721,10 +1719,6 @@
     <string name="no_site_exceptions">Aucune exception de site</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Voulez-vous vraiment supprimer ce marque-page ?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Ajouter aux sites principaux</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Retirer des sites principaux</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Ajouter aux raccourcis</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1800,12 +1794,8 @@
     <string name="synced_tabs_collapse_group">Réduire le groupe d’onglets synchronisés</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Nombre maximal de sites atteint</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Nombre maximal de raccourcis atteint</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Pour ajouter un nouveau site principal, supprimez-en un autre. Faites un appui long sur le site et sélectionnez supprimer.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">Pour ajouter un nouveau raccourci, supprimez-en un autre. Faites un appui long sur le site et sélectionnez supprimer.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1815,8 +1805,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">Raccourcis</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nom</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Nom du site principal</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Nom du raccourci</string>
 	<!-- Button caption to confirm the renaming of the top site. -->

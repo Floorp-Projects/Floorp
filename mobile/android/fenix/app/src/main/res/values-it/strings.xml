@@ -43,8 +43,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Segnalibri recenti</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Visualizza tutti</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Visualizza tutti i segnalibri salvati</string>
 
@@ -363,7 +361,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalizza</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Sincronizza segnalibri, cronologia e molto altro con il tuo account Firefox</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Sincronizza segnalibri, cronologia e molto altro con il tuo account Firefox</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Accedi per sincronizzare schede, segnalibri, password e altro ancora.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Account Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -542,8 +542,10 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Attiva Sync</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Attiva Sync</string>
 
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Sincronizza e salva i tuoi dati</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Accedi per riconnetterti</string>
     <!-- Preference for removing FxA account -->
@@ -1105,8 +1107,6 @@
     <string name="snackbar_tabs_closed">Schede chiuse</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Segnalibri salvati.</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Aggiunto ai siti principali</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Aggiunto alle scorciatoie.</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1732,10 +1732,6 @@
     <string name="no_site_exceptions">Nessuna eccezione per siti</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Eliminare questo segnalibro?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Aggiungi ai siti principali</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Elimina dai siti principali</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Aggiungi alle scorciatoie</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1812,12 +1808,8 @@
     <string name="synced_tabs_collapse_group">Comprimi il gruppo di schede sincronizzate</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Raggiunto limite per i siti principali</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Raggiunto limite per le scorciatoie</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Per aggiungere un nuovo sito principale è necessario rimuoverne uno esistente. Toccare il sito da eliminare tenendo premuto e selezionare rimuovi.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">Per aggiungere una nuova scorciatoia è necessario rimuoverne una esistente. Toccare il sito da eliminare tenendo premuto e selezionare rimuovi.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1827,8 +1819,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">Scorciatoie</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nome</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Nome sito principale</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Nome scorciatoia</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
