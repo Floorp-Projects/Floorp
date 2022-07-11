@@ -154,9 +154,27 @@ def to_stat(files):
     return stat
 
 
+if mode == "hg":
+    cmd = ["hg", "parent", "--template", "{node}"]
+    commit_hash = list(run(cmd))[0]
+
+    cmd = ["hg", "parent", "--template", "{date|shortdate}"]
+    date = list(run(cmd))[0]
+else:
+    cmd = ["git", "log", "-1", "--pretty=%H"]
+    git_hash = list(run(cmd))[0]
+    cmd = ["git", "cinnabar", "git2hg", git_hash]
+    commit_hash = list(run(cmd))[0]
+
+    cmd = ["git", "log", "-1", "--pretty=%cs"]
+    date = list(run(cmd))[0]
+
 files = new_files_struct()
 collect_jsm(files)
 collect_esm(files)
 
 stat = to_stat(files)
+stat["hash"] = commit_hash
+stat["date"] = date
+
 print(json.dumps(stat, indent=2))
