@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **feature-recentlyclosed**
+  * 🚒 Bug fixed [issue #12470](https://github.com/mozilla-mobile/android-components/issues/12470) - Set autoMirrored to true to fix RTL issues
+
 * **browser-awesomebar**:
   * 🚒 Bug fixed [issue #12469](https://github.com/mozilla-mobile/android-components/issues/12469) Cancel previous queries before new suggestions requests.
 
