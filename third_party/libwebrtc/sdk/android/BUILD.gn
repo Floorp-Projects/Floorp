@@ -537,24 +537,6 @@ if (is_android) {
       "//third_party/androidx:androidx_annotation_annotation_java",
     ]
   }
-
-  rtc_android_library("network_monitor_java") {
-    visibility = [ "*" ]
-    sources = [
-      "api/org/webrtc/NetworkChangeDetector.java",
-      "api/org/webrtc/NetworkChangeDetectorFactory.java",
-      "api/org/webrtc/NetworkMonitor.java",
-      "api/org/webrtc/NetworkMonitorAutoDetect.java",
-    ]
-    deps = [
-      ":base_java",
-      ":logging_java",
-      "//rtc_base:base_java",
-      "//third_party/android_deps:com_android_support_support_annotations_java",
-      "//third_party/androidx:androidx_annotation_annotation_java",
-    ]
-    srcjar_deps = [ "//rtc_base:network_monitor_enums" ]
-  }
 }
 
 if (current_os == "linux" || is_android) {
