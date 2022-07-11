@@ -22,8 +22,8 @@ var { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 var { SerializableSet, Svc, Utils, getChromeWindow } = ChromeUtils.import(
   "resource://services-sync/util.js"
 );
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+var { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 var { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"

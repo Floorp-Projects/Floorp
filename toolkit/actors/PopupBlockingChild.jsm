@@ -10,8 +10,8 @@ var EXPORTED_SYMBOLS = ["PopupBlockingChild"];
 // The maximum number of popup information we'll send to the parent.
 const MAX_SENT_POPUPS = 15;
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 class PopupBlockingChild extends JSWindowActorChild {
