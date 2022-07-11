@@ -15,12 +15,6 @@
 
 namespace webrtc {
 
-namespace {
-
-constexpr TimeDelta kMaxAllowedFrameDelay = TimeDelta::Millis(5);
-
-}
-
 FrameDecodeTiming::FrameDecodeTiming(Clock* clock,
                                      webrtc::VCMTiming const* timing)
     : clock_(clock), timing_(timing) {
@@ -51,7 +45,7 @@ FrameDecodeTiming::OnFrameBufferUpdated(uint32_t next_temporal_unit_rtp,
   RTC_DLOG(LS_VERBOSE) << "Selected frame with rtp " << next_temporal_unit_rtp
                        << " render time " << render_time.ms()
                        << " with a max wait of " << max_wait.ms() << "ms";
-  return FrameSchedule{.max_decode_time = now + max_wait,
+  return FrameSchedule{.latest_decode_time = now + max_wait,
                        .render_time = render_time};
 }
 

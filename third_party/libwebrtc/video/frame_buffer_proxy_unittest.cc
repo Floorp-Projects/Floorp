@@ -20,6 +20,7 @@
 
 #include "absl/types/optional.h"
 #include "absl/types/variant.h"
+#include "api/metronome/test/fake_metronome.h"
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -32,6 +33,7 @@
 #include "test/gtest.h"
 #include "test/run_loop.h"
 #include "test/time_controller/simulated_time_controller.h"
+#include "video/decode_synchronizer.h"
 
 using ::testing::_;
 using ::testing::AllOf;
@@ -209,6 +211,9 @@ class FrameBufferProxyTest : public ::testing::TestWithParam<std::string>,
         decode_queue_(time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
             "decode_queue",
             TaskQueueFactory::Priority::NORMAL)),
+        fake_metronome_(time_controller_.GetTaskQueueFactory(),
+                        TimeDelta::Millis(16)),
+        decode_sync_(clock_, &fake_metronome_, run_loop_.task_queue()),
         timing_(clock_),
         proxy_(FrameBufferProxy::CreateFromFieldTrial(clock_,
                                                       run_loop_.task_queue(),
@@ -217,7 +222,8 @@ class FrameBufferProxyTest : public ::testing::TestWithParam<std::string>,
                                                       &decode_queue_,
                                                       this,
                                                       kMaxWaitForKeyframe,
-                                                      kMaxWaitForFrame)) {
+                                                      kMaxWaitForFrame,
+                                                      &decode_sync_)) {
     // Avoid starting with negative render times.
     timing_.set_min_playout_delay(10);
 
@@ -230,6 +236,8 @@ class FrameBufferProxyTest : public ::testing::TestWithParam<std::string>,
     if (proxy_) {
       proxy_->StopOnWorker();
     }
+    fake_metronome_.Stop();
+    time_controller_.AdvanceTime(TimeDelta::Zero());
   }
 
   void OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) override {
@@ -291,7 +299,10 @@ class FrameBufferProxyTest : public ::testing::TestWithParam<std::string>,
   Clock* const clock_;
   test::RunLoop run_loop_;
   rtc::TaskQueue decode_queue_;
+  test::FakeMetronome fake_metronome_;
+  DecodeSynchronizer decode_sync_;
   VCMTiming timing_;
+
   ::testing::NiceMock<VCMReceiveStatisticsCallbackMock> stats_callback_;
   std::unique_ptr<FrameBufferProxy> proxy_;
 
@@ -544,7 +555,7 @@ TEST_P(FrameBufferProxyTest, NewFrameInsertedWhileWaitingToReleaseFrame) {
   proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
   EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
 
-  time_controller_.AdvanceTime(kFps30Delay);
+  time_controller_.AdvanceTime(kFps30Delay / 2);
   proxy_->InsertFrame(
       Builder().Id(1).Time(kFps30Rtp).Refs({0}).AsLast().Build());
   StartNextDecode();
@@ -598,6 +609,8 @@ TEST_P(FrameBufferProxyTest, SameFrameNotScheduledTwice) {
   StartNextDecode();
 
   EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(33)));
+  StartNextDecode();
+  EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), TimedOut());
   EXPECT_EQ(dropped_frames(), 1);
 }
 
@@ -617,6 +630,10 @@ TEST_P(FrameBufferProxyTest, TestStatsCallback) {
   time_controller_.AdvanceTime(TimeDelta::Zero());
 }
 
+// Note: This test takes a long time to run if the fake metronome is active.
+// Since the test needs to wait for the timestamp to rollover, it has a fake
+// delay of around 6.5 hours. Even though time is simulated, this will be
+// around 1,500,000 metronome tick invocations.
 TEST_P(FrameBufferProxyTest, NextFrameWithOldTimestamp) {
   // Test inserting 31 frames and pause the stream for a long time before
   // frame 32.
@@ -668,16 +685,19 @@ TEST_P(FrameBufferProxyTest, NextFrameWithOldTimestamp) {
                           .AsLast()
                           .Build());
   // FrameBuffer2 drops the frame, while FrameBuffer3 will continue the stream.
-  if (field_trial::IsEnabled("WebRTC-FrameBuffer3")) {
+  if (field_trial::FindFullName("WebRTC-FrameBuffer3")
+          .find("arm:FrameBuffer2") == std::string::npos) {
     EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(2)));
   } else {
     EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), TimedOut());
   }
 }
 
-INSTANTIATE_TEST_SUITE_P(FrameBufferProxy,
-                         FrameBufferProxyTest,
-                         ::testing::Values("WebRTC-FrameBuffer3/Disabled/",
-                                           "WebRTC-FrameBuffer3/Enabled/"));
+INSTANTIATE_TEST_SUITE_P(
+    FrameBufferProxy,
+    FrameBufferProxyTest,
+    ::testing::Values("WebRTC-FrameBuffer3/arm:FrameBuffer2/",
+                      "WebRTC-FrameBuffer3/arm:FrameBuffer3/",
+                      "WebRTC-FrameBuffer3/arm:SyncDecoding/"));
 
 }  // namespace webrtc

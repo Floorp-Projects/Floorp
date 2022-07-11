@@ -16,10 +16,7 @@
 #include <functional>
 
 #include "absl/types/optional.h"
-#include "api/task_queue/task_queue_base.h"
 #include "api/units/timestamp.h"
-#include "rtc_base/task_utils/pending_task_safety_flag.h"
-#include "system_wrappers/include/clock.h"
 #include "video/frame_decode_timing.h"
 
 namespace webrtc {
@@ -30,25 +27,23 @@ class FrameDecodeScheduler {
   using FrameReleaseCallback =
       std::function<void(uint32_t rtp_timestamp, Timestamp render_time)>;
 
-  FrameDecodeScheduler(Clock* clock,
-                       TaskQueueBase* const bookkeeping_queue,
-                       FrameReleaseCallback callback);
-  ~FrameDecodeScheduler();
-  FrameDecodeScheduler(const FrameDecodeScheduler&) = delete;
-  FrameDecodeScheduler& operator=(const FrameDecodeScheduler&) = delete;
+  virtual ~FrameDecodeScheduler() = default;
 
-  absl::optional<uint32_t> scheduled_rtp() const { return scheduled_rtp_; }
+  // Returns the rtp timestamp of the next frame scheduled for release, or
+  // `nullopt` if no frame is currently scheduled.
+  virtual absl::optional<uint32_t> ScheduledRtpTimestamp() = 0;
 
-  void ScheduleFrame(uint32_t rtp, FrameDecodeTiming::FrameSchedule schedule);
-  void CancelOutstanding();
+  // Shedules a frame for release based on `schedule`. When released, `callback`
+  // will be invoked with the `rtp` timestamp of the frame and the `render_time`
+  virtual void ScheduleFrame(uint32_t rtp,
+                             FrameDecodeTiming::FrameSchedule schedule,
+                             FrameReleaseCallback callback) = 0;
 
- private:
-  Clock* const clock_;
-  TaskQueueBase* const bookkeeping_queue_;
-  const FrameReleaseCallback callback_;
+  // Cancels all scheduled frames.
+  virtual void CancelOutstanding() = 0;
 
-  absl::optional<uint32_t> scheduled_rtp_;
-  ScopedTaskSafetyDetached task_safety_;
+  // Stop() Must be called before destruction.
+  virtual void Stop() = 0;
 };
 
 }  // namespace webrtc

@@ -273,7 +273,7 @@ VideoReceiveStream2::VideoReceiveStream2(
   frame_buffer_ = FrameBufferProxy::CreateFromFieldTrial(
       clock_, call_->worker_thread(), timing_.get(), &stats_proxy_,
       &decode_queue_, this, TimeDelta::Millis(max_wait_for_keyframe_ms_),
-      TimeDelta::Millis(max_wait_for_frame_ms_));
+      TimeDelta::Millis(max_wait_for_frame_ms_), nullptr);
 
   if (config_.rtp.rtx_ssrc) {
     rtx_receive_stream_ = std::make_unique<RtxReceiveStream>(
