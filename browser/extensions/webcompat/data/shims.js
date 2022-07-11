@@ -415,6 +415,8 @@ const AVAILABLE_SHIMS = [
     file: "google-publisher-tags.js",
     matches: [
       "*://www.googletagservices.com/tag/js/gpt.js*",
+      "*://pagead2.googlesyndication.com/tag/js/gpt.js*",
+      "*://pagead2.googlesyndication.com/gpt/pubads_impl_*.js*",
       "*://securepubads.g.doubleclick.net/tag/js/gpt.js*",
       "*://securepubads.g.doubleclick.net/gpt/pubads_impl_*.js*",
     ],
