@@ -1110,8 +1110,8 @@ void ParsedRtcEventLog::Clear() {
 
   last_incoming_rtcp_packet_.clear();
 
-  first_timestamp_ = std::numeric_limits<int64_t>::max();
-  last_timestamp_ = std::numeric_limits<int64_t>::min();
+  first_timestamp_ = Timestamp::PlusInfinity();
+  last_timestamp_ = Timestamp::MinusInfinity();
   first_log_segment_ = LogSegment(0, std::numeric_limits<int64_t>::max());
 
   incoming_rtp_extensions_maps_.clear();
@@ -1232,8 +1232,8 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStream(
   // stream configurations and starting/stopping the log.
   // TODO(terelius): Figure out if we actually need to find the first and last
   // timestamp in the parser. It seems like this could be done by the caller.
-  first_timestamp_ = std::numeric_limits<int64_t>::max();
-  last_timestamp_ = std::numeric_limits<int64_t>::min();
+  first_timestamp_ = Timestamp::PlusInfinity();
+  last_timestamp_ = Timestamp::MinusInfinity();
   StoreFirstAndLastTimestamp(alr_state_events());
   StoreFirstAndLastTimestamp(route_change_events());
   for (const auto& audio_stream : audio_playout_events()) {
@@ -1272,7 +1272,8 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStream(
   // event, we could use the timestamp of the the last previous regular event.
   auto start_iter = start_log_events().begin();
   auto stop_iter = stop_log_events().begin();
-  int64_t start_us = first_timestamp();
+  int64_t start_us =
+      first_timestamp().us_or(std::numeric_limits<int64_t>::max());
   int64_t next_start_us = std::numeric_limits<int64_t>::max();
   int64_t stop_us = std::numeric_limits<int64_t>::max();
   if (start_iter != start_log_events().end()) {
@@ -1286,15 +1287,14 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStream(
   }
   stop_us = std::min(stop_us, next_start_us);
   if (stop_us == std::numeric_limits<int64_t>::max() &&
-      last_timestamp() != std::numeric_limits<int64_t>::min()) {
-    stop_us = last_timestamp();
+      !last_timestamp().IsMinusInfinity()) {
+    stop_us = last_timestamp().us();
   }
   RTC_PARSE_CHECK_OR_RETURN_LE(start_us, stop_us);
   first_log_segment_ = LogSegment(start_us, stop_us);
 
-  if (first_timestamp_ == std::numeric_limits<int64_t>::max() &&
-      last_timestamp_ == std::numeric_limits<int64_t>::min()) {
-    first_timestamp_ = last_timestamp_ = 0;
+  if (first_timestamp_ > last_timestamp_) {
+    first_timestamp_ = last_timestamp_ = Timestamp::Zero();
   }
 
   return status;
@@ -1563,8 +1563,8 @@ template <typename T>
 void ParsedRtcEventLog::StoreFirstAndLastTimestamp(const std::vector<T>& v) {
   if (v.empty())
     return;
-  first_timestamp_ = std::min(first_timestamp_, v.front().log_time_us());
-  last_timestamp_ = std::max(last_timestamp_, v.back().log_time_us());
+  first_timestamp_ = std::min(first_timestamp_, v.front().log_time());
+  last_timestamp_ = std::max(last_timestamp_, v.back().log_time());
 }
 
 ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::StoreParsedLegacyEvent(

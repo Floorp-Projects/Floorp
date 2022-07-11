@@ -35,6 +35,7 @@ struct LoggedStartEvent {
 
   int64_t log_time_us() const { return timestamp.us(); }
   int64_t log_time_ms() const { return timestamp.ms(); }
+  Timestamp log_time() const { return timestamp; }
 
   Timestamp utc_time() const { return utc_start_time; }
 
