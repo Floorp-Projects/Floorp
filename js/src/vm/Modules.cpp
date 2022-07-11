@@ -1227,14 +1227,20 @@ bool js::ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
     return false;
   }
 
+  // Note: we return early in the error case, as the spec assumes we can get the
+  // cycle root of |module| which may not be available.
+  if (module->hadEvaluationError()) {
+    Rooted<PromiseObject*> promise(cx, module->topLevelCapability());
+    MOZ_ASSERT(JS::GetPromiseState(promise) == JS::PromiseState::Rejected);
+    MOZ_ASSERT(JS::GetPromiseResult(promise) == module->evaluationError());
+    result.set(ObjectValue(*promise));
+    return true;
+  }
+
   // Step 3. If module.[[Status]] is evaluating-async or evaluated, set module
   //         to module.[[CycleRoot]].
-  //
-  // Note: we don't attempt to get the cycle root if there was an error during
-  // evaluation as it may not be set.
-  if ((module->status() == ModuleStatus::EvaluatingAsync ||
-       module->status() == ModuleStatus::Evaluated) &&
-      !module->hadEvaluationError()) {
+  if (module->status() == ModuleStatus::EvaluatingAsync ||
+      module->status() == ModuleStatus::Evaluated) {
     module = module->getCycleRoot();
   }
 
