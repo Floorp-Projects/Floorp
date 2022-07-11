@@ -54,7 +54,7 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
   bool use_agc = fuzz_data->ReadOrDefaultValue(true);
   bool use_ns = fuzz_data->ReadOrDefaultValue(true);
   static_cast<void>(fuzz_data->ReadOrDefaultValue(true));
-  static_cast<void>(fuzz_data->ReadOrDefaultValue(true));
+  bool use_vad = fuzz_data->ReadOrDefaultValue(true);
   bool use_agc_limiter = fuzz_data->ReadOrDefaultValue(true);
   bool use_agc2 = fuzz_data->ReadOrDefaultValue(true);
 
@@ -114,6 +114,7 @@ rtc::scoped_refptr<AudioProcessing> CreateApm(test::FuzzDataHelper* fuzz_data,
       use_agc2_adaptive_digital;
   apm_config.noise_suppression.enabled = use_ns;
   apm_config.transient_suppression.enabled = use_ts;
+  apm_config.voice_detection.enabled = use_vad;
 
   rtc::scoped_refptr<AudioProcessing> apm =
       AudioProcessingBuilderForTesting()

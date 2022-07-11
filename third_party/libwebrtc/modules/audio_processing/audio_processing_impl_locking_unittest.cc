@@ -483,6 +483,7 @@ AudioProcessing::Config GetApmTestConfig(AecType aec_type) {
   apm_config.gain_controller1.mode =
       AudioProcessing::Config::GainController1::kAdaptiveDigital;
   apm_config.noise_suppression.enabled = true;
+  apm_config.voice_detection.enabled = true;
   return apm_config;
 }
 

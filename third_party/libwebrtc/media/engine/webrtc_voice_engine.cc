@@ -609,7 +609,9 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
   }
 
   if (options.typing_detection) {
-    RTC_LOG(LS_WARNING) << "Typing detection is requested, but unsupported.";
+    RTC_LOG(LS_INFO) << "Typing detection is enabled? "
+                     << *options.typing_detection;
+    apm_config.voice_detection.enabled = *options.typing_detection;
   }
 
   ap->ApplyConfig(apm_config);
