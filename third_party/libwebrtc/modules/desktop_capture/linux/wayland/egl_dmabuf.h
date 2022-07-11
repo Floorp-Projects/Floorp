@@ -51,6 +51,8 @@ class EglDmaBuf {
   bool IsEglInitialized() const { return egl_initialized_; }
 
  private:
+  bool GetClientExtensions(EGLDisplay dpy, EGLint name);
+
   bool egl_initialized_ = false;
   bool has_image_dma_buf_import_ext_ = false;
   int32_t drm_fd_ = -1;               // for GBM buffer mmap
