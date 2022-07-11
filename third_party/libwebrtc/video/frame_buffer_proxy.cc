@@ -17,6 +17,8 @@
 #include "absl/base/attributes.h"
 #include "absl/functional/bind_front.h"
 #include "api/sequence_checker.h"
+#include "api/video/encoded_frame.h"
+#include "api/video/video_content_type.h"
 #include "modules/video_coding/frame_buffer2.h"
 #include "modules/video_coding/frame_buffer3.h"
 #include "modules/video_coding/frame_helpers.h"
@@ -146,6 +148,25 @@ static constexpr int kMaxFramesHistory = 1 << 13;
 // low-latency renderer is used.
 static constexpr size_t kZeroPlayoutDelayDefaultMaxDecodeQueueSize = 8;
 
+struct FrameMetadata {
+  explicit FrameMetadata(const EncodedFrame& frame)
+      : is_last_spatial_layer(frame.is_last_spatial_layer),
+        is_keyframe(frame.is_keyframe()),
+        size(frame.size()),
+        contentType(frame.contentType()),
+        delayed_by_retransmission(frame.delayed_by_retransmission()),
+        rtp_timestamp(frame.Timestamp()),
+        receive_time(frame.ReceivedTime()) {}
+
+  const bool is_last_spatial_layer;
+  const bool is_keyframe;
+  const size_t size;
+  const VideoContentType contentType;
+  const bool delayed_by_retransmission;
+  const uint32_t rtp_timestamp;
+  const int64_t receive_time;
+};
+
 // Encapsulates use of the new frame buffer for use in VideoReceiveStream. This
 // behaves the same as the FrameBuffer2Proxy but uses frame_buffer3 instead.
 // Responsibilities from frame_buffer2, like stats, jitter and frame timing
@@ -232,14 +253,19 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
   absl::optional<int64_t> InsertFrame(
       std::unique_ptr<EncodedFrame> frame) override {
     RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
-    if (frame->is_last_spatial_layer)
-      stats_proxy_->OnCompleteFrame(frame->is_keyframe(), frame->size(),
-                                    frame->contentType());
-    if (!frame->delayed_by_retransmission())
-      timing_->IncomingTimestamp(frame->Timestamp(), frame->ReceivedTime());
-
+    FrameMetadata metadata(*frame);
+    int complete_units = buffer_->GetTotalNumberOfContinuousTemporalUnits();
     buffer_->InsertFrame(std::move(frame));
-    MaybeScheduleFrameForRelease();
+    // Don't update stats or frame timing if the inserted frame did not complete
+    // a new temporal layer.
+    if (complete_units < buffer_->GetTotalNumberOfContinuousTemporalUnits()) {
+      stats_proxy_->OnCompleteFrame(metadata.is_keyframe, metadata.size,
+                                    metadata.contentType);
+      if (!metadata.delayed_by_retransmission)
+        timing_->IncomingTimestamp(metadata.rtp_timestamp,
+                                   metadata.receive_time);
+      MaybeScheduleFrameForRelease();
+    }
 
     return buffer_->LastContinuousFrameId();
   }

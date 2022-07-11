@@ -198,6 +198,12 @@ class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
               (const TimingFrameInfo& info),
               (override));
 };
+
+bool IsFrameBuffer2Enabled() {
+  return field_trial::FindFullName("WebRTC-FrameBuffer3")
+             .find("arm:FrameBuffer2") != std::string::npos;
+}
+
 }  // namespace
 
 constexpr auto kMaxWaitForKeyframe = TimeDelta::Millis(500);
@@ -635,6 +641,64 @@ TEST_P(FrameBufferProxyTest, TestStatsCallback) {
   time_controller_.AdvanceTime(TimeDelta::Zero());
 }
 
+TEST_P(FrameBufferProxyTest, FrameCompleteCalledOnceForDuplicateFrame) {
+  EXPECT_CALL(stats_callback_,
+              OnCompleteFrame(true, kFrameSize, VideoContentType::UNSPECIFIED))
+      .Times(1);
+
+  StartNextDecodeForceKeyframe();
+  proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
+  proxy_->InsertFrame(Builder().Id(0).Time(0).AsLast().Build());
+  // Flush stats posted on the decode queue.
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+}
+
+TEST_P(FrameBufferProxyTest, FrameCompleteCalledOnceForSingleTemporalUnit) {
+  StartNextDecodeForceKeyframe();
+
+  // `OnCompleteFrame` should not be called for the first two frames since they
+  // do not complete the temporal layer.
+  EXPECT_CALL(stats_callback_, OnCompleteFrame(_, _, _)).Times(0);
+  proxy_->InsertFrame(Builder().Id(0).Time(0).Build());
+  proxy_->InsertFrame(Builder().Id(1).Time(0).Refs({0}).Build());
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+  // Flush stats posted on the decode queue.
+  ::testing::Mock::VerifyAndClearExpectations(&stats_callback_);
+
+  // Note that this frame is not marked as a keyframe since the last spatial
+  // layer has dependencies.
+  EXPECT_CALL(stats_callback_,
+              OnCompleteFrame(false, kFrameSize, VideoContentType::UNSPECIFIED))
+      .Times(1);
+  proxy_->InsertFrame(Builder().Id(2).Time(0).Refs({0, 1}).AsLast().Build());
+  // Flush stats posted on the decode queue.
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+}
+
+TEST_P(FrameBufferProxyTest, FrameCompleteCalledOnceForCompleteTemporalUnit) {
+  // FrameBuffer2 logs the complete frame on the arrival of the last layer.
+  if (IsFrameBuffer2Enabled())
+    return;
+  StartNextDecodeForceKeyframe();
+
+  // `OnCompleteFrame` should not be called for the first two frames since they
+  // do not complete the temporal layer. Frame 1 arrives later, at which time
+  // this frame can finally be considered complete.
+  EXPECT_CALL(stats_callback_, OnCompleteFrame(_, _, _)).Times(0);
+  proxy_->InsertFrame(Builder().Id(0).Time(0).Build());
+  proxy_->InsertFrame(Builder().Id(2).Time(0).Refs({0, 1}).AsLast().Build());
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+  // Flush stats posted on the decode queue.
+  ::testing::Mock::VerifyAndClearExpectations(&stats_callback_);
+
+  EXPECT_CALL(stats_callback_,
+              OnCompleteFrame(false, kFrameSize, VideoContentType::UNSPECIFIED))
+      .Times(1);
+  proxy_->InsertFrame(Builder().Id(1).Time(0).Refs({0}).Build());
+  // Flush stats posted on the decode queue.
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+}
+
 // Note: This test takes a long time to run if the fake metronome is active.
 // Since the test needs to wait for the timestamp to rollover, it has a fake
 // delay of around 6.5 hours. Even though time is simulated, this will be
@@ -690,8 +754,7 @@ TEST_P(FrameBufferProxyTest, NextFrameWithOldTimestamp) {
                           .AsLast()
                           .Build());
   // FrameBuffer2 drops the frame, while FrameBuffer3 will continue the stream.
-  if (field_trial::FindFullName("WebRTC-FrameBuffer3")
-          .find("arm:FrameBuffer2") == std::string::npos) {
+  if (!IsFrameBuffer2Enabled()) {
     EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(2)));
   } else {
     EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), TimedOut());
