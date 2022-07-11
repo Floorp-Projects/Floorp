@@ -301,10 +301,12 @@ rtc_library("frame_buffer_proxy") {
     "frame_buffer_proxy.h",
   ]
   deps = [
-    ":frame_decode_scheduler",
+    ":decode_synchronizer",
     ":frame_decode_timing",
+    ":task_queue_frame_decode_scheduler",
     ":video_receive_stream_timeout_tracker",
     "../api:sequence_checker",
+    "../api/metronome",
     "../api/task_queue",
     "../api/video:encoded_frame",
     "../modules/video_coding",
@@ -312,6 +314,7 @@ rtc_library("frame_buffer_proxy") {
     "../modules/video_coding:frame_helpers",
     "../modules/video_coding:timing",
     "../modules/video_coding:video_codec_interface",
+    "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:rtc_task_queue",
@@ -324,16 +327,27 @@ rtc_library("frame_buffer_proxy") {
   ]
 }
 
-rtc_library("frame_decode_scheduler") {
+rtc_source_set("frame_decode_scheduler") {
+  sources = [ "frame_decode_scheduler.h" ]
+  deps = [
+    ":frame_decode_timing",
+    "../api/units:timestamp",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+rtc_library("task_queue_frame_decode_scheduler") {
   sources = [
-    "frame_decode_scheduler.cc",
-    "frame_decode_scheduler.h",
+    "task_queue_frame_decode_scheduler.cc",
+    "task_queue_frame_decode_scheduler.h",
   ]
   deps = [
+    ":frame_decode_scheduler",
     ":frame_decode_timing",
     "../api:sequence_checker",
     "../api/task_queue",
     "../api/units:timestamp",
+    "../rtc_base:checks",
     "../rtc_base/task_utils:pending_task_safety_flag",
     "../rtc_base/task_utils:to_queued_task",
     "../system_wrappers",
@@ -367,6 +381,26 @@ rtc_library("video_receive_stream_timeout_tracker") {
     "../rtc_base/task_utils:repeating_task",
     "../system_wrappers",
   ]
+}
+
+rtc_library("decode_synchronizer") {
+  sources = [
+    "decode_synchronizer.cc",
+    "decode_synchronizer.h",
+  ]
+  deps = [
+    ":frame_decode_scheduler",
+    ":frame_decode_timing",
+    "../api:sequence_checker",
+    "../api/metronome",
+    "../api/task_queue",
+    "../api/units:time_delta",
+    "../api/units:timestamp",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("video_stream_encoder_impl") {
@@ -702,6 +736,7 @@ if (rtc_include_tests) {
       "buffered_frame_decryptor_unittest.cc",
       "call_stats2_unittest.cc",
       "cpu_scaling_tests.cc",
+      "decode_synchronizer_unittest.cc",
       "encoder_bitrate_adjuster_unittest.cc",
       "encoder_overshoot_detector_unittest.cc",
       "encoder_rtcp_feedback_unittest.cc",
@@ -726,7 +761,6 @@ if (rtc_include_tests) {
       "end_to_end_tests/transport_feedback_tests.cc",
       "frame_buffer_proxy_unittest.cc",
       "frame_cadence_adapter_unittest.cc",
-      "frame_decode_scheduler_unittest.cc",
       "frame_decode_timing_unittest.cc",
       "frame_encode_metadata_writer_unittest.cc",
       "picture_id_tests.cc",
@@ -741,6 +775,7 @@ if (rtc_include_tests) {
       "send_statistics_proxy_unittest.cc",
       "stats_counter_unittest.cc",
       "stream_synchronization_unittest.cc",
+      "task_queue_frame_decode_scheduler_unittest.cc",
       "video_receive_stream2_unittest.cc",
       "video_receive_stream_timeout_tracker_unittest.cc",
       "video_send_stream_impl_unittest.cc",
@@ -750,10 +785,12 @@ if (rtc_include_tests) {
       "video_stream_encoder_unittest.cc",
     ]
     deps = [
+      ":decode_synchronizer",
       ":frame_buffer_proxy",
       ":frame_cadence_adapter",
       ":frame_decode_scheduler",
       ":frame_decode_timing",
+      ":task_queue_frame_decode_scheduler",
       ":video",
       ":video_mocks",
       ":video_receive_stream_timeout_tracker",
@@ -777,6 +814,7 @@ if (rtc_include_tests) {
       "../api:transport_api",
       "../api/adaptation:resource_adaptation_api",
       "../api/crypto:options",
+      "../api/metronome/test:fake_metronome",
       "../api/rtc_event_log",
       "../api/task_queue",
       "../api/task_queue:default_task_queue_factory",
@@ -870,6 +908,7 @@ if (rtc_include_tests) {
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
+      "//third_party/abseil-cpp/absl/functional:bind_front",
       "//third_party/abseil-cpp/absl/memory",
       "//third_party/abseil-cpp/absl/types:optional",
       "//third_party/abseil-cpp/absl/types:variant",

@@ -29,8 +29,12 @@ class FrameDecodeTiming {
   FrameDecodeTiming(const FrameDecodeTiming&) = delete;
   FrameDecodeTiming& operator=(const FrameDecodeTiming&) = delete;
 
+  // Any frame that has decode delay more than this in the past can be
+  // fast-forwarded.
+  static constexpr TimeDelta kMaxAllowedFrameDelay = TimeDelta::Millis(5);
+
   struct FrameSchedule {
-    Timestamp max_decode_time;
+    Timestamp latest_decode_time;
     Timestamp render_time;
   };
 

@@ -13,12 +13,15 @@
 
 #include <memory>
 
+#include "api/metronome/metronome.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/encoded_frame.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/timing.h"
 #include "rtc_base/task_queue.h"
 #include "system_wrappers/include/clock.h"
+#include "video/decode_synchronizer.h"
+
 namespace webrtc {
 
 class FrameSchedulingReceiver {
@@ -43,7 +46,8 @@ class FrameBufferProxy {
       rtc::TaskQueue* decode_queue,
       FrameSchedulingReceiver* receiver,
       TimeDelta max_wait_for_keyframe,
-      TimeDelta max_wait_for_frame);
+      TimeDelta max_wait_for_frame,
+      DecodeSynchronizer* decode_sync);
   virtual ~FrameBufferProxy() = default;
 
   // Run on the worker thread.

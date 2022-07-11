@@ -14,19 +14,23 @@
 #include <memory>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/functional/bind_front.h"
 #include "api/sequence_checker.h"
 #include "modules/video_coding/frame_buffer2.h"
 #include "modules/video_coding/frame_buffer3.h"
 #include "modules/video_coding/frame_helpers.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/field_trial.h"
-#include "video/frame_decode_scheduler.h"
 #include "video/frame_decode_timing.h"
+#include "video/task_queue_frame_decode_scheduler.h"
 #include "video/video_receive_stream_timeout_tracker.h"
 
 namespace webrtc {
+
+namespace {
 
 class FrameBuffer2Proxy : public FrameBufferProxy {
  public:
@@ -148,14 +152,16 @@ static constexpr size_t kZeroPlayoutDelayDefaultMaxDecodeQueueSize = 8;
 // accounting are moved into this pro
 class FrameBuffer3Proxy : public FrameBufferProxy {
  public:
-  FrameBuffer3Proxy(Clock* clock,
-                    TaskQueueBase* worker_queue,
-                    VCMTiming* timing,
-                    VCMReceiveStatisticsCallback* stats_proxy,
-                    rtc::TaskQueue* decode_queue,
-                    FrameSchedulingReceiver* receiver,
-                    TimeDelta max_wait_for_keyframe,
-                    TimeDelta max_wait_for_frame)
+  FrameBuffer3Proxy(
+      Clock* clock,
+      TaskQueueBase* worker_queue,
+      VCMTiming* timing,
+      VCMReceiveStatisticsCallback* stats_proxy,
+      rtc::TaskQueue* decode_queue,
+      FrameSchedulingReceiver* receiver,
+      TimeDelta max_wait_for_keyframe,
+      TimeDelta max_wait_for_frame,
+      std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler)
       : max_wait_for_keyframe_(max_wait_for_keyframe),
         max_wait_for_frame_(max_wait_for_frame),
         clock_(clock),
@@ -164,15 +170,11 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
         stats_proxy_(stats_proxy),
         receiver_(receiver),
         timing_(timing),
+        frame_decode_scheduler_(std::move(frame_decode_scheduler)),
         jitter_estimator_(clock_),
         inter_frame_delay_(clock_->TimeInMilliseconds()),
         buffer_(std::make_unique<FrameBuffer>(kMaxFramesBuffered,
                                               kMaxFramesHistory)),
-        frame_decode_scheduler_(
-            clock_,
-            worker_queue,
-            absl::bind_front(&FrameBuffer3Proxy::OnFrameReadyForExtraction,
-                             this)),
         decode_timing_(clock_, timing_),
         timeout_tracker_(clock_,
                          worker_queue_,
@@ -189,6 +191,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     RTC_DCHECK(timing_);
     RTC_DCHECK(worker_queue_);
     RTC_DCHECK(clock_);
+    RTC_DCHECK(frame_decode_scheduler_);
     RTC_LOG(LS_WARNING) << "Using FrameBuffer3";
 
     ParseFieldTrial({&zero_playout_delay_max_decode_queue_size_},
@@ -204,8 +207,8 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
   // FrameBufferProxy implementation.
   void StopOnWorker() override {
     RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
+    frame_decode_scheduler_->Stop();
     timeout_tracker_.Stop();
-    frame_decode_scheduler_.CancelOutstanding();
     decoder_ready_for_new_frame_ = false;
     decode_queue_->PostTask([this] {
       RTC_DCHECK_RUN_ON(decode_queue_);
@@ -223,7 +226,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     stats_proxy_->OnDroppedFrames(buffer_->CurrentSize());
     buffer_ =
         std::make_unique<FrameBuffer>(kMaxFramesBuffered, kMaxFramesHistory);
-    frame_decode_scheduler_.CancelOutstanding();
+    frame_decode_scheduler_->CancelOutstanding();
   }
 
   absl::optional<int64_t> InsertFrame(
@@ -356,8 +359,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
   }
 
  private:
-  void OnFrameReadyForExtraction(uint32_t rtp_timestamp,
-                                 Timestamp render_time) {
+  void FrameReadyForDecode(uint32_t rtp_timestamp, Timestamp render_time) {
     RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
     RTC_DCHECK(buffer_->NextDecodableTemporalUnitRtpTimestamp() ==
                rtp_timestamp)
@@ -445,7 +447,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     auto last_rtp = *buffer_->LastDecodableTemporalUnitRtpTimestamp();
 
     // If already scheduled then abort.
-    if (frame_decode_scheduler_.scheduled_rtp() ==
+    if (frame_decode_scheduler_->ScheduledRtpTimestamp() ==
         buffer_->NextDecodableTemporalUnitRtpTimestamp())
       return;
 
@@ -456,9 +458,11 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
                                                      IsTooManyFramesQueued());
       if (schedule) {
         // Don't schedule if already waiting for the same frame.
-        if (frame_decode_scheduler_.scheduled_rtp() != next_rtp) {
-          frame_decode_scheduler_.CancelOutstanding();
-          frame_decode_scheduler_.ScheduleFrame(next_rtp, *schedule);
+        if (frame_decode_scheduler_->ScheduledRtpTimestamp() != next_rtp) {
+          frame_decode_scheduler_->CancelOutstanding();
+          frame_decode_scheduler_->ScheduleFrame(
+              next_rtp, *schedule,
+              absl::bind_front(&FrameBuffer3Proxy::FrameReadyForDecode, this));
         }
         return;
       }
@@ -478,6 +482,8 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
   VCMReceiveStatisticsCallback* const stats_proxy_;
   FrameSchedulingReceiver* const receiver_;
   VCMTiming* const timing_;
+  const std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler_
+      RTC_GUARDED_BY(&worker_sequence_checker_);
 
   VCMJitterEstimator jitter_estimator_
       RTC_GUARDED_BY(&worker_sequence_checker_);
@@ -485,8 +491,6 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
       RTC_GUARDED_BY(&worker_sequence_checker_);
   bool keyframe_required_ RTC_GUARDED_BY(&worker_sequence_checker_) = false;
   std::unique_ptr<FrameBuffer> buffer_
-      RTC_GUARDED_BY(&worker_sequence_checker_);
-  FrameDecodeScheduler frame_decode_scheduler_
       RTC_GUARDED_BY(&worker_sequence_checker_);
   FrameDecodeTiming decode_timing_ RTC_GUARDED_BY(&worker_sequence_checker_);
   VideoReceiveStreamTimeoutTracker timeout_tracker_
@@ -515,6 +519,28 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
   ScopedTaskSafety worker_safety_;
 };
 
+enum class FrameBufferArm {
+  kFrameBuffer2,
+  kFrameBuffer3,
+  kSyncDecode,
+};
+
+constexpr const char* kFrameBufferFieldTrial = "WebRTC-FrameBuffer3";
+
+FrameBufferArm ParseFrameBufferFieldTrial() {
+  webrtc::FieldTrialEnum<FrameBufferArm> arm(
+      "arm", FrameBufferArm::kFrameBuffer2,
+      {
+          {"FrameBuffer2", FrameBufferArm::kFrameBuffer2},
+          {"FrameBuffer3", FrameBufferArm::kFrameBuffer3},
+          {"SyncDecoding", FrameBufferArm::kSyncDecode},
+      });
+  ParseFieldTrial({&arm}, field_trial::FindFullName(kFrameBufferFieldTrial));
+  return arm.Get();
+}
+
+}  // namespace
+
 std::unique_ptr<FrameBufferProxy> FrameBufferProxy::CreateFromFieldTrial(
     Clock* clock,
     TaskQueueBase* worker_queue,
@@ -523,14 +549,39 @@ std::unique_ptr<FrameBufferProxy> FrameBufferProxy::CreateFromFieldTrial(
     rtc::TaskQueue* decode_queue,
     FrameSchedulingReceiver* receiver,
     TimeDelta max_wait_for_keyframe,
-    TimeDelta max_wait_for_frame) {
-  if (field_trial::IsEnabled("WebRTC-FrameBuffer3"))
-    return std::make_unique<FrameBuffer3Proxy>(
-        clock, worker_queue, timing, stats_proxy, decode_queue, receiver,
-        max_wait_for_keyframe, max_wait_for_frame);
-  return std::make_unique<FrameBuffer2Proxy>(
-      clock, timing, stats_proxy, decode_queue, receiver, max_wait_for_keyframe,
-      max_wait_for_frame);
+    TimeDelta max_wait_for_frame,
+    DecodeSynchronizer* decode_sync) {
+  switch (ParseFrameBufferFieldTrial()) {
+    case FrameBufferArm::kFrameBuffer3: {
+      auto scheduler =
+          std::make_unique<TaskQueueFrameDecodeScheduler>(clock, worker_queue);
+      return std::make_unique<FrameBuffer3Proxy>(
+          clock, worker_queue, timing, stats_proxy, decode_queue, receiver,
+          max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler));
+    }
+    case FrameBufferArm::kSyncDecode: {
+      std::unique_ptr<FrameDecodeScheduler> scheduler;
+      if (decode_sync) {
+        scheduler = decode_sync->CreateSynchronizedFrameScheduler();
+      } else {
+        RTC_LOG(LS_ERROR) << "In FrameBuffer with sync decode trial, but "
+                             "no DecodeSynchronizer was present!";
+        // Crash in debug, but in production use the task queue scheduler.
+        RTC_DCHECK_NOTREACHED();
+        scheduler = std::make_unique<TaskQueueFrameDecodeScheduler>(
+            clock, worker_queue);
+      }
+      return std::make_unique<FrameBuffer3Proxy>(
+          clock, worker_queue, timing, stats_proxy, decode_queue, receiver,
+          max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler));
+    }
+    case FrameBufferArm::kFrameBuffer2:
+      ABSL_FALLTHROUGH_INTENDED;
+    default:
+      return std::make_unique<FrameBuffer2Proxy>(
+          clock, timing, stats_proxy, decode_queue, receiver,
+          max_wait_for_keyframe, max_wait_for_frame);
+  }
 }
 
 }  // namespace webrtc
