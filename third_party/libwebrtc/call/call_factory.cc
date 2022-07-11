@@ -168,8 +168,7 @@ Call* CallFactory::CreateCall(const Call::Config& config) {
             config.rtp_transport_controller_send_factory->Create(
                 transportConfig, Clock::GetRealTimeClock(),
                 ProcessThread::Create("PacerThread")))),
-        send_degradation_configs, receive_degradation_configs,
-        config.task_queue_factory);
+        send_degradation_configs, receive_degradation_configs);
      */
   }
 
