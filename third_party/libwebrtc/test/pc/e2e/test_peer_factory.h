@@ -70,6 +70,13 @@ class TestPeerFactory {
       std::unique_ptr<PeerConfigurerImpl> configurer,
       std::unique_ptr<MockPeerConnectionObserver> observer,
       absl::optional<RemotePeerAudioConfig> remote_audio_config,
+      absl::optional<PeerConnectionE2EQualityTestFixture::EchoEmulationConfig>
+          echo_emulation_config);
+  // Deprecated. Use the one above.
+  std::unique_ptr<TestPeer> CreateTestPeer(
+      std::unique_ptr<PeerConfigurerImpl> configurer,
+      std::unique_ptr<MockPeerConnectionObserver> observer,
+      absl::optional<RemotePeerAudioConfig> remote_audio_config,
       double bitrate_multiplier,
       absl::optional<PeerConnectionE2EQualityTestFixture::EchoEmulationConfig>
           echo_emulation_config);

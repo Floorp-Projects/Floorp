@@ -254,8 +254,7 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
             OnTrackCallback(alice_name, transceiver, bob_video_configs);
           },
           [this]() { StartVideo(alice_video_sources_); }),
-      alice_remote_audio_config, run_params.video_encoder_bitrate_multiplier,
-      run_params.echo_emulation_config);
+      alice_remote_audio_config, run_params.echo_emulation_config);
   bob_ = test_peer_factory.CreateTestPeer(
       std::move(bob_configurer),
       std::make_unique<FixturePeerConnectionObserver>(
@@ -264,8 +263,7 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
             OnTrackCallback(bob_name, transceiver, alice_video_configs);
           },
           [this]() { StartVideo(bob_video_sources_); }),
-      bob_remote_audio_config, run_params.video_encoder_bitrate_multiplier,
-      run_params.echo_emulation_config);
+      bob_remote_audio_config, run_params.echo_emulation_config);
 
   int num_cores = CpuInfo::DetectNumberOfCores();
   RTC_DCHECK_GE(num_cores, 1);
@@ -411,7 +409,7 @@ std::string PeerConnectionE2EQualityTest::GetFieldTrials(
     const RunParams& run_params) {
   std::vector<absl::string_view> default_field_trials = {
       kUseStandardsBytesStats};
-  if (run_params.use_flex_fec) {
+  if (run_params.enable_flex_fec_support) {
     default_field_trials.push_back(kFlexFecEnabledFieldTrials);
   }
   rtc::StringBuilder sb;
@@ -480,7 +478,7 @@ void PeerConnectionE2EQualityTest::SetupCallOnSignalingThread(
         for (int i = 0;
              i < video_config.simulcast_config->simulcast_streams_count; ++i) {
           RtpEncodingParameters enc_params;
-          if (video_config.simulcast_config->encoding_params.size() > 0) {
+          if (!video_config.simulcast_config->encoding_params.empty()) {
             enc_params = video_config.simulcast_config->encoding_params[i];
           }
           // We need to be sure, that all rids will be unique with all mids.
@@ -523,28 +521,26 @@ void PeerConnectionE2EQualityTest::SetupCallOnSignalingThread(
   media_helper_->MaybeAddAudio(bob_.get());
   bob_video_sources_ = media_helper_->MaybeAddVideo(bob_.get());
 
-  SetPeerCodecPreferences(alice_.get(), run_params);
-  SetPeerCodecPreferences(bob_.get(), run_params);
+  SetPeerCodecPreferences(alice_.get());
+  SetPeerCodecPreferences(bob_.get());
 }
 
 void PeerConnectionE2EQualityTest::TearDownCallOnSignalingThread() {
   TearDownCall();
 }
 
-void PeerConnectionE2EQualityTest::SetPeerCodecPreferences(
-    TestPeer* peer,
-    const RunParams& run_params) {
+void PeerConnectionE2EQualityTest::SetPeerCodecPreferences(TestPeer* peer) {
   std::vector<RtpCodecCapability> with_rtx_video_capabilities =
       FilterVideoCodecCapabilities(
-          peer->params()->video_codecs, true, run_params.use_ulp_fec,
-          run_params.use_flex_fec,
+          peer->params()->video_codecs, true, peer->params()->use_ulp_fec,
+          peer->params()->use_flex_fec,
           peer->pc_factory()
               ->GetRtpSenderCapabilities(cricket::MediaType::MEDIA_TYPE_VIDEO)
               .codecs);
   std::vector<RtpCodecCapability> without_rtx_video_capabilities =
       FilterVideoCodecCapabilities(
-          peer->params()->video_codecs, false, run_params.use_ulp_fec,
-          run_params.use_flex_fec,
+          peer->params()->video_codecs, false, peer->params()->use_ulp_fec,
+          peer->params()->use_flex_fec,
           peer->pc_factory()
               ->GetRtpSenderCapabilities(cricket::MediaType::MEDIA_TYPE_VIDEO)
               .codecs);

@@ -147,6 +147,10 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Smoke) {
     alice->SetAudioConfig(std::move(audio));
     alice->SetVideoCodecs(
         {VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})});
+
+    alice->SetUseFlexFEC(true);
+    alice->SetUseUlpFEC(true);
+    alice->SetVideoEncoderBitrateMultiplier(1.1);
   });
   AddPeer(network_links.second, [](PeerConfigurer* charlie) {
     charlie->SetName("charlie");
@@ -163,6 +167,10 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Smoke) {
     charlie->SetAudioConfig(std::move(audio));
     charlie->SetVideoCodecs(
         {VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})});
+
+    charlie->SetUseFlexFEC(true);
+    charlie->SetUseUlpFEC(true);
+    charlie->SetVideoEncoderBitrateMultiplier(1.1);
   });
   fixture()->AddQualityMetricsReporter(
       std::make_unique<StatsBasedNetworkQualityMetricsReporter>(
@@ -171,9 +179,7 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Smoke) {
                {"charlie", network_links.second->endpoints()}}),
           network_emulation()));
   RunParams run_params(TimeDelta::Seconds(2));
-  run_params.use_flex_fec = true;
-  run_params.use_ulp_fec = true;
-  run_params.video_encoder_bitrate_multiplier = 1.1;
+  run_params.enable_flex_fec_support = true;
   RunAndCheckEachVideoStreamReceivedFrames(run_params);
 }
 
@@ -219,10 +225,18 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_ChangeNetworkConditions) {
     alice->AddVideoConfig(std::move(video));
     alice->SetVideoCodecs(
         {VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})});
+
+    alice->SetUseFlexFEC(true);
+    alice->SetUseUlpFEC(true);
+    alice->SetVideoEncoderBitrateMultiplier(1.1);
   });
   AddPeer(bob_network, [](PeerConfigurer* bob) {
     bob->SetVideoCodecs(
         {VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})});
+
+    bob->SetUseFlexFEC(true);
+    bob->SetUseUlpFEC(true);
+    bob->SetVideoEncoderBitrateMultiplier(1.1);
   });
   fixture()->AddQualityMetricsReporter(
       std::make_unique<StatsBasedNetworkQualityMetricsReporter>(
@@ -238,9 +252,7 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_ChangeNetworkConditions) {
   });
 
   RunParams run_params(TimeDelta::Seconds(2));
-  run_params.use_flex_fec = true;
-  run_params.use_ulp_fec = true;
-  run_params.video_encoder_bitrate_multiplier = 1.1;
+  run_params.enable_flex_fec_support = true;
   RunAndCheckEachVideoStreamReceivedFrames(run_params);
 }
 
