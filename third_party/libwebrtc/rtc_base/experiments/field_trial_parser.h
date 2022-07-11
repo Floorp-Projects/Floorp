@@ -220,7 +220,7 @@ class FieldTrialFlag : public FieldTrialParameterInterface {
   explicit FieldTrialFlag(std::string key);
   FieldTrialFlag(std::string key, bool default_value);
   bool Get() const;
-  operator bool() const;
+  explicit operator bool() const;
 
  protected:
   bool Parse(absl::optional<std::string> str_value) override;
