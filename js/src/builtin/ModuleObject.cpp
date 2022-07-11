@@ -945,6 +945,9 @@ static inline void AssertValidModuleStatus(ModuleStatus status) {
 ModuleStatus ModuleObject::status() const {
   ModuleStatus status = ModuleStatus(getReservedSlot(StatusSlot).toInt32());
   AssertValidModuleStatus(status);
+  if (status == ModuleStatus::Evaluated_Error) {
+    return ModuleStatus::Evaluated;
+  }
   return status;
 }
 
@@ -1112,12 +1115,19 @@ bool ModuleObject::hasTopLevelCapability() const {
 }
 
 bool ModuleObject::hadEvaluationError() const {
-  return status() == ModuleStatus::Evaluated_Error;
+  ModuleStatus fullStatus = ModuleStatus(getReservedSlot(StatusSlot).toInt32());
+  return fullStatus == ModuleStatus::Evaluated_Error;
 }
 
 void ModuleObject::setEvaluationError(HandleValue newValue) {
+  MOZ_ASSERT(status() != ModuleStatus::Unlinked);
+  MOZ_ASSERT(!hadEvaluationError());
+
   setReservedSlot(StatusSlot, ModuleStatusValue(ModuleStatus::Evaluated_Error));
-  return setReservedSlot(EvaluationErrorSlot, newValue);
+  setReservedSlot(EvaluationErrorSlot, newValue);
+
+  MOZ_ASSERT(status() == ModuleStatus::Evaluated);
+  MOZ_ASSERT(hadEvaluationError());
 }
 
 Value ModuleObject::maybeEvaluationError() const {
@@ -1204,6 +1214,7 @@ bool ModuleObject::execute(JSContext* cx, Handle<ModuleObject*> self) {
 #ifdef DEBUG
   MOZ_ASSERT(self->status() == ModuleStatus::Evaluating ||
              self->status() == ModuleStatus::Evaluated);
+  MOZ_ASSERT(!self->hadEvaluationError());
   if (!AssertFrozen(cx, self)) {
     return false;
   }
