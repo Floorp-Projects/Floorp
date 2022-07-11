@@ -235,6 +235,7 @@ class RTC_EXPORT StatsReport {
     kStatsValueNameTrackId,
     kStatsValueNameTransmitBitrate,
     kStatsValueNameTransportType,
+    // TODO(bugs.webrtc.org/11226): Remove.
     kStatsValueNameTypingNoiseState,
     kStatsValueNameWritable,
     kStatsValueNameAudioDeviceUnderrunCounter,
