@@ -106,7 +106,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     webHandler.name = "Web Handler";
     webHandler.uriTemplate = "http://example.com/tests/dom/security/test/mixedcontentblocker/file_bug803225_test_mailto.html?s=%";
 
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     Services.ppmm.addMessageListener("Test:content-ready", function contentReadyListener() {
       Services.ppmm.removeMessageListener("Test:content-ready", contentReadyListener);
       sendAsyncMessage("Test:content-ready-forward");

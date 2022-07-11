@@ -21,7 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936340
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
 var baseURL = "http://mochi.test:8888/chrome/dom/tests/mochitest/beacon/";

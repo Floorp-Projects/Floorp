@@ -18,7 +18,6 @@
 
   async function runTest() {
     let script = SpecialPowers.loadChromeScript(function() {
-      const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
       // Force download to be w/o user assistance for our testing mime type
       const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
       let handlerInfo =
@@ -64,7 +63,6 @@
 
   testCleanUp = function cleanup() {
     SpecialPowers.loadChromeScript(function() {
-      const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
       const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
       let handlerInfo =
         mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");

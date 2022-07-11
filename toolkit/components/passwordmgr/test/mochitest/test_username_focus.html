@@ -14,7 +14,6 @@
 <script>
 let readyPromise = registerRunTests(5);
 let chromeScript = runInParent(function chromeSetup() {
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   let login1A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
   let login2A  = Cc["@mozilla.org/login-manager/loginInfo;1"].

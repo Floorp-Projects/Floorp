@@ -30,7 +30,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=618176
     function start() {
       messageManager.addMessageListener("test", recvTest);
       messageManager.loadFrameScript(FRAME_SCRIPT, true);
-      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
       let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
       setTimeout(function () {
         document.getElementById("browser").loadURI(TEST_PAGE, {triggeringPrincipal});

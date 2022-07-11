@@ -30,8 +30,6 @@
        * Add a listener to add some logins to be autofilled in the HTTP/proxy auth. prompts later.
        */
       let pwmgrParent = runInParent(() => {
-        const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
         Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
         Services.prefs.setIntPref("prompts.authentication_dialog_abuse_limit", -1);
 

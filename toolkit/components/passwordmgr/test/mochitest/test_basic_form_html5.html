@@ -15,7 +15,6 @@ runChecksAfterCommonInit(() => startTest());
 let DEFAULT_ORIGIN = window.location.origin;
 
 runInParent(function setup() {
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
                createInstance(Ci.nsILoginInfo);
   let login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].

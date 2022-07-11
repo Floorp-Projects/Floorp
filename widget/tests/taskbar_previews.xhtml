@@ -11,8 +11,6 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script class="testbody" type="application/javascript">
   <![CDATA[
-    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
     let taskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(Ci.nsIWinTaskbar);
 
     function IsWin7OrHigher() {

@@ -16,8 +16,6 @@ const { ContentTask } = ChromeUtils.import("resource://testing-common/ContentTas
 function dropOnRemoteBrowserAsync(browser, data, shouldExpectStateChange) {
   ContentTask.setTestScope(window); // Need this so is/isnot/ok are available inside the contenttask
   return ContentTask.spawn(browser, {data, shouldExpectStateChange}, async function({data, shouldExpectStateChange}) {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
     if (!content.document.documentElement) {
       // Wait until the testing document gets loaded.
       await new Promise(resolve => {

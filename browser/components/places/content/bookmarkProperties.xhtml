@@ -34,7 +34,6 @@
   </stringbundleset>
 
   <script>
-    var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
     if (Services.prefs.getBoolPref("browser.bookmarks.editDialog.delayedApply.enabled", false)) {
       Services.scriptloader.loadSubScript("chrome://browser/content/places/editBookmark.js", this);
     } else {

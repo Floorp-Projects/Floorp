@@ -92,7 +92,6 @@
     function doTests() {
       // Front end stuff sometimes likes to stuff things in the hidden window(s)
       // in which case we should repress all accessibles for those.
-      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
       // Try to create an accessible for the hidden window's document.
       let doc = Services.appShell.hiddenDOMWindow.document;
