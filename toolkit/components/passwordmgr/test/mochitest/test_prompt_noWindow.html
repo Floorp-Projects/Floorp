@@ -24,8 +24,6 @@ add_task(async function setup() {
   let loginAddedPromise = promiseStorageChanged(["addLogin"]);
 
   runInParent(() => {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
     let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
                 createInstance(Ci.nsILoginInfo);
     login.init("http://mochi.test:8888", null, "mochitest",

@@ -4,8 +4,6 @@
 <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 <div id="log"></div>
 <script>
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function awaitScriptError(fun) {
   // Use setTimeout in order to prevent throwing from test frame
   // and to have a clean stack frame.

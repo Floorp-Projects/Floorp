@@ -29,7 +29,6 @@ let prompterParent = runInParent(() => {
   const promptFac = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].
                     getService(Ci.nsIPromptFactory);
 
-  let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
   let prompter1 = promptFac.getPrompt(chromeWin, Ci.nsIAuthPrompt);
 
@@ -49,7 +48,6 @@ const defaultTitle = "the title";
 const defaultMsg = "the message";
 
 function initLogins() {
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   var login1, login2A, login2B, login2C, login2D, login2E;
   login1  = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);

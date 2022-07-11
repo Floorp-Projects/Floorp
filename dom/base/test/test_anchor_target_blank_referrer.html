@@ -16,7 +16,6 @@
   // We are going to open new tabs with target=_blank and rel=noopener
   // Listen a new tab is opened then close the new tab, otherwise we will lose
   // focus for the next tests
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
   const gBrowser = Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
   window.addEventListener("message", function(event) {

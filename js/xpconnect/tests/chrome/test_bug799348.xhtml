@@ -20,7 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=799348
   /** Test for Bug 799348 **/
   SimpleTest.waitForExplicitFinish();
   ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   gCalledOnload = false;
   var myObserver = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),

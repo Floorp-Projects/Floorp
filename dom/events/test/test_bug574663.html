@@ -104,7 +104,6 @@ function runTest() {
     SimpleTest.waitForFocus(function() {
       /* eslint-disable no-shadow */
       let chromeScript = SpecialPowers.loadChromeScript(_ => {
-        const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
         let win = Services.wm.getMostRecentWindow("navigator:browser");
         win.requestAnimationFrame(() => {
           win.gBrowser.selectedBrowser.removeAttribute("blank");

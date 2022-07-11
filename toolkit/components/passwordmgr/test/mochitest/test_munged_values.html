@@ -16,7 +16,6 @@ const DEFAULT_ORIGIN = window.location.origin;
 
 function removeAllUserFacingLoginsInParent() {
   runInParent(function removeAllUserFacingLogins() {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     Services.logins.removeAllUserFacingLogins();
   });
 }

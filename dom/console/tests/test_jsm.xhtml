@@ -16,8 +16,6 @@
 
 const JSM = "chrome://mochitests/content/chrome/dom/console/tests/console.jsm";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 let dumpCalled = 0;
 function dumpFunction(msg) {
   ok(msg.includes("_PREFIX_"), "we have a prefix");

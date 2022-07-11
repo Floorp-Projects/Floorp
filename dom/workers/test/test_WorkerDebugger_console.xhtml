@@ -18,8 +18,6 @@
     const CHILD_WORKER_URL = "WorkerDebugger.console_childWorker.js";
     const DEBUGGER_URL = BASE_URL + "WorkerDebugger.console_debugger.js";
 
-    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
     consoleMessagesReceived = 0;
     function test() {
       const ConsoleAPIStorage = SpecialPowers.Cc[

@@ -21,9 +21,6 @@ const notifier = Cc["@mozilla.org/alerts-service;1"]
                    .getService(Ci.nsIAlertsService);
 
 const chromeScript = SpecialPowers.loadChromeScript(_ => {
-  // eslint-disable-next-line no-shadow
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
   addMessageListener("anyXULAlertsVisible", function() {
     var windows = Services.wm.getEnumerator("alert:alert");
     return windows.hasMoreElements();
