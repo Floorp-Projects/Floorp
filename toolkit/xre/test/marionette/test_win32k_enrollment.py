@@ -141,8 +141,6 @@ class TestWin32kAutostart(MarionetteTestCase):
           // We're running in a function, in a sandbox, that inherits from an
           // X-ray wrapped window. Anything we want to be globally available
           // needs to be defined on that window.
-          let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-          window.Services = Services;
           window.env = Cc["@mozilla.org/process/environment;1"]
                     .getService(Ci.nsIEnvironment);
         """

@@ -110,9 +110,6 @@ class Browser(object):
         """
 
         script = """\
-        let { Services } = ChromeUtils.import(
-          "resource://gre/modules/Services.jsm"
-        );
         Services.telemetry.setEventRecordingEnabled("navigation", true);
         """
 

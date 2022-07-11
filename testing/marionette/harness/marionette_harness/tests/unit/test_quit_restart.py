@@ -114,9 +114,6 @@ class TestQuitRestart(MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             return self.marionette.execute_script(
                 """
-              const { Services } = ChromeUtils.import(
-                "resource://gre/modules/Services.jsm"
-              );
               return Services.appinfo.inSafeMode;
             """
             )
@@ -125,9 +122,6 @@ class TestQuitRestart(MarionetteTestCase):
         self.marionette.set_context("chrome")
         self.marionette.execute_script(
             """
-            const { Services } = ChromeUtils.import(
-              "resource://gre/modules/Services.jsm"
-            );
             let flags = Ci.nsIAppStartup.eAttemptQuit;
             if (arguments[0]) {
               flags |= Ci.nsIAppStartup.eRestart;
