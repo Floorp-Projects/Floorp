@@ -1035,18 +1035,6 @@ TEST_P(WebRtcVoiceEngineTestFake, RecvRedDefault) {
                    {112, {"red", 48000, 2, {{"", "111/111"}}}}})));
 }
 
-// Test that we disable Opus/Red with the kill switch.
-TEST_P(WebRtcVoiceEngineTestFake, RecvRed) {
-  webrtc::test::ScopedFieldTrials override_field_trials(
-      "WebRTC-Audio-Red-For-Opus/Disabled/");
-
-  EXPECT_TRUE(SetupRecvStream());
-  cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kOpusCodec);
-  parameters.codecs.push_back(kRed48000Codec);
-  EXPECT_FALSE(channel_->SetRecvParameters(parameters));
-}
-
 TEST_P(WebRtcVoiceEngineTestFake, SetSendBandwidthAuto) {
   EXPECT_TRUE(SetupSendStream());
 

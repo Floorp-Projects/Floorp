@@ -130,9 +130,6 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   int audio_jitter_buffer_min_delay_ms_ = 0;
   bool audio_jitter_buffer_enable_rtx_handling_ = false;
 
-  // If this field is enabled, we will negotiate and use RFC 2198
-  // redundancy for opus audio.
-  const bool audio_red_for_opus_enabled_;
   const bool minimized_remsampling_on_mobile_trial_enabled_;
 };
 
@@ -325,8 +322,6 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   // Unsignaled streams have an option to have a frame decryptor set on them.
   rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
       unsignaled_frame_decryptor_;
-
-  const bool audio_red_for_opus_enabled_;
 };
 }  // namespace cricket
 
