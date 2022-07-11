@@ -9,8 +9,8 @@ const EXPORTED_SYMBOLS = ["InsecurePasswordUtils"];
 
 const STRINGS_URI = "chrome://global/locale/security/security.properties";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};

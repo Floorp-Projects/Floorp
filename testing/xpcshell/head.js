@@ -56,8 +56,8 @@ let { NetUtil: _NetUtil } = ChromeUtils.import(
   "resource://gre/modules/NetUtil.jsm"
 );
 
-let { XPCOMUtils: _XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+let { XPCOMUtils: _XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 let { OS: _OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");

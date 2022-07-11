@@ -71,8 +71,8 @@ const AMO_ATTRIBUTION_DATA_KEYS = [
 ];
 const AMO_ATTRIBUTION_DATA_MAX_LENGTH = 40;
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 // This global is overridden by xpcshell tests, and therefore cannot be
 // a const.
