@@ -15,5 +15,5 @@ Examples of incorrect code for this rule:
     globalThis.foo = 10;
     Object.defineProperty(globalThis, "bar", { value: 20});
     XPCOMUtils.defineLazyModuleGetters(globalThis, {
-      Services: "resource://gre/modules/Services.jsm",
+      AppConstants: "resource://gre/modules/AppConstants.jsm",
     });

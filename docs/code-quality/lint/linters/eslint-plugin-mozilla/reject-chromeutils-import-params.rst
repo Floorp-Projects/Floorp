@@ -10,13 +10,13 @@ Examples of incorrect code for this rule:
 
 .. code-block:: js
 
-    ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-    ChromeUtils.import("resource://gre/modules/Services.jsm", null);
-    ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+    ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
+    ChromeUtils.import("resource://gre/modules/AppConstants.jsm", null);
+    ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 
 Examples of correct code for this rule:
 ---------------------------------------
 
 .. code-block:: js
 
-    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
