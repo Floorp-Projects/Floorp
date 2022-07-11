@@ -9,7 +9,7 @@
 //   - open a link with the download attribute
 //   - save a link or image from the context menu
 
-requestLongerTimeout(5);
+requestLongerTimeout(8);
 
 let types = {
   text: "text/plain",
@@ -177,6 +177,7 @@ add_task(async function init() {
   httpServer.registerPathHandler("/bellr", handleRequest);
   httpServer.registerPathHandler("/bellg", handleRequest);
   httpServer.registerPathHandler("/bellb", handleRequest);
+  httpServer.registerPathHandler("/executable.exe", handleRequest);
 
   await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

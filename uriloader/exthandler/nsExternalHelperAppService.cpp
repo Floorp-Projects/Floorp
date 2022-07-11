@@ -3417,22 +3417,24 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
           mimeInfo->GetPrimaryExtension(extension);
         }
 
-        ModifyExtensionType modify =
-            ShouldModifyExtension(mimeInfo, originalExtension);
-        if (modify == ModifyExtension_Replace) {
-          int32_t dotidx = fileName.RFind(".");
-          if (dotidx != -1) {
-            // Remove the existing extension and replace it.
-            fileName.Truncate(dotidx);
+        if (!extension.IsEmpty()) {
+          ModifyExtensionType modify =
+              ShouldModifyExtension(mimeInfo, originalExtension);
+          if (modify == ModifyExtension_Replace) {
+            int32_t dotidx = fileName.RFind(".");
+            if (dotidx != -1) {
+              // Remove the existing extension and replace it.
+              fileName.Truncate(dotidx);
+            }
           }
-        }
 
-        // Otherwise, just append the proper extension to the end of the
-        // filename, adding to the invalid extension that might already be
-        // there.
-        if (modify != ModifyExtension_Ignore && !extension.IsEmpty()) {
-          fileName.AppendLiteral(".");
-          fileName.Append(NS_ConvertUTF8toUTF16(extension));
+          // Otherwise, just append the proper extension to the end of the
+          // filename, adding to the invalid extension that might already be
+          // there.
+          if (modify != ModifyExtension_Ignore) {
+            fileName.AppendLiteral(".");
+            fileName.Append(NS_ConvertUTF8toUTF16(extension));
+          }
         }
       }
     }
