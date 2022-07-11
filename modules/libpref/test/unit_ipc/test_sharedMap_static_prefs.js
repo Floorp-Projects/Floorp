@@ -67,9 +67,6 @@ add_task(async function test_sharedMap_static_prefs() {
 
   /* eslint-disable no-shadow */
   let values = await contentPage.spawn([PREF1_NAME, PREF2_NAME], prefs => {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
     return prefs.map(pref => Services.prefs.getBoolPref(pref));
   });
   /* eslint-enable no-shadow */

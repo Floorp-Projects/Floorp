@@ -246,10 +246,6 @@ var chromeScript;
 
 function runTests(flag, prefs, trackingResource) {
   chromeScript = SpecialPowers.loadChromeScript(_ => {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
-
     function onExamResp(subject, topic, data) {
       let channel = subject.QueryInterface(Ci.nsIHttpChannel);
       let classifiedChannel = subject.QueryInterface(Ci.nsIClassifiedChannel);

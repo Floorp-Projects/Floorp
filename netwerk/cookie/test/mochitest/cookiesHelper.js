@@ -6,9 +6,6 @@ async function cleanupData() {
     const chromeScript = SpecialPowers.loadChromeScript(_ => {
       // eslint-disable-next-line no-undef
       addMessageListener("go", __ => {
-        const { Services } = ChromeUtils.import(
-          "resource://gre/modules/Services.jsm"
-        );
         Services.clearData.deleteData(
           Services.clearData.CLEAR_COOKIES |
             Services.clearData.CLEAR_ALL_CACHES |

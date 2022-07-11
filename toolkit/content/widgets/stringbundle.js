@@ -7,10 +7,6 @@
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
 {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
-
   class MozStringbundle extends MozXULElement {
     get stringBundle() {
       if (!this._bundle) {

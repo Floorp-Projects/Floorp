@@ -29,9 +29,6 @@ let processActorOptions = {
 };
 
 function promiseNotification(aNotification) {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   let notificationResolve;
   let notificationObserver = function observer() {
     notificationResolve();

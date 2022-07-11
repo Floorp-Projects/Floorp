@@ -569,9 +569,6 @@ async function waitUntilApzStable() {
     /* eslint-env mozilla/frame-script */
     function parentProcessFlush() {
       function apzFlush() {
-        const { Services } = ChromeUtils.import(
-          "resource://gre/modules/Services.jsm"
-        );
         var topWin = Services.wm.getMostRecentWindow("navigator:browser");
         if (!topWin) {
           topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
@@ -701,9 +698,6 @@ function isKeyApzEnabled() {
 function getSnapshot(rect) {
   function parentProcessSnapshot() {
     addMessageListener("snapshot", function(parentRect) {
-      const { Services } = ChromeUtils.import(
-        "resource://gre/modules/Services.jsm"
-      );
       var topWin = Services.wm.getMostRecentWindow("navigator:browser");
       if (!topWin) {
         topWin = Services.wm.getMostRecentWindow("navigator:geckoview");

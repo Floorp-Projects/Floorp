@@ -66,7 +66,6 @@ function onLoad() {
     }
   } catch (e) {}
 
-  let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   Services.obs.notifyObservers(window, "select-dialog-loaded");
 }
 

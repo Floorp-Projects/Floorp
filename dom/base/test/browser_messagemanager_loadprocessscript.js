@@ -30,9 +30,6 @@ function checkBaseProcessCount(description) {
 }
 
 function processScript() {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   if (Services.cpmm !== this) {
     dump("Test failed: wrong global object\n");
     return;

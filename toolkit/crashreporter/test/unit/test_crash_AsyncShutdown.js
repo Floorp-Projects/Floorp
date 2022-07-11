@@ -11,9 +11,6 @@ function setup_crash() {
   const { AsyncShutdown } = ChromeUtils.import(
     "resource://gre/modules/AsyncShutdown.jsm"
   );
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   const { PromiseUtils } = ChromeUtils.import(
     "resource://gre/modules/PromiseUtils.jsm"
   );
@@ -48,9 +45,6 @@ function after_crash(mdump, extra) {
 // the latest operation succeeded
 
 function setup_osfile_crash_noerror() {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
   const { PromiseUtils } = ChromeUtils.import(
     "resource://gre/modules/PromiseUtils.jsm"
@@ -88,9 +82,6 @@ function after_osfile_crash_noerror(mdump, extra) {
 // the latest operation failed
 
 function setup_osfile_crash_exn() {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
   const { PromiseUtils } = ChromeUtils.import(
     "resource://gre/modules/PromiseUtils.jsm"

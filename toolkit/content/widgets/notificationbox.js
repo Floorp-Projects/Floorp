@@ -7,10 +7,6 @@
 // This is loaded into chrome windows with the subscript loader. If you need to
 // define globals, wrap in a block to prevent leaking onto `window`.
 {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
-
   MozElements.NotificationBox = class NotificationBox {
     /**
      * Creates a new class to handle a notification box, but does not add any

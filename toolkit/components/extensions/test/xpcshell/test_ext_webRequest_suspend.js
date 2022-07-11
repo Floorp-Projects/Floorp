@@ -185,10 +185,6 @@ add_task(async function test_set_responseHeaders() {
     resolveHeaderPromise = resolve;
   });
   {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
-
     let ssm = Services.scriptSecurityManager;
 
     let channel = NetUtil.newChannel({
