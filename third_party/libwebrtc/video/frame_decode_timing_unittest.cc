@@ -89,7 +89,8 @@ TEST_F(FrameDecodeTimingTest, ReturnsWaitTimesWhenValid) {
 }
 
 TEST_F(FrameDecodeTimingTest, FastForwardsFrameTooFarInThePast) {
-  const TimeDelta decode_delay = TimeDelta::Millis(-6);
+  const TimeDelta decode_delay =
+      -FrameDecodeTiming::kMaxAllowedFrameDelay - TimeDelta::Millis(1);
   const Timestamp render_time = clock_.CurrentTime();
   timing_.SetTimes(90000, render_time, decode_delay);
 
@@ -99,14 +100,16 @@ TEST_F(FrameDecodeTimingTest, FastForwardsFrameTooFarInThePast) {
 }
 
 TEST_F(FrameDecodeTimingTest, NoFastForwardIfOnlyFrameToDecode) {
-  const TimeDelta decode_delay = TimeDelta::Millis(-6);
+  const TimeDelta decode_delay =
+      -FrameDecodeTiming::kMaxAllowedFrameDelay - TimeDelta::Millis(1);
   const Timestamp render_time = clock_.CurrentTime();
   timing_.SetTimes(90000, render_time, decode_delay);
 
+  // Negative `decode_delay` means that `latest_decode_time` is now.
   EXPECT_THAT(frame_decode_scheduler_.OnFrameBufferUpdated(90000, 90000, false),
               Optional(AllOf(
                   Field(&FrameDecodeTiming::FrameSchedule::latest_decode_time,
-                        Eq(clock_.CurrentTime() + decode_delay)),
+                        Eq(clock_.CurrentTime())),
                   Field(&FrameDecodeTiming::FrameSchedule::render_time,
                         Eq(render_time)))));
 }
