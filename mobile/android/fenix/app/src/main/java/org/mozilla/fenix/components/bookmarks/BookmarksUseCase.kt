@@ -30,8 +30,8 @@ class BookmarksUseCase(
          */
         @WorkerThread
         suspend operator fun invoke(url: String, title: String, position: UInt? = null): Boolean {
-            try {
-                val canAdd = storage.getBookmarksWithUrl(url).firstOrNull { it.url == it.url } == null
+            return try {
+                val canAdd = storage.getBookmarksWithUrl(url).firstOrNull { it.url == url } == null
 
                 if (canAdd) {
                     storage.addItem(
@@ -41,9 +41,9 @@ class BookmarksUseCase(
                         position = position
                     )
                 }
-                return canAdd
+                canAdd
             } catch (e: PlacesException.UrlParseFailed) {
-                return false
+                false
             }
         }
     }

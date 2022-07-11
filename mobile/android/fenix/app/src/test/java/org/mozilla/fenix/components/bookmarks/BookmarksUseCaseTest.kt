@@ -44,9 +44,11 @@ class BookmarksUseCaseTest {
     fun `WHEN adding bookmark THEN new item is stored`() = runTest {
         val bookmarksStorage = mockk<BookmarksStorage>(relaxed = true)
         val historyStorage = mockk<HistoryStorage>(relaxed = true)
+        val bookmarkNode = mockk<BookmarkNode>()
         val useCase = BookmarksUseCase(bookmarksStorage, historyStorage)
 
-        coEvery { bookmarksStorage.getBookmarksWithUrl(any()) }.coAnswers { emptyList() }
+        every { bookmarkNode.url }.answers { "https://firefox.com" }
+        coEvery { bookmarksStorage.getBookmarksWithUrl(any()) }.coAnswers { listOf(bookmarkNode) }
 
         val result = useCase.addBookmark("https://mozilla.org", "Mozilla")
 
