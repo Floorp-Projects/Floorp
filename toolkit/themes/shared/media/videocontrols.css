@@ -697,12 +697,12 @@
 .pip-expanded {
   border: var(--pip-highlight-width) var(--pip-highlight-style);
   transition: opacity 250ms, scale 200ms, translate 190ms;
-  justify-content: left;
   display: flex;
   height: 40px;
   background-color: rgba(12,12,13,0.9);
   box-shadow: 0px 4px 4px rgba(12,12,13,0.25);
   width: max-content;
+  min-width: 200px;
   border-radius: 8px;
   opacity: 0;
   align-items: center;
@@ -711,10 +711,8 @@
 }
 
 .pip-wrapper[position="right"] > .pip-expanded {
-
   translate: calc(-100% + var(--pip-icon-width-with-margins));
   transform-origin: right;
-  justify-content: right;
 }
 
 .pip-wrapper:is([small-video],[has-used]) > .pip-expanded,
