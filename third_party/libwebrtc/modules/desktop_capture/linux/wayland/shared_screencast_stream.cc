@@ -57,6 +57,12 @@ const char kDrmLib[] = "libdrm.so.2";
 #define SPA_POD_PROP_FLAG_DONT_FIXATE (1u << 4)
 #endif
 
+constexpr int kCursorBpp = 4;
+constexpr int CursorMetaSize(int w, int h) {
+  return (sizeof(struct spa_meta_cursor) + sizeof(struct spa_meta_bitmap) +
+          w * h * kCursorBpp);
+}
+
 struct PipeWireVersion {
   int major = 0;
   int minor = 0;
@@ -183,6 +189,8 @@ class SharedScreenCastStreamPrivate {
   bool StartScreenCastStream(uint32_t stream_node_id, int fd);
   void StopScreenCastStream();
   std::unique_ptr<DesktopFrame> CaptureFrame();
+  std::unique_ptr<MouseCursor> CaptureCursor();
+  DesktopVector CaptureCursorPosition();
 
  private:
   uint32_t pw_stream_node_id_ = 0;
@@ -194,6 +202,8 @@ class SharedScreenCastStreamPrivate {
   webrtc::Mutex queue_lock_;
   ScreenCaptureFrameQueue<SharedDesktopFrame> queue_
       RTC_GUARDED_BY(&queue_lock_);
+  std::unique_ptr<MouseCursor> mouse_cursor_;
+  DesktopVector mouse_cursor_position_ = DesktopVector(-1, -1);
 
   int64_t modifier_;
   std::unique_ptr<EglDmaBuf> egl_dmabuf_;
@@ -387,6 +397,18 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
       &builder, SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta, SPA_PARAM_META_type,
       SPA_POD_Id(SPA_META_VideoCrop), SPA_PARAM_META_size,
       SPA_POD_Int(sizeof(struct spa_meta_region)))));
+  params.push_back(reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
+      &builder, SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta, SPA_PARAM_META_type,
+      SPA_POD_Id(SPA_META_Cursor), SPA_PARAM_META_size,
+      SPA_POD_CHOICE_RANGE_Int(CursorMetaSize(64, 64), CursorMetaSize(1, 1),
+                               CursorMetaSize(384, 384)))));
+  params.push_back(reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
+      &builder, SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta, SPA_PARAM_META_type,
+      SPA_POD_Id(SPA_META_VideoDamage), SPA_PARAM_META_size,
+      SPA_POD_CHOICE_RANGE_Int(sizeof(struct spa_meta_region) * 16,
+                               sizeof(struct spa_meta_region) * 1,
+                               sizeof(struct spa_meta_region) * 16))));
+
   pw_stream_update_params(that->pw_stream_, params.data(), params.size());
 }
 
@@ -604,14 +626,53 @@ std::unique_ptr<DesktopFrame> SharedScreenCastStreamPrivate::CaptureFrame() {
   return std::move(frame);
 }
 
+std::unique_ptr<MouseCursor> SharedScreenCastStreamPrivate::CaptureCursor() {
+  if (!mouse_cursor_) {
+    return nullptr;
+  }
+
+  return std::move(mouse_cursor_);
+}
+
+DesktopVector SharedScreenCastStreamPrivate::CaptureCursorPosition() {
+  return mouse_cursor_position_;
+}
+
 void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
   spa_buffer* spa_buffer = buffer->buffer;
   ScopedBuf map;
   std::unique_ptr<uint8_t[]> src_unique_ptr;
   uint8_t* src = nullptr;
 
+  // Try to update the mouse cursor first, because it can be the only
+  // information carried by the buffer
+  {
+    const struct spa_meta_cursor* cursor =
+        static_cast<struct spa_meta_cursor*>(spa_buffer_find_meta_data(
+            spa_buffer, SPA_META_Cursor, sizeof(*cursor)));
+    if (spa_meta_cursor_is_valid(cursor)) {
+      struct spa_meta_bitmap* bitmap = nullptr;
+
+      if (cursor->bitmap_offset)
+        bitmap =
+            SPA_MEMBER(cursor, cursor->bitmap_offset, struct spa_meta_bitmap);
+
+      if (bitmap && bitmap->size.width > 0 && bitmap->size.height > 0) {
+        const uint8_t* bitmap_data =
+            SPA_MEMBER(bitmap, bitmap->offset, uint8_t);
+        BasicDesktopFrame* mouse_frame = new BasicDesktopFrame(
+            DesktopSize(bitmap->size.width, bitmap->size.height));
+        mouse_frame->CopyPixelsFrom(
+            bitmap_data, bitmap->stride,
+            DesktopRect::MakeWH(bitmap->size.width, bitmap->size.height));
+        mouse_cursor_ = std::make_unique<MouseCursor>(
+            mouse_frame, DesktopVector(cursor->hotspot.x, cursor->hotspot.y));
+      }
+      mouse_cursor_position_.set(cursor->position.x, cursor->position.y);
+    }
+  }
+
   if (spa_buffer->datas[0].chunk->size == 0) {
-    RTC_LOG(LS_ERROR) << "Failed to get video stream: Zero size.";
     return;
   }
 
@@ -674,7 +735,6 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
   if (!src) {
     return;
   }
-
   struct spa_meta_region* video_metadata =
       static_cast<struct spa_meta_region*>(spa_buffer_find_meta_data(
           spa_buffer, SPA_META_VideoCrop, sizeof(*video_metadata)));
@@ -753,8 +813,8 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
       spa_video_format_.format == SPA_VIDEO_FORMAT_RGBA) {
     uint8_t* tmp_src = queue_.current_frame()->data();
     for (int i = 0; i < video_size_.height(); ++i) {
-      // If both sides decided to go with the RGBx format we need to convert it
-      // to BGRx to match color format expected by WebRTC.
+      // If both sides decided to go with the RGBx format we need to convert
+      // it to BGRx to match color format expected by WebRTC.
       ConvertRGBxToBGRx(tmp_src, queue_.current_frame()->stride());
       tmp_src += queue_.current_frame()->stride();
     }
@@ -793,6 +853,21 @@ void SharedScreenCastStream::StopScreenCastStream() {
 
 std::unique_ptr<DesktopFrame> SharedScreenCastStream::CaptureFrame() {
   return private_->CaptureFrame();
+}
+
+std::unique_ptr<MouseCursor> SharedScreenCastStream::CaptureCursor() {
+  return private_->CaptureCursor();
+}
+
+absl::optional<DesktopVector> SharedScreenCastStream::CaptureCursorPosition() {
+  DesktopVector position = private_->CaptureCursorPosition();
+
+  // Consider only (x >= 0 and y >= 0) a valid position
+  if (position.x() < 0 || position.y() < 0) {
+    return absl::nullopt;
+  }
+
+  return position;
 }
 
 }  // namespace webrtc
