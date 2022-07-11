@@ -482,31 +482,31 @@ static bool IsCacheableGetPropReadSlot(NativeObject* obj, NativeObject* holder,
   return prop.isDataProperty();
 }
 
-enum NativeGetPropCacheability {
-  CanAttachNone,
-  CanAttachReadSlot,
-  CanAttachNativeGetter,
-  CanAttachScriptedGetter,
+enum class NativeGetPropKind {
+  None,
+  ReadSlot,
+  NativeGetter,
+  ScriptedGetter,
 };
 
-static NativeGetPropCacheability IsCacheableGetPropCall(NativeObject* obj,
-                                                        NativeObject* holder,
-                                                        PropertyInfo prop) {
+static NativeGetPropKind IsCacheableGetPropCall(NativeObject* obj,
+                                                NativeObject* holder,
+                                                PropertyInfo prop) {
   MOZ_ASSERT(IsCacheableProtoChain(obj, holder));
 
   if (!prop.isAccessorProperty()) {
-    return CanAttachNone;
+    return NativeGetPropKind::None;
   }
 
   JSObject* getterObject = holder->getGetter(prop);
   if (!getterObject || !getterObject->is<JSFunction>()) {
-    return CanAttachNone;
+    return NativeGetPropKind::None;
   }
 
   JSFunction& getter = getterObject->as<JSFunction>();
 
   if (getter.isClassConstructor()) {
-    return CanAttachNone;
+    return NativeGetPropKind::None;
   }
 
   // For getters that need the WindowProxy (instead of the Window) as this
@@ -516,17 +516,17 @@ static NativeGetPropCacheability IsCacheableGetPropCall(NativeObject* obj,
     // Check for a getter that has jitinfo and whose jitinfo says it's
     // OK with both inner and outer objects.
     if (!getter.hasJitInfo() || getter.jitInfo()->needsOuterizedThisObject()) {
-      return CanAttachNone;
+      return NativeGetPropKind::None;
     }
   }
 
   // Scripted functions and natives with JIT entry can use the scripted path.
   if (getter.hasJitEntry()) {
-    return CanAttachScriptedGetter;
+    return NativeGetPropKind::ScriptedGetter;
   }
 
   MOZ_ASSERT(getter.isNativeWithoutJitEntry());
-  return CanAttachNativeGetter;
+  return NativeGetPropKind::NativeGetter;
 }
 
 static bool CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id) {
@@ -569,9 +569,11 @@ static bool IsCacheableNoProperty(JSContext* cx, NativeObject* obj,
   return CheckHasNoSuchProperty(cx, obj, id);
 }
 
-static NativeGetPropCacheability CanAttachNativeGetProp(
-    JSContext* cx, JSObject* obj, PropertyKey id, NativeObject** holder,
-    Maybe<PropertyInfo>* propInfo, jsbytecode* pc) {
+static NativeGetPropKind CanAttachNativeGetProp(JSContext* cx, JSObject* obj,
+                                                PropertyKey id,
+                                                NativeObject** holder,
+                                                Maybe<PropertyInfo>* propInfo,
+                                                jsbytecode* pc) {
   MOZ_ASSERT(id.isString() || id.isSymbol());
   MOZ_ASSERT(!*holder);
 
@@ -582,7 +584,7 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
   NativeObject* baseHolder = nullptr;
   PropertyResult prop;
   if (!LookupPropertyPure(cx, obj, id, &baseHolder, &prop)) {
-    return CanAttachNone;
+    return NativeGetPropKind::None;
   }
   auto* nobj = &obj->as<NativeObject>();
 
@@ -592,7 +594,7 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
     *propInfo = mozilla::Some(prop.propertyInfo());
 
     if (IsCacheableGetPropReadSlot(nobj, *holder, propInfo->ref())) {
-      return CanAttachReadSlot;
+      return NativeGetPropKind::ReadSlot;
     }
 
     return IsCacheableGetPropCall(nobj, *holder, propInfo->ref());
@@ -600,11 +602,11 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
 
   if (!prop.isFound()) {
     if (IsCacheableNoProperty(cx, nobj, *holder, id, pc)) {
-      return CanAttachReadSlot;
+      return NativeGetPropKind::ReadSlot;
     }
   }
 
-  return CanAttachNone;
+  return NativeGetPropKind::None;
 }
 
 static void GuardReceiverProto(CacheIRWriter& writer, NativeObject* obj,
@@ -854,12 +856,12 @@ static void EmitCallGetterResultNoGuards(JSContext* cx, CacheIRWriter& writer,
   bool sameRealm = cx->realm() == target->realm();
 
   switch (IsCacheableGetPropCall(obj, holder, prop)) {
-    case CanAttachNativeGetter: {
+    case NativeGetPropKind::NativeGetter: {
       writer.callNativeGetterResult(receiverId, target, sameRealm);
       writer.returnFromIC();
       break;
     }
-    case CanAttachScriptedGetter: {
+    case NativeGetPropKind::ScriptedGetter: {
       writer.callScriptedGetterResult(receiverId, target, sameRealm);
       writer.returnFromIC();
       break;
@@ -1040,12 +1042,12 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
   Maybe<PropertyInfo> prop;
   NativeObject* holder = nullptr;
 
-  NativeGetPropCacheability type =
+  NativeGetPropKind kind =
       CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
-  switch (type) {
-    case CanAttachNone:
+  switch (kind) {
+    case NativeGetPropKind::None:
       return AttachDecision::NoAction;
-    case CanAttachReadSlot: {
+    case NativeGetPropKind::ReadSlot: {
       auto* nobj = &obj->as<NativeObject>();
 
       if (mode_ == ICState::Mode::Megamorphic &&
@@ -1061,8 +1063,8 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
       trackAttached("NativeSlot");
       return AttachDecision::Attach;
     }
-    case CanAttachScriptedGetter:
-    case CanAttachNativeGetter: {
+    case NativeGetPropKind::ScriptedGetter:
+    case NativeGetPropKind::NativeGetter: {
       auto* nobj = &obj->as<NativeObject>();
 
       maybeEmitIdGuard(id);
@@ -1083,7 +1085,7 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
     }
   }
 
-  MOZ_CRASH("Bad NativeGetPropCacheability");
+  MOZ_CRASH("Bad NativeGetPropKind");
 }
 
 // Returns whether obj is a WindowProxy wrapping the script's global.
@@ -1146,13 +1148,13 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
   GlobalObject* windowObj = cx_->global();
   NativeObject* holder = nullptr;
   Maybe<PropertyInfo> prop;
-  NativeGetPropCacheability type =
+  NativeGetPropKind kind =
       CanAttachNativeGetProp(cx_, windowObj, id, &holder, &prop, pc_);
-  switch (type) {
-    case CanAttachNone:
+  switch (kind) {
+    case NativeGetPropKind::None:
       return AttachDecision::NoAction;
 
-    case CanAttachReadSlot: {
+    case NativeGetPropKind::ReadSlot: {
       maybeEmitIdGuard(id);
       ObjOperandId windowObjId =
           GuardAndLoadWindowProxyWindow(writer, objId, windowObj);
@@ -1163,7 +1165,7 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       return AttachDecision::Attach;
     }
 
-    case CanAttachNativeGetter: {
+    case NativeGetPropKind::NativeGetter: {
       // Make sure the native getter is okay with the IC passing the Window
       // instead of the WindowProxy as |this| value.
       JSFunction* callee = &holder->getGetter(*prop)->as<JSFunction>();
@@ -1199,7 +1201,7 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       return AttachDecision::Attach;
     }
 
-    case CanAttachScriptedGetter:
+    case NativeGetPropKind::ScriptedGetter:
       MOZ_ASSERT_UNREACHABLE("Not possible for window proxies");
   }
 
@@ -1248,9 +1250,9 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
   {
     AutoRealm ar(cx_, unwrapped);
 
-    NativeGetPropCacheability canCache =
+    NativeGetPropKind kind =
         CanAttachNativeGetProp(cx_, unwrapped, id, &holder, &prop, pc_);
-    if (canCache != CanAttachReadSlot) {
+    if (kind != NativeGetPropKind::ReadSlot) {
       return AttachDecision::NoAction;
     }
   }
@@ -1511,9 +1513,9 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(
   // Try to do the lookup on the expando object.
   NativeObject* holder = nullptr;
   Maybe<PropertyInfo> prop;
-  NativeGetPropCacheability canCache =
+  NativeGetPropKind kind =
       CanAttachNativeGetProp(cx_, expandoObj, id, &holder, &prop, pc_);
-  if (canCache == CanAttachNone) {
+  if (kind == NativeGetPropKind::None) {
     return AttachDecision::NoAction;
   }
   if (!holder) {
@@ -1527,15 +1529,15 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(
   ObjOperandId expandoObjId = guardDOMProxyExpandoObjectAndShape(
       obj, objId, expandoVal, nativeExpandoObj);
 
-  if (canCache == CanAttachReadSlot) {
+  if (kind == NativeGetPropKind::ReadSlot) {
     // Load from the expando's slots.
     EmitLoadSlotResult(writer, expandoObjId, nativeExpandoObj, *prop);
     writer.returnFromIC();
   } else {
     // Call the getter. Note that we pass objId, the DOM proxy, as |this|
     // and not the expando object.
-    MOZ_ASSERT(canCache == CanAttachNativeGetter ||
-               canCache == CanAttachScriptedGetter);
+    MOZ_ASSERT(kind == NativeGetPropKind::NativeGetter ||
+               kind == NativeGetPropKind::ScriptedGetter);
     EmitGuardGetterSetterSlot(writer, nativeExpandoObj, *prop, expandoObjId);
     EmitCallGetterResultNoGuards(cx_, writer, nativeExpandoObj,
                                  nativeExpandoObj, *prop, receiverId);
@@ -1606,9 +1608,9 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
 
   NativeObject* holder = nullptr;
   Maybe<PropertyInfo> prop;
-  NativeGetPropCacheability canCache =
+  NativeGetPropKind kind =
       CanAttachNativeGetProp(cx_, checkObj, id, &holder, &prop, pc_);
-  if (canCache == CanAttachNone) {
+  if (kind == NativeGetPropKind::None) {
     return AttachDecision::NoAction;
   }
   auto* nativeCheckObj = &checkObj->as<NativeObject>();
@@ -1628,7 +1630,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
     ObjOperandId holderId = writer.loadObject(holder);
     TestMatchingHolder(writer, holder, holderId);
 
-    if (canCache == CanAttachReadSlot) {
+    if (kind == NativeGetPropKind::ReadSlot) {
       EmitLoadSlotResult(writer, holderId, holder, *prop);
       writer.returnFromIC();
     } else {
@@ -1636,8 +1638,8 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
       // property is on to do some checks. Since we actually looked at
       // checkObj, and no extra guards will be generated, we can just
       // pass that instead.
-      MOZ_ASSERT(canCache == CanAttachNativeGetter ||
-                 canCache == CanAttachScriptedGetter);
+      MOZ_ASSERT(kind == NativeGetPropKind::NativeGetter ||
+                 kind == NativeGetPropKind::ScriptedGetter);
       MOZ_ASSERT(!isSuper());
       EmitGuardGetterSetterSlot(writer, holder, *prop, holderId,
                                 /* holderIsConstant = */ true);
@@ -1760,9 +1762,9 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
 
   NativeObject* holder = nullptr;
   Maybe<PropertyInfo> prop;
-  NativeGetPropCacheability type =
+  NativeGetPropKind kind =
       CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
-  if (type != CanAttachNativeGetter) {
+  if (kind != NativeGetPropKind::NativeGetter) {
     return AttachDecision::NoAction;
   }
 
@@ -1843,9 +1845,9 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
 
   NativeObject* holder = nullptr;
   Maybe<PropertyInfo> prop;
-  NativeGetPropCacheability type =
+  NativeGetPropKind kind =
       CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
-  if (type != CanAttachNativeGetter) {
+  if (kind != NativeGetPropKind::NativeGetter) {
     return AttachDecision::NoAction;
   }
 
@@ -1907,9 +1909,9 @@ AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
 
   NativeObject* holder = nullptr;
   Maybe<PropertyInfo> prop;
-  NativeGetPropCacheability type =
+  NativeGetPropKind kind =
       CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
-  if (type != CanAttachNativeGetter) {
+  if (kind != NativeGetPropKind::NativeGetter) {
     return AttachDecision::NoAction;
   }
 
@@ -1958,9 +1960,9 @@ AttachDecision GetPropIRGenerator::tryAttachRegExp(HandleObject obj,
 
   NativeObject* holder = nullptr;
   Maybe<PropertyInfo> prop;
-  NativeGetPropCacheability type =
+  NativeGetPropKind kind =
       CanAttachNativeGetProp(cx_, obj, id, &holder, &prop, pc_);
-  if (type != CanAttachNativeGetter) {
+  if (kind != NativeGetPropKind::NativeGetter) {
     return AttachDecision::NoAction;
   }
 
@@ -2167,12 +2169,12 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
 
   NativeObject* holder = nullptr;
   Maybe<PropertyInfo> prop;
-  NativeGetPropCacheability type =
+  NativeGetPropKind kind =
       CanAttachNativeGetProp(cx_, proto, id, &holder, &prop, pc_);
-  switch (type) {
-    case CanAttachNone:
+  switch (kind) {
+    case NativeGetPropKind::None:
       return AttachDecision::NoAction;
-    case CanAttachReadSlot: {
+    case NativeGetPropKind::ReadSlot: {
       auto* nproto = &proto->as<NativeObject>();
 
       if (val_.isNumber()) {
@@ -2189,8 +2191,8 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
       trackAttached("PrimitiveSlot");
       return AttachDecision::Attach;
     }
-    case CanAttachScriptedGetter:
-    case CanAttachNativeGetter: {
+    case NativeGetPropKind::ScriptedGetter:
+    case NativeGetPropKind::NativeGetter: {
       auto* nproto = &proto->as<NativeObject>();
 
       if (val_.isNumber()) {
@@ -2209,7 +2211,7 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
     }
   }
 
-  MOZ_CRASH("Bad NativeGetPropCacheability");
+  MOZ_CRASH("Bad NativeGetPropKind");
 }
 
 AttachDecision GetPropIRGenerator::tryAttachStringLength(ValOperandId valId,
@@ -2866,7 +2868,8 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
 
   GlobalObject* global = &globalLexical->global();
 
-  if (IsCacheableGetPropCall(global, holder, *prop) != CanAttachNativeGetter) {
+  NativeGetPropKind kind = IsCacheableGetPropCall(global, holder, *prop);
+  if (kind != NativeGetPropKind::NativeGetter) {
     return AttachDecision::NoAction;
   }
 
@@ -11948,9 +11951,9 @@ AttachDecision CloseIterIRGenerator::tryAttachNoReturnMethod() {
 
   // If we can guard that the iterator does not have a |return| method,
   // then this CloseIter is a no-op.
-  NativeGetPropCacheability type = CanAttachNativeGetProp(
+  NativeGetPropKind kind = CanAttachNativeGetProp(
       cx_, iter_, NameToId(cx_->names().return_), &holder, &prop, pc_);
-  if (type != CanAttachReadSlot) {
+  if (kind != NativeGetPropKind::ReadSlot) {
     return AttachDecision::NoAction;
   }
   if (holder) {
@@ -11974,12 +11977,12 @@ AttachDecision CloseIterIRGenerator::tryAttachScriptedReturn() {
   Maybe<PropertyInfo> prop;
   NativeObject* holder = nullptr;
 
-  NativeGetPropCacheability type = CanAttachNativeGetProp(
+  NativeGetPropKind kind = CanAttachNativeGetProp(
       cx_, iter_, NameToId(cx_->names().return_), &holder, &prop, pc_);
   if (!holder) {
     return AttachDecision::NoAction;
   }
-  if (type != CanAttachReadSlot) {
+  if (kind != NativeGetPropKind::ReadSlot) {
     return AttachDecision::NoAction;
   }
   if (!prop->isDataProperty()) {
