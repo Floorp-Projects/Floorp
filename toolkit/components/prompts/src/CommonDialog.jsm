@@ -316,7 +316,7 @@ CommonDialog.prototype = {
       if (isOSX && !(this.ui.infoRow && this.ui.infoRow.hidden)) {
         this.ui.infoBody.focus();
       } else {
-        button.focus({ preventFocusRing: true });
+        button.focus({ focusVisible: false });
       }
     } else if (this.args.promptType == "promptPassword") {
       // When the prompt is initialized, focus and select the textbox

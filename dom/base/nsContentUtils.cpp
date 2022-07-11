@@ -2115,21 +2115,6 @@ bool nsContentUtils::IsCallerChromeOrElementTransformGettersEnabled(
 }
 
 /* static */
-bool nsContentUtils::IsCallerChromeOrErrorPage(JSContext* aCx,
-                                               JSObject* aObject) {
-  if (ThreadsafeIsSystemCaller(aCx)) {
-    return true;
-  }
-  nsGlobalWindowInner* win =
-      xpc::WindowGlobalOrNull(js::UncheckedUnwrap(aObject));
-  if (!win) {
-    return false;
-  }
-  Document* doc = win->GetExtantDoc();
-  return doc && IsErrorPage(doc->GetDocumentURI());
-}
-
-/* static */
 bool nsContentUtils::ShouldResistFingerprinting() {
   return StaticPrefs::privacy_resistFingerprinting();
 }
