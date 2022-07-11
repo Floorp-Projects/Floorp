@@ -200,7 +200,7 @@ already_AddRefed<mozilla::gl::GLContext> CompositorOGL::CreateContext() {
   }
 
 #ifdef XP_WIN
-  if (gfxEnv::LayersPreferEGL()) {
+  if (gfxEnv::MOZ_LAYERS_PREFER_EGL()) {
     printf_stderr("Trying GL layers...\n");
     context = gl::GLContextProviderEGL::CreateForCompositorWidget(
         mWidget, /* aHardwareWebRender */ false, /* aForceAccelerated */ false);
@@ -208,7 +208,7 @@ already_AddRefed<mozilla::gl::GLContext> CompositorOGL::CreateContext() {
 #endif
 
   // Allow to create offscreen GL context for main Layer Manager
-  if (!context && gfxEnv::LayersPreferOffscreen()) {
+  if (!context && gfxEnv::MOZ_LAYERS_PREFER_OFFSCREEN()) {
     nsCString discardFailureId;
     context = GLContextProvider::CreateHeadless(
         {CreateContextFlags::REQUIRE_COMPAT_PROFILE}, &discardFailureId);
@@ -1438,7 +1438,7 @@ void CompositorOGL::EndFrame() {
   AUTO_PROFILER_LABEL("CompositorOGL::EndFrame", GRAPHICS);
 
 #ifdef MOZ_DUMP_PAINTING
-  if (gfxEnv::DumpCompositorTextures()) {
+  if (gfxEnv::MOZ_DISABLE_FORCE_PRESENT()) {
     LayoutDeviceIntSize size;
     if (mUseExternalSurfaceSize) {
       size = LayoutDeviceIntSize(mSurfaceSize.width, mSurfaceSize.height);

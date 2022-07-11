@@ -2997,7 +2997,7 @@ static void DumpBeforePaintDisplayList(UniquePtr<std::stringstream>& aStream,
                                        nsDisplayList* aList,
                                        const nsRect& aVisibleRect) {
 #ifdef MOZ_DUMP_PAINTING
-  if (gfxEnv::DumpPaintToFile()) {
+  if (gfxEnv::MOZ_DUMP_PAINT_TO_FILE()) {
     nsCString string("dump-");
     // Include the process ID in the dump file name, to make sure that in an
     // e10s setup different processes don't clobber each other's dump files.
@@ -3011,7 +3011,7 @@ static void DumpBeforePaintDisplayList(UniquePtr<std::stringstream>& aStream,
   } else {
     gfxUtils::sDumpPaintFile = stderr;
   }
-  if (gfxEnv::DumpPaintToFile()) {
+  if (gfxEnv::MOZ_DUMP_PAINT_TO_FILE()) {
     *aStream << "<html><head><script>\n"
                 "var array = {};\n"
                 "function ViewImage(index) { \n"
@@ -3030,9 +3030,9 @@ static void DumpBeforePaintDisplayList(UniquePtr<std::stringstream>& aStream,
                   aVisibleRect.height)
                   .get();
   nsIFrame::PrintDisplayList(aBuilder, *aList, *aStream,
-                             gfxEnv::DumpPaintToFile());
+                             gfxEnv::MOZ_DUMP_PAINT_TO_FILE());
 
-  if (gfxEnv::DumpPaint() || gfxEnv::DumpPaintItems()) {
+  if (gfxEnv::MOZ_DUMP_PAINT() || gfxEnv::MOZ_DUMP_PAINT_ITEMS()) {
     // Flush stream now to avoid reordering dump output relative to
     // messages dumped by PaintRoot below.
     fprint_stderr(gfxUtils::sDumpPaintFile, *aStream);
@@ -3045,15 +3045,15 @@ static void DumpAfterPaintDisplayList(UniquePtr<std::stringstream>& aStream,
                                       nsDisplayList* aList) {
   *aStream << "Painting --- after optimization:\n";
   nsIFrame::PrintDisplayList(aBuilder, *aList, *aStream,
-                             gfxEnv::DumpPaintToFile());
+                             gfxEnv::MOZ_DUMP_PAINT_TO_FILE());
 
   fprint_stderr(gfxUtils::sDumpPaintFile, *aStream);
 
 #ifdef MOZ_DUMP_PAINTING
-  if (gfxEnv::DumpPaintToFile()) {
+  if (gfxEnv::MOZ_DUMP_PAINT_TO_FILE()) {
     *aStream << "</body></html>";
   }
-  if (gfxEnv::DumpPaintToFile()) {
+  if (gfxEnv::MOZ_DUMP_PAINT_TO_FILE()) {
     fclose(gfxUtils::sDumpPaintFile);
   }
 #endif
@@ -3414,7 +3414,7 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       std::move(dlTimerId));
 
   bool consoleNeedsDisplayList =
-      (gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint()) &&
+      (gfxUtils::DumpDisplayList() || gfxEnv::MOZ_DUMP_PAINT()) &&
       builder->IsInActiveDocShell();
 #ifdef MOZ_DUMP_PAINTING
   FILE* savedDumpFile = gfxUtils::sDumpPaintFile;

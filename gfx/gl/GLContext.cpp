@@ -244,15 +244,15 @@ static bool ParseVersion(const std::string& versionStr,
 uint8_t GLContext::ChooseDebugFlags(const CreateContextFlags createFlags) {
   uint8_t debugFlags = 0;
 
-#ifdef MOZ_GL_DEBUG
-  if (gfxEnv::GlDebug()) {
+#ifdef MOZ_GL_DEBUG_BUILD
+  if (gfxEnv::MOZ_GL_DEBUG()) {
     debugFlags |= GLContext::DebugFlagEnabled;
   }
 
   // Enables extra verbose output, informing of the start and finish of every GL
   // call. Useful e.g. to record information to investigate graphics system
   // crashes/lockups
-  if (gfxEnv::GlDebugVerbose()) {
+  if (gfxEnv::MOZ_GL_DEBUG_VERBOSE()) {
     debugFlags |= GLContext::DebugFlagTrace;
   }
 
@@ -263,12 +263,8 @@ uint8_t GLContext::ChooseDebugFlags(const CreateContextFlags createFlags) {
   if (createFlags & CreateContextFlags::NO_VALIDATION) {
     abortOnError = true;
 
-    const auto fnStringsMatch = [](const char* a, const char* b) {
-      return strcmp(a, b) == 0;
-    };
-
-    const char* envAbortOnError = PR_GetEnv("MOZ_GL_DEBUG_ABORT_ON_ERROR");
-    if (envAbortOnError && fnStringsMatch(envAbortOnError, "0")) {
+    const auto& env = gfxEnv::MOZ_GL_DEBUG_ABORT_ON_ERROR();
+    if (env.as_str == "0") {
       abortOnError = false;
     }
   }
@@ -298,7 +294,7 @@ GLContext::~GLContext() {
   NS_ASSERTION(
       IsDestroyed(),
       "GLContext implementation must call MarkDestroyed in destructor!");
-#ifdef MOZ_GL_DEBUG
+#ifdef MOZ_GL_DEBUG_BUILD
   if (mSharedContext) {
     GLContext* tip = mSharedContext;
     while (tip->mSharedContext) tip = tip->mSharedContext;
@@ -1866,7 +1862,7 @@ bool GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
 
   if (!IsFramebufferComplete(drawFB, &status)) {
     NS_WARNING("DrawFBO: Incomplete");
-#ifdef MOZ_GL_DEBUG
+#ifdef MOZ_GL_DEBUG_BUILD
     if (ShouldSpew()) {
       printf_stderr("Framebuffer status: %X\n", status);
     }
@@ -1876,7 +1872,7 @@ bool GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
 
   if (!IsFramebufferComplete(readFB, &status)) {
     NS_WARNING("ReadFBO: Incomplete");
-#ifdef MOZ_GL_DEBUG
+#ifdef MOZ_GL_DEBUG_BUILD
     if (ShouldSpew()) {
       printf_stderr("Framebuffer status: %X\n", status);
     }
@@ -1915,7 +1911,7 @@ void GLContext::MarkDestroyed() {
 
 // -
 
-#ifdef MOZ_GL_DEBUG
+#ifdef MOZ_GL_DEBUG_BUILD
 /* static */
 void GLContext::AssertNotPassingStackBufferToTheGL(const void* ptr) {
   int somethingOnTheStack;
@@ -2093,7 +2089,7 @@ void GLContext::ReportOutstandingNames() {
   ReportArrayContents("Outstanding Renderbuffers", mTrackedRenderbuffers);
 }
 
-#endif /* DEBUG */
+#endif  // ifdef MOZ_GL_DEBUG_BUILD
 
 bool GLContext::IsOffscreenSizeAllowed(const IntSize& aSize) const {
   int32_t biggerDimension = std::max(aSize.width, aSize.height);
@@ -2131,7 +2127,7 @@ void GLContext::FlushIfHeavyGLCallsSinceLastFlush() {
 }
 
 /*static*/
-bool GLContext::ShouldDumpExts() { return gfxEnv::GlDumpExtensions(); }
+bool GLContext::ShouldDumpExts() { return gfxEnv::MOZ_GL_DUMP_EXTS(); }
 
 bool DoesStringMatch(const char* aString, const char* aWantedString) {
   if (!aString || !aWantedString) return false;
@@ -2152,7 +2148,7 @@ bool DoesStringMatch(const char* aString, const char* aWantedString) {
 }
 
 /*static*/
-bool GLContext::ShouldSpew() { return gfxEnv::GlSpew(); }
+bool GLContext::ShouldSpew() { return gfxEnv::MOZ_GL_SPEW(); }
 
 void SplitByChar(const nsACString& str, const char delim,
                  std::vector<nsCString>* const out) {
