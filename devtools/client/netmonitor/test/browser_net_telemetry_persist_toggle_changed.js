@@ -29,8 +29,6 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  await waitForAllNetworkUpdateEvents();
-
   // Clear all events
   Services.telemetry.clearEvents();
 
@@ -70,7 +68,6 @@ add_task(async function() {
     object: "netmonitor",
   };
 
-  await waitForAllNetworkUpdateEvents();
   // Will compare filtered events to event list above
   await TelemetryTestUtils.assertEvents(expectedEvents, filter);
 

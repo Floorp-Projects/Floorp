@@ -57,12 +57,6 @@ class NetworkEventContentWatcher {
       "http-on-image-cache-response"
     );
   }
-  /**
-   * Allows clearing of network events
-   */
-  clear() {
-    this._networkEvents.clear();
-  }
 
   get conn() {
     return this.targetActor.conn;
@@ -235,7 +229,6 @@ class NetworkEventContentWatcher {
   }
 
   destroy() {
-    this.clear();
     Services.obs.removeObserver(
       this.httpFailedOpeningRequest,
       "http-on-failed-opening-request"

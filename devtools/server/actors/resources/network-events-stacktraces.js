@@ -47,20 +47,13 @@ class NetworkEventStackTracesWatcher {
   }
 
   /**
-   * Allows clearing of network stacktrace resources
-   */
-  clear() {
-    this.stacktraces.clear();
-  }
-
-  /**
    * Stop watching for network event's strack traces related to a given Target Actor.
    *
    * @param TargetActor targetActor
    *        The target actor from which we should stop observing the strack traces
    */
   destroy(targetActor) {
-    this.clear();
+    this.stacktraces.clear();
     Services.obs.removeObserver(this, "http-on-opening-request");
     Services.obs.removeObserver(this, "document-on-opening-request");
     Services.obs.removeObserver(this, "network-monitor-alternate-stack");

@@ -119,7 +119,8 @@ add_task(async function() {
         " after request has been completed."
     );
 
-    await clearNetworkEvents(monitor);
+    info("Clearing requests.");
+    store.dispatch(Actions.clearRequests());
   }
 
   return teardown(monitor);
