@@ -502,6 +502,7 @@ function Loader(options) {
       CC: bind(CC, Components),
       components: Components,
       ChromeWorker,
+      Services,
     },
   };
 
