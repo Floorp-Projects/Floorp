@@ -81,7 +81,7 @@ service(
     "nsIMemoryReporterManager",
     "@mozilla.org/memory-reporter-manager;1",
 )
-# If you want nsIXULAppInfo, as returned by Services.jsm, you need to call:
+# If you want nsIXULAppInfo, as returned by Services, you need to call:
 #
 # nsCOMPtr<nsIXULRuntime> runtime = mozilla::services::GetXULRuntime();
 # nsCOMPtr<nsIXULAppInfo> appInfo = do_QueryInterface(runtime);
@@ -143,8 +143,6 @@ if buildconfig.substs.get("ENABLE_WEBDRIVER"):
 # The following code consumes the data listed above to generate the files
 # Services.h, Services.cpp, and services.rs which provide access to these
 # service getters in both rust and C++ code.
-#
-# XXX(nika): would it be a good idea to unify Services.jsm into here too?
 
 
 def services_h(output):

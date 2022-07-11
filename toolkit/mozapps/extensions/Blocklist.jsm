@@ -1296,10 +1296,9 @@ var gBlocklistLevel = DEFAULT_LEVEL;
  *          item    - the nsIPluginTag or Addon object
  */
 
-// From appinfo in Services.jsm. It is not possible to use the one in
-// Services.jsm since it will not successfully QueryInterface nsIXULAppInfo in
-// xpcshell tests due to other code calling Services.appinfo before the
-// nsIXULAppInfo is created by the tests.
+// It is not possible to use the one in Services since it will not successfully
+// QueryInterface nsIXULAppInfo in xpcshell tests due to other code calling
+// Services.appinfo before the nsIXULAppInfo is created by the tests.
 XPCOMUtils.defineLazyGetter(lazy, "gApp", function() {
   // eslint-disable-next-line mozilla/use-services
   let appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
