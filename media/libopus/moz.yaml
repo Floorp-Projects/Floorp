@@ -65,3 +65,4 @@ vendoring:
       file: moz.build
       pattern: 'DEFINES\["OPUS_VERSION"\] = "(.+)"'
       with: 'DEFINES["OPUS_VERSION"] = "{revision}"'
+
