@@ -107,9 +107,12 @@ class AimdRateControl {
   // Use estimated link capacity lower bound if it is higher than the
   // acknowledged rate when backing off due to overuse.
   const bool estimate_bounded_backoff_;
-  // Use estimated link capacity upper bound as upper limit for increasing
-  // bitrate over the acknowledged rate.
-  const bool estimate_bounded_increase_;
+  // If false, uses estimated link capacity upper bound *
+  // `estimate_bounded_increase_ratio_` as upper limit for the estimate.
+  FieldTrialFlag disable_estimate_bounded_increase_{"Disabled"};
+  FieldTrialParameter<double> estimate_bounded_increase_ratio_{"ratio", 1.0};
+  FieldTrialParameter<bool> ignore_throughput_limit_if_network_estimate_{
+      "ignore_acked", false};
   absl::optional<DataRate> last_decrease_;
   FieldTrialOptional<TimeDelta> initial_backoff_interval_;
   FieldTrialFlag link_capacity_fix_;
