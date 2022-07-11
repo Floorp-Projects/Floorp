@@ -22,7 +22,6 @@
 var mainWindow = window.browsingContext.topChromeWindow;
 var contentPage = "http://www.itisatrap.org/chrome/toolkit/components/url-classifier/tests/mochitest/trackingRequest.html";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");

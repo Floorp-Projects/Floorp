@@ -24,19 +24,19 @@ SimpleTest.waitForExplicitFinish();
 const Cu = SpecialPowers.Cu;
 
 function doTest() {
-    msg = "Services should be imported on window";
+    msg = "XPCOMUtils should be imported on window";
     try {
-      Cu.import("resource://gre/modules/Services.jsm", window);
-      ok(Services, msg);
+      Cu.import("resource://gre/modules/XPCOMUtils.jsm", window);
+      ok(XPCOMUtils, msg);
     } catch (ex) {
       ok(false, msg + " : " + ex);
     }
 
-    msg = "Services should be imported on myObj";
+    msg = "XPCOMUtils should be imported on myObj";
     try {
       var myObj = {};
-      Cu.import("resource://gre/modules/Services.jsm", myObj);
-      ok(myObj.Services, msg);
+      Cu.import("resource://gre/modules/XPCOMUtils.jsm", myObj);
+      ok(myObj.XPCOMUtils, msg);
     } catch (ex) {
       ok(false, msg + " : " + ex);
     }
