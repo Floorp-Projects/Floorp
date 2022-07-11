@@ -214,7 +214,7 @@ TimeSeries CreateRtcpTypeTimeSeries(const std::vector<T>& rtcp_list,
                                     int category_id) {
   TimeSeries time_series(rtcp_name, LineStyle::kNone, PointStyle::kHighlight);
   for (const auto& rtcp : rtcp_list) {
-    float x = config.GetCallTimeSec(rtcp.log_time_us());
+    float x = config.GetCallTimeSec(rtcp.timestamp);
     float y = category_id;
     time_series.points.emplace_back(x, y);
   }
@@ -346,20 +346,24 @@ std::string GetDirectionAsShortString(PacketDirection direction) {
 EventLogAnalyzer::EventLogAnalyzer(const ParsedRtcEventLog& log,
                                    bool normalize_time)
     : parsed_log_(log) {
-  config_.window_duration_ = 250000;
-  config_.step_ = 10000;
+  config_.window_duration_ = TimeDelta::Millis(250);
+  config_.step_ = TimeDelta::Millis(10);
+  if (!log.start_log_events().empty()) {
+    config_.rtc_to_utc_offset_ = log.start_log_events()[0].utc_time() -
+                                 log.start_log_events()[0].log_time();
+  }
   config_.normalize_time_ = normalize_time;
   config_.begin_time_ = parsed_log_.first_timestamp();
   config_.end_time_ = parsed_log_.last_timestamp();
   if (config_.end_time_ < config_.begin_time_) {
     RTC_LOG(LS_WARNING) << "No useful events in the log.";
-    config_.begin_time_ = config_.end_time_ = 0;
+    config_.begin_time_ = config_.end_time_ = Timestamp::Zero();
   }
 
   RTC_LOG(LS_INFO) << "Log is "
-                   << (parsed_log_.last_timestamp() -
-                       parsed_log_.first_timestamp()) /
-                          1000000
+                   << (parsed_log_.last_timestamp().ms() -
+                       parsed_log_.first_timestamp().ms()) /
+                          1000
                    << " seconds long.";
 }
 
@@ -367,9 +371,9 @@ EventLogAnalyzer::EventLogAnalyzer(const ParsedRtcEventLog& log,
                                    const AnalyzerConfig& config)
     : parsed_log_(log), config_(config) {
   RTC_LOG(LS_INFO) << "Log is "
-                   << (parsed_log_.last_timestamp() -
-                       parsed_log_.first_timestamp()) /
-                          1000000
+                   << (parsed_log_.last_timestamp().ms() -
+                       parsed_log_.first_timestamp().ms()) /
+                          1000
                    << " seconds long.";
 }
 
@@ -413,7 +417,7 @@ void EventLogAnalyzer::CreatePacketGraph(PacketDirection direction,
       return absl::optional<float>(packet.total_length);
     };
     auto ToCallTime = [this](const LoggedRtpPacket& packet) {
-      return this->config_.GetCallTimeSec(packet.log_time_us());
+      return this->config_.GetCallTimeSec(packet.timestamp);
     };
     ProcessPoints<LoggedRtpPacket>(ToCallTime, GetPacketSize,
                                    stream.packet_view, &time_series);
@@ -469,7 +473,7 @@ void EventLogAnalyzer::CreateAccumulatedPacketsTimeSeries(
     const std::string& label) {
   TimeSeries time_series(label, LineStyle::kStep);
   for (size_t i = 0; i < packets.size(); i++) {
-    float x = config_.GetCallTimeSec(packets[i].log_time_us());
+    float x = config_.GetCallTimeSec(packets[i].log_time());
     time_series.points.emplace_back(x, i + 1);
   }
   plot->AppendTimeSeries(std::move(time_series));
@@ -545,17 +549,15 @@ void EventLogAnalyzer::CreateTotalPacketRateGraph(PacketDirection direction,
   // types using MovingAverage().
   class LogTime {
    public:
-    explicit LogTime(int64_t log_time_us) : log_time_us_(log_time_us) {}
-
-    int64_t log_time_us() const { return log_time_us_; }
+    explicit LogTime(Timestamp log_time) : log_time_(log_time) {}
+    Timestamp log_time() const { return log_time_; }
 
    private:
-    int64_t log_time_us_;
+    Timestamp log_time_;
   };
-
   std::vector<LogTime> packet_times;
   auto handle_rtp = [&](const LoggedRtpPacket& packet) {
-    packet_times.emplace_back(packet.log_time_us());
+    packet_times.emplace_back(packet.log_time());
   };
   RtcEventProcessor process;
   for (const auto& stream : parsed_log_.rtp_packets_by_ssrc(direction)) {
@@ -563,13 +565,13 @@ void EventLogAnalyzer::CreateTotalPacketRateGraph(PacketDirection direction,
   }
   if (direction == kIncomingPacket) {
     auto handle_incoming_rtcp = [&](const LoggedRtcpPacketIncoming& packet) {
-      packet_times.emplace_back(packet.log_time_us());
+      packet_times.emplace_back(packet.log_time());
     };
     process.AddEvents(parsed_log_.incoming_rtcp_packets(),
                       handle_incoming_rtcp);
   } else {
     auto handle_outgoing_rtcp = [&](const LoggedRtcpPacketOutgoing& packet) {
-      packet_times.emplace_back(packet.log_time_us());
+      packet_times.emplace_back(packet.log_time());
     };
     process.AddEvents(parsed_log_.outgoing_rtcp_packets(),
                       handle_outgoing_rtcp);
@@ -599,7 +601,7 @@ void EventLogAnalyzer::CreatePlayoutGraph(Plot* plot) {
     absl::optional<int64_t> last_playout_ms;
     TimeSeries time_series(SsrcToString(ssrc), LineStyle::kBar);
     for (const auto& playout_event : playout_stream.second) {
-      float x = config_.GetCallTimeSec(playout_event.log_time_us());
+      float x = config_.GetCallTimeSec(playout_event.log_time());
       int64_t playout_time_ms = playout_event.log_time_ms();
       // If there were no previous playouts, place the point on the x-axis.
       float y = playout_time_ms - last_playout_ms.value_or(playout_time_ms);
@@ -626,7 +628,7 @@ void EventLogAnalyzer::CreateAudioLevelGraph(PacketDirection direction,
                            LineStyle::kLine);
     for (auto& packet : stream.packet_view) {
       if (packet.header.extension.hasAudioLevel) {
-        float x = config_.GetCallTimeSec(packet.log_time_us());
+        float x = config_.GetCallTimeSec(packet.log_time());
         // The audio level is stored in -dBov (so e.g. -10 dBov is stored as 10)
         // Here we convert it to dBov.
         float y = static_cast<float>(-packet.header.extension.audioLevel);
@@ -662,7 +664,7 @@ void EventLogAnalyzer::CreateSequenceNumberGraph(Plot* plot) {
       return diff;
     };
     auto ToCallTime = [this](const LoggedRtpPacketIncoming& packet) {
-      return this->config_.GetCallTimeSec(packet.log_time_us());
+      return this->config_.GetCallTimeSec(packet.log_time());
     };
     ProcessPairs<LoggedRtpPacketIncoming, float>(
         ToCallTime, GetSequenceNumberDiff, stream.incoming_packets,
@@ -691,8 +693,8 @@ void EventLogAnalyzer::CreateIncomingPacketLossGraph(Plot* plot) {
         LineStyle::kLine, PointStyle::kHighlight);
     // TODO(terelius): Should the window and step size be read from the class
     // instead?
-    const int64_t kWindowUs = 1000000;
-    const int64_t kStep = 1000000;
+    const TimeDelta kWindow = TimeDelta::Millis(1000);
+    const TimeDelta kStep = TimeDelta::Millis(1000);
     SeqNumUnwrapper<uint16_t> unwrapper_;
     SeqNumUnwrapper<uint16_t> prior_unwrapper_;
     size_t window_index_begin = 0;
@@ -702,17 +704,17 @@ void EventLogAnalyzer::CreateIncomingPacketLossGraph(Plot* plot) {
     uint64_t highest_prior_seq_number =
         prior_unwrapper_.Unwrap(packets[0].rtp.header.sequenceNumber) - 1;
 
-    for (int64_t t = config_.begin_time_; t < config_.end_time_ + kStep;
+    for (Timestamp t = config_.begin_time_; t < config_.end_time_ + kStep;
          t += kStep) {
       while (window_index_end < packets.size() &&
-             packets[window_index_end].rtp.log_time_us() < t) {
+             packets[window_index_end].rtp.log_time() < t) {
         uint64_t sequence_number = unwrapper_.Unwrap(
             packets[window_index_end].rtp.header.sequenceNumber);
         highest_seq_number = std::max(highest_seq_number, sequence_number);
         ++window_index_end;
       }
       while (window_index_begin < packets.size() &&
-             packets[window_index_begin].rtp.log_time_us() < t - kWindowUs) {
+             packets[window_index_begin].rtp.log_time() < t - kWindow) {
         uint64_t sequence_number = prior_unwrapper_.Unwrap(
             packets[window_index_begin].rtp.header.sequenceNumber);
         highest_prior_seq_number =
@@ -767,7 +769,7 @@ void EventLogAnalyzer::CreateIncomingDelayGraph(Plot* plot) {
     }
 
     auto ToCallTime = [this](const LoggedRtpPacketIncoming& packet) {
-      return this->config_.GetCallTimeSec(packet.log_time_us());
+      return this->config_.GetCallTimeSec(packet.log_time());
     };
     auto ToNetworkDelay = [frequency_hz](
                               const LoggedRtpPacketIncoming& old_packet,
@@ -803,7 +805,7 @@ void EventLogAnalyzer::CreateFractionLossGraph(Plot* plot) {
   TimeSeries time_series("Fraction lost", LineStyle::kLine,
                          PointStyle::kHighlight);
   for (auto& bwe_update : parsed_log_.bwe_loss_updates()) {
-    float x = config_.GetCallTimeSec(bwe_update.log_time_us());
+    float x = config_.GetCallTimeSec(bwe_update.log_time());
     float y = static_cast<float>(bwe_update.fraction_lost) / 255 * 100;
     time_series.points.emplace_back(x, y);
   }
@@ -818,11 +820,11 @@ void EventLogAnalyzer::CreateFractionLossGraph(Plot* plot) {
 // Plot the total bandwidth used by all RTP streams.
 void EventLogAnalyzer::CreateTotalIncomingBitrateGraph(Plot* plot) {
   // TODO(terelius): This could be provided by the parser.
-  std::multimap<int64_t, size_t> packets_in_order;
+  std::multimap<Timestamp, size_t> packets_in_order;
   for (const auto& stream : parsed_log_.incoming_rtp_packets_by_ssrc()) {
     for (const LoggedRtpPacketIncoming& packet : stream.incoming_packets)
       packets_in_order.insert(
-          std::make_pair(packet.rtp.log_time_us(), packet.rtp.total_length));
+          std::make_pair(packet.rtp.log_time(), packet.rtp.total_length));
   }
 
   auto window_begin = packets_in_order.begin();
@@ -832,7 +834,7 @@ void EventLogAnalyzer::CreateTotalIncomingBitrateGraph(Plot* plot) {
   if (!packets_in_order.empty()) {
     // Calculate a moving average of the bitrate and store in a TimeSeries.
     TimeSeries bitrate_series("Bitrate", LineStyle::kLine);
-    for (int64_t time = config_.begin_time_;
+    for (Timestamp time = config_.begin_time_;
          time < config_.end_time_ + config_.step_; time += config_.step_) {
       while (window_end != packets_in_order.end() && window_end->first < time) {
         bytes_in_window += window_end->second;
@@ -845,7 +847,8 @@ void EventLogAnalyzer::CreateTotalIncomingBitrateGraph(Plot* plot) {
         ++window_begin;
       }
       float window_duration_in_seconds =
-          static_cast<float>(config_.window_duration_) / kNumMicrosecsPerSec;
+          static_cast<float>(config_.window_duration_.us()) /
+          kNumMicrosecsPerSec;
       float x = config_.GetCallTimeSec(time);
       float y = bytes_in_window * 8 / window_duration_in_seconds / 1000;
       bitrate_series.points.emplace_back(x, y);
@@ -856,7 +859,7 @@ void EventLogAnalyzer::CreateTotalIncomingBitrateGraph(Plot* plot) {
   // Overlay the outgoing REMB over incoming bitrate.
   TimeSeries remb_series("Remb", LineStyle::kStep);
   for (const auto& rtcp : parsed_log_.rembs(kOutgoingPacket)) {
-    float x = config_.GetCallTimeSec(rtcp.log_time_us());
+    float x = config_.GetCallTimeSec(rtcp.log_time());
     float y = static_cast<float>(rtcp.remb.bitrate_bps()) / 1000;
     remb_series.points.emplace_back(x, y);
   }
@@ -884,11 +887,11 @@ void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
                                                        bool show_detector_state,
                                                        bool show_alr_state) {
   // TODO(terelius): This could be provided by the parser.
-  std::multimap<int64_t, size_t> packets_in_order;
+  std::multimap<Timestamp, size_t> packets_in_order;
   for (const auto& stream : parsed_log_.outgoing_rtp_packets_by_ssrc()) {
     for (const LoggedRtpPacketOutgoing& packet : stream.outgoing_packets)
       packets_in_order.insert(
-          std::make_pair(packet.rtp.log_time_us(), packet.rtp.total_length));
+          std::make_pair(packet.rtp.log_time(), packet.rtp.total_length));
   }
 
   auto window_begin = packets_in_order.begin();
@@ -898,7 +901,7 @@ void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
   if (!packets_in_order.empty()) {
     // Calculate a moving average of the bitrate and store in a TimeSeries.
     TimeSeries bitrate_series("Bitrate", LineStyle::kLine);
-    for (int64_t time = config_.begin_time_;
+    for (Timestamp time = config_.begin_time_;
          time < config_.end_time_ + config_.step_; time += config_.step_) {
       while (window_end != packets_in_order.end() && window_end->first < time) {
         bytes_in_window += window_end->second;
@@ -911,7 +914,8 @@ void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
         ++window_begin;
       }
       float window_duration_in_seconds =
-          static_cast<float>(config_.window_duration_) / kNumMicrosecsPerSec;
+          static_cast<float>(config_.window_duration_.us()) /
+          kNumMicrosecsPerSec;
       float x = config_.GetCallTimeSec(time);
       float y = bytes_in_window * 8 / window_duration_in_seconds / 1000;
       bitrate_series.points.emplace_back(x, y);
@@ -922,7 +926,7 @@ void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
   // Overlay the send-side bandwidth estimate over the outgoing bitrate.
   TimeSeries loss_series("Loss-based estimate", LineStyle::kStep);
   for (auto& loss_update : parsed_log_.bwe_loss_updates()) {
-    float x = config_.GetCallTimeSec(loss_update.log_time_us());
+    float x = config_.GetCallTimeSec(loss_update.log_time());
     float y = static_cast<float>(loss_update.bitrate_bps) / 1000;
     loss_series.points.emplace_back(x, y);
   }
@@ -935,12 +939,12 @@ void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
   IntervalSeries normal_series("Normal", "#c4ffc4",
                                IntervalSeries::kHorizontal);
   IntervalSeries* last_series = &normal_series;
-  double last_detector_switch = 0.0;
+  float last_detector_switch = 0.0;
 
   BandwidthUsage last_detector_state = BandwidthUsage::kBwNormal;
 
   for (auto& delay_update : parsed_log_.bwe_delay_updates()) {
-    float x = config_.GetCallTimeSec(delay_update.log_time_us());
+    float x = config_.GetCallTimeSec(delay_update.log_time());
     float y = static_cast<float>(delay_update.bitrate_bps) / 1000;
 
     if (last_detector_state != delay_update.detector_state) {
@@ -967,12 +971,13 @@ void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
   }
 
   RTC_CHECK(last_series);
-  last_series->intervals.emplace_back(last_detector_switch, config_.end_time_);
+  last_series->intervals.emplace_back(last_detector_switch,
+                                      config_.CallEndTimeSec());
 
   TimeSeries created_series("Probe cluster created.", LineStyle::kNone,
                             PointStyle::kHighlight);
   for (auto& cluster : parsed_log_.bwe_probe_cluster_created_events()) {
-    float x = config_.GetCallTimeSec(cluster.log_time_us());
+    float x = config_.GetCallTimeSec(cluster.log_time());
     float y = static_cast<float>(cluster.bitrate_bps) / 1000;
     created_series.points.emplace_back(x, y);
   }
@@ -980,7 +985,7 @@ void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
   TimeSeries result_series("Probing results.", LineStyle::kNone,
                            PointStyle::kHighlight);
   for (auto& result : parsed_log_.bwe_probe_success_events()) {
-    float x = config_.GetCallTimeSec(result.log_time_us());
+    float x = config_.GetCallTimeSec(result.log_time());
     float y = static_cast<float>(result.bitrate_bps) / 1000;
     result_series.points.emplace_back(x, y);
   }
@@ -988,17 +993,17 @@ void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
   TimeSeries probe_failures_series("Probe failed", LineStyle::kNone,
                                    PointStyle::kHighlight);
   for (auto& failure : parsed_log_.bwe_probe_failure_events()) {
-    float x = config_.GetCallTimeSec(failure.log_time_us());
+    float x = config_.GetCallTimeSec(failure.log_time());
     probe_failures_series.points.emplace_back(x, 0);
   }
 
   IntervalSeries alr_state("ALR", "#555555", IntervalSeries::kHorizontal);
   bool previously_in_alr = false;
-  int64_t alr_start = 0;
+  Timestamp alr_start = Timestamp::Zero();
   for (auto& alr : parsed_log_.alr_state_events()) {
-    float y = config_.GetCallTimeSec(alr.log_time_us());
+    float y = config_.GetCallTimeSec(alr.log_time());
     if (!previously_in_alr && alr.in_alr) {
-      alr_start = alr.log_time_us();
+      alr_start = alr.log_time();
       previously_in_alr = true;
     } else if (previously_in_alr && !alr.in_alr) {
       float x = config_.GetCallTimeSec(alr_start);
@@ -1031,7 +1036,7 @@ void EventLogAnalyzer::CreateTotalOutgoingBitrateGraph(Plot* plot,
   // Overlay the incoming REMB over the outgoing bitrate.
   TimeSeries remb_series("Remb", LineStyle::kStep);
   for (const auto& rtcp : parsed_log_.rembs(kIncomingPacket)) {
-    float x = config_.GetCallTimeSec(rtcp.log_time_us());
+    float x = config_.GetCallTimeSec(rtcp.log_time());
     float y = static_cast<float>(rtcp.remb.bitrate_bps()) / 1000;
     remb_series.points.emplace_back(x, y);
   }
@@ -1117,7 +1122,7 @@ void EventLogAnalyzer::CreateBitrateAllocationGraph(PacketDirection direction,
             std::make_pair(layer, TimeSeries(layer_name, LineStyle::kStep)));
         RTC_DCHECK(inserted);
       }
-      float x = config_.GetCallTimeSec(rtcp.log_time_us());
+      float x = config_.GetCallTimeSec(rtcp.log_time());
       float y = bitrate_item.target_bitrate_kbps;
       time_series_it->second.points.emplace_back(x, y);
     }
@@ -1149,22 +1154,20 @@ void EventLogAnalyzer::CreateGoogCcSimulationGraph(Plot* plot) {
       [&](const NetworkControlUpdate& update, Timestamp at_time) {
         if (update.target_rate) {
           target_rates.points.emplace_back(
-              config_.GetCallTimeSec(at_time.us()),
+              config_.GetCallTimeSec(at_time),
               update.target_rate->target_rate.kbps<float>());
         }
       });
 
   simulation.ProcessEventsInLog(parsed_log_);
   for (const auto& logged : parsed_log_.bwe_delay_updates())
-    delay_based.points.emplace_back(
-        config_.GetCallTimeSec(logged.log_time_us()),
-        logged.bitrate_bps / 1000);
+    delay_based.points.emplace_back(config_.GetCallTimeSec(logged.log_time()),
+                                    logged.bitrate_bps / 1000);
   for (const auto& logged : parsed_log_.bwe_probe_success_events())
-    probe_results.points.emplace_back(
-        config_.GetCallTimeSec(logged.log_time_us()),
-        logged.bitrate_bps / 1000);
+    probe_results.points.emplace_back(config_.GetCallTimeSec(logged.log_time()),
+                                      logged.bitrate_bps / 1000);
   for (const auto& logged : parsed_log_.bwe_loss_updates())
-    loss_based.points.emplace_back(config_.GetCallTimeSec(logged.log_time_us()),
+    loss_based.points.emplace_back(config_.GetCallTimeSec(logged.log_time()),
                                    logged.bitrate_bps / 1000);
 
   plot->AppendTimeSeries(std::move(delay_based));
@@ -1324,7 +1327,7 @@ void EventLogAnalyzer::CreateSendSideBweSimulationGraph(Plot* plot) {
         }
       }
 
-      float x = config_.GetCallTimeSec(clock.TimeInMicroseconds());
+      float x = config_.GetCallTimeSec(clock.CurrentTime());
       float y = bitrate_bps.value_or(0) / 1000;
       acked_time_series.points.emplace_back(x, y);
       y = robust_throughput_estimator->bitrate()
@@ -1347,7 +1350,7 @@ void EventLogAnalyzer::CreateSendSideBweSimulationGraph(Plot* plot) {
     if (observer.GetAndResetBitrateUpdated() ||
         time_us - last_update_us >= 1e6) {
       uint32_t y = observer.last_bitrate_bps() / 1000;
-      float x = config_.GetCallTimeSec(clock.TimeInMicroseconds());
+      float x = config_.GetCallTimeSec(clock.CurrentTime());
       time_series.points.emplace_back(x, y);
       last_update_us = time_us;
     }
@@ -1423,13 +1426,13 @@ void EventLogAnalyzer::CreateReceiveSideBweSimulationGraph(Plot* plot) {
     absl::optional<uint32_t> bitrate_bps = acked_bitrate.Rate(arrival_time_ms);
     if (bitrate_bps) {
       uint32_t y = *bitrate_bps / 1000;
-      float x = config_.GetCallTimeSec(clock.TimeInMicroseconds());
+      float x = config_.GetCallTimeSec(clock.CurrentTime());
       acked_time_series.points.emplace_back(x, y);
     }
     if (remb_interceptor.GetAndResetBitrateUpdated() ||
         clock.TimeInMicroseconds() - last_update_us >= 1e6) {
       uint32_t y = remb_interceptor.last_bitrate_bps() / 1000;
-      float x = config_.GetCallTimeSec(clock.TimeInMicroseconds());
+      float x = config_.GetCallTimeSec(clock.CurrentTime());
       time_series.points.emplace_back(x, y);
       last_update_us = clock.TimeInMicroseconds();
     }
@@ -1461,7 +1464,7 @@ void EventLogAnalyzer::CreateNetworkDelayFeedbackGraph(Plot* plot) {
   for (const auto& packet : matched_rtp_rtcp) {
     if (packet.arrival_time_ms == MatchedSendArrivalTimes::kNotReceived)
       continue;
-    float x = config_.GetCallTimeSec(1000 * packet.feedback_arrival_time_ms);
+    float x = config_.GetCallTimeSecFromMs(packet.feedback_arrival_time_ms);
     int64_t y = packet.arrival_time_ms - packet.send_time_ms;
     int64_t rtt_ms = packet.feedback_arrival_time_ms - packet.send_time_ms;
     min_rtt_ms = std::min(rtt_ms, min_rtt_ms);
@@ -1530,7 +1533,7 @@ void EventLogAnalyzer::CreatePacerDelayGraph(Plot* plot) {
       double send_time_ms =
           static_cast<double>(packet.rtp.log_time_us() - first_send_timestamp) /
           1000;
-      float x = config_.GetCallTimeSec(packet.rtp.log_time_us());
+      float x = config_.GetCallTimeSec(packet.rtp.log_time());
       float y = send_time_ms - capture_time_ms;
       pacer_delay_series.points.emplace_back(x, y);
     }
@@ -1551,7 +1554,7 @@ void EventLogAnalyzer::CreateTimestampGraph(PacketDirection direction,
         GetStreamName(parsed_log_, direction, stream.ssrc) + " capture-time",
         LineStyle::kLine, PointStyle::kHighlight);
     for (const auto& packet : stream.packet_view) {
-      float x = config_.GetCallTimeSec(packet.log_time_us());
+      float x = config_.GetCallTimeSec(packet.log_time());
       float y = packet.header.timestamp;
       rtp_timestamps.points.emplace_back(x, y);
     }
@@ -1566,7 +1569,7 @@ void EventLogAnalyzer::CreateTimestampGraph(PacketDirection direction,
     for (const auto& rtcp : sender_reports) {
       if (rtcp.sr.sender_ssrc() != stream.ssrc)
         continue;
-      float x = config_.GetCallTimeSec(rtcp.log_time_us());
+      float x = config_.GetCallTimeSec(rtcp.log_time());
       float y = rtcp.sr.rtp_timestamp();
       rtcp_timestamps.points.emplace_back(x, y);
     }
@@ -1588,7 +1591,7 @@ void EventLogAnalyzer::CreateSenderAndReceiverReportPlot(
   std::map<uint32_t, TimeSeries> sr_reports_by_ssrc;
   const auto& sender_reports = parsed_log_.sender_reports(direction);
   for (const auto& rtcp : sender_reports) {
-    float x = config_.GetCallTimeSec(rtcp.log_time_us());
+    float x = config_.GetCallTimeSec(rtcp.log_time());
     uint32_t ssrc = rtcp.sr.sender_ssrc();
     for (const auto& block : rtcp.sr.report_blocks()) {
       float y = fy(block);
@@ -1610,7 +1613,7 @@ void EventLogAnalyzer::CreateSenderAndReceiverReportPlot(
   std::map<uint32_t, TimeSeries> rr_reports_by_ssrc;
   const auto& receiver_reports = parsed_log_.receiver_reports(direction);
   for (const auto& rtcp : receiver_reports) {
-    float x = config_.GetCallTimeSec(rtcp.log_time_us());
+    float x = config_.GetCallTimeSec(rtcp.log_time());
     uint32_t ssrc = rtcp.rr.sender_ssrc();
     for (const auto& block : rtcp.rr.report_blocks()) {
       float y = fy(block);
@@ -1649,7 +1652,7 @@ void EventLogAnalyzer::CreateIceCandidatePairConfigGraph(Plot* plot) {
       candidate_pair_desc_by_id_[config.candidate_pair_id] =
           candidate_pair_desc;
     }
-    float x = config_.GetCallTimeSec(config.log_time_us());
+    float x = config_.GetCallTimeSec(config.log_time());
     float y = static_cast<float>(config.type);
     configs_by_cp_id[config.candidate_pair_id].points.emplace_back(x, y);
   }
@@ -1706,7 +1709,7 @@ void EventLogAnalyzer::CreateIceConnectivityCheckGraph(Plot* plot) {
               GetCandidatePairLogDescriptionFromId(event.candidate_pair_id),
           LineStyle::kNone, PointStyle::kHighlight);
     }
-    float x = config_.GetCallTimeSec(event.log_time_us());
+    float x = config_.GetCallTimeSec(event.log_time());
     float y = static_cast<float>(event.type) + kEventTypeOffset;
     checks_by_cp_id[event.candidate_pair_id].points.emplace_back(x, y);
   }
@@ -1741,7 +1744,7 @@ void EventLogAnalyzer::CreateDtlsTransportStateGraph(Plot* plot) {
   TimeSeries states("DTLS Transport State", LineStyle::kNone,
                     PointStyle::kHighlight);
   for (const auto& event : parsed_log_.dtls_transport_states()) {
-    float x = config_.GetCallTimeSec(event.log_time_us());
+    float x = config_.GetCallTimeSec(event.log_time());
     float y = static_cast<float>(event.dtls_transport_state);
     states.points.emplace_back(x, y);
   }
@@ -1763,7 +1766,7 @@ void EventLogAnalyzer::CreateDtlsWritableStateGraph(Plot* plot) {
   TimeSeries writable("DTLS Writable", LineStyle::kNone,
                       PointStyle::kHighlight);
   for (const auto& event : parsed_log_.dtls_writable_states()) {
-    float x = config_.GetCallTimeSec(event.log_time_us());
+    float x = config_.GetCallTimeSec(event.log_time());
     float y = static_cast<float>(event.writable);
     writable.points.emplace_back(x, y);
   }
