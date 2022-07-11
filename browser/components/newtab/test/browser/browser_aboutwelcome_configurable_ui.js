@@ -415,8 +415,8 @@ add_task(async function test_aboutwelcome_split_position() {
     // Expected styles:
     {
       // Override default text-link styles
-      "background-color": "rgb(240, 240, 244)",
-      color: "rgb(0, 0, 0)",
+      "background-color": "rgb(43, 42, 51)",
+      color: "rgb(251, 251, 254)",
     }
   );
 });

@@ -1511,6 +1511,11 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
 }
 
+.dialogBox.fullScreen {
+  height: 100vh;
+  width: 100vw;
+}
+
 /*
  * In High Contrast Mode, this prevents a dialog from visually bleeding into
  * the window behind it, which looks jarring.

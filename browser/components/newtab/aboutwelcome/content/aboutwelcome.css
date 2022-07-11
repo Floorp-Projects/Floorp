@@ -62,6 +62,19 @@ body[lwt-newtab-brighttext] {
 :root[dialogroot] .onboardingContainer .screen:dir(rtl) {
   transform: unset;
 }
+:root[dialogroot] .onboardingContainer .screen:not([pos=split]) .section-main {
+  margin-block: 106px auto;
+}
+:root[dialogroot] .onboardingContainer .screen.with-noodles .section-main,
+:root[dialogroot] .onboardingContainer .screen.with-noodles .section-secondary {
+  margin-block: 156px auto;
+}
+@media only screen and (min-width: 800px) {
+  :root[dialogroot] .onboardingContainer .screen[pos=split] .section-main,
+:root[dialogroot] .onboardingContainer .screen[pos=split] .section-secondary {
+    margin-block: 156px auto;
+  }
+}
 
 .welcome-container .onboardingContainer {
   min-height: 610px;
@@ -236,13 +249,13 @@ body[lwt-newtab-brighttext] {
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta {
   position: absolute;
-  bottom: 0;
+  bottom: -30px;
   inset-inline-end: 0;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary {
-  background-color: #F0F0F4 !important;
+  background-color: var(--in-content-button-background) !important;
+  color: var(--in-content-button-text-color);
   line-height: 12px;
-  color: #000;
   font-size: 10px;
   font-weight: 600;
   padding: 8px 16px;
@@ -370,6 +383,7 @@ body[lwt-newtab-brighttext] {
   .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta {
     position: relative;
     margin-block: 10px 0;
+    bottom: 0;
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .primary,
 .onboardingContainer .screen[pos=split] .section-main .main-content .secondary {
