@@ -1296,6 +1296,7 @@ rtc_library("video_track_source") {
     "../media:rtc_media_base",
     "../rtc_base:checks",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base/system:no_unique_address",
     "../rtc_base/system:rtc_export",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
