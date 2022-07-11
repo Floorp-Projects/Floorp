@@ -4574,26 +4574,28 @@ static StyleUserSelect UsedUserSelect(const nsIFrame* aFrame) {
 
   // Per https://drafts.csswg.org/css-ui-4/#content-selection:
   //
-  // The used value is the same as the computed value, except:
+  // The computed value is the specified value, except:
   //
-  //    1 - on editable elements where the used value is always 'contain'
-  //        regardless of the computed value
-  //    2 - when the computed value is auto, in which case the used value is one
-  //        of the other values...
+  //   1 - on editable elements where the computed value is always 'contain'
+  //       regardless of the specified value.
+  //   2 - when the specified value is auto, which computes to one of the other
+  //       values [...]
   //
   // See https://github.com/w3c/csswg-drafts/issues/3344 to see why we do this
   // at used-value time instead of at computed-value time.
+  //
+  // Also, we check for auto first to allow explicitly overriding the value for
+  // the editing host.
+  auto style = aFrame->Style()->UserSelect();
+  if (style != StyleUserSelect::Auto) {
+    return style;
+  }
 
   if (aFrame->IsTextInputFrame() || IsEditingHost(aFrame)) {
     // We don't implement 'contain' itself, but we make 'text' behave as
     // 'contain' for contenteditable and <input> / <textarea> elements anyway so
     // this is ok.
     return StyleUserSelect::Text;
-  }
-
-  auto style = aFrame->Style()->UserSelect();
-  if (style != StyleUserSelect::Auto) {
-    return style;
   }
 
   auto* parent = nsLayoutUtils::GetParentOrPlaceholderFor(aFrame);
