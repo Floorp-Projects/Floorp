@@ -67,6 +67,11 @@ class MockMediaReceiverRtcpObserver : public MediaReceiverRtcpObserver {
               (override));
 };
 
+class MockRtpStreamRtcpHandler : public RtpStreamRtcpHandler {
+ public:
+  MOCK_METHOD(RtpStats, SentStats, (), (override));
+};
+
 class MockNetworkLinkRtcpObserver : public NetworkLinkRtcpObserver {
  public:
   MOCK_METHOD(void,
@@ -1345,6 +1350,129 @@ TEST(RtcpTransceiverImplTest,
   EXPECT_CALL(link_observer, OnReportBlocks(receive_time, SizeIs(64)));
 
   rtcp_transceiver.ReceivePacket(packet.Build(), receive_time);
+}
+
+TEST(RtcpTransceiverImplTest, FailsToRegisterTwoSendersWithTheSameSsrc) {
+  RtcpTransceiverImpl rtcp_transceiver(DefaultTestConfig());
+  MockRtpStreamRtcpHandler sender1;
+  MockRtpStreamRtcpHandler sender2;
+
+  EXPECT_TRUE(rtcp_transceiver.AddMediaSender(/*local_ssrc=*/10001, &sender1));
+  EXPECT_FALSE(rtcp_transceiver.AddMediaSender(/*local_ssrc=*/10001, &sender2));
+  EXPECT_TRUE(rtcp_transceiver.AddMediaSender(/*local_ssrc=*/10002, &sender2));
+
+  EXPECT_TRUE(rtcp_transceiver.RemoveMediaSender(/*local_ssrc=*/10001));
+  EXPECT_FALSE(rtcp_transceiver.RemoveMediaSender(/*local_ssrc=*/10001));
+}
+
+TEST(RtcpTransceiverImplTest, SendsSenderReport) {
+  static constexpr uint32_t kFeedbackSsrc = 123;
+  static constexpr uint32_t kSenderSsrc = 12345;
+  SimulatedClock clock(100'000'000);
+  RtcpTransceiverConfig config;
+  config.clock = &clock;
+  config.feedback_ssrc = kFeedbackSsrc;
+  RtcpPacketParser rtcp_parser;
+  RtcpParserTransport transport(&rtcp_parser);
+  config.outgoing_transport = &transport;
+  config.schedule_periodic_compound_packets = false;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  RtpStreamRtcpHandler::RtpStats sender_stats;
+  sender_stats.set_num_sent_packets(10);
+  sender_stats.set_num_sent_bytes(1000);
+  sender_stats.set_last_rtp_timestamp(0x3333);
+  sender_stats.set_last_capture_time(clock.CurrentTime() -
+                                     TimeDelta::Seconds(2));
+  sender_stats.set_last_clock_rate(0x1000);
+  MockRtpStreamRtcpHandler sender;
+  ON_CALL(sender, SentStats).WillByDefault(Return(sender_stats));
+  rtcp_transceiver.AddMediaSender(kSenderSsrc, &sender);
+
+  rtcp_transceiver.SendCompoundPacket();
+
+  ASSERT_GT(rtcp_parser.sender_report()->num_packets(), 0);
+  EXPECT_EQ(rtcp_parser.sender_report()->sender_ssrc(), kSenderSsrc);
+  EXPECT_EQ(rtcp_parser.sender_report()->ntp(), clock.CurrentNtpTime());
+  EXPECT_EQ(rtcp_parser.sender_report()->rtp_timestamp(), 0x3333u + 0x2000u);
+  EXPECT_EQ(rtcp_parser.sender_report()->sender_packet_count(), 10u);
+  EXPECT_EQ(rtcp_parser.sender_report()->sender_octet_count(), 1000u);
+}
+
+TEST(RtcpTransceiverImplTest,
+     MaySendBothSenderReportAndReceiverReportInTheSamePacket) {
+  RtcpPacketParser rtcp_parser;
+  RtcpParserTransport transport(&rtcp_parser);
+  std::vector<ReportBlock> statistics_report_blocks(40);
+  MockReceiveStatisticsProvider receive_statistics;
+  EXPECT_CALL(receive_statistics, RtcpReportBlocks(/*max_blocks=*/Ge(40u)))
+      .WillOnce(Return(statistics_report_blocks));
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.outgoing_transport = &transport;
+  config.receive_statistics = &receive_statistics;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  MockRtpStreamRtcpHandler sender;
+  rtcp_transceiver.AddMediaSender(/*ssrc=*/12345, &sender);
+
+  rtcp_transceiver.SendCompoundPacket();
+
+  // Expect a single RTCP packet with a sender and a receiver reports in it.
+  EXPECT_EQ(transport.num_packets(), 1);
+  ASSERT_EQ(rtcp_parser.sender_report()->num_packets(), 1);
+  ASSERT_EQ(rtcp_parser.receiver_report()->num_packets(), 1);
+  // Sender report may contain up to 31 report blocks, thus remaining 9 report
+  // block should be attached to the receiver report.
+  EXPECT_THAT(rtcp_parser.sender_report()->report_blocks(), SizeIs(31));
+  EXPECT_THAT(rtcp_parser.receiver_report()->report_blocks(), SizeIs(9));
+}
+
+TEST(RtcpTransceiverImplTest, RotatesSendersWhenAllSenderReportDoNotFit) {
+  // Send 6 compound packet, each should contain 5 sender reports,
+  // each of 6 senders should be mentioned 5 times.
+  static constexpr int kNumSenders = 6;
+  static constexpr uint32_t kSenderSsrc[kNumSenders] = {10, 20, 30, 40, 50, 60};
+  static constexpr int kSendersPerPacket = 5;
+  SimulatedClock clock(100'000'000);
+  // RtcpPacketParser remembers only latest block for each type, but this test
+  // is about sending multiple sender reports in the same packet, thus need
+  // a more advance parser: RtcpTranceiver
+  RtcpTransceiverConfig receiver_config = DefaultTestConfig();
+  receiver_config.clock = &clock;
+  RtcpTransceiverImpl rtcp_receiver(receiver_config);
+  // Main expectatation: all senders are spread equally across multiple packets.
+  NiceMock<MockMediaReceiverRtcpObserver> receiver[kNumSenders];
+  for (int i = 0; i < kNumSenders; ++i) {
+    SCOPED_TRACE(i);
+    EXPECT_CALL(receiver[i], OnSenderReport(kSenderSsrc[i], _, _))
+        .Times(kSendersPerPacket);
+    rtcp_receiver.AddMediaReceiverRtcpObserver(kSenderSsrc[i], &receiver[i]);
+  }
+
+  MockTransport transport;
+  EXPECT_CALL(transport, SendRtcp)
+      .Times(kNumSenders)
+      .WillRepeatedly([&](const uint8_t* data, size_t size) {
+        rtcp_receiver.ReceivePacket(rtc::MakeArrayView(data, size),
+                                    clock.CurrentTime());
+        return true;
+      });
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.clock = &clock;
+  config.outgoing_transport = &transport;
+  // Limit packet to have space just for kSendersPerPacket sender reports.
+  // Sender report without report blocks require 28 bytes.
+  config.max_packet_size = kSendersPerPacket * 28;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+  NiceMock<MockRtpStreamRtcpHandler> sender[kNumSenders];
+  for (int i = 0; i < kNumSenders; ++i) {
+    rtcp_transceiver.AddMediaSender(kSenderSsrc[i], &sender[i]);
+  }
+
+  for (int i = 1; i <= kNumSenders; ++i) {
+    SCOPED_TRACE(i);
+    rtcp_transceiver.SendCompoundPacket();
+  }
 }
 
 }  // namespace
