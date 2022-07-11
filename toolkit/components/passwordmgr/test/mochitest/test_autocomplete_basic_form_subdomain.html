@@ -33,7 +33,6 @@ addLoginsInParent(
   [newHost, newHost, null, "dsdu1", "dsdp1prime", "uname", "pword"]);
 
 var setupScript = runInParent(function setup() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   addMessageListener("getDateString", () => {
     let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
     return dateAndTimeFormatter.format(new Date());

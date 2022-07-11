@@ -11,7 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { GeckoViewActorChild } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewActorChild.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 

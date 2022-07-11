@@ -11,8 +11,6 @@
   async function checkForFindDialog() {
     let chromeScript = SpecialPowers.loadChromeScript(_ => {
       addMessageListener("test:check", () => {
-        const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
         let sawFind = false;
         let findDialog = Services.wm.getMostRecentWindow("findInPage");
         if (findDialog) {

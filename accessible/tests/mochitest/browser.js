@@ -95,8 +95,6 @@ function reloadButton() {
 // //////////////////////////////////////////////////////////////////////////////
 // private section
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var gBrowserContext = {
   browserWnd: null,
   testFunc: null,

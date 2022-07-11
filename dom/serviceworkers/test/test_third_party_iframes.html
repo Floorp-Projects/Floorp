@@ -15,10 +15,6 @@
 
 var chromeScript;
 chromeScript = SpecialPowers.loadChromeScript(_ => {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
-
   Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
 });
 

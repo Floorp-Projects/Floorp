@@ -10,8 +10,6 @@ const { GeckoViewActorParent } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewActorParent.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const DIALOGS = [
   "alert",
   "alertCheck",

@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 do_get_profile();
 
 // Test that interrupted sanitizations are properly tracked.

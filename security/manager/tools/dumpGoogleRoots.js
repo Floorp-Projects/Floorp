@@ -13,8 +13,6 @@
 // 4. [paste the output into the appropriate section in
 //     security/manager/tools/PreloadedHPKPins.json]
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 Services.prefs.setBoolPref("network.process.enabled", false);
 
 function downloadRoots() {

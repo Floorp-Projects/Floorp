@@ -10,7 +10,6 @@ const { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 const { gDevTools } = require("devtools/client/framework/devtools");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 async function showToolboxForSelectedTab(toolId, hostType) {

@@ -9,7 +9,6 @@ do_get_profile();
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var {
   HTTP_400,
   HTTP_401,

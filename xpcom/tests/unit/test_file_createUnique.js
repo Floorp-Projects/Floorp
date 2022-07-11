@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function run_test() {
   // Generate a leaf name that is 255 characters long.
   var longLeafName = new Array(256).join("T");

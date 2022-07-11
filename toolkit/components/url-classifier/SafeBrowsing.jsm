@@ -4,8 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["SafeBrowsing"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const PREF_DEBUG_ENABLED = "browser.safebrowsing.debug";
 let loggingEnabled = false;
 

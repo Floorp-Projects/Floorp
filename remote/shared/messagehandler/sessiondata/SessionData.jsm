@@ -6,7 +6,6 @@
 
 const EXPORTED_SYMBOLS = ["SESSION_DATA_SHARED_DATA_KEY", "SessionData"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

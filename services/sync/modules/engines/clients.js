@@ -22,7 +22,6 @@
 
 var EXPORTED_SYMBOLS = ["ClientEngine", "ClientsRec"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Async } = ChromeUtils.import("resource://services-common/async.js");
 const {
   DEVICE_TYPE_DESKTOP,

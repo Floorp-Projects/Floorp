@@ -12,8 +12,6 @@
 # tools/lint/eslint/eslint-plugin-mozilla/lib/environments/browser-window.js
 
 <script type="text/javascript">
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 Services.scriptloader.loadSubScript("chrome://browser/content/browser.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-places.js", this);
 Services.scriptloader.loadSubScript("chrome://global/content/globalOverlay.js", this);

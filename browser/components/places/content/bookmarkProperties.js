@@ -54,7 +54,6 @@
 /* import-globals-from controller.js */
 
 /* Shared Places Import - change other consumers if you change this: */
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["ContentEventListenerChild"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class ContentEventListenerChild extends JSWindowActorChild {
   actorCreated() {
     this._contentEvents = new Map();

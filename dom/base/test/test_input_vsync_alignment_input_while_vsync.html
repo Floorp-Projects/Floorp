@@ -12,7 +12,6 @@
 
   function triggerKey() {
     SpecialPowers.loadChromeScript(() => {
-      const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
       const { EventUtils } = ChromeUtils.import(
         "resource://specialpowers/SpecialPowersEventUtils.jsm"
       );

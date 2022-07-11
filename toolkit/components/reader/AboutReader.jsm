@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["AboutReader"];
 const { ReaderMode } = ChromeUtils.import(
   "resource://gre/modules/ReaderMode.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );

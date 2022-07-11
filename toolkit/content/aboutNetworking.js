@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const FileUtils = ChromeUtils.import("resource://gre/modules/FileUtils.jsm")
   .FileUtils;
 const gEnv = Cc["@mozilla.org/process/environment;1"].getService(

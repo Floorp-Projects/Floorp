@@ -23,8 +23,6 @@
 const EXPORTED_SYMBOLS = ["ExtensionPreferencesManager"];
 let ExtensionPreferencesManager;
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const { Management } = ChromeUtils.import(
   "resource://gre/modules/Extension.jsm"
 );

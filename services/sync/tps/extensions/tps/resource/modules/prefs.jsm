@@ -11,7 +11,6 @@ var EXPORTED_SYMBOLS = ["Preference"];
 
 const WEAVE_PREF_PREFIX = "services.sync.prefs.sync.";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 
 /**

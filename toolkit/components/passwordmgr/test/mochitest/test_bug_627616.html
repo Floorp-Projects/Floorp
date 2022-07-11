@@ -80,7 +80,6 @@
     let mm = runInParent(() => {
       const { classes: parentCc, interfaces: parentCi } = Components;
 
-      let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
       let {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
       let channel = NetUtil.newChannel({

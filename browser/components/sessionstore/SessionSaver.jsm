@@ -12,7 +12,6 @@ const {
   requestIdleCallback,
   setTimeout,
 } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

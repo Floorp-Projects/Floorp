@@ -39,7 +39,6 @@ const known_scripts = {
     // General utilities
     "resource://gre/modules/AppConstants.jsm",
     "resource://gre/modules/DeferredTask.jsm",
-    "resource://gre/modules/Services.jsm", // bug 1464542
     "resource://gre/modules/XPCOMUtils.jsm",
 
     // Logging related

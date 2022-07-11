@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["DOMFullscreenChild"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class DOMFullscreenChild extends JSWindowActorChild {
   receiveMessage(aMessage) {
     let window = this.contentWindow;

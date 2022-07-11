@@ -8,7 +8,6 @@ const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { RemoteImages, REMOTE_IMAGES_PATH } = ChromeUtils.import(
   "resource://activity-stream/lib/RemoteImages.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const RS_SERVER_PREF = "services.settings.server";
 
 class RemoteSettingsRecord {

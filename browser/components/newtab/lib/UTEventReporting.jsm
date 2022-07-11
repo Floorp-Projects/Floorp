@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /**
  * Note: the schema can be found in
  * https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Events.yaml

@@ -3,7 +3,6 @@
 // Tests that unhandled promise rejections generate the appropriate
 // console messages.
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );

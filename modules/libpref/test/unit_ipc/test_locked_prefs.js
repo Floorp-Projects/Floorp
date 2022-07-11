@@ -4,8 +4,6 @@
 
 // Locked status should be communicated to children.
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function isParentProcess() {
   return Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }

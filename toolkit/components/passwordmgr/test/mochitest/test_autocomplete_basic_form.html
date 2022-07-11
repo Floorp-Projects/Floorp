@@ -25,11 +25,6 @@ function addLoginsInParent(...aLogins) {
     let initialCount = 5;
 
     addMessageListener("initLogins", logins => {
-      // eslint-disable-next-line no-shadow
-      const { Services } = ChromeUtils.import(
-        "resource://gre/modules/Services.jsm"
-      );
-
       let nsLoginInfo = Components.Constructor(
         "@mozilla.org/login-manager/loginInfo;1",
         Ci.nsILoginInfo,

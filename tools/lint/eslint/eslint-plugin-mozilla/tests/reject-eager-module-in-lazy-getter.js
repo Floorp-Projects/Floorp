@@ -47,10 +47,10 @@ ruleTester.run("reject-eager-module-in-lazy-getter", rule, {
     invalidCode(
       `
     XPCOMUtils.defineLazyModuleGetter(
-      lazy, "Services", "resource://gre/modules/Services.jsm"
+      lazy, "AppConstants", "resource://gre/modules/AppConstants.jsm"
     );
 `,
-      "resource://gre/modules/Services.jsm"
+      "resource://gre/modules/AppConstants.jsm"
     ),
     invalidCode(
       `

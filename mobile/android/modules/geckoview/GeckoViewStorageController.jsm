@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["GeckoViewStorageController"];
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { PrincipalsCollector } = ChromeUtils.import(
   "resource://gre/modules/PrincipalsCollector.jsm"
 );

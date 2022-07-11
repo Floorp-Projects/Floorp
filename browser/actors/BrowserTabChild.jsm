@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["BrowserTabChild"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(

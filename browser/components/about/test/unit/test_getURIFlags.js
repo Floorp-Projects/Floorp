@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const contract = "@mozilla.org/network/protocol/about;1?what=newtab";
 const am = Cc[contract].getService(Ci.nsIAboutModule);
 const uri = Services.io.newURI("about:newtab");

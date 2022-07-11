@@ -5,8 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["WebProtocolHandlerRegistrar"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const STRING_BUNDLE_URI = "chrome://browser/locale/feeds/subscribe.properties";
 
 function WebProtocolHandlerRegistrar() {}

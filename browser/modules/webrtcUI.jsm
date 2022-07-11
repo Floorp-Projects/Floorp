@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["webrtcUI", "MacOSWebRTCStatusbarIndicator"];
 const { EventEmitter } = ChromeUtils.import(
   "resource:///modules/syncedtabs/EventEmitter.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

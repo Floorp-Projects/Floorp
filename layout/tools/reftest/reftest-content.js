@@ -22,7 +22,6 @@ const { setTimeout, clearTimeout } = ChromeUtils.import(
 const { onSpellCheck } = ChromeUtils.import(
     "resource://reftest/AsyncSpellCheckTestHelper.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // This will load chrome Custom Elements inside chrome documents:
 ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm");

@@ -16,7 +16,6 @@
 const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
   "resource:///modules/MigrationUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 

@@ -283,10 +283,6 @@ function invokeContentTask(browser, args, task) {
  */
 async function comparePIDs(browser, isRemote) {
   function getProcessID() {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
-
     return Services.appinfo.processID;
   }
 

@@ -44,9 +44,6 @@ function assertSandboxHeadless() {
 
 function getPage() {
   let filePage = undefined;
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   switch (Services.appinfo.OS) {
     case "WINNT":
       filePage = "file:///C:/";
@@ -65,9 +62,6 @@ function getPage() {
 
 function getSize() {
   let iconSize = undefined;
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   switch (Services.appinfo.OS) {
     case "WINNT":
       iconSize = 32;

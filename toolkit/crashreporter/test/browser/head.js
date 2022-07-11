@@ -1,5 +1,3 @@
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function create_subdir(dir, subdirname) {
   let subdir = dir.clone();
   subdir.append(subdirname);

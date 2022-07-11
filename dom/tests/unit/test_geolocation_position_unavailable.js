@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function successCallback() {
   Assert.ok(false);
   do_test_finished();

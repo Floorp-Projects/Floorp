@@ -11,8 +11,6 @@
 // Definitions from test and other files used by the tests
 /* global getState */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function getTestDataFile(aFilename) {
   let file = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   let pathParts = REL_PATH_DATA.split("/");

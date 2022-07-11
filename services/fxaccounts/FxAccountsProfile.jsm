@@ -14,7 +14,6 @@
 
 var EXPORTED_SYMBOLS = ["FxAccountsProfile"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { ON_PROFILE_CHANGE_NOTIFICATION, log } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );

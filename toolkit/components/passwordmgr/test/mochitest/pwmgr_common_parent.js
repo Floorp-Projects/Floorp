@@ -35,7 +35,6 @@ if (LoginHelper.improvedPasswordRulesEnabled) {
     await rsPromise;
   };
 }
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Init with a common login

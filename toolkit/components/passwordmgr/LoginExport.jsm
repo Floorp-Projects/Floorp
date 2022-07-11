@@ -13,7 +13,6 @@ const EXPORTED_SYMBOLS = ["LoginExport"];
 let { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 

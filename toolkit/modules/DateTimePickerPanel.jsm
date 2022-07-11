@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["DateTimePickerPanel"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var DateTimePickerPanel = class {
   constructor(element) {
     this.element = element;

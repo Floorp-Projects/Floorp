@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script><![CDATA[
     add_task(async function testAlwaysOnTop() {
-      const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
       let topWin = window.docShell.rootTreeItem.domWindow;
       await SimpleTest.promiseFocus(topWin);
       is(Services.focus.activeWindow, topWin, "Top level window is focused");

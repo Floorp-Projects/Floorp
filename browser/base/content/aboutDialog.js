@@ -7,7 +7,6 @@
 /* import-globals-from aboutDialog-appUpdater.js */
 
 // Services = object with smart getters for common XPCOM services
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );

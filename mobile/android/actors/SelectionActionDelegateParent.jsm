@@ -8,7 +8,6 @@ var EXPORTED_SYMBOLS = ["SelectionActionDelegateParent"];
 const { GeckoViewActorParent } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewActorParent.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class SelectionActionDelegateParent extends GeckoViewActorParent {
   respondTo = null;

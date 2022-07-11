@@ -8,8 +8,6 @@ var EXPORTED_SYMBOLS = ["Deprecated"];
 
 const PREF_DEPRECATION_WARNINGS = "devtools.errorconsole.deprecation_warnings";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // A flag that indicates whether deprecation warnings should be logged.
 var logWarnings = Services.prefs.getBoolPref(PREF_DEPRECATION_WARNINGS);
 

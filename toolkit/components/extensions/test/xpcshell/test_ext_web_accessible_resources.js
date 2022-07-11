@@ -113,9 +113,6 @@ add_task(async function test_web_accessible_resources_csp() {
     `http://example.com/data/file_sample.html`
   );
   await page.spawn(null, () => {
-    let { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
     this.obs = {
       events: [],
       observe(subject, topic, data) {

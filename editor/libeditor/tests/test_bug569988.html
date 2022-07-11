@@ -27,7 +27,6 @@ SimpleTest.waitForFocus(runTest);
 function runTest() {
   /* eslint-env mozilla/frame-script */
   var script = SpecialPowers.loadChromeScript(function() {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     var gPromptInput = null;
     var os = Services.obs;
 

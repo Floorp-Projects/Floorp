@@ -1,7 +1,5 @@
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 add_task(async () => {
   const HOST = "www.bbc.co.uk";
   Assert.equal(

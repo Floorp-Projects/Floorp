@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["GoogleTranslator"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );

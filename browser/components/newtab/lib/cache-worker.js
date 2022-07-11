@@ -30,7 +30,7 @@ importScripts("resource://gre/modules/workers/require.js");
 
   // ChromeUtils is defined inside of a Worker, but we don't want the
   // activity-stream.bundle.js to detect it when loading, since that results
-  // in it attempting to import `Services.jsm` on load, which is not allowed in
+  // in it attempting to import JSMs on load, which is not allowed in
   // a Worker. So we temporarily clear ChromeUtils so that activity-stream.bundle.js
   // thinks its being loaded in content scope.
   //

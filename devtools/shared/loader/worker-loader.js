@@ -336,6 +336,7 @@ var chrome = {
   Cu: undefined,
   Cr: undefined,
   components: undefined,
+  Services: undefined,
 };
 
 var loader = {

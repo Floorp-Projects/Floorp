@@ -13,7 +13,6 @@ Login Manager test: forms and logins without a username.
 gTestDependsOnDeprecatedLogin = true;
 runChecksAfterCommonInit(() => startTest());
 runInParent(() => {
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo);
 
   // pwlogin1 uses a unique formActionOrigin, to check forms where no other logins

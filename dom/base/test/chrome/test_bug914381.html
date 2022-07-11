@@ -16,8 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650776
 </div>
 <pre id="test">
 <script type="application/javascript">
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function createFileWithData(fileData) {
   var testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
   testFile.append("testBug914381");

@@ -49,8 +49,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
   }
 
   function initAndRunTests() {
-    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
     // Test copy.
     const data = "random number: " + Math.random();
     let helper = Cc['@mozilla.org/widget/clipboardhelper;1']

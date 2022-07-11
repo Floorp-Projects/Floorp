@@ -9,8 +9,6 @@ var EXPORTED_SYMBOLS = ["LayoutDebugChild"];
 const NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID =
   "@mozilla.org/layout-debug/layout-debuggingtools;1";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class LayoutDebugChild extends JSWindowActorChild {
   receiveMessage(msg) {
     if (!this._debuggingTools) {

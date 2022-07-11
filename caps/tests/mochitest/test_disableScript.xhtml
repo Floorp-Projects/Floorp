@@ -25,7 +25,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
   /** Test for all the different ways that script can be disabled for a given global. **/
 
   SimpleTest.waitForExplicitFinish();
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   const ssm = Services.scriptSecurityManager;
   function makeURI(uri) { return Services.io.newURI(uri); }
   const path = "/tests/caps/tests/mochitest/file_disableScript.html";

@@ -5,8 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["runBackgroundTask"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 async function runBackgroundTask(commandLine) {
   // This task depends on `CrashTestUtils.jsm` and requires the
   // sibling `testcrasher` library to be in the current working

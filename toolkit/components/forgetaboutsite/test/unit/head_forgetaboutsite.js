@@ -8,10 +8,6 @@ var profileDir = do_get_profile();
  * Removes any files that could make our tests fail.
  */
 async function cleanUp() {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
-
   let files = ["places.sqlite", "cookies.sqlite", "signons.sqlite"];
 
   for (let i = 0; i < files.length; i++) {

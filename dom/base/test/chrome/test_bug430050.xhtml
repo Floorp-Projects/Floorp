@@ -32,7 +32,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=430050
         if (evt.target == evt.currentTarget) {
           document.getElementById('b').setAttribute("src",
                                                     "data:text/plain,failed");
-          const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
           const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
           document.getElementById('b').loadURI('data:text/plain,succeeded', {
             triggeringPrincipal: systemPrincipal

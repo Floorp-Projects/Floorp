@@ -57,9 +57,6 @@ var gRegistry = new WeakMap();
 
 var ContentDOMReference = {
   _init() {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
     Services.obs.addObserver(this, FINALIZATION_TOPIC);
   },
 

@@ -4,8 +4,6 @@
 
 /* import-globals-from /toolkit/content/preferencesBindings.js */
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // This is exported by preferences.js but we can't import that in a subdialog.
 let { LangPackMatcher } = window.top;
 

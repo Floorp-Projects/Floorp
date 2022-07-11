@@ -18,8 +18,6 @@ function do_check_throws(f, result, stack) {
   ok(false, "expected result " + result + ", none thrown");
 }
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // Register current test directory as provider for the profile directory.
 var provider = {
   getFile(prop, persistent) {

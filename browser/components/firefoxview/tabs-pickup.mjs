@@ -23,7 +23,6 @@ const tabsSetupFlowManager = new (class {
     this.sync = {};
 
     XPCOMUtils.defineLazyModuleGetters(this, {
-      Services: "resource://gre/modules/Services.jsm",
       SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
     });
     XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
@@ -103,17 +102,17 @@ const tabsSetupFlowManager = new (class {
   async initialize(elem) {
     this.elem = elem;
     this.elem.addEventListener("click", this);
-    this.Services.obs.addObserver(this, this.sync.UIState.ON_UPDATE);
-    this.Services.obs.addObserver(this, "fxaccounts:device_connected");
-    this.Services.obs.addObserver(this, "fxaccounts:device_disconnected");
+    Services.obs.addObserver(this, this.sync.UIState.ON_UPDATE);
+    Services.obs.addObserver(this, "fxaccounts:device_connected");
+    Services.obs.addObserver(this, "fxaccounts:device_disconnected");
 
     await this.fxAccounts.getSignedInUser();
     this.maybeUpdateUI();
   }
   uninit() {
-    this.Services.obs.removeObserver(this, this.sync.UIState.ON_UPDATE);
-    this.Services.obs.removeObserver(this, "fxaccounts:device_connected");
-    this.Services.obs.removeObserver(this, "fxaccounts:device_disconnected");
+    Services.obs.removeObserver(this, this.sync.UIState.ON_UPDATE);
+    Services.obs.removeObserver(this, "fxaccounts:device_connected");
+    Services.obs.removeObserver(this, "fxaccounts:device_disconnected");
   }
   get fxaSignedIn() {
     return (
@@ -201,7 +200,7 @@ const tabsSetupFlowManager = new (class {
   syncOpenTabs(containerElem) {
     // Flip the pref on.
     // The observer should trigger re-evaluating state and advance to next step
-    this.Services.prefs.setBoolPref(SYNC_TABS_PREF, true);
+    Services.prefs.setBoolPref(SYNC_TABS_PREF, true);
   }
 })();
 
@@ -210,9 +209,6 @@ class TabsPickupContainer extends HTMLElement {
     super();
     this.manager = null;
     this._currentSetupStateIndex = -1;
-    XPCOMUtils.defineLazyModuleGetters(this, {
-      Services: "resource://gre/modules/Services.jsm",
-    });
   }
   get setupContainerElem() {
     return this.querySelector(".sync-setup-container");
@@ -251,7 +247,7 @@ class TabsPickupContainer extends HTMLElement {
       }
       for (let elem of cloned.querySelectorAll("a[data-support-url]")) {
         elem.href =
-          this.Services.urlFormatter.formatURLPref("app.support.baseURL") +
+          Services.urlFormatter.formatURLPref("app.support.baseURL") +
           elem.dataset.supportUrl;
       }
     }

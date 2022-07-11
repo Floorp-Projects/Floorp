@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Troubleshoot } = ChromeUtils.import(
   "resource://gre/modules/Troubleshoot.jsm"
 );

@@ -32,7 +32,6 @@ const { PromiseUtils } = ChromeUtils.import(
 const { ServiceRequest } = ChromeUtils.import(
   "resource://gre/modules/ServiceRequest.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );

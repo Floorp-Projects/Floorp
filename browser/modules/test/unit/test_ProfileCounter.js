@@ -6,7 +6,6 @@
 const { BrowserUsageTelemetry } = ChromeUtils.import(
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );

@@ -16,9 +16,7 @@ var errorCodes = {
   LANGUAGE_NOT_SUPPORTED: "language-not-supported",
 };
 
-var { Services } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/Services.jsm"
-);
+var Services = SpecialPowers.Services;
 
 function EventManager(sr) {
   var self = this;

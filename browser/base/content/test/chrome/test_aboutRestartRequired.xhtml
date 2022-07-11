@@ -11,8 +11,6 @@
   <iframe type="content" id="frame1"/>
   <iframe type="content" id="frame2" onload="doTest()"/>
   <script type="application/javascript"><![CDATA[
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
     SimpleTest.waitForExplicitFinish();
 
     // Load error pages do not fire "load" events, so let's use a progressListener.

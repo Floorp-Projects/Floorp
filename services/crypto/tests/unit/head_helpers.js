@@ -56,9 +56,6 @@ function base64UrlDecode(s) {
 
 // Register resource alias. Normally done in SyncComponents.manifest.
 function addResourceAlias() {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   const resProt = Services.io
     .getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler);

@@ -6,7 +6,6 @@
 // Non-string preferences are not tested here, because their behavior
 // should not be affected by this filtering.
 //
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function isParentProcess() {
   return Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;

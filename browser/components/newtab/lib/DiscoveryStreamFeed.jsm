@@ -22,7 +22,6 @@ ChromeUtils.defineModuleGetter(
 const { setTimeout, clearTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );

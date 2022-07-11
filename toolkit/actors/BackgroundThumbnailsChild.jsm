@@ -5,7 +5,6 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = ["BackgroundThumbnailsChild"];
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 

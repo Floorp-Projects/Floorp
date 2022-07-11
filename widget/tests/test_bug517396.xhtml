@@ -31,7 +31,6 @@ SimpleTest.waitForFocus(function () {
     return;
   }
 
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   var win = Services.wm.getMostRecentWindow("navigator:browser");
   var oldWidth = win.outerWidth, oldHeight = win.outerHeight;
   win.maximize();

@@ -4,7 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["PasswordEngine", "LoginRec", "PasswordValidator"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Collection, CryptoWrapper } = ChromeUtils.import(
   "resource://services-sync/record.js"
 );

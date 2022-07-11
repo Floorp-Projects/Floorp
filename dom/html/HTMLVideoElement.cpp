@@ -215,6 +215,44 @@ bool HTMLVideoElement::IsInteractiveHTMLContent() const {
          HTMLMediaElement::IsInteractiveHTMLContent();
 }
 
+gfx::IntSize HTMLVideoElement::GetVideoIntrinsicDimensions() {
+  layers::ImageContainer* container = GetImageContainer();
+  // Prefer the size of the container as it's more up to date.
+  if (container && container->GetCurrentSize().width != 0) {
+    // But adjust to the aspect ratio of the container.
+    float dar = static_cast<float>(mMediaInfo.mVideo.mDisplay.width) /
+                mMediaInfo.mVideo.mDisplay.height;
+    gfx::IntSize size = container->GetCurrentSize();
+    float imageDar = static_cast<float>(size.width) / size.height;
+    return gfx::IntSize(int(size.width * (dar / imageDar)), size.height);
+  }
+  return mMediaInfo.mVideo.mDisplay;
+}
+
+uint32_t HTMLVideoElement::VideoWidth() {
+  if (!mMediaInfo.HasVideo()) {
+    return 0;
+  }
+  gfx::IntSize size = GetVideoIntrinsicDimensions();
+  if (mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_90 ||
+      mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_270) {
+    return size.height;
+  }
+  return size.width;
+}
+
+uint32_t HTMLVideoElement::VideoHeight() {
+  if (!mMediaInfo.HasVideo()) {
+    return 0;
+  }
+  gfx::IntSize size = GetVideoIntrinsicDimensions();
+  if (mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_90 ||
+      mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_270) {
+    return size.width;
+  }
+  return size.height;
+}
+
 uint32_t HTMLVideoElement::MozParsedFrames() const {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
   if (!IsVideoStatsEnabled()) {
@@ -241,7 +279,7 @@ uint32_t HTMLVideoElement::MozDecodedFrames() const {
   return mDecoder ? mDecoder->GetFrameStatistics().GetDecodedFrames() : 0;
 }
 
-uint32_t HTMLVideoElement::MozPresentedFrames() const {
+uint32_t HTMLVideoElement::MozPresentedFrames() {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
   if (!IsVideoStatsEnabled()) {
     return 0;

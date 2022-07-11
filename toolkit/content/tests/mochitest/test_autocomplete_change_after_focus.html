@@ -42,7 +42,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=998893
   add_task(async function runTest() {
     let promisePopupShown = new Promise(resolve => {
       let chromeScript = SpecialPowers.loadChromeScript(function() {
-        const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
         let window = Services.wm.getMostRecentWindow("navigator:browser");
         let popup = window.document.getElementById("PopupAutoComplete");
         popup.addEventListener("popupshown", function() {

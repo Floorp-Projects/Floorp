@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["GeckoViewProgress"];
 const { GeckoViewModule } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewModule.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

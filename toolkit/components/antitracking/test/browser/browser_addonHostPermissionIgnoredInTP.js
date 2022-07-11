@@ -1,5 +1,3 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 add_task(async function() {
   info("Starting test");
 

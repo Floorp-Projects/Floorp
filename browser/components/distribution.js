@@ -13,7 +13,6 @@ const PREF_CACHED_FILE_APPVERSION = "distribution.iniFile.exists.appversion";
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,

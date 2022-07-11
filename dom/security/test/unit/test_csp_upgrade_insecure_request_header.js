@@ -3,7 +3,6 @@ const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Since this test creates a TYPE_DOCUMENT channel via javascript, it will
 // end up using the wrong LoadInfo constructor. Setting this pref will disable

@@ -1,8 +1,4 @@
 function frameScript() {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
-
   function eventHandler(e) {
     if (!docShell) {
       sendAsyncMessage("Test:Fail", "docShell is null");

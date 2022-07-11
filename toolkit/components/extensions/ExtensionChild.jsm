@@ -16,7 +16,6 @@ var EXPORTED_SYMBOLS = ["ExtensionChild", "ExtensionActivityLogChild"];
  * Don't put contentscript logic here, use ExtensionContent.jsm instead.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

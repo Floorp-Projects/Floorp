@@ -1,8 +1,8 @@
 use-services
 ============
 
-Requires the use of ``Services.jsm`` rather than ``Cc[].getService()`` where a
-service is already defined in ``Services.jsm``.
+Requires the use of ``Services`` rather than ``Cc[].getService()`` where a
+service is already defined in ``Services``.
 
 Examples of incorrect code for this rule:
 -----------------------------------------

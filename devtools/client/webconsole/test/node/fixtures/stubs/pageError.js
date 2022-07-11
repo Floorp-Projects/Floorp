@@ -58,7 +58,7 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -67,14 +67,14 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -87,7 +87,7 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj24",
+        "actor": "server0.conn0.windowGlobal15032385537/obj22",
         "class": "ReferenceError",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -104,7 +104,7 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
           "columnNumber": 5
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj24"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj22"
     },
     "hasException": true
   },
@@ -131,7 +131,7 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -140,14 +140,14 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -170,7 +170,7 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj25",
+        "actor": "server0.conn0.windowGlobal15032385537/obj23",
         "class": "SyntaxError",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -187,7 +187,7 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
           "columnNumber": 9
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj25"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj23"
     },
     "hasException": true
   },
@@ -200,11 +200,11 @@ rawPackets.set(`TypeError longString message`, {
     "errorMessage": {
       "_grip": {
         "type": "longString",
-        "actor": "server0.conn4.windowGlobal2147483651/longstractor27",
+        "actor": "server0.conn0.windowGlobal15032385537/longstractor25",
         "length": 110007,
         "initial": "Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon"
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/longstractor27"
+      "actorID": "server0.conn0.windowGlobal15032385537/longstractor25"
     },
     "errorMessageName": "",
     "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
@@ -228,7 +228,7 @@ rawPackets.set(`TypeError longString message`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -237,14 +237,14 @@ rawPackets.set(`TypeError longString message`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -257,7 +257,7 @@ rawPackets.set(`TypeError longString message`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj28",
+        "actor": "server0.conn0.windowGlobal15032385537/obj26",
         "class": "Error",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -270,11 +270,11 @@ rawPackets.set(`TypeError longString message`, {
           "message": {
             "_grip": {
               "type": "longString",
-              "actor": "server0.conn4.windowGlobal2147483651/longstractor29",
+              "actor": "server0.conn0.windowGlobal15032385537/longstractor27",
               "length": 110000,
               "initial": "Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error"
             },
-            "actorID": "server0.conn4.windowGlobal2147483651/longstractor29"
+            "actorID": "server0.conn0.windowGlobal15032385537/longstractor27"
           },
           "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
           "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
@@ -282,7 +282,7 @@ rawPackets.set(`TypeError longString message`, {
           "columnNumber": 7
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj28"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj26"
     },
     "hasException": true
   },
@@ -315,7 +315,7 @@ rawPackets.set(`throw string with URL`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -324,14 +324,14 @@ rawPackets.set(`throw string with URL`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -373,7 +373,7 @@ rawPackets.set(`throw ""`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -382,14 +382,14 @@ rawPackets.set(`throw ""`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -431,7 +431,7 @@ rawPackets.set(`throw "tomato"`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -440,14 +440,14 @@ rawPackets.set(`throw "tomato"`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -489,7 +489,7 @@ rawPackets.set(`throw false`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -498,14 +498,14 @@ rawPackets.set(`throw false`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -547,7 +547,7 @@ rawPackets.set(`throw 0`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -556,14 +556,14 @@ rawPackets.set(`throw 0`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -605,7 +605,7 @@ rawPackets.set(`throw null`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -614,14 +614,14 @@ rawPackets.set(`throw null`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -665,7 +665,7 @@ rawPackets.set(`throw undefined`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -674,14 +674,14 @@ rawPackets.set(`throw undefined`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -725,7 +725,7 @@ rawPackets.set(`throw Symbol`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -734,14 +734,14 @@ rawPackets.set(`throw Symbol`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -753,7 +753,7 @@ rawPackets.set(`throw Symbol`, {
     "isForwardedFromContentProcess": false,
     "exception": {
       "type": "symbol",
-      "actor": "server0.conn4.windowGlobal2147483651/symbol38",
+      "actor": "server0.conn0.windowGlobal15032385537/symbol36",
       "name": "potato"
     },
     "hasException": true
@@ -787,7 +787,7 @@ rawPackets.set(`throw Object`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -796,14 +796,14 @@ rawPackets.set(`throw Object`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -816,7 +816,7 @@ rawPackets.set(`throw Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj40",
+        "actor": "server0.conn0.windowGlobal15032385537/obj38",
         "class": "Object",
         "ownPropertyLength": 1,
         "extensible": true,
@@ -836,7 +836,7 @@ rawPackets.set(`throw Object`, {
           "ownPropertiesLength": 1
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj40"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj38"
     },
     "hasException": true
   },
@@ -869,7 +869,7 @@ rawPackets.set(`throw Error Object`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -878,14 +878,14 @@ rawPackets.set(`throw Error Object`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -898,7 +898,7 @@ rawPackets.set(`throw Error Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj42",
+        "actor": "server0.conn0.windowGlobal15032385537/obj40",
         "class": "Error",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -915,7 +915,7 @@ rawPackets.set(`throw Error Object`, {
           "columnNumber": 7
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj42"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj40"
     },
     "hasException": true
   },
@@ -948,7 +948,7 @@ rawPackets.set(`throw Error Object with custom name`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -957,14 +957,14 @@ rawPackets.set(`throw Error Object with custom name`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -977,7 +977,7 @@ rawPackets.set(`throw Error Object with custom name`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj44",
+        "actor": "server0.conn0.windowGlobal15032385537/obj42",
         "class": "Error",
         "ownPropertyLength": 6,
         "extensible": true,
@@ -994,7 +994,7 @@ rawPackets.set(`throw Error Object with custom name`, {
           "columnNumber": 15
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj44"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj42"
     },
     "hasException": true
   },
@@ -1027,7 +1027,7 @@ rawPackets.set(`throw Error Object with error cause`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1036,14 +1036,14 @@ rawPackets.set(`throw Error Object with error cause`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1056,7 +1056,7 @@ rawPackets.set(`throw Error Object with error cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj46",
+        "actor": "server0.conn0.windowGlobal15032385537/obj44",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1073,7 +1073,7 @@ rawPackets.set(`throw Error Object with error cause`, {
           "columnNumber": 15,
           "cause": {
             "type": "object",
-            "actor": "server0.conn4.windowGlobal2147483651/obj47",
+            "actor": "server0.conn0.windowGlobal15032385537/obj45",
             "class": "SyntaxError",
             "ownPropertyLength": 4,
             "extensible": true,
@@ -1092,7 +1092,7 @@ rawPackets.set(`throw Error Object with error cause`, {
           }
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj46"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj44"
     },
     "hasException": true
   },
@@ -1125,7 +1125,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1134,14 +1134,14 @@ rawPackets.set(`throw Error Object with cause chain`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1154,7 +1154,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj49",
+        "actor": "server0.conn0.windowGlobal15032385537/obj47",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1171,7 +1171,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
           "columnNumber": 13,
           "cause": {
             "type": "object",
-            "actor": "server0.conn4.windowGlobal2147483651/obj50",
+            "actor": "server0.conn0.windowGlobal15032385537/obj48",
             "class": "Error",
             "ownPropertyLength": 5,
             "extensible": true,
@@ -1188,7 +1188,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
               "columnNumber": 13,
               "cause": {
                 "type": "object",
-                "actor": "server0.conn4.windowGlobal2147483651/obj51",
+                "actor": "server0.conn0.windowGlobal15032385537/obj49",
                 "class": "Error",
                 "ownPropertyLength": 5,
                 "extensible": true,
@@ -1205,7 +1205,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
                   "columnNumber": 13,
                   "cause": {
                     "type": "object",
-                    "actor": "server0.conn4.windowGlobal2147483651/obj52",
+                    "actor": "server0.conn0.windowGlobal15032385537/obj50",
                     "class": "Error",
                     "ownPropertyLength": 4,
                     "extensible": true,
@@ -1228,7 +1228,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
           }
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj49"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj47"
     },
     "hasException": true
   },
@@ -1261,7 +1261,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1270,14 +1270,14 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1290,7 +1290,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj54",
+        "actor": "server0.conn0.windowGlobal15032385537/obj52",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1307,7 +1307,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
           "columnNumber": 13,
           "cause": {
             "type": "object",
-            "actor": "server0.conn4.windowGlobal2147483651/obj55",
+            "actor": "server0.conn0.windowGlobal15032385537/obj53",
             "class": "Error",
             "ownPropertyLength": 5,
             "extensible": true,
@@ -1324,7 +1324,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
               "columnNumber": 13,
               "cause": {
                 "type": "object",
-                "actor": "server0.conn4.windowGlobal2147483651/obj56",
+                "actor": "server0.conn0.windowGlobal15032385537/obj54",
                 "class": "Error",
                 "ownPropertyLength": 5,
                 "extensible": true,
@@ -1341,7 +1341,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
                   "columnNumber": 13,
                   "cause": {
                     "type": "object",
-                    "actor": "server0.conn4.windowGlobal2147483651/obj57",
+                    "actor": "server0.conn0.windowGlobal15032385537/obj55",
                     "class": "Error",
                     "ownPropertyLength": 4,
                     "extensible": true,
@@ -1364,7 +1364,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
           }
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj54"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj52"
     },
     "hasException": true
   },
@@ -1397,7 +1397,7 @@ rawPackets.set(`throw Error Object with falsy cause`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1406,14 +1406,14 @@ rawPackets.set(`throw Error Object with falsy cause`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1426,7 +1426,7 @@ rawPackets.set(`throw Error Object with falsy cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj59",
+        "actor": "server0.conn0.windowGlobal15032385537/obj57",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1446,7 +1446,7 @@ rawPackets.set(`throw Error Object with falsy cause`, {
           }
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj59"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj57"
     },
     "hasException": true
   },
@@ -1479,7 +1479,7 @@ rawPackets.set(`throw Error Object with number cause`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1488,14 +1488,14 @@ rawPackets.set(`throw Error Object with number cause`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1508,7 +1508,7 @@ rawPackets.set(`throw Error Object with number cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj61",
+        "actor": "server0.conn0.windowGlobal15032385537/obj59",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1526,7 +1526,7 @@ rawPackets.set(`throw Error Object with number cause`, {
           "cause": 0
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj61"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj59"
     },
     "hasException": true
   },
@@ -1559,7 +1559,7 @@ rawPackets.set(`throw Error Object with string cause`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1568,14 +1568,14 @@ rawPackets.set(`throw Error Object with string cause`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1588,7 +1588,7 @@ rawPackets.set(`throw Error Object with string cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj63",
+        "actor": "server0.conn0.windowGlobal15032385537/obj61",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1606,7 +1606,7 @@ rawPackets.set(`throw Error Object with string cause`, {
           "cause": "cause message"
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj63"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj61"
     },
     "hasException": true
   },
@@ -1639,7 +1639,7 @@ rawPackets.set(`throw Error Object with object cause`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1648,14 +1648,14 @@ rawPackets.set(`throw Error Object with object cause`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1668,7 +1668,7 @@ rawPackets.set(`throw Error Object with object cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj65",
+        "actor": "server0.conn0.windowGlobal15032385537/obj63",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -1685,7 +1685,7 @@ rawPackets.set(`throw Error Object with object cause`, {
           "columnNumber": 7,
           "cause": {
             "type": "object",
-            "actor": "server0.conn4.windowGlobal2147483651/obj66",
+            "actor": "server0.conn0.windowGlobal15032385537/obj64",
             "class": "Object",
             "ownPropertyLength": 2,
             "extensible": true,
@@ -1695,7 +1695,7 @@ rawPackets.set(`throw Error Object with object cause`, {
           }
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj65"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj63"
     },
     "hasException": true
   },
@@ -1728,7 +1728,7 @@ rawPackets.set(`Promise reject ""`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1737,14 +1737,14 @@ rawPackets.set(`Promise reject ""`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1786,7 +1786,7 @@ rawPackets.set(`Promise reject "tomato"`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1795,14 +1795,14 @@ rawPackets.set(`Promise reject "tomato"`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1844,7 +1844,7 @@ rawPackets.set(`Promise reject false`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1853,14 +1853,14 @@ rawPackets.set(`Promise reject false`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1902,7 +1902,7 @@ rawPackets.set(`Promise reject 0`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1911,14 +1911,14 @@ rawPackets.set(`Promise reject 0`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -1960,7 +1960,7 @@ rawPackets.set(`Promise reject null`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -1969,14 +1969,14 @@ rawPackets.set(`Promise reject null`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -2020,7 +2020,7 @@ rawPackets.set(`Promise reject undefined`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -2029,14 +2029,14 @@ rawPackets.set(`Promise reject undefined`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -2080,7 +2080,7 @@ rawPackets.set(`Promise reject Symbol`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -2089,14 +2089,14 @@ rawPackets.set(`Promise reject Symbol`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -2108,7 +2108,7 @@ rawPackets.set(`Promise reject Symbol`, {
     "isForwardedFromContentProcess": false,
     "exception": {
       "type": "symbol",
-      "actor": "server0.conn4.windowGlobal2147483651/symbol74",
+      "actor": "server0.conn0.windowGlobal15032385537/symbol72",
       "name": "potato"
     },
     "hasException": true
@@ -2142,7 +2142,7 @@ rawPackets.set(`Promise reject Object`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -2151,14 +2151,14 @@ rawPackets.set(`Promise reject Object`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -2171,7 +2171,7 @@ rawPackets.set(`Promise reject Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj76",
+        "actor": "server0.conn0.windowGlobal15032385537/obj74",
         "class": "Object",
         "ownPropertyLength": 1,
         "extensible": true,
@@ -2191,7 +2191,7 @@ rawPackets.set(`Promise reject Object`, {
           "ownPropertiesLength": 1
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj76"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj74"
     },
     "hasException": true
   },
@@ -2224,7 +2224,7 @@ rawPackets.set(`Promise reject Error Object`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -2233,14 +2233,14 @@ rawPackets.set(`Promise reject Error Object`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -2253,7 +2253,7 @@ rawPackets.set(`Promise reject Error Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj78",
+        "actor": "server0.conn0.windowGlobal15032385537/obj76",
         "class": "Error",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -2270,7 +2270,7 @@ rawPackets.set(`Promise reject Error Object`, {
           "columnNumber": 16
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj78"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj76"
     },
     "hasException": true
   },
@@ -2303,7 +2303,7 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -2312,14 +2312,14 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -2332,7 +2332,7 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj80",
+        "actor": "server0.conn0.windowGlobal15032385537/obj78",
         "class": "Error",
         "ownPropertyLength": 6,
         "extensible": true,
@@ -2349,7 +2349,7 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
           "columnNumber": 15
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj80"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj78"
     },
     "hasException": true
   },
@@ -2390,7 +2390,7 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
         "asyncCause": "promise callback"
       },
       {
-        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "filename": "resource://testing-common/content-task.js line 109 > eval",
         "sourceId": null,
         "lineNumber": 6,
         "columnNumber": 29,
@@ -2399,14 +2399,14 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 111,
+        "lineNumber": 110,
         "columnNumber": 33,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
         "sourceId": null,
-        "lineNumber": 64,
+        "lineNumber": 63,
         "columnNumber": 19,
         "functionName": null,
         "asyncCause": "MessageListener.receiveMessage"
@@ -2419,7 +2419,7 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.windowGlobal2147483651/obj82",
+        "actor": "server0.conn0.windowGlobal15032385537/obj80",
         "class": "Error",
         "ownPropertyLength": 5,
         "extensible": true,
@@ -2436,7 +2436,7 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
           "columnNumber": 15,
           "cause": {
             "type": "object",
-            "actor": "server0.conn4.windowGlobal2147483651/obj83",
+            "actor": "server0.conn0.windowGlobal15032385537/obj81",
             "class": "ReferenceError",
             "ownPropertyLength": 4,
             "extensible": true,
@@ -2455,7 +2455,7 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
           }
         }
       },
-      "actorID": "server0.conn4.windowGlobal2147483651/obj82"
+      "actorID": "server0.conn0.windowGlobal15032385537/obj80"
     },
     "hasException": true
   },

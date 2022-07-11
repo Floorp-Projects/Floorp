@@ -19,7 +19,6 @@ SimpleTest.waitForExplicitFinish();
 
 // First, obtain the file URI to the ourselves:
 var chromeURI = location.href;
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var io = Services.io;
 chromeURI = io.newURI(chromeURI);
 var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]

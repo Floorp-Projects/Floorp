@@ -21,8 +21,6 @@
     const LOADING_URI = BASE_URI + "bug1277803.html";
     let testWindow; //will be used to trigger favicon load
 
-    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
     let expectedPrincipal = Services.scriptSecurityManager
         .createContentPrincipal(Services.io.newURI(LOADING_URI), {});
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();

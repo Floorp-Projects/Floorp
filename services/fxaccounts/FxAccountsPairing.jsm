@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {
   log,
   PREF_REMOTE_PAIRING_URI,

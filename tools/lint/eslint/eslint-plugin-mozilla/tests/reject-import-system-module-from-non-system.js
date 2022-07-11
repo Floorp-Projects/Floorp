@@ -21,12 +21,12 @@ const ruleTester = new RuleTester({
 ruleTester.run("reject-import-system-module-from-non-system", rule, {
   valid: [
     {
-      code: `const { Services } = ChromeUtils.importESM("resource://gre/modules/Services.sys.mjs");`,
+      code: `const { AppConstants } = ChromeUtils.importESM("resource://gre/modules/AppConstants.sys.mjs");`,
     },
   ],
   invalid: [
     {
-      code: `import { Services } from "resource://gre/modules/Services.sys.mjs";`,
+      code: `import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";`,
       errors: [{ messageId: "rejectStaticImportSystemModuleFromNonSystem" }],
     },
   ],

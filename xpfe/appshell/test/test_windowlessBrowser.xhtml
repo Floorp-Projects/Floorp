@@ -23,8 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=815847
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-const {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
-
 function testWindowlessBrowser(chromePrivileged) {
   var webNav = Services.appShell.createWindowlessBrowser(chromePrivileged);
 

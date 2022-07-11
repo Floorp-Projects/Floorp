@@ -73,7 +73,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
   async function RunTest() {
     SimpleTest.waitForExplicitFinish();
     const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     // Sanitize environment
     gClipboardHelper.copyString(SHORT_STRING_NO_CACHE);

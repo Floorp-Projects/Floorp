@@ -42,7 +42,6 @@ const EXPORTED_SYMBOLS = ["LoginStore"];
 
 // Globals
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { JSONFile } = ChromeUtils.import("resource://gre/modules/JSONFile.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"

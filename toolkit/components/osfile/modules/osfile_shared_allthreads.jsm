@@ -30,16 +30,12 @@
  * @constructor
  */
 var Meta;
-let Services;
 if (typeof Components != "undefined") {
   // Global definition of |exports|, to keep everybody happy.
   // In non-main thread, |exports| is provided by the module
   // loader.
   // eslint-disable-next-line mozilla/reject-global-this
   this.exports = {};
-  ({ Services } = ChromeUtils.import("resource://gre/modules/Services.jsm"));
-  // eslint-disable-next-line mozilla/reject-global-this
-  this.Services = Services;
   Meta = ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm")
     .BasePromiseWorker.Meta;
 } else {

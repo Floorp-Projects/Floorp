@@ -10,8 +10,6 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const CLIENT = PublicSuffixList.CLIENT;
 const SIGNAL = "public-suffix-list-updated";
 

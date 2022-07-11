@@ -1,7 +1,5 @@
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const EXPORTED_SYMBOLS = ["RegionTestUtils"];
 
 const RegionTestUtils = Object.freeze({

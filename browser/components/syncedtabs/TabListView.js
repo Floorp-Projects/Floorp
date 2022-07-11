@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(

@@ -10,7 +10,6 @@
 
 var EXPORTED_SYMBOLS = ["PromiseTestUtils"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
 var PromiseTestUtils = {

@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["SessionCookies"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(

@@ -19,8 +19,6 @@ const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 ChromeUtils.defineModuleGetter(
   this,
   "PlacesTestUtils",

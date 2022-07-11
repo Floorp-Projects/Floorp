@@ -11,7 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Svc } = ChromeUtils.import("resource://services-sync/util.js");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 

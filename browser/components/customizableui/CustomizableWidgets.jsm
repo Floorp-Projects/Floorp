@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["CustomizableWidgets"];
 const { CustomizableUI } = ChromeUtils.import(
   "resource:///modules/CustomizableUI.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

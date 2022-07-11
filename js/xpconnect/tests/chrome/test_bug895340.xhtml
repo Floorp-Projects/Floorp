@@ -21,8 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=895340
   SimpleTest.waitForExplicitFinish();
   SimpleTest.expectUncaughtException();
 
-  ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-
   var finished = false;
 
   var console = Cc["@mozilla.org/consoleservice;1"]

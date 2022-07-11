@@ -19,8 +19,6 @@
  */
 var EXPORTED_SYMBOLS = ["TRRRacer", "DNSLookup", "LookupAggregator"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 Services.telemetry.setEventRecordingEnabled(
   "security.doh.trrPerformance",
   true

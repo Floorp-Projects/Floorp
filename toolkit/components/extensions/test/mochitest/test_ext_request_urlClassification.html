@@ -111,7 +111,6 @@ add_task(async function teardown() {
   let chromeScript = SpecialPowers.loadChromeScript(async _ => {
     // Cleanup cache
     await new Promise(resolve => {
-      const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
       Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
     });
 

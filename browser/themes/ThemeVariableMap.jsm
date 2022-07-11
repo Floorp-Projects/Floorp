@@ -4,8 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["ThemeVariableMap", "ThemeContentPropertyList"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const ThemeVariableMap = [
   [
     "--lwt-accent-color-inactive",

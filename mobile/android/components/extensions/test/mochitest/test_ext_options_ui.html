@@ -13,9 +13,6 @@
 <script type="text/javascript">
 "use strict";
 
-;
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 async function waitAboutAddonsRendered(addonId) {
   await ContentTaskUtils.waitForCondition(() => {
     return content.document.querySelector(`div.addon-item[addonID="${addonId}"]`);

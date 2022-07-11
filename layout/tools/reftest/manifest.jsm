@@ -30,7 +30,6 @@ const {
 
     g,
 } = ChromeUtils.import("resource://reftest/globals.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { AppConstants } = ChromeUtils.import(
     "resource://gre/modules/AppConstants.jsm"

@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["VacuumParticipant"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /**
  * Returns a new nsIFile reference for a profile database.
  * @param filename for the database, excluded the .sqlite extension.

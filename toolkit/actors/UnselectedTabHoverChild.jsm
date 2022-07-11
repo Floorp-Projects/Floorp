@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["UnselectedTabHoverChild"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class UnselectedTabHoverChild extends JSWindowActorChild {
   receiveMessage(message) {
     Services.obs.notifyObservers(

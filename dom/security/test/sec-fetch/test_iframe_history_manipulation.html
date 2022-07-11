@@ -17,8 +17,6 @@ let testCounter = 0;
 let testFrame;
 
 var script = SpecialPowers.loadChromeScript(() => {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
   Services.obs.addObserver(function onExamResp(subject, topic, data) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     info("request observed: " + channel.URI.spec);

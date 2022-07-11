@@ -10,8 +10,6 @@ const { GeckoViewModule } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewModule.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class GeckoViewProcessHangMonitor extends GeckoViewModule {
   constructor(aModuleInfo) {
     super(aModuleInfo);

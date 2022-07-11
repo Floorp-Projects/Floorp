@@ -48,7 +48,7 @@
   ; not have experienced the onboarding offer to pin to taskbar, so we're
   ; leaving it enabled there.
   ${If} ${AtMostWin2012R2}
-    ${MigrateTaskBarShortcut}
+    ${MigrateTaskBarShortcut} "$AddTaskbarSC"
   ${EndIf}
 
   ; Update the name/icon/AppModelID of our shortcuts as needed, then update the
@@ -1261,14 +1261,14 @@ ${RemoveDefaultBrowserAgentShortcut}
 !macroend
 !define FixDistributionsINI "!insertmacro FixDistributionsINI"
 
-; Adds a pinned shortcut to Task Bar on update for Windows 7 and above if this
-; macro has never been called before and the application is default (see
-; PinToTaskBar for more details).
-; Since defaults handling is handled by Windows in Win8 and later, we always
-; attempt to pin a taskbar on that OS.  If Windows sets the defaults at
-; installation time, then we don't get the opportunity to run this code at
-; that time.
-!macro MigrateTaskBarShortcut
+; For updates, adds a pinned shortcut to Task Bar on update for Windows 7
+; and 8 if this macro has never been called before and the application
+; is default (see PinToTaskBar for more details). This doesn't get called
+; for Windows 10 and 11 on updates, so we will never pin on update there.
+;
+; For installs, adds a taskbar pin if SHOULD_PIN is 1. (Defaults to 1,
+; but is controllable through the UI, ini file, and command line flags.)
+!macro MigrateTaskBarShortcut SHOULD_PIN
   ${GetShortcutsLogPath} $0
   ${If} ${FileExists} "$0"
     ClearErrors
@@ -1283,7 +1283,7 @@ ${RemoveDefaultBrowserAgentShortcut}
         ; If we didn't run the stub installer, AddTaskbarSC will be empty.
         ; We determine whether to pin based on whether we're the default
         ; browser, or if we're on win8 or later, we always pin.
-        ${If} $AddTaskbarSC == ""
+        ${If} "${SHOULD_PIN}" == ""
           ; No need to check the default on Win8 and later
           ${If} ${AtMostWin2008R2}
             ; Check if the Firefox is the http handler for this user
@@ -1297,7 +1297,7 @@ ${RemoveDefaultBrowserAgentShortcut}
           ${OrIf} ${AtLeastWin8}
             ${PinToTaskBar}
           ${EndIf}
-        ${ElseIf} $AddTaskbarSC == "1"
+        ${ElseIf} "${SHOULD_PIN}" == "1"
           ${PinToTaskBar}
         ${EndIf}
       ${EndIf}
@@ -1649,7 +1649,7 @@ Function SetAsDefaultAppUserHKCU
     Pop $0
   ${EndUnless}
   ${RemoveDeprecatedKeys}
-  ${MigrateTaskBarShortcut}
+  ${MigrateTaskBarShortcut} "$R0"
 FunctionEnd
 
 ; Helper for updating the shortcut application model IDs.
@@ -1674,6 +1674,11 @@ FunctionEnd
 !ifdef NO_LOG
 
 Function SetAsDefaultAppUser
+  ; AddTaskbarSC is needed by MigrateTaskBarShortcut, which is called by
+  ; SetAsDefaultAppUserHKCU. If this is called via ExecCodeSegment,
+  ; MigrateTaskBarShortcut will not see the value of AddTaskbarSC, so we
+  ; send it via a register instead.
+  StrCpy $R0 $AddTaskbarSC
   ; On Win8, we want to avoid having a UAC prompt since we'll already have
   ; another action for control panel default browser selection popping up
   ; to the user.  Win8 is the first OS where the start menu keys can be

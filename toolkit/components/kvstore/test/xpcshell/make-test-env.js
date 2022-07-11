@@ -33,7 +33,6 @@ const { KeyValueService } = ChromeUtils.import(
   "resource://gre/modules/kvstore.jsm"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 (async function() {
   const currentDir = await OS.File.getCurrentDirectory();

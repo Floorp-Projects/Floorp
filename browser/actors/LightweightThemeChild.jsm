@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["LightweightThemeChild"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /**
  * LightweightThemeChild forwards theme data to in-content pages.
  * It is both instantiated by the traditional Actor mechanism,
