@@ -114,10 +114,10 @@ void DtlsTransport::UpdateInformation() {
       if (success) {
         switch (internal_role) {
           case rtc::SSL_CLIENT:
-            role = DtlsTransportTlsRole::kServer;
+            role = DtlsTransportTlsRole::kClient;
             break;
           case rtc::SSL_SERVER:
-            role = DtlsTransportTlsRole::kClient;
+            role = DtlsTransportTlsRole::kServer;
             break;
         }
       }
