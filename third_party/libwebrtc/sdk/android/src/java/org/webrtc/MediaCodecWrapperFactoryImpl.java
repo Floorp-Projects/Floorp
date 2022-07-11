@@ -79,6 +79,11 @@ class MediaCodecWrapperFactoryImpl implements MediaCodecWrapperFactory {
     }
 
     @Override
+    public MediaFormat getInputFormat() {
+      return mediaCodec.getInputFormat();
+    }
+
+    @Override
     public MediaFormat getOutputFormat() {
       return mediaCodec.getOutputFormat();
     }
