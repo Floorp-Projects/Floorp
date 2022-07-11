@@ -1618,6 +1618,28 @@ class HTMLEditUtils final {
   }
 
   /**
+   * Get the first <br> element in aElement.  This scans only leaf nodes so
+   * if a <br> element has children illegally, it'll be ignored.
+   *
+   * @param aElement    The element which may have a <br> element.
+   * @return            First <br> element node in aElement if there is.
+   */
+  static dom::HTMLBRElement* GetFirstBRElement(const dom::Element& aElement) {
+    for (nsIContent* content = HTMLEditUtils::GetFirstLeafContent(
+             aElement, {LeafNodeType::OnlyLeafNode});
+         content; content = HTMLEditUtils::GetNextContent(
+                      *content,
+                      {WalkTreeOption::IgnoreDataNodeExceptText,
+                       WalkTreeOption::IgnoreWhiteSpaceOnlyText},
+                      &aElement)) {
+      if (auto* brElement = dom::HTMLBRElement::FromNode(*content)) {
+        return brElement;
+      }
+    }
+    return nullptr;
+  }
+
+  /**
    * IsInTableCellSelectionMode() returns true when Gecko's editor thinks that
    * selection is in a table cell selection mode.
    * Note that Gecko's editor traditionally treats selection as in table cell

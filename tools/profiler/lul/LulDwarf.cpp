@@ -50,6 +50,7 @@
 #include <string>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Vector.h"
 
@@ -961,7 +962,17 @@ class CallFrameInfo::State {
   // Interpret one CFI instruction from STATE's instruction stream, update
   // STATE, report any rule changes to handler_, and return true. On
   // failure, report the problem and return false.
-  bool DoInstruction();
+  MOZ_ALWAYS_INLINE bool DoInstruction();
+
+  // Repeatedly call `DoInstruction`, until either:
+  // * it returns `false`, which indicates some kind of failure,
+  //   in which case return `false` from here too, or
+  // * we've run out of instructions (that is, `cursor_ >= entry_->end`),
+  //   in which case return `true`.
+  // This is marked as never-inline because it is the only place that
+  // `DoInstruction` is called from, and we want to maximise the chances that
+  // `DoInstruction` is inlined into this routine.
+  MOZ_NEVER_INLINE bool DoInstructions();
 
   // The following Do* member functions are subroutines of DoInstruction,
   // factoring out the actual work of operations that have several
@@ -1041,8 +1052,9 @@ class CallFrameInfo::State {
 bool CallFrameInfo::State::InterpretCIE(const CIE& cie) {
   entry_ = &cie;
   cursor_ = entry_->instructions;
-  while (cursor_ < entry_->end)
-    if (!DoInstruction()) return false;
+  if (!DoInstructions()) {
+    return false;
+  }
   // Note the rules established by the CIE, for use by DW_CFA_restore
   // and DW_CFA_restore_extended.
   cie_rules_ = rules_;
@@ -1052,9 +1064,7 @@ bool CallFrameInfo::State::InterpretCIE(const CIE& cie) {
 bool CallFrameInfo::State::InterpretFDE(const FDE& fde) {
   entry_ = &fde;
   cursor_ = entry_->instructions;
-  while (cursor_ < entry_->end)
-    if (!DoInstruction()) return false;
-  return true;
+  return DoInstructions();
 }
 
 bool CallFrameInfo::State::ParseOperands(const char* format,
@@ -1131,6 +1141,7 @@ bool CallFrameInfo::State::ParseOperands(const char* format,
   return true;
 }
 
+MOZ_ALWAYS_INLINE
 bool CallFrameInfo::State::DoInstruction() {
   CIE* cie = entry_->cie;
   Operands ops;
@@ -1404,6 +1415,17 @@ bool CallFrameInfo::State::DoInstruction() {
     }
   }
 
+  return true;
+}
+
+// See declaration above for rationale re the no-inline directive.
+MOZ_NEVER_INLINE
+bool CallFrameInfo::State::DoInstructions() {
+  while (cursor_ < entry_->end) {
+    if (!DoInstruction()) {
+      return false;
+    }
+  }
   return true;
 }
 

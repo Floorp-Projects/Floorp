@@ -49,8 +49,11 @@ if (!window?.branch?.b) {
     first() {}
     getBrowserFingerprintId() {}
     getCode() {}
-    init(key, cb) {
-      cb?.(undefined, {});
+    init(key, ...args) {
+      const cb = args.pop();
+      if (typeof cb === "function") {
+        cb(undefined, {});
+      }
     }
     lastAttributedTouchData() {}
     link() {}

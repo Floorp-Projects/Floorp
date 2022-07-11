@@ -7713,6 +7713,22 @@ static void AppendScrollPositionsForSnap(
 
   ScrollSnapTargetId targetId = ScrollSnapUtils::GetTargetIdFor(aFrame);
 
+  // Use the writing-mode on the target element if the snap area is larger than
+  // the snapport.
+  // https://drafts.csswg.org/css-scroll-snap/#snap-scope
+  //
+  // It's unclear `larger` means that the size is larger than only on the target
+  // axis. If it doesn't, it will pick the same axis in the case where only one
+  // axis is larger. For example, if an element size is (200 x 10) and the
+  // snapport size is (100 x 100) and if the element's writing mode is different
+  // from the scroller's writing mode, then `scroll-snap-align: start start`
+  // will be conflict.
+  WritingMode writingMode =
+      snapArea.width > aSnapInfo.mSnapportSize.width ||
+              snapArea.height > aSnapInfo.mSnapportSize.height
+          ? aFrame->GetWritingMode()
+          : aWritingModeOnScroller;
+
   // These snap range shouldn't be involved with scroll-margin since we just
   // need the visible range of the target element.
   if (snapArea.width > aSnapInfo.mSnapportSize.width) {
@@ -7733,47 +7749,44 @@ static void AppendScrollPositionsForSnap(
   snapArea.y -= aScrollPadding.top;
   snapArea.x -= aScrollPadding.left;
 
-  LogicalRect logicalTargetRect(aWritingModeOnScroller, snapArea,
-                                aSnapInfo.mSnapportSize);
-  LogicalSize logicalSnapportRect(aWritingModeOnScroller,
-                                  aSnapInfo.mSnapportSize);
+  LogicalRect logicalTargetRect(writingMode, snapArea, aSnapInfo.mSnapportSize);
+  LogicalSize logicalSnapportRect(writingMode, aSnapInfo.mSnapportSize);
 
   Maybe<nscoord> blockDirectionPosition;
   Maybe<nscoord> inlineDirectionPosition;
 
   const nsStyleDisplay* styleDisplay = aFrame->StyleDisplay();
-  nscoord containerBSize = logicalSnapportRect.BSize(aWritingModeOnScroller);
+  nscoord containerBSize = logicalSnapportRect.BSize(writingMode);
   switch (styleDisplay->mScrollSnapAlign.block) {
     case StyleScrollSnapAlignKeyword::None:
       break;
     case StyleScrollSnapAlignKeyword::Start:
       blockDirectionPosition.emplace(
-          aWritingModeOnScroller.IsVerticalRL()
-              ? -logicalTargetRect.BStart(aWritingModeOnScroller)
-              : logicalTargetRect.BStart(aWritingModeOnScroller));
+          writingMode.IsVerticalRL() ? -logicalTargetRect.BStart(writingMode)
+                                     : logicalTargetRect.BStart(writingMode));
       break;
     case StyleScrollSnapAlignKeyword::End:
-      if (aWritingModeOnScroller.IsVerticalRL()) {
-        blockDirectionPosition.emplace(
-            containerBSize - logicalTargetRect.BEnd(aWritingModeOnScroller));
+      if (writingMode.IsVerticalRL()) {
+        blockDirectionPosition.emplace(containerBSize -
+                                       logicalTargetRect.BEnd(writingMode));
       } else {
         // What we need here is the scroll position instead of the snap position
         // itself, so we need, for example, the top edge of the scroll port
         // on horizontal-tb when the frame is positioned at the bottom edge of
         // the scroll port. For this reason we subtract containerBSize from
         // BEnd of the target.
-        blockDirectionPosition.emplace(
-            logicalTargetRect.BEnd(aWritingModeOnScroller) - containerBSize);
+        blockDirectionPosition.emplace(logicalTargetRect.BEnd(writingMode) -
+                                       containerBSize);
       }
       break;
     case StyleScrollSnapAlignKeyword::Center: {
-      nscoord targetCenter = (logicalTargetRect.BStart(aWritingModeOnScroller) +
-                              logicalTargetRect.BEnd(aWritingModeOnScroller)) /
+      nscoord targetCenter = (logicalTargetRect.BStart(writingMode) +
+                              logicalTargetRect.BEnd(writingMode)) /
                              2;
       nscoord halfSnapportSize = containerBSize / 2;
       // Get the center of the target to align with the center of the snapport
       // depending on direction.
-      if (aWritingModeOnScroller.IsVerticalRL()) {
+      if (writingMode.IsVerticalRL()) {
         blockDirectionPosition.emplace(halfSnapportSize - targetCenter);
       } else {
         blockDirectionPosition.emplace(targetCenter - halfSnapportSize);
@@ -7782,34 +7795,34 @@ static void AppendScrollPositionsForSnap(
     }
   }
 
-  nscoord containerISize = logicalSnapportRect.ISize(aWritingModeOnScroller);
+  nscoord containerISize = logicalSnapportRect.ISize(writingMode);
   switch (styleDisplay->mScrollSnapAlign.inline_) {
     case StyleScrollSnapAlignKeyword::None:
       break;
     case StyleScrollSnapAlignKeyword::Start:
       inlineDirectionPosition.emplace(
-          aWritingModeOnScroller.IsInlineReversed()
-              ? -logicalTargetRect.IStart(aWritingModeOnScroller)
-              : logicalTargetRect.IStart(aWritingModeOnScroller));
+          writingMode.IsInlineReversed()
+              ? -logicalTargetRect.IStart(writingMode)
+              : logicalTargetRect.IStart(writingMode));
       break;
     case StyleScrollSnapAlignKeyword::End:
-      if (aWritingModeOnScroller.IsInlineReversed()) {
-        inlineDirectionPosition.emplace(
-            containerISize - logicalTargetRect.IEnd(aWritingModeOnScroller));
+      if (writingMode.IsInlineReversed()) {
+        inlineDirectionPosition.emplace(containerISize -
+                                        logicalTargetRect.IEnd(writingMode));
       } else {
         // Same as above BEnd case, we subtract containerISize.
-        inlineDirectionPosition.emplace(
-            logicalTargetRect.IEnd(aWritingModeOnScroller) - containerISize);
+        inlineDirectionPosition.emplace(logicalTargetRect.IEnd(writingMode) -
+                                        containerISize);
       }
       break;
     case StyleScrollSnapAlignKeyword::Center: {
-      nscoord targetCenter = (logicalTargetRect.IStart(aWritingModeOnScroller) +
-                              logicalTargetRect.IEnd(aWritingModeOnScroller)) /
+      nscoord targetCenter = (logicalTargetRect.IStart(writingMode) +
+                              logicalTargetRect.IEnd(writingMode)) /
                              2;
       nscoord halfSnapportSize = containerISize / 2;
       // Get the center of the target to align with the center of the snapport
       // depending on direction.
-      if (aWritingModeOnScroller.IsInlineReversed()) {
+      if (writingMode.IsInlineReversed()) {
         inlineDirectionPosition.emplace(halfSnapportSize - targetCenter);
       } else {
         inlineDirectionPosition.emplace(targetCenter - halfSnapportSize);
@@ -7820,7 +7833,7 @@ static void AppendScrollPositionsForSnap(
 
   if (blockDirectionPosition || inlineDirectionPosition) {
     aSnapInfo.mSnapTargets.AppendElement(
-        aWritingModeOnScroller.IsVertical()
+        writingMode.IsVertical()
             ? ScrollSnapInfo::SnapTarget(
                   std::move(blockDirectionPosition),
                   std::move(inlineDirectionPosition), std::move(snapArea),
