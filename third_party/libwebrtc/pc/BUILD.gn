@@ -1989,6 +1989,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:timeutils",
       "../rtc_base/synchronization:mutex",
       "../rtc_base/task_utils:pending_task_safety_flag",
+      "../rtc_base/task_utils:repeating_task",
       "../rtc_base/task_utils:to_queued_task",
       "../rtc_base/third_party/base64",
       "../rtc_base/third_party/sigslot",
