@@ -70,7 +70,9 @@ class ConnectionRequest : public StunRequest {
 
 // Represents a communication link between a port on the local client and a
 // port on the remote client.
-class Connection : public CandidatePairInterface, public sigslot::has_slots<> {
+class Connection : public CandidatePairInterface,
+                   public rtc::MessageHandlerAutoCleanup,
+                   public sigslot::has_slots<> {
  public:
   struct SentPing {
     SentPing(const std::string id, int64_t sent_time, uint32_t nomination)
@@ -318,6 +320,8 @@ class Connection : public CandidatePairInterface, public sigslot::has_slots<> {
   void set_remote_nomination(uint32_t remote_nomination);
 
  protected:
+  enum { MSG_DELETE = 0, MSG_FIRST_AVAILABLE };
+
   // Constructs a new connection to the given remote port.
   Connection(Port* port, size_t index, const Candidate& candidate);
 
@@ -346,6 +350,8 @@ class Connection : public CandidatePairInterface, public sigslot::has_slots<> {
   void UpdateReceiving(int64_t now);
   void set_state(IceCandidatePairState state);
   void set_connected(bool value);
+
+  void OnMessage(rtc::Message* pmsg) override;
 
   // The local port where this connection sends and receives packets.
   Port* port() { return port_; }
