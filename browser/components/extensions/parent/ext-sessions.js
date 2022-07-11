@@ -21,6 +21,9 @@ ChromeUtils.defineModuleGetter(
 
 const SS_ON_CLOSED_OBJECTS_CHANGED = "sessionstore-closed-objects-changed";
 
+// Note: This must match the value in sessions.json.
+const MAX_SESSION_RESULTS = 25;
+
 const getRecentlyClosed = (maxResults, extension) => {
   let recentlyClosed = [];
 
@@ -134,8 +137,8 @@ this.sessions = class extends ExtensionAPIPersistent {
         async getRecentlyClosed(filter) {
           await SessionStore.promiseInitialized;
           let maxResults =
-            filter.maxResults == undefined
-              ? this.MAX_SESSION_RESULTS
+            filter.maxResults === null
+              ? MAX_SESSION_RESULTS
               : filter.maxResults;
           return getRecentlyClosed(maxResults, extension);
         },
