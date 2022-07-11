@@ -377,6 +377,7 @@ rtc_library("rtcp_transceiver") {
     "../../api/units:timestamp",
     "../../api/video:video_bitrate_allocation",
     "../../rtc_base:checks",
+    "../../rtc_base:divide_round",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/containers:flat_map",
     "../../rtc_base/task_utils:repeating_task",
