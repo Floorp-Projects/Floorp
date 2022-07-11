@@ -40,9 +40,18 @@ class VideoTrackTest : public ::testing::Test {
 
  protected:
   rtc::scoped_refptr<FakeVideoTrackSource> video_track_source_;
-  rtc::scoped_refptr<VideoTrackInterface> video_track_;
+  rtc::scoped_refptr<VideoTrack> video_track_;
   cricket::FakeFrameSource frame_source_;
 };
+
+// VideoTrack::Create will create an API proxy around the source object.
+// The `GetSource` method provides access to the proxy object intented for API
+// use while the GetSourceInternal() provides direct access to the source object
+// as provided to the `VideoTrack::Create` factory function.
+TEST_F(VideoTrackTest, CheckApiProxyAndInternalSource) {
+  EXPECT_NE(video_track_->GetSource(), video_track_source_.get());
+  EXPECT_EQ(video_track_->GetSourceInternal(), video_track_source_.get());
+}
 
 // Test changing the source state also changes the track state.
 TEST_F(VideoTrackTest, SourceStateChangeTrackState) {
