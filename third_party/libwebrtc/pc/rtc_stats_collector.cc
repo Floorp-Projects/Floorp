@@ -10,26 +10,28 @@
 
 #include "pc/rtc_stats_collector.h"
 
+#include <stdint.h>
 #include <stdio.h>
 
-#include <algorithm>
 #include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/candidate.h"
+#include "api/dtls_transport_interface.h"
 #include "api/media_stream_interface.h"
 #include "api/rtp_parameters.h"
-#include "api/rtp_receiver_interface.h"
-#include "api/rtp_sender_interface.h"
 #include "api/sequence_checker.h"
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtcstats_objects.h"
 #include "api/task_queue/queued_task.h"
+#include "api/units/time_delta.h"
 #include "api/video/video_content_type.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/media_channel.h"
@@ -37,7 +39,6 @@
 #include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "p2p/base/connection_info.h"
-#include "p2p/base/dtls_transport_internal.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/port.h"
@@ -45,6 +46,8 @@
 #include "pc/channel_interface.h"
 #include "pc/data_channel_utils.h"
 #include "pc/rtc_stats_traversal.h"
+#include "pc/rtp_receiver_proxy.h"
+#include "pc/rtp_sender_proxy.h"
 #include "pc/webrtc_sdp.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/ip_address.h"

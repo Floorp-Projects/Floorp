@@ -14,10 +14,17 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
+#include "absl/types/optional.h"
 #include "api/dtls_transport_interface.h"
+#include "api/transport/data_channel_transport_interface.h"
+#include "media/base/media_channel.h"
 #include "p2p/base/fake_dtls_transport.h"
+#include "p2p/base/p2p_constants.h"
+#include "p2p/base/packet_transport_internal.h"
 #include "pc/dtls_transport.h"
+#include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/gunit.h"
+#include "rtc_base/ref_counted_object.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 

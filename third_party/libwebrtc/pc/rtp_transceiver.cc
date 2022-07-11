@@ -10,6 +10,7 @@
 
 #include "pc/rtp_transceiver.h"
 
+#include <algorithm>
 #include <iterator>
 #include <string>
 #include <utility>
@@ -24,6 +25,7 @@
 #include "pc/rtp_media_utils.h"
 #include "pc/session_description.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"

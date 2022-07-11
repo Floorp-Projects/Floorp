@@ -11,28 +11,45 @@
 #include "pc/rtc_stats_collector.h"
 
 #include <ctype.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include <algorithm>
 #include <initializer_list>
 #include <memory>
 #include <ostream>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
-#include "absl/memory/memory.h"
 #include "absl/strings/str_replace.h"
+#include "api/candidate.h"
 #include "api/dtls_transport_interface.h"
+#include "api/media_stream_interface.h"
 #include "api/media_stream_track.h"
 #include "api/rtp_parameters.h"
+#include "api/stats/rtc_stats.h"
 #include "api/stats/rtc_stats_report.h"
 #include "api/stats/rtcstats_objects.h"
 #include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
+#include "api/video/recordable_encoded_frame.h"
+#include "api/video/video_content_type.h"
+#include "api/video/video_frame.h"
+#include "api/video/video_sink_interface.h"
+#include "api/video/video_source_interface.h"
+#include "common_video/include/quality_limitation_reason.h"
+#include "media/base/media_channel.h"
+#include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "p2p/base/connection_info.h"
+#include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/port.h"
 #include "pc/media_stream.h"
+#include "pc/stream_collection.h"
 #include "pc/test/fake_data_channel_provider.h"
 #include "pc/test/fake_peer_connection_for_stats.h"
 #include "pc/test/mock_data_channel.h"
@@ -43,10 +60,19 @@
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/fake_ssl_identity.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/logging.h"
+#include "rtc_base/network_constants.h"
+#include "rtc_base/ref_counted_object.h"
+#include "rtc_base/rtc_certificate.h"
+#include "rtc_base/socket_address.h"
+#include "rtc_base/ssl_fingerprint.h"
+#include "rtc_base/ssl_identity.h"
+#include "rtc_base/ssl_stream_adapter.h"
+#include "rtc_base/string_encode.h"
 #include "rtc_base/strings/json.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/time_utils.h"
+#include "test/gmock.h"
+#include "test/gtest.h"
 
 using ::testing::_;
 using ::testing::AtLeast;

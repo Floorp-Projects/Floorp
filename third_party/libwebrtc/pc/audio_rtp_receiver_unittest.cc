@@ -10,9 +10,11 @@
 
 #include "pc/audio_rtp_receiver.h"
 
-#include "media/base/media_channel.h"
+#include <atomic>
+
 #include "pc/test/mock_voice_media_channel.h"
 #include "rtc_base/gunit.h"
+#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"

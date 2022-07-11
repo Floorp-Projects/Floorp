@@ -9,17 +9,38 @@
  */
 
 #include <memory>
+#include <string>
 #include <tuple>
+#include <utility>
+#include <vector>
 
+#include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "api/call/call_factory_interface.h"
+#include "api/jsep.h"
+#include "api/media_types.h"
+#include "api/peer_connection_interface.h"
+#include "api/rtc_error.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"
+#include "api/rtc_event_log/rtc_event_log_factory_interface.h"
+#include "api/rtp_parameters.h"
+#include "api/rtp_transceiver_direction.h"
+#include "api/rtp_transceiver_interface.h"
+#include "api/scoped_refptr.h"
 #include "api/task_queue/default_task_queue_factory.h"
+#include "api/task_queue/task_queue_factory.h"
 #include "media/base/fake_media_engine.h"
+#include "media/base/media_engine.h"
 #include "p2p/base/fake_port_allocator.h"
-#include "pc/media_session.h"
+#include "p2p/base/port_allocator.h"
 #include "pc/peer_connection_wrapper.h"
-#include "rtc_base/gunit.h"
+#include "pc/session_description.h"
+#include "pc/test/mock_peer_connection_observers.h"
+#include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/strings/string_builder.h"
+#include "rtc_base/thread.h"
 #include "test/gmock.h"
+#include "test/gtest.h"
 
 namespace webrtc {
 

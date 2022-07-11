@@ -10,32 +10,42 @@
 
 #include "pc/media_session.h"
 
+#include <stddef.h>
+
 #include <algorithm>
+#include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
-#include <utility>
+#include <tuple>
 #include <vector>
 
 #include "absl/algorithm/container.h"
-#include "absl/memory/memory.h"
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
+#include "api/candidate.h"
+#include "api/crypto_params.h"
 #include "media/base/codec.h"
+#include "media/base/media_constants.h"
 #include "media/base/test_utils.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/transport_description.h"
 #include "p2p/base/transport_info.h"
+#include "pc/media_protocol_names.h"
 #include "pc/rtp_media_utils.h"
-#include "pc/srtp_filter.h"
+#include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/fake_ssl_identity.h"
-#include "rtc_base/gunit.h"
-#include "rtc_base/message_digest.h"
-#include "rtc_base/ssl_adapter.h"
+#include "rtc_base/rtc_certificate.h"
+#include "rtc_base/ssl_identity.h"
+#include "rtc_base/ssl_stream_adapter.h"
+#include "rtc_base/string_encode.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/unique_id_generator.h"
 #include "test/field_trial.h"
 #include "test/gmock.h"
+#include "test/gtest.h"
 
 #define ASSERT_CRYPTO(cd, s, cs)      \
   ASSERT_EQ(s, cd->cryptos().size()); \

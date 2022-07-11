@@ -14,12 +14,15 @@
 
 #include <memory>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/rtp_parameters.h"
 #include "media/base/fake_media_engine.h"
+#include "media/base/media_engine.h"
 #include "pc/test/mock_channel_interface.h"
 #include "pc/test/mock_rtp_receiver_internal.h"
 #include "pc/test/mock_rtp_sender_internal.h"
+#include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 

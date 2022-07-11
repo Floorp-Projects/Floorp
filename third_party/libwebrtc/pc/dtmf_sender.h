@@ -17,12 +17,14 @@
 
 #include "api/dtmf_sender_interface.h"
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "pc/proxy.h"
 #include "rtc_base/location.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
+#include "rtc_base/thread_annotations.h"
 
 // DtmfSender is the native implementation of the RTCDTMFSender defined by
 // the WebRTC W3C Editor's Draft.
@@ -102,6 +104,7 @@ class DtmfSender : public DtmfSenderInterface, public sigslot::has_slots<> {
 
 // Define proxy for DtmfSenderInterface.
 BEGIN_PRIMARY_PROXY_MAP(DtmfSender)
+
 PROXY_PRIMARY_THREAD_DESTRUCTOR()
 PROXY_METHOD1(void, RegisterObserver, DtmfSenderObserverInterface*)
 PROXY_METHOD0(void, UnregisterObserver)

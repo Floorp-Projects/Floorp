@@ -13,6 +13,7 @@
 #include <stddef.h>
 
 #include <memory>
+#include <string>
 
 #include "absl/algorithm/container.h"
 #include "api/scoped_refptr.h"

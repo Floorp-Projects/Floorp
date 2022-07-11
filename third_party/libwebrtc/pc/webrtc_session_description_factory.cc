@@ -11,8 +11,8 @@
 #include "pc/webrtc_session_description_factory.h"
 
 #include <stddef.h>
-#include <algorithm>
-#include <memory>
+
+#include <list>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -23,6 +23,7 @@
 #include "api/jsep.h"
 #include "api/jsep_session_description.h"
 #include "api/rtc_error.h"
+#include "api/sequence_checker.h"
 #include "pc/sdp_state_provider.h"
 #include "pc/session_description.h"
 #include "rtc_base/checks.h"
@@ -32,6 +33,7 @@
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/string_encode.h"
+#include "rtc_base/unique_id_generator.h"
 
 using cricket::MediaSessionOptions;
 using rtc::UniqueRandomIdGenerator;

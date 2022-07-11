@@ -12,6 +12,8 @@
 #define PC_RTC_STATS_COLLECTOR_H_
 
 #include <stdint.h>
+
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <set>

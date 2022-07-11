@@ -29,6 +29,7 @@
 #include "rtc_base/network.h"
 #include "rtc_base/network_monitor_factory.h"
 #include "rtc_base/rtc_certificate_generator.h"
+#include "rtc_base/socket_factory.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 

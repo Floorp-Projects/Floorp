@@ -12,7 +12,7 @@
 
 #include <stdio.h>
 
-#include <memory>
+#include <cstdint>
 
 #include "absl/algorithm/container.h"
 #include "absl/types/optional.h"
@@ -20,11 +20,16 @@
 #include "api/candidate.h"
 #include "api/data_channel_interface.h"
 #include "api/media_stream_track.h"
+#include "api/media_types.h"
+#include "api/rtp_sender_interface.h"
 #include "api/scoped_refptr.h"
 #include "call/call.h"
 #include "media/base/media_channel.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
+#include "p2p/base/ice_transport_internal.h"
 #include "pc/media_stream.h"
+#include "pc/rtp_receiver.h"
+#include "pc/rtp_sender.h"
 #include "pc/sctp_data_channel.h"
 #include "pc/test/fake_peer_connection_for_stats.h"
 #include "pc/test/fake_video_track_source.h"
@@ -43,6 +48,7 @@
 #include "rtc_base/string_encode.h"
 #include "rtc_base/third_party/base64/base64.h"
 #include "rtc_base/thread.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 
 using cricket::ConnectionInfo;

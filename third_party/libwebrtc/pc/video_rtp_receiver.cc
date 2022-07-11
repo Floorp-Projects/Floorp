@@ -12,15 +12,16 @@
 
 #include <stddef.h>
 
+#include <string>
 #include <utility>
 #include <vector>
 
 #include "api/video/recordable_encoded_frame.h"
-#include "api/video_track_source_proxy_factory.h"
 #include "pc/video_track.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 

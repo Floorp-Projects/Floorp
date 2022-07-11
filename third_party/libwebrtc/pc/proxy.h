@@ -59,6 +59,8 @@
 #ifndef PC_PROXY_H_
 #define PC_PROXY_H_
 
+#include <stddef.h>
+
 #include <memory>
 #include <string>
 #include <tuple>
@@ -69,6 +71,7 @@
 #include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
 #include "rtc_base/event.h"
+#include "rtc_base/location.h"
 #include "rtc_base/message_handler.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/string_utils.h"

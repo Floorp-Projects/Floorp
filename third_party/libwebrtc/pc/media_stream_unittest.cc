@@ -12,8 +12,6 @@
 
 #include <stddef.h>
 
-#include <string>
-
 #include "pc/audio_track.h"
 #include "pc/test/fake_video_track_source.h"
 #include "pc/video_track.h"

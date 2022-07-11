@@ -10,19 +10,18 @@
 
 #include "pc/channel_manager.h"
 
-#include <memory>
-
-#include "api/rtc_error.h"
+#include "api/sequence_checker.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "media/base/fake_media_engine.h"
 #include "media/base/test_utils.h"
 #include "media/engine/fake_webrtc_call.h"
-#include "p2p/base/dtls_transport_internal.h"
 #include "p2p/base/fake_dtls_transport.h"
 #include "p2p/base/p2p_constants.h"
-#include "p2p/base/packet_transport_internal.h"
 #include "pc/dtls_srtp_transport.h"
+#include "pc/rtp_transport_internal.h"
+#include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/location.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
 

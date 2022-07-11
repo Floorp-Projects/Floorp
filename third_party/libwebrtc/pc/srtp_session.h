@@ -11,6 +11,9 @@
 #ifndef PC_SRTP_SESSION_H_
 #define PC_SRTP_SESSION_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <vector>
 
 #include "api/scoped_refptr.h"

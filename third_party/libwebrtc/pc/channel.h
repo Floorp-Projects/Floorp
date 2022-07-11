@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <set>
@@ -21,12 +22,14 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/call/audio_sink.h"
 #include "api/crypto/crypto_options.h"
 #include "api/function_view.h"
 #include "api/jsep.h"
 #include "api/media_types.h"
+#include "api/rtp_parameters.h"
 #include "api/rtp_receiver_interface.h"
 #include "api/rtp_transceiver_direction.h"
 #include "api/scoped_refptr.h"
@@ -52,6 +55,7 @@
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/async_udp_socket.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/containers/flat_set.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/location.h"
 #include "rtc_base/network.h"

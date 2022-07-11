@@ -10,7 +10,7 @@
 
 #include "pc/rtp_transmission_manager.h"
 
-#include <algorithm>
+#include <type_traits>
 #include <utility>
 
 #include "absl/types/optional.h"
@@ -23,6 +23,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 

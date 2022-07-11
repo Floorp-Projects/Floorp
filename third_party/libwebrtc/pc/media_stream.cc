@@ -13,7 +13,6 @@
 #include <stddef.h>
 
 #include <utility>
-#include <vector>
 
 #include "rtc_base/checks.h"
 #include "rtc_base/ref_counted_object.h"
