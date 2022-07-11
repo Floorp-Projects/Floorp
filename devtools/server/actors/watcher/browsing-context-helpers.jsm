@@ -14,8 +14,10 @@ const EXPORTED_SYMBOLS = [
 let Services;
 if (typeof module == "object") {
   // Allow this JSM to also be loaded as a CommonJS module
+  // eslint-disable-next-line no-global-assign
   Services = require("Services");
 } else {
+  // eslint-disable-next-line no-global-assign
   ({ Services } = ChromeUtils.import("resource://gre/modules/Services.jsm"));
 }
 
