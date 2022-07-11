@@ -26,15 +26,6 @@ interface nsIComponentRegistrar : nsISupports
     void autoRegister(in nsIFile aSpec);
 
     /**
-     * autoUnregister
-     * @status OBSOLETE: This method is no longer implemented, but preserved
-     *                   in this interface for binary compatibility with
-     *                   Mozilla 1.9.2.
-     */
-    void autoUnregister(in nsIFile aSpec);
-
-
-    /**
      * registerFactory
      *
      * Register a factory with a given ContractID, CID and Class Name.
@@ -67,28 +58,6 @@ interface nsIComponentRegistrar : nsISupports
                            in nsIFactory aFactory);
 
     /**
-     * registerFactoryLocation
-     * @status OBSOLETE: This method is no longer implemented, but preserved
-     *                   in this interface for binary compatibility with
-     *                   Mozilla 1.9.2.
-     */
-    void registerFactoryLocation(in nsCIDRef aClass,
-                                 in string aClassName,
-                                 in string aContractID,
-                                 in nsIFile aFile,
-                                 in string aLoaderStr,
-                                 in string aType);
-
-    /**
-     * unregisterFactoryLocation
-     * @status OBSOLETE: This method is no longer implemented, but preserved
-     *                   in this interface for binary compatibility with
-     *                   Mozilla 1.9.2.
-     */
-    void unregisterFactoryLocation(in nsCIDRef aClass,
-                                   in nsIFile aFile);
-
-    /**
      * isCIDRegistered
      *
      * Returns true if a factory is registered for the CID.
@@ -119,14 +88,6 @@ interface nsIComponentRegistrar : nsISupports
      *           encoding of Contract IDs.
      */
     Array<ACString> getContractIDs();
-
-    /**
-     * CIDToContractID
-     * @status OBSOLETE: This method is no longer implemented, but preserved
-     *                   in this interface for binary compatibility with
-     *                   Mozilla 1.9.2.
-     */
-    string   CIDToContractID(in nsCIDRef aClass);
 
     /**
      * contractIDToCID

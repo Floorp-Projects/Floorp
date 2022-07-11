@@ -1258,27 +1258,6 @@ nsComponentManagerImpl::AutoRegister(nsIFile* aLocation) {
 }
 
 NS_IMETHODIMP
-nsComponentManagerImpl::AutoUnregister(nsIFile* aLocation) {
-  NS_ERROR("AutoUnregister not implemented.");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsComponentManagerImpl::RegisterFactoryLocation(
-    const nsCID& aCID, const char* aClassName, const char* aContractID,
-    nsIFile* aFile, const char* aLoaderStr, const char* aType) {
-  NS_ERROR("RegisterFactoryLocation not implemented.");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsComponentManagerImpl::UnregisterFactoryLocation(const nsCID& aCID,
-                                                  nsIFile* aFile) {
-  NS_ERROR("UnregisterFactoryLocation not implemented.");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsComponentManagerImpl::IsCIDRegistered(const nsCID& aClass, bool* aResult) {
   *aResult = LookupByCID(aClass).isSome();
   return NS_OK;
@@ -1308,12 +1287,6 @@ nsComponentManagerImpl::GetContractIDs(nsTArray<nsCString>& aResult) {
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsComponentManagerImpl::CIDToContractID(const nsCID& aClass, char** aResult) {
-  NS_ERROR("CIDTOContractID not implemented");
-  return NS_ERROR_FACTORY_NOT_REGISTERED;
 }
 
 NS_IMETHODIMP
