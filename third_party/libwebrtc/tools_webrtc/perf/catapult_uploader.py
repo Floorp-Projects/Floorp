@@ -56,7 +56,7 @@ def _SendHistogramSet(url, histograms):
     # The catapult server turns off compression in developer mode.
     data = serialized
   else:
-    data = zlib.compress(serialized)
+    data = zlib.compress(serialized.encode('utf-8'))
 
   print('Sending %d bytes to %s.' % (len(data), url + '/add_histograms'))
 
