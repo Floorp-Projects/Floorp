@@ -52,10 +52,6 @@ function getFocusedElementForBrowser(browser, dontCheckExtraFocus = false) {
     browser,
     [dontCheckExtraFocus],
     dontCheckExtraFocusChild => {
-      const { Services } = ChromeUtils.import(
-        "resource://gre/modules/Services.jsm"
-      );
-
       let focusedWindow = {};
       let node = Services.focus.getFocusedElementForWindow(
         content,

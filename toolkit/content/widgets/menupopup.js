@@ -10,9 +10,6 @@
   const { AppConstants } = ChromeUtils.import(
     "resource://gre/modules/AppConstants.jsm"
   );
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
 
   // For the Windows 10 custom context menu styling, we need to know if we need
   // a gutter for checkboxes. To do this, check whether there are any

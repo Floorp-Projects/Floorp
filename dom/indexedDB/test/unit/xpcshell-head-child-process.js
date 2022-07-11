@@ -4,10 +4,6 @@
  */
 
 function run_test() {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
-
   const INDEXEDDB_HEAD_FILE = "xpcshell-head-parent-process.js";
   const INDEXEDDB_PREF_EXPERIMENTAL = "dom.indexedDB.experimental";
 

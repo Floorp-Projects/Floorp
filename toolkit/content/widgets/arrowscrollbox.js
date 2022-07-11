@@ -7,10 +7,6 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
-
   class MozArrowScrollbox extends MozElements.BaseControl {
     static get inheritedAttributes() {
       return {

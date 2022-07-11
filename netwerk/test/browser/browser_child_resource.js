@@ -37,9 +37,6 @@ function resolveURI(uri) {
 
 function remoteResolveURI(uri) {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [uri], uriToResolve => {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
     let resProtocol = Cc[
       "@mozilla.org/network/protocol;1?name=resource"
     ].getService(Ci.nsIResProtocolHandler);

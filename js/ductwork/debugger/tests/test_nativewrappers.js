@@ -1,7 +1,6 @@
 function run_test()
 {
   const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
   registerCleanupFunction(() => {

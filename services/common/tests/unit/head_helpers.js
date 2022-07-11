@@ -208,9 +208,6 @@ function uninstallFakePAC() {
 }
 
 function getUptakeTelemetrySnapshot(component, source) {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   const TELEMETRY_CATEGORY_ID = "uptake.remotecontent.result";
   const snapshot = Services.telemetry.snapshotEvents(
     Ci.nsITelemetry.DATASET_ALL_CHANNELS,

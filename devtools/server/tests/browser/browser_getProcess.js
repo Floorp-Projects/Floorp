@@ -79,10 +79,6 @@ add_task(async () => {
   }
 
   function processScript() {
-    // eslint-disable-next-line no-shadow
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
     const listener = function() {
       /* global sendAsyncMessage */
       Services.obs.removeObserver(listener, "devtools:loader:destroy");
