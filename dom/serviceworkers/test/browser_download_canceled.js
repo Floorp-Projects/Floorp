@@ -19,7 +19,6 @@
  * notification with the headers, so there are two ways to produce
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Downloads } = ChromeUtils.import(
   "resource://gre/modules/Downloads.jsm"
 );
