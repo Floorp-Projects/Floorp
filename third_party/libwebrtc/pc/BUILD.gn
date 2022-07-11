@@ -242,8 +242,6 @@ rtc_library("peerconnection") {
     "peer_connection.h",
     "peer_connection_factory.cc",
     "peer_connection_factory.h",
-    "sdp_offer_answer.cc",  # TODO: Make separate target when not circular
-    "sdp_offer_answer.h",  # dependent on peerconnection.h
   ]
 
   deps = [
@@ -571,6 +569,69 @@ rtc_source_set("rtc_stats_traversal") {
 
 rtc_source_set("sdp_offer_answer") {
   visibility = [ ":*" ]
+  sources = [
+    "sdp_offer_answer.cc",  # TODO: Make separate target when not circular
+    "sdp_offer_answer.h",  # dependent on peerconnection.h
+  ]
+  deps = [
+    ":connection_context",
+    ":data_channel_controller",
+    ":data_channel_utils",
+    ":ice_server_parsing",
+    ":media_stream",
+    ":media_stream_observer",
+    ":peer_connection_internal",
+    ":peer_connection_message_handler",
+    ":rtc_pc_base",
+    ":rtc_stats_collector",
+    ":rtp_receiver",
+    ":rtp_sender",
+    ":rtp_transceiver",
+    ":rtp_transmission_manager",
+    ":sdp_state_provider",
+    ":session_description",
+    ":simulcast_description",
+    ":stats_collector",
+    ":stream_collection",
+    ":transceiver_list",
+    ":usage_pattern",
+    ":webrtc_session_description_factory",
+    "../api:array_view",
+    "../api:audio_options_api",
+    "../api:libjingle_peerconnection_api",
+    "../api:media_stream_interface",
+    "../api:rtc_error",
+    "../api:rtp_parameters",
+    "../api:rtp_transceiver_direction",
+    "../api:scoped_refptr",
+    "../api:sequence_checker",
+    "../api/crypto:options",
+    "../api/transport:datagram_transport_interface",
+    "../api/video:builtin_video_bitrate_allocator_factory",
+    "../api/video:video_bitrate_allocator_factory",
+    "../media:rtc_media_base",
+    "../p2p:rtc_p2p",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:refcount",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:rtc_operations_chain",
+    "../rtc_base:stringutils",
+    "../rtc_base:threading",
+    "../rtc_base:weak_ptr",
+    "../rtc_base/experiments:field_trial_parser",
+    "../rtc_base/third_party/sigslot:sigslot",
+    "../system_wrappers:field_trial",
+    "../system_wrappers:metrics",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/memory:memory",
+    "//third_party/abseil-cpp/absl/strings:strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 rtc_source_set("jsep_ice_candidate") {
   visibility = [ ":*" ]
