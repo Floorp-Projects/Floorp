@@ -198,7 +198,7 @@ class RtpSenderTest : public ::testing::Test {
     packet->set_packet_type(RtpPacketMediaType::kVideo);
     packet->SetMarker(marker_bit);
     packet->SetTimestamp(timestamp);
-    packet->set_capture_time_ms(capture_time_ms);
+    packet->set_capture_time(Timestamp::Millis(capture_time_ms));
     return packet;
   }
 
@@ -354,13 +354,12 @@ TEST_F(RtpSenderTest, PaddingAlwaysAllowedOnAudio) {
 
 TEST_F(RtpSenderTest, SendToNetworkForwardsPacketsToPacer) {
   auto packet = BuildRtpPacket(kPayload, kMarkerBit, kTimestamp, 0);
-  int64_t now_ms = clock_->TimeInMilliseconds();
+  Timestamp now = clock_->CurrentTime();
 
-  EXPECT_CALL(
-      mock_paced_sender_,
-      EnqueuePackets(ElementsAre(AllOf(
-          Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc)),
-          Pointee(Property(&RtpPacketToSend::capture_time_ms, now_ms))))));
+  EXPECT_CALL(mock_paced_sender_,
+              EnqueuePackets(ElementsAre(AllOf(
+                  Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc)),
+                  Pointee(Property(&RtpPacketToSend::capture_time, now))))));
   EXPECT_TRUE(
       rtp_sender_->SendToNetwork(std::make_unique<RtpPacketToSend>(*packet)));
 }
@@ -378,7 +377,8 @@ TEST_F(RtpSenderTest, ReSendPacketForwardsPacketsToPacer) {
               EnqueuePackets(ElementsAre(AllOf(
                   Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc)),
                   Pointee(Property(&RtpPacketToSend::SequenceNumber, kSeqNum)),
-                  Pointee(Property(&RtpPacketToSend::capture_time_ms, now_ms)),
+                  Pointee(Property(&RtpPacketToSend::capture_time,
+                                   Timestamp::Millis(now_ms))),
                   Pointee(Property(&RtpPacketToSend::packet_type,
                                    RtpPacketMediaType::kRetransmission))))));
   EXPECT_TRUE(rtp_sender_->ReSendPacket(kSeqNum));
@@ -527,10 +527,11 @@ TEST_F(RtpSenderTest, UpdatesTimestampsOnPlainRtxPadding) {
   // Start by sending one media packet.
   EXPECT_CALL(
       mock_paced_sender_,
-      EnqueuePackets(ElementsAre(AllOf(
-          Pointee(Property(&RtpPacketToSend::padding_size, 0u)),
-          Pointee(Property(&RtpPacketToSend::Timestamp, start_timestamp)),
-          Pointee(Property(&RtpPacketToSend::capture_time_ms, start_time))))));
+      EnqueuePackets(ElementsAre(
+          AllOf(Pointee(Property(&RtpPacketToSend::padding_size, 0u)),
+                Pointee(Property(&RtpPacketToSend::Timestamp, start_timestamp)),
+                Pointee(Property(&RtpPacketToSend::capture_time,
+                                 Timestamp::Millis(start_time)))))));
   std::unique_ptr<RtpPacketToSend> media_packet =
       SendPacket(start_time, /*payload_size=*/600);
   sequencer_->Sequence(*media_packet);
@@ -546,8 +547,8 @@ TEST_F(RtpSenderTest, UpdatesTimestampsOnPlainRtxPadding) {
           Property(&RtpPacketToSend::padding_size, kMaxPaddingLength),
           Property(&RtpPacketToSend::Timestamp,
                    start_timestamp + (kTimestampTicksPerMs * kTimeDiff.ms())),
-          Property(&RtpPacketToSend::capture_time_ms,
-                   start_time + kTimeDiff.ms())))));
+          Property(&RtpPacketToSend::capture_time,
+                   Timestamp::Millis(start_time) + kTimeDiff)))));
 }
 
 TEST_F(RtpSenderTest, KeepsTimestampsOnPayloadPadding) {
@@ -563,10 +564,11 @@ TEST_F(RtpSenderTest, KeepsTimestampsOnPayloadPadding) {
   // Start by sending one media packet and putting in the packet history.
   EXPECT_CALL(
       mock_paced_sender_,
-      EnqueuePackets(ElementsAre(AllOf(
-          Pointee(Property(&RtpPacketToSend::padding_size, 0u)),
-          Pointee(Property(&RtpPacketToSend::Timestamp, start_timestamp)),
-          Pointee(Property(&RtpPacketToSend::capture_time_ms, start_time))))));
+      EnqueuePackets(ElementsAre(
+          AllOf(Pointee(Property(&RtpPacketToSend::padding_size, 0u)),
+                Pointee(Property(&RtpPacketToSend::Timestamp, start_timestamp)),
+                Pointee(Property(&RtpPacketToSend::capture_time,
+                                 Timestamp::Millis(start_time)))))));
   std::unique_ptr<RtpPacketToSend> media_packet =
       SendPacket(start_time, kPayloadSize);
   packet_history_->PutRtpPacket(std::move(media_packet), start_time);
@@ -576,14 +578,14 @@ TEST_F(RtpSenderTest, KeepsTimestampsOnPayloadPadding) {
   time_controller_.AdvanceTime(kTimeDiff);
 
   // Timestamps on payload padding should be set to original.
-  EXPECT_THAT(
-      GeneratePadding(/*target_size_bytes=*/100),
-      Each(AllOf(
-          Pointee(Property(&RtpPacketToSend::padding_size, 0u)),
-          Pointee(Property(&RtpPacketToSend::payload_size,
-                           kPayloadSize + kRtxHeaderSize)),
-          Pointee(Property(&RtpPacketToSend::Timestamp, start_timestamp)),
-          Pointee(Property(&RtpPacketToSend::capture_time_ms, start_time)))));
+  EXPECT_THAT(GeneratePadding(/*target_size_bytes=*/100),
+              Each(AllOf(Pointee(Property(&RtpPacketToSend::padding_size, 0u)),
+                         Pointee(Property(&RtpPacketToSend::payload_size,
+                                          kPayloadSize + kRtxHeaderSize)),
+                         Pointee(Property(&RtpPacketToSend::Timestamp,
+                                          start_timestamp)),
+                         Pointee(Property(&RtpPacketToSend::capture_time,
+                                          Timestamp::Millis(start_time))))));
 }
 
 // Test that the MID header extension is included on sent packets when
@@ -1273,9 +1275,10 @@ TEST_F(RtpSenderTest, SetsCaptureTimeOnRtxRetransmissions) {
   // preserved.
   time_controller_.AdvanceTime(TimeDelta::Millis(10));
 
-  EXPECT_CALL(mock_paced_sender_,
-              EnqueuePackets(ElementsAre(Pointee(Property(
-                  &RtpPacketToSend::capture_time_ms, start_time_ms)))));
+  EXPECT_CALL(
+      mock_paced_sender_,
+      EnqueuePackets(ElementsAre(Pointee(Property(
+          &RtpPacketToSend::capture_time, Timestamp::Millis(start_time_ms))))));
   EXPECT_GT(rtp_sender_->ReSendPacket(kSeqNum), 0);
 }
 

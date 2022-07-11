@@ -45,7 +45,7 @@ class RtpPacketHistoryTest : public ::testing::TestWithParam<bool> {
     // Payload, ssrc, timestamp and extensions are irrelevant for this tests.
     std::unique_ptr<RtpPacketToSend> packet(new RtpPacketToSend(nullptr));
     packet->SetSequenceNumber(seq_num);
-    packet->set_capture_time_ms(fake_clock_.TimeInMilliseconds());
+    packet->set_capture_time(fake_clock_.CurrentTime());
     packet->set_allow_retransmission(true);
     return packet;
   }
@@ -122,9 +122,9 @@ TEST_P(RtpPacketHistoryTest, PutRtpPacket) {
 
 TEST_P(RtpPacketHistoryTest, GetRtpPacket) {
   hist_.SetStorePacketsStatus(StorageMode::kStoreAndCull, 10);
-  int64_t capture_time_ms = 1;
+  Timestamp capture_time = Timestamp::Millis(1);
   std::unique_ptr<RtpPacketToSend> packet = CreateRtpPacket(kStartSeqNum);
-  packet->set_capture_time_ms(capture_time_ms);
+  packet->set_capture_time(capture_time);
   rtc::CopyOnWriteBuffer buffer = packet->Buffer();
   hist_.PutRtpPacket(std::move(packet), absl::nullopt);
 
@@ -132,7 +132,7 @@ TEST_P(RtpPacketHistoryTest, GetRtpPacket) {
       hist_.GetPacketAndSetSendTime(kStartSeqNum);
   EXPECT_TRUE(packet_out);
   EXPECT_EQ(buffer, packet_out->Buffer());
-  EXPECT_EQ(capture_time_ms, packet_out->capture_time_ms());
+  EXPECT_EQ(capture_time, packet_out->capture_time());
 }
 
 TEST_P(RtpPacketHistoryTest, PacketStateIsCorrect) {
@@ -212,7 +212,7 @@ TEST_P(RtpPacketHistoryTest, MinResendTimeWithoutPacer) {
 
   hist_.SetStorePacketsStatus(StorageMode::kStoreAndCull, 10);
   hist_.SetRtt(kMinRetransmitIntervalMs);
-  int64_t capture_time_ms = fake_clock_.TimeInMilliseconds();
+  Timestamp capture_time = fake_clock_.CurrentTime();
   std::unique_ptr<RtpPacketToSend> packet = CreateRtpPacket(kStartSeqNum);
   size_t len = packet->size();
   hist_.PutRtpPacket(std::move(packet), fake_clock_.TimeInMilliseconds());
@@ -222,7 +222,7 @@ TEST_P(RtpPacketHistoryTest, MinResendTimeWithoutPacer) {
   packet = hist_.GetPacketAndSetSendTime(kStartSeqNum);
   EXPECT_TRUE(packet);
   EXPECT_EQ(len, packet->size());
-  EXPECT_EQ(capture_time_ms, packet->capture_time_ms());
+  EXPECT_EQ(packet->capture_time(), capture_time);
 
   // Second retransmission - advance time to just before retransmission OK.
   fake_clock_.AdvanceTimeMilliseconds(kMinRetransmitIntervalMs - 1);
