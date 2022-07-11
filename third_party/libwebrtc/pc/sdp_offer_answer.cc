@@ -91,9 +91,6 @@ namespace {
 typedef webrtc::PeerConnectionInterface::RTCOfferAnswerOptions
     RTCOfferAnswerOptions;
 
-constexpr const char* kAlwaysAllowPayloadTypeDemuxingFieldTrialName =
-    "WebRTC-AlwaysAllowPayloadTypeDemuxing";
-
 // Error messages
 const char kInvalidSdp[] = "Invalid session description.";
 const char kInvalidCandidates[] = "Description contains invalid candidates.";
@@ -5090,13 +5087,6 @@ bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
   bool bundled_pt_demux_allowed_video = !IsUnifiedPlan() ||
                                         mid_header_extension_missing_video ||
                                         pt_demuxing_has_been_used_video_;
-  // Kill switch for the above change.
-  if (field_trial::IsEnabled(kAlwaysAllowPayloadTypeDemuxingFieldTrialName)) {
-    // TODO(https://crbug.com/webrtc/12814): If disabling PT-based demux does
-    // not trigger regressions, remove this kill switch.
-    bundled_pt_demux_allowed_audio = true;
-    bundled_pt_demux_allowed_video = true;
-  }
 
   // Gather all updates ahead of time so that all channels can be updated in a
   // single Invoke; necessary due to thread guards.
