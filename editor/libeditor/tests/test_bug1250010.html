@@ -66,20 +66,17 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("KEY_Enter");
   sendString("A");
 
-  // The resulting HTML is sadly less than optimal:
-  // A <br> gets inserted after the image and the "A" is followed by an empty <tt></tt>.
-  var newHTML = div.innerHTML;
-  var expectedHTML;
-  //             Existing part with additional <br> inserted.
-  expectedHTML = "<p><tt>xyz</tt></p><p><tt><img src=\"" + getImageDataURI() + "\"><br></tt></p>" +
-  //             New part caused by pressing enter after the image and typing an "A".
-                 "<p><tt>A</tt><br><tt></tt></p>";
-  is(newHTML, expectedHTML, "unexpected HTML");
-
-  // In case the empty tag gets deleted some day, let them know that something improved.
-  expectedHTML = "<p><tt>xyz</tt></p><p><tt><img src=\"" + getImageDataURI() + "\"><br></tt></p>" +
-                 "<p><tt>A</tt><br></p>";
-  todo_is(newHTML, expectedHTML, "unexpected HTML");
+  // TODO: The <br> in the new paragraph and the paragraph containing the <img>
+  //       should be removed at typing "A" because they are not necessary
+  //       anymore to make the paragraphs visible (bug 503838).
+  const expectedHTML =
+    "<p><tt>xyz</tt></p><p><tt><img src=\"" + getImageDataURI() + "\"><br></tt></p>" +
+    "<p><tt>A<br></tt></p>";
+  is(
+    div.innerHTML,
+    expectedHTML,
+    "Pressing Enter after the <img> should create new paragraph and which contain <tt> and new text should be inserted in it"
+  );
 
   SimpleTest.finish();
 });
