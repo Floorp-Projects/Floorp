@@ -308,6 +308,14 @@ webrtc_fuzzer_test("audio_decoder_multiopus_fuzzer") {
   ]
 }
 
+webrtc_fuzzer_test("audio_decoder_pcm16b_fuzzer") {
+  sources = [ "audio_decoder_pcm16b_fuzzer.cc" ]
+  deps = [
+    ":audio_decoder_fuzzer",
+    "../../modules/audio_coding:pcm16b",
+  ]
+}
+
 rtc_library("audio_encoder_fuzzer") {
   testonly = true
   sources = [
