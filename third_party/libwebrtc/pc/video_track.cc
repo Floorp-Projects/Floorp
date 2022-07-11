@@ -23,12 +23,14 @@
 
 namespace webrtc {
 
-VideoTrack::VideoTrack(const std::string& label,
-                       VideoTrackSourceInterface* video_source,
-                       rtc::Thread* worker_thread)
+VideoTrack::VideoTrack(
+    const std::string& label,
+    rtc::scoped_refptr<
+        VideoTrackSourceProxyWithInternal<VideoTrackSourceInterface>> source,
+    rtc::Thread* worker_thread)
     : MediaStreamTrack<VideoTrackInterface>(label),
       worker_thread_(worker_thread),
-      video_source_(video_source),
+      video_source_(std::move(source)),
       content_hint_(ContentHint::kNone) {
   RTC_DCHECK_RUN_ON(&signaling_thread_);
   // Detach the thread checker for VideoSourceBaseGuarded since we'll make calls
@@ -130,7 +132,13 @@ rtc::scoped_refptr<VideoTrack> VideoTrack::Create(
     const std::string& id,
     VideoTrackSourceInterface* source,
     rtc::Thread* worker_thread) {
-  return rtc::make_ref_counted<VideoTrack>(id, source, worker_thread);
+  rtc::scoped_refptr<
+      VideoTrackSourceProxyWithInternal<VideoTrackSourceInterface>>
+      source_proxy = VideoTrackSourceProxy::Create(rtc::Thread::Current(),
+                                                   worker_thread, source);
+
+  return rtc::make_ref_counted<VideoTrack>(id, std::move(source_proxy),
+                                           worker_thread);
 }
 
 }  // namespace webrtc
