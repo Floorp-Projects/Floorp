@@ -11,10 +11,12 @@
 #include "pc/sdp_offer_answer.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
 #include <map>
 #include <memory>
 #include <queue>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -30,7 +32,6 @@
 #include "api/rtp_sender_interface.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "media/base/codec.h"
-#include "media/base/media_engine.h"
 #include "media/base/rid_description.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
@@ -39,15 +40,16 @@
 #include "p2p/base/transport_description.h"
 #include "p2p/base/transport_description_factory.h"
 #include "p2p/base/transport_info.h"
-#include "pc/data_channel_utils.h"
+#include "pc/channel_interface.h"
 #include "pc/dtls_transport.h"
 #include "pc/media_stream.h"
 #include "pc/media_stream_proxy.h"
 #include "pc/peer_connection_internal.h"
 #include "pc/peer_connection_message_handler.h"
 #include "pc/rtp_media_utils.h"
+#include "pc/rtp_receiver_proxy.h"
 #include "pc/rtp_sender.h"
-#include "pc/rtp_transport_internal.h"
+#include "pc/rtp_sender_proxy.h"
 #include "pc/simulcast_description.h"
 #include "pc/stats_collector.h"
 #include "pc/usage_pattern.h"
@@ -60,7 +62,6 @@
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
