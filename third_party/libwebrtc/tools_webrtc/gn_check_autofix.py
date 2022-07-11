@@ -55,7 +55,10 @@ class TemporaryDirectory:
 
 def Run(cmd):
   print('Running:', ' '.join(cmd))
-  sub = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  sub = subprocess.Popen(cmd,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         universal_newlines=True)
   return sub.communicate()
 
 
@@ -155,14 +158,14 @@ def main():
     ] + sys.argv[1:])
 
   mb_output = Run(mb_gen_command)
-  errors = mb_output[0].decode('utf-8').split('ERROR')[1:]
+  errors = mb_output[0].split('ERROR')[1:]
 
   if mb_output[1]:
     print(mb_output[1])
     return 1
 
   for error in errors:
-    error = error.splitlines()
+    error = error.split('\\n')
     target_msg = 'The target:'
     if target_msg not in error:
       target_msg = 'It is not in any dependency of'
