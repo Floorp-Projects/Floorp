@@ -565,9 +565,9 @@ void AudioProcessingSimulator::ConfigureAudioProcessor() {
     apm_config.gain_controller1.analog_gain_controller.enabled =
         *settings_.use_analog_agc;
   }
-  if (settings_.analog_agc_disable_digital_adaptive) {
+  if (settings_.analog_agc_use_digital_adaptive_controller) {
     apm_config.gain_controller1.analog_gain_controller.enable_digital_adaptive =
-        *settings_.analog_agc_disable_digital_adaptive;
+        *settings_.analog_agc_use_digital_adaptive_controller;
   }
 
   if (settings_.maximum_internal_processing_rate) {
