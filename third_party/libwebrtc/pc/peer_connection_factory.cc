@@ -10,7 +10,7 @@
 
 #include "pc/peer_connection_factory.h"
 
-#include <memory>
+#include <type_traits>
 #include <utility>
 
 #include "absl/strings/match.h"

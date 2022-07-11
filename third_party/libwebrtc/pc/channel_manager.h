@@ -27,10 +27,12 @@
 #include "media/base/media_config.h"
 #include "media/base/media_engine.h"
 #include "pc/channel.h"
+#include "pc/channel_interface.h"
 #include "pc/rtp_transport_internal.h"
 #include "pc/session_description.h"
 #include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/thread.h"
+#include "rtc_base/thread_annotations.h"
 #include "rtc_base/unique_id_generator.h"
 
 namespace cricket {

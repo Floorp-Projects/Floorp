@@ -21,18 +21,24 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/media_stream_interface.h"
 #include "api/peer_connection_interface.h"
+#include "api/scoped_refptr.h"
 #include "api/stats_types.h"
 #include "p2p/base/connection_info.h"
 #include "p2p/base/port.h"
 #include "pc/peer_connection_internal.h"
+#include "pc/rtp_transceiver.h"
 #include "pc/stats_collector_interface.h"
+#include "pc/transport_stats.h"
 #include "rtc_base/network_constants.h"
 #include "rtc_base/ssl_certificate.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
 

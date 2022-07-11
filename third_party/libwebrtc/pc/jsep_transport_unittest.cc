@@ -10,15 +10,33 @@
 
 #include "pc/jsep_transport.h"
 
-#include <memory>
+#include <stdint.h>
+#include <string.h>
+
+#include <ostream>
+#include <string>
 #include <tuple>
 #include <utility>
 
-#include "api/ice_transport_factory.h"
+#include "api/candidate.h"
 #include "media/base/fake_rtp.h"
 #include "p2p/base/fake_dtls_transport.h"
 #include "p2p/base/fake_ice_transport.h"
-#include "rtc_base/gunit.h"
+#include "p2p/base/p2p_constants.h"
+#include "p2p/base/packet_transport_internal.h"
+#include "rtc_base/async_packet_socket.h"
+#include "rtc_base/buffer.h"
+#include "rtc_base/byte_order.h"
+#include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/helpers.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/net_helper.h"
+#include "rtc_base/ref_counted_object.h"
+#include "rtc_base/socket_address.h"
+#include "rtc_base/ssl_certificate.h"
+#include "rtc_base/ssl_identity.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
+#include "test/gtest.h"
 
 namespace cricket {
 namespace {

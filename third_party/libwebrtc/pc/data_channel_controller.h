@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "api/data_channel_interface.h"
+#include "api/rtc_error.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
 #include "api/transport/data_channel_transport_interface.h"

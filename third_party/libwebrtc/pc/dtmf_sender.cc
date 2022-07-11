@@ -13,8 +13,6 @@
 #include <ctype.h>
 #include <string.h>
 
-#include <string>
-
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/ref_counted_object.h"

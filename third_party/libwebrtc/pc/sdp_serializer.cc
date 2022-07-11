@@ -10,9 +10,9 @@
 
 #include "pc/sdp_serializer.h"
 
-#include <algorithm>
 #include <map>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 

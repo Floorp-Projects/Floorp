@@ -13,6 +13,7 @@
 
 #include <string>
 
+#include "absl/types/optional.h"
 #include "api/media_stream_interface.h"
 #include "api/media_stream_track.h"
 #include "api/scoped_refptr.h"
@@ -21,8 +22,8 @@
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
 #include "media/base/video_source_base.h"
-#include "rtc_base/system/no_unique_address.h"
 #include "pc/video_track_source_proxy.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 

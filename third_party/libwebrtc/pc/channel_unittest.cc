@@ -10,9 +10,11 @@
 
 #include "pc/channel.h"
 
+#include <stddef.h>
+
 #include <cstdint>
-#include <memory>
-#include <utility>
+#include <string>
+#include <type_traits>
 
 #include "api/array_view.h"
 #include "api/audio_options.h"
@@ -21,11 +23,15 @@
 #include "media/base/fake_media_engine.h"
 #include "media/base/fake_rtp.h"
 #include "media/base/media_channel.h"
+#include "media/base/media_constants.h"
+#include "media/base/rid_description.h"
 #include "p2p/base/candidate_pair_interface.h"
+#include "p2p/base/dtls_transport_internal.h"
 #include "p2p/base/fake_dtls_transport.h"
 #include "p2p/base/fake_packet_transport.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
+#include "p2p/base/packet_transport_internal.h"
 #include "pc/dtls_srtp_transport.h"
 #include "pc/jsep_transport.h"
 #include "pc/rtp_transport.h"
@@ -33,6 +39,7 @@
 #include "rtc_base/buffer.h"
 #include "rtc_base/byte_order.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/location.h"
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"

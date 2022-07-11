@@ -14,7 +14,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <set>
 
 #include "call/rtp_demuxer.h"
 #include "media/base/fake_rtp.h"
@@ -26,9 +25,11 @@
 #include "pc/test/rtp_transport_test_util.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/byte_order.h"
+#include "rtc_base/containers/flat_set.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/ssl_identity.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "test/gtest.h"
 
 using cricket::FakeDtlsTransport;

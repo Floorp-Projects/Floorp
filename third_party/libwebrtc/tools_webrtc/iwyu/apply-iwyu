@@ -17,7 +17,7 @@
 
 # Set this to 1 to get more debug information.
 # Set this to 2 to also get a dump of the iwyu tool output.
-DEBUG=1
+DEBUG=2
 
 set -e
 if [ $DEBUG -gt 0 ]; then
@@ -26,6 +26,7 @@ fi
 
 IWYU_TOOL="${IWYU_TOOL:-/usr/bin/iwyu_tool}"
 FIX_INCLUDE="${FIX_INCLUDE:-/usr/bin/fix_include}"
+IWYU_TOOL_DIR="${IWYU_TOOL_DIR:-tools_webrtc/iwyu}"
 COMPILE_COMMANDS=''
 
 error() {
@@ -68,6 +69,7 @@ fi
 
 # IWYU has a confusing set of exit codes. Discard it.
 "$IWYU_TOOL" -p "$COMPILE_COMMANDS" "$FILE_CC" -- -Xiwyu --no_fwd_decls \
+  -Xiwyu --mapping_file=../../$IWYU_TOOL_DIR/mappings.imp \
   >& /tmp/includefixes$$ || echo "IWYU done, code $?"
 
 if grep 'fatal error' /tmp/includefixes$$; then

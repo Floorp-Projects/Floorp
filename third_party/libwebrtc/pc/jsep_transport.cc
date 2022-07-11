@@ -15,6 +15,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "api/array_view.h"

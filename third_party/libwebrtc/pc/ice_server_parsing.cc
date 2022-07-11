@@ -12,9 +12,7 @@
 
 #include <stddef.h>
 
-#include <algorithm>
 #include <cctype>  // For std::isdigit.
-#include <memory>
 #include <string>
 
 #include "p2p/base/port_interface.h"

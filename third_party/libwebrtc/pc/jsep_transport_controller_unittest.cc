@@ -11,14 +11,26 @@
 #include "pc/jsep_transport_controller.h"
 
 #include <map>
-#include <memory>
+#include <string>
+#include <utility>
 
 #include "api/dtls_transport_interface.h"
+#include "api/transport/enums.h"
+#include "p2p/base/candidate_pair_interface.h"
 #include "p2p/base/dtls_transport_factory.h"
 #include "p2p/base/fake_dtls_transport.h"
 #include "p2p/base/fake_ice_transport.h"
+#include "p2p/base/p2p_constants.h"
 #include "p2p/base/transport_info.h"
+#include "rtc_base/fake_ssl_identity.h"
 #include "rtc_base/gunit.h"
+#include "rtc_base/location.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/net_helper.h"
+#include "rtc_base/ref_counted_object.h"
+#include "rtc_base/socket_address.h"
+#include "rtc_base/ssl_fingerprint.h"
+#include "rtc_base/ssl_identity.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
 

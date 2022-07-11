@@ -14,8 +14,7 @@
 
 #include <algorithm>
 #include <map>
-#include <memory>
-#include <set>
+#include <string>
 #include <unordered_map>
 #include <utility>
 
@@ -24,7 +23,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/crypto_params.h"
-#include "api/video_codecs/h264_profile_level_id.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "media/base/sdp_video_format_utils.h"

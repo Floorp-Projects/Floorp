@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <string>
 #include <utility>
 #include <vector>
 
