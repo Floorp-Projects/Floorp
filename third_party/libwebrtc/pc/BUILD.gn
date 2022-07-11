@@ -1261,6 +1261,7 @@ rtc_library("audio_track") {
     "../api:sequence_checker",
     "../rtc_base:checks",
     "../rtc_base:refcount",
+    "../rtc_base/system:no_unique_address",
   ]
 }
 
@@ -1281,6 +1282,7 @@ rtc_library("video_track") {
     "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:threading",
+    "../rtc_base/system:no_unique_address",
   ]
 }
 
