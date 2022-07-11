@@ -66,3 +66,4 @@ python3 gen-sources.py $1
 
 # apply outstanding local patches
 patch -p3 --no-backup-if-mismatch < nonunified.patch
+patch -p3 --no-backup-if-mismatch < nonunified2.patch

@@ -90,7 +90,7 @@ struct OpusCustomDecoder {
    opus_uint32 rng;
    int error;
    int last_pitch_index;
-   int loss_duration;
+   int loss_count;
    int skip_plc;
    int postfilter_period;
    int postfilter_period_old;
@@ -512,7 +512,7 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM)
    int nbEBands;
    int overlap;
    int start;
-   int loss_duration;
+   int loss_count;
    int noise_based;
    const opus_int16 *eBands;
    SAVE_STACK;
@@ -532,9 +532,9 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM)
    oldLogE2 = oldLogE + 2*nbEBands;
    backgroundLogE = oldLogE2  + 2*nbEBands;
 
-   loss_duration = st->loss_duration;
+   loss_count = st->loss_count;
    start = st->start;
-   noise_based = loss_duration >= 40 || start != 0 || st->skip_plc;
+   noise_based = loss_count >= 5 || start != 0 || st->skip_plc;
    if (noise_based)
    {
       /* Noise-based PLC/CNG */
@@ -559,7 +559,7 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM)
 #endif
 
       /* Energy decay */
-      decay = loss_duration==0 ? QCONST16(1.5f, DB_SHIFT) : QCONST16(.5f, DB_SHIFT);
+      decay = loss_count==0 ? QCONST16(1.5f, DB_SHIFT) : QCONST16(.5f, DB_SHIFT);
       c=0; do
       {
          for (i=start;i<end;i++)
@@ -602,7 +602,7 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM)
       VARDECL(opus_val16, _exc);
       VARDECL(opus_val16, fir_tmp);
 
-      if (loss_duration == 0)
+      if (loss_count == 0)
       {
          st->last_pitch_index = pitch_index = celt_plc_pitch_search(decode_mem, C, st->arch);
       } else {
@@ -632,7 +632,7 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM)
          for (i=0;i<MAX_PERIOD+LPC_ORDER;i++)
             exc[i-LPC_ORDER] = ROUND16(buf[DECODE_BUFFER_SIZE-MAX_PERIOD-LPC_ORDER+i], SIG_SHIFT);
 
-         if (loss_duration == 0)
+         if (loss_count == 0)
          {
             opus_val32 ac[LPC_ORDER+1];
             /* Compute LPC coefficients for the last MAX_PERIOD samples before
@@ -812,8 +812,7 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM)
       } while (++c<C);
    }
 
-   /* Saturate to soemthing large to avoid wrap-around. */
-   st->loss_duration = IMIN(10000, loss_duration+(1<<LM));
+   st->loss_count = loss_count+1;
 
    RESTORE_STACK;
 }
@@ -869,7 +868,6 @@ int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *dat
    int nbEBands;
    int overlap;
    const opus_int16 *eBands;
-   opus_val16 max_background_increase;
    ALLOC_STACK;
 
    VALIDATE_CELT_DECODER(st);
@@ -944,7 +942,7 @@ int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *dat
 
    /* Check if there are at least two packets received consecutively before
     * turning on the pitch-based PLC */
-   st->skip_plc = st->loss_duration != 0;
+   st->skip_plc = st->loss_count != 0;
 
    if (dec == NULL)
    {
@@ -1142,21 +1140,25 @@ int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *dat
    if (C==1)
       OPUS_COPY(&oldBandE[nbEBands], oldBandE, nbEBands);
 
+   /* In case start or end were to change */
    if (!isTransient)
    {
+      opus_val16 max_background_increase;
       OPUS_COPY(oldLogE2, oldLogE, 2*nbEBands);
       OPUS_COPY(oldLogE, oldBandE, 2*nbEBands);
+      /* In normal circumstances, we only allow the noise floor to increase by
+         up to 2.4 dB/second, but when we're in DTX, we allow up to 6 dB
+         increase for each update.*/
+      if (st->loss_count < 10)
+         max_background_increase = M*QCONST16(0.001f,DB_SHIFT);
+      else
+         max_background_increase = QCONST16(1.f,DB_SHIFT);
+      for (i=0;i<2*nbEBands;i++)
+         backgroundLogE[i] = MIN16(backgroundLogE[i] + max_background_increase, oldBandE[i]);
    } else {
       for (i=0;i<2*nbEBands;i++)
          oldLogE[i] = MIN16(oldLogE[i], oldBandE[i]);
    }
-   /* In normal circumstances, we only allow the noise floor to increase by
-      up to 2.4 dB/second, but when we're in DTX we give the weight of
-      all missing packets to the update packet. */
-   max_background_increase = IMIN(160, st->loss_duration+M)*QCONST16(0.001f,DB_SHIFT);
-   for (i=0;i<2*nbEBands;i++)
-      backgroundLogE[i] = MIN16(backgroundLogE[i] + max_background_increase, oldBandE[i]);
-   /* In case start or end were to change */
    c=0; do
    {
       for (i=0;i<start;i++)
@@ -1173,7 +1175,7 @@ int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *dat
    st->rng = dec->rng;
 
    deemphasis(out_syn, pcm, N, CC, st->downsample, mode->preemph, st->preemph_memD, accum);
-   st->loss_duration = 0;
+   st->loss_count = 0;
    RESTORE_STACK;
    if (ec_tell(dec) > 8*len)
       return OPUS_INTERNAL_ERROR;

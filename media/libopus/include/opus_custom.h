@@ -104,8 +104,7 @@ typedef struct OpusCustomDecoder OpusCustomDecoder;
 /** The mode contains all the information necessary to create an
     encoder. Both the encoder and decoder need to be initialized
     with exactly the same mode, otherwise the output will be
-    corrupted. The mode MUST NOT BE DESTROYED until the encoders and
-    decoders that use it are destroyed as well.
+    corrupted.
    @brief Mode configuration
  */
 typedef struct OpusCustomMode OpusCustomMode;
