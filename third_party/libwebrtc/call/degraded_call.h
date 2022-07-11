@@ -17,6 +17,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "absl/types/optional.h"
 #include "api/call/transport.h"
@@ -38,15 +39,20 @@
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/task_queue.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 class DegradedCall : public Call, private PacketReceiver {
  public:
+  struct TimeScopedNetworkConfig : public BuiltInNetworkBehaviorConfig {
+    TimeDelta duration = TimeDelta::PlusInfinity();
+  };
+
   explicit DegradedCall(
       std::unique_ptr<Call> call,
-      absl::optional<BuiltInNetworkBehaviorConfig> send_config,
-      absl::optional<BuiltInNetworkBehaviorConfig> receive_config,
+      const std::vector<TimeScopedNetworkConfig>& send_configs,
+      const std::vector<TimeScopedNetworkConfig>& receive_configs,
       TaskQueueFactory* task_queue_factory);
   ~DegradedCall() override;
 
@@ -157,14 +163,17 @@ class DegradedCall : public Call, private PacketReceiver {
     Transport* const real_transport_;
   };
 
-  Clock* const clock_;
-  const std::unique_ptr<Call> call_;
-  TaskQueueFactory* const task_queue_factory_;
-
   void SetClientBitratePreferences(
       const webrtc::BitrateSettings& preferences) override {}
+  void UpdateSendNetworkConfig();
+  void UpdateReceiveNetworkConfig();
 
-  const absl::optional<BuiltInNetworkBehaviorConfig> send_config_;
+  Clock* const clock_;
+  const std::unique_ptr<Call> call_;
+  ScopedTaskSafety task_safety_;
+  TaskQueueFactory* const task_queue_factory_;
+  size_t send_config_index_;
+  const std::vector<TimeScopedNetworkConfig> send_configs_;
   SimulatedNetwork* send_simulated_network_;
   std::unique_ptr<FakeNetworkPipeOnTaskQueue> send_pipe_;
   std::map<AudioSendStream*, std::unique_ptr<FakeNetworkPipeTransportAdapter>>
@@ -172,7 +181,8 @@ class DegradedCall : public Call, private PacketReceiver {
   std::map<VideoSendStream*, std::unique_ptr<FakeNetworkPipeTransportAdapter>>
       video_send_transport_adapters_;
 
-  const absl::optional<BuiltInNetworkBehaviorConfig> receive_config_;
+  size_t receive_config_index_;
+  const std::vector<TimeScopedNetworkConfig> receive_configs_;
   SimulatedNetwork* receive_simulated_network_;
   std::unique_ptr<FakeNetworkPipe> receive_pipe_;
 };
