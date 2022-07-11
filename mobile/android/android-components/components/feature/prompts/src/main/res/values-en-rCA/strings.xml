@@ -123,4 +123,6 @@
     <string name="mozac_feature_prompts_expand_address_content_description">Expand suggested addresses</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
     <string name="mozac_feature_prompts_collapse_address_content_description">Collapse suggested addresses</string>
-    </resources>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Manage addresses</string>
+</resources>
