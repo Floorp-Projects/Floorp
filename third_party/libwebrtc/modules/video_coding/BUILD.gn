@@ -202,6 +202,18 @@ rtc_library("timing") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("rtt_filter") {
+  sources = [
+    "rtt_filter.cc",
+    "rtt_filter.h",
+  ]
+  deps = [ "../../api/units:time_delta" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/container:inlined_vector",
+  ]
+}
+
 rtc_library("video_coding") {
   visibility = [ "*" ]
   sources = [
@@ -244,8 +256,6 @@ rtc_library("video_coding") {
     "rtp_vp8_ref_finder.h",
     "rtp_vp9_ref_finder.cc",
     "rtp_vp9_ref_finder.h",
-    "rtt_filter.cc",
-    "rtt_filter.h",
     "timestamp_map.cc",
     "timestamp_map.h",
     "unique_timestamp_counter.cc",
@@ -261,6 +271,7 @@ rtc_library("video_coding") {
     ":frame_buffer",
     ":frame_helpers",
     ":packet_buffer",
+    ":rtt_filter",
     ":timing",
     ":video_codec_interface",
     ":video_coding_utility",
@@ -1108,6 +1119,7 @@ if (rtc_include_tests) {
       "rtp_frame_reference_finder_unittest.cc",
       "rtp_vp8_ref_finder_unittest.cc",
       "rtp_vp9_ref_finder_unittest.cc",
+      "rtt_filter_unittest.cc",
       "session_info_unittest.cc",
       "test/stream_generator.cc",
       "test/stream_generator.h",
@@ -1143,6 +1155,7 @@ if (rtc_include_tests) {
       ":h264_packet_buffer",
       ":nack_requester",
       ":packet_buffer",
+      ":rtt_filter",
       ":simulcast_test_fixture_impl",
       ":timing",
       ":video_codec_interface",

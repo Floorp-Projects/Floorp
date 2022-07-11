@@ -346,7 +346,7 @@ void VCMJitterEstimator::PostProcessEstimate() {
 }
 
 void VCMJitterEstimator::UpdateRtt(int64_t rttMs) {
-  _rttFilter.Update(rttMs);
+  _rttFilter.Update(TimeDelta::Millis(rttMs));
 }
 
 // Returns the current filtered estimate if available,
@@ -364,10 +364,10 @@ int VCMJitterEstimator::GetJitterEstimate(
     jitterMS = _filterJitterEstimate;
   if (_nackCount >= _nackLimit) {
     if (rttMultAddCapMs.has_value()) {
-      jitterMS +=
-          std::min(_rttFilter.RttMs() * rttMultiplier, rttMultAddCapMs.value());
+      jitterMS += std::min(_rttFilter.Rtt().ms() * rttMultiplier,
+                           rttMultAddCapMs.value());
     } else {
-      jitterMS += _rttFilter.RttMs() * rttMultiplier;
+      jitterMS += _rttFilter.Rtt().ms() * rttMultiplier;
     }
   }
 
