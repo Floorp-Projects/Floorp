@@ -57,7 +57,7 @@ ABSL_FLAG(
     "described by histogram.proto in "
     "https://chromium.googlesource.com/catapult/.");
 
-#else
+#endif
 
 ABSL_FLAG(std::string,
           isolated_script_test_output,
@@ -71,8 +71,6 @@ ABSL_FLAG(
     "Path where the perf results should be stored in proto format described "
     "described by histogram.proto in "
     "https://chromium.googlesource.com/catapult/.");
-
-#endif
 
 constexpr char kPlotAllMetrics[] = "all";
 ABSL_FLAG(std::vector<std::string>,
