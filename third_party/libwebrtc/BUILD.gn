@@ -12,6 +12,15 @@
 # you add a new build file, there must be some path of dependencies from this
 # file to your new one or GN won't know about it.
 
+# Use of visibility = clauses:
+# The default visibility for all rtc_ targets is equivalent to "//*", or
+# "all targets in webrtc can depend on this, nothing outside can".
+#
+# When overriding, the choices are:
+# - visibility = [ "*" ] - public. Stuff outside webrtc can use this.
+# - visibility = [ ":*" ] - directory private.
+# As a general guideline, only targets in api/ should have public visibility.
+
 import("//build/config/linux/pkg_config.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//third_party/google_benchmark/buildconfig.gni")
