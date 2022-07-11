@@ -120,6 +120,18 @@ TEST_F(DtlsTransportTest, CloseWhenClearing) {
                    kDefaultTimeout);
 }
 
+TEST_F(DtlsTransportTest, RoleAppearsOnConnect) {
+  rtc::FakeSSLCertificate fake_certificate("fake data");
+  CreateTransport(&fake_certificate);
+  transport()->RegisterObserver(observer());
+  EXPECT_FALSE(transport()->Information().role());
+  CompleteDtlsHandshake();
+  ASSERT_TRUE_WAIT(observer_.state() == DtlsTransportState::kConnected,
+                   kDefaultTimeout);
+  EXPECT_TRUE(observer_.info_.role());
+  EXPECT_TRUE(transport()->Information().role());
+}
+
 TEST_F(DtlsTransportTest, CertificateAppearsOnConnect) {
   rtc::FakeSSLCertificate fake_certificate("fake data");
   CreateTransport(&fake_certificate);
