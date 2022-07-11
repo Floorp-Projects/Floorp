@@ -54,6 +54,28 @@ body {
         &:dir(rtl) {
           transform: unset;
         }
+
+        &:not([pos='split']), {
+          .section-main {
+            margin-block: $noodle-buffer auto;
+          }
+        }
+
+        &.with-noodles {
+          .section-main,
+          .section-secondary {
+            margin-block: 50px + $noodle-buffer auto;
+          }
+        }
+
+        &[pos='split'] {
+          @media only screen and (min-width: 800px) {
+            .section-main,
+            .section-secondary {
+              margin-block: 50px + $noodle-buffer auto;
+            }
+          }
+        }
       }
     }
   }
@@ -266,14 +288,14 @@ body {
 
             .secondary-cta {
               position: absolute;
-              bottom: 0;
+              bottom: -30px;
               inset-inline-end: 0;
 
               .secondary {
                 // sass-lint:disable-block no-important
-                background-color: #F0F0F4 !important;
+                background-color: var(--in-content-button-background) !important;
+                color: var(--in-content-button-text-color);
                 line-height: 12px;
-                color: #000;
                 font-size: 10px;
                 font-weight: 600;
                 padding: 8px 16px;
@@ -429,11 +451,12 @@ body {
 
             .action-buttons {
               text-align: center;
-            }
 
-            .action-buttons .secondary-cta {
-              position: relative;
-              margin-block: 10px 0;
+              .secondary-cta {
+                position: relative;
+                margin-block: 10px 0;
+                bottom: 0;
+              }
             }
 
             .primary,
