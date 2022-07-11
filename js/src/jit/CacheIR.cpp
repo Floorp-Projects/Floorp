@@ -475,8 +475,8 @@ static bool IsCacheableProtoChain(NativeObject* obj, NativeObject* holder) {
 }
 #endif
 
-static bool IsCacheableGetPropReadSlot(NativeObject* obj, NativeObject* holder,
-                                       PropertyInfo prop) {
+static bool IsCacheableGetPropSlot(NativeObject* obj, NativeObject* holder,
+                                   PropertyInfo prop) {
   MOZ_ASSERT(IsCacheableProtoChain(obj, holder));
 
   return prop.isDataProperty();
@@ -484,7 +484,8 @@ static bool IsCacheableGetPropReadSlot(NativeObject* obj, NativeObject* holder,
 
 enum class NativeGetPropKind {
   None,
-  ReadSlot,
+  Missing,
+  Slot,
   NativeGetter,
   ScriptedGetter,
 };
@@ -593,8 +594,8 @@ static NativeGetPropKind CanAttachNativeGetProp(JSContext* cx, JSObject* obj,
     *holder = baseHolder;
     *propInfo = mozilla::Some(prop.propertyInfo());
 
-    if (IsCacheableGetPropReadSlot(nobj, *holder, propInfo->ref())) {
-      return NativeGetPropKind::ReadSlot;
+    if (IsCacheableGetPropSlot(nobj, *holder, propInfo->ref())) {
+      return NativeGetPropKind::Slot;
     }
 
     return IsCacheableGetPropCall(nobj, *holder, propInfo->ref());
@@ -602,7 +603,7 @@ static NativeGetPropKind CanAttachNativeGetProp(JSContext* cx, JSObject* obj,
 
   if (!prop.isFound()) {
     if (IsCacheableNoProperty(cx, nobj, *holder, id, pc)) {
-      return NativeGetPropKind::ReadSlot;
+      return NativeGetPropKind::Missing;
     }
   }
 
@@ -1047,7 +1048,8 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
   switch (kind) {
     case NativeGetPropKind::None:
       return AttachDecision::NoAction;
-    case NativeGetPropKind::ReadSlot: {
+    case NativeGetPropKind::Missing:
+    case NativeGetPropKind::Slot: {
       auto* nobj = &obj->as<NativeObject>();
 
       if (mode_ == ICState::Mode::Megamorphic &&
@@ -1154,7 +1156,8 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
     case NativeGetPropKind::None:
       return AttachDecision::NoAction;
 
-    case NativeGetPropKind::ReadSlot: {
+    case NativeGetPropKind::Missing:
+    case NativeGetPropKind::Slot: {
       maybeEmitIdGuard(id);
       ObjOperandId windowObjId =
           GuardAndLoadWindowProxyWindow(writer, objId, windowObj);
@@ -1252,7 +1255,7 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
 
     NativeGetPropKind kind =
         CanAttachNativeGetProp(cx_, unwrapped, id, &holder, &prop, pc_);
-    if (kind != NativeGetPropKind::ReadSlot) {
+    if (kind != NativeGetPropKind::Slot && kind != NativeGetPropKind::Missing) {
       return AttachDecision::NoAction;
     }
   }
@@ -1529,7 +1532,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(
   ObjOperandId expandoObjId = guardDOMProxyExpandoObjectAndShape(
       obj, objId, expandoVal, nativeExpandoObj);
 
-  if (kind == NativeGetPropKind::ReadSlot) {
+  if (kind == NativeGetPropKind::Slot) {
     // Load from the expando's slots.
     EmitLoadSlotResult(writer, expandoObjId, nativeExpandoObj, *prop);
     writer.returnFromIC();
@@ -1630,7 +1633,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
     ObjOperandId holderId = writer.loadObject(holder);
     TestMatchingHolder(writer, holder, holderId);
 
-    if (kind == NativeGetPropKind::ReadSlot) {
+    if (kind == NativeGetPropKind::Slot) {
       EmitLoadSlotResult(writer, holderId, holder, *prop);
       writer.returnFromIC();
     } else {
@@ -1649,6 +1652,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
   } else {
     // Property was not found on the prototype chain. Deoptimize down to
     // proxy get call.
+    MOZ_ASSERT(kind == NativeGetPropKind::Missing);
     MOZ_ASSERT(!isSuper());
     writer.proxyGetResult(objId, id);
     writer.returnFromIC();
@@ -2174,7 +2178,8 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
   switch (kind) {
     case NativeGetPropKind::None:
       return AttachDecision::NoAction;
-    case NativeGetPropKind::ReadSlot: {
+    case NativeGetPropKind::Missing:
+    case NativeGetPropKind::Slot: {
       auto* nproto = &proto->as<NativeObject>();
 
       if (val_.isNumber()) {
@@ -2818,7 +2823,7 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
     // prototype. Ignore the global lexical scope as it doesn't figure
     // into the prototype chain. We guard on the global lexical
     // scope's shape independently.
-    if (!IsCacheableGetPropReadSlot(&globalLexical->global(), holder, *prop)) {
+    if (!IsCacheableGetPropSlot(&globalLexical->global(), holder, *prop)) {
       return AttachDecision::NoAction;
     }
 
@@ -2961,7 +2966,7 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   }
 
   holder = &env->as<NativeObject>();
-  if (!IsCacheableGetPropReadSlot(holder, holder, *prop)) {
+  if (!IsCacheableGetPropSlot(holder, holder, *prop)) {
     return AttachDecision::NoAction;
   }
   if (holder->getSlot(prop->slot()).isMagic()) {
@@ -11953,12 +11958,10 @@ AttachDecision CloseIterIRGenerator::tryAttachNoReturnMethod() {
   // then this CloseIter is a no-op.
   NativeGetPropKind kind = CanAttachNativeGetProp(
       cx_, iter_, NameToId(cx_->names().return_), &holder, &prop, pc_);
-  if (kind != NativeGetPropKind::ReadSlot) {
+  if (kind != NativeGetPropKind::Missing) {
     return AttachDecision::NoAction;
   }
-  if (holder) {
-    return AttachDecision::NoAction;
-  }
+  MOZ_ASSERT(!holder);
 
   ObjOperandId objId(writer.setInputOperandId(0));
 
@@ -11979,15 +11982,11 @@ AttachDecision CloseIterIRGenerator::tryAttachScriptedReturn() {
 
   NativeGetPropKind kind = CanAttachNativeGetProp(
       cx_, iter_, NameToId(cx_->names().return_), &holder, &prop, pc_);
-  if (!holder) {
+  if (kind != NativeGetPropKind::Slot) {
     return AttachDecision::NoAction;
   }
-  if (kind != NativeGetPropKind::ReadSlot) {
-    return AttachDecision::NoAction;
-  }
-  if (!prop->isDataProperty()) {
-    return AttachDecision::NoAction;
-  }
+  MOZ_ASSERT(holder);
+  MOZ_ASSERT(prop->isDataProperty());
 
   size_t slot = prop->slot();
   Value calleeVal = holder->getSlot(slot);
