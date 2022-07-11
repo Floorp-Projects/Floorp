@@ -1272,6 +1272,7 @@ rtc_library("video_track") {
     "video_track.h",
   ]
   deps = [
+    ":rtc_pc_base",
     "../api:media_stream_interface",
     "../api:scoped_refptr",
     "../api:sequence_checker",
