@@ -174,35 +174,44 @@ def main(check=False):
         "$id": schema_id,
         "title": "Messaging Experiment",
         "description": "A Firefox Messaging System message.",
-        "allOf": [
-            # Enforce that one of the templates must match (so that one of the
-            # if branches will match).
+        "oneOf": [
             {
+                "description": "An empty FxMS message.",
                 "type": "object",
-                "properties": {
-                    "template": {
-                        "type": "string",
-                        "enum": all_templates,
-                    },
-                },
-                "required": ["template"],
+                "additionalProperties": False,
             },
-            *(
-                {
-                    "if": {
+            {
+                "allOf": [
+                    # Enforce that one of the templates must match (so that one of the
+                    # if branches will match).
+                    {
                         "type": "object",
                         "properties": {
                             "template": {
                                 "type": "string",
-                                "enum": templates[message_type],
+                                "enum": all_templates,
                             },
                         },
                         "required": ["template"],
                     },
-                    "then": {"$ref": f"{schema_id}#/$defs/{message_type}"},
-                }
-                for message_type in defs
-            ),
+                    *(
+                        {
+                            "if": {
+                                "type": "object",
+                                "properties": {
+                                    "template": {
+                                        "type": "string",
+                                        "enum": templates[message_type],
+                                    },
+                                },
+                                "required": ["template"],
+                            },
+                            "then": {"$ref": f"{schema_id}#/$defs/{message_type}"},
+                        }
+                        for message_type in defs
+                    ),
+                ],
+            },
         ],
         "$defs": defs,
     }

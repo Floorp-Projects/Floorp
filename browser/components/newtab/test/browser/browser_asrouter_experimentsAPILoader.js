@@ -380,3 +380,52 @@ add_task(async function test_forceEnrollUpdatesMessages() {
     "Experiment message should be found after opt in"
   );
 });
+
+add_task(async function test_emptyMessage() {
+  const experiment = ExperimentFakes.recipe("empty", {
+    branches: [
+      {
+        slug: "a",
+        ratio: 1,
+        features: [
+          {
+            featureId: "cfr",
+            value: {},
+          },
+        ],
+      },
+    ],
+    bucketConfig: {
+      start: 0,
+      count: 100,
+      total: 100,
+      namespace: "mochitest",
+      randomizationUnit: "normandy_id",
+    },
+  });
+
+  await setup(experiment);
+  await RemoteSettingsExperimentLoader.updateRecipes();
+  await BrowserTestUtils.waitForCondition(
+    () => ExperimentAPI.getExperiment({ featureId: "cfr" }),
+    "ExperimentAPI should return an experiment"
+  );
+
+  await ASRouter._updateMessageProviders();
+
+  // Disable all other providers and clear all messages.
+  ASRouter.setState(state => ({
+    messages: [],
+    providers: [state.providers.find(p => p.id === "messaging-experiments")],
+  }));
+
+  await ASRouter.loadMessagesFromAllProviders();
+
+  Assert.deepEqual(
+    ASRouter.state.messages,
+    [],
+    "ASRouter should have loaded zero messages"
+  );
+
+  await cleanup();
+});
