@@ -33,7 +33,6 @@ const SANDBOX_GLOBALS = [
 ];
 const EXTRA_IMPORTS = {
   EventUtils: "resource://specialpowers/SpecialPowersEventUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 };
 
 let expectFail = false;
