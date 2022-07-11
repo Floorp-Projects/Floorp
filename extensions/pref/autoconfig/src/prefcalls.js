@@ -15,11 +15,6 @@ var gVersion;
 var gIsUTF8;
 
 function getPrefBranch() {
-  // NOTE: Import Services.jsm locally to avoid polluting the global variables
-  //       for non-sandbox case.
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   return Services.prefs.getBranch(null);
 }
 
@@ -45,9 +40,6 @@ function pref(prefName, value) {
 
 function defaultPref(prefName, value) {
   try {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
     var prefBranch = Services.prefs.getDefaultBranch(null);
     if (typeof value == "string") {
       if (gIsUTF8) {
@@ -141,9 +133,6 @@ function getLDAPAttributes(host, base, filter, attribs, isSecure) {
       "?sub?" +
       filter;
 
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
     var url = Services.io.newURI(urlSpec).QueryInterface(Ci.nsILDAPURL);
 
     var ldapquery = Cc[LDAPSyncQueryContractID].createInstance(
@@ -193,9 +182,6 @@ function getLDAPValue(str, key) {
 
 function displayError(funcname, message) {
   try {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
     var bundle = Services.strings.createBundle(
       "chrome://autoconfig/locale/autoconfig.properties"
     );
