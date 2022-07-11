@@ -36,7 +36,9 @@ class RtcEventLogParseStatus {
   }
 
   bool ok() const { return error_.empty(); }
-  ABSL_DEPRECATED("Use ok() instead") operator bool() const { return ok(); }
+  ABSL_DEPRECATED("Use ok() instead") explicit operator bool() const {
+    return ok();
+  }
 
   std::string message() const { return error_; }
 
