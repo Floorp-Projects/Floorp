@@ -2474,58 +2474,6 @@ TEST_P(WebRtcVoiceEngineTestFake, PlayoutWithMultipleStreams) {
   EXPECT_TRUE(channel_->RemoveRecvStream(kSsrcY));
 }
 
-TEST_P(WebRtcVoiceEngineTestFake, TxAgcConfigViaOptions) {
-  EXPECT_TRUE(SetupSendStream());
-  EXPECT_CALL(*adm_, BuiltInAGCIsAvailable())
-      .Times(::testing::AtLeast(1))
-      .WillRepeatedly(Return(false));
-
-  if (!use_null_apm_) {
-    // Ensure default options.
-    VerifyGainControlEnabledCorrectly();
-    VerifyGainControlDefaultSettings();
-  }
-
-  const auto& agc_config = apm_config_.gain_controller1;
-
-  send_parameters_.options.auto_gain_control = false;
-  SetSendParameters(send_parameters_);
-  if (!use_null_apm_) {
-    EXPECT_FALSE(agc_config.enabled);
-  }
-  send_parameters_.options.auto_gain_control = absl::nullopt;
-
-  send_parameters_.options.tx_agc_target_dbov = 5;
-  SetSendParameters(send_parameters_);
-  if (!use_null_apm_) {
-    EXPECT_EQ(5, agc_config.target_level_dbfs);
-  }
-  send_parameters_.options.tx_agc_target_dbov = absl::nullopt;
-
-  send_parameters_.options.tx_agc_digital_compression_gain = 10;
-  SetSendParameters(send_parameters_);
-  if (!use_null_apm_) {
-    EXPECT_EQ(10, agc_config.compression_gain_db);
-  }
-  send_parameters_.options.tx_agc_digital_compression_gain = absl::nullopt;
-
-  send_parameters_.options.tx_agc_limiter = false;
-  SetSendParameters(send_parameters_);
-  if (!use_null_apm_) {
-    EXPECT_FALSE(agc_config.enable_limiter);
-  }
-  send_parameters_.options.tx_agc_limiter = absl::nullopt;
-
-  SetSendParameters(send_parameters_);
-  if (!use_null_apm_) {
-    // Expect all options to have been preserved.
-    EXPECT_FALSE(agc_config.enabled);
-    EXPECT_EQ(5, agc_config.target_level_dbfs);
-    EXPECT_EQ(10, agc_config.compression_gain_db);
-    EXPECT_FALSE(agc_config.enable_limiter);
-  }
-}
-
 TEST_P(WebRtcVoiceEngineTestFake, SetAudioNetworkAdaptorViaOptions) {
   EXPECT_TRUE(SetupSendStream());
   send_parameters_.options.audio_network_adaptor = true;

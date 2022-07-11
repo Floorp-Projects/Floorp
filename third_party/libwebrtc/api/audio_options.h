@@ -64,16 +64,10 @@ struct RTC_EXPORT AudioOptions {
   // TODO(bugs.webrtc.org/11226): Remove.
   // Audio processing to detect typing.
   absl::optional<bool> typing_detection;
-  absl::optional<bool> experimental_agc;
-  absl::optional<bool> experimental_ns;
   // TODO(bugs.webrtc.org/11539): Deprecated, replaced by
   // webrtc::CreateEchoDetector() and injection when creating the audio
   // processing module.
   absl::optional<bool> residual_echo_detector;
-  // Note that tx_agc_* only applies to non-experimental AGC.
-  absl::optional<uint16_t> tx_agc_target_dbov;
-  absl::optional<uint16_t> tx_agc_digital_compression_gain;
-  absl::optional<bool> tx_agc_limiter;
   // Enable combined audio+bandwidth BWE.
   // TODO(pthatcher): This flag is set from the
   // "googCombinedAudioVideoBwe", but not used anywhere. So delete it,
