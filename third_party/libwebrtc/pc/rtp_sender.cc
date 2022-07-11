@@ -483,6 +483,7 @@ sigslot::signal0<>* AudioRtpSender::GetOnDestroyedSignal() {
 }
 
 void AudioRtpSender::OnChanged() {
+  // Running on the signaling thread.
   TRACE_EVENT0("webrtc", "AudioRtpSender::OnChanged");
   RTC_DCHECK(!stopped_);
   if (cached_track_enabled_ != track_->enabled()) {
@@ -584,10 +585,13 @@ VideoRtpSender::~VideoRtpSender() {
 }
 
 void VideoRtpSender::OnChanged() {
+  // Running on the signaling thread.
   TRACE_EVENT0("webrtc", "VideoRtpSender::OnChanged");
   RTC_DCHECK(!stopped_);
-  if (cached_track_content_hint_ != video_track()->content_hint()) {
-    cached_track_content_hint_ = video_track()->content_hint();
+
+  auto content_hint = video_track()->content_hint();
+  if (cached_track_content_hint_ != content_hint) {
+    cached_track_content_hint_ = content_hint;
     if (can_send_track()) {
       SetSend();
     }

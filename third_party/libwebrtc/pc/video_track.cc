@@ -18,6 +18,7 @@
 #include "api/sequence_checker.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
@@ -74,12 +75,12 @@ VideoTrackSourceInterface* VideoTrack::GetSource() const {
 }
 
 VideoTrackInterface::ContentHint VideoTrack::content_hint() const {
-  RTC_DCHECK_RUN_ON(worker_thread_);
+  RTC_DCHECK_RUN_ON(&signaling_thread_);
   return content_hint_;
 }
 
 void VideoTrack::set_content_hint(ContentHint hint) {
-  RTC_DCHECK_RUN_ON(worker_thread_);
+  RTC_DCHECK_RUN_ON(&signaling_thread_);
   if (content_hint_ == hint)
     return;
   content_hint_ = hint;
@@ -120,15 +121,9 @@ MediaStreamTrackInterface::TrackState VideoTrack::state() const {
 
 void VideoTrack::OnChanged() {
   RTC_DCHECK_RUN_ON(&signaling_thread_);
-  worker_thread_->Invoke<void>(
-      RTC_FROM_HERE, [this, state = video_source_->state()]() {
-        // TODO(tommi): Calling set_state() this way isn't ideal since we're
-        // currently blocking the signaling thread and set_state() may
-        // internally fire notifications via `FireOnChanged()` which may further
-        // amplify the blocking effect on the signaling thread.
-        rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
-        set_state(state == MediaSourceInterface::kEnded ? kEnded : kLive);
-      });
+  rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
+  MediaSourceInterface::SourceState state = video_source_->state();
+  set_state(state == MediaSourceInterface::kEnded ? kEnded : kLive);
 }
 
 rtc::scoped_refptr<VideoTrack> VideoTrack::Create(
