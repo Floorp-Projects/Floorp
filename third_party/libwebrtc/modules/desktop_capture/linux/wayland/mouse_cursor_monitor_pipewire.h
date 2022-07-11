@@ -20,6 +20,7 @@
 #include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
 #include "modules/desktop_capture/mouse_cursor.h"
 #include "modules/desktop_capture/mouse_cursor_monitor.h"
+#include "rtc_base/system/no_unique_address.h"
 
 namespace webrtc {
 

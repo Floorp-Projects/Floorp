@@ -450,6 +450,7 @@ rtc_library("desktop_capture_generic") {
     "../../rtc_base:checks",
     "../../rtc_base/synchronization:mutex",
     "../../rtc_base/system:arch",
+    "../../rtc_base/system:no_unique_address",
     "../../rtc_base/system:rtc_export",
     "../../system_wrappers",
     "../../system_wrappers:metrics",
