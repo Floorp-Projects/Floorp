@@ -111,7 +111,7 @@ class MockNetworkLinkRtcpObserver : public NetworkLinkRtcpObserver {
 // Since some tests will need to wait for this period, make it small to avoid
 // slowing tests too much. As long as there are test bots with high scheduler
 // granularity, small period should be ok.
-constexpr int kReportPeriodMs = 10;
+constexpr TimeDelta kReportPeriod = TimeDelta::Millis(10);
 // On some systems task queue might be slow, instead of guessing right
 // grace period, use very large timeout, 100x larger expected wait time.
 // Use finite timeout to fail tests rather than hang them.
@@ -176,8 +176,8 @@ RtcpTransceiverConfig DefaultTestConfig() {
   config.clock = &null_clock;
   config.outgoing_transport = &null_transport;
   config.schedule_periodic_compound_packets = false;
-  config.initial_report_delay_ms = 10;
-  config.report_period_ms = kReportPeriodMs;
+  config.initial_report_delay = TimeDelta::Millis(10);
+  config.report_period = kReportPeriod;
   return config;
 }
 
@@ -246,7 +246,7 @@ TEST(RtcpTransceiverImplTest, DelaysSendingFirstCompondPacket) {
   RtcpTransceiverConfig config;
   config.clock = &clock;
   config.outgoing_transport = &transport;
-  config.initial_report_delay_ms = 10;
+  config.initial_report_delay = TimeDelta::Millis(10);
   config.task_queue = queue.Get();
   absl::optional<RtcpTransceiverImpl> rtcp_transceiver;
 
@@ -254,7 +254,7 @@ TEST(RtcpTransceiverImplTest, DelaysSendingFirstCompondPacket) {
   queue.PostTask([&] { rtcp_transceiver.emplace(config); });
   EXPECT_TRUE(transport.WaitPacket());
 
-  EXPECT_GE(rtc::TimeMillis() - started_ms, config.initial_report_delay_ms);
+  EXPECT_GE(rtc::TimeMillis() - started_ms, config.initial_report_delay.ms());
 
   // Cleanup.
   rtc::Event done;
@@ -273,8 +273,8 @@ TEST(RtcpTransceiverImplTest, PeriodicallySendsPackets) {
   RtcpTransceiverConfig config;
   config.clock = &clock;
   config.outgoing_transport = &transport;
-  config.initial_report_delay_ms = 0;
-  config.report_period_ms = kReportPeriodMs;
+  config.initial_report_delay = TimeDelta::Zero();
+  config.report_period = kReportPeriod;
   config.task_queue = queue.Get();
   absl::optional<RtcpTransceiverImpl> rtcp_transceiver;
   int64_t time_just_before_1st_packet_ms = 0;
@@ -290,7 +290,7 @@ TEST(RtcpTransceiverImplTest, PeriodicallySendsPackets) {
   int64_t time_just_after_2nd_packet_ms = rtc::TimeMillis();
 
   EXPECT_GE(time_just_after_2nd_packet_ms - time_just_before_1st_packet_ms,
-            config.report_period_ms - 1);
+            config.report_period.ms() - 1);
 
   // Cleanup.
   rtc::Event done;
@@ -309,8 +309,8 @@ TEST(RtcpTransceiverImplTest, SendCompoundPacketDelaysPeriodicSendPackets) {
   RtcpTransceiverConfig config;
   config.clock = &clock;
   config.outgoing_transport = &transport;
-  config.initial_report_delay_ms = 0;
-  config.report_period_ms = kReportPeriodMs;
+  config.initial_report_delay = TimeDelta::Zero();
+  config.report_period = kReportPeriod;
   config.task_queue = queue.Get();
   absl::optional<RtcpTransceiverImpl> rtcp_transceiver;
   queue.PostTask([&] { rtcp_transceiver.emplace(config); });
@@ -326,7 +326,7 @@ TEST(RtcpTransceiverImplTest, SendCompoundPacketDelaysPeriodicSendPackets) {
         rtcp_transceiver->SendCompoundPacket();
         non_periodic.Set();
       },
-      config.report_period_ms / 2);
+      (config.report_period / 2).ms());
   // Though non-periodic packet is scheduled just in between periodic, due to
   // small period and task queue flakiness it migth end-up 1ms after next
   // periodic packet. To be sure duration after non-periodic packet is tested
@@ -338,7 +338,7 @@ TEST(RtcpTransceiverImplTest, SendCompoundPacketDelaysPeriodicSendPackets) {
   int64_t time_of_last_periodic_packet_ms = rtc::TimeMillis();
 
   EXPECT_GE(time_of_last_periodic_packet_ms - time_of_non_periodic_packet_ms,
-            config.report_period_ms - 1);
+            config.report_period.ms() - 1);
 
   // Cleanup.
   rtc::Event done;

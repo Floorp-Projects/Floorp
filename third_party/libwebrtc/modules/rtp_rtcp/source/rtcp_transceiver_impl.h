@@ -116,7 +116,7 @@ class RtcpTransceiverImpl {
       rtc::ArrayView<const rtcp::ReportBlock> report_blocks);
 
   void ReschedulePeriodicCompoundPackets();
-  void SchedulePeriodicCompoundPackets(int64_t delay_ms);
+  void SchedulePeriodicCompoundPackets(TimeDelta delay);
   // Appends RTCP sender and receiver reports to the `sender`.
   // Both sender and receiver reports may have attached report blocks.
   // Uses up to `config_.max_packet_size - reserved_bytes`
