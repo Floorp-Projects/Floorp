@@ -80,7 +80,7 @@ class VideoReceiveStream2Test : public ::testing::Test {
         h264_decoder_factory_(&mock_h264_video_decoder_),
         config_(&mock_transport_, &h264_decoder_factory_),
         call_stats_(Clock::GetRealTimeClock(), loop_.task_queue()),
-        field_trials_("WebRTC-FrameBuffer3/Enabled/") {}
+        field_trials_("WebRTC-FrameBuffer3/arm:FrameBuffer3/") {}
   ~VideoReceiveStream2Test() override {
     if (video_receive_stream_)
       video_receive_stream_->UnregisterFromTransport();
@@ -539,8 +539,8 @@ class VideoReceiveStream2TestWithSimulatedClock
   VideoReceiveStream2TestWithSimulatedClock()
       : time_controller_(Timestamp::Millis(4711)),
         field_trials_(std::get<1>(GetParam())
-                          ? "WebRTC-FrameBuffer3/Enabled/"
-                          : "WebRTC-FrameBuffer3/Disabled/"),
+                          ? "WebRTC-FrameBuffer3/arm:FrameBuffer3/"
+                          : "WebRTC-FrameBuffer3/arm:FrameBuffer2/"),
         fake_decoder_factory_([this] {
           return std::make_unique<FakeDecoder2>([this] { OnFrameDecoded(); });
         }),
