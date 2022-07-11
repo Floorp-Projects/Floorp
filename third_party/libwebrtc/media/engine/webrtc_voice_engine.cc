@@ -1666,8 +1666,8 @@ bool CheckRedParameters(
     RTC_LOG(LS_WARNING) << "audio/RED missing fmtp parameters.";
     return false;
   }
-  std::vector<std::string> redundant_payloads;
-  rtc::split(red_parameters->second, '/', &redundant_payloads);
+  std::vector<absl::string_view> redundant_payloads =
+      rtc::split(red_parameters->second, '/');
   // 32 is chosen as a maximum upper bound for consistency with the
   // red payload splitter.
   if (redundant_payloads.size() < 2 || redundant_payloads.size() > 32) {

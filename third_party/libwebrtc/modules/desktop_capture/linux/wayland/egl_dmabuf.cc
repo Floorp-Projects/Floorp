@@ -327,9 +327,8 @@ EglDmaBuf::EglDmaBuf() {
     return;
   }
 
-  std::vector<std::string> client_extensions_no_display;
-  rtc::split(client_extensions_cstring_no_display, ' ',
-             &client_extensions_no_display);
+  std::vector<absl::string_view> client_extensions_no_display =
+      rtc::split(client_extensions_cstring_no_display, ' ');
   for (const auto& extension : client_extensions_no_display) {
     egl_.extensions.push_back(std::string(extension));
   }
@@ -388,8 +387,8 @@ EglDmaBuf::EglDmaBuf() {
       EglQueryString(egl_.display, EGL_EXTENSIONS);
   client_extensions_string = client_extensions_cstring_display;
 
-  std::vector<std::string> client_extensions;
-  rtc::split(client_extensions_string, ' ', &client_extensions);
+  std::vector<absl::string_view> client_extensions =
+      rtc::split(client_extensions_string, ' ');
   for (const auto& extension : client_extensions) {
     egl_.extensions.push_back(std::string(extension));
   }
