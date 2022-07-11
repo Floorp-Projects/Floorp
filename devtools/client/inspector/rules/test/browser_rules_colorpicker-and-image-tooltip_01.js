@@ -19,7 +19,12 @@ const TEST_URI = `
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { view } = await openRuleView();
-  const value = getRuleViewProperty(view, "body", "background").valueSpan;
+
+  // Bug 1767679 - Frequent intermittents on linux.
+  const property = await waitFor(() =>
+    getRuleViewProperty(view, "body", "background")
+  );
+  const value = property.valueSpan;
   const swatch = value.querySelectorAll(".ruleview-colorswatch")[0];
   const url = value.querySelector(".theme-link");
   await testImageTooltipAfterColorChange(swatch, url, view);
