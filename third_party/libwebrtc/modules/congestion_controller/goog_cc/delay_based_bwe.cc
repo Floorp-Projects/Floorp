@@ -243,8 +243,8 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
     if (probe_bitrate) {
       result.probe = true;
       result.updated = true;
-      result.target_bitrate = *probe_bitrate;
       rate_control_.SetEstimate(*probe_bitrate, at_time);
+      result.target_bitrate = rate_control_.LatestEstimate();
     } else {
       result.updated =
           UpdateEstimate(at_time, acked_bitrate, &result.target_bitrate);
