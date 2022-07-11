@@ -339,7 +339,7 @@ VideoStatistics VideoCodecTestStatsImpl::SliceAndCalcVideoStatistic(
 
   video_stat.avg_delay_sec = buffer_level_sec.GetMean().value_or(0);
   video_stat.max_key_frame_delay_sec = MaxDelaySec(key_frame_size_bytes);
-  video_stat.max_delta_frame_delay_sec = MaxDelaySec(key_frame_size_bytes);
+  video_stat.max_delta_frame_delay_sec = MaxDelaySec(delta_frame_size_bytes);
 
   video_stat.avg_bitrate_mismatch_pct =
       100 * (bitrate_bps - target_bitrate_bps) / target_bitrate_bps;
