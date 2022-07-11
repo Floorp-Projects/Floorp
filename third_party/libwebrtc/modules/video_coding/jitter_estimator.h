@@ -22,7 +22,8 @@ class VCMJitterEstimator {
  public:
   explicit VCMJitterEstimator(Clock* clock);
   virtual ~VCMJitterEstimator();
-  VCMJitterEstimator& operator=(const VCMJitterEstimator& rhs);
+  VCMJitterEstimator(const VCMJitterEstimator&) = delete;
+  VCMJitterEstimator& operator=(const VCMJitterEstimator&) = delete;
 
   // Resets the estimate to the initial state.
   void Reset();
