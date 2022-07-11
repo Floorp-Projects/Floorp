@@ -2675,6 +2675,7 @@ include_rules = [
   "+absl/base/config.h",
   "+absl/base/const_init.h",
   "+absl/base/macros.h",
+  "+absl/cleanup/cleanup.h",
   "+absl/container/inlined_vector.h",
   "+absl/functional/bind_front.h",
   "+absl/memory/memory.h",
