@@ -261,8 +261,12 @@ int main(int argc, char* argv[]) {
   }
 
   webrtc::AnalyzerConfig config;
-  config.window_duration_ = 250000;
-  config.step_ = 10000;
+  config.window_duration_ = webrtc::TimeDelta::Millis(250);
+  config.step_ = webrtc::TimeDelta::Millis(10);
+  if (!parsed_log.start_log_events().empty()) {
+    config.rtc_to_utc_offset_ = parsed_log.start_log_events()[0].utc_time() -
+                                parsed_log.start_log_events()[0].log_time();
+  }
   config.normalize_time_ = absl::GetFlag(FLAGS_normalize_time);
   config.begin_time_ = parsed_log.first_timestamp();
   config.end_time_ = parsed_log.last_timestamp();
@@ -275,6 +279,7 @@ int main(int argc, char* argv[]) {
 
   webrtc::EventLogAnalyzer analyzer(parsed_log, config);
   webrtc::PlotCollection collection;
+  collection.SetCallTimeToUtcOffsetMs(config.CallTimeToUtcOffsetMs());
 
   PlotMap plots;
   plots.RegisterPlot("incoming_packet_sizes", [&](Plot* plot) {
