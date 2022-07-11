@@ -52,8 +52,7 @@ class DegradedCall : public Call, private PacketReceiver {
   explicit DegradedCall(
       std::unique_ptr<Call> call,
       const std::vector<TimeScopedNetworkConfig>& send_configs,
-      const std::vector<TimeScopedNetworkConfig>& receive_configs,
-      TaskQueueFactory* task_queue_factory);
+      const std::vector<TimeScopedNetworkConfig>& receive_configs);
   ~DegradedCall() override;
 
   // Implements Call.
@@ -115,7 +114,8 @@ class DegradedCall : public Call, private PacketReceiver {
   class FakeNetworkPipeOnTaskQueue {
    public:
     FakeNetworkPipeOnTaskQueue(
-        TaskQueueFactory* task_queue_factory,
+        TaskQueueBase* task_queue,
+        const ScopedTaskSafety& task_safety,
         Clock* clock,
         std::unique_ptr<NetworkBehaviorInterface> network_behavior);
 
@@ -134,7 +134,8 @@ class DegradedCall : public Call, private PacketReceiver {
     bool Process();
 
     Clock* const clock_;
-    rtc::TaskQueue task_queue_;
+    TaskQueueBase* const task_queue_;
+    const ScopedTaskSafety& task_safety_;
     FakeNetworkPipe pipe_;
     absl::optional<int64_t> next_process_ms_ RTC_GUARDED_BY(&task_queue_);
   };
@@ -171,7 +172,6 @@ class DegradedCall : public Call, private PacketReceiver {
   Clock* const clock_;
   const std::unique_ptr<Call> call_;
   ScopedTaskSafety task_safety_;
-  TaskQueueFactory* const task_queue_factory_;
   size_t send_config_index_;
   const std::vector<TimeScopedNetworkConfig> send_configs_;
   SimulatedNetwork* send_simulated_network_;
