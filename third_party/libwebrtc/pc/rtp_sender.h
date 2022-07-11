@@ -104,6 +104,9 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
 
   bool SetTrack(MediaStreamTrackInterface* track) override;
   rtc::scoped_refptr<MediaStreamTrackInterface> track() const override {
+    // This method is currently called from the worker thread by
+    // RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n.
+    // RTC_DCHECK_RUN_ON(signaling_thread_);
     return track_;
   }
 
@@ -120,9 +123,17 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   // underlying transport (this occurs if the sender isn't seen in a local
   // description).
   void SetSsrc(uint32_t ssrc) override;
-  uint32_t ssrc() const override { return ssrc_; }
+  uint32_t ssrc() const override {
+    // This method is currently called from the worker thread by
+    // RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n.
+    // RTC_DCHECK_RUN_ON(signaling_thread_);
+    return ssrc_;
+  }
 
-  std::vector<std::string> stream_ids() const override { return stream_ids_; }
+  std::vector<std::string> stream_ids() const override {
+    RTC_DCHECK_RUN_ON(signaling_thread_);
+    return stream_ids_;
+  }
   void set_stream_ids(const std::vector<std::string>& stream_ids) override {
     stream_ids_ = stream_ids;
   }
@@ -135,6 +146,7 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
     init_parameters_.encodings = init_send_encodings;
   }
   std::vector<RtpEncodingParameters> init_send_encodings() const override {
+    RTC_DCHECK_RUN_ON(signaling_thread_);
     return init_parameters_.encodings;
   }
 
@@ -143,6 +155,7 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
     dtls_transport_ = dtls_transport;
   }
   rtc::scoped_refptr<DtlsTransportInterface> dtls_transport() const override {
+    RTC_DCHECK_RUN_ON(signaling_thread_);
     return dtls_transport_;
   }
 
@@ -168,7 +181,10 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   void SetEncoderToPacketizerFrameTransformer(
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) override;
 
-  void SetTransceiverAsStopped() override { is_transceiver_stopped_ = true; }
+  void SetTransceiverAsStopped() override {
+    RTC_DCHECK_RUN_ON(signaling_thread_);
+    is_transceiver_stopped_ = true;
+  }
 
  protected:
   // If `set_streams_observer` is not null, it is invoked when SetStreams()
@@ -195,10 +211,11 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   virtual void AddTrackToStats() {}
   virtual void RemoveTrackFromStats() {}
 
-  rtc::Thread* worker_thread_;
+  rtc::Thread* const signaling_thread_;
+  rtc::Thread* const worker_thread_;
   uint32_t ssrc_ = 0;
-  bool stopped_ = false;
-  bool is_transceiver_stopped_ = false;
+  bool stopped_ RTC_GUARDED_BY(signaling_thread_) = false;
+  bool is_transceiver_stopped_ RTC_GUARDED_BY(signaling_thread_) = false;
   int attachment_id_ = 0;
   const std::string id_;
 
