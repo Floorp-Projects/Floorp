@@ -146,7 +146,6 @@ rtc_library("audio_processing") {
     "audio_processing_builder_impl.cc",
     "audio_processing_impl.cc",
     "audio_processing_impl.h",
-    "common.h",
     "echo_control_mobile_impl.cc",
     "echo_control_mobile_impl.h",
     "gain_control_impl.cc",

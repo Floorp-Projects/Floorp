@@ -27,7 +27,6 @@
 #include "common_audio/signal_processing/include/signal_processing_library.h"
 #include "modules/audio_processing/aec_dump/aec_dump_factory.h"
 #include "modules/audio_processing/audio_processing_impl.h"
-#include "modules/audio_processing/common.h"
 #include "modules/audio_processing/include/mock_audio_processing.h"
 #include "modules/audio_processing/test/audio_processing_builder_for_testing.h"
 #include "modules/audio_processing/test/protobuf_utils.h"

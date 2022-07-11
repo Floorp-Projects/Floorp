@@ -154,8 +154,6 @@ void SetContainerFormat(int sample_rate_hz,
   cb->reset(new ChannelBuffer<T>(frame->samples_per_channel, num_channels));
 }
 
-AudioProcessing::ChannelLayout LayoutFromChannels(size_t num_channels);
-
 template <typename T>
 float ComputeSNR(const T* ref, const T* test, size_t length, float* variance) {
   float mse = 0;
