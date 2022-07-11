@@ -692,7 +692,8 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::Handle<JSObject*> aObj,
   }
 
   nsAutoCString mimeType;
-  response->GetMimeType(mimeType);
+  nsAutoCString mixedCaseMimeType;  // unused
+  response->GetMimeType(mimeType, mixedCaseMimeType);
 
   if (!mimeType.EqualsASCII(requiredMimeType)) {
     JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,

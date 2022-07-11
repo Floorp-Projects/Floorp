@@ -1187,7 +1187,8 @@ already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
   }
 
   nsAutoCString mimeType;
-  DerivedClass()->GetMimeType(mimeType);
+  nsAutoCString mixedCaseMimeType;
+  DerivedClass()->GetMimeType(mimeType, mixedCaseMimeType);
 
   // Null bodies are a special-case in the fetch spec.  The Body mix-in can only
   // be "disturbed" or "locked" if its associated "body" is non-null.
@@ -1201,9 +1202,10 @@ already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
   nsCOMPtr<nsIInputStream> bodyStream;
   DerivedClass()->GetBody(getter_AddRefs(bodyStream));
   if (!bodyStream) {
-    RefPtr<EmptyBody> emptyBody = EmptyBody::Create(
-        DerivedClass()->GetParentObject(),
-        DerivedClass()->GetPrincipalInfo().get(), signalImpl, mimeType, aRv);
+    RefPtr<EmptyBody> emptyBody =
+        EmptyBody::Create(DerivedClass()->GetParentObject(),
+                          DerivedClass()->GetPrincipalInfo().get(), signalImpl,
+                          mimeType, mixedCaseMimeType, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -1236,7 +1238,8 @@ already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
 
   RefPtr<Promise> promise = BodyConsumer::Create(
       global, mMainThreadEventTarget, bodyStream, signalImpl, aType,
-      BodyBlobURISpec(), BodyLocalPath(), mimeType, blobStorageType, aRv);
+      BodyBlobURISpec(), BodyLocalPath(), mimeType, mixedCaseMimeType,
+      blobStorageType, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -1254,7 +1257,8 @@ template already_AddRefed<Promise> FetchBody<EmptyBody>::ConsumeBody(
     JSContext* aCx, BodyConsumer::ConsumeType aType, ErrorResult& aRv);
 
 template <class Derived>
-void FetchBody<Derived>::GetMimeType(nsACString& aMimeType) {
+void FetchBody<Derived>::GetMimeType(nsACString& aMimeType,
+                                     nsACString& aMixedCaseMimeType) {
   // Extract mime type.
   ErrorResult result;
   nsCString contentTypeValues;
@@ -1268,12 +1272,15 @@ void FetchBody<Derived>::GetMimeType(nsACString& aMimeType) {
   if (!contentTypeValues.IsVoid() && contentTypeValues.Find(",") == -1) {
     // Convert from a bytestring to a UTF8 CString.
     CopyLatin1toUTF8(contentTypeValues, aMimeType);
+    aMixedCaseMimeType = aMimeType;
     ToLowerCase(aMimeType);
   }
 }
 
-template void FetchBody<Request>::GetMimeType(nsACString& aMimeType);
-template void FetchBody<Response>::GetMimeType(nsACString& aMimeType);
+template void FetchBody<Request>::GetMimeType(nsACString& aMimeType,
+                                              nsACString& aMixedCaseMimeType);
+template void FetchBody<Response>::GetMimeType(nsACString& aMimeType,
+                                               nsACString& aMixedCaseMimeType);
 
 template <class Derived>
 const nsACString& FetchBody<Derived>::BodyBlobURISpec() const {
@@ -1510,10 +1517,12 @@ EmptyBody::EmptyBody(nsIGlobalObject* aGlobal,
                      mozilla::ipc::PrincipalInfo* aPrincipalInfo,
                      AbortSignalImpl* aAbortSignalImpl,
                      const nsACString& aMimeType,
+                     const nsACString& aMixedCaseMimeType,
                      already_AddRefed<nsIInputStream> aBodyStream)
     : FetchBody<EmptyBody>(aGlobal),
       mAbortSignalImpl(aAbortSignalImpl),
       mMimeType(aMimeType),
+      mMixedCaseMimeType(aMixedCaseMimeType),
       mBodyStream(std::move(aBodyStream)) {
   if (aPrincipalInfo) {
     mPrincipalInfo = MakeUnique<mozilla::ipc::PrincipalInfo>(*aPrincipalInfo);
@@ -1526,7 +1535,7 @@ EmptyBody::~EmptyBody() = default;
 already_AddRefed<EmptyBody> EmptyBody::Create(
     nsIGlobalObject* aGlobal, mozilla::ipc::PrincipalInfo* aPrincipalInfo,
     AbortSignalImpl* aAbortSignalImpl, const nsACString& aMimeType,
-    ErrorResult& aRv) {
+    const nsACString& aMixedCaseMimeType, ErrorResult& aRv) {
   nsCOMPtr<nsIInputStream> bodyStream;
   aRv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), ""_ns);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -1535,7 +1544,7 @@ already_AddRefed<EmptyBody> EmptyBody::Create(
 
   RefPtr<EmptyBody> emptyBody =
       new EmptyBody(aGlobal, aPrincipalInfo, aAbortSignalImpl, aMimeType,
-                    bodyStream.forget());
+                    aMixedCaseMimeType, bodyStream.forget());
   return emptyBody.forget();
 }
 

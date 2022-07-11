@@ -46,10 +46,10 @@ class BodyUtil final {
    * Creates a form data object from a UTF-8 encoded |aStr|. Returns |nullptr|
    * and sets |aRv| to MSG_BAD_FORMDATA if |aStr| contains invalid data.
    */
-  static already_AddRefed<FormData> ConsumeFormData(nsIGlobalObject* aParent,
-                                                    const nsCString& aMimeType,
-                                                    const nsCString& aStr,
-                                                    ErrorResult& aRv);
+  static already_AddRefed<FormData> ConsumeFormData(
+      nsIGlobalObject* aParent, const nsCString& aMimeType,
+      const nsACString& aMixedCaseMimeType, const nsCString& aStr,
+      ErrorResult& aRv);
 
   /**
    * UTF-8 decodes |aInput| into |aText|. The caller may free |aInput|

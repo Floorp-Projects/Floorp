@@ -294,7 +294,7 @@ already_AddRefed<Promise> Blob::ConsumeBody(
 
   return BodyConsumer::Create(mGlobal, mainThreadEventTarget, inputStream,
                               nullptr, aConsumeType, VoidCString(),
-                              VoidString(), VoidCString(),
+                              VoidString(), VoidCString(), VoidCString(),
                               MutableBlobStorage::eOnlyInMemory, aRv);
 }
 
