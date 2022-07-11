@@ -95,14 +95,8 @@ const char MediaConstraints::kValueFalse[] = "false";
 // Audio constraints.
 const char MediaConstraints::kGoogEchoCancellation[] = "googEchoCancellation";
 const char MediaConstraints::kAutoGainControl[] = "googAutoGainControl";
-const char MediaConstraints::kExperimentalAutoGainControl[] =
-    "googAutoGainControl2";
 const char MediaConstraints::kNoiseSuppression[] = "googNoiseSuppression";
-const char MediaConstraints::kExperimentalNoiseSuppression[] =
-    "googNoiseSuppression2";
 const char MediaConstraints::kHighpassFilter[] = "googHighpassFilter";
-const char MediaConstraints::kTypingNoiseDetection[] =
-    "googTypingNoiseDetection";
 const char MediaConstraints::kAudioMirroring[] = "googAudioMirroring";
 const char MediaConstraints::kAudioNetworkAdaptorConfig[] =
     "googAudioNetworkAdaptorConfig";
@@ -190,19 +184,10 @@ void CopyConstraintsIntoAudioOptions(const MediaConstraints* constraints,
                              &options->echo_cancellation);
   ConstraintToOptional<bool>(constraints, MediaConstraints::kAutoGainControl,
                              &options->auto_gain_control);
-  ConstraintToOptional<bool>(constraints,
-                             MediaConstraints::kExperimentalAutoGainControl,
-                             &options->experimental_agc);
   ConstraintToOptional<bool>(constraints, MediaConstraints::kNoiseSuppression,
                              &options->noise_suppression);
-  ConstraintToOptional<bool>(constraints,
-                             MediaConstraints::kExperimentalNoiseSuppression,
-                             &options->experimental_ns);
   ConstraintToOptional<bool>(constraints, MediaConstraints::kHighpassFilter,
                              &options->highpass_filter);
-  ConstraintToOptional<bool>(constraints,
-                             MediaConstraints::kTypingNoiseDetection,
-                             &options->typing_detection);
   ConstraintToOptional<bool>(constraints, MediaConstraints::kAudioMirroring,
                              &options->stereo_swapping);
   ConstraintToOptional<std::string>(

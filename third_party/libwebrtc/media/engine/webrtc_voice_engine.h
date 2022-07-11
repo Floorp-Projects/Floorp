@@ -124,9 +124,6 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   bool is_dumping_aec_ = false;
   bool initialized_ = false;
 
-  // Cache experimental_ns and apply in case they are missing in the audio
-  // options.
-  absl::optional<bool> experimental_ns_;
   // Jitter buffer settings for new streams.
   size_t audio_jitter_buffer_max_packets_ = 200;
   bool audio_jitter_buffer_fast_accelerate_ = false;
