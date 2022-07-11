@@ -834,6 +834,11 @@ void Connection::Prune() {
 
 void Connection::Destroy() {
   RTC_DCHECK_RUN_ON(network_thread_);
+  if (pending_delete_)
+    return;
+
+  pending_delete_ = true;
+
   RTC_DLOG(LS_VERBOSE) << ToString() << ": Connection destroyed";
 
   // Fire the 'destroyed' event before deleting the object. This is done
