@@ -130,6 +130,7 @@ TEST_F(DtlsTransportTest, RoleAppearsOnConnect) {
                    kDefaultTimeout);
   EXPECT_TRUE(observer_.info_.role());
   EXPECT_TRUE(transport()->Information().role());
+  EXPECT_EQ(transport()->Information().role(), DtlsTransportTlsRole::kClient);
 }
 
 TEST_F(DtlsTransportTest, CertificateAppearsOnConnect) {
