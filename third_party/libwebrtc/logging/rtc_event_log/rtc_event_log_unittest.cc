@@ -785,8 +785,8 @@ void RtcEventLogSession::ReadAndVerifyLog() {
                                              parsed_generic_acks_received[i]);
   }
 
-  EXPECT_EQ(first_timestamp_ms_, parsed_log.first_timestamp().ms());
-  EXPECT_EQ(last_timestamp_ms_, parsed_log.last_timestamp().ms());
+  EXPECT_EQ(first_timestamp_ms_, parsed_log.first_timestamp() / 1000);
+  EXPECT_EQ(last_timestamp_ms_, parsed_log.last_timestamp() / 1000);
 
   EXPECT_EQ(parsed_log.first_log_segment().start_time_ms(),
             std::min(start_time_us_ / 1000, first_timestamp_ms_));

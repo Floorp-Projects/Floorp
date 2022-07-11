@@ -72,7 +72,6 @@ enum class IceCandidateNetworkType {
 struct LoggedIceCandidatePairConfig {
   int64_t log_time_us() const { return timestamp.us(); }
   int64_t log_time_ms() const { return timestamp.ms(); }
-  Timestamp log_time() const { return timestamp; }
 
   Timestamp timestamp = Timestamp::MinusInfinity();
   IceCandidatePairConfigType type;

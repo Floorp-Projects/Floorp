@@ -643,8 +643,8 @@ class ParsedRtcEventLog {
     return decoded_frames_;
   }
 
-  Timestamp first_timestamp() const { return first_timestamp_; }
-  Timestamp last_timestamp() const { return last_timestamp_; }
+  int64_t first_timestamp() const { return first_timestamp_; }
+  int64_t last_timestamp() const { return last_timestamp_; }
 
   const LogSegment& first_log_segment() const { return first_log_segment_; }
 
@@ -889,8 +889,8 @@ class ParsedRtcEventLog {
 
   std::vector<uint8_t> last_incoming_rtcp_packet_;
 
-  Timestamp first_timestamp_ = Timestamp::PlusInfinity();
-  Timestamp last_timestamp_ = Timestamp::MinusInfinity();
+  int64_t first_timestamp_;
+  int64_t last_timestamp_;
 
   LogSegment first_log_segment_ =
       LogSegment(0, std::numeric_limits<int64_t>::max());
