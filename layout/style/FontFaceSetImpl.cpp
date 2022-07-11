@@ -93,10 +93,9 @@ void FontFaceSetImpl::Destroy() {
   }
 
   mLoaders.Clear();
-
   mNonRuleFaces.Clear();
-
   gfxUserFontSet::Destroy();
+  mOwner = nullptr;
 }
 
 void FontFaceSetImpl::ParseFontShorthandForMatching(
