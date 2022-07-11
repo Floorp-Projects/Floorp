@@ -278,7 +278,7 @@ class PeerConnection : public PeerConnectionInternal,
 
   bool initial_offerer() const override {
     RTC_DCHECK_RUN_ON(signaling_thread());
-    return transport_controller_ && transport_controller_->initial_offerer();
+    return sdp_handler_->initial_offerer();
   }
 
   std::vector<
@@ -357,7 +357,12 @@ class PeerConnection : public PeerConnectionInternal,
   }
   cricket::ChannelManager* channel_manager();
 
-  JsepTransportController* transport_controller() override {
+  JsepTransportController* transport_controller_s() override {
+    RTC_DCHECK_RUN_ON(signaling_thread());
+    return transport_controller_copy_;
+  }
+  JsepTransportController* transport_controller_n() override {
+    RTC_DCHECK_RUN_ON(network_thread());
     return transport_controller_.get();
   }
   cricket::PortAllocator* port_allocator() override {
@@ -463,7 +468,7 @@ class PeerConnection : public PeerConnectionInternal,
   RTCError Initialize(
       const PeerConnectionInterface::RTCConfiguration& configuration,
       PeerConnectionDependencies dependencies);
-  void InitializeTransportController_n(
+  JsepTransportController* InitializeTransportController_n(
       const RTCConfiguration& configuration,
       const PeerConnectionDependencies& dependencies)
       RTC_RUN_ON(network_thread());
@@ -664,9 +669,14 @@ class PeerConnection : public PeerConnectionInternal,
 
   const std::string session_id_;
 
-  std::unique_ptr<JsepTransportController>
-      transport_controller_;  // TODO(bugs.webrtc.org/9987): Accessed on both
-                              // signaling and network thread.
+  // The transport controller is set and used on the network thread.
+  // Some functions pass the value of the transport_controller_ pointer
+  // around as arguments while running on the signaling thread; these
+  // use the transport_controller_copy.
+  std::unique_ptr<JsepTransportController> transport_controller_
+      RTC_GUARDED_BY(network_thread());
+  JsepTransportController* transport_controller_copy_
+      RTC_GUARDED_BY(signaling_thread()) = nullptr;
 
   // `sctp_mid_` is the content name (MID) in SDP.
   // Note: this is used as the data channel MID by both SCTP and data channel
