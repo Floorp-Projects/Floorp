@@ -505,6 +505,42 @@ TEST_F(PeerConnectionJsepTest, SetRemoteAnswerUpdatesCurrentDirection) {
             transceivers[0]->current_direction());
 }
 
+TEST_F(PeerConnectionJsepTest,
+       ChangeDirectionFromRecvOnlyToSendRecvDoesNotBreakVideoNegotiation) {
+  auto caller = CreatePeerConnection();
+  auto caller_transceiver = caller->AddTransceiver(cricket::MEDIA_TYPE_VIDEO);
+  auto callee = CreatePeerConnection();
+  caller_transceiver->SetDirectionWithError(RtpTransceiverDirection::kRecvOnly);
+
+  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
+  ASSERT_TRUE(
+      caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
+
+  caller_transceiver->SetDirectionWithError(RtpTransceiverDirection::kSendRecv);
+
+  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
+  ASSERT_TRUE(
+      caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
+}
+
+TEST_F(PeerConnectionJsepTest,
+       ChangeDirectionFromRecvOnlyToSendRecvDoesNotBreakAudioNegotiation) {
+  auto caller = CreatePeerConnection();
+  auto caller_transceiver = caller->AddTransceiver(cricket::MEDIA_TYPE_AUDIO);
+  auto callee = CreatePeerConnection();
+  caller_transceiver->SetDirectionWithError(RtpTransceiverDirection::kRecvOnly);
+
+  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
+  ASSERT_TRUE(
+      caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
+
+  caller_transceiver->SetDirectionWithError(RtpTransceiverDirection::kSendRecv);
+
+  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
+  ASSERT_TRUE(
+      caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
+}
+
 // Tests for multiple round trips.
 
 // Test that setting a transceiver with the inactive direction does not stop it

@@ -1111,6 +1111,25 @@ static Codecs MatchCodecPreference(
   return filtered_codecs;
 }
 
+// Compute the union of `codecs1` and `codecs2`.
+template <class C>
+std::vector<C> ComputeCodecsUnion(const std::vector<C>& codecs1,
+                                  const std::vector<C>& codecs2) {
+  std::vector<C> all_codecs;
+  UsedPayloadTypes used_payload_types;
+  for (const C& codec : codecs1) {
+    C codec_mutable = codec;
+    used_payload_types.FindAndSetIdUsed(&codec_mutable);
+    all_codecs.push_back(codec_mutable);
+  }
+
+  // Use MergeCodecs to merge the second half of our list as it already checks
+  // and fixes problems with duplicate payload types.
+  MergeCodecs<C>(codecs2, &all_codecs, &used_payload_types);
+
+  return all_codecs;
+}
+
 // Adds all extensions from `reference_extensions` to `offered_extensions` that
 // don't already exist in `offered_extensions` and ensure the IDs don't
 // collide. If an extension is added, it's also added to `regular_extensions` or
@@ -2696,7 +2715,9 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
         }
       }
     }
+
     // Add other supported video codecs.
+    VideoCodecs other_video_codecs;
     for (const VideoCodec& codec : supported_video_codecs) {
       if (FindMatchingCodec<VideoCodec>(supported_video_codecs, video_codecs,
                                         codec, nullptr) &&
@@ -2704,9 +2725,13 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
                                          filtered_codecs, codec, nullptr)) {
         // We should use the local codec with local parameters and the codec id
         // would be correctly mapped in `NegotiateCodecs`.
-        filtered_codecs.push_back(codec);
+        other_video_codecs.push_back(codec);
       }
     }
+
+    // Use ComputeCodecsUnion to avoid having duplicate payload IDs
+    filtered_codecs =
+        ComputeCodecsUnion<VideoCodec>(filtered_codecs, other_video_codecs);
   }
 
   if (session_options.raw_packetization_for_video) {
@@ -2900,27 +2925,11 @@ void MediaSessionDescriptionFactory::ComputeAudioCodecsIntersectionAndUnion() {
 
 void MediaSessionDescriptionFactory::ComputeVideoCodecsIntersectionAndUnion() {
   video_sendrecv_codecs_.clear();
-  all_video_codecs_.clear();
-  // Compute the video codecs union.
-  for (const VideoCodec& send : video_send_codecs_) {
-    all_video_codecs_.push_back(send);
-    if (!FindMatchingCodec<VideoCodec>(video_send_codecs_, video_recv_codecs_,
-                                       send, nullptr)) {
-      // TODO(kron): This check is violated by the unit test:
-      // MediaSessionDescriptionFactoryTest.RtxWithoutApt
-      // Remove either the test or the check.
 
-      // It doesn't make sense to have an RTX codec we support sending but not
-      // receiving.
-      // RTC_DCHECK(!IsRtxCodec(send));
-    }
-  }
-  for (const VideoCodec& recv : video_recv_codecs_) {
-    if (!FindMatchingCodec<VideoCodec>(video_recv_codecs_, video_send_codecs_,
-                                       recv, nullptr)) {
-      all_video_codecs_.push_back(recv);
-    }
-  }
+  // Use ComputeCodecsUnion to avoid having duplicate payload IDs
+  all_video_codecs_ =
+      ComputeCodecsUnion(video_recv_codecs_, video_send_codecs_);
+
   // Use NegotiateCodecs to merge our codec lists, since the operation is
   // essentially the same. Put send_codecs as the offered_codecs, which is the
   // order we'd like to follow. The reasoning is that encoding is usually more
