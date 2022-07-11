@@ -35,22 +35,6 @@ class RtpPacketHistory {
                    // packets as they time out or as signaled as received.
   };
 
-  // Snapshot indicating the state of a packet in the history.
-  struct PacketState {
-    PacketState();
-    PacketState(const PacketState&);
-    ~PacketState();
-
-    uint16_t rtp_sequence_number = 0;
-    absl::optional<int64_t> send_time_ms;
-    int64_t capture_time_ms = 0;
-    uint32_t ssrc = 0;
-    size_t packet_size = 0;
-    // Number of times RE-transmitted, ie not including the first transmission.
-    size_t times_retransmitted = 0;
-    bool pending_transmission = false;
-  };
-
   // Maximum number of packets we ever allow in the history.
   static constexpr size_t kMaxCapacity = 9600;
   // Maximum number of entries in prioritized queue of padding packets.
@@ -78,15 +62,8 @@ class RtpPacketHistory {
   // a packet in the history before we are reasonably sure it has been received.
   void SetRtt(int64_t rtt_ms);
 
-  // If `send_time` is set, packet was sent without using pacer, so state will
-  // be set accordingly.
   void PutRtpPacket(std::unique_ptr<RtpPacketToSend> packet,
-                    absl::optional<int64_t> send_time_ms);
-
-  // Gets stored RTP packet corresponding to the input |sequence number|.
-  // Returns nullptr if packet is not found or was (re)sent too recently.
-  std::unique_ptr<RtpPacketToSend> GetPacketAndSetSendTime(
-      uint16_t sequence_number);
+                    int64_t send_time_ms);
 
   // Gets stored RTP packet corresponding to the input |sequence number|.
   // Returns nullptr if packet is not found or was (re)sent too recently.
@@ -109,9 +86,9 @@ class RtpPacketHistory {
   // counter. Marks the packet as no longer being in the pacer queue.
   void MarkPacketAsSent(uint16_t sequence_number);
 
-  // Similar to GetPacketAndSetSendTime(), but only returns a snapshot of the
-  // current state for packet, and never updates internal state.
-  absl::optional<PacketState> GetPacketState(uint16_t sequence_number) const;
+  // Returns true if history contains packet with `sequence_number` and it can
+  // be retransmitted.
+  bool GetPacketState(uint16_t sequence_number) const;
 
   // Get the packet (if any) from the history, that is deemed most likely to
   // the remote side. This is calculated from heuristics such as packet age
@@ -130,11 +107,6 @@ class RtpPacketHistory {
   // Cull packets that have been acknowledged as received by the remote end.
   void CullAcknowledgedPackets(rtc::ArrayView<const uint16_t> sequence_numbers);
 
-  // Mark packet as queued for transmission. This will prevent premature
-  // removal or duplicate retransmissions in the pacer queue.
-  // Returns true if status was set, false if packet was not found.
-  bool SetPendingTransmission(uint16_t sequence_number);
-
   // Remove all pending packets from the history, but keep storage mode and
   // capacity.
   void Clear();
@@ -146,8 +118,9 @@ class RtpPacketHistory {
 
   class StoredPacket {
    public:
+    StoredPacket() = default;
     StoredPacket(std::unique_ptr<RtpPacketToSend> packet,
-                 absl::optional<int64_t> send_time_ms,
+                 int64_t send_time_ms,
                  uint64_t insert_order);
     StoredPacket(StoredPacket&&);
     StoredPacket& operator=(StoredPacket&&);
@@ -158,7 +131,7 @@ class RtpPacketHistory {
     void IncrementTimesRetransmitted(PacketPrioritySet* priority_set);
 
     // The time of last transmission, including retransmissions.
-    absl::optional<int64_t> send_time_ms_;
+    int64_t send_time_ms_;
 
     // The actual packet.
     std::unique_ptr<RtpPacketToSend> packet_;
@@ -178,8 +151,7 @@ class RtpPacketHistory {
     bool operator()(StoredPacket* lhs, StoredPacket* rhs) const;
   };
 
-  // Helper method used by GetPacketAndSetSendTime() and GetPacketState() to
-  // check if packet has too recently been sent.
+  // Helper method to check if packet has too recently been sent.
   bool VerifyRtt(const StoredPacket& packet, int64_t now_ms) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(lock_);
   void Reset() RTC_EXCLUSIVE_LOCKS_REQUIRED(lock_);
@@ -192,8 +164,6 @@ class RtpPacketHistory {
       RTC_EXCLUSIVE_LOCKS_REQUIRED(lock_);
   StoredPacket* GetStoredPacket(uint16_t sequence_number)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(lock_);
-  static PacketState StoredPacketToPacketState(
-      const StoredPacket& stored_packet);
 
   Clock* const clock_;
   const bool enable_padding_prio_;

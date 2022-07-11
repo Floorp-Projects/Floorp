@@ -29,20 +29,13 @@ constexpr int64_t RtpPacketHistory::kMinPacketDurationMs;
 constexpr int RtpPacketHistory::kMinPacketDurationRtt;
 constexpr int RtpPacketHistory::kPacketCullingDelayFactor;
 
-RtpPacketHistory::PacketState::PacketState() = default;
-RtpPacketHistory::PacketState::PacketState(const PacketState&) = default;
-RtpPacketHistory::PacketState::~PacketState() = default;
-
 RtpPacketHistory::StoredPacket::StoredPacket(
     std::unique_ptr<RtpPacketToSend> packet,
-    absl::optional<int64_t> send_time_ms,
+    int64_t send_time_ms,
     uint64_t insert_order)
     : send_time_ms_(send_time_ms),
       packet_(std::move(packet)),
-      // No send time indicates packet is not sent immediately, but instead will
-      // be put in the pacer queue and later retrieved via
-      // GetPacketAndSetSendTime().
-      pending_transmission_(!send_time_ms.has_value()),
+      pending_transmission_(false),
       insert_order_(insert_order),
       times_retransmitted_(0) {}
 
@@ -120,7 +113,7 @@ void RtpPacketHistory::SetRtt(int64_t rtt_ms) {
 }
 
 void RtpPacketHistory::PutRtpPacket(std::unique_ptr<RtpPacketToSend> packet,
-                                    absl::optional<int64_t> send_time_ms) {
+                                    int64_t send_time_ms) {
   RTC_DCHECK(packet);
   MutexLock lock(&lock_);
   int64_t now_ms = clock_->TimeInMilliseconds();
@@ -145,11 +138,11 @@ void RtpPacketHistory::PutRtpPacket(std::unique_ptr<RtpPacketToSend> packet,
 
   // Packet to be inserted ahead of first packet, expand front.
   for (; packet_index < 0; ++packet_index) {
-    packet_history_.emplace_front(nullptr, absl::nullopt, 0);
+    packet_history_.emplace_front();
   }
   // Packet to be inserted behind last packet, expand back.
   while (static_cast<int>(packet_history_.size()) <= packet_index) {
-    packet_history_.emplace_back(nullptr, absl::nullopt, 0);
+    packet_history_.emplace_back();
   }
 
   RTC_DCHECK_GE(packet_index, 0);
@@ -166,36 +159,6 @@ void RtpPacketHistory::PutRtpPacket(std::unique_ptr<RtpPacketToSend> packet,
     auto prio_it = padding_priority_.insert(&packet_history_[packet_index]);
     RTC_DCHECK(prio_it.second) << "Failed to insert packet into prio set.";
   }
-}
-
-std::unique_ptr<RtpPacketToSend> RtpPacketHistory::GetPacketAndSetSendTime(
-    uint16_t sequence_number) {
-  MutexLock lock(&lock_);
-  if (mode_ == StorageMode::kDisabled) {
-    return nullptr;
-  }
-
-  StoredPacket* packet = GetStoredPacket(sequence_number);
-  if (packet == nullptr) {
-    return nullptr;
-  }
-
-  int64_t now_ms = clock_->TimeInMilliseconds();
-  if (!VerifyRtt(*packet, now_ms)) {
-    return nullptr;
-  }
-
-  if (packet->send_time_ms_) {
-    packet->IncrementTimesRetransmitted(
-        enable_padding_prio_ ? &padding_priority_ : nullptr);
-  }
-
-  // Update send-time and mark as no long in pacer queue.
-  packet->send_time_ms_ = now_ms;
-  packet->pending_transmission_ = false;
-
-  // Return copy of packet instance since it may need to be retransmitted.
-  return std::make_unique<RtpPacketToSend>(*packet->packet_);
 }
 
 std::unique_ptr<RtpPacketToSend> RtpPacketHistory::GetPacketAndMarkAsPending(
@@ -251,8 +214,6 @@ void RtpPacketHistory::MarkPacketAsSent(uint16_t sequence_number) {
     return;
   }
 
-  RTC_DCHECK(packet->send_time_ms_);
-
   // Update send-time, mark as no longer in pacer queue, and increment
   // transmission count.
   packet->send_time_ms_ = clock_->TimeInMilliseconds();
@@ -261,41 +222,37 @@ void RtpPacketHistory::MarkPacketAsSent(uint16_t sequence_number) {
                                                            : nullptr);
 }
 
-absl::optional<RtpPacketHistory::PacketState> RtpPacketHistory::GetPacketState(
-    uint16_t sequence_number) const {
+bool RtpPacketHistory::GetPacketState(uint16_t sequence_number) const {
   MutexLock lock(&lock_);
   if (mode_ == StorageMode::kDisabled) {
-    return absl::nullopt;
+    return false;
   }
 
   int packet_index = GetPacketIndex(sequence_number);
   if (packet_index < 0 ||
       static_cast<size_t>(packet_index) >= packet_history_.size()) {
-    return absl::nullopt;
+    return false;
   }
   const StoredPacket& packet = packet_history_[packet_index];
   if (packet.packet_ == nullptr) {
-    return absl::nullopt;
+    return false;
   }
 
   if (!VerifyRtt(packet, clock_->TimeInMilliseconds())) {
-    return absl::nullopt;
+    return false;
   }
 
-  return StoredPacketToPacketState(packet);
+  return true;
 }
 
 bool RtpPacketHistory::VerifyRtt(const RtpPacketHistory::StoredPacket& packet,
                                  int64_t now_ms) const {
-  if (packet.send_time_ms_) {
-    // Send-time already set, this check must be for a retransmission.
-    if (packet.times_retransmitted() > 0 &&
-        now_ms < *packet.send_time_ms_ + rtt_ms_) {
-      // This packet has already been retransmitted once, and the time since
-      // that even is lower than on RTT. Ignore request as this packet is
-      // likely already in the network pipe.
-      return false;
-    }
+  if (packet.times_retransmitted() > 0 &&
+      now_ms < packet.send_time_ms_ + rtt_ms_) {
+    // This packet has already been retransmitted once, and the time since
+    // that even is lower than on RTT. Ignore request as this packet is
+    // likely already in the network pipe.
+    return false;
   }
 
   return true;
@@ -368,21 +325,6 @@ void RtpPacketHistory::CullAcknowledgedPackets(
   }
 }
 
-bool RtpPacketHistory::SetPendingTransmission(uint16_t sequence_number) {
-  MutexLock lock(&lock_);
-  if (mode_ == StorageMode::kDisabled) {
-    return false;
-  }
-
-  StoredPacket* packet = GetStoredPacket(sequence_number);
-  if (packet == nullptr) {
-    return false;
-  }
-
-  packet->pending_transmission_ = true;
-  return true;
-}
-
 void RtpPacketHistory::Clear() {
   MutexLock lock(&lock_);
   Reset();
@@ -410,13 +352,13 @@ void RtpPacketHistory::CullOldPackets(int64_t now_ms) {
       return;
     }
 
-    if (*stored_packet.send_time_ms_ + packet_duration_ms > now_ms) {
+    if (stored_packet.send_time_ms_ + packet_duration_ms > now_ms) {
       // Don't cull packets too early to avoid failed retransmission requests.
       return;
     }
 
     if (packet_history_.size() >= number_to_store_ ||
-        *stored_packet.send_time_ms_ +
+        stored_packet.send_time_ms_ +
                 (packet_duration_ms * kPacketCullingDelayFactor) <=
             now_ms) {
       // Too many packets in history, or this packet has timed out. Remove it
@@ -485,19 +427,6 @@ RtpPacketHistory::StoredPacket* RtpPacketHistory::GetStoredPacket(
     return nullptr;
   }
   return &packet_history_[index];
-}
-
-RtpPacketHistory::PacketState RtpPacketHistory::StoredPacketToPacketState(
-    const RtpPacketHistory::StoredPacket& stored_packet) {
-  RtpPacketHistory::PacketState state;
-  state.rtp_sequence_number = stored_packet.packet_->SequenceNumber();
-  state.send_time_ms = stored_packet.send_time_ms_;
-  state.capture_time_ms = stored_packet.packet_->capture_time().ms();
-  state.ssrc = stored_packet.packet_->Ssrc();
-  state.packet_size = stored_packet.packet_->size();
-  state.times_retransmitted = stored_packet.times_retransmitted();
-  state.pending_transmission = stored_packet.pending_transmission_;
-  return state;
 }
 
 }  // namespace webrtc

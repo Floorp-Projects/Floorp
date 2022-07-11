@@ -294,16 +294,7 @@ void RTPSender::SetRtxPayloadType(int payload_type,
 }
 
 int32_t RTPSender::ReSendPacket(uint16_t packet_id) {
-  // Try to find packet in RTP packet history. Also verify RTT here, so that we
-  // don't retransmit too often.
-  absl::optional<RtpPacketHistory::PacketState> stored_packet =
-      packet_history_->GetPacketState(packet_id);
-  if (!stored_packet || stored_packet->pending_transmission) {
-    // Packet not found or already queued for retransmission, ignore.
-    return 0;
-  }
-
-  const int32_t packet_size = static_cast<int32_t>(stored_packet->packet_size);
+  int32_t packet_size = 0;
   const bool rtx = (RtxStatus() & kRtxRetransmitted) > 0;
 
   std::unique_ptr<RtpPacketToSend> packet =
@@ -312,6 +303,7 @@ int32_t RTPSender::ReSendPacket(uint16_t packet_id) {
             // Check if we're overusing retransmission bitrate.
             // TODO(sprang): Add histograms for nack success or failure
             // reasons.
+            packet_size = stored_packet.size();
             std::unique_ptr<RtpPacketToSend> retransmit_packet;
             if (retransmission_rate_limiter_ &&
                 !retransmission_rate_limiter_->TryUseRate(packet_size)) {
@@ -329,7 +321,14 @@ int32_t RTPSender::ReSendPacket(uint16_t packet_id) {
             }
             return retransmit_packet;
           });
+  if (packet_size == 0) {
+    // Packet not found or already queued for retransmission, ignore.
+    RTC_DCHECK(!packet);
+    return 0;
+  }
   if (!packet) {
+    // Packet was found, but lambda helper above chose not to create
+    // `retransmit_packet` out of it.
     return -1;
   }
   packet->set_packet_type(RtpPacketMediaType::kRetransmission);
