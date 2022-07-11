@@ -234,15 +234,10 @@ rtc_library("media_protocol_names") {
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
-rtc_library("peerconnection") {
+rtc_source_set("peerconnection") {
   visibility = [ "*" ]
   cflags = []
-  sources = [
-    "peer_connection.cc",
-    "peer_connection.h",
-    "peer_connection_factory.cc",
-    "peer_connection_factory.h",
-  ]
+  sources = []
 
   deps = [
     ":audio_rtp_receiver",
@@ -488,10 +483,7 @@ rtc_source_set("data_channel_controller") {
     "//third_party/abseil-cpp/absl/types:optional",
   ]
 }
-rtc_source_set("peer_connection_factory") {
-  visibility = [ "*" ]  # Known to be used externally
-  # TODO(bugs.webrtc.org/13661): Reduce visibility if possible
-}
+
 rtc_source_set("peer_connection_internal") {
   visibility = [ ":*" ]
   sources = [ "peer_connection_internal.h" ]
@@ -654,6 +646,81 @@ rtc_source_set("local_audio_source") {
 }
 rtc_source_set("peer_connection") {
   visibility = [ ":*" ]
+  sources = [
+    "peer_connection.cc",
+    "peer_connection.h",
+  ]
+  deps = [
+    ":connection_context",
+    ":data_channel_controller",
+    ":data_channel_utils",
+    ":ice_server_parsing",
+    ":peer_connection_internal",
+    ":peer_connection_message_handler",
+    ":rtc_pc_base",
+    ":rtc_stats_collector",
+    ":rtp_receiver",
+    ":rtp_sender",
+    ":rtp_transceiver",
+    ":rtp_transmission_manager",
+    ":sctp_data_channel",
+    ":sdp_offer_answer",
+    ":session_description",
+    ":simulcast_description",
+    ":stats_collector",
+    ":stream_collection",
+    ":transceiver_list",
+    ":usage_pattern",
+    ":webrtc_session_description_factory",
+    "../api:async_dns_resolver",
+    "../api:audio_options_api",
+    "../api:libjingle_logging_api",
+    "../api:libjingle_peerconnection_api",
+    "../api:media_stream_interface",
+    "../api:packet_socket_factory",
+    "../api:rtc_error",
+    "../api:rtc_stats_api",
+    "../api:rtp_parameters",
+    "../api:rtp_transceiver_direction",
+    "../api:scoped_refptr",
+    "../api:sequence_checker",
+    "../api/adaptation:resource_adaptation_api",
+    "../api/crypto:options",
+    "../api/rtc_event_log:rtc_event_log",
+    "../api/transport:bitrate_settings",
+    "../api/transport:datagram_transport_interface",
+    "../api/transport:enums",
+    "../api/transport:webrtc_key_value_config",
+    "../api/video:video_bitrate_allocator_factory",
+    "../api/video:video_codec_constants",
+    "../call:call_interfaces",
+    "../media:rtc_media_base",
+    "../media:rtc_media_config",
+    "../modules/rtp_rtcp:rtp_rtcp_format",
+    "../p2p:rtc_p2p",
+    "../rtc_base:checks",
+    "../rtc_base:ip_address",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:network_constants",
+    "../rtc_base:refcount",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:socket_address",
+    "../rtc_base:stringutils",
+    "../rtc_base:threading",
+    "../rtc_base:weak_ptr",
+    "../rtc_base/network:sent_packet",
+    "../rtc_base/task_utils:pending_task_safety_flag",
+    "../rtc_base/task_utils:to_queued_task",
+    "../rtc_base/third_party/sigslot:sigslot",
+    "../system_wrappers:metrics",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings:strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_source_set("sdp_serializer") {
@@ -859,6 +926,59 @@ rtc_library("media_stream_observer") {
     "../api:scoped_refptr",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
+}
+rtc_source_set("peer_connection_factory") {
+  visibility = [ "*" ]  # Known to be used externally
+  sources = [
+    "peer_connection_factory.cc",
+    "peer_connection_factory.h",
+  ]
+  deps = [
+    ":local_audio_source",
+    ":peer_connection",
+    "../api:audio_options_api",
+    "../api:callfactory_api",
+    "../api:fec_controller_api",
+    "../api:libjingle_peerconnection_api",
+    "../api:media_stream_interface",
+    "../api:network_state_predictor_api",
+    "../api:packet_socket_factory",
+    "../api:rtc_error",
+    "../api:rtp_parameters",
+    "../api:scoped_refptr",
+    "../api:sequence_checker",
+    "../api/neteq:neteq_api",
+    "../api/rtc_event_log:rtc_event_log",
+    "../api/task_queue:task_queue",
+    "../api/transport:bitrate_settings",
+    "../api/transport:network_control",
+    "../api/transport:sctp_transport_factory_interface",
+    "../api/transport:webrtc_key_value_config",
+    "../api/units:data_rate",
+    "../call:call_interfaces",
+    "../call:rtp_interfaces",
+    "../call:rtp_sender",
+    "../media:rtc_media_base",
+    "../p2p:rtc_p2p",
+    "../pc:audio_track",
+    "../pc:connection_context",
+    "../pc:media_stream",
+    "../pc:rtc_pc_base",
+    "../pc:rtp_parameters_conversion",
+    "../pc:session_description",
+    "../pc:video_track",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:refcount",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:safe_conversions",
+    "../rtc_base:threading",
+    "../rtc_base/experiments:field_trial_parser",
+    "../rtc_base/system:file_wrapper",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings:strings" ]
 }
 
 rtc_library("peer_connection_message_handler") {
@@ -1414,6 +1534,7 @@ if (rtc_include_tests && !build_with_chromium) {
     sources = [ "peer_connection_rampup_tests.cc" ]
     deps = [
       ":pc_test_utils",
+      ":peer_connection",
       ":peerconnection",
       ":peerconnection_wrapper",
       "../api:audio_options_api",
@@ -1529,6 +1650,9 @@ if (rtc_include_tests && !build_with_chromium) {
       ":jitter_buffer_delay",
       ":local_audio_source",
       ":media_stream",
+      ":peer_connection",
+      ":peer_connection_factory",
+      ":peer_connection_factory",
       ":peerconnection",
       ":proxy",
       ":remote_audio_source",
@@ -1701,6 +1825,8 @@ if (rtc_include_tests && !build_with_chromium) {
       ":local_audio_source",
       ":media_stream",
       ":pc_test_utils",
+      ":peer_connection",
+      ":peer_connection_factory",
       ":peerconnection",
       ":remote_audio_source",
       ":rtc_pc_base",
