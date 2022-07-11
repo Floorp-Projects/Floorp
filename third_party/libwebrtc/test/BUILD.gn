@@ -399,10 +399,6 @@ rtc_library("video_test_support") {
   } else {
     sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
   }
-
-  if (is_android) {
-    deps += [ "//base" ]
-  }
 }
 
 if (rtc_include_tests && enable_google_benchmarks) {
