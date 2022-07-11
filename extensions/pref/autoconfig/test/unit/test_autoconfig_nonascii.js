@@ -43,6 +43,7 @@ function run_test() {
         prefs: {
           "_test.string.typeofComponents": "undefined",
           "_test.string.typeofChromeUtils": "undefined",
+          "_test.string.typeofServices": "undefined",
         },
       },
     ];
