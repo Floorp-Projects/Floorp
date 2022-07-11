@@ -8,7 +8,6 @@ class TestFissionAutostart(MarionetteTestCase):
         def call_quit():
             self.marionette.execute_script(
                 """
-                const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
                 Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
                 """,
                 sandbox="system",
@@ -23,7 +22,6 @@ class TestFissionAutostart(MarionetteTestCase):
         def call_quit():
             self.marionette.execute_script(
                 """
-                const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
                 Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit, 5);
                 """,
                 sandbox="system",

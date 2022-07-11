@@ -28,7 +28,6 @@ SIMPLE_PASSING_TEST = "function run_test() { Assert.ok(true); }"
 SIMPLE_FAILING_TEST = "function run_test() { Assert.ok(false); }"
 SIMPLE_PREFCHECK_TEST = """
 function run_test() {
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   Assert.ok(Services.prefs.getBoolPref("fake.pref.to.test"));
 }
 """
