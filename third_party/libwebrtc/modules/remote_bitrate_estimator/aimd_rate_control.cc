@@ -95,11 +95,12 @@ AimdRateControl::AimdRateControl(const WebRtcKeyValueConfig* key_value_config,
       estimate_bounded_backoff_(
           IsNotDisabled(*key_value_config,
                         "WebRTC-Bwe-EstimateBoundedBackoff")),
-      estimate_bounded_increase_(
-          IsNotDisabled(*key_value_config,
-                        "WebRTC-Bwe-EstimateBoundedIncrease")),
       initial_backoff_interval_("initial_backoff_interval"),
       link_capacity_fix_("link_capacity_fix") {
+  ParseFieldTrial(
+      {&disable_estimate_bounded_increase_, &estimate_bounded_increase_ratio_,
+       &ignore_throughput_limit_if_network_estimate_},
+      key_value_config->Lookup("WebRTC-Bwe-EstimateBoundedIncrease"));
   // E.g
   // WebRTC-BweAimdRateControlConfig/initial_backoff_interval:100ms/
   ParseFieldTrial({&initial_backoff_interval_, &link_capacity_fix_},
@@ -272,27 +273,34 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
 
   ChangeState(input, at_time);
 
-  // We limit the new bitrate based on the troughput to avoid unlimited bitrate
-  // increases. We allow a bit more lag at very low rates to not too easily get
-  // stuck if the encoder produces uneven outputs.
-  const DataRate troughput_based_limit =
-      1.5 * estimated_throughput + DataRate::KilobitsPerSec(10);
-
   switch (rate_control_state_) {
     case RateControlState::kRcHold:
       break;
 
-    case RateControlState::kRcIncrease:
+    case RateControlState::kRcIncrease: {
       if (estimated_throughput > link_capacity_.UpperBound())
         link_capacity_.Reset();
 
-      // Do not increase the delay based estimate in alr since the estimator
-      // will not be able to get transport feedback necessary to detect if
-      // the new estimate is correct.
-      // If we have previously increased above the limit (for instance due to
-      // probing), we don't allow further changes.
-      if (current_bitrate_ < troughput_based_limit &&
-          !(send_side_ && in_alr_ && no_bitrate_increase_in_alr_)) {
+      // We limit the new bitrate based on the troughput to avoid unlimited
+      // bitrate increases. We allow a bit more lag at very low rates to not too
+      // easily get stuck if the encoder produces uneven outputs.
+      DataRate increase_limit =
+          1.5 * estimated_throughput + DataRate::KilobitsPerSec(10);
+      if (ignore_throughput_limit_if_network_estimate_ && network_estimate_ &&
+          network_estimate_->link_capacity_upper.IsFinite()) {
+        // If we have a Network estimate, we do allow the estimate to increase.
+        increase_limit = network_estimate_->link_capacity_upper *
+                         estimate_bounded_increase_ratio_.Get();
+      } else if (send_side_ && in_alr_ && no_bitrate_increase_in_alr_) {
+        // Do not increase the delay based estimate in alr since the estimator
+        // will not be able to get transport feedback necessary to detect if
+        // the new estimate is correct.
+        // If we have previously increased above the limit (for instance due to
+        // probing), we don't allow further changes.
+        increase_limit = current_bitrate_;
+      }
+
+      if (current_bitrate_ < increase_limit) {
         DataRate increased_bitrate = DataRate::MinusInfinity();
         if (link_capacity_.has_estimate()) {
           // The link_capacity estimate is reset if the measured throughput
@@ -309,11 +317,11 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
               at_time, time_last_bitrate_change_, current_bitrate_);
           increased_bitrate = current_bitrate_ + multiplicative_increase;
         }
-        new_bitrate = std::min(increased_bitrate, troughput_based_limit);
+        new_bitrate = std::min(increased_bitrate, increase_limit);
       }
-
       time_last_bitrate_change_ = at_time;
       break;
+    }
 
     case RateControlState::kRcDecrease: {
       DataRate decreased_bitrate = DataRate::PlusInfinity();
@@ -368,8 +376,10 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
 }
 
 DataRate AimdRateControl::ClampBitrate(DataRate new_bitrate) const {
-  if (estimate_bounded_increase_ && network_estimate_) {
-    DataRate upper_bound = network_estimate_->link_capacity_upper;
+  if (!disable_estimate_bounded_increase_ && network_estimate_ &&
+      network_estimate_->link_capacity_upper.IsFinite()) {
+    DataRate upper_bound = network_estimate_->link_capacity_upper *
+                           estimate_bounded_increase_ratio_.Get();
     new_bitrate = std::min(new_bitrate, upper_bound);
   }
   new_bitrate = std::max(new_bitrate, min_configured_bitrate_);
