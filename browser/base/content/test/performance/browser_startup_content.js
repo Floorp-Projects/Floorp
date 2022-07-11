@@ -26,7 +26,7 @@ const known_scripts = {
     "resource://gre/modules/AppConstants.jsm",
     "resource://gre/modules/DeferredTask.jsm",
     "resource://gre/modules/Timer.jsm",
-    "resource://gre/modules/XPCOMUtils.jsm",
+    "resource://gre/modules/XPCOMUtils.sys.mjs",
 
     // Logging related
     "resource://gre/modules/Log.jsm",
