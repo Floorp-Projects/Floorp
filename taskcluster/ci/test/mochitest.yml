@@ -47,6 +47,11 @@ mochitest-plain:
     treeherder-symbol: M()
     schedules-component: mochitest-plain
     loopback-video: true
+    worker-type:
+        by-test-platform:
+            linux.*64-tsan-qr/opt: t-linux-xlarge-gcp
+            linux.*: t-linux-large-gcp
+            default: default
     virtualization: virtual
     variants:
         - aab+no-fission
