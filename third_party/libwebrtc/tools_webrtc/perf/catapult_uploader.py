@@ -24,7 +24,10 @@ from tracing.value.diagnostics import reserved_infos
 
 def _GenerateOauthToken():
   args = ['luci-auth', 'token']
-  p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  p = subprocess.Popen(args,
+                       universal_newlines=True,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
   if p.wait() == 0:
     output = p.stdout.read()
     return output.strip()
@@ -193,7 +196,7 @@ def _ApplyHacks(dicts):
 def _LoadHistogramSetFromProto(options):
   hs = histogram_set.HistogramSet()
   with options.input_results_file as f:
-    hs.ImportProto(f.read())
+    hs.ImportProto(f.read().decode('utf-8'))
 
   return hs
 
