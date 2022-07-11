@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var EXPORTED_SYMBOLS = ["XPCOMUtils"];
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -33,7 +35,7 @@ function redefine(object, prop, value) {
   return value;
 }
 
-export var XPCOMUtils = {
+var XPCOMUtils = {
   /**
    * Defines a getter on a specified object that will be created upon first use.
    *

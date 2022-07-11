@@ -29,8 +29,8 @@ var promptState;
 
 function registerMockPromptService()
 {
-  var { XPCOMUtils } = SpecialPowers.ChromeUtils.importESModule(
-    "resource://gre/modules/XPCOMUtils.sys.mjs"
+  var { XPCOMUtils } = SpecialPowers.ChromeUtils.import(
+    "resource://gre/modules/XPCOMUtils.jsm"
   );
   var Ci = SpecialPowers.Ci;
 

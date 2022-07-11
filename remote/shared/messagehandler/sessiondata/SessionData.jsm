@@ -6,8 +6,8 @@
 
 const EXPORTED_SYMBOLS = ["SESSION_DATA_SHARED_DATA_KEY", "SessionData"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 const lazy = {};

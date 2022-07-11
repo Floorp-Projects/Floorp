@@ -16,8 +16,8 @@ var { Preferences } = ChromeUtils.import(
 var { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 var { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"

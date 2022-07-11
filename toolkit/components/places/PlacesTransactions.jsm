@@ -169,8 +169,8 @@ const TRANSACTIONS_QUEUE_TIMEOUT_MS = 240000; // 4 Mins.
 const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 function setTimeout(callback, ms) {

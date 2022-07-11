@@ -234,8 +234,8 @@ const UIStateInternal = {
   },
 };
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyGetter(UIStateInternal, "fxAccounts", () => {
   return ChromeUtils.import(

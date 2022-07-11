@@ -8,8 +8,8 @@ import { toggleContainer } from "./helpers.mjs";
 
 const { switchToTabHavingURI } = window.docShell.chromeEventHandler.ownerGlobal;
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 const SYNC_TABS_PREF = "services.sync.engine.tabs";
 const RECENT_TABS_SYNC = "services.sync.lastTabFetch";

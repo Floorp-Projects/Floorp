@@ -34,7 +34,7 @@ const startupPhases = {
         "resource://gre/modules/ActorManagerParent.jsm",
         "resource://gre/modules/CustomElementsListener.jsm",
         "resource://gre/modules/MainProcessSingleton.jsm",
-        "resource://gre/modules/XPCOMUtils.sys.mjs",
+        "resource://gre/modules/XPCOMUtils.jsm",
       ]),
     },
   },

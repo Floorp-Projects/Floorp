@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = [
   "SetClipboardSearchString",
 ];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Rect } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
 

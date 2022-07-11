@@ -5,8 +5,8 @@ var Cm = Components.manager;
 
 // Required to avoid failures.
 do_get_profile();
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 const { updateAppInfo } = ChromeUtils.import(

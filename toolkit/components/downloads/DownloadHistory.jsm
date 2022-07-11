@@ -18,8 +18,8 @@ var EXPORTED_SYMBOLS = ["DownloadHistory"];
 const { DownloadList } = ChromeUtils.import(
   "resource://gre/modules/DownloadList.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 const lazy = {};

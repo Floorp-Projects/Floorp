@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = [
   "ExtensionStorageEngineBridge",
 ];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { BridgedEngine } = ChromeUtils.import(
   "resource://services-sync/bridged_engine.js"

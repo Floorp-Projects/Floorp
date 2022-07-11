@@ -18,6 +18,7 @@
 <script src="head.js"></script>
 <script class="testbody" type="text/javascript">
 const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var mainWindow = window.browsingContext.topChromeWindow;
 

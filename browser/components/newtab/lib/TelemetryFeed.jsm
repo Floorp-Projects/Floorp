@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { MESSAGE_TYPE_HASH: msg } = ChromeUtils.import(
   "resource://activity-stream/common/ActorConstants.jsm"

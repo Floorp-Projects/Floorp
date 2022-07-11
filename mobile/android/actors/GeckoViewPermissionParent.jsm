@@ -8,8 +8,8 @@ var EXPORTED_SYMBOLS = ["GeckoViewPermissionParent"];
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { GeckoViewActorParent } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewActorParent.jsm"

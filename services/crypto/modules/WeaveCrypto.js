@@ -4,8 +4,8 @@
 
 var EXPORTED_SYMBOLS = ["WeaveCrypto"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 const CRYPT_ALGO = "AES-CBC";
