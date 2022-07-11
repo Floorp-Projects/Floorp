@@ -27,8 +27,8 @@ const ONE_GIGA = 1024 * 1024 * 1024;
 const ONE_MEGA = 1024 * 1024;
 const ONE_KILO = 1024;
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"

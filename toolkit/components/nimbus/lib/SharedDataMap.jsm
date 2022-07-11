@@ -24,8 +24,8 @@ ChromeUtils.defineModuleGetter(
   "JSONFile",
   "resource://gre/modules/JSONFile.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 class SharedDataMap extends EventEmitter {

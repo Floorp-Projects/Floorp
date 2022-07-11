@@ -13,8 +13,8 @@ var { AppConstants } = ChromeUtils.import(
 );
 var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 const { HandlerServiceTestUtils } = ChromeUtils.import(

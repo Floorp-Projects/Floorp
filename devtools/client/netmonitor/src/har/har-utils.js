@@ -6,7 +6,7 @@
 
 const Services = require("Services");
 const { Ci, Cc, CC } = require("chrome");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.sys.mjs");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "ZipWriter", function() {
   return CC("@mozilla.org/zipwriter;1", "nsIZipWriter");

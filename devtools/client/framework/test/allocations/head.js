@@ -34,8 +34,8 @@ let tracker;
 // => Avoid loading devtools module as much as possible
 // => If you really have to, lazy load them
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyGetter(this, "TrackedObjects", () => {
   return ChromeUtils.import(

@@ -5,14 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * This file tests the methods on XPCOMUtils.sys.mjs.
+ * This file tests the methods on XPCOMUtils.jsm.
  * Also on ComponentUtils.jsm. Which is deprecated.
  */
 
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {ComponentUtils} = ChromeUtils.import("resource://gre/modules/ComponentUtils.jsm");
 const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-const {XPCOMUtils} = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests

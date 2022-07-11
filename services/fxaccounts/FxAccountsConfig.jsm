@@ -10,8 +10,8 @@ const { RESTRequest } = ChromeUtils.import(
 const { log } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 const lazy = {};

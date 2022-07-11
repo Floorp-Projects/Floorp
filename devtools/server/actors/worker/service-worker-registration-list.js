@@ -5,7 +5,7 @@
 "use strict";
 
 const { Ci } = require("chrome");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.sys.mjs");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 loader.lazyRequireGetter(
   this,
   "ServiceWorkerRegistrationActor",

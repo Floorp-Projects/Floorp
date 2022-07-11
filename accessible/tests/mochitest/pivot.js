@@ -4,6 +4,8 @@
 /* import-globals-from states.js */
 /* import-globals-from text.js */
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 // //////////////////////////////////////////////////////////////////////////////
 // Constants
 

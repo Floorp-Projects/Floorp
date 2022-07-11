@@ -7,8 +7,8 @@
 
 var EXPORTED_SYMBOLS = ["WebChannelChild"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { ContentDOMReference } = ChromeUtils.import(
   "resource://gre/modules/ContentDOMReference.jsm"

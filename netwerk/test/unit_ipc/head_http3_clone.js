@@ -1,8 +1,8 @@
 /* import-globals-from ../unit/head_http3.js */
 
 var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 load("../unit/head_http3.js");

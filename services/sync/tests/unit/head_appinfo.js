@@ -3,8 +3,8 @@
 
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 // Required to avoid failures.

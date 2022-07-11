@@ -12,8 +12,8 @@ var EXPORTED_SYMBOLS = ["HandlerServiceTestUtils"];
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
