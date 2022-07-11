@@ -1903,7 +1903,7 @@
 # This only works when sessionHistoryInParent is enabled.
 - name: docshell.shistory.bfcache.ship_allow_beforeunload_listeners
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -6795,7 +6795,7 @@
 # ShadowRealms: https://github.com/tc39/proposal-shadowrealm
 - name: javascript.options.experimental.shadow_realms
   # Atomic, as we assert the preference, and that assertion may happen
-  # in a worker. 
+  # in a worker.
   type: RelaxedAtomicBool
   value: false
   mirror: always
