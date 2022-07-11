@@ -184,7 +184,7 @@ class RtpSenderEgressTest : public ::testing::TestWithParam<TestConfig> {
     packet->set_packet_type(RtpPacketMediaType::kVideo);
     packet->SetMarker(marker_bit);
     packet->SetTimestamp(capture_time_ms * 90);
-    packet->set_capture_time_ms(capture_time_ms);
+    packet->set_capture_time(Timestamp::Millis(capture_time_ms));
     packet->SetSequenceNumber(sequence_number_++);
     return packet;
   }
@@ -756,7 +756,7 @@ TEST_P(RtpSenderEgressTest, SendPacketUpdatesExtensions) {
   std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
 
   std::unique_ptr<RtpPacketToSend> packet = BuildRtpPacket();
-  packet->set_packetization_finish_time_ms(clock_->TimeInMilliseconds());
+  packet->set_packetization_finish_time(clock_->CurrentTime());
 
   const int32_t kDiffMs = 10;
   time_controller_.AdvanceTime(TimeDelta::Millis(kDiffMs));
