@@ -37,6 +37,7 @@ if (typeof Components != "undefined") {
   // loader.
   // eslint-disable-next-line mozilla/reject-global-this
   this.exports = {};
+  // eslint-disable-next-line no-global-assign
   ({ Services } = ChromeUtils.import("resource://gre/modules/Services.jsm"));
   // eslint-disable-next-line mozilla/reject-global-this
   this.Services = Services;
