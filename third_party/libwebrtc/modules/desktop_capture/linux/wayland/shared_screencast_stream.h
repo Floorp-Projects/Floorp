@@ -13,9 +13,11 @@
 
 #include <memory>
 
+#include "absl/types/optional.h"
 #include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
 #include "modules/desktop_capture/desktop_frame.h"
+#include "modules/desktop_capture/mouse_cursor.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
@@ -29,7 +31,28 @@ class RTC_EXPORT SharedScreenCastStream
 
   bool StartScreenCastStream(uint32_t stream_node_id, int fd);
   void StopScreenCastStream();
+
+  // Below functions return the most recent information we get from a
+  // PipeWire buffer on each Process() callback. This assumes that we
+  // managed to successfuly connect to a PipeWire stream provided by the
+  // compositor (based on stream parameters). The cursor data are obtained
+  // from spa_meta_cursor stream metadata and therefore the cursor is not
+  // part of actual screen/window frame.
+
+  // Returns the most recent screen/window frame we obtained from PipeWire
+  // buffer. Will return an empty frame in case we didn't manage to get a frame
+  // from PipeWire buffer.
   std::unique_ptr<DesktopFrame> CaptureFrame();
+
+  // Returns the most recent mouse cursor image. Will return an nullptr cursor
+  // in case we didn't manage to get a cursor from PipeWire buffer. NOTE: the
+  // cursor image might not be updated on every cursor location change, but
+  // actually only when its shape changes.
+  std::unique_ptr<MouseCursor> CaptureCursor();
+
+  // Returns the most recent mouse cursor position. Will not return a value in
+  // case we didn't manage to get it from PipeWire buffer.
+  absl::optional<DesktopVector> CaptureCursorPosition();
 
   ~SharedScreenCastStream();
 

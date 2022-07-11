@@ -90,7 +90,7 @@ class ScreenCastPortal {
   CaptureSourceType capture_source_type_ =
       ScreenCastPortal::CaptureSourceType::kScreen;
 
-  CursorMode cursor_mode_ = ScreenCastPortal::CursorMode::kEmbedded;
+  CursorMode cursor_mode_ = ScreenCastPortal::CursorMode::kMetadata;
 
   GDBusConnection* connection_ = nullptr;
   GDBusProxy* proxy_ = nullptr;
