@@ -22,9 +22,9 @@ if (window.googletag?.apiReady === undefined) {
   const slots = new Map();
   const slotsById = new Map();
   const slotsPerPath = new Map();
-
-  const displayedSlots = new Set();
-  const refreshedSlots = new Set();
+  const slotCreatives = new Map();
+  const usedCreatives = new Map();
+  const fetchedSlots = new Set();
   const eventCallbacks = new Map();
 
   const fireSlotEvent = (name, slot) => {
@@ -62,11 +62,71 @@ if (window.googletag?.apiReady === undefined) {
     }
   };
 
-  const callbackIfSlotReady = async id => {
-    const slot = slotsById.get(id);
-    if (!slot || !refreshedSlots.has(id) || !displayedSlots.has(id)) {
+  const SizeMapping = class extends Array {
+    getCreatives() {
+      const { clientWidth, clientHeight } = document.documentElement;
+      for (const [size, creatives] of this) {
+        if (clientWidth >= size[0] && clientHeight >= size[1]) {
+          return creatives;
+        }
+      }
+      return [];
+    }
+  };
+
+  const fetchSlot = slot => {
+    if (!slot) {
       return;
     }
+
+    const id = slot.getSlotElementId();
+
+    const node = document.getElementById(id);
+    if (!node) {
+      return;
+    }
+
+    let creatives = slotCreatives.get(id);
+    if (creatives instanceof SizeMapping) {
+      creatives = creatives.getCreatives();
+    }
+
+    if (!creatives?.length) {
+      node.remove();
+      return;
+    }
+
+    for (const creative of creatives) {
+      if (usedCreatives.has(creative)) {
+        node.remove();
+        return;
+      }
+    }
+
+    const creative = creatives[0];
+    usedCreatives.set(creative, slot);
+    fetchedSlots.add(id);
+  };
+
+  const displaySlot = async slot => {
+    if (!slot) {
+      return;
+    }
+
+    const id = slot.getSlotElementId();
+    if (!document.getElementById(id)) {
+      return;
+    }
+
+    if (!fetchedSlots.has(id)) {
+      fetchSlot(slot);
+    }
+
+    const parent = document.getElementById(id);
+    if (parent) {
+      parent.appendChild(document.createElement("div"));
+    }
+
     emptySlotElement(slot);
     recreateIframeForSlot(slot);
     await fireSlotEvent("slotRenderEnded", slot);
@@ -74,27 +134,6 @@ if (window.googletag?.apiReady === undefined) {
     await fireSlotEvent("slotResponseReceived", slot);
     await fireSlotEvent("slotOnload", slot);
     await fireSlotEvent("impressionViewable", slot);
-  };
-
-  const display = arg => {
-    let id;
-    if (arg?.getSlotElementId) {
-      id = arg.getSlotElementId();
-    } else if (arg?.nodeType) {
-      id = arg.id;
-    } else {
-      id = String(arg);
-    }
-
-    if (slotsById.has(id)) {
-      const parent = document.getElementById(id);
-      if (parent) {
-        parent.appendChild(document.createElement("div"));
-      }
-
-      displayedSlots.add(id);
-      callbackIfSlotReady(id);
-    }
   };
 
   const addEventListener = function(name, listener) {
@@ -114,7 +153,6 @@ if (window.googletag?.apiReady === undefined) {
 
   const companionAdsService = {
     addEventListener,
-    display,
     enable() {},
     fillSlot() {},
     getAttributeKeys: () => [],
@@ -129,7 +167,12 @@ if (window.googletag?.apiReady === undefined) {
     isSlotAPersistentRoadblock: () => false,
     notifyUnfilledSlots() {},
     onImplementationLoaded() {},
-    refreshAllSlots() {},
+    refreshAllSlots() {
+      for (const slot of slotsById.values()) {
+        fetchSlot(slot);
+        displaySlot(slot);
+      }
+    },
     removeEventListener,
     set() {},
     setRefreshUnfilledSlots() {},
@@ -162,7 +205,7 @@ if (window.googletag?.apiReady === undefined) {
     }
   };
 
-  const newSlot = (adUnitPath, size, opt_div) => {
+  const defineSlot = (adUnitPath, creatives, opt_div) => {
     if (slotsById.has(opt_div)) {
       document.getElementById(opt_div)?.remove();
       return slotsById.get(opt_div);
@@ -202,7 +245,10 @@ if (window.googletag?.apiReady === undefined) {
           targeting.delete(k);
         }
       },
-      defineSizeMapping: noopthisfn,
+      defineSizeMapping(mapping) {
+        slotCreatives.set(opt_div, mapping);
+        return this;
+      },
       get: k => attributes.get(k),
       getAdUnitPath: () => adUnitPath,
       getAttributeKeys: () => Array.from(attributes.keys()),
@@ -263,6 +309,7 @@ if (window.googletag?.apiReady === undefined) {
     };
     slots.set(adUnitPath, slot);
     slotsById.set(opt_div, slot);
+    slotCreatives.set(opt_div, creatives);
     return slot;
   };
 
@@ -287,13 +334,16 @@ if (window.googletag?.apiReady === undefined) {
       }
     },
     collapseEmptyDivs() {},
-    defineOutOfPagePassback: (a, o) => newSlot(a, 0, o),
-    definePassback: (a, s, o) => newSlot(a, s, o),
+    defineOutOfPagePassback: (a, o) => defineSlot(a, 0, o),
+    definePassback: (a, s, o) => defineSlot(a, s, o),
     disableInitialLoad() {
       initialLoadDisabled = true;
       return this;
     },
-    display,
+    display(adUnitPath, sizes, opt_div) {
+      const slot = defineSlot(adUnitPath, sizes, opt_div);
+      displaySlot(slot);
+    },
     enable() {},
     enableAsyncRendering() {},
     enableLazyLoad() {},
@@ -332,10 +382,8 @@ if (window.googletag?.apiReady === undefined) {
       for (const slot of slts) {
         if (slot) {
           try {
-            const id = slot.getSlotElementId();
-            displayedSlots.add(id);
-            refreshedSlots.add(id);
-            callbackIfSlotReady(id);
+            fetchSlot(slot);
+            displaySlot(slot);
           } catch (e) {
             console.error(e);
           }
@@ -378,11 +426,21 @@ if (window.googletag?.apiReady === undefined) {
     },
   };
 
-  const newSizeMappingBuilder = () => {
-    return {
-      addSize: noopthisfn,
-      build: () => null,
-    };
+  const SizeMappingBuilder = class {
+    #mapping;
+    constructor() {
+      this.#mapping = new SizeMapping();
+    }
+    addSize(size, creatives) {
+      if (!Array.isArray(size) || isNaN(size[0]) || isNaN(size[1])) {
+        this.#mapping = null;
+      } else {
+        this.#mapping?.push([size, creatives]);
+      }
+    }
+    build() {
+      return this.#mapping;
+    }
   };
 
   let gt = window.googletag;
@@ -394,14 +452,24 @@ if (window.googletag?.apiReady === undefined) {
     apiReady: true,
     companionAds: () => companionAdsService,
     content: () => contentService,
-    defineOutOfPageSlot: (a, o) => newSlot(a, 0, o),
-    defineSlot: (a, s, o) => newSlot(a, s, o),
+    defineOutOfPageSlot: (a, o) => defineSlot(a, 0, o),
+    defineSlot: (a, s, o) => defineSlot(a, s, o),
     destroySlots() {
       slots.clear();
       slotsById.clear();
     },
     disablePublisherConsole() {},
-    display,
+    display(arg) {
+      let id;
+      if (arg?.getSlotElementId) {
+        id = arg.getSlotElementId();
+      } else if (arg?.nodeType) {
+        id = arg.id;
+      } else {
+        id = String(arg);
+      }
+      displaySlot(slotsById.get(id));
+    },
     enableServices() {},
     enums: {
       OutOfPageFormat: {
@@ -415,7 +483,7 @@ if (window.googletag?.apiReady === undefined) {
     pubads: () => pubadsService,
     pubadsReady: true,
     setAdIframeTitle() {},
-    sizeMapping: () => newSizeMappingBuilder(),
+    sizeMapping: () => new SizeMappingBuilder(),
   });
 
   const run = function(fn) {
