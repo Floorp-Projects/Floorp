@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * This file tests the methods on XPCOMUtils.jsm.
+ * This file tests the methods on XPCOMUtils.sys.mjs.
  * Also on ComponentUtils.jsm. Which is deprecated.
  */
 
