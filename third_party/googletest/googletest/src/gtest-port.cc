@@ -90,15 +90,6 @@
 namespace testing {
 namespace internal {
 
-#if defined(_MSC_VER) || defined(__BORLANDC__)
-// MSVC and C++Builder do not provide a definition of STDERR_FILENO.
-const int kStdOutFileno = 1;
-const int kStdErrFileno = 2;
-#else
-const int kStdOutFileno = STDOUT_FILENO;
-const int kStdErrFileno = STDERR_FILENO;
-#endif  // _MSC_VER
-
 #if GTEST_OS_LINUX || GTEST_OS_GNU_HURD
 
 namespace {
@@ -374,7 +365,8 @@ class MemoryIsNotDeallocated {
  private:
   int old_crtdbg_flag_;
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(MemoryIsNotDeallocated);
+  MemoryIsNotDeallocated(const MemoryIsNotDeallocated&) = delete;
+  MemoryIsNotDeallocated& operator=(const MemoryIsNotDeallocated&) = delete;
 };
 #endif  // _MSC_VER
 
@@ -469,7 +461,8 @@ class ThreadWithParamSupport : public ThreadWithParamBase {
   // Prohibit instantiation.
   ThreadWithParamSupport();
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(ThreadWithParamSupport);
+  ThreadWithParamSupport(const ThreadWithParamSupport&) = delete;
+  ThreadWithParamSupport& operator=(const ThreadWithParamSupport&) = delete;
 };
 
 }  // namespace
@@ -1146,7 +1139,8 @@ class CapturedStream {
   // Name of the temporary file holding the stderr output.
   ::std::string filename_;
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(CapturedStream);
+  CapturedStream(const CapturedStream&) = delete;
+  CapturedStream& operator=(const CapturedStream&) = delete;
 };
 
 GTEST_DISABLE_MSC_DEPRECATED_POP_()
@@ -1173,6 +1167,15 @@ static std::string GetCapturedStream(CapturedStream** captured_stream) {
 
   return content;
 }
+
+#if defined(_MSC_VER) || defined(__BORLANDC__)
+// MSVC and C++Builder do not provide a definition of STDERR_FILENO.
+const int kStdOutFileno = 1;
+const int kStdErrFileno = 2;
+#else
+const int kStdOutFileno = STDOUT_FILENO;
+const int kStdErrFileno = STDERR_FILENO;
+#endif  // defined(_MSC_VER) || defined(__BORLANDC__)
 
 // Starts capturing stdout.
 void CaptureStdout() {

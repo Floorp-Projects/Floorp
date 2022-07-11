@@ -6,7 +6,8 @@
 
 GoogleTest now follows the
 [Abseil Live at Head philosophy](https://abseil.io/about/philosophy#upgrade-support).
-We recommend using the latest commit in the `main` branch in your projects.
+We recommend
+[updating to the latest commit in the `main` branch as often as possible](https://github.com/abseil/abseil-cpp/blob/master/FAQ.md#what-is-live-at-head-and-how-do-i-do-it).
 
 #### Documentation Updates
 
@@ -14,10 +15,13 @@ Our documentation is now live on GitHub Pages at
 https://google.github.io/googletest/. We recommend browsing the documentation on
 GitHub Pages rather than directly in the repository.
 
-#### Release 1.11.0
+#### Release 1.12.1
 
-[Release 1.11.0](https://github.com/google/googletest/releases/tag/release-1.11.0)
+[Release 1.12.1](https://github.com/google/googletest/releases/tag/release-1.12.1)
 is now available.
+
+The 1.12.x branch will be the last to support C++11. Future releases will
+require at least C++14.
 
 #### Coming Soon
 
@@ -55,7 +59,7 @@ More information about building GoogleTest can be found at
 
 ## Supported Platforms
 
-GoogleTest requires a codebase and compiler compliant with the C++11 standard or
+GoogleTest requires a codebase and compiler compliant with the C++14 standard or
 newer.
 
 The GoogleTest code is officially supported on the following platforms.
@@ -121,11 +125,11 @@ result output. If your test runner understands TAP, you may find it useful.
 runs tests from your binary in parallel to provide significant speed-up.
 
 [GoogleTest Adapter](https://marketplace.visualstudio.com/items?itemName=DavidSchuldenfrei.gtest-adapter)
-is a VS Code extension allowing to view GoogleTest in a tree view, and run/debug
+is a VS Code extension allowing to view GoogleTest in a tree view and run/debug
 your tests.
 
 [C++ TestMate](https://github.com/matepek/vscode-catch2-test-adapter) is a VS
-Code extension allowing to view GoogleTest in a tree view, and run/debug your
+Code extension allowing to view GoogleTest in a tree view and run/debug your
 tests.
 
 [Cornichon](https://pypi.org/project/cornichon/) is a small Gherkin DSL parser

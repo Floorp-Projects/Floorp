@@ -262,11 +262,299 @@ GMOCK_DEFINE_DEFAULT_ACTION_FOR_RETURN_TYPE_(double, 0);
 
 #undef GMOCK_DEFINE_DEFAULT_ACTION_FOR_RETURN_TYPE_
 
-// Simple two-arg form of std::disjunction.
-template <typename P, typename Q>
-using disjunction = typename ::std::conditional<P::value, P, Q>::type;
+// Partial implementations of metaprogramming types from the standard library
+// not available in C++11.
+
+template <typename P>
+struct negation
+    // NOLINTNEXTLINE
+    : std::integral_constant<bool, bool(!P::value)> {};
+
+// Base case: with zero predicates the answer is always true.
+template <typename...>
+struct conjunction : std::true_type {};
+
+// With a single predicate, the answer is that predicate.
+template <typename P1>
+struct conjunction<P1> : P1 {};
+
+// With multiple predicates the answer is the first predicate if that is false,
+// and we recurse otherwise.
+template <typename P1, typename... Ps>
+struct conjunction<P1, Ps...>
+    : std::conditional<bool(P1::value), conjunction<Ps...>, P1>::type {};
+
+template <typename...>
+struct disjunction : std::false_type {};
+
+template <typename P1>
+struct disjunction<P1> : P1 {};
+
+template <typename P1, typename... Ps>
+struct disjunction<P1, Ps...>
+    // NOLINTNEXTLINE
+    : std::conditional<!bool(P1::value), disjunction<Ps...>, P1>::type {};
+
+template <typename...>
+using void_t = void;
+
+// Detects whether an expression of type `From` can be implicitly converted to
+// `To` according to [conv]. In C++17, [conv]/3 defines this as follows:
+//
+//     An expression e can be implicitly converted to a type T if and only if
+//     the declaration T t=e; is well-formed, for some invented temporary
+//     variable t ([dcl.init]).
+//
+// [conv]/2 implies we can use function argument passing to detect whether this
+// initialization is valid.
+//
+// Note that this is distinct from is_convertible, which requires this be valid:
+//
+//     To test() {
+//       return declval<From>();
+//     }
+//
+// In particular, is_convertible doesn't give the correct answer when `To` and
+// `From` are the same non-moveable type since `declval<From>` will be an rvalue
+// reference, defeating the guaranteed copy elision that would otherwise make
+// this function work.
+//
+// REQUIRES: `From` is not cv void.
+template <typename From, typename To>
+struct is_implicitly_convertible {
+ private:
+  // A function that accepts a parameter of type T. This can be called with type
+  // U successfully only if U is implicitly convertible to T.
+  template <typename T>
+  static void Accept(T);
+
+  // A function that creates a value of type T.
+  template <typename T>
+  static T Make();
+
+  // An overload be selected when implicit conversion from T to To is possible.
+  template <typename T, typename = decltype(Accept<To>(Make<T>()))>
+  static std::true_type TestImplicitConversion(int);
+
+  // A fallback overload selected in all other cases.
+  template <typename T>
+  static std::false_type TestImplicitConversion(...);
+
+ public:
+  using type = decltype(TestImplicitConversion<From>(0));
+  static constexpr bool value = type::value;
+};
+
+// Like std::invoke_result_t from C++17, but works only for objects with call
+// operators (not e.g. member function pointers, which we don't need specific
+// support for in OnceAction because std::function deals with them).
+template <typename F, typename... Args>
+using call_result_t = decltype(std::declval<F>()(std::declval<Args>()...));
+
+template <typename Void, typename R, typename F, typename... Args>
+struct is_callable_r_impl : std::false_type {};
+
+// Specialize the struct for those template arguments where call_result_t is
+// well-formed. When it's not, the generic template above is chosen, resulting
+// in std::false_type.
+template <typename R, typename F, typename... Args>
+struct is_callable_r_impl<void_t<call_result_t<F, Args...>>, R, F, Args...>
+    : std::conditional<
+          std::is_void<R>::value,  //
+          std::true_type,          //
+          is_implicitly_convertible<call_result_t<F, Args...>, R>>::type {};
+
+// Like std::is_invocable_r from C++17, but works only for objects with call
+// operators. See the note on call_result_t.
+template <typename R, typename F, typename... Args>
+using is_callable_r = is_callable_r_impl<void, R, F, Args...>;
+
+// Like std::as_const from C++17.
+template <typename T>
+typename std::add_const<T>::type& as_const(T& t) {
+  return t;
+}
 
 }  // namespace internal
+
+// Specialized for function types below.
+template <typename F>
+class OnceAction;
+
+// An action that can only be used once.
+//
+// This is accepted by WillOnce, which doesn't require the underlying action to
+// be copy-constructible (only move-constructible), and promises to invoke it as
+// an rvalue reference. This allows the action to work with move-only types like
+// std::move_only_function in a type-safe manner.
+//
+// For example:
+//
+//     // Assume we have some API that needs to accept a unique pointer to some
+//     // non-copyable object Foo.
+//     void AcceptUniquePointer(std::unique_ptr<Foo> foo);
+//
+//     // We can define an action that provides a Foo to that API. Because It
+//     // has to give away its unique pointer, it must not be called more than
+//     // once, so its call operator is &&-qualified.
+//     struct ProvideFoo {
+//       std::unique_ptr<Foo> foo;
+//
+//       void operator()() && {
+//         AcceptUniquePointer(std::move(Foo));
+//       }
+//     };
+//
+//     // This action can be used with WillOnce.
+//     EXPECT_CALL(mock, Call)
+//         .WillOnce(ProvideFoo{std::make_unique<Foo>(...)});
+//
+//     // But a call to WillRepeatedly will fail to compile. This is correct,
+//     // since the action cannot correctly be used repeatedly.
+//     EXPECT_CALL(mock, Call)
+//         .WillRepeatedly(ProvideFoo{std::make_unique<Foo>(...)});
+//
+// A less-contrived example would be an action that returns an arbitrary type,
+// whose &&-qualified call operator is capable of dealing with move-only types.
+template <typename Result, typename... Args>
+class OnceAction<Result(Args...)> final {
+ private:
+  // True iff we can use the given callable type (or lvalue reference) directly
+  // via StdFunctionAdaptor.
+  template <typename Callable>
+  using IsDirectlyCompatible = internal::conjunction<
+      // It must be possible to capture the callable in StdFunctionAdaptor.
+      std::is_constructible<typename std::decay<Callable>::type, Callable>,
+      // The callable must be compatible with our signature.
+      internal::is_callable_r<Result, typename std::decay<Callable>::type,
+                              Args...>>;
+
+  // True iff we can use the given callable type via StdFunctionAdaptor once we
+  // ignore incoming arguments.
+  template <typename Callable>
+  using IsCompatibleAfterIgnoringArguments = internal::conjunction<
+      // It must be possible to capture the callable in a lambda.
+      std::is_constructible<typename std::decay<Callable>::type, Callable>,
+      // The callable must be invocable with zero arguments, returning something
+      // convertible to Result.
+      internal::is_callable_r<Result, typename std::decay<Callable>::type>>;
+
+ public:
+  // Construct from a callable that is directly compatible with our mocked
+  // signature: it accepts our function type's arguments and returns something
+  // convertible to our result type.
+  template <typename Callable,
+            typename std::enable_if<
+                internal::conjunction<
+                    // Teach clang on macOS that we're not talking about a
+                    // copy/move constructor here. Otherwise it gets confused
+                    // when checking the is_constructible requirement of our
+                    // traits above.
+                    internal::negation<std::is_same<
+                        OnceAction, typename std::decay<Callable>::type>>,
+                    IsDirectlyCompatible<Callable>>  //
+                ::value,
+                int>::type = 0>
+  OnceAction(Callable&& callable)  // NOLINT
+      : function_(StdFunctionAdaptor<typename std::decay<Callable>::type>(
+            {}, std::forward<Callable>(callable))) {}
+
+  // As above, but for a callable that ignores the mocked function's arguments.
+  template <typename Callable,
+            typename std::enable_if<
+                internal::conjunction<
+                    // Teach clang on macOS that we're not talking about a
+                    // copy/move constructor here. Otherwise it gets confused
+                    // when checking the is_constructible requirement of our
+                    // traits above.
+                    internal::negation<std::is_same<
+                        OnceAction, typename std::decay<Callable>::type>>,
+                    // Exclude callables for which the overload above works.
+                    // We'd rather provide the arguments if possible.
+                    internal::negation<IsDirectlyCompatible<Callable>>,
+                    IsCompatibleAfterIgnoringArguments<Callable>>::value,
+                int>::type = 0>
+  OnceAction(Callable&& callable)  // NOLINT
+                                   // Call the constructor above with a callable
+                                   // that ignores the input arguments.
+      : OnceAction(IgnoreIncomingArguments<typename std::decay<Callable>::type>{
+            std::forward<Callable>(callable)}) {}
+
+  // We are naturally copyable because we store only an std::function, but
+  // semantically we should not be copyable.
+  OnceAction(const OnceAction&) = delete;
+  OnceAction& operator=(const OnceAction&) = delete;
+  OnceAction(OnceAction&&) = default;
+
+  // Invoke the underlying action callable with which we were constructed,
+  // handing it the supplied arguments.
+  Result Call(Args... args) && {
+    return function_(std::forward<Args>(args)...);
+  }
+
+ private:
+  // An adaptor that wraps a callable that is compatible with our signature and
+  // being invoked as an rvalue reference so that it can be used as an
+  // StdFunctionAdaptor. This throws away type safety, but that's fine because
+  // this is only used by WillOnce, which we know calls at most once.
+  //
+  // Once we have something like std::move_only_function from C++23, we can do
+  // away with this.
+  template <typename Callable>
+  class StdFunctionAdaptor final {
+   public:
+    // A tag indicating that the (otherwise universal) constructor is accepting
+    // the callable itself, instead of e.g. stealing calls for the move
+    // constructor.
+    struct CallableTag final {};
+
+    template <typename F>
+    explicit StdFunctionAdaptor(CallableTag, F&& callable)
+        : callable_(std::make_shared<Callable>(std::forward<F>(callable))) {}
+
+    // Rather than explicitly returning Result, we return whatever the wrapped
+    // callable returns. This allows for compatibility with existing uses like
+    // the following, when the mocked function returns void:
+    //
+    //     EXPECT_CALL(mock_fn_, Call)
+    //         .WillOnce([&] {
+    //            [...]
+    //            return 0;
+    //         });
+    //
+    // Such a callable can be turned into std::function<void()>. If we use an
+    // explicit return type of Result here then it *doesn't* work with
+    // std::function, because we'll get a "void function should not return a
+    // value" error.
+    //
+    // We need not worry about incompatible result types because the SFINAE on
+    // OnceAction already checks this for us. std::is_invocable_r_v itself makes
+    // the same allowance for void result types.
+    template <typename... ArgRefs>
+    internal::call_result_t<Callable, ArgRefs...> operator()(
+        ArgRefs&&... args) const {
+      return std::move(*callable_)(std::forward<ArgRefs>(args)...);
+    }
+
+   private:
+    // We must put the callable on the heap so that we are copyable, which
+    // std::function needs.
+    std::shared_ptr<Callable> callable_;
+  };
+
+  // An adaptor that makes a callable that accepts zero arguments callable with
+  // our mocked arguments.
+  template <typename Callable>
+  struct IgnoreIncomingArguments {
+    internal::call_result_t<Callable> operator()(Args&&...) {
+      return std::move(callable)();
+    }
+
+    Callable callable;
+  };
+
+  std::function<Result(Args...)> function_;
+};
 
 // When an unexpected function call is encountered, Google Mock will
 // let it return a default value if the user has specified one for its
@@ -337,7 +625,8 @@ class DefaultValue {
 
    private:
     const T value_;
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(FixedValueProducer);
+    FixedValueProducer(const FixedValueProducer&) = delete;
+    FixedValueProducer& operator=(const FixedValueProducer&) = delete;
   };
 
   class FactoryValueProducer : public ValueProducer {
@@ -348,7 +637,8 @@ class DefaultValue {
 
    private:
     const FactoryFunction factory_;
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(FactoryValueProducer);
+    FactoryValueProducer(const FactoryValueProducer&) = delete;
+    FactoryValueProducer& operator=(const FactoryValueProducer&) = delete;
   };
 
   static ValueProducer* producer_;
@@ -422,28 +712,34 @@ class ActionInterface {
   virtual Result Perform(const ArgumentTuple& args) = 0;
 
  private:
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(ActionInterface);
+  ActionInterface(const ActionInterface&) = delete;
+  ActionInterface& operator=(const ActionInterface&) = delete;
 };
 
-// An Action<F> is a copyable and IMMUTABLE (except by assignment)
-// object that represents an action to be taken when a mock function
-// of type F is called.  The implementation of Action<T> is just a
-// std::shared_ptr to const ActionInterface<T>. Don't inherit from Action!
-// You can view an object implementing ActionInterface<F> as a
-// concrete action (including its current state), and an Action<F>
-// object as a handle to it.
 template <typename F>
-class Action {
+class Action;
+
+// An Action<R(Args...)> is a copyable and IMMUTABLE (except by assignment)
+// object that represents an action to be taken when a mock function of type
+// R(Args...) is called. The implementation of Action<T> is just a
+// std::shared_ptr to const ActionInterface<T>. Don't inherit from Action! You
+// can view an object implementing ActionInterface<F> as a concrete action
+// (including its current state), and an Action<F> object as a handle to it.
+template <typename R, typename... Args>
+class Action<R(Args...)> {
+ private:
+  using F = R(Args...);
+
   // Adapter class to allow constructing Action from a legacy ActionInterface.
   // New code should create Actions from functors instead.
   struct ActionAdapter {
     // Adapter must be copyable to satisfy std::function requirements.
     ::std::shared_ptr<ActionInterface<F>> impl_;
 
-    template <typename... Args>
-    typename internal::Function<F>::Result operator()(Args&&... args) {
+    template <typename... InArgs>
+    typename internal::Function<F>::Result operator()(InArgs&&... args) {
       return impl_->Perform(
-          ::std::forward_as_tuple(::std::forward<Args>(args)...));
+          ::std::forward_as_tuple(::std::forward<InArgs>(args)...));
     }
   };
 
@@ -478,7 +774,8 @@ class Action {
   // Action<F>, as long as F's arguments can be implicitly converted
   // to Func's and Func's return type can be implicitly converted to F's.
   template <typename Func>
-  explicit Action(const Action<Func>& action) : fun_(action.fun_) {}
+  Action(const Action<Func>& action)  // NOLINT
+      : fun_(action.fun_) {}
 
   // Returns true if and only if this is the DoDefault() action.
   bool IsDoDefault() const { return fun_ == nullptr; }
@@ -494,6 +791,24 @@ class Action {
       internal::IllegalDoDefault(__FILE__, __LINE__);
     }
     return internal::Apply(fun_, ::std::move(args));
+  }
+
+  // An action can be used as a OnceAction, since it's obviously safe to call it
+  // once.
+  operator OnceAction<F>() const {  // NOLINT
+    // Return a OnceAction-compatible callable that calls Perform with the
+    // arguments it is provided. We could instead just return fun_, but then
+    // we'd need to handle the IsDoDefault() case separately.
+    struct OA {
+      Action<F> action;
+
+      R operator()(Args... args) && {
+        return action.Perform(
+            std::forward_as_tuple(std::forward<Args>(args)...));
+      }
+    };
+
+    return OA{*this};
   }
 
  private:
@@ -512,8 +827,8 @@ class Action {
 
   template <typename FunctionImpl>
   struct IgnoreArgs {
-    template <typename... Args>
-    Result operator()(const Args&...) const {
+    template <typename... InArgs>
+    Result operator()(const InArgs&...) const {
       return function_impl();
     }
 
@@ -604,118 +919,198 @@ struct ByMoveWrapper {
   T payload;
 };
 
-// Implements the polymorphic Return(x) action, which can be used in
-// any function that returns the type of x, regardless of the argument
-// types.
-//
-// Note: The value passed into Return must be converted into
-// Function<F>::Result when this action is cast to Action<F> rather than
-// when that action is performed. This is important in scenarios like
-//
-// MOCK_METHOD1(Method, T(U));
-// ...
-// {
-//   Foo foo;
-//   X x(&foo);
-//   EXPECT_CALL(mock, Method(_)).WillOnce(Return(x));
-// }
-//
-// In the example above the variable x holds reference to foo which leaves
-// scope and gets destroyed.  If copying X just copies a reference to foo,
-// that copy will be left with a hanging reference.  If conversion to T
-// makes a copy of foo, the above code is safe. To support that scenario, we
-// need to make sure that the type conversion happens inside the EXPECT_CALL
-// statement, and conversion of the result of Return to Action<T(U)> is a
-// good place for that.
-//
-// The real life example of the above scenario happens when an invocation
-// of gtl::Container() is passed into Return.
-//
+// The general implementation of Return(R). Specializations follow below.
 template <typename R>
-class ReturnAction {
+class ReturnAction final {
  public:
-  // Constructs a ReturnAction object from the value to be returned.
-  // 'value' is passed by value instead of by const reference in order
-  // to allow Return("string literal") to compile.
-  explicit ReturnAction(R value) : value_(new R(std::move(value))) {}
+  explicit ReturnAction(R value) : value_(std::move(value)) {}
 
-  // This template type conversion operator allows Return(x) to be
-  // used in ANY function that returns x's type.
-  template <typename F>
-  operator Action<F>() const {  // NOLINT
-    // Assert statement belongs here because this is the best place to verify
-    // conditions on F. It produces the clearest error messages
-    // in most compilers.
-    // Impl really belongs in this scope as a local class but can't
-    // because MSVC produces duplicate symbols in different translation units
-    // in this case. Until MS fixes that bug we put Impl into the class scope
-    // and put the typedef both here (for use in assert statement) and
-    // in the Impl class. But both definitions must be the same.
-    typedef typename Function<F>::Result Result;
-    GTEST_COMPILE_ASSERT_(
-        !std::is_reference<Result>::value,
-        use_ReturnRef_instead_of_Return_to_return_a_reference);
-    static_assert(!std::is_void<Result>::value,
-                  "Can't use Return() on an action expected to return `void`.");
-    return Action<F>(new Impl<R, F>(value_));
+  template <typename U, typename... Args,
+            typename = typename std::enable_if<conjunction<
+                // See the requirements documented on Return.
+                negation<std::is_same<void, U>>,  //
+                negation<std::is_reference<U>>,   //
+                std::is_convertible<R, U>,        //
+                std::is_move_constructible<U>>::value>::type>
+  operator OnceAction<U(Args...)>() && {  // NOLINT
+    return Impl<U>(std::move(value_));
+  }
+
+  template <typename U, typename... Args,
+            typename = typename std::enable_if<conjunction<
+                // See the requirements documented on Return.
+                negation<std::is_same<void, U>>,   //
+                negation<std::is_reference<U>>,    //
+                std::is_convertible<const R&, U>,  //
+                std::is_copy_constructible<U>>::value>::type>
+  operator Action<U(Args...)>() const {  // NOLINT
+    return Impl<U>(value_);
   }
 
  private:
-  // Implements the Return(x) action for a particular function type F.
-  template <typename R_, typename F>
-  class Impl : public ActionInterface<F> {
+  // Implements the Return(x) action for a mock function that returns type U.
+  template <typename U>
+  class Impl final {
    public:
-    typedef typename Function<F>::Result Result;
-    typedef typename Function<F>::ArgumentTuple ArgumentTuple;
+    // The constructor used when the return value is allowed to move from the
+    // input value (i.e. we are converting to OnceAction).
+    explicit Impl(R&& input_value)
+        : state_(new State(std::move(input_value))) {}
 
-    // The implicit cast is necessary when Result has more than one
-    // single-argument constructor (e.g. Result is std::vector<int>) and R
-    // has a type conversion operator template.  In that case, value_(value)
-    // won't compile as the compiler doesn't known which constructor of
-    // Result to call.  ImplicitCast_ forces the compiler to convert R to
-    // Result without considering explicit constructors, thus resolving the
-    // ambiguity. value_ is then initialized using its copy constructor.
-    explicit Impl(const std::shared_ptr<R>& value)
-        : value_before_cast_(*value),
-          value_(ImplicitCast_<Result>(value_before_cast_)) {}
+    // The constructor used when the return value is not allowed to move from
+    // the input value (i.e. we are converting to Action).
+    explicit Impl(const R& input_value) : state_(new State(input_value)) {}
 
-    Result Perform(const ArgumentTuple&) override { return value_; }
+    U operator()() && { return std::move(state_->value); }
+    U operator()() const& { return state_->value; }
 
    private:
-    GTEST_COMPILE_ASSERT_(!std::is_reference<Result>::value,
-                          Result_cannot_be_a_reference_type);
-    // We save the value before casting just in case it is being cast to a
-    // wrapper type.
-    R value_before_cast_;
-    Result value_;
+    // We put our state on the heap so that the compiler-generated copy/move
+    // constructors work correctly even when U is a reference-like type. This is
+    // necessary only because we eagerly create State::value (see the note on
+    // that symbol for details). If we instead had only the input value as a
+    // member then the default constructors would work fine.
+    //
+    // For example, when R is std::string and U is std::string_view, value is a
+    // reference to the string backed by input_value. The copy constructor would
+    // copy both, so that we wind up with a new input_value object (with the
+    // same contents) and a reference to the *old* input_value object rather
+    // than the new one.
+    struct State {
+      explicit State(const R& input_value_in)
+          : input_value(input_value_in),
+            // Make an implicit conversion to Result before initializing the U
+            // object we store, avoiding calling any explicit constructor of U
+            // from R.
+            //
+            // This simulates the language rules: a function with return type U
+            // that does `return R()` requires R to be implicitly convertible to
+            // U, and uses that path for the conversion, even U Result has an
+            // explicit constructor from R.
+            value(ImplicitCast_<U>(internal::as_const(input_value))) {}
 
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(Impl);
+      // As above, but for the case where we're moving from the ReturnAction
+      // object because it's being used as a OnceAction.
+      explicit State(R&& input_value_in)
+          : input_value(std::move(input_value_in)),
+            // For the same reason as above we make an implicit conversion to U
+            // before initializing the value.
+            //
+            // Unlike above we provide the input value as an rvalue to the
+            // implicit conversion because this is a OnceAction: it's fine if it
+            // wants to consume the input value.
+            value(ImplicitCast_<U>(std::move(input_value))) {}
+
+      // A copy of the value originally provided by the user. We retain this in
+      // addition to the value of the mock function's result type below in case
+      // the latter is a reference-like type. See the std::string_view example
+      // in the documentation on Return.
+      R input_value;
+
+      // The value we actually return, as the type returned by the mock function
+      // itself.
+      //
+      // We eagerly initialize this here, rather than lazily doing the implicit
+      // conversion automatically each time Perform is called, for historical
+      // reasons: in 2009-11, commit a070cbd91c (Google changelist 13540126)
+      // made the Action<U()> conversion operator eagerly convert the R value to
+      // U, but without keeping the R alive. This broke the use case discussed
+      // in the documentation for Return, making reference-like types such as
+      // std::string_view not safe to use as U where the input type R is a
+      // value-like type such as std::string.
+      //
+      // The example the commit gave was not very clear, nor was the issue
+      // thread (https://github.com/google/googlemock/issues/86), but it seems
+      // the worry was about reference-like input types R that flatten to a
+      // value-like type U when being implicitly converted. An example of this
+      // is std::vector<bool>::reference, which is often a proxy type with an
+      // reference to the underlying vector:
+      //
+      //     // Helper method: have the mock function return bools according
+      //     // to the supplied script.
+      //     void SetActions(MockFunction<bool(size_t)>& mock,
+      //                     const std::vector<bool>& script) {
+      //       for (size_t i = 0; i < script.size(); ++i) {
+      //         EXPECT_CALL(mock, Call(i)).WillOnce(Return(script[i]));
+      //       }
+      //     }
+      //
+      //     TEST(Foo, Bar) {
+      //       // Set actions using a temporary vector, whose operator[]
+      //       // returns proxy objects that references that will be
+      //       // dangling once the call to SetActions finishes and the
+      //       // vector is destroyed.
+      //       MockFunction<bool(size_t)> mock;
+      //       SetActions(mock, {false, true});
+      //
+      //       EXPECT_FALSE(mock.AsStdFunction()(0));
+      //       EXPECT_TRUE(mock.AsStdFunction()(1));
+      //     }
+      //
+      // This eager conversion helps with a simple case like this, but doesn't
+      // fully make these types work in general. For example the following still
+      // uses a dangling reference:
+      //
+      //     TEST(Foo, Baz) {
+      //       MockFunction<std::vector<std::string>()> mock;
+      //
+      //       // Return the same vector twice, and then the empty vector
+      //       // thereafter.
+      //       auto action = Return(std::initializer_list<std::string>{
+      //           "taco", "burrito",
+      //       });
+      //
+      //       EXPECT_CALL(mock, Call)
+      //           .WillOnce(action)
+      //           .WillOnce(action)
+      //           .WillRepeatedly(Return(std::vector<std::string>{}));
+      //
+      //       EXPECT_THAT(mock.AsStdFunction()(),
+      //                   ElementsAre("taco", "burrito"));
+      //       EXPECT_THAT(mock.AsStdFunction()(),
+      //                   ElementsAre("taco", "burrito"));
+      //       EXPECT_THAT(mock.AsStdFunction()(), IsEmpty());
+      //     }
+      //
+      U value;
+    };
+
+    const std::shared_ptr<State> state_;
   };
 
-  // Partially specialize for ByMoveWrapper. This version of ReturnAction will
-  // move its contents instead.
-  template <typename R_, typename F>
-  class Impl<ByMoveWrapper<R_>, F> : public ActionInterface<F> {
-   public:
-    typedef typename Function<F>::Result Result;
-    typedef typename Function<F>::ArgumentTuple ArgumentTuple;
+  R value_;
+};
 
-    explicit Impl(const std::shared_ptr<R>& wrapper)
-        : performed_(false), wrapper_(wrapper) {}
+// A specialization of ReturnAction<R> when R is ByMoveWrapper<T> for some T.
+//
+// This version applies the type system-defeating hack of moving from T even in
+// the const call operator, checking at runtime that it isn't called more than
+// once, since the user has declared their intent to do so by using ByMove.
+template <typename T>
+class ReturnAction<ByMoveWrapper<T>> final {
+ public:
+  explicit ReturnAction(ByMoveWrapper<T> wrapper)
+      : state_(new State(std::move(wrapper.payload))) {}
 
-    Result Perform(const ArgumentTuple&) override {
-      GTEST_CHECK_(!performed_)
-          << "A ByMove() action should only be performed once.";
-      performed_ = true;
-      return std::move(wrapper_->payload);
-    }
+  T operator()() const {
+    GTEST_CHECK_(!state_->called)
+        << "A ByMove() action must be performed at most once.";
 
-   private:
-    bool performed_;
-    const std::shared_ptr<R> wrapper_;
+    state_->called = true;
+    return std::move(state_->value);
+  }
+
+ private:
+  // We store our state on the heap so that we are copyable as required by
+  // Action, despite the fact that we are stateful and T may not be copyable.
+  struct State {
+    explicit State(T&& value_in) : value(std::move(value_in)) {}
+
+    T value;
+    bool called = false;
   };
 
-  const std::shared_ptr<R> value_;
+  const std::shared_ptr<State> state_;
 };
 
 // Implements the ReturnNull() action.
@@ -757,8 +1152,8 @@ class ReturnRefAction {
     // Asserts that the function return type is a reference.  This
     // catches the user error of using ReturnRef(x) when Return(x)
     // should be used, and generates some helpful error message.
-    GTEST_COMPILE_ASSERT_(std::is_reference<Result>::value,
-                          use_Return_instead_of_ReturnRef_to_return_a_value);
+    static_assert(std::is_reference<Result>::value,
+                  "use Return instead of ReturnRef to return a value");
     return Action<F>(new Impl<F>(ref_));
   }
 
@@ -799,9 +1194,8 @@ class ReturnRefOfCopyAction {
     // Asserts that the function return type is a reference.  This
     // catches the user error of using ReturnRefOfCopy(x) when Return(x)
     // should be used, and generates some helpful error message.
-    GTEST_COMPILE_ASSERT_(
-        std::is_reference<Result>::value,
-        use_Return_instead_of_ReturnRefOfCopy_to_return_a_value);
+    static_assert(std::is_reference<Result>::value,
+                  "use Return instead of ReturnRefOfCopy to return a value");
     return Action<F>(new Impl<F>(value_));
   }
 
@@ -1012,17 +1406,60 @@ class IgnoreResultAction {
 
 template <typename InnerAction, size_t... I>
 struct WithArgsAction {
-  InnerAction action;
+  InnerAction inner_action;
 
-  // The inner action could be anything convertible to Action<X>.
-  // We use the conversion operator to detect the signature of the inner Action.
+  // The signature of the function as seen by the inner action, given an out
+  // action with the given result and argument types.
   template <typename R, typename... Args>
-  operator Action<R(Args...)>() const {  // NOLINT
-    using TupleType = std::tuple<Args...>;
-    Action<R(typename std::tuple_element<I, TupleType>::type...)> converted(
-        action);
+  using InnerSignature =
+      R(typename std::tuple_element<I, std::tuple<Args...>>::type...);
 
-    return [converted](Args... args) -> R {
+  // Rather than a call operator, we must define conversion operators to
+  // particular action types. This is necessary for embedded actions like
+  // DoDefault(), which rely on an action conversion operators rather than
+  // providing a call operator because even with a particular set of arguments
+  // they don't have a fixed return type.
+
+  template <typename R, typename... Args,
+            typename std::enable_if<
+                std::is_convertible<
+                    InnerAction,
+                    // Unfortunately we can't use the InnerSignature alias here;
+                    // MSVC complains about the I parameter pack not being
+                    // expanded (error C3520) despite it being expanded in the
+                    // type alias.
+                    OnceAction<R(typename std::tuple_element<
+                                 I, std::tuple<Args...>>::type...)>>::value,
+                int>::type = 0>
+  operator OnceAction<R(Args...)>() && {  // NOLINT
+    struct OA {
+      OnceAction<InnerSignature<R, Args...>> inner_action;
+
+      R operator()(Args&&... args) && {
+        return std::move(inner_action)
+            .Call(std::get<I>(
+                std::forward_as_tuple(std::forward<Args>(args)...))...);
+      }
+    };
+
+    return OA{std::move(inner_action)};
+  }
+
+  template <typename R, typename... Args,
+            typename std::enable_if<
+                std::is_convertible<
+                    const InnerAction&,
+                    // Unfortunately we can't use the InnerSignature alias here;
+                    // MSVC complains about the I parameter pack not being
+                    // expanded (error C3520) despite it being expanded in the
+                    // type alias.
+                    Action<R(typename std::tuple_element<
+                             I, std::tuple<Args...>>::type...)>>::value,
+                int>::type = 0>
+  operator Action<R(Args...)>() const {  // NOLINT
+    Action<InnerSignature<R, Args...>> converted(inner_action);
+
+    return [converted](Args&&... args) -> R {
       return converted.Perform(std::forward_as_tuple(
           std::get<I>(std::forward_as_tuple(std::forward<Args>(args)...))...));
     };
@@ -1030,37 +1467,178 @@ struct WithArgsAction {
 };
 
 template <typename... Actions>
-struct DoAllAction {
- private:
+class DoAllAction;
+
+// Base case: only a single action.
+template <typename FinalAction>
+class DoAllAction<FinalAction> {
+ public:
+  struct UserConstructorTag {};
+
   template <typename T>
-  using NonFinalType =
+  explicit DoAllAction(UserConstructorTag, T&& action)
+      : final_action_(std::forward<T>(action)) {}
+
+  // Rather than a call operator, we must define conversion operators to
+  // particular action types. This is necessary for embedded actions like
+  // DoDefault(), which rely on an action conversion operators rather than
+  // providing a call operator because even with a particular set of arguments
+  // they don't have a fixed return type.
+
+  template <typename R, typename... Args,
+            typename std::enable_if<
+                std::is_convertible<FinalAction, OnceAction<R(Args...)>>::value,
+                int>::type = 0>
+  operator OnceAction<R(Args...)>() && {  // NOLINT
+    return std::move(final_action_);
+  }
+
+  template <
+      typename R, typename... Args,
+      typename std::enable_if<
+          std::is_convertible<const FinalAction&, Action<R(Args...)>>::value,
+          int>::type = 0>
+  operator Action<R(Args...)>() const {  // NOLINT
+    return final_action_;
+  }
+
+ private:
+  FinalAction final_action_;
+};
+
+// Recursive case: support N actions by calling the initial action and then
+// calling through to the base class containing N-1 actions.
+template <typename InitialAction, typename... OtherActions>
+class DoAllAction<InitialAction, OtherActions...>
+    : private DoAllAction<OtherActions...> {
+ private:
+  using Base = DoAllAction<OtherActions...>;
+
+  // The type of reference that should be provided to an initial action for a
+  // mocked function parameter of type T.
+  //
+  // There are two quirks here:
+  //
+  //  *  Unlike most forwarding functions, we pass scalars through by value.
+  //     This isn't strictly necessary because an lvalue reference would work
+  //     fine too and be consistent with other non-reference types, but it's
+  //     perhaps less surprising.
+  //
+  //     For example if the mocked function has signature void(int), then it
+  //     might seem surprising for the user's initial action to need to be
+  //     convertible to Action<void(const int&)>. This is perhaps less
+  //     surprising for a non-scalar type where there may be a performance
+  //     impact, or it might even be impossible, to pass by value.
+  //
+  //  *  More surprisingly, `const T&` is often not a const reference type.
+  //     By the reference collapsing rules in C++17 [dcl.ref]/6, if T refers to
+  //     U& or U&& for some non-scalar type U, then InitialActionArgType<T> is
+  //     U&. In other words, we may hand over a non-const reference.
+  //
+  //     So for example, given some non-scalar type Obj we have the following
+  //     mappings:
+  //
+  //            T               InitialActionArgType<T>
+  //         -------            -----------------------
+  //         Obj                const Obj&
+  //         Obj&               Obj&
+  //         Obj&&              Obj&
+  //         const Obj          const Obj&
+  //         const Obj&         const Obj&
+  //         const Obj&&        const Obj&
+  //
+  //     In other words, the initial actions get a mutable view of an non-scalar
+  //     argument if and only if the mock function itself accepts a non-const
+  //     reference type. They are never given an rvalue reference to an
+  //     non-scalar type.
+  //
+  //     This situation makes sense if you imagine use with a matcher that is
+  //     designed to write through a reference. For example, if the caller wants
+  //     to fill in a reference argument and then return a canned value:
+  //
+  //         EXPECT_CALL(mock, Call)
+  //             .WillOnce(DoAll(SetArgReferee<0>(17), Return(19)));
+  //
+  template <typename T>
+  using InitialActionArgType =
       typename std::conditional<std::is_scalar<T>::value, T, const T&>::type;
 
-  template <typename ActionT, size_t... I>
-  std::vector<ActionT> Convert(IndexSequence<I...>) const {
-    return {ActionT(std::get<I>(actions))...};
-  }
-
  public:
-  std::tuple<Actions...> actions;
+  struct UserConstructorTag {};
 
-  template <typename R, typename... Args>
-  operator Action<R(Args...)>() const {  // NOLINT
-    struct Op {
-      std::vector<Action<void(NonFinalType<Args>...)>> converted;
-      Action<R(Args...)> last;
-      R operator()(Args... args) const {
-        auto tuple_args = std::forward_as_tuple(std::forward<Args>(args)...);
-        for (auto& a : converted) {
-          a.Perform(tuple_args);
-        }
-        return last.Perform(std::move(tuple_args));
+  template <typename T, typename... U>
+  explicit DoAllAction(UserConstructorTag, T&& initial_action,
+                       U&&... other_actions)
+      : Base({}, std::forward<U>(other_actions)...),
+        initial_action_(std::forward<T>(initial_action)) {}
+
+  template <typename R, typename... Args,
+            typename std::enable_if<
+                conjunction<
+                    // Both the initial action and the rest must support
+                    // conversion to OnceAction.
+                    std::is_convertible<
+                        InitialAction,
+                        OnceAction<void(InitialActionArgType<Args>...)>>,
+                    std::is_convertible<Base, OnceAction<R(Args...)>>>::value,
+                int>::type = 0>
+  operator OnceAction<R(Args...)>() && {  // NOLINT
+    // Return an action that first calls the initial action with arguments
+    // filtered through InitialActionArgType, then forwards arguments directly
+    // to the base class to deal with the remaining actions.
+    struct OA {
+      OnceAction<void(InitialActionArgType<Args>...)> initial_action;
+      OnceAction<R(Args...)> remaining_actions;
+
+      R operator()(Args... args) && {
+        std::move(initial_action)
+            .Call(static_cast<InitialActionArgType<Args>>(args)...);
+
+        return std::move(remaining_actions).Call(std::forward<Args>(args)...);
       }
     };
-    return Op{Convert<Action<void(NonFinalType<Args>...)>>(
-                  MakeIndexSequence<sizeof...(Actions) - 1>()),
-              std::get<sizeof...(Actions) - 1>(actions)};
+
+    return OA{
+        std::move(initial_action_),
+        std::move(static_cast<Base&>(*this)),
+    };
   }
+
+  template <
+      typename R, typename... Args,
+      typename std::enable_if<
+          conjunction<
+              // Both the initial action and the rest must support conversion to
+              // Action.
+              std::is_convertible<const InitialAction&,
+                                  Action<void(InitialActionArgType<Args>...)>>,
+              std::is_convertible<const Base&, Action<R(Args...)>>>::value,
+          int>::type = 0>
+  operator Action<R(Args...)>() const {  // NOLINT
+    // Return an action that first calls the initial action with arguments
+    // filtered through InitialActionArgType, then forwards arguments directly
+    // to the base class to deal with the remaining actions.
+    struct OA {
+      Action<void(InitialActionArgType<Args>...)> initial_action;
+      Action<R(Args...)> remaining_actions;
+
+      R operator()(Args... args) const {
+        initial_action.Perform(std::forward_as_tuple(
+            static_cast<InitialActionArgType<Args>>(args)...));
+
+        return remaining_actions.Perform(
+            std::forward_as_tuple(std::forward<Args>(args)...));
+      }
+    };
+
+    return OA{
+        initial_action_,
+        static_cast<const Base&>(*this),
+    };
+  }
+
+ private:
+  InitialAction initial_action_;
 };
 
 template <typename T, typename... Params>
@@ -1077,7 +1655,8 @@ struct ReturnNewAction {
 
 template <size_t k>
 struct ReturnArgAction {
-  template <typename... Args>
+  template <typename... Args,
+            typename = typename std::enable_if<(k < sizeof...(Args))>::type>
   auto operator()(Args&&... args) const -> decltype(std::get<k>(
       std::forward_as_tuple(std::forward<Args>(args)...))) {
     return std::get<k>(std::forward_as_tuple(std::forward<Args>(args)...));
@@ -1202,7 +1781,8 @@ typedef internal::IgnoredValue Unused;
 template <typename... Action>
 internal::DoAllAction<typename std::decay<Action>::type...> DoAll(
     Action&&... action) {
-  return {std::forward_as_tuple(std::forward<Action>(action)...)};
+  return internal::DoAllAction<typename std::decay<Action>::type...>(
+      {}, std::forward<Action>(action)...);
 }
 
 // WithArg<k>(an_action) creates an action that passes the k-th
@@ -1236,9 +1816,30 @@ internal::WithArgsAction<typename std::decay<InnerAction>::type> WithoutArgs(
   return {std::forward<InnerAction>(action)};
 }
 
-// Creates an action that returns 'value'.  'value' is passed by value
-// instead of const reference - otherwise Return("string literal")
-// will trigger a compiler error about using array as initializer.
+// Creates an action that returns a value.
+//
+// The returned type can be used with a mock function returning a non-void,
+// non-reference type U as follows:
+//
+//  *  If R is convertible to U and U is move-constructible, then the action can
+//     be used with WillOnce.
+//
+//  *  If const R& is convertible to U and U is copy-constructible, then the
+//     action can be used with both WillOnce and WillRepeatedly.
+//
+// The mock expectation contains the R value from which the U return value is
+// constructed (a move/copy of the argument to Return). This means that the R
+// value will survive at least until the mock object's expectations are cleared
+// or the mock object is destroyed, meaning that U can safely be a
+// reference-like type such as std::string_view:
+//
+//     // The mock function returns a view of a copy of the string fed to
+//     // Return. The view is valid even after the action is performed.
+//     MockFunction<std::string_view()> mock;
+//     EXPECT_CALL(mock, Call).WillOnce(Return(std::string("taco")));
+//     const std::string_view result = mock.AsStdFunction()();
+//     EXPECT_EQ("taco", result);
+//
 template <typename R>
 internal::ReturnAction<R> Return(R value) {
   return internal::ReturnAction<R>(std::move(value));
@@ -1272,6 +1873,8 @@ inline internal::ReturnRefOfCopyAction<R> ReturnRefOfCopy(const R& x) {
   return internal::ReturnRefOfCopyAction<R>(x);
 }
 
+// DEPRECATED: use Return(x) directly with WillOnce.
+//
 // Modifies the parent action (a Return() action) to perform a move of the
 // argument instead of a copy.
 // Return(ByMove()) actions can only be executed once and will assert this
