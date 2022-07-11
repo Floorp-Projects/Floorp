@@ -8,25 +8,25 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Graphics: Canvas2D")
 
 with Files("TexUnpackBlob.cpp"):
-    BUG_COMPONENT = ("Core", "Graphics: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: CanvasWebGL")
 
 with Files("WebGL*"):
-    BUG_COMPONENT = ("Core", "Graphics: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: CanvasWebGL")
 
 with Files("test/webgl-conf/**"):
-    BUG_COMPONENT = ("Core", "Graphics: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: CanvasWebGL")
 
 with Files("test/webgl-mochitest/**"):
-    BUG_COMPONENT = ("Core", "Graphics: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: CanvasWebGL")
 
 with Files("test/reftest/webgl*"):
-    BUG_COMPONENT = ("Core", "Graphics: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: CanvasWebGL")
 
 with Files("test/chrome/*webgl*"):
-    BUG_COMPONENT = ("Core", "Graphics: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: CanvasWebGL")
 
 with Files("test/crossorigin/*webgl*"):
-    BUG_COMPONENT = ("Core", "Graphics: WebGL")
+    BUG_COMPONENT = ("Core", "Graphics: CanvasWebGL")
 
 # Change the following line(s) to avoid bug 1081323 (clobber after changing a manifest):
 # * Adjust failure errata for webgl-conf.
