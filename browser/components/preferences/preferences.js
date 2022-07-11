@@ -70,7 +70,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://gre/modules/ExtensionPreferencesManager.jsm",
   ExtensionSettingsStore: "resource://gre/modules/ExtensionSettingsStore.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
-  formAutofillParent: "resource://formautofill/FormAutofillParent.jsm",
   FeatureGate: "resource://featuregates/FeatureGate.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   LangPackMatcher: "resource://gre/modules/LangPackMatcher.jsm",
