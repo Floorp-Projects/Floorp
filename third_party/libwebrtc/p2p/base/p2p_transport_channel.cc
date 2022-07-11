@@ -786,6 +786,16 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
     SetOption(rtc::Socket::OPT_DSCP, *field_trials_.override_dscp);
   }
 
+  std::string field_trial_string =
+      webrtc::field_trial::FindFullName("WebRTC-SetSocketReceiveBuffer");
+  int receive_buffer_size_kb = 0;
+  sscanf(field_trial_string.c_str(), "Enabled-%d", &receive_buffer_size_kb);
+  if (receive_buffer_size_kb > 0) {
+    RTC_LOG(LS_INFO) << "Set WebRTC-SetSocketReceiveBuffer: Enabled and set to "
+                     << receive_buffer_size_kb << "kb";
+    SetOption(rtc::Socket::OPT_RCVBUF, receive_buffer_size_kb * 1024);
+  }
+
   RTC_DCHECK(ValidateIceConfig(config_).ok());
 }
 
