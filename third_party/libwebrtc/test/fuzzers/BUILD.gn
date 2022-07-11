@@ -316,6 +316,14 @@ webrtc_fuzzer_test("audio_decoder_multiopus_fuzzer") {
   ]
 }
 
+webrtc_fuzzer_test("audio_decoder_pcm_fuzzer") {
+  sources = [ "audio_decoder_pcm_fuzzer.cc" ]
+  deps = [
+    ":audio_decoder_fuzzer",
+    "../../modules/audio_coding:g711",
+  ]
+}
+
 webrtc_fuzzer_test("audio_decoder_pcm16b_fuzzer") {
   sources = [ "audio_decoder_pcm16b_fuzzer.cc" ]
   deps = [
