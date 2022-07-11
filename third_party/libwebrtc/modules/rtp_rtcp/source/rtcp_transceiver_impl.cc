@@ -100,7 +100,7 @@ RtcpTransceiverImpl::RtcpTransceiverImpl(const RtcpTransceiverConfig& config)
     : config_(config), ready_to_send_(config.initial_ready_to_send) {
   RTC_CHECK(config_.Validate());
   if (ready_to_send_ && config_.schedule_periodic_compound_packets) {
-    SchedulePeriodicCompoundPackets(config_.initial_report_delay_ms);
+    SchedulePeriodicCompoundPackets(config_.initial_report_delay);
   }
 }
 
@@ -159,7 +159,7 @@ void RtcpTransceiverImpl::SetReadyToSend(bool ready) {
       periodic_task_handle_.Stop();
 
     if (!ready_to_send_ && ready)  // Restart periodic sending.
-      SchedulePeriodicCompoundPackets(config_.report_period_ms / 2);
+      SchedulePeriodicCompoundPackets(config_.report_period / 2);
   }
   ready_to_send_ = ready;
 }
@@ -470,16 +470,16 @@ void RtcpTransceiverImpl::ReschedulePeriodicCompoundPackets() {
     return;
   periodic_task_handle_.Stop();
   RTC_DCHECK(ready_to_send_);
-  SchedulePeriodicCompoundPackets(config_.report_period_ms);
+  SchedulePeriodicCompoundPackets(config_.report_period);
 }
 
-void RtcpTransceiverImpl::SchedulePeriodicCompoundPackets(int64_t delay_ms) {
-  periodic_task_handle_ = RepeatingTaskHandle::DelayedStart(
-      config_.task_queue, TimeDelta::Millis(delay_ms), [this] {
+void RtcpTransceiverImpl::SchedulePeriodicCompoundPackets(TimeDelta delay) {
+  periodic_task_handle_ =
+      RepeatingTaskHandle::DelayedStart(config_.task_queue, delay, [this] {
         RTC_DCHECK(config_.schedule_periodic_compound_packets);
         RTC_DCHECK(ready_to_send_);
         SendPeriodicCompoundPacket();
-        return TimeDelta::Millis(config_.report_period_ms);
+        return config_.report_period;
       });
 }
 

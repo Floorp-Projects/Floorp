@@ -149,10 +149,10 @@ struct RtcpTransceiverConfig {
   // Initial state if `outgoing_transport` ready to accept packets.
   bool initial_ready_to_send = true;
   // Delay before 1st periodic compound packet.
-  int initial_report_delay_ms = 500;
+  TimeDelta initial_report_delay = TimeDelta::Millis(500);
 
   // Period between periodic compound packets.
-  int report_period_ms = 1000;
+  TimeDelta report_period = TimeDelta::Seconds(1);
 
   //
   // Flags for features and experiments.
