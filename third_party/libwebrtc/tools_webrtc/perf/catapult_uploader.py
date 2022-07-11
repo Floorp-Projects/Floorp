@@ -195,8 +195,8 @@ def _ApplyHacks(dicts):
 
 def _LoadHistogramSetFromProto(options):
   hs = histogram_set.HistogramSet()
-  with options.input_results_file as f:
-    hs.ImportProto(f.read().decode('utf-8'))
+  with open(options.input_results_file, 'rb') as f:
+    hs.ImportProto(f.read())
 
   return hs
 
