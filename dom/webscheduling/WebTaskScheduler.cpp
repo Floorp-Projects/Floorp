@@ -211,6 +211,9 @@ already_AddRefed<Promise> WebTaskScheduler::PostTask(
   }
 
   if (!QueueTask(task)) {
+    MOZ_ASSERT(task->isInList());
+    task->remove();
+
     promise->MaybeRejectWithNotSupportedError("Unable to queue the task");
     return promise.forget();
   }
