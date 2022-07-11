@@ -10,17 +10,22 @@
 
 package org.webrtc;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mock;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -28,7 +33,11 @@ import android.support.test.InstrumentationRegistry;
 import androidx.annotation.Nullable;
 import androidx.test.filters.MediumTest;
 import androidx.test.filters.SmallTest;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.chromium.base.test.UiThreadTest;
 import org.junit.Before;
@@ -39,6 +48,7 @@ import org.webrtc.NetworkChangeDetector.ConnectionType;
 import org.webrtc.NetworkChangeDetector.NetworkInformation;
 import org.webrtc.NetworkMonitorAutoDetect.ConnectivityManagerDelegate;
 import org.webrtc.NetworkMonitorAutoDetect.NetworkState;
+import org.webrtc.NetworkMonitorAutoDetect.SimpleNetworkCallback;
 
 /**
  * Tests for org.webrtc.NetworkMonitor.
@@ -82,6 +92,14 @@ public class NetworkMonitorTest {
     private int networkSubtype;
     private int underlyingNetworkTypeForVpn;
     private int underlyingNetworkSubtypeForVpn;
+
+    MockConnectivityManagerDelegate() {
+      this(new HashSet<>(), "");
+    }
+
+    MockConnectivityManagerDelegate(Set<Network> availableNetworks, String fieldTrialsString) {
+      super(null, availableNetworks, fieldTrialsString);
+    }
 
     @Override
     public NetworkState getNetworkState() {
@@ -275,8 +293,8 @@ public class NetworkMonitorTest {
   @UiThreadTest
   @SmallTest
   public void testConnectivityManagerDelegateDoesNotCrash() {
-    ConnectivityManagerDelegate delegate =
-        new ConnectivityManagerDelegate(InstrumentationRegistry.getTargetContext());
+    ConnectivityManagerDelegate delegate = new ConnectivityManagerDelegate(
+        InstrumentationRegistry.getTargetContext(), new HashSet<>());
     delegate.getNetworkState();
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       Network[] networks = delegate.getAllNetworks();
@@ -286,6 +304,72 @@ public class NetworkMonitorTest {
       }
       delegate.getDefaultNetId();
     }
+  }
+
+  /** Tests that ConnectivityManagerDelegate preferentially reads from the cache */
+  @Test
+  @SmallTest
+  public void testConnectivityManagerDelegatePreferentiallyReadsFromCache() {
+    final Set<Network> availableNetworks = new HashSet<>();
+    ConnectivityManagerDelegate delegate = new ConnectivityManagerDelegate(
+        (ConnectivityManager) InstrumentationRegistry.getTargetContext().getSystemService(
+            Context.CONNECTIVITY_SERVICE),
+        availableNetworks, "getAllNetworksFromCache/Enabled/");
+
+    Network[] networks = delegate.getAllNetworks();
+    assertTrue(networks.length == 0);
+
+    final Network mockNetwork = mock(Network.class);
+    availableNetworks.add(mockNetwork);
+
+    assertArrayEquals(new Network[] {mockNetwork}, delegate.getAllNetworks());
+  }
+
+  /** Tests field trial parsing */
+
+  @Test
+  @SmallTest
+  public void testConnectivityManager_requestVPN_disabled() {
+    NetworkRequest request = getNetworkRequestForFieldTrials("requestVPN/Disabled");
+    assertTrue(request.equals(new NetworkRequest.Builder()
+                                  .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                  .build()));
+  }
+
+  @Test
+  @SmallTest
+  public void testConnectivityManager_requestVPN_enabled() {
+    NetworkRequest request = getNetworkRequestForFieldTrials("requestVPN/Enabled");
+    assertTrue(request.equals(new NetworkRequest.Builder()
+                                  .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                  .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+                                  .build()));
+  }
+
+  @Test
+  @SmallTest
+  public void testConnectivityManager_includeOtherUidNetworks_disabled() {
+    NetworkRequest request = getNetworkRequestForFieldTrials("includeOtherUidNetworks/Disabled");
+    assertTrue(request.equals(new NetworkRequest.Builder()
+                                  .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                  .build()));
+  }
+
+  @Test
+  @SmallTest
+  public void testConnectivityManager_includeOtherUidNetworks_enabled() {
+    NetworkRequest request = getNetworkRequestForFieldTrials("includeOtherUidNetworks/Enabled");
+    NetworkRequest.Builder builder =
+        new NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      builder.setIncludeOtherUidNetworks(true);
+    }
+    assertTrue(request.equals(builder.build()));
+  }
+
+  private NetworkRequest getNetworkRequestForFieldTrials(String fieldTrials) {
+    return new ConnectivityManagerDelegate(null, new HashSet<>(), fieldTrials)
+        .createNetworkRequest();
   }
 
   /**
