@@ -122,7 +122,7 @@ class FrameBuffer {
   // Check that the references of `frame` are valid.
   bool ValidReferences(const EncodedFrame& frame) const;
 
-  int64_t FindNextFrame(int64_t now_ms) RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  int64_t FindNextFrame(Timestamp now) RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   std::unique_ptr<EncodedFrame> GetNextFrame()
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 

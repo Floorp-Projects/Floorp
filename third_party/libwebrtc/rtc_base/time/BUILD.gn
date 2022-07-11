@@ -17,4 +17,6 @@ rtc_library("timestamp_extrapolator") {
     "timestamp_extrapolator.cc",
     "timestamp_extrapolator.h",
   ]
+  deps = [ "../../api/units:timestamp" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }

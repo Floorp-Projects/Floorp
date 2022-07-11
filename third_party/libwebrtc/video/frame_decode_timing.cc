@@ -30,10 +30,9 @@ FrameDecodeTiming::OnFrameBufferUpdated(uint32_t next_temporal_unit_rtp,
                                         uint32_t last_temporal_unit_rtp,
                                         bool too_many_frames_queued) {
   const Timestamp now = clock_->CurrentTime();
-  Timestamp render_time = Timestamp::Millis(
-      timing_->RenderTimeMs(next_temporal_unit_rtp, now.ms()));
-  TimeDelta max_wait = TimeDelta::Millis(timing_->MaxWaitingTime(
-      render_time.ms(), now.ms(), too_many_frames_queued));
+  Timestamp render_time = timing_->RenderTime(next_temporal_unit_rtp, now);
+  TimeDelta max_wait =
+      timing_->MaxWaitingTime(render_time, now, too_many_frames_queued);
 
   // If the delay is not too far in the past, or this is the last decodable
   // frame then it is the best frame to be decoded. Otherwise, fast-forward

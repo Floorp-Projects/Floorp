@@ -70,11 +70,11 @@ void VideoStreamDecoderImpl::OnFrame(std::unique_ptr<EncodedFrame> frame) {
 }
 
 void VideoStreamDecoderImpl::SetMinPlayoutDelay(TimeDelta min_delay) {
-  timing_.set_min_playout_delay(min_delay.ms());
+  timing_.set_min_playout_delay(min_delay);
 }
 
 void VideoStreamDecoderImpl::SetMaxPlayoutDelay(TimeDelta max_delay) {
-  timing_.set_max_playout_delay(max_delay.ms());
+  timing_.set_max_playout_delay(max_delay);
 }
 
 VideoDecoder* VideoStreamDecoderImpl::GetDecoder(int payload_type) {
@@ -258,7 +258,8 @@ void VideoStreamDecoderImpl::OnDecodedFrameCallback(
          Timestamp::Millis(frame_info->decode_start_time_ms +
                            *decode_time_ms)});
     decoded_image.set_timestamp_us(frame_info->render_time_us);
-    timing_.StopDecodeTimer(*decode_time_ms, decode_stop_time_ms);
+    timing_.StopDecodeTimer(TimeDelta::Millis(*decode_time_ms),
+                            Timestamp::Millis(decode_stop_time_ms));
 
     callbacks_->OnDecodedFrame(decoded_image, callback_info);
   });
