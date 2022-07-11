@@ -53,6 +53,8 @@ class BodyConsumer final : public nsIObserver,
    *          file. Used only by CONSUME_BLOB. Optional.
    * @param aBodyMimeType the mime-type for blob. Used only by CONSUME_BLOB.
    *          Optional.
+   * @param aMixedCaseMimeType is needed to get mixed case multipart
+   *          boundary value to FormDataParser.
    * @param aBlobStorageType Blobs can be saved in temporary file. This is the
    *          type of blob storage to use. Used only by CONSUME_BLOB.
    * @param aRv An ErrorResult.
@@ -62,6 +64,7 @@ class BodyConsumer final : public nsIObserver,
       nsIInputStream* aBodyStream, AbortSignalImpl* aSignalImpl,
       ConsumeType aType, const nsACString& aBodyBlobURISpec,
       const nsAString& aBodyLocalPath, const nsACString& aBodyMimeType,
+      const nsACString& aMixedCaseMimeType,
       MutableBlobStorage::MutableBlobStorageType aBlobStorageType,
       ErrorResult& aRv);
 
@@ -96,6 +99,7 @@ class BodyConsumer final : public nsIObserver,
                Promise* aPromise, ConsumeType aType,
                const nsACString& aBodyBlobURISpec,
                const nsAString& aBodyLocalPath, const nsACString& aBodyMimeType,
+               const nsACString& aMixedCaseMimeType,
                MutableBlobStorage::MutableBlobStorageType aBlobStorageType);
 
   ~BodyConsumer();
@@ -112,6 +116,7 @@ class BodyConsumer final : public nsIObserver,
 
   MutableBlobStorage::MutableBlobStorageType mBlobStorageType;
   nsCString mBodyMimeType;
+  nsCString mMixedCaseMimeType;
 
   nsCString mBodyBlobURISpec;
   nsString mBodyLocalPath;

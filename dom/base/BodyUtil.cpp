@@ -10,7 +10,7 @@
 #include "nsString.h"
 #include "nsIGlobalObject.h"
 #include "mozilla/Encoding.h"
-
+#include "mozilla/dom/MimeType.h"
 #include "nsCRT.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsDOMString.h"
@@ -68,6 +68,7 @@ class MOZ_STACK_CLASS FormDataParser {
  private:
   RefPtr<FormData> mFormData;
   nsCString mMimeType;
+  nsCString mMixedCaseMimeType;
   nsCString mData;
 
   // Entry state, reset in START_PART.
@@ -251,9 +252,11 @@ class MOZ_STACK_CLASS FormDataParser {
   }
 
  public:
-  FormDataParser(const nsACString& aMimeType, const nsACString& aData,
+  FormDataParser(const nsACString& aMimeType,
+                 const nsACString& aMixedCaseMimeType, const nsACString& aData,
                  nsIGlobalObject* aParent)
       : mMimeType(aMimeType),
+        mMixedCaseMimeType(aMixedCaseMimeType),
         mData(aData),
         mState(START_PART),
         mParentObject(aParent) {}
@@ -264,29 +267,13 @@ class MOZ_STACK_CLASS FormDataParser {
     }
 
     // Determine boundary from mimetype.
-    const char* boundaryId = nullptr;
-    boundaryId = strstr(mMimeType.BeginWriting(), "boundary");
-    if (!boundaryId) {
+    UniquePtr<CMimeType> parsed = CMimeType::Parse(mMixedCaseMimeType);
+    if (!parsed) {
       return false;
     }
 
-    boundaryId = strchr(boundaryId, '=');
-    if (!boundaryId) {
-      return false;
-    }
-
-    // Skip over '='.
-    boundaryId++;
-
-    char* attrib = (char*)strchr(boundaryId, ';');
-    if (attrib) *attrib = '\0';
-
-    nsAutoCString boundaryString(boundaryId);
-    if (attrib) *attrib = ';';
-
-    boundaryString.Trim(" \"");
-
-    if (boundaryString.Length() == 0) {
+    nsAutoCString boundaryString;
+    if (!parsed->GetParameterValue("boundary"_ns, boundaryString)) {
       return false;
     }
 
@@ -396,10 +383,10 @@ already_AddRefed<Blob> BodyUtil::ConsumeBlob(nsIGlobalObject* aParent,
 }
 
 // static
-already_AddRefed<FormData> BodyUtil::ConsumeFormData(nsIGlobalObject* aParent,
-                                                     const nsCString& aMimeType,
-                                                     const nsCString& aStr,
-                                                     ErrorResult& aRv) {
+already_AddRefed<FormData> BodyUtil::ConsumeFormData(
+    nsIGlobalObject* aParent, const nsCString& aMimeType,
+    const nsACString& aMixedCaseMimeType, const nsCString& aStr,
+    ErrorResult& aRv) {
   constexpr auto formDataMimeType = "multipart/form-data"_ns;
 
   // Allow semicolon separated boundary/encoding suffix like
@@ -412,7 +399,7 @@ already_AddRefed<FormData> BodyUtil::ConsumeFormData(nsIGlobalObject* aParent,
   }
 
   if (isValidFormDataMimeType) {
-    FormDataParser parser(aMimeType, aStr, aParent);
+    FormDataParser parser(aMimeType, aMixedCaseMimeType, aStr, aParent);
     if (!parser.Parse()) {
       aRv.ThrowTypeError<MSG_BAD_FORMDATA>();
       return nullptr;

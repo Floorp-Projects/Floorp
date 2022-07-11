@@ -163,7 +163,7 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   }
 
   already_AddRefed<ReadableStream> GetBody(JSContext* aCx, ErrorResult& aRv);
-  void GetMimeType(nsACString& aMimeType);
+  void GetMimeType(nsACString& aMimeType, nsACString& aMixedCaseMimeType);
 
   const nsACString& BodyBlobURISpec() const;
 
@@ -277,7 +277,7 @@ class EmptyBody final : public FetchBody<EmptyBody> {
   static already_AddRefed<EmptyBody> Create(
       nsIGlobalObject* aGlobal, mozilla::ipc::PrincipalInfo* aPrincipalInfo,
       AbortSignalImpl* aAbortSignalImpl, const nsACString& aMimeType,
-      ErrorResult& aRv);
+      const nsACString& aMixedCaseMimeType, ErrorResult& aRv);
 
   nsIGlobalObject* GetParentObject() const { return mOwner; }
 
@@ -288,7 +288,10 @@ class EmptyBody final : public FetchBody<EmptyBody> {
     return mPrincipalInfo;
   }
 
-  void GetMimeType(nsACString& aMimeType) { aMimeType = mMimeType; }
+  void GetMimeType(nsACString& aMimeType, nsACString& aMixedCaseMimeType) {
+    aMimeType = mMimeType;
+    aMixedCaseMimeType = mMixedCaseMimeType;
+  }
 
   void GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr);
 
@@ -304,6 +307,7 @@ class EmptyBody final : public FetchBody<EmptyBody> {
   EmptyBody(nsIGlobalObject* aGlobal,
             mozilla::ipc::PrincipalInfo* aPrincipalInfo,
             AbortSignalImpl* aAbortSignalImpl, const nsACString& aMimeType,
+            const nsACString& aMixedCaseMimeType,
             already_AddRefed<nsIInputStream> aBodyStream);
 
   ~EmptyBody();
@@ -311,6 +315,7 @@ class EmptyBody final : public FetchBody<EmptyBody> {
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
   RefPtr<AbortSignalImpl> mAbortSignalImpl;
   nsCString mMimeType;
+  nsCString mMixedCaseMimeType;
   nsCOMPtr<nsIInputStream> mBodyStream;
 };
 }  // namespace dom
