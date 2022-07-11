@@ -2169,10 +2169,12 @@ bool PeerConnection::GetSctpSslRole(rtc::SSLRole* role) {
         });
     if (!dtls_role && sdp_handler_->is_caller().has_value()) {
       // This works fine if we are the offerer, but can be a mistake if
-      // we are the answerer and the remote offer is PASSIVE. In that
+      // we are the answerer and the remote offer is ACTIVE. In that
       // case, we will guess the role wrong.
       // TODO(bugs.webrtc.org/13668): Check if this actually happens.
-      RTC_LOG(LS_ERROR) << "Possible risk: DTLS role guesser is active";
+      RTC_LOG(LS_ERROR)
+          << "Possible risk: DTLS role guesser is active, is_caller is "
+          << *sdp_handler_->is_caller();
       dtls_role =
           *sdp_handler_->is_caller() ? rtc::SSL_SERVER : rtc::SSL_CLIENT;
     }
