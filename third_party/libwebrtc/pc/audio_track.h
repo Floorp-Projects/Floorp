@@ -20,6 +20,10 @@
 
 namespace webrtc {
 
+// TODO(tommi): Instead of inheriting from `MediaStreamTrack<>`, implement the
+// properties directly in this class. `MediaStreamTrack` doesn't guard against
+// conflicting access, so we'd need to override those methods anyway in this
+// class in order to make sure things are correctly checked.
 class AudioTrack : public MediaStreamTrack<AudioTrackInterface>,
                    public ObserverInterface {
  protected:
