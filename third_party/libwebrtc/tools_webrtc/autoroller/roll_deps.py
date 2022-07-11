@@ -120,7 +120,7 @@ def ParseDepsDict(deps_content):
 
 def ParseLocalDepsFile(filename):
   with open(filename, 'rb') as f:
-    deps_content = f.read()
+    deps_content = f.read().decode('utf-8')
   return ParseDepsDict(deps_content)
 
 
@@ -196,7 +196,7 @@ def _ReadGitilesContent(url):
   # Download and decode BASE64 content until
   # https://code.google.com/p/gitiles/issues/detail?id=7 is fixed.
   base64_content = ReadUrlContent(url + '?format=TEXT')
-  return base64.b64decode(base64_content[0])
+  return base64.b64decode(base64_content[0].decode('utf-8'))
 
 
 def ReadRemoteCrFile(path_below_src, revision):
@@ -524,8 +524,8 @@ def GenerateCommitMessage(
 def UpdateDepsFile(deps_filename, rev_update, changed_deps, new_cr_content):
   """Update the DEPS file with the new revision."""
 
-  with open(deps_filename, 'r') as deps_file:
-    deps_content = deps_file.read()
+  with open(deps_filename, 'rb') as deps_file:
+    deps_content = deps_file.read().decode('utf-8')
 
   # Update the chromium_revision variable.
   deps_content = deps_content.replace(rev_update.current_chromium_rev,
@@ -544,8 +544,8 @@ def UpdateDepsFile(deps_filename, rev_update, changed_deps, new_cr_content):
                     (ANDROID_DEPS_START, ANDROID_DEPS_END, faulty))
   deps_content = deps_re.sub(new_deps.group(0), deps_content)
 
-  with open(deps_filename, 'w') as deps_file:
-    deps_file.write(deps_content)
+  with open(deps_filename, 'wb') as deps_file:
+    deps_file.write(deps_content.encode('utf-8'))
 
   # Update each individual DEPS entry.
   for dep in changed_deps:

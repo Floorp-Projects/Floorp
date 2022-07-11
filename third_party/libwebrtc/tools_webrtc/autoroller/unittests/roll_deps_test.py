@@ -108,22 +108,22 @@ class TestRollChromiumRevision(unittest.TestCase):
     new_rev = 'aaaaabbbbbcccccdddddeeeeefffff0000011111'
     current_rev = TEST_DATA_VARS['chromium_revision']
 
-    with open(self._new_cr_depsfile_android) as deps_file:
-      new_cr_contents = deps_file.read()
+    with open(self._new_cr_depsfile_android, 'rb') as deps_file:
+      new_cr_contents = deps_file.read().decode('utf-8')
 
     UpdateDepsFile(self._webrtc_depsfile,
                    ChromiumRevisionUpdate(current_rev, new_rev), [],
                    new_cr_contents)
-    with open(self._webrtc_depsfile) as deps_file:
-      deps_contents = deps_file.read()
+    with open(self._webrtc_depsfile, 'rb') as deps_file:
+      deps_contents = deps_file.read().decode('utf-8')
       self.assertTrue(new_rev in deps_contents,
                       'Failed to find %s in\n%s' % (new_rev, deps_contents))
 
   def _UpdateDepsSetup(self):
-    with open(self._webrtc_depsfile_android) as deps_file:
-      webrtc_contents = deps_file.read()
-    with open(self._new_cr_depsfile_android) as deps_file:
-      new_cr_contents = deps_file.read()
+    with open(self._webrtc_depsfile_android, 'rb') as deps_file:
+      webrtc_contents = deps_file.read().decode('utf-8')
+    with open(self._new_cr_depsfile_android, 'rb') as deps_file:
+      new_cr_contents = deps_file.read().decode('utf-8')
     webrtc_deps = ParseDepsDict(webrtc_contents)
     new_cr_deps = ParseDepsDict(new_cr_contents)
 
@@ -132,8 +132,8 @@ class TestRollChromiumRevision(unittest.TestCase):
       UpdateDepsFile(self._webrtc_depsfile_android, NO_CHROMIUM_REVISION_UPDATE,
                      changed_deps, new_cr_contents)
 
-    with open(self._webrtc_depsfile_android) as deps_file:
-      updated_contents = deps_file.read()
+    with open(self._webrtc_depsfile_android, 'rb') as deps_file:
+      updated_contents = deps_file.read().decode('utf-8')
 
     return webrtc_contents, updated_contents
 
@@ -160,8 +160,8 @@ class TestRollChromiumRevision(unittest.TestCase):
     self.assertFalse(removed in updated_contents)
 
   def testParseDepsDict(self):
-    with open(self._webrtc_depsfile) as deps_file:
-      deps_contents = deps_file.read()
+    with open(self._webrtc_depsfile, 'rb') as deps_file:
+      deps_contents = deps_file.read().decode('utf-8')
     local_scope = ParseDepsDict(deps_contents)
     vars_dict = local_scope['vars']
 
