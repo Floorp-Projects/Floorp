@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script id="worker1" type="javascript/worker">
+        self.onmessage = async function (e) {
+          const abort = new AbortController()
+          self.close()
+          try { await self.scheduler.postTask(async () => abort.abort(undefined), { 'signal': abort.signal }) } catch (e) {}
+          self.queueMicrotask(async () => abort.abort(undefined))
+        }
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const blob = new Blob([document.querySelector('#worker1').textContent], { type: 'text/javascript' })
+        const worker = new Worker(window.URL.createObjectURL(blob))
+        worker.postMessage([], [])
+      })
+    </script>
+</head>
+</html>
