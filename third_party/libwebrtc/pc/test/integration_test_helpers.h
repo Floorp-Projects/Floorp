@@ -389,14 +389,29 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
 
   void CreateDataChannel(const std::string& label,
                          const webrtc::DataChannelInit* init) {
-    data_channel_ = pc()->CreateDataChannel(label, init);
-    ASSERT_TRUE(data_channel_.get() != nullptr);
-    data_observer_.reset(new MockDataChannelObserver(data_channel_));
+    data_channels_.push_back(pc()->CreateDataChannel(label, init));
+    ASSERT_TRUE(data_channels_.back().get() != nullptr);
+    data_observers_.push_back(
+        std::make_unique<MockDataChannelObserver>(data_channels_.back()));
   }
 
-  DataChannelInterface* data_channel() { return data_channel_; }
+  // Return the last observed data channel.
+  DataChannelInterface* data_channel() {
+    if (data_channels_.size() == 0) {
+      return nullptr;
+    }
+    return data_channels_.back();
+  }
+  // Return all data channels.
+  const std::vector<rtc::scoped_refptr<DataChannelInterface>>& data_channels() {
+    return data_channels_;
+  }
+
   const MockDataChannelObserver* data_observer() const {
-    return data_observer_.get();
+    if (data_observers_.size() == 0) {
+      return nullptr;
+    }
+    return data_observers_.back().get();
   }
 
   int audio_frames_received() const {
@@ -1094,8 +1109,9 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   void OnDataChannel(
       rtc::scoped_refptr<DataChannelInterface> data_channel) override {
     RTC_LOG(LS_INFO) << debug_name_ << ": OnDataChannel";
-    data_channel_ = data_channel;
-    data_observer_.reset(new MockDataChannelObserver(data_channel));
+    data_channels_.push_back(data_channel);
+    data_observers_.push_back(
+        std::make_unique<MockDataChannelObserver>(data_channel));
   }
 
   std::string debug_name_;
@@ -1138,8 +1154,9 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   std::function<void(cricket::SessionDescription*)> generated_sdp_munger_;
   std::function<void()> remote_offer_handler_;
   rtc::MockAsyncResolver* remote_async_resolver_ = nullptr;
-  rtc::scoped_refptr<DataChannelInterface> data_channel_;
-  std::unique_ptr<MockDataChannelObserver> data_observer_;
+  // All data channels either created or observed on this peerconnection
+  std::vector<rtc::scoped_refptr<DataChannelInterface>> data_channels_;
+  std::vector<std::unique_ptr<MockDataChannelObserver>> data_observers_;
 
   std::vector<std::unique_ptr<MockRtpReceiverObserver>> rtp_receiver_observers_;
 
