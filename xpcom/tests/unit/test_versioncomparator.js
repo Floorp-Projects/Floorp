@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // Versions to test listed in ascending order, none can be equal
 var comparisons = [
   "pre",

@@ -19,7 +19,6 @@ const { E10SUtils } = ChromeUtils.import(
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const FEATURES = {
   paintDumping: "nglayout.debug.paint_dumping",

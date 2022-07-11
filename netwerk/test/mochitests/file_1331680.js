@@ -2,8 +2,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var observer = {
   observe(subject, topic, data) {
     if (topic == "cookie-changed") {

@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function createSandbox() {
   const uri = Services.io.newURI("https://example.com");
   const principal = Services.scriptSecurityManager.createContentPrincipal(

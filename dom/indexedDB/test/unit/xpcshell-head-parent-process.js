@@ -10,8 +10,6 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 if (!("self" in this)) {
   this.self = this;
 }

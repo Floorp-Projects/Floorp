@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function categoryExists(category, entry) {
   try {
     Services.catMan.getCategoryEntry(category, entry);

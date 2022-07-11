@@ -13,7 +13,6 @@
 
 // The following are not lazily loaded as they are needed during initialization.
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { createLazyLoaders } = ChromeUtils.import(
   "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js"
 );

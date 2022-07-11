@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function onLoad() {
   document.getElementById("controls-submit").addEventListener("click", () => {
     let tag = document.getElementById("tag-pings").value;

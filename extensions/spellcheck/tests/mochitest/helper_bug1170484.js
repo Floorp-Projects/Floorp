@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /* eslint-env mozilla/frame-script */
 
 // Chrome scripts are run with synchronous messages, so make sure we're completely

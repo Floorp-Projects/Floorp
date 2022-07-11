@@ -1,6 +1,5 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 4 -*- */
 /* vim: set ts=8 et sw=4 tw=80: */
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gExpectedCharset;
 var gLocalDir;

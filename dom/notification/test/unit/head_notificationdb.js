@@ -3,7 +3,6 @@
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function getNotificationObject(app, id, tag, includeScope) {
   const origin = `https://${app}.gaiamobile.org/`;

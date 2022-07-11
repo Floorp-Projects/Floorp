@@ -1,4 +1,3 @@
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var {addDebuggerToGlobal, addSandboxedDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 
 const testingFunctions = Cu.getJSTestingFunctions();

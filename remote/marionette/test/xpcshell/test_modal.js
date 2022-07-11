@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { modal } = ChromeUtils.import(
   "chrome://remote/content/marionette/modal.js"
 );

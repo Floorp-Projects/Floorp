@@ -1,7 +1,5 @@
 /* eslint-env mozilla/frame-script */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 let dialogObserverTopic = "common-dialog-loaded";
 
 function dialogObserver(subj, topic, data) {

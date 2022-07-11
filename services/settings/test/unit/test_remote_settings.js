@@ -1,6 +1,5 @@
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );

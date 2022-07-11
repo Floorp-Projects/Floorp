@@ -18,8 +18,6 @@
  * Also, this module is only loaded, on-demand from process-helper if devtools are watching for process targets.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
 
 class ContentProcessStartup {

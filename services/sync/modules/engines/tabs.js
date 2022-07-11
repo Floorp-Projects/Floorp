@@ -13,7 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { TabStateFlusher } = ChromeUtils.import(
   "resource:///modules/sessionstore/TabStateFlusher.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Store, SyncEngine, Tracker } = ChromeUtils.import(
   "resource://services-sync/engines.js"

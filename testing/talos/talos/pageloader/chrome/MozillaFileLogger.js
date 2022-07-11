@@ -6,8 +6,6 @@
  * MozillaFileLogger, a log listener that can write to a local file.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // double logging to account for normal mode and ipc mode (mobile_profile only)
 // Ideally we would remove the dump() and just do ipc logging
 function dumpLog(msg) {

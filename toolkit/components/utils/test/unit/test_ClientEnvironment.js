@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { ClientEnvironmentBase } = ChromeUtils.import(
   "resource://gre/modules/components-utils/ClientEnvironment.jsm"
 );

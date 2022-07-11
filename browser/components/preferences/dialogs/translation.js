@@ -5,8 +5,6 @@
 
 "use strict";
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const kPermissionType = "translate";
 const kLanguagesPref = "browser.translation.neverForLanguages";
 

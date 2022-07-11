@@ -8,7 +8,6 @@ var EXPORTED_SYMBOLS = [
   "TokenAuthenticatedRESTRequest",
 ];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { PromiseUtils } = ChromeUtils.import(

@@ -1,4 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );

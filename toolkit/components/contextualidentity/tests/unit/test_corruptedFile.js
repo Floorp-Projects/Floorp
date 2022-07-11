@@ -5,7 +5,6 @@ const profileDir = do_get_profile();
 const { ContextualIdentityService } = ChromeUtils.import(
   "resource://gre/modules/ContextualIdentityService.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const TEST_STORE_FILE_PATH = PathUtils.join(
   profileDir.path,

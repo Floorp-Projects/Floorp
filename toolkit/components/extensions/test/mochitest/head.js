@@ -83,7 +83,6 @@ function waitForLoad(win) {
 /* exported loadChromeScript */
 function loadChromeScript(fn) {
   let wrapper = `
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 (${fn.toString()})();`;
 
   return SpecialPowers.loadChromeScript(new Function(wrapper));

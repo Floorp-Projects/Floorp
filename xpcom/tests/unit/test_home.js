@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const CWD = do_get_cwd();
 function checkOS(os) {
   const nsILocalFile_ = "nsILocalFile" + os;

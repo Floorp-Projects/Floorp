@@ -25,7 +25,6 @@ const PREF1_VALUE = false;
 const PREF2_NAME = "dom.mutation-events.cssom.disabled";
 const PREF2_VALUE = true;
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCShellContentUtils } = ChromeUtils.import(
   "resource://testing-common/XPCShellContentUtils.jsm"
 );

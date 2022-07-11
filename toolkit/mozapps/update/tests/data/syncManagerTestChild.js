@@ -15,8 +15,6 @@
 
 print("child process is running");
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // This function is copied from xpcshellUtilsAUS.js so that we can have our
 // xpcshell subprocess call it without having to load that whole file, because
 // it turns out that needs a bunch of infrastructure that normally the testing

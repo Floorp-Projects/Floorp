@@ -3,8 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 async function require_module(id) {
   if (!require_module.moduleLoader) {
     const { ModuleLoader } = ChromeUtils.import(

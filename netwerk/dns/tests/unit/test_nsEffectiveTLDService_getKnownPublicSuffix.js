@@ -7,8 +7,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 add_task(() => {
   for (let [suffix, isKnown] of [
     ["", false],

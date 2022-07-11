@@ -4,8 +4,6 @@
 
 /* eslint-env mozilla/frame-script */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const gfxFrameScript = {
   domUtils: null,
 

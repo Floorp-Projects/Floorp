@@ -1,7 +1,6 @@
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Stamp an array buffer with a pattern; verified by verify_chunk below.
 function init(array) {

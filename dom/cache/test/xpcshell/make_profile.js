@@ -6,8 +6,6 @@
  * and are CC licensed by https://www.flickr.com/photos/legofenris/.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // Enumerate the directory tree and store results in entryList as
 //
 //  { path: 'a/b/c', file: <nsIFile> }

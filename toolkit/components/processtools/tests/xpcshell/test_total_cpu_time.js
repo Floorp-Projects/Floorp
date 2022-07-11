@@ -1,7 +1,5 @@
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var cpuThreadCount;
 
 add_task(async function setup() {

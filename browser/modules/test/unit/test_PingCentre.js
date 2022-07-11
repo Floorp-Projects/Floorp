@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { PingCentre, PingCentreConstants } = ChromeUtils.import(
   "resource:///modules/PingCentre.jsm"
 );

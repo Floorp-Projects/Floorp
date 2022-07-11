@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function isParentProcess() {
   let appInfo = Cc["@mozilla.org/xre/app-info;1"];
   return (

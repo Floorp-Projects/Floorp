@@ -1,7 +1,5 @@
 /* global ChromeUtils */
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 try {
   // We might be running without privileges, in which case it's up to the
   // harness to give us the 'ctypes' object.
