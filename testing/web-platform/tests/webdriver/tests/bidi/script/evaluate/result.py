@@ -12,7 +12,7 @@ from webdriver.bidi.modules.script import ContextTarget
         ("'2'", {"type": "string", "value": "2"}),
         ("Number.NaN", {"type": "number", "value": "NaN"}),
         ("-0", {"type": "number", "value": "-0"}),
-        ("Infinity", {"type": "number", "value": "+Infinity"}),
+        ("Infinity", {"type": "number", "value": "Infinity"}),
         ("-Infinity", {"type": "number", "value": "-Infinity"}),
         ("3", {"type": "number", "value": 3}),
         ("1.4", {"type": "number", "value": 1.4}),
