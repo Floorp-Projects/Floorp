@@ -1748,8 +1748,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
   // If there's still room, display the alt-text
   if (!inner.IsEmpty()) {
     nsAutoString altText;
-    nsCSSFrameConstructor::GetAlternateTextFor(
-        mContent->AsElement(), mContent->NodeInfo()->NameAtom(), altText);
+    nsCSSFrameConstructor::GetAlternateTextFor(*mContent->AsElement(), altText);
     DisplayAltText(PresContext(), aRenderingContext, altText, inner);
   }
 
@@ -1958,8 +1957,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
     RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
 
     nsAutoString altText;
-    nsCSSFrameConstructor::GetAlternateTextFor(
-        mContent->AsElement(), mContent->NodeInfo()->NameAtom(), altText);
+    nsCSSFrameConstructor::GetAlternateTextFor(*mContent->AsElement(), altText);
     DisplayAltText(PresContext(), *captureCtx.get(), altText, inner);
 
     textDrawer->TerminateShadows();
