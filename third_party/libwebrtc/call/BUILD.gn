@@ -55,6 +55,7 @@ rtc_library("call_interfaces") {
     "../api/audio_codecs:audio_codecs_api",
     "../api/crypto:frame_encryptor_interface",
     "../api/crypto:options",
+    "../api/metronome",
     "../api/neteq:neteq_api",
     "../api/task_queue",
     "../api/transport:bitrate_settings",
@@ -318,6 +319,7 @@ rtc_library("call") {
     "../system_wrappers:field_trial",
     "../system_wrappers:metrics",
     "../video",
+    "../video:decode_synchronizer",
     "adaptation:resource_adaptation",
   ]
   absl_deps = [

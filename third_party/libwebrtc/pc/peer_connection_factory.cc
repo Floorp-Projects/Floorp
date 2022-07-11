@@ -105,7 +105,8 @@ PeerConnectionFactory::PeerConnectionFactory(
       transport_controller_send_factory_(
           (dependencies->transport_controller_send_factory)
               ? std::move(dependencies->transport_controller_send_factory)
-              : std::make_unique<RtpTransportControllerSendFactory>()) {}
+              : std::make_unique<RtpTransportControllerSendFactory>()),
+      metronome_(std::move(dependencies->metronome)) {}
 
 PeerConnectionFactory::PeerConnectionFactory(
     PeerConnectionFactoryDependencies dependencies)
@@ -348,6 +349,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
   call_config.trials = &trials();
   call_config.rtp_transport_controller_send_factory =
       transport_controller_send_factory_.get();
+  call_config.metronome = metronome_.get();
   return std::unique_ptr<Call>(
       context_->call_factory()->CreateCall(call_config));
 }

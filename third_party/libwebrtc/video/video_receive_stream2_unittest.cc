@@ -106,7 +106,7 @@ class VideoReceiveStream2Test : public ::testing::Test {
         std::make_unique<webrtc::internal::VideoReceiveStream2>(
             task_queue_factory_.get(), &fake_call_, kDefaultNumCpuCores,
             &packet_router_, config_.Copy(), &call_stats_, clock_, timing_,
-            &nack_periodic_processor_);
+            &nack_periodic_processor_, nullptr);
     video_receive_stream_->RegisterWithTransport(
         &rtp_stream_receiver_controller_);
   }
@@ -286,7 +286,7 @@ class VideoReceiveStream2TestWithFakeDecoder : public ::testing::Test {
     video_receive_stream_.reset(new webrtc::internal::VideoReceiveStream2(
         task_queue_factory_.get(), &fake_call_, kDefaultNumCpuCores,
         &packet_router_, config_.Copy(), &call_stats_, clock_, timing_,
-        &nack_periodic_processor_));
+        &nack_periodic_processor_, nullptr));
     video_receive_stream_->RegisterWithTransport(
         &rtp_stream_receiver_controller_);
     video_receive_stream_->SetAndGetRecordingState(std::move(state), false);
@@ -556,7 +556,8 @@ class VideoReceiveStream2TestWithSimulatedClock
                               &call_stats_,
                               time_controller_.GetClock(),
                               new VCMTiming(time_controller_.GetClock()),
-                              &nack_periodic_processor_) {
+                              &nack_periodic_processor_,
+                              nullptr) {
     video_receive_stream_.RegisterWithTransport(
         &rtp_stream_receiver_controller_);
     video_receive_stream_.Start();
@@ -741,7 +742,7 @@ class VideoReceiveStream2TestWithLazyDecoderCreation : public ::testing::Test {
         std::make_unique<webrtc::internal::VideoReceiveStream2>(
             task_queue_factory_.get(), &fake_call_, kDefaultNumCpuCores,
             &packet_router_, config_.Copy(), &call_stats_, clock_, timing_,
-            &nack_periodic_processor_);
+            &nack_periodic_processor_, nullptr);
     video_receive_stream_->RegisterWithTransport(
         &rtp_stream_receiver_controller_);
   }

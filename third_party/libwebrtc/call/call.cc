@@ -371,6 +371,7 @@ class Call final : public webrtc::Call,
   TaskQueueFactory* const task_queue_factory_;
   TaskQueueBase* const worker_thread_;
   TaskQueueBase* const network_thread_;
+  const std::unique_ptr<DecodeSynchronizer> decode_sync_;
   RTC_NO_UNIQUE_ADDRESS SequenceChecker send_transport_sequence_checker_;
 
   const int num_cpu_cores_;
@@ -789,6 +790,11 @@ Call::Call(Clock* clock,
       // must be made on `worker_thread_` (i.e. they're one and the same).
       network_thread_(config.network_task_queue_ ? config.network_task_queue_
                                                  : worker_thread_),
+      decode_sync_(config.metronome
+                       ? std::make_unique<DecodeSynchronizer>(clock_,
+                                                              config.metronome,
+                                                              worker_thread_)
+                       : nullptr),
       num_cpu_cores_(CpuInfo::DetectNumberOfCores()),
       module_process_thread_(std::move(module_process_thread)),
       call_stats_(new CallStats(clock_, worker_thread_)),
@@ -1137,7 +1143,7 @@ webrtc::VideoReceiveStream* Call::CreateVideoReceiveStream(
       task_queue_factory_, this, num_cpu_cores_,
       transport_send_->packet_router(), std::move(configuration),
       call_stats_.get(), clock_, new VCMTiming(clock_),
-      &nack_periodic_processor_);
+      &nack_periodic_processor_, decode_sync_.get());
   // TODO(bugs.webrtc.org/11993): Set this up asynchronously on the network
   // thread.
   receive_stream->RegisterWithTransport(&video_receiver_controller_);

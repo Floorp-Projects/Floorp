@@ -211,7 +211,8 @@ VideoReceiveStream2::VideoReceiveStream2(
     CallStats* call_stats,
     Clock* clock,
     VCMTiming* timing,
-    NackPeriodicProcessor* nack_periodic_processor)
+    NackPeriodicProcessor* nack_periodic_processor,
+    DecodeSynchronizer* decode_sync)
     : task_queue_factory_(task_queue_factory),
       transport_adapter_(config.rtcp_send_transport),
       config_(std::move(config)),
@@ -247,6 +248,7 @@ VideoReceiveStream2::VideoReceiveStream2(
       low_latency_renderer_include_predecode_buffer_("include_predecode_buffer",
                                                      true),
       maximum_pre_stream_decoders_("max", kDefaultMaximumPreStreamDecoders),
+      decode_sync_(decode_sync),
       decode_queue_(task_queue_factory_->CreateTaskQueue(
           "DecodingQueue",
           TaskQueueFactory::Priority::HIGH)) {
@@ -273,7 +275,7 @@ VideoReceiveStream2::VideoReceiveStream2(
   frame_buffer_ = FrameBufferProxy::CreateFromFieldTrial(
       clock_, call_->worker_thread(), timing_.get(), &stats_proxy_,
       &decode_queue_, this, TimeDelta::Millis(max_wait_for_keyframe_ms_),
-      TimeDelta::Millis(max_wait_for_frame_ms_), nullptr);
+      TimeDelta::Millis(max_wait_for_frame_ms_), decode_sync_);
 
   if (config_.rtp.rtx_ssrc) {
     rtx_receive_stream_ = std::make_unique<RtxReceiveStream>(
