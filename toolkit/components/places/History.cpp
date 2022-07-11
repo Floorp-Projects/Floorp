@@ -2113,15 +2113,29 @@ History::IsURIVisited(nsIURI* aURI, mozIVisitedStatusCallback* aCallback) {
 
 void History::StartPendingVisitedQueries(PendingVisitedQueries&& aQueries) {
   if (XRE_IsContentProcess()) {
+    auto* cpc = dom::ContentChild::GetSingleton();
+    MOZ_ASSERT(cpc, "Content Protocol is NULL!");
+
+    // Fairly arbitrary limit on the number of URLs we send at a time, to avoid
+    // going over the IPC message size limit... Note that this is imperfect (we
+    // could have very long URIs), so this is a best-effort kind of thing. See
+    // bug 1775265.
+    constexpr size_t kBatchLimit = 4000;
+
     nsTArray<RefPtr<nsIURI>> uris(aQueries.Count());
     for (const auto& entry : aQueries) {
       uris.AppendElement(entry.GetKey());
       MOZ_ASSERT(entry.GetData().IsEmpty(),
                  "Child process shouldn't have parent requests");
+      if (uris.Length() == kBatchLimit) {
+        Unused << cpc->SendStartVisitedQueries(uris);
+        uris.ClearAndRetainStorage();
+      }
     }
-    auto* cpc = mozilla::dom::ContentChild::GetSingleton();
-    MOZ_ASSERT(cpc, "Content Protocol is NULL!");
-    Unused << cpc->SendStartVisitedQueries(uris);
+
+    if (!uris.IsEmpty()) {
+      Unused << cpc->SendStartVisitedQueries(uris);
+    }
   } else {
     // TODO(bug 1594368): We could do a single query, as long as we can
     // then notify each URI individually.
