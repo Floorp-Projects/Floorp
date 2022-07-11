@@ -155,6 +155,7 @@ wayland:
     suffix: "wayland"
     replace:
         run-on-projects: []
+        tier: 3
     merge:
         mozharness:
             extra-options:
