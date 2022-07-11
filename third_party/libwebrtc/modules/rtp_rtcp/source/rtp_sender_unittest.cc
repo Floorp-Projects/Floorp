@@ -443,6 +443,39 @@ TEST_F(RtpSenderTest, NoPaddingAsFirstPacketWithoutBweExtensions) {
               IsEmpty());
 }
 
+TEST_F(RtpSenderTest, RequiresRtxSsrcToEnableRtx) {
+  RtpRtcpInterface::Configuration config = GetDefaultConfig();
+  config.rtx_send_ssrc = absl::nullopt;
+  RTPSender rtp_sender(config, packet_history_.get(), config.paced_sender);
+  rtp_sender.SetRtxPayloadType(kRtxPayload, kPayload);
+
+  rtp_sender.SetRtxStatus(kRtxRetransmitted);
+
+  EXPECT_EQ(rtp_sender.RtxStatus(), kRtxOff);
+}
+
+TEST_F(RtpSenderTest, RequiresRtxPayloadTypesToEnableRtx) {
+  RtpRtcpInterface::Configuration config = GetDefaultConfig();
+  config.rtx_send_ssrc = kRtxSsrc;
+  RTPSender rtp_sender(config, packet_history_.get(), config.paced_sender);
+
+  rtp_sender.SetRtxStatus(kRtxRetransmitted);
+
+  EXPECT_EQ(rtp_sender.RtxStatus(), kRtxOff);
+}
+
+TEST_F(RtpSenderTest, CanEnableRtxWhenRtxSsrcAndPayloadTypeAreConfigured) {
+  RtpRtcpInterface::Configuration config = GetDefaultConfig();
+  config.rtx_send_ssrc = kRtxSsrc;
+  RTPSender rtp_sender(config, packet_history_.get(), config.paced_sender);
+  rtp_sender.SetRtxPayloadType(kRtxPayload, kPayload);
+
+  ASSERT_EQ(rtp_sender.RtxStatus(), kRtxOff);
+  rtp_sender.SetRtxStatus(kRtxRetransmitted);
+
+  EXPECT_EQ(rtp_sender.RtxStatus(), kRtxRetransmitted);
+}
+
 TEST_F(RtpSenderTest, AllowPaddingAsFirstPacketOnRtxWithTransportCc) {
   ASSERT_TRUE(rtp_sender_->RegisterRtpHeaderExtension(
       TransportSequenceNumber::Uri(), kTransportSequenceNumberExtensionId));
@@ -1049,8 +1082,8 @@ TEST_F(RtpSenderTest, GeneratePaddingResendsOldPacketsWithRtx) {
   // Min requested size in order to use RTX payload.
   const size_t kMinPaddingSize = 50;
 
-  rtp_sender_->SetRtxStatus(kRtxRetransmitted | kRtxRedundantPayloads);
   rtp_sender_->SetRtxPayloadType(kRtxPayload, kPayload);
+  rtp_sender_->SetRtxStatus(kRtxRetransmitted | kRtxRedundantPayloads);
   packet_history_->SetStorePacketsStatus(
       RtpPacketHistory::StorageMode::kStoreAndCull, 1);
 
@@ -1099,8 +1132,8 @@ TEST_F(RtpSenderTest, LimitsPayloadPaddingSize) {
   const double kFactor = 2.0;
   field_trials_.SetMaxPaddingFactor(kFactor);
   SetUpRtpSender(false, false, nullptr);
-  rtp_sender_->SetRtxStatus(kRtxRetransmitted | kRtxRedundantPayloads);
   rtp_sender_->SetRtxPayloadType(kRtxPayload, kPayload);
+  rtp_sender_->SetRtxStatus(kRtxRetransmitted | kRtxRedundantPayloads);
   packet_history_->SetStorePacketsStatus(
       RtpPacketHistory::StorageMode::kStoreAndCull, 1);
 
@@ -1201,6 +1234,7 @@ TEST_F(RtpSenderTest, SupportsPadding) {
       if (redundant_payloads) {
         rtx_mode |= kRtxRedundantPayloads;
       }
+      rtp_sender_->SetRtxPayloadType(kRtxPayload, kPayload);
       rtp_sender_->SetRtxStatus(rtx_mode);
 
       for (auto extension_uri : kBweExtensionUris) {

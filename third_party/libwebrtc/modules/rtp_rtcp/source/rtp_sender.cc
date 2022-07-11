@@ -266,6 +266,12 @@ size_t RTPSender::MaxRtpPacketSize() const {
 
 void RTPSender::SetRtxStatus(int mode) {
   MutexLock lock(&send_mutex_);
+  if (mode != kRtxOff &&
+      (!rtx_ssrc_.has_value() || rtx_payload_type_map_.empty())) {
+    RTC_LOG(LS_ERROR)
+        << "Failed to enable RTX without RTX SSRC or payload types.";
+    return;
+  }
   rtx_ = mode;
 }
 
@@ -461,6 +467,7 @@ std::vector<std::unique_ptr<RtpPacketToSend>> RTPSender::GeneratePadding(
       }
 
       RTC_DCHECK(rtx_ssrc_);
+      RTC_DCHECK(!rtx_payload_type_map_.empty());
       padding_packet->SetSsrc(*rtx_ssrc_);
       padding_packet->SetPayloadType(rtx_payload_type_map_.begin()->second);
     }
