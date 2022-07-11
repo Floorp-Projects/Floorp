@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "api/rtc_event_log/rtc_event_log.h"
+
 #include <algorithm>
 #include <limits>
 #include <map>
@@ -17,9 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include "api/rtc_event_log/rtc_event_log.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"
-#include "api/rtc_event_log_output_file.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "logging/rtc_event_log/events/rtc_event_audio_network_adaptation.h"
 #include "logging/rtc_event_log/events/rtc_event_audio_playout.h"
@@ -50,6 +50,7 @@
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/random.h"
 #include "test/gtest.h"
+#include "test/logging/memory_log_writer.h"
 #include "test/testsupport/file_utils.h"
 
 namespace webrtc {
@@ -113,11 +114,12 @@ class RtcEventLogSession
         output_period_ms_(std::get<1>(GetParam())),
         encoding_type_(std::get<2>(GetParam())),
         gen_(seed_ * 880001UL),
-        verifier_(encoding_type_) {
+        verifier_(encoding_type_),
+        log_storage_(),
+        log_output_factory_(log_storage_.CreateFactory()) {
     clock_.SetTime(Timestamp::Micros(prng_.Rand<uint32_t>()));
     // Find the name of the current test, in order to use it as a temporary
     // filename.
-    // TODO(terelius): Use a general utility function to generate a temp file.
     auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
     std::string test_name =
         std::string(test_info->test_case_name()) + "_" + test_info->name();
@@ -203,6 +205,8 @@ class RtcEventLogSession
   test::EventVerifier verifier_;
   rtc::ScopedFakeClock clock_;
   std::string temp_filename_;
+  MemoryLogStorage log_storage_;
+  std::unique_ptr<LogWriterFactoryInterface> log_output_factory_;
 };
 
 bool SsrcUsed(
@@ -314,7 +318,7 @@ void RtcEventLogSession::WriteLog(EventCounts count,
 
   auto task_queue_factory = CreateDefaultTaskQueueFactory();
   RtcEventLogFactory rtc_event_log_factory(task_queue_factory.get());
-  // The log file will be flushed to disk when the event_log goes out of scope.
+  // The log will be flushed to output when the event_log goes out of scope.
   std::unique_ptr<RtcEventLog> event_log =
       rtc_event_log_factory.CreateRtcEventLog(encoding_type_);
 
@@ -333,9 +337,8 @@ void RtcEventLogSession::WriteLog(EventCounts count,
   for (; remaining_events > 0; remaining_events--) {
     if (remaining_events == remaining_events_at_start) {
       clock_.AdvanceTime(TimeDelta::Millis(prng_.Rand(20)));
-      event_log->StartLogging(
-          std::make_unique<RtcEventLogOutputFile>(temp_filename_, 10000000),
-          output_period_ms_);
+      event_log->StartLogging(log_output_factory_->Create(temp_filename_),
+                              output_period_ms_);
       start_time_us_ = rtc::TimeMicros();
       utc_start_time_us_ = rtc::TimeUTCMicros();
     }
@@ -555,12 +558,14 @@ void RtcEventLogSession::WriteLog(EventCounts count,
   ASSERT_EQ(count.total_nonconfig_events(), static_cast<size_t>(0));
 }
 
-// Read the file and verify that what we read back from the event log is the
+// Read the log and verify that what we read back from the event log is the
 // same as what we wrote down.
 void RtcEventLogSession::ReadAndVerifyLog() {
-  // Read the generated file from disk.
+  // Read the generated log from memory.
   ParsedRtcEventLog parsed_log;
-  ASSERT_TRUE(parsed_log.ParseFile(temp_filename_).ok());
+  auto it = log_storage_.logs().find(temp_filename_);
+  ASSERT_TRUE(it != log_storage_.logs().end());
+  ASSERT_TRUE(parsed_log.ParseString(it->second).ok());
 
   // Start and stop events.
   auto& parsed_start_log_events = parsed_log.start_log_events();
@@ -787,9 +792,6 @@ void RtcEventLogSession::ReadAndVerifyLog() {
             std::min(start_time_us_ / 1000, first_timestamp_ms_));
   EXPECT_EQ(parsed_log.first_log_segment().stop_time_ms(),
             stop_time_us_ / 1000);
-
-  // Clean up temporary file - can be pretty slow.
-  remove(temp_filename_.c_str());
 }
 
 }  // namespace
@@ -875,9 +877,14 @@ class RtcEventLogCircularBufferTest
     : public ::testing::TestWithParam<RtcEventLog::EncodingType> {
  public:
   RtcEventLogCircularBufferTest()
-      : encoding_type_(GetParam()), verifier_(encoding_type_) {}
+      : encoding_type_(GetParam()),
+        verifier_(encoding_type_),
+        log_storage_(),
+        log_output_factory_(log_storage_.CreateFactory()) {}
   const RtcEventLog::EncodingType encoding_type_;
   const test::EventVerifier verifier_;
+  MemoryLogStorage log_storage_;
+  std::unique_ptr<LogWriterFactoryInterface> log_output_factory_;
 };
 
 TEST_P(RtcEventLogCircularBufferTest, KeepsMostRecentEvents) {
@@ -899,8 +906,8 @@ TEST_P(RtcEventLogCircularBufferTest, KeepsMostRecentEvents) {
 
   auto task_queue_factory = CreateDefaultTaskQueueFactory();
   RtcEventLogFactory rtc_event_log_factory(task_queue_factory.get());
-  // When `log` goes out of scope, it causes the log file to be flushed
-  // to disk.
+  // When `log` goes out of scope, the contents are flushed
+  // to the output.
   std::unique_ptr<RtcEventLog> log =
       rtc_event_log_factory.CreateRtcEventLog(encoding_type_);
 
@@ -917,16 +924,17 @@ TEST_P(RtcEventLogCircularBufferTest, KeepsMostRecentEvents) {
   }
   int64_t start_time_us = rtc::TimeMicros();
   int64_t utc_start_time_us = rtc::TimeUTCMicros();
-  log->StartLogging(
-      std::make_unique<RtcEventLogOutputFile>(temp_filename, 10000000),
-      RtcEventLog::kImmediateOutput);
+  log->StartLogging(log_output_factory_->Create(temp_filename),
+                    RtcEventLog::kImmediateOutput);
   fake_clock->AdvanceTime(TimeDelta::Millis(10));
   int64_t stop_time_us = rtc::TimeMicros();
   log->StopLogging();
 
-  // Read the generated file from disk.
+  // Read the generated log from memory.
   ParsedRtcEventLog parsed_log;
-  ASSERT_TRUE(parsed_log.ParseFile(temp_filename).ok());
+  auto it = log_storage_.logs().find(temp_filename);
+  ASSERT_TRUE(it != log_storage_.logs().end());
+  ASSERT_TRUE(parsed_log.ParseString(it->second).ok());
 
   const auto& start_log_events = parsed_log.start_log_events();
   ASSERT_EQ(start_log_events.size(), 1u);
@@ -960,9 +968,6 @@ TEST_P(RtcEventLogCircularBufferTest, KeepsMostRecentEvents) {
         RtcEventProbeResultSuccess(first_id + i, first_bitrate_bps + i * 1000),
         probe_success_events[i]);
   }
-
-  // Clean up temporary file - can be pretty slow.
-  remove(temp_filename.c_str());
 }
 
 INSTANTIATE_TEST_SUITE_P(
