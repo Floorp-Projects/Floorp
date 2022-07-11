@@ -274,6 +274,10 @@ specific_include_rules = {
     "+rtc_base/ref_counted_object.h",
   ],
 
+  "notifier\.h": [
+    "+rtc_base/system/no_unique_address.h",
+  ],
+
   "simulated_network\.h": [
     "+rtc_base/random.h",
     "+rtc_base/thread_annotations.h",
