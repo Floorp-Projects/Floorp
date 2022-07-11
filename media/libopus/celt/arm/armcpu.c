@@ -156,7 +156,7 @@ opus_uint32 opus_cpu_capabilities(void)
    "your platform.  Reconfigure with --disable-rtcd (or send patches)."
 #endif
 
-static int opus_select_arch_impl(void)
+int opus_select_arch(void)
 {
   opus_uint32 flags = opus_cpu_capabilities();
   int arch = 0;
@@ -184,11 +184,4 @@ static int opus_select_arch_impl(void)
   return arch;
 }
 
-int opus_select_arch(void) {
-  int arch = opus_select_arch_impl();
-#ifdef FUZZING
-  arch = rand()%(arch+1);
-#endif
-  return arch;
-}
 #endif
