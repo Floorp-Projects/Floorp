@@ -1,13 +1,7 @@
 This directory contains the HarfBuzz source from the upstream repo:
 https://github.com/harfbuzz/harfbuzz
 
-Current version: main [commit aee123fc83388b8f5acfb301d87bd92eccc5b843]
-
-!!!Please Note!!!
-Because LLVM added in D100581 support for -Wunused-but-set-parameter and -Wunused-but-set-variable
-and clang doesn't cope well with `#pragma GCC diagnostic warning` vs gcc we had to patch this version up.
-The same patch was upstream in #2995 so, starting with the next version, the current patch will no longer
-be needed.
+Current version: 4.4.1 [commit 096aaa62a6e0d07c02a4894fc036efc927e5aaf9]
 
 UPDATING:
 

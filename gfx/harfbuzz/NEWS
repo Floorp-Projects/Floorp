@@ -1,3 +1,44 @@
+Overview of changes leading to 4.4.1
+Wednesday, June 29, 2022
+====================================
+- Fix test failure with some compilers.
+- Fix Telugu and Kannada kerning regression.
+
+
+Overview of changes leading to 4.4.0
+Monday, June 27, 2022
+====================================
+- Caching of variable fonts shaping, in particular when using HarfBuzz’s own
+  font loading functions (ot). Bringing performance of variable shaping in par
+  with non-variable fonts shaping. (Behdad Esfahbod)
+- Caching of format 2 “Contextual Substitution” and “Chained Contexts
+  Substitution” lookups. Resulting in up to 20% speedup of lookup-heavy fonts
+  like Gulzar or Noto Nastaliq Urdu. (Behdad Esfahbod)
+- Improved ANSI output from hb-view. (Behdad Esfahbod)
+- Support for shaping legacy, pre-OpenType Windows 3.1-era, Arabic fonts that
+  relied on a fixed PUA encoding. (Khaled Hosny, Behdad Esfahbod)
+- Sinhala script is now shaped by the USE shaper instead of “indic” one.
+  (Behdad Esfahbod, David Corbett)
+- Thai shaper improvements. (David Corbett)
+- hb-ot-name API supports approximate BCP-47 language matching, for example
+  asking for “en_US” in a font that has only “en” names will return them.
+  (Behdad Esfahbod)
+- Optimized TrueType glyph shape loading. (Behdad Esfahbod)
+- Fix subsetting of HarfBuzz faces created via hb_face_create_for_tables().
+  (Garret Rieger)
+- Add 32 bit var store support to the subsetter. (Garret Rieger)
+
+- New API
++HB_BUFFER_FLAG_DEFINED
++HB_BUFFER_SERIALIZE_FLAG_DEFINED
++hb_font_changed()
++hb_font_get_serial()
++hb_ft_hb_font_changed()
++hb_set_hash()
++hb_map_copy()
++hb_map_hash()
+
+
 Overview of changes leading to 4.3.0
 Friday, May 20, 2022
 ====================================
