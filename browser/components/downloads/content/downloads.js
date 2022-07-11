@@ -539,7 +539,10 @@ var DownloadsPanel = {
     if (document.activeElement && this.panel.contains(document.activeElement)) {
       return;
     }
-    let focusOptions = { preventFocusRing: !!this._preventFocusRing };
+    let focusOptions = {};
+    if (this._preventFocusRing) {
+      focusOptions.focusRing = false;
+    }
     if (DownloadsView.richListBox.itemCount > 0) {
       DownloadsView.richListBox.selectedIndex = 0;
       DownloadsView.richListBox.focus(focusOptions);

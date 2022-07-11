@@ -473,7 +473,7 @@ async function loadTab(args) {
     document.getElementById("generalTab");
   radioGroup.selectedItem = initialTab;
   radioGroup.selectedItem.doCommand();
-  radioGroup.focus({ preventFocusRing: true });
+  radioGroup.focus({ focusVisible: false });
 }
 
 function openCacheEntry(key, cb) {

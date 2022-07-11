@@ -99,7 +99,7 @@ async function renderSpotlight(ready) {
     // If we just call focus() at some random time, it'll cause a flush,
     // which slows things down unnecessarily, so instead we use rAF...
     requestAnimationFrame(() => {
-      primaryBtn.focus({ preventFocusRing: true });
+      primaryBtn.focus({ focusVisible: false });
     });
   }
   if (secondaryBtn) {
