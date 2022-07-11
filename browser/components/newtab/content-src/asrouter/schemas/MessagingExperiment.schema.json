@@ -3,190 +3,181 @@
   "$id": "resource://activity-stream/schemas/MessagingExperiment.schema.json",
   "title": "Messaging Experiment",
   "description": "A Firefox Messaging System message.",
-  "oneOf": [
+  "allOf": [
     {
-      "description": "An empty FxMS message.",
       "type": "object",
-      "additionalProperties": false
+      "properties": {
+        "template": {
+          "type": "string",
+          "enum": [
+            "cfr_urlbar_chiclet",
+            "cfr_doorhanger",
+            "milestone_message",
+            "infobar",
+            "pb_newtab",
+            "spotlight",
+            "toolbar_badge",
+            "update_action",
+            "whatsnew_panel_message"
+          ]
+        }
+      },
+      "required": [
+        "template"
+      ]
     },
     {
-      "allOf": [
-        {
-          "type": "object",
-          "properties": {
-            "template": {
-              "type": "string",
-              "enum": [
-                "cfr_urlbar_chiclet",
-                "cfr_doorhanger",
-                "milestone_message",
-                "infobar",
-                "pb_newtab",
-                "spotlight",
-                "toolbar_badge",
-                "update_action",
-                "whatsnew_panel_message"
-              ]
-            }
-          },
-          "required": [
-            "template"
-          ]
-        },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "template": {
-                "type": "string",
-                "enum": [
-                  "cfr_urlbar_chiclet"
-                ]
-              }
-            },
-            "required": [
-              "template"
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "cfr_urlbar_chiclet"
             ]
-          },
-          "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/CFRUrlbarChiclet"
           }
         },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "template": {
-                "type": "string",
-                "enum": [
-                  "cfr_doorhanger",
-                  "milestone_message"
-                ]
-              }
-            },
-            "required": [
-              "template"
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/CFRUrlbarChiclet"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "cfr_doorhanger",
+              "milestone_message"
             ]
-          },
-          "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ExtensionDoorhanger"
           }
         },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "template": {
-                "type": "string",
-                "enum": [
-                  "infobar"
-                ]
-              }
-            },
-            "required": [
-              "template"
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ExtensionDoorhanger"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "infobar"
             ]
-          },
-          "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/InfoBar"
           }
         },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "template": {
-                "type": "string",
-                "enum": [
-                  "pb_newtab"
-                ]
-              }
-            },
-            "required": [
-              "template"
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/InfoBar"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "pb_newtab"
             ]
-          },
-          "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/NewtabPromoMessage"
           }
         },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "template": {
-                "type": "string",
-                "enum": [
-                  "spotlight"
-                ]
-              }
-            },
-            "required": [
-              "template"
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/NewtabPromoMessage"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "spotlight"
             ]
-          },
-          "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Spotlight"
           }
         },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "template": {
-                "type": "string",
-                "enum": [
-                  "toolbar_badge"
-                ]
-              }
-            },
-            "required": [
-              "template"
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Spotlight"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "toolbar_badge"
             ]
-          },
-          "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ToolbarBadgeMessage"
           }
         },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "template": {
-                "type": "string",
-                "enum": [
-                  "update_action"
-                ]
-              }
-            },
-            "required": [
-              "template"
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ToolbarBadgeMessage"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "update_action"
             ]
-          },
-          "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/UpdateAction"
           }
         },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "template": {
-                "type": "string",
-                "enum": [
-                  "whatsnew_panel_message"
-                ]
-              }
-            },
-            "required": [
-              "template"
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/UpdateAction"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "enum": [
+              "whatsnew_panel_message"
             ]
-          },
-          "then": {
-            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/WhatsNewMessage"
           }
-        }
-      ]
+        },
+        "required": [
+          "template"
+        ]
+      },
+      "then": {
+        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/WhatsNewMessage"
+      }
     }
   ],
   "$defs": {
