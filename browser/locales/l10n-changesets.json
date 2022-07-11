@@ -123,7 +123,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "ea81ab240cd118edb0a92b168cadd9b7b1ca6fdd"
+        "revision": "977d265255721bd348a3e51099716420230e5ab0"
     },
     "bg": {
         "pin": false,
@@ -285,7 +285,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "9ec80f673d1e3aa5fe7c6888a912d718c8426e28"
+        "revision": "1d3b91a42df4d2489f67e721bf4d99918b4abd24"
     },
     "da": {
         "pin": false,
@@ -375,7 +375,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "c2d0145acc2e090e68615c43f45dd76e7caacac6"
+        "revision": "b895dd9b521c5c79f6be6f25bfe30146b0aeaa90"
     },
     "en-GB": {
         "pin": false,
@@ -429,7 +429,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "74f9327521944e7b096077123c79b6d05e2f0688"
+        "revision": "66bf4063df33aeb109eb6ce1c58f6ce5ee3569f1"
     },
     "es-CL": {
         "pin": false,
@@ -465,7 +465,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "a0c887c6ea7de85db9bb455130b67de712818935"
+        "revision": "942edb9eb6258fb266669c6a1024a0cfea53613d"
     },
     "es-MX": {
         "pin": false,
@@ -591,7 +591,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "0afe5e3c3fb87ffe7d5931fd7de61e24a93a5e29"
+        "revision": "6882ca7fa00f38b0d3bcad53e21c89cb9abed6eb"
     },
     "fy-NL": {
         "pin": false,
@@ -609,7 +609,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "6d47b6e0efe15c2e8a48aeed4d7a66da74d5fd38"
+        "revision": "2269e2bcef6b4938cd737e003bdd833270e3b52b"
     },
     "ga-IE": {
         "pin": false,
@@ -843,7 +843,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "b5b77c9c16ea60d08540577ac6e05fbf1ee1139e"
+        "revision": "afc81687a7b37f6688ec80788e287328b31eac9c"
     },
     "is": {
         "pin": false,
@@ -975,7 +975,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "c70f959373acb7c9452a300ee599e99e6fb7ed3d"
+        "revision": "068e2093c0c15d174f54ae4c9dd7e3ebeb436cee"
     },
     "kn": {
         "pin": false,
@@ -1155,7 +1155,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "1166afc922d333d4b9535dad79c33183c7027cd6"
+        "revision": "7397a2677ff49d899bb5c83e0d2581cdf9bfffff"
     },
     "ne-NP": {
         "pin": false,
@@ -1191,7 +1191,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "d530826100a72d7a7ef622903ea5e3a3fa880e9c"
+        "revision": "07b5f302c460e1f504318db4b53e42b8cd0bd265"
     },
     "nn-NO": {
         "pin": false,
@@ -1299,7 +1299,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "4df83bcca8e3b12b68c87f9a72eaca1b5152ed89"
+        "revision": "efb08c45e99c6d70e2edf1a7844c3fd13a120620"
     },
     "rm": {
         "pin": false,
@@ -1353,7 +1353,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "877cb9c3370e354dd482cbf02c3569a1a88c38ed"
+        "revision": "b9e247ebebf679d807f9643259befbb3e190b25b"
     },
     "sco": {
         "pin": false,
@@ -1695,7 +1695,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "e4be9bcfb6b39e9427fc7ab99c56e62a8ec71a1b"
+        "revision": "ca58af7628b8771312a6fab74d5c06c798dce473"
     },
     "xh": {
         "pin": false,
