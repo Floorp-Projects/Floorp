@@ -17,6 +17,11 @@ celt_sources = [
     'celt/vq.c',
 ]
 
+celt_sources_x86_rtcd = [
+    'celt/x86/x86_celt_map.c',
+    'celt/x86/x86cpu.c',
+]
+
 opus_nonunified_sources = [
     # Disabled because of undefined reference to celt_fatal at link time
     'celt/celt.c',
@@ -30,8 +35,6 @@ opus_nonunified_sources = [
 
 celt_sources_sse = [
     'celt/x86/pitch_sse.c',
-    'celt/x86/x86_celt_map.c',
-    'celt/x86/x86cpu.c',
 ]
 
 celt_sources_sse2 = [
@@ -44,7 +47,7 @@ celt_sources_sse4_1 = [
     'celt/x86/pitch_sse4_1.c',
 ]
 
-celt_sources_arm = [
+celt_sources_arm_rtcd = [
     'celt/arm/arm_celt_map.c',
     'celt/arm/armcpu.c',
 ]
@@ -164,16 +167,22 @@ silk_sources = [
     'silk/VQ_WMat_EC.c',
 ]
 
+silk_sources_x86_rtcd = [
+    'silk/x86/x86_silk_map.c',
+]
+
 silk_sources_sse4_1 = [
     'silk/x86/NSQ_del_dec_sse4_1.c',
     'silk/x86/NSQ_sse4_1.c',
     'silk/x86/VAD_sse4_1.c',
     'silk/x86/VQ_WMat_EC_sse4_1.c',
-    'silk/x86/x86_silk_map.c',
+]
+
+silk_sources_arm_rtcd = [
+    'silk/arm/arm_silk_map.c',
 ]
 
 silk_sources_arm_neon_intr = [
-    'silk/arm/arm_silk_map.c',
     'silk/arm/biquad_alt_neon_intr.c',
     'silk/arm/LPC_inv_pred_gain_neon_intr.c',
     'silk/arm/NSQ_del_dec_neon_intr.c',

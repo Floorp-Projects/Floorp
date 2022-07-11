@@ -36,6 +36,7 @@
 
 #include "SigProc_FIX.h"
 #include "pitch.h"
+#include "celt/x86/x86cpu.h"
 
 opus_int64 silk_inner_prod16_sse4_1(
     const opus_int16            *inVec1,            /*    I input vector 1                                              */
@@ -78,7 +79,7 @@ opus_int64 silk_inner_prod16_sse4_1(
     _mm_storel_epi64( (__m128i *)&sum, acc1 );
 
     for( ; i < len; i++ ) {
-        sum = silk_SMLABB( sum, inVec1[ i ], inVec2[ i ] );
+        sum = silk_SMLALBB( sum, inVec1[ i ], inVec2[ i ] );
     }
 
 #ifdef OPUS_CHECK_ASM
