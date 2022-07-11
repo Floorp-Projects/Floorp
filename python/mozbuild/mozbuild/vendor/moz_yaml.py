@@ -274,6 +274,16 @@ vendoring:
   # If the action is run-script:
   #   script is the script to run
   #   cwd is the directory the script should run with as its cwd
+  #   args is a list of arguments to pass to the script
+  #
+  # If the action is run-command:
+  #   command is the command to run
+  #      Unlike run-script, `command` is _not_ processed to be relative
+  #      to the vendor directory, and is passed directly to python's
+  #      execution code without any path substitution or manipulation
+  #   cwd is the directory the command should run with as its cwd
+  #   args is a list of arguments to pass to the command
+  #
   #
   # Unless specified otherwise, all files/directories are relative to the
   #     vendor-directory. If the vendor-directory is different from the
@@ -470,6 +480,7 @@ def _schema_1():
                                     "replace-in-file",
                                     "replace-in-file-regex",
                                     "run-script",
+                                    "run-command",
                                     "delete-path",
                                 ],
                                 msg="Invalid action specified in update-actions",
@@ -480,6 +491,7 @@ def _schema_1():
                             "with": All(str, Length(min=1)),
                             "file": All(str, Length(min=1)),
                             "script": All(str, Length(min=1)),
+                            "command": All(str, Length(min=1)),
                             "args": All([All(str, Length(min=1))]),
                             "cwd": All(str, Length(min=1)),
                             "path": All(str, Length(min=1)),
@@ -625,6 +637,15 @@ class UpdateActions(object):
                 if set(v.keys()) - set(["args", "cwd", "script", "action"]) != set():
                     raise Invalid(
                         "run-script action may only specify 'script', 'cwd', and 'args' keys"
+                    )
+            elif v["action"] == "run-command":
+                if "command" not in v or "cwd" not in v:
+                    raise Invalid(
+                        "run-command action must specify 'command' and 'cwd' keys"
+                    )
+                if set(v.keys()) - set(["args", "cwd", "command", "action"]) != set():
+                    raise Invalid(
+                        "run-command action may only specify 'command', 'cwd', and 'args' keys"
                     )
             else:
                 # This check occurs before the validator above, so the above is
