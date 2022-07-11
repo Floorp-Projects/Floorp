@@ -128,13 +128,15 @@ void CallPreProcessAudioBuffer(int num_calls,
   }
 }
 
-std::string GetAgcMinMicLevelExperimentFieldTrial(int enabled_value) {
+std::string GetAgcMinMicLevelExperimentFieldTrial(
+    int enabled_value,
+    const std::string& suffix = "") {
   RTC_DCHECK_GE(enabled_value, 0);
   RTC_DCHECK_LE(enabled_value, 255);
   char field_trial_buffer[64];
   rtc::SimpleStringBuilder builder(field_trial_buffer);
   builder << "WebRTC-Audio-AgcMinMicLevelExperiment/Enabled-" << enabled_value
-          << "/";
+          << suffix << "/";
   return builder.str();
 }
 
@@ -883,13 +885,16 @@ TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperiment) {
 }
 
 TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperimentDisabled) {
-  test::ScopedFieldTrials field_trial(
-      "WebRTC-Audio-AgcMinMicLevelExperiment/Disabled/");
-  std::unique_ptr<AgcManagerDirect> manager =
-      CreateAgcManagerDirect(kInitialVolume, kClippedLevelStep,
-                             kClippedRatioThreshold, kClippedWaitFrames);
-  EXPECT_EQ(manager->channel_agcs_[0]->min_mic_level(), kMinMicLevel);
-  EXPECT_EQ(manager->channel_agcs_[0]->startup_min_level(), kInitialVolume);
+  for (const std::string& field_trial_suffix : {"", "_20220210"}) {
+    test::ScopedFieldTrials field_trial(
+        "WebRTC-Audio-AgcMinMicLevelExperiment/Disabled" + field_trial_suffix +
+        "/");
+    std::unique_ptr<AgcManagerDirect> manager =
+        CreateAgcManagerDirect(kInitialVolume, kClippedLevelStep,
+                               kClippedRatioThreshold, kClippedWaitFrames);
+    EXPECT_EQ(manager->channel_agcs_[0]->min_mic_level(), kMinMicLevel);
+    EXPECT_EQ(manager->channel_agcs_[0]->startup_min_level(), kInitialVolume);
+  }
 }
 
 // Checks that a field-trial parameter outside of the valid range [0,255] is
@@ -921,13 +926,16 @@ TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperimentOutOfRangeBelow) {
 // changed.
 TEST(AgcManagerDirectStandaloneTest, AgcMinMicLevelExperimentEnabled50) {
   constexpr int kMinMicLevelOverride = 50;
-  test::ScopedFieldTrials field_trial(
-      GetAgcMinMicLevelExperimentFieldTrial(kMinMicLevelOverride));
-  std::unique_ptr<AgcManagerDirect> manager =
-      CreateAgcManagerDirect(kInitialVolume, kClippedLevelStep,
-                             kClippedRatioThreshold, kClippedWaitFrames);
-  EXPECT_EQ(manager->channel_agcs_[0]->min_mic_level(), kMinMicLevelOverride);
-  EXPECT_EQ(manager->channel_agcs_[0]->startup_min_level(), kInitialVolume);
+  for (const std::string& field_trial_suffix : {"", "_20220210"}) {
+    SCOPED_TRACE(field_trial_suffix);
+    test::ScopedFieldTrials field_trial(GetAgcMinMicLevelExperimentFieldTrial(
+        kMinMicLevelOverride, field_trial_suffix));
+    std::unique_ptr<AgcManagerDirect> manager =
+        CreateAgcManagerDirect(kInitialVolume, kClippedLevelStep,
+                               kClippedRatioThreshold, kClippedWaitFrames);
+    EXPECT_EQ(manager->channel_agcs_[0]->min_mic_level(), kMinMicLevelOverride);
+    EXPECT_EQ(manager->channel_agcs_[0]->startup_min_level(), kInitialVolume);
+  }
 }
 
 // Checks that, when the "WebRTC-Audio-AgcMinMicLevelExperiment" field trial is
