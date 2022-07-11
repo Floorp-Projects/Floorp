@@ -492,6 +492,16 @@ void HTMLLinkElement::
     // https://wicg.github.io/import-maps/#wait-for-import-maps
     // Step 1.2: Set document’s acquiring import maps to false.
     // When fetch a modulepreload module script graph.
+    if (!OwnerDoc()->ScriptLoader()->GetModuleLoader()) {
+      // For the print preview documents, at this moment it doesn't have module
+      // loader yet, as the (print preview) document is not attached to the
+      // nsIContentViewer yet, so it doesn't have the GlobalObject.
+      // Also, the script elements won't be processed as they are also cloned
+      // from the original document.
+      // So we simply bail out if the module loader is null.
+      return;
+    }
+
     OwnerDoc()->ScriptLoader()->GetModuleLoader()->SetAcquiringImportMaps(
         false);
     return;
