@@ -169,6 +169,7 @@ TEST_F(VideoRtpReceiverTest, BroadcastsEncodedFramesWhenEnabled) {
 
 TEST_F(VideoRtpReceiverTest, EnablesEncodedOutputOnChannelRestart) {
   InSequence s;
+  EXPECT_CALL(channel_, ClearRecordableEncodedFrameCallback(0));
   MockVideoSink sink;
   Source()->AddEncodedSink(&sink);
   EXPECT_CALL(channel_, SetRecordableEncodedFrameCallback(4711, _));
