@@ -83,7 +83,15 @@ void BaseCapturerPipeWire::CaptureFrame() {
 #define PIPEWIRE_NAME "####_PIPEWIRE_PORTAL_####"
 
 bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
-  sources->push_back({PIPEWIRE_ID, 0, PIPEWIRE_NAME});
+  RTC_DCHECK(sources->size() == 0);
+  // List of available screens is already presented by the xdg-desktop-portal,
+  // so we just need a (valid) source id for any callers to pass around, even
+  // though it doesn't mean anything to us. Until the user selects a source in
+  // xdg-desktop-portal we'll just end up returning empty frames. Note that "0"
+  // is often treated as a null/placeholder id, so we shouldn't use that.
+  // TODO(https://crbug.com/1297671): Reconsider type of ID when plumbing
+  // token that will enable stream re-use.
+  sources->push_back({1});
   return true;
 }
 
