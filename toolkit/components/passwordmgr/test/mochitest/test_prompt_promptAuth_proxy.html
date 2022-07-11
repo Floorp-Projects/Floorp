@@ -35,9 +35,6 @@ let proxyAuthinfo = {
 modalType = authPromptModalType;
 
 let chromeScript = runInParent(() => {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   const promptFac = Cc[
     "@mozilla.org/passwordmanager/authpromptfactory;1"
   ].getService(Ci.nsIPromptFactory);
