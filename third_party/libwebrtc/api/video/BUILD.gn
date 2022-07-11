@@ -31,6 +31,7 @@ rtc_library("video_rtp_headers") {
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:rtc_export",
     "../units:data_rate",
+    "../units:time_delta",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/container:inlined_vector",
