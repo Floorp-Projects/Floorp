@@ -276,7 +276,7 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
   // actual sending fails.
   if (is_media && packet->allow_retransmission()) {
     packet_history_->PutRtpPacket(std::make_unique<RtpPacketToSend>(*packet),
-                                  now_ms);
+                                  Timestamp::Millis(now_ms));
   } else if (packet->retransmitted_sequence_number()) {
     packet_history_->MarkPacketAsSent(*packet->retransmitted_sequence_number());
   }

@@ -362,7 +362,7 @@ void RTPSender::OnReceivedAckOnRtxSsrc(
 void RTPSender::OnReceivedNack(
     const std::vector<uint16_t>& nack_sequence_numbers,
     int64_t avg_rtt) {
-  packet_history_->SetRtt(5 + avg_rtt);
+  packet_history_->SetRtt(TimeDelta::Millis(5 + avg_rtt));
   for (uint16_t seq_no : nack_sequence_numbers) {
     const int32_t bytes_sent = ReSendPacket(seq_no);
     if (bytes_sent < 0) {

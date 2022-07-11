@@ -794,7 +794,7 @@ void ModuleRtpRtcpImpl::set_rtt_ms(int64_t rtt_ms) {
     rtt_ms_ = rtt_ms;
   }
   if (rtp_sender_) {
-    rtp_sender_->packet_history.SetRtt(rtt_ms);
+    rtp_sender_->packet_history.SetRtt(TimeDelta::Millis(rtt_ms));
   }
 }
 
