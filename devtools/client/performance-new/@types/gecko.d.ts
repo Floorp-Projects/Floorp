@@ -21,7 +21,6 @@ declare namespace MockedExports {
    * This interface teaches ChromeUtils.import how to find modules.
    */
   interface KnownModules {
-    "resource://gre/modules/Services.jsm": typeof import("resource://gre/modules/Services.jsm");
     Services: typeof import("Services");
     chrome: typeof import("chrome");
     "resource://gre/modules/osfile.jsm": typeof import("resource://gre/modules/osfile.jsm");
@@ -197,10 +196,6 @@ declare namespace MockedExports {
     };
   };
 
-  const ServicesJSM: {
-    Services: Services;
-  };
-
   const EventEmitter: {
     decorate: (target: object) => void;
   };
@@ -355,10 +350,6 @@ declare module "devtools/client/shared/vendor/react-redux" {
 
 declare module "devtools/shared/event-emitter2" {
   export = MockedExports.EventEmitter;
-}
-
-declare module "resource://gre/modules/Services.jsm" {
-  export = MockedExports.ServicesJSM;
 }
 
 declare module "Services" {
