@@ -504,7 +504,7 @@ class HardwareVideoEncoder implements VideoEncoder {
 
   @Override
   public String getImplementationName() {
-    return "HWEncoder";
+    return codecName;
   }
 
   @Override
