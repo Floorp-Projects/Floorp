@@ -23,6 +23,7 @@ absl_source_set("cleanup") {
   ]
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("cleanup_test") {
   testonly = true
   sources = [ "cleanup_test.cc" ]
@@ -32,4 +33,5 @@ absl_source_set("cleanup_test") {
     "//third_party/abseil-cpp/absl/utility",
     "//third_party/googletest:gtest",
   ]
+}
 }
