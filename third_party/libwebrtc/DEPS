@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'd418bb1e88693f04bb2c6b31820125576529c0d2',
+  'chromium_revision': '5688012168805e9d67c29ea3aa7271b594404d7b',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,9 +23,9 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@2dfd7c24223bc3cb05a167fab0b8bd98571faa66',
+    'https://chromium.googlesource.com/chromium/src/base@402f2001000a6c4f3106b89e549f4066d315e5c0',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@1825abc1e53c0d637d60d68cf8426468d208f3d8',
+    'https://chromium.googlesource.com/chromium/src/build@48b4cff6a547de252f958d79ff88598992c46d7c',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@893aa038dd17d05f3c5ff5af98daebabc294a948',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -34,13 +34,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@603214b04e0305d320622fbc906e2f00915533d5',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@596955996740cbb569121fa463648a74e503babb',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@e867c867ab4646cebb173ea71fe979f8cae1c35d',
+    'https://chromium.googlesource.com/chromium/src/testing@e5a7a6719aa1d4975a8e2f4ee52ee6bf194db7ae',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@d4b6f1bfd064dcb2f189dabba08062ffba573923',
+    'https://chromium.googlesource.com/chromium/src/third_party@dd5821349bc531875a1b79f6e62386dc6e9a4efa',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -80,7 +80,7 @@ deps = {
   'src/buildtools/third_party/libc++abi/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@738dc100c61890744f9e78cac27c71d0a2190781',
   'src/buildtools/third_party/libunwind/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git@8cd7191937c9341646c88e39eae63ccd692ace91',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git@2ea265b95a08e4a98fab16b327119788b8e50a69',
 
   'src/tools/clang/dsymutil': {
     'packages': [
@@ -140,7 +140,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@08bd844599bf04c71707e8f59a8013a941264695',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@392c66f379f22799379b5d10d577bb2a73b2723c',
+    'https://chromium.googlesource.com/catapult.git@666eff907b58ca7b4c82c0fae4c6e1d24f223ea0',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -228,7 +228,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@7a29efcb91ff562d9fbb61b9490ef8f71983b9f2',
+    'https://android.googlesource.com/platform/external/perfetto.git@5b5f79bbdb2a2d59c88f02394cac1b08298a3da7',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@df0d06de6d3b64e35b9e75ad72c571af061bc7b3',
   'src/third_party/libyuv':
@@ -285,7 +285,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@eeb2fef42d2a80b811638747a720a02bee0c8fa6',
+    'https://chromium.googlesource.com/chromium/src/tools@21f13c8e61ed1bbdeb412f57adfb5fc1adc3076e',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
