@@ -162,6 +162,13 @@ struct RtcpTransceiverConfig {
   // https://tools.ietf.org/html/rfc3611#section-4.4 and #section-4.5
   bool non_sender_rtt_measurement = false;
 
+  // Reply to incoming RRTR messages so that remote endpoint may estimate RTT as
+  // non-sender as described in https://tools.ietf.org/html/rfc3611#section-4.4
+  // and #section-4.5
+  // TODO(danilchap): Make it true by default after users got enough time to
+  // turn it off if not needed.
+  bool reply_to_non_sender_rtt_measurement = false;
+
   // Allows a REMB message to be sent immediately when SetRemb is called without
   // having to wait for the next compount message to be sent.
   bool send_remb_on_change = false;
