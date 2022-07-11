@@ -126,7 +126,7 @@ async def test_await_resolve_map(bidi_session, top_context):
         ("42", 42, "number"),
         ("Number.NaN", "NaN", "number"),
         ("-0", "-0", "number"),
-        ("Infinity", "+Infinity", "number"),
+        ("Infinity", "Infinity", "number"),
         ("-Infinity", "-Infinity", "number"),
         ("true", True, "boolean"),
         ("false", False, "boolean"),
