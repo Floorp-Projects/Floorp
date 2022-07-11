@@ -5,10 +5,12 @@
 package mozilla.components.compose.browser.awesomebar.internal
 
 import android.os.SystemClock
+import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.RememberObserver
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.compose.browser.awesomebar.AwesomeBarFacts
 import mozilla.components.compose.browser.awesomebar.AwesomeBarFacts.emitAwesomeBarFact
@@ -32,6 +34,9 @@ internal class SuggestionFetcher(
         NamedThreadFactory("SuggestionFetcher")
     ).asCoroutineDispatcher()
 
+    @VisibleForTesting
+    internal var fetchJob: Job? = null
+
     /**
      * The current list of suggestions as an observable list.
      */
@@ -45,7 +50,9 @@ internal class SuggestionFetcher(
     suspend fun fetch(text: String) {
         profiler?.addMarker("SuggestionFetcher.fetch") // DO NOT ADD ANYTHING ABOVE THIS addMarker CALL.
 
-        coroutineScope {
+        fetchJob?.cancel()
+
+        fetchJob = CoroutineScope(dispatcher).launch {
             groups.forEach { group ->
                 group.providers.forEach { provider ->
                     val profilerStartTime = profiler?.getProfilerTime() // DO NOT ADD ANYTHING ABOVE getProfilerTime.
@@ -58,7 +65,8 @@ internal class SuggestionFetcher(
     /**
      * Fetches suggestions from [provider].
      */
-    private suspend fun fetchFrom(
+    @VisibleForTesting
+    internal suspend fun fetchFrom(
         group: AwesomeBar.SuggestionProviderGroup,
         provider: AwesomeBar.SuggestionProvider,
         text: String,

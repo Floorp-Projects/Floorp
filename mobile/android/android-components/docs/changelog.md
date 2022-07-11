@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **browser-awesomebar**:
+  * 🚒 Bug fixed [issue #12469](https://github.com/mozilla-mobile/android-components/issues/12469) Cancel previous queries before new suggestions requests.
+
 * **service-pocket**
   * Add an index for sponsored stories foreign key to resolve a compilation warning. [#12406](https://github.com/mozilla-mobile/android-components/issues/12406)
 
