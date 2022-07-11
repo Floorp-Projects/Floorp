@@ -454,9 +454,9 @@ void AudioReceiveStream::DeliverRtcp(const uint8_t* packet, size_t length) {
   channel_receive_->ReceivedRTCPPacket(packet, length);
 }
 
-void AudioReceiveStream::SetSyncGroup(const std::string& sync_group) {
+void AudioReceiveStream::SetSyncGroup(absl::string_view sync_group) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  config_.sync_group = sync_group;
+  config_.sync_group = std::string(sync_group);
 }
 
 void AudioReceiveStream::SetLocalSsrc(uint32_t local_ssrc) {
