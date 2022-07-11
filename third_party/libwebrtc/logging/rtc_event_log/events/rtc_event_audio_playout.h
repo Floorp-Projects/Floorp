@@ -56,12 +56,12 @@ class RtcEventAudioPlayout final : public RtcEvent {
   }
 
   static RtcEventLogParseStatus Parse(
-      absl::string_view s,
+      absl::string_view encoded_bytes,
       bool batched,
       std::map<uint32_t, std::vector<LoggedAudioPlayoutEvent>>& output) {
     std::vector<LoggedAudioPlayoutEvent> temp_output;
-    auto status =
-        RtcEventAudioPlayout::definition_.ParseBatch(s, batched, temp_output);
+    auto status = RtcEventAudioPlayout::definition_.ParseBatch(
+        encoded_bytes, batched, temp_output);
     for (const LoggedAudioPlayoutEvent& event : temp_output) {
       output[event.ssrc].push_back(event);
     }

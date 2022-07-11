@@ -12,8 +12,12 @@
 #define LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_AUDIO_SEND_STREAM_CONFIG_H_
 
 #include <memory>
+#include <string>
+#include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/rtc_event_log/rtc_event.h"
+#include "logging/rtc_event_log/events/rtc_event_field_encoding_parser.h"
 #include "logging/rtc_event_log/rtc_stream_config.h"
 
 namespace webrtc {
@@ -44,6 +48,19 @@ class RtcEventAudioSendStreamConfig final : public RtcEvent {
   std::unique_ptr<RtcEventAudioSendStreamConfig> Copy() const;
 
   const rtclog::StreamConfig& config() const { return *config_; }
+
+  static std::string Encode(rtc::ArrayView<const RtcEvent*> batch) {
+    // TODO(terelius): Implement
+    return "";
+  }
+
+  static RtcEventLogParseStatus Parse(
+      absl::string_view encoded_bytes,
+      bool batched,
+      std::vector<LoggedAudioSendConfig>& output) {
+    // TODO(terelius): Implement
+    return RtcEventLogParseStatus::Error("Not Implemented", __FILE__, __LINE__);
+  }
 
  private:
   RtcEventAudioSendStreamConfig(const RtcEventAudioSendStreamConfig& other);

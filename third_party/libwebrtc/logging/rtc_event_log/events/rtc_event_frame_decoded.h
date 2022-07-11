@@ -13,11 +13,16 @@
 
 #include <stdint.h>
 
+#include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/rtc_event_log/rtc_event.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_codec_type.h"
+#include "logging/rtc_event_log/events/rtc_event_field_encoding_parser.h"
 
 namespace webrtc {
 
@@ -57,6 +62,19 @@ class RtcEventFrameDecoded final : public RtcEvent {
   int height() const { return height_; }
   VideoCodecType codec() const { return codec_; }
   uint8_t qp() const { return qp_; }
+
+  static std::string Encode(rtc::ArrayView<const RtcEvent*> batch) {
+    // TODO(terelius): Implement
+    return "";
+  }
+
+  static RtcEventLogParseStatus Parse(
+      absl::string_view encoded_bytes,
+      bool batched,
+      std::map<uint32_t, std::vector<LoggedFrameDecoded>>& output) {
+    // TODO(terelius): Implement
+    return RtcEventLogParseStatus::Error("Not Implemented", __FILE__, __LINE__);
+  }
 
  private:
   RtcEventFrameDecoded(const RtcEventFrameDecoded& other);
