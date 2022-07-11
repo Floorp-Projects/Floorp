@@ -298,6 +298,10 @@ TEST(ShortcutKeyDefinitions, HTMLInputElement)
     {0, 'y',    MODIFIER_ACCEL, u"cmd_redo",      nullptr,          u"cmd_redo",      nullptr,          u"cmd_redo"},
     {0, 'z',    MODIFIER_ACCEL, u"cmd_undo",      u"cmd_undo",      u"cmd_undo",      u"cmd_undo",      u"cmd_undo"},
 
+    // charCode Modifiers,                                      Windows       macOS         Linux         Android       Emacs
+    {0, 'v',    MODIFIER_SHIFT | MODIFIER_ACCEL,                u"cmd_paste", u"cmd_paste", u"cmd_paste", u"cmd_paste", u"cmd_paste"},
+    {0, 'v',    MODIFIER_SHIFT | MODIFIER_ALT | MODIFIER_ACCEL, nullptr,      u"cmd_paste", nullptr,      nullptr,      nullptr},
+
     // charCode Modifiers                        Windows      macOS        Linux        Android      Emacs
     {0, 'z',    MODIFIER_SHIFT | MODIFIER_ACCEL, u"cmd_redo", u"cmd_redo", u"cmd_redo", u"cmd_redo", u"cmd_redo"},
 
@@ -395,6 +399,10 @@ TEST(ShortcutKeyDefinitions, HTMLTextAreaElement)
     {0, 'v',    MODIFIER_ACCEL, u"cmd_paste",     u"cmd_paste",     u"cmd_paste",     u"cmd_paste",     u"cmd_paste"},
     {0, 'y',    MODIFIER_ACCEL, u"cmd_redo",      nullptr,          u"cmd_redo",      nullptr,          u"cmd_redo"},
     {0, 'z',    MODIFIER_ACCEL, u"cmd_undo",      u"cmd_undo",      u"cmd_undo",      u"cmd_undo",      u"cmd_undo"},
+
+    // charCode Modifiers,                                      Windows       macOS         Linux         Android       Emacs
+    {0, 'v',    MODIFIER_SHIFT | MODIFIER_ACCEL,                u"cmd_paste", u"cmd_paste", u"cmd_paste", u"cmd_paste", u"cmd_paste"},
+    {0, 'v',    MODIFIER_SHIFT | MODIFIER_ALT | MODIFIER_ACCEL, nullptr,      u"cmd_paste", nullptr,      nullptr,      nullptr},
 
     // charCode Modifiers                        Windows      macOS        Linux        Android      Emacs
     {0, 'z',    MODIFIER_SHIFT | MODIFIER_ACCEL, u"cmd_redo", u"cmd_redo", u"cmd_redo", u"cmd_redo", u"cmd_redo"},
@@ -496,6 +504,12 @@ TEST(ShortcutKeyDefinitions, Browser)
     {0, 'v',    MODIFIER_ACCEL, u"cmd_paste",          u"cmd_paste",          u"cmd_paste",          u"cmd_paste",          u"cmd_paste"},
     {0, 'y',    MODIFIER_ACCEL, u"cmd_redo",           nullptr,               nullptr,               nullptr,               nullptr},
     {0, 'z',    MODIFIER_ACCEL, u"cmd_undo",           u"cmd_undo",           u"cmd_undo",           u"cmd_undo",           u"cmd_undo"},
+
+    // charCode Modifiers,                                      Windows       macOS         Linux         Android       Emacs
+    {0, 'v',    MODIFIER_SHIFT | MODIFIER_ACCEL,                u"cmd_pasteNoFormatting", u"cmd_pasteNoFormatting", u"cmd_pasteNoFormatting", u"cmd_pasteNoFormatting", u"cmd_pasteNoFormatting"},
+
+    // charCode Modifiers,                                      Windows  macOS                     Linux    Android  Emacs
+    {0, 'v',    MODIFIER_SHIFT | MODIFIER_ALT | MODIFIER_ACCEL, nullptr, u"cmd_pasteNoFormatting", nullptr, nullptr, nullptr},
 
     // charCode Modifiers                        Windows      macOS        Linux        Android      Emacs
     {0, 'z',    MODIFIER_SHIFT | MODIFIER_ACCEL, u"cmd_redo", u"cmd_redo", u"cmd_redo", u"cmd_redo", u"cmd_redo"},
