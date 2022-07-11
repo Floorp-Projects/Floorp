@@ -26,6 +26,7 @@
 
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
+#include "JSServices.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -510,6 +511,10 @@ bool InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal,
     // XPCCallContext gives us an active request needed to save/restore.
     if (!ObjectScope(aGlobal)->AttachComponentsObject(aJSContext) ||
         !XPCNativeWrapper::AttachNewConstructorObject(aJSContext, aGlobal)) {
+      return UnexpectedFailure(false);
+    }
+
+    if (!mozJSModuleLoader::Get()->DefineJSServices(aJSContext, aGlobal)) {
       return UnexpectedFailure(false);
     }
   }

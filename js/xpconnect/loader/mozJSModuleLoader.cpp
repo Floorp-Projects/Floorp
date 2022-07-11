@@ -48,6 +48,7 @@
 #include "WrapperFactory.h"
 #include "JSMEnvironmentProxy.h"
 #include "ModuleEnvironmentProxy.h"
+#include "JSServices.h"
 
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
@@ -266,7 +267,8 @@ mozJSModuleLoader::mozJSModuleLoader()
       mFallbackImports(16),
       mLocations(16),
       mInitialized(false),
-      mLoaderGlobal(dom::RootingCx()) {
+      mLoaderGlobal(dom::RootingCx()),
+      mServicesObj(dom::RootingCx()) {
   MOZ_ASSERT(!sSelf, "mozJSModuleLoader should be a singleton");
 }
 
@@ -545,10 +547,18 @@ void mozJSModuleLoader::CreateLoaderGlobal(JSContext* aCx,
   // been defined so the JS debugger can tell what module the global is
   // for
   RootedObject global(aCx);
+
+#ifdef DEBUG
+  // See mozJSModuleLoader::DefineJSServices.
+  mIsInitializingLoaderGlobal = true;
+#endif
   nsresult rv = xpc::InitClassesWithNewWrappedGlobal(
       aCx, static_cast<nsIGlobalObject*>(backstagePass),
       nsContentUtils::GetSystemPrincipal(), xpc::DONT_FIRE_ONNEWGLOBALHOOK,
       options, &global);
+#ifdef DEBUG
+  mIsInitializingLoaderGlobal = false;
+#endif
   NS_ENSURE_SUCCESS_VOID(rv);
 
   NS_ENSURE_TRUE_VOID(global);
@@ -557,6 +567,14 @@ void mozJSModuleLoader::CreateLoaderGlobal(JSContext* aCx,
 
   JSAutoRealm ar(aCx, global);
   if (!JS_DefineFunctions(aCx, global, gGlobalFun)) {
+    return;
+  }
+
+  if (!CreateJSServices(aCx)) {
+    return;
+  }
+
+  if (!DefineJSServices(aCx, global)) {
     return;
   }
 
@@ -959,6 +977,7 @@ void mozJSModuleLoader::UnloadModules() {
     JS_SetAllNonReservedSlotsToUndefined(mLoaderGlobal);
     mLoaderGlobal = nullptr;
   }
+  mServicesObj = nullptr;
 
   mFallbackImports.Clear();
   mInProgressImports.Clear();
@@ -1635,6 +1654,41 @@ nsresult mozJSModuleLoader::Unload(const nsACString& aLocation) {
   // until UnloadModules is called. So be it.
 
   return NS_OK;
+}
+
+bool mozJSModuleLoader::CreateJSServices(JSContext* aCx) {
+  JSObject* services = NewJSServices(aCx);
+  if (!services) {
+    return false;
+  }
+
+  mServicesObj = services;
+  return true;
+}
+
+bool mozJSModuleLoader::DefineJSServices(JSContext* aCx,
+                                         JS::Handle<JSObject*> aGlobal) {
+  if (!mServicesObj) {
+    // This function is called whenever creating a new global that needs
+    // `Services`, including the loader's shared global.
+    //
+    // This function is no-op if it's called during creating the loader's
+    // shared global.
+    //
+    // See also  CreateAndDefineJSServices.
+    MOZ_ASSERT(!mLoaderGlobal);
+    MOZ_ASSERT(mIsInitializingLoaderGlobal);
+    return true;
+  }
+
+  JS::Rooted<JS::Value> services(aCx, ObjectValue(*mServicesObj));
+  if (!JS_WrapValue(aCx, &services)) {
+    return false;
+  }
+
+  JS::Rooted<JS::PropertyKey> servicesId(
+      aCx, XPCJSContext::Get()->GetStringID(XPCJSContext::IDX_SERVICES));
+  return JS_DefinePropertyById(aCx, aGlobal, servicesId, services, 0);
 }
 
 size_t mozJSModuleLoader::ModuleEntry::SizeOfIncludingThis(
