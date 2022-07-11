@@ -10,7 +10,10 @@
 
 #include "video/frame_decode_timing.h"
 
+#include <algorithm>
+
 #include "absl/types/optional.h"
+#include "api/units/time_delta.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
@@ -45,7 +48,9 @@ FrameDecodeTiming::OnFrameBufferUpdated(uint32_t next_temporal_unit_rtp,
   RTC_DLOG(LS_VERBOSE) << "Selected frame with rtp " << next_temporal_unit_rtp
                        << " render time " << render_time.ms()
                        << " with a max wait of " << max_wait.ms() << "ms";
-  return FrameSchedule{.latest_decode_time = now + max_wait,
+
+  Timestamp latest_decode_time = now + std::max(max_wait, TimeDelta::Zero());
+  return FrameSchedule{.latest_decode_time = latest_decode_time,
                        .render_time = render_time};
 }
 

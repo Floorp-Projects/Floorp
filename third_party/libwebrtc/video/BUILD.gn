@@ -362,6 +362,7 @@ rtc_library("frame_decode_timing") {
   ]
   deps = [
     "../api/task_queue",
+    "../api/units:time_delta",
     "../modules/video_coding:timing",
     "../rtc_base:logging",
     "../rtc_base/task_utils:pending_task_safety_flag",

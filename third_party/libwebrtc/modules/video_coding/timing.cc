@@ -10,7 +10,6 @@
 
 #include "modules/video_coding/timing.h"
 
-
 #include <algorithm>
 
 #include "rtc_base/experiments/field_trial_parser.h"

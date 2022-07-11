@@ -25,6 +25,7 @@
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_content_type.h"
+#include "api/video/video_timing.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
 #include "system_wrappers/include/field_trial.h"
@@ -201,10 +202,11 @@ class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
 
 constexpr auto kMaxWaitForKeyframe = TimeDelta::Millis(500);
 constexpr auto kMaxWaitForFrame = TimeDelta::Millis(1500);
-class FrameBufferProxyTest : public ::testing::TestWithParam<std::string>,
-                             public FrameSchedulingReceiver {
+class FrameBufferProxyFixture
+    : public ::testing::WithParamInterface<std::string>,
+      public FrameSchedulingReceiver {
  public:
-  FrameBufferProxyTest()
+  FrameBufferProxyFixture()
       : field_trials_(GetParam()),
         time_controller_(kClockStart),
         clock_(time_controller_.GetClock()),
@@ -232,7 +234,7 @@ class FrameBufferProxyTest : public ::testing::TestWithParam<std::string>,
             [this](auto num_dropped) { dropped_frames_ += num_dropped; });
   }
 
-  ~FrameBufferProxyTest() override {
+  ~FrameBufferProxyFixture() override {
     if (proxy_) {
       proxy_->StopOnWorker();
     }
@@ -319,6 +321,9 @@ class FrameBufferProxyTest : public ::testing::TestWithParam<std::string>,
   uint32_t dropped_frames_ = 0;
   absl::optional<WaitResult> wait_result_;
 };
+
+class FrameBufferProxyTest : public ::testing::Test,
+                             public FrameBufferProxyFixture {};
 
 TEST_P(FrameBufferProxyTest, InitialTimeoutAfterKeyframeTimeoutPeriod) {
   StartNextDecodeForceKeyframe();
@@ -699,5 +704,89 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values("WebRTC-FrameBuffer3/arm:FrameBuffer2/",
                       "WebRTC-FrameBuffer3/arm:FrameBuffer3/",
                       "WebRTC-FrameBuffer3/arm:SyncDecoding/"));
+
+class LowLatencyFrameBufferProxyTest : public ::testing::Test,
+                                       public FrameBufferProxyFixture {};
+
+TEST_P(LowLatencyFrameBufferProxyTest,
+       FramesDecodedInstantlyWithLowLatencyRendering) {
+  // Initial keyframe.
+  StartNextDecodeForceKeyframe();
+  timing_.set_min_playout_delay(0);
+  timing_.set_max_playout_delay(10);
+  auto frame = Builder().Id(0).Time(0).AsLast().Build();
+  // Playout delay of 0 implies low-latency rendering.
+  frame->SetPlayoutDelay({0, 10});
+  proxy_->InsertFrame(std::move(frame));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
+
+  // Delta frame would normally wait here, but should decode at the pacing rate
+  // in low-latency mode.
+  StartNextDecode();
+  frame = Builder().Id(1).Time(kFps30Rtp).AsLast().Build();
+  frame->SetPlayoutDelay({0, 10});
+  proxy_->InsertFrame(std::move(frame));
+  // Pacing is set to 16ms in the field trial so we should not decode yet.
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Eq(absl::nullopt));
+  time_controller_.AdvanceTime(TimeDelta::Millis(16));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(1)));
+}
+
+TEST_P(LowLatencyFrameBufferProxyTest, ZeroPlayoutDelayFullQueue) {
+  // Initial keyframe.
+  StartNextDecodeForceKeyframe();
+  timing_.set_min_playout_delay(0);
+  timing_.set_max_playout_delay(10);
+  auto frame = Builder().Id(0).Time(0).AsLast().Build();
+  // Playout delay of 0 implies low-latency rendering.
+  frame->SetPlayoutDelay({0, 10});
+  proxy_->InsertFrame(std::move(frame));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
+
+  // Queue up 5 frames (configured max queue size for 0-playout delay pacing).
+  for (int id = 1; id <= 6; ++id) {
+    frame = Builder().Id(id).Time(kFps30Rtp * id).AsLast().Build();
+    frame->SetPlayoutDelay({0, 10});
+    proxy_->InsertFrame(std::move(frame));
+  }
+
+  // The queue is at its max size for zero playout delay pacing, so the pacing
+  // should be ignored and the next frame should be decoded instantly.
+  StartNextDecode();
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(1)));
+}
+
+TEST_P(LowLatencyFrameBufferProxyTest, MinMaxDelayZeroLowLatencyMode) {
+  // Initial keyframe.
+  StartNextDecodeForceKeyframe();
+  timing_.set_min_playout_delay(0);
+  timing_.set_max_playout_delay(0);
+  auto frame = Builder().Id(0).Time(0).AsLast().Build();
+  // Playout delay of 0 implies low-latency rendering.
+  frame->SetPlayoutDelay({0, 0});
+  proxy_->InsertFrame(std::move(frame));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(0)));
+
+  // Delta frame would normally wait here, but should decode at the pacing rate
+  // in low-latency mode.
+  StartNextDecode();
+  frame = Builder().Id(1).Time(kFps30Rtp).AsLast().Build();
+  frame->SetPlayoutDelay({0, 0});
+  proxy_->InsertFrame(std::move(frame));
+  // The min/max=0 version of low-latency rendering will result in a large
+  // negative decode wait time, so the frame should be ready right away.
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(WithId(1)));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    FrameBufferProxy,
+    LowLatencyFrameBufferProxyTest,
+    ::testing::Values(
+        "WebRTC-FrameBuffer3/arm:FrameBuffer2/"
+        "WebRTC-ZeroPlayoutDelay/min_pacing:16ms,max_decode_queue_size:5/",
+        "WebRTC-FrameBuffer3/arm:FrameBuffer3/"
+        "WebRTC-ZeroPlayoutDelay/min_pacing:16ms,max_decode_queue_size:5/",
+        "WebRTC-FrameBuffer3/arm:SyncDecoding/"
+        "WebRTC-ZeroPlayoutDelay/min_pacing:16ms,max_decode_queue_size:5/"));
 
 }  // namespace webrtc
