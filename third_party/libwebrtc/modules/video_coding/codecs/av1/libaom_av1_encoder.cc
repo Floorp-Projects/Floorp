@@ -49,21 +49,6 @@ constexpr int kLagInFrames = 0;  // No look ahead.
 constexpr int kRtpTicksPerSecond = 90000;
 constexpr float kMinimumFrameRate = 1.0;
 
-// Only positive speeds, range for real-time coding currently is: 6 - 8.
-// Lower means slower/better quality, higher means fastest/lower quality.
-int GetCpuSpeed(int width, int height, int number_of_cores) {
-  // For smaller resolutions, use lower speed setting (get some coding gain at
-  // the cost of increased encoding complexity).
-  if (number_of_cores > 4 && width * height < 320 * 180)
-    return 6;
-  else if (width * height >= 1280 * 720)
-    return 9;
-  else if (width * height >= 640 * 360)
-    return 8;
-  else
-    return 7;
-}
-
 aom_superblock_size_t GetSuperblockSize(int width, int height, int threads) {
   int resolution = width * height;
   if (threads >= 4 && resolution >= 960 * 540 && resolution < 1920 * 1080)
@@ -93,6 +78,9 @@ class LibaomAv1Encoder final : public VideoEncoder {
   EncoderInfo GetEncoderInfo() const override;
 
  private:
+  // Get value to be used for encoder cpu_speed setting
+  int GetCpuSpeed(int width, int height);
+
   // Determine number of encoder threads to use.
   int NumberOfThreads(int width, int height, int number_of_cores);
 
@@ -247,9 +235,8 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
   inited_ = true;
 
   // Set control parameters
-  ret = aom_codec_control(
-      &ctx_, AOME_SET_CPUUSED,
-      GetCpuSpeed(cfg_.g_w, cfg_.g_h, settings.number_of_cores));
+  ret = aom_codec_control(&ctx_, AOME_SET_CPUUSED,
+                          GetCpuSpeed(cfg_.g_w, cfg_.g_h));
   if (ret != AOM_CODEC_OK) {
     RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
                         << " on control AV1E_SET_CPUUSED.";
@@ -417,6 +404,42 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
   }
 
   return WEBRTC_VIDEO_CODEC_OK;
+}
+
+// Only positive speeds, range for real-time coding currently is: 6 - 8.
+// Lower means slower/better quality, higher means fastest/lower quality.
+int LibaomAv1Encoder::GetCpuSpeed(int width, int height) {
+  // For smaller resolutions, use lower speed setting (get some coding gain at
+  // the cost of increased encoding complexity).
+  switch (encoder_settings_.GetVideoEncoderComplexity()) {
+    case VideoCodecComplexity::kComplexityHigh:
+      if (width * height <= 320 * 180)
+        return 8;
+      else if (width * height <= 640 * 360)
+        return 9;
+      else
+        return 10;
+    case VideoCodecComplexity::kComplexityHigher:
+      if (width * height <= 320 * 180)
+        return 7;
+      else if (width * height <= 640 * 360)
+        return 8;
+      else if (width * height <= 1280 * 720)
+        return 9;
+      else
+        return 10;
+    case VideoCodecComplexity::kComplexityMax:
+      if (width * height <= 320 * 180)
+        return 6;
+      else if (width * height <= 640 * 360)
+        return 7;
+      else if (width * height <= 1280 * 720)
+        return 8;
+      else
+        return 9;
+    default:
+      return 10;
+  }
 }
 
 int LibaomAv1Encoder::NumberOfThreads(int width,
