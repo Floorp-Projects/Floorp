@@ -104,6 +104,8 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
+  bool DefineJSServices(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+
  protected:
   mozJSModuleLoader();
   ~mozJSModuleLoader();
@@ -117,6 +119,8 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 
   void CreateLoaderGlobal(JSContext* aCx, const nsACString& aLocation,
                           JS::MutableHandleObject aGlobal);
+
+  bool CreateJSServices(JSContext* aCx);
 
   JSObject* GetSharedGlobal(JSContext* aCx);
 
@@ -227,7 +231,11 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   nsClassHashtable<nsCStringHashKey, nsCString> mLocations;
 
   bool mInitialized;
+#ifdef DEBUG
+  bool mIsInitializingLoaderGlobal = false;
+#endif
   JS::PersistentRooted<JSObject*> mLoaderGlobal;
+  JS::PersistentRooted<JSObject*> mServicesObj;
 
   RefPtr<mozilla::loader::ComponentModuleLoader> mModuleLoader;
 };

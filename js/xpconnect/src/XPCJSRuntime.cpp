@@ -103,6 +103,7 @@ const char* const XPCJSRuntime::mStrings[] = {
     "Ci",               // IDX_CI
     "Cr",               // IDX_CR
     "Cu",               // IDX_CU
+    "Services",         // IDX_SERVICES
     "wrappedJSObject",  // IDX_WRAPPED_JSOBJECT
     "prototype",        // IDX_PROTOTYPE
     "eval",             // IDX_EVAL
