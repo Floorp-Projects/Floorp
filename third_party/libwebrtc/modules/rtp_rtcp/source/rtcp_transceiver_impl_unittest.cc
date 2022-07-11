@@ -45,6 +45,7 @@ using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::StrictMock;
+using ::testing::UnorderedElementsAre;
 using ::testing::WithArg;
 using ::webrtc::rtcp::Bye;
 using ::webrtc::rtcp::CompoundPacket;
@@ -1209,6 +1210,43 @@ TEST(RtcpTransceiverImplTest, SendsXrRrtrWhenEnabled) {
   EXPECT_EQ(rtcp_parser.xr()->sender_ssrc(), kSenderSsrc);
   ASSERT_TRUE(rtcp_parser.xr()->rrtr());
   EXPECT_EQ(rtcp_parser.xr()->rrtr()->ntp(), ntp_time_now);
+}
+
+TEST(RtcpTransceiverImplTest, RepliesToRrtrWhenEnabled) {
+  static constexpr uint32_t kSenderSsrc[] = {4321, 9876};
+  SimulatedClock clock(0);
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.clock = &clock;
+  config.reply_to_non_sender_rtt_measurement = true;
+  RtcpPacketParser rtcp_parser;
+  RtcpParserTransport transport(&rtcp_parser);
+  config.outgoing_transport = &transport;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  rtcp::ExtendedReports xr;
+  rtcp::Rrtr rrtr;
+  rrtr.SetNtp(NtpTime(uint64_t{0x1111'2222'3333'4444}));
+  xr.SetRrtr(rrtr);
+  xr.SetSenderSsrc(kSenderSsrc[0]);
+  rtcp_transceiver.ReceivePacket(xr.Build(), clock.CurrentTime());
+  clock.AdvanceTime(TimeDelta::Millis(1'500));
+
+  rrtr.SetNtp(NtpTime(uint64_t{0x4444'5555'6666'7777}));
+  xr.SetRrtr(rrtr);
+  xr.SetSenderSsrc(kSenderSsrc[1]);
+  rtcp_transceiver.ReceivePacket(xr.Build(), clock.CurrentTime());
+  clock.AdvanceTime(TimeDelta::Millis(500));
+
+  rtcp_transceiver.SendCompoundPacket();
+
+  EXPECT_EQ(rtcp_parser.xr()->num_packets(), 1);
+  static constexpr uint32_t kComactNtpOneSecond = 0x0001'0000;
+  EXPECT_THAT(rtcp_parser.xr()->dlrr().sub_blocks(),
+              UnorderedElementsAre(
+                  rtcp::ReceiveTimeInfo(kSenderSsrc[0], 0x2222'3333,
+                                        /*delay=*/2 * kComactNtpOneSecond),
+                  rtcp::ReceiveTimeInfo(kSenderSsrc[1], 0x5555'6666,
+                                        /*delay=*/kComactNtpOneSecond / 2)));
 }
 
 TEST(RtcpTransceiverImplTest, SendsNoXrRrtrWhenDisabled) {

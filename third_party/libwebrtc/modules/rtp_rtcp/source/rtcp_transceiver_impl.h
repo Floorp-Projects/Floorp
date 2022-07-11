@@ -82,6 +82,13 @@ class RtcpTransceiverImpl {
   class PacketSender;
   struct RemoteSenderState;
   struct LocalSenderState;
+  struct RrtrTimes {
+    // Received remote NTP timestamp in compact representation.
+    uint32_t received_remote_mid_ntp_time;
+
+    // Local NTP time when the report was received in compact representation.
+    uint32_t local_receive_mid_ntp_time;
+  };
 
   void HandleReceivedPacket(const rtcp::CommonHeader& rtcp_packet_header,
                             Timestamp now,
@@ -144,6 +151,7 @@ class RtcpTransceiverImpl {
   std::list<LocalSenderState> local_senders_;
   flat_map<uint32_t, std::list<LocalSenderState>::iterator>
       local_senders_by_ssrc_;
+  flat_map<uint32_t, RrtrTimes> received_rrtrs_;
   RepeatingTaskHandle periodic_task_handle_;
 };
 
