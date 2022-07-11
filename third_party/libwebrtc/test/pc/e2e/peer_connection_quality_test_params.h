@@ -119,6 +119,16 @@ struct Params {
   // it will be available for further analysis.
   absl::optional<std::string> aec_dump_path;
 
+  bool use_ulp_fec = false;
+  bool use_flex_fec = false;
+  // Specifies how much video encoder target bitrate should be different than
+  // target bitrate, provided by WebRTC stack. Must be greater then 0. Can be
+  // used to emulate overshooting of video encoders. This multiplier will
+  // be applied for all video encoder on both sides for all layers. Bitrate
+  // estimated by WebRTC stack will be multiplied by this multiplier and then
+  // provided into VideoEncoder::SetRates(...).
+  double video_encoder_bitrate_multiplier = 1.0;
+
   PeerConnectionInterface::RTCConfiguration rtc_configuration;
   BitrateSettings bitrate_settings;
   std::vector<PeerConnectionE2EQualityTestFixture::VideoCodecConfig>

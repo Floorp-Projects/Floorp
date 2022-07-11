@@ -30,47 +30,153 @@ using VideoCodecConfig = PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
 constexpr absl::string_view kDefaultNames[] = {"alice", "bob",  "charlie",
                                                "david", "erin", "frank"};
 
-class DefaultNamesProvider {
- public:
-  // Caller have to ensure that default names array will outlive names provider
-  // instance.
-  explicit DefaultNamesProvider(
-      absl::string_view prefix,
-      rtc::ArrayView<const absl::string_view> default_names = {})
-      : prefix_(prefix), default_names_(default_names) {}
-
-  void MaybeSetName(absl::optional<std::string>* name) {
-    if (name->has_value()) {
-      known_names_.insert(name->value());
-    } else {
-      *name = GenerateName();
-    }
-  }
-
- private:
-  std::string GenerateName() {
-    std::string name;
-    do {
-      name = GenerateNameInternal();
-    } while (!known_names_.insert(name).second);
-    return name;
-  }
-
-  std::string GenerateNameInternal() {
-    if (counter_ < default_names_.size()) {
-      return std::string(default_names_[counter_++]);
-    }
-    return prefix_ + std::to_string(counter_++);
-  }
-
-  const std::string prefix_;
-  const rtc::ArrayView<const absl::string_view> default_names_;
-
-  std::set<std::string> known_names_;
-  size_t counter_ = 0;
-};
-
 }  // namespace
+
+DefaultNamesProvider::DefaultNamesProvider(
+    absl::string_view prefix,
+    rtc::ArrayView<const absl::string_view> default_names)
+    : prefix_(prefix), default_names_(default_names) {}
+
+void DefaultNamesProvider::MaybeSetName(absl::optional<std::string>& name) {
+  if (name.has_value()) {
+    known_names_.insert(name.value());
+  } else {
+    name = GenerateName();
+  }
+}
+
+std::string DefaultNamesProvider::GenerateName() {
+  std::string name;
+  do {
+    name = GenerateNameInternal();
+  } while (!known_names_.insert(name).second);
+  return name;
+}
+
+std::string DefaultNamesProvider::GenerateNameInternal() {
+  if (counter_ < default_names_.size()) {
+    return std::string(default_names_[counter_++]);
+  }
+  return prefix_ + std::to_string(counter_++);
+}
+
+PeerParamsPreprocessor::PeerParamsPreprocessor()
+    : peer_names_provider("peer_", kDefaultNames) {}
+
+void PeerParamsPreprocessor::SetDefaultValuesForMissingParams(
+    PeerConfigurerImpl& peer) {
+  auto* p = peer.params();
+  peer_names_provider.MaybeSetName(p->name);
+  DefaultNamesProvider video_stream_names_provider(*p->name +
+                                                   "_auto_video_stream_label_");
+  for (VideoConfig& video_config : p->video_configs) {
+    video_stream_names_provider.MaybeSetName(video_config.stream_label);
+  }
+  if (p->audio_config) {
+    DefaultNamesProvider audio_stream_names_provider(
+        *p->name + "_auto_audio_stream_label_");
+    audio_stream_names_provider.MaybeSetName(p->audio_config->stream_label);
+  }
+
+  if (p->video_codecs.empty()) {
+    p->video_codecs.push_back(
+        PeerConnectionE2EQualityTestFixture::VideoCodecConfig(
+            cricket::kVp8CodecName));
+  }
+}
+
+void PeerParamsPreprocessor::ValidateParams(const PeerConfigurerImpl& peer) {
+  const Params& p = peer.params();
+  RTC_CHECK_GT(p.video_encoder_bitrate_multiplier, 0.0);
+  // Each peer should at least support 1 video codec.
+  RTC_CHECK_GE(p.video_codecs.size(), 1);
+
+  {
+    RTC_CHECK(p.name);
+    bool inserted = peer_names.insert(p.name.value()).second;
+    RTC_CHECK(inserted) << "Duplicate name=" << p.name.value();
+  }
+
+  if (p.audio_config) {
+    media_streams_count++;
+  }
+  media_streams_count += p.video_configs.size();
+
+  // Validate that all video stream labels are unique and sync groups are
+  // valid.
+  for (const VideoConfig& video_config : p.video_configs) {
+    RTC_CHECK(video_config.stream_label);
+    bool inserted =
+        video_labels.insert(video_config.stream_label.value()).second;
+    RTC_CHECK(inserted) << "Duplicate video_config.stream_label="
+                        << video_config.stream_label.value();
+
+    if (video_config.input_dump_file_name.has_value()) {
+      RTC_CHECK_GT(video_config.input_dump_sampling_modulo, 0)
+          << "video_config.input_dump_sampling_modulo must be greater than 0";
+    }
+    if (video_config.output_dump_file_name.has_value()) {
+      RTC_CHECK_GT(video_config.output_dump_sampling_modulo, 0)
+          << "video_config.input_dump_sampling_modulo must be greater than 0";
+    }
+
+    // TODO(bugs.webrtc.org/4762): remove this check after synchronization of
+    // more than two streams is supported.
+    if (video_config.sync_group.has_value()) {
+      bool sync_group_inserted =
+          video_sync_groups.insert(video_config.sync_group.value()).second;
+      RTC_CHECK(sync_group_inserted)
+          << "Sync group shouldn't consist of more than two streams (one "
+             "video and one audio). Duplicate video_config.sync_group="
+          << video_config.sync_group.value();
+    }
+
+    if (video_config.simulcast_config) {
+      if (video_config.simulcast_config->target_spatial_index) {
+        RTC_CHECK_GE(*video_config.simulcast_config->target_spatial_index, 0);
+        RTC_CHECK_LT(*video_config.simulcast_config->target_spatial_index,
+                     video_config.simulcast_config->simulcast_streams_count);
+      }
+      RTC_CHECK(!video_config.max_encode_bitrate_bps)
+          << "Setting max encode bitrate is not implemented for simulcast.";
+      RTC_CHECK(!video_config.min_encode_bitrate_bps)
+          << "Setting min encode bitrate is not implemented for simulcast.";
+      if (p.video_codecs[0].name == cricket::kVp8CodecName &&
+          !video_config.simulcast_config->encoding_params.empty()) {
+        RTC_CHECK_EQ(video_config.simulcast_config->simulcast_streams_count,
+                     video_config.simulcast_config->encoding_params.size())
+            << "|encoding_params| have to be specified for each simulcast "
+            << "stream in |simulcast_config|.";
+      }
+    }
+  }
+  if (p.audio_config) {
+    bool inserted =
+        audio_labels.insert(p.audio_config->stream_label.value()).second;
+    RTC_CHECK(inserted) << "Duplicate audio_config.stream_label="
+                        << p.audio_config->stream_label.value();
+    // TODO(bugs.webrtc.org/4762): remove this check after synchronization of
+    // more than two streams is supported.
+    if (p.audio_config->sync_group.has_value()) {
+      bool sync_group_inserted =
+          audio_sync_groups.insert(p.audio_config->sync_group.value()).second;
+      RTC_CHECK(sync_group_inserted)
+          << "Sync group shouldn't consist of more than two streams (one "
+             "video and one audio). Duplicate audio_config.sync_group="
+          << p.audio_config->sync_group.value();
+    }
+    // Check that if mode input file name specified only if mode is kFile.
+    if (p.audio_config.value().mode == AudioConfig::Mode::kGenerated) {
+      RTC_CHECK(!p.audio_config.value().input_file_name);
+    }
+    if (p.audio_config.value().mode == AudioConfig::Mode::kFile) {
+      RTC_CHECK(p.audio_config.value().input_file_name);
+      RTC_CHECK(
+          test::FileExists(p.audio_config.value().input_file_name.value()))
+          << p.audio_config.value().input_file_name.value() << " doesn't exist";
+    }
+  }
+}
 
 void SetDefaultValuesForMissingParams(
     RunParams* run_params,
@@ -79,16 +185,16 @@ void SetDefaultValuesForMissingParams(
   for (size_t i = 0; i < peers->size(); ++i) {
     auto* peer = peers->at(i).get();
     auto* p = peer->params();
-    peer_names_provider.MaybeSetName(&p->name);
+    peer_names_provider.MaybeSetName(p->name);
     DefaultNamesProvider video_stream_names_provider(
         *p->name + "_auto_video_stream_label_");
     for (VideoConfig& video_config : p->video_configs) {
-      video_stream_names_provider.MaybeSetName(&video_config.stream_label);
+      video_stream_names_provider.MaybeSetName(video_config.stream_label);
     }
     if (p->audio_config) {
       DefaultNamesProvider audio_stream_names_provider(
           *p->name + "_auto_audio_stream_label_");
-      audio_stream_names_provider.MaybeSetName(&p->audio_config->stream_label);
+      audio_stream_names_provider.MaybeSetName(p->audio_config->stream_label);
     }
 
     if (p->video_codecs.empty()) {

@@ -300,6 +300,19 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
     std::unique_ptr<PeerConfigurerImpl> configurer,
     std::unique_ptr<MockPeerConnectionObserver> observer,
     absl::optional<RemotePeerAudioConfig> remote_audio_config,
+    absl::optional<PeerConnectionE2EQualityTestFixture::EchoEmulationConfig>
+        echo_emulation_config) {
+  double bitrate_multiplier =
+      configurer->params()->video_encoder_bitrate_multiplier;
+  return CreateTestPeer(std::move(configurer), std::move(observer),
+                        remote_audio_config, bitrate_multiplier,
+                        echo_emulation_config);
+}
+
+std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
+    std::unique_ptr<PeerConfigurerImpl> configurer,
+    std::unique_ptr<MockPeerConnectionObserver> observer,
+    absl::optional<RemotePeerAudioConfig> remote_audio_config,
     double bitrate_multiplier,
     absl::optional<PeerConnectionE2EQualityTestFixture::EchoEmulationConfig>
         echo_emulation_config) {

@@ -396,6 +396,22 @@ class PeerConnectionE2EQualityTestFixture {
     // Set the audio stream for the call from this peer. If this method won't
     // be invoked, this peer will send no audio.
     virtual PeerConfigurer* SetAudioConfig(AudioConfig config) = 0;
+
+    // Set if ULP FEC should be used or not. False by default.
+    virtual PeerConfigurer* SetUseUlpFEC(bool value) = 0;
+    // Set if Flex FEC should be used or not. False by default.
+    // Client also must enable `enable_flex_fec_support` in the `RunParams` to
+    // be able to use this feature.
+    virtual PeerConfigurer* SetUseFlexFEC(bool value) = 0;
+    // Specifies how much video encoder target bitrate should be different than
+    // target bitrate, provided by WebRTC stack. Must be greater than 0. Can be
+    // used to emulate overshooting of video encoders. This multiplier will
+    // be applied for all video encoder on both sides for all layers. Bitrate
+    // estimated by WebRTC stack will be multiplied by this multiplier and then
+    // provided into VideoEncoder::SetRates(...). 1.0 by default.
+    virtual PeerConfigurer* SetVideoEncoderBitrateMultiplier(
+        double multiplier) = 0;
+
     // If is set, an RTCEventLog will be saved in that location and it will be
     // available for further analysis.
     virtual PeerConfigurer* SetRtcEventLogPath(std::string path) = 0;
@@ -427,8 +443,17 @@ class PeerConnectionE2EQualityTestFixture {
     // it will be shut downed.
     TimeDelta run_duration;
 
+    // If set to true peers will be able to use Flex FEC, otherwise they won't
+    // be able to negotiate it even if it's enabled on per peer level.
+    bool enable_flex_fec_support = false;
+    // TODO(titovartem): delete this field.
+    // Deprecated. Use `PeerConfigurer::SetUseUlpFEC`.
     bool use_ulp_fec = false;
+    // TODO(titovartem): delete this field.
+    // Deprecated. Use `PeerConfigurer::SetUseFlexFEC`.
     bool use_flex_fec = false;
+    // TODO(titovartem): delete this field.
+    // Deprecated. Use `PeerConfigurer::SetVideoEncoderBitrateMultiplier`.
     // Specifies how much video encoder target bitrate should be different than
     // target bitrate, provided by WebRTC stack. Must be greater then 0. Can be
     // used to emulate overshooting of video encoders. This multiplier will
