@@ -255,14 +255,8 @@ enum class ModuleStatus : int32_t {
   Linking,
   Linked,
   Evaluating,
-  EvaluatingAsync,
   Evaluated,
-
-  // Sub-state of Evaluated with error value set.
-  //
-  // This is not returned from ModuleObject::status(); use hadEvaluationError()
-  // to check this.
-  Evaluated_Error
+  Evaluated_Error  // Sub-state of Evaluated with error value set.
 };
 
 // Special values for ModuleObject's AsyncEvaluatingPostOrderSlot slot, which is
@@ -374,10 +368,10 @@ class ModuleObject : public NativeObject {
   void setAsyncEvaluatingFalse();
   void setEvaluationError(HandleValue newValue);
   void setPendingAsyncDependencies(uint32_t newValue);
-  void setInitialTopLevelCapability(Handle<PromiseObject*> capability);
+  void setInitialTopLevelCapability(HandleObject promiseObj);
   bool hasTopLevelCapability() const;
-  PromiseObject* maybeTopLevelCapability() const;
-  PromiseObject* topLevelCapability() const;
+  JSObject* maybeTopLevelCapability() const;
+  JSObject* topLevelCapability() const;
   ListObject* asyncParentModules() const;
   mozilla::Maybe<uint32_t> maybePendingAsyncDependencies() const;
   uint32_t pendingAsyncDependencies() const;

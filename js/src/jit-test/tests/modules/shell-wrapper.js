@@ -33,7 +33,7 @@ testGetter(a, "namespace");
 // ==== status getter ====
 const MODULE_STATUS_UNLINKED = 0;
 const MODULE_STATUS_LINKED = 2;
-const MODULE_STATUS_EVALUATED = 5;
+const MODULE_STATUS_EVALUATED = 4;
 
 const c = registerModule('c', parseModule(`
 `));
