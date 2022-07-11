@@ -48,46 +48,17 @@ class Scoped {
 };
 
 template <>
-Scoped<GError>::~Scoped() {
-  if (ptr_) {
-    g_error_free(ptr_);
-  }
-}
-
+Scoped<GError>::~Scoped();
 template <>
-Scoped<char>::~Scoped() {
-  if (ptr_) {
-    g_free(ptr_);
-  }
-}
-
+Scoped<char>::~Scoped();
 template <>
-Scoped<GVariant>::~Scoped() {
-  if (ptr_) {
-    g_variant_unref(ptr_);
-  }
-}
-
+Scoped<GVariant>::~Scoped();
 template <>
-Scoped<GVariantIter>::~Scoped() {
-  if (ptr_) {
-    g_variant_iter_free(ptr_);
-  }
-}
-
+Scoped<GVariantIter>::~Scoped();
 template <>
-Scoped<GDBusMessage>::~Scoped() {
-  if (ptr_) {
-    g_object_unref(ptr_);
-  }
-}
-
+Scoped<GDBusMessage>::~Scoped();
 template <>
-Scoped<GUnixFDList>::~Scoped() {
-  if (ptr_) {
-    g_object_unref(ptr_);
-  }
-}
+Scoped<GUnixFDList>::~Scoped();
 
 }  // namespace webrtc
 

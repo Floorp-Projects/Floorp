@@ -557,6 +557,7 @@ rtc_library("desktop_capture_generic") {
       "linux/wayland/base_capturer_pipewire.h",
       "linux/wayland/egl_dmabuf.cc",
       "linux/wayland/egl_dmabuf.h",
+      "linux/wayland/scoped_glib.cc",
       "linux/wayland/scoped_glib.h",
       "linux/wayland/screencast_portal.cc",
       "linux/wayland/screencast_portal.h",
