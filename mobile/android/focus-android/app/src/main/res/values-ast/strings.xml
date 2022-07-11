@@ -1,134 +1,364 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Encaboxar</string>
-  <string name="action_ok">Aceutar</string>
-  <string name="action_save">Guardar</string>
-  <string name="urlbar_hint">Gueta o introduz direiciones</string>
-  <string name="teaser">Restolar en privao automático.\nRestola. Balera. Repiti.</string>
-  <string name="feedback_erase">Baleróse\'l to historial de restolar.</string>
-  <string name="search_hint">Guetar %1$s</string>
-  <string name="menu_share">Compartir…</string>
-  <string name="menu_report_site_issue">Informar de fallu del sitiu</string>
-  <string name="menu_open_with_default_browser2">Abrir en %1$s</string>
-  <string name="menu_open_with_a_browser2">Abrir en…</string>
-  <string name="menu_add_to_home_screen">Amestar a la pantalla d\'aniciu</string>
-  <string name="menu_whats_new">Qué hai nuevo</string>
-  <string name="menu_settings">Axustes</string>
-  <string name="menu_about">Tocante a</string>
-  <string name="menu_help">Ayuda</string>
-  <string name="menu_rights">Los tos drechos</string>
-  <string name="menu_trackers_blocked_title">Rastrexadores bloquiaos</string>
-  <string name="menu_custom_tab_branding">Cola potencia de %1$s</string>
-  <string name="share_dialog_title">Compartir per</string>
-  <string name="notification_erase_text">Balerar historial de restolar</string>
-  <string name="notification_action_open">Abrir</string>
-  <string name="notification_action_erase_and_open">Balerar y abrir</string>
-  <string name="shortcut_erase_short_label">Balerar</string>
-  <string name="shortcut_erase_long_label">Balerar historial de restolar</string>
-  <string name="text_selection_search_action">Guetar de mou priváu</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Privacidá y seguranza</string>
-  <string name="preference_privacy_and_security_summary">Rastrexu, cookies y escoyetes de datos</string>
-  <string name="preference_search_summary">Predeterminación, autocompletáu</string>
-  <string name="preference_mozilla_summary">Tocante a %1$s, ayuda</string>
-  <string name="preference_category_tracking_protection">Proteición de rastrexu</string>
-  <string name="preference_category_web_content">Conteníu web</string>
-  <string name="preference_category_switching_apps">Cambéu d\'aplicaciones</string>
-  <string name="preference_category_general">Xeneral</string>
-  <string name="preference_category_data_collection_use">Recoyida y usu de datos</string>
-  <string name="preference_category_search">Gueta</string>
-  <string name="preference_show_search_suggestions">Consiguir suxerencies de gueta</string>
-  <string name="preference_show_search_suggestions_summary">%1$s va unviar lo que teclexes na barra de direiciones al motor de gueta</string>
-  <string name="preference_search_engine_default">Por defeutu</string>
-  <string name="preference_state_on">Sí</string>
-  <string name="preference_state_off">Non</string>
-  <string name="preference_subitem_autocomplete">Autocompletáu d\'URLs</string>
-  <string name="preference_autocomplete_action_add">+ Amestar URL personalizada</string>
-  <string name="preference_autocomplete_title_add">Amestar URL personalizada</string>
-  <string name="custom_autocomplete_quick_add">Amestar URL personalizada</string>
-  <string name="preference_category_cookies">Cookies y datos del sitiu</string>
-  <string name="preference_category_data_choices">Escoyetes de datos</string>
-  <string name="preference_autocomplete_title_remove">Desaniciar URL personalizada</string>
-  <string name="preference_autocomplete_learn_more">Deprendi más</string>
-  <string name="preference_autocomplete_custom_summary">Amiesta o xestiona URLs personalizaes d\'autocompletáu.</string>
-  <string name="preference_autocomplete_add_title">URL p\'amestar</string>
-  <string name="preference_autocomplete_add_hint">Apega o introduz la URL</string>
-  <string name="preference_autocomplete_add_example2">Exemplu: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Exemplu: exemplu.com</string>
-  <string name="preference_autocomplete_add_confirmation">Amestóse una URL nueva personalizada.</string>
-  <string name="preference_autocomplete_menu_remove">Desaniciar</string>
-  <string name="preference_autocomplete_action_remove_content_description">Desaniciar</string>
-  <string name="preference_autocomplete_add_error">Volvi comprobar la URL qu\'introduxesti.</string>
-  <string name="preference_language">Llingua</string>
-  <string name="preference_language_systemdefault">Predeterminada del sistema</string>
-  <string name="preference_category_privacy">Privacidá</string>
-  <string name="preference_privacy_block_ads">Bloquiar rastrexadores publicitarios</string>
-  <string name="preference_privacy_block_ads_summary">Dellos anuncios rastrexen los sitios qu\'andes, incluso si nun faes clic nellos</string>
-  <string name="preference_privacy_block_analytics">Bloquiar rastrexadores d\'analítiques</string>
-  <string name="preference_privacy_block_analytics_summary">Úsase pa recoyer, analizar y midir actividaes como calcos y desplazamientos</string>
-  <string name="preference_privacy_block_social">Bloquiar rastrexadores sociales</string>
-  <string name="preference_privacy_block_social_summary">Intégrase en sitios pa rastrexar les tos visites y amosar funcionalidaes como botones de compartición</string>
-  <string name="preference_privacy_block_content">Bloquiar otros rastrexadores</string>
-  <string name="preference_privacy_block_content_summary2">Activalo quiciabes faiga que delles páxines se comporten de mou inesperáu</string>
-  <string name="preference_privacy_category_cookies">Bloquéu de cookies</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Non</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloquiar namái cookies de terceros</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
-  <string name="preference_security_biometric">Usa la buelga pa desbloquiar l\'aplicación</string>
-  <string name="preference_privacy_secure_mode">Invisible</string>
-  <string name="preference_privacy_stealth_summary">Anubre les páxines web al camudar d\'aplicaciones y bloquia la fechura de caputres de pantalla.</string>
-  <string name="preference_category_security">Seguranza</string>
-  <string name="preference_category_performance">Rindimientu</string>
-  <string name="preference_performance_block_webfonts">Bloquiar fontes web</string>
-  <string name="preference_performance_block_webfonts_summary">Pue facer que falten iconos o imáxenes</string>
-  <string name="preference_performance_block_javascript">Bloquiar JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Les páxines podríen cargar aína pero tamién podríe comportase de mou inesperáu</string>
-  <string name="preference_default_browser2">Predeterminar %1$s</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Unviar datos d\'usu</string>
-  <string name="preference_mozilla_telemetry_summary">Deprendi más</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla esfuérciase en recoyer namái lo que precisa pa fornir y ameyorar %1$s pa tol mundu.</string>
-  <string name="preference_privacy_notice">Avisu de privacidá</string>
-  <string name="preference_about">Tocante a %1$s</string>
-  <string name="preference_search_installed_search_engines">Motores de gueta instalaos</string>
-  <string name="preference_search_restore">Reafitar motores de gueta</string>
-  <string name="preference_search_add2">+ Amestar otru motor de gueta</string>
-  <string name="preference_search_remove_title">Desaniciar motores de gueta</string>
-  <string name="preference_search_remove">Desaniciar</string>
-  <string name="preference_homescreen_tips">Amosar conseyos na pantalla d\'aniciu</string>
-  <string name="action_option_add_search_engine">Amestar motor de gueta</string>
-  <string name="search_add_manually_name_hint">Nome del motor de gueta</string>
-  <string name="search_add_manually_string">Cadena de gueta a usar</string>
-  <string name="search_add_manually_save">Guardar</string>
-  <string name="search_add_manually_example">Exemplu: exemplu.com/gueta/?q=%s</string>
-  <string name="search_add_confirmation">Amestóse\'l motor de gueta nuevu.</string>
-  <string name="search_add_error_empty_name">Introduz el nome del motor de gueta</string>
-  <string name="search_add_error_duplicate_name">Un motor de gueta instaláu yá ta usando esi nome.</string>
-  <string name="search_add_error_empty_search">Introduz la cadena de gueta</string>
-  <string name="search_add_error_format">Comprueba que la cadena de gueta concase col formatu del exemplu</string>
-  <string name="content_description_clear_input">Llimpiar entrada</string>
-  <string name="content_description_dismiss_input">Escartar</string>
-  <string name="content_description_erase">Balerar historial de restolar</string>
-  <string name="content_description_tab_counter">Llingüetes abiertes: %1$s</string>
-  <string name="content_description_lock">Conexón segura</string>
-  <string name="accessibility_announcement_loading">Cargando</string>
-  <string name="accessibility_announcement_loading_finished">Sitiu web cargáu</string>
-  <string name="content_description_menu">Más opciones</string>
-  <string name="content_description_forward">Dir haza alantre</string>
-  <string name="content_description_reload">Recargar sitiu web</string>
-  <string name="content_description_back">Restolar p\'atrás</string>
-  <string name="content_description_stop">Parar carga del sitiu web</string>
-  <string name="content_description_customtab_exit">Volver a l\'aplicación previa</string>
-  <string name="content_description_trackers_blocked">Númberu de rastrexadores bloquiaos</string>
-  <string name="content_description_blocking_switch">Bloquia los rastrexadores</string>
-  <string name="your_rights">Los tos drechos</string>
-  <string name="external_app_prompt_title">Apertura d\'enllaz n\'otra aplicación</string>
-  <string name="external_app_prompt">Pues colar de %1$s p\'abrir esti enllaz en %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Alcuentra una aplicación que puea abrir l\'enllaz</string>
-  <string name="external_app_prompt_no_app">Denguna aplicación del to preséu ye abrir esti enllaz. Pues colar de %1$s y guetar en %2$s una aplicación compatible.</string>
-  <string name="external_multiple_apps_matched_exit">¿Colar de restolar en privao?</string>
-  <string name="download_snackbar_finished">%1$s finó</string>
-  <string name="download_snackbar_open">Abrir</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Encaboxar</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">D\'acuerdu</string>
+
+    <string name="action_save">Guardar</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Busca o introduz dalguna direición</string>
+
+    <string name="teaser">Restolar en privao automático.\nRestola. Balera. Repiti.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Borróse l\'historial de restolar.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Buscar «%1$s»</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Compartir…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Informar de fallu del sitiu</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Abrir en %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Abrir en…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Amestar a la pantalla d\'aniciu</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Qué hai nuevo</string>
+    <string name="menu_settings">Axustes</string>
+    <string name="menu_about">Tocante a</string>
+    <string name="menu_help">Ayuda</string>
+    <string name="menu_rights">Los tos drechos</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Rastrexadores bloquiaos</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Cola potencia de %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Compartir per</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Balerar historial de restolar</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Abrir</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Balerar y abrir</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Balerar</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Balerar historial de restolar</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Guetar de mou priváu</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Privacidá y seguranza</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Rastrexu, cookies y escoyetes de datos</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Predeterminación, autocompletáu</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Tocante a %1$s, ayuda</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Conteníu web</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Cambéu d\'aplicaciones</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Xeneral</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Recoyida y usu de datos</string>
+
+    <string name="preference_category_search">Gueta</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Consiguir suxerencies de gueta</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s va unviar lo que teclexes na barra de direiciones al motor de gueta</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Por defeutu</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Sí</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Non</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">Autocompletáu d\'URLs</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Amestar URL personalizada</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Amestar URL personalizada</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Amestar URL personalizada</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cookies y datos del sitiu</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Escoyetes de datos</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Desaniciar URL personalizada</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Deprendi más</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Amiesta o xestiona URLs personalizaes d\'autocompletáu.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL p\'amestar</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Apega o introduz la URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Exemplu: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Exemplu: exemplu.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Amestóse una URL nueva personalizada.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Desaniciar</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Desaniciar</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Volvi comprobar la URL qu\'introduxesti.</string>
+
+    <string name="preference_language">Llingua</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Predeterminada del sistema</string>
+
+    <string name="preference_category_privacy">Privacidá</string>
+    <string name="preference_privacy_block_ads">Bloquiar rastrexadores publicitarios</string>
+    <string name="preference_privacy_block_ads_summary">Dellos anuncios rastrexen los sitios qu\'andes, incluso si nun faes clic nellos</string>
+    <string name="preference_privacy_block_analytics">Bloquiar rastrexadores d\'analítiques</string>
+    <string name="preference_privacy_block_analytics_summary">Úsase pa recoyer, analizar y midir actividaes como calcos y desplazamientos</string>
+    <string name="preference_privacy_block_social">Bloquiar rastrexadores sociales</string>
+    <string name="preference_privacy_block_social_summary">Intégrase en sitios pa rastrexar les tos visites y amosar funcionalidaes como botones de compartición</string>
+    <string name="preference_privacy_block_content">Bloquiar otros rastrexadores</string>
+    <string name="preference_privacy_block_content_summary2">Activalo quiciabes faiga que delles páxines se comporten de mou inesperáu</string>
+    <string name="preference_privacy_category_cookies">Bloquéu de cookies</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloquiar namái cookies de terceros</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Usa la buelga pa desbloquiar l\'aplicación</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Invisible</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Anubre les páxines web al camudar d\'aplicaciones y bloquia la fechura de caputres de pantalla.</string>
+
+    <string name="preference_category_security">Seguranza</string>
+
+    <string name="preference_category_performance">Rindimientu</string>
+    <string name="preference_performance_block_webfonts">Bloquiar fontes web</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Pue facer que falten iconos o imáxenes</string>
+
+    <string name="preference_performance_block_javascript">Bloquiar JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Les páxines podríen cargar aína pero tamién podríe comportase de mou inesperáu</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Predeterminar %1$s</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Unviar datos d\'usu</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Deprendi más</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla esfuérciase en recoyer namái lo que precisa pa fornir y ameyorar %1$s pa tol mundu.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Avisu de privacidá</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Tocante a %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Motores de gueta instalaos</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Reafitar motores de gueta</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Amestar otru motor de gueta</string>
+    <string name="preference_search_remove_title">Desaniciar motores de gueta</string>
+    <string name="preference_search_remove">Desaniciar</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Amosar conseyos na pantalla d\'aniciu</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Amestar motor de gueta</string>
+
+    <string name="search_add_manually_name_hint">Nome del motor de gueta</string>
+    <string name="search_add_manually_string">Cadena de gueta a usar</string>
+    <string name="search_add_manually_save">Guardar</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Exemplu: exemplu.com/gueta/?q=%s</string>
+
+    <string name="search_add_confirmation">Amestóse\'l motor de gueta nuevu.</string>
+
+    <string name="search_add_error_empty_name">Introduz el nome del motor de gueta</string>
+    <string name="search_add_error_duplicate_name">Un motor de gueta instaláu yá ta usando esi nome.</string>
+
+    <string name="search_add_error_empty_search">Introduz la cadena de gueta</string>
+
+    <string name="search_add_error_format">Comprueba que la cadena de gueta concase col formatu del exemplu</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Llimpiar entrada</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Escartar</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Balerar historial de restolar</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Llingüetes abiertes: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Conexón segura</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Cargando</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Sitiu web cargáu</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Más opciones</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Dir haza alantre</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Recargar sitiu web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Restolar p\'atrás</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Parar carga del sitiu web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Volver a l\'aplicación previa</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Númberu de rastrexadores bloquiaos</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Bloquia los rastrexadores</string>
+
+    <string name="your_rights">Los tos drechos</string>
+
+    <string name="external_app_prompt_title">Apertura d\'enllaz n\'otra aplicación</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Pues colar de %1$s p\'abrir esti enllaz en %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Alcuentra una aplicación que puea abrir l\'enllaz</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Denguna aplicación del to preséu ye abrir esti enllaz. Pues colar de %1$s y guetar en %2$s una aplicación compatible.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">¿Colar de restolar en privao?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s finó</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Abrir</string>
 
 
 
@@ -157,47 +387,116 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">Potencia la to privacidá</string>
-  <string name="firstrun_defaultbrowser_text2">Lleva\'l restolar en privao a un nivel meyor. Bloquia anuncios y otru conteníu que pue rastrexate nes páxines y faen lentos los tiempos de carga.</string>
-  <string name="firstrun_search_title">Guetes al to xeitu</string>
-  <string name="firstrun_search_text">¿Guetes daqué diferente? Escueyi otru motor de gueta predetermináu nos axustes.</string>
-  <string name="firstrun_shortcut_title">Amiesta atayos a la to pantalla d\'aniciu</string>
-  <string name="firstrun_shortcut_text">Volvi aína a los tos sitios favoritos en %1$s. Namái esbilla «Amestar a la pantalla d\'aniciu» nel menú de %1$s.</string>
-  <string name="firstrun_privacy_title">Fai de la privacidá un vezu</string>
-  <string name="firstrun_privacy_text">Predetermina %1$s como\'l to restolador y consigui los beneficios del restolar en privao cuando abres páxines web dende otres aplicaciones.</string>
-  <string name="firstrun_close_button">¡Val, coyílo!</string>
-  <string name="firstrun_skip_button">Saltar</string>
-  <string name="firstrun_next_button">Siguiente</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Amestar</string>
-  <string name="dialog_addtohomescreen_action_cancel">Encaboxar</string>
-  <string name="dialog_addtohomescreen_tracking_protection">L\'atayu abriráse cola proteición de rastrexu desactivada</string>
-  <string name="notification_browsing_session_channel_name">Sesión de restolar en privao</string>
-  <string name="notification_browsing_session_channel_description">Los avisos déxente balerar la to sesión de %1$s con un toque. Nun precises abrir l\'aplicación pa ver lo que ta n\'execución nel to restolador.</string>
-  <string name="tabs_tray_action_erase">Balerar historial de restolar</string>
-  <string name="download_firefox">Baxar Firefox</string>
-  <string name="your_rights_content1">%1$s ye un programa de baldre y de códigu abiertu fechu por Mozilla y otros collaboradores.</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Potencia la to privacidá</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Lleva\'l restolar en privao a un nivel meyor. Bloquia anuncios y otru conteníu que pue rastrexate nes páxines y faen lentos los tiempos de carga.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Guetes al to xeitu</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">¿Guetes daqué diferente? Escueyi otru motor de gueta predetermináu nos axustes.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Amiesta atayos a la to pantalla d\'aniciu</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Volvi aína a los tos sitios favoritos en %1$s. Namái esbilla «Amestar a la pantalla d\'aniciu» nel menú de %1$s.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Fai de la privacidá un vezu</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Predetermina %1$s como\'l to restolador y consigui los beneficios del restolar en privao cuando abres páxines web dende otres aplicaciones.</string>
+
+    <string name="firstrun_close_button">¡Val, coyílo!</string>
+    <string name="firstrun_skip_button">Saltar</string>
+    <string name="firstrun_next_button">Siguiente</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Amestar</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Encaboxar</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Sesión de restolar en privao</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Los avisos déxente balerar la to sesión de %1$s con un toque. Nun precises abrir l\'aplicación pa ver lo que ta n\'execución nel to restolador.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Balerar historial de restolar</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Baxar Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s ye un programa de baldre y de códigu abiertu fechu por Mozilla y otros collaboradores.]]></string>
 
 
 
 
-  <string name="gv_prompt_username_hint">Nome d\'usuariu</string>
-  <string name="gv_prompt_password_hint">Contraseña</string>
-  <string name="gv_prompt_clear">Llimpiar</string>
-  <string name="security_popup_secure_connection">Conexón segura</string>
-  <string name="security_popup_insecure_connection">Conexón insegura</string>
-  <string name="security_popup_security_verified">Verificáu por: %1$s</string>
-  <string name="site_security_icon_content_description">Seguranza del sitiu</string>
-  <string name="preference_autocomplete_duplicate_url_error">Yá esiste la URL</string>
-  <string name="find_in_page">Alcontrar na páxina</string>
-  <string name="find_in_page_input">Alcontrar na páxina</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d de %2$d</string>
+  <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Nome d\'usuariu</string>
+    <string name="gv_prompt_password_hint">Contraseña</string>
+    <string name="gv_prompt_clear">Llimpiar</string>
 
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Conexón segura</string>
+    <string name="security_popup_insecure_connection">Conexón insegura</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Verificáu por: %1$s</string>
 
-  <string name="biometric_auth_new_session">Sesión</string>
-  <string name="enable_search_suggestions_no">Non</string>
-  <string name="enable_search_suggestions_yes">Sí</string>
-  <string name="no_suggestions_message">Dalgunos motores de gueta nun puen amosar suxerencies.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Escartar</string>
-</resources>
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Seguranza del sitiu</string>
+    <string name="preference_autocomplete_duplicate_url_error">Yá esiste la URL</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Alcontrar na páxina</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Alcontrar na páxina</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d de %2$d</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string moz:removedIn="103" name="biometric_auth_new_session">Sesión</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Non</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Sí</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Dalgunos motores de gueta nun puen amosar suxerencies.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Escartar</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tracking protection bottom sheet -->
+
+    </resources>
