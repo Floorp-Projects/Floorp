@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test pasting formatted test into various fields</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<input id="input">
+<textarea id="textarea"></textarea>
+<div id="editable" contenteditable="true"></div>
+<div id="noneditable">Text</div>
+
+<div id="source">Some <b>Bold</b> Text</div>
+<script>
+
+const expectedText = "Some Bold Text";
+const expectedHTML = "<div id=\"source\">Some <b>Bold</b> Text</div>";
+
+const htmlPrefix = navigator.platform.includes("Win")
+  ? "<html><body>\n<!--StartFragment-->"
+  : "";
+const htmlPostfix = navigator.platform.includes("Win")
+  ? "<!--EndFragment-->\n</body>\n</html>"
+  : "";
+
+add_task(async function test_paste_formatted() {
+  window.getSelection().selectAllChildren(document.getElementById("source"));
+  synthesizeKey("c", { accelKey: true });
+
+  function doKey(element, withShiftKey)
+  {
+    let inputEventPromise = new Promise(resolve => {
+      element.addEventListener("input", event => {
+        is(event.inputType, "insertFromPaste", "correct inputType");
+        resolve();
+      }, { once: true });
+    });
+    synthesizeKey("v", { accelKey: true, shiftKey: withShiftKey });
+    return inputEventPromise;
+  }
+
+  // Paste into input and textarea
+  for (let fieldid of ["input", "textarea"]) {
+    let field = document.getElementById(fieldid);
+    field.focus();
+
+    doKey(field, false);
+    is(field.value, expectedText, "paste into " + fieldid);
+
+    doKey(field, true);
+    is(field.value, expectedText + expectedText, "paste unformatted into " + field);
+  }
+
+  const selection = window.getSelection();
+
+  // Paste into editable area
+  let editable = document.getElementById("editable");
+  selection.selectAllChildren(editable);
+  selection.collapseToStart();
+  doKey(editable, false);
+  is(editable.innerHTML, expectedHTML, "paste into contenteditable");
+
+  // Unformatted paste into editable area
+  selection.selectAllChildren(editable);
+  selection.collapseToEnd();
+  doKey(editable, true);
+  is(editable.innerHTML, expectedHTML + expectedText, "paste unformatted into contenteditable");
+
+  let noneditable = document.getElementById("noneditable");
+  selection.selectAllChildren(noneditable);
+  selection.collapseToStart();
+
+  function getPasteResult() {
+    return new Promise(resolve => {
+      noneditable.addEventListener("paste", event => {
+        resolve({
+          text: event.clipboardData.getData("text/plain"),
+          html: event.clipboardData.getData("text/html"),
+        });
+      }, { once: true});
+    });
+  }
+
+  // Normal paste into non-editable area
+  let pastePromise = getPasteResult();
+  doKey(noneditable, false);
+  is(noneditable.innerHTML, "Text", "paste into non-editable");
+
+  let result = await pastePromise;
+  is(result.text, expectedText, "paste text into non-editable");
+  is(result.html, htmlPrefix + expectedHTML + htmlPostfix, "paste html into non-editable");
+
+  // Unformatted paste into non-editable area
+  pastePromise = getPasteResult();
+  doKey(noneditable, true);
+  is(noneditable.innerHTML, "Text", "paste unformatted into non-editable");
+
+  result = await pastePromise;
+  is(result.text, expectedText, "paste unformatted text into non-editable");
+  // Formatted HTML text should not exist when pasting unformatted.
+  is(result.html, "", "paste unformatted html into non-editable");
+});
+</script>
+</body>
