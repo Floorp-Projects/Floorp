@@ -10,6 +10,7 @@
 
 #include "media/sctp/dcsctp_transport.h"
 
+#include <atomic>
 #include <cstdint>
 #include <limits>
 #include <utility>
@@ -126,7 +127,7 @@ DcSctpTransport::DcSctpTransport(rtc::Thread* network_thread,
             socket_->HandleTimeout(timeout_id);
           }) {
   RTC_DCHECK_RUN_ON(network_thread_);
-  static int instance_count = 0;
+  static std::atomic<int> instance_count = 0;
   rtc::StringBuilder sb;
   sb << debug_name_ << instance_count++;
   debug_name_ = sb.Release();
