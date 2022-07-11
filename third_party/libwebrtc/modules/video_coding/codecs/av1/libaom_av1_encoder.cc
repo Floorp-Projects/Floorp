@@ -105,8 +105,6 @@ class LibaomAv1Encoder final : public VideoEncoder {
   // Configures the encoder which buffers next frame updates and can reference.
   void SetSvcRefFrameConfig(
       const ScalableVideoController::LayerFrameConfig& layer_frame);
-  // If pixel format doesn't match, then reallocate.
-  void MaybeRewrapImgWithFormat(const aom_img_fmt_t fmt);
 
   std::unique_ptr<ScalableVideoController> svc_controller_;
   bool inited_;
@@ -230,10 +228,11 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
   cfg_.g_pass = AOM_RC_ONE_PASS;        // One-pass rate control
   cfg_.g_lag_in_frames = kLagInFrames;  // No look ahead when lag equals 0.
 
-  if (frame_for_encode_ != nullptr) {
-    aom_img_free(frame_for_encode_);
-    frame_for_encode_ = nullptr;
-  }
+  // Creating a wrapper to the image - setting image data to nullptr. Actual
+  // pointer will be set in encode. Setting align to 1, as it is meaningless
+  // (actual memory is not allocated).
+  frame_for_encode_ =
+      aom_img_alloc(nullptr, AOM_IMG_FMT_I420, cfg_.g_w, cfg_.g_h, 1);
 
   // Flag options: AOM_CODEC_USE_PSNR and AOM_CODEC_USE_HIGHBITDEPTH
   aom_codec_flags_t flags = 0;
@@ -556,21 +555,6 @@ int32_t LibaomAv1Encoder::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-void LibaomAv1Encoder::MaybeRewrapImgWithFormat(const aom_img_fmt_t fmt) {
-  if (!frame_for_encode_) {
-    frame_for_encode_ =
-        aom_img_wrap(nullptr, fmt, cfg_.g_w, cfg_.g_h, 1, nullptr);
-
-  } else if (frame_for_encode_->fmt != fmt) {
-    RTC_LOG(LS_INFO) << "Switching AV1 encoder pixel format to "
-                     << (fmt == AOM_IMG_FMT_NV12 ? "NV12" : "I420");
-    aom_img_free(frame_for_encode_);
-    frame_for_encode_ =
-        aom_img_wrap(nullptr, fmt, cfg_.g_w, cfg_.g_h, 1, nullptr);
-  }
-  // else no-op since the image is already in the right format.
-}
-
 int32_t LibaomAv1Encoder::Encode(
     const VideoFrame& frame,
     const std::vector<VideoFrameType>* frame_types) {
@@ -590,74 +574,38 @@ int32_t LibaomAv1Encoder::Encode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  rtc::scoped_refptr<VideoFrameBuffer> buffer = frame.video_frame_buffer();
-  absl::InlinedVector<VideoFrameBuffer::Type, kMaxPreferredPixelFormats>
-      supported_formats = {VideoFrameBuffer::Type::kI420,
-                           VideoFrameBuffer::Type::kNV12};
-  rtc::scoped_refptr<VideoFrameBuffer> mapped_buffer;
-  if (buffer->type() != VideoFrameBuffer::Type::kNative) {
-    // `buffer` is already mapped.
-    mapped_buffer = buffer;
-  } else {
-    // Attempt to map to one of the supported formats.
-    mapped_buffer = buffer->GetMappedFrameBuffer(supported_formats);
-  }
-
   // Convert input frame to I420, if needed.
-  if (!mapped_buffer ||
-      (absl::c_find(supported_formats, mapped_buffer->type()) ==
-           supported_formats.end() &&
-       mapped_buffer->type() != VideoFrameBuffer::Type::kI420A)) {
+  VideoFrame prepped_input_frame = frame;
+  if (prepped_input_frame.video_frame_buffer()->type() !=
+          VideoFrameBuffer::Type::kI420 &&
+      prepped_input_frame.video_frame_buffer()->type() !=
+          VideoFrameBuffer::Type::kI420A) {
     rtc::scoped_refptr<I420BufferInterface> converted_buffer(
-        mapped_buffer->ToI420());
+        prepped_input_frame.video_frame_buffer()->ToI420());
     if (!converted_buffer) {
       RTC_LOG(LS_ERROR) << "Failed to convert "
                         << VideoFrameBufferTypeToString(
-                               frame.video_frame_buffer()->type())
+                               prepped_input_frame.video_frame_buffer()->type())
                         << " image to I420. Can't encode frame.";
       return WEBRTC_VIDEO_CODEC_ENCODER_FAILURE;
     }
     RTC_CHECK(converted_buffer->type() == VideoFrameBuffer::Type::kI420 ||
               converted_buffer->type() == VideoFrameBuffer::Type::kI420A);
-
-    mapped_buffer = converted_buffer;
+    prepped_input_frame = VideoFrame(converted_buffer, frame.timestamp(),
+                                     frame.render_time_ms(), frame.rotation());
   }
 
-  switch (mapped_buffer->type()) {
-    case VideoFrameBuffer::Type::kI420:
-    case VideoFrameBuffer::Type::kI420A: {
-      // Set frame_for_encode_ data pointers and strides.
-      MaybeRewrapImgWithFormat(AOM_IMG_FMT_I420);
-      auto i420_buffer = mapped_buffer->GetI420();
-      RTC_DCHECK(i420_buffer);
-      frame_for_encode_->planes[AOM_PLANE_Y] =
-          const_cast<unsigned char*>(i420_buffer->DataY());
-      frame_for_encode_->planes[AOM_PLANE_U] =
-          const_cast<unsigned char*>(i420_buffer->DataU());
-      frame_for_encode_->planes[AOM_PLANE_V] =
-          const_cast<unsigned char*>(i420_buffer->DataV());
-      frame_for_encode_->stride[AOM_PLANE_Y] = i420_buffer->StrideY();
-      frame_for_encode_->stride[AOM_PLANE_U] = i420_buffer->StrideU();
-      frame_for_encode_->stride[AOM_PLANE_V] = i420_buffer->StrideV();
-      break;
-    }
-    case VideoFrameBuffer::Type::kNV12: {
-      MaybeRewrapImgWithFormat(AOM_IMG_FMT_NV12);
-      const NV12BufferInterface* nv12_buffer = mapped_buffer->GetNV12();
-      RTC_DCHECK(nv12_buffer);
-      frame_for_encode_->planes[AOM_PLANE_Y] =
-          const_cast<unsigned char*>(nv12_buffer->DataY());
-      frame_for_encode_->planes[AOM_PLANE_U] =
-          const_cast<unsigned char*>(nv12_buffer->DataUV());
-      frame_for_encode_->planes[AOM_PLANE_V] = nullptr;
-      frame_for_encode_->stride[AOM_PLANE_Y] = nv12_buffer->StrideY();
-      frame_for_encode_->stride[AOM_PLANE_U] = nv12_buffer->StrideUV();
-      frame_for_encode_->stride[AOM_PLANE_V] = 0;
-      break;
-    }
-    default:
-      return WEBRTC_VIDEO_CODEC_ENCODER_FAILURE;
-  }
+  // Set frame_for_encode_ data pointers and strides.
+  auto i420_buffer = prepped_input_frame.video_frame_buffer()->GetI420();
+  frame_for_encode_->planes[AOM_PLANE_Y] =
+      const_cast<unsigned char*>(i420_buffer->DataY());
+  frame_for_encode_->planes[AOM_PLANE_U] =
+      const_cast<unsigned char*>(i420_buffer->DataU());
+  frame_for_encode_->planes[AOM_PLANE_V] =
+      const_cast<unsigned char*>(i420_buffer->DataV());
+  frame_for_encode_->stride[AOM_PLANE_Y] = i420_buffer->StrideY();
+  frame_for_encode_->stride[AOM_PLANE_U] = i420_buffer->StrideU();
+  frame_for_encode_->stride[AOM_PLANE_V] = i420_buffer->StrideV();
 
   const uint32_t duration =
       kRtpTicksPerSecond / static_cast<float>(encoder_settings_.maxFramerate);
@@ -857,8 +805,7 @@ VideoEncoder::EncoderInfo LibaomAv1Encoder::GetEncoderInfo() const {
   info.has_trusted_rate_controller = true;
   info.is_hardware_accelerated = false;
   info.scaling_settings = VideoEncoder::ScalingSettings(kMinQindex, kMaxQindex);
-  info.preferred_pixel_formats = {VideoFrameBuffer::Type::kI420,
-                                  VideoFrameBuffer::Type::kNV12};
+  info.preferred_pixel_formats = {VideoFrameBuffer::Type::kI420};
   if (SvcEnabled()) {
     for (int sid = 0; sid < svc_params_->number_spatial_layers; ++sid) {
       info.fps_allocation[sid].resize(svc_params_->number_temporal_layers);
