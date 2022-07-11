@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "schema": 1647536413492,
+      "schema": 1656866210051,
       "taggedCodes": [
         "ffab",
         "ffcm",
@@ -25,14 +25,15 @@
       "searchPageRegexp": "^https://duckduckgo\\.com/",
       "expectedOrganicCodes": [
         "hz",
-        "h_"
+        "h_",
+        "hs"
       ],
       "extraAdServersRegexps": [
         "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
         "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
       ],
       "id": "9dfd626b-26f2-4913-9d0a-27db6cb7d8ca",
-      "last_modified": 1647619735693
+      "last_modified": 1657300470689
     },
     {
       "schema": 1643096116299,
@@ -150,5 +151,5 @@
       "last_modified": 1643136933989
     }
   ],
-  "timestamp": 1647619735693
+  "timestamp": 1657300470689
 }
