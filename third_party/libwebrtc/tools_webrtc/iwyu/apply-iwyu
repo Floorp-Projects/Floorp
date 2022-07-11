@@ -3,14 +3,15 @@
 # Run the include-what-you-use tool (iwyu) on a file in the webrtc source
 # directory.
 #
-# The script uses a subsequent grep pass to remove #include files from .cc
-# that are also in the .h file, or are problematic to include.
+# The script uses a subsequent grep pass to remove #include files
+# that are problematic to include.
 #
 # In order to handle include paths correctly, you need to provide
 # a compile DB (aka compile_commands.json).
 # You can create it in one of the following ways:
 # "gn gen --export-compile-commands path/to/out"
 # "tools/clang/scripts/generate_compdb.py -p path/to/out > compile_commands.json"
+# If "out/Default" exists, the script will attempt to generate it for you.
 #
 # To get iwyu on Debian/glinux, do "sudo apt-get install iwyu".
 
@@ -25,9 +26,6 @@ fi
 
 IWYU_TOOL="${IWYU_TOOL:-/usr/bin/iwyu_tool}"
 FIX_INCLUDE="${FIX_INCLUDE:-/usr/bin/fix_include}"
-# If you want to exclude files that are in $FILE.h from $FILE.cc, set
-# the following variable to "yes". This is a style guide violation.
-REMOVE_CC_INCLUDES=no
 COMPILE_COMMANDS=''
 
 error() {
@@ -38,38 +36,34 @@ error() {
 while getopts 'c:r' opts; do
   case "${opts}" in
     c) COMPILE_COMMANDS="${OPTARG}" ;;
-    r) REMOVE_CC_INCLUDES=yes ;;
     *) error "Unexpected option ${opts}" ;;
   esac
 done
 shift $(expr $OPTIND - 1 )
 
 if [[ -z "$COMPILE_COMMANDS" ]]; then
-  error "compile_commands.json must be passed."
+  if [ -d "out/Default" ]; then
+    if [ ! -f "out/Default/compile_commands.json" ]; then
+      gn gen --export-compile-commands out/Default
+    fi
+    COMPILE_COMMANDS="out/Default/compile_commands.json"
+  else
+    error "compile_commands.json must be passed."
+  fi
 fi
 
 FILE="$1"
 
-if [ ! -f $FILE ]; then
-  # See if we have the root name of a .cc/.h pair
-  if [ ! -f $FILE.h ]; then
-    echo "$FILE.h not found"
-    exit 1
-  fi
-  FILE_H=$FILE.h
-  if [ ! -f $FILE.cc ]; then
-    echo "$FILE.cc not found"
-    exit 1
-  fi
-  FILE_CC=$FILE.cc
+if [ ! -f $FILE_CC ]; then
+  error "File $FILE is not found"
+fi
+
+# Find the .h file that IWYU will modify, if any.
+FILE_CC=$FILE
+if [ -f $(dirname $FILE)/$(basename -s .cc $FILE).h ]; then
+  FILE_H=$(dirname $FILE)/$(basename -s .cc $FILE).h
 else
-  # Exact cc file, no .h file - but iwyu will modify .h anyway if it exists.
-  FILE_CC=$FILE
-  if [ -f $(dirname $FILE)/$(basename -s .cc $FILE).h ]; then
-    FILE_H=$(dirname $FILE)/$(basename -s .cc $FILE).h
-  else
-    FILE_H=""
-  fi
+  FILE_H=""
 fi
 
 # IWYU has a confusing set of exit codes. Discard it.
@@ -93,20 +87,9 @@ else
   rm /tmp/includefixes$$
 fi
 
-if [ $REMOVE_CC_INCLUDES == "yes" ]; then
-  if [ -n "$FILE_H" ]; then
-    # Don't include in .cc what's already included in .h
-    grep ^#include $FILE_H | grep -v -f - $FILE_CC > $FILE_CC.new
-  else
-    cp $FILE_CC $FILE_CC.new
-  fi
-  # Don't include stuff on the banlist
-  grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE_CC.new > $FILE_CC
-  rm $FILE.ccnew
-else
-  grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE_CC > $FILE_CC.new
-  mv $FILE_CC.new $FILE_CC
-fi
+grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE_CC > $FILE_CC.new
+mv $FILE_CC.new $FILE_CC
+
 if [ -n "$FILE_H" ]; then
   grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE_H > $FILE_H.new
   mv $FILE_H.new $FILE_H
