@@ -46,7 +46,7 @@ object ErrorPages {
                     context.appName, uri.toString()
                 )
             ErrorType.ERROR_BAD_HSTS_CERT -> context.getString(
-                R.string.mozac_browser_errorpages_security_bad_hsts_cert_techInfo,
+                R.string.mozac_browser_errorpages_security_bad_hsts_cert_techInfo2,
                 uri.toString().trim('/'), context.appName
             )
             else -> ""
