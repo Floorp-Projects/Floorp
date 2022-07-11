@@ -41,7 +41,11 @@ VideoRtpReceiver::VideoRtpReceiver(
       track_(VideoTrackProxyWithInternal<VideoTrack>::Create(
           rtc::Thread::Current(),
           worker_thread,
-          VideoTrack::Create(receiver_id, source_, worker_thread))),
+          VideoTrack::Create(receiver_id,
+                             CreateVideoTrackSourceProxy(rtc::Thread::Current(),
+                                                         worker_thread,
+                                                         source_),
+                             worker_thread))),
       attachment_id_(GenerateUniqueId()) {
   RTC_DCHECK(worker_thread_);
   SetStreams(streams);
