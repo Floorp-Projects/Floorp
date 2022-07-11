@@ -111,6 +111,9 @@ class RTC_EXPORT VideoCodec {
     scalability_mode_ = std::string(scalability_mode);
   }
 
+  VideoCodecComplexity GetVideoEncoderComplexity() const;
+  void SetVideoEncoderComplexity(VideoCodecComplexity complexity_setting);
+
   // Public variables. TODO(hta): Make them private with accessors.
   VideoCodecType codecType;
 
@@ -171,6 +174,9 @@ class RTC_EXPORT VideoCodec {
   // This will allow removing the VideoCodec* types from this file.
   VideoCodecUnion codec_specific_;
   std::string scalability_mode_;
+  // 'complexity_' indicates the CPU capability of the client. It's used to
+  // determine encoder CPU complexity (e.g., cpu_used for VP8, VP9. and AV1).
+  absl::optional<VideoCodecComplexity> complexity_;
 };
 
 }  // namespace webrtc
