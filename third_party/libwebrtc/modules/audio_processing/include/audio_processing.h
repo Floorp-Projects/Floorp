@@ -112,8 +112,6 @@ static constexpr int kClippedLevelMin = 70;
 //
 // config.high_pass_filter.enabled = true;
 //
-// config.voice_detection.enabled = true;
-//
 // apm->ApplyConfig(config)
 //
 // apm->noise_reduction()->set_level(kHighSuppression);
@@ -230,11 +228,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
     struct TransientSuppression {
       bool enabled = false;
     } transient_suppression;
-
-    // Enables reporting of `voice_detected` in webrtc::AudioProcessingStats.
-    struct VoiceDetection {
-      bool enabled = false;
-    } voice_detection;
 
     // Enables automatic gain control (AGC) functionality.
     // The automatic gain control (AGC) component brings the signal to an

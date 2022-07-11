@@ -105,7 +105,6 @@ struct SimulationSettings {
   absl::optional<bool> use_ns;
   absl::optional<int> use_ts;
   absl::optional<bool> use_analog_agc;
-  absl::optional<bool> use_vad;
   absl::optional<bool> use_all;
   absl::optional<bool> analog_agc_disable_digital_adaptive;
   absl::optional<int> agc_mode;
