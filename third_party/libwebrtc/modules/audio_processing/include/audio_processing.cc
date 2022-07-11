@@ -145,6 +145,7 @@ std::string AudioProcessing::Config::ToString() const {
           << NoiseSuppressionLevelToString(noise_suppression.level)
           << " }, transient_suppression: { enabled: "
           << transient_suppression.enabled
+          << " }, voice_detection: { enabled: " << voice_detection.enabled
           << " }, gain_controller1: { enabled: " << gain_controller1.enabled
           << ", mode: " << GainController1ModeToString(gain_controller1.mode)
           << ", target_level_dbfs: " << gain_controller1.target_level_dbfs
