@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '6e70e8eefd1bc0b644fab3a3e91ec99ff212cbc7',
+  'chromium_revision': '3c219c13d35e3d409708bd275c825c9e3f3b996e',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -25,7 +25,7 @@ deps = {
   'src/base':
     'https://chromium.googlesource.com/chromium/src/base@2c3f10d2961fc17e6c3b45a972899628a78d859a',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@6b6ba00571e4db0c43fa4e3e26bfd22b93dcb8cd',
+    'https://chromium.googlesource.com/chromium/src/build@2a53b6c0cd2c99507f354ccb94fa772dc655f6ea',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@893aa038dd17d05f3c5ff5af98daebabc294a948',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -34,19 +34,19 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@d487126e91540fa90232f2243bbe2a2f2383ed0d',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@03ed7e4bd59994b2011a654a8e31033619ddd90a',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@9d8d8b3e7e1f9a58c3c8297a535935f41d6dbaae',
+    'https://chromium.googlesource.com/chromium/src/testing@912f58bd45b07f7ef83c109ff831e1807cf26515',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@d14b82e7e2d1708f646a73be671b0a739550905b',
+    'https://chromium.googlesource.com/chromium/src/third_party@566a36179b8d30eb760b81a2459b938604d0cc6e',
 
   'src/buildtools/linux64': {
     'packages': [
       {
         'package': 'gn/gn/linux-amd64',
-        'version': 'git_revision:e3f114f46537152cfbdb553015518d1db1b812fd',
+        'version': 'git_revision:d7c2209cebcfe37f46dba7be4e1a7000ffc342fb',
       }
     ],
     'dep_type': 'cipd',
@@ -56,7 +56,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/mac-${{arch}}',
-        'version': 'git_revision:e3f114f46537152cfbdb553015518d1db1b812fd',
+        'version': 'git_revision:d7c2209cebcfe37f46dba7be4e1a7000ffc342fb',
       }
     ],
     'dep_type': 'cipd',
@@ -66,7 +66,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/windows-amd64',
-        'version': 'git_revision:e3f114f46537152cfbdb553015518d1db1b812fd',
+        'version': 'git_revision:d7c2209cebcfe37f46dba7be4e1a7000ffc342fb',
       }
     ],
     'dep_type': 'cipd',
@@ -80,7 +80,7 @@ deps = {
   'src/buildtools/third_party/libc++abi/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@738dc100c61890744f9e78cac27c71d0a2190781',
   'src/buildtools/third_party/libunwind/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git@2ea265b95a08e4a98fab16b327119788b8e50a69',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git@d1c7f92b8b0bff8d9f710ca40e44563a63db376e',
 
   'src/tools/clang/dsymutil': {
     'packages': [
@@ -285,7 +285,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@e18670641dd11ffaef1d8f85f78a117d5819e16d',
+    'https://chromium.googlesource.com/chromium/src/tools@d580756862272ffd68f13ea5c32a3993044f6879',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
