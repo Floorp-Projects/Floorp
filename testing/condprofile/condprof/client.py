@@ -31,7 +31,7 @@ ROOT_URL = TC_SERVICE + "/api/index"
 INDEX_PATH = "gecko.v2.%(repo)s.latest.firefox.condprof-%(platform)s-%(scenario)s"
 PUBLIC_DIR = "artifacts/public/condprof"
 TC_LINK = ROOT_URL + "/v1/task/" + INDEX_PATH + "/" + PUBLIC_DIR + "/"
-ARTIFACT_NAME = "profile-%(platform)s-%(scenario)s-%(customization)s.tgz"
+ARTIFACT_NAME = "profile%(version)s-%(platform)s-%(scenario)s-%(customization)s.tgz"
 CHANGELOG_LINK = (
     ROOT_URL + "/v1/task/" + INDEX_PATH + "/" + PUBLIC_DIR + "/changelog.json"
 )
@@ -100,23 +100,26 @@ def _check_profile(profile_dir):
     _clean_pref_file("user.js")
 
 
-def _retries(callable, onerror=None):
-    retries = 0
+def _retries(callable, onerror=None, retries=RETRIES):
+    _retry_count = 0
     pause = RETRY_PAUSE
 
-    while retries < RETRIES:
+    while _retry_count < retries:
         try:
             return callable()
         except Exception as e:
             if onerror is not None:
                 onerror(e)
             logger.info("Failed, retrying")
-            retries += 1
+            _retry_count += 1
             time.sleep(pause)
             pause *= 1.5
 
     # If we reach that point, it means all attempts failed
-    logger.error("All attempt failed")
+    if _retry_count >= RETRIES:
+        logger.error("All attempt failed")
+    else:
+        logger.info("Retried %s attempts and failed" % _retry_count)
     raise RetriesError()
 
 
@@ -129,6 +132,8 @@ def get_profile(
     download_cache=True,
     repo="mozilla-central",
     remote_test_root="/sdcard/test_root/",
+    version=None,
+    retries=RETRIES,
 ):
     """Extract a conditioned profile in the target directory.
 
@@ -137,12 +142,18 @@ def get_profile(
     """
 
     # XXX assert values
+    if version:
+        version = "-v%s" % version
+    else:
+        version = ""
+
     params = {
         "platform": platform,
         "scenario": scenario,
         "customization": customization,
         "task_id": task_id,
         "repo": repo,
+        "version": version,
     }
     logger.info("Getting conditioned profile with arguments: %s" % params)
     filename = ARTIFACT_NAME % params
@@ -208,7 +219,7 @@ def get_profile(
                 logger.error("Could not remove the file")
 
     try:
-        return _retries(_get_profile, onerror)
+        return _retries(_get_profile, onerror, retries)
     except RetriesError:
         raise ProfileNotFoundError(url)
 
