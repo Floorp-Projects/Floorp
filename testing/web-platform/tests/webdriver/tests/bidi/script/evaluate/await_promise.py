@@ -1,10 +1,13 @@
 import pytest
 
-from webdriver.bidi.modules.script import ContextTarget
+from webdriver.bidi.modules.script import ContextTarget, ScriptEvaluateResultException
+
+from ... import any_int, any_string, recursive_compare
+from .. import any_stack_trace
 
 
 @pytest.mark.asyncio
-async def test_await_delayed_promise(bidi_session, top_context):
+async def test_await_promise_delayed(bidi_session, top_context):
     result = await bidi_session.script.evaluate(
         expression="""
           new Promise(r => {{
@@ -16,6 +19,41 @@ async def test_await_delayed_promise(bidi_session, top_context):
     )
 
     assert result == {"type": "string", "value": "SOME_DELAYED_RESULT"}
+
+
+@pytest.mark.asyncio
+async def test_await_promise_rejected(bidi_session, top_context):
+    with pytest.raises(ScriptEvaluateResultException) as exception:
+        await bidi_session.script.evaluate(
+            expression="Promise.reject('SOME_REJECTED_RESULT')",
+            target=ContextTarget(top_context["context"]),
+            await_promise=True,
+        )
+
+    recursive_compare(
+        {
+            "realm": any_string,
+            "exceptionDetails": {
+                "columnNumber": any_int,
+                "exception": {"type": "string", "value": "SOME_REJECTED_RESULT"},
+                "lineNumber": any_int,
+                "stackTrace": any_stack_trace,
+                "text": any_string,
+            },
+        },
+        exception.value.result,
+    )
+
+
+@pytest.mark.asyncio
+async def test_await_promise_resolved(bidi_session, top_context):
+    result = await bidi_session.script.evaluate(
+        expression="Promise.resolve('SOME_RESOLVED_RESULT')",
+        target=ContextTarget(top_context["context"]),
+        await_promise=True,
+    )
+
+    assert result == {"type": "string", "value": "SOME_RESOLVED_RESULT"}
 
 
 @pytest.mark.asyncio
@@ -96,7 +134,9 @@ async def test_await_resolve_map(bidi_session, top_context):
     ],
 )
 @pytest.mark.asyncio
-async def test_await_resolve_primitive(bidi_session, top_context, expression, expected, type):
+async def test_await_resolve_primitive(
+    bidi_session, top_context, expression, expected, type
+):
     result = await bidi_session.script.evaluate(
         expression=f"Promise.resolve({expression})",
         await_promise=True,
@@ -153,3 +193,25 @@ async def test_await_resolve_set(bidi_session, top_context):
             {"type": "set"},
         ],
     }
+
+
+@pytest.mark.asyncio
+async def test_no_await_promise_rejected(bidi_session, top_context):
+    result = await bidi_session.script.evaluate(
+        expression="Promise.reject('SOME_REJECTED_RESULT')",
+        target=ContextTarget(top_context["context"]),
+        await_promise=False,
+    )
+
+    recursive_compare({"type": "promise", "handle": any_string}, result)
+
+
+@pytest.mark.asyncio
+async def test_no_await_promise_resolved(bidi_session, top_context):
+    result = await bidi_session.script.evaluate(
+        expression="Promise.resolve('SOME_RESOLVED_RESULT')",
+        target=ContextTarget(top_context["context"]),
+        await_promise=False,
+    )
+
+    recursive_compare({"type": "promise", "handle": any_string}, result)
