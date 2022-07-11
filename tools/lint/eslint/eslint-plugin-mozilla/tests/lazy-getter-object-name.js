@@ -26,24 +26,24 @@ ruleTester.run("lazy-getter-object-name", rule, {
   valid: [
     `
     ChromeUtils.defineESModuleGetters(lazy, {
-      Services: "resource://gre/modules/Services.sys.mjs",
+      AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
     });
 `,
   ],
   invalid: [
     invalidCode(`
     ChromeUtils.defineESModuleGetters(obj, {
-      Services: "resource://gre/modules/Services.sys.mjs",
+      AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
     });
 `),
     invalidCode(`
     ChromeUtils.defineESModuleGetters(this, {
-      Services: "resource://gre/modules/Services.sys.mjs",
+      AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
     });
 `),
     invalidCode(`
     ChromeUtils.defineESModuleGetters(window, {
-      Services: "resource://gre/modules/Services.sys.mjs",
+      AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
     });
 `),
   ],
