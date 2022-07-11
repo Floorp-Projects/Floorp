@@ -492,11 +492,13 @@ std::vector<std::unique_ptr<RtpPacketToSend>> RTPSender::GeneratePadding(
 
 bool RTPSender::SendToNetwork(std::unique_ptr<RtpPacketToSend> packet) {
   RTC_DCHECK(packet);
+  int64_t now_ms = clock_->TimeInMilliseconds();
+
   auto packet_type = packet->packet_type();
   RTC_CHECK(packet_type) << "Packet type must be set before sending.";
 
-  if (packet->capture_time() <= Timestamp::Zero()) {
-    packet->set_capture_time(clock_->CurrentTime());
+  if (packet->capture_time_ms() <= 0) {
+    packet->set_capture_time_ms(now_ms);
   }
 
   std::vector<std::unique_ptr<RtpPacketToSend>> packets;
@@ -509,13 +511,13 @@ bool RTPSender::SendToNetwork(std::unique_ptr<RtpPacketToSend> packet) {
 void RTPSender::EnqueuePackets(
     std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
   RTC_DCHECK(!packets.empty());
-  Timestamp now = clock_->CurrentTime();
+  int64_t now_ms = clock_->TimeInMilliseconds();
   for (auto& packet : packets) {
     RTC_DCHECK(packet);
     RTC_CHECK(packet->packet_type().has_value())
         << "Packet type must be set before sending.";
-    if (packet->capture_time() <= Timestamp::Zero()) {
-      packet->set_capture_time(now);
+    if (packet->capture_time_ms() <= 0) {
+      packet->set_capture_time_ms(now_ms);
     }
   }
 
@@ -732,7 +734,7 @@ std::unique_ptr<RtpPacketToSend> RTPSender::BuildRtxPacket(
   rtx_packet->set_additional_data(packet.additional_data());
 
   // Copy capture time so e.g. TransmissionOffset is correctly set.
-  rtx_packet->set_capture_time(packet.capture_time());
+  rtx_packet->set_capture_time_ms(packet.capture_time_ms());
 
   return rtx_packet;
 }

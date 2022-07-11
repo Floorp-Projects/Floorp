@@ -60,7 +60,7 @@ std::unique_ptr<RtpPacketToSend> BuildPacket(RtpPacketMediaType type,
   packet->set_packet_type(type);
   packet->SetSsrc(ssrc);
   packet->SetSequenceNumber(sequence_number);
-  packet->set_capture_time(Timestamp::Millis(capture_time_ms));
+  packet->set_capture_time_ms(capture_time_ms);
   packet->SetPayloadSize(size);
   return packet;
 }
@@ -73,7 +73,7 @@ class MockPacingControllerCallback : public PacingController::PacketSender {
   void SendPacket(std::unique_ptr<RtpPacketToSend> packet,
                   const PacedPacketInfo& cluster_info) override {
     SendPacket(packet->Ssrc(), packet->SequenceNumber(),
-               packet->capture_time().ms(),
+               packet->capture_time_ms(),
                packet->packet_type() == RtpPacketMediaType::kRetransmission,
                packet->packet_type() == RtpPacketMediaType::kPadding);
   }

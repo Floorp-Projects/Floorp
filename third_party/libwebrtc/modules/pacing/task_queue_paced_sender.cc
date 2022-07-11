@@ -141,7 +141,7 @@ void TaskQueuePacedSender::EnqueuePackets(
     RTC_DCHECK_RUN_ON(&task_queue_);
     for (auto& packet : packets_) {
       packet_size_.Apply(1, packet->size());
-      RTC_DCHECK_GE(packet->capture_time(), Timestamp::Zero());
+      RTC_DCHECK_GE(packet->capture_time_ms(), 0);
       pacing_controller_.EnqueuePacket(std::move(packet));
     }
     MaybeProcessPackets(Timestamp::MinusInfinity());
