@@ -29,7 +29,7 @@ class RTC_EXPORT SharedScreenCastStream
 
   bool StartScreenCastStream(uint32_t stream_node_id, int fd);
   void StopScreenCastStream();
-  std::unique_ptr<BasicDesktopFrame> CaptureFrame();
+  std::unique_ptr<DesktopFrame> CaptureFrame();
 
   ~SharedScreenCastStream();
 

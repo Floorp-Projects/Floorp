@@ -59,7 +59,7 @@ void BaseCapturerPipeWire::CaptureFrame() {
     return;
   }
 
-  std::unique_ptr<BasicDesktopFrame> frame =
+  std::unique_ptr<DesktopFrame> frame =
       options_.screencast_stream()->CaptureFrame();
 
   if (!frame || !frame->data()) {
