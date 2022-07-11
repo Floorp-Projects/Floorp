@@ -254,8 +254,6 @@ TEST_P(UnsignaledStreamTest, ReplacesUnsignaledStreamOnCompletedSignaling) {
       });
   EXPECT_TRUE(s.WaitAndProcess(&offer_exchange_done));
   EXPECT_TRUE(s.WaitAndProcess(&second_sink.frame_observed_));
-  caller->pc()->Close();
-  callee->pc()->Close();
 }
 
 INSTANTIATE_TEST_SUITE_P(
