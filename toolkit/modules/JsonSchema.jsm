@@ -9,8 +9,6 @@
  * convenience methods whil executing inside a sandbox.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const sandbox = new Cu.Sandbox(null, {
   wantComponents: false,
   wantGlobalProperties: ["URL"],

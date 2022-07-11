@@ -7,7 +7,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 

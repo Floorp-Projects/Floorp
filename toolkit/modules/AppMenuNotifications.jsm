@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["AppMenuNotifications"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function AppMenuNotification(id, mainAction, secondaryAction, options = {}) {
   this.id = id;
   this.mainAction = mainAction;

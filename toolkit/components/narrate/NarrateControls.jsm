@@ -10,7 +10,6 @@ const { VoiceSelect } = ChromeUtils.import(
 const { Narrator } = ChromeUtils.import(
   "resource://gre/modules/narrate/Narrator.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AsyncPrefs } = ChromeUtils.import(
   "resource://gre/modules/AsyncPrefs.jsm"
 );

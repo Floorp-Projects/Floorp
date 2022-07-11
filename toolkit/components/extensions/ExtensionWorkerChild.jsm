@@ -14,8 +14,6 @@ var EXPORTED_SYMBOLS = ["ExtensionWorkerChild"];
  * child process.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const { ExtensionChild, ExtensionActivityLogChild } = ChromeUtils.import(
   "resource://gre/modules/ExtensionChild.jsm"
 );

@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = ["makeFakeAppDir"];
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Reference needed in order for fake app dir provider to be active.
 var gFakeAppDirectoryProvider;

@@ -30,7 +30,6 @@ const PDF_CONTENT_TYPE = "application/pdf";
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Svc = {};
 XPCOMUtils.defineLazyServiceGetter(

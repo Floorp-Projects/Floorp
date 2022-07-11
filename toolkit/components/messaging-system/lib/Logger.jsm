@@ -5,7 +5,6 @@
 
 const EXPORTED_SYMBOLS = ["Logger"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm");
 
 const LOGGING_PREF = "messaging-system.log";

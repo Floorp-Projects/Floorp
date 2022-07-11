@@ -10,7 +10,6 @@ const { AppConstants } = ChromeUtils.import(
 const { AsyncShutdown } = ChromeUtils.import(
   "resource://gre/modules/AsyncShutdown.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Set to true if the application is quitting
 var gQuitting = false;

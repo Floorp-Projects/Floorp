@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = ["TelemetryReportingPolicy", "Policy"];
 
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );

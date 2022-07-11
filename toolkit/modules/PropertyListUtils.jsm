@@ -64,7 +64,6 @@ ChromeUtils.defineModuleGetter(
   "ctypes",
   "resource://gre/modules/ctypes.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var PropertyListUtils = Object.freeze({
   /**

@@ -11,8 +11,6 @@ var EXPORTED_SYMBOLS = ["EventUtils"];
  * content tasks without holding any direct references to windows.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 let EventUtils = {};
 
 EventUtils.window = {};

@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["Preferences"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );

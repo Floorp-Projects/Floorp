@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["UIDensities"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var UIDensities = {
   init(libDir) {},
 

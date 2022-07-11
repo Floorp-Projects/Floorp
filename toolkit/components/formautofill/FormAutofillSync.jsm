@@ -12,7 +12,6 @@ var EXPORTED_SYMBOLS = [
   "AutofillRecord",
 ];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Changeset, Store, SyncEngine, Tracker } = ChromeUtils.import(
   "resource://services-sync/engines.js"
 );

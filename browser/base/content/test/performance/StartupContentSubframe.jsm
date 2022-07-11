@@ -4,7 +4,6 @@
 /**
  * test helper JSWindowActors used by the browser_startup_content_subframe.js test.
  */
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = [
   "StartupContentSubframeParent",

@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["PermissionPrompts"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );

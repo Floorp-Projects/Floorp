@@ -18,8 +18,6 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/BrowserWindowTracker.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class PopupShownObserver {
   _weakContext = null;
 

@@ -9,8 +9,6 @@ var Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 var EXPORTED_SYMBOLS = ["BrowserElementPromptService"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function debug(msg) {
   // dump("BrowserElementPromptService - " + msg + "\n");
 }

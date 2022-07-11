@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["Screenshot"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"

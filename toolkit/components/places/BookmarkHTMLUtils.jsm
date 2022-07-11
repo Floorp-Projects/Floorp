@@ -58,7 +58,6 @@
 
 var EXPORTED_SYMBOLS = ["BookmarkHTMLUtils"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"

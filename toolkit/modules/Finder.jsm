@@ -13,7 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Rect } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"

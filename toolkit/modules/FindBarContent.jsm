@@ -10,8 +10,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /* Please keep in sync with toolkit/content/widgets/findbar.js */
 const FIND_NORMAL = 0;
 const FIND_TYPEAHEAD = 1;

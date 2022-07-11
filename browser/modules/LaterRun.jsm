@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["LaterRun"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const kEnabledPref = "browser.laterrun.enabled";
 const kPagePrefRoot = "browser.laterrun.pages.";
 // Number of sessions we've been active in

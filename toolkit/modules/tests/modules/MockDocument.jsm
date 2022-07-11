@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = ["MockDocument"];
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const MockDocument = {
   /**

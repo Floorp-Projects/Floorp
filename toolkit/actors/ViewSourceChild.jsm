@@ -5,8 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["ViewSourceChild"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(

@@ -10,7 +10,6 @@ const gLoadContext = Cu.createLoadContext();
 const gContentPrefs = Cc["@mozilla.org/content-pref/service;1"].getService(
   Ci.nsIContentPrefService2
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const gZoomPropertyName = "browser.content.full-zoom";
 
 const lazy = {};

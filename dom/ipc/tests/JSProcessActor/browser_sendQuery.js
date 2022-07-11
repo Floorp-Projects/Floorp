@@ -3,8 +3,8 @@
 "use strict";
 
 const ERROR_LINE_NUMBERS = {
-  jsm: 33,
-  "sys.mjs": 31,
+  jsm: 31,
+  "sys.mjs": 29,
 };
 const EXCEPTION_LINE_NUMBERS = {
   jsm: ERROR_LINE_NUMBERS.jsm + 3,

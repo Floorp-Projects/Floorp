@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["CreditCardTelemetry"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { FormAutofillUtils } = ChromeUtils.import(
   "resource://autofill/FormAutofillUtils.jsm"
 );

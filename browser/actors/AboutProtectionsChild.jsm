@@ -5,7 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["AboutProtectionsChild"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { RemotePageChild } = ChromeUtils.import(
   "resource://gre/actors/RemotePageChild.jsm"
 );

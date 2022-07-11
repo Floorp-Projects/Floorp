@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["FinderIterator"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );

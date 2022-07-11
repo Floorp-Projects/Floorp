@@ -64,7 +64,6 @@ ChromeUtils.defineModuleGetter(
 const { BasePromiseWorker } = ChromeUtils.import(
   "resource://gre/modules/PromiseWorker.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AsyncShutdown } = ChromeUtils.import(
   "resource://gre/modules/AsyncShutdown.jsm"
 );

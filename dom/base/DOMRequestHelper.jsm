@@ -18,8 +18,6 @@
  */
 var EXPORTED_SYMBOLS = ["DOMRequestIpcHelper"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function DOMRequestIpcHelper() {
   // _listeners keeps a list of messages for which we added a listener and the
   // kind of listener that we added (strong or weak). It's an object of this

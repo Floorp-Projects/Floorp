@@ -5,8 +5,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const DEBUG = false; // set to true to show debug messages
 
 const kCAPTIVEPORTALDETECTOR_CID = Components.ID(

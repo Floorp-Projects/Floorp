@@ -17,7 +17,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { BaseStudyAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseStudyAction.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 

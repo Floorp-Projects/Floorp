@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var EXPORTED_SYMBOLS = ["BlockedSiteParent"];
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class BlockedSiteParent extends JSWindowActorParent {
   receiveMessage(msg) {

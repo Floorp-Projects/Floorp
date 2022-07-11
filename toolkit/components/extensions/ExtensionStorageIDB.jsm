@@ -13,7 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { IndexedDB } = ChromeUtils.import(
   "resource://gre/modules/IndexedDB.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 

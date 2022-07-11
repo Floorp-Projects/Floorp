@@ -25,7 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const Utils = TelemetryUtils;
 

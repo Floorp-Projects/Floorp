@@ -20,7 +20,6 @@ const { AppConstants } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // BrowserWindowTracker and PrivateBrowsingUtils are only used when opening downloaded files into a browser window
 XPCOMUtils.defineLazyModuleGetters(lazy, {
