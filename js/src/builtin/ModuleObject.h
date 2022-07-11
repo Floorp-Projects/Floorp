@@ -255,6 +255,7 @@ enum class ModuleStatus : int32_t {
   Linking,
   Linked,
   Evaluating,
+  EvaluatingAsync,
   Evaluated,
 
   // Sub-state of Evaluated with error value set.
