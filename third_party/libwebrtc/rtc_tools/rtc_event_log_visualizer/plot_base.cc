@@ -307,12 +307,12 @@ void PlotCollection::PrintPythonCode(bool shared_xaxis) const {
 void PlotCollection::ExportProtobuf(
     webrtc::analytics::ChartCollection* collection) const {
   for (const auto& plot : plots_) {
+    // TODO(terelius): Ensure that there is no way to insert plots other than
+    // ProtobufPlots in a ProtobufPlotCollection. Needed to safely static_cast
+    // here.
     webrtc::analytics::Chart* protobuf_representation =
         collection->add_charts();
     plot->ExportProtobuf(protobuf_representation);
-  }
-  if (calltime_to_utc_ms_) {
-    collection->set_calltime_to_utc_ms(*calltime_to_utc_ms_);
   }
 }
 

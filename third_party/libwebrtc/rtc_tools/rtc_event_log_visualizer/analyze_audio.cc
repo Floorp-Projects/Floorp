@@ -38,7 +38,7 @@ void CreateAudioEncoderTargetBitrateGraph(const ParsedRtcEventLog& parsed_log,
     return absl::nullopt;
   };
   auto ToCallTime = [config](const LoggedAudioNetworkAdaptationEvent& packet) {
-    return config.GetCallTimeSec(packet.log_time());
+    return config.GetCallTimeSec(packet.log_time_us());
   };
   ProcessPoints<LoggedAudioNetworkAdaptationEvent>(
       ToCallTime, GetAnaBitrateBps,
@@ -63,7 +63,7 @@ void CreateAudioEncoderFrameLengthGraph(const ParsedRtcEventLog& parsed_log,
         return absl::optional<float>();
       };
   auto ToCallTime = [config](const LoggedAudioNetworkAdaptationEvent& packet) {
-    return config.GetCallTimeSec(packet.log_time());
+    return config.GetCallTimeSec(packet.log_time_us());
   };
   ProcessPoints<LoggedAudioNetworkAdaptationEvent>(
       ToCallTime, GetAnaFrameLengthMs,
@@ -88,7 +88,7 @@ void CreateAudioEncoderPacketLossGraph(const ParsedRtcEventLog& parsed_log,
         return absl::optional<float>();
       };
   auto ToCallTime = [config](const LoggedAudioNetworkAdaptationEvent& packet) {
-    return config.GetCallTimeSec(packet.log_time());
+    return config.GetCallTimeSec(packet.log_time_us());
   };
   ProcessPoints<LoggedAudioNetworkAdaptationEvent>(
       ToCallTime, GetAnaPacketLoss,
@@ -114,7 +114,7 @@ void CreateAudioEncoderEnableFecGraph(const ParsedRtcEventLog& parsed_log,
         return absl::optional<float>();
       };
   auto ToCallTime = [config](const LoggedAudioNetworkAdaptationEvent& packet) {
-    return config.GetCallTimeSec(packet.log_time());
+    return config.GetCallTimeSec(packet.log_time_us());
   };
   ProcessPoints<LoggedAudioNetworkAdaptationEvent>(
       ToCallTime, GetAnaFecEnabled,
@@ -139,7 +139,7 @@ void CreateAudioEncoderEnableDtxGraph(const ParsedRtcEventLog& parsed_log,
         return absl::optional<float>();
       };
   auto ToCallTime = [config](const LoggedAudioNetworkAdaptationEvent& packet) {
-    return config.GetCallTimeSec(packet.log_time());
+    return config.GetCallTimeSec(packet.log_time_us());
   };
   ProcessPoints<LoggedAudioNetworkAdaptationEvent>(
       ToCallTime, GetAnaDtxEnabled,
@@ -164,7 +164,7 @@ void CreateAudioEncoderNumChannelsGraph(const ParsedRtcEventLog& parsed_log,
         return absl::optional<float>();
       };
   auto ToCallTime = [config](const LoggedAudioNetworkAdaptationEvent& packet) {
-    return config.GetCallTimeSec(packet.log_time());
+    return config.GetCallTimeSec(packet.log_time_us());
   };
   ProcessPoints<LoggedAudioNetworkAdaptationEvent>(
       ToCallTime, GetAnaNumChannels,
@@ -397,23 +397,23 @@ void CreateAudioJitterBufferGraph(const ParsedRtcEventLog& parsed_log,
                                      PointStyle::kHighlight);
 
   for (const auto& data : arrival_delay_ms) {
-    const float x = config.GetCallTimeSec(Timestamp::Millis(data.first));
+    const float x = config.GetCallTimeSec(data.first * 1000);  // ms to us.
     const float y = data.second;
     time_series_packet_arrival.points.emplace_back(TimeSeriesPoint(x, y));
   }
   for (const auto& data : corrected_arrival_delay_ms) {
-    const float x = config.GetCallTimeSec(Timestamp::Millis(data.first));
+    const float x = config.GetCallTimeSec(data.first * 1000);  // ms to us.
     const float y = data.second;
     time_series_relative_packet_arrival.points.emplace_back(
         TimeSeriesPoint(x, y));
   }
   for (const auto& data : playout_delay_ms) {
-    const float x = config.GetCallTimeSec(Timestamp::Millis(data.first));
+    const float x = config.GetCallTimeSec(data.first * 1000);  // ms to us.
     const float y = data.second;
     time_series_play_time.points.emplace_back(TimeSeriesPoint(x, y));
   }
   for (const auto& data : target_delay_ms) {
-    const float x = config.GetCallTimeSec(Timestamp::Millis(data.first));
+    const float x = config.GetCallTimeSec(data.first * 1000);  // ms to us.
     const float y = data.second;
     time_series_target_time.points.emplace_back(TimeSeriesPoint(x, y));
   }
@@ -448,7 +448,7 @@ void CreateNetEqStatsGraphInternal(
     const std::vector<std::pair<int64_t, NetEqStatsType>>* data_vector =
         data_extractor(st.second.get());
     for (const auto& data : *data_vector) {
-      const float time = config.GetCallTimeSec(Timestamp::Millis(data.first));
+      const float time = config.GetCallTimeSec(data.first * 1000);  // ms to us.
       const float value = stats_extractor(data.second);
       time_series[ssrc].points.emplace_back(TimeSeriesPoint(time, value));
     }
