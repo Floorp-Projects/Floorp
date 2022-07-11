@@ -947,12 +947,7 @@ void VideoSendStreamTest::TestNackRetransmission(
       ++send_count_;
 
       // NACK packets at arbitrary points.
-      if (send_count_ == 5 || send_count_ == 25) {
-        nacked_sequence_numbers_.insert(
-            nacked_sequence_numbers_.end(),
-            non_padding_sequence_numbers_.end() - kNackedPacketsAtOnceCount,
-            non_padding_sequence_numbers_.end());
-
+      if (send_count_ % 25 == 0) {
         RTCPSender::Configuration config;
         config.clock = Clock::GetRealTimeClock();
         config.outgoing_transport = transport_adapter_.get();
@@ -964,11 +959,19 @@ void VideoSendStreamTest::TestNackRetransmission(
         rtcp_sender.SetRemoteSSRC(kVideoSendSsrcs[0]);
 
         RTCPSender::FeedbackState feedback_state;
+        uint16_t nack_sequence_numbers[kNackedPacketsAtOnceCount];
+        int nack_count = 0;
+        for (uint16_t sequence_number :
+             sequence_numbers_pending_retransmission_) {
+          if (nack_count < kNackedPacketsAtOnceCount) {
+            nack_sequence_numbers[nack_count++] = sequence_number;
+          } else {
+            break;
+          }
+        }
 
-        EXPECT_EQ(0, rtcp_sender.SendRTCP(
-                         feedback_state, kRtcpNack,
-                         static_cast<int>(nacked_sequence_numbers_.size()),
-                         &nacked_sequence_numbers_.front()));
+        EXPECT_EQ(0, rtcp_sender.SendRTCP(feedback_state, kRtcpNack, nack_count,
+                                          nack_sequence_numbers));
       }
 
       uint16_t sequence_number = rtp_packet.SequenceNumber();
@@ -980,17 +983,25 @@ void VideoSendStreamTest::TestNackRetransmission(
         sequence_number = (rtx_header[0] << 8) + rtx_header[1];
       }
 
-      auto found = absl::c_find(nacked_sequence_numbers_, sequence_number);
-      if (found != nacked_sequence_numbers_.end()) {
-        nacked_sequence_numbers_.erase(found);
-
+      auto it = sequence_numbers_pending_retransmission_.find(sequence_number);
+      if (it == sequence_numbers_pending_retransmission_.end()) {
+        // Not currently pending retransmission. Add it to retransmission queue
+        // if media and limit not reached.
+        if (rtp_packet.Ssrc() == kVideoSendSsrcs[0] &&
+            rtp_packet.payload_size() > 0 &&
+            retransmit_count_ +
+                    sequence_numbers_pending_retransmission_.size() <
+                kRetransmitTarget) {
+          sequence_numbers_pending_retransmission_.insert(sequence_number);
+        }
+      } else {
+        // Packet is a retransmission, remove it from queue and check if done.
+        sequence_numbers_pending_retransmission_.erase(it);
         if (++retransmit_count_ == kRetransmitTarget) {
           EXPECT_EQ(retransmit_ssrc_, rtp_packet.Ssrc());
           EXPECT_EQ(retransmit_payload_type_, rtp_packet.PayloadType());
           observation_complete_.Set();
         }
-      } else {
-        non_padding_sequence_numbers_.push_back(sequence_number);
       }
 
       return SEND_PACKET;
@@ -1018,8 +1029,7 @@ void VideoSendStreamTest::TestNackRetransmission(
     int retransmit_count_;
     const uint32_t retransmit_ssrc_;
     const uint8_t retransmit_payload_type_;
-    std::vector<uint16_t> nacked_sequence_numbers_;
-    std::vector<uint16_t> non_padding_sequence_numbers_;
+    std::set<uint16_t> sequence_numbers_pending_retransmission_;
   } test(retransmit_ssrc, retransmit_payload_type);
 
   RunBaseTest(&test);
