@@ -36,7 +36,7 @@ NOTIFY_EMAIL = 'webrtc-trooper@webrtc.org'
 def _RemovePreviousUpdateBranch():
   active_branch, branches = _GetBranches()
   if active_branch == UPDATE_BRANCH_NAME:
-    active_branch = 'master'
+    active_branch = 'main'
   if UPDATE_BRANCH_NAME in branches:
     logging.info('Removing previous update branch (%s)', UPDATE_BRANCH_NAME)
     subprocess.check_call(['git', 'checkout', active_branch])
