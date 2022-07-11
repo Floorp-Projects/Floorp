@@ -104,6 +104,7 @@ rtc_library("audio") {
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
 }
@@ -225,7 +226,10 @@ if (rtc_include_tests) {
         "../test/pc/e2e:network_quality_metrics_reporter",
         "//testing/gtest",
       ]
-      absl_deps = [ "//third_party/abseil-cpp/absl/flags:flag" ]
+      absl_deps = [
+        "//third_party/abseil-cpp/absl/flags:flag",
+        "//third_party/abseil-cpp/absl/strings",
+      ]
       if (is_android) {
         deps += [ "//testing/android/native_test:native_test_native_code" ]
       }
