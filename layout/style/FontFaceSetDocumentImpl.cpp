@@ -150,6 +150,9 @@ nsPresContext* FontFaceSetDocumentImpl::GetPresContext() const {
 void FontFaceSetDocumentImpl::RefreshStandardFontLoadPrincipal() {
   MOZ_ASSERT(NS_IsMainThread());
   RecursiveMutexAutoLock lock(mMutex);
+  if (NS_WARN_IF(!mDocument)) {
+    return;
+  }
   mStandardFontLoadPrincipal = MakeRefPtr<gfxFontSrcPrincipal>(
       mDocument->NodePrincipal(), mDocument->PartitionedPrincipal());
   FontFaceSetImpl::RefreshStandardFontLoadPrincipal();
@@ -213,6 +216,10 @@ bool FontFaceSetDocumentImpl::HasRuleFontFace(FontFaceImpl* aFontFace) {
 #endif
 
 bool FontFaceSetDocumentImpl::Add(FontFaceImpl* aFontFace, ErrorResult& aRv) {
+  if (NS_WARN_IF(!mDocument)) {
+    return false;
+  }
+
   if (!FontFaceSetImpl::Add(aFontFace, aRv)) {
     return false;
   }
@@ -233,6 +240,10 @@ bool FontFaceSetDocumentImpl::Add(FontFaceImpl* aFontFace, ErrorResult& aRv) {
 
 nsresult FontFaceSetDocumentImpl::StartLoad(gfxUserFontEntry* aUserFontEntry,
                                             uint32_t aSrcIndex) {
+  if (NS_WARN_IF(!mDocument)) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv;
 
   nsCOMPtr<nsIStreamLoader> streamLoader;
@@ -324,6 +335,10 @@ bool FontFaceSetDocumentImpl::IsFontLoadAllowed(const gfxFontFaceSrc& aSrc) {
 
   if (aSrc.mUseOriginPrincipal) {
     return true;
+  }
+
+  if (NS_WARN_IF(!mDocument)) {
+    return false;
   }
 
   RefPtr<gfxFontSrcPrincipal> gfxPrincipal =
