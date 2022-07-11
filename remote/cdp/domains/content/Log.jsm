@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["Log"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const { ContentProcessDomain } = ChromeUtils.import(
   "chrome://remote/content/cdp/domains/ContentProcessDomain.jsm"
 );

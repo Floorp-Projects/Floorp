@@ -8,7 +8,6 @@ const { GeckoViewActorChild } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const EXPORTED_SYMBOLS = ["SelectionActionDelegateChild"];
 
 const MAGNIFIER_PREF = "layout.accessiblecaret.magnifier.enabled";

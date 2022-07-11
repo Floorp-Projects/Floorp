@@ -20,8 +20,6 @@ const SOCIAL_TRACKING_TABLE_NAME = "mochitest4-track-simple";
 const SOCIAL_TRACKING_TABLE_PREF =
   "urlclassifier.features.socialtracking.blacklistTables";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
 var UrlClassifierTestUtils = {

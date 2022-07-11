@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["ChildMessagePort"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { MessagePort } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/MessagePort.jsm"
 );

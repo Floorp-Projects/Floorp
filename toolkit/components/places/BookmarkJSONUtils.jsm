@@ -4,7 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["BookmarkJSONUtils"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );

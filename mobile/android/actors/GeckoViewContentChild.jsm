@@ -10,8 +10,6 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // This needs to match ScreenLength.java
 const SCREEN_LENGTH_TYPE_PIXEL = 0;
 const SCREEN_LENGTH_TYPE_VISUAL_VIEWPORT_WIDTH = 1;

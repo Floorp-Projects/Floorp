@@ -24,7 +24,6 @@ const { PlacesSyncUtils } = ChromeUtils.import(
 const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 
 async function DumpBookmarks() {

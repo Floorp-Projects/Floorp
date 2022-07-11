@@ -9,7 +9,6 @@ const { PromiseUtils } = ChromeUtils.import(
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

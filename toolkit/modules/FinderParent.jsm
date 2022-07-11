@@ -10,7 +10,6 @@ const kModalHighlightPref = "findbar.modalHighlight";
 const kSoundEnabledPref = "accessibility.typeaheadfind.enablesound";
 const kNotFoundSoundPref = "accessibility.typeaheadfind.soundURL";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

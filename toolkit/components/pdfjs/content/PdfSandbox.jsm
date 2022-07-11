@@ -15,7 +15,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { SandboxSupportBase } = ChromeUtils.import(
   "resource://pdf.js/build/pdf.sandbox.external.js"
 );

@@ -9,7 +9,6 @@
 
 const EXPORTED_SYMBOLS = ["BrowserTabs"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
 const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 

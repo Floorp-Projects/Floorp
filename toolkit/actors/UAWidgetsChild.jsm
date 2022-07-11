@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["UAWidgetsChild"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class UAWidgetsChild extends JSWindowActorChild {
   constructor() {
     super();

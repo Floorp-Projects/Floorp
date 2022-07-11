@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = ["ProfileAge"];
 
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const FILE_TIMES = "times.json";
 

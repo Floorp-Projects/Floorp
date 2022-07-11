@@ -15,8 +15,6 @@ var EXPORTED_SYMBOLS = ["NetUtil"];
 
 const PR_UINT32_MAX = 0xffffffff;
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",

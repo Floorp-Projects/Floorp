@@ -14,7 +14,6 @@ const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
 
 // TODO: remove this and do strict request count

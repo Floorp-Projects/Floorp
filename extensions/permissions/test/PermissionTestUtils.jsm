@@ -8,8 +8,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 let pm = Services.perms;
 
 let secMan = Services.scriptSecurityManager;

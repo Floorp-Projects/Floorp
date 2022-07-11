@@ -7,8 +7,6 @@ var EXPORTED_SYMBOLS = ["AutoCompleteChild"];
 
 /* eslint no-unused-vars: ["error", {args: "none"}] */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(

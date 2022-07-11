@@ -14,7 +14,6 @@ var EXPORTED_SYMBOLS = ["RemotePageChild"];
  * directly to the page.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,

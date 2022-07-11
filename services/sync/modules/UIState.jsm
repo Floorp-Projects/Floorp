@@ -16,7 +16,6 @@
 
 var EXPORTED_SYMBOLS = ["UIState"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,

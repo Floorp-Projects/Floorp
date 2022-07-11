@@ -19,7 +19,6 @@ var EXPORTED_SYMBOLS = ["RemotePages", "RemotePageManager"];
  *   from MessagePort.jsm.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { MessageListener, MessagePort } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/MessagePort.jsm"
 );

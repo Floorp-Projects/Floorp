@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["newAppInfo", "getAppInfo", "updateAppInfo"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 let origPlatformInfo = Cc["@mozilla.org/xre/app-info;1"].getService(
   Ci.nsIPlatformInfo
 );

@@ -9,7 +9,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const SCHEMA_VERSION = 1;
 const TRACKERS_BLOCKED_COUNT = "contentblocking.trackers_blocked_count";

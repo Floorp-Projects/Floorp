@@ -17,8 +17,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/NewTabUtils.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const { BasePromiseWorker } = ChromeUtils.import(
   "resource://gre/modules/PromiseWorker.jsm"
 );

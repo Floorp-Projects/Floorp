@@ -5,8 +5,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function isAutocompleteDisabled(aField) {
   if (aField.autocomplete !== "") {
     return aField.autocomplete === "off";

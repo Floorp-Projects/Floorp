@@ -3,8 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class RequestError extends Error {
   constructor(resultCode, resultName) {
     super(`Request failed (code: ${resultCode}, name: ${resultName})`);

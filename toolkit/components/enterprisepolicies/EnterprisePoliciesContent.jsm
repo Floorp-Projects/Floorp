@@ -4,8 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["EnterprisePoliciesManagerContent"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class EnterprisePoliciesManagerContent {
   get status() {
     return (

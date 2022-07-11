@@ -45,7 +45,6 @@ var EXPORTED_SYMBOLS = ["ExtensionSettingsStore"];
 const { ExtensionParent } = ChromeUtils.import(
   "resource://gre/modules/ExtensionParent.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 

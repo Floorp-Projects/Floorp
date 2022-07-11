@@ -12,7 +12,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { clearTimeout, setTimeoutWithTarget } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function debug(msg) {
   Services.console.logStringMessage("SessionStoreContent: " + msg);

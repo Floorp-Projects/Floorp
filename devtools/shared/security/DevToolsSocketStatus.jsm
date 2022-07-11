@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /**
  * Singleton that should be updated whenever a socket is opened or closed for
  * incoming connections.

@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["AsyncPrefs", "AsyncPrefsChild", "AsyncPrefsParent"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const kInChildProcess =
   Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 

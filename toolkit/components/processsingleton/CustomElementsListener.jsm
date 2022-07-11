@@ -5,8 +5,6 @@
 
 var EXPORTED_SYMBOLS = [];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // Set up Custom Elements for XUL and XHTML documents before anything else
 // happens. Anything loaded here should be considered part of core XUL functionality.
 // Any window-specific elements can be registered via <script> tags at the

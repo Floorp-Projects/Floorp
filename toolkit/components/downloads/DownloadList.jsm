@@ -14,8 +14,6 @@ var EXPORTED_SYMBOLS = [
   "DownloadSummary",
 ];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const kFileExtensions = [
   "aac",
   "adt",

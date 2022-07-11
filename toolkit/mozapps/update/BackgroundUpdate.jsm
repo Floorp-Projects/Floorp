@@ -13,7 +13,6 @@ const { AppConstants } = ChromeUtils.import(
 const { BackgroundTasksManager } = ChromeUtils.import(
   "resource://gre/modules/BackgroundTasksManager.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

@@ -8,8 +8,6 @@ var EXPORTED_SYMBOLS = ["TabsInTitlebar"];
 
 const PREF_TABS_IN_TITLEBAR = "browser.tabs.inTitlebar";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var TabsInTitlebar = {
   init(libDir) {},
 

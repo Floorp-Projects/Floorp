@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["DevToolsFrameChild"];
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const Loader = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );

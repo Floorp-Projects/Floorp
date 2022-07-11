@@ -11,8 +11,6 @@ var EXPORTED_SYMBOLS = [
   "getErrorNameForTelemetry",
 ];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // Map of the base histogram ids for the metrics recorded for the extensions.
 const histograms = {
   extensionStartup: "WEBEXT_EXTENSION_STARTUP_MS",

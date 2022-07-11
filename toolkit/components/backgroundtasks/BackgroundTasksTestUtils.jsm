@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["BackgroundTasksTestUtils"];
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Subprocess } = ChromeUtils.import(
   "resource://gre/modules/Subprocess.jsm"
 );

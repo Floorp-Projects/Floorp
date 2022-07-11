@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["Buttons"];
 const { CustomizableUI } = ChromeUtils.import(
   "resource:///modules/CustomizableUI.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var Buttons = {
   init(libDir) {

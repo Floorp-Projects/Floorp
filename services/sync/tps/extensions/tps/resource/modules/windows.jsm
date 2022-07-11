@@ -10,8 +10,6 @@
 
 const EXPORTED_SYMBOLS = ["BrowserWindows"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var BrowserWindows = {
   /**
    * Add

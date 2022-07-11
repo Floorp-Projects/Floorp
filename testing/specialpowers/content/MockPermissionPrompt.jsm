@@ -8,8 +8,6 @@ const Cm = Components.manager;
 
 const CONTRACT_ID = "@mozilla.org/content-permission/prompt;1";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID, oldFactory;
 var newClassID = Services.uuid.generateUUID();

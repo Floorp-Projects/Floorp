@@ -6,7 +6,6 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Stop updating jumplists after some idle time.
 const IDLE_TIMEOUT_SECONDS = 5 * 60;

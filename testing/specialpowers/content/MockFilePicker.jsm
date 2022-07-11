@@ -21,7 +21,6 @@ ChromeUtils.defineModuleGetter(
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /* globals __URI__ */
 if (__URI__.includes("specialpowers")) {

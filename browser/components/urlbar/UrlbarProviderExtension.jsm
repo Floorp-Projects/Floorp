@@ -14,7 +14,6 @@ var EXPORTED_SYMBOLS = ["UrlbarProviderExtension"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { SkippableTimer, UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
   "resource:///modules/UrlbarUtils.jsm"

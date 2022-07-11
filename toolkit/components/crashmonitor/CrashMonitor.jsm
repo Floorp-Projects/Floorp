@@ -39,7 +39,6 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const SESSIONSTORE_WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
 const SESSIONSTORE_FINAL_STATE_WRITE_COMPLETE_TOPIC =

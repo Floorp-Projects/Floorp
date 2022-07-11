@@ -7,7 +7,6 @@
 const { LogManager } = ChromeUtils.import(
   "resource://normandy/lib/LogManager.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,

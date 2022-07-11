@@ -12,7 +12,6 @@ const { SharedDataMap } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FeatureManifest: "resource://nimbus/FeatureManifest.js",

@@ -14,7 +14,6 @@
 var EXPORTED_SYMBOLS = ["Credentials"];
 
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );

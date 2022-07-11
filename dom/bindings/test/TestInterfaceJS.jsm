@@ -8,8 +8,6 @@
 
 var EXPORTED_SYMBOLS = ["TestInterfaceJS"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function TestInterfaceJS() {}
 
 TestInterfaceJS.prototype = {

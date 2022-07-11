@@ -4,7 +4,6 @@
 "use strict";
 
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );

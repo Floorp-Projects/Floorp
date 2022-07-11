@@ -7,7 +7,6 @@
 // 1 day default
 const DEFAULT_SECONDS_BETWEEN_CHECKS = 60 * 60 * 24;
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );

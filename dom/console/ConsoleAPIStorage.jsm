@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const STORAGE_MAX_EVENTS = 1000;
 
 var _consoleStorage = new Map();

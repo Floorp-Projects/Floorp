@@ -9,7 +9,6 @@
 
 var EXPORTED_SYMBOLS = ["Password", "DumpPasswords"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 
 var nsLoginInfo = new Components.Constructor(

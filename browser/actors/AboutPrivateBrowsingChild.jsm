@@ -13,8 +13,6 @@ const { RemotePageChild } = ChromeUtils.import(
   "resource://gre/actors/RemotePageChild.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {

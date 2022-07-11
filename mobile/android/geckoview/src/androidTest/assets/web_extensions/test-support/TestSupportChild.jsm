@@ -6,8 +6,6 @@ const { GeckoViewActorChild } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewActorChild.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const EXPORTED_SYMBOLS = ["TestSupportChild"];
 
 class TestSupportChild extends GeckoViewActorChild {

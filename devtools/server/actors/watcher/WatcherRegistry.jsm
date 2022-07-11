@@ -28,7 +28,6 @@
 
 var EXPORTED_SYMBOLS = ["WatcherRegistry"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { ActorManagerParent } = ChromeUtils.import(
   "resource://gre/modules/ActorManagerParent.jsm"
 );

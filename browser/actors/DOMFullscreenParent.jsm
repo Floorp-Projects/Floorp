@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["DOMFullscreenParent"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class DOMFullscreenParent extends JSWindowActorParent {
   // These properties get set by browser-fullScreenAndPointerLock.js.
   // TODO: Bug 1743703 - Consider moving the messaging component of
