@@ -446,21 +446,6 @@ class PeerConnectionE2EQualityTestFixture {
     // If set to true peers will be able to use Flex FEC, otherwise they won't
     // be able to negotiate it even if it's enabled on per peer level.
     bool enable_flex_fec_support = false;
-    // TODO(titovartem): delete this field.
-    // Deprecated. Use `PeerConfigurer::SetUseUlpFEC`.
-    bool use_ulp_fec = false;
-    // TODO(titovartem): delete this field.
-    // Deprecated. Use `PeerConfigurer::SetUseFlexFEC`.
-    bool use_flex_fec = false;
-    // TODO(titovartem): delete this field.
-    // Deprecated. Use `PeerConfigurer::SetVideoEncoderBitrateMultiplier`.
-    // Specifies how much video encoder target bitrate should be different than
-    // target bitrate, provided by WebRTC stack. Must be greater then 0. Can be
-    // used to emulate overshooting of video encoders. This multiplier will
-    // be applied for all video encoder on both sides for all layers. Bitrate
-    // estimated by WebRTC stack will be multiplied on this multiplier and then
-    // provided into VideoEncoder::SetRates(...).
-    double video_encoder_bitrate_multiplier = 1.0;
     // If true will set conference mode in SDP media section for all video
     // tracks for all peers.
     bool use_conference_mode = false;

@@ -181,8 +181,11 @@ PeerConnectionE2EQualityTest::PeerHandle* PeerConnectionE2EQualityTest::AddPeer(
 }
 
 void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
-  SetDefaultValuesForMissingParams(&run_params, &peer_configurations_);
-  ValidateParams(run_params, peer_configurations_);
+  webrtc::webrtc_pc_e2e::PeerParamsPreprocessor params_preprocessor;
+  for (auto& peer_configuration : peer_configurations_) {
+    params_preprocessor.SetDefaultValuesForMissingParams(*peer_configuration);
+    params_preprocessor.ValidateParams(*peer_configuration);
+  }
   ValidateP2PSimulcastParams(peer_configurations_);
   RTC_CHECK_EQ(peer_configurations_.size(), 2)
       << "Only peer to peer calls are allowed, please add 2 peers";

@@ -280,24 +280,6 @@ class PeerParamsPreprocessor {
   int media_streams_count = 0;
 };
 
-// TODO(titovartem): delete this method.
-// Deprecated. Use `PeerParamsPreprocessor`.
-// Set missing params to default values if it is required:
-//  * Generate video stream labels if some of them are missing
-//  * Generate audio stream labels if some of them are missing
-//  * Set video source generation mode if it is not specified
-//  * Video codecs under test
-void SetDefaultValuesForMissingParams(
-    PeerConnectionE2EQualityTestFixture::RunParams* run_params,
-    std::vector<std::unique_ptr<PeerConfigurerImpl>>* peers);
-// TODO(titovartem): delete this method.
-// Deprecated. Use `PeerParamsPreprocessor`.
-// Validate peer's parameters, also ensure uniqueness of all video stream
-// labels.
-void ValidateParams(
-    const PeerConnectionE2EQualityTestFixture::RunParams& run_params,
-    const std::vector<std::unique_ptr<PeerConfigurerImpl>>& peers);
-
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc
 
