@@ -103,11 +103,11 @@ class RtcEventBweUpdateDelayBased final : public RtcEvent {
   }
 
   static RtcEventLogParseStatus Parse(
-      absl::string_view s,
+      absl::string_view encoded_bytes,
       bool batched,
       std::vector<LoggedBweDelayBasedUpdate>& output) {
-    return RtcEventBweUpdateDelayBased::definition_.ParseBatch(s, batched,
-                                                               output);
+    return RtcEventBweUpdateDelayBased::definition_.ParseBatch(encoded_bytes,
+                                                               batched, output);
   }
 
  private:

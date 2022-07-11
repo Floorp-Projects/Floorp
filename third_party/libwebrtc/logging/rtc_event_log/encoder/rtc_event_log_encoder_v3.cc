@@ -75,9 +75,53 @@ std::string RtcEventLogEncoderV3::EncodeLogEnd(int64_t timestamp_us) {
 
 RtcEventLogEncoderV3::RtcEventLogEncoderV3() {
   encoders_[RtcEvent::Type::AlrStateEvent] = RtcEventAlrState::Encode;
+  encoders_[RtcEvent::Type::AudioNetworkAdaptation] =
+      RtcEventAudioNetworkAdaptation::Encode;
   encoders_[RtcEvent::Type::AudioPlayout] = RtcEventAudioPlayout::Encode;
+  encoders_[RtcEvent::Type::AudioReceiveStreamConfig] =
+      RtcEventAudioReceiveStreamConfig::Encode;
+  encoders_[RtcEvent::Type::AudioSendStreamConfig] =
+      RtcEventAudioSendStreamConfig::Encode;
   encoders_[RtcEvent::Type::BweUpdateDelayBased] =
       RtcEventBweUpdateDelayBased::Encode;
+  encoders_[RtcEvent::Type::BweUpdateLossBased] =
+      RtcEventBweUpdateLossBased::Encode;
+  encoders_[RtcEvent::Type::DtlsTransportState] =
+      RtcEventDtlsTransportState::Encode;
+  encoders_[RtcEvent::Type::DtlsWritableState] =
+      RtcEventDtlsWritableState::Encode;
+  encoders_[RtcEvent::Type::FrameDecoded] = RtcEventFrameDecoded::Encode;
+  encoders_[RtcEvent::Type::GenericAckReceived] =
+      RtcEventGenericAckReceived::Encode;
+  encoders_[RtcEvent::Type::GenericPacketReceived] =
+      RtcEventGenericPacketReceived::Encode;
+  encoders_[RtcEvent::Type::GenericPacketSent] =
+      RtcEventGenericPacketSent::Encode;
+  encoders_[RtcEvent::Type::IceCandidatePairConfig] =
+      RtcEventIceCandidatePairConfig::Encode;
+  encoders_[RtcEvent::Type::IceCandidatePairEvent] =
+      RtcEventIceCandidatePair::Encode;
+  encoders_[RtcEvent::Type::ProbeClusterCreated] =
+      RtcEventProbeClusterCreated::Encode;
+  encoders_[RtcEvent::Type::ProbeResultFailure] =
+      RtcEventProbeResultFailure::Encode;
+  encoders_[RtcEvent::Type::ProbeResultSuccess] =
+      RtcEventProbeResultSuccess::Encode;
+  encoders_[RtcEvent::Type::RemoteEstimateEvent] =
+      RtcEventRemoteEstimate::Encode;
+  encoders_[RtcEvent::Type::RouteChangeEvent] = RtcEventRouteChange::Encode;
+  encoders_[RtcEvent::Type::RtcpPacketIncoming] =
+      RtcEventRtcpPacketIncoming::Encode;
+  encoders_[RtcEvent::Type::RtcpPacketOutgoing] =
+      RtcEventRtcpPacketOutgoing::Encode;
+  encoders_[RtcEvent::Type::RtpPacketIncoming] =
+      RtcEventRtpPacketIncoming::Encode;
+  encoders_[RtcEvent::Type::RtpPacketOutgoing] =
+      RtcEventRtpPacketOutgoing::Encode;
+  encoders_[RtcEvent::Type::VideoReceiveStreamConfig] =
+      RtcEventVideoReceiveStreamConfig::Encode;
+  encoders_[RtcEvent::Type::VideoSendStreamConfig] =
+      RtcEventVideoSendStreamConfig::Encode;
 }
 
 std::string RtcEventLogEncoderV3::EncodeBatch(

@@ -28,6 +28,7 @@
 #include "logging/rtc_event_log/encoder/delta_encoding.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_common.h"
 #include "logging/rtc_event_log/encoder/var_int.h"
+#include "logging/rtc_event_log/events/logged_rtp_rtcp.h"
 #include "logging/rtc_event_log/rtc_event_processor.h"
 #include "modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor.h"
 #include "modules/include/module_common_types_public.h"
@@ -951,6 +952,35 @@ std::vector<RtpExtension> GetRuntimeRtpHeaderExtensionConfig(
 }
 // End of conversion functions.
 
+LoggedPacketInfo::LoggedPacketInfo(const LoggedRtpPacket& rtp,
+                                   LoggedMediaType media_type,
+                                   bool rtx,
+                                   Timestamp capture_time)
+    : ssrc(rtp.header.ssrc),
+      stream_seq_no(rtp.header.sequenceNumber),
+      size(static_cast<uint16_t>(rtp.total_length)),
+      payload_size(static_cast<uint16_t>(rtp.total_length -
+                                         rtp.header.paddingLength -
+                                         rtp.header.headerLength)),
+      padding_size(static_cast<uint16_t>(rtp.header.paddingLength)),
+      payload_type(rtp.header.payloadType),
+      media_type(media_type),
+      rtx(rtx),
+      marker_bit(rtp.header.markerBit),
+      has_transport_seq_no(rtp.header.extension.hasTransportSequenceNumber),
+      transport_seq_no(static_cast<uint16_t>(
+          has_transport_seq_no ? rtp.header.extension.transportSequenceNumber
+                               : 0)),
+      capture_time(capture_time),
+      log_packet_time(Timestamp::Micros(rtp.log_time_us())),
+      reported_send_time(rtp.header.extension.hasAbsoluteSendTime
+                             ? rtp.header.extension.GetAbsoluteSendTimestamp()
+                             : Timestamp::MinusInfinity()) {}
+
+LoggedPacketInfo::LoggedPacketInfo(const LoggedPacketInfo&) = default;
+
+LoggedPacketInfo::~LoggedPacketInfo() {}
+
 ParsedRtcEventLog::~ParsedRtcEventLog() = default;
 
 ParsedRtcEventLog::LoggedRtpStreamIncoming::LoggedRtpStreamIncoming() = default;
@@ -1432,6 +1462,96 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStreamInternalV3(
       case static_cast<uint32_t>(RtcEvent::Type::BweUpdateDelayBased):
         RtcEventBweUpdateDelayBased::Parse(event_fields, batched,
                                            bwe_delay_updates_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::AudioNetworkAdaptation):
+        RtcEventAudioNetworkAdaptation::Parse(event_fields, batched,
+                                              audio_network_adaptation_events_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::AudioReceiveStreamConfig):
+        RtcEventAudioReceiveStreamConfig::Parse(event_fields, batched,
+                                                audio_recv_configs_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::AudioSendStreamConfig):
+        RtcEventAudioSendStreamConfig::Parse(event_fields, batched,
+                                             audio_send_configs_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::BweUpdateLossBased):
+        RtcEventBweUpdateLossBased::Parse(event_fields, batched,
+                                          bwe_loss_updates_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::DtlsTransportState):
+        RtcEventDtlsTransportState::Parse(event_fields, batched,
+                                          dtls_transport_states_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::DtlsWritableState):
+        RtcEventDtlsWritableState::Parse(event_fields, batched,
+                                         dtls_writable_states_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::FrameDecoded):
+        RtcEventFrameDecoded::Parse(event_fields, batched, decoded_frames_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::GenericAckReceived):
+        RtcEventGenericAckReceived::Parse(event_fields, batched,
+                                          generic_acks_received_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::GenericPacketReceived):
+        RtcEventGenericPacketReceived::Parse(event_fields, batched,
+                                             generic_packets_received_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::GenericPacketSent):
+        RtcEventGenericPacketSent::Parse(event_fields, batched,
+                                         generic_packets_sent_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::IceCandidatePairConfig):
+        RtcEventIceCandidatePairConfig::Parse(event_fields, batched,
+                                              ice_candidate_pair_configs_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::IceCandidatePairEvent):
+        RtcEventIceCandidatePair::Parse(event_fields, batched,
+                                        ice_candidate_pair_events_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::ProbeClusterCreated):
+        RtcEventProbeClusterCreated::Parse(event_fields, batched,
+                                           bwe_probe_cluster_created_events_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::ProbeResultFailure):
+        RtcEventProbeResultFailure::Parse(event_fields, batched,
+                                          bwe_probe_failure_events_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::ProbeResultSuccess):
+        RtcEventProbeResultSuccess::Parse(event_fields, batched,
+                                          bwe_probe_success_events_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::RemoteEstimateEvent):
+        RtcEventRemoteEstimate::Parse(event_fields, batched,
+                                      remote_estimate_events_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::RouteChangeEvent):
+        RtcEventRouteChange::Parse(event_fields, batched, route_change_events_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::RtcpPacketIncoming):
+        RtcEventRtcpPacketIncoming::Parse(event_fields, batched,
+                                          incoming_rtcp_packets_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::RtcpPacketOutgoing):
+        RtcEventRtcpPacketOutgoing::Parse(event_fields, batched,
+                                          outgoing_rtcp_packets_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::RtpPacketIncoming):
+        RtcEventRtpPacketIncoming::Parse(event_fields, batched,
+                                         incoming_rtp_packets_map_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::RtpPacketOutgoing):
+        RtcEventRtpPacketOutgoing::Parse(event_fields, batched,
+                                         outgoing_rtp_packets_map_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::VideoReceiveStreamConfig):
+        RtcEventVideoReceiveStreamConfig::Parse(event_fields, batched,
+                                                video_recv_configs_);
+        break;
+      case static_cast<uint32_t>(RtcEvent::Type::VideoSendStreamConfig):
+        RtcEventVideoSendStreamConfig::Parse(event_fields, batched,
+                                             video_send_configs_);
         break;
     }
   }
