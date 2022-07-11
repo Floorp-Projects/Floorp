@@ -196,7 +196,7 @@ DcSctpSocket::DcSctpSocket(absl::string_view log_prefix,
           [this]() { callbacks_.OnTotalBufferedAmountLow(); }) {}
 
 std::string DcSctpSocket::log_prefix() const {
-  return log_prefix_ + "[" + std::string(ToString(state_)) + "] ";
+  return log_prefix_ + "[" + std::string(ToString(state_)) + "] ";
 }
 
 bool DcSctpSocket::IsConsistent() const {
