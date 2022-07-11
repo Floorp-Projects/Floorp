@@ -5,7 +5,6 @@ const kPagePrefRoot = "browser.laterrun.pages.";
 const kSessionCountPref = "browser.laterrun.bookkeeping.sessionCount";
 const kProfileCreationTime = "browser.laterrun.bookkeeping.profileCreationTime";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { LaterRun } = ChromeUtils.import("resource:///modules/LaterRun.jsm");
 
 Services.prefs.setBoolPref(kEnabledPref, true);

@@ -12,7 +12,6 @@ var EXPORTED_SYMBOLS = [
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { RESTRequest } = ChromeUtils.import(
   "resource://services-common/rest.js"

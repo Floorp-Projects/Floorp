@@ -10,7 +10,6 @@ const { AppConstants } = ChromeUtils.import(
 const { ProcessType } = ChromeUtils.import(
   "resource://gre/modules/ProcessType.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let AboutThirdParty = null;
 let CrashModuleSet = null;

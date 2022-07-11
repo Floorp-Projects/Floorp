@@ -11,8 +11,6 @@
  * This file silently depends on contentAreaUtils.js for getDefaultFileName
  */
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 ChromeUtils.defineModuleGetter(
   this,
   "PrivateBrowsingUtils",

@@ -10,8 +10,6 @@
  * pippki UI js files.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 function setText(id, value) {

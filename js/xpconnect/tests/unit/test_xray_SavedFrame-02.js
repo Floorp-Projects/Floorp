@@ -1,7 +1,6 @@
 // Test calling SavedFrame getters across wrappers from privileged and
 // un-privileged globals.
 
-const {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
 const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 

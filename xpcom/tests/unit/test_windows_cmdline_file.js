@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 let executableFile = Services.dirsvc.get("CurProcD", Ci.nsIFile);
 executableFile.append("xpcshell.exe");
 function run_test() {

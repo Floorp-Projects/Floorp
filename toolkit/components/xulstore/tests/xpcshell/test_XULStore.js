@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var XULStore = null;
 var browserURI = "chrome://browser/content/browser.xhtml";
 var aboutURI = "about:config";

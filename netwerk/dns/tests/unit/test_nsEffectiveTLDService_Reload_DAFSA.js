@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const SIGNAL = "public-suffix-list-updated";
 
 add_task(async () => {

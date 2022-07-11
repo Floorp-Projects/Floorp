@@ -1,6 +1,5 @@
 "use strict";
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const gPrefs = Services.prefs;
 
 function symmetricEquality(expect, a, b) {

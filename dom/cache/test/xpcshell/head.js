@@ -9,8 +9,6 @@
 // testSteps is expected to be defined by the file including this file.
 /* global testSteps */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 const osWindowsName = "WINNT";
 const pathDelimiter = "/";

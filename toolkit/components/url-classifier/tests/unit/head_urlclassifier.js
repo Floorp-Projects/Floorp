@@ -33,7 +33,6 @@ var {
   HttpError,
   HttpServer,
 } = ChromeUtils.import("resource://testing-common/httpd.js");
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 do_get_profile();
 

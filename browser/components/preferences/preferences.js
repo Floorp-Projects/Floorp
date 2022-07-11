@@ -20,7 +20,6 @@
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var { Downloads } = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
 var { Integration } = ChromeUtils.import(

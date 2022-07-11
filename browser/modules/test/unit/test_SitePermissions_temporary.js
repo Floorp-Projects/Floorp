@@ -6,7 +6,6 @@
 const { SitePermissions } = ChromeUtils.import(
   "resource:///modules/SitePermissions.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const TemporaryPermissions = SitePermissions._temporaryPermissions;
 

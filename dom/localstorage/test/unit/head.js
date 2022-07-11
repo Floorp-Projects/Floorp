@@ -8,8 +8,6 @@
 
 const NS_ERROR_DOM_QUOTA_EXCEEDED_ERR = 22;
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function is(a, b, msg) {
   Assert.equal(a, b, msg);
 }

@@ -1,5 +1,4 @@
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const URI = Services.io.newURI("http://example.org/");
 

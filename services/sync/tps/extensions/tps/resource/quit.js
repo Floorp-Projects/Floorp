@@ -9,8 +9,6 @@
 */
 var EXPORTED_SYMBOLS = ["goQuitApplication"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function canQuitApplication() {
   try {
     var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(

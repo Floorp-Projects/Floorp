@@ -20,7 +20,6 @@ const IS_ALPHA = /^[a-z]+$/i;
 var { PerfTestHelpers } = ChromeUtils.import(
   "resource://testing-common/PerfTestHelpers.jsm"
 );
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { OS, require } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 /**

@@ -1,7 +1,5 @@
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function makeSandbox() {
   return Cu.Sandbox(
     Services.scriptSecurityManager.getSystemPrincipal(),

@@ -5,7 +5,6 @@
 
 requestLongerTimeout(4);
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
   "resource://testing-common/EnterprisePolicyTesting.jsm"
 );

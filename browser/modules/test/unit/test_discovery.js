@@ -8,7 +8,6 @@
 // ClientID fails without...
 do_get_profile();
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );

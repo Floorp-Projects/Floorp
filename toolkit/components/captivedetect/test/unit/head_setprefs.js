@@ -8,7 +8,6 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var {
   HTTP_400,
   HTTP_401,

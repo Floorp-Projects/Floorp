@@ -1,7 +1,6 @@
 'use strict'
 
 ChromeUtils.import('resource://gre/modules/Preferences.jsm');
-const {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
 
 add_task(async function() {
   let webnav = Services.appShell.createWindowlessBrowser(false);

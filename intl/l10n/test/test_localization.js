@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(function test_methods_presence() {
   strictEqual(typeof Localization.prototype.formatValues, "function");

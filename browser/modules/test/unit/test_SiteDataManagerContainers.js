@@ -3,7 +3,6 @@
  */
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { SiteDataManager } = ChromeUtils.import(
   "resource:///modules/SiteDataManager.jsm"
 );

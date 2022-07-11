@@ -4,8 +4,6 @@
 
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1273251
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function promiseEvent(target, event) {
   return new Promise(resolve => {
     target.addEventListener(event, resolve, {capture: true, once: true});

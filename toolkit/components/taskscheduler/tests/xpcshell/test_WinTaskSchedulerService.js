@@ -8,7 +8,6 @@
 const svc = Cc["@mozilla.org/win-task-scheduler-service;1"].getService(
   Ci.nsIWinTaskSchedulerService
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function randomName() {
   return (

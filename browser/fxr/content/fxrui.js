@@ -31,7 +31,6 @@ let forwardButton = null;
 let refreshButton = null;
 let stopButton = null;
 
-let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );

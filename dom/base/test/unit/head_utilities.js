@@ -31,7 +31,6 @@ var {
   HttpServer,
 } = ChromeUtils.import("resource://testing-common/httpd.js");
 var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const nsIDocumentEncoder = Ci.nsIDocumentEncoder;
 const replacementChar =

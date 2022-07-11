@@ -4,8 +4,6 @@
  * all GetStringFromName calls should fail.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const name_ascii = "asciiProperty";
 const value_ascii = "";
 

@@ -6,8 +6,6 @@
 
 "use strict";
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function forceSyncReflow(div) {
   div.setAttribute("class", "resize-change-color");
   // Force a reflow.

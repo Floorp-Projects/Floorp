@@ -6,8 +6,6 @@
 // The path to the top level directory.
 const depth = "../../../../";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 loadScript("dom/quota/test/xpcshell/common/head.js");
 
 function loadScript(path) {
