@@ -38,7 +38,7 @@ const backgroundtaskPhases = {
         "resource://gre/modules/EnterprisePolicies.jsm",
         "resource://gre/modules/EnterprisePoliciesParent.jsm",
         "resource://gre/modules/PromiseUtils.jsm",
-        "resource://gre/modules/XPCOMUtils.jsm",
+        "resource://gre/modules/XPCOMUtils.sys.mjs",
         "resource://gre/modules/nsAsyncShutdown.jsm",
       ],
       // Human-readable contract IDs are many-to-one mapped to CIDs, so this
