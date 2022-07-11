@@ -30,7 +30,7 @@ def FindSrcDirPath():
 UPDATE_BRANCH_NAME = 'webrtc_version_update'
 CHECKOUT_SRC_DIR = FindSrcDirPath()
 
-NOTIFY_EMAIL = 'mbonadei@webrtc.org'
+NOTIFY_EMAIL = 'webrtc-trooper@webrtc.org'
 
 
 def _RemovePreviousUpdateBranch():
@@ -47,7 +47,8 @@ def _RemovePreviousUpdateBranch():
 def _GetLastAuthor():
   """Returns a string with the author of the last commit."""
   author = subprocess.check_output(
-      ['git', 'log', '-1', '--pretty=format:"%an"']).splitlines()
+      ['git', 'log', '-1', '--pretty=format:"%an"'],
+      universal_newlines=True).splitlines()
   return author
 
 
@@ -57,7 +58,8 @@ def _GetBranches():
     'active' is a string with name of the currently active branch, while
      'branches' is the list of all branches.
     """
-  lines = subprocess.check_output(['git', 'branch']).splitlines()
+  lines = subprocess.check_output(['git', 'branch'],
+                                  universal_newlines=True).splitlines()
   branches = []
   active = ''
   for line in lines:
@@ -78,8 +80,8 @@ def _CreateUpdateBranch():
 
 
 def _UpdateWebRTCVersion(filename):
-  with open(filename) as f:
-    content = f.read()
+  with open(filename, 'rb') as f:
+    content = f.read().decode('utf-8')
   d = datetime.datetime.utcnow()
   # pylint: disable=line-too-long
   new_content = re.sub(
@@ -89,12 +91,13 @@ def _UpdateWebRTCVersion(filename):
       content,
       flags=re.MULTILINE)
   # pylint: enable=line-too-long
-  with open(filename, 'w') as f:
-    f.write(new_content)
+  with open(filename, 'wb') as f:
+    f.write(new_content.encode('utf-8'))
 
 
 def _IsTreeClean():
-  stdout = subprocess.check_output(['git', 'status', '--porcelain'])
+  stdout = subprocess.check_output(['git', 'status', '--porcelain'],
+                                   universal_newlines=True)
   if len(stdout) == 0:
     return True
   return False
