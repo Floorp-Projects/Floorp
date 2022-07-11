@@ -182,10 +182,6 @@
   margin-inline-start: 12px;
 }
 
-.urlbarView-row:not([dynamicType=quickactions]) {
-  margin-inline: calc(5px + var(--urlbar-container-padding));
-}
-
 .urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row:hover {
   background-color: var(--autocomplete-popup-highlight-background);
   border: .5px solid #CFCFD8;
