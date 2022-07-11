@@ -104,7 +104,6 @@ std::string CodecSpecificToString(const VideoCodec& codec) {
   rtc::SimpleStringBuilder ss(buf);
   switch (codec.codecType) {
     case kVideoCodecVP8:
-      ss << "complexity: " << static_cast<int>(codec.VP8().complexity);
       ss << "\nnum_temporal_layers: "
          << static_cast<int>(codec.VP8().numberOfTemporalLayers);
       ss << "\ndenoising: " << codec.VP8().denoisingOn;
@@ -113,7 +112,6 @@ std::string CodecSpecificToString(const VideoCodec& codec) {
       ss << "\nkey_frame_interval: " << codec.VP8().keyFrameInterval;
       break;
     case kVideoCodecVP9:
-      ss << "complexity: " << static_cast<int>(codec.VP9().complexity);
       ss << "\nnum_temporal_layers: "
          << static_cast<int>(codec.VP9().numberOfTemporalLayers);
       ss << "\nnum_spatial_layers: "
@@ -302,6 +300,8 @@ std::string VideoCodecTestFixtureImpl::Config::ToString() const {
   ss << "\nnum_simulcast_streams: "
      << static_cast<int>(codec_settings.numberOfSimulcastStreams);
   ss << "\n\n--> codec_settings." << codec_type;
+  ss << "complexity: "
+     << static_cast<int>(codec_settings.GetVideoEncoderComplexity());
   ss << "\n" << CodecSpecificToString(codec_settings);
   if (codec_settings.numberOfSimulcastStreams > 1) {
     for (int i = 0; i < codec_settings.numberOfSimulcastStreams; ++i) {

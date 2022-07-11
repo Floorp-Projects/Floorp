@@ -76,7 +76,8 @@ class TestVp8Impl : public VideoCodecUnitTest {
     webrtc::test::CodecSettings(kVideoCodecVP8, codec_settings);
     codec_settings->width = kWidth;
     codec_settings->height = kHeight;
-    codec_settings->VP8()->complexity = VideoCodecComplexity::kComplexityNormal;
+    codec_settings->SetVideoEncoderComplexity(
+        VideoCodecComplexity::kComplexityNormal);
   }
 
   void EncodeAndWaitForFrame(const VideoFrame& input_frame,
