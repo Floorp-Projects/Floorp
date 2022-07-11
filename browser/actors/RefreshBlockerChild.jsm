@@ -10,7 +10,6 @@
 
 var EXPORTED_SYMBOLS = ["RefreshBlockerChild", "RefreshBlockerObserverChild"];
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 const REFRESHBLOCKING_PREF = "accessibility.blockautorefresh";

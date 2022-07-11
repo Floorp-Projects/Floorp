@@ -78,9 +78,6 @@ class TestSafeBrowsingWarningPages(WindowManagerMixin, MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             self.marionette.execute_script(
                 """
-              const { Services } = ChromeUtils.import(
-                "resource://gre/modules/Services.jsm"
-              );
               let uri = Services.io.newURI(arguments[0], null, null);
               let principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
               Services.perms.removeFromPrincipal(principal, arguments[1]);
@@ -101,9 +98,6 @@ class TestSafeBrowsingWarningPages(WindowManagerMixin, MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             url = self.marionette.execute_script(
                 """
-              const { Services } = ChromeUtils.import(
-                "resource://gre/modules/Services.jsm"
-              );
               return Services.urlFormatter.formatURLPref("app.support.baseURL")
                                                          + "phishing-malware";
             """

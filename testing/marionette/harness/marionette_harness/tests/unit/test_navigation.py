@@ -85,9 +85,6 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
               let win = null;
 
               if (AppConstants.MOZ_APP_NAME == "fennec") {
-                const { Services } = ChromeUtils.import(
-                  "resource://gre/modules/Services.jsm"
-                );
                 win = Services.wm.getMostRecentWindow("navigator:browser");
               } else {
                 const { BrowserWindowTracker } = ChromeUtils.import(

@@ -73,10 +73,6 @@ add_task(async function runTest() {
           addBreakpoint, assertPausedAtSourceAndLine, stepIn, findSource,
           removeBreakpoint, resume, selectSource, assertNotPaused, assertBreakpoint,
           assertTextContentOnLine */
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
-
     Services.prefs.clearUserPref("devtools.debugger.tabs");
     Services.prefs.clearUserPref("devtools.debugger.pending-selected-location");
 

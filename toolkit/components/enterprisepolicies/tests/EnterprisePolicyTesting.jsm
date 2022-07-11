@@ -7,7 +7,6 @@
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 const lazy = {};

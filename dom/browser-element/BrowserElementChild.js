@@ -7,8 +7,6 @@
 
 "use strict";
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function debug(msg) {
   // dump("BrowserElementChild - " + msg + "\n");
 }

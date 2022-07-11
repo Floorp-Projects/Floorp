@@ -4,8 +4,6 @@
 
 /* import-globals-from /toolkit/content/preferencesBindings.js */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 Preferences.addAll([
   { id: "services.sync.engine.addons", type: "bool" },
   { id: "services.sync.engine.bookmarks", type: "bool" },

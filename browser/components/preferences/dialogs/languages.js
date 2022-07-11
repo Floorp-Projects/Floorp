@@ -5,8 +5,6 @@
 
 /* import-globals-from /toolkit/content/preferencesBindings.js */
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 document
   .getElementById("LanguagesDialog")
   .addEventListener("dialoghelp", window.top.openPrefsHelp);

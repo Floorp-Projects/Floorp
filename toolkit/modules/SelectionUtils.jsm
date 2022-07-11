@@ -7,8 +7,6 @@
 
 var EXPORTED_SYMBOLS = ["SelectionUtils"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var SelectionUtils = {
   /**
    * Trim the selection text to a reasonable size and sanitize it to make it

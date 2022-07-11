@@ -17,8 +17,6 @@ function getLoadContext() {
   return window.docShell.QueryInterface(Ci.nsILoadContext);
 }
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var transferable = Cc['@mozilla.org/widget/transferable;1']
                              .createInstance(Ci.nsITransferable);
 transferable.init(getLoadContext());

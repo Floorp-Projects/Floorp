@@ -7,7 +7,6 @@ let reportURL;
 const { CrashReports } = ChromeUtils.import(
   "resource://gre/modules/CrashReports.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineModuleGetter(

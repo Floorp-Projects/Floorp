@@ -13,8 +13,6 @@ var EXPORTED_SYMBOLS = [
 const TRANSLATION_PREF_SHOWUI = "browser.translation.ui.show";
 const TRANSLATION_PREF_DETECT_LANG = "browser.translation.detectLanguage";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var Translation = {
   STATE_OFFER: 0,
   STATE_TRANSLATING: 1,

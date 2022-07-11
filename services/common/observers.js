@@ -4,8 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["Observers"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /**
  * A service for adding, removing and notifying observers of notifications.
  * Wraps the nsIObserverService interface.

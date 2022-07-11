@@ -18,7 +18,6 @@ ChromeUtils.defineModuleGetter(
   "ClientID",
   "resource://gre/modules/ClientID.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(lazy, "CryptoHash", () => {
   return Components.Constructor(

@@ -15,7 +15,6 @@ const HOME_PAGE = "resource://mozscreenshots/lib/mozscreenshots.html";
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { Rect } = ChromeUtils.import("resource://gre/modules/Geometry.jsm");
 

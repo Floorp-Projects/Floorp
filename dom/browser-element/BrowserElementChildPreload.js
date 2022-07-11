@@ -14,7 +14,6 @@ debug("loaded");
 
 var BrowserElementIsReady;
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { BrowserElementPromptService } = ChromeUtils.import(
   "resource://gre/modules/BrowserElementPromptService.jsm"
 );

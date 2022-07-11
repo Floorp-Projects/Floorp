@@ -6,7 +6,6 @@
 
 const EXPORTED_SYMBOLS = ["SharedDataMap"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );

@@ -16,8 +16,6 @@ if (DEBUG) {
 
 var EXPORTED_SYMBOLS = ["IndexedDBHelper"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function getErrorName(err) {
   return (err && err.name) || "UnknownError";
 }

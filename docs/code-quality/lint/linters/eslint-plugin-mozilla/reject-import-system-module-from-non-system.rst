@@ -16,7 +16,7 @@ Inside a non-system module:
 
 .. code-block:: js
 
-    import { Services } from "resource://gre/modules/Services.sys.mjs";
+    import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 Examples of correct code for this rule:
 ---------------------------------------
@@ -25,12 +25,12 @@ Inside a non-system module:
 
 .. code-block:: js
 
-    const { Services } = ChromeUtils.importESM(
-      "resource://gre/modules/Services.sys.mjs"
+    const { AppConstants } = ChromeUtils.importESM(
+      "resource://gre/modules/AppConstants.sys.mjs"
     );
 
 Inside a system module:
 
 .. code-block:: js
 
-    import { Services } from "resource://gre/modules/Services.sys.mjs";
+    import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";

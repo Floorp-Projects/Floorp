@@ -19,8 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 let { Assert: AssertCls } = ChromeUtils.import(
   "resource://testing-common/Assert.jsm"
 );

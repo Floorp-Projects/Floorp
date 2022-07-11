@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["ExecutionContext"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const TYPED_ARRAY_CLASSES = [
   "Uint8Array",
   "Uint8ClampedArray",

@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["PromiseUtils"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var PromiseUtils = {
   /*
    * Creates a new pending Promise and provide methods to resolve and reject this Promise.

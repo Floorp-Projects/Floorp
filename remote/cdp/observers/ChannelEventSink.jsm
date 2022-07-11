@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["ChannelEventSinkFactory"];
 const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const Cm = Components.manager;
 

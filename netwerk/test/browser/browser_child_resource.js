@@ -37,9 +37,6 @@ function resolveURI(uri) {
 
 function remoteResolveURI(uri) {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [uri], uriToResolve => {
-    const { Services } = ChromeUtils.import(
-      "resource://gre/modules/Services.jsm"
-    );
     let resProtocol = Cc[
       "@mozilla.org/network/protocol;1?name=resource"
     ].getService(Ci.nsIResProtocolHandler);
@@ -84,9 +81,11 @@ add_task(async function() {
     "Browser should be in the right process"
   );
 
-  let local = resolveURI("resource://gre/modules/Services.jsm");
-  let remote = await remoteResolveURI("resource://gre/modules/Services.jsm");
-  is(local, remote, "Services.jsm should resolve in both processes");
+  let local = resolveURI("resource://gre/modules/AppConstants.jsm");
+  let remote = await remoteResolveURI(
+    "resource://gre/modules/AppConstants.jsm"
+  );
+  is(local, remote, "AppConstants.jsm should resolve in both processes");
 
   gBrowser.removeCurrentTab();
 });

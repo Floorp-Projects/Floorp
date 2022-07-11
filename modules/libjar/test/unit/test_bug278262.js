@@ -1,7 +1,5 @@
 // Regression test for bug 278262 - JAR URIs should resolve relative URIs in the base section.
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const path = "data/test_bug333423.zip";
 
 function test_relative_sub() {

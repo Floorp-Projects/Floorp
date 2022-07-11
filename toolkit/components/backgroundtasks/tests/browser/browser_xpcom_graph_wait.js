@@ -38,7 +38,6 @@ const backgroundtaskPhases = {
         "resource://gre/modules/EnterprisePolicies.jsm",
         "resource://gre/modules/EnterprisePoliciesParent.jsm",
         "resource://gre/modules/PromiseUtils.jsm",
-        "resource://gre/modules/Services.jsm",
         "resource://gre/modules/XPCOMUtils.jsm",
         "resource://gre/modules/nsAsyncShutdown.jsm",
       ],

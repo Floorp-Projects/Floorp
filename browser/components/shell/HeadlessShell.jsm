@@ -12,7 +12,6 @@ const { E10SUtils } = ChromeUtils.import(
 const { HiddenFrame } = ChromeUtils.import(
   "resource://gre/modules/HiddenFrame.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Refrences to the progress listeners to keep them from being gc'ed
 // before they are called.

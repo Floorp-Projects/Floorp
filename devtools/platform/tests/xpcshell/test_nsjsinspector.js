@@ -7,7 +7,6 @@
 var gCount = 0;
 const MAX = 10;
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var inspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
 
 // Emulate 10 simultaneously-debugged windows from 3 separate client connections.

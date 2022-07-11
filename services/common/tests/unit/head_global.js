@@ -20,9 +20,6 @@ updateAppInfo({
 });
 
 function addResourceAlias() {
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
   const handler = Services.io
     .getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler);

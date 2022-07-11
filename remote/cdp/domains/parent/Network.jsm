@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["Network"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const { Domain } = ChromeUtils.import(
   "chrome://remote/content/cdp/domains/Domain.jsm"
 );

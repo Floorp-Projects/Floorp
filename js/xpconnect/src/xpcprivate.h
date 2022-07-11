@@ -379,6 +379,7 @@ class XPCJSContext final : public mozilla::CycleCollectedJSContext,
     IDX_CI,
     IDX_CR,
     IDX_CU,
+    IDX_SERVICES,
     IDX_WRAPPED_JSOBJECT,
     IDX_PROTOTYPE,
     IDX_EVAL,
@@ -823,6 +824,8 @@ class XPCWrappedNativeScope final
   nsXPCComponents* GetComponents() const { return mComponents; }
 
   bool AttachComponentsObject(JSContext* aCx);
+
+  bool AttachJSServices(JSContext* aCx);
 
   // Returns the JS object reflection of the Components object.
   bool GetComponentsJSObject(JSContext* cx, JS::MutableHandleObject obj);

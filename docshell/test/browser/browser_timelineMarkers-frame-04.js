@@ -6,8 +6,6 @@
 
 "use strict";
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // Test that the docShell profile timeline API returns the right
 // markers for XMLHttpRequest events.
 

@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["Toolbars"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var Toolbars = {
   init(libDir) {},
 

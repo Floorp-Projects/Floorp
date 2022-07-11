@@ -6,7 +6,6 @@
 
 const EXPORTED_SYMBOLS = ["CommonUtils"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
 const MAX_TRIM_LENGTH = 100;

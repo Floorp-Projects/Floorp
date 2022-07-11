@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["WindowsInstallsInfo"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var WindowsInstallsInfo = {
   /**
    * Retrieve install paths of this app, based on the values in the TaskBarIDs registry key.

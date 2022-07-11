@@ -4,8 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["Async"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer");
 
 /*

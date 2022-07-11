@@ -24,7 +24,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1224790
   function modalClosed(grandparent) {
     // Request cycle collection to trigger destructor for parent modal window,
     // that mutates mAncestorLink of this window.
-    var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
     var windowUtils = window.windowUtils;
 
     Services.obs.notifyObservers(null, "child-cc-request");

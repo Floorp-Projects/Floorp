@@ -16,9 +16,7 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  const { Services } = SpecialPowers.ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
+  const Services = SpecialPowers.Services;
   const { AppConstants } = SpecialPowers.ChromeUtils.import(
     "resource://gre/modules/AppConstants.jsm"
   );

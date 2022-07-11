@@ -5,8 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["runBackgroundTask"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 async function runBackgroundTask(commandLine) {
   let pref = commandLine.length
     ? commandLine.getArgument(0)

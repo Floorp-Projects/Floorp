@@ -16,7 +16,6 @@ const INTERVAL_END = 3;
 
 // This Services declaration may shadow another from head.js, so define it as
 // a var rather than a const.
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const defaultSettings = {
   entries: 8 * 1024 * 1024, // 8M entries = 64MB

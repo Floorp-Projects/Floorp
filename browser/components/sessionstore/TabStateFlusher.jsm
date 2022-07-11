@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["TabStateFlusher"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,

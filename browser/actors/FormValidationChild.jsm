@@ -13,7 +13,6 @@ var EXPORTED_SYMBOLS = ["FormValidationChild"];
 const { LayoutUtils } = ChromeUtils.import(
   "resource://gre/modules/LayoutUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class FormValidationChild extends JSWindowActorChild {
   constructor() {

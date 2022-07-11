@@ -24,7 +24,6 @@ const { createLazyLoaders } = ChromeUtils.import(
 );
 
 const lazy = createLazyLoaders({
-  Services: () => ChromeUtils.import("resource://gre/modules/Services.jsm"),
   PanelMultiView: () =>
     ChromeUtils.import("resource:///modules/PanelMultiView.jsm"),
   Background: () =>
@@ -117,7 +116,6 @@ function createViewControllers(state, elements) {
     },
 
     updatePresets() {
-      const { Services } = lazy.Services();
       const { presets, getRecordingSettings } = lazy.Background();
       const { presetName } = getRecordingSettings(
         "aboutprofiling",
@@ -146,8 +144,6 @@ function createViewControllers(state, elements) {
     },
 
     updateProfilerState() {
-      const { Services } = lazy.Services();
-
       if (Services.profiler.IsActive()) {
         elements.inactive.hidden = true;
         elements.active.hidden = false;
@@ -170,7 +166,6 @@ function createViewControllers(state, elements) {
         return;
       }
 
-      const { Services } = lazy.Services();
       const { presets } = lazy.Background();
       const currentPreset = Services.prefs.getCharPref(
         "devtools.performance.recording.preset"
@@ -327,8 +322,6 @@ function addPopupEventHandlers(state, elements, view) {
   });
 
   // Update the view when the profiler starts/stops.
-  const { Services } = lazy.Services();
-
   // These are all events that can affect the current state of the profiler.
   const events = ["profiler-started", "profiler-stopped"];
   for (const event of events) {

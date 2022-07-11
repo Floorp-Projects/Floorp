@@ -55,8 +55,6 @@ class TestModalDialogs(WindowManagerMixin, MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             self.marionette.execute_script(
                 """
-                const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
                 const [ modalType, browsingContextId, delay ] = arguments;
 
                 const modalTypes = {

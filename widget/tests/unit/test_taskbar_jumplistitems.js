@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This tests taskbar jump list functionality available on win7 and up.
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function test_basics() {
   var item = Cc["@mozilla.org/windows-jumplistitem;1"].createInstance(

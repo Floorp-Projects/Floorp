@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // // This undoes some of the configuration from
 // Services.dirsvc
 //   .QueryInterface(Ci.nsIDirectoryService)

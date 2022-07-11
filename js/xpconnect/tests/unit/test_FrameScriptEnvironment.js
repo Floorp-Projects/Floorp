@@ -1,5 +1,3 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 let ppmm = Services.ppmm.getChildAt(0);
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);

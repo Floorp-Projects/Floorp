@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["EncryptedMediaChild"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /**
  * GlobalCaptureListener is a class that listens for changes to the global
  * capture state of windows and screens. It uses this information to notify

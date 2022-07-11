@@ -18,7 +18,6 @@ const { createLazyLoaders } = ChromeUtils.import(
 );
 
 const lazy = createLazyLoaders({
-  Services: () => ChromeUtils.import("resource://gre/modules/Services.jsm"),
   CustomizableUI: () =>
     ChromeUtils.import("resource:///modules/CustomizableUI.jsm"),
   CustomizableWidgets: () =>
@@ -99,7 +98,6 @@ function openPopup(document) {
 function initialize(toggleProfilerKeyShortcuts) {
   const { CustomizableUI } = lazy.CustomizableUI();
   const { CustomizableWidgets } = lazy.CustomizableWidgets();
-  const { Services } = lazy.Services();
 
   const widget = CustomizableUI.getWidget(WIDGET_ID);
   if (widget && widget.provider == CustomizableUI.PROVIDER_API) {

@@ -7,7 +7,6 @@
 
 var EXPORTED_SYMBOLS = ["runBackgroundTask"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Subprocess } = ChromeUtils.import(
   "resource://gre/modules/Subprocess.jsm"
 );

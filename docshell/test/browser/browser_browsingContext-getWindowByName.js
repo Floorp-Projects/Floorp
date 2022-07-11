@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function addWindow(name) {
   var blank = Cc["@mozilla.org/supports-string;1"].createInstance(

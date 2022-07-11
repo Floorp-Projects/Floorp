@@ -21,7 +21,6 @@ for (var name of imports) {
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const ACTOR_MODULE_URI =
   "chrome://mochitests/content/chrome/docshell/test/chrome/DocShellHelpers.jsm";

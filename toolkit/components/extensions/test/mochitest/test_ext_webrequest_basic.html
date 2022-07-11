@@ -42,7 +42,6 @@ add_task(async function setup() {
   let cache = imgTools.getImgCacheForDocument(document);
   cache.clearCache(false);
   function clearCache() {
-    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
     Services.cache2.clear();
   }
   SpecialPowers.loadChromeScript(clearCache);

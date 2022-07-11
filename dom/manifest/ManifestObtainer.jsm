@@ -23,8 +23,6 @@
  */
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const { ManifestProcessor } = ChromeUtils.import(
   "resource://gre/modules/ManifestProcessor.jsm"
 );

@@ -10,8 +10,6 @@
  * or use the methods that accept a browser to be modified.
  **/
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var ZoomManager = {
   set useFullZoom(aVal) {
     Services.prefs.setBoolPref("browser.zoom.full", aVal);

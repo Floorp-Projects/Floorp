@@ -18,8 +18,6 @@
 
 var EXPORTED_SYMBOLS = ["PdfJsTelemetry"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var PdfJsTelemetry = {
   onViewerIsUsed(isAttachment) {
     Services.telemetry.scalarAdd("pdf.viewer.used", 1);

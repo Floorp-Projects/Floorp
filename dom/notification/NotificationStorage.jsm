@@ -9,8 +9,6 @@ function debug(s) {
   dump("-*- NotificationStorage.js: " + s + "\n");
 }
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const kMessageNotificationGetAllOk = "Notification:GetAll:Return:OK";
 const kMessageNotificationGetAllKo = "Notification:GetAll:Return:KO";
 const kMessageNotificationSaveKo = "Notification:Save:Return:KO";

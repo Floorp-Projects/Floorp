@@ -6,9 +6,6 @@
 
 function test() {
   waitForExplicitFinish();
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
 
   // Types of processes to test, taken from GeckoProcessTypes.h
   // GPU process might not run depending on the platform, so we need it to be

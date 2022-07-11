@@ -37,7 +37,6 @@ let prompterParent = runInParent(() => {
   const promptFac = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].
                     getService(Ci.nsIPromptFactory);
 
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
   let prompter2 = promptFac.getPrompt(chromeWin, Ci.nsIAuthPrompt2);
   prompter2.QueryInterface(Ci.nsILoginManagerAuthPrompter).browser = chromeWin.gBrowser.selectedBrowser;

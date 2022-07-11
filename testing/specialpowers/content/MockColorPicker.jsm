@@ -11,7 +11,6 @@ ChromeUtils.defineModuleGetter(
   "WrapPrivileged",
   "resource://specialpowers/WrapPrivileged.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const Cm = Components.manager;
 

@@ -54,7 +54,6 @@ const { StructuredLogger } = ChromeUtils.import(
 const { PerTestCoverageUtils } = ChromeUtils.import(
     "resource://reftest/PerTestCoverageUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
     "resource://gre/modules/XPCOMUtils.jsm"
 );

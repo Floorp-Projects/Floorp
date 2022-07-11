@@ -6,8 +6,6 @@
 // the common JS files used by safebrowsing and url-classifier into a
 // single component.
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const PREF_DISABLE_TEST_BACKOFF =
   "browser.safebrowsing.provider.test.disableBackoff";
 /**

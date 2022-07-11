@@ -8,7 +8,6 @@ var EXPORTED_SYMBOLS = ["GeckoViewPermissionProcessParent"];
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // See: http://developer.android.com/reference/android/Manifest.permission.html
 const PERM_CAMERA = "android.permission.CAMERA";

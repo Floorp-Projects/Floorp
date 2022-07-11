@@ -1,6 +1,5 @@
 "use strict";
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const gService = Cc["@mozilla.org/http-sfv-service;1"].getService(
   Ci.nsISFVService
 );

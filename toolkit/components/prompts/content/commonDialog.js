@@ -9,8 +9,6 @@ const { CommonDialog } = ChromeUtils.import(
 // imported by adjustableTitle.js loaded in the same context:
 /* globals PromptUtils */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var propBag, args, Dialog;
 
 // Inherit color scheme overrides from parent window. This is to inherit the

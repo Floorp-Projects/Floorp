@@ -6,7 +6,6 @@
 // Creates a new PageListener for this process. This will listen for page loads
 // and for those that match URLs provided by the parent process will set up
 // a dedicated message port and notify the parent process.
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Services.cpmm.addMessageListener("gmp-plugin-crash", ({ data }) => {
   Cc["@mozilla.org/gecko-media-plugin-service;1"]

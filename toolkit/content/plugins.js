@@ -6,8 +6,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 /* JavaScript to enumerate and display all installed plug-ins
 
  * First, refresh plugins in case anything has been changed recently in

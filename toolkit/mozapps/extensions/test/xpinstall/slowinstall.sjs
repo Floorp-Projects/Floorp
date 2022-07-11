@@ -1,4 +1,3 @@
-let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 let { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 let { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 

@@ -41,9 +41,6 @@ add_task(async function check_startup_canary() {
 
   async function canaryExists() {
     let chromeScript = loadChromeScript(async () => {
-      const {
-        Services,
-      } = ChromeUtils.import("resource://gre/modules/Services.jsm");
       // This file is called FILE_STARTUP_INCOMPLETE in nsAppRunner.cpp and
       // referenced via mozilla::startup::GetIncompleteStartupFile:
       let file = Services.dirsvc.get("ProfLD", Ci.nsIFile);

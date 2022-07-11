@@ -4,8 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["PrivateBrowsingUtils"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const kAutoStartPref = "browser.privatebrowsing.autostart";
 
 // This will be set to true when the PB mode is autostarted from the command

@@ -3,8 +3,6 @@
 
 /* eslint no-unsafe-finally: "off"*/
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function run_test() {
   let prefs = Services.prefs.getBranch(null);
 
@@ -32,11 +30,7 @@ function run_test() {
 
     equal("object", prefs.getStringPref("_test.typeof_Components"));
     equal("object", prefs.getStringPref("_test.typeof_ChromeUtils"));
-
-    equal("object", prefs.getStringPref("_test.typeof_Cu_g_Services"));
-    equal("object", prefs.getStringPref("_test.typeof_Cu_obj_Services"));
-
-    equal("object", prefs.getStringPref("_test.typeof_ChromeUtils_Services"));
+    equal("object", prefs.getStringPref("_test.typeof_Services"));
 
     Services.prefs.resetPrefs();
   } finally {

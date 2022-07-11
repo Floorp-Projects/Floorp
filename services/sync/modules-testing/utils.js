@@ -47,7 +47,6 @@ const { FxAccountsClient } = ChromeUtils.import(
 const { SCOPE_OLD_SYNC, LEGACY_SCOPE_WEBEXT_SYNC } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // and grab non-exported stuff via a backstage pass.
 const { AccountState } = ChromeUtils.import(

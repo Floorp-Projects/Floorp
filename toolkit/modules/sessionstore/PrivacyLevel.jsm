@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["PrivacyLevel"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const PREF = "browser.sessionstore.privacy_level";
 
 // The following constants represent the different possible privacy levels that

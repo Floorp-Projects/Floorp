@@ -3,7 +3,6 @@
  */
 
 // A simple 3x3 png; rows go red, green, blue. Stolen from the PNG encoder test.
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var pngspec =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII=";

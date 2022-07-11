@@ -9,8 +9,6 @@
 // only touches on the basics of argument checking. On platforms without a task
 // scheduler implementation, these interfaces currently do nothing else.
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const { updateAppInfo } = ChromeUtils.import(
   "resource://testing-common/AppInfo.jsm"
 );

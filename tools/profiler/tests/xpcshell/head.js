@@ -6,7 +6,6 @@
 
 // This Services declaration may shadow another from head.js, so define it as
 // a var rather than a const.
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"

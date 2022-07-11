@@ -38,8 +38,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIHandlerService"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var HandlerServiceTestUtils = {
   /**
    * Retrieves the names of all the MIME types and protocols configured in the

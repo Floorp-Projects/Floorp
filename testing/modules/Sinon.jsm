@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["sinon"];
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // ================================================
 // Load mocking/stubbing library sinon
 // docs: http://sinonjs.org/releases/v7.2.7/

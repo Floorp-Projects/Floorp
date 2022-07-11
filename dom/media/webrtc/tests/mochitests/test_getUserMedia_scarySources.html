@@ -9,9 +9,7 @@
 
 createHTML({title: "Detect screensharing sources that are firefox", bug: "1311048"});
 
-const { Services } = SpecialPowers.ChromeUtils.import(
-  'resource://gre/modules/Services.jsm'
-);
+const Services = SpecialPowers.Services;
 
 let observe = topic => new Promise(r => Services.obs.addObserver(function o(...args) {
   Services.obs.removeObserver(o, topic);

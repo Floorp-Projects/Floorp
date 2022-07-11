@@ -12,8 +12,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1414077
 
 /** Test for Bug 1414077 **/
 
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [["browser.enable_automatic_image_resizing", true]]});
 

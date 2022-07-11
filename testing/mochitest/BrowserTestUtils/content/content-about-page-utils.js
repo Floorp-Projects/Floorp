@@ -4,8 +4,6 @@
 
 var Cm = Components.manager;
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function AboutPage(aboutHost, chromeURL, uriFlags) {
   this.chromeURL = chromeURL;
   this.aboutHost = aboutHost;

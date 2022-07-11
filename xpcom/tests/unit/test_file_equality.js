@@ -6,8 +6,6 @@
 
 var LocalFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function run_test() {
   test_normalized_vs_non_normalized();
 }

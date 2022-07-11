@@ -8,9 +8,6 @@
 "use strict";
 
 const lazy = {};
-const { Services } = ChromeUtils.import(
-  "resource://gre/modules/Services.jsm"
-);
 ChromeUtils.defineModuleGetter(lazy, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 var EXPORTED_SYMBOLS = ["AppConstants"];

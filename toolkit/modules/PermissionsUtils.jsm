@@ -4,8 +4,6 @@
 
 var EXPORTED_SYMBOLS = ["PermissionsUtils", "PermissionsTestUtils"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var gImportedPrefBranches = new Set();
 
 function importPrefBranch(aPrefBranch, aPermission, aAction) {

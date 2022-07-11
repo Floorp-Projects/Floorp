@@ -15,7 +15,6 @@ const TOPIC_PLACES_DEFAULTS_FINISHED = "places-browser-init-complete";
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const lazy = {};
 

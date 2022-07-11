@@ -25,8 +25,6 @@ modalType = authPromptModalType;
 const AUTHENTICATE_PATH = new URL("authenticate.sjs", window.location.href).pathname;
 
 runInParent(() => {
-  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
   let login3A, login3B, login4;
   login3A = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
@@ -205,8 +203,6 @@ add_task(async function test_iframe() {
 
   // Housekeeping: Delete login4 to test the save prompt in the next test.
   runInParent(() => {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
     var tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
                    createInstance(Ci.nsILoginInfo);
     tmpLogin.init("http://mochi.test:8888", null, "mochitest3",

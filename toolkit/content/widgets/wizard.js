@@ -10,9 +10,6 @@
   const { AppConstants } = ChromeUtils.import(
     "resource://gre/modules/AppConstants.jsm"
   );
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
 
   const XUL_NS =
     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

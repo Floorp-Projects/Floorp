@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var browser = Services.wm.getMostRecentWindow("navigator:browser");
 var connection = browser.navigator.mozMobileConnections[0];
 

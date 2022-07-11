@@ -26,7 +26,6 @@ const JSMs = [
   "resource://gre/modules/PlacesUtils.jsm",
   "resource://gre/modules/PluralForm.jsm",
   "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  "resource://gre/modules/Services.jsm",
   "resource://gre/modules/Timer.jsm",
   "resource://gre/modules/XPCOMUtils.jsm",
   "resource://gre/modules/osfile.jsm",

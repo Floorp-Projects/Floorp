@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var nameArray = [
   "ascii", // ASCII
   "fran\u00E7ais", // Latin-1

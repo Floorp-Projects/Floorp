@@ -18,9 +18,6 @@
     "resource://gre/modules/AppConstants.jsm"
   );
   const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
-  const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-  );
 
   const UNRECOGNIZED_PATH = /Could not initialize path: NS_ERROR_FILE_UNRECOGNIZED_PATH/;
   const EMPTY_PATH = /PathUtils does not support empty paths/;

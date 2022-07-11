@@ -10,7 +10,6 @@ const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
   get browser() {

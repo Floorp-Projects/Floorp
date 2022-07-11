@@ -1443,9 +1443,15 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
     }
 
     bool allowComponents = principal->IsSystemPrincipal();
-    if (options.wantComponents && allowComponents &&
-        !ObjectScope(sandbox)->AttachComponentsObject(cx))
-      return NS_ERROR_XPC_UNEXPECTED;
+    if (options.wantComponents && allowComponents) {
+      if (!ObjectScope(sandbox)->AttachComponentsObject(cx)) {
+        return NS_ERROR_XPC_UNEXPECTED;
+      }
+
+      if (!ObjectScope(sandbox)->AttachJSServices(cx)) {
+        return NS_ERROR_XPC_UNEXPECTED;
+      }
+    }
 
     if (!XPCNativeWrapper::AttachNewConstructorObject(cx, sandbox)) {
       return NS_ERROR_XPC_UNEXPECTED;

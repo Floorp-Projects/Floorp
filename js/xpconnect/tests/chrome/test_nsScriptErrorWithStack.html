@@ -6,9 +6,6 @@
 <script>
   var c = Cc;
 
-  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
   SimpleTest.waitForExplicitFinish();
   SimpleTest.expectUncaughtException();
 
@@ -35,13 +32,13 @@
       var s = aSubject.stack;
       ok(!!s, "has first frame");
       ok(s.source.includes("test_nsScriptErrorWithStack.html"), "source is correct");
-      is(s.line, 21, "line is correct");
+      is(s.line, 18, "line is correct");
       is(s.column, 5, "column is correct");
       is(s.functionDisplayName, "nestedFunction");
       s = s.parent;
       ok(!!s, "has second frame");
       ok(s.source.includes("test_nsScriptErrorWithStack.html"), "source is correct");
-      is(s.line, 18, "line is correct");
+      is(s.line, 15, "line is correct");
       is(s.column, 5, "column is correct");
       is(s.functionDisplayName, "failingStack");
       // We shouldn't have any more frame as we used setTimeout

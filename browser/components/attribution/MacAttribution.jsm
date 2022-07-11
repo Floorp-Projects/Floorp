@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   };
   return new ConsoleAPI(consoleOptions);
 });
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
   lazy,

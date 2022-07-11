@@ -1,4 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const pb = Services.prefs;
 
 // This pref is chosen somewhat arbitrarily --- we just need one

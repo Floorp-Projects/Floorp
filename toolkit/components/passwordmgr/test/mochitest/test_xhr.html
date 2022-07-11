@@ -44,7 +44,6 @@ function xhrLoad(xmlDoc) {
 modalType = authPromptModalType;
 
 let prompterParent = runInParent(() => {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   const promptFac = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].
                     getService(Ci.nsIPromptFactory);
 
@@ -65,7 +64,6 @@ let prompter1 = new PrompterProxy(prompterParent);
 
 add_task(function setup() {
   runInParent(function initLogins() {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     let nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                              Ci.nsILoginInfo, "init");
     let login1 = new nsLoginInfo("http://mochi.test:8888", null, "xhr",
@@ -153,8 +151,6 @@ add_task(async function test2() {
   let result = await requestPromise;
 
   runInParent(() => {
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
     // Check that the right tab is focused:
     let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
     let spec = browserWin.gBrowser.selectedBrowser.currentURI.spec;

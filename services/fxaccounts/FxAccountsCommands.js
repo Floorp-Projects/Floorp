@@ -16,7 +16,6 @@ ChromeUtils.defineModuleGetter(
   "PushCrypto",
   "resource://gre/modules/PushCrypto.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );

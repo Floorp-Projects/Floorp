@@ -9,7 +9,6 @@
  * appropriate action here in the parent.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { BrowserElementPromptService } = ChromeUtils.import(
   "resource://gre/modules/BrowserElementPromptService.jsm"
 );

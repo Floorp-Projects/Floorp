@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // enable crash reporting first
 var cwd = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
 

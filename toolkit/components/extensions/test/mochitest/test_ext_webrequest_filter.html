@@ -19,7 +19,6 @@ let windowData, testWindow;
 
 add_task(async function setup() {
   let chromeScript = SpecialPowers.loadChromeScript(function() {
-    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
     Services.cache2.clear();
   });
   chromeScript.destroy();

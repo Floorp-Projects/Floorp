@@ -7,7 +7,6 @@
 const { Interactions } = ChromeUtils.import(
   "resource:///modules/Interactions.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Snapshots } = ChromeUtils.import("resource:///modules/Snapshots.jsm");
 const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"

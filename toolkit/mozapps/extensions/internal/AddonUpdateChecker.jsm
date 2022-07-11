@@ -14,8 +14,6 @@ var EXPORTED_SYMBOLS = ["AddonUpdateChecker"];
 const TIMEOUT = 60 * 1000;
 const TOOLKIT_ID = "toolkit@mozilla.org";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(

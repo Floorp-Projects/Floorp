@@ -4,9 +4,8 @@
 "use strict";
 
 /*
- * This can't be an xpcshell-test because, according to
- * `toolkit/modules/Services.jsm`, "Not all applications implement
- * nsIXULAppInfo (e.g. xpcshell doesn't)."
+ * This can't be an xpcshell-test because not all applications implement
+ * nsIXULAppInfo (e.g. xpcshell doesn't).
  */
 const { ClientEnvironmentBase } = ChromeUtils.import(
   "resource://gre/modules/components-utils/ClientEnvironment.jsm"

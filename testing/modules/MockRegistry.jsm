@@ -10,8 +10,6 @@ const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 class MockRegistry {
   constructor() {
     // Three level structure of Maps pointing to Maps pointing to Maps

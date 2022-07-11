@@ -20,8 +20,6 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 function ImageObjectProcessor(aErrors, aExtractor, aBundle) {
   this.errors = aErrors;
   this.extractor = aExtractor;
