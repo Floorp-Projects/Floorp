@@ -60,13 +60,20 @@ class VideoRtpReceiverTest : public testing::Test {
             std::string("receiver"),
             std::vector<std::string>({"stream"}))) {
     worker_thread_->Start();
-    receiver_->SetMediaChannel(&channel_);
+    SetMediaChannel(&channel_);
   }
 
   ~VideoRtpReceiverTest() override {
-    // Clear expectations that tests may have set up before calling Stop().
+    // Clear expectations that tests may have set up before calling
+    // SetMediaChannel(nullptr).
     Mock::VerifyAndClearExpectations(&channel_);
     receiver_->Stop();
+    SetMediaChannel(nullptr);
+  }
+
+  void SetMediaChannel(cricket::MediaChannel* media_channel) {
+    worker_thread_->Invoke<void>(
+        RTC_FROM_HERE, [&]() { receiver_->SetMediaChannel(media_channel); });
   }
 
   webrtc::VideoTrackSourceInterface* Source() {
@@ -94,23 +101,24 @@ TEST_F(VideoRtpReceiverTest,
   MockVideoMediaChannel channel2(nullptr, cricket::VideoOptions());
   EXPECT_CALL(channel_, GenerateKeyFrame).Times(0);
   EXPECT_CALL(channel2, GenerateKeyFrame).Times(0);
-  receiver_->SetMediaChannel(&channel2);
+  SetMediaChannel(&channel2);
   Mock::VerifyAndClearExpectations(&channel2);
 
   // Generate a key frame. When we switch channel next time, we will have to
   // re-generate it as we don't know if it was eventually received
+  EXPECT_CALL(channel2, GenerateKeyFrame).Times(1);
   Source()->GenerateKeyFrame();
   MockVideoMediaChannel channel3(nullptr, cricket::VideoOptions());
   EXPECT_CALL(channel3, GenerateKeyFrame);
-  receiver_->SetMediaChannel(&channel3);
+  SetMediaChannel(&channel3);
 
   // Switching to a new channel should now not cause calls to GenerateKeyFrame.
   StrictMock<MockVideoMediaChannel> channel4(nullptr, cricket::VideoOptions());
-  receiver_->SetMediaChannel(&channel4);
+  SetMediaChannel(&channel4);
 
-  // We must call Stop() here since the mock media channels live on the stack
-  // and `receiver_` still has a pointer to those objects.
-  receiver_->Stop();
+  // We must call SetMediaChannel(nullptr) here since the mock media channels
+  // live on the stack and `receiver_` still has a pointer to those objects.
+  SetMediaChannel(nullptr);
 }
 
 TEST_F(VideoRtpReceiverTest, EnablesEncodedOutput) {
@@ -135,7 +143,7 @@ TEST_F(VideoRtpReceiverTest, DisablesEnablesEncodedOutputOnChannelSwitch) {
   Source()->AddEncodedSink(&sink);
   MockVideoMediaChannel channel2(nullptr, cricket::VideoOptions());
   EXPECT_CALL(channel2, SetRecordableEncodedFrameCallback);
-  receiver_->SetMediaChannel(&channel2);
+  SetMediaChannel(&channel2);
   Mock::VerifyAndClearExpectations(&channel2);
 
   // When clearing encoded frame buffer function, we need channel switches
@@ -143,11 +151,11 @@ TEST_F(VideoRtpReceiverTest, DisablesEnablesEncodedOutputOnChannelSwitch) {
   EXPECT_CALL(channel2, ClearRecordableEncodedFrameCallback);
   Source()->RemoveEncodedSink(&sink);
   StrictMock<MockVideoMediaChannel> channel3(nullptr, cricket::VideoOptions());
-  receiver_->SetMediaChannel(&channel3);
+  SetMediaChannel(&channel3);
 
-  // We must call Stop() here since the mock media channels live on the stack
-  // and `receiver_` still has a pointer to those objects.
-  receiver_->Stop();
+  // We must call SetMediaChannel(nullptr) here since the mock media channels
+  // live on the stack and `receiver_` still has a pointer to those objects.
+  SetMediaChannel(nullptr);
 }
 
 TEST_F(VideoRtpReceiverTest, BroadcastsEncodedFramesWhenEnabled) {

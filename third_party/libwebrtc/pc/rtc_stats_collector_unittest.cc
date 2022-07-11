@@ -363,7 +363,6 @@ rtc::scoped_refptr<MockRtpSenderInternal> CreateMockSender(
   EXPECT_CALL(*sender, AttachmentId()).WillRepeatedly(Return(attachment_id));
   EXPECT_CALL(*sender, stream_ids()).WillRepeatedly(Return(local_stream_ids));
   EXPECT_CALL(*sender, SetTransceiverAsStopped());
-  EXPECT_CALL(*sender, Stop());
   return sender;
 }
 
@@ -389,7 +388,7 @@ rtc::scoped_refptr<MockRtpReceiverInternal> CreateMockReceiver(
     return params;
   }));
   EXPECT_CALL(*receiver, AttachmentId()).WillRepeatedly(Return(attachment_id));
-  EXPECT_CALL(*receiver, StopAndEndTrack());
+  EXPECT_CALL(*receiver, Stop()).WillRepeatedly(Return());
   return receiver;
 }
 
@@ -460,6 +459,8 @@ class RTCStatsCollectorWrapper {
 
     rtc::scoped_refptr<MockRtpSenderInternal> sender =
         CreateMockSender(media_type, track, ssrc, attachment_id, {});
+    EXPECT_CALL(*sender, Stop());
+    EXPECT_CALL(*sender, SetMediaChannel(_));
     pc_->AddSender(sender);
     return sender;
   }
@@ -490,6 +491,7 @@ class RTCStatsCollectorWrapper {
         .WillRepeatedly(
             Return(std::vector<rtc::scoped_refptr<MediaStreamInterface>>(
                 {remote_stream})));
+    EXPECT_CALL(*receiver, SetMediaChannel(_)).WillRepeatedly(Return());
     pc_->AddReceiver(receiver);
     return receiver;
   }
@@ -532,6 +534,7 @@ class RTCStatsCollectorWrapper {
           voice_sender_info.local_stats[0].ssrc,
           voice_sender_info.local_stats[0].ssrc + 10, local_stream_ids);
       EXPECT_CALL(*rtp_sender, SetMediaChannel(_)).WillRepeatedly(Return());
+      EXPECT_CALL(*rtp_sender, Stop());
       pc_->AddSender(rtp_sender);
     }
 
@@ -550,7 +553,7 @@ class RTCStatsCollectorWrapper {
               voice_receiver_info.local_stats[0].ssrc + 10);
       EXPECT_CALL(*rtp_receiver, streams())
           .WillRepeatedly(Return(remote_streams));
-      EXPECT_CALL(*rtp_receiver, SetMediaChannel(_));
+      EXPECT_CALL(*rtp_receiver, SetMediaChannel(_)).WillRepeatedly(Return());
       pc_->AddReceiver(rtp_receiver);
     }
 
@@ -569,6 +572,7 @@ class RTCStatsCollectorWrapper {
           video_sender_info.local_stats[0].ssrc,
           video_sender_info.local_stats[0].ssrc + 10, local_stream_ids);
       EXPECT_CALL(*rtp_sender, SetMediaChannel(_)).WillRepeatedly(Return());
+      EXPECT_CALL(*rtp_sender, Stop());
       pc_->AddSender(rtp_sender);
     }
 
@@ -587,7 +591,7 @@ class RTCStatsCollectorWrapper {
               video_receiver_info.local_stats[0].ssrc + 10);
       EXPECT_CALL(*rtp_receiver, streams())
           .WillRepeatedly(Return(remote_streams));
-      EXPECT_CALL(*rtp_receiver, SetMediaChannel(_));
+      EXPECT_CALL(*rtp_receiver, SetMediaChannel(_)).WillRepeatedly(Return());
       pc_->AddReceiver(rtp_receiver);
     }
 
@@ -2691,6 +2695,8 @@ TEST_F(RTCStatsCollectorTest, RTCVideoSourceStatsCollectedForSenderWithTrack) {
       "LocalVideoTrackID", MediaStreamTrackInterface::kLive, video_source);
   rtc::scoped_refptr<MockRtpSenderInternal> sender = CreateMockSender(
       cricket::MEDIA_TYPE_VIDEO, video_track, kSsrc, kAttachmentId, {});
+  EXPECT_CALL(*sender, Stop());
+  EXPECT_CALL(*sender, SetMediaChannel(_));
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -2734,6 +2740,8 @@ TEST_F(RTCStatsCollectorTest,
       "LocalVideoTrackID", MediaStreamTrackInterface::kLive, video_source);
   rtc::scoped_refptr<MockRtpSenderInternal> sender = CreateMockSender(
       cricket::MEDIA_TYPE_VIDEO, video_track, kNoSsrc, kAttachmentId, {});
+  EXPECT_CALL(*sender, Stop());
+  EXPECT_CALL(*sender, SetMediaChannel(_));
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -2763,6 +2771,8 @@ TEST_F(RTCStatsCollectorTest,
       /*source=*/nullptr);
   rtc::scoped_refptr<MockRtpSenderInternal> sender = CreateMockSender(
       cricket::MEDIA_TYPE_VIDEO, video_track, kSsrc, kAttachmentId, {});
+  EXPECT_CALL(*sender, Stop());
+  EXPECT_CALL(*sender, SetMediaChannel(_));
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -2785,6 +2795,8 @@ TEST_F(RTCStatsCollectorTest,
   pc_->AddVoiceChannel("AudioMid", "TransportName", voice_media_info);
   rtc::scoped_refptr<MockRtpSenderInternal> sender = CreateMockSender(
       cricket::MEDIA_TYPE_AUDIO, /*track=*/nullptr, kSsrc, kAttachmentId, {});
+  EXPECT_CALL(*sender, Stop());
+  EXPECT_CALL(*sender, SetMediaChannel(_));
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -3108,6 +3120,8 @@ TEST_F(RTCStatsCollectorTest,
 
   rtc::scoped_refptr<MockRtpSenderInternal> sender = CreateMockSender(
       cricket::MEDIA_TYPE_VIDEO, /*track=*/nullptr, kSsrc, kAttachmentId, {});
+  EXPECT_CALL(*sender, Stop());
+  EXPECT_CALL(*sender, SetMediaChannel(_));
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -3257,6 +3271,7 @@ TEST_F(RTCStatsCollectorTest, StatsReportedOnZeroSsrc) {
                       MediaStreamTrackInterface::kLive);
   rtc::scoped_refptr<MockRtpSenderInternal> sender =
       CreateMockSender(cricket::MEDIA_TYPE_AUDIO, track, 0, 49, {});
+  EXPECT_CALL(*sender, Stop());
   pc_->AddSender(sender);
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
@@ -3276,6 +3291,7 @@ TEST_F(RTCStatsCollectorTest, DoNotCrashOnSsrcChange) {
                       MediaStreamTrackInterface::kLive);
   rtc::scoped_refptr<MockRtpSenderInternal> sender =
       CreateMockSender(cricket::MEDIA_TYPE_AUDIO, track, 4711, 49, {});
+  EXPECT_CALL(*sender, Stop());
   pc_->AddSender(sender);
 
   // We do not generate any matching voice_sender_info stats.

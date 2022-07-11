@@ -109,74 +109,66 @@ void VideoRtpReceiver::SetDepacketizerToDecoderFrameTransformer(
 
 void VideoRtpReceiver::Stop() {
   RTC_DCHECK_RUN_ON(&signaling_thread_checker_);
-  // TODO(deadbeef): Need to do more here to fully stop receiving packets.
-
   source_->SetState(MediaSourceInterface::kEnded);
-
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    if (media_channel_) {
-      SetSink(nullptr);
-      SetMediaChannel_w(nullptr);
-    }
-    source_->ClearCallback();
-  });
-}
-
-void VideoRtpReceiver::StopAndEndTrack() {
-  RTC_DCHECK_RUN_ON(&signaling_thread_checker_);
-  Stop();
   track_->internal()->set_ended();
 }
 
-void VideoRtpReceiver::RestartMediaChannel(absl::optional<uint32_t> ssrc) {
+void VideoRtpReceiver::SetSourceEnded() {
   RTC_DCHECK_RUN_ON(&signaling_thread_checker_);
+  source_->SetState(MediaSourceInterface::kEnded);
+}
 
+// RTC_RUN_ON(&signaling_thread_checker_)
+void VideoRtpReceiver::RestartMediaChannel(absl::optional<uint32_t> ssrc) {
   MediaSourceInterface::SourceState state = source_->state();
-
   // TODO(tommi): Can we restart the media channel without blocking?
   worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
     RTC_DCHECK_RUN_ON(worker_thread_);
-    if (!media_channel_) {
-      // Ignore further negotiations if we've already been stopped and don't
-      // have an associated media channel.
-      return;  // Can't restart.
-    }
-
-    const bool encoded_sink_enabled = saved_encoded_sink_enabled_;
-
-    if (state != MediaSourceInterface::kInitializing) {
-      if (ssrc == ssrc_)
-        return;
-
-      // Disconnect from a previous ssrc.
-      SetSink(nullptr);
-
-      if (encoded_sink_enabled)
-        SetEncodedSinkEnabled(false);
-    }
-
-    // Set up the new ssrc.
-    ssrc_ = std::move(ssrc);
-    SetSink(source_->sink());
-    if (encoded_sink_enabled) {
-      SetEncodedSinkEnabled(true);
-    }
-
-    if (frame_transformer_ && media_channel_) {
-      media_channel_->SetDepacketizerToDecoderFrameTransformer(
-          ssrc_.value_or(0), frame_transformer_);
-    }
-
-    if (media_channel_ && ssrc_) {
-      if (frame_decryptor_) {
-        media_channel_->SetFrameDecryptor(*ssrc_, frame_decryptor_);
-      }
-
-      media_channel_->SetBaseMinimumPlayoutDelayMs(*ssrc_, delay_.GetMs());
-    }
+    RestartMediaChannel_w(std::move(ssrc), state);
   });
   source_->SetState(MediaSourceInterface::kLive);
+}
+
+// RTC_RUN_ON(worker_thread_)
+void VideoRtpReceiver::RestartMediaChannel_w(
+    absl::optional<uint32_t> ssrc,
+    MediaSourceInterface::SourceState state) {
+  if (!media_channel_) {
+    return;  // Can't restart.
+  }
+
+  const bool encoded_sink_enabled = saved_encoded_sink_enabled_;
+
+  if (state != MediaSourceInterface::kInitializing) {
+    if (ssrc == ssrc_)
+      return;
+
+    // Disconnect from a previous ssrc.
+    SetSink(nullptr);
+
+    if (encoded_sink_enabled)
+      SetEncodedSinkEnabled(false);
+  }
+
+  // Set up the new ssrc.
+  ssrc_ = std::move(ssrc);
+  SetSink(source_->sink());
+  if (encoded_sink_enabled) {
+    SetEncodedSinkEnabled(true);
+  }
+
+  if (frame_transformer_ && media_channel_) {
+    media_channel_->SetDepacketizerToDecoderFrameTransformer(
+        ssrc_.value_or(0), frame_transformer_);
+  }
+
+  if (media_channel_ && ssrc_) {
+    if (frame_decryptor_) {
+      media_channel_->SetFrameDecryptor(*ssrc_, frame_decryptor_);
+    }
+
+    media_channel_->SetBaseMinimumPlayoutDelayMs(*ssrc_, delay_.GetMs());
+  }
 }
 
 // RTC_RUN_ON(worker_thread_)
@@ -266,20 +258,21 @@ void VideoRtpReceiver::SetJitterBufferMinimumDelay(
 }
 
 void VideoRtpReceiver::SetMediaChannel(cricket::MediaChannel* media_channel) {
-  RTC_DCHECK_RUN_ON(&signaling_thread_checker_);
+  RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_DCHECK(media_channel == nullptr ||
              media_channel->media_type() == media_type());
 
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    SetMediaChannel_w(media_channel);
-  });
+  SetMediaChannel_w(media_channel);
 }
 
 // RTC_RUN_ON(worker_thread_)
 void VideoRtpReceiver::SetMediaChannel_w(cricket::MediaChannel* media_channel) {
   if (media_channel == media_channel_)
     return;
+
+  if (!media_channel) {
+    SetSink(nullptr);
+  }
 
   bool encoded_sink_enabled = saved_encoded_sink_enabled_;
   if (encoded_sink_enabled && media_channel_) {
@@ -303,6 +296,9 @@ void VideoRtpReceiver::SetMediaChannel_w(cricket::MediaChannel* media_channel) {
           ssrc_.value_or(0), frame_transformer_);
     }
   }
+
+  if (!media_channel)
+    source_->ClearCallback();
 }
 
 void VideoRtpReceiver::NotifyFirstPacketReceived() {
@@ -318,6 +314,19 @@ std::vector<RtpSource> VideoRtpReceiver::GetSources() const {
   if (!ssrc_ || !media_channel_)
     return std::vector<RtpSource>();
   return media_channel_->GetSources(*ssrc_);
+}
+
+void VideoRtpReceiver::SetupMediaChannel(absl::optional<uint32_t> ssrc,
+                                         cricket::MediaChannel* media_channel) {
+  RTC_DCHECK_RUN_ON(&signaling_thread_checker_);
+  RTC_DCHECK(media_channel);
+  MediaSourceInterface::SourceState state = source_->state();
+  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+    RTC_DCHECK_RUN_ON(worker_thread_);
+    SetMediaChannel_w(media_channel);
+    RestartMediaChannel_w(std::move(ssrc), state);
+  });
+  source_->SetState(MediaSourceInterface::kLive);
 }
 
 void VideoRtpReceiver::OnGenerateKeyFrame() {

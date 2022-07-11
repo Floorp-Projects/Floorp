@@ -88,7 +88,7 @@ class VideoRtpReceiver : public RtpReceiverInternal {
 
   // RtpReceiverInternal implementation.
   void Stop() override;
-  void StopAndEndTrack() override;
+  void SetSourceEnded() override;
   void SetupMediaChannel(uint32_t ssrc) override;
   void SetupUnsignaledMediaChannel() override;
   uint32_t ssrc() const override;
@@ -110,8 +110,17 @@ class VideoRtpReceiver : public RtpReceiverInternal {
 
   std::vector<RtpSource> GetSources() const override;
 
+  // Combines SetMediaChannel, SetupMediaChannel and
+  // SetupUnsignaledMediaChannel.
+  void SetupMediaChannel(absl::optional<uint32_t> ssrc,
+                         cricket::MediaChannel* media_channel);
+
  private:
-  void RestartMediaChannel(absl::optional<uint32_t> ssrc);
+  void RestartMediaChannel(absl::optional<uint32_t> ssrc)
+      RTC_RUN_ON(&signaling_thread_checker_);
+  void RestartMediaChannel_w(absl::optional<uint32_t> ssrc,
+                             MediaSourceInterface::SourceState state)
+      RTC_RUN_ON(worker_thread_);
   void SetSink(rtc::VideoSinkInterface<VideoFrame>* sink)
       RTC_RUN_ON(worker_thread_);
   void SetMediaChannel_w(cricket::MediaChannel* media_channel)

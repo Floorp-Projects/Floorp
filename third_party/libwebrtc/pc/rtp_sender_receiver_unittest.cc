@@ -347,7 +347,7 @@ class RtpSenderReceiverTest
   void DestroyAudioRtpReceiver() {
     if (!audio_rtp_receiver_)
       return;
-    audio_rtp_receiver_->Stop();
+    audio_rtp_receiver_->SetMediaChannel(nullptr);
     audio_rtp_receiver_ = nullptr;
     VerifyVoiceChannelNoOutput();
   }
@@ -356,6 +356,7 @@ class RtpSenderReceiverTest
     if (!video_rtp_receiver_)
       return;
     video_rtp_receiver_->Stop();
+    video_rtp_receiver_->SetMediaChannel(nullptr);
     video_rtp_receiver_ = nullptr;
     VerifyVideoChannelNoOutput();
   }
@@ -1640,7 +1641,7 @@ TEST_F(RtpSenderReceiverTest, AudioReceiverCannotSetFrameDecryptorAfterStop) {
   rtc::scoped_refptr<FrameDecryptorInterface> fake_frame_decryptor(
       new FakeFrameDecryptor());
   EXPECT_EQ(nullptr, audio_rtp_receiver_->GetFrameDecryptor());
-  audio_rtp_receiver_->Stop();
+  audio_rtp_receiver_->SetMediaChannel(nullptr);
   audio_rtp_receiver_->SetFrameDecryptor(fake_frame_decryptor);
   // TODO(webrtc:9926) - Validate media channel not set once fakes updated.
   DestroyAudioRtpReceiver();
@@ -1687,7 +1688,7 @@ TEST_F(RtpSenderReceiverTest, VideoReceiverCannotSetFrameDecryptorAfterStop) {
   rtc::scoped_refptr<FrameDecryptorInterface> fake_frame_decryptor(
       new FakeFrameDecryptor());
   EXPECT_EQ(nullptr, video_rtp_receiver_->GetFrameDecryptor());
-  video_rtp_receiver_->Stop();
+  video_rtp_receiver_->SetMediaChannel(nullptr);
   video_rtp_receiver_->SetFrameDecryptor(fake_frame_decryptor);
   // TODO(webrtc:9926) - Validate media channel not set once fakes updated.
   DestroyVideoRtpReceiver();

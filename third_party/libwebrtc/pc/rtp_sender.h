@@ -222,6 +222,11 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   std::vector<std::string> stream_ids_;
   RtpParameters init_parameters_;
 
+  // TODO(tommi): `media_channel_` and several other member variables in this
+  // class (ssrc_, stopped_, etc) are accessed from more than one thread without
+  // a guard or lock. Internally there are also several Invoke()s that we could
+  // remove since the upstream code may already be performing several operations
+  // on the worker thread.
   cricket::MediaChannel* media_channel_ = nullptr;
   rtc::scoped_refptr<MediaStreamTrackInterface> track_;
 
