@@ -57,27 +57,23 @@ void VideoTrack::AddOrUpdateSink(rtc::VideoSinkInterface<VideoFrame>* sink,
   VideoSourceBaseGuarded::AddOrUpdateSink(sink, wants);
   rtc::VideoSinkWants modified_wants = wants;
   modified_wants.black_frames = !enabled_w_;
-  video_source_->internal()->AddOrUpdateSink(sink, modified_wants);
+  video_source_->AddOrUpdateSink(sink, modified_wants);
 }
 
 void VideoTrack::RemoveSink(rtc::VideoSinkInterface<VideoFrame>* sink) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   VideoSourceBaseGuarded::RemoveSink(sink);
-  video_source_->internal()->RemoveSink(sink);
+  video_source_->RemoveSink(sink);
 }
 
 void VideoTrack::RequestRefreshFrame() {
   RTC_DCHECK_RUN_ON(worker_thread_);
-  video_source_->internal()->RequestRefreshFrame();
+  video_source_->RequestRefreshFrame();
 }
 
 VideoTrackSourceInterface* VideoTrack::GetSource() const {
   // Callable from any thread.
   return video_source_.get();
-}
-
-VideoTrackSourceInterface* VideoTrack::GetSourceInternal() const {
-  return video_source_->internal();
 }
 
 VideoTrackInterface::ContentHint VideoTrack::content_hint() const {
