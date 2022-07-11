@@ -43,7 +43,7 @@
 #include "pc/dtls_transport.h"
 #include "pc/media_stream.h"
 #include "pc/media_stream_proxy.h"
-#include "pc/peer_connection.h"
+#include "pc/peer_connection_internal.h"
 #include "pc/peer_connection_message_handler.h"
 #include "pc/rtp_media_utils.h"
 #include "pc/rtp_sender.h"
