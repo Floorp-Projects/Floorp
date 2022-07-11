@@ -37,6 +37,7 @@ struct LoggedGenericPacketSent {
 
   int64_t log_time_us() const { return timestamp.us(); }
   int64_t log_time_ms() const { return timestamp.ms(); }
+  Timestamp log_time() const { return timestamp; }
 
   size_t packet_length() const {
     return payload_length + padding_length + overhead_length;
