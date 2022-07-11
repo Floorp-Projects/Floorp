@@ -124,7 +124,7 @@ TEST_F(TestVCMReceiver, NonDecodableDuration_OneIncomplete) {
   const int kMinDelayMs = 500;
   receiver_.SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack,
                             kMaxNonDecodableDuration);
-  timing_.set_min_playout_delay(kMinDelayMs);
+  timing_.set_min_playout_delay(TimeDelta::Millis(kMinDelayMs));
   int64_t key_frame_inserted = clock_.TimeInMilliseconds();
   EXPECT_GE(InsertFrame(VideoFrameType::kVideoFrameKey, true), kNoError);
   // Insert an incomplete frame.
@@ -152,7 +152,7 @@ TEST_F(TestVCMReceiver, NonDecodableDuration_NoTrigger) {
   const int kMinDelayMs = 500;
   receiver_.SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack,
                             kMaxNonDecodableDuration);
-  timing_.set_min_playout_delay(kMinDelayMs);
+  timing_.set_min_playout_delay(TimeDelta::Millis(kMinDelayMs));
   int64_t key_frame_inserted = clock_.TimeInMilliseconds();
   EXPECT_GE(InsertFrame(VideoFrameType::kVideoFrameKey, true), kNoError);
   // Insert an incomplete frame.
@@ -182,7 +182,7 @@ TEST_F(TestVCMReceiver, NonDecodableDuration_NoTrigger2) {
   const int kMinDelayMs = 500;
   receiver_.SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack,
                             kMaxNonDecodableDuration);
-  timing_.set_min_playout_delay(kMinDelayMs);
+  timing_.set_min_playout_delay(TimeDelta::Millis(kMinDelayMs));
   int64_t key_frame_inserted = clock_.TimeInMilliseconds();
   EXPECT_GE(InsertFrame(VideoFrameType::kVideoFrameKey, true), kNoError);
   // Insert enough frames to have too long non-decodable sequence, except that
@@ -212,7 +212,7 @@ TEST_F(TestVCMReceiver, NonDecodableDuration_KeyFrameAfterIncompleteFrames) {
   const int kMinDelayMs = 500;
   receiver_.SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack,
                             kMaxNonDecodableDuration);
-  timing_.set_min_playout_delay(kMinDelayMs);
+  timing_.set_min_playout_delay(TimeDelta::Millis(kMinDelayMs));
   int64_t key_frame_inserted = clock_.TimeInMilliseconds();
   EXPECT_GE(InsertFrame(VideoFrameType::kVideoFrameKey, true), kNoError);
   // Insert an incomplete frame.
@@ -448,9 +448,9 @@ TEST_F(VCMReceiverTimingTest, FrameForDecodingPreferLateDecoding) {
   int64_t arrive_timestamps[kNumFrames];
   int64_t render_timestamps[kNumFrames];
 
-  int render_delay_ms;
-  int max_decode_ms;
-  int dummy;
+  TimeDelta render_delay_ms = TimeDelta::Zero();
+  TimeDelta max_decode_ms = TimeDelta::Zero();
+  TimeDelta dummy = TimeDelta::Zero();
   timing_.GetTimings(&max_decode_ms, &dummy, &dummy, &dummy, &dummy,
                      &render_delay_ms);
 
@@ -479,8 +479,9 @@ TEST_F(VCMReceiverTimingTest, FrameForDecodingPreferLateDecoding) {
         receiver_.FrameForDecoding(kMaxWaitTime, prefer_late_decoding);
     int64_t end_time = clock_.TimeInMilliseconds();
     if (frame) {
-      EXPECT_EQ(frame->RenderTimeMs() - max_decode_ms - render_delay_ms,
-                end_time);
+      EXPECT_EQ(
+          frame->RenderTimeMs() - max_decode_ms.ms() - render_delay_ms.ms(),
+          end_time);
       receiver_.ReleaseFrame(frame);
       ++num_frames_return;
     } else {

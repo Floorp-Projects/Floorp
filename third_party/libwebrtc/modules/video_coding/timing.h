@@ -29,6 +29,9 @@ class TimestampExtrapolator;
 
 class VCMTiming {
  public:
+  static constexpr auto kDefaultRenderDelay = TimeDelta::Millis(10);
+  static constexpr auto kDelayMaxChangeMsPerS = 100;
+
   explicit VCMTiming(Clock* clock);
   virtual ~VCMTiming() = default;
 
@@ -36,19 +39,19 @@ class VCMTiming {
   void Reset();
 
   // Set the amount of time needed to render an image. Defaults to 10 ms.
-  void set_render_delay(int render_delay_ms);
+  void set_render_delay(TimeDelta render_delay);
 
   // Set the minimum time the video must be delayed on the receiver to
   // get the desired jitter buffer level.
-  void SetJitterDelay(int required_delay_ms);
+  void SetJitterDelay(TimeDelta required_delay);
 
-  // Set/get the minimum playout delay from capture to render in ms.
-  void set_min_playout_delay(int min_playout_delay_ms);
-  int min_playout_delay();
+  // Set/get the minimum playout delay from capture to render.
+  void set_min_playout_delay(TimeDelta min_playout_delay);
+  TimeDelta min_playout_delay();
 
   // Set/get the maximum playout delay from capture to render in ms.
-  void set_max_playout_delay(int max_playout_delay_ms);
-  int max_playout_delay();
+  void set_max_playout_delay(TimeDelta max_playout_delay);
+  TimeDelta max_playout_delay();
 
   // Increases or decreases the current delay to get closer to the target delay.
   // Calculates how long it has been since the previous call to this function,
@@ -59,51 +62,44 @@ class VCMTiming {
   // Given the actual decode time in ms and the render time in ms for a frame,
   // this function calculates how late the frame is and increases the delay
   // accordingly.
-  void UpdateCurrentDelay(int64_t render_time_ms,
-                          int64_t actual_decode_time_ms);
+  void UpdateCurrentDelay(Timestamp render_time, Timestamp actual_decode_time);
 
   // Stops the decoder timer, should be called when the decoder returns a frame
   // or when the decoded frame callback is called.
-  void StopDecodeTimer(int32_t decode_time_ms, int64_t now_ms);
-  // TODO(kron): Remove once downstream projects has been changed to use the
-  // above function.
-  void StopDecodeTimer(uint32_t time_stamp,
-                       int32_t decode_time_ms,
-                       int64_t now_ms,
-                       int64_t render_time_ms);
+  void StopDecodeTimer(TimeDelta decode_time, Timestamp now);
 
   // Used to report that a frame is passed to decoding. Updates the timestamp
   // filter which is used to map between timestamps and receiver system time.
-  void IncomingTimestamp(uint32_t time_stamp, int64_t last_packet_time_ms);
+  void IncomingTimestamp(uint32_t rtp_timestamp, Timestamp last_packet_time);
 
   // Returns the receiver system time when the frame with timestamp
   // `frame_timestamp` should be rendered, assuming that the system time
-  // currently is `now_ms`.
-  virtual int64_t RenderTimeMs(uint32_t frame_timestamp, int64_t now_ms) const;
+  // currently is `now`.
+  virtual Timestamp RenderTime(uint32_t frame_timestamp, Timestamp now) const;
 
   // Returns the maximum time in ms that we can wait for a frame to become
-  // complete before we must pass it to the decoder. render_time_ms==0 indicates
+  // complete before we must pass it to the decoder. render_time==0 indicates
   // that the frames should be processed as quickly as possible, with possibly
   // only a small delay added to make sure that the decoder is not overloaded.
   // In this case, the parameter too_many_frames_queued is used to signal that
   // the decode queue is full and that the frame should be decoded as soon as
   // possible.
-  virtual int64_t MaxWaitingTime(int64_t render_time_ms,
-                                 int64_t now_ms,
-                                 bool too_many_frames_queued) const;
+  virtual TimeDelta MaxWaitingTime(Timestamp render_time,
+                                   Timestamp now,
+                                   bool too_many_frames_queued) const;
 
   // Returns the current target delay which is required delay + decode time +
   // render delay.
-  int TargetVideoDelay() const;
+  TimeDelta TargetVideoDelay() const;
 
   // Return current timing information. Returns true if the first frame has been
   // decoded, false otherwise.
-  virtual bool GetTimings(int* max_decode_ms,
-                          int* current_delay_ms,
-                          int* target_delay_ms,
-                          int* jitter_buffer_ms,
-                          int* min_playout_delay_ms,
-                          int* render_delay_ms) const;
+  virtual bool GetTimings(TimeDelta* max_decode,
+                          TimeDelta* current_delay,
+                          TimeDelta* target_delay,
+                          TimeDelta* jitter_buffer,
+                          TimeDelta* min_playout_delay,
+                          TimeDelta* render_delay) const;
 
   void SetTimingFrameInfo(const TimingFrameInfo& info);
   absl::optional<TimingFrameInfo> GetTimingFrameInfo();
@@ -113,16 +109,13 @@ class VCMTiming {
   absl::optional<int> MaxCompositionDelayInFrames() const;
 
   // Updates the last time a frame was scheduled for decoding.
-  void SetLastDecodeScheduledTimestamp(int64_t last_decode_scheduled_ts);
-
-  enum { kDefaultRenderDelayMs = 10 };
-  enum { kDelayMaxChangeMsPerS = 100 };
+  void SetLastDecodeScheduledTimestamp(Timestamp last_decode_scheduled);
 
  protected:
-  int RequiredDecodeTimeMs() const RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  int64_t RenderTimeMsInternal(uint32_t frame_timestamp, int64_t now_ms) const
+  TimeDelta RequiredDecodeTime() const RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Timestamp RenderTimeInternal(uint32_t frame_timestamp, Timestamp now) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  int TargetDelayInternal() const RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  TimeDelta TargetDelayInternal() const RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
  private:
   mutable Mutex mutex_;
@@ -131,16 +124,16 @@ class VCMTiming {
       RTC_PT_GUARDED_BY(mutex_);
   std::unique_ptr<VCMCodecTimer> codec_timer_ RTC_GUARDED_BY(mutex_)
       RTC_PT_GUARDED_BY(mutex_);
-  int render_delay_ms_ RTC_GUARDED_BY(mutex_);
+  TimeDelta render_delay_ RTC_GUARDED_BY(mutex_);
   // Best-effort playout delay range for frames from capture to render.
   // The receiver tries to keep the delay between `min_playout_delay_ms_`
   // and `max_playout_delay_ms_` taking the network jitter into account.
   // A special case is where min_playout_delay_ms_ = max_playout_delay_ms_ = 0,
   // in which case the receiver tries to play the frames as they arrive.
-  int min_playout_delay_ms_ RTC_GUARDED_BY(mutex_);
-  int max_playout_delay_ms_ RTC_GUARDED_BY(mutex_);
-  int jitter_delay_ms_ RTC_GUARDED_BY(mutex_);
-  int current_delay_ms_ RTC_GUARDED_BY(mutex_);
+  TimeDelta min_playout_delay_ RTC_GUARDED_BY(mutex_);
+  TimeDelta max_playout_delay_ RTC_GUARDED_BY(mutex_);
+  TimeDelta jitter_delay_ RTC_GUARDED_BY(mutex_);
+  TimeDelta current_delay_ RTC_GUARDED_BY(mutex_);
   uint32_t prev_frame_timestamp_ RTC_GUARDED_BY(mutex_);
   absl::optional<TimingFrameInfo> timing_frame_info_ RTC_GUARDED_BY(mutex_);
   size_t num_decoded_frames_ RTC_GUARDED_BY(mutex_);
@@ -158,7 +151,7 @@ class VCMTiming {
   // Timestamp at which the last frame was scheduled to be sent to the decoder.
   // Used only when the RTP header extension playout delay is set to min=0 ms
   // which is indicated by a render time set to 0.
-  int64_t last_decode_scheduled_ts_ RTC_GUARDED_BY(mutex_);
+  Timestamp last_decode_scheduled_ RTC_GUARDED_BY(mutex_);
 };
 }  // namespace webrtc
 

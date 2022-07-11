@@ -16,6 +16,8 @@
 #include <memory>
 #include <vector>
 
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "modules/video_coding/frame_object.h"
 #include "modules/video_coding/jitter_estimator.h"
 #include "modules/video_coding/timing.h"
@@ -40,56 +42,55 @@ class VCMTimingFake : public VCMTiming {
  public:
   explicit VCMTimingFake(Clock* clock) : VCMTiming(clock) {}
 
-  int64_t RenderTimeMs(uint32_t frame_timestamp,
-                       int64_t now_ms) const override {
-    if (last_ms_ == -1) {
-      last_ms_ = now_ms + kDelayMs;
+  Timestamp RenderTime(uint32_t frame_timestamp, Timestamp now) const override {
+    if (last_render_time_.IsMinusInfinity()) {
+      last_render_time_ = now + kDelay;
       last_timestamp_ = frame_timestamp;
     }
 
-    uint32_t diff = MinDiff(frame_timestamp, last_timestamp_);
+    auto diff = MinDiff(frame_timestamp, last_timestamp_);
+    auto timeDiff = TimeDelta::Millis(diff / 90);
     if (AheadOf(frame_timestamp, last_timestamp_))
-      last_ms_ += diff / 90;
+      last_render_time_ += timeDiff;
     else
-      last_ms_ -= diff / 90;
+      last_render_time_ -= timeDiff;
 
     last_timestamp_ = frame_timestamp;
-    return last_ms_;
+    return last_render_time_;
   }
 
-  int64_t MaxWaitingTime(int64_t render_time_ms,
-                         int64_t now_ms,
-                         bool too_many_frames_queued) const override {
-    return render_time_ms - now_ms - kDecodeTime;
+  TimeDelta MaxWaitingTime(Timestamp render_time,
+                           Timestamp now,
+                           bool too_many_frames_queued) const override {
+    return render_time - now - kDecodeTime;
   }
 
-  bool GetTimings(int* max_decode_ms,
-                  int* current_delay_ms,
-                  int* target_delay_ms,
-                  int* jitter_buffer_ms,
-                  int* min_playout_delay_ms,
-                  int* render_delay_ms) const override {
+  bool GetTimings(TimeDelta* max_decode,
+                  TimeDelta* current_delay,
+                  TimeDelta* target_delay,
+                  TimeDelta* jitter_buffer,
+                  TimeDelta* min_playout_delay,
+                  TimeDelta* render_delay) const override {
     return true;
   }
 
-  int GetCurrentJitter() {
-    int max_decode_ms;
-    int current_delay_ms;
-    int target_delay_ms;
-    int jitter_buffer_ms;
-    int min_playout_delay_ms;
-    int render_delay_ms;
-    VCMTiming::GetTimings(&max_decode_ms, &current_delay_ms, &target_delay_ms,
-                          &jitter_buffer_ms, &min_playout_delay_ms,
-                          &render_delay_ms);
-    return jitter_buffer_ms;
+  TimeDelta GetCurrentJitter() {
+    TimeDelta max_decode = TimeDelta::Zero();
+    TimeDelta current_delay = TimeDelta::Zero();
+    TimeDelta target_delay = TimeDelta::Zero();
+    TimeDelta jitter_buffer = TimeDelta::Zero();
+    TimeDelta min_playout_delay = TimeDelta::Zero();
+    TimeDelta render_delay = TimeDelta::Zero();
+    VCMTiming::GetTimings(&max_decode, &current_delay, &target_delay,
+                          &jitter_buffer, &min_playout_delay, &render_delay);
+    return jitter_buffer;
   }
 
  private:
-  static constexpr int kDelayMs = 50;
-  static constexpr int kDecodeTime = kDelayMs / 2;
+  static constexpr TimeDelta kDelay = TimeDelta::Millis(50);
+  const TimeDelta kDecodeTime = kDelay / 2;
   mutable uint32_t last_timestamp_ = 0;
-  mutable int64_t last_ms_ = -1;
+  mutable Timestamp last_render_time_ = Timestamp::MinusInfinity();
 };
 
 class FrameObjectFake : public EncodedFrame {
@@ -120,12 +121,12 @@ class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
   MOCK_METHOD(void, OnDroppedFrames, (uint32_t frames_dropped), (override));
   MOCK_METHOD(void,
               OnFrameBufferTimingsUpdated,
-              (int max_decode_ms,
-               int current_delay_ms,
-               int target_delay_ms,
-               int jitter_buffer_ms,
-               int min_playout_delay_ms,
-               int render_delay_ms),
+              (int max_decode,
+               int current_delay,
+               int target_delay,
+               int jitter_buffer,
+               int min_playout_delay,
+               int render_delay),
               (override));
   MOCK_METHOD(void,
               OnTimingFrameInfoUpdated,
@@ -474,7 +475,7 @@ TEST_F(TestFrameBuffer2, ProtectionModeNackFEC) {
   ExtractFrame();
   ExtractFrame();
   ASSERT_EQ(4u, frames_.size());
-  EXPECT_LT(timing_.GetCurrentJitter(), kRttMs);
+  EXPECT_LT(timing_.GetCurrentJitter().ms(), kRttMs);
 }
 
 TEST_F(TestFrameBuffer2, NoContinuousFrame) {

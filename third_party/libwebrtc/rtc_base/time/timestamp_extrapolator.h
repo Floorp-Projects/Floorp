@@ -13,23 +13,26 @@
 
 #include <stdint.h>
 
+#include "absl/types/optional.h"
+#include "api/units/timestamp.h"
+
 namespace webrtc {
 
 // Not thread safe.
 class TimestampExtrapolator {
  public:
-  explicit TimestampExtrapolator(int64_t start_ms);
-  void Update(int64_t tMs, uint32_t ts90khz);
-  int64_t ExtrapolateLocalTime(uint32_t timestamp90khz);
-  void Reset(int64_t start_ms);
+  explicit TimestampExtrapolator(Timestamp start);
+  void Update(Timestamp now, uint32_t ts90khz);
+  absl::optional<Timestamp> ExtrapolateLocalTime(uint32_t timestamp90khz);
+  void Reset(Timestamp start);
 
  private:
   void CheckForWrapArounds(uint32_t ts90khz);
   bool DelayChangeDetection(double error);
   double _w[2];
   double _pP[2][2];
-  int64_t _startMs;
-  int64_t _prevMs;
+  Timestamp _start;
+  Timestamp _prev;
   uint32_t _firstTimestamp;
   int32_t _wrapArounds;
   int64_t _prevUnwrappedTimestamp;

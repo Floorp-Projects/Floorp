@@ -18,10 +18,9 @@
 
 namespace webrtc {
 
-// TODO(https://bugs.webrtc.org/13589): Switch to using Timestamp and TimeDelta.
-bool FrameHasBadRenderTiming(int64_t render_time_ms,
-                             int64_t now_ms,
-                             int target_video_delay);
+bool FrameHasBadRenderTiming(Timestamp render_time,
+                             Timestamp now,
+                             TimeDelta target_video_delay);
 
 std::unique_ptr<EncodedFrame> CombineAndDeleteFrames(
     absl::InlinedVector<std::unique_ptr<EncodedFrame>, 4> frames);

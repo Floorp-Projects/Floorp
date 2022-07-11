@@ -163,30 +163,30 @@ TEST_F(VideoReceiveStream2Test, PlayoutDelay) {
   test_frame->SetPlayoutDelay(kPlayoutDelayMs);
 
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
-  EXPECT_EQ(kPlayoutDelayMs.min_ms, timing_->min_playout_delay());
-  EXPECT_EQ(kPlayoutDelayMs.max_ms, timing_->max_playout_delay());
+  EXPECT_EQ(kPlayoutDelayMs.min_ms, timing_->min_playout_delay().ms());
+  EXPECT_EQ(kPlayoutDelayMs.max_ms, timing_->max_playout_delay().ms());
 
   // Check that the biggest minimum delay is chosen.
   video_receive_stream_->SetMinimumPlayoutDelay(400);
-  EXPECT_EQ(400, timing_->min_playout_delay());
+  EXPECT_EQ(400, timing_->min_playout_delay().ms());
 
   // Check base minimum delay validation.
   EXPECT_FALSE(video_receive_stream_->SetBaseMinimumPlayoutDelayMs(12345));
   EXPECT_FALSE(video_receive_stream_->SetBaseMinimumPlayoutDelayMs(-1));
   EXPECT_TRUE(video_receive_stream_->SetBaseMinimumPlayoutDelayMs(500));
-  EXPECT_EQ(500, timing_->min_playout_delay());
+  EXPECT_EQ(500, timing_->min_playout_delay().ms());
 
   // Check that intermidiate values are remembered and the biggest remembered
   // is chosen.
   video_receive_stream_->SetBaseMinimumPlayoutDelayMs(0);
-  EXPECT_EQ(400, timing_->min_playout_delay());
+  EXPECT_EQ(400, timing_->min_playout_delay().ms());
 
   video_receive_stream_->SetMinimumPlayoutDelay(0);
-  EXPECT_EQ(123, timing_->min_playout_delay());
+  EXPECT_EQ(123, timing_->min_playout_delay().ms());
 }
 
 TEST_F(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMaxValue) {
-  const int default_max_playout_latency = timing_->max_playout_delay();
+  const TimeDelta default_max_playout_latency = timing_->max_playout_delay();
   const VideoPlayoutDelay kPlayoutDelayMs = {123, -1};
 
   std::unique_ptr<FrameObjectFake> test_frame(new FrameObjectFake());
@@ -196,13 +196,13 @@ TEST_F(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMaxValue) {
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
 
   // Ensure that -1 preserves default maximum value from `timing_`.
-  EXPECT_EQ(kPlayoutDelayMs.min_ms, timing_->min_playout_delay());
-  EXPECT_NE(kPlayoutDelayMs.max_ms, timing_->max_playout_delay());
+  EXPECT_EQ(kPlayoutDelayMs.min_ms, timing_->min_playout_delay().ms());
+  EXPECT_NE(kPlayoutDelayMs.max_ms, timing_->max_playout_delay().ms());
   EXPECT_EQ(default_max_playout_latency, timing_->max_playout_delay());
 }
 
 TEST_F(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMinValue) {
-  const int default_min_playout_latency = timing_->min_playout_delay();
+  const TimeDelta default_min_playout_latency = timing_->min_playout_delay();
   const VideoPlayoutDelay kPlayoutDelayMs = {-1, 321};
 
   std::unique_ptr<FrameObjectFake> test_frame(new FrameObjectFake());
@@ -212,8 +212,8 @@ TEST_F(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMinValue) {
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
 
   // Ensure that -1 preserves default minimum value from `timing_`.
-  EXPECT_NE(kPlayoutDelayMs.min_ms, timing_->min_playout_delay());
-  EXPECT_EQ(kPlayoutDelayMs.max_ms, timing_->max_playout_delay());
+  EXPECT_NE(kPlayoutDelayMs.min_ms, timing_->min_playout_delay().ms());
+  EXPECT_EQ(kPlayoutDelayMs.max_ms, timing_->max_playout_delay().ms());
   EXPECT_EQ(default_min_playout_latency, timing_->min_playout_delay());
 }
 

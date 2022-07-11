@@ -10,7 +10,15 @@
 
 #include "api/video/encoded_frame.h"
 
+#include "absl/types/optional.h"
+
 namespace webrtc {
+
+absl::optional<Timestamp> EncodedFrame::RenderTimestamp() const {
+  return RenderTimeMs() >= 0
+             ? absl::make_optional(Timestamp::Millis(RenderTimeMs()))
+             : absl::nullopt;
+}
 
 bool EncodedFrame::delayed_by_retransmission() const {
   return false;

@@ -16,29 +16,29 @@
 
 namespace webrtc {
 
-bool FrameHasBadRenderTiming(int64_t render_time_ms,
-                             int64_t now_ms,
-                             int target_video_delay) {
+bool FrameHasBadRenderTiming(Timestamp render_time,
+                             Timestamp now,
+                             TimeDelta target_video_delay) {
   // Zero render time means render immediately.
-  if (render_time_ms == 0) {
+  if (render_time.IsZero()) {
     return false;
   }
-  if (render_time_ms < 0) {
+  if (render_time < Timestamp::Zero()) {
     return true;
   }
-  const int64_t kMaxVideoDelayMs = 10000;
-  if (std::abs(render_time_ms - now_ms) > kMaxVideoDelayMs) {
-    int frame_delay = static_cast<int>(std::abs(render_time_ms - now_ms));
+  constexpr TimeDelta kMaxVideoDelay = TimeDelta::Millis(10000);
+  TimeDelta frame_delay = (render_time - now).Abs();
+  if (frame_delay > kMaxVideoDelay) {
     RTC_LOG(LS_WARNING)
         << "A frame about to be decoded is out of the configured "
            "delay bounds ("
-        << frame_delay << " > " << kMaxVideoDelayMs
+        << frame_delay.ms() << " > " << kMaxVideoDelay.ms()
         << "). Resetting the video jitter buffer.";
     return true;
   }
-  if (target_video_delay > kMaxVideoDelayMs) {
+  if (target_video_delay > kMaxVideoDelay) {
     RTC_LOG(LS_WARNING) << "The video target delay has grown larger than "
-                        << kMaxVideoDelayMs << " ms.";
+                        << kMaxVideoDelay.ms() << " ms.";
     return true;
   }
   return false;

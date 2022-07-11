@@ -270,7 +270,7 @@ VideoReceiveStream2::VideoReceiveStream2(
     decoder_payload_types.insert(decoder.payload_type);
   }
 
-  timing_->set_render_delay(config_.render_delay_ms);
+  timing_->set_render_delay(TimeDelta::Millis(config_.render_delay_ms));
 
   frame_buffer_ = FrameBufferProxy::CreateFromFieldTrial(
       clock_, call_->worker_thread(), timing_.get(), &stats_proxy_,
@@ -721,7 +721,7 @@ absl::optional<Syncable::Info> VideoReceiveStream2::GetInfo() const {
   if (!info)
     return absl::nullopt;
 
-  info->current_delay_ms = timing_->TargetVideoDelay();
+  info->current_delay_ms = timing_->TargetVideoDelay().ms();
   return info;
 }
 
@@ -981,7 +981,7 @@ void VideoReceiveStream2::UpdatePlayoutDelays() const {
       std::max({frame_minimum_playout_delay_ms_, base_minimum_playout_delay_ms_,
                 syncable_minimum_playout_delay_ms_});
   if (minimum_delay_ms >= 0) {
-    timing_->set_min_playout_delay(minimum_delay_ms);
+    timing_->set_min_playout_delay(TimeDelta::Millis(minimum_delay_ms));
     if (frame_minimum_playout_delay_ms_ == 0 &&
         frame_maximum_playout_delay_ms_ > 0 && low_latency_renderer_enabled_) {
       // TODO(kron): Estimate frame rate from video stream.
@@ -1002,7 +1002,7 @@ void VideoReceiveStream2::UpdatePlayoutDelays() const {
 
   const int maximum_delay_ms = frame_maximum_playout_delay_ms_;
   if (maximum_delay_ms >= 0) {
-    timing_->set_max_playout_delay(maximum_delay_ms);
+    timing_->set_max_playout_delay(TimeDelta::Millis(maximum_delay_ms));
   }
 }
 
