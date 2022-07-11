@@ -6495,7 +6495,7 @@ function showFullScreenViewContextMenuItems(popup) {
   }
   let autoHide = popup.querySelector(".fullscreen-context-autohide");
   if (autoHide) {
-    FullScreen.getAutohide(autoHide);
+    FullScreen.updateAutohideMenuitem(autoHide);
   }
 }
 
