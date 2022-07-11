@@ -312,6 +312,7 @@ declare namespace MockedExports {
     Cc: Cc;
     Ci: Ci;
     Cu: Cu;
+    Services: Services;
   };
 
   interface FluentLocalization {
@@ -419,6 +420,7 @@ declare var PathUtils: PathUtilsInterface;
 declare var Cu: MockedExports.Cu;
 declare var Cc: MockedExports.Cc;
 declare var Ci: MockedExports.Ci;
+declare var Services: MockedExports.Services;
 
 /**
  * This is a variant on the normal Document, as it contains chrome-specific properties.
