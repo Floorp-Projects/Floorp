@@ -543,6 +543,10 @@ void AudioProcessingSimulator::ConfigureAudioProcessor() {
     apm_config.high_pass_filter.enabled = *settings_.use_hpf;
   }
 
+  if (settings_.use_vad) {
+    apm_config.voice_detection.enabled = *settings_.use_vad;
+  }
+
   if (settings_.use_agc) {
     apm_config.gain_controller1.enabled = *settings_.use_agc;
   }
