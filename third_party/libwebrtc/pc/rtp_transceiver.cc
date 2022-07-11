@@ -212,26 +212,34 @@ void RtpTransceiver::SetChannel(
     }
   });
 
-  for (const auto& sender : senders_) {
-    sender->internal()->SetMediaChannel(channel_ ? channel_->media_channel()
-                                                 : nullptr);
-  }
-
   RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(1);
 
-  for (const auto& receiver : receivers_) {
-    if (!channel_) {
-      receiver->internal()->Stop();
-    } else {
-      receiver->internal()->SetMediaChannel(channel_->media_channel());
-    }
+  if (!channel_) {
+    for (const auto& receiver : receivers_)
+      receiver->internal()->SetSourceEnded();
+    RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(1);  // There should not be an invoke.
   }
 
-  // Destroy the channel, if we had one, now _after_ updating the receivers who
-  // might have had references to the previous channel.
-  if (channel_to_delete) {
-    channel_manager_->DestroyChannel(channel_to_delete);
+  if (channel_to_delete || !senders_.empty() || !receivers_.empty()) {
+    channel_manager_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+      auto* media_channel = channel_ ? channel_->media_channel() : nullptr;
+      for (const auto& sender : senders_) {
+        sender->internal()->SetMediaChannel(media_channel);
+      }
+
+      for (const auto& receiver : receivers_) {
+        receiver->internal()->SetMediaChannel(media_channel);
+      }
+
+      // Destroy the channel, if we had one, now _after_ updating the receivers
+      // who might have had references to the previous channel.
+      if (channel_to_delete) {
+        channel_manager_->DestroyChannel(channel_to_delete);
+      }
+    });
   }
+
+  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(2);
 }
 
 void RtpTransceiver::AddSender(
@@ -272,6 +280,7 @@ void RtpTransceiver::AddReceiver(
 }
 
 bool RtpTransceiver::RemoveReceiver(RtpReceiverInterface* receiver) {
+  RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK(!unified_plan_);
   if (receiver) {
     RTC_DCHECK_EQ(media_type(), receiver->media_type());
@@ -280,8 +289,13 @@ bool RtpTransceiver::RemoveReceiver(RtpReceiverInterface* receiver) {
   if (it == receivers_.end()) {
     return false;
   }
-  // `Stop()` will clear the internally cached pointer to the media channel.
+
   (*it)->internal()->Stop();
+  channel_manager_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+    // `Stop()` will clear the receiver's pointer to the media channel.
+    (*it)->internal()->SetMediaChannel(nullptr);
+  });
+
   receivers_.erase(it);
   return true;
 }
@@ -399,15 +413,22 @@ void RtpTransceiver::StopSendingAndReceiving() {
   //
   // 3. Stop sending media with sender.
   //
+  RTC_DCHECK_RUN_ON(thread_);
+
   // 4. Send an RTCP BYE for each RTP stream that was being sent by sender, as
   // specified in [RFC3550].
-  RTC_DCHECK_RUN_ON(thread_);
   for (const auto& sender : senders_)
     sender->internal()->Stop();
 
-  // 5. Stop receiving media with receiver.
+  // Signal to receiver sources that we're stopping.
   for (const auto& receiver : receivers_)
-    receiver->internal()->StopAndEndTrack();
+    receiver->internal()->Stop();
+
+  channel_manager_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+    // 5 Stop receiving media with receiver.
+    for (const auto& receiver : receivers_)
+      receiver->internal()->SetMediaChannel(nullptr);
+  });
 
   stopping_ = true;
   direction_ = webrtc::RtpTransceiverDirection::kInactive;
