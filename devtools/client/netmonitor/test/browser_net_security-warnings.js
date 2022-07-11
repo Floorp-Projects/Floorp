@@ -57,7 +57,7 @@ add_task(async function() {
       "Cipher suite warning is hidden."
     );
 
-    store.dispatch(Actions.clearRequests());
+    await clearNetworkEvents(monitor);
   }
 
   return teardown(monitor);

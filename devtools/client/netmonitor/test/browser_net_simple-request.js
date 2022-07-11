@@ -72,7 +72,7 @@ add_task(async function() {
     "The network details panel should still be hidden after a reload."
   );
 
-  store.dispatch(Actions.clearRequests());
+  await clearNetworkEvents(monitor);
 
   ok(
     document.querySelector(".request-list-empty-notice"),

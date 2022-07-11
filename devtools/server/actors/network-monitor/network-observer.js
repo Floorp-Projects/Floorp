@@ -1426,6 +1426,14 @@ NetworkObserver.prototype = {
     }
   },
 
+  /*
+   * Clears all open requests and responses
+   */
+  clear: function() {
+    this.openRequests.clear();
+    this.openResponses.clear();
+  },
+
   /**
    * Suspend observer activity. This is called when the Network monitor actor stops
    * listening.
@@ -1465,6 +1473,7 @@ NetworkObserver.prototype = {
     this.filters = null;
     this._throttler = null;
     this._decodedCertificateCache.clear();
+    this.clear();
   },
 };
 

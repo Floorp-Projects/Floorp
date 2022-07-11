@@ -143,10 +143,13 @@ function removeSelectedCustomRequest() {
     type: REMOVE_SELECTED_CUSTOM_REQUEST,
   };
 }
-
+/**
+ * Clear all requests
+ */
 function clearRequests() {
-  return {
-    type: CLEAR_REQUESTS,
+  return ({ dispatch, connector }) => {
+    dispatch({ type: CLEAR_REQUESTS });
+    connector.clear();
   };
 }
 
