@@ -284,6 +284,10 @@ rtc_library("rtc_event") {
   }
 }
 
+config("chromium_logging_config") {
+  defines = ["LOGGING_INSIDE_WEBRTC"]
+}
+
 rtc_library("logging") {
   visibility = [ "*" ]
   libs = []
@@ -308,6 +312,12 @@ rtc_library("logging") {
       "../../webrtc_overrides/rtc_base/logging.cc",
       "../../webrtc_overrides/rtc_base/logging.h",
     ]
+    # This macro needs to be both present in all WebRTC targets (see its
+    # definition in //BUILD.gn but also propagated to all the targets
+    # depending on the Chromium component defined in
+    # //third_party/webrtc_overrides:webrtc_component. This public_config
+    # allows GN to propagate the macro accordingly.
+    public_configs = [":chromium_logging_config"]
   } else {
     sources = [
       "logging.cc",
