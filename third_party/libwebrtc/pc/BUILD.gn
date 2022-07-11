@@ -246,8 +246,6 @@ rtc_library("peerconnection") {
     "peer_connection_factory.h",
     "sdp_offer_answer.cc",  # TODO: Make separate target when not circular
     "sdp_offer_answer.h",  # dependent on peerconnection.h
-    "stats_collector.cc",
-    "stats_collector.h",
   ]
 
   deps = [
@@ -610,6 +608,41 @@ rtc_source_set("sdp_utils") {
 }
 rtc_source_set("stats_collector") {
   visibility = [ ":*" ]
+  sources = [
+    "stats_collector.cc",
+    "stats_collector.h",
+  ]
+  deps = [
+    ":data_channel_utils",
+    ":peer_connection_internal",
+    ":rtc_pc_base",
+    ":rtp_receiver",
+    ":rtp_transceiver",
+    ":stats_collector_interface",
+    "../api:libjingle_peerconnection_api",
+    "../api:media_stream_interface",
+    "../api:rtp_parameters",
+    "../api:scoped_refptr",
+    "../api:sequence_checker",
+    "../api/audio_codecs:audio_codecs_api",
+    "../api/video:video_rtp_headers",
+    "../call:call_interfaces",
+    "../media:rtc_media_base",
+    "../modules/audio_processing:audio_processing_statistics",
+    "../p2p:rtc_p2p",
+    "../rtc_base:checks",
+    "../rtc_base:ip_address",
+    "../rtc_base:logging",
+    "../rtc_base:network_constants",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:socket_address",
+    "../rtc_base:stringutils",
+    "../rtc_base:threading",
+    "../rtc_base:timeutils",
+    "../system_wrappers:field_trial",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 rtc_source_set("stream_collection") {
   visibility = [ ":*" ]
@@ -1421,6 +1454,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":sdp_serializer",
       ":sdp_utils",
       ":session_description",
+      ":stats_collector",
       ":stream_collection",
       ":track_media_info_map",
       ":usage_pattern",
