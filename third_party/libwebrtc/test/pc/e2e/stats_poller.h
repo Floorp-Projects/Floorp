@@ -19,6 +19,8 @@
 #include "api/peer_connection_interface.h"
 #include "api/stats/rtc_stats_collector_callback.h"
 #include "api/test/stats_observer_interface.h"
+#include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/thread_annotations.h"
 #include "test/pc/e2e/test_peer.h"
 
 namespace webrtc {
@@ -28,12 +30,10 @@ namespace webrtc_pc_e2e {
 // objects subscribed.
 class InternalStatsObserver : public RTCStatsCollectorCallback {
  public:
-  InternalStatsObserver(std::string pc_label,
+  InternalStatsObserver(absl::string_view pc_label,
                         TestPeer* peer,
                         std::vector<StatsObserverInterface*> observers)
-      : pc_label_(std::move(pc_label)),
-        peer_(peer),
-        observers_(std::move(observers)) {}
+      : pc_label_(pc_label), peer_(peer), observers_(std::move(observers)) {}
 
   void PollStats();
 
@@ -56,8 +56,13 @@ class StatsPoller {
 
   void PollStatsAndNotifyObservers();
 
+  void RegisterParticipantInCall(absl::string_view peer_name, TestPeer* peer);
+
  private:
-  std::vector<rtc::scoped_refptr<InternalStatsObserver>> pollers_;
+  const std::vector<StatsObserverInterface*> observers_;
+  webrtc::Mutex mutex_;
+  std::vector<rtc::scoped_refptr<InternalStatsObserver>> pollers_
+      RTC_GUARDED_BY(mutex_);
 };
 
 }  // namespace webrtc_pc_e2e

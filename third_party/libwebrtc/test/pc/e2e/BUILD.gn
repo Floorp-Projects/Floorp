@@ -498,6 +498,8 @@ if (!build_with_chromium) {
         "../../../api:rtc_stats_api",
         "../../../api:stats_observer_interface",
         "../../../rtc_base:logging",
+        "../../../rtc_base:rtc_base_approved",
+        "../../../rtc_base/synchronization:mutex",
       ]
     }
 

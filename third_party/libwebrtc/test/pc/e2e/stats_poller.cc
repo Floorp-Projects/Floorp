@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "rtc_base/logging.h"
+#include "rtc_base/synchronization/mutex.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -29,17 +30,27 @@ void InternalStatsObserver::OnStatsDelivered(
 }
 
 StatsPoller::StatsPoller(std::vector<StatsObserverInterface*> observers,
-                         std::map<std::string, TestPeer*> peers) {
+                         std::map<std::string, TestPeer*> peers)
+    : observers_(observers) {
+  webrtc::MutexLock lock(&mutex_);
   for (auto& peer : peers) {
     pollers_.push_back(rtc::make_ref_counted<InternalStatsObserver>(
-        peer.first, peer.second, observers));
+        peer.first, peer.second, observers_));
   }
 }
 
 void StatsPoller::PollStatsAndNotifyObservers() {
+  webrtc::MutexLock lock(&mutex_);
   for (auto& poller : pollers_) {
     poller->PollStats();
   }
+}
+
+void StatsPoller::RegisterParticipantInCall(absl::string_view peer_name,
+                                            TestPeer* peer) {
+  webrtc::MutexLock lock(&mutex_);
+  pollers_.push_back(rtc::make_ref_counted<InternalStatsObserver>(
+      peer_name, peer, observers_));
 }
 
 }  // namespace webrtc_pc_e2e
