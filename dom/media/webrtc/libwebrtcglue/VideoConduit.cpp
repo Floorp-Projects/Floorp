@@ -194,8 +194,11 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
         webrtc::VideoEncoder::GetDefaultH264Settings();
     h264_settings.frameDroppingOn = frame_dropping;
     h264_settings.packetizationMode = aConfig.mPacketizationMode;
-    return new rtc::RefCountedObject<
-        webrtc::VideoEncoderConfig::H264EncoderSpecificSettings>(h264_settings);
+    return rtc::scoped_refptr<
+        webrtc::VideoEncoderConfig::EncoderSpecificSettings>(
+        new rtc::RefCountedObject<
+            webrtc::VideoEncoderConfig::H264EncoderSpecificSettings>(
+            h264_settings));
   }
   if (aConfig.mName == kVp8CodecName) {
     webrtc::VideoCodecVP8 vp8_settings =
@@ -204,8 +207,11 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
     // VP8 denoising is enabled by default.
     vp8_settings.denoisingOn = codec_default_denoising ? true : denoising;
     vp8_settings.frameDroppingOn = frame_dropping;
-    return new rtc::RefCountedObject<
-        webrtc::VideoEncoderConfig::Vp8EncoderSpecificSettings>(vp8_settings);
+    return rtc::scoped_refptr<
+        webrtc::VideoEncoderConfig::EncoderSpecificSettings>(
+        new rtc::RefCountedObject<
+            webrtc::VideoEncoderConfig::Vp8EncoderSpecificSettings>(
+            vp8_settings));
   }
   if (aConfig.mName == kVp9CodecName) {
     webrtc::VideoCodecVP9 vp9_settings =
@@ -220,8 +226,11 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
     // VP9 denoising is disabled by default.
     vp9_settings.denoisingOn = codec_default_denoising ? false : denoising;
     vp9_settings.frameDroppingOn = true;  // This must be true for VP9
-    return new rtc::RefCountedObject<
-        webrtc::VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9_settings);
+    return rtc::scoped_refptr<
+        webrtc::VideoEncoderConfig::EncoderSpecificSettings>(
+        new rtc::RefCountedObject<
+            webrtc::VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+            vp9_settings));
   }
   return nullptr;
 }

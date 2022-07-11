@@ -33,7 +33,9 @@ namespace mozilla {
         config.task_queue_factory = wrapper->mTaskQueueFactory.get();
         config.trials = aSharedState->mTrials.get();
         wrapper->SetCall(WrapUnique(webrtc::Call::Create(
-            config, &wrapper->mClock, aSharedState->GetModuleThread(),
+            config, &wrapper->mClock,
+            rtc::scoped_refptr<webrtc::SharedModuleThread>(
+                aSharedState->GetModuleThread()),
             webrtc::ProcessThread::Create("PacerThread"))));
       }));
 
