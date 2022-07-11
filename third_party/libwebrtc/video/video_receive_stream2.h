@@ -101,7 +101,8 @@ class VideoReceiveStream2
                       CallStats* call_stats,
                       Clock* clock,
                       VCMTiming* timing,
-                      NackPeriodicProcessor* nack_periodic_processor);
+                      NackPeriodicProcessor* nack_periodic_processor,
+                      DecodeSynchronizer* decode_sync);
   // Destruction happens on the worker thread. Prior to destruction the caller
   // must ensure that a registration with the transport has been cleared. See
   // `RegisterWithTransport` for details.
@@ -322,6 +323,8 @@ class VideoReceiveStream2
   // determines the maximum number of decoders that are created up front before
   // any video frame has been received.
   FieldTrialParameter<int> maximum_pre_stream_decoders_;
+
+  DecodeSynchronizer* decode_sync_;
 
   // Defined last so they are destroyed before all other members.
   rtc::TaskQueue decode_queue_;
