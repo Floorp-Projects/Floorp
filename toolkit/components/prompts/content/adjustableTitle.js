@@ -8,9 +8,6 @@ let { PromptUtils } = ChromeUtils.import(
   "resource://gre/modules/SharedPromptUtils.jsm"
 );
 
-// We expect our consumer to provide Services.jsm.
-/* global Services */
-
 const AdjustableTitle = {
   _cssSnippet: `
     #titleContainer {
