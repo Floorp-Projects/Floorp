@@ -170,6 +170,7 @@
 //   GTEST_HAS_TYPED_TEST   - typed tests
 //   GTEST_HAS_TYPED_TEST_P - type-parameterized tests
 //   GTEST_IS_THREADSAFE    - Google Test is thread-safe.
+//   GTEST_USES_RE2         - the RE2 regular expression library is used
 //   GTEST_USES_POSIX_RE    - enhanced POSIX regex is used. Do not confuse with
 //                            GTEST_HAS_POSIX_RE (see above) which users can
 //                            define themselves.
@@ -192,8 +193,6 @@
 //   GTEST_AMBIGUOUS_ELSE_BLOCKER_ - for disabling a gcc warning.
 //   GTEST_ATTRIBUTE_UNUSED_  - declares that a class' instances or a
 //                              variable don't have to be used.
-//   GTEST_DISALLOW_COPY_AND_ASSIGN_ - disables copy ctor and operator=.
-//   GTEST_DISALLOW_MOVE_AND_ASSIGN_ - disables move ctor and operator=.
 //   GTEST_MUST_USE_RESULT_   - declares that a function's result must be used.
 //   GTEST_INTENTIONAL_CONST_COND_PUSH_ - start code section where MSVC C4127 is
 //                                        suppressed (constant conditional).
@@ -217,10 +216,13 @@
 //                            - synchronization primitives.
 //
 // Regular expressions:
-//   RE             - a simple regular expression class using the POSIX
-//                    Extended Regular Expression syntax on UNIX-like platforms
-//                    or a reduced regular exception syntax on other
-//                    platforms, including Windows.
+//   RE             - a simple regular expression class using
+//                     1) the RE2 syntax on all platforms when built with RE2
+//                        and Abseil as dependencies
+//                     2) the POSIX Extended Regular Expression syntax on
+//                        UNIX-like platforms,
+//                     3) A reduced regular exception syntax on other platforms,
+//                        including Windows.
 // Logging:
 //   GTEST_LOG_()   - logs messages at the specified severity level.
 //   LogToStderr()  - directs all log messages to stderr.
@@ -240,8 +242,6 @@
 //   BiggestInt     - the biggest signed integer type.
 //
 // Command-line utilities:
-//   GTEST_DECLARE_*()  - declares a flag.
-//   GTEST_DEFINE_*()   - defines a flag.
 //   GetInjectableArgvs() - returns the command line as a vector of strings.
 //
 // Environment variable utilities:
@@ -286,6 +286,12 @@
 
 #include "gtest/internal/custom/gtest-port.h"
 #include "gtest/internal/gtest-port-arch.h"
+
+#if GTEST_HAS_ABSL
+#include "absl/flags/declare.h"
+#include "absl/flags/flag.h"
+#include "absl/flags/reflection.h"
+#endif
 
 #if !defined(GTEST_DEV_EMAIL_)
 #define GTEST_DEV_EMAIL_ "googletestframework@@googlegroups.com"
@@ -383,32 +389,19 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 #endif
 #endif
 
-#if GTEST_USES_PCRE
-// The appropriate headers have already been included.
-
+// Select the regular expression implementation.
+#if GTEST_HAS_ABSL
+// When using Abseil, RE2 is required.
+#include "absl/strings/string_view.h"
+#include "re2/re2.h"
+#define GTEST_USES_RE2 1
 #elif GTEST_HAS_POSIX_RE
-
-// On some platforms, <regex.h> needs someone to define size_t, and
-// won't compile otherwise.  We can #include it here as we already
-// included <stdlib.h>, which is guaranteed to define size_t through
-// <stddef.h>.
 #include <regex.h>  // NOLINT
-
 #define GTEST_USES_POSIX_RE 1
-
-#elif GTEST_OS_WINDOWS
-
-// <regex.h> is not available on Windows.  Use our own simple regex
-// implementation instead.
-#define GTEST_USES_SIMPLE_RE 1
-
 #else
-
-// <regex.h> may not be available on this platform.  Use our own
-// simple regex implementation instead.
+// Use our own simple regex implementation.
 #define GTEST_USES_SIMPLE_RE 1
-
-#endif  // GTEST_USES_PCRE
+#endif
 
 #ifndef GTEST_HAS_EXCEPTIONS
 // The user didn't tell us whether exceptions are enabled, so we need
@@ -685,20 +678,6 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 #define GTEST_ATTRIBUTE_PRINTF_(string_index, first_to_check)
 #endif
 
-// A macro to disallow copy constructor and operator=
-// This should be used in the private: declarations for a class.
-// NOLINT is for modernize-use-trailing-return-type in macro uses.
-#define GTEST_DISALLOW_COPY_AND_ASSIGN_(type) \
-  type(type const&) = delete;                 \
-  type& operator=(type const&) = delete /* NOLINT */
-
-// A macro to disallow move constructor and operator=
-// This should be used in the private: declarations for a class.
-// NOLINT is for modernize-use-trailing-return-type in macro uses.
-#define GTEST_DISALLOW_MOVE_AND_ASSIGN_(type) \
-  type(type&&) noexcept = delete;             \
-  type& operator=(type&&) noexcept = delete /* NOLINT */
-
 // Tell the compiler to warn about unused return values for functions declared
 // with this macro.  The macro should be used on function declarations
 // following the argument list:
@@ -874,25 +853,37 @@ namespace internal {
 // Secret object, which is what we want.
 class Secret;
 
-// The GTEST_COMPILE_ASSERT_ is a legacy macro used to verify that a compile
-// time expression is true (in new code, use static_assert instead). For
-// example, you could use it to verify the size of a static array:
-//
-//   GTEST_COMPILE_ASSERT_(GTEST_ARRAY_SIZE_(names) == NUM_NAMES,
-//                         names_incorrect_size);
-//
-// The second argument to the macro must be a valid C++ identifier. If the
-// expression is false, compiler will issue an error containing this identifier.
-#define GTEST_COMPILE_ASSERT_(expr, msg) static_assert(expr, #msg)
-
 // A helper for suppressing warnings on constant condition.  It just
 // returns 'condition'.
 GTEST_API_ bool IsTrue(bool condition);
 
 // Defines RE.
 
-#if GTEST_USES_PCRE
-// if used, PCRE is injected by custom/gtest-port.h
+#if GTEST_USES_RE2
+
+// This is almost `using RE = ::RE2`, except it is copy-constructible, and it
+// needs to disambiguate the `std::string`, `absl::string_view`, and `const
+// char*` constructors.
+class GTEST_API_ RE {
+ public:
+  RE(absl::string_view regex) : regex_(regex) {}                  // NOLINT
+  RE(const char* regex) : RE(absl::string_view(regex)) {}         // NOLINT
+  RE(const std::string& regex) : RE(absl::string_view(regex)) {}  // NOLINT
+  RE(const RE& other) : RE(other.pattern()) {}
+
+  const std::string& pattern() const { return regex_.pattern(); }
+
+  static bool FullMatch(absl::string_view str, const RE& re) {
+    return RE2::FullMatch(str, re.regex_);
+  }
+  static bool PartialMatch(absl::string_view str, const RE& re) {
+    return RE2::PartialMatch(str, re.regex_);
+  }
+
+ private:
+  RE2 regex_;
+};
+
 #elif GTEST_USES_POSIX_RE || GTEST_USES_SIMPLE_RE
 
 // A simple C++ wrapper for <regex.h>.  It uses the POSIX Extended
@@ -943,7 +934,7 @@ class GTEST_API_ RE {
 #endif
 };
 
-#endif  // GTEST_USES_PCRE
+#endif  // ::testing::internal::RE implementation
 
 // Formats a source file path and a line number as they would appear
 // in an error message from the compiler used to compile this code.
@@ -978,7 +969,8 @@ class GTEST_API_ GTestLog {
  private:
   const GTestLogSeverity severity_;
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(GTestLog);
+  GTestLog(const GTestLog&) = delete;
+  GTestLog& operator=(const GTestLog&) = delete;
 };
 
 #if !defined(GTEST_LOG_)
@@ -1198,7 +1190,8 @@ class GTEST_API_ AutoHandle {
 
   Handle handle_;
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(AutoHandle);
+  AutoHandle(const AutoHandle&) = delete;
+  AutoHandle& operator=(const AutoHandle&) = delete;
 };
 #endif
 
@@ -1207,6 +1200,9 @@ class GTEST_API_ AutoHandle {
 // Nothing to do here.
 
 #else
+GTEST_DISABLE_MSC_WARNINGS_PUSH_(4251 \
+/* class A needs to have dll-interface to be used by clients of class B */)
+
 // Allows a controller thread to pause execution of newly created
 // threads until notified.  Instances of this class must be created
 // and destroyed in the controller thread.
@@ -1240,6 +1236,7 @@ class GTEST_API_ Notification {
   std::condition_variable cv_;
   bool notified_;
 };
+GTEST_DISABLE_MSC_WARNINGS_POP_()  // 4251
 #endif  // GTEST_HAS_NOTIFICATION_
 
 // On MinGW, we can have both GTEST_OS_WINDOWS and GTEST_HAS_PTHREAD
@@ -1321,7 +1318,8 @@ class ThreadWithParam : public ThreadWithParamBase {
                    // finished.
   pthread_t thread_;  // The native thread object.
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(ThreadWithParam);
+  ThreadWithParam(const ThreadWithParam&) = delete;
+  ThreadWithParam& operator=(const ThreadWithParam&) = delete;
 };
 #endif  // !GTEST_OS_WINDOWS && GTEST_HAS_PTHREAD ||
         // GTEST_HAS_MUTEX_AND_THREAD_LOCAL_
@@ -1384,7 +1382,8 @@ class GTEST_API_ Mutex {
   long critical_section_init_phase_;  // NOLINT
   GTEST_CRITICAL_SECTION* critical_section_;
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(Mutex);
+  Mutex(const Mutex&) = delete;
+  Mutex& operator=(const Mutex&) = delete;
 };
 
 #define GTEST_DECLARE_STATIC_MUTEX_(mutex) \
@@ -1407,7 +1406,8 @@ class GTestMutexLock {
  private:
   Mutex* const mutex_;
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(GTestMutexLock);
+  GTestMutexLock(const GTestMutexLock&) = delete;
+  GTestMutexLock& operator=(const GTestMutexLock&) = delete;
 };
 
 typedef GTestMutexLock MutexLock;
@@ -1434,7 +1434,8 @@ class ThreadLocalBase {
   virtual ~ThreadLocalBase() {}
 
  private:
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(ThreadLocalBase);
+  ThreadLocalBase(const ThreadLocalBase&) = delete;
+  ThreadLocalBase& operator=(const ThreadLocalBase&) = delete;
 };
 
 // Maps a thread to a set of ThreadLocals that have values instantiated on that
@@ -1491,10 +1492,12 @@ class ThreadWithParam : public ThreadWithParamBase {
     UserThreadFunc* const func_;
     const T param_;
 
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(RunnableImpl);
+    RunnableImpl(const RunnableImpl&) = delete;
+    RunnableImpl& operator=(const RunnableImpl&) = delete;
   };
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(ThreadWithParam);
+  ThreadWithParam(const ThreadWithParam&) = delete;
+  ThreadWithParam& operator=(const ThreadWithParam&) = delete;
 };
 
 // Implements thread-local storage on Windows systems.
@@ -1531,7 +1534,7 @@ class ThreadLocal : public ThreadLocalBase {
   explicit ThreadLocal(const T& value)
       : default_factory_(new InstanceValueHolderFactory(value)) {}
 
-  ~ThreadLocal() { ThreadLocalRegistry::OnThreadLocalDestroyed(this); }
+  ~ThreadLocal() override { ThreadLocalRegistry::OnThreadLocalDestroyed(this); }
 
   T* pointer() { return GetOrCreateValue(); }
   const T* pointer() const { return GetOrCreateValue(); }
@@ -1550,7 +1553,8 @@ class ThreadLocal : public ThreadLocalBase {
 
    private:
     T value_;
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(ValueHolder);
+    ValueHolder(const ValueHolder&) = delete;
+    ValueHolder& operator=(const ValueHolder&) = delete;
   };
 
   T* GetOrCreateValue() const {
@@ -1559,7 +1563,7 @@ class ThreadLocal : public ThreadLocalBase {
         ->pointer();
   }
 
-  virtual ThreadLocalValueHolderBase* NewValueForCurrentThread() const {
+  ThreadLocalValueHolderBase* NewValueForCurrentThread() const override {
     return default_factory_->MakeNewHolder();
   }
 
@@ -1570,7 +1574,8 @@ class ThreadLocal : public ThreadLocalBase {
     virtual ValueHolder* MakeNewHolder() const = 0;
 
    private:
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(ValueHolderFactory);
+    ValueHolderFactory(const ValueHolderFactory&) = delete;
+    ValueHolderFactory& operator=(const ValueHolderFactory&) = delete;
   };
 
   class DefaultValueHolderFactory : public ValueHolderFactory {
@@ -1579,7 +1584,9 @@ class ThreadLocal : public ThreadLocalBase {
     ValueHolder* MakeNewHolder() const override { return new ValueHolder(); }
 
    private:
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(DefaultValueHolderFactory);
+    DefaultValueHolderFactory(const DefaultValueHolderFactory&) = delete;
+    DefaultValueHolderFactory& operator=(const DefaultValueHolderFactory&) =
+        delete;
   };
 
   class InstanceValueHolderFactory : public ValueHolderFactory {
@@ -1592,12 +1599,15 @@ class ThreadLocal : public ThreadLocalBase {
    private:
     const T value_;  // The value for each thread.
 
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(InstanceValueHolderFactory);
+    InstanceValueHolderFactory(const InstanceValueHolderFactory&) = delete;
+    InstanceValueHolderFactory& operator=(const InstanceValueHolderFactory&) =
+        delete;
   };
 
   std::unique_ptr<ValueHolderFactory> default_factory_;
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(ThreadLocal);
+  ThreadLocal(const ThreadLocal&) = delete;
+  ThreadLocal& operator=(const ThreadLocal&) = delete;
 };
 
 #elif GTEST_HAS_PTHREAD
@@ -1670,7 +1680,8 @@ class Mutex : public MutexBase {
   ~Mutex() { GTEST_CHECK_POSIX_SUCCESS_(pthread_mutex_destroy(&mutex_)); }
 
  private:
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(Mutex);
+  Mutex(const Mutex&) = delete;
+  Mutex& operator=(const Mutex&) = delete;
 };
 
 // We cannot name this class MutexLock because the ctor declaration would
@@ -1687,7 +1698,8 @@ class GTestMutexLock {
  private:
   MutexBase* const mutex_;
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(GTestMutexLock);
+  GTestMutexLock(const GTestMutexLock&) = delete;
+  GTestMutexLock& operator=(const GTestMutexLock&) = delete;
 };
 
 typedef GTestMutexLock MutexLock;
@@ -1744,7 +1756,8 @@ class GTEST_API_ ThreadLocal {
 
    private:
     T value_;
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(ValueHolder);
+    ValueHolder(const ValueHolder&) = delete;
+    ValueHolder& operator=(const ValueHolder&) = delete;
   };
 
   static pthread_key_t CreateKey() {
@@ -1776,7 +1789,8 @@ class GTEST_API_ ThreadLocal {
     virtual ValueHolder* MakeNewHolder() const = 0;
 
    private:
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(ValueHolderFactory);
+    ValueHolderFactory(const ValueHolderFactory&) = delete;
+    ValueHolderFactory& operator=(const ValueHolderFactory&) = delete;
   };
 
   class DefaultValueHolderFactory : public ValueHolderFactory {
@@ -1785,7 +1799,9 @@ class GTEST_API_ ThreadLocal {
     ValueHolder* MakeNewHolder() const override { return new ValueHolder(); }
 
    private:
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(DefaultValueHolderFactory);
+    DefaultValueHolderFactory(const DefaultValueHolderFactory&) = delete;
+    DefaultValueHolderFactory& operator=(const DefaultValueHolderFactory&) =
+        delete;
   };
 
   class InstanceValueHolderFactory : public ValueHolderFactory {
@@ -1798,14 +1814,17 @@ class GTEST_API_ ThreadLocal {
    private:
     const T value_;  // The value for each thread.
 
-    GTEST_DISALLOW_COPY_AND_ASSIGN_(InstanceValueHolderFactory);
+    InstanceValueHolderFactory(const InstanceValueHolderFactory&) = delete;
+    InstanceValueHolderFactory& operator=(const InstanceValueHolderFactory&) =
+        delete;
   };
 
   // A key pthreads uses for looking up per-thread values.
   const pthread_key_t key_;
   std::unique_ptr<ValueHolderFactory> default_factory_;
 
-  GTEST_DISALLOW_COPY_AND_ASSIGN_(ThreadLocal);
+  ThreadLocal(const ThreadLocal&) = delete;
+  ThreadLocal& operator=(const ThreadLocal&) = delete;
 };
 
 #endif  // GTEST_HAS_MUTEX_AND_THREAD_LOCAL_
@@ -1950,7 +1969,8 @@ inline int StrCaseCmp(const char* s1, const char* s2) {
 }
 inline char* StrDup(const char* src) { return strdup(src); }
 #else  // !__BORLANDC__
-#if GTEST_OS_WINDOWS_MOBILE
+#if GTEST_OS_WINDOWS_MOBILE || GTEST_OS_ZOS || GTEST_OS_IOS || \
+    GTEST_OS_WINDOWS_PHONE || GTEST_OS_WINDOWS_RT || defined(ESP_PLATFORM)
 inline int DoIsATTY(int /* fd */) { return 0; }
 #else
 inline int DoIsATTY(int fd) { return _isatty(fd); }
@@ -2157,32 +2177,37 @@ using TimeInMillis = int64_t;  // Represents time in milliseconds.
 
 // Macro for referencing flags.
 #if !defined(GTEST_FLAG)
+#define GTEST_FLAG_NAME_(name) gtest_##name
 #define GTEST_FLAG(name) FLAGS_gtest_##name
 #endif  // !defined(GTEST_FLAG)
 
-#if !defined(GTEST_USE_OWN_FLAGFILE_FLAG_)
-#define GTEST_USE_OWN_FLAGFILE_FLAG_ 1
-#endif  // !defined(GTEST_USE_OWN_FLAGFILE_FLAG_)
+// Pick a command line flags implementation.
+#if GTEST_HAS_ABSL
 
-#if !defined(GTEST_DECLARE_bool_)
-#define GTEST_FLAG_SAVER_ ::testing::internal::GTestFlagSaver
+// Macros for defining flags.
+#define GTEST_DEFINE_bool_(name, default_val, doc) \
+  ABSL_FLAG(bool, GTEST_FLAG_NAME_(name), default_val, doc)
+#define GTEST_DEFINE_int32_(name, default_val, doc) \
+  ABSL_FLAG(int32_t, GTEST_FLAG_NAME_(name), default_val, doc)
+#define GTEST_DEFINE_string_(name, default_val, doc) \
+  ABSL_FLAG(std::string, GTEST_FLAG_NAME_(name), default_val, doc)
 
 // Macros for declaring flags.
-#define GTEST_DECLARE_bool_(name)          \
-  namespace testing {                      \
-  GTEST_API_ extern bool GTEST_FLAG(name); \
-  }                                        \
-  static_assert(true, "no-op to require trailing semicolon")
-#define GTEST_DECLARE_int32_(name)                 \
-  namespace testing {                              \
-  GTEST_API_ extern std::int32_t GTEST_FLAG(name); \
-  }                                                \
-  static_assert(true, "no-op to require trailing semicolon")
-#define GTEST_DECLARE_string_(name)                 \
-  namespace testing {                               \
-  GTEST_API_ extern ::std::string GTEST_FLAG(name); \
-  }                                                 \
-  static_assert(true, "no-op to require trailing semicolon")
+#define GTEST_DECLARE_bool_(name) \
+  ABSL_DECLARE_FLAG(bool, GTEST_FLAG_NAME_(name))
+#define GTEST_DECLARE_int32_(name) \
+  ABSL_DECLARE_FLAG(int32_t, GTEST_FLAG_NAME_(name))
+#define GTEST_DECLARE_string_(name) \
+  ABSL_DECLARE_FLAG(std::string, GTEST_FLAG_NAME_(name))
+
+#define GTEST_FLAG_SAVER_ ::absl::FlagSaver
+
+#define GTEST_FLAG_GET(name) ::absl::GetFlag(GTEST_FLAG(name))
+#define GTEST_FLAG_SET(name, value) \
+  (void)(::absl::SetFlag(&GTEST_FLAG(name), value))
+#define GTEST_USE_OWN_FLAGFILE_FLAG_ 0
+
+#else  // GTEST_HAS_ABSL
 
 // Macros for defining flags.
 #define GTEST_DEFINE_bool_(name, default_val, doc)  \
@@ -2201,12 +2226,30 @@ using TimeInMillis = int64_t;  // Represents time in milliseconds.
   }                                                          \
   static_assert(true, "no-op to require trailing semicolon")
 
-#endif  // !defined(GTEST_DECLARE_bool_)
+// Macros for declaring flags.
+#define GTEST_DECLARE_bool_(name)          \
+  namespace testing {                      \
+  GTEST_API_ extern bool GTEST_FLAG(name); \
+  }                                        \
+  static_assert(true, "no-op to require trailing semicolon")
+#define GTEST_DECLARE_int32_(name)                 \
+  namespace testing {                              \
+  GTEST_API_ extern std::int32_t GTEST_FLAG(name); \
+  }                                                \
+  static_assert(true, "no-op to require trailing semicolon")
+#define GTEST_DECLARE_string_(name)                 \
+  namespace testing {                               \
+  GTEST_API_ extern ::std::string GTEST_FLAG(name); \
+  }                                                 \
+  static_assert(true, "no-op to require trailing semicolon")
 
-#if !defined(GTEST_FLAG_GET)
+#define GTEST_FLAG_SAVER_ ::testing::internal::GTestFlagSaver
+
 #define GTEST_FLAG_GET(name) ::testing::GTEST_FLAG(name)
 #define GTEST_FLAG_SET(name, value) (void)(::testing::GTEST_FLAG(name) = value)
-#endif  // !defined(GTEST_FLAG_GET)
+#define GTEST_USE_OWN_FLAGFILE_FLAG_ 1
+
+#endif  // GTEST_HAS_ABSL
 
 // Thread annotations
 #if !defined(GTEST_EXCLUSIVE_LOCK_REQUIRED_)
@@ -2362,8 +2405,7 @@ template <typename... T>
 using Variant = ::std::variant<T...>;
 }  // namespace internal
 }  // namespace testing
-   // The case where absl is configured NOT to alias std::variant is not
-   // supported.
+// The case where absl is configured NOT to alias std::variant is not supported.
 #endif  // __has_include(<variant>) && __cplusplus >= 201703L
 #endif  // __has_include
 #endif  // GTEST_HAS_ABSL
