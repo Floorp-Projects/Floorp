@@ -496,6 +496,12 @@ bool BaseChannel::RegisterRtpDemuxerSink_w() {
   bool ret = network_thread_->Invoke<bool>(
       RTC_FROM_HERE, [this, demuxer_criteria = demuxer_criteria_] {
         RTC_DCHECK_RUN_ON(network_thread());
+        if (!rtp_transport_) {
+          // Transport was disconnected before attempting to update the
+          // criteria. This can happen while setting the remote description.
+          // See chromium:1295469 for an example.
+          return false;
+        }
         // Note that RegisterRtpDemuxerSink first unregisters the sink if
         // already registered. So this will change the state of the class
         // whether the call succeeds or not.
