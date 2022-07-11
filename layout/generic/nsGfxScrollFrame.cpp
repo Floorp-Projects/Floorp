@@ -3730,7 +3730,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  bool isRootContent =
+  const bool isRootContent =
       mIsRoot && mOuter->PresContext()->IsRootContentDocumentCrossProcess();
 
   nsRect effectiveScrollPort = mScrollPort;
@@ -3749,7 +3749,8 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // It's safe to get this value before the DecideScrollableLayer call below
   // because that call cannot create a displayport for root scroll frames,
   // and hence it cannot create an ignore scroll frame.
-  bool ignoringThisScrollFrame = aBuilder->GetIgnoreScrollFrame() == mOuter;
+  const bool ignoringThisScrollFrame =
+      aBuilder->GetIgnoreScrollFrame() == mOuter;
 
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
@@ -3788,10 +3789,12 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // of the viewport, so most layer implementations would create a layer buffer
   // that's much larger than necessary. Creating independent layers for each
   // scrollbar works around the problem.
-  bool createLayersForScrollbars = isRootContent;
+  const bool createLayersForScrollbars = isRootContent;
 
   nsIScrollableFrame* sf = do_QueryFrame(mOuter);
   MOZ_ASSERT(sf);
+
+  nsDisplayListCollection set(aBuilder);
 
   if (ignoringThisScrollFrame) {
     // If we are a root scroll frame that has a display port we want to add
@@ -3799,8 +3802,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // adjusted by the APZC automatically.
     bool addScrollBars =
         mIsRoot && mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow();
-
-    nsDisplayListCollection set(aBuilder);
 
     if (addScrollBars) {
       // Add classic scrollbars.
@@ -3836,16 +3837,16 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // to the layer tree (a scroll info layer if necessary, and add the right
   // area to the dispatch to content layer event regions) necessary to activate
   // a scroll frame so it creates a scrollable layer.
-  bool couldBuildLayer = false;
-  if (aBuilder->IsPaintingToWindow()) {
-    if (mWillBuildScrollableLayer) {
-      couldBuildLayer = true;
-    } else {
-      couldBuildLayer = mOuter->StyleVisibility()->IsVisible() &&
-                        nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
-                        WantAsyncScroll();
+  const bool couldBuildLayer = [&] {
+    if (!aBuilder->IsPaintingToWindow()) {
+      return false;
     }
-  }
+    if (mWillBuildScrollableLayer) {
+      return true;
+    }
+    return mOuter->StyleVisibility()->IsVisible() &&
+           nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll();
+  }();
 
   // Now display the scrollbars and scrollcorner. These parts are drawn
   // in the border-background layer, on top of our own background and
@@ -3918,10 +3919,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  nsDisplayListCollection set(aBuilder);
   AutoContainsBlendModeCapturer blendCapture(*aBuilder);
 
-  bool willBuildAsyncZoomContainer =
+  const bool willBuildAsyncZoomContainer =
       mWillBuildScrollableLayer && aBuilder->ShouldBuildAsyncZoomContainer() &&
       isRootContent;
 
@@ -3931,7 +3931,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // Our override of GetBorderRadii ensures we never have a radius at
   // the corners where we have a scrollbar.
   nscoord radii[8];
-  bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
+  const bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
   if (mIsRoot) {
     clipRect.SizeTo(nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
     // The composition size is essentially in visual coordinates.
@@ -3969,7 +3969,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
 
     Maybe<DisplayListClipState::AutoSaveRestore> contentBoxClipState;
-    ;
     if (contentBoxClip) {
       contentBoxClipState.emplace(aBuilder);
       if (mIsRoot) {
@@ -4228,9 +4227,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     set.Content()->AppendToTop(&rootResultList);
   }
 
-  nsDisplayListCollection scrolledContent(aBuilder);
-  set.MoveTo(scrolledContent);
-
   if (mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow()) {
     aBuilder->ForceLayerForScrollParent();
   }
@@ -4266,7 +4262,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // create a displayport for this frame. We'll add the item later on.
     if (!mWillBuildScrollableLayer && aBuilder->BuildCompositorHitTestInfo()) {
       int32_t zIndex = MaxZIndexInListOfItemsContainedInFrame(
-          scrolledContent.PositionedDescendants(), mOuter);
+          set.PositionedDescendants(), mOuter);
       if (aBuilder->IsPartialUpdate()) {
         for (nsDisplayItem* item : mScrolledFrame->DisplayItems()) {
           if (item->GetType() ==
@@ -4289,7 +4285,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           MakeDisplayItemWithIndex<nsDisplayCompositorHitTestInfo>(
               aBuilder, mScrolledFrame, 1, area, info);
       if (hitInfo) {
-        AppendInternalItemToTop(scrolledContent, hitInfo, Some(zIndex));
+        AppendInternalItemToTop(set, hitInfo, Some(zIndex));
         aBuilder->SetCompositorHitTestInfo(info);
       }
     }
@@ -4302,10 +4298,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   // Now display overlay scrollbars and the resizer, if we have one.
-  AppendScrollPartsTo(aBuilder, scrolledContent, createLayersForScrollbars,
-                      true);
+  AppendScrollPartsTo(aBuilder, set, createLayersForScrollbars, true);
 
-  scrolledContent.MoveTo(aLists);
+  set.MoveTo(aLists);
 }
 
 nsDisplayWrapList* ScrollFrameHelper::MaybeCreateTopLayerItems(
