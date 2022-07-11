@@ -28,6 +28,7 @@
 
 #include "hb-repacker.hh"
 #include "hb-open-type.hh"
+#include "graph/serialize.hh"
 
 static void start_object(const char* tag,
                          unsigned len,
@@ -931,7 +932,7 @@ test_serialize ()
   hb_bytes_t expected = c1.copy_bytes ();
 
   graph_t graph (c1.object_graph ());
-  hb_blob_t* out = graph.serialize ();
+  hb_blob_t* out = graph::serialize (graph);
   free (buffer_1);
 
   hb_bytes_t actual = out->as_bytes ();
@@ -948,7 +949,7 @@ static void test_will_overflow_1 ()
   populate_serializer_complex_2 (&c);
   graph_t graph (c.object_graph ());
 
-  assert (!graph.will_overflow (nullptr));
+  assert (!graph::will_overflow (graph, nullptr));
 
   free (buffer);
 }
@@ -961,7 +962,7 @@ static void test_will_overflow_2 ()
   populate_serializer_with_overflow (&c);
   graph_t graph (c.object_graph ());
 
-  assert (graph.will_overflow (nullptr));
+  assert (graph::will_overflow (graph, nullptr));
 
   free (buffer);
 }
@@ -974,7 +975,7 @@ static void test_will_overflow_3 ()
   populate_serializer_with_dedup_overflow (&c);
   graph_t graph (c.object_graph ());
 
-  assert (graph.will_overflow (nullptr));
+  assert (graph::will_overflow (graph, nullptr));
 
   free (buffer);
 }

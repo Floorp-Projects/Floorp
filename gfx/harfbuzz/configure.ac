@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [4.3.0],
+        [4.4.1],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -374,7 +374,7 @@ if test "x$with_directwrite" = "xyes" -a "x$have_directwrite" != "xtrue"; then
 fi
 if $have_directwrite; then
 	DIRECTWRITE_CXXFLAGS=
-	DIRECTWRITE_LIBS=
+	DIRECTWRITE_LIBS=-ldwrite
 	AC_SUBST(DIRECTWRITE_CXXFLAGS)
 	AC_SUBST(DIRECTWRITE_LIBS)
 	AC_DEFINE(HAVE_DIRECTWRITE, 1, [Have DirectWrite library])
@@ -437,6 +437,7 @@ test/shape/data/text-rendering-tests/Makefile
 test/subset/Makefile
 test/subset/data/Makefile
 test/subset/data/repack_tests/Makefile
+test/threads/Makefile
 perf/Makefile
 docs/Makefile
 docs/version.xml
