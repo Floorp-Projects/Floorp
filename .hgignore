@@ -157,6 +157,7 @@ _OPT\.OBJ/
 ^tools/browsertime/node_modules/
 ^tools/lint/eslint/eslint-plugin-mozilla/node_modules/
 ^browser/components/newtab/node_modules/
+^tools/esmify/node_modules/
 
 # Ignore talos virtualenv and tp5n files.
 # The tp5n set is supposed to be decompressed at
@@ -246,3 +247,9 @@ toolkit/components/certviewer/content/package-lock.json
 # Ignore Storybook generated files
 ^browser/components/storybook/node_modules/
 ^browser/components/storybook/storybook-static/
+
+# Ignore jscodeshift installed by mach esmify on windows
+^tools/esmify/jscodeshift
+^tools/esmify/jscodeshift.cmd
+^tools/esmify/jscodeshift.ps1
+^tools/esmify/package-lock.json

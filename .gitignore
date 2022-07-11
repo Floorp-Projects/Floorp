@@ -193,3 +193,9 @@ config/external/icu4x
 # Ignore Storybook generated files
 browser/components/storybook/node_modules/
 browser/components/storybook/storybook-static/
+
+# Ignore jscodeshift installed by mach esmify on windows
+tools/esmify/jscodeshift
+tools/esmify/jscodeshift.cmd
+tools/esmify/jscodeshift.ps1
+tools/esmify/package-lock.json
