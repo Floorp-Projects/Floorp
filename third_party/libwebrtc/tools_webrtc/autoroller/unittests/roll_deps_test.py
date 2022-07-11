@@ -323,6 +323,40 @@ class TestChooseCQMode(unittest.TestCase):
     self.assertEqual(ChooseCQMode(False, 100, 500000, 500100), 2)
 
 
+class TestReadUrlContent(unittest.TestCase):
+  def setUp(self):
+    self.url = 'http://localhost+?format=TEXT'
+
+  def testReadUrlContent(self):
+    url_mock = mock.Mock()
+    roll_deps.urllib.request.urlopen = url_mock
+
+    roll_deps.ReadUrlContent(self.url)
+
+    calls = [
+        mock.call('http://localhost+?format=TEXT'),
+        mock.call().readlines(),
+        mock.call().close()
+    ]
+    self.assertEqual(url_mock.mock_calls, calls)
+
+  def testReadUrlContentError(self):
+    roll_deps.logging = mock.Mock()
+
+    readlines_mock = mock.Mock()
+    readlines_mock.readlines = mock.Mock(
+        side_effect=IOError('Connection error'))
+    readlines_mock.close = mock.Mock()
+
+    url_mock = mock.Mock(return_value=readlines_mock)
+    roll_deps.urllib.request.urlopen = url_mock
+
+    try:
+      roll_deps.ReadUrlContent(self.url)
+    except OSError:
+      self.assertTrue(roll_deps.logging.exception.called)
+
+
 def _SetupGitLsRemoteCall(cmd_fake, url, revision):
   cmd = ['git', 'ls-remote', url, revision]
   cmd_fake.AddExpectation(cmd, _returns=(revision, None))
