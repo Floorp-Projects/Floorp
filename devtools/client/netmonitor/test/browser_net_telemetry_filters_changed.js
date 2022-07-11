@@ -22,6 +22,7 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
+  await waitForAllNetworkUpdateEvents();
   // Remove all telemetry events (you can check about:telemetry).
   Services.telemetry.clearEvents();
 
@@ -31,6 +32,7 @@ add_task(async function() {
 
   // Reload to have one request in the list.
   const wait = waitForNetworkEvents(monitor, 1);
+  await waitForAllNetworkUpdateEvents();
   await navigateTo(HTTPS_SIMPLE_URL);
   await wait;
 

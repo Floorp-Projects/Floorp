@@ -27,6 +27,8 @@ add_task(async function() {
   const allRequestsVisible = waitUntil(
     () => document.querySelectorAll(".request-list-item").length == 2
   );
+
+  await waitForAllNetworkUpdateEvents();
   await reloadBrowser();
   await allRequestsVisible;
 
