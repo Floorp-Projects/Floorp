@@ -9,6 +9,9 @@ const EXPORTED_SYMBOLS = [
   "waitForInitialNavigationCompleted",
 ];
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -27,6 +30,24 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.REMOTE_AGENT)
 );
+
+// Define a custom multiplier to apply to the unload timer on various platforms.
+// This multiplier should only reflect the navigation performance of the
+// platform and not the overall performance.
+XPCOMUtils.defineLazyGetter(lazy, "UNLOAD_TIMEOUT_MULTIPLIER", () => {
+  if (AppConstants.MOZ_CODE_COVERAGE) {
+    // Navigation on ccov platforms can be extremely slow because new processes
+    // need to be instrumented for coverage on startup.
+    return 16;
+  }
+
+  if (AppConstants.ASAN || AppConstants.DEBUG || AppConstants.TSAN) {
+    // Use an extended timeout on slow platforms.
+    return 8;
+  }
+
+  return 1;
+});
 
 // Used to keep weak references of webProgressListeners alive.
 const webProgressListeners = new Set();
@@ -117,7 +138,9 @@ class ProgressListener {
    *     page load has been started. Otherwise wait until the page has
    *     finished loading. Defaults to `false`.
    * @param {Number=} options.unloadTimeout
-   *     Time to allow before the page gets unloaded. Defaults to 200ms.
+   *     Time to allow before the page gets unloaded. Defaults to 200ms on
+   *     regular platforms. A multiplier will be applied on slower platforms
+   *     (eg. debug, ccov...).
    *     Ignored if options.expectNavigation is set to `true`
    * @param {Boolean=} options.waitForExplicitStart
    *     Flag to indicate that the Promise can only resolve after receiving a
@@ -135,7 +158,7 @@ class ProgressListener {
 
     this.#expectNavigation = expectNavigation;
     this.#resolveWhenStarted = resolveWhenStarted;
-    this.#unloadTimeout = unloadTimeout;
+    this.#unloadTimeout = unloadTimeout * lazy.UNLOAD_TIMEOUT_MULTIPLIER;
     this.#waitForExplicitStart = waitForExplicitStart;
     this.#webProgress = webProgress;
 
