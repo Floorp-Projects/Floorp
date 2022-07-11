@@ -39,7 +39,6 @@
 #include "modules/audio_processing/render_queue_item_verifier.h"
 #include "modules/audio_processing/rms_level.h"
 #include "modules/audio_processing/transient/transient_suppressor.h"
-#include "modules/audio_processing/voice_detection.h"
 #include "rtc_base/gtest_prod_util.h"
 #include "rtc_base/ignore_wundef.h"
 #include "rtc_base/swap_queue.h"
@@ -208,7 +207,6 @@ class AudioProcessingImpl : public AudioProcessing {
                 bool gain_controller2_enabled,
                 bool gain_adjustment_enabled,
                 bool echo_controller_enabled,
-                bool voice_detector_enabled,
                 bool transient_suppressor_enabled);
     bool CaptureMultiBandSubModulesActive() const;
     bool CaptureMultiBandProcessingPresent() const;
@@ -231,7 +229,6 @@ class AudioProcessingImpl : public AudioProcessing {
     bool gain_controller2_enabled_ = false;
     bool gain_adjustment_enabled_ = false;
     bool echo_controller_enabled_ = false;
-    bool voice_detector_enabled_ = false;
     bool transient_suppressor_enabled_ = false;
     bool first_update_ = true;
   };
@@ -267,7 +264,6 @@ class AudioProcessingImpl : public AudioProcessing {
   // already acquired.
   void InitializeHighPassFilter(bool forced_reset)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
-  void InitializeVoiceDetector() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeGainController1() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeTransientSuppressor()
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
@@ -400,7 +396,6 @@ class AudioProcessingImpl : public AudioProcessing {
     std::unique_ptr<EchoControlMobileImpl> echo_control_mobile;
     std::unique_ptr<NoiseSuppressor> noise_suppressor;
     std::unique_ptr<TransientSuppressor> transient_suppressor;
-    std::unique_ptr<VoiceDetection> voice_detector;
     std::unique_ptr<CaptureLevelsAdjuster> capture_levels_adjuster;
   } submodules_;
 
