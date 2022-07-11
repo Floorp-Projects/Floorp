@@ -12,7 +12,6 @@
 #define MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_SCREENCAST_PORTAL_H_
 
 #include <gio/gio.h>
-#define typeof __typeof__
 
 #include <string>
 
