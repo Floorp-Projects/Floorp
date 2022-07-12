@@ -69,8 +69,9 @@ class DataTracker {
   // means that there is intentional packet loss.
   bool IsTSNValid(TSN tsn) const;
 
-  // Call for every incoming data chunk.
-  void Observe(TSN tsn,
+  // Call for every incoming data chunk. Returns `true` if `tsn` was seen for
+  // the first time, and `false` if it has been seen before (a duplicate `tsn`).
+  bool Observe(TSN tsn,
                AnyDataChunk::ImmediateAckFlag immediate_ack =
                    AnyDataChunk::ImmediateAckFlag(false));
   // Called at the end of processing an SCTP packet.
