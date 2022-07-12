@@ -510,10 +510,8 @@ template("rtc_test") {
       ]
     }
 
-    # When not targeting a simulator, building //base/test:google_test_runner
-    # fails, so it is added only when the test is not a real XCTest and when
-    # targeting a simulator.
-    if (is_ios && target_cpu == "x64" && rtc_include_tests) {
+    # Build //base/test:google_test_runner when the test is not a real XCTest.
+    if (is_ios && rtc_include_tests) {
       if (!defined(invoker.is_xctest) || !invoker.is_xctest) {
         xctest_module_target = "//base/test:google_test_runner"
       }
@@ -542,6 +540,7 @@ template("rtc_test") {
             [ "//third_party/llvm-build/Release+Asserts/lib/libstdc++.so.6" ]
       }
     }
+
     # TODO(crbug.com/webrtc/13556): Adding the .app folder in the runtime_deps
     # shoulnd't be necessary. this code should be removed and the same solution
     # as Chromium should be used.
