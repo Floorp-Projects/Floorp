@@ -118,12 +118,12 @@ rtc_library("red") {
 
   deps = [
     "../../api:array_view",
+    "../../api:webrtc_key_value_config",
     "../../api/audio_codecs:audio_codecs_api",
     "../../api/units:time_delta",
     "../../common_audio",
     "../../rtc_base:checks",
     "../../rtc_base:rtc_base_approved",
-    "../../system_wrappers:field_trial",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -2081,6 +2081,7 @@ if (rtc_include_tests) {
         "../../test:fileutils",
         "../../test:rtc_expect_death",
         "../../test:rtp_test_utils",
+        "../../test:scoped_key_value_config",
         "../../test:test_common",
         "../../test:test_support",
         "codecs/opus/test",

@@ -39,7 +39,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/audio_format_to_string.h"
 #include "rtc_base/task_queue.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
@@ -88,8 +87,9 @@ std::unique_ptr<StructParametersParser> AudioAllocationConfig::Parser() {
       "rate_prio", &bitrate_priority);
 }
 
-AudioAllocationConfig::AudioAllocationConfig() {
-  Parser()->Parse(field_trial::FindFullName(kKey));
+AudioAllocationConfig::AudioAllocationConfig(
+    const WebRtcKeyValueConfig& field_trials) {
+  Parser()->Parse(field_trials.Lookup(kKey));
   if (priority_bitrate_raw && !priority_bitrate.IsZero()) {
     RTC_LOG(LS_WARNING) << "'priority_bitrate' and '_raw' are mutually "
                            "exclusive but both were configured.";
@@ -106,28 +106,31 @@ AudioSendStream::AudioSendStream(
     BitrateAllocatorInterface* bitrate_allocator,
     RtcEventLog* event_log,
     RtcpRttStats* rtcp_rtt_stats,
-    const absl::optional<RtpState>& suspended_rtp_state)
-    : AudioSendStream(clock,
-                      config,
-                      audio_state,
-                      task_queue_factory,
-                      rtp_transport,
-                      bitrate_allocator,
-                      event_log,
-                      suspended_rtp_state,
-                      voe::CreateChannelSend(
-                          clock,
-                          task_queue_factory,
-                          config.send_transport,
-                          rtcp_rtt_stats,
-                          event_log,
-                          config.frame_encryptor,
-                          config.crypto_options,
-                          config.rtp.extmap_allow_mixed,
-                          config.rtcp_report_interval_ms,
-                          config.rtp.ssrc,
-                          config.frame_transformer,
-                          rtp_transport->transport_feedback_observer())) {}
+    const absl::optional<RtpState>& suspended_rtp_state,
+    const WebRtcKeyValueConfig& field_trials)
+    : AudioSendStream(
+          clock,
+          config,
+          audio_state,
+          task_queue_factory,
+          rtp_transport,
+          bitrate_allocator,
+          event_log,
+          suspended_rtp_state,
+          voe::CreateChannelSend(clock,
+                                 task_queue_factory,
+                                 config.send_transport,
+                                 rtcp_rtt_stats,
+                                 event_log,
+                                 config.frame_encryptor,
+                                 config.crypto_options,
+                                 config.rtp.extmap_allow_mixed,
+                                 config.rtcp_report_interval_ms,
+                                 config.rtp.ssrc,
+                                 config.frame_transformer,
+                                 rtp_transport->transport_feedback_observer(),
+                                 field_trials),
+          field_trials) {}
 
 AudioSendStream::AudioSendStream(
     Clock* clock,
@@ -138,21 +141,24 @@ AudioSendStream::AudioSendStream(
     BitrateAllocatorInterface* bitrate_allocator,
     RtcEventLog* event_log,
     const absl::optional<RtpState>& suspended_rtp_state,
-    std::unique_ptr<voe::ChannelSendInterface> channel_send)
+    std::unique_ptr<voe::ChannelSendInterface> channel_send,
+    const WebRtcKeyValueConfig& field_trials)
     : clock_(clock),
+      field_trials_(field_trials),
       rtp_transport_queue_(rtp_transport->GetWorkerQueue()),
       allocate_audio_without_feedback_(
-          field_trial::IsEnabled("WebRTC-Audio-ABWENoTWCC")),
+          field_trials_.IsEnabled("WebRTC-Audio-ABWENoTWCC")),
       enable_audio_alr_probing_(
-          !field_trial::IsDisabled("WebRTC-Audio-AlrProbing")),
+          !field_trials_.IsDisabled("WebRTC-Audio-AlrProbing")),
       send_side_bwe_with_overhead_(
-          !field_trial::IsDisabled("WebRTC-SendSideBwe-WithOverhead")),
+          !field_trials_.IsDisabled("WebRTC-SendSideBwe-WithOverhead")),
+      allocation_settings_(field_trials_),
       config_(Config(/*send_transport=*/nullptr)),
       audio_state_(audio_state),
       channel_send_(std::move(channel_send)),
       event_log_(event_log),
       use_legacy_overhead_calculation_(
-          field_trial::IsEnabled("WebRTC-Audio-LegacyOverhead")),
+          field_trials_.IsEnabled("WebRTC-Audio-LegacyOverhead")),
       bitrate_allocator_(bitrate_allocator),
       rtp_transport_(rtp_transport),
       rtp_rtcp_module_(channel_send_->GetRtpRtcp()),
@@ -641,7 +647,8 @@ bool AudioSendStream::SetupSendCodec(const Config& new_config) {
     AudioEncoderCopyRed::Config red_config;
     red_config.payload_type = *spec.red_payload_type;
     red_config.speech_encoder = std::move(encoder);
-    encoder = std::make_unique<AudioEncoderCopyRed>(std::move(red_config));
+    encoder = std::make_unique<AudioEncoderCopyRed>(std::move(red_config),
+                                                    field_trials_);
   }
 
   // Set currently known overhead (used in ANA, opus only).

@@ -22,6 +22,7 @@
 #include "api/array_view.h"
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/units/time_delta.h"
+#include "api/webrtc_key_value_config.h"
 #include "rtc_base/buffer.h"
 
 namespace webrtc {
@@ -42,7 +43,8 @@ class AudioEncoderCopyRed final : public AudioEncoder {
     std::unique_ptr<AudioEncoder> speech_encoder;
   };
 
-  explicit AudioEncoderCopyRed(Config&& config);
+  AudioEncoderCopyRed(Config&& config,
+                      const WebRtcKeyValueConfig& field_trials);
 
   ~AudioEncoderCopyRed() override;
 

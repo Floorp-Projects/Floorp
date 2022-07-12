@@ -904,7 +904,7 @@ webrtc::AudioSendStream* Call::CreateAudioSendStream(
   AudioSendStream* send_stream = new AudioSendStream(
       clock_, config, config_.audio_state, task_queue_factory_,
       transport_send_.get(), bitrate_allocator_.get(), event_log_,
-      call_stats_->AsRtcpRttStats(), suspended_rtp_state);
+      call_stats_->AsRtcpRttStats(), suspended_rtp_state, trials());
   RTC_DCHECK(audio_send_ssrcs_.find(config.rtp.ssrc) ==
              audio_send_ssrcs_.end());
   audio_send_ssrcs_[config.rtp.ssrc] = send_stream;
