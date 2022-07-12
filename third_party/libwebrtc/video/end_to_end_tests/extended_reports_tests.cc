@@ -247,7 +247,8 @@ TEST_F(ExtendedReportsEndToEndTest,
 
 TEST_F(ExtendedReportsEndToEndTest,
        TestExtendedReportsWithoutRrtrWithTargetBitrateExplicitlySet) {
-  test::ScopedFieldTrials field_trials("WebRTC-Target-Bitrate-Rtcp/Enabled/");
+  test::ScopedKeyValueConfig field_trials(
+      field_trials_, "WebRTC-Target-Bitrate-Rtcp/Enabled/");
   RtcpXrObserver test(/*enable_rrtr=*/false, /*expect_target_bitrate=*/true,
                       /*enable_zero_target_bitrate=*/false,
                       VideoEncoderConfig::ContentType::kRealtimeVideo);

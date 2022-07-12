@@ -21,7 +21,6 @@
 #include "api/task_queue/task_queue_factory.h"
 #include "api/test/video/function_video_decoder_factory.h"
 #include "api/test/video/function_video_encoder_factory.h"
-#include "api/transport/field_trial_based_config.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "call/call.h"
 #include "modules/audio_device/include/test_audio_device.h"
@@ -32,6 +31,7 @@
 #include "test/frame_generator_capturer.h"
 #include "test/rtp_rtcp_observer.h"
 #include "test/run_loop.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 namespace test {
@@ -180,7 +180,7 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
   test::RunLoop loop_;
 
   Clock* const clock_;
-  const FieldTrialBasedConfig field_trials_;
+  test::ScopedKeyValueConfig field_trials_;
 
   std::unique_ptr<TaskQueueFactory> task_queue_factory_;
   std::unique_ptr<webrtc::RtcEventLog> send_event_log_;

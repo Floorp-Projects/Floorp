@@ -48,7 +48,6 @@
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/trace_event.h"
-#include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
 #include "video/adaptation/video_stream_encoder_resource_manager.h"
 #include "video/alignment_adjuster.h"
@@ -600,7 +599,8 @@ VideoStreamEncoder::VideoStreamEncoder(
         encoder_queue,
     BitrateAllocationCallbackType allocation_cb_type,
     const WebRtcKeyValueConfig& field_trials)
-    : worker_queue_(TaskQueueBase::Current()),
+    : field_trials_(field_trials),
+      worker_queue_(TaskQueueBase::Current()),
       number_of_cores_(number_of_cores),
       sink_(nullptr),
       settings_(settings),
@@ -663,10 +663,10 @@ VideoStreamEncoder::VideoStreamEncoder(
       video_source_sink_controller_(/*sink=*/frame_cadence_adapter_.get(),
                                     /*source=*/nullptr),
       default_limits_allowed_(
-          !field_trial::IsEnabled("WebRTC-DefaultBitrateLimitsKillSwitch")),
+          !field_trials.IsEnabled("WebRTC-DefaultBitrateLimitsKillSwitch")),
       qp_parsing_allowed_(
-          !field_trial::IsEnabled("WebRTC-QpParsingKillSwitch")),
-      switch_encoder_on_init_failures_(!field_trial::IsDisabled(
+          !field_trials.IsEnabled("WebRTC-QpParsingKillSwitch")),
+      switch_encoder_on_init_failures_(!field_trials.IsDisabled(
           kSwitchEncoderOnInitializationFailuresFieldTrial)),
       encoder_queue_(std::move(encoder_queue)) {
   TRACE_EVENT0("webrtc", "VideoStreamEncoder::VideoStreamEncoder");
@@ -1220,7 +1220,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
   //  * We have screensharing with layers.
   //  * "WebRTC-FrameDropper" field trial is "Disabled".
   force_disable_frame_dropper_ =
-      field_trial::IsDisabled(kFrameDropperFieldTrial) ||
+      field_trials_.IsDisabled(kFrameDropperFieldTrial) ||
       (num_layers > 1 && codec.mode == VideoCodecMode::kScreensharing);
 
   VideoEncoder::EncoderInfo info = encoder_->GetEncoderInfo();
@@ -2263,8 +2263,8 @@ VideoStreamEncoder::AutomaticAnimationDetectionExperiment
 VideoStreamEncoder::ParseAutomatincAnimationDetectionFieldTrial() const {
   AutomaticAnimationDetectionExperiment result;
 
-  result.Parser()->Parse(webrtc::field_trial::FindFullName(
-      "WebRTC-AutomaticAnimationDetectionScreenshare"));
+  result.Parser()->Parse(
+      field_trials_.Lookup("WebRTC-AutomaticAnimationDetectionScreenshare"));
 
   if (!result.enabled) {
     RTC_LOG(LS_INFO) << "Automatic animation detection experiment is disabled.";

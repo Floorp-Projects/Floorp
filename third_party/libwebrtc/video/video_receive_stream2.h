@@ -332,6 +332,7 @@ class VideoReceiveStream2
   // Used to signal destruction to potentially pending tasks.
   ScopedTaskSafety task_safety_;
 };
+
 }  // namespace internal
 }  // namespace webrtc
 

@@ -1731,6 +1731,7 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
 
   webrtc::RtcEventLogNull event_log_;
   webrtc::test::ScopedKeyValueConfig field_trials_;
+  std::unique_ptr<webrtc::test::ScopedKeyValueConfig> override_field_trials_;
   std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
   std::unique_ptr<webrtc::Call> call_;
   std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
@@ -1785,7 +1786,7 @@ TEST_F(WebRtcVideoChannelBaseTest, OverridesRecvBufferSize) {
   // Set field trial to override the default recv buffer size, and then re-run
   // setup where the interface is created and configured.
   const int kCustomRecvBufferSize = 123456;
-  webrtc::test::ScopedKeyValueConfig override_field_trials(
+  override_field_trials_ = std::make_unique<webrtc::test::ScopedKeyValueConfig>(
       field_trials_, "WebRTC-IncreasedReceivebuffers/123456/");
 
   ResetTest();
@@ -1802,7 +1803,7 @@ TEST_F(WebRtcVideoChannelBaseTest, OverridesRecvBufferSizeWithSuffix) {
   // Set field trial to override the default recv buffer size, and then re-run
   // setup where the interface is created and configured.
   const int kCustomRecvBufferSize = 123456;
-  webrtc::test::ScopedKeyValueConfig override_field_trials(
+  override_field_trials_ = std::make_unique<webrtc::test::ScopedKeyValueConfig>(
       field_trials_, "WebRTC-IncreasedReceivebuffers/123456_Dogfood/");
   ResetTest();
 
@@ -1812,53 +1813,31 @@ TEST_F(WebRtcVideoChannelBaseTest, OverridesRecvBufferSizeWithSuffix) {
   EXPECT_EQ(kCustomRecvBufferSize, network_interface_.recvbuf_size());
 }
 
+class InvalidRecvBufferSizeFieldTrial
+    : public WebRtcVideoChannelBaseTest,
+      public ::testing::WithParamInterface<const char*> {};
+
 // Test that we properly set the send and recv buffer sizes when overriding
 // via field trials that don't make any sense.
-TEST_F(WebRtcVideoChannelBaseTest, InvalidRecvBufferSize) {
+TEST_P(InvalidRecvBufferSizeFieldTrial, InvalidRecvBufferSize) {
   // Set bogus field trial values to override the default recv buffer size, and
   // then re-run setup where the interface is created and configured. The
   // default value should still be used.
+  override_field_trials_ = std::make_unique<webrtc::test::ScopedKeyValueConfig>(
+      field_trials_,
+      std::string("WebRTC-IncreasedReceivebuffers/") + GetParam() + "/");
 
-  std::string field_trial_string;
-  for (std::string group : {" ", "NotANumber", "-1", "0"}) {
-    std::string trial_string = "WebRTC-IncreasedReceivebuffers/";
-    trial_string += group;
-    trial_string += "/";
+  ResetTest();
 
-    // Dear reader. Sorry for this... it's a bit of a mess.
-    // TODO(bugs.webrtc.org/12854): This test needs to be rewritten to not use
-    // ResetTest and changing global field trials in a loop.
-    TearDown();
-    // This is a hack to appease tsan. Because of the way the test is written
-    // active state within Call, including running task queues may race with
-    // the test changing the global field trial variable.
-    // This particular hack, pauses the transport controller TQ while we
-    // change the field trial.
-    rtc::TaskQueue* tq = call_->GetTransportControllerSend()->GetWorkerQueue();
-    rtc::Event waiting, resume, conclude;
-    tq->PostTask([&waiting, &resume, &conclude]() {
-      waiting.Set();
-      resume.Wait(rtc::Event::kForever);
-      conclude.Set();
-    });
-
-    waiting.Wait(rtc::Event::kForever);
-    webrtc::test::ScopedKeyValueConfig field_trial_override(field_trials_,
-                                                            trial_string);
-
-    SetUp();
-    resume.Set();
-    // Ensure we don't cause a UAF as the test scope exits.
-    conclude.Wait(rtc::Event::kForever);
-
-    // OK, now the test can carry on.
-
-    EXPECT_TRUE(SetOneCodec(DefaultCodec()));
-    EXPECT_TRUE(SetSend(true));
-    EXPECT_EQ(64 * 1024, network_interface_.sendbuf_size());
-    EXPECT_EQ(256 * 1024, network_interface_.recvbuf_size());
-  }
+  EXPECT_TRUE(SetOneCodec(DefaultCodec()));
+  EXPECT_TRUE(SetSend(true));
+  EXPECT_EQ(64 * 1024, network_interface_.sendbuf_size());
+  EXPECT_EQ(256 * 1024, network_interface_.recvbuf_size());
 }
+
+INSTANTIATE_TEST_SUITE_P(All,
+                         InvalidRecvBufferSizeFieldTrial,
+                         Values("NotANumber", "-1", " ", "0"));
 
 // Test that stats work properly for a 1-1 call.
 TEST_F(WebRtcVideoChannelBaseTest, GetStats) {
@@ -2480,7 +2459,7 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
     AddSupportedVideoCodecType("H264");
 #endif
 
-    fake_call_.reset(new FakeCall());
+    fake_call_.reset(new FakeCall(&field_trials_));
     channel_.reset(engine_.CreateMediaChannel(
         fake_call_.get(), GetMediaConfig(), VideoOptions(),
         webrtc::CryptoOptions(), video_bitrate_allocator_factory_.get()));
@@ -2494,6 +2473,7 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
   void TearDown() override {
     channel_->SetInterface(nullptr);
     channel_ = nullptr;
+    fake_call_ = nullptr;
   }
 
   void ResetTest() {
@@ -2932,8 +2912,8 @@ TEST_F(WebRtcVideoChannelTest, RecvAbsoluteSendTimeHeaderExtensions) {
 }
 
 TEST_F(WebRtcVideoChannelTest, FiltersExtensionsPicksTransportSeqNum) {
-  webrtc::test::ScopedFieldTrials override_field_trials(
-      "WebRTC-FilterAbsSendTimeExtension/Enabled/");
+  webrtc::test::ScopedKeyValueConfig override_field_trials(
+      field_trials_, "WebRTC-FilterAbsSendTimeExtension/Enabled/");
   // Enable three redundant extensions.
   std::vector<std::string> extensions;
   extensions.push_back(RtpExtension::kAbsSendTimeUri);
@@ -7400,8 +7380,8 @@ TEST_F(WebRtcVideoChannelTest,
   // so that the bottom layer has width and height divisible by 2.
   // TODO(bugs.webrtc.org/8785): Remove this field trial when we fully trust
   // the number of simulcast layers set by the app.
-  webrtc::test::ScopedFieldTrials field_trial(
-      "WebRTC-NormalizeSimulcastResolution/Enabled-3/");
+  webrtc::test::ScopedKeyValueConfig field_trial(
+      field_trials_, "WebRTC-NormalizeSimulcastResolution/Enabled-3/");
 
   // Set up WebRtcVideoChannel for 3-layer VP8 simulcast.
   VideoSendParameters parameters;
@@ -7555,8 +7535,8 @@ TEST_F(WebRtcVideoChannelTest,
   // so that the bottom layer has width and height divisible by 2.
   // TODO(bugs.webrtc.org/8785): Remove this field trial when we fully trust
   // the number of simulcast layers set by the app.
-  webrtc::test::ScopedFieldTrials field_trial(
-      "WebRTC-NormalizeSimulcastResolution/Enabled-3/");
+  webrtc::test::ScopedKeyValueConfig field_trial(
+      field_trials_, "WebRTC-NormalizeSimulcastResolution/Enabled-3/");
 
   // Set up WebRtcVideoChannel for 3-layer H264 simulcast.
   encoder_factory_->AddSupportedVideoCodecType(kH264CodecName);
@@ -8830,13 +8810,13 @@ class WebRtcVideoChannelSimulcastTest : public ::testing::Test {
     return streams[streams.size() - 1];
   }
 
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   webrtc::RtcEventLogNull event_log_;
   FakeCall fake_call_;
   cricket::FakeWebRtcVideoEncoderFactory* encoder_factory_;
   cricket::FakeWebRtcVideoDecoderFactory* decoder_factory_;
   std::unique_ptr<webrtc::MockVideoBitrateAllocatorFactory>
       mock_rate_allocator_factory_;
-  webrtc::test::ScopedKeyValueConfig field_trials_;
   WebRtcVideoEngine engine_;
   std::unique_ptr<VideoMediaChannel> channel_;
   uint32_t last_ssrc_;

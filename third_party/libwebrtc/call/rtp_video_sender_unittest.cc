@@ -138,7 +138,8 @@ class RtpVideoSenderTestFixture {
             field_trials ? field_trials : &field_trials_),
         stats_proxy_(time_controller_.GetClock(),
                      config_,
-                     VideoEncoderConfig::ContentType::kRealtimeVideo),
+                     VideoEncoderConfig::ContentType::kRealtimeVideo,
+                     field_trials ? *field_trials : field_trials_),
         retransmission_rate_limiter_(time_controller_.GetClock(),
                                      kRetransmitWindowSizeMs) {
     transport_controller_.EnsureStarted();

@@ -33,7 +33,6 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
-#include "system_wrappers/include/field_trial.h"
 #include "video/adaptation/quality_scaler_resource.h"
 
 namespace webrtc {
@@ -268,7 +267,8 @@ VideoStreamEncoderResourceManager::VideoStreamEncoderResourceManager(
     std::unique_ptr<OveruseFrameDetector> overuse_detector,
     DegradationPreferenceProvider* degradation_preference_provider,
     const WebRtcKeyValueConfig& field_trials)
-    : degradation_preference_provider_(degradation_preference_provider),
+    : field_trials_(field_trials),
+      degradation_preference_provider_(degradation_preference_provider),
       bitrate_constraint_(std::make_unique<BitrateConstraint>()),
       balanced_constraint_(
           std::make_unique<BalancedConstraint>(degradation_preference_provider_,
@@ -292,7 +292,7 @@ VideoStreamEncoderResourceManager::VideoStreamEncoderResourceManager(
           std::make_unique<InitialFrameDropper>(quality_scaler_resource_)),
       quality_scaling_experiment_enabled_(QualityScalingExperiment::Enabled()),
       pixel_limit_resource_experiment_enabled_(
-          field_trial::IsEnabled(kPixelLimitResourceFieldTrialName)),
+          field_trials.IsEnabled(kPixelLimitResourceFieldTrialName)),
       encoder_target_bitrate_bps_(absl::nullopt),
       quality_rampup_experiment_(
           QualityRampUpExperimentHelper::CreateIfEnabled(this, clock_)),
@@ -361,7 +361,7 @@ void VideoStreamEncoderResourceManager::MaybeInitializePixelLimitResource() {
   }
   int max_pixels = 0;
   std::string pixel_limit_field_trial =
-      field_trial::FindFullName(kPixelLimitResourceFieldTrialName);
+      field_trials_.Lookup(kPixelLimitResourceFieldTrialName);
   if (sscanf(pixel_limit_field_trial.c_str(), "Enabled-%d", &max_pixels) != 1) {
     RTC_LOG(LS_ERROR) << "Couldn't parse " << kPixelLimitResourceFieldTrialName
                       << " trial config: " << pixel_limit_field_trial;

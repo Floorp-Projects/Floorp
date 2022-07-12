@@ -416,17 +416,19 @@ void FakeFlexfecReceiveStream::OnRtpPacket(const webrtc::RtpPacketReceived&) {
   RTC_DCHECK_NOTREACHED() << "Not implemented.";
 }
 
-FakeCall::FakeCall()
-    : FakeCall(rtc::Thread::Current(), rtc::Thread::Current()) {}
+FakeCall::FakeCall(webrtc::test::ScopedKeyValueConfig* field_trials)
+    : FakeCall(rtc::Thread::Current(), rtc::Thread::Current(), field_trials) {}
 
 FakeCall::FakeCall(webrtc::TaskQueueBase* worker_thread,
-                   webrtc::TaskQueueBase* network_thread)
+                   webrtc::TaskQueueBase* network_thread,
+                   webrtc::test::ScopedKeyValueConfig* field_trials)
     : network_thread_(network_thread),
       worker_thread_(worker_thread),
       audio_network_state_(webrtc::kNetworkUp),
       video_network_state_(webrtc::kNetworkUp),
       num_created_send_streams_(0),
-      num_created_receive_streams_(0) {}
+      num_created_receive_streams_(0),
+      trials_(field_trials ? field_trials : &fallback_trials_) {}
 
 FakeCall::~FakeCall() {
   EXPECT_EQ(0u, video_send_streams_.size());
