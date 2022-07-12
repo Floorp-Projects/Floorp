@@ -12,10 +12,12 @@
 #define MODULES_CONGESTION_CONTROLLER_GOOG_CC_LOSS_BASED_BWE_V2_H_
 
 #include <cstddef>
+#include <deque>
 #include <vector>
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/network_state_predictor.h"
 #include "api/transport/network_types.h"
 #include "api/transport/webrtc_key_value_config.h"
 #include "api/units/data_rate.h"
@@ -42,14 +44,15 @@ class LossBasedBweV2 {
   bool IsReady() const;
 
   // Returns `DataRate::PlusInfinity` if no BWE can be calculated.
-  DataRate GetBandwidthEstimate() const;
+  DataRate GetBandwidthEstimate(DataRate delay_based_limit) const;
 
   void SetAcknowledgedBitrate(DataRate acknowledged_bitrate);
   void SetBandwidthEstimate(DataRate bandwidth_estimate);
 
   void UpdateBandwidthEstimate(
       rtc::ArrayView<const PacketResult> packet_results,
-      DataRate delay_based_estimate);
+      DataRate delay_based_estimate,
+      BandwidthUsage delay_detector_state);
 
  private:
   struct ChannelParameters {
@@ -80,6 +83,11 @@ class LossBasedBweV2 {
     DataRate instant_upper_bound_bandwidth_balance = DataRate::MinusInfinity();
     double instant_upper_bound_loss_offset = 0.0;
     double temporal_weight_factor = 0.0;
+    double bandwidth_backoff_lower_bound_factor = 0.0;
+    bool trendline_integration_enabled = false;
+    double delay_based_limit_factor = 1.0;
+    int trendline_window_size = 0;
+    bool backoff_when_overusing = false;
   };
 
   struct Derivatives {
@@ -124,9 +132,21 @@ class LossBasedBweV2 {
 
   void CalculateTemporalWeights();
   void NewtonsMethodUpdate(ChannelParameters& channel_parameters) const;
+  // Returns true if either
+  // 1. At least one of states in the window is kBwOverusing, or
+  // 2. There are no kBwUnderusing states in the window.
+  bool TrendlineEsimateAllowBitrateDecrease() const;
+
+  // Returns false if there exists an overusing state in the window.
+  bool TrendlineEsimateAllowBitrateIncrease() const;
 
   // Returns false if no observation was created.
-  bool PushBackObservation(rtc::ArrayView<const PacketResult> packet_results);
+  bool PushBackObservation(rtc::ArrayView<const PacketResult> packet_results,
+                           BandwidthUsage delay_detector_state);
+  void UpdateTrendlineEstimator(
+      const std::vector<PacketResult>& packet_feedbacks,
+      Timestamp at_time);
+  void UpdateDelayDetector(BandwidthUsage delay_detector_state);
 
   absl::optional<DataRate> acknowledged_bitrate_;
   absl::optional<Config> config_;
@@ -139,6 +159,7 @@ class LossBasedBweV2 {
   absl::optional<DataRate> cached_instant_upper_bound_;
   std::vector<double> instant_upper_bound_temporal_weights_;
   std::vector<double> temporal_weights_;
+  std::deque<BandwidthUsage> delay_detector_states_;
 };
 
 }  // namespace webrtc

@@ -181,23 +181,22 @@ void DelayBasedBwe::IncomingPacketFeedback(const PacketResult& packet_feedback,
   }
   DataSize packet_size = packet_feedback.sent_packet.size;
 
-    TimeDelta send_delta = TimeDelta::Zero();
-    TimeDelta recv_delta = TimeDelta::Zero();
-    int size_delta = 0;
+  TimeDelta send_delta = TimeDelta::Zero();
+  TimeDelta recv_delta = TimeDelta::Zero();
+  int size_delta = 0;
 
-    InterArrivalDelta* inter_arrival_for_packet =
-        (separate_audio_.enabled && packet_feedback.sent_packet.audio)
-            ? video_inter_arrival_delta_.get()
-            : audio_inter_arrival_delta_.get();
-    bool calculated_deltas = inter_arrival_for_packet->ComputeDeltas(
-        packet_feedback.sent_packet.send_time, packet_feedback.receive_time,
-        at_time, packet_size.bytes(), &send_delta, &recv_delta, &size_delta);
+  InterArrivalDelta* inter_arrival_for_packet =
+      (separate_audio_.enabled && packet_feedback.sent_packet.audio)
+          ? video_inter_arrival_delta_.get()
+          : audio_inter_arrival_delta_.get();
+  bool calculated_deltas = inter_arrival_for_packet->ComputeDeltas(
+      packet_feedback.sent_packet.send_time, packet_feedback.receive_time,
+      at_time, packet_size.bytes(), &send_delta, &recv_delta, &size_delta);
 
-    delay_detector_for_packet->Update(
-        recv_delta.ms(), send_delta.ms(),
-        packet_feedback.sent_packet.send_time.ms(),
-        packet_feedback.receive_time.ms(), packet_size.bytes(),
-        calculated_deltas);
+  delay_detector_for_packet->Update(recv_delta.ms(), send_delta.ms(),
+                                    packet_feedback.sent_packet.send_time.ms(),
+                                    packet_feedback.receive_time.ms(),
+                                    packet_size.bytes(), calculated_deltas);
 }
 
 DataRate DelayBasedBwe::TriggerOveruse(Timestamp at_time,
@@ -266,6 +265,8 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
     prev_bitrate_ = bitrate;
     prev_state_ = detector_state;
   }
+
+  result.delay_detector_state = detector_state;
   return result;
 }
 
