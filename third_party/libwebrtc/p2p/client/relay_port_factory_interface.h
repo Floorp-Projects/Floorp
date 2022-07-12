@@ -36,7 +36,6 @@ struct RelayServerConfig;
 
 // A struct containing arguments to RelayPortFactory::Create()
 struct CreateRelayPortArgs {
-  CreateRelayPortArgs();
   rtc::Thread* network_thread;
   rtc::PacketSocketFactory* socket_factory;
   rtc::Network* network;
@@ -44,11 +43,9 @@ struct CreateRelayPortArgs {
   const RelayServerConfig* config;
   std::string username;
   std::string password;
-  webrtc::TurnCustomizer* turn_customizer;
+  webrtc::TurnCustomizer* turn_customizer = nullptr;
   const webrtc::WebRtcKeyValueConfig* field_trials = nullptr;
 };
-
-inline CreateRelayPortArgs::CreateRelayPortArgs() {}
 
 // A factory for creating RelayPort's.
 class RelayPortFactoryInterface {
