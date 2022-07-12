@@ -19,6 +19,8 @@
 #include <vector>
 
 #include "absl/container/inlined_vector.h"
+#include "api/units/data_size.h"
+#include "api/units/time_delta.h"
 #include "api/video/encoded_image.h"
 #include "api/video/video_timing.h"
 #include "modules/video_coding/frame_helpers.h"
@@ -252,7 +254,7 @@ std::unique_ptr<EncodedFrame> FrameBuffer::GetNextFrame() {
 
   RTC_DCHECK(!frames_to_decode_.empty());
   bool superframe_delayed_by_retransmission = false;
-  size_t superframe_size = 0;
+  DataSize superframe_size = DataSize::Zero();
   const EncodedFrame& first_frame = *frames_to_decode_[0]->second.frame;
   absl::optional<Timestamp> render_time = first_frame.RenderTimestamp();
   int64_t receive_time_ms = first_frame.ReceivedTime();
@@ -272,7 +274,7 @@ std::unique_ptr<EncodedFrame> FrameBuffer::GetNextFrame() {
 
     superframe_delayed_by_retransmission |= frame->delayed_by_retransmission();
     receive_time_ms = std::max(receive_time_ms, frame->ReceivedTime());
-    superframe_size += frame->size();
+    superframe_size += DataSize::Bytes(frame->size());
 
     PropagateDecodability(frame_it->second);
     decoded_frames_history_.InsertDecoded(frame_it->first, frame->Timestamp());
@@ -318,17 +320,19 @@ std::unique_ptr<EncodedFrame> FrameBuffer::GetNextFrame() {
 
     if (inter_frame_delay_.CalculateDelay(first_frame.Timestamp(), &frame_delay,
                                           receive_time_ms)) {
-      jitter_estimator_.UpdateEstimate(frame_delay, superframe_size);
+      jitter_estimator_.UpdateEstimate(TimeDelta::Millis(frame_delay),
+                                       superframe_size);
     }
 
     float rtt_mult = protection_mode_ == kProtectionNackFEC ? 0.0 : 1.0;
-    absl::optional<float> rtt_mult_add_cap_ms = absl::nullopt;
+    absl::optional<TimeDelta> rtt_mult_add_cap_ms = absl::nullopt;
     if (rtt_mult_settings_.has_value()) {
       rtt_mult = rtt_mult_settings_->rtt_mult_setting;
-      rtt_mult_add_cap_ms = rtt_mult_settings_->rtt_mult_add_cap_ms;
+      rtt_mult_add_cap_ms =
+          TimeDelta::Millis(rtt_mult_settings_->rtt_mult_add_cap_ms);
     }
-    timing_->SetJitterDelay(TimeDelta::Millis(
-        jitter_estimator_.GetJitterEstimate(rtt_mult, rtt_mult_add_cap_ms)));
+    timing_->SetJitterDelay(
+        jitter_estimator_.GetJitterEstimate(rtt_mult, rtt_mult_add_cap_ms));
     timing_->UpdateCurrentDelay(*render_time, now);
   } else {
     if (RttMultExperiment::RttMultEnabled())
@@ -379,7 +383,7 @@ int FrameBuffer::Size() {
 
 void FrameBuffer::UpdateRtt(int64_t rtt_ms) {
   MutexLock lock(&mutex_);
-  jitter_estimator_.UpdateRtt(rtt_ms);
+  jitter_estimator_.UpdateRtt(TimeDelta::Millis(rtt_ms));
 }
 
 bool FrameBuffer::ValidReferences(const EncodedFrame& frame) const {
