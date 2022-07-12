@@ -282,7 +282,7 @@ HttpAuthResult HttpAuthenticate(const char* challenge,
     // std::string decoded = username + ":" + password;
     size_t len = username.size() + password.GetLength() + 2;
     char* sensitive = new char[len];
-    size_t pos = strcpyn(sensitive, len, username.data(), username.size());
+    size_t pos = strcpyn(sensitive, len, username);
     pos += strcpyn(sensitive + pos, len - pos, ":");
     password.CopyTo(sensitive + pos, true);
 
@@ -322,9 +322,9 @@ HttpAuthResult HttpAuthenticate(const char* challenge,
     // std::string A1 = username + ":" + realm + ":" + password;
     size_t len = username.size() + realm.size() + password.GetLength() + 3;
     char* sensitive = new char[len];  // A1
-    size_t pos = strcpyn(sensitive, len, username.data(), username.size());
+    size_t pos = strcpyn(sensitive, len, username);
     pos += strcpyn(sensitive + pos, len - pos, ":");
-    pos += strcpyn(sensitive + pos, len - pos, realm.c_str());
+    pos += strcpyn(sensitive + pos, len - pos, realm);
     pos += strcpyn(sensitive + pos, len - pos, ":");
     password.CopyTo(sensitive + pos, true);
 

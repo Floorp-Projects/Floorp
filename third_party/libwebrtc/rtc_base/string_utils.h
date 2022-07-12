@@ -51,10 +51,7 @@ struct AbslStringViewCmp {
 };
 
 // Safe version of strncpy that always nul-terminate.
-size_t strcpyn(char* buffer,
-               size_t buflen,
-               const char* source,
-               size_t srclen = SIZE_UNKNOWN);
+size_t strcpyn(char* buffer, size_t buflen, absl::string_view source);
 
 ///////////////////////////////////////////////////////////////////////////////
 // UTF helpers (Windows only)
