@@ -35,6 +35,7 @@ rtc_library("resource_adaptation") {
     "../../api:rtp_parameters",
     "../../api:scoped_refptr",
     "../../api:sequence_checker",
+    "../../api:webrtc_key_value_config",
     "../../api/adaptation:resource_adaptation_api",
     "../../api/task_queue:task_queue",
     "../../api/video:video_adaptation",
@@ -86,6 +87,7 @@ if (rtc_include_tests) {
       "../../rtc_base/synchronization:mutex",
       "../../test:field_trial",
       "../../test:rtc_expect_death",
+      "../../test:scoped_key_value_config",
       "../../test:test_support",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]

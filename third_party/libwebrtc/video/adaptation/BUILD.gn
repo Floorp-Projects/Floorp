@@ -36,6 +36,7 @@ rtc_library("video_adaptation") {
     "../../api:rtp_parameters",
     "../../api:scoped_refptr",
     "../../api:sequence_checker",
+    "../../api:webrtc_key_value_config",
     "../../api/adaptation:resource_adaptation_api",
     "../../api/task_queue:task_queue",
     "../../api/units:data_rate",

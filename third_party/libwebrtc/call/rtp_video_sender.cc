@@ -358,8 +358,10 @@ RtpVideoSender::RtpVideoSender(
     std::unique_ptr<FecController> fec_controller,
     FrameEncryptorInterface* frame_encryptor,
     const CryptoOptions& crypto_options,
-    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer)
-    : send_side_bwe_with_overhead_(!absl::StartsWith(
+    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+    const WebRtcKeyValueConfig& field_trials)
+    : field_trials_(field_trials),
+      send_side_bwe_with_overhead_(!absl::StartsWith(
           field_trials_.Lookup("WebRTC-SendSideBwe-WithOverhead"),
           "Disabled")),
       use_frame_rate_for_overhead_(absl::StartsWith(
