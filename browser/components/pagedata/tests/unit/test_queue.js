@@ -1,8 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+ChromeUtils.defineESModuleGetters(this, {
+  PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 

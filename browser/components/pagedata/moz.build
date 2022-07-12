@@ -14,16 +14,16 @@ BROWSER_CHROME_MANIFESTS += [
 JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES.pagedata += [
-    "OpenGraphPageData.jsm",
-    "PageDataSchema.jsm",
-    "PageDataService.jsm",
-    "SchemaOrgPageData.jsm",
-    "TwitterPageData.jsm",
+    "OpenGraphPageData.sys.mjs",
+    "PageDataSchema.sys.mjs",
+    "PageDataService.sys.mjs",
+    "SchemaOrgPageData.sys.mjs",
+    "TwitterPageData.sys.mjs",
 ]
 
 FINAL_TARGET_FILES.actors += [
-    "PageDataChild.jsm",
-    "PageDataParent.jsm",
+    "PageDataChild.sys.mjs",
+    "PageDataParent.sys.mjs",
 ]
 
 SPHINX_TREES["docs"] = "docs"

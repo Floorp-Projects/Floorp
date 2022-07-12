@@ -4,23 +4,24 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["PageDataParent"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
 /**
  * Receives messages from PageDataChild and passes them to the PageData service.
  */
-class PageDataParent extends JSWindowActorParent {
+export class PageDataParent extends JSWindowActorParent {
   #deferredCollection = null;
 
   /**

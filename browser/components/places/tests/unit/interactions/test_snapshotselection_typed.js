@@ -11,9 +11,9 @@ const TEST_URL2 = "https://example.com/12345";
 const TEST_URL3 = "https://example.com/14235";
 const TEST_URL4 = "https://example.com/14345";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
-  PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.sys.mjs",
+  PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
 });
 
 add_task(async () => {

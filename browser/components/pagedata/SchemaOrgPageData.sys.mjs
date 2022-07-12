@@ -4,11 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SchemaOrgPageData"];
-
-const { PageDataSchema } = ChromeUtils.import(
-  "resource:///modules/pagedata/PageDataSchema.jsm"
-);
+import { PageDataSchema } from "resource:///modules/pagedata/PageDataSchema.sys.mjs";
 
 /**
  * Represents an item from the schema.org specification.
@@ -402,7 +398,7 @@ function collectJsonLDItems(document) {
  *
  * Currently only supports HTML Microdata and JSON-LD formats, not RDFa.
  */
-const SchemaOrgPageData = {
+export const SchemaOrgPageData = {
   /**
    * Parses and collects the schema.org items from the given document.
    * The returned items are the roots, i.e. the top-level items, there may be
