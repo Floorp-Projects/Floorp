@@ -238,8 +238,6 @@ export const getDisplayedSources = createSelector(
         isPrettyPrinted: source.isPrettyPrinted,
         isOriginal: source.isOriginal,
         url: source.url,
-        // quick-open codebase uses this attribute:
-        relativeUrl: source.relativeUrl,
         id: source.id,
         displayURL: source.displayURL,
         parts: getPathParts(source.displayURL, source.thread, mainThreadHost),

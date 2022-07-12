@@ -7,7 +7,6 @@
  * @module reducers/sources
  */
 
-import { getRelativeUrl } from "../utils/source";
 import { prefs } from "../utils/prefs";
 
 export function initialSourcesState(state) {
@@ -71,8 +70,6 @@ export function initialSourcesState(state) {
      * Project root set from the Source Tree.
      *
      * This focused the source tree on a subset of sources.
-     * `relativeUrl` attribute of all sources will be updated according
-     * to the new root.
      */
     projectDirectoryRoot: prefs.projectDirectoryRoot,
     projectDirectoryRootName: prefs.projectDirectoryRootName,
@@ -219,8 +216,6 @@ function addSources(state, sources) {
   }
   state.sources = newSourceMap;
 
-  state = updateRootRelativeValues(state, sources);
-
   return state;
 }
 
@@ -302,12 +297,13 @@ function updateProjectDirectoryRoot(state, root, name) {
     prefs.projectDirectoryRootName = name;
   }
 
-  return updateRootRelativeValues(
-    state,
-    [...state.sources.values()],
-    root,
-    name
-  );
+  state = {
+    ...state,
+    projectDirectoryRoot: root,
+    projectDirectoryRootName: name,
+  };
+
+  return state;
 }
 
 /* Checks if a path is a thread actor or not
@@ -316,30 +312,6 @@ function updateProjectDirectoryRoot(state, root, name) {
 function actorType(actor) {
   const match = actor.match(/\/([a-z]+)\d+/);
   return match ? match[1] : null;
-}
-
-function updateRootRelativeValues(
-  state,
-  sourcesToUpdate,
-  projectDirectoryRoot = state.projectDirectoryRoot,
-  projectDirectoryRootName = state.projectDirectoryRootName
-) {
-  state = {
-    ...state,
-    projectDirectoryRoot,
-    projectDirectoryRootName,
-  };
-
-  const newSourceMap = new Map(state.sources);
-  for (const source of sourcesToUpdate) {
-    newSourceMap.set(source.id, {
-      ...state.sources.get(source.id),
-      relativeUrl: getRelativeUrl(source, state.projectDirectoryRoot),
-    });
-  }
-  state.sources = newSourceMap;
-
-  return state;
 }
 
 export default update;

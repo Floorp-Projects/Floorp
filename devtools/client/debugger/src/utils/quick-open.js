@@ -4,10 +4,10 @@
 
 import { endTruncateStr } from "./utils";
 import {
-  isPretty,
   getFilename,
   getSourceClassnames,
   getSourceQueryString,
+  getRelativeUrl,
 } from "./source";
 
 export const MODIFIERS = {
@@ -50,18 +50,24 @@ export function parseLineColumn(query) {
   }
 }
 
-function formatSourceForList(source, tabUrls, isBlackBoxed) {
+export function formatSourceForList(
+  source,
+  hasTabOpened,
+  isBlackBoxed,
+  projectDirectoryRoot
+) {
   const title = getFilename(source);
-  const relativeUrlWithQuery = `${source.relativeUrl}${getSourceQueryString(
-    source
-  ) || ""}`;
+  const relativeUrlWithQuery = `${getRelativeUrl(
+    source,
+    projectDirectoryRoot
+  )}${getSourceQueryString(source) || ""}`;
   const subtitle = endTruncateStr(relativeUrlWithQuery, 100);
   const value = relativeUrlWithQuery;
   return {
     value,
     title,
     subtitle,
-    icon: tabUrls.has(source.url)
+    icon: hasTabOpened
       ? "tab result-item-icon"
       : `result-item-icon ${getSourceClassnames(source, null, isBlackBoxed)}`,
     id: source.id,
@@ -79,12 +85,14 @@ export function formatSymbol(symbol) {
   };
 }
 
-export function formatSymbols(symbols) {
+export function formatSymbols(symbols, maxResults) {
   if (!symbols) {
     return { functions: [] };
   }
 
-  const { functions } = symbols;
+  let { functions } = symbols;
+  // Avoid formating more symbols than necessary
+  functions = functions.slice(0, maxResults);
 
   return {
     functions: functions.map(formatSymbol),
@@ -109,20 +117,4 @@ export function formatShortcutResults() {
       id: ":",
     },
   ];
-}
-
-export function formatSources(sources, tabUrls, blackBoxRanges) {
-  const formattedSources = [];
-
-  for (let i = 0; i < sources.length; ++i) {
-    const source = sources[i];
-
-    if (!!source.relativeUrl && !isPretty(source)) {
-      formattedSources.push(
-        formatSourceForList(source, tabUrls, !!blackBoxRanges[source.url])
-      );
-    }
-  }
-
-  return formattedSources;
 }

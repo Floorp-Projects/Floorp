@@ -9,6 +9,8 @@ import {
   makeSource,
 } from "../../utils/test-head";
 
+import { getRelativeUrl } from "../../utils/source";
+
 const {
   getProjectDirectoryRoot,
   getProjectDirectoryRootName,
@@ -64,7 +66,9 @@ describe("setProjectDirectoryRoot", () => {
       "http://localhost:8000/examples/js/scopes.js"
     );
 
-    expect(filteredSources.relativeUrl).toEqual("scopes.js");
+    expect(
+      getRelativeUrl(filteredSources, "localhost:8000/examples/js")
+    ).toEqual("scopes.js");
   });
 
   it("should update the child directory ", () => {
