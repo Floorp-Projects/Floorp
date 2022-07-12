@@ -15,6 +15,11 @@ const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(lazy, "disabledExperimentalAPI", () => {
+  return !Services.prefs.getBoolPref("remote.experimental.enabled");
 });
 
 class Module {
@@ -106,6 +111,43 @@ class Module {
     throw new Error(
       `Could not intercept event ${name}, interceptEvent is not implemented in windowglobal-in-root module`
     );
+  }
+
+  /**
+   * Assert if experimental commands are enabled.
+   *
+   * @param {String} methodName
+   *     Name of the command.
+   *
+   * @throws {UnknownCommandError}
+   *     If experimental commands are disabled.
+   */
+  assertExperimentalCommandsEnabled(methodName) {
+    // TODO: 1778987. Move it to a BiDi specific place.
+    if (lazy.disabledExperimentalAPI) {
+      throw new lazy.error.UnknownCommandError(methodName);
+    }
+  }
+
+  /**
+   * Assert if experimental events are enabled.
+   *
+   * @param {string} moduleName
+   *     Name of the module.
+   *
+   * @param {string} event
+   *     Name of the event.
+   *
+   * @throws {InvalidArgumentError}
+   *     If experimental events are disabled.
+   */
+  assertExperimentalEventsEnabled(moduleName, event) {
+    // TODO: 1778987. Move it to a BiDi specific place.
+    if (lazy.disabledExperimentalAPI) {
+      throw new lazy.error.InvalidArgumentError(
+        `Module ${moduleName} does not support event ${event}`
+      );
+    }
   }
 
   /**
