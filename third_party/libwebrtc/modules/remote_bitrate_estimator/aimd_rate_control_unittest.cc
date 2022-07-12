@@ -255,7 +255,7 @@ TEST(AimdRateControlTest, SetEstimateIncreaseBweInAlr) {
             2 * kInitialBitrateBps);
 }
 
-TEST(AimdRateControlTest, SetEstimateClampedByNetworkEstimate) {
+TEST(AimdRateControlTest, SetEstimateUpperLimitedByNetworkEstimate) {
   auto states = CreateAimdRateControlStates(/*send_side=*/true);
   NetworkStateEstimate network_estimate;
   network_estimate.link_capacity_upper = DataRate::KilobitsPerSec(400);
@@ -263,6 +263,17 @@ TEST(AimdRateControlTest, SetEstimateClampedByNetworkEstimate) {
   SetEstimate(states, 500'000);
   EXPECT_EQ(states.aimd_rate_control->LatestEstimate(),
             network_estimate.link_capacity_upper);
+}
+
+TEST(AimdRateControlTest, SetEstimateLowerLimitedByNetworkEstimate) {
+  auto states = CreateAimdRateControlStates(/*send_side=*/true);
+  NetworkStateEstimate network_estimate;
+  network_estimate.link_capacity_lower = DataRate::KilobitsPerSec(400);
+  states.aimd_rate_control->SetNetworkStateEstimate(network_estimate);
+  SetEstimate(states, 100'000);
+  // 0.85 is default backoff factor. (`beta_`)
+  EXPECT_EQ(states.aimd_rate_control->LatestEstimate(),
+            network_estimate.link_capacity_lower * 0.85);
 }
 
 TEST(AimdRateControlTest, SetEstimateIgnoresNetworkEstimatesLowerThanCurrent) {
