@@ -94,12 +94,16 @@ class VCMTiming {
 
   // Return current timing information. Returns true if the first frame has been
   // decoded, false otherwise.
-  virtual bool GetTimings(TimeDelta* max_decode,
-                          TimeDelta* current_delay,
-                          TimeDelta* target_delay,
-                          TimeDelta* jitter_buffer,
-                          TimeDelta* min_playout_delay,
-                          TimeDelta* render_delay) const;
+  struct VideoDelayTimings {
+    TimeDelta max_decode_duration;
+    TimeDelta current_delay;
+    TimeDelta target_delay;
+    TimeDelta jitter_buffer_delay;
+    TimeDelta min_playout_delay;
+    TimeDelta render_delay;
+    size_t num_decoded_frames;
+  };
+  VideoDelayTimings GetTimings() const;
 
   void SetTimingFrameInfo(const TimingFrameInfo& info);
   absl::optional<TimingFrameInfo> GetTimingFrameInfo();
