@@ -87,6 +87,7 @@ class MockRtpStreamRtcpHandler : public RtpStreamRtcpHandler {
               OnNack,
               (uint32_t, rtc::ArrayView<const uint16_t>),
               (override));
+  MOCK_METHOD(void, OnPli, (uint32_t), (override));
 
  private:
   int num_calls_ = 0;
@@ -1095,6 +1096,27 @@ TEST(RtcpTransceiverImplTest, RequestKeyFrameWithPictureLossIndication) {
   EXPECT_EQ(rtcp_parser.pli()->num_packets(), 1);
   EXPECT_EQ(rtcp_parser.pli()->sender_ssrc(), kSenderSsrc);
   EXPECT_EQ(rtcp_parser.pli()->media_ssrc(), kRemoteSsrc);
+}
+
+TEST(RtcpTransceiverImplTest, ReceivesPictureLossIndication) {
+  static constexpr uint32_t kRemoteSsrc = 4321;
+  static constexpr uint32_t kMediaSsrc1 = 1234;
+  static constexpr uint32_t kMediaSsrc2 = 1235;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  MockRtpStreamRtcpHandler local_stream1;
+  MockRtpStreamRtcpHandler local_stream2;
+  EXPECT_CALL(local_stream1, OnPli(kRemoteSsrc));
+  EXPECT_CALL(local_stream2, OnPli).Times(0);
+
+  EXPECT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc1, &local_stream1));
+  EXPECT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc2, &local_stream2));
+
+  rtcp::Pli pli;
+  pli.SetSenderSsrc(kRemoteSsrc);
+  pli.SetMediaSsrc(kMediaSsrc1);
+  rtcp_transceiver.ReceivePacket(pli.Build(), config.clock->CurrentTime());
 }
 
 TEST(RtcpTransceiverImplTest, RequestKeyFrameWithFullIntraRequest) {

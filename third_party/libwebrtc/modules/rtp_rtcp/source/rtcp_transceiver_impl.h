@@ -105,6 +105,8 @@ class RtcpTransceiverImpl {
       Timestamp now);
   void HandleRtpFeedback(const rtcp::CommonHeader& rtcp_packet_header,
                          Timestamp now);
+  void HandlePli(const rtcp::CommonHeader& rtcp_packet_header);
+  void HandleRemb(const rtcp::CommonHeader& rtcp_packet_header, Timestamp now);
   void HandleNack(const rtcp::CommonHeader& rtcp_packet_header);
   void HandleTransportFeedback(const rtcp::CommonHeader& rtcp_packet_header,
                                Timestamp now);

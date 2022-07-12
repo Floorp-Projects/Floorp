@@ -336,16 +336,38 @@ void RtcpTransceiverImpl::HandleReceiverReport(
 void RtcpTransceiverImpl::HandlePayloadSpecificFeedback(
     const rtcp::CommonHeader& rtcp_packet_header,
     Timestamp now) {
-  // Remb is the only payload specific message handled right now.
-  if (rtcp_packet_header.fmt() != rtcp::Psfb::kAfbMessageType ||
-      config_.network_link_observer == nullptr) {
+  switch (rtcp_packet_header.fmt()) {
+    case rtcp::Pli::kFeedbackMessageType:
+      HandlePli(rtcp_packet_header);
+      break;
+    case rtcp::Psfb::kAfbMessageType:
+      HandleRemb(rtcp_packet_header, now);
+      break;
+  }
+}
+
+void RtcpTransceiverImpl::HandlePli(
+    const rtcp::CommonHeader& rtcp_packet_header) {
+  rtcp::Pli pli;
+  if (local_senders_.empty() || !pli.Parse(rtcp_packet_header)) {
     return;
   }
-  rtcp::Remb remb;
-  if (remb.Parse(rtcp_packet_header)) {
-    config_.network_link_observer->OnReceiverEstimatedMaxBitrate(
-        now, DataRate::BitsPerSec(remb.bitrate_bps()));
+  auto it = local_senders_by_ssrc_.find(pli.media_ssrc());
+  if (it != local_senders_by_ssrc_.end()) {
+    it->second->handler->OnPli(pli.sender_ssrc());
   }
+}
+
+void RtcpTransceiverImpl::HandleRemb(
+    const rtcp::CommonHeader& rtcp_packet_header,
+    Timestamp now) {
+  rtcp::Remb remb;
+  if (config_.network_link_observer == nullptr ||
+      !remb.Parse(rtcp_packet_header)) {
+    return;
+  }
+  config_.network_link_observer->OnReceiverEstimatedMaxBitrate(
+      now, DataRate::BitsPerSec(remb.bitrate_bps()));
 }
 
 void RtcpTransceiverImpl::HandleRtpFeedback(
