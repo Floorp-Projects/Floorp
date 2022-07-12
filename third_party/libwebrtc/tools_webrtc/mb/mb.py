@@ -36,6 +36,12 @@ sys.path = [os.path.join(SRC_DIR, 'build')] + sys.path
 import gn_helpers
 
 
+def _get_executable(target, platform):
+  executable_prefix = '.\\' if platform == 'win32' else './'
+  executable_suffix = '.exe' if platform == 'win32' else ''
+  return executable_prefix + target + executable_suffix
+
+
 def main(args):
   mbw = MetaBuildWrapper()
   return mbw.Main(args)
@@ -920,8 +926,7 @@ class MetaBuildWrapper:
     ]
     vpython_exe = 'vpython3'
 
-    must_retry = False
-    if test_type == 'script':
+    if isolate_map[target].get('script'):
       cmdline += [
           vpython_exe,
           '../../' + self.ToSrcRelPath(isolate_map[target]['script'])
@@ -939,11 +944,11 @@ class MetaBuildWrapper:
           'bin/run_%s' % target, '--out-dir', '${ISOLATED_OUTDIR}'
       ]
       extra_files.append('../../tools_webrtc/flags_compatibility.py')
+    elif test_type == 'raw':
+      cmdline += [vpython_exe, '../../tools_webrtc/flags_compatibility.py']
+      extra_files.append('../../tools_webrtc/flags_compatibility.py')
+      cmdline.append(_get_executable(target, self.platform))
     else:
-      if test_type == 'raw':
-        cmdline += [vpython_exe, '../../tools_webrtc/flags_compatibility.py']
-        extra_files.append('../../tools_webrtc/flags_compatibility.py')
-
       if isolate_map[target].get('use_webcam', False):
         cmdline += [
             vpython_exe, '../../tools_webrtc/ensure_webcam_is_running.py'
@@ -960,46 +965,40 @@ class MetaBuildWrapper:
       else:
         cmdline += [vpython_exe, '../../testing/test_env.py']
 
-      if test_type != 'raw':
-        extra_files += [
-            '../../third_party/gtest-parallel/gtest-parallel',
-            '../../third_party/gtest-parallel/gtest_parallel.py',
-            '../../tools_webrtc/gtest-parallel-wrapper.py',
-        ]
-        sep = '\\' if self.platform == 'win32' else '/'
-        output_dir = '${ISOLATED_OUTDIR}' + sep + 'test_logs'
-        timeout = isolate_map[target].get('timeout', 900)
-        cmdline += [
-            '../../tools_webrtc/gtest-parallel-wrapper.py',
-            '--output_dir=%s' % output_dir,
-            '--gtest_color=no',
-            # We tell gtest-parallel to interrupt the test after 900
-            # seconds, so it can exit cleanly and report results,
-            # instead of being interrupted by swarming and not
-            # reporting anything.
-            '--timeout=%s' % timeout,
-        ]
-        if test_type == 'non_parallel_console_test_launcher':
-          # Still use the gtest-parallel-wrapper.py script since we
-          # need it to run tests on swarming, but don't execute tests
-          # in parallel.
-          cmdline.append('--workers=1')
-        must_retry = True
+      extra_files += [
+          '../../third_party/gtest-parallel/gtest-parallel',
+          '../../third_party/gtest-parallel/gtest_parallel.py',
+          '../../tools_webrtc/gtest-parallel-wrapper.py',
+      ]
+      sep = '\\' if self.platform == 'win32' else '/'
+      output_dir = '${ISOLATED_OUTDIR}' + sep + 'test_logs'
+      timeout = isolate_map[target].get('timeout', 900)
+      cmdline += [
+          '../../tools_webrtc/gtest-parallel-wrapper.py',
+          '--output_dir=%s' % output_dir,
+          '--gtest_color=no',
+          # We tell gtest-parallel to interrupt the test after 900
+          # seconds, so it can exit cleanly and report results,
+          # instead of being interrupted by swarming and not
+          # reporting anything.
+          '--timeout=%s' % timeout,
+      ]
+      if test_type == 'non_parallel_console_test_launcher':
+        # Still use the gtest-parallel-wrapper.py script since we
+        # need it to run tests on swarming, but don't execute tests
+        # in parallel.
+        cmdline.append('--workers=1')
 
       asan = 'is_asan=true' in vals['gn_args']
       lsan = 'is_lsan=true' in vals['gn_args']
       msan = 'is_msan=true' in vals['gn_args']
       tsan = 'is_tsan=true' in vals['gn_args']
       sanitizer = asan or lsan or msan or tsan
-      if must_retry and not sanitizer:
+      if not sanitizer:
         # Retry would hide most sanitizers detections.
         cmdline.append('--retry_failed=3')
 
-      executable_prefix = '.\\' if self.platform == 'win32' else './'
-      executable_suffix = '.exe' if self.platform == 'win32' else ''
-      executable = executable_prefix + target + executable_suffix
-
-      cmdline.append(executable)
+      cmdline.append(_get_executable(target, self.platform))
 
       cmdline.extend([
           '--asan=%d' % asan,

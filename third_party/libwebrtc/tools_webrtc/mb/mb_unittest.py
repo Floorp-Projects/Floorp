@@ -522,13 +522,7 @@ class UnitTest(unittest.TestCase):
     self.assertEqual(command, [
         'vpython3',
         '../../tools_webrtc/flags_compatibility.py',
-        'vpython3',
-        '../../testing/test_env.py',
         './base_unittests',
-        '--asan=0',
-        '--lsan=0',
-        '--msan=0',
-        '--tsan=0',
     ])
 
   def test_gen_non_parallel_console_test_launcher(self):
