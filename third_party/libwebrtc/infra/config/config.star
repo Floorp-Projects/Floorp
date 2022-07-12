@@ -14,7 +14,7 @@ WEBRTC_GIT = "https://webrtc.googlesource.com/src"
 WEBRTC_GERRIT = "https://webrtc-review.googlesource.com/src"
 WEBRTC_TROOPER_EMAIL = "webrtc-troopers-robots@google.com"
 WEBRTC_IOS_XCODE_VERSION = "12a7209"
-WEBRTC_XCODE13 = "13a233"
+WEBRTC_XCODE13 = "13c100"
 DEFAULT_CPU = "x86-64"
 
 # Helpers:
