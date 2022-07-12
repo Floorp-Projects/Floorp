@@ -2530,14 +2530,15 @@ void ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
 }
 
 void ScrollFrameHelper::ScrollToCSSPixelsForApz(
-    const CSSPoint& aScrollPosition) {
+    const CSSPoint& aScrollPosition, ScrollSnapTargetIds&& aLastSnapTargetIds) {
   nsPoint pt = CSSPoint::ToAppUnits(aScrollPosition);
   nscoord halfRange = nsPresContext::CSSPixelsToAppUnits(1000);
   nsRect range(pt.x - halfRange, pt.y - halfRange, 2 * halfRange - 1,
                2 * halfRange - 1);
   ScrollToWithOrigin(
       pt, &range,
-      ScrollOperationParams{ScrollMode::Instant, ScrollOrigin::Apz});
+      ScrollOperationParams{ScrollMode::Instant, ScrollOrigin::Apz,
+                            std::move(aLastSnapTargetIds)});
   // 'this' might be destroyed here
 }
 
