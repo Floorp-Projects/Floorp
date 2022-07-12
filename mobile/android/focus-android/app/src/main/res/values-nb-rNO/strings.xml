@@ -512,8 +512,6 @@
     <string name="onboarding_history_title">Surf som om det aldri skjedde</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Ett trykk sletter nettleserhistorikken og infokapslene — og hindrer annonser i å spore deg rundt.</string>
-
     <string name="onboarding_history_description2">Ett trykk sletter nettleserhistorikken og infokapslene — og hindrer annonser i å spore deg.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -761,14 +759,23 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">Lås opp %1$s</string>
+    <string moz:removedIn="103" name="biometric_auth_title">Lås opp %1$s</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Lås opp</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">Bekreft ved bruk av fingeravtrykket ditt</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">Du kan bruke fingeravtrykket for å fortsette den nåværende appøkten.</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">Trykk på fingeravtrykks-sensoren for å fortsette.</string>
+    <string moz:removedIn="103" name="biometric_auth_description">Trykk på fingeravtrykks-sensoren for å fortsette.</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">Ny programøkt</string>
+    <string moz:removedIn="103" name="biometric_auth_new_session">Ny programøkt</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -864,8 +871,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Bytt til lenke i ny fane med en gang</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">Trygg nettlesing</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Blokker potensielt farlige og villedende nettsteder</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -873,9 +878,8 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Kun-HTTPS-modus</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Forsøker automatisk å koble til nettsteder ved hjelp av HTTPS for økt sikkerhet. HTTPS-tilkoblinger gir en sikker, kryptert tilkobling til nettsteder du besøker.</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preference_https_only_summary3">Forsøker automatisk å koble til nettsteder ved hjelp av HTTPS-krypteringsprotokollen for økt sikkerhet.</string>
 
     <!-- Preference for exceptions tracking protection -->

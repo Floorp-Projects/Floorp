@@ -513,8 +513,6 @@
     <string name="onboarding_history_title">Naviguez comme si de rien n’était</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Effacez votre historique de navigation et les cookies d’un simple appui, et empêchez les publicités de suivre votre navigation.</string>
-
     <string name="onboarding_history_description2">Effacez votre historique de navigation et les cookies d’un simple appui, et empêchez ainsi les publicités de suivre votre navigation.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -769,6 +767,9 @@
 
     <!-- Title text for biometric prompt pop-up -->
     <string name="biometric_prompt_title">Confirmez à l’aide de votre empreinte digitale</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">Vous pouvez utiliser votre empreinte digitale pour poursuivre la session courante de l’application.</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
     <string moz:removedIn="103" name="biometric_auth_description">Touchez le capteur d’empreinte digitale pour continuer.</string>

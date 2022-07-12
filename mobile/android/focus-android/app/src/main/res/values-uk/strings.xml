@@ -56,7 +56,7 @@
     <string name="menu_whats_new">Що нового</string>
     <string name="menu_settings">Налаштування</string>
     <string name="menu_about">Про</string>
-    <string name="menu_help">Допомога</string>
+    <string name="menu_help">Довідка</string>
     <string name="menu_rights">Ваші права</string>
 
     <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
@@ -148,7 +148,7 @@
     <!-- Preference category description for settings screen for settings related to Mozilla -->
     <!-- About the app and help are links that are inside this menu -->
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_mozilla_summary">Про %1$s, допомога</string>
+    <string name="preference_mozilla_summary">Про %1$s, довідка</string>
 
     <!-- Preference category for ad blocking and enhanced tracking protection settings -->
     <string name="preference_category_tracking_protection3">Розширений захист від стеження</string>
@@ -512,8 +512,6 @@
     <string name="onboarding_history_title">Переглядайте інтернет як ніколи раніше</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Одне торкання видаляє вашу історію вебперегляду й куки та запобігає стеженню реклами за вами.</string>
-
     <string name="onboarding_history_description2">Одне торкання видаляє вашу історію вебперегляду й куки та запобігає стеженню реклами за вами.</string>
 
     <!-- Onboarding: Protection Title -->
