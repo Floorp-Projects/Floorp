@@ -864,6 +864,21 @@ void Connection::FailAndDestroy() {
 
 void Connection::FailAndPrune() {
   RTC_DCHECK_RUN_ON(network_thread_);
+
+  // TODO(bugs.webrtc.org/13865): There's a circular dependency between Port
+  // and Connection. In some cases (Port dtor), a Connection object is deleted
+  // without using the `Destroy` method (pending_delete_ won't be raised and
+  // some functionality won't run as expected), while in other cases
+  // (AddOrReplaceConnection), the Connection object is deleted asynchronously
+  // via the `Destroy` method and in that case `pending_delete_` will be raised.
+  // However, in that case, there's a chance that the Port object gets
+  // deleted before the Connection object ends up being deleted. So, the
+  // Connection object holds on to a potentially bogus `port_` pointer.
+  // Here, we avoid such a potential, but the cleanup operations in Port
+  // need to be made consistent and safe.
+  if (pending_delete_)
+    return;
+
   set_state(IceCandidatePairState::FAILED);
   Prune();
 }
