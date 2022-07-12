@@ -29,17 +29,17 @@ namespace rtc {
 class OpenSSLIdentity final : public SSLIdentity {
  public:
   static std::unique_ptr<OpenSSLIdentity> CreateWithExpiration(
-      const std::string& common_name,
+      absl::string_view common_name,
       const KeyParams& key_params,
       time_t certificate_lifetime);
   static std::unique_ptr<OpenSSLIdentity> CreateForTest(
       const SSLIdentityParams& params);
   static std::unique_ptr<SSLIdentity> CreateFromPEMStrings(
-      const std::string& private_key,
-      const std::string& certificate);
+      absl::string_view private_key,
+      absl::string_view certificate);
   static std::unique_ptr<SSLIdentity> CreateFromPEMChainStrings(
-      const std::string& private_key,
-      const std::string& certificate_chain);
+      absl::string_view private_key,
+      absl::string_view certificate_chain);
   ~OpenSSLIdentity() override;
 
   OpenSSLIdentity(const OpenSSLIdentity&) = delete;
