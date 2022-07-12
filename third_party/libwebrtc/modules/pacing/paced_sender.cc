@@ -87,18 +87,10 @@ void PacedSender::Resume() {
   }
 }
 
-void PacedSender::SetCongestionWindow(DataSize congestion_window_size) {
+void PacedSender::SetCongested(bool congested) {
   {
     MutexLock lock(&mutex_);
-    pacing_controller_.SetCongestionWindow(congestion_window_size);
-  }
-  MaybeWakupProcessThread();
-}
-
-void PacedSender::UpdateOutstandingData(DataSize outstanding_data) {
-  {
-    MutexLock lock(&mutex_);
-    pacing_controller_.UpdateOutstandingData(outstanding_data);
+    pacing_controller_.SetCongested(congested);
   }
   MaybeWakupProcessThread();
 }

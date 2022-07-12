@@ -105,28 +105,10 @@ void TaskQueuePacedSender::Resume() {
   });
 }
 
-void TaskQueuePacedSender::SetCongestionWindow(
-    DataSize congestion_window_size) {
-  task_queue_.PostTask([this, congestion_window_size]() {
+void TaskQueuePacedSender::SetCongested(bool congested) {
+  task_queue_.PostTask([this, congested]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
-    pacing_controller_.SetCongestionWindow(congestion_window_size);
-    MaybeProcessPackets(Timestamp::MinusInfinity());
-  });
-}
-
-void TaskQueuePacedSender::UpdateOutstandingData(DataSize outstanding_data) {
-  if (task_queue_.IsCurrent()) {
-    RTC_DCHECK_RUN_ON(&task_queue_);
-    // Fast path since this can be called once per sent packet while on the
-    // task queue.
-    pacing_controller_.UpdateOutstandingData(outstanding_data);
-    MaybeProcessPackets(Timestamp::MinusInfinity());
-    return;
-  }
-
-  task_queue_.PostTask([this, outstanding_data]() {
-    RTC_DCHECK_RUN_ON(&task_queue_);
-    pacing_controller_.UpdateOutstandingData(outstanding_data);
+    pacing_controller_.SetCongested(congested);
     MaybeProcessPackets(Timestamp::MinusInfinity());
   });
 }

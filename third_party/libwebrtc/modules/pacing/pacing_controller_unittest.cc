@@ -399,12 +399,11 @@ TEST_P(PacingControllerFieldTrialTest, CongestionWindowAffectsAudioInTrial) {
   EXPECT_CALL(callback_, SendPadding).Times(0);
   PacingController pacer(&clock_, &callback_, nullptr, trials, GetParam());
   pacer.SetPacingRates(DataRate::KilobitsPerSec(10000), DataRate::Zero());
-  pacer.SetCongestionWindow(DataSize::Bytes(video.packet_size - 100));
-  pacer.UpdateOutstandingData(DataSize::Zero());
   // Video packet fills congestion window.
   InsertPacket(&pacer, &video);
   EXPECT_CALL(callback_, SendPacket).Times(1);
   ProcessNext(&pacer);
+  pacer.SetCongested(true);
   // Audio packet blocked due to congestion.
   InsertPacket(&pacer, &audio);
   EXPECT_CALL(callback_, SendPacket).Times(0);
@@ -416,7 +415,7 @@ TEST_P(PacingControllerFieldTrialTest, CongestionWindowAffectsAudioInTrial) {
   ProcessNext(&pacer);
   // Audio packet unblocked when congestion window clear.
   ::testing::Mock::VerifyAndClearExpectations(&callback_);
-  pacer.UpdateOutstandingData(DataSize::Zero());
+  pacer.SetCongested(false);
   EXPECT_CALL(callback_, SendPacket).Times(1);
   ProcessNext(&pacer);
 }
@@ -427,12 +426,11 @@ TEST_P(PacingControllerFieldTrialTest,
   const test::ExplicitKeyValueConfig trials("");
   PacingController pacer(&clock_, &callback_, nullptr, trials, GetParam());
   pacer.SetPacingRates(DataRate::BitsPerSec(10000000), DataRate::Zero());
-  pacer.SetCongestionWindow(DataSize::Bytes(800));
-  pacer.UpdateOutstandingData(DataSize::Zero());
   // Video packet fills congestion window.
   InsertPacket(&pacer, &video);
   EXPECT_CALL(callback_, SendPacket).Times(1);
   ProcessNext(&pacer);
+  pacer.SetCongested(true);
   // Audio not blocked due to congestion.
   InsertPacket(&pacer, &audio);
   EXPECT_CALL(callback_, SendPacket).Times(1);
@@ -1062,21 +1060,18 @@ TEST_P(PacingControllerTest, SendsOnlyPaddingWhenCongested) {
   uint32_t ssrc = 202020;
   uint16_t sequence_number = 1000;
   int kPacketSize = 250;
-  int kCongestionWindow = kPacketSize * 10;
 
-  pacer_->UpdateOutstandingData(DataSize::Zero());
-  pacer_->SetCongestionWindow(DataSize::Bytes(kCongestionWindow));
-  int sent_data = 0;
-  while (sent_data < kCongestionWindow) {
-    sent_data += kPacketSize;
-    SendAndExpectPacket(RtpPacketMediaType::kVideo, ssrc, sequence_number++,
-                        clock_.TimeInMilliseconds(), kPacketSize);
-    AdvanceTimeAndProcess();
-  }
+  // Send an initial packet so we have a last send time.
+  SendAndExpectPacket(RtpPacketMediaType::kVideo, ssrc, sequence_number++,
+                      clock_.TimeInMilliseconds(), kPacketSize);
+  AdvanceTimeAndProcess();
   ::testing::Mock::VerifyAndClearExpectations(&callback_);
+
+  // Set congested state, we should not send anything until the 500ms since
+  // last send time limit for keep-alives is triggered.
   EXPECT_CALL(callback_, SendPacket).Times(0);
   EXPECT_CALL(callback_, SendPadding).Times(0);
-
+  pacer_->SetCongested(true);
   size_t blocked_packets = 0;
   int64_t expected_time_until_padding = 500;
   while (expected_time_until_padding > 5) {
@@ -1087,6 +1082,7 @@ TEST_P(PacingControllerTest, SendsOnlyPaddingWhenCongested) {
     pacer_->ProcessPackets();
     expected_time_until_padding -= 5;
   }
+
   ::testing::Mock::VerifyAndClearExpectations(&callback_);
   EXPECT_CALL(callback_, SendPadding(1)).WillOnce(Return(1));
   EXPECT_CALL(callback_, SendPacket(_, _, _, _, true)).Times(1);
@@ -1105,15 +1101,13 @@ TEST_P(PacingControllerTest, DoesNotAllowOveruseAfterCongestion) {
   // to be sent in a row.
   pacer_->SetPacingRates(DataRate::BitsPerSec(400 * 8 * 1000 / 5),
                          DataRate::Zero());
-  // The congestion window is small enough to only let one packet through.
-  pacer_->SetCongestionWindow(DataSize::Bytes(800));
-  pacer_->UpdateOutstandingData(DataSize::Zero());
   // Not yet budget limited or congested, packet is sent.
   Send(RtpPacketMediaType::kVideo, ssrc, seq_num++, now_ms(), size);
   EXPECT_CALL(callback_, SendPacket).Times(1);
   clock_.AdvanceTimeMilliseconds(5);
   pacer_->ProcessPackets();
   // Packet blocked due to congestion.
+  pacer_->SetCongested(true);
   Send(RtpPacketMediaType::kVideo, ssrc, seq_num++, now_ms(), size);
   EXPECT_CALL(callback_, SendPacket).Times(0);
   clock_.AdvanceTimeMilliseconds(5);
@@ -1127,68 +1121,13 @@ TEST_P(PacingControllerTest, DoesNotAllowOveruseAfterCongestion) {
   Send(RtpPacketMediaType::kVideo, ssrc, seq_num++, now_ms(), size);
   EXPECT_CALL(callback_, SendPacket).Times(1);
   clock_.AdvanceTimeMilliseconds(5);
-  pacer_->UpdateOutstandingData(DataSize::Zero());
+  pacer_->SetCongested(false);
   pacer_->ProcessPackets();
   // Should be blocked due to budget limitation as congestion has be removed.
   Send(RtpPacketMediaType::kVideo, ssrc, seq_num++, now_ms(), size);
   EXPECT_CALL(callback_, SendPacket).Times(0);
   clock_.AdvanceTimeMilliseconds(5);
   pacer_->ProcessPackets();
-}
-
-TEST_P(PacingControllerTest, ResumesSendingWhenCongestionEnds) {
-  uint32_t ssrc = 202020;
-  uint16_t sequence_number = 1000;
-  int64_t kPacketSize = 250;
-  int64_t kCongestionCount = 10;
-  int64_t kCongestionWindow = kPacketSize * kCongestionCount;
-  int64_t kCongestionTimeMs = 1000;
-
-  pacer_->UpdateOutstandingData(DataSize::Zero());
-  pacer_->SetCongestionWindow(DataSize::Bytes(kCongestionWindow));
-  int sent_data = 0;
-  while (sent_data < kCongestionWindow) {
-    sent_data += kPacketSize;
-    SendAndExpectPacket(RtpPacketMediaType::kVideo, ssrc, sequence_number++,
-                        clock_.TimeInMilliseconds(), kPacketSize);
-    clock_.AdvanceTimeMilliseconds(5);
-    pacer_->ProcessPackets();
-  }
-  ::testing::Mock::VerifyAndClearExpectations(&callback_);
-  EXPECT_CALL(callback_, SendPacket).Times(0);
-  int unacked_packets = 0;
-  for (int duration = 0; duration < kCongestionTimeMs; duration += 5) {
-    Send(RtpPacketMediaType::kVideo, ssrc, sequence_number++,
-         clock_.TimeInMilliseconds(), kPacketSize);
-    unacked_packets++;
-    clock_.AdvanceTimeMilliseconds(5);
-    pacer_->ProcessPackets();
-  }
-  ::testing::Mock::VerifyAndClearExpectations(&callback_);
-
-  // First mark half of the congested packets as cleared and make sure that just
-  // as many are sent
-  int ack_count = kCongestionCount / 2;
-  EXPECT_CALL(callback_, SendPacket(ssrc, _, _, false, _)).Times(ack_count);
-  pacer_->UpdateOutstandingData(
-      DataSize::Bytes(kCongestionWindow - kPacketSize * ack_count));
-
-  for (int duration = 0; duration < kCongestionTimeMs; duration += 5) {
-    clock_.AdvanceTimeMilliseconds(5);
-    pacer_->ProcessPackets();
-  }
-  unacked_packets -= ack_count;
-  ::testing::Mock::VerifyAndClearExpectations(&callback_);
-
-  // Second make sure all packets are sent if sent packets are continuously
-  // marked as acked.
-  EXPECT_CALL(callback_, SendPacket(ssrc, _, _, false, _))
-      .Times(unacked_packets);
-  for (int duration = 0; duration < kCongestionTimeMs; duration += 5) {
-    pacer_->UpdateOutstandingData(DataSize::Zero());
-    clock_.AdvanceTimeMilliseconds(5);
-    pacer_->ProcessPackets();
-  }
 }
 
 TEST_P(PacingControllerTest, Pause) {

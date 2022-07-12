@@ -158,6 +158,7 @@ class RtpTransportControllerSend final
       RTC_RUN_ON(task_queue_);
   void PostUpdates(NetworkControlUpdate update) RTC_RUN_ON(task_queue_);
   void UpdateControlState() RTC_RUN_ON(task_queue_);
+  void UpdateCongestedState() RTC_RUN_ON(task_queue_);
   RtpPacketPacer* pacer();
   const RtpPacketPacer* pacer() const;
 
@@ -210,6 +211,9 @@ class RtpTransportControllerSend final
   bool network_available_ RTC_GUARDED_BY(task_queue_);
   RepeatingTaskHandle pacer_queue_update_task_ RTC_GUARDED_BY(task_queue_);
   RepeatingTaskHandle controller_task_ RTC_GUARDED_BY(task_queue_);
+
+  DataSize congestion_window_size_ RTC_GUARDED_BY(task_queue_);
+  bool is_congested_ RTC_GUARDED_BY(task_queue_);
 
   // Protected by internal locks.
   RateLimiter retransmission_rate_limiter_;

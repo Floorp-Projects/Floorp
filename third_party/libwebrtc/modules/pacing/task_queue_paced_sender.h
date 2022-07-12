@@ -86,8 +86,7 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   // Resume sending packets.
   void Resume() override;
 
-  void SetCongestionWindow(DataSize congestion_window_size) override;
-  void UpdateOutstandingData(DataSize outstanding_data) override;
+  void SetCongested(bool congested) override;
 
   // Sets the pacing rates. Must be called once before packets can be sent.
   void SetPacingRates(DataRate pacing_rate, DataRate padding_rate) override;
