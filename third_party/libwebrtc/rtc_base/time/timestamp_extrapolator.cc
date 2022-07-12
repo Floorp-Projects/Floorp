@@ -13,7 +13,6 @@
 #include <algorithm>
 
 #include "absl/types/optional.h"
-#include "api/units/frequency.h"
 #include "modules/include/module_common_types_public.h"
 
 namespace webrtc {
@@ -130,8 +129,9 @@ absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
   if (!first_unwrapped_timestamp_) {
     return absl::nullopt;
   } else if (packet_count_ < kStartUpFilterDelayInPackets) {
-    constexpr Frequency k90KHz = Frequency::KiloHertz(90);
-    TimeDelta diff = (unwrapped_ts90khz - *prev_unwrapped_timestamp_) / k90KHz;
+    constexpr double kRtpTicksPerMs = 90;
+    TimeDelta diff = TimeDelta::Millis(
+        (unwrapped_ts90khz - *prev_unwrapped_timestamp_) / kRtpTicksPerMs);
     return prev_ + diff;
   } else if (w_[0] < 1e-3) {
     return start_;
