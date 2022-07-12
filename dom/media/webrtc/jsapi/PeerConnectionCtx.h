@@ -8,8 +8,8 @@
 #include <map>
 #include <string>
 
+#include "api/field_trials_view.h"
 #include "api/scoped_refptr.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "call/audio_state.h"
 #include "MediaTransportHandler.h"  // Mostly for IceLogPromise
 #include "mozIGeckoMediaPluginService.h"
@@ -23,7 +23,7 @@ class AudioDecoderFactory;
 class SharedModuleThread;
 
 // Used for testing in mediapipeline_unittest.cpp, MockCall.h
-class NoTrialsConfig : public WebRtcKeyValueConfig {
+class NoTrialsConfig : public FieldTrialsView {
   public:
     NoTrialsConfig() = default;
     std::string Lookup(absl::string_view key) const override {
@@ -51,7 +51,7 @@ class SharedWebrtcState {
   SharedWebrtcState(RefPtr<AbstractThread> aCallWorkerThread,
                     webrtc::AudioState::Config&& aAudioStateConfig,
                     RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
-                    UniquePtr<webrtc::WebRtcKeyValueConfig> aTrials);
+                    UniquePtr<webrtc::FieldTrialsView> aTrials);
 
   webrtc::SharedModuleThread* GetModuleThread();
 
@@ -71,7 +71,7 @@ class SharedWebrtcState {
 
   // Trials instance shared between calls, to limit the number of instances in
   // large calls.
-  const UniquePtr<webrtc::WebRtcKeyValueConfig> mTrials;
+  const UniquePtr<webrtc::FieldTrialsView> mTrials;
 
  private:
   virtual ~SharedWebrtcState();
