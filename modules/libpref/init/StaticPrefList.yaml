@@ -9261,13 +9261,13 @@
     value: false
     mirror: always
 
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
 # Use VA-API for ffmpeg video playback on Linux
 - name: media.ffmpeg.vaapi.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
-#endif # MOZ_WAYLAND
+#endif # MOZ_WIDGET_GTK
 #endif  # MOZ_FFMPEG
 
 -   name: media.ffvpx.enabled
