@@ -10,7 +10,7 @@ const { dumpn } = require("devtools/shared/DevToolsUtils");
 
 function createTCPSocket(location, port, options) {
   const { TCPSocket } = Cu.getGlobalForObject(
-    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
+    ChromeUtils.import("resource://gre/modules/AppConstants.jsm")
   );
 
   return new TCPSocket(location, port, options);

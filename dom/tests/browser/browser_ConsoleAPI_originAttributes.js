@@ -6,7 +6,7 @@ const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
 );
 
 const { WebExtensionPolicy } = Cu.getGlobalForObject(
-  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
+  ChromeUtils.import("resource://gre/modules/AppConstants.jsm")
 );
 
 const FAKE_ADDON_ID = "test-webext-addon@mozilla.org";
