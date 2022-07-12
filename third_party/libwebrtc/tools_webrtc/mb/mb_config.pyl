@@ -356,31 +356,27 @@
 
     # iOS
     'ios_debug_bot_arm64': [
-      'ios', 'debug_bot', 'arm64', 'no_ios_code_signing', 'ios_use_goma_rbe',
-      'xctest', 'ios_no_chrome',
+      'ios', 'debug_bot', 'arm64', 'no_ios_code_signing',
+      'xctest'
     ],
     'ios_release_bot_arm64': [
-      'ios', 'release_bot', 'arm64', 'no_ios_code_signing', 'ios_use_goma_rbe',
-      'xctest', 'ios_no_chrome',
+      'ios', 'release_bot', 'arm64', 'no_ios_code_signing',
+      'xctest'
     ],
     'ios_internal_debug_bot_arm64': [
-      'ios', 'debug_bot', 'arm64', 'ios_use_goma_rbe',
-      'ios_code_signing_identity_description', 'xctest',
-      'ios_no_chrome',
+      'ios', 'debug_bot', 'arm64',
+      'ios_code_signing_identity_description', 'xctest'
     ],
     'ios_internal_release_bot_arm64': [
-      'ios', 'release_bot', 'arm64', 'ios_use_goma_rbe',
-      'ios_code_signing_identity_description', 'xctest',
-      'ios_no_chrome',
+      'ios', 'release_bot', 'arm64',
+      'ios_code_signing_identity_description', 'xctest'
     ],
     'ios_internal_pure_release_bot_arm64': [
-      'ios', 'pure_release_bot', 'arm64', 'ios_use_goma_rbe',
-      'ios_code_signing_identity_description', 'xctest',
-      'ios_no_chrome',
+      'ios', 'pure_release_bot', 'arm64',
+      'ios_code_signing_identity_description', 'xctest'
     ],
     'ios_debug_bot_x64': [
-      'ios', 'debug_bot', 'x64', 'ios_use_goma_rbe', 'xctest',
-      'ios_no_chrome',
+      'ios', 'debug_bot', 'x64', 'xctest'
     ],
 
     # More configs
@@ -466,14 +462,6 @@
 
     'ios_code_signing_identity_description': {
       'gn_args': 'ios_code_signing_identity_description="Apple Development"',
-    },
-
-    'ios_no_chrome': {
-      'gn_args': 'ios_build_chrome=false',
-    },
-
-    'ios_use_goma_rbe': {
-      'gn_args': 'ios_use_goma_rbe=true',
     },
 
     'ios': {
