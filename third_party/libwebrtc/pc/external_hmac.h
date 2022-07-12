@@ -30,7 +30,6 @@
 
 #include <stdint.h>
 
-#include "third_party/libsrtp/crypto/include/auth.h"
 #include "third_party/libsrtp/crypto/include/crypto_types.h"
 #include "third_party/libsrtp/include/srtp.h"
 #include "third_party/libsrtp/include/srtp_priv.h"

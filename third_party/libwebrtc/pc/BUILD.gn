@@ -76,10 +76,6 @@ rtc_library("rtc_pc_base") {
     "dtls_srtp_transport.h",
     "dtls_transport.cc",
     "dtls_transport.h",
-    "external_hmac.cc",
-    "external_hmac.h",
-    "ice_transport.cc",
-    "ice_transport.h",
     "jsep_transport.cc",
     "jsep_transport.h",
     "jsep_transport_collection.cc",
@@ -88,10 +84,6 @@ rtc_library("rtc_pc_base") {
     "jsep_transport_controller.h",
     "media_session.cc",
     "media_session.h",
-    "rtcp_mux_filter.cc",
-    "rtcp_mux_filter.h",
-    "rtp_media_utils.cc",
-    "rtp_media_utils.h",
     "rtp_transport.cc",
     "rtp_transport.h",
     "rtp_transport_internal.h",
@@ -224,7 +216,6 @@ rtc_library("rtc_pc_base") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
-
   if (rtc_build_libsrtp) {
     deps += [ "//third_party/libsrtp" ]
   }
@@ -250,9 +241,28 @@ rtc_source_set("dtls_transport") {
 }
 rtc_source_set("external_hmac") {
   visibility = [ ":*" ]
+  sources = [
+    "external_hmac.cc",
+    "external_hmac.h",
+  ]
+  deps = [ "../rtc_base:rtc_base_approved" ]
+  if (rtc_build_libsrtp) {
+    deps += [ "//third_party/libsrtp" ]
+  }
 }
 rtc_source_set("ice_transport") {
   visibility = [ ":*" ]
+  sources = [
+    "ice_transport.cc",
+    "ice_transport.h",
+  ]
+  deps = [
+    "../api:libjingle_peerconnection_api",
+    "../api:sequence_checker",
+    "../rtc_base:checks",
+    "../rtc_base:macromagic",
+    "../rtc_base:threading",
+  ]
 }
 rtc_source_set("jsep_transport") {
   visibility = [ ":*" ]
@@ -300,9 +310,25 @@ rtc_source_set("peer_connection_proxy") {
 }
 rtc_source_set("rtcp_mux_filter") {
   visibility = [ ":*" ]
+  sources = [
+    "rtcp_mux_filter.cc",
+    "rtcp_mux_filter.h",
+  ]
+  deps = [
+    ":session_description",
+    "../rtc_base:logging",
+  ]
 }
 rtc_source_set("rtp_media_utils") {
   visibility = [ ":*" ]
+  sources = [
+    "rtp_media_utils.cc",
+    "rtp_media_utils.h",
+  ]
+  deps = [
+    "../api:rtp_transceiver_direction",
+    "../rtc_base:checks",
+  ]
 }
 rtc_source_set("rtp_receiver_proxy") {
   visibility = [ ":*" ]
@@ -764,6 +790,7 @@ rtc_source_set("sdp_offer_answer") {
     ":peer_connection_message_handler",
     ":rtc_pc_base",
     ":rtc_stats_collector",
+    ":rtp_media_utils",
     ":rtp_receiver",
     ":rtp_receiver_proxy",
     ":rtp_sender",
@@ -1219,6 +1246,7 @@ rtc_library("rtp_transceiver") {
   deps = [
     ":proxy",
     ":rtc_pc_base",
+    ":rtp_media_utils",
     ":rtp_parameters_conversion",
     ":rtp_receiver",
     ":rtp_receiver_proxy",
@@ -1705,12 +1733,15 @@ if (rtc_include_tests && !build_with_chromium) {
 
     deps = [
       ":audio_rtp_receiver",
+      ":ice_transport",
       ":libjingle_peerconnection",
       ":media_protocol_names",
       ":pc_test_utils",
       ":peerconnection",
       ":rtc_pc",
       ":rtc_pc_base",
+      ":rtcp_mux_filter",
+      ":rtp_media_utils",
       ":session_description",
       ":video_rtp_receiver",
       "../api:array_view",
@@ -1903,6 +1934,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":rtc_pc_base",
       ":rtc_stats_collector",
       ":rtc_stats_traversal",
+      ":rtp_media_utils",
       ":rtp_parameters_conversion",
       ":rtp_receiver",
       ":rtp_sender",
@@ -2092,6 +2124,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":peerconnection",
       ":remote_audio_source",
       ":rtc_pc_base",
+      ":rtp_media_utils",
       ":rtp_parameters_conversion",
       ":rtp_receiver",
       ":rtp_sender",
