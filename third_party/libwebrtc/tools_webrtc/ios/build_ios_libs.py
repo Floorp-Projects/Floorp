@@ -180,7 +180,6 @@ def BuildWebRTC(output_dir, target_environment, target_arch, flavor,
                  ('true' if libvpx_build_vp9 else 'false'))
 
   gn_args.append('enable_ios_bitcode=' + ('true' if use_bitcode else 'false'))
-  gn_args.append('use_lld=' + ('false' if use_bitcode else 'true'))
   gn_args.append('use_goma=' + ('true' if use_goma else 'false'))
   gn_args.append('rtc_enable_objc_symbol_export=true')
 
