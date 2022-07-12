@@ -172,6 +172,7 @@ rtc_library("libjingle_peerconnection_api") {
     ":audio_options_api",
     ":callfactory_api",
     ":fec_controller_api",
+    ":field_trials",
     ":field_trials_view",
     ":frame_transformer_interface",
     ":libjingle_logging_api",
@@ -1162,6 +1163,7 @@ if (rtc_include_tests) {
 
     sources = [
       "array_view_unittest.cc",
+      "field_trials_unittest.cc",
       "function_view_unittest.cc",
       "rtc_error_unittest.cc",
       "rtc_event_log_output_file_unittest.cc",
@@ -1176,6 +1178,8 @@ if (rtc_include_tests) {
     deps = [
       ":array_view",
       ":create_time_controller",
+      ":field_trials",
+      ":field_trials_view",
       ":function_view",
       ":libjingle_peerconnection_api",
       ":rtc_error",
@@ -1191,9 +1195,12 @@ if (rtc_include_tests) {
       "../rtc_base:rtc_task_queue",
       "../rtc_base:task_queue_for_test",
       "../rtc_base/task_utils:repeating_task",
+      "../system_wrappers:field_trial",
       "../test:fileutils",
+      "../test:rtc_expect_death",
       "../test:test_support",
       "task_queue:task_queue_default_factory_unittests",
+      "transport:field_trial_based_config",
       "units:time_delta",
       "units:timestamp",
       "units:units_unittests",
@@ -1245,4 +1252,19 @@ rtc_source_set("webrtc_key_value_config") {
   visibility = [ "*" ]
   sources = [ "webrtc_key_value_config.h" ]
   deps = [ ":field_trials_view" ]
+}
+
+rtc_library("field_trials") {
+  visibility = [ "*" ]
+  sources = [
+    "field_trials.cc",
+    "field_trials.h",
+  ]
+  deps = [
+    ":field_trials_view",
+    "../rtc_base:checks",
+    "../rtc_base/containers:flat_map",
+    "../system_wrappers:field_trial",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
