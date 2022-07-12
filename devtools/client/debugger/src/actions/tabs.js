@@ -16,19 +16,10 @@ import {
   getNewSelectedSourceId,
 } from "../selectors";
 
-export function updateTab(source, framework) {
-  return {
-    type: "UPDATE_TAB",
-    source,
-    framework,
-  };
-}
-
 export function addTab(source) {
   return {
     type: "ADD_TAB",
     source,
-    framework: null,
   };
 }
 

@@ -248,8 +248,10 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
     "named-eval.js"
   );
 
+  info("Verify source tree content");
   await waitForSourcesInSourceTree(dbg, INTEGRATION_TEST_PAGE_SOURCES);
 
+  info("Verify Thread Source Items");
   const mainThreadItem = findSourceTreeThreadByName(dbg, "Main Thread");
   ok(mainThreadItem, "Found the thread item for the main thread");
   ok(
@@ -310,6 +312,20 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
     "The thread has the worker icon"
   );
 
+  info("Verify source icons");
+  assertSourceIcon(dbg, "index.html", "file");
+  assertSourceIcon(dbg, "script.js", "javascript");
+  assertSourceIcon(dbg, "query.js?x=1", "javascript");
+  assertSourceIcon(dbg, "original.js", "javascript");
+  info("Verify blackbox source icon");
+  await selectSource(dbg, "script.js");
+  await clickElement(dbg, "blackbox");
+  await waitForDispatch(dbg.store, "BLACKBOX");
+  assertSourceIcon(dbg, "script.js", "blackBox");
+  await clickElement(dbg, "blackbox");
+  await waitForDispatch(dbg.store, "BLACKBOX");
+  assertSourceIcon(dbg, "script.js", "javascript");
+
   info("Assert the content of the named eval");
   await selectSource(dbg, "named-eval.js");
   assertTextContentOnLine(dbg, 3, `console.log("named-eval");`);
@@ -336,6 +352,7 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
   clickElement(dbg, "prettyPrintButton");
   await waitForSource(dbg, "query.js?x=1:formatted");
   await waitForSelectedSource(dbg, "query.js?x=1:formatted");
+  assertSourceIcon(dbg, "query.js?x=1", "prettyPrint");
 
   const prettyTab = findElement(dbg, "activeTab");
   is(prettyTab.innerText, "query.js?x=1", "Tab label is query.js?x=1");
@@ -397,6 +414,7 @@ add_task(async function testSourceTreeWithWebExtensionContentScript() {
     contentScriptGroupItem.querySelector("span.img.extension"),
     "The group has the extension icon"
   );
+  assertSourceIcon(dbg, "content_script.js", "javascript");
 
   for (let i = 1; i < 3; i++) {
     info(

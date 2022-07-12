@@ -32,11 +32,6 @@ export function getHiddenTabs(sourceTabs, sourceTabEls) {
   });
 }
 
-export function getFramework(tabs, url) {
-  const tab = tabs.find(t => t.url === url);
-  return tab?.framework ?? "";
-}
-
 export function getTabMenuItems() {
   return {
     closeTab: {
