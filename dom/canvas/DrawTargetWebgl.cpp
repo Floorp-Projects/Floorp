@@ -1290,10 +1290,11 @@ bool DrawTargetWebgl::SharedContext::UploadSurface(DataSourceSurface* aData,
       mZeroSize = aSrcRect.Size();
       mWebgl->BindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mZeroBuffer);
       size_t size = 4 * mZeroSize.width * mZeroSize.height;
-      void* data = calloc(1, size);
+      // WebGL will zero initialize the empty buffer, so we don't send zero data
+      // explicitly.
+      void* data = nullptr;
       mWebgl->RawBufferData(LOCAL_GL_PIXEL_UNPACK_BUFFER,
                             {(const uint8_t*)data, size}, LOCAL_GL_STATIC_DRAW);
-      free(data);
     } else {
       mWebgl->BindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mZeroBuffer);
     }
