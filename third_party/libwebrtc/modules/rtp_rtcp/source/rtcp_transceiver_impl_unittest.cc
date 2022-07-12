@@ -87,6 +87,7 @@ class MockRtpStreamRtcpHandler : public RtpStreamRtcpHandler {
               OnNack,
               (uint32_t, rtc::ArrayView<const uint16_t>),
               (override));
+  MOCK_METHOD(void, OnFir, (uint32_t), (override));
   MOCK_METHOD(void, OnPli, (uint32_t), (override));
 
  private:
@@ -1205,6 +1206,83 @@ TEST(RtcpTransceiverImplTest, SendFirDoesNotIncreaseSeqNoIfOldRequest) {
   EXPECT_EQ(rtcp_parser.fir()->requests()[0].seq_nr, fir_sequence_number0);
   ASSERT_EQ(rtcp_parser.fir()->requests()[1].ssrc, kBothRemoteSsrcs[1]);
   EXPECT_EQ(rtcp_parser.fir()->requests()[1].seq_nr, fir_sequence_number1);
+}
+
+TEST(RtcpTransceiverImplTest, ReceivesFir) {
+  static constexpr uint32_t kRemoteSsrc = 4321;
+  static constexpr uint32_t kMediaSsrc1 = 1234;
+  static constexpr uint32_t kMediaSsrc2 = 1235;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  MockRtpStreamRtcpHandler local_stream1;
+  MockRtpStreamRtcpHandler local_stream2;
+  EXPECT_CALL(local_stream1, OnFir(kRemoteSsrc));
+  EXPECT_CALL(local_stream2, OnFir).Times(0);
+
+  EXPECT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc1, &local_stream1));
+  EXPECT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc2, &local_stream2));
+
+  rtcp::Fir fir;
+  fir.SetSenderSsrc(kRemoteSsrc);
+  fir.AddRequestTo(kMediaSsrc1, /*seq_num=*/13);
+
+  rtcp_transceiver.ReceivePacket(fir.Build(), config.clock->CurrentTime());
+}
+
+TEST(RtcpTransceiverImplTest, IgnoresReceivedFirWithRepeatedSequenceNumber) {
+  static constexpr uint32_t kRemoteSsrc = 4321;
+  static constexpr uint32_t kMediaSsrc1 = 1234;
+  static constexpr uint32_t kMediaSsrc2 = 1235;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  MockRtpStreamRtcpHandler local_stream1;
+  MockRtpStreamRtcpHandler local_stream2;
+  EXPECT_CALL(local_stream1, OnFir(kRemoteSsrc)).Times(1);
+  EXPECT_CALL(local_stream2, OnFir(kRemoteSsrc)).Times(2);
+
+  EXPECT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc1, &local_stream1));
+  EXPECT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc2, &local_stream2));
+
+  rtcp::Fir fir1;
+  fir1.SetSenderSsrc(kRemoteSsrc);
+  fir1.AddRequestTo(kMediaSsrc1, /*seq_num=*/132);
+  fir1.AddRequestTo(kMediaSsrc2, /*seq_num=*/10);
+  rtcp_transceiver.ReceivePacket(fir1.Build(), config.clock->CurrentTime());
+
+  // Repeat request for MediaSsrc1 - expect it to be ignored,
+  // Change FIR sequence number for MediaSsrc2 - expect a 2nd callback.
+  rtcp::Fir fir2;
+  fir2.SetSenderSsrc(kRemoteSsrc);
+  fir2.AddRequestTo(kMediaSsrc1, /*seq_num=*/132);
+  fir2.AddRequestTo(kMediaSsrc2, /*seq_num=*/13);
+  rtcp_transceiver.ReceivePacket(fir2.Build(), config.clock->CurrentTime());
+}
+
+TEST(RtcpTransceiverImplTest, ReceivedFirTracksSequenceNumberPerRemoteSsrc) {
+  static constexpr uint32_t kRemoteSsrc1 = 4321;
+  static constexpr uint32_t kRemoteSsrc2 = 4323;
+  static constexpr uint32_t kMediaSsrc = 1234;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  MockRtpStreamRtcpHandler local_stream;
+  EXPECT_CALL(local_stream, OnFir(kRemoteSsrc1));
+  EXPECT_CALL(local_stream, OnFir(kRemoteSsrc2));
+
+  EXPECT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc, &local_stream));
+
+  rtcp::Fir fir1;
+  fir1.SetSenderSsrc(kRemoteSsrc1);
+  fir1.AddRequestTo(kMediaSsrc, /*seq_num=*/13);
+  rtcp_transceiver.ReceivePacket(fir1.Build(), config.clock->CurrentTime());
+
+  // Use the same FIR sequence number, but different sender SSRC.
+  rtcp::Fir fir2;
+  fir2.SetSenderSsrc(kRemoteSsrc2);
+  fir2.AddRequestTo(kMediaSsrc, /*seq_num=*/13);
+  rtcp_transceiver.ReceivePacket(fir2.Build(), config.clock->CurrentTime());
 }
 
 TEST(RtcpTransceiverImplTest, KeyFrameRequestCreatesCompoundPacket) {
