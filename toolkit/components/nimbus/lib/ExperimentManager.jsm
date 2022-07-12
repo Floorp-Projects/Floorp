@@ -184,10 +184,24 @@ class _ExperimentManager {
    * Runs when the all recipes been processed during an update, including at first run.
    * @param {string} sourceToCheck
    * @param {object} options Extra context used in telemetry reporting
+   * @param {string[]} options.recipeMismatches
+   *         The list of experiments that do not match targeting.
+   * @param {string[]} options.invalidRecipes
+   *         The list of recipes that do not match
+   * @param {Map<string, string[]>} options.invalidBranches
+   *         A mapping of experiment slugs to a list of branches that failed
+   *         feature validation.
+   * @param {Map<string, string[]>} options.invalidFeatures
+   *        The mapping of experiment slugs to a list of invalid feature IDs.
    */
   onFinalize(
     sourceToCheck,
-    { recipeMismatches = [], invalidRecipes = [], invalidBranches = [] } = {}
+    {
+      recipeMismatches = [],
+      invalidRecipes = [],
+      invalidBranches = new Map(),
+      invalidFeatures = new Map(),
+    } = {}
   ) {
     if (!sourceToCheck) {
       throw new Error("When calling onFinalize, you must specify a source.");
@@ -208,6 +222,22 @@ class _ExperimentManager {
       invalidRecipes,
       invalidBranches
     );
+
+    for (const slug of invalidRecipes) {
+      this.sendValidationFailedTelemetry(slug, "invalid-recipe");
+    }
+    for (const [slug, branches] of invalidBranches.entries()) {
+      for (const branch of branches) {
+        this.sendValidationFailedTelemetry(slug, "invalid-branch", { branch });
+      }
+    }
+    for (const [slug, featureIds] of invalidFeatures.entries()) {
+      for (const featureId of featureIds) {
+        this.sendValidationFailedTelemetry(slug, "invalid-feature", {
+          feature: featureId,
+        });
+      }
+    }
 
     this.sessions.delete(sourceToCheck);
   }
@@ -489,6 +519,23 @@ class _ExperimentManager {
         reason,
       });
     }
+  }
+
+  sendValidationFailedTelemetry(slug, reason, extra) {
+    lazy.TelemetryEvents.sendEvent(
+      "validationFailed",
+      TELEMETRY_EVENT_OBJECT,
+      slug,
+      {
+        reason,
+        ...extra,
+      }
+    );
+    Glean.nimbusEvents.validationFailed.record({
+      experiment: slug,
+      reason,
+      ...extra,
+    });
   }
 
   /**

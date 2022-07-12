@@ -12,6 +12,17 @@ const { NimbusFeatures } = ChromeUtils.import(
 const { PanelTestProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/PanelTestProvider.jsm"
 );
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+const { TelemetryEvents } = ChromeUtils.import(
+  "resource://normandy/lib/TelemetryEvents.jsm"
+);
+
+add_setup(async function setup() {
+  do_get_profile();
+  Services.fog.initializeFOG();
+});
 
 add_task(async function test_updateRecipes_activeExperiments() {
   const manager = ExperimentFakes.manager();
@@ -154,6 +165,8 @@ add_task(async function test_updateRecipes_invalidRecipe() {
 });
 
 add_task(async function test_updateRecipes_invalidRecipeAfterUpdate() {
+  Services.fog.testResetFOG();
+
   const manager = ExperimentFakes.manager();
   const loader = ExperimentFakes.rsLoader();
   loader.manager = manager;
@@ -422,4 +435,135 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
     }),
     "should call .onFinalize with an invalid branch"
   );
+});
+
+add_task(async function test_updateRecipes_validationTelemetry() {
+  TelemetryEvents.init();
+
+  Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    /* clear = */ true
+  );
+
+  const invalidRecipe = ExperimentFakes.recipe("invalid-recipe");
+  delete invalidRecipe.channel;
+
+  const invalidBranch = ExperimentFakes.recipe("invalid-branch");
+  invalidBranch.branches[0].features[0].value.testInt = "hello";
+  invalidBranch.branches[1].features[0].value.testInt = "world";
+
+  const invalidFeature = ExperimentFakes.recipe("invalid-feature", {
+    branches: [
+      {
+        slug: "control",
+        ratio: 1,
+        features: [
+          {
+            featureId: "unknown-feature",
+            value: { foo: "bar" },
+          },
+          {
+            featureId: "second-unknown-feature",
+            value: { baz: "qux" },
+          },
+        ],
+      },
+    ],
+  });
+
+  const TEST_CASES = [
+    {
+      recipe: invalidRecipe,
+      reason: "invalid-recipe",
+      events: [{}],
+      callCount: 1,
+    },
+    {
+      recipe: invalidBranch,
+      reason: "invalid-branch",
+      events: invalidBranch.branches.map(branch => ({ branch: branch.slug })),
+      callCount: 2,
+    },
+    {
+      recipe: invalidFeature,
+      reason: "invalid-feature",
+      events: invalidFeature.branches[0].features.map(feature => ({
+        feature: feature.featureId,
+      })),
+      callCount: 2,
+    },
+  ];
+
+  const LEGACY_FILTER = {
+    category: "normandy",
+    method: "validationFailed",
+    object: "nimbus_experiment",
+  };
+
+  for (const { recipe, reason, events, callCount } of TEST_CASES) {
+    info(`Testing validation failed telemetry for reason = "${reason}" ...`);
+    const loader = ExperimentFakes.rsLoader();
+    const manager = loader.manager;
+
+    sinon.stub(loader, "setTimer");
+    sinon.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+
+    sinon.stub(manager, "onRecipe");
+    sinon.stub(manager.store, "ready").resolves();
+    sinon.stub(manager.store, "getAllActive").returns([]);
+    sinon.stub(manager.store, "getAllRollouts").returns([]);
+
+    const telemetrySpy = sinon.spy(manager, "sendValidationFailedTelemetry");
+
+    await loader.init();
+
+    Assert.equal(
+      telemetrySpy.callCount,
+      callCount,
+      `Should call sendValidationFailedTelemetry ${callCount} times for reason ${reason}`
+    );
+
+    const gleanEvents = Glean.nimbusEvents.validationFailed
+      .testGetValue()
+      .map(event => {
+        event = { ...event };
+        // We do not care about the timestamp.
+        delete event.timestamp;
+        return event;
+      });
+
+    const expectedGleanEvents = events.map(event => ({
+      category: "nimbus_events",
+      name: "validation_failed",
+      extra: {
+        experiment: recipe.slug,
+        reason,
+        ...event,
+      },
+    }));
+
+    Assert.deepEqual(
+      gleanEvents,
+      expectedGleanEvents,
+      "Glean telemetry matches"
+    );
+
+    const expectedLegacyEvents = events.map(event => ({
+      ...LEGACY_FILTER,
+      value: recipe.slug,
+      extra: {
+        reason,
+        ...event,
+      },
+      LEGACY_FILTER,
+    }));
+
+    // await new Promise(resolve => setTimeout(resolve, 0));
+
+    TelemetryTestUtils.assertEvents(expectedLegacyEvents, LEGACY_FILTER, {
+      clear: true,
+    });
+
+    Services.fog.testResetFOG();
+  }
 });
