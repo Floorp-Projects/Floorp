@@ -3442,7 +3442,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
    * Returns true if the thread on which this context was created is the
    * currently executing thread.
    */
-  bool IsOwningThreadCurrent();
+  bool IsOwningThread() const;
 
   static void PlatformStartup();
 
@@ -3569,7 +3569,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   RefPtr<GLContext> mSharedContext;
 
   // The thread id which this context was created.
-  PlatformThreadId mOwningThreadId;
+  const PlatformThreadId mOwningThreadId;
 
   GLContextSymbols mSymbols = {};
 

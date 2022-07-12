@@ -80,7 +80,7 @@ void TextureImage::UpdateUploadSize(size_t amount) {
 
 BasicTextureImage::~BasicTextureImage() {
   GLContext* ctx = mGLContext;
-  if (ctx->IsDestroyed() || !ctx->IsOwningThreadCurrent()) {
+  if (ctx->IsDestroyed() || !ctx->IsOwningThread()) {
     ctx = ctx->GetSharedContext();
   }
 

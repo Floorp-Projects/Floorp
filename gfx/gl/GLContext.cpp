@@ -283,9 +283,9 @@ GLContext::GLContext(const GLContextDesc& desc, GLContext* sharedContext,
       mUseTLSIsCurrent(ShouldUseTLSIsCurrent(useTLSIsCurrent)),
       mDebugFlags(ChooseDebugFlags(mDesc.flags)),
       mSharedContext(sharedContext),
+      mOwningThreadId(PlatformThread::CurrentId()),
       mWorkAroundDriverBugs(
           StaticPrefs::gfx_work_around_driver_bugs_AtStartup()) {
-  mOwningThreadId = PlatformThread::CurrentId();
   MOZ_ALWAYS_TRUE(sCurrentContext.init());
   sCurrentContext.set(0);
 }
@@ -2097,7 +2097,7 @@ bool GLContext::IsOffscreenSizeAllowed(const IntSize& aSize) const {
   return biggerDimension <= maxAllowed;
 }
 
-bool GLContext::IsOwningThreadCurrent() {
+bool GLContext::IsOwningThread() const {
   return PlatformThread::CurrentId() == mOwningThreadId;
 }
 
@@ -2429,7 +2429,10 @@ bool GLContext::MakeCurrent(bool aForce) const {
       return true;
     }
   }
-
+  if (!IsOwningThread()) {
+    gfxCriticalError() << "MakeCurrent called on a thread other than the"
+                       << " creating thread!";
+  }
   if (!MakeCurrentImpl()) return false;
 
   sCurrentContext.set(reinterpret_cast<uintptr_t>(this));
