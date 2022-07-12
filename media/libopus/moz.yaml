@@ -52,6 +52,7 @@ vendoring:
     - COPYING
     - gen-sources.py
     - "*.patch"
+    - Makefile.in
     - README_MOZILLA
     - sources.mozbuild
     - update.sh
@@ -65,3 +66,4 @@ vendoring:
       file: moz.build
       pattern: 'DEFINES\["OPUS_VERSION"\] = "(.+)"'
       with: 'DEFINES["OPUS_VERSION"] = "{revision}"'
+
