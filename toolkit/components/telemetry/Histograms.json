@@ -14070,16 +14070,6 @@
     "kind": "count",
     "description": "Count ServiceWorkers scripts that are updated. File bugs in Core::DOM in case of a Telemetry regression."
   },
-  "SERVICE_WORKER_LIFE_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "105",
-    "kind": "exponential",
-    "high": 120000,
-    "n_buckets": 20,
-    "alert_emails": ["sw-telemetry@mozilla.com", "rjesup@mozilla.com", "echuang@mozilla.com"],
-    "description": "Tracking how long a ServiceWorker stays alive after it is spawned. File bugs in Core::DOM in case of a Telemetry regression."
-  },
   "SERVICE_WORKER_RUNNING": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
