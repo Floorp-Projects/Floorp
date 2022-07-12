@@ -3,8 +3,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const paymentSrv = Cc[

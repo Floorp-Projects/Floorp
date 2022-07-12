@@ -13,8 +13,8 @@ load(_HTTPD_JS_PATH.path);
 // if these tests fail, we'll want the debug output
 var linDEBUG = true;
 
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+var { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 

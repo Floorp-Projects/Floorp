@@ -960,7 +960,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     // display:contents element doesn't have a frame, but retains the semantics.
     // All its children are unaffected.
     if (nsCoreUtils::CanCreateAccessibleWithoutFrame(content)) {
-      const MarkupMapInfo* markupMap = GetMarkupMapInfoForNode(content);
+      const MarkupMapInfo* markupMap = GetMarkupMapInfoFor(content);
       if (markupMap && markupMap->new_func) {
         RefPtr<LocalAccessible> newAcc =
             markupMap->new_func(content->AsElement(), aContext);
@@ -1242,6 +1242,21 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
   return newAcc;
 }
 
+#if defined(ANDROID)
+#  include "mozilla/Monitor.h"
+#  include "mozilla/Maybe.h"
+
+static Maybe<Monitor> sAndroidMonitor;
+
+mozilla::Monitor& nsAccessibilityService::GetAndroidMonitor() {
+  if (!sAndroidMonitor.isSome()) {
+    sAndroidMonitor.emplace("nsAccessibility::sAndroidMonitor");
+  }
+
+  return *sAndroidMonitor;
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService private
 
@@ -1359,6 +1374,11 @@ void nsAccessibilityService::Shutdown() {
   NS_IF_RELEASE(gXPCApplicationAccessible);
   gXPCApplicationAccessible = nullptr;
 
+#if defined(ANDROID)
+  // Don't allow the service to shut down while an a11y request is being handled
+  // in the UI thread, as the request may depend on state from the service.
+  MonitorAutoLock mal(GetAndroidMonitor());
+#endif
   NS_RELEASE(gAccessibilityService);
   gAccessibilityService = nullptr;
 
@@ -1522,30 +1542,27 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
 }
 
 void nsAccessibilityService::MarkupAttributes(
-    const nsIContent* aContent, AccAttributes* aAttributes) const {
-  const mozilla::a11y::MarkupMapInfo* markupMap =
-      GetMarkupMapInfoForNode(aContent);
+    Accessible* aAcc, AccAttributes* aAttributes) const {
+  const mozilla::a11y::MarkupMapInfo* markupMap = GetMarkupMapInfoFor(aAcc);
   if (!markupMap) return;
 
+  dom::Element* el = aAcc->IsLocal() ? aAcc->AsLocal()->Elm() : nullptr;
   for (uint32_t i = 0; i < ArrayLength(markupMap->attrs); i++) {
     const MarkupAttrInfo* info = markupMap->attrs + i;
     if (!info->name) break;
 
-    if (info->DOMAttrName) {
+    // XXX Expose DOM attributes for cached RemoteAccessibles.
+    if (info->DOMAttrName && el) {
       if (info->DOMAttrValue) {
-        if (aContent->IsElement() && aContent->AsElement()->AttrValueIs(
-                                         kNameSpaceID_None, info->DOMAttrName,
-                                         info->DOMAttrValue, eCaseMatters)) {
+        if (el->AttrValueIs(kNameSpaceID_None, info->DOMAttrName,
+                            info->DOMAttrValue, eCaseMatters)) {
           aAttributes->SetAttribute(info->name, info->DOMAttrValue);
         }
         continue;
       }
 
       nsString value;
-      if (aContent->IsElement()) {
-        aContent->AsElement()->GetAttr(kNameSpaceID_None, info->DOMAttrName,
-                                       value);
-      }
+      el->GetAttr(kNameSpaceID_None, info->DOMAttrName, value);
 
       if (!value.IsEmpty()) {
         aAttributes->SetAttribute(info->name, std::move(value));
@@ -1557,21 +1574,6 @@ void nsAccessibilityService::MarkupAttributes(
     aAttributes->SetAttribute(info->name, info->value);
   }
 }
-
-#if defined(ANDROID)
-#  include "mozilla/Monitor.h"
-#  include "mozilla/Maybe.h"
-
-static Maybe<Monitor> sAndroidMonitor;
-
-mozilla::Monitor& nsAccessibilityService::GetAndroidMonitor() {
-  if (!sAndroidMonitor.isSome()) {
-    sAndroidMonitor.emplace("nsAccessibility::sAndroidMonitor");
-  }
-
-  return *sAndroidMonitor;
-}
-#endif
 
 LocalAccessible* nsAccessibilityService::AddNativeRootAccessible(
     void* aAtkAccessible) {
@@ -1655,6 +1657,18 @@ void nsAccessibilityService::NotifyOfConsumersChange() {
   GetConsumers(consumers);
   observerService->NotifyObservers(nullptr, "a11y-consumers-changed",
                                    consumers.get());
+}
+
+const mozilla::a11y::MarkupMapInfo* nsAccessibilityService::GetMarkupMapInfoFor(
+    Accessible* aAcc) const {
+  if (LocalAccessible* localAcc = aAcc->AsLocal()) {
+    return GetMarkupMapInfoFor(localAcc->GetContent());
+  }
+  // XXX For now, we assume all RemoteAccessibles are HTML elements. This
+  // isn't strictly correct, but as far as current callers are concerned,
+  // this doesn't matter. If that changes in future, we could expose the
+  // element type via AccGenericType.
+  return mHTMLMarkupMap.Get(aAcc->TagName());
 }
 
 nsAccessibilityService* GetOrCreateAccService(uint32_t aNewConsumer) {

@@ -16,7 +16,7 @@
 
 const { Ci } = require("chrome");
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.sys.mjs");
 const protocol = require("devtools/shared/protocol");
 const {
   workerDescriptorSpec,

@@ -39,8 +39,8 @@ const { CryptoWrapper } = ChromeUtils.import(
 const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
 const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};

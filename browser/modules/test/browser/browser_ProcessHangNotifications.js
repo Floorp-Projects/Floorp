@@ -1,7 +1,7 @@
 /* globals ProcessHangMonitor */
 
 const { WebExtensionPolicy } = Cu.getGlobalForObject(
-  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
+  ChromeUtils.import("resource://gre/modules/AppConstants.jsm")
 );
 
 const { UpdateUtils } = ChromeUtils.import(

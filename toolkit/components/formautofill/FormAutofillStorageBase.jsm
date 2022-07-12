@@ -130,8 +130,8 @@ const EXPORTED_SYMBOLS = [
   "AddressesBase",
 ];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"

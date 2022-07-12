@@ -958,9 +958,11 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           AccTextChangeEvent* event = downcast_accEvent(aEvent);
           const nsString& text = event->ModifiedText();
 #if defined(XP_WIN)
-          // On Windows, events for live region updates containing embedded
-          // objects require us to dispatch synchronous events.
-          bool sync = text.Contains(L'\xfffc') &&
+          // On Windows with the cache disabled, events for live region updates
+          // containing embedded objects require us to dispatch synchronous
+          // events.
+          bool sync = !StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+                      text.Contains(L'\xfffc') &&
                       nsAccUtils::IsARIALive(aEvent->GetAccessible());
 #endif
           ipcDoc->SendTextChangeEvent(id, text, event->GetStartOffset(),
@@ -1171,7 +1173,7 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
   // container with the live region attribute. Inner nodes override outer nodes
   // within the same document. The inner nodes can be used to override live
   // region behavior on more general outer nodes.
-  nsAccUtils::SetLiveContainerAttributes(attributes, mContent);
+  nsAccUtils::SetLiveContainerAttributes(attributes, this);
 
   if (!mContent->IsElement()) return attributes.forget();
 
@@ -2966,7 +2968,7 @@ bool LocalAccessible::IsActiveDescendant(LocalAccessible** aWidget) const {
   selector.AppendPrintf(
       "[aria-activedescendant=\"%s\"]",
       NS_ConvertUTF16toUTF8(mContent->GetID()->GetUTF16String()).get());
-  ErrorResult er;
+  IgnoredErrorResult er;
 
   dom::Element* widgetElm =
       docOrShadowRoot->AsNode().QuerySelector(selector, er);
@@ -3744,6 +3746,33 @@ void LocalAccessible::DOMNodeID(nsString& aID) const {
     if (nsAtom* id = mContent->GetID()) {
       id->ToString(aID);
     }
+  }
+}
+
+void LocalAccessible::LiveRegionAttributes(nsAString* aLive,
+                                           nsAString* aRelevant,
+                                           Maybe<bool>* aAtomic,
+                                           nsAString* aBusy) const {
+  dom::Element* el = Elm();
+  if (!el) {
+    return;
+  }
+  if (aLive) {
+    el->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_live, *aLive);
+  }
+  if (aRelevant) {
+    el->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_relevant, *aRelevant);
+  }
+  if (aAtomic) {
+    // XXX We ignore aria-atomic="false", but this probably doesn't conform to
+    // the spec.
+    if (el->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_atomic,
+                        nsGkAtoms::_true, eCaseMatters)) {
+      *aAtomic = Some(true);
+    }
+  }
+  if (aBusy) {
+    el->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_busy, *aBusy);
   }
 }
 

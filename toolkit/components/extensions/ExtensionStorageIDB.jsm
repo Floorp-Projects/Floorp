@@ -7,8 +7,8 @@
 const EXPORTED_SYMBOLS = ["ExtensionStorageIDB"];
 let ExtensionStorageIDB;
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const { IndexedDB } = ChromeUtils.import(
   "resource://gre/modules/IndexedDB.jsm"

@@ -12,8 +12,8 @@ const PARTIAL_LENGTH = 4;
 const MIN_WAIT_DURATION_MAX_VALUE = 24 * 60 * 60 * 1000;
 const PREF_DEBUG_ENABLED = "browser.safebrowsing.debug";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 

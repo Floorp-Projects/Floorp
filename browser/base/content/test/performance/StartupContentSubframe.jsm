@@ -37,8 +37,11 @@ class StartupContentSubframeChild extends JSWindowActorChild {
     let collectStacks = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG;
 
     let modules = {};
-    for (let module of Cu.loadedModules) {
+    for (let module of Cu.loadedJSModules) {
       modules[module] = collectStacks ? Cu.getModuleImportStack(module) : "";
+    }
+    for (let module of Cu.loadedESModules) {
+      modules[module] = "";
     }
 
     let services = {};
