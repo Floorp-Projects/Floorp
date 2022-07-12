@@ -363,7 +363,7 @@ rtc_source_set("jsep_transport_controller") {
   visibility = [ ":*" ]
 }
 rtc_source_set("media_session") {
-  visibility = [ ":*" ]
+  visibility = [ "*" ]  # Used by Chrome
 }
 rtc_source_set("media_stream_proxy") {
   visibility = [ ":*" ]
