@@ -688,6 +688,8 @@ home-prefs-recommended-by-description-new = Exceptional content curated by { $pr
 home-prefs-recommended-by-learn-more = How it works
 home-prefs-recommended-by-option-sponsored-stories =
     .label = Sponsored Stories
+home-prefs-recommended-by-option-recent-saves =
+    .label = Show Recent Saves
 
 home-prefs-highlights-option-visited-pages =
     .label = Visited Pages

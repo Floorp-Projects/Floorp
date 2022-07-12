@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * Built in sections may depend on options stored as serialised JSON in the pref
  * `${feed_pref_name}.options`.
  */
-const BUILT_IN_SECTIONS = () => ({
+const BUILT_IN_SECTIONS = ({ newtab, pocketNewtab }) => ({
   "feeds.section.topstories": options => ({
     id: "topstories",
     pref: {
@@ -40,16 +40,29 @@ const BUILT_IN_SECTIONS = () => ({
         id: "home-prefs-recommended-by-description-new",
         values: { provider: options.provider_name },
       },
-      nestedPrefs: options.show_spocs
-        ? [
-            {
-              name: "showSponsored",
-              titleString: "home-prefs-recommended-by-option-sponsored-stories",
-              icon: "icon-info",
-              eventSource: "POCKET_SPOCS",
-            },
-          ]
-        : [],
+      nestedPrefs: [
+        ...(options.show_spocs
+          ? [
+              {
+                name: "showSponsored",
+                titleString:
+                  "home-prefs-recommended-by-option-sponsored-stories",
+                icon: "icon-info",
+                eventSource: "POCKET_SPOCS",
+              },
+            ]
+          : []),
+        ...(pocketNewtab.recentSavesEnabled
+          ? [
+              {
+                name: "showRecentSaves",
+                titleString: "home-prefs-recommended-by-option-recent-saves",
+                icon: "icon-info",
+                eventSource: "POCKET_RECENT_SAVES",
+              },
+            ]
+          : []),
+      ],
       learnMore: {
         link: {
           href: "https://getpocket.com/firefox/new_tab_learn_more",
@@ -189,7 +202,10 @@ const SectionsManager = {
   sections: new Map(),
   async init(prefs = {}, storage) {
     this._storage = storage;
-    const featureConfig = lazy.NimbusFeatures.newtab.getAllVariables() || {};
+    const featureConfig = {
+      newtab: lazy.NimbusFeatures.newtab.getAllVariables() || {},
+      pocketNewtab: lazy.NimbusFeatures.pocketNewtab.getAllVariables() || {},
+    };
 
     for (const feedPrefName of Object.keys(BUILT_IN_SECTIONS(featureConfig))) {
       const optionsPrefName = `${feedPrefName}.options`;
@@ -238,7 +254,10 @@ const SectionsManager = {
   async addBuiltInSection(feedPrefName, optionsPrefValue = "{}") {
     let options;
     let storedPrefs;
-    const featureConfig = lazy.NimbusFeatures.newtab.getAllVariables() || {};
+    const featureConfig = {
+      newtab: lazy.NimbusFeatures.newtab.getAllVariables() || {},
+      pocketNewtab: lazy.NimbusFeatures.pocketNewtab.getAllVariables() || {},
+    };
     try {
       options = JSON.parse(optionsPrefValue);
     } catch (e) {
