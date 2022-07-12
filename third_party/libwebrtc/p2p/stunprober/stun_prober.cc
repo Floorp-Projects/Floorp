@@ -38,6 +38,16 @@ void IncrementCounterByAddress(std::map<T, int>* counter_per_ip, const T& ip) {
   counter_per_ip->insert(std::make_pair(ip, 0)).first->second++;
 }
 
+std::vector<const rtc::Network*> NetworkListToConst(
+    const rtc::NetworkManager::NetworkList networks) {
+  std::vector<const rtc::Network*> result;
+  result.reserve(networks.size());
+  for (const rtc::Network* network : networks) {
+    result.push_back(network);
+  }
+  return result;
+}
+
 }  // namespace
 
 // A requester tracks the requests and responses from a single socket to many
@@ -256,6 +266,14 @@ void StunProber::ObserverAdapter::OnFinished(StunProber* stunprober,
 StunProber::StunProber(rtc::PacketSocketFactory* socket_factory,
                        rtc::Thread* thread,
                        const rtc::NetworkManager::NetworkList& networks)
+    : interval_ms_(0),
+      socket_factory_(socket_factory),
+      thread_(thread),
+      networks_(NetworkListToConst(networks)) {}
+
+StunProber::StunProber(rtc::PacketSocketFactory* socket_factory,
+                       rtc::Thread* thread,
+                       std::vector<const rtc::Network*> networks)
     : interval_ms_(0),
       socket_factory_(socket_factory),
       thread_(thread),
