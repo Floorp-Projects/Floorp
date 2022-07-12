@@ -84,7 +84,6 @@ void InitFieldTrialsFromString(const char* trials_string);
 
 const char* GetFieldTrialString();
 
-#ifndef WEBRTC_EXCLUDE_FIELD_TRIAL_DEFAULT
 // Validates the given field trial string.
 bool FieldTrialsStringIsValid(const char* trials_string);
 
@@ -94,7 +93,6 @@ bool FieldTrialsStringIsValid(const char* trials_string);
 // in 'second' takes precedence.
 // Shall only be called with valid FieldTrial strings.
 std::string MergeFieldTrialsStrings(const char* first, const char* second);
-#endif  // WEBRTC_EXCLUDE_FIELD_TRIAL_DEFAULT
 
 }  // namespace field_trial
 }  // namespace webrtc
