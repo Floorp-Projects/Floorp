@@ -6,15 +6,10 @@
 
 #include "OffscreenCanvasRenderingContext2D.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
-#include "mozilla/dom/FontFaceSetImpl.h"
-#include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/OffscreenCanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
-#include "mozilla/ServoCSSParser.h"
-#include "gfxPlatform.h"
-#include "gfxTextRun.h"
 
 using namespace mozilla;
 
@@ -87,92 +82,6 @@ nsIGlobalObject* OffscreenCanvasRenderingContext2D::GetParentObject() const {
 NS_IMETHODIMP OffscreenCanvasRenderingContext2D::InitializeWithDrawTarget(
     nsIDocShell* aShell, NotNull<gfx::DrawTarget*> aTarget) {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-static nsAutoCString FamilyListToString(
-    const StyleFontFamilyList& aFamilyList) {
-  return StringJoin(","_ns, aFamilyList.list.AsSpan(),
-                    [](nsACString& dst, const StyleSingleFontFamily& name) {
-                      name.AppendToString(dst);
-                    });
-}
-
-static void SerializeFontForCanvas(const StyleFontFamilyList& aList,
-                                   const gfxFontStyle& aStyle,
-                                   nsACString& aUsedFont) {
-  // Re-serialize the font shorthand as required by the canvas spec.
-  aUsedFont.Truncate();
-
-  if (!aStyle.style.IsNormal()) {
-    aStyle.style.ToString(aUsedFont);
-    aUsedFont.Append(" ");
-  }
-
-  // font-weight is serialized as a number
-  if (!aStyle.weight.IsNormal()) {
-    aUsedFont.AppendFloat(aStyle.weight.ToFloat());
-  }
-
-  // font-stretch is serialized using CSS Fonts 3 keywords, not percentages.
-  if (!aStyle.stretch.IsNormal() &&
-      Servo_FontStretch_SerializeKeyword(&aStyle.stretch, &aUsedFont)) {
-    aUsedFont.Append(" ");
-  }
-
-  // Serialize the computed (not specified) size, and the family name(s).
-  aUsedFont.AppendFloat(aStyle.size);
-  aUsedFont.Append("px ");
-  aUsedFont.Append(FamilyListToString(aList));
-}
-
-bool OffscreenCanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
-                                                        ErrorResult& aError) {
-  nsIGlobalObject* global = GetParentObject();
-  FontFaceSet* fontFaceSet = global ? global->Fonts() : nullptr;
-  FontFaceSetImpl* fontFaceSetImpl =
-      fontFaceSet ? fontFaceSet->GetImpl() : nullptr;
-  RefPtr<URLExtraData> urlExtraData =
-      fontFaceSetImpl ? fontFaceSetImpl->GetURLExtraData() : nullptr;
-
-  if (fontFaceSetImpl) {
-    fontFaceSetImpl->FlushUserFontSet();
-  }
-
-  // In the OffscreenCanvas case we don't have the context necessary to call
-  // GetFontStyleForServo(), as we do in the main-thread canvas context, so
-  // instead we borrow ParseFontShorthandForMatching to parse the attribute.
-  StyleComputedFontStyleDescriptor style(
-      StyleComputedFontStyleDescriptor::Normal());
-  StyleFontFamilyList list;
-  gfxFontStyle fontStyle;
-  float size = 0.0f;
-  if (!ServoCSSParser::ParseFontShorthandForMatching(
-          aFont, urlExtraData, list, fontStyle.style, fontStyle.stretch,
-          fontStyle.weight, &size)) {
-    return false;
-  }
-
-  fontStyle.size = size;
-
-  // TODO: Get a userFontSet from the Worker and pass to the fontGroup
-  // TODO: Should we be passing a language? Where from?
-  // TODO: Cache fontGroups in the Worker (use an nsFontCache?)
-  gfxFontGroup* fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(
-      nullptr,          // aPresContext
-      list,             // aFontFamilyList
-      &fontStyle,       // aStyle
-      nullptr,          // aLanguage
-      false,            // aExplicitLanguage
-      nullptr,          // aTextPerf
-      fontFaceSetImpl,  // aUserFontSet
-      1.0);             // aDevToCssSize
-  CurrentState().fontGroup = fontGroup;
-  SerializeFontForCanvas(list, fontStyle, CurrentState().font);
-  CurrentState().fontFont = nsFont(StyleFontFamily{list, false, false},
-                                   StyleCSSPixelLength::FromPixels(size));
-  CurrentState().fontLanguage = nullptr;
-  CurrentState().fontExplicitLanguage = false;
-  return true;
 }
 
 void OffscreenCanvasRenderingContext2D::AddShutdownObserver() {
