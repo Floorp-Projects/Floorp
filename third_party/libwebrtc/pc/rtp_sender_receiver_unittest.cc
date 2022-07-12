@@ -1635,7 +1635,7 @@ TEST_F(RtpSenderReceiverTest, AudioSenderCannotSetFrameEncryptorAfterStop) {
 TEST_F(RtpSenderReceiverTest, AudioReceiverCanSetFrameDecryptor) {
   CreateAudioRtpReceiver();
   rtc::scoped_refptr<FrameDecryptorInterface> fake_frame_decryptor(
-      new FakeFrameDecryptor());
+      rtc::make_ref_counted<FakeFrameDecryptor>());
   EXPECT_EQ(nullptr, audio_rtp_receiver_->GetFrameDecryptor());
   audio_rtp_receiver_->SetFrameDecryptor(fake_frame_decryptor);
   EXPECT_EQ(fake_frame_decryptor.get(),
@@ -1647,7 +1647,7 @@ TEST_F(RtpSenderReceiverTest, AudioReceiverCanSetFrameDecryptor) {
 TEST_F(RtpSenderReceiverTest, AudioReceiverCannotSetFrameDecryptorAfterStop) {
   CreateAudioRtpReceiver();
   rtc::scoped_refptr<FrameDecryptorInterface> fake_frame_decryptor(
-      new FakeFrameDecryptor());
+      rtc::make_ref_counted<FakeFrameDecryptor>());
   EXPECT_EQ(nullptr, audio_rtp_receiver_->GetFrameDecryptor());
   audio_rtp_receiver_->SetMediaChannel(nullptr);
   audio_rtp_receiver_->SetFrameDecryptor(fake_frame_decryptor);
@@ -1682,7 +1682,7 @@ TEST_F(RtpSenderReceiverTest, VideoSenderCannotSetFrameEncryptorAfterStop) {
 TEST_F(RtpSenderReceiverTest, VideoReceiverCanSetFrameDecryptor) {
   CreateVideoRtpReceiver();
   rtc::scoped_refptr<FrameDecryptorInterface> fake_frame_decryptor(
-      new FakeFrameDecryptor());
+      rtc::make_ref_counted<FakeFrameDecryptor>());
   EXPECT_EQ(nullptr, video_rtp_receiver_->GetFrameDecryptor());
   video_rtp_receiver_->SetFrameDecryptor(fake_frame_decryptor);
   EXPECT_EQ(fake_frame_decryptor.get(),
@@ -1694,7 +1694,7 @@ TEST_F(RtpSenderReceiverTest, VideoReceiverCanSetFrameDecryptor) {
 TEST_F(RtpSenderReceiverTest, VideoReceiverCannotSetFrameDecryptorAfterStop) {
   CreateVideoRtpReceiver();
   rtc::scoped_refptr<FrameDecryptorInterface> fake_frame_decryptor(
-      new FakeFrameDecryptor());
+      rtc::make_ref_counted<FakeFrameDecryptor>());
   EXPECT_EQ(nullptr, video_rtp_receiver_->GetFrameDecryptor());
   video_rtp_receiver_->SetMediaChannel(nullptr);
   video_rtp_receiver_->SetFrameDecryptor(fake_frame_decryptor);
