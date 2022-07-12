@@ -312,7 +312,7 @@ class DecoderIvfFileWriter : public test::FakeDecoder {
 };
 
 // The RtpReplayer is responsible for parsing the configuration provided by the
-// user, setting up the windows, recieve streams and decoders and then replaying
+// user, setting up the windows, receive streams and decoders and then replaying
 // the provided RTP dump.
 class RtpReplayer final {
  public:
@@ -382,7 +382,7 @@ class RtpReplayer final {
   }
 
  private:
-  // Holds all the shared memory structures required for a recieve stream. This
+  // Holds all the shared memory structures required for a receive stream. This
   // structure is used to prevent members being deallocated before the replay
   // has been finished.
   struct StreamState {

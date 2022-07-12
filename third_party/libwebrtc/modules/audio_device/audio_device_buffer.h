@@ -228,7 +228,7 @@ class AudioDeviceBuffer {
   // being printed in the LogStats() task.
   bool log_stats_ RTC_GUARDED_BY(task_queue_);
 
-  // Used for converting capture timestaps (recieved from AudioRecordThread
+  // Used for converting capture timestaps (received from AudioRecordThread
   // via AudioRecordJni::DataIsRecorded) to RTC clock.
   rtc::TimestampAligner timestamp_aligner_;
 

@@ -63,7 +63,7 @@ struct SctpInboundPacket;
 //  11. SctpTransport::OnDataFromSctpToTransport(data)
 //  12. SctpTransport::SignalDataReceived(data)
 // [from the same thread, methods registered/connected to
-//  SctpTransport are called with the recieved data]
+//  SctpTransport are called with the received data]
 class UsrsctpTransport : public SctpTransportInternal,
                          public sigslot::has_slots<> {
  public:
