@@ -14,12 +14,48 @@ import subprocess
 import time
 import zlib
 
+import dataclasses
 import httplib2
 
 from tracing.value import histogram
 from tracing.value import histogram_set
 from tracing.value.diagnostics import generic_set
 from tracing.value.diagnostics import reserved_infos
+
+
+@dataclasses.dataclass
+class UploaderOptions():
+  """Required information to upload perf metrics.
+
+    Attributes:
+      perf_dashboard_machine_group: The "master" the bots are grouped under.
+        This string is the group in the the perf dashboard path
+        group/bot/perf_id/metric/subtest.
+      bot: The bot running the test (e.g. webrtc-win-large-tests).
+      test_suite: The key for the test in the dashboard (i.e. what you select
+        in the top-level test suite selector in the dashboard
+      webrtc_git_hash: webrtc.googlesource.com commit hash.
+      commit_position: Commit pos corresponding to the git hash.
+      build_page_url: URL to the build page for this build.
+      dashboard_url: Which dashboard to use.
+      input_results_file: A HistogramSet proto file coming from WebRTC tests.
+      output_json_file: Where to write the output (for debugging).
+      wait_timeout_sec: Maximum amount of time in seconds that the script will
+        wait for the confirmation.
+      wait_polling_period_sec: Status will be requested from the Dashboard
+        every wait_polling_period_sec seconds.
+    """
+  perf_dashboard_machine_group: str
+  bot: str
+  test_suite: str
+  webrtc_git_hash: str
+  commit_position: int
+  build_page_url: str
+  dashboard_url: str
+  input_results_file: str
+  output_json_file: str
+  wait_timeout_sec: datetime.timedelta = datetime.timedelta(seconds=1200)
+  wait_polling_period_sec: datetime.timedelta = datetime.timedelta(seconds=120)
 
 
 def _GenerateOauthToken():
@@ -195,7 +231,7 @@ def _ApplyHacks(dicts):
 
 def _LoadHistogramSetFromProto(options):
   hs = histogram_set.HistogramSet()
-  with options.input_results_file as f:
+  with open(options.input_results_file, 'rb') as f:
     hs.ImportProto(f.read())
 
   return hs
@@ -217,11 +253,11 @@ def _AddBuildInfo(histograms, options):
 
 
 def _DumpOutput(histograms, output_file):
-  with output_file:
-    json.dump(_ApplyHacks(histograms.AsDicts()), output_file, indent=4)
+  with open(output_file, 'wb') as f:
+    json.dump(_ApplyHacks(histograms.AsDicts()), f, indent=4)
 
 
-def UploadToDashboard(options):
+def UploadToDashboardImpl(options):
   histograms = _LoadHistogramSetFromProto(options)
   _AddBuildInfo(histograms, options)
 
@@ -236,15 +272,14 @@ def UploadToDashboard(options):
     return 1
 
   upload_token = json.loads(content).get('token')
-  if not options.wait_for_upload or not upload_token:
+  if not upload_token:
     print(('Received 200 from dashboard. ',
            'Not waiting for the upload status confirmation.'))
     return 0
 
   response, resp_json = _WaitForUploadConfirmation(
-      options.dashboard_url, upload_token,
-      datetime.timedelta(seconds=options.wait_timeout_sec),
-      datetime.timedelta(seconds=options.wait_polling_period_sec))
+      options.dashboard_url, upload_token, options.wait_timeout_sec,
+      options.wait_polling_period_sec)
 
   if ((resp_json and resp_json['state'] == 'COMPLETED')
       or _CheckFullUploadInfo(options.dashboard_url, upload_token)):
@@ -260,6 +295,15 @@ def UploadToDashboard(options):
     print('Upload failed.')
     return 1
 
-  print(('Upload wasn\'t completed in a given time: %d seconds.' %
+  print(('Upload wasn\'t completed in a given time: %s seconds.' %
          options.wait_timeout_sec))
   return 1
+
+
+def UploadToDashboard(options):
+  try:
+    exit_code = UploadToDashboardImpl(options)
+  except RuntimeError as e:
+    print(e)
+    return 2
+  return exit_code
