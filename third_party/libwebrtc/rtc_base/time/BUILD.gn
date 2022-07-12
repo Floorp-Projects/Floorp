@@ -18,7 +18,6 @@ rtc_library("timestamp_extrapolator") {
     "timestamp_extrapolator.h",
   ]
   deps = [
-    "../../api/units:frequency",
     "../../api/units:timestamp",
     "../../modules:module_api_public",
   ]
