@@ -224,7 +224,7 @@ class DefaultTabsTrayControllerTest {
 
         assertTrue(dismissTrayInvoked)
         verify(exactly = 0) { navController.popBackStack() }
-        verify(exactly = 0) { navController.popBackStack(any(), any()) }
+        verify(exactly = 0) { navController.popBackStack(any<Int>(), any()) }
         verify(exactly = 0) { navController.navigate(any<Int>()) }
         verify(exactly = 0) { navController.navigate(any<NavDirections>()) }
         verify(exactly = 0) { navController.navigate(any<NavDirections>(), any<NavOptions>()) }
