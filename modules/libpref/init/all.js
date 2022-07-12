@@ -256,6 +256,8 @@ pref("media.volume_scale", "1.0");
 // opened as top-level documents, as opposed to inside a media element.
 pref("media.play-stand-alone", true);
 
+pref("media.hardware-video-decoding.enabled", true);
+
 #ifdef MOZ_WMF
   pref("media.wmf.dxva.enabled", true);
   pref("media.wmf.play-stand-alone", true);

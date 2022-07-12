@@ -225,15 +225,11 @@ void gfxPlatformGtk::InitDmabufConfig() {
 #endif
 }
 
-bool gfxPlatformGtk::InitVAAPIConfig(bool aForceEnabledByUser) {
+bool gfxPlatformGtk::InitVAAPIConfig(bool aEnabledByPlatform) {
   FeatureState& feature =
       gfxConfig::GetFeature(Feature::HARDWARE_VIDEO_DECODING);
 #ifdef MOZ_WAYLAND
   feature.EnableByDefault();
-
-  if (aForceEnabledByUser) {
-    feature.UserForceEnable("Force enabled by pref");
-  }
 
   nsCString failureId;
   int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
@@ -242,14 +238,16 @@ bool gfxPlatformGtk::InitVAAPIConfig(bool aForceEnabledByUser) {
           nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING, failureId, &status))) {
     feature.Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
                     "FEATURE_FAILURE_NO_GFX_INFO"_ns);
-  } else if (status == nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST) {
-    feature.ForceDisable(FeatureStatus::Unavailable,
-                         "Force disabled by gfxInfo", failureId);
   } else if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
     feature.Disable(FeatureStatus::Blocklisted, "Blocklisted by gfxInfo",
                     failureId);
   }
-
+  if (status != nsIGfxInfo::FEATURE_STATUS_OK && aEnabledByPlatform) {
+    feature.UserForceEnable("Force enabled by pref");
+  }
+  if (!aEnabledByPlatform) {
+    feature.Disable(FeatureStatus::Blocked, "Blocked by platform", failureId);
+  }
   if (!gfxVars::UseEGL()) {
     feature.ForceDisable(FeatureStatus::Unavailable, "Requires EGL",
                          "FEATURE_FAILURE_REQUIRES_EGL"_ns);
