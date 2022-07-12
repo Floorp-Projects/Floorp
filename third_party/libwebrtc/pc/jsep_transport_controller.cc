@@ -400,6 +400,7 @@ JsepTransportController::CreateIceTransport(const std::string& transport_name,
   init.set_port_allocator(port_allocator_);
   init.set_async_dns_resolver_factory(async_dns_resolver_factory_);
   init.set_event_log(config_.event_log);
+  init.set_field_trials(config_.field_trials);
   return config_.ice_transport_factory->CreateIceTransport(
       transport_name, component, std::move(init));
 }

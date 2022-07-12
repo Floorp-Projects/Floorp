@@ -27,6 +27,7 @@ class IceControllerFactoryInterface;
 }  // namespace cricket
 
 namespace webrtc {
+class WebRtcKeyValueConfig;
 
 // An ICE transport, as represented to the outside world.
 // This object is refcounted, and is therefore alive until the
@@ -83,6 +84,11 @@ struct IceTransportInit final {
     return ice_controller_factory_;
   }
 
+  const WebRtcKeyValueConfig* field_trials() { return field_trials_; }
+  void set_field_trials(const WebRtcKeyValueConfig* field_trials) {
+    field_trials_ = field_trials;
+  }
+
  private:
   cricket::PortAllocator* port_allocator_ = nullptr;
   AsyncDnsResolverFactoryInterface* async_dns_resolver_factory_ = nullptr;
@@ -90,6 +96,7 @@ struct IceTransportInit final {
   AsyncResolverFactory* async_resolver_factory_ = nullptr;
   RtcEventLog* event_log_ = nullptr;
   cricket::IceControllerFactoryInterface* ice_controller_factory_ = nullptr;
+  const WebRtcKeyValueConfig* field_trials_ = nullptr;
   // TODO(https://crbug.com/webrtc/12657): Redesign to have const members.
 };
 

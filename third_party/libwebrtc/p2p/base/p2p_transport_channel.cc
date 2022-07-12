@@ -25,6 +25,7 @@
 #include "api/async_dns_resolver.h"
 #include "api/candidate.h"
 #include "api/task_queue/queued_task.h"
+#include "api/webrtc_key_value_config.h"
 #include "logging/rtc_event_log/ice_logger.h"
 #include "p2p/base/basic_async_resolver_factory.h"
 #include "p2p/base/basic_ice_controller.h"
@@ -44,7 +45,6 @@
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
-#include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
 
 namespace {
@@ -60,12 +60,15 @@ cricket::PortInterface::CandidateOrigin GetOrigin(
     return cricket::PortInterface::ORIGIN_OTHER_PORT;
 }
 
-uint32_t GetWeakPingIntervalInFieldTrial() {
-  uint32_t weak_ping_interval = ::strtoul(
-      webrtc::field_trial::FindFullName("WebRTC-StunInterPacketDelay").c_str(),
-      nullptr, 10);
-  if (weak_ping_interval) {
-    return static_cast<int>(weak_ping_interval);
+uint32_t GetWeakPingIntervalInFieldTrial(
+    const webrtc::WebRtcKeyValueConfig* field_trials) {
+  if (field_trials != nullptr) {
+    uint32_t weak_ping_interval =
+        ::strtoul(field_trials->Lookup("WebRTC-StunInterPacketDelay").c_str(),
+                  nullptr, 10);
+    if (weak_ping_interval) {
+      return static_cast<int>(weak_ping_interval);
+    }
   }
   return cricket::WEAK_PING_INTERVAL;
 }
@@ -118,25 +121,28 @@ std::unique_ptr<P2PTransportChannel> P2PTransportChannel::Create(
         transport_name, component, init.port_allocator(), nullptr,
         std::make_unique<webrtc::WrappingAsyncDnsResolverFactory>(
             init.async_resolver_factory()),
-        init.event_log(), init.ice_controller_factory()));
+        init.event_log(), init.ice_controller_factory(), init.field_trials()));
   } else {
     return absl::WrapUnique(new P2PTransportChannel(
         transport_name, component, init.port_allocator(),
         init.async_dns_resolver_factory(), nullptr, init.event_log(),
-        init.ice_controller_factory()));
+        init.ice_controller_factory(), init.field_trials()));
   }
 }
 
-P2PTransportChannel::P2PTransportChannel(const std::string& transport_name,
-                                         int component,
-                                         PortAllocator* allocator)
+P2PTransportChannel::P2PTransportChannel(
+    const std::string& transport_name,
+    int component,
+    PortAllocator* allocator,
+    const webrtc::WebRtcKeyValueConfig* field_trials)
     : P2PTransportChannel(transport_name,
                           component,
                           allocator,
                           /* async_dns_resolver_factory= */ nullptr,
                           /* owned_dns_resolver_factory= */ nullptr,
                           /* event_log= */ nullptr,
-                          /* ice_controller_factory= */ nullptr) {}
+                          /* ice_controller_factory= */ nullptr,
+                          field_trials) {}
 
 // Private constructor, called from Create()
 P2PTransportChannel::P2PTransportChannel(
@@ -147,7 +153,8 @@ P2PTransportChannel::P2PTransportChannel(
     std::unique_ptr<webrtc::AsyncDnsResolverFactoryInterface>
         owned_dns_resolver_factory,
     webrtc::RtcEventLog* event_log,
-    IceControllerFactoryInterface* ice_controller_factory)
+    IceControllerFactoryInterface* ice_controller_factory,
+    const webrtc::WebRtcKeyValueConfig* field_trials)
     : transport_name_(transport_name),
       component_(component),
       allocator_(allocator),
@@ -165,6 +172,7 @@ P2PTransportChannel::P2PTransportChannel(
       ice_role_(ICEROLE_UNKNOWN),
       tiebreaker_(0),
       gathering_state_(kIceGatheringNew),
+      weak_ping_interval_(GetWeakPingIntervalInFieldTrial(field_trials)),
       config_(RECEIVING_TIMEOUT,
               BACKUP_CONNECTION_PING_INTERVAL,
               GATHER_ONCE /* continual_gathering_policy */,
@@ -175,7 +183,6 @@ P2PTransportChannel::P2PTransportChannel(
               RECEIVING_SWITCHING_DELAY) {
   TRACE_EVENT0("webrtc", "P2PTransportChannel::P2PTransportChannel");
   RTC_DCHECK(allocator_ != nullptr);
-  weak_ping_interval_ = GetWeakPingIntervalInFieldTrial();
   // Validate IceConfig even for mostly built-in constant default values in case
   // we change them.
   RTC_DCHECK(ValidateIceConfig(config_).ok());
@@ -191,6 +198,8 @@ P2PTransportChannel::P2PTransportChannel(
       this, &P2PTransportChannel::OnCandidateFilterChanged);
   ice_event_log_.set_event_log(event_log);
 
+  ParseFieldTrials(field_trials);
+
   IceControllerFactoryArgs args{
       [this] { return GetState(); }, [this] { return GetIceRole(); },
       [this](const Connection* connection) {
@@ -199,8 +208,9 @@ P2PTransportChannel::P2PTransportChannel(
         return IsPortPruned(connection->port()) ||
                IsRemoteCandidatePruned(connection->remote_candidate());
       },
-      &field_trials_,
-      webrtc::field_trial::FindFullName("WebRTC-IceControllerFieldTrials")};
+      &ice_field_trials_,
+      field_trials ? field_trials->Lookup("WebRTC-IceControllerFieldTrials")
+                   : ""};
   if (ice_controller_factory != nullptr) {
     ice_controller_ = ice_controller_factory->Create(args);
   } else {
@@ -267,7 +277,7 @@ void P2PTransportChannel::AddConnection(Connection* connection) {
   had_connection_ = true;
 
   connection->set_ice_event_log(&ice_event_log_);
-  connection->SetIceFieldTrials(&field_trials_);
+  connection->SetIceFieldTrials(&ice_field_trials_);
   LogCandidatePairConfig(connection,
                          webrtc::IceCandidatePairConfigType::kAdded);
 
@@ -685,72 +695,6 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
                      << config.stun_keepalive_interval_or_default();
   }
 
-  if (webrtc::field_trial::IsEnabled("WebRTC-ExtraICEPing")) {
-    RTC_LOG(LS_INFO) << "Set WebRTC-ExtraICEPing: Enabled";
-  }
-  if (webrtc::field_trial::IsEnabled("WebRTC-TurnAddMultiMapping")) {
-    RTC_LOG(LS_INFO) << "Set WebRTC-TurnAddMultiMapping: Enabled";
-  }
-
-  webrtc::StructParametersParser::Create(
-      // go/skylift-light
-      "skip_relay_to_non_relay_connections",
-      &field_trials_.skip_relay_to_non_relay_connections,
-      // Limiting pings sent.
-      "max_outstanding_pings", &field_trials_.max_outstanding_pings,
-      // Delay initial selection of connection.
-      "initial_select_dampening", &field_trials_.initial_select_dampening,
-      // Delay initial selection of connections, that are receiving.
-      "initial_select_dampening_ping_received",
-      &field_trials_.initial_select_dampening_ping_received,
-      // Reply that we support goog ping.
-      "announce_goog_ping", &field_trials_.announce_goog_ping,
-      // Use goog ping if remote support it.
-      "enable_goog_ping", &field_trials_.enable_goog_ping,
-      // How fast does a RTT sample decay.
-      "rtt_estimate_halftime_ms", &field_trials_.rtt_estimate_halftime_ms,
-      // Make sure that nomination reaching ICE controlled asap.
-      "send_ping_on_switch_ice_controlling",
-      &field_trials_.send_ping_on_switch_ice_controlling,
-      // Make sure that nomination reaching ICE controlled asap.
-      "send_ping_on_selected_ice_controlling",
-      &field_trials_.send_ping_on_selected_ice_controlling,
-      // Reply to nomination ASAP.
-      "send_ping_on_nomination_ice_controlled",
-      &field_trials_.send_ping_on_nomination_ice_controlled,
-      // Allow connections to live untouched longer that 30s.
-      "dead_connection_timeout_ms", &field_trials_.dead_connection_timeout_ms,
-      // Stop gathering on strongly connected.
-      "stop_gather_on_strongly_connected",
-      &field_trials_.stop_gather_on_strongly_connected)
-      ->Parse(webrtc::field_trial::FindFullName("WebRTC-IceFieldTrials"));
-
-  if (field_trials_.dead_connection_timeout_ms < 30000) {
-    RTC_LOG(LS_WARNING) << "dead_connection_timeout_ms set to "
-                        << field_trials_.dead_connection_timeout_ms
-                        << " increasing it to 30000";
-    field_trials_.dead_connection_timeout_ms = 30000;
-  }
-
-  if (field_trials_.skip_relay_to_non_relay_connections) {
-    RTC_LOG(LS_INFO) << "Set skip_relay_to_non_relay_connections";
-  }
-
-  if (field_trials_.max_outstanding_pings.has_value()) {
-    RTC_LOG(LS_INFO) << "Set max_outstanding_pings: "
-                     << *field_trials_.max_outstanding_pings;
-  }
-
-  if (field_trials_.initial_select_dampening.has_value()) {
-    RTC_LOG(LS_INFO) << "Set initial_select_dampening: "
-                     << *field_trials_.initial_select_dampening;
-  }
-
-  if (field_trials_.initial_select_dampening_ping_received.has_value()) {
-    RTC_LOG(LS_INFO) << "Set initial_select_dampening_ping_received: "
-                     << *field_trials_.initial_select_dampening_ping_received;
-  }
-
   webrtc::BasicRegatheringController::Config regathering_config;
   regathering_config.regather_on_failed_networks_interval =
       config_.regather_on_failed_networks_interval_or_default();
@@ -761,18 +705,95 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
 
   ice_controller_->SetIceConfig(config_);
 
+  RTC_DCHECK(ValidateIceConfig(config_).ok());
+}
+
+void P2PTransportChannel::ParseFieldTrials(
+    const webrtc::WebRtcKeyValueConfig* field_trials) {
+  if (field_trials == nullptr) {
+    return;
+  }
+
+  if (field_trials->IsEnabled("WebRTC-ExtraICEPing")) {
+    RTC_LOG(LS_INFO) << "Set WebRTC-ExtraICEPing: Enabled";
+  }
+  if (field_trials->IsEnabled("WebRTC-TurnAddMultiMapping")) {
+    RTC_LOG(LS_INFO) << "Set WebRTC-TurnAddMultiMapping: Enabled";
+  }
+
+  webrtc::StructParametersParser::Create(
+      // go/skylift-light
+      "skip_relay_to_non_relay_connections",
+      &ice_field_trials_.skip_relay_to_non_relay_connections,
+      // Limiting pings sent.
+      "max_outstanding_pings", &ice_field_trials_.max_outstanding_pings,
+      // Delay initial selection of connection.
+      "initial_select_dampening", &ice_field_trials_.initial_select_dampening,
+      // Delay initial selection of connections, that are receiving.
+      "initial_select_dampening_ping_received",
+      &ice_field_trials_.initial_select_dampening_ping_received,
+      // Reply that we support goog ping.
+      "announce_goog_ping", &ice_field_trials_.announce_goog_ping,
+      // Use goog ping if remote support it.
+      "enable_goog_ping", &ice_field_trials_.enable_goog_ping,
+      // How fast does a RTT sample decay.
+      "rtt_estimate_halftime_ms", &ice_field_trials_.rtt_estimate_halftime_ms,
+      // Make sure that nomination reaching ICE controlled asap.
+      "send_ping_on_switch_ice_controlling",
+      &ice_field_trials_.send_ping_on_switch_ice_controlling,
+      // Make sure that nomination reaching ICE controlled asap.
+      "send_ping_on_selected_ice_controlling",
+      &ice_field_trials_.send_ping_on_selected_ice_controlling,
+      // Reply to nomination ASAP.
+      "send_ping_on_nomination_ice_controlled",
+      &ice_field_trials_.send_ping_on_nomination_ice_controlled,
+      // Allow connections to live untouched longer that 30s.
+      "dead_connection_timeout_ms",
+      &ice_field_trials_.dead_connection_timeout_ms,
+      // Stop gathering on strongly connected.
+      "stop_gather_on_strongly_connected",
+      &ice_field_trials_.stop_gather_on_strongly_connected)
+      ->Parse(field_trials->Lookup("WebRTC-IceFieldTrials"));
+
+  if (ice_field_trials_.dead_connection_timeout_ms < 30000) {
+    RTC_LOG(LS_WARNING) << "dead_connection_timeout_ms set to "
+                        << ice_field_trials_.dead_connection_timeout_ms
+                        << " increasing it to 30000";
+    ice_field_trials_.dead_connection_timeout_ms = 30000;
+  }
+
+  if (ice_field_trials_.skip_relay_to_non_relay_connections) {
+    RTC_LOG(LS_INFO) << "Set skip_relay_to_non_relay_connections";
+  }
+
+  if (ice_field_trials_.max_outstanding_pings.has_value()) {
+    RTC_LOG(LS_INFO) << "Set max_outstanding_pings: "
+                     << *ice_field_trials_.max_outstanding_pings;
+  }
+
+  if (ice_field_trials_.initial_select_dampening.has_value()) {
+    RTC_LOG(LS_INFO) << "Set initial_select_dampening: "
+                     << *ice_field_trials_.initial_select_dampening;
+  }
+
+  if (ice_field_trials_.initial_select_dampening_ping_received.has_value()) {
+    RTC_LOG(LS_INFO)
+        << "Set initial_select_dampening_ping_received: "
+        << *ice_field_trials_.initial_select_dampening_ping_received;
+  }
+
   // DSCP override, allow user to specify (any) int value
   // that will be used for tagging all packets.
   webrtc::StructParametersParser::Create("override_dscp",
-                                         &field_trials_.override_dscp)
-      ->Parse(webrtc::field_trial::FindFullName("WebRTC-DscpFieldTrial"));
+                                         &ice_field_trials_.override_dscp)
+      ->Parse(field_trials->Lookup("WebRTC-DscpFieldTrial"));
 
-  if (field_trials_.override_dscp) {
-    SetOption(rtc::Socket::OPT_DSCP, *field_trials_.override_dscp);
+  if (ice_field_trials_.override_dscp) {
+    SetOption(rtc::Socket::OPT_DSCP, *ice_field_trials_.override_dscp);
   }
 
   std::string field_trial_string =
-      webrtc::field_trial::FindFullName("WebRTC-SetSocketReceiveBuffer");
+      field_trials->Lookup("WebRTC-SetSocketReceiveBuffer");
   int receive_buffer_size_kb = 0;
   sscanf(field_trial_string.c_str(), "Enabled-%d", &receive_buffer_size_kb);
   if (receive_buffer_size_kb > 0) {
@@ -781,7 +802,11 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
     SetOption(rtc::Socket::OPT_RCVBUF, receive_buffer_size_kb * 1024);
   }
 
-  RTC_DCHECK(ValidateIceConfig(config_).ok());
+  ice_field_trials_.piggyback_ice_check_acknowledgement =
+      field_trials->IsEnabled("WebRTC-PiggybackIceCheckAcknowledgement");
+
+  ice_field_trials_.extra_ice_ping =
+      field_trials->IsEnabled("WebRTC-ExtraICEPing");
 }
 
 const IceConfig& P2PTransportChannel::config() const {
@@ -795,7 +820,7 @@ const IceConfig& P2PTransportChannel::config() const {
 RTCError P2PTransportChannel::ValidateIceConfig(const IceConfig& config) {
   if (config.ice_check_interval_strong_connectivity_or_default() <
       config.ice_check_interval_weak_connectivity.value_or(
-          GetWeakPingIntervalInFieldTrial())) {
+          GetWeakPingIntervalInFieldTrial(nullptr))) {
     return RTCError(RTCErrorType::INVALID_PARAMETER,
                     "Ping interval of candidate pairs is shorter when ICE is "
                     "strongly connected than that when ICE is weakly "
@@ -1179,7 +1204,8 @@ void P2PTransportChannel::OnNominated(Connection* conn) {
     return;
   }
 
-  if (field_trials_.send_ping_on_nomination_ice_controlled && conn != nullptr) {
+  if (ice_field_trials_.send_ping_on_nomination_ice_controlled &&
+      conn != nullptr) {
     PingConnection(conn);
     MarkConnectionPinged(conn);
   }
@@ -1419,7 +1445,7 @@ bool P2PTransportChannel::CreateConnection(PortInterface* port,
     return false;
   }
 
-  if (field_trials_.skip_relay_to_non_relay_connections) {
+  if (ice_field_trials_.skip_relay_to_non_relay_connections) {
     if ((port->Type() != remote_candidate.type()) &&
         (port->Type() == RELAY_PORT_TYPE ||
          remote_candidate.type() == RELAY_PORT_TYPE)) {
@@ -1535,8 +1561,8 @@ void P2PTransportChannel::RememberRemoteCandidate(
 // port objects.
 int P2PTransportChannel::SetOption(rtc::Socket::Option opt, int value) {
   RTC_DCHECK_RUN_ON(network_thread_);
-  if (field_trials_.override_dscp && opt == rtc::Socket::OPT_DSCP) {
-    value = *field_trials_.override_dscp;
+  if (ice_field_trials_.override_dscp && opt == rtc::Socket::OPT_DSCP) {
+    value = *ice_field_trials_.override_dscp;
   }
 
   OptionMap::iterator it = options_.find(opt);
@@ -1855,9 +1881,9 @@ void P2PTransportChannel::SwitchSelectedConnection(Connection* conn,
   }
 
   if (conn != nullptr && ice_role_ == ICEROLE_CONTROLLING &&
-      ((field_trials_.send_ping_on_switch_ice_controlling &&
+      ((ice_field_trials_.send_ping_on_switch_ice_controlling &&
         old_selected_connection != nullptr) ||
-       field_trials_.send_ping_on_selected_ice_controlling)) {
+       ice_field_trials_.send_ping_on_selected_ice_controlling)) {
     PingConnection(conn);
     MarkConnectionPinged(conn);
   }
@@ -2116,7 +2142,7 @@ void P2PTransportChannel::OnConnectionStateChange(Connection* connection) {
   // the connection is at the latest generation. It is not enough to check
   // that the connection becomes weakly connected because the connection may be
   // changing from (writable, receiving) to (writable, not receiving).
-  if (field_trials_.stop_gather_on_strongly_connected) {
+  if (ice_field_trials_.stop_gather_on_strongly_connected) {
     bool strongly_connected = !connection->weak();
     bool latest_generation = connection->local_candidate().generation() >=
                              allocator_session()->generation();

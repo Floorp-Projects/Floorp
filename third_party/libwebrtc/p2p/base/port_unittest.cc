@@ -63,7 +63,6 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/virtual_socket_server.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
 
 using rtc::AsyncListenSocket;

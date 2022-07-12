@@ -97,6 +97,7 @@ rtc_library("rtc_p2p") {
     "../api/rtc_event_log",
     "../api/task_queue",
     "../api/transport:enums",
+    "../api/transport:field_trial_based_config",
     "../api/transport:stun_types",
     "../logging:ice_log",
     "../rtc_base",

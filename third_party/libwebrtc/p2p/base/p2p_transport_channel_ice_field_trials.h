@@ -19,6 +19,9 @@ namespace cricket {
 // put in separate file so that they can be shared e.g
 // with Connection.
 struct IceFieldTrials {
+  // This struct is built using the FieldTrialParser, and then not modified.
+  // TODO(jonaso) : Consider how members of this struct can be made const.
+
   bool skip_relay_to_non_relay_connections = false;
   absl::optional<int> max_outstanding_pings;
 
@@ -64,6 +67,9 @@ struct IceFieldTrials {
 
   // DSCP taging.
   absl::optional<int> override_dscp;
+
+  bool piggyback_ice_check_acknowledgement = false;
+  bool extra_ice_ping = false;
 };
 
 }  // namespace cricket
