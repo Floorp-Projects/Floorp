@@ -824,7 +824,9 @@ void SimulcastEncoderAdapter::OverrideFromFieldTrial(
         info->apply_alignment_to_all_simulcast_layers ||
         encoder_info_override_.apply_alignment_to_all_simulcast_layers();
   }
-  if (!encoder_info_override_.resolution_bitrate_limits().empty()) {
+  // Override resolution bitrate limits unless they're set already.
+  if (info->resolution_bitrate_limits.empty() &&
+      !encoder_info_override_.resolution_bitrate_limits().empty()) {
     info->resolution_bitrate_limits =
         encoder_info_override_.resolution_bitrate_limits();
   }
