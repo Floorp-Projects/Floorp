@@ -39,7 +39,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/virtual_socket_server.h"
-#include "system_wrappers/include/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -845,7 +844,7 @@ TEST_P(DataChannelIntegrationTest,
   EXPECT_GT(202u, callee()->data_observer()->received_message_count());
   EXPECT_LE(2u, callee()->data_observer()->received_message_count());
   // Then, check that observed behavior (lose some messages) has not changed
-  if (!webrtc::field_trial::IsDisabled("WebRTC-DataChannel-Dcsctp")) {
+  if (!trials().IsDisabled("WebRTC-DataChannel-Dcsctp")) {
     // DcSctp loses all messages. This is correct.
     EXPECT_EQ(2u, callee()->data_observer()->received_message_count());
   } else {

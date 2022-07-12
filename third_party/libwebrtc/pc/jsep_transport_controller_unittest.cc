@@ -33,6 +33,7 @@
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 using cricket::Candidate;
 using cricket::Candidates;
@@ -100,6 +101,7 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
     config.ice_transport_factory = fake_ice_transport_factory_.get();
     config.dtls_transport_factory = fake_dtls_transport_factory_.get();
     config.on_dtls_handshake_error_ = [](rtc::SSLHandshakeError s) {};
+    config.field_trials = &field_trials_;
     transport_controller_ = std::make_unique<JsepTransportController>(
         network_thread, port_allocator, nullptr /* async_resolver_factory */,
         config);
@@ -378,6 +380,7 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
   // Transport controller needs to be destroyed first, because it may issue
   // callbacks that modify the changed_*_by_mid in the destructor.
   std::unique_ptr<JsepTransportController> transport_controller_;
+  webrtc::test::ScopedKeyValueConfig field_trials_;
 };
 
 TEST_F(JsepTransportControllerTest, GetRtpTransport) {

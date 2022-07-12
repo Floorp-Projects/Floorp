@@ -711,6 +711,8 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
         }
       };
 
+  config.field_trials = &context_->trials();
+
   transport_controller_.reset(
       new JsepTransportController(network_thread(), port_allocator_.get(),
                                   async_dns_resolver_factory_.get(), config));

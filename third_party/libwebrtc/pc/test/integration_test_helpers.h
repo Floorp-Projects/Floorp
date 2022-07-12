@@ -120,8 +120,8 @@
 #include "rtc_base/time_utils.h"
 #include "rtc_base/virtual_socket_server.h"
 #include "system_wrappers/include/metrics.h"
-#include "test/field_trial.h"
 #include "test/gmock.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 
@@ -1366,9 +1366,9 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
         fss_(new rtc::FirewallSocketServer(ss_.get())),
         network_thread_(new rtc::Thread(fss_.get())),
         worker_thread_(rtc::Thread::Create()),
-        field_trials_(field_trials.has_value()
-                          ? new test::ScopedFieldTrials(*field_trials)
-                          : nullptr) {
+        // TODO(bugs.webrtc.org/10335): Pass optional ScopedKeyValueConfig.
+        field_trials_(new test::ScopedKeyValueConfig(
+            field_trials.has_value() ? *field_trials : "")) {
     network_thread_->SetName("PCNetworkThread", this);
     worker_thread_->SetName("PCWorkerThread", this);
     RTC_CHECK(network_thread_->Start());
@@ -1855,6 +1855,8 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
                               expected_cipher_suite);
   }
 
+  const WebRtcKeyValueConfig& trials() const { return *field_trials_.get(); }
+
  protected:
   SdpSemantics sdp_semantics_;
 
@@ -1874,7 +1876,7 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
   std::vector<std::unique_ptr<cricket::TestTurnCustomizer>> turn_customizers_;
   std::unique_ptr<PeerConnectionIntegrationWrapper> caller_;
   std::unique_ptr<PeerConnectionIntegrationWrapper> callee_;
-  std::unique_ptr<test::ScopedFieldTrials> field_trials_;
+  std::unique_ptr<WebRtcKeyValueConfig> field_trials_;
 };
 
 }  // namespace webrtc

@@ -25,6 +25,7 @@
 #include "rtc_base/ssl_identity.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 using cricket::TransportDescription;
 using cricket::TransportDescriptionFactory;
@@ -36,6 +37,8 @@ class TransportDescriptionFactoryTest : public ::testing::Test {
  public:
   TransportDescriptionFactoryTest()
       : ice_credentials_({}),
+        f1_(field_trials_),
+        f2_(field_trials_),
         cert1_(rtc::RTCCertificate::Create(std::unique_ptr<rtc::SSLIdentity>(
             new rtc::FakeSSLIdentity("User1")))),
         cert2_(rtc::RTCCertificate::Create(std::unique_ptr<rtc::SSLIdentity>(
@@ -156,6 +159,7 @@ class TransportDescriptionFactoryTest : public ::testing::Test {
     }
   }
 
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   cricket::IceCredentialsIterator ice_credentials_;
   TransportDescriptionFactory f1_;
   TransportDescriptionFactory f2_;

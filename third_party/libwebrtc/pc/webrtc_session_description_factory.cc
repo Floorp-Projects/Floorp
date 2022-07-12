@@ -24,6 +24,7 @@
 #include "api/jsep_session_description.h"
 #include "api/rtc_error.h"
 #include "api/sequence_checker.h"
+#include "pc/connection_context.h"
 #include "pc/sdp_state_provider.h"
 #include "pc/session_description.h"
 #include "rtc_base/checks.h"
@@ -127,8 +128,7 @@ void WebRtcSessionDescriptionFactory::CopyCandidatesFromSessionDescription(
 }
 
 WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
-    rtc::Thread* signaling_thread,
-    cricket::ChannelManager* channel_manager,
+    ConnectionContext* context,
     const SdpStateProvider* sdp_info,
     const std::string& session_id,
     bool dtls_enabled,
@@ -136,8 +136,10 @@ WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
     const rtc::scoped_refptr<rtc::RTCCertificate>& certificate,
     std::function<void(const rtc::scoped_refptr<rtc::RTCCertificate>&)>
         on_certificate_ready)
-    : signaling_thread_(signaling_thread),
-      session_desc_factory_(channel_manager, &transport_desc_factory_),
+    : signaling_thread_(context->signaling_thread()),
+      transport_desc_factory_(context->trials()),
+      session_desc_factory_(context->channel_manager(),
+                            &transport_desc_factory_),
       // RFC 4566 suggested a Network Time Protocol (NTP) format timestamp
       // as the session id and session version. To simplify, it should be fine
       // to just use a random number as session id and start version from
