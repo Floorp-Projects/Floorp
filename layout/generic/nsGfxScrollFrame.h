@@ -32,6 +32,7 @@ class nsPresContext;
 class nsIContent;
 class nsAtom;
 class nsIScrollPositionListener;
+class AutoContainsBlendModeCapturer;
 
 namespace mozilla {
 class PresShell;
@@ -119,8 +120,10 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // wrapped in the async zoom container, if we're building one.
   // It should not be called with an ASR setter on the stack, as the
   // top-layer items handle setting up their own ASRs.
-  nsDisplayWrapList* MaybeCreateTopLayerItems(nsDisplayListBuilder* aBuilder,
-                                              bool* aIsOpaque);
+  void MaybeCreateTopLayerAndWrapRootItems(
+      nsDisplayListBuilder*, nsDisplayListCollection&, bool aCreateAsyncZoom,
+      AutoContainsBlendModeCapturer* aAsyncZoomBlendCapture,
+      const nsRect& aAsyncZoomClipRect, nscoord* aRadii);
 
   void AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
                            const nsDisplayListSet& aLists, bool aCreateLayer,
