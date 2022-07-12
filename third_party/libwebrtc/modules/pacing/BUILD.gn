@@ -35,7 +35,6 @@ rtc_library("pacing") {
     "..:module_api",
     "../../api:function_view",
     "../../api:sequence_checker",
-    "../../api:webrtc_key_value_config",
     "../../api/rtc_event_log",
     "../../api/task_queue:task_queue",
     "../../api/transport:field_trial_based_config",
@@ -94,7 +93,6 @@ if (rtc_include_tests) {
     deps = [
       ":interval_budget",
       ":pacing",
-      "../../api/task_queue:task_queue",
       "../../api/transport:network_control",
       "../../api/units:data_rate",
       "../../api/units:time_delta",
@@ -103,7 +101,6 @@ if (rtc_include_tests) {
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_base_tests_utils",
       "../../rtc_base/experiments:alr_experiment",
-      "../../rtc_base/task_utils:to_queued_task",
       "../../system_wrappers",
       "../../test:explicit_key_value_config",
       "../../test:scoped_key_value_config",
