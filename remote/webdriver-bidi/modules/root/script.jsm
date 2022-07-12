@@ -139,7 +139,7 @@ class ScriptModule extends Module {
    *     The target for the evaluation, which either matches the definition for
    *     a RealmTarget or for ContextTarget.
    * @param {RemoteValue=} this
-   *     The value of the this keyword for the function call. [unsupported]
+   *     The value of the this keyword for the function call.
    *
    * @returns {ScriptEvaluateResult}
    *
@@ -180,12 +180,6 @@ class ScriptModule extends Module {
       );
     }
 
-    if (thisParameter != null) {
-      throw new lazy.error.UnsupportedOperationError(
-        `"this" parameter is not supported yet`
-      );
-    }
-
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
     const realm = this.#getRealmInfoFromTarget({ contextId, realmId, sandbox });
     const evaluationResult = await this.messageHandler.forwardCommand({
@@ -199,6 +193,7 @@ class ScriptModule extends Module {
         awaitPromise,
         commandArguments,
         functionDeclaration,
+        thisParameter,
       },
     });
 
