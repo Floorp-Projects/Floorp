@@ -483,6 +483,9 @@ class MarionetteActionSequenceProtocolPart(ActionSequenceProtocolPart):
         self.logger.info(actions)
         self.marionette._send_message("WebDriver:PerformActions", actions)
 
+    def release(self):
+        self.marionette._send_message("WebDriver:ReleaseActions", {})
+
 
 class MarionetteTestDriverProtocolPart(TestDriverProtocolPart):
     def setup(self):
