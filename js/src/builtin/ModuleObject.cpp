@@ -1030,17 +1030,17 @@ void ModuleObject::clearDfsIndexes() {
   setReservedSlot(DFSAncestorIndexSlot, UndefinedValue());
 }
 
-JSObject* ModuleObject::maybeTopLevelCapability() const {
+PromiseObject* ModuleObject::maybeTopLevelCapability() const {
   Value value = getReservedSlot(TopLevelCapabilitySlot);
   if (value.isUndefined()) {
     return nullptr;
   }
 
-  return &value.toObject();
+  return &value.toObject().as<PromiseObject>();
 }
 
-JSObject* ModuleObject::topLevelCapability() const {
-  JSObject* capability = maybeTopLevelCapability();
+PromiseObject* ModuleObject::topLevelCapability() const {
+  PromiseObject* capability = maybeTopLevelCapability();
   MOZ_RELEASE_ASSERT(capability);
   return capability;
 }
@@ -1056,8 +1056,9 @@ PromiseObject* ModuleObject::createTopLevelCapability(
   return resultPromise;
 }
 
-void ModuleObject::setInitialTopLevelCapability(HandleObject promiseObj) {
-  initReservedSlot(TopLevelCapabilitySlot, ObjectValue(*promiseObj));
+void ModuleObject::setInitialTopLevelCapability(
+    Handle<PromiseObject*> capability) {
+  initReservedSlot(TopLevelCapabilitySlot, ObjectValue(*capability));
 }
 
 ListObject* ModuleObject::asyncParentModules() const {
