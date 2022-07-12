@@ -11,14 +11,8 @@
 #include "nsPoint.h"
 #include "mozilla/ScrollGeneration.h"
 #include "mozilla/ScrollOrigin.h"
-#include "mozilla/ScrollSnapTargetId.h"
 #include "mozilla/ScrollTypes.h"
 #include "Units.h"
-
-namespace IPC {
-template <typename T>
-struct ParamTraits;
-}  // namespace IPC
 
 namespace mozilla {
 
@@ -47,8 +41,6 @@ enum class ScrollTriggeredByScript : bool { No, Yes };
  * occurred independently on the compositor side.
  */
 class ScrollPositionUpdate {
-  friend struct IPC::ParamTraits<mozilla::ScrollPositionUpdate>;
-
  public:
   // Constructor for IPC use only.
   explicit ScrollPositionUpdate();
@@ -67,15 +59,9 @@ class ScrollPositionUpdate {
   // Create a ScrollPositionUpdate for a new absolute/smooth scroll, which
   // animates smoothly to the given destination from whatever the current
   // scroll position is in the receiver.
-  // If the smooth operation involves snapping to |aDestination|,
-  // |aSnapTargetIds| has snap-target-ids for snapping. Once after this smooth
-  // scroll finished on the target APZC, the ids will be reported back to the
-  // main-thread as the last snap target ids which will be used for re-snapping
-  // to the same snapped element(s).
   static ScrollPositionUpdate NewSmoothScroll(
       ScrollOrigin aOrigin, nsPoint aDestination,
-      ScrollTriggeredByScript aTriggeredByScript,
-      UniquePtr<ScrollSnapTargetIds> aSnapTargetIds);
+      ScrollTriggeredByScript aTriggeredByScript);
   // Create a ScrollPositionUpdate for a new pure-relative scroll. The
   // aMode parameter controls whether or not this is a smooth animation or
   // instantaneous scroll.
@@ -103,7 +89,6 @@ class ScrollPositionUpdate {
   bool WasTriggeredByScript() const {
     return mTriggeredByScript == ScrollTriggeredByScript::Yes;
   }
-  const ScrollSnapTargetIds& GetSnapTargetIds() const { return mSnapTargetIds; }
 
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const ScrollPositionUpdate& aUpdate);
@@ -122,7 +107,6 @@ class ScrollPositionUpdate {
   // mDelta is not populated when mType == Absolute || mType == Relative.
   CSSPoint mDelta;
   ScrollTriggeredByScript mTriggeredByScript;
-  ScrollSnapTargetIds mSnapTargetIds;
 };
 
 }  // namespace mozilla
