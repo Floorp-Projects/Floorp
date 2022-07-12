@@ -547,14 +547,6 @@ bool nsNativeTheme::IsRangeHorizontal(nsIFrame* aFrame) {
   return aFrame->GetSize().width >= aFrame->GetSize().height;
 }
 
-static nsIFrame* GetBodyFrame(nsIFrame* aCanvasFrame) {
-  nsIContent* body = aCanvasFrame->PresContext()->Document()->GetBodyElement();
-  if (!body) {
-    return nullptr;
-  }
-  return body->GetPrimaryFrame();
-}
-
 /* static */
 bool nsNativeTheme::IsDarkBackground(nsIFrame* aFrame) {
   // Try to find the scrolled frame. Note that for stuff like xul <tree> there
@@ -573,29 +565,10 @@ bool nsNativeTheme::IsDarkBackground(nsIFrame* aFrame) {
     }
   }
 
-  auto backgroundFrame = nsCSSRendering::FindNonTransparentBackgroundFrame(
-      aFrame, /* aStopAtThemed = */ false);
-  if (!backgroundFrame.mFrame) {
-    return false;
-  }
-
-  nscolor color = backgroundFrame.mFrame->StyleBackground()->BackgroundColor(
-      backgroundFrame.mFrame);
-
-  if (backgroundFrame.mIsForCanvas) {
-    // For canvas frames, prefer to look at the body first, because the body
-    // background color is most likely what will be visible as the background
-    // color of the page, even if the html element has a different background
-    // color which prevents that of the body frame to propagate to the viewport.
-    if (nsIFrame* bodyFrame = GetBodyFrame(aFrame)) {
-      nscolor bodyColor =
-          bodyFrame->StyleBackground()->BackgroundColor(bodyFrame);
-      if (NS_GET_A(bodyColor)) {
-        color = bodyColor;
-      }
-    }
-  }
-
+  auto color =
+      nsCSSRendering::FindEffectiveBackgroundColor(
+          aFrame, /* aStopAtThemed = */ false, /* aPreferBodyToCanvas = */ true)
+          .mColor;
   return LookAndFeel::IsDarkColor(color);
 }
 
