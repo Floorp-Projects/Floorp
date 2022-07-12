@@ -55,3 +55,7 @@ rtc_library("unittests") {
   ]
 }
 }
+
+rtc_source_set("always_valid_pointer") {
+  sources = [ "always_valid_pointer.h" ]
+}
