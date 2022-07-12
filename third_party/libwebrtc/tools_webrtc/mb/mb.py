@@ -24,7 +24,7 @@ sys.path.insert(0, _SRC_DIR)
 from tools.mb import mb
 
 
-def _get_executable(target, platform):
+def _GetExecutable(target, platform):
   executable_prefix = '.\\' if platform == 'win32' else './'
   executable_suffix = '.exe' if platform == 'win32' else ''
   return executable_prefix + target + executable_suffix
@@ -37,7 +37,7 @@ def main(args):
 
 class WebRTCMetaBuildWrapper(mb.MetaBuildWrapper):
   def __init__(self):
-    super(WebRTCMetaBuildWrapper, self).__init__()
+    super().__init__()
     # Make sure default_config and default_isolate_map are attributes of the
     # parent class before changing their values.
     # pylint: disable=access-member-before-definition
@@ -93,7 +93,7 @@ class WebRTCMetaBuildWrapper(mb.MetaBuildWrapper):
     elif test_type == 'raw':
       cmdline += [vpython_exe, '../../tools_webrtc/flags_compatibility.py']
       extra_files.append('../../tools_webrtc/flags_compatibility.py')
-      cmdline.append(_get_executable(target, self.platform))
+      cmdline.append(_GetExecutable(target, self.platform))
     else:
       if isolate_map[target].get('use_webcam', False):
         cmdline += [
@@ -144,7 +144,7 @@ class WebRTCMetaBuildWrapper(mb.MetaBuildWrapper):
         # Retry would hide most sanitizers detections.
         cmdline.append('--retry_failed=3')
 
-      cmdline.append(_get_executable(target, self.platform))
+      cmdline.append(_GetExecutable(target, self.platform))
 
       cmdline.extend([
           '--asan=%d' % asan,
