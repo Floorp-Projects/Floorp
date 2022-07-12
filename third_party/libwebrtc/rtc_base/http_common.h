@@ -13,6 +13,8 @@
 
 #include <string>
 
+#include "absl/strings/string_view.h"
+
 namespace rtc {
 
 class CryptString;
@@ -24,7 +26,7 @@ class SocketAddress;
 
 struct HttpAuthContext {
   std::string auth_method;
-  HttpAuthContext(const std::string& auth) : auth_method(auth) {}
+  HttpAuthContext(absl::string_view auth) : auth_method(auth) {}
   virtual ~HttpAuthContext() {}
 };
 
@@ -37,9 +39,9 @@ enum HttpAuthResult { HAR_RESPONSE, HAR_IGNORE, HAR_CREDENTIALS, HAR_ERROR };
 HttpAuthResult HttpAuthenticate(const char* challenge,
                                 size_t len,
                                 const SocketAddress& server,
-                                const std::string& method,
-                                const std::string& uri,
-                                const std::string& username,
+                                absl::string_view method,
+                                absl::string_view uri,
+                                absl::string_view username,
                                 const CryptString& password,
                                 HttpAuthContext*& context,
                                 std::string& response,

@@ -15,6 +15,8 @@
 #import "base/RTCLogging.h"
 #import "helpers/RTCDispatcher+Private.h"
 
+#include "rtc_base/string_utils.h"
+
 namespace {
 
 rtc::AdapterType AdapterTypeFromInterfaceType(nw_interface_type_t interfaceType) {
@@ -78,8 +80,8 @@ rtc::AdapterType AdapterTypeFromInterfaceType(nw_interface_type_t interfaceType)
         } else if (status == nw_path_status_satisfiable) {
           RTCLog(@"NW path monitor status: satisfiable.");
         }
-        std::map<std::string, rtc::AdapterType> *map =
-            new std::map<std::string, rtc::AdapterType>();
+        std::map<std::string, rtc::AdapterType, rtc::AbslStringViewCmp> *map =
+            new std::map<std::string, rtc::AdapterType, rtc::AbslStringViewCmp>();
         nw_path_enumerate_interfaces(
             path, (nw_path_enumerate_interfaces_block_t) ^ (nw_interface_t interface) {
               const char *name = nw_interface_get_name(interface);

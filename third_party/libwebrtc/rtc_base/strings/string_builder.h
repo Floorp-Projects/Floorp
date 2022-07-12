@@ -32,9 +32,8 @@ class SimpleStringBuilder {
   SimpleStringBuilder(const SimpleStringBuilder&) = delete;
   SimpleStringBuilder& operator=(const SimpleStringBuilder&) = delete;
 
-  SimpleStringBuilder& operator<<(const char* str);
   SimpleStringBuilder& operator<<(char ch);
-  SimpleStringBuilder& operator<<(const std::string& str);
+  SimpleStringBuilder& operator<<(absl::string_view str);
   SimpleStringBuilder& operator<<(int i);
   SimpleStringBuilder& operator<<(unsigned i);
   SimpleStringBuilder& operator<<(long i);                // NOLINT

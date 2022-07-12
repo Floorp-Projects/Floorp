@@ -19,6 +19,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "p2p/base/connection.h"
 #include "p2p/base/port_allocator.h"
 #include "rtc_base/checks.h"
@@ -301,7 +302,7 @@ bool Port::MaybeObfuscateAddress(Candidate* c,
   auto copy = *c;
   auto weak_ptr = weak_factory_.GetWeakPtr();
   auto callback = [weak_ptr, copy, is_final](const rtc::IPAddress& addr,
-                                             const std::string& name) mutable {
+                                             absl::string_view name) mutable {
     RTC_DCHECK(copy.address().ipaddr() == addr);
     rtc::SocketAddress hostname_address(name, copy.address().port());
     // In Port and Connection, we need the IP address information to

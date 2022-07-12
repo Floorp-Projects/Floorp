@@ -592,7 +592,10 @@ if (current_os == "linux" || is_android) {
       "../../system_wrappers:field_trial",
       "../../system_wrappers:metrics",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 
   rtc_library("audio_jni") {

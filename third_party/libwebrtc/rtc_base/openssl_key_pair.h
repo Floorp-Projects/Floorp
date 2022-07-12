@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/ssl_identity.h"
 
@@ -34,7 +35,7 @@ class OpenSSLKeyPair final {
   // Constructs a key pair from the private key PEM string. This must not result
   // in missing public key parameters. Returns null on error.
   static std::unique_ptr<OpenSSLKeyPair> FromPrivateKeyPEMString(
-      const std::string& pem_string);
+      absl::string_view pem_string);
 
   ~OpenSSLKeyPair();
 

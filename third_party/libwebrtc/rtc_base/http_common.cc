@@ -10,6 +10,8 @@
 
 #include <time.h>
 
+#include "absl/strings/string_view.h"
+
 #if defined(WEBRTC_WIN)
 #include <windows.h>
 #include <winsock2.h>
@@ -185,7 +187,7 @@ void HttpParseAttributes(const char* data,
 }
 
 bool HttpHasAttribute(const HttpAttributeList& attributes,
-                      const std::string& name,
+                      absl::string_view name,
                       std::string* value) {
   for (HttpAttributeList::const_iterator it = attributes.begin();
        it != attributes.end(); ++it) {
@@ -213,7 +215,7 @@ bool HttpHasNthAttribute(HttpAttributeList& attributes,
   return true;
 }
 
-std::string quote(const std::string& str) {
+std::string quote(absl::string_view str) {
   std::string result;
   result.push_back('"');
   for (size_t i = 0; i < str.size(); ++i) {
@@ -232,7 +234,7 @@ struct NegotiateAuthContext : public HttpAuthContext {
   size_t steps;
   bool specified_credentials;
 
-  NegotiateAuthContext(const std::string& auth, CredHandle c1, CtxtHandle c2)
+  NegotiateAuthContext(absl::string_view auth, CredHandle c1, CtxtHandle c2)
       : HttpAuthContext(auth),
         cred(c1),
         ctx(c2),
@@ -251,9 +253,9 @@ struct NegotiateAuthContext : public HttpAuthContext {
 HttpAuthResult HttpAuthenticate(const char* challenge,
                                 size_t len,
                                 const SocketAddress& server,
-                                const std::string& method,
-                                const std::string& uri,
-                                const std::string& username,
+                                absl::string_view method,
+                                absl::string_view uri,
+                                absl::string_view username,
                                 const CryptString& password,
                                 HttpAuthContext*& context,
                                 std::string& response,
@@ -326,7 +328,7 @@ HttpAuthResult HttpAuthenticate(const char* challenge,
     pos += strcpyn(sensitive + pos, len - pos, ":");
     password.CopyTo(sensitive + pos, true);
 
-    std::string A2 = method + ":" + uri;
+    std::string A2 = std::string(method) + ":" + std::string(uri);
     std::string middle;
     if (has_qop) {
       qop = "auth";
@@ -459,11 +461,11 @@ HttpAuthResult HttpAuthenticate(const char* challenge,
         size_t len = password.GetLength() + 1;
         char* sensitive = new char[len];
         password.CopyTo(sensitive, true);
-        std::string::size_type pos = username.find('\\');
-        if (pos == std::string::npos) {
+        absl::string_view::size_type pos = username.find('\\');
+        if (pos == absl::string_view::npos) {
           auth_id.UserLength = static_cast<unsigned long>(
               std::min(sizeof(userbuf) - 1, username.size()));
-          memcpy(userbuf, username.c_str(), auth_id.UserLength);
+          memcpy(userbuf, username.data(), auth_id.UserLength);
           userbuf[auth_id.UserLength] = 0;
           auth_id.DomainLength = 0;
           domainbuf[auth_id.DomainLength] = 0;
@@ -474,11 +476,11 @@ HttpAuthResult HttpAuthenticate(const char* challenge,
         } else {
           auth_id.UserLength = static_cast<unsigned long>(
               std::min(sizeof(userbuf) - 1, username.size() - pos - 1));
-          memcpy(userbuf, username.c_str() + pos + 1, auth_id.UserLength);
+          memcpy(userbuf, username.data() + pos + 1, auth_id.UserLength);
           userbuf[auth_id.UserLength] = 0;
           auth_id.DomainLength =
               static_cast<unsigned long>(std::min(sizeof(domainbuf) - 1, pos));
-          memcpy(domainbuf, username.c_str(), auth_id.DomainLength);
+          memcpy(domainbuf, username.data(), auth_id.DomainLength);
           domainbuf[auth_id.DomainLength] = 0;
           auth_id.PasswordLength = static_cast<unsigned long>(
               std::min(sizeof(passbuf) - 1, password.GetLength()));

@@ -10,6 +10,8 @@
 
 #include "rtc_base/thread.h"
 
+#include "absl/strings/string_view.h"
+
 #if defined(WEBRTC_WIN)
 #include <comdef.h>
 #elif defined(WEBRTC_POSIX)
@@ -744,10 +746,10 @@ bool Thread::SleepMs(int milliseconds) {
 #endif
 }
 
-bool Thread::SetName(const std::string& name, const void* obj) {
+bool Thread::SetName(absl::string_view name, const void* obj) {
   RTC_DCHECK(!IsRunning());
 
-  name_ = name;
+  name_ = std::string(name);
   if (obj) {
     // The %p specifier typically produce at most 16 hex digits, possibly with a
     // 0x prefix. But format is implementation defined, so add some margin.

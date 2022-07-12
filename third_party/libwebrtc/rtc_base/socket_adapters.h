@@ -13,6 +13,7 @@
 
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "rtc_base/async_socket.h"
 #include "rtc_base/crypt_string.h"
@@ -82,9 +83,9 @@ class AsyncSSLSocket : public BufferedReadAdapter {
 class AsyncHttpsProxySocket : public BufferedReadAdapter {
  public:
   AsyncHttpsProxySocket(Socket* socket,
-                        const std::string& user_agent,
+                        absl::string_view user_agent,
                         const SocketAddress& proxy,
-                        const std::string& username,
+                        absl::string_view username,
                         const CryptString& password);
   ~AsyncHttpsProxySocket() override;
 
@@ -143,7 +144,7 @@ class AsyncSocksProxySocket : public BufferedReadAdapter {
  public:
   AsyncSocksProxySocket(Socket* socket,
                         const SocketAddress& proxy,
-                        const std::string& username,
+                        absl::string_view username,
                         const CryptString& password);
   ~AsyncSocksProxySocket() override;
 

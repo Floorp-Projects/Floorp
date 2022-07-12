@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/system/rtc_export.h"
 
@@ -55,7 +56,7 @@ class RTC_EXPORT SSLCertificate {
   // stored in *pem_length if it is non-null, and only if
   // parsing was successful.
   static std::unique_ptr<SSLCertificate> FromPEMString(
-      const std::string& pem_string);
+      absl::string_view pem_string);
   virtual ~SSLCertificate() = default;
 
   // Returns a new SSLCertificate object instance wrapping the same
@@ -73,7 +74,7 @@ class RTC_EXPORT SSLCertificate {
   virtual bool GetSignatureDigestAlgorithm(std::string* algorithm) const = 0;
 
   // Compute the digest of the certificate given algorithm
-  virtual bool ComputeDigest(const std::string& algorithm,
+  virtual bool ComputeDigest(absl::string_view algorithm,
                              unsigned char* digest,
                              size_t size,
                              size_t* length) const = 0;

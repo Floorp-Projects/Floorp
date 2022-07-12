@@ -13,9 +13,11 @@
 
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/sequence_checker.h"
 #include "rtc_base/network_monitor.h"
 #include "rtc_base/network_monitor_factory.h"
+#include "rtc_base/string_utils.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
@@ -41,23 +43,24 @@ class ObjCNetworkMonitor : public rtc::NetworkMonitorInterface,
   void Start() override;
   void Stop() override;
 
-  rtc::AdapterType GetAdapterType(const std::string& interface_name) override;
+  rtc::AdapterType GetAdapterType(absl::string_view interface_name) override;
   rtc::AdapterType GetVpnUnderlyingAdapterType(
-      const std::string& interface_name) override;
+      absl::string_view interface_name) override;
   rtc::NetworkPreference GetNetworkPreference(
-      const std::string& interface_name) override;
-  bool IsAdapterAvailable(const std::string& interface_name) override;
+      absl::string_view interface_name) override;
+  bool IsAdapterAvailable(absl::string_view interface_name) override;
 
   // NetworkMonitorObserver override.
   // Fans out updates to observers on the correct thread.
   void OnPathUpdate(
-      std::map<std::string, rtc::AdapterType> adapter_type_by_name) override;
+      std::map<std::string, rtc::AdapterType, rtc::AbslStringViewCmp>
+          adapter_type_by_name) override;
 
  private:
   rtc::Thread* thread_ = nullptr;
   bool started_ = false;
-  std::map<std::string, rtc::AdapterType> adapter_type_by_name_
-      RTC_GUARDED_BY(thread_);
+  std::map<std::string, rtc::AdapterType, rtc::AbslStringViewCmp>
+      adapter_type_by_name_ RTC_GUARDED_BY(thread_);
   rtc::scoped_refptr<PendingTaskSafetyFlag> safety_flag_;
   RTCNetworkMonitor* network_monitor_ = nil;
 };

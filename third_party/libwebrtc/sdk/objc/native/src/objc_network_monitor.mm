@@ -9,12 +9,14 @@
  */
 
 #include "sdk/objc/native/src/objc_network_monitor.h"
+#include "absl/strings/string_view.h"
 
 #include "rtc_base/task_utils/to_queued_task.h"
 
 #include <algorithm>
 
 #include "rtc_base/logging.h"
+#include "rtc_base/string_utils.h"
 
 namespace webrtc {
 
@@ -56,24 +58,24 @@ void ObjCNetworkMonitor::Stop() {
   started_ = false;
 }
 
-rtc::AdapterType ObjCNetworkMonitor::GetAdapterType(const std::string& interface_name) {
+rtc::AdapterType ObjCNetworkMonitor::GetAdapterType(absl::string_view interface_name) {
   RTC_DCHECK_RUN_ON(thread_);
-  if (adapter_type_by_name_.find(interface_name) == adapter_type_by_name_.end()) {
+  auto iter = adapter_type_by_name_.find(interface_name);
+  if (iter == adapter_type_by_name_.end()) {
     return rtc::ADAPTER_TYPE_UNKNOWN;
   }
-  return adapter_type_by_name_.at(interface_name);
+  return iter->second;
 }
 
-rtc::AdapterType ObjCNetworkMonitor::GetVpnUnderlyingAdapterType(
-    const std::string& interface_name) {
+rtc::AdapterType ObjCNetworkMonitor::GetVpnUnderlyingAdapterType(absl::string_view interface_name) {
   return rtc::ADAPTER_TYPE_UNKNOWN;
 }
 
-rtc::NetworkPreference ObjCNetworkMonitor::GetNetworkPreference(const std::string& interface_name) {
+rtc::NetworkPreference ObjCNetworkMonitor::GetNetworkPreference(absl::string_view interface_name) {
   return rtc::NetworkPreference::NEUTRAL;
 }
 
-bool ObjCNetworkMonitor::IsAdapterAvailable(const std::string& interface_name) {
+bool ObjCNetworkMonitor::IsAdapterAvailable(absl::string_view interface_name) {
   RTC_DCHECK_RUN_ON(thread_);
   if (adapter_type_by_name_.empty()) {
     // If we have no path update, assume everything's available, because it's
@@ -84,7 +86,7 @@ bool ObjCNetworkMonitor::IsAdapterAvailable(const std::string& interface_name) {
 }
 
 void ObjCNetworkMonitor::OnPathUpdate(
-    std::map<std::string, rtc::AdapterType> adapter_type_by_name) {
+    std::map<std::string, rtc::AdapterType, rtc::AbslStringViewCmp> adapter_type_by_name) {
   RTC_DCHECK(network_monitor_ != nil);
   thread_->PostTask(ToQueuedTask(safety_flag_, [this, adapter_type_by_name] {
     RTC_DCHECK_RUN_ON(thread_);

@@ -14,6 +14,7 @@
 #include <functional>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/network_constants.h"
 
 namespace rtc {
@@ -78,12 +79,12 @@ class NetworkMonitorInterface {
   virtual void Start() = 0;
   virtual void Stop() = 0;
 
-  virtual AdapterType GetAdapterType(const std::string& interface_name) = 0;
+  virtual AdapterType GetAdapterType(absl::string_view interface_name) = 0;
   virtual AdapterType GetVpnUnderlyingAdapterType(
-      const std::string& interface_name) = 0;
+      absl::string_view interface_name) = 0;
 
   virtual NetworkPreference GetNetworkPreference(
-      const std::string& interface_name) = 0;
+      absl::string_view interface_name) = 0;
 
   // Does `this` NetworkMonitorInterface implement BindSocketToNetwork?
   // Only Android returns true.
@@ -94,7 +95,7 @@ class NetworkMonitorInterface {
   virtual NetworkBindingResult BindSocketToNetwork(
       int socket_fd,
       const IPAddress& address,
-      const std::string& interface_name) {
+      absl::string_view interface_name) {
     return NetworkBindingResult::NOT_IMPLEMENTED;
   }
 
@@ -107,7 +108,7 @@ class NetworkMonitorInterface {
   // These specific use case this was added for was a phone with two SIM cards,
   // where attempting to use all interfaces returned from getifaddrs caused the
   // connection to be dropped.
-  virtual bool IsAdapterAvailable(const std::string& interface_name) {
+  virtual bool IsAdapterAvailable(absl::string_view interface_name) {
     return true;
   }
 

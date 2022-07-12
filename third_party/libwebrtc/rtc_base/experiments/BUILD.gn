@@ -157,7 +157,10 @@ rtc_library("encoder_info_settings") {
     "../../api/video_codecs:video_codecs_api",
     "../../system_wrappers:field_trial",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("rtt_mult_experiment") {
@@ -296,6 +299,9 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../test:test_main",
       "../../test:test_support",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 }

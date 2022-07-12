@@ -15,6 +15,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "absl/strings/string_view.h"
+
 #if defined(WEBRTC_ANDROID)
 #define RTC_LOG_TAG_ANDROID "rtc"
 #include <android/log.h>  // NOLINT
@@ -37,13 +39,14 @@
 
 namespace {
 
-RTC_NORETURN void WriteFatalLogAndAbort(const std::string& output) {
-  const char* output_c = output.c_str();
+RTC_NORETURN void WriteFatalLogAndAbort(absl::string_view output) {
 #if defined(WEBRTC_ANDROID)
-  __android_log_print(ANDROID_LOG_ERROR, RTC_LOG_TAG_ANDROID, "%s\n", output_c);
+  std::string output_str = std::string(output);
+  __android_log_print(ANDROID_LOG_ERROR, RTC_LOG_TAG_ANDROID, "%s\n",
+                      output_str.c_str());
 #endif
   fflush(stdout);
-  fprintf(stderr, "%s", output_c);
+  fwrite(output.data(), output.size(), 1, stderr);
   fflush(stderr);
 #if defined(WEBRTC_WIN)
   DebugBreak();
