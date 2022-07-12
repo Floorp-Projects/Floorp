@@ -17,6 +17,7 @@ self.onmessage = function(msg) {
   self.onmessage = function on_unexpected_message(msg) {
     throw new Error("Unexpected message " + JSON.stringify(msg.data));
   };
+  /* import-globals-from /toolkit/components/osfile/osfile.jsm */
   importScripts("resource://gre/modules/osfile.jsm");
   info("Initialization complete");
 
