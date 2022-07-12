@@ -566,6 +566,8 @@ rtc_library("desktop_capture_generic") {
       "linux/wayland/screencast_portal.h",
       "linux/wayland/shared_screencast_stream.cc",
       "linux/wayland/shared_screencast_stream.h",
+      "linux/wayland/xdg_desktop_portal_utils.cc",
+      "linux/wayland/xdg_desktop_portal_utils.h",
     ]
     } else {
     sources += [

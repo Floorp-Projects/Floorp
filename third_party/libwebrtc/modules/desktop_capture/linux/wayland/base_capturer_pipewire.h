@@ -15,6 +15,7 @@
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/desktop_capture/linux/wayland/screencast_portal.h"
 #include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
+#include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
 
 namespace webrtc {
 
@@ -34,7 +35,7 @@ class BaseCapturerPipeWire : public DesktopCapturer,
   bool SelectSource(SourceId id) override;
 
   // ScreenCastPortal::PortalNotifier interface.
-  void OnScreenCastRequestResult(ScreenCastPortal::RequestResponse result,
+  void OnScreenCastRequestResult(xdg_portal::RequestResponse result,
                                  uint32_t stream_node_id,
                                  int fd) override;
   void OnScreenCastSessionClosed() override;
