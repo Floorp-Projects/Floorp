@@ -207,6 +207,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_ALLOW_ALWAYS = 9;
   /* This feature is safe to be on this device due to the allowlist, depending on qualified/experiment status. */
   const long FEATURE_ALLOW_QUALIFIED = 10;
+  /* This feature failed in a startup test, e.g. due to a crashing driver. */
+  const long FEATURE_BLOCKED_PLATFORM_TEST = 11;
 
   /**
    * Ask about a feature, and return the status of that feature.
