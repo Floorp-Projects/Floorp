@@ -92,6 +92,8 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
       pace_at_max_of_bwe_and_lower_link_capacity_(
           IsEnabled(key_value_config_,
                     "WebRTC-Bwe-PaceAtMaxOfBweAndLowerLinkCapacity")),
+      pace_at_loss_based_bwe_when_loss_(
+          IsEnabled(key_value_config_, "WebRTC-Bwe-PaceAtLossBaseBweWhenLoss")),
       probe_controller_(
           new ProbeController(key_value_config_, config.event_log)),
       congestion_window_pushback_controller_(
@@ -700,7 +702,10 @@ PacerConfig GoogCcNetworkController::GetPacingRates(Timestamp at_time) const {
   // Pacing rate is based on target rate before congestion window pushback,
   // because we don't want to build queues in the pacer when pushback occurs.
   DataRate pacing_rate = DataRate::Zero();
-  if (pace_at_max_of_bwe_and_lower_link_capacity_ && estimate_) {
+  if ((pace_at_max_of_bwe_and_lower_link_capacity_ ||
+       (pace_at_loss_based_bwe_when_loss_ &&
+        last_loss_based_target_rate_ >= delay_based_bwe_->last_estimate())) &&
+      estimate_) {
     pacing_rate =
         std::max({min_total_allocated_bitrate_, estimate_->link_capacity_lower,
                   last_loss_based_target_rate_}) *
