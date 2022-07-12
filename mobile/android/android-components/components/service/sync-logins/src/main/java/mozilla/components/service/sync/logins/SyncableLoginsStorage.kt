@@ -20,7 +20,6 @@ import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.logElapsedTime
-import org.json.JSONObject
 import java.io.Closeable
 
 // Older database that was encrypted using SQLCipher
@@ -243,8 +242,8 @@ class SyncableLoginsStorage(
      * (IO failure, rust panics, etc).
      */
     @Throws(CryptoException::class, LoginsStorageException::class)
-    override suspend fun importLoginsAsync(logins: List<Login>): JSONObject = withContext(coroutineContext) {
-        JSONObject(conn.getStorage().importMultiple(logins.map { it.toLogin() }, crypto.getOrGenerateKey().key))
+    override suspend fun importLoginsAsync(logins: List<Login>): Unit = withContext(coroutineContext) {
+        conn.getStorage().importMultiple(logins.map { it.toLogin() }, crypto.getOrGenerateKey().key)
     }
 
     /**

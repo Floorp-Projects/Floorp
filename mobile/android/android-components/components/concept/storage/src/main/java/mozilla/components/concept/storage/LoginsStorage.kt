@@ -5,7 +5,6 @@
 package mozilla.components.concept.storage
 
 import kotlinx.coroutines.Deferred
-import org.json.JSONObject
 
 /**
  * A login stored in the database
@@ -219,9 +218,8 @@ interface LoginsStorage : AutoCloseable {
      * the same GUID.
      *
      * @param logins A list of [Login] records to be imported.
-     * @return JSON object with detailed information about imported logins.
      */
-    suspend fun importLoginsAsync(logins: List<Login>): JSONObject
+    suspend fun importLoginsAsync(logins: List<Login>)
 
     /**
      * Fetch the list of logins for some origin from the underlying storage layer.

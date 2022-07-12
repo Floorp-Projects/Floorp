@@ -155,26 +155,13 @@ internal object FennecLoginsMigration {
             return Result.Failure(LoginMigrationException(LoginsMigrationResult.Failure.GetLoginsThrew(e)))
         }
 
-        val migrationMetrics = try {
-            loginsStorage.importLoginsAsync(fennecRecords.records)
-        } catch (e: Exception) {
-            return Result.Failure(LoginMigrationException(LoginsMigrationResult.Failure.RustImportThrew(e)))
-        }
-
-        // TODO process login migration metrics properly:
-        // See https://github.com/mozilla/application-services/commit/d1a12d98a8c428567a3fff9e4333869b980952a8
-        val failedToImport = try {
-            migrationMetrics.getInt("num_failed")
-        } catch (e: Exception) {
-            crashReporter.submitCaughtException(e)
-            0
-        }
+        loginsStorage.importLoginsAsync(fennecRecords.records)
 
         return Result.Success(
             LoginsMigrationResult.Success.ImportedLoginRecords(
                 totalRecordsDetected = fennecRecords.totalRecordsDetected,
                 failedToProcess = (fennecRecords.totalRecordsDetected - fennecRecords.records.size),
-                failedToImport = failedToImport
+                failedToImport = 0,
             )
         )
     }
