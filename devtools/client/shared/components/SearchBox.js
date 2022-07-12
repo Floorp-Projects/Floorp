@@ -43,7 +43,6 @@ class SearchBox extends PureComponent {
       onFocus: PropTypes.func,
       onKeyDown: PropTypes.func,
       placeholder: PropTypes.string.isRequired,
-      shouldNotFocus: PropTypes.func,
       summary: PropTypes.string,
       summaryTooltip: PropTypes.string,
       type: PropTypes.string,
@@ -78,10 +77,6 @@ class SearchBox extends PureComponent {
       window,
     });
     this.shortcuts.on(this.props.keyShortcut, event => {
-      if (this.props.shouldNotFocus?.(event)) {
-        return;
-      }
-
       event.preventDefault();
       this.focus();
     });
