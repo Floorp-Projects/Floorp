@@ -396,8 +396,6 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer();
 
-  bool CopySnapshotTo(DrawTarget* aDT);
-
   void OnMemoryPressure() { mSharedContext->OnMemoryPressure(); }
 
   operator std::string() const {
