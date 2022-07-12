@@ -29,6 +29,7 @@ using ::testing::Field;
 using ::testing::Pointee;
 using ::testing::Property;
 using ::testing::Return;
+using ::testing::WithoutArgs;
 
 namespace webrtc {
 namespace test {
@@ -213,8 +214,8 @@ class PacingControllerTest
   void SetUp() override {
     srand(0);
     // Need to initialize PacingController after we initialize clock.
-    pacer_ = std::make_unique<PacingController>(&clock_, &callback_, nullptr,
-                                                trials_, GetParam());
+    pacer_ = std::make_unique<PacingController>(&clock_, &callback_, trials_,
+                                                GetParam());
     Init();
   }
 
@@ -365,7 +366,7 @@ class PacingControllerFieldTrialTest
 
 TEST_P(PacingControllerFieldTrialTest, DefaultNoPaddingInSilence) {
   const test::ExplicitKeyValueConfig trials("");
-  PacingController pacer(&clock_, &callback_, nullptr, trials, GetParam());
+  PacingController pacer(&clock_, &callback_, trials, GetParam());
   pacer.SetPacingRates(kTargetRate, DataRate::Zero());
   // Video packet to reset last send time and provide padding data.
   InsertPacket(&pacer, &video);
@@ -381,7 +382,7 @@ TEST_P(PacingControllerFieldTrialTest, DefaultNoPaddingInSilence) {
 TEST_P(PacingControllerFieldTrialTest, PaddingInSilenceWithTrial) {
   const test::ExplicitKeyValueConfig trials(
       "WebRTC-Pacer-PadInSilence/Enabled/");
-  PacingController pacer(&clock_, &callback_, nullptr, trials, GetParam());
+  PacingController pacer(&clock_, &callback_, trials, GetParam());
   pacer.SetPacingRates(kTargetRate, DataRate::Zero());
   // Video packet to reset last send time and provide padding data.
   InsertPacket(&pacer, &video);
@@ -397,7 +398,7 @@ TEST_P(PacingControllerFieldTrialTest, PaddingInSilenceWithTrial) {
 TEST_P(PacingControllerFieldTrialTest, CongestionWindowAffectsAudioInTrial) {
   const test::ExplicitKeyValueConfig trials("WebRTC-Pacer-BlockAudio/Enabled/");
   EXPECT_CALL(callback_, SendPadding).Times(0);
-  PacingController pacer(&clock_, &callback_, nullptr, trials, GetParam());
+  PacingController pacer(&clock_, &callback_, trials, GetParam());
   pacer.SetPacingRates(DataRate::KilobitsPerSec(10000), DataRate::Zero());
   // Video packet fills congestion window.
   InsertPacket(&pacer, &video);
@@ -424,7 +425,7 @@ TEST_P(PacingControllerFieldTrialTest,
        DefaultCongestionWindowDoesNotAffectAudio) {
   EXPECT_CALL(callback_, SendPadding).Times(0);
   const test::ExplicitKeyValueConfig trials("");
-  PacingController pacer(&clock_, &callback_, nullptr, trials, GetParam());
+  PacingController pacer(&clock_, &callback_, trials, GetParam());
   pacer.SetPacingRates(DataRate::BitsPerSec(10000000), DataRate::Zero());
   // Video packet fills congestion window.
   InsertPacket(&pacer, &video);
@@ -439,7 +440,7 @@ TEST_P(PacingControllerFieldTrialTest,
 
 TEST_P(PacingControllerFieldTrialTest, BudgetAffectsAudioInTrial) {
   ExplicitKeyValueConfig trials("WebRTC-Pacer-BlockAudio/Enabled/");
-  PacingController pacer(&clock_, &callback_, nullptr, trials, GetParam());
+  PacingController pacer(&clock_, &callback_, trials, GetParam());
   DataRate pacing_rate = DataRate::BitsPerSec(video.packet_size / 3 * 8 *
                                               kProcessIntervalsPerSecond);
   pacer.SetPacingRates(pacing_rate, DataRate::Zero());
@@ -451,10 +452,9 @@ TEST_P(PacingControllerFieldTrialTest, BudgetAffectsAudioInTrial) {
   InsertPacket(&pacer, &audio);
   Timestamp wait_start_time = clock_.CurrentTime();
   Timestamp wait_end_time = Timestamp::MinusInfinity();
-  EXPECT_CALL(callback_, SendPacket)
-      .WillOnce([&](uint32_t ssrc, uint16_t sequence_number,
-                    int64_t capture_timestamp, bool retransmission,
-                    bool padding) { wait_end_time = clock_.CurrentTime(); });
+  EXPECT_CALL(callback_, SendPacket).WillOnce(WithoutArgs([&]() {
+    wait_end_time = clock_.CurrentTime();
+  }));
   while (!wait_end_time.IsFinite()) {
     ProcessNext(&pacer);
   }
@@ -470,7 +470,7 @@ TEST_P(PacingControllerFieldTrialTest, BudgetAffectsAudioInTrial) {
 TEST_P(PacingControllerFieldTrialTest, DefaultBudgetDoesNotAffectAudio) {
   EXPECT_CALL(callback_, SendPadding).Times(0);
   const test::ExplicitKeyValueConfig trials("");
-  PacingController pacer(&clock_, &callback_, nullptr, trials, GetParam());
+  PacingController pacer(&clock_, &callback_, trials, GetParam());
   pacer.SetPacingRates(DataRate::BitsPerSec(video.packet_size / 3 * 8 *
                                             kProcessIntervalsPerSecond),
                        DataRate::Zero());
@@ -868,8 +868,8 @@ TEST_P(PacingControllerTest, VerifyAverageBitrateVaryingMediaPayload) {
   const int kTimeStep = 5;
   const TimeDelta kAveragingWindowLength = TimeDelta::Seconds(10);
   PacingControllerPadding callback;
-  pacer_ = std::make_unique<PacingController>(&clock_, &callback, nullptr,
-                                              trials_, GetParam());
+  pacer_ = std::make_unique<PacingController>(&clock_, &callback, trials_,
+                                              GetParam());
   pacer_->SetProbingEnabled(false);
   pacer_->SetPacingRates(kTargetRate * kPaceMultiplier, kTargetRate);
 
@@ -1246,8 +1246,8 @@ TEST_P(PacingControllerTest, Pause) {
 
 TEST_P(PacingControllerTest, InactiveFromStart) {
   // Recreate the pacer without the inital time forwarding.
-  pacer_ = std::make_unique<PacingController>(&clock_, &callback_, nullptr,
-                                              trials_, GetParam());
+  pacer_ = std::make_unique<PacingController>(&clock_, &callback_, trials_,
+                                              GetParam());
   pacer_->SetProbingEnabled(false);
   pacer_->SetPacingRates(kTargetRate * kPaceMultiplier, kTargetRate);
 
@@ -1345,8 +1345,8 @@ TEST_P(PacingControllerTest, ProbingWithInsertedPackets) {
   uint16_t sequence_number = 1234;
 
   PacingControllerProbing packet_sender;
-  pacer_ = std::make_unique<PacingController>(&clock_, &packet_sender, nullptr,
-                                              trials_, GetParam());
+  pacer_ = std::make_unique<PacingController>(&clock_, &packet_sender, trials_,
+                                              GetParam());
   pacer_->CreateProbeCluster(kFirstClusterRate,
                              /*cluster_id=*/0);
   pacer_->CreateProbeCluster(kSecondClusterRate,
@@ -1405,8 +1405,8 @@ TEST_P(PacingControllerTest, SkipsProbesWhenProcessIntervalTooLarge) {
                                "abort_delayed_probes:1,max_probe_delay:2ms/"
                              : "WebRTC-Bwe-ProbingBehavior/"
                                "abort_delayed_probes:0,max_probe_delay:2ms/");
-    pacer_ = std::make_unique<PacingController>(&clock_, &packet_sender,
-                                                nullptr, trials, GetParam());
+    pacer_ = std::make_unique<PacingController>(&clock_, &packet_sender, trials,
+                                                GetParam());
     pacer_->SetPacingRates(
         DataRate::BitsPerSec(kInitialBitrateBps * kPaceMultiplier),
         DataRate::BitsPerSec(kInitialBitrateBps));
@@ -1512,8 +1512,8 @@ TEST_P(PacingControllerTest, ProbingWithPaddingSupport) {
   uint16_t sequence_number = 1234;
 
   PacingControllerProbing packet_sender;
-  pacer_ = std::make_unique<PacingController>(&clock_, &packet_sender, nullptr,
-                                              trials_, GetParam());
+  pacer_ = std::make_unique<PacingController>(&clock_, &packet_sender, trials_,
+                                              GetParam());
   pacer_->CreateProbeCluster(kFirstClusterRate,
                              /*cluster_id=*/0);
   pacer_->SetPacingRates(
@@ -1578,8 +1578,8 @@ TEST_P(PacingControllerTest, PaddingOveruse) {
 TEST_P(PacingControllerTest, ProbeClusterId) {
   MockPacketSender callback;
 
-  pacer_ = std::make_unique<PacingController>(&clock_, &callback, nullptr,
-                                              trials_, GetParam());
+  pacer_ = std::make_unique<PacingController>(&clock_, &callback, trials_,
+                                              GetParam());
   Init();
 
   uint32_t ssrc = 12346;
@@ -1635,8 +1635,8 @@ TEST_P(PacingControllerTest, ProbeClusterId) {
 
 TEST_P(PacingControllerTest, OwnedPacketPrioritizedOnType) {
   MockPacketSender callback;
-  pacer_ = std::make_unique<PacingController>(&clock_, &callback, nullptr,
-                                              trials_, GetParam());
+  pacer_ = std::make_unique<PacingController>(&clock_, &callback, trials_,
+                                              GetParam());
   Init();
 
   // Insert a packet of each type, from low to high priority. Since priority
@@ -1682,8 +1682,8 @@ TEST_P(PacingControllerTest, OwnedPacketPrioritizedOnType) {
 
 TEST_P(PacingControllerTest, SmallFirstProbePacket) {
   MockPacketSender callback;
-  pacer_ = std::make_unique<PacingController>(&clock_, &callback, nullptr,
-                                              trials_, GetParam());
+  pacer_ = std::make_unique<PacingController>(&clock_, &callback, trials_,
+                                              GetParam());
   pacer_->CreateProbeCluster(kFirstClusterRate, /*cluster_id=*/0);
   pacer_->SetPacingRates(kTargetRate * kPaceMultiplier, DataRate::Zero());
 
@@ -1841,8 +1841,8 @@ TEST_P(PacingControllerTest,
     uint16_t sequence_number = 1234;
     MockPacketSender callback;
     EXPECT_CALL(callback, SendPacket).Times(::testing::AnyNumber());
-    pacer_ = std::make_unique<PacingController>(&clock_, &callback, nullptr,
-                                                trials_, GetParam());
+    pacer_ = std::make_unique<PacingController>(&clock_, &callback, trials_,
+                                                GetParam());
     pacer_->SetAccountForAudioPackets(account_for_audio);
 
     // First, saturate the padding budget.
@@ -2020,8 +2020,8 @@ TEST_P(PacingControllerTest, PaddingTargetAccountsForPaddingRate) {
       "WebRTC-Pacer-DynamicPaddingTarget/timedelta:10ms/");
   srand(0);
   // Need to initialize PacingController after we initialize clock.
-  pacer_ = std::make_unique<PacingController>(&clock_, &callback_, nullptr,
-                                              field_trials, GetParam());
+  pacer_ = std::make_unique<PacingController>(&clock_, &callback_, field_trials,
+                                              GetParam());
   Init();
 
   const uint32_t kSsrc = 12345;

@@ -78,8 +78,8 @@ class PacedSenderTest
     EXPECT_CALL(process_thread_, RegisterModule)
         .WillOnce(SaveArg<0>(&paced_module_));
 
-    pacer_ = std::make_unique<PacedSender>(&clock_, &callback_, nullptr,
-                                           trials_, &process_thread_);
+    pacer_ = std::make_unique<PacedSender>(&clock_, &callback_, trials_,
+                                           &process_thread_);
     EXPECT_CALL(process_thread_, WakeUp).WillRepeatedly([&](Module* module) {
       clock_.AdvanceTimeMilliseconds(module->TimeUntilNextProcess());
     });
