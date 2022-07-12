@@ -32,6 +32,7 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/sender_report.h"
 #include "modules/rtp_rtcp/source/time_util.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/containers/flat_map.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/divide_round.h"
 #include "rtc_base/task_utils/repeating_task.h"
@@ -57,6 +58,8 @@ struct RtcpTransceiverImpl::RemoteSenderState {
 struct RtcpTransceiverImpl::LocalSenderState {
   uint32_t ssrc;
   size_t last_num_sent_bytes = 0;
+  // Sequence number of the last FIR message per sender SSRC.
+  flat_map<uint32_t, uint8_t> last_fir;
   RtpStreamRtcpHandler* handler = nullptr;
 };
 
@@ -337,12 +340,35 @@ void RtcpTransceiverImpl::HandlePayloadSpecificFeedback(
     const rtcp::CommonHeader& rtcp_packet_header,
     Timestamp now) {
   switch (rtcp_packet_header.fmt()) {
+    case rtcp::Fir::kFeedbackMessageType:
+      HandleFir(rtcp_packet_header);
+      break;
     case rtcp::Pli::kFeedbackMessageType:
       HandlePli(rtcp_packet_header);
       break;
     case rtcp::Psfb::kAfbMessageType:
       HandleRemb(rtcp_packet_header, now);
       break;
+  }
+}
+
+void RtcpTransceiverImpl::HandleFir(
+    const rtcp::CommonHeader& rtcp_packet_header) {
+  rtcp::Fir fir;
+  if (local_senders_.empty() || !fir.Parse(rtcp_packet_header)) {
+    return;
+  }
+  for (const rtcp::Fir::Request& r : fir.requests()) {
+    auto it = local_senders_by_ssrc_.find(r.ssrc);
+    if (it == local_senders_by_ssrc_.end()) {
+      continue;
+    }
+    auto [fir_it, is_new] =
+        it->second->last_fir.emplace(fir.sender_ssrc(), r.seq_nr);
+    if (is_new || fir_it->second != r.seq_nr) {
+      it->second->handler->OnFir(fir.sender_ssrc());
+      fir_it->second = r.seq_nr;
+    }
   }
 }
 
