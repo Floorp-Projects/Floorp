@@ -99,25 +99,25 @@ TEST_F(ChannelManagerTest, SetVideoRtxEnabled) {
 
   // By default RTX is disabled.
   cm_->GetSupportedVideoSendCodecs(&send_codecs);
-  EXPECT_FALSE(ContainsMatchingCodec(send_codecs, rtx_codec));
+  EXPECT_FALSE(ContainsMatchingCodec(send_codecs, rtx_codec, &field_trials_));
   cm_->GetSupportedVideoSendCodecs(&recv_codecs);
-  EXPECT_FALSE(ContainsMatchingCodec(recv_codecs, rtx_codec));
+  EXPECT_FALSE(ContainsMatchingCodec(recv_codecs, rtx_codec, &field_trials_));
 
   // Enable and check.
   cm_ = cricket::ChannelManager::Create(CreateFakeMediaEngine(),
                                         true, worker_, network_.get());
   cm_->GetSupportedVideoSendCodecs(&send_codecs);
-  EXPECT_TRUE(ContainsMatchingCodec(send_codecs, rtx_codec));
+  EXPECT_TRUE(ContainsMatchingCodec(send_codecs, rtx_codec, &field_trials_));
   cm_->GetSupportedVideoSendCodecs(&recv_codecs);
-  EXPECT_TRUE(ContainsMatchingCodec(recv_codecs, rtx_codec));
+  EXPECT_TRUE(ContainsMatchingCodec(recv_codecs, rtx_codec, &field_trials_));
 
   // Disable and check.
   cm_ = cricket::ChannelManager::Create(CreateFakeMediaEngine(),
                                         false, worker_, network_.get());
   cm_->GetSupportedVideoSendCodecs(&send_codecs);
-  EXPECT_FALSE(ContainsMatchingCodec(send_codecs, rtx_codec));
+  EXPECT_FALSE(ContainsMatchingCodec(send_codecs, rtx_codec, &field_trials_));
   cm_->GetSupportedVideoSendCodecs(&recv_codecs);
-  EXPECT_FALSE(ContainsMatchingCodec(recv_codecs, rtx_codec));
+  EXPECT_FALSE(ContainsMatchingCodec(recv_codecs, rtx_codec, &field_trials_));
 }
 
 TEST_F(ChannelManagerTest, CreateDestroyChannels) {
