@@ -56,13 +56,13 @@ void RemoteTextureOwnerClient::UnregisterAllTextureOwners() {
   }
 }
 
-void RemoteTextureOwnerClient::PushTexure(
+void RemoteTextureOwnerClient::PushTexture(
     const RemoteTextureId aTextureId, const RemoteTextureOwnerId aOwnerId,
     UniquePtr<TextureData>&& aTextureData,
     const std::shared_ptr<gl::SharedSurface>& aSharedSurface) {
   MOZ_ASSERT(IsRegistered(aOwnerId));
-  RemoteTextureMap::Get()->PushTexure(aTextureId, aOwnerId, mForPid,
-                                      std::move(aTextureData), aSharedSurface);
+  RemoteTextureMap::Get()->PushTexture(aTextureId, aOwnerId, mForPid,
+                                       std::move(aTextureData), aSharedSurface);
 }
 
 UniquePtr<TextureData>
@@ -138,7 +138,7 @@ RemoteTextureMap::RemoteTextureMap() : mMutex("D3D11TextureMap::mMutexd") {}
 
 RemoteTextureMap::~RemoteTextureMap() = default;
 
-void RemoteTextureMap::PushTexure(
+void RemoteTextureMap::PushTexture(
     const RemoteTextureId aTextureId, const RemoteTextureOwnerId aOwnerId,
     const base::ProcessId aForPid, UniquePtr<TextureData>&& aTextureData,
     const std::shared_ptr<gl::SharedSurface>& aSharedSurface) {

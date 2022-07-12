@@ -672,6 +672,9 @@ struct OpaqueFramebufferOptions final {
 
 struct SwapChainOptions final {
   bool bgra = false;
+  bool forceAsyncPresent = false;
+  layers::RemoteTextureId remoteTextureId;
+  layers::RemoteTextureOwnerId remoteTextureOwnerId;
 };
 
 // -
