@@ -1008,7 +1008,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(
 
   if (aFeature == nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING &&
       !mIsVAAPISupported) {
-    *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+    *aStatus = nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST;
     aFailureId = "FEATURE_FAILURE_VIDEO_DECODING_TEST_FAILED";
     return NS_OK;
   }

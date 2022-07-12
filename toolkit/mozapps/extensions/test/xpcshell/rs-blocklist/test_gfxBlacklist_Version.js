@@ -161,7 +161,7 @@ async function run_test() {
       failureId
     );
     if (OS == "Linux" && status != Ci.nsIGfxInfo.FEATURE_STATUS_OK) {
-      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DEVICE);
+      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_PLATFORM_TEST);
       Assert.equal(
         failureId.value,
         "FEATURE_FAILURE_VIDEO_DECODING_TEST_FAILED"
