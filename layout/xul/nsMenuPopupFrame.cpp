@@ -1099,6 +1099,9 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState) {
   mHFlip = mVFlip = false;
 
   if (auto* widget = GetWidget()) {
+    // Ideally we should call ClearCachedWebrenderResources but there are
+    // intermittent failures (see bug 1748788), so we currently call
+    // ClearWebrenderAnimationResources instead.
     widget->ClearWebrenderAnimationResources();
   }
 

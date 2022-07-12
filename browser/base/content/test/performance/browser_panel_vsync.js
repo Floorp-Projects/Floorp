@@ -34,6 +34,21 @@ add_task(
     // Should not already be using vsync
     ok(!ChromeUtils.vsyncEnabled(), "vsync should be off initially");
 
+    if (
+      AppConstants.platform == "linux" &&
+      DownloadsPanel.panel.state != "open"
+    ) {
+      // Panels sometime receive spurious popuphiding events on Linux.
+      // Given the main target of this test is Windows, avoid causing
+      // intermittent failures and just make the test return early.
+      todo(
+        false,
+        "panel should still be 'open', current state: " +
+          DownloadsPanel.panel.state
+      );
+      return;
+    }
+
     const hiddenPromise = BrowserTestUtils.waitForEvent(
       DownloadsPanel.panel,
       "popuphidden"
