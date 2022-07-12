@@ -9,6 +9,10 @@
         "description": {
           "type": "string"
         },
+        "owner": {
+          "type": "string",
+          "description": "The owner of the feature."
+        },
         "hasExposure": {
           "type": "boolean",
           "description": "If the feature sends an exposure event."
