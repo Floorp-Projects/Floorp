@@ -75,3 +75,5 @@ user_pref("layout.css.prefers-color-scheme.content-override", 1);
 // Force OffscreenCanvas support
 user_pref("gfx.offscreencanvas.enabled", true);
 user_pref("dom.workers.requestAnimationFrame", true);
+// Enable WebDriver BiDi experimental commands and events during tests.
+user_pref("remote.experimental.enabled", true);

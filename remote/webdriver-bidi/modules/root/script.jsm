@@ -146,6 +146,9 @@ class ScriptModule extends Module {
    *     If the target cannot be found.
    */
   async evaluate(options = {}) {
+    // TODO: Bug 1778976. Remove once command is fully supported.
+    this.assertExperimentalCommandsEnabled("script.evaluate");
+
     const {
       awaitPromise = true,
       expression: source,
