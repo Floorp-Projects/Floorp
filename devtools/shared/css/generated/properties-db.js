@@ -3233,6 +3233,7 @@ exports.CSS_PROPERTIES = {
       "animation-direction",
       "animation-play-state",
       "animation-fill-mode",
+      "animation-composition",
       "animation-delay",
       "animation-timeline",
       "scroll-timeline-name",
@@ -11802,6 +11803,10 @@ exports.PREFERENCES = [
   [
     "align-tracks",
     "layout.css.grid-template-masonry-value.enabled"
+  ],
+  [
+    "animation-composition",
+    "layout.css.animation-composition.enabled"
   ],
   [
     "animation-timeline",
