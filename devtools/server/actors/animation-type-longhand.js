@@ -185,6 +185,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
   [
     "none",
     new Set([
+      "animation-composition",
       "animation-delay",
       "animation-direction",
       "animation-duration",

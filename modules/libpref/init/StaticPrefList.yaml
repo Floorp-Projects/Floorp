@@ -7589,6 +7589,11 @@
   value: 6.0
   mirror: always
 
+# Whether the `animation-composition` in css-animations-2 is enabled.
+- name: layout.css.animation-composition.enabled
+  type: bool
+  value: false
+  mirror: always
 
 # Whether the `aspect-ratio` in css-sizing-4 is enabled.
 - name: layout.css.aspect-ratio.enabled
