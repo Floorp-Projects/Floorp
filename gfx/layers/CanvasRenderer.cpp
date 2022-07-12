@@ -72,28 +72,6 @@ std::shared_ptr<BorrowedSourceSurface> CanvasRenderer::BorrowSnapshot(
   return std::make_shared<BorrowedSourceSurface>(provider, ss);
 }
 
-bool CanvasRenderer::CopySnapshotTo(gfx::DrawTarget* aDT,
-                                    bool aRequireAlphaPremult) {
-  auto* const context = mData.GetContext();
-  if (!context) return false;
-
-  if (RefPtr<PersistentBufferProvider> provider =
-          context->GetBufferProvider()) {
-    // If we can copy the snapshot directly to the DT, try that first.
-    if (provider->CopySnapshotTo(aDT)) {
-      return true;
-    }
-  }
-
-  // Otherwise, we have to borrow a snapshot before we can copy it to the DT.
-  auto borrowed = BorrowSnapshot(aRequireAlphaPremult);
-  if (!borrowed) {
-    return false;
-  }
-  aDT->CopySurface(borrowed->mSurf, borrowed->mSurf->GetRect(), {0, 0});
-  return true;
-}
-
 void CanvasRenderer::FirePreTransactionCallback() const {
   if (!mData.mDoPaintCallbacks) return;
   const auto context = mData.GetContext();

@@ -729,34 +729,6 @@ already_AddRefed<SourceSurface> DrawTargetWebgl::GetBackingSurface() {
   return Snapshot();
 }
 
-bool DrawTargetWebgl::CopySnapshotTo(DrawTarget* aDT) {
-  if (mSkiaValid ||
-      (mSnapshot &&
-       (mSnapshot->GetType() != SurfaceType::WEBGL ||
-        static_cast<SourceSurfaceWebgl*>(mSnapshot.get())->HasReadData()))) {
-    // There's already a snapshot that is mapped, so just use that.
-    return false;
-  }
-  // Otherwise, attempt to read the data directly into the DT pixels to avoid an
-  // intermediate copy.
-  if (!PrepareContext(false)) {
-    return false;
-  }
-  uint8_t* data = nullptr;
-  IntSize size;
-  int32_t stride = 0;
-  SurfaceFormat format = SurfaceFormat::UNKNOWN;
-  if (!aDT->LockBits(&data, &size, &stride, &format)) {
-    return false;
-  }
-  bool result =
-      mSharedContext->ReadInto(data, stride, format,
-                               {0, 0, std::min(size.width, mSize.width),
-                                std::min(size.height, mSize.height)});
-  aDT->ReleaseBits(data);
-  return result;
-}
-
 void DrawTargetWebgl::DetachAllSnapshots() {
   mSkia->DetachAllSnapshots();
   ClearSnapshot();
