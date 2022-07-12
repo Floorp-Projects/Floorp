@@ -466,14 +466,20 @@ Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
   const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
 
+  Maybe<layers::SurfaceDescriptor> ret;
+
   // If valid remote texture data was set for async present, then use it.
   const auto& ownerId = fb ? fb->mRemoteTextureOwnerId : mRemoteTextureOwnerId;
   const auto& textureId = fb ? fb->mLastRemoteTextureId : mLastRemoteTextureId;
   if (ownerId && textureId) {
+    if (StaticPrefs::webgl_out_of_process_async_present_force_sync()) {
+      // Request the front buffer from IPDL to cause a sync, even though we
+      // will continue to use the remote texture descriptor after.
+      (void)child->SendGetFrontBuffer(fb ? fb->mId : 0, vr, &ret);
+    }
     return Some(layers::SurfaceDescriptorRemoteTexture(*textureId, *ownerId));
   }
 
-  Maybe<layers::SurfaceDescriptor> ret;
   if (!child->SendGetFrontBuffer(fb ? fb->mId : 0, vr, &ret)) return {};
 
   return ret;

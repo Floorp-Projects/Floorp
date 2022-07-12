@@ -13486,6 +13486,12 @@
   value: false
   mirror: always
 
+# Forces async present to wait for a sync, even while using remote textures.
+- name: webgl.out-of-process.async-present.force-sync
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Override the blocklist to assume that GL is threadsafe.
 - name: webgl.threadsafe-gl.force-enabled
   type: bool
