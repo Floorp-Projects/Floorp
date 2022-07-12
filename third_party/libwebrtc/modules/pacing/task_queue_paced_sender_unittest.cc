@@ -11,15 +11,19 @@
 #include "modules/pacing/task_queue_paced_sender.h"
 
 #include <algorithm>
+#include <atomic>
 #include <list>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "api/task_queue/task_queue_base.h"
 #include "api/transport/network_types.h"
+#include "api/units/data_rate.h"
 #include "modules/pacing/packet_router.h"
 #include "modules/utility/include/mock/mock_process_thread.h"
+#include "rtc_base/task_utils/to_queued_task.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/scoped_key_value_config.h"
@@ -75,6 +79,88 @@ std::vector<std::unique_ptr<RtpPacketToSend>> GeneratePadding(
   }
   return padding_packets;
 }
+
+class TaskQueueWithFakePrecisionFactory : public TaskQueueFactory {
+ public:
+  explicit TaskQueueWithFakePrecisionFactory(
+      TaskQueueFactory* task_queue_factory)
+      : task_queue_factory_(task_queue_factory) {}
+
+  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> CreateTaskQueue(
+      absl::string_view name,
+      Priority priority) const override {
+    return std::unique_ptr<TaskQueueBase, TaskQueueDeleter>(
+        new TaskQueueWithFakePrecision(
+            const_cast<TaskQueueWithFakePrecisionFactory*>(this),
+            task_queue_factory_));
+  }
+
+  int delayed_low_precision_count() const {
+    return delayed_low_precision_count_;
+  }
+  int delayed_high_precision_count() const {
+    return delayed_high_precision_count_;
+  }
+
+ private:
+  friend class TaskQueueWithFakePrecision;
+
+  class TaskQueueWithFakePrecision : public TaskQueueBase {
+   public:
+    TaskQueueWithFakePrecision(
+        TaskQueueWithFakePrecisionFactory* parent_factory,
+        TaskQueueFactory* task_queue_factory)
+        : parent_factory_(parent_factory),
+          task_queue_(task_queue_factory->CreateTaskQueue(
+              "TaskQueueWithFakePrecision",
+              TaskQueueFactory::Priority::NORMAL)) {}
+    ~TaskQueueWithFakePrecision() override {}
+
+    void Delete() override {
+      // `task_queue_->Delete()` is implicitly called in the destructor due to
+      // TaskQueueDeleter.
+      delete this;
+    }
+    void PostTask(std::unique_ptr<QueuedTask> task) override {
+      task_queue_->PostTask(
+          ToQueuedTask([this, task = std::move(task)]() mutable {
+            RunTask(std::move(task));
+          }));
+    }
+    void PostDelayedTask(std::unique_ptr<QueuedTask> task,
+                         uint32_t milliseconds) override {
+      ++parent_factory_->delayed_low_precision_count_;
+      task_queue_->PostDelayedTask(
+          ToQueuedTask([this, task = std::move(task)]() mutable {
+            RunTask(std::move(task));
+          }),
+          milliseconds);
+    }
+    void PostDelayedHighPrecisionTask(std::unique_ptr<QueuedTask> task,
+                                      uint32_t milliseconds) override {
+      ++parent_factory_->delayed_high_precision_count_;
+      task_queue_->PostDelayedHighPrecisionTask(
+          ToQueuedTask([this, task = std::move(task)]() mutable {
+            RunTask(std::move(task));
+          }),
+          milliseconds);
+    }
+
+   private:
+    void RunTask(std::unique_ptr<QueuedTask> task) {
+      CurrentTaskQueueSetter set_current(this);
+      if (!task->Run())
+        task.release();
+    }
+
+    TaskQueueWithFakePrecisionFactory* parent_factory_;
+    std::unique_ptr<TaskQueueBase, TaskQueueDeleter> task_queue_;
+  };
+
+  TaskQueueFactory* task_queue_factory_;
+  std::atomic<int> delayed_low_precision_count_ = 0u;
+  std::atomic<int> delayed_high_precision_count_ = 0u;
+};
 
 }  // namespace
 
@@ -595,6 +681,94 @@ TEST(TaskQueuePacedSenderTest, Stats) {
   EXPECT_EQ(pacer.FirstSentPacketTime(), kStartTime);
   EXPECT_TRUE(pacer.QueueSizeData().IsZero());
   EXPECT_TRUE(pacer.ExpectedQueueTime().IsZero());
+}
+
+TEST(TaskQueuePacedSenderTest, HighPrecisionPacingWhenSlackIsDisabled) {
+  test::ScopedKeyValueConfig experiments(
+      "WebRTC-SlackedTaskQueuePacedSender/Disabled/");
+
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(1234));
+  TaskQueueWithFakePrecisionFactory task_queue_factory(
+      time_controller.GetTaskQueueFactory());
+
+  MockPacketRouter packet_router;
+  TaskQueuePacedSender pacer(
+      time_controller.GetClock(), &packet_router, /*event_log=*/nullptr,
+      experiments, &task_queue_factory, PacingController::kMinSleepTime,
+      kNoPacketHoldback);
+
+  // Send enough packets (covering one second) that pacing is triggered, i.e.
+  // delayed tasks being scheduled.
+  static constexpr size_t kPacketsToSend = 42;
+  static constexpr DataRate kPacingRate =
+      DataRate::BitsPerSec(kDefaultPacketSize * 8 * kPacketsToSend);
+  pacer.SetPacingRates(kPacingRate, DataRate::Zero());
+  pacer.EnsureStarted();
+  pacer.EnqueuePackets(
+      GeneratePackets(RtpPacketMediaType::kVideo, kPacketsToSend));
+  // Expect all of them to be sent.
+  size_t packets_sent = 0;
+  EXPECT_CALL(packet_router, SendPacket)
+      .WillRepeatedly(
+          [&](std::unique_ptr<RtpPacketToSend> packet,
+              const PacedPacketInfo& cluster_info) { ++packets_sent; });
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  EXPECT_EQ(packets_sent, kPacketsToSend);
+
+  // Expect pacing to make use of high precision.
+  EXPECT_EQ(task_queue_factory.delayed_low_precision_count(), 0);
+  EXPECT_GT(task_queue_factory.delayed_high_precision_count(), 0);
+
+  // Create probe cluster which is also high precision.
+  pacer.CreateProbeCluster(kPacingRate, 123);
+  pacer.EnqueuePackets(GeneratePackets(RtpPacketMediaType::kVideo, 1));
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  EXPECT_EQ(task_queue_factory.delayed_low_precision_count(), 0);
+  EXPECT_GT(task_queue_factory.delayed_high_precision_count(), 0);
+}
+
+TEST(TaskQueuePacedSenderTest, LowPrecisionPacingWhenSlackIsEnabled) {
+  test::ScopedKeyValueConfig experiments(
+      "WebRTC-SlackedTaskQueuePacedSender/Enabled/");
+
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(1234));
+  TaskQueueWithFakePrecisionFactory task_queue_factory(
+      time_controller.GetTaskQueueFactory());
+
+  MockPacketRouter packet_router;
+  TaskQueuePacedSender pacer(
+      time_controller.GetClock(), &packet_router, /*event_log=*/nullptr,
+      experiments, &task_queue_factory, PacingController::kMinSleepTime,
+      kNoPacketHoldback);
+
+  // Send enough packets (covering one second) that pacing is triggered, i.e.
+  // delayed tasks being scheduled.
+  static constexpr size_t kPacketsToSend = 42;
+  static constexpr DataRate kPacingRate =
+      DataRate::BitsPerSec(kDefaultPacketSize * 8 * kPacketsToSend);
+  pacer.SetPacingRates(kPacingRate, DataRate::Zero());
+  pacer.EnsureStarted();
+  pacer.EnqueuePackets(
+      GeneratePackets(RtpPacketMediaType::kVideo, kPacketsToSend));
+  // Expect all of them to be sent.
+  size_t packets_sent = 0;
+  EXPECT_CALL(packet_router, SendPacket)
+      .WillRepeatedly(
+          [&](std::unique_ptr<RtpPacketToSend> packet,
+              const PacedPacketInfo& cluster_info) { ++packets_sent; });
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  EXPECT_EQ(packets_sent, kPacketsToSend);
+
+  // Expect pacing to make use of low precision.
+  EXPECT_GT(task_queue_factory.delayed_low_precision_count(), 0);
+  EXPECT_EQ(task_queue_factory.delayed_high_precision_count(), 0);
+
+  // Create probe cluster, which uses high precision despite regular pacing
+  // being low precision.
+  pacer.CreateProbeCluster(kPacingRate, 123);
+  pacer.EnqueuePackets(GeneratePackets(RtpPacketMediaType::kVideo, 1));
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  EXPECT_GT(task_queue_factory.delayed_high_precision_count(), 0);
 }
 
 }  // namespace test
