@@ -267,7 +267,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   FieldTrialParameter<double> temporal_weight_factor("TemporalWeightFactor",
                                                      0.99);
   FieldTrialParameter<double> bandwidth_backoff_lower_bound_factor(
-      "BwBackoffLowerBoundFactor", 0.85);
+      "BwBackoffLowerBoundFactor", 1.0);
   FieldTrialParameter<bool> trendline_integration_enabled(
       "TrendlineIntegrationEnabled", false);
   FieldTrialParameter<double> delay_based_limit_factor("DelayBasedLimitFactor",
