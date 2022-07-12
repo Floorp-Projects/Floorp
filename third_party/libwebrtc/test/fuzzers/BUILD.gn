@@ -647,7 +647,6 @@ webrtc_fuzzer_test("sctp_utils_fuzzer") {
   deps = [
     "../../api:libjingle_peerconnection_api",
     "../../pc:libjingle_peerconnection",
-    "../../pc:rtc_pc_base",
     "../../pc:sctp_utils",
     "../../rtc_base:rtc_base_approved",
   ]

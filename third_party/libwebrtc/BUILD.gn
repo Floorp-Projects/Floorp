@@ -485,7 +485,6 @@ if (!build_with_chromium) {
       #"pc:libjingle_peerconnection",
       #"pc:peerconnection",
       #"pc:rtc_pc",
-      #"pc:rtc_pc_base",
       "rtc_base",
       #"sdk",
       "video",

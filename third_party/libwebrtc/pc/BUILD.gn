@@ -741,10 +741,7 @@ rtc_source_set("rtc_pc") {
     visibility = [ "*" ]
   }
   allow_poison = [ "audio_codecs" ]  # TODO(bugs.webrtc.org/8396): Remove.
-  deps = [
-    ":rtc_pc_base",
-    "../media:rtc_audio_video",
-  ]
+  deps = [ "../media:rtc_audio_video" ]
 }
 
 rtc_library("media_protocol_names") {

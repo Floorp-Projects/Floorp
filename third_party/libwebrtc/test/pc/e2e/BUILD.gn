@@ -822,7 +822,6 @@ if (!build_with_chromium) {
       "../../../media:rtc_media_base",
       "../../../p2p:rtc_p2p",
       "../../../pc:peerconnection",
-      "../../../pc:rtc_pc_base",
       "../../../pc:sdp_utils",
       "../../../pc:session_description",
       "../../../pc:simulcast_description",
