@@ -39,7 +39,6 @@
 #include "pc/rtp_sender_proxy.h"
 #include "pc/rtp_transport_internal.h"
 #include "pc/session_description.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
@@ -76,9 +75,8 @@ namespace webrtc {
 // MediaType specified in the constructor. Audio RtpTransceivers will have
 // AudioRtpSenders, AudioRtpReceivers, and a VoiceChannel. Video RtpTransceivers
 // will have VideoRtpSenders, VideoRtpReceivers, and a VideoChannel.
-class RtpTransceiver final
-    : public rtc::RefCountedObject<RtpTransceiverInterface>,
-      public sigslot::has_slots<> {
+class RtpTransceiver : public RtpTransceiverInterface,
+                       public sigslot::has_slots<> {
  public:
   // Construct a Plan B-style RtpTransceiver with no senders, receivers, or
   // channel set.

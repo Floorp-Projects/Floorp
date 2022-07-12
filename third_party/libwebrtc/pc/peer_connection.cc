@@ -649,11 +649,13 @@ RTCError PeerConnection::Initialize(
     rtp_manager()->transceivers()->Add(
         RtpTransceiverProxyWithInternal<RtpTransceiver>::Create(
             signaling_thread(),
-            new RtpTransceiver(cricket::MEDIA_TYPE_AUDIO, channel_manager())));
+            rtc::make_ref_counted<RtpTransceiver>(cricket::MEDIA_TYPE_AUDIO,
+                                                  channel_manager())));
     rtp_manager()->transceivers()->Add(
         RtpTransceiverProxyWithInternal<RtpTransceiver>::Create(
             signaling_thread(),
-            new RtpTransceiver(cricket::MEDIA_TYPE_VIDEO, channel_manager())));
+            rtc::make_ref_counted<RtpTransceiver>(cricket::MEDIA_TYPE_VIDEO,
+                                                  channel_manager())));
   }
 
   int delay_ms = configuration.report_usage_pattern_delay_ms
