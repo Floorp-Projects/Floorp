@@ -119,3 +119,15 @@ add_task(async function test_PanelTestProvider() {
     "There is one pb_newtab message"
   );
 });
+
+add_task(async function test_emptyMessage() {
+  info(
+    "Testing blank FxMS messages validate with the Messaging Experiment schema"
+  );
+
+  Assert.deepEqual(
+    JsonSchema.validate({}, MESSAGING_EXPERIMENT_SCHEMA),
+    { valid: true, errors: [] },
+    "Empty messages validate"
+  );
+});
