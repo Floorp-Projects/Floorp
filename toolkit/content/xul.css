@@ -260,6 +260,7 @@ tooltip {
 tooltip {
   -moz-box-orient: vertical;
   white-space: pre-wrap;
+  overflow: clip;
 }
 
 tooltip:not([position]) {
