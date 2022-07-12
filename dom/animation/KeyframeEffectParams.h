@@ -13,6 +13,16 @@
 namespace mozilla {
 
 struct KeyframeEffectParams {
+  KeyframeEffectParams() = default;
+  KeyframeEffectParams(dom::IterationCompositeOperation aIterationComposite,
+                       dom::CompositeOperation aComposite,
+                       PseudoStyleType aPseudoType)
+      : mIterationComposite(aIterationComposite),
+        mComposite(aComposite),
+        mPseudoType(aPseudoType) {}
+  explicit KeyframeEffectParams(dom::CompositeOperation aComposite)
+      : mComposite(aComposite) {}
+
   dom::IterationCompositeOperation mIterationComposite =
       dom::IterationCompositeOperation::Replace;
   dom::CompositeOperation mComposite = dom::CompositeOperation::Replace;

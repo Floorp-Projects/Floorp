@@ -179,7 +179,10 @@ class KeyframeEffect : public AnimationEffect {
       const IterationCompositeOperation& aIterationComposite);
 
   CompositeOperation Composite() const;
-  void SetComposite(const CompositeOperation& aComposite);
+  virtual void SetComposite(const CompositeOperation& aComposite);
+  void SetCompositeFromStyle(const CompositeOperation& aComposite) {
+    KeyframeEffect::SetComposite(aComposite);
+  }
 
   void NotifySpecifiedTimingUpdated();
   void NotifyAnimationTimingUpdated(PostRestyleMode aPostRestyle);

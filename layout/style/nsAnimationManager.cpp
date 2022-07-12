@@ -131,7 +131,8 @@ static void UpdateOldAnimationPropertiesWithNew(
     CSSAnimation& aOld, TimingParams&& aNewTiming,
     nsTArray<Keyframe>&& aNewKeyframes, bool aNewIsStylePaused,
     CSSAnimationProperties aOverriddenProperties,
-    ServoCSSAnimationBuilder& aBuilder, dom::AnimationTimeline* aTimeline) {
+    ServoCSSAnimationBuilder& aBuilder, dom::AnimationTimeline* aTimeline,
+    dom::CompositeOperation aNewComposite) {
   bool animationChanged = false;
 
   // Update the old from the new so we can keep the original object
@@ -160,10 +161,15 @@ static void UpdateOldAnimationPropertiesWithNew(
     animationChanged = oldEffect->SpecifiedTiming() != updatedTiming;
     oldEffect->SetSpecifiedTiming(std::move(updatedTiming));
 
-    KeyframeEffect* oldKeyframeEffect = oldEffect->AsKeyframeEffect();
-    if (~aOverriddenProperties & CSSAnimationProperties::Keyframes &&
-        oldKeyframeEffect) {
-      aBuilder.SetKeyframes(*oldKeyframeEffect, std::move(aNewKeyframes));
+    if (KeyframeEffect* oldKeyframeEffect = oldEffect->AsKeyframeEffect()) {
+      if (~aOverriddenProperties & CSSAnimationProperties::Keyframes) {
+        aBuilder.SetKeyframes(*oldKeyframeEffect, std::move(aNewKeyframes));
+      }
+
+      if (~aOverriddenProperties & CSSAnimationProperties::Composition) {
+        animationChanged = oldKeyframeEffect->Composite() != aNewComposite;
+        oldKeyframeEffect->SetCompositeFromStyle(aNewComposite);
+      }
     }
   }
 
@@ -287,11 +293,12 @@ static already_AddRefed<CSSAnimation> BuildAnimation(
     // In order to honor what the spec said, we'd copy more data over.
     UpdateOldAnimationPropertiesWithNew(
         *oldAnim, std::move(timing), std::move(keyframes), isStylePaused,
-        oldAnim->GetOverriddenProperties(), aBuilder, timeline);
+        oldAnim->GetOverriddenProperties(), aBuilder, timeline,
+        aStyle.GetAnimationComposition(animIdx));
     return oldAnim.forget();
   }
 
-  KeyframeEffectParams effectOptions;
+  KeyframeEffectParams effectOptions(aStyle.GetAnimationComposition(animIdx));
   RefPtr<KeyframeEffect> effect = new dom::CSSAnimationKeyframeEffect(
       aPresContext->Document(),
       OwningAnimationTarget(aTarget.mElement, aTarget.mPseudoType),

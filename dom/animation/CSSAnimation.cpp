@@ -353,6 +353,15 @@ void CSSAnimationKeyframeEffect::SetKeyframes(JSContext* aContext,
   }
 }
 
+void CSSAnimationKeyframeEffect::SetComposite(
+    const CompositeOperation& aComposite) {
+  KeyframeEffect::SetComposite(aComposite);
+
+  if (CSSAnimation* cssAnimation = GetOwningCSSAnimation()) {
+    cssAnimation->AddOverriddenProperties(CSSAnimationProperties::Composition);
+  }
+}
+
 void CSSAnimationKeyframeEffect::MaybeFlushUnanimatedStyle() const {
   if (!GetOwningCSSAnimation()) {
     return;
