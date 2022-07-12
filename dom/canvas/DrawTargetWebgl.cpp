@@ -2920,10 +2920,6 @@ Maybe<layers::SurfaceDescriptor> DrawTargetWebgl::GetFrontBuffer() {
   // Only try to present and retrieve the front buffer if there is a valid
   // WebGL framebuffer that can be sent to the compositor. Otherwise, return
   // nothing to try to reuse the Skia snapshot.
-  if (mSharedContext->mWebgl->GetTexTypeForSwapChain() ==
-      layers::TextureType::Unknown) {
-    return Nothing();
-  }
   if (mNeedsPresent) {
     mNeedsPresent = false;
     if (mWebglValid || FlushFromSkia()) {

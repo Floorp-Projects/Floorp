@@ -71,6 +71,11 @@ struct IsTriviallySerializable<webgl::ReadPixelsDesc> : std::true_type {};
 // {};
 //  SurfaceDescriptorBuffer is *not* trivial.
 template <>
+struct IsTriviallySerializable<layers::RemoteTextureId> : std::true_type {};
+template <>
+struct IsTriviallySerializable<layers::RemoteTextureOwnerId> : std::true_type {
+};
+template <>
 struct IsTriviallySerializable<webgl::SwapChainOptions> : std::true_type {};
 
 template <typename T>

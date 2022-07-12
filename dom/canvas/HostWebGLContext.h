@@ -169,15 +169,14 @@ class HostWebGLContext final : public SupportsWeakPtr {
   }
 
   void Present(const ObjectId xrFb, const layers::TextureType t,
-               const bool webvr) const {
-    return (void)mContext->Present(AutoResolve(xrFb), t, webvr);
+               const bool webvr, const webgl::SwapChainOptions& options) const {
+    return (void)mContext->Present(AutoResolve(xrFb), t, webvr, options);
   }
   void CopyToSwapChain(const ObjectId fb, const layers::TextureType t,
                        const webgl::SwapChainOptions& options) const {
     return (void)mContext->CopyToSwapChain(AutoResolve(fb), t, options);
   }
   void EndOfFrame() const { return (void)mContext->EndOfFrame(); }
-  gl::SwapChain* GetSwapChain(ObjectId xrFb, const bool webvr) const;
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(ObjectId xrFb,
                                                   const bool webvr) const;
 
