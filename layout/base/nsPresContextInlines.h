@@ -15,7 +15,7 @@ inline mozilla::ServoStyleSet* nsPresContext::StyleSet() const {
   return mDocument->StyleSetForPresShellOrMediaQueryEvaluation();
 }
 
-inline nsCSSFrameConstructor* nsPresContext::FrameConstructor() {
+inline nsCSSFrameConstructor* nsPresContext::FrameConstructor() const {
   return PresShell()->FrameConstructor();
 }
 

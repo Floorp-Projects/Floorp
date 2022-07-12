@@ -58,8 +58,7 @@ nsListControlFrame::nsListControlFrame(ComputedStyle* aStyle,
     : nsHTMLScrollFrame(aStyle, aPresContext, kClassID, false),
       mMightNeedSecondPass(false),
       mHasPendingInterruptAtStartOfReflow(false),
-      mForceSelection(false),
-      mLastDropdownComputedBSize(NS_UNCONSTRAINEDSIZE) {
+      mForceSelection(false) {
   mChangesSinceDragStart = false;
 
   mIsAllContentHere = false;
@@ -701,8 +700,6 @@ void nsListControlFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
   mStartSelectionIndex = kNothingSelected;
   mEndSelectionIndex = kNothingSelected;
-
-  mLastDropdownBackstopColor = PresContext()->DefaultBackgroundColor();
 }
 
 dom::HTMLOptionsCollection* nsListControlFrame::GetOptions() const {
