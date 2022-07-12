@@ -89,7 +89,6 @@ class FakeAudioProcessor : public AudioProcessorInterface {
   AudioProcessorInterface::AudioProcessorStatistics GetStats(
       bool has_recv_streams) override {
     AudioProcessorStatistics stats;
-    stats.typing_noise_detected = true;
     if (has_recv_streams) {
       stats.apm_statistics.echo_return_loss = 2.0;
       stats.apm_statistics.echo_return_loss_enhancement = 3.0;
@@ -132,7 +131,6 @@ class FakeAudioProcessorWithInitValue : public AudioProcessorInterface {
   AudioProcessorInterface::AudioProcessorStatistics GetStats(
       bool /*has_recv_streams*/) override {
     AudioProcessorStatistics stats;
-    stats.typing_noise_detected = false;
     return stats;
   }
 };
@@ -488,10 +486,6 @@ void VerifyVoiceSenderInfoReport(const StatsReport* report,
   EXPECT_TRUE(GetValue(report, StatsReport::kStatsValueNameAudioInputLevel,
                        &value_in_report));
   EXPECT_EQ(rtc::ToString(sinfo.audio_level), value_in_report);
-  EXPECT_TRUE(GetValue(report, StatsReport::kStatsValueNameTypingNoiseState,
-                       &value_in_report));
-  std::string typing_detected = sinfo.typing_noise_detected ? "true" : "false";
-  EXPECT_EQ(typing_detected, value_in_report);
   EXPECT_TRUE(GetValue(report,
                        StatsReport::kStatsValueNameAnaBitrateActionCounter,
                        &value_in_report));
@@ -551,7 +545,6 @@ void InitVoiceSenderInfo(cricket::VoiceSenderInfo* voice_sender_info,
   voice_sender_info->apm_statistics.echo_return_loss_enhancement = 109;
   voice_sender_info->apm_statistics.delay_median_ms = 110;
   voice_sender_info->apm_statistics.delay_standard_deviation_ms = 111;
-  voice_sender_info->typing_noise_detected = false;
   voice_sender_info->ana_statistics.bitrate_action_counter = 112;
   voice_sender_info->ana_statistics.channel_action_counter = 113;
   voice_sender_info->ana_statistics.dtx_action_counter = 114;
@@ -568,8 +561,6 @@ void UpdateVoiceSenderInfoFromAudioTrack(
   audio_track->GetSignalLevel(&voice_sender_info->audio_level);
   AudioProcessorInterface::AudioProcessorStatistics audio_processor_stats =
       audio_track->GetAudioProcessor()->GetStats(has_remote_tracks);
-  voice_sender_info->typing_noise_detected =
-      audio_processor_stats.typing_noise_detected;
   voice_sender_info->apm_statistics = audio_processor_stats.apm_statistics;
 }
 

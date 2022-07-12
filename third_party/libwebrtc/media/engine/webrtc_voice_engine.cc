@@ -393,10 +393,8 @@ void WebRtcVoiceEngine::Init() {
 #if defined(WEBRTC_IOS)
     // On iOS, VPIO provides built-in NS.
     options.noise_suppression = false;
-    options.typing_detection = false;
 #else
     options.noise_suppression = true;
-    options.typing_detection = true;
 #endif
     options.highpass_filter = true;
     options.stereo_swapping = false;
@@ -451,11 +449,6 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
   }
 #elif defined(WEBRTC_ANDROID)
   use_mobile_software_aec = true;
-#endif
-
-// Override noise suppression options for Android.
-#if defined(WEBRTC_ANDROID)
-  options.typing_detection = false;
 #endif
 
 // Set and adjust gain control options.
@@ -600,10 +593,6 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
     apm_config.noise_suppression.level =
         webrtc::AudioProcessing::Config::NoiseSuppression::Level::kHigh;
     RTC_LOG(LS_INFO) << "NS set to " << enabled;
-  }
-
-  if (options.typing_detection) {
-    RTC_LOG(LS_WARNING) << "Typing detection is requested, but unsupported.";
   }
 
   ap->ApplyConfig(apm_config);
@@ -2339,7 +2328,6 @@ bool WebRtcVoiceMediaChannel::GetStats(VoiceMediaInfo* info,
     sinfo.audio_level = stats.audio_level;
     sinfo.total_input_energy = stats.total_input_energy;
     sinfo.total_input_duration = stats.total_input_duration;
-    sinfo.typing_noise_detected = (send_ ? stats.typing_noise_detected : false);
     sinfo.ana_statistics = stats.ana_statistics;
     sinfo.apm_statistics = stats.apm_statistics;
     sinfo.report_block_datas = std::move(stats.report_block_datas);

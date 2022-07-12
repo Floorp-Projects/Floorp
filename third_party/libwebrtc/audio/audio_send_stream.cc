@@ -476,7 +476,6 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
     stats.total_input_duration = audio_level_.TotalDuration();
   }
 
-  stats.typing_noise_detected = audio_state()->typing_noise_detected();
   stats.ana_statistics = channel_send_->GetANAStatistics();
 
   AudioProcessing* ap = audio_state_->audio_processing();

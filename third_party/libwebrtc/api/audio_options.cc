@@ -54,7 +54,6 @@ void AudioOptions::SetAll(const AudioOptions& change) {
           change.audio_jitter_buffer_min_delay_ms);
   SetFrom(&audio_jitter_buffer_enable_rtx_handling,
           change.audio_jitter_buffer_enable_rtx_handling);
-  SetFrom(&typing_detection, change.typing_detection);
   SetFrom(&residual_echo_detector, change.residual_echo_detector);
   SetFrom(&combined_audio_video_bwe, change.combined_audio_video_bwe);
   SetFrom(&audio_network_adaptor, change.audio_network_adaptor);
@@ -78,7 +77,6 @@ bool AudioOptions::operator==(const AudioOptions& o) const {
              o.audio_jitter_buffer_min_delay_ms &&
          audio_jitter_buffer_enable_rtx_handling ==
              o.audio_jitter_buffer_enable_rtx_handling &&
-         typing_detection == o.typing_detection &&
          residual_echo_detector == o.residual_echo_detector &&
          combined_audio_video_bwe == o.combined_audio_video_bwe &&
          audio_network_adaptor == o.audio_network_adaptor &&
@@ -107,7 +105,6 @@ std::string AudioOptions::ToString() const {
                 audio_jitter_buffer_min_delay_ms);
   ToStringIfSet(&result, "audio_jitter_buffer_enable_rtx_handling",
                 audio_jitter_buffer_enable_rtx_handling);
-  ToStringIfSet(&result, "typing", typing_detection);
   ToStringIfSet(&result, "residual_echo_detector", residual_echo_detector);
   ToStringIfSet(&result, "combined_audio_video_bwe", combined_audio_video_bwe);
   ToStringIfSet(&result, "audio_network_adaptor", audio_network_adaptor);
