@@ -25,10 +25,11 @@ class RtpTransportControllerSendFactory
       const RtpTransportConfig& config,
       Clock* clock,
       std::unique_ptr<ProcessThread> process_thread) override {
+    RTC_CHECK(config.trials);
     return std::make_unique<RtpTransportControllerSend>(
         clock, config.event_log, config.network_state_predictor_factory,
         config.network_controller_factory, config.bitrate_config,
-        std::move(process_thread), config.task_queue_factory, config.trials);
+        std::move(process_thread), config.task_queue_factory, *config.trials);
   }
 
   virtual ~RtpTransportControllerSendFactory() {}

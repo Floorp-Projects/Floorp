@@ -58,7 +58,7 @@ class PacedSender : public RtpPacketPacer, public RtpPacketSender {
   PacedSender(Clock* clock,
               PacketRouter* packet_router,
               RtcEventLog* event_log,
-              const WebRtcKeyValueConfig* field_trials = nullptr,
+              const WebRtcKeyValueConfig& field_trials,
               ProcessThread* process_thread = nullptr);
 
   ~PacedSender() override;

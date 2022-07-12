@@ -59,14 +59,12 @@ TargetRateConstraints ConvertConstraints(const BitrateConstraints& contraints,
                             contraints.start_bitrate_bps, clock);
 }
 
-bool IsEnabled(const WebRtcKeyValueConfig* trials, absl::string_view key) {
-  RTC_DCHECK(trials != nullptr);
-  return absl::StartsWith(trials->Lookup(key), "Enabled");
+bool IsEnabled(const WebRtcKeyValueConfig& trials, absl::string_view key) {
+  return absl::StartsWith(trials.Lookup(key), "Enabled");
 }
 
-bool IsDisabled(const WebRtcKeyValueConfig* trials, absl::string_view key) {
-  RTC_DCHECK(trials != nullptr);
-  return absl::StartsWith(trials->Lookup(key), "Disabled");
+bool IsDisabled(const WebRtcKeyValueConfig& trials, absl::string_view key) {
+  return absl::StartsWith(trials.Lookup(key), "Disabled");
 }
 
 bool IsRelayed(const rtc::NetworkRoute& route) {
@@ -76,12 +74,12 @@ bool IsRelayed(const rtc::NetworkRoute& route) {
 }  // namespace
 
 RtpTransportControllerSend::PacerSettings::PacerSettings(
-    const WebRtcKeyValueConfig* trials)
+    const WebRtcKeyValueConfig& trials)
     : tq_disabled("Disabled"),
       holdback_window("holdback_window", PacingController::kMinSleepTime),
       holdback_packets("holdback_packets", -1) {
   ParseFieldTrial({&tq_disabled, &holdback_window, &holdback_packets},
-                  trials->Lookup("WebRTC-TaskQueuePacer"));
+                  trials.Lookup("WebRTC-TaskQueuePacer"));
 }
 
 RtpTransportControllerSend::RtpTransportControllerSend(
@@ -92,7 +90,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
     const BitrateConstraints& bitrate_config,
     std::unique_ptr<ProcessThread> process_thread,
     TaskQueueFactory* task_queue_factory,
-    const WebRtcKeyValueConfig* trials)
+    const WebRtcKeyValueConfig& trials)
     : clock_(clock),
       event_log_(event_log),
       bitrate_configurator_(bitrate_config),
@@ -135,18 +133,18 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       task_queue_(task_queue_factory->CreateTaskQueue(
           "rtp_send_controller",
           TaskQueueFactory::Priority::NORMAL)),
-      field_trials_(*trials) {
+      field_trials_(trials) {
   ParseFieldTrial({&relay_bandwidth_cap_},
-                  trials->Lookup("WebRTC-Bwe-NetworkRouteConstraints"));
+                  trials.Lookup("WebRTC-Bwe-NetworkRouteConstraints"));
   initial_config_.constraints = ConvertConstraints(bitrate_config, clock_);
   initial_config_.event_log = event_log;
-  initial_config_.key_value_config = trials;
+  initial_config_.key_value_config = &trials;
   RTC_DCHECK(bitrate_config.start_bitrate_bps > 0);
 
   pacer()->SetPacingRates(
       DataRate::BitsPerSec(bitrate_config.start_bitrate_bps), DataRate::Zero());
 
-  if (absl::StartsWith(trials->Lookup("WebRTC-LazyPacerStart"), "Disabled")) {
+  if (absl::StartsWith(trials.Lookup("WebRTC-LazyPacerStart"), "Disabled")) {
     EnsureStarted();
   }
 }

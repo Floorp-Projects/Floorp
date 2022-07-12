@@ -38,8 +38,6 @@
 #include "modules/congestion_controller/goog_cc/delay_based_bwe.h"
 #include "modules/congestion_controller/include/receive_side_congestion_controller.h"
 #include "modules/congestion_controller/rtp/transport_feedback_adapter.h"
-#include "modules/pacing/paced_sender.h"
-#include "modules/pacing/packet_router.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtcp_packet.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
@@ -1199,8 +1197,6 @@ void EventLogAnalyzer::CreateSendSideBweSimulationGraph(Plot* plot) {
   SimulatedClock clock(0);
   BitrateObserver observer;
   RtcEventLogNull null_event_log;
-  PacketRouter packet_router;
-  PacedSender pacer(&clock, &packet_router, &null_event_log);
   TransportFeedbackAdapter transport_feedback;
   auto factory = GoogCcNetworkControllerFactory();
   TimeDelta process_interval = factory.GetProcessInterval();

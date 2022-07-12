@@ -135,7 +135,7 @@ class RtpVideoSenderTestFixture {
             bitrate_config_,
             time_controller_.CreateProcessThread("PacerThread"),
             time_controller_.GetTaskQueueFactory(),
-            field_trials ? field_trials : &field_trials_),
+            field_trials ? *field_trials : field_trials_),
         stats_proxy_(time_controller_.GetClock(),
                      config_,
                      VideoEncoderConfig::ContentType::kRealtimeVideo,

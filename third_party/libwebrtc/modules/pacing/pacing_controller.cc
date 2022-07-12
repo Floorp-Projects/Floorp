@@ -98,22 +98,20 @@ const TimeDelta PacingController::kMinSleepTime = TimeDelta::Millis(1);
 PacingController::PacingController(Clock* clock,
                                    PacketSender* packet_sender,
                                    RtcEventLog* event_log,
-                                   const WebRtcKeyValueConfig* field_trials,
+                                   const WebRtcKeyValueConfig& field_trials,
                                    ProcessMode mode)
     : mode_(mode),
       clock_(clock),
       packet_sender_(packet_sender),
-      fallback_field_trials_(
-          !field_trials ? std::make_unique<FieldTrialBasedConfig>() : nullptr),
-      field_trials_(field_trials ? field_trials : fallback_field_trials_.get()),
+      field_trials_(field_trials),
       drain_large_queues_(
-          !IsDisabled(*field_trials_, "WebRTC-Pacer-DrainQueue")),
+          !IsDisabled(field_trials_, "WebRTC-Pacer-DrainQueue")),
       send_padding_if_silent_(
-          IsEnabled(*field_trials_, "WebRTC-Pacer-PadInSilence")),
-      pace_audio_(IsEnabled(*field_trials_, "WebRTC-Pacer-BlockAudio")),
+          IsEnabled(field_trials_, "WebRTC-Pacer-PadInSilence")),
+      pace_audio_(IsEnabled(field_trials_, "WebRTC-Pacer-BlockAudio")),
       ignore_transport_overhead_(
-          IsEnabled(*field_trials_, "WebRTC-Pacer-IgnoreTransportOverhead")),
-      padding_target_duration_(GetDynamicPaddingTarget(*field_trials_)),
+          IsEnabled(field_trials_, "WebRTC-Pacer-IgnoreTransportOverhead")),
+      padding_target_duration_(GetDynamicPaddingTarget(field_trials_)),
       min_packet_limit_(kDefaultMinPacketLimit),
       transport_overhead_per_packet_(DataSize::Zero()),
       last_timestamp_(clock_->CurrentTime()),
@@ -124,12 +122,12 @@ PacingController::PacingController(Clock* clock,
       padding_debt_(DataSize::Zero()),
       media_rate_(DataRate::Zero()),
       padding_rate_(DataRate::Zero()),
-      prober_(*field_trials_),
+      prober_(field_trials_),
       probing_send_failure_(false),
       pacing_bitrate_(DataRate::Zero()),
       last_process_time_(clock->CurrentTime()),
       last_send_time_(last_process_time_),
-      packet_queue_(last_process_time_, field_trials_),
+      packet_queue_(last_process_time_),
       packet_counter_(0),
       congestion_window_size_(DataSize::PlusInfinity()),
       outstanding_data_(DataSize::Zero()),
@@ -142,7 +140,7 @@ PacingController::PacingController(Clock* clock,
   }
   FieldTrialParameter<int> min_packet_limit_ms("", min_packet_limit_.ms());
   ParseFieldTrial({&min_packet_limit_ms},
-                  field_trials_->Lookup("WebRTC-Pacer-MinPacketLimitMs"));
+                  field_trials_.Lookup("WebRTC-Pacer-MinPacketLimitMs"));
   min_packet_limit_ = TimeDelta::Millis(min_packet_limit_ms.Get());
   UpdateBudgetWithElapsedTime(min_packet_limit_);
 }
