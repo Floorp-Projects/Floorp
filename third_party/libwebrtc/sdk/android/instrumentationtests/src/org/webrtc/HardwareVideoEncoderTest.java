@@ -23,35 +23,26 @@ import androidx.annotation.Nullable;
 import androidx.test.filters.SmallTest;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.chromium.base.test.params.BaseJUnit4RunnerDelegate;
-import org.chromium.base.test.params.ParameterAnnotations.ClassParameter;
-import org.chromium.base.test.params.ParameterAnnotations.UseRunnerDelegate;
-import org.chromium.base.test.params.ParameterSet;
-import org.chromium.base.test.params.ParameterizedRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
-@RunWith(ParameterizedRunner.class)
-@UseRunnerDelegate(BaseJUnit4RunnerDelegate.class)
+@RunWith(Parameterized.class)
 public class HardwareVideoEncoderTest {
-  @ClassParameter private static List<ParameterSet> CLASS_PARAMS = new ArrayList<>();
-
-  static {
-    CLASS_PARAMS.add(new ParameterSet()
-                         .value(false /* useTextures */, false /* useEglContext */)
-                         .name("I420WithoutEglContext"));
-    CLASS_PARAMS.add(new ParameterSet()
-                         .value(true /* useTextures */, false /* useEglContext */)
-                         .name("TextureWithoutEglContext"));
-    CLASS_PARAMS.add(new ParameterSet()
-                         .value(true /* useTextures */, true /* useEglContext */)
-                         .name("TextureWithEglContext"));
+  @Parameters(name = "textures={0};eglContext={1}")
+  public static Collection<Object[]> parameters() {
+    return Arrays.asList(new Object[] {/*textures=*/false, /*eglContext=*/false},
+        new Object[] {/*textures=*/true, /*eglContext=*/false},
+        new Object[] {/*textures=*/true, /*eglContext=*/true});
   }
 
   private final boolean useTextures;
