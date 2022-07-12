@@ -91,8 +91,6 @@ class GeckoViewSupport final
 
   void OnShowDynamicToolbar() const;
 
-  void OnUpdateSessionStore(mozilla::jni::Object::Param aBundle);
-
   void PassExternalResponse(java::WebResponse::Param aResponse);
 
   void AttachMediaSessionController(

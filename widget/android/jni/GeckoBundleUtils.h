@@ -9,8 +9,6 @@
 
 #include "mozilla/java/GeckoBundleWrappers.h"
 
-#include "jsapi.h"
-
 namespace mozilla {
 namespace jni {
 
@@ -36,9 +34,6 @@ namespace jni {
   }                                                                         \
   auto name =                                                               \
       mozilla::java::GeckoBundle::New(_##name##_jkeys, _##name##_jvalues);
-
-nsresult BoxData(JSContext* aCx, JS::HandleValue aData,
-                 jni::Object::LocalRef& aOut, bool aObjectOnly);
 
 }  // namespace jni
 }  // namespace mozilla
