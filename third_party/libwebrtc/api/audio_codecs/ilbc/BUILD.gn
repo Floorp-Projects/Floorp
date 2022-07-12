@@ -27,6 +27,7 @@ rtc_library("audio_encoder_ilbc") {
   deps = [
     ":audio_encoder_ilbc_config",
     "..:audio_codecs_api",
+    "../../../api:webrtc_key_value_config",
     "../../../modules/audio_coding:ilbc",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:safe_minmax",
@@ -46,6 +47,7 @@ rtc_library("audio_decoder_ilbc") {
   ]
   deps = [
     "..:audio_codecs_api",
+    "../../../api:webrtc_key_value_config",
     "../../../modules/audio_coding:ilbc",
     "../../../rtc_base:rtc_base_approved",
   ]

@@ -32,6 +32,7 @@ rtc_library("audio_codecs_api") {
     "..:array_view",
     "..:bitrate_allocation",
     "..:scoped_refptr",
+    "../../api:webrtc_key_value_config",
     "../../rtc_base:checks",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:sanitizer",
