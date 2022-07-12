@@ -14,6 +14,8 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
+import androidx.core.view.MenuProvider
+import androidx.lifecycle.Lifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.MainScope
@@ -38,7 +40,7 @@ import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.utils.allowUndo
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHandler {
+class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHandler, MenuProvider {
     private lateinit var downloadStore: DownloadFragmentStore
     private lateinit var downloadView: DownloadView
     private lateinit var downloadInteractor: DownloadInteractor
@@ -116,7 +118,6 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
     }
 
     /**
@@ -140,6 +141,8 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
         consumeFrom(downloadStore) {
             downloadView.update(it)
         }
@@ -150,7 +153,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         showToolbar(getString(R.string.library_downloads))
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         val menuRes = when (downloadStore.state.mode) {
             is DownloadFragmentState.Mode.Normal -> R.menu.library_menu
             is DownloadFragmentState.Mode.Editing -> R.menu.download_select_multi
@@ -163,7 +166,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
             }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+    override fun onMenuItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.close_history -> {
             close()
             true
@@ -181,7 +184,8 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
             }
             true
         }
-        else -> super.onOptionsItemSelected(item)
+        // other options are not handled by this menu provider
+        else -> false
     }
 
     /**

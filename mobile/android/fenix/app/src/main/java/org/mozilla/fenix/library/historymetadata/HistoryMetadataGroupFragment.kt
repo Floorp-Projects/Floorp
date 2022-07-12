@@ -16,7 +16,9 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.CoroutineScope
@@ -51,7 +53,7 @@ import org.mozilla.fenix.utils.allowUndo
  */
 @SuppressWarnings("TooManyFunctions")
 class HistoryMetadataGroupFragment :
-    LibraryPageFragment<History.Metadata>(), UserInteractionHandler {
+    LibraryPageFragment<History.Metadata>(), UserInteractionHandler, MenuProvider {
 
     private lateinit var historyMetadataGroupStore: HistoryMetadataGroupFragmentStore
     private lateinit var interactor: HistoryMetadataGroupInteractor
@@ -66,11 +68,6 @@ class HistoryMetadataGroupFragment :
 
     override val selectedItems: Set<History.Metadata>
         get() = historyMetadataGroupStore.state.items.filter { it.selected }.toSet()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -121,6 +118,8 @@ class HistoryMetadataGroupFragment :
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
         consumeFrom(historyMetadataGroupStore) { state ->
             historyMetadataGroupView.update(state)
             activity?.invalidateOptionsMenu()
@@ -150,7 +149,7 @@ class HistoryMetadataGroupFragment :
 
     override fun onBackPressed(): Boolean = interactor.onBackPressed(selectedItems)
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         if (selectedItems.isNotEmpty()) {
             inflater.inflate(R.menu.history_select_multi, menu)
 
@@ -164,7 +163,7 @@ class HistoryMetadataGroupFragment :
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    override fun onMenuItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.share_history_multi_select -> {
                 interactor.onShareMenuItem(selectedItems)
@@ -199,7 +198,8 @@ class HistoryMetadataGroupFragment :
                 interactor.onDeleteAll()
                 true
             }
-            else -> super.onOptionsItemSelected(item)
+            // other options are not handled by this menu provider
+            else -> false
         }
     }
 

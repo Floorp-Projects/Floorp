@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -16,6 +17,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.MenuProvider
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import mozilla.components.concept.menu.MenuController
@@ -42,7 +45,7 @@ import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
 import org.mozilla.fenix.settings.logins.view.SavedLoginsListView
 
 @SuppressWarnings("TooManyFunctions")
-class SavedLoginsFragment : SecureFragment() {
+class SavedLoginsFragment : SecureFragment(), MenuProvider {
     private lateinit var savedLoginsStore: LoginsFragmentStore
     private lateinit var savedLoginsListView: SavedLoginsListView
     private lateinit var savedLoginsInteractor: SavedLoginsInteractor
@@ -108,7 +111,7 @@ class SavedLoginsFragment : SecureFragment() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.login_list, menu)
         val searchItem = menu.findItem(R.id.search)
         val searchView: SearchView = searchItem.actionView as SearchView
@@ -133,6 +136,8 @@ class SavedLoginsFragment : SecureFragment() {
             },
         )
     }
+
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean = false
 
     /**
      * If we pause this fragment, we want to pop users back to reauth
@@ -160,7 +165,7 @@ class SavedLoginsFragment : SecureFragment() {
     ) = (activity as HomeActivity).openToBrowserAndLoad(searchTermOrURL, newTab, from)
 
     private fun initToolbar() {
-        setHasOptionsMenu(true)
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
         showToolbar(getString(R.string.preferences_passwords_saved_logins))
         (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary()
             .setDisplayShowTitleEnabled(false)

@@ -15,8 +15,10 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import mozilla.components.lib.state.ext.consumeFrom
@@ -40,7 +42,7 @@ import org.mozilla.fenix.settings.logins.interactor.AddLoginInteractor
  * Displays the editable new login information for a single website
  */
 @Suppress("TooManyFunctions", "NestedBlockDepth", "ForbiddenComment")
-class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
+class AddLoginFragment : Fragment(R.layout.fragment_add_login), MenuProvider {
 
     private lateinit var loginsFragmentStore: LoginsFragmentStore
     private lateinit var interactor: AddLoginInteractor
@@ -57,7 +59,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setHasOptionsMenu(true)
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         _binding = FragmentAddLoginBinding.bind(view)
 
@@ -332,7 +334,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
         activity?.invalidateOptionsMenu()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.login_save, menu)
     }
 
@@ -356,7 +358,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
         showToolbar(getString(R.string.add_login))
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+    override fun onMenuItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.save_login_button -> {
             view?.hideKeyboard()
             interactor.onAddLogin(

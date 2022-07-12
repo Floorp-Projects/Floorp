@@ -9,7 +9,9 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -32,7 +34,7 @@ import org.mozilla.fenix.settings.SupportUtils
 /**
  * Fragment to enter a custom search engine name and URL template.
  */
-class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine) {
+class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_engine), MenuProvider {
 
     private val args by navArgs<EditCustomSearchEngineFragmentArgs>()
     private lateinit var searchEngine: SearchEngine
@@ -43,7 +45,6 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
 
         searchEngine = requireNotNull(
             requireComponents.core.store.state.search.customSearchEngines.find { engine ->
@@ -54,6 +55,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         val url = searchEngine.resultUrls[0]
 
@@ -85,17 +87,18 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
         _binding = null
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.edit_custom_searchengine_menu, menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    override fun onMenuItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.save_button -> {
                 saveCustomEngine()
                 true
             }
-            else -> super.onOptionsItemSelected(item)
+            // other options are not handled by this menu provider
+            else -> false
         }
     }
 

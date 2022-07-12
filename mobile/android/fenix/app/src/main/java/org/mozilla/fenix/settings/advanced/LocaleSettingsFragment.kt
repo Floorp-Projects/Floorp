@@ -8,11 +8,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.locale.LocaleUseCases
@@ -22,7 +25,7 @@ import org.mozilla.fenix.databinding.FragmentLocaleSettingsBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
 
-class LocaleSettingsFragment : Fragment() {
+class LocaleSettingsFragment : Fragment(), MenuProvider {
 
     private lateinit var localeSettingsStore: LocaleSettingsStore
     private lateinit var interactor: LocaleSettingsInteractor
@@ -33,7 +36,6 @@ class LocaleSettingsFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
     }
 
     override fun onCreateView(
@@ -63,7 +65,7 @@ class LocaleSettingsFragment : Fragment() {
         return view
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.languages_list, menu)
         val searchItem = menu.findItem(R.id.search)
         val searchView: SearchView = searchItem.actionView as SearchView
@@ -85,6 +87,8 @@ class LocaleSettingsFragment : Fragment() {
         )
     }
 
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean = false
+
     override fun onResume() {
         super.onResume()
         localeView.onResume()
@@ -98,6 +102,8 @@ class LocaleSettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
         consumeFrom(localeSettingsStore) {
             localeView.update(it)
         }

@@ -14,8 +14,10 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -42,7 +44,7 @@ import org.mozilla.fenix.settings.logins.togglePasswordReveal
  * Displays the editable saved login information for a single website
  */
 @Suppress("TooManyFunctions", "NestedBlockDepth", "ForbiddenComment")
-class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
+class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
 
     private val args by navArgs<EditLoginFragmentArgs>()
     private lateinit var loginsFragmentStore: LoginsFragmentStore
@@ -62,7 +64,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setHasOptionsMenu(true)
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         _binding = FragmentEditLoginBinding.bind(view)
 
@@ -278,7 +280,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         activity?.invalidateOptionsMenu()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.login_save, menu)
     }
 
@@ -299,7 +301,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         super.onPause()
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+    override fun onMenuItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.save_login_button -> {
             view?.hideKeyboard()
             interactor.onSaveLogin(

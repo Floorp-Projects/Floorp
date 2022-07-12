@@ -15,6 +15,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.MenuProvider
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -47,7 +49,7 @@ import org.mozilla.fenix.settings.logins.view.LoginDetailsBindingDelegate
  * Displays saved login information for a single website.
  */
 @Suppress("TooManyFunctions", "ForbiddenComment")
-class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
+class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail), MenuProvider {
 
     private val args by navArgs<LoginDetailFragmentArgs>()
     private var login: SavedLogin? = null
@@ -79,6 +81,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         interactor = LoginDetailInteractor(
             SavedLoginsStorageController(
@@ -101,11 +104,6 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
             setUpPasswordReveal()
         }
         togglePasswordReveal(binding.passwordText, binding.revealPasswordButton)
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
     }
 
     /**
@@ -157,12 +155,12 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
         )
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.login_options_menu, menu)
         this.menu = menu
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+    override fun onMenuItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.delete_login_button -> {
             displayDeleteLoginDialog()
             true

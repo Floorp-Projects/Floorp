@@ -17,8 +17,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
@@ -53,7 +55,7 @@ import org.mozilla.fenix.library.bookmarks.friendlyRootTitle
 /**
  * Menu to edit the name, URL, and location of a bookmark item.
  */
-class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
+class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark), MenuProvider {
     private var _binding: FragmentEditBookmarkBinding? = null
     private val binding get() = _binding!!
 
@@ -63,13 +65,9 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
     private var bookmarkParent: BookmarkNode? = null
     private var initialParentGuid: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         _binding = FragmentEditBookmarkBinding.bind(view)
 
@@ -191,11 +189,11 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
         binding.progressBarBookmark.visibility = View.GONE
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.bookmarks_edit, menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    override fun onMenuItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.delete_bookmark_button -> {
                 displayDeleteBookmarkDialog()
@@ -206,7 +204,8 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                 true
             }
 
-            else -> super.onOptionsItemSelected(item)
+            // other options are not handled by this menu provider
+            else -> false
         }
     }
 
