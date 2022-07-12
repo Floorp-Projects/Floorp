@@ -44,6 +44,8 @@ rtc_library("video_frame") {
   sources = [
     "i420_buffer.cc",
     "i420_buffer.h",
+    "i422_buffer.cc",
+    "i422_buffer.h",
     "i444_buffer.cc",
     "i444_buffer.h",
     "nv12_buffer.cc",

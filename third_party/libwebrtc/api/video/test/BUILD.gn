@@ -12,6 +12,7 @@ rtc_library("rtc_api_video_unittests") {
   testonly = true
   sources = [
     "color_space_unittest.cc",
+    "i422_buffer_unittest.cc",
     "i444_buffer_unittest.cc",
     "nv12_buffer_unittest.cc",
     "video_adaptation_counters_unittest.cc",
