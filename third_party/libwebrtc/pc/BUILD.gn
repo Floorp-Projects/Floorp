@@ -121,10 +121,40 @@ rtc_library("rtc_pc_base") {
   ]
 
   deps = [
+    ":channel",
+    ":channel_interface",
+    ":channel_manager",
+    ":dtls_srtp_transport",
+    ":dtls_transport",
+    ":external_hmac",
+    ":ice_transport",
+    ":jsep_transport",
+    ":jsep_transport_collection",
+    ":jsep_transport_controller",
     ":media_protocol_names",
+    ":media_session",
+    ":media_stream_proxy",
+    ":media_stream_track_proxy",
+    ":peer_connection_factory_proxy",
+    ":peer_connection_proxy",
     ":proxy",
+    ":rtcp_mux_filter",
+    ":rtp_media_utils",
+    ":rtp_receiver_proxy",
+    ":rtp_sender_proxy",
+    ":rtp_transport",
+    ":rtp_transport_internal",
+    ":sctp_data_channel_transport",
+    ":sctp_transport",
+    ":sctp_utils",
     ":session_description",
     ":simulcast_description",
+    ":srtp_filter",
+    ":srtp_session",
+    ":srtp_transport",
+    ":transport_stats",
+    ":used_ids",
+    ":video_track_source_proxy",
     "../api:array_view",
     "../api:async_dns_resolver",
     "../api:audio_options_api",
@@ -206,6 +236,98 @@ rtc_library("rtc_pc_base") {
   }
 
   public_configs = [ ":rtc_pc_config" ]
+}
+
+# Targets in preparation for breaking up rtc_pc_base target
+rtc_source_set("channel") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("channel_interface") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("channel_manager") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("dtls_srtp_transport") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("dtls_transport") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("external_hmac") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("ice_transport") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("jsep_transport") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("jsep_transport_collection") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("jsep_transport_controller") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("media_session") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("media_stream_proxy") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("media_stream_track_proxy") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("peer_connection_factory_proxy") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("peer_connection_proxy") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("rtcp_mux_filter") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("rtp_media_utils") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("rtp_receiver_proxy") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("rtp_sender_proxy") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("rtp_transport") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("rtp_transport_internal") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("sctp_data_channel_transport") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("sctp_transport") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("sctp_utils") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("srtp_filter") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("srtp_session") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("srtp_transport") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("transport_stats") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("used_ids") {
+  visibility = [ ":*" ]
+}
+rtc_source_set("video_track_source_proxy") {
+  visibility = [ ":*" ]
 }
 
 rtc_source_set("session_description") {
