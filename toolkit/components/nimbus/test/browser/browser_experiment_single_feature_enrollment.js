@@ -17,10 +17,10 @@ const SINGLE_FEATURE_RECIPE = {
   branches: [
     {
       feature: {
-        enabled: true,
         featureId: "urlbar",
         isEarlyStartup: true,
         value: {
+          enabled: true,
           quickSuggestEnabled: false,
           quickSuggestNonSponsoredIndex: -1,
           quickSuggestShouldShowOnboardingDialog: true,
@@ -33,10 +33,10 @@ const SINGLE_FEATURE_RECIPE = {
     },
     {
       feature: {
-        enabled: true,
         featureId: "urlbar",
         isEarlyStartup: true,
         value: {
+          enabled: true,
           quickSuggestEnabled: true,
           quickSuggestNonSponsoredIndex: -1,
           quickSuggestShouldShowOnboardingDialog: false,

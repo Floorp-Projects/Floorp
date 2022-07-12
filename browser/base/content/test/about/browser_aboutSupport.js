@@ -72,9 +72,8 @@ add_task(async function() {
 add_task(async function test_nimbus_experiments() {
   await ExperimentAPI.ready();
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    enabled: true,
     featureId: "aboutwelcome",
-    value: null,
+    value: { enabled: true },
   });
 
   await BrowserTestUtils.withNewTab(

@@ -22,7 +22,6 @@ const SINGLE_FEATURE_RECIPE = {
   ...ExperimentFakes.experiment(),
   branch: {
     feature: {
-      enabled: true,
       featureId: "urlbar",
       value: {
         valueThatWillDefinitelyShowUp: 42,

@@ -399,11 +399,11 @@ add_task(async function test_failure_group_conflict() {
   // These should not be allowed to exist simultaneously.
   const existingBranch = {
     slug: "treatment",
-    features: [{ featureId: "pink", enabled: true, value: {} }],
+    features: [{ featureId: "pink", value: {} }],
   };
   const newBranch = {
     slug: "treatment",
-    features: [{ featureId: "pink", enabled: true, value: {} }],
+    features: [{ featureId: "pink", value: {} }],
   };
 
   // simulate adding an experiment with a conflicting group "pink"
@@ -633,7 +633,9 @@ add_task(async function enroll_in_reference_aw_experiment() {
   const branches = ["treatment-a", "treatment-b"].map(slug => ({
     slug,
     ratio: 1,
-    features: [{ value: content, enabled: true, featureId: "aboutwelcome" }],
+    features: [
+      { value: { ...content, enabled: true }, featureId: "aboutwelcome" },
+    ],
   }));
   let recipe = ExperimentFakes.recipe("reference-aw", { branches });
   // Ensure we get enrolled
@@ -678,7 +680,7 @@ add_task(async function test_forceEnroll_cleanup() {
       {
         slug: "treatment",
         ratio: 1,
-        features: [{ featureId: "force-enrollment", enabled: true, value: {} }],
+        features: [{ featureId: "force-enrollment", value: {} }],
       },
     ],
   });
@@ -687,7 +689,7 @@ add_task(async function test_forceEnroll_cleanup() {
       {
         slug: "treatment",
         ratio: 1,
-        features: [{ featureId: "force-enrollment", enabled: true, value: {} }],
+        features: [{ featureId: "force-enrollment", value: {} }],
       },
     ],
   });

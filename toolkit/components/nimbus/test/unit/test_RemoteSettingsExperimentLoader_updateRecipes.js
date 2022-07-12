@@ -105,7 +105,6 @@ add_task(async function test_updateRecipes_invalidFeatureValue() {
         features: [
           {
             featureId: "spotlight",
-            enabled: true,
             value: {
               id: "test-spotlight-invalid-1",
             },
@@ -118,7 +117,6 @@ add_task(async function test_updateRecipes_invalidFeatureValue() {
         features: [
           {
             featureId: "spotlight",
-            enabled: true,
             value: {
               id: "test-spotlight-invalid-2",
             },

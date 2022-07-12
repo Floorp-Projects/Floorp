@@ -10,10 +10,6 @@ const EXPORTED_SYMBOLS = [
   "_ExperimentFeature",
 ];
 
-function isBooleanValueDefined(value) {
-  return typeof value === "boolean";
-}
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -406,41 +402,6 @@ class _ExperimentFeature {
   }
 
   /**
-   * Lookup feature in active experiments and return enabled.
-   * By default, this will send an exposure event.
-   * @param {{defaultValue?: any}} options
-   * @returns {obj} The feature value
-   */
-  isEnabled({ defaultValue = null } = {}) {
-    const branch = ExperimentAPI.getActiveBranch({ featureId: this.featureId });
-
-    let feature = featuresCompat(branch).find(
-      ({ featureId }) => featureId === this.featureId
-    );
-
-    // First, try to return an experiment value if it exists.
-    if (isBooleanValueDefined(feature?.enabled)) {
-      return feature.enabled;
-    }
-
-    let enabled;
-    try {
-      enabled = this.getVariable("enabled");
-    } catch (e) {
-      /* This is expected not all features have an enabled flag defined */
-    }
-    if (isBooleanValueDefined(enabled)) {
-      return enabled;
-    }
-
-    if (isBooleanValueDefined(this.getRollout()?.enabled)) {
-      return this.getRollout().enabled;
-    }
-
-    return defaultValue;
-  }
-
-  /**
    * Lookup feature variables in experiments, prefs, and remote defaults.
    * @param {{defaultValues?: {[variableName: string]: any}}} options
    * @returns {{[variableName: string]: any}} The feature value
@@ -557,7 +518,6 @@ class _ExperimentFeature {
 
   debug() {
     return {
-      enabled: this.isEnabled(),
       variables: this.getAllVariables(),
       experiment: ExperimentAPI.getExperimentMetaData({
         featureId: this.featureId,

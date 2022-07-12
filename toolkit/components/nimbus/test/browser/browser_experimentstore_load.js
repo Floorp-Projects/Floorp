@@ -61,7 +61,7 @@ add_task(async function test_load_from_disk_event() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "green", enabled: true }],
+      features: [{ featureId: "green" }],
     },
     lastSeen: Date.now(),
   });

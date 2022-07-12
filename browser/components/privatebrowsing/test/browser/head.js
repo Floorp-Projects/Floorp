@@ -145,7 +145,6 @@ async function setupMSExperimentWithMessage(message) {
   );
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "pbNewtab",
-    enabled: true,
     value: message,
   });
   await SpecialPowers.pushPrefEnv({
