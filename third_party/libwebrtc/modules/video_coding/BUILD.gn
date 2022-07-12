@@ -214,6 +214,26 @@ rtc_library("rtt_filter") {
   ]
 }
 
+rtc_library("jitter_estimator") {
+  sources = [
+    "jitter_estimator.cc",
+    "jitter_estimator.h",
+  ]
+  deps = [
+    ":rtt_filter",
+    "../../api/units:data_size",
+    "../../api/units:frequency",
+    "../../api/units:time_delta",
+    "../../api/units:timestamp",
+    "../../rtc_base",
+    "../../rtc_base:safe_conversions",
+    "../../rtc_base/experiments:jitter_upper_bound_experiment",
+    "../../system_wrappers",
+    "../../system_wrappers:field_trial",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
 rtc_library("video_coding") {
   visibility = [ "*" ]
   sources = [
@@ -238,8 +258,6 @@ rtc_library("video_coding") {
     "inter_frame_delay.cc",
     "inter_frame_delay.h",
     "internal_defines.h",
-    "jitter_estimator.cc",
-    "jitter_estimator.h",
     "loss_notification_controller.cc",
     "loss_notification_controller.h",
     "media_opt_util.cc",
@@ -270,6 +288,7 @@ rtc_library("video_coding") {
     ":encoded_frame",
     ":frame_buffer",
     ":frame_helpers",
+    ":jitter_estimator",
     ":packet_buffer",
     ":rtt_filter",
     ":timing",
@@ -287,6 +306,8 @@ rtc_library("video_coding") {
     "../../api:sequence_checker",
     "../../api/task_queue",
     "../../api/units:data_rate",
+    "../../api/units:data_size",
+    "../../api/units:frequency",
     "../../api/units:time_delta",
     "../../api/units:timestamp",
     "../../api/video:builtin_video_bitrate_allocator_factory",
@@ -383,6 +404,7 @@ rtc_library("video_coding_legacy") {
   deps = [
     ":codec_globals_headers",
     ":encoded_frame",
+    ":jitter_estimator",
     ":timing",
     ":video_codec_interface",
     ":video_coding",
@@ -1153,6 +1175,7 @@ if (rtc_include_tests) {
       ":frame_buffer",
       ":frame_dependencies_calculator",
       ":h264_packet_buffer",
+      ":jitter_estimator",
       ":nack_requester",
       ":packet_buffer",
       ":rtt_filter",
@@ -1182,6 +1205,7 @@ if (rtc_include_tests) {
       "../../api:videocodec_test_fixture_api",
       "../../api/task_queue:default_task_queue_factory",
       "../../api/test/video:function_video_factory",
+      "../../api/units:data_size",
       "../../api/units:frequency",
       "../../api/units:time_delta",
       "../../api/units:timestamp",

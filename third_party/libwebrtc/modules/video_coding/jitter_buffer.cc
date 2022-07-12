@@ -572,7 +572,7 @@ void VCMJitterBuffer::FindAndInsertContinuousFramesWithState(
 uint32_t VCMJitterBuffer::EstimatedJitterMs() {
   MutexLock lock(&mutex_);
   const double rtt_mult = 1.0f;
-  return jitter_estimate_.GetJitterEstimate(rtt_mult, absl::nullopt);
+  return jitter_estimate_.GetJitterEstimate(rtt_mult, absl::nullopt).ms();
 }
 
 void VCMJitterBuffer::SetNackSettings(size_t max_nack_list_size,
@@ -879,7 +879,9 @@ void VCMJitterBuffer::UpdateJitterEstimate(int64_t latest_packet_time_ms,
   // Filter out frames which have been reordered in time by the network
   if (not_reordered) {
     // Update the jitter estimate with the new samples
-    jitter_estimate_.UpdateEstimate(frame_delay, frame_size, incomplete_frame);
+    jitter_estimate_.UpdateEstimate(TimeDelta::Millis(frame_delay),
+                                    DataSize::Bytes(frame_size),
+                                    incomplete_frame);
   }
 }
 
