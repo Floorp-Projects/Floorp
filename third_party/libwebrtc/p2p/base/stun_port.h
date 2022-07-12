@@ -40,11 +40,12 @@ class UDPPort : public Port {
       const std::string& username,
       const std::string& password,
       bool emit_local_for_anyaddress,
-      absl::optional<int> stun_keepalive_interval) {
+      absl::optional<int> stun_keepalive_interval,
+      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr) {
     // Using `new` to access a non-public constructor.
-    auto port =
-        absl::WrapUnique(new UDPPort(thread, factory, network, socket, username,
-                                     password, emit_local_for_anyaddress));
+    auto port = absl::WrapUnique(
+        new UDPPort(thread, factory, network, socket, username, password,
+                    emit_local_for_anyaddress, field_trials));
     port->set_stun_keepalive_delay(stun_keepalive_interval);
     if (!port->Init()) {
       return nullptr;
@@ -61,11 +62,12 @@ class UDPPort : public Port {
       const std::string& username,
       const std::string& password,
       bool emit_local_for_anyaddress,
-      absl::optional<int> stun_keepalive_interval) {
+      absl::optional<int> stun_keepalive_interval,
+      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr) {
     // Using `new` to access a non-public constructor.
-    auto port = absl::WrapUnique(new UDPPort(thread, factory, network, min_port,
-                                             max_port, username, password,
-                                             emit_local_for_anyaddress));
+    auto port = absl::WrapUnique(
+        new UDPPort(thread, factory, network, min_port, max_port, username,
+                    password, emit_local_for_anyaddress, field_trials));
     port->set_stun_keepalive_delay(stun_keepalive_interval);
     if (!port->Init()) {
       return nullptr;
@@ -124,7 +126,8 @@ class UDPPort : public Port {
           uint16_t max_port,
           const std::string& username,
           const std::string& password,
-          bool emit_local_for_anyaddress);
+          bool emit_local_for_anyaddress,
+          const webrtc::WebRtcKeyValueConfig* field_trials);
 
   UDPPort(rtc::Thread* thread,
           rtc::PacketSocketFactory* factory,
@@ -132,7 +135,8 @@ class UDPPort : public Port {
           rtc::AsyncPacketSocket* socket,
           const std::string& username,
           const std::string& password,
-          bool emit_local_for_anyaddress);
+          bool emit_local_for_anyaddress,
+          const webrtc::WebRtcKeyValueConfig* field_trials);
 
   bool Init();
 
@@ -270,7 +274,8 @@ class StunPort : public UDPPort {
       const std::string& username,
       const std::string& password,
       const ServerAddresses& servers,
-      absl::optional<int> stun_keepalive_interval);
+      absl::optional<int> stun_keepalive_interval,
+      const webrtc::WebRtcKeyValueConfig* field_trials);
 
   void PrepareAddress() override;
 
@@ -282,7 +287,8 @@ class StunPort : public UDPPort {
            uint16_t max_port,
            const std::string& username,
            const std::string& password,
-           const ServerAddresses& servers);
+           const ServerAddresses& servers,
+           const webrtc::WebRtcKeyValueConfig* field_trials);
 };
 
 }  // namespace cricket

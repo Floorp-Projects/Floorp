@@ -25,6 +25,7 @@
 #include "rtc_base/time_utils.h"
 #include "rtc_base/virtual_socket_server.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 using cricket::Connection;
 using cricket::ICE_PWD_LENGTH;
@@ -82,12 +83,13 @@ class TCPPortTest : public ::testing::Test, public sigslot::has_slots<> {
   std::unique_ptr<TCPPort> CreateTCPPort(const SocketAddress& addr) {
     return std::unique_ptr<TCPPort>(
         TCPPort::Create(&main_, &socket_factory_, MakeNetwork(addr), 0, 0,
-                        username_, password_, true));
+                        username_, password_, true, &field_trials_));
   }
 
   std::unique_ptr<TCPPort> CreateTCPPort(const rtc::Network* network) {
-    return std::unique_ptr<TCPPort>(TCPPort::Create(
-        &main_, &socket_factory_, network, 0, 0, username_, password_, true));
+    return std::unique_ptr<TCPPort>(
+        TCPPort::Create(&main_, &socket_factory_, network, 0, 0, username_,
+                        password_, true, &field_trials_));
   }
 
  protected:
@@ -100,6 +102,7 @@ class TCPPortTest : public ::testing::Test, public sigslot::has_slots<> {
   rtc::BasicPacketSocketFactory socket_factory_;
   std::string username_;
   std::string password_;
+  webrtc::test::ScopedKeyValueConfig field_trials_;
 };
 
 TEST_F(TCPPortTest, TestTCPPortWithLocalhostAddress) {

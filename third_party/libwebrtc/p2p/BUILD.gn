@@ -115,6 +115,7 @@ rtc_library("rtc_p2p") {
     "../rtc_base:threading",
     "../rtc_base/containers:flat_map",
     "../rtc_base/experiments:field_trial_parser",
+    "../rtc_base/memory:always_valid_pointer",
     "../rtc_base/system:no_unique_address",
 
     # Needed by pseudo_tcp, which should move to a separate target.
@@ -127,7 +128,6 @@ rtc_library("rtc_p2p") {
     "../rtc_base/task_utils:to_queued_task",
     "../rtc_base/third_party/base64",
     "../rtc_base/third_party/sigslot",
-    "../system_wrappers:field_trial",
     "../system_wrappers:metrics",
   ]
   absl_deps = [
@@ -166,6 +166,7 @@ if (rtc_include_tests) {
       "../rtc_base",
       "../rtc_base:net_helpers",
       "../rtc_base:threading",
+      "../test:scoped_key_value_config",
     ]
   }
 
@@ -260,7 +261,6 @@ if (rtc_include_tests) {
       "../rtc_base/network:sent_packet",
       "../rtc_base/third_party/sigslot",
       "../system_wrappers:metrics",
-      "../test:field_trial",
       "../test:rtc_expect_death",
       "../test:scoped_key_value_config",
       "../test:test_support",

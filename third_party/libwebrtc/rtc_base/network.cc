@@ -29,8 +29,10 @@
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
+#include "api/transport/field_trial_based_config.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/memory/always_valid_pointer.h"
 #include "rtc_base/network_monitor.h"
 #include "rtc_base/socket.h"  // includes something that makes windows happy
 #include "rtc_base/string_encode.h"
@@ -38,7 +40,6 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace rtc {
 namespace {
@@ -280,10 +281,13 @@ webrtc::MdnsResponderInterface* NetworkManager::GetMdnsResponder() const {
   return nullptr;
 }
 
-NetworkManagerBase::NetworkManagerBase()
+NetworkManagerBase::NetworkManagerBase(
+    const webrtc::WebRtcKeyValueConfig* field_trials)
     : enumeration_permission_(NetworkManager::ENUMERATION_ALLOWED),
-      signal_network_preference_change_(webrtc::field_trial::IsEnabled(
-          "WebRTC-SignalNetworkPreferenceChange")) {}
+      signal_network_preference_change_(
+          field_trials
+              ? field_trials->IsEnabled("WebRTC-SignalNetworkPreferenceChange")
+              : false) {}
 
 NetworkManagerBase::~NetworkManagerBase() {
   for (const auto& kv : networks_map_) {
@@ -508,25 +512,17 @@ bool NetworkManagerBase::IsVpnMacAddress(
   return false;
 }
 
-BasicNetworkManager::BasicNetworkManager()
-    : BasicNetworkManager(nullptr, nullptr) {}
-
-BasicNetworkManager::BasicNetworkManager(SocketFactory* socket_factory)
-    : BasicNetworkManager(nullptr, socket_factory) {}
-
-BasicNetworkManager::BasicNetworkManager(
-    NetworkMonitorFactory* network_monitor_factory)
-    : BasicNetworkManager(network_monitor_factory, nullptr) {}
-
 BasicNetworkManager::BasicNetworkManager(
     NetworkMonitorFactory* network_monitor_factory,
-    SocketFactory* socket_factory)
-    : network_monitor_factory_(network_monitor_factory),
+    SocketFactory* socket_factory,
+    const webrtc::WebRtcKeyValueConfig* field_trials)
+    : field_trials_(field_trials),
+      network_monitor_factory_(network_monitor_factory),
       socket_factory_(socket_factory),
       allow_mac_based_ipv6_(
-          webrtc::field_trial::IsEnabled("WebRTC-AllowMACBasedIPv6")),
+          field_trials_->IsEnabled("WebRTC-AllowMACBasedIPv6")),
       bind_using_ifname_(
-          !webrtc::field_trial::IsDisabled("WebRTC-BindUsingInterfaceName")) {}
+          !field_trials_->IsDisabled("WebRTC-BindUsingInterfaceName")) {}
 
 BasicNetworkManager::~BasicNetworkManager() {
   if (task_safety_flag_) {
@@ -936,7 +932,8 @@ void BasicNetworkManager::StartNetworkMonitor() {
     return;
   }
   if (!network_monitor_) {
-    network_monitor_.reset(network_monitor_factory_->CreateNetworkMonitor());
+    network_monitor_.reset(
+        network_monitor_factory_->CreateNetworkMonitor(*field_trials_));
     if (!network_monitor_) {
       return;
     }
@@ -1060,24 +1057,6 @@ NetworkBindingResult BasicNetworkManager::BindSocketToNetwork(
 Network::Network(absl::string_view name,
                  absl::string_view desc,
                  const IPAddress& prefix,
-                 int prefix_length)
-    : name_(name),
-      description_(desc),
-      prefix_(prefix),
-      prefix_length_(prefix_length),
-      key_(MakeNetworkKey(name, prefix, prefix_length)),
-      scope_id_(0),
-      ignored_(false),
-      type_(ADAPTER_TYPE_UNKNOWN),
-      preference_(0),
-      use_differentiated_cellular_costs_(webrtc::field_trial::IsEnabled(
-          "WebRTC-UseDifferentiatedCellularCosts")),
-      add_network_cost_to_vpn_(
-          webrtc::field_trial::IsEnabled("WebRTC-AddNetworkCostToVpn")) {}
-
-Network::Network(absl::string_view name,
-                 absl::string_view desc,
-                 const IPAddress& prefix,
                  int prefix_length,
                  AdapterType type)
     : name_(name),
@@ -1088,11 +1067,7 @@ Network::Network(absl::string_view name,
       scope_id_(0),
       ignored_(false),
       type_(type),
-      preference_(0),
-      use_differentiated_cellular_costs_(webrtc::field_trial::IsEnabled(
-          "WebRTC-UseDifferentiatedCellularCosts")),
-      add_network_cost_to_vpn_(
-          webrtc::field_trial::IsEnabled("WebRTC-AddNetworkCostToVpn")) {}
+      preference_(0) {}
 
 Network::Network(const Network&) = default;
 
@@ -1162,11 +1137,23 @@ webrtc::MdnsResponderInterface* Network::GetMdnsResponder() const {
   return mdns_responder_provider_->GetMdnsResponder();
 }
 
-uint16_t Network::GetCost() const {
+uint16_t Network::GetCost(
+    const webrtc::WebRtcKeyValueConfig* field_trials) const {
+  return GetCost(
+      *webrtc::AlwaysValidPointer<const webrtc::WebRtcKeyValueConfig,
+                                  webrtc::FieldTrialBasedConfig>(field_trials));
+}
+
+uint16_t Network::GetCost(
+    const webrtc::WebRtcKeyValueConfig& field_trials) const {
   AdapterType type = IsVpn() ? underlying_type_for_vpn_ : type_;
+  const bool use_differentiated_cellular_costs =
+      field_trials.IsEnabled("WebRTC-UseDifferentiatedCellularCosts");
+  const bool add_network_cost_to_vpn =
+      field_trials.IsEnabled("WebRTC-AddNetworkCostToVpn");
   return ComputeNetworkCostByType(type, IsVpn(),
-                                  use_differentiated_cellular_costs_,
-                                  add_network_cost_to_vpn_);
+                                  use_differentiated_cellular_costs,
+                                  add_network_cost_to_vpn);
 }
 
 // This is the inverse of ComputeNetworkCostByType().

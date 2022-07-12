@@ -756,11 +756,13 @@ std::vector<const rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
       if (rtc::IPIsLinkLocal(network->GetBestIP())) {
         continue;
       }
-      lowest_cost = std::min<uint16_t>(lowest_cost, network->GetCost());
+      lowest_cost = std::min<uint16_t>(
+          lowest_cost, network->GetCost(*allocator()->field_trials()));
     }
     NetworkFilter costly_filter(
-        [lowest_cost](const rtc::Network* network) {
-          return network->GetCost() > lowest_cost + rtc::kNetworkCostLow;
+        [lowest_cost, this](const rtc::Network* network) {
+          return network->GetCost(*allocator()->field_trials()) >
+                 lowest_cost + rtc::kNetworkCostLow;
         },
         "costly");
     FilterNetworks(&networks, costly_filter);
@@ -1449,14 +1451,16 @@ void AllocationSequence::CreateUDPPorts() {
         session_->network_thread(), session_->socket_factory(), network_,
         udp_socket_.get(), session_->username(), session_->password(),
         emit_local_candidate_for_anyaddress,
-        session_->allocator()->stun_candidate_keepalive_interval());
+        session_->allocator()->stun_candidate_keepalive_interval(),
+        session_->allocator()->field_trials());
   } else {
     port = UDPPort::Create(
         session_->network_thread(), session_->socket_factory(), network_,
         session_->allocator()->min_port(), session_->allocator()->max_port(),
         session_->username(), session_->password(),
         emit_local_candidate_for_anyaddress,
-        session_->allocator()->stun_candidate_keepalive_interval());
+        session_->allocator()->stun_candidate_keepalive_interval(),
+        session_->allocator()->field_trials());
   }
 
   if (port) {
@@ -1492,7 +1496,8 @@ void AllocationSequence::CreateTCPPorts() {
       session_->network_thread(), session_->socket_factory(), network_,
       session_->allocator()->min_port(), session_->allocator()->max_port(),
       session_->username(), session_->password(),
-      session_->allocator()->allow_tcp_listen());
+      session_->allocator()->allow_tcp_listen(),
+      session_->allocator()->field_trials());
   if (port) {
     session_->AddAllocatedPort(port.release(), this);
     // Since TCPPort is not created using shared socket, `port` will not be
@@ -1520,7 +1525,8 @@ void AllocationSequence::CreateStunPorts() {
       session_->network_thread(), session_->socket_factory(), network_,
       session_->allocator()->min_port(), session_->allocator()->max_port(),
       session_->username(), session_->password(), config_->StunServers(),
-      session_->allocator()->stun_candidate_keepalive_interval());
+      session_->allocator()->stun_candidate_keepalive_interval(),
+      session_->allocator()->field_trials());
   if (port) {
     session_->AddAllocatedPort(port.release(), this);
     // Since StunPort is not created using shared socket, `port` will not be

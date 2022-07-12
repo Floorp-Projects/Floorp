@@ -37,6 +37,7 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/virtual_socket_server.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 namespace rtc {
 namespace {
@@ -219,8 +220,9 @@ bool TestConnectivity(const SocketAddress& src, const IPAddress& dst) {
 }
 
 void TestPhysicalInternal(const SocketAddress& int_addr) {
+  webrtc::test::ScopedKeyValueConfig field_trials;
   PhysicalSocketServer socket_server;
-  BasicNetworkManager network_manager(nullptr, &socket_server);
+  BasicNetworkManager network_manager(nullptr, &socket_server, &field_trials);
   network_manager.StartUpdating();
   // Process pending messages so the network list is updated.
   Thread::Current()->ProcessMessages(0);

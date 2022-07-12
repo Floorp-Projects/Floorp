@@ -41,6 +41,10 @@ class AlwaysValidPointer {
   Interface* operator->() { return pointer_; }
   Interface& operator*() { return *pointer_; }
 
+  Interface* get() const { return pointer_; }
+  Interface* operator->() const { return pointer_; }
+  Interface& operator*() const { return *pointer_; }
+
  private:
   const std::unique_ptr<Interface> owned_instance_;
   Interface* const pointer_;

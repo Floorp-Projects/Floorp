@@ -64,6 +64,7 @@
 #include "rtc_base/time_utils.h"
 #include "rtc_base/virtual_socket_server.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 using rtc::AsyncListenSocket;
 using rtc::AsyncPacketSocket;
@@ -519,7 +520,8 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   std::unique_ptr<UDPPort> CreateUdpPort(const SocketAddress& addr,
                                          PacketSocketFactory* socket_factory) {
     return UDPPort::Create(&main_, socket_factory, MakeNetwork(addr), 0, 0,
-                           username_, password_, true, absl::nullopt);
+                           username_, password_, true, absl::nullopt,
+                           &field_trials_);
   }
   std::unique_ptr<TCPPort> CreateTcpPort(const SocketAddress& addr) {
     return CreateTcpPort(addr, &socket_factory_);
@@ -527,14 +529,15 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   std::unique_ptr<TCPPort> CreateTcpPort(const SocketAddress& addr,
                                          PacketSocketFactory* socket_factory) {
     return TCPPort::Create(&main_, socket_factory, MakeNetwork(addr), 0, 0,
-                           username_, password_, true);
+                           username_, password_, true, &field_trials_);
   }
   std::unique_ptr<StunPort> CreateStunPort(const SocketAddress& addr,
                                            rtc::PacketSocketFactory* factory) {
     ServerAddresses stun_servers;
     stun_servers.insert(kStunAddr);
     return StunPort::Create(&main_, factory, MakeNetwork(addr), 0, 0, username_,
-                            password_, stun_servers, absl::nullopt);
+                            password_, stun_servers, absl::nullopt,
+                            &field_trials_);
   }
   std::unique_ptr<Port> CreateRelayPort(const SocketAddress& addr,
                                         ProtocolType int_proto,
@@ -567,6 +570,7 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     args.password = password_;
     args.server_address = &server_address;
     args.config = &config;
+    args.field_trials = &field_trials_;
 
     return TurnPort::Create(args, 0, 0);
   }
@@ -832,6 +836,7 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   std::string password_;
   bool role_conflict_;
   int ports_destroyed_;
+  webrtc::test::ScopedKeyValueConfig field_trials_;
 };
 
 void PortTest::TestConnectivity(const char* name1,

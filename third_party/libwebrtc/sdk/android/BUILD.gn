@@ -582,6 +582,7 @@ if (current_os == "linux" || is_android) {
       "../../api:libjingle_peerconnection_api",
       "../../api:scoped_refptr",
       "../../api:sequence_checker",
+      "../../api:webrtc_key_value_config",
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:ip_address",

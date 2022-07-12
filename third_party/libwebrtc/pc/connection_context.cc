@@ -146,7 +146,7 @@ ConnectionContext::ConnectionContext(
   // If network_monitor_factory_ is non-null, it will be used to create a
   // network monitor while on the network thread.
   default_network_manager_ = std::make_unique<rtc::BasicNetworkManager>(
-      network_monitor_factory_.get(), socket_factory);
+      network_monitor_factory_.get(), socket_factory, &trials());
 
   default_socket_factory_ =
       std::make_unique<rtc::BasicPacketSocketFactory>(socket_factory);

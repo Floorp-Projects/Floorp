@@ -157,8 +157,15 @@ UDPPort::UDPPort(rtc::Thread* thread,
                  rtc::AsyncPacketSocket* socket,
                  const std::string& username,
                  const std::string& password,
-                 bool emit_local_for_anyaddress)
-    : Port(thread, LOCAL_PORT_TYPE, factory, network, username, password),
+                 bool emit_local_for_anyaddress,
+                 const webrtc::WebRtcKeyValueConfig* field_trials)
+    : Port(thread,
+           LOCAL_PORT_TYPE,
+           factory,
+           network,
+           username,
+           password,
+           field_trials),
       requests_(thread),
       socket_(socket),
       error_(0),
@@ -174,7 +181,8 @@ UDPPort::UDPPort(rtc::Thread* thread,
                  uint16_t max_port,
                  const std::string& username,
                  const std::string& password,
-                 bool emit_local_for_anyaddress)
+                 bool emit_local_for_anyaddress,
+                 const webrtc::WebRtcKeyValueConfig* field_trials)
     : Port(thread,
            LOCAL_PORT_TYPE,
            factory,
@@ -182,7 +190,8 @@ UDPPort::UDPPort(rtc::Thread* thread,
            min_port,
            max_port,
            username,
-           password),
+           password,
+           field_trials),
       requests_(thread),
       socket_(nullptr),
       error_(0),
@@ -605,11 +614,12 @@ std::unique_ptr<StunPort> StunPort::Create(
     const std::string& username,
     const std::string& password,
     const ServerAddresses& servers,
-    absl::optional<int> stun_keepalive_interval) {
+    absl::optional<int> stun_keepalive_interval,
+    const webrtc::WebRtcKeyValueConfig* field_trials) {
   // Using `new` to access a non-public constructor.
-  auto port =
-      absl::WrapUnique(new StunPort(thread, factory, network, min_port,
-                                    max_port, username, password, servers));
+  auto port = absl::WrapUnique(new StunPort(thread, factory, network, min_port,
+                                            max_port, username, password,
+                                            servers, field_trials));
   port->set_stun_keepalive_delay(stun_keepalive_interval);
   if (!port->Init()) {
     return nullptr;
@@ -624,7 +634,8 @@ StunPort::StunPort(rtc::Thread* thread,
                    uint16_t max_port,
                    const std::string& username,
                    const std::string& password,
-                   const ServerAddresses& servers)
+                   const ServerAddresses& servers,
+                   const webrtc::WebRtcKeyValueConfig* field_trials)
     : UDPPort(thread,
               factory,
               network,
@@ -632,7 +643,8 @@ StunPort::StunPort(rtc::Thread* thread,
               max_port,
               username,
               password,
-              false) {
+              false,
+              field_trials) {
   // UDPPort will set these to local udp, updating these to STUN.
   set_type(STUN_PORT_TYPE);
   set_server_addresses(servers);

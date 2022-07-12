@@ -91,7 +91,8 @@ TCPPort::TCPPort(rtc::Thread* thread,
                  uint16_t max_port,
                  const std::string& username,
                  const std::string& password,
-                 bool allow_listen)
+                 bool allow_listen,
+                 const webrtc::WebRtcKeyValueConfig* field_trials)
     : Port(thread,
            LOCAL_PORT_TYPE,
            factory,
@@ -99,7 +100,8 @@ TCPPort::TCPPort(rtc::Thread* thread,
            min_port,
            max_port,
            username,
-           password),
+           password,
+           field_trials),
       allow_listen_(allow_listen),
       error_(0) {
   // TODO(mallinath) - Set preference value as per RFC 6544.
