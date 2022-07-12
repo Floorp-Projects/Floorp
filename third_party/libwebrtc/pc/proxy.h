@@ -53,8 +53,6 @@
 // The variant defined with BEGIN_PRIMARY_PROXY_MAP is unaware of
 // the secondary thread, and invokes all methods on the primary thread.
 //
-// The variant defined with BEGIN_OWNED_PROXY_MAP does not use
-// refcounting, and instead just takes ownership of the object being proxied.
 
 #ifndef PC_PROXY_H_
 #define PC_PROXY_H_
@@ -307,19 +305,6 @@ class ConstMethodCall : public QueuedTask {
       INTERNAL_CLASS* c) {                                         \
     return rtc::make_ref_counted<class_name##ProxyWithInternal>(   \
         primary_thread, secondary_thread, c);                      \
-  }
-
-#define BEGIN_OWNED_PROXY_MAP(class_name)                                   \
-  PROXY_MAP_BOILERPLATE(class_name)                                         \
-  SECONDARY_PROXY_MAP_BOILERPLATE(class_name)                               \
-  OWNED_PROXY_MAP_BOILERPLATE(class_name)                                   \
- public:                                                                    \
-  static std::unique_ptr<class_name##Interface> Create(                     \
-      rtc::Thread* primary_thread, rtc::Thread* secondary_thread,           \
-      std::unique_ptr<INTERNAL_CLASS> c) {                                  \
-    return std::unique_ptr<class_name##Interface>(                          \
-        new class_name##ProxyWithInternal(primary_thread, secondary_thread, \
-                                          c.release()));                    \
   }
 
 #define PROXY_PRIMARY_THREAD_DESTRUCTOR()                            \
