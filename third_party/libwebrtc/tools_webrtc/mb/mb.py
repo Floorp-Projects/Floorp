@@ -1213,6 +1213,8 @@ class MetaBuildWrapper:
                            stderr=subprocess.PIPE,
                            env=env)
       out, err = p.communicate()
+      out = out.decode('utf-8')
+      err = err.decode('utf-8')
     else:
       p = subprocess.Popen(cmd, shell=False, cwd=self.src_dir, env=env)
       p.wait()
