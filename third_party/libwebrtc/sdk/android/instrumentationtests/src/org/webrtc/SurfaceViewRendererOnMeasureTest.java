@@ -16,19 +16,19 @@ import static org.junit.Assert.fail;
 import android.annotation.SuppressLint;
 import android.graphics.Point;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.annotation.UiThreadTest;
+import android.support.test.rule.UiThreadTestRule;
 import android.view.View.MeasureSpec;
 import androidx.test.filters.MediumTest;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
-import org.chromium.base.test.BaseJUnit4ClassRunner;
-import org.chromium.base.test.UiThreadTest;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(BaseJUnit4ClassRunner.class)
 public class SurfaceViewRendererOnMeasureTest {
+  @Rule public final UiThreadTestRule uiThreadRule = new UiThreadTestRule();
+
   /**
    * List with all possible scaling types.
    */
