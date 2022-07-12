@@ -271,9 +271,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollToCSSPixelsForApz(
-      const mozilla::CSSPoint& aScrollPosition,
-      mozilla::ScrollSnapTargetIds&& aLastSnapTargetIds);
+  void ScrollToCSSPixelsForApz(const mozilla::CSSPoint& aScrollPosition);
 
   CSSIntPoint GetScrollPositionCSSPixels();
   /**
@@ -876,8 +874,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // either the layout or the visual scroll range (APZ will happily smooth
   // scroll to either).
   void ApzSmoothScrollTo(const nsPoint& aDestination, ScrollOrigin aOrigin,
-                         ScrollTriggeredByScript aTriggeredByScript,
-                         UniquePtr<ScrollSnapTargetIds> aSnapTargetIds);
+                         ScrollTriggeredByScript aTriggeredByScript);
 
   // Removes any RefreshDriver observers we might have registered.
   void RemoveObservers();
@@ -1102,11 +1099,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
                          ScrollMode aMode = ScrollMode::Instant) final {
     mHelper.ScrollToCSSPixels(aScrollPosition, aMode);
   }
-  void ScrollToCSSPixelsForApz(
-      const mozilla::CSSPoint& aScrollPosition,
-      mozilla::ScrollSnapTargetIds&& aLastSnapTargetIds) final {
-    mHelper.ScrollToCSSPixelsForApz(aScrollPosition,
-                                    std::move(aLastSnapTargetIds));
+  void ScrollToCSSPixelsForApz(const mozilla::CSSPoint& aScrollPosition) final {
+    mHelper.ScrollToCSSPixelsForApz(aScrollPosition);
   }
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -1584,11 +1578,8 @@ class nsXULScrollFrame final : public nsBoxFrame,
                          ScrollMode aMode = ScrollMode::Instant) final {
     mHelper.ScrollToCSSPixels(aScrollPosition, aMode);
   }
-  void ScrollToCSSPixelsForApz(
-      const mozilla::CSSPoint& aScrollPosition,
-      mozilla::ScrollSnapTargetIds&& aLastSnapTargetIds) final {
-    mHelper.ScrollToCSSPixelsForApz(aScrollPosition,
-                                    std::move(aLastSnapTargetIds));
+  void ScrollToCSSPixelsForApz(const mozilla::CSSPoint& aScrollPosition) final {
+    mHelper.ScrollToCSSPixelsForApz(aScrollPosition);
   }
   CSSIntPoint GetScrollPositionCSSPixels() final {
     return mHelper.GetScrollPositionCSSPixels();

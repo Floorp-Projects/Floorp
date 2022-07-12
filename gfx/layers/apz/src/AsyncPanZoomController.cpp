@@ -1976,7 +1976,7 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
   CSSPoint destination = GetKeyboardDestination(aEvent.mAction);
   ScrollOrigin scrollOrigin =
       SmoothScrollAnimation::GetScrollOriginForAction(aEvent.mAction.mType);
-  Maybe<CSSSnapTarget> snapTarget = MaybeAdjustDestinationForScrollSnapping(
+  bool scrollSnapped = MaybeAdjustDestinationForScrollSnapping(
       aEvent, destination, GetScrollSnapFlagsForKeyboardAction(aEvent.mAction));
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(scrollOrigin);
 
@@ -2006,16 +2006,7 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
         distance, ScrollSource::Keyboard);
 
     CallDispatchScroll(startPoint, endPoint, handoffState);
-    ParentLayerPoint remainingDelta = endPoint - startPoint;
-    if (remainingDelta != delta) {
-      // If any scrolling happened, set KEYBOARD_SCROLL explicitly so that it
-      // will trigger a TransformEnd notification.
-      SetState(KEYBOARD_SCROLL);
-    }
 
-    if (snapTarget) {
-      mLastSnapTargetIds = std::move(snapTarget->mTargetIds);
-    }
     SetState(NOTHING);
 
     return nsEventStatus_eConsumeDoDefault;
@@ -2026,13 +2017,13 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
   // update it.
   RecursiveMutexAutoLock lock(mRecursiveMutex);
 
-  if (snapTarget) {
+  if (scrollSnapped) {
     // If we're scroll snapping, use a smooth scroll animation to get
     // the desired physics. Note that SmoothMsdScrollTo() will re-use an
     // existing smooth scroll animation if there is one.
     APZC_LOG("%p keyboard scrolling to snap point %s\n", this,
              ToString(destination).c_str());
-    SmoothMsdScrollTo(std::move(*snapTarget), ScrollTriggeredByScript::No);
+    SmoothMsdScrollTo(destination, ScrollTriggeredByScript::No);
     return nsEventStatus_eConsumeDoDefault;
   }
 
@@ -2421,9 +2412,8 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
         RecursiveMutexAutoLock lock(mRecursiveMutex);
         startPosition = Metrics().GetVisualScrollOffset();
       }
-      Maybe<CSSSnapTarget> snapTarget =
-          MaybeAdjustDeltaForScrollSnappingOnWheelInput(aEvent, delta,
-                                                        startPosition);
+      MaybeAdjustDeltaForScrollSnappingOnWheelInput(aEvent, delta,
+                                                    startPosition);
 
       ScreenPoint distance = ToScreenCoordinates(
           ParentLayerPoint(fabs(delta.x), fabs(delta.y)), aEvent.mLocalOrigin);
@@ -2436,18 +2426,8 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
       ParentLayerPoint startPoint = aEvent.mLocalOrigin;
       ParentLayerPoint endPoint = aEvent.mLocalOrigin - delta;
       RecordScrollPayload(aEvent.mTimeStamp);
-
       CallDispatchScroll(startPoint, endPoint, handoffState);
-      ParentLayerPoint remainingDelta = endPoint - startPoint;
-      if (remainingDelta != delta) {
-        // If any scrolling happened, set WHEEL_SCROLL explicitly so that it
-        // will trigger a TransformEnd notification.
-        SetState(WHEEL_SCROLL);
-      }
 
-      if (snapTarget) {
-        mLastSnapTargetIds = std::move(snapTarget->mTargetIds);
-      }
       SetState(NOTHING);
 
       // The calls above handle their own locking; moreover,
@@ -2472,15 +2452,14 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
       CSSPoint startPosition = GetCurrentAnimationDestination(lock).valueOr(
           Metrics().GetVisualScrollOffset());
 
-      if (Maybe<CSSSnapTarget> snapTarget =
-              MaybeAdjustDeltaForScrollSnappingOnWheelInput(aEvent, delta,
-                                                            startPosition)) {
+      if (MaybeAdjustDeltaForScrollSnappingOnWheelInput(aEvent, delta,
+                                                        startPosition)) {
         // If we're scroll snapping, use a smooth scroll animation to get
         // the desired physics. Note that SmoothMsdScrollTo() will re-use an
         // existing smooth scroll animation if there is one.
         APZC_LOG("%p wheel scrolling to snap point %s\n", this,
                  ToString(startPosition).c_str());
-        SmoothMsdScrollTo(std::move(*snapTarget), ScrollTriggeredByScript::No);
+        SmoothMsdScrollTo(startPosition, ScrollTriggeredByScript::No);
         break;
       }
 
@@ -3819,14 +3798,12 @@ void AsyncPanZoomController::SmoothScrollTo(const CSSPoint& aDestination,
 }
 
 void AsyncPanZoomController::SmoothMsdScrollTo(
-    CSSSnapTarget&& aDestination, ScrollTriggeredByScript aTriggeredByScript) {
+    const CSSPoint& aDestination, ScrollTriggeredByScript aTriggeredByScript) {
   if (mState == SMOOTHMSD_SCROLL && mAnimation) {
     APZC_LOG("%p updating destination on existing animation\n", this);
     RefPtr<SmoothMsdScrollAnimation> animation(
         static_cast<SmoothMsdScrollAnimation*>(mAnimation.get()));
-    animation->SetDestination(aDestination.mPosition,
-                              std::move(aDestination.mTargetIds),
-                              aTriggeredByScript);
+    animation->SetDestination(aDestination, aTriggeredByScript);
   } else {
     CancelAnimation();
     SetState(SMOOTHMSD_SCROLL);
@@ -3839,11 +3816,10 @@ void AsyncPanZoomController::SmoothMsdScrollTo(
     }
 
     StartAnimation(new SmoothMsdScrollAnimation(
-        *this, Metrics().GetVisualScrollOffset(), initialVelocity,
-        aDestination.mPosition,
+        *this, Metrics().GetVisualScrollOffset(), initialVelocity, aDestination,
         StaticPrefs::layout_css_scroll_behavior_spring_constant(),
         StaticPrefs::layout_css_scroll_behavior_damping_ratio(),
-        std::move(aDestination.mTargetIds), aTriggeredByScript));
+        aTriggeredByScript));
   }
 }
 
@@ -3994,7 +3970,6 @@ void AsyncPanZoomController::CancelAnimation(CancelAnimationFlags aFlags) {
   }
 
   SetState(NOTHING);
-  mLastSnapTargetIds = ScrollSnapTargetIds{};
   mAnimation = nullptr;
   // Since there is no animation in progress now the axes should
   // have no velocity either. If we are dropping the velocity from a non-zero
@@ -4421,7 +4396,7 @@ void AsyncPanZoomController::RequestContentRepaint(
                         : APZScrollAnimationType::TriggeredByUserInput;
   }
   RepaintRequest request(aFrameMetrics, aDisplayportMargins, aUpdateType,
-                         animationType, mScrollGeneration, mLastSnapTargetIds);
+                         animationType, mScrollGeneration);
 
   if (request.IsRootContent() && request.GetZoom() != mLastNotifiedZoom &&
       mState != PINCHING && mState != ANIMATING_ZOOM) {
@@ -4523,10 +4498,6 @@ bool AsyncPanZoomController::UpdateAnimation(
     *aOutDeferredTasks = mAnimation->TakeDeferredTasks();
     if (!continueAnimation) {
       SetState(NOTHING);
-      if (mAnimation->AsSmoothMsdScrollAnimation()) {
-        mLastSnapTargetIds =
-            mAnimation->AsSmoothMsdScrollAnimation()->TakeSnapTargetIds();
-      }
       mAnimation = nullptr;
     }
     // Request a repaint at the end of the animation in case something such as a
@@ -5334,9 +5305,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       }
 
       if (scrollUpdate.GetMode() == ScrollMode::SmoothMsd) {
-        SmoothMsdScrollTo(
-            CSSSnapTarget{destination, scrollUpdate.GetSnapTargetIds()},
-            scrollUpdate.GetScrollTriggeredByScript());
+        SmoothMsdScrollTo(destination,
+                          scrollUpdate.GetScrollTriggeredByScript());
       } else {
         MOZ_ASSERT(scrollUpdate.GetMode() == ScrollMode::Smooth);
         MOZ_ASSERT(!scrollUpdate.WasTriggeredByScript());
@@ -6104,7 +6074,7 @@ void AsyncPanZoomController::SetTestAsyncZoom(
   ScheduleComposite();
 }
 
-Maybe<CSSSnapTarget> AsyncPanZoomController::FindSnapPointNear(
+Maybe<CSSPoint> AsyncPanZoomController::FindSnapPointNear(
     const CSSPoint& aDestination, ScrollUnit aUnit,
     ScrollSnapFlags aSnapFlags) {
   mRecursiveMutex.AssertCurrentThreadIn();
@@ -6121,20 +6091,19 @@ Maybe<CSSSnapTarget> AsyncPanZoomController::FindSnapPointNear(
     // of the scroll frame's scroll range. Clamp it here (this matches the
     // behaviour of the main-thread code path, which clamps it in
     // nsGfxScrollFrame::ScrollTo()).
-    return Some(CSSSnapTarget{scrollRange.ClampPoint(cssSnapPoint),
-                              snapTarget->mTargetIds});
+    return Some(scrollRange.ClampPoint(cssSnapPoint));
   }
   return Nothing();
 }
 
 void AsyncPanZoomController::ScrollSnapNear(const CSSPoint& aDestination,
                                             ScrollSnapFlags aSnapFlags) {
-  if (Maybe<CSSSnapTarget> snapTarget = FindSnapPointNear(
+  if (Maybe<CSSPoint> snapPoint = FindSnapPointNear(
           aDestination, ScrollUnit::DEVICE_PIXELS, aSnapFlags)) {
-    if (snapTarget->mPosition != Metrics().GetVisualScrollOffset()) {
+    if (*snapPoint != Metrics().GetVisualScrollOffset()) {
       APZC_LOG("%p smooth scrolling to snap point %s\n", this,
-               ToString(snapTarget->mPosition).c_str());
-      SmoothMsdScrollTo(std::move(*snapTarget), ScrollTriggeredByScript::No);
+               ToString(*snapPoint).c_str());
+      SmoothMsdScrollTo(*snapPoint, ScrollTriggeredByScript::No);
     }
   }
 }
@@ -6173,9 +6142,8 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
   if (predictedDelta != ParentLayerPoint()) {
     snapFlags |= ScrollSnapFlags::IntendedDirection;
   }
-  if (Maybe<CSSSnapTarget> snapTarget = MaybeAdjustDeltaForScrollSnapping(
-          ScrollUnit::DEVICE_PIXELS, snapFlags, predictedDelta,
-          startPosition)) {
+  if (MaybeAdjustDeltaForScrollSnapping(ScrollUnit::DEVICE_PIXELS, snapFlags,
+                                        predictedDelta, startPosition)) {
     APZC_LOG(
         "%p fling snapping.  friction: %f velocity: %f, %f "
         "predictedDelta: %f, %f position: %f, %f "
@@ -6185,38 +6153,37 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
         (float)Metrics().GetVisualScrollOffset().y, (float)startPosition.x,
         (float)startPosition.y);
 
-    SmoothMsdScrollTo(std::move(*snapTarget), ScrollTriggeredByScript::No);
+    SmoothMsdScrollTo(startPosition, ScrollTriggeredByScript::No);
   }
 }
 
-Maybe<CSSSnapTarget> AsyncPanZoomController::MaybeAdjustDeltaForScrollSnapping(
+bool AsyncPanZoomController::MaybeAdjustDeltaForScrollSnapping(
     ScrollUnit aUnit, ScrollSnapFlags aSnapFlags, ParentLayerPoint& aDelta,
     CSSPoint& aStartPosition) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   CSSToParentLayerScale zoom = Metrics().GetZoom();
   if (zoom == CSSToParentLayerScale(0)) {
-    return Nothing();
+    return false;
   }
   CSSPoint destination = Metrics().CalculateScrollRange().ClampPoint(
       aStartPosition + (aDelta / zoom));
 
-  if (Maybe<CSSSnapTarget> snapTarget =
+  if (Maybe<CSSPoint> snapPoint =
           FindSnapPointNear(destination, aUnit, aSnapFlags)) {
-    aDelta = (snapTarget->mPosition - aStartPosition) * zoom;
-    aStartPosition = snapTarget->mPosition;
-    return snapTarget;
+    aDelta = (*snapPoint - aStartPosition) * zoom;
+    aStartPosition = *snapPoint;
+    return true;
   }
-  return Nothing();
+  return false;
 }
 
-Maybe<CSSSnapTarget>
-AsyncPanZoomController::MaybeAdjustDeltaForScrollSnappingOnWheelInput(
+bool AsyncPanZoomController::MaybeAdjustDeltaForScrollSnappingOnWheelInput(
     const ScrollWheelInput& aEvent, ParentLayerPoint& aDelta,
     CSSPoint& aStartPosition) {
   // Don't scroll snap for pixel scrolls. This matches the main thread
   // behaviour in EventStateManager::DoScrollText().
   if (aEvent.mDeltaType == ScrollWheelInput::SCROLLDELTA_PIXEL) {
-    return Nothing();
+    return false;
   }
 
   // Note that this MaybeAdjustDeltaForScrollSnappingOnWheelInput also gets
@@ -6237,19 +6204,18 @@ AsyncPanZoomController::MaybeAdjustDeltaForScrollSnappingOnWheelInput(
       ScrollSnapFlags::IntendedDirection, aDelta, aStartPosition);
 }
 
-Maybe<CSSSnapTarget>
-AsyncPanZoomController::MaybeAdjustDestinationForScrollSnapping(
+bool AsyncPanZoomController::MaybeAdjustDestinationForScrollSnapping(
     const KeyboardInput& aEvent, CSSPoint& aDestination,
     ScrollSnapFlags aSnapFlags) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   ScrollUnit unit = KeyboardScrollAction::GetScrollUnit(aEvent.mAction.mType);
 
-  if (Maybe<CSSSnapTarget> snapPoint =
+  if (Maybe<CSSPoint> snapPoint =
           FindSnapPointNear(aDestination, unit, aSnapFlags)) {
-    aDestination = snapPoint->mPosition;
-    return snapPoint;
+    aDestination = *snapPoint;
+    return true;
   }
-  return Nothing();
+  return false;
 }
 
 void AsyncPanZoomController::SetZoomAnimationId(

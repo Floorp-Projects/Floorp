@@ -19,16 +19,6 @@ const prefs = [
 
 const subtests = [
   {"file": "helper_scroll_snap_no_valid_snap_position.html", "prefs": prefs},
-  {"file": "helper_scroll_snap_resnap_after_async_scroll.html",
-    // Specify a small `layout.css.scroll-behavior.spring-constant` value to
-    // keep the smooth scroll animation running long enough so that we can
-    // trigger a reflow during the animation.
-   "prefs": [["layout.css.scroll-behavior.spring-constant", 10]]},
-  {"file": "helper_scroll_snap_resnap_after_async_scroll.html",
-    "prefs": [["general.smoothScroll", false]]},
-  {"file": "helper_scroll_snap_resnap_after_async_scrollBy.html",
-    // Same as above helper_scroll_snap_resnap_after_async_scroll.html.
-   "prefs": [["layout.css.scroll-behavior.spring-constant", 10]]},
 ];
 
 if (isApzEnabled()) {
