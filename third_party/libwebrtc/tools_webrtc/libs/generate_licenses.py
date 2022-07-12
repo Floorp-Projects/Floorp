@@ -40,7 +40,6 @@ LIB_TO_LICENSES_DICT = {
         'third_party/android_deps/libs/'
         'com_google_auto_service_auto_service/LICENSE'
     ],
-    'bazel': ['third_party/bazel/LICENSE'],
     'boringssl': ['third_party/boringssl/src/LICENSE'],
     'crc32c': ['third_party/crc32c/src/LICENSE'],
     'errorprone': [
