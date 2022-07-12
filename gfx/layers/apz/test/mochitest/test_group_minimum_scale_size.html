@@ -21,9 +21,6 @@ const prefs = [
   // test takes too long the displayport can expire before we read the value
   // out of the test. So we disable displayport expiry for these tests.
   ["apz.displayport_expiry_ms", 0],
-  // Explicitly enable pinch-zooming, so this test can run on desktop
-  // even though zooming isn't enabled by default on desktop yet.
-  ["apz.allow_zooming", true],
   // Similarly, explicitly enable support for meta viewport tags (which the
   // test cases use) so they're processed even on desktop.
   ["dom.meta-viewport.enabled", true],

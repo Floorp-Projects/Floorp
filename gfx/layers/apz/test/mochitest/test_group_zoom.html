@@ -23,9 +23,6 @@ var prefs = [
   // test takes too long the displayport can expire before we read the value
   // out of the test. So we disable displayport expiry for these tests.
   ["apz.displayport_expiry_ms", 0],
-  // Explicitly enable pinch-zooming, so this test can run on desktop
-  // even though zooming isn't enabled by default on desktop yet.
-  ["apz.allow_zooming", true],
   // Increase the content response timeout because some tests do preventDefault
   // and we want to make sure APZ actually waits for them.
   ["apz.content_response_timeout", 60000],
