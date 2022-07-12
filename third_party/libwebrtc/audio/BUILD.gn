@@ -285,7 +285,11 @@ if (rtc_include_tests) {
         data += [ "../tools_webrtc/audio_quality/mac/pesq" ]
       }
 
-      write_runtime_deps = "${root_out_dir}/${target_name}.runtime_deps"
+      if (is_win) {
+        write_runtime_deps = "${root_out_dir}/${target_name}.exe.runtime_deps"
+      } else {
+        write_runtime_deps = "${root_out_dir}/${target_name}.runtime_deps"
+      }
     }
   }
 
