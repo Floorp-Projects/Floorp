@@ -218,6 +218,8 @@ class RtpTransportControllerSend final
   // `task_queue_` is defined last to ensure all pending tasks are cancelled
   // and deleted before any other members.
   rtc::TaskQueue task_queue_;
+
+  const WebRtcKeyValueConfig& field_trials_;
 };
 
 }  // namespace webrtc

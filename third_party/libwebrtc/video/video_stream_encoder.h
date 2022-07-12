@@ -28,6 +28,7 @@
 #include "api/video/video_stream_encoder_settings.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_encoder.h"
+#include "api/webrtc_key_value_config.h"
 #include "call/adaptation/adaptation_constraint.h"
 #include "call/adaptation/resource_adaptation_processor.h"
 #include "call/adaptation/resource_adaptation_processor_interface.h"
@@ -79,7 +80,8 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
       std::unique_ptr<FrameCadenceAdapterInterface> frame_cadence_adapter,
       std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
           encoder_queue,
-      BitrateAllocationCallbackType allocation_cb_type);
+      BitrateAllocationCallbackType allocation_cb_type,
+      const WebRtcKeyValueConfig& field_trials);
   ~VideoStreamEncoder() override;
 
   VideoStreamEncoder(const VideoStreamEncoder&) = delete;

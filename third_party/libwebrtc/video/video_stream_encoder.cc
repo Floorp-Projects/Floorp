@@ -30,6 +30,7 @@
 #include "api/video/video_layers_allocation.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
+#include "api/webrtc_key_value_config.h"
 #include "call/adaptation/resource_adaptation_processor.h"
 #include "call/adaptation/video_stream_adapter.h"
 #include "modules/video_coding/include/video_codec_initializer.h"
@@ -597,7 +598,8 @@ VideoStreamEncoder::VideoStreamEncoder(
     std::unique_ptr<FrameCadenceAdapterInterface> frame_cadence_adapter,
     std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
         encoder_queue,
-    BitrateAllocationCallbackType allocation_cb_type)
+    BitrateAllocationCallbackType allocation_cb_type,
+    const WebRtcKeyValueConfig& field_trials)
     : worker_queue_(TaskQueueBase::Current()),
       number_of_cores_(number_of_cores),
       sink_(nullptr),
@@ -645,7 +647,8 @@ VideoStreamEncoder::VideoStreamEncoder(
       input_state_provider_(encoder_stats_observer),
       video_stream_adapter_(
           std::make_unique<VideoStreamAdapter>(&input_state_provider_,
-                                               encoder_stats_observer)),
+                                               encoder_stats_observer,
+                                               field_trials)),
       degradation_preference_manager_(
           std::make_unique<DegradationPreferenceManager>(
               video_stream_adapter_.get())),
@@ -655,7 +658,8 @@ VideoStreamEncoder::VideoStreamEncoder(
                                clock_,
                                settings_.experiment_cpu_load_estimator,
                                std::move(overuse_detector),
-                               degradation_preference_manager_.get()),
+                               degradation_preference_manager_.get(),
+                               field_trials),
       video_source_sink_controller_(/*sink=*/frame_cadence_adapter_.get(),
                                     /*source=*/nullptr),
       default_limits_allowed_(

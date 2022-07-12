@@ -126,6 +126,7 @@ rtc_library("balanced_degradation_settings") {
   deps = [
     ":field_trial_parser",
     "../:rtc_base_approved",
+    "../../api:webrtc_key_value_config",
     "../../api/video_codecs:video_codecs_api",
     "../../system_wrappers:field_trial",
   ]
@@ -291,6 +292,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../api/video_codecs:video_codecs_api",
       "../../system_wrappers:field_trial",
       "../../test:field_trial",
+      "../../test:scoped_key_value_config",
       "../../test:test_main",
       "../../test:test_support",
     ]

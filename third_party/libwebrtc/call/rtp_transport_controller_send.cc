@@ -134,7 +134,8 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       retransmission_rate_limiter_(clock, kRetransmitWindowSizeMs),
       task_queue_(task_queue_factory->CreateTaskQueue(
           "rtp_send_controller",
-          TaskQueueFactory::Priority::NORMAL)) {
+          TaskQueueFactory::Priority::NORMAL)),
+      field_trials_(*trials) {
   ParseFieldTrial({&relay_bandwidth_cap_},
                   trials->Lookup("WebRTC-Bwe-NetworkRouteConstraints"));
   initial_config_.constraints = ConvertConstraints(bitrate_config, clock_);
@@ -174,7 +175,8 @@ RtpVideoSenderInterface* RtpTransportControllerSend::CreateRtpVideoSender(
       // the parts of RtpTransportControllerSendInterface that are really used.
       this, event_log, &retransmission_rate_limiter_, std::move(fec_controller),
       frame_encryption_config.frame_encryptor,
-      frame_encryption_config.crypto_options, std::move(frame_transformer)));
+      frame_encryption_config.crypto_options, std::move(frame_transformer),
+      field_trials_));
   return video_rtp_senders_.back().get();
 }
 

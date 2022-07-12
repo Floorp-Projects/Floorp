@@ -114,7 +114,8 @@ std::unique_ptr<VideoStreamEncoder> CreateVideoStreamEncoder(
     SendStatisticsProxy* stats_proxy,
     const VideoStreamEncoderSettings& encoder_settings,
     VideoStreamEncoder::BitrateAllocationCallbackType
-        bitrate_allocation_callback_type) {
+        bitrate_allocation_callback_type,
+    const WebRtcKeyValueConfig& field_trials) {
   std::unique_ptr<TaskQueueBase, TaskQueueDeleter> encoder_queue =
       task_queue_factory->CreateTaskQueue("EncoderQueue",
                                           TaskQueueFactory::Priority::NORMAL);
@@ -123,7 +124,7 @@ std::unique_ptr<VideoStreamEncoder> CreateVideoStreamEncoder(
       clock, num_cpu_cores, stats_proxy, encoder_settings,
       std::make_unique<OveruseFrameDetector>(stats_proxy),
       FrameCadenceAdapterInterface::Create(clock, encoder_queue_ptr),
-      std::move(encoder_queue), bitrate_allocation_callback_type);
+      std::move(encoder_queue), bitrate_allocation_callback_type, field_trials);
 }
 
 }  // namespace
@@ -144,7 +145,8 @@ VideoSendStream::VideoSendStream(
     VideoEncoderConfig encoder_config,
     const std::map<uint32_t, RtpState>& suspended_ssrcs,
     const std::map<uint32_t, RtpPayloadState>& suspended_payload_states,
-    std::unique_ptr<FecController> fec_controller)
+    std::unique_ptr<FecController> fec_controller,
+    const WebRtcKeyValueConfig& field_trials)
     : rtp_transport_queue_(transport->GetWorkerQueue()),
       transport_(transport),
       stats_proxy_(clock, config, encoder_config.content_type),
@@ -156,7 +158,8 @@ VideoSendStream::VideoSendStream(
                                    task_queue_factory,
                                    &stats_proxy_,
                                    config_.encoder_settings,
-                                   GetBitrateAllocationCallbackType(config_))),
+                                   GetBitrateAllocationCallbackType(config_),
+                                   field_trials)),
       encoder_feedback_(
           clock,
           config_.rtp.ssrcs,

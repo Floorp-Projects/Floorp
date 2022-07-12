@@ -266,11 +266,13 @@ VideoStreamEncoderResourceManager::VideoStreamEncoderResourceManager(
     Clock* clock,
     bool experiment_cpu_load_estimator,
     std::unique_ptr<OveruseFrameDetector> overuse_detector,
-    DegradationPreferenceProvider* degradation_preference_provider)
+    DegradationPreferenceProvider* degradation_preference_provider,
+    const WebRtcKeyValueConfig& field_trials)
     : degradation_preference_provider_(degradation_preference_provider),
       bitrate_constraint_(std::make_unique<BitrateConstraint>()),
-      balanced_constraint_(std::make_unique<BalancedConstraint>(
-          degradation_preference_provider_)),
+      balanced_constraint_(
+          std::make_unique<BalancedConstraint>(degradation_preference_provider_,
+                                               field_trials)),
       encode_usage_resource_(
           EncodeUsageResource::Create(std::move(overuse_detector))),
       quality_scaler_resource_(QualityScalerResource::Create()),
@@ -283,6 +285,7 @@ VideoStreamEncoderResourceManager::VideoStreamEncoderResourceManager(
       encoder_stats_observer_(encoder_stats_observer),
       degradation_preference_(DegradationPreference::DISABLED),
       video_source_restrictions_(),
+      balanced_settings_(field_trials),
       clock_(clock),
       experiment_cpu_load_estimator_(experiment_cpu_load_estimator),
       initial_frame_dropper_(
