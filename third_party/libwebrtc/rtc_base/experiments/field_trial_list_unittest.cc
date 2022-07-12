@@ -10,6 +10,7 @@
 
 #include "rtc_base/experiments/field_trial_list.h"
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/gunit.h"
 #include "test/gmock.h"
 
@@ -25,7 +26,8 @@ struct Garment {
 
   // Only needed for testing.
   Garment() = default;
-  Garment(int p, std::string c, bool g) : price(p), color(c), has_glitter(g) {}
+  Garment(int p, absl::string_view c, bool g)
+      : price(p), color(c), has_glitter(g) {}
 
   bool operator==(const Garment& other) const {
     return price == other.price && color == other.color &&

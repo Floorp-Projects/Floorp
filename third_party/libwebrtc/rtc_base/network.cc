@@ -10,6 +10,8 @@
 
 #include "rtc_base/network.h"
 
+#include "absl/strings/string_view.h"
+
 #if defined(WEBRTC_POSIX)
 #include <net/if.h>
 #endif  // WEBRTC_POSIX
@@ -190,7 +192,7 @@ const char kPublicIPv4Host[] = "8.8.8.8";
 const char kPublicIPv6Host[] = "2001:4860:4860::8888";
 const int kPublicPort = 53;  // DNS port.
 
-std::string MakeNetworkKey(const std::string& name,
+std::string MakeNetworkKey(absl::string_view name,
                            const IPAddress& prefix,
                            int prefix_length) {
   rtc::StringBuilder ost;
@@ -1055,8 +1057,8 @@ NetworkBindingResult BasicNetworkManager::BindSocketToNetwork(
   return network_monitor_->BindSocketToNetwork(socket_fd, address, if_name);
 }
 
-Network::Network(const std::string& name,
-                 const std::string& desc,
+Network::Network(absl::string_view name,
+                 absl::string_view desc,
                  const IPAddress& prefix,
                  int prefix_length)
     : name_(name),
@@ -1073,8 +1075,8 @@ Network::Network(const std::string& name,
       add_network_cost_to_vpn_(
           webrtc::field_trial::IsEnabled("WebRTC-AddNetworkCostToVpn")) {}
 
-Network::Network(const std::string& name,
-                 const std::string& desc,
+Network::Network(absl::string_view name,
+                 absl::string_view desc,
                  const IPAddress& prefix,
                  int prefix_length,
                  AdapterType type)

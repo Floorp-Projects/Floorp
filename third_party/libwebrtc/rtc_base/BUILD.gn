@@ -96,6 +96,7 @@ rtc_library("rtc_base_approved") {
   absl_deps = [
     "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/numeric:bits",
+    "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
   public_deps = []  # no-presubmit-check TODO(webrtc:8603)
@@ -684,6 +685,7 @@ rtc_library("rtc_json") {
     # expected to be when building json outside of the standalone build.
     defines += [ "WEBRTC_EXTERNAL_JSON" ]
   }
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 }
 
@@ -732,6 +734,7 @@ rtc_library("ip_address") {
   if (is_win) {
     deps += [ ":win32" ]
   }
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("socket_address") {
@@ -753,6 +756,7 @@ rtc_library("socket_address") {
   if (is_win) {
     deps += [ ":win32" ]
   }
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("null_socket_server") {
@@ -797,6 +801,7 @@ rtc_library("threading") {
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/strings",
   ]
   deps = [
     ":async_resolver_interface",
@@ -1236,6 +1241,7 @@ rtc_library("rtc_base_tests_utils") {
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
   ]
 }
 
@@ -1330,7 +1336,10 @@ if (rtc_include_tests) {
         "third_party/sigslot",
         "//testing/gtest",
       ]
-      absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+      absl_deps = [
+        "//third_party/abseil-cpp/absl/memory",
+        "//third_party/abseil-cpp/absl/strings",
+      ]
     }
 
     rtc_library("rtc_base_approved_unittests") {

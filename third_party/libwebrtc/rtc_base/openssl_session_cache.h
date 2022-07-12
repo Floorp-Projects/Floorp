@@ -16,7 +16,9 @@
 #include <map>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/ssl_stream_adapter.h"
+#include "rtc_base/string_utils.h"
 
 #ifndef OPENSSL_IS_BORINGSSL
 typedef struct ssl_session_st SSL_SESSION;
@@ -40,10 +42,10 @@ class OpenSSLSessionCache final {
   OpenSSLSessionCache& operator=(const OpenSSLSessionCache&) = delete;
 
   // Looks up a session by hostname. The returned SSL_SESSION is not up_refed.
-  SSL_SESSION* LookupSession(const std::string& hostname) const;
+  SSL_SESSION* LookupSession(absl::string_view hostname) const;
   // Adds a session to the cache, and up_refs it. Any existing session with the
   // same hostname is replaced.
-  void AddSession(const std::string& hostname, SSL_SESSION* session);
+  void AddSession(absl::string_view hostname, SSL_SESSION* session);
   // Returns the true underlying SSL Context that holds these cached sessions.
   SSL_CTX* GetSSLContext() const;
   // The SSL Mode tht the OpenSSLSessionCache was constructed with. This cannot
@@ -61,7 +63,7 @@ class OpenSSLSessionCache final {
   // Map of hostnames to SSL_SESSIONs; holds references to the SSL_SESSIONs,
   // which are cleaned up when the factory is destroyed.
   // TODO(juberti): Add LRU eviction to keep the cache from growing forever.
-  std::map<std::string, SSL_SESSION*> sessions_;
+  std::map<std::string, SSL_SESSION*, rtc::AbslStringViewCmp> sessions_;
   // The cache should never be copied or assigned directly.
 };
 

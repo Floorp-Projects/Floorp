@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/string_encode.h"
 
@@ -36,7 +37,7 @@ namespace webrtc {
 class FieldTrialListBase : public FieldTrialParameterInterface {
  protected:
   friend class FieldTrialListWrapper;
-  explicit FieldTrialListBase(std::string key);
+  explicit FieldTrialListBase(absl::string_view key);
 
   bool Failed() const;
   bool Used() const;
@@ -52,8 +53,8 @@ class FieldTrialListBase : public FieldTrialParameterInterface {
 template <typename T>
 class FieldTrialList : public FieldTrialListBase {
  public:
-  explicit FieldTrialList(std::string key) : FieldTrialList(key, {}) {}
-  FieldTrialList(std::string key, std::initializer_list<T> default_values)
+  explicit FieldTrialList(absl::string_view key) : FieldTrialList(key, {}) {}
+  FieldTrialList(absl::string_view key, std::initializer_list<T> default_values)
       : FieldTrialListBase(key), values_(default_values) {}
 
   std::vector<T> Get() const { return values_; }
@@ -132,7 +133,7 @@ struct LambdaTypeTraits<RetType* (ClassType::*)(SourceType*)const> {
 template <typename T>
 struct TypedFieldTrialListWrapper : FieldTrialListWrapper {
  public:
-  TypedFieldTrialListWrapper(std::string key,
+  TypedFieldTrialListWrapper(absl::string_view key,
                              std::function<void(void*, T)> sink)
       : list_(key), sink_(sink) {}
 
@@ -151,7 +152,8 @@ struct TypedFieldTrialListWrapper : FieldTrialListWrapper {
 
 template <typename F,
           typename Traits = typename field_trial_list_impl::LambdaTypeTraits<F>>
-FieldTrialListWrapper* FieldTrialStructMember(std::string key, F accessor) {
+FieldTrialListWrapper* FieldTrialStructMember(absl::string_view key,
+                                              F accessor) {
   return new field_trial_list_impl::TypedFieldTrialListWrapper<
       typename Traits::ret>(key, [accessor](void* s, typename Traits::ret t) {
     *accessor(static_cast<typename Traits::src*>(s)) = t;

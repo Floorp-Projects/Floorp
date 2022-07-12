@@ -16,6 +16,8 @@
 #include <openssl/rand.h>
 #include <openssl/tls1.h>
 #include <openssl/x509v3.h>
+
+#include "absl/strings/string_view.h"
 #ifndef OPENSSL_IS_BORINGSSL
 #include <openssl/dtls1.h>
 #include <openssl/ssl.h>
@@ -327,7 +329,7 @@ void OpenSSLStreamAdapter::SetServerRole(SSLRole role) {
 }
 
 bool OpenSSLStreamAdapter::SetPeerCertificateDigest(
-    const std::string& digest_alg,
+    absl::string_view digest_alg,
     const unsigned char* digest_val,
     size_t digest_len,
     SSLPeerCertificateDigestError* error) {
@@ -353,7 +355,7 @@ bool OpenSSLStreamAdapter::SetPeerCertificateDigest(
   }
 
   peer_certificate_digest_value_.SetData(digest_val, digest_len);
-  peer_certificate_digest_algorithm_ = digest_alg;
+  peer_certificate_digest_algorithm_ = std::string(digest_alg);
 
   if (!peer_cert_chain_) {
     // Normal case, where the digest is set before we obtain the certificate
@@ -445,15 +447,15 @@ bool OpenSSLStreamAdapter::GetSslVersionBytes(int* version) const {
 }
 
 // Key Extractor interface
-bool OpenSSLStreamAdapter::ExportKeyingMaterial(const std::string& label,
+bool OpenSSLStreamAdapter::ExportKeyingMaterial(absl::string_view label,
                                                 const uint8_t* context,
                                                 size_t context_len,
                                                 bool use_context,
                                                 uint8_t* result,
                                                 size_t result_len) {
-  if (SSL_export_keying_material(ssl_, result, result_len, label.c_str(),
-                                 label.length(), const_cast<uint8_t*>(context),
-                                 context_len, use_context) != 1) {
+  if (SSL_export_keying_material(ssl_, result, result_len, label.data(),
+                                 label.length(), context, context_len,
+                                 use_context) != 1) {
     return false;
   }
   return true;
@@ -1263,7 +1265,7 @@ bool OpenSSLStreamAdapter::IsAcceptableCipher(int cipher, KeyType key_type) {
   return false;
 }
 
-bool OpenSSLStreamAdapter::IsAcceptableCipher(const std::string& cipher,
+bool OpenSSLStreamAdapter::IsAcceptableCipher(absl::string_view cipher,
                                               KeyType key_type) {
   if (key_type == KT_RSA) {
     for (const cipher_list& c : OK_RSA_ciphers) {

@@ -10,6 +10,8 @@
 
 #include "rtc_base/string_utils.h"
 
+#include "absl/strings/string_view.h"
+
 namespace rtc {
 
 size_t strcpyn(char* buffer,

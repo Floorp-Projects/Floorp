@@ -15,6 +15,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/numerics/safe_minmax.h"
 
@@ -26,16 +27,12 @@ SimpleStringBuilder::SimpleStringBuilder(rtc::ArrayView<char> buffer)
   RTC_DCHECK(IsConsistent());
 }
 
-SimpleStringBuilder& SimpleStringBuilder::operator<<(const char* str) {
-  return Append(str, strlen(str));
-}
-
 SimpleStringBuilder& SimpleStringBuilder::operator<<(char ch) {
   return Append(&ch, 1);
 }
 
-SimpleStringBuilder& SimpleStringBuilder::operator<<(const std::string& str) {
-  return Append(str.c_str(), str.length());
+SimpleStringBuilder& SimpleStringBuilder::operator<<(absl::string_view str) {
+  return Append(str.data(), str.length());
 }
 
 // Numeric conversion routines.

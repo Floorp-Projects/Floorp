@@ -357,6 +357,8 @@ if (is_ios || is_mac) {
           "../rtc_base:network_constants",
           "../rtc_base:threading",
         ]
+
+        absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
       }
 
       rtc_library("network_monitor_objc") {
@@ -376,6 +378,7 @@ if (is_ios || is_mac) {
           ":base_objc",
           ":helpers_objc",
           ":network_monitor_observer",
+          "../rtc_base:stringutils",
           "../rtc_base/system:gcd_helpers",
         ]
       }
@@ -1583,6 +1586,8 @@ if (is_ios || is_mac) {
           "../rtc_base/task_utils:pending_task_safety_flag",
           "../rtc_base/task_utils:to_queued_task",
         ]
+
+        absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
       }
     }
 
