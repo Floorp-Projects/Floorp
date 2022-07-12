@@ -374,10 +374,10 @@ class ModuleObject : public NativeObject {
   void setAsyncEvaluatingFalse();
   void setEvaluationError(HandleValue newValue);
   void setPendingAsyncDependencies(uint32_t newValue);
-  void setInitialTopLevelCapability(HandleObject promiseObj);
+  void setInitialTopLevelCapability(Handle<PromiseObject*> capability);
   bool hasTopLevelCapability() const;
-  JSObject* maybeTopLevelCapability() const;
-  JSObject* topLevelCapability() const;
+  PromiseObject* maybeTopLevelCapability() const;
+  PromiseObject* topLevelCapability() const;
   ListObject* asyncParentModules() const;
   mozilla::Maybe<uint32_t> maybePendingAsyncDependencies() const;
   uint32_t pendingAsyncDependencies() const;
