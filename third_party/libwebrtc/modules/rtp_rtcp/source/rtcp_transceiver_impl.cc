@@ -446,8 +446,8 @@ void RtcpTransceiverImpl::HandleDlrr(const rtcp::Dlrr& dlrr, Timestamp now) {
     if (rti.ssrc != config_.feedback_ssrc)
       continue;
     uint32_t rtt_ntp = receive_time_ntp - rti.delay_since_last_rr - rti.last_rr;
-    int64_t rtt_ms = CompactNtpRttToMs(rtt_ntp);
-    config_.network_link_observer->OnRttUpdate(now, TimeDelta::Millis(rtt_ms));
+    TimeDelta rtt = CompactNtpRttToTimeDelta(rtt_ntp);
+    config_.network_link_observer->OnRttUpdate(now, rtt);
   }
 }
 
@@ -472,7 +472,7 @@ void RtcpTransceiverImpl::ProcessReportBlocks(
 
     uint32_t rtt_ntp = receive_time_ntp - report_block.delay_since_last_sr() -
                        report_block.last_sr();
-    rtt_sum += TimeDelta::Millis(CompactNtpRttToMs(rtt_ntp));
+    rtt_sum += CompactNtpRttToTimeDelta(rtt_ntp);
     ++num_rtts;
   }
   // For backward compatibility, do not report rtt based on report blocks to the
@@ -788,8 +788,8 @@ std::vector<rtcp::ReportBlock> RtcpTransceiverImpl::CreateReportBlocks(
     const SenderReportTimes& last_sender_report =
         *it->second.last_received_sender_report;
     last_sr = CompactNtp(last_sender_report.remote_sent_time);
-    last_delay = SaturatedUsToCompactNtp(
-        now.us() - last_sender_report.local_received_time.us());
+    last_delay =
+        SaturatedToCompactNtp(now - last_sender_report.local_received_time);
     report_block.SetLastSr(last_sr);
     report_block.SetDelayLastSr(last_delay);
   }

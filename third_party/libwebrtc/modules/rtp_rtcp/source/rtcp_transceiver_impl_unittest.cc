@@ -123,6 +123,12 @@ constexpr TimeDelta kReportPeriod = TimeDelta::Millis(10);
 // Use finite timeout to fail tests rather than hang them.
 constexpr int kAlmostForeverMs = 1000;
 
+constexpr TimeDelta kTimePrecision = TimeDelta::Millis(1);
+
+MATCHER_P(Near, value, "") {
+  return arg > value - kTimePrecision && arg < value + kTimePrecision;
+}
+
 // Helper to wait for an rtcp packet produced on a different thread/task queue.
 class FakeRtcpTransport : public webrtc::Transport {
  public:
@@ -970,10 +976,12 @@ TEST(RtcpTransceiverImplTest,
   // match result of ReceiveStatisticsProvider::RtcpReportBlocks callback,
   // but for simplicity of the test asume it is the same.
   ASSERT_EQ(report_blocks[0].source_ssrc(), kRemoteSsrc1);
-  EXPECT_EQ(CompactNtpRttToMs(report_blocks[0].delay_since_last_sr()), 200);
+  EXPECT_THAT(CompactNtpRttToTimeDelta(report_blocks[0].delay_since_last_sr()),
+              Near(TimeDelta::Millis(200)));
 
   ASSERT_EQ(report_blocks[1].source_ssrc(), kRemoteSsrc2);
-  EXPECT_EQ(CompactNtpRttToMs(report_blocks[1].delay_since_last_sr()), 100);
+  EXPECT_THAT(CompactNtpRttToTimeDelta(report_blocks[1].delay_since_last_sr()),
+              Near(TimeDelta::Millis(100)));
 }
 
 TEST(RtcpTransceiverImplTest, MaySendMultipleReceiverReportInSinglePacket) {
@@ -1333,11 +1341,12 @@ TEST(RtcpTransceiverImplTest, PassRttFromDlrrToLinkObserver) {
   rtcp::ReceiveTimeInfo rti;
   rti.ssrc = kSenderSsrc;
   rti.last_rr = CompactNtp(config.clock->ConvertTimestampToNtpTime(send_time));
-  rti.delay_since_last_rr = SaturatedUsToCompactNtp(10'000);  // 10ms
+  rti.delay_since_last_rr = SaturatedToCompactNtp(TimeDelta::Millis(10));
   rtcp::ExtendedReports xr;
   xr.AddDlrrItem(rti);
 
-  EXPECT_CALL(link_observer, OnRttUpdate(receive_time, TimeDelta::Millis(100)));
+  EXPECT_CALL(link_observer,
+              OnRttUpdate(receive_time, Near(TimeDelta::Millis(100))));
   rtcp_transceiver.ReceivePacket(xr.Build(), receive_time);
 }
 
@@ -1354,15 +1363,15 @@ TEST(RtcpTransceiverImplTest, CalculatesRoundTripTimeFromReportBlocks) {
   rtcp::ReportBlock rb1;
   rb1.SetLastSr(CompactNtp(config.clock->ConvertTimestampToNtpTime(
       receive_time - rtt - TimeDelta::Millis(10))));
-  rb1.SetDelayLastSr(SaturatedUsToCompactNtp(10'000));  // 10ms
+  rb1.SetDelayLastSr(SaturatedToCompactNtp(TimeDelta::Millis(10)));
   rr.AddReportBlock(rb1);
   rtcp::ReportBlock rb2;
   rb2.SetLastSr(CompactNtp(config.clock->ConvertTimestampToNtpTime(
       receive_time - rtt - TimeDelta::Millis(20))));
-  rb2.SetDelayLastSr(SaturatedUsToCompactNtp(20'000));  // 20ms
+  rb2.SetDelayLastSr(SaturatedToCompactNtp(TimeDelta::Millis(20)));
   rr.AddReportBlock(rb2);
 
-  EXPECT_CALL(link_observer, OnRttUpdate(receive_time, rtt));
+  EXPECT_CALL(link_observer, OnRttUpdate(receive_time, Near(rtt)));
   rtcp_transceiver.ReceivePacket(rr.Build(), receive_time);
 }
 
