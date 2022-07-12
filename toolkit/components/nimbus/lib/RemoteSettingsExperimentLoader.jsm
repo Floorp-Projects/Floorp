@@ -222,8 +222,7 @@ class _RemoteSettingsExperimentLoader {
     let matches = 0;
     let recipeMismatches = [];
     let invalidRecipes = [];
-    let invalidBranches = new Map();
-    let invalidFeatures = new Map();
+    let invalidBranches = [];
     let validatorCache = {};
 
     if (recipes && !loadingError) {
@@ -237,22 +236,14 @@ class _RemoteSettingsExperimentLoader {
               2
             )}`
           );
-          if (r.slug) {
-            invalidRecipes.push(r.slug);
-          }
+          invalidRecipes.push(r.slug);
           continue;
         }
 
         let type = r.isRollout ? "rollout" : "experiment";
 
-        const result = await this._validateBranches(r, validatorCache);
-        if (!result.valid) {
-          if (result.invalidBranchSlugs.length) {
-            invalidBranches.set(r.slug, result.invalidBranchSlugs);
-          }
-          if (result.invalidFeatureIds.length) {
-            invalidFeatures.set(r.slug, result.invalidFeatureIds);
-          }
+        if (!(await this._validateBranches(r, validatorCache))) {
+          invalidBranches.push(r.slug);
           lazy.log.debug(`${r.id} did not validate`);
           continue;
         }
@@ -274,7 +265,6 @@ class _RemoteSettingsExperimentLoader {
         recipeMismatches,
         invalidRecipes,
         invalidBranches,
-        invalidFeatures,
       });
     }
 
@@ -376,17 +366,13 @@ class _RemoteSettingsExperimentLoader {
   /**
    * Validate the branches of an experiment using schemas
    *
-   * @param {object} recipe The recipe object.
-   * @param {object} validatorCache A cache of JSON Schema validators keyed by feature
-   *                                ID.
+   * @param recipe The recipe object.
+   * @param validatorCache A cache of JSON Schema validators keyed by feature
+   *                       ID.
    *
-   * @returns {object} The lists of invalid branch slugs and invalid feature
-   *                   IDs.
+   * @returns Whether or not the branches pass validation.
    */
   async _validateBranches({ id, branches }, validatorCache = {}) {
-    const invalidBranchSlugs = [];
-    const invalidFeatureIds = new Set();
-
     for (const [branchIdx, branch] of branches.entries()) {
       const features = branch.features ?? [branch.feature];
       for (const feature of features) {
@@ -395,9 +381,7 @@ class _RemoteSettingsExperimentLoader {
           Cu.reportError(
             `Experiment ${id} has unknown featureId: ${featureId}`
           );
-
-          invalidFeatureIds.add(featureId);
-          continue;
+          return false;
         }
 
         let validator;
@@ -436,16 +420,12 @@ class _RemoteSettingsExperimentLoader {
               2
             )}`
           );
-          invalidBranchSlugs.push(branch.slug);
+          return false;
         }
       }
     }
 
-    return {
-      invalidBranchSlugs,
-      invalidFeatureIds: Array.from(invalidFeatureIds),
-      valid: invalidBranchSlugs.length === 0 && invalidFeatureIds.size === 0,
-    };
+    return true;
   }
 
   _generateVariablesOnlySchema(featureId, manifest) {
