@@ -226,10 +226,15 @@ if (!build_with_chromium) {
         ":peer_configurer",
         ":peer_connection_quality_test_params",
         "../../../api:frame_generator_api",
+        "../../../api:function_view",
+        "../../../api:libjingle_peerconnection_api",
         "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api:scoped_refptr",
+        "../../../api:sequence_checker",
         "../../../modules/audio_processing:api",
         "../../../pc:peerconnection_wrapper",
+        "../../../rtc_base:logging",
+        "../../../rtc_base:refcount",
       ]
       absl_deps = [
         "//third_party/abseil-cpp/absl/memory",
