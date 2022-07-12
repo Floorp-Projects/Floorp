@@ -2179,5 +2179,40 @@ TEST(DcSctpSocketTest, BothCanDetectDcsctpImplementation) {
   EXPECT_EQ(a.socket.peer_implementation(), SctpImplementation::kDcsctp);
   EXPECT_EQ(z.socket.peer_implementation(), SctpImplementation::kDcsctp);
 }
+
+TEST_P(DcSctpSocketParametrizedTest, CanLoseFirstOrderedMessage) {
+  SocketUnderTest a("A");
+  auto z = std::make_unique<SocketUnderTest>("Z");
+
+  ConnectSockets(a, *z);
+  z = MaybeHandoverSocket(std::move(z));
+
+  SendOptions send_options;
+  send_options.unordered = IsUnordered(false);
+  send_options.max_retransmissions = 0;
+  std::vector<uint8_t> payload(a.options.mtu - 100);
+
+  // Send a first message (SID=1, SSN=0)
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(51), payload), send_options);
+
+  // First DATA is lost, and retransmission timer will delete it.
+  a.cb.ConsumeSentPacket();
+  AdvanceTime(a, *z, a.options.rto_initial);
+  ExchangeMessages(a, *z);
+
+  // Send a second message (SID=0, SSN=1).
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(52), payload), send_options);
+  ExchangeMessages(a, *z);
+
+  // The Z socket should receive the second message, but not the first.
+  absl::optional<DcSctpMessage> msg = z->cb.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg.has_value());
+  EXPECT_EQ(msg->ppid(), PPID(52));
+
+  EXPECT_FALSE(z->cb.ConsumeReceivedMessage().has_value());
+
+  MaybeHandoverSocketAndSendMessage(a, std::move(z));
+}
+
 }  // namespace
 }  // namespace dcsctp
