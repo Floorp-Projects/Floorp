@@ -723,12 +723,13 @@ class MetaBuildWrapper:
 
     android = 'target_os="android"' in vals['gn_args']
     for target in swarming_targets:
+      label = isolate_map[target]['label']
+      stamp_runtime_deps = 'obj/%s.stamp.runtime_deps' % label.replace(':', '/')
       if android:
         # Android targets may be either android_apk or executable. The
         # former will result in runtime_deps associated with the stamp
         # file, while the latter will result in runtime_deps associated
         # with the executable.
-        label = isolate_map[target]['label']
         runtime_deps_targets = [
             target + '.runtime_deps',
             'obj/%s.stamp.runtime_deps' % label.replace(':', '/')
@@ -739,12 +740,11 @@ class MetaBuildWrapper:
         else:
           runtime_deps_targets = ['browser_tests.runtime_deps']
       elif isolate_map[target]['type'] == 'script':
-        label = isolate_map[target]['label'].split(':')[1]
-        runtime_deps_targets = ['%s.runtime_deps' % label]
+        runtime_deps_targets = [stamp_runtime_deps]
         if self.platform == 'win32':
-          runtime_deps_targets += [label + '.exe.runtime_deps']
+          runtime_deps_targets += [target + '.exe.runtime_deps']
         else:
-          runtime_deps_targets += [label + '.runtime_deps']
+          runtime_deps_targets += [target + '.runtime_deps']
       elif self.platform == 'win32':
         runtime_deps_targets = [target + '.exe.runtime_deps']
       else:
