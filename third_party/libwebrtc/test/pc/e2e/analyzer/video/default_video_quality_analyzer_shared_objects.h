@@ -214,8 +214,6 @@ struct DefaultVideoQualityAnalyzerOptions {
   bool compute_ssim = true;
   // If true, weights the luma plane more than the chroma planes in the PSNR.
   bool use_weighted_psnr = false;
-  // DEPRECATED.
-  bool heavy_metrics_computation_enabled = true;
   // If true DefaultVideoQualityAnalyzer will try to adjust frames before
   // computing PSNR and SSIM for them. In some cases picture may be shifted by
   // a few pixels after the encode/decode step. Those difference is invisible
