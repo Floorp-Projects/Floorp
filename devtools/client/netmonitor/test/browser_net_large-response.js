@@ -71,6 +71,17 @@ add_task(async function() {
     "The text shown in the source editor is incorrect."
   );
 
+  info("Check that search input can be displayed");
+  document.querySelector(".CodeMirror").CodeMirror.focus();
+  synthesizeKeyShortcut("CmdOrCtrl+F");
+  const searchInput = await waitFor(() =>
+    document.querySelector(".CodeMirror input[type=search]")
+  );
+  ok(
+    searchInput.ownerDocument.activeElement == searchInput,
+    "search input is focused"
+  );
+
   await teardown(monitor);
 
   // This test uses a lot of memory, so force a GC to help fragmentation.
