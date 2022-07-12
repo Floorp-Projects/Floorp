@@ -398,7 +398,7 @@ rtc_source_set("sctp_transport") {
 rtc_source_set("sctp_utils") {
   visibility = [
     ":*",
-    "../test/fuzzers:sctp_utils_fuzzer",
+    "../test/fuzzers:*",
   ]
   sources = [
     "sctp_utils.cc",
