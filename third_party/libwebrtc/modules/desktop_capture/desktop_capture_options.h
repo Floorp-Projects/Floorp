@@ -163,6 +163,17 @@ class RTC_EXPORT DesktopCaptureOptions {
   // precedence over the cropping, directx, and magnification flags.
   bool allow_wgc_capturer() const { return allow_wgc_capturer_; }
   void set_allow_wgc_capturer(bool allow) { allow_wgc_capturer_ = allow; }
+
+  // This flag enables the WGC capturer for fallback capturer.
+  // The flag is useful when the first capturer (eg. WindowCapturerWinGdi) is
+  // unreliable in certain devices where WGC is supported, but not used by
+  // default.
+  bool allow_wgc_capturer_fallback() const {
+    return allow_wgc_capturer_fallback_;
+  }
+  void set_allow_wgc_capturer_fallback(bool allow) {
+    allow_wgc_capturer_fallback_ = allow;
+  }
 #endif  // defined(RTC_ENABLE_WIN_WGC)
 #endif  // defined(WEBRTC_WIN)
 
@@ -205,6 +216,7 @@ class RTC_EXPORT DesktopCaptureOptions {
   bool allow_cropping_window_capturer_ = false;
 #if defined(RTC_ENABLE_WIN_WGC)
   bool allow_wgc_capturer_ = false;
+  bool allow_wgc_capturer_fallback_ = false;
 #endif
 #endif
 #if defined(WEBRTC_USE_X11)
