@@ -69,8 +69,7 @@ using ::testing::Values;
 const uint32_t kDefaultTimeout = 10000u;
 
 template <typename MethodFunctor>
-class OnSuccessObserver : public rtc::RefCountedObject<
-                              webrtc::SetRemoteDescriptionObserverInterface> {
+class OnSuccessObserver : public webrtc::SetRemoteDescriptionObserverInterface {
  public:
   explicit OnSuccessObserver(MethodFunctor on_success)
       : on_success_(std::move(on_success)) {}

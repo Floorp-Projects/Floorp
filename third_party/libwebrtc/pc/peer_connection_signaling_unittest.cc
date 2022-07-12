@@ -610,8 +610,7 @@ TEST_P(PeerConnectionSignalingTest,
 
 TEST_P(PeerConnectionSignalingTest, ImplicitCreateOfferAndShutdown) {
   auto caller = CreatePeerConnection();
-  rtc::scoped_refptr<FakeSetLocalDescriptionObserver> observer(
-      new FakeSetLocalDescriptionObserver());
+  auto observer = rtc::make_ref_counted<FakeSetLocalDescriptionObserver>();
   caller->pc()->SetLocalDescription(observer);
   caller.reset(nullptr);
   // The new observer gets invoked because it is called immediately.
@@ -632,8 +631,7 @@ TEST_P(PeerConnectionSignalingTest,
 
 TEST_P(PeerConnectionSignalingTest, CloseBeforeImplicitCreateOfferAndShutdown) {
   auto caller = CreatePeerConnection();
-  rtc::scoped_refptr<FakeSetLocalDescriptionObserver> observer(
-      new FakeSetLocalDescriptionObserver());
+  auto observer = rtc::make_ref_counted<FakeSetLocalDescriptionObserver>();
   caller->pc()->Close();
   caller->pc()->SetLocalDescription(observer);
   caller.reset(nullptr);
@@ -655,8 +653,7 @@ TEST_P(PeerConnectionSignalingTest,
 
 TEST_P(PeerConnectionSignalingTest, CloseAfterImplicitCreateOfferAndShutdown) {
   auto caller = CreatePeerConnection();
-  rtc::scoped_refptr<FakeSetLocalDescriptionObserver> observer(
-      new FakeSetLocalDescriptionObserver());
+  auto observer = rtc::make_ref_counted<FakeSetLocalDescriptionObserver>();
   caller->pc()->SetLocalDescription(observer);
   caller->pc()->Close();
   caller.reset(nullptr);
@@ -670,8 +667,7 @@ TEST_P(PeerConnectionSignalingTest,
   auto caller = CreatePeerConnection();
   auto offer = caller->CreateOffer(RTCOfferAnswerOptions());
 
-  rtc::scoped_refptr<FakeSetLocalDescriptionObserver> observer(
-      new FakeSetLocalDescriptionObserver());
+  auto observer = rtc::make_ref_counted<FakeSetLocalDescriptionObserver>();
   caller->pc()->SetLocalDescription(std::move(offer), observer);
   // The new observer is invoked immediately.
   EXPECT_TRUE(observer->called());
