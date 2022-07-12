@@ -4,10 +4,6 @@ const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
 
-const { ProductAddonCheckerTestUtils } = ChromeUtils.import(
-  "resource://gre/modules/addons/ProductAddonChecker.jsm"
-);
-
 AddonTestUtils.initMochitest(this);
 
 const testServer = AddonTestUtils.createHttpServer();
@@ -69,9 +65,9 @@ add_task(async function test_management_install() {
     },
   });
 
-  let themeXPIFileHash = await ProductAddonCheckerTestUtils.computeHash(
-    "sha256",
-    themeXPIFile.path
+  let themeXPIFileHash = await IOUtils.computeHexDigest(
+    themeXPIFile.path,
+    "sha256"
   );
 
   const otherXPIFile = AddonTestUtils.createTempWebExtensionFile({
