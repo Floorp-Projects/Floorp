@@ -28,11 +28,19 @@ SimpleStringBuilder::SimpleStringBuilder(rtc::ArrayView<char> buffer)
 }
 
 SimpleStringBuilder& SimpleStringBuilder::operator<<(char ch) {
-  return Append(&ch, 1);
+  return operator<<(absl::string_view(&ch, 1));
 }
 
 SimpleStringBuilder& SimpleStringBuilder::operator<<(absl::string_view str) {
-  return Append(str.data(), str.length());
+  RTC_DCHECK_LT(size_ + str.length(), buffer_.size())
+      << "Buffer size was insufficient";
+  const size_t chars_added =
+      rtc::SafeMin(str.length(), buffer_.size() - size_ - 1);
+  memcpy(&buffer_[size_], str.data(), chars_added);
+  size_ += chars_added;
+  buffer_[size_] = '\0';
+  RTC_DCHECK(IsConsistent());
+  return *this;
 }
 
 // Numeric conversion routines.
@@ -99,18 +107,6 @@ SimpleStringBuilder& SimpleStringBuilder::AppendFormat(const char* fmt, ...) {
     buffer_[size_] = '\0';
   }
   va_end(args);
-  RTC_DCHECK(IsConsistent());
-  return *this;
-}
-
-SimpleStringBuilder& SimpleStringBuilder::Append(const char* str,
-                                                 size_t length) {
-  RTC_DCHECK_LT(size_ + length, buffer_.size())
-      << "Buffer size was insufficient";
-  const size_t chars_added = rtc::SafeMin(length, buffer_.size() - size_ - 1);
-  memcpy(&buffer_[size_], str, chars_added);
-  size_ += chars_added;
-  buffer_[size_] = '\0';
   RTC_DCHECK(IsConsistent());
   return *this;
 }
