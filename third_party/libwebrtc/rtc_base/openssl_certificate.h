@@ -37,7 +37,7 @@ class OpenSSLCertificate final : public SSLCertificate {
       OpenSSLKeyPair* key_pair,
       const SSLIdentityParams& params);
   static std::unique_ptr<OpenSSLCertificate> FromPEMString(
-      const std::string& pem_string);
+      absl::string_view pem_string);
 
   ~OpenSSLCertificate() override;
 
@@ -54,14 +54,14 @@ class OpenSSLCertificate final : public SSLCertificate {
   bool operator!=(const OpenSSLCertificate& other) const;
 
   // Compute the digest of the certificate given algorithm
-  bool ComputeDigest(const std::string& algorithm,
+  bool ComputeDigest(absl::string_view algorithm,
                      unsigned char* digest,
                      size_t size,
                      size_t* length) const override;
 
   // Compute the digest of a certificate as an X509 *
   static bool ComputeDigest(const X509* x509,
-                            const std::string& algorithm,
+                            absl::string_view algorithm,
                             unsigned char* digest,
                             size_t size,
                             size_t* length);
