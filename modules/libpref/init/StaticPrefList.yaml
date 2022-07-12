@@ -5250,6 +5250,11 @@
 #endif
   mirror: always
 
+- name: gfx.canvas.accelerated.async-present
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: gfx.canvas.accelerated.cache-items
   type: RelaxedAtomicUint32
   value: 2048

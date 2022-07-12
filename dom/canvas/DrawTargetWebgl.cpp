@@ -2926,6 +2926,9 @@ Maybe<layers::SurfaceDescriptor> DrawTargetWebgl::GetFrontBuffer() {
       // Copy and swizzle the WebGL framebuffer to the swap chain front buffer.
       webgl::SwapChainOptions options;
       options.bgra = true;
+      // Allow async present to be toggled on for accelerated Canvas2D independent
+      // of WebGL via pref.
+      options.forceAsyncPresent = StaticPrefs::gfx_canvas_accelerated_async_present();
       mSharedContext->mWebgl->CopyToSwapChain(mFramebuffer, options);
     }
   }
