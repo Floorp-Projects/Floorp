@@ -81,12 +81,8 @@ rtc_library("rtc_pc_base") {
     "jsep_transport_controller.h",
     "media_session.cc",
     "media_session.h",
-    "rtp_transport.cc",
-    "rtp_transport.h",
     "sctp_transport.cc",
     "sctp_transport.h",
-    "srtp_session.cc",
-    "srtp_session.h",
     "srtp_transport.cc",
     "srtp_transport.h",
     "video_track_source_proxy.cc",
@@ -362,6 +358,32 @@ rtc_source_set("rtp_sender_proxy") {
 }
 rtc_source_set("rtp_transport") {
   visibility = [ ":*" ]
+  sources = [
+    "rtp_transport.cc",
+    "rtp_transport.h",
+  ]
+  deps = [
+    ":rtp_transport_internal",
+    ":session_description",
+    "../api:array_view",
+    "../api/units:timestamp",
+    "../call:rtp_receiver",
+    "../call:video_stream_api",
+    "../media:rtc_media_base",
+    "../modules/rtp_rtcp:rtp_rtcp_format",
+    "../p2p:rtc_p2p",
+    "../rtc_base",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:socket",
+    "../rtc_base/network:sent_packet",
+    "../rtc_base/third_party/sigslot",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 rtc_source_set("rtp_transport_internal") {
   visibility = [
@@ -436,6 +458,28 @@ rtc_source_set("srtp_filter") {
 }
 rtc_source_set("srtp_session") {
   visibility = [ ":*" ]
+  sources = [
+    "srtp_session.cc",
+    "srtp_session.h",
+  ]
+  deps = [
+    ":external_hmac",
+    "../api:array_view",
+    "../api:scoped_refptr",
+    "../api:sequence_checker",
+    "../api:webrtc_key_value_config",
+    "../modules/rtp_rtcp:rtp_rtcp_format",
+    "../rtc_base",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base/synchronization:mutex",
+    "../system_wrappers:metrics",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
+  if (rtc_build_libsrtp) {
+    deps += [ "//third_party/libsrtp" ]
+  }
 }
 rtc_source_set("srtp_transport") {
   visibility = [ ":*" ]
@@ -1843,9 +1887,11 @@ if (rtc_include_tests && !build_with_chromium) {
       ":rtc_pc_base",
       ":rtcp_mux_filter",
       ":rtp_media_utils",
+      ":rtp_transport",
       ":rtp_transport_internal",
       ":session_description",
       ":srtp_filter",
+      ":srtp_session",
       ":used_ids",
       ":video_rtp_receiver",
       "../api:array_view",
