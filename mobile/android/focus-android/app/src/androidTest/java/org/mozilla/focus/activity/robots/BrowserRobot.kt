@@ -22,6 +22,7 @@ import org.hamcrest.Matchers.not
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
+import org.mozilla.focus.helpers.Constants.RETRY_COUNT
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.pageLoadingTime
@@ -165,7 +166,20 @@ class BrowserRobot {
 
     fun waitForPlaybackToStart() {
         val playStateMessage = mDevice.findObject(UiSelector().text("Media file is playing"))
-        assertTrue(playStateMessage.waitForExists(pageLoadingTime))
+
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertTrue(playStateMessage.waitForExists(pageLoadingTime))
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    clickPlayButton()
+                }
+            }
+        }
+
         // dismiss the js alert
         mDevice.findObject(UiSelector().textContains("ok")).click()
     }
