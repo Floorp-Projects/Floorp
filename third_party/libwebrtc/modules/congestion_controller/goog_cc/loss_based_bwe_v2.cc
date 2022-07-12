@@ -578,7 +578,8 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates(
   }
 
   if (acknowledged_bitrate_.has_value() &&
-      config_->append_acknowledged_rate_candidate && can_decrease_bitrate) {
+      config_->append_acknowledged_rate_candidate &&
+      TrendlineEsimateAllowEmergencyBackoff()) {
     bandwidths.push_back(*acknowledged_bitrate_ *
                          config_->bandwidth_backoff_lower_bound_factor);
   }
@@ -789,6 +790,20 @@ bool LossBasedBweV2::TrendlineEsimateAllowBitrateIncrease() const {
     }
   }
   return true;
+}
+
+bool LossBasedBweV2::TrendlineEsimateAllowEmergencyBackoff() const {
+  if (!config_->trendline_integration_enabled) {
+    return true;
+  }
+
+  for (const auto& detector_state : delay_detector_states_) {
+    if (detector_state == BandwidthUsage::kBwOverusing) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 bool LossBasedBweV2::PushBackObservation(

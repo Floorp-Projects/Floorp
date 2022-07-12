@@ -437,10 +437,14 @@ TEST(LossBasedBweV2Test, BandwidthEstimateIncreasesWhenUnderusing) {
             DataRate::KilobitsPerSec(600));
 }
 
+// When network is underusing, estimate can increase but never be higher than
+// the delay based estimate.
 TEST(LossBasedBweV2Test,
      BandwidthEstimateCappedByDelayBasedEstimateWhenUnderusing) {
   PacketResult enough_feedback_1[2];
   PacketResult enough_feedback_2[2];
+  // Create two packet results, network is in normal state, 100% packets are
+  // received, and no delay increase.
   enough_feedback_1[0].sent_packet.size = DataSize::Bytes(15'000);
   enough_feedback_1[1].sent_packet.size = DataSize::Bytes(15'000);
   enough_feedback_2[0].sent_packet.size = DataSize::Bytes(15'000);
@@ -470,16 +474,69 @@ TEST(LossBasedBweV2Test,
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_1, DataRate::PlusInfinity(),
       BandwidthUsage::kBwUnderusing);
+  // If the delay based estimate is infinity, then loss based estimate increases
+  // and not bounded by delay based estimate.
   EXPECT_GT(loss_based_bandwidth_estimator.GetBandwidthEstimate(
                 /*delay_based_limit=*/DataRate::PlusInfinity()),
             DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_2, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal);
+  // If the delay based estimate is not infinity, then loss based estimate is
+  // bounded by delay based estimate.
   EXPECT_EQ(loss_based_bandwidth_estimator.GetBandwidthEstimate(
                 /*delay_based_limit=*/DataRate::KilobitsPerSec(500)),
             DataRate::KilobitsPerSec(500));
 }
 
+// When loss based bwe receives a strong signal of overusing and an increase in
+// loss rate, it should acked bitrate for emegency backoff.
+TEST(LossBasedBweV2Test, UseAckedBitrateForEmegencyBackOff) {
+  PacketResult enough_feedback_1[2];
+  PacketResult enough_feedback_2[2];
+  // Create two packet results, first packet has 50% loss rate, second packet
+  // has 100% loss rate.
+  enough_feedback_1[0].sent_packet.size = DataSize::Bytes(15'000);
+  enough_feedback_1[1].sent_packet.size = DataSize::Bytes(15'000);
+  enough_feedback_2[0].sent_packet.size = DataSize::Bytes(15'000);
+  enough_feedback_2[1].sent_packet.size = DataSize::Bytes(15'000);
+  enough_feedback_1[0].sent_packet.send_time = Timestamp::Zero();
+  enough_feedback_1[1].sent_packet.send_time =
+      Timestamp::Zero() + kObservationDurationLowerBound;
+  enough_feedback_2[0].sent_packet.send_time =
+      Timestamp::Zero() + 2 * kObservationDurationLowerBound;
+  enough_feedback_2[1].sent_packet.send_time =
+      Timestamp::Zero() + 3 * kObservationDurationLowerBound;
+  enough_feedback_1[0].receive_time = Timestamp::PlusInfinity();
+  enough_feedback_1[1].receive_time =
+      Timestamp::Zero() + 2 * kObservationDurationLowerBound;
+  enough_feedback_2[0].receive_time = Timestamp::PlusInfinity();
+  enough_feedback_2[1].receive_time = Timestamp::PlusInfinity();
+
+  ExplicitKeyValueConfig key_value_config(
+      Config(/*enabled=*/true, /*valid=*/true));
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(600));
+  DataRate acked_bitrate = DataRate::KilobitsPerSec(300);
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(acked_bitrate);
+  // Update estimate when network is overusing, and 50% loss rate.
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_1, DataRate::PlusInfinity(),
+      BandwidthUsage::kBwOverusing);
+  // Update estimate again when network is continuously overusing, and 100%
+  // loss rate.
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_2, DataRate::PlusInfinity(),
+      BandwidthUsage::kBwOverusing);
+  // The estimate bitrate now is backed off based on acked bitrate.
+  EXPECT_LE(loss_based_bandwidth_estimator.GetBandwidthEstimate(
+                /*delay_based_limit=*/DataRate::PlusInfinity()),
+            acked_bitrate);
+}
+
+// When network is in normal state, and if the acked bitrate is small, then the
+// loss based estimate is higher than the acked bitrate.
 TEST(LossBasedBweV2Test, NotUseAckedBitrateInNormalState) {
   PacketResult enough_feedback_1[2];
   PacketResult enough_feedback_2[2];
@@ -525,5 +582,4 @@ TEST(LossBasedBweV2Test, NotUseAckedBitrateInNormalState) {
 }
 
 }  // namespace
-
 }  // namespace webrtc
