@@ -8261,8 +8261,8 @@ function RecentSavesContainer({
         raw_image_src: recentSave.top_image_url,
         word_count: recentSave.word_count,
         time_to_read: recentSave.time_to_read,
-        title: recentSave.resolved_title,
-        url: recentSave.resolved_url,
+        title: recentSave.resolved_title || recentSave.given_title,
+        url: recentSave.resolved_url || recentSave.given_url,
         domain: (_recentSave$domain_me = recentSave.domain_metadata) === null || _recentSave$domain_me === void 0 ? void 0 : _recentSave$domain_me.name,
         excerpt: recentSave.excerpt
       }, index));
