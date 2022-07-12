@@ -21,7 +21,7 @@
   },
   "AppRTCMobile_test_apk": {
     "label": "//examples:AppRTCMobile_test_apk",
-    "type": "additional_compile_target",
+    "type": "console_test_launcher",
   },
   "android_junit_tests": {
     "label": "//:android_junit_tests",
@@ -37,7 +37,7 @@
   },
   "apprtcmobile_tests": {
     "label": "//examples:apprtcmobile_tests",
-    "type": "raw",
+    "type": "console_test_launcher",
   },
   "audio_decoder_unittests": {
     "label": "//modules/audio_coding:audio_decoder_unittests",
@@ -57,7 +57,7 @@
   },
   "android_instrumentation_test_apk": {
     "label": "//sdk/android:android_instrumentation_test_apk",
-    "type": "additional_compile_target",
+    "type": "console_test_launcher",
   },
   "low_bandwidth_audio_test": {
     "label": "//audio:low_bandwidth_audio_test",
@@ -104,11 +104,11 @@
   },
   "sdk_framework_unittests": {
     "label": "//sdk:sdk_framework_unittests",
-    "type": "raw",
+    "type": "console_test_launcher",
   },
   "sdk_unittests": {
     "label": "//sdk:sdk_unittests",
-    "type": "raw",
+    "type": "console_test_launcher",
   },
   "system_wrappers_unittests": {
     "label": "//system_wrappers:system_wrappers_unittests",
