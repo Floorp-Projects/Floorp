@@ -5,9 +5,9 @@
  * Tests of queries on common referrer snapshots (i.e. those with a referrer common to the context url's interactions)
  */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
-  PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.sys.mjs",
+  PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
 });
 
 /**

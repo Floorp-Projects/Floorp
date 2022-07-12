@@ -5,8 +5,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.sys.mjs",
 });
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");

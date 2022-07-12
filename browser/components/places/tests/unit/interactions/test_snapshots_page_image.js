@@ -4,8 +4,8 @@
 /**
  * Tests that adding a snapshot also adds related page data.
  */
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
 });
 
 const TEST_URL1 = "https://example.com/";
