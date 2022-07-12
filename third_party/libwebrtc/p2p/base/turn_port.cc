@@ -215,7 +215,7 @@ class TurnEntry : public sigslot::has_slots<> {
 
 TurnPort::TurnPort(rtc::Thread* thread,
                    rtc::PacketSocketFactory* factory,
-                   rtc::Network* network,
+                   const rtc::Network* network,
                    rtc::AsyncPacketSocket* socket,
                    const std::string& username,
                    const std::string& password,
@@ -248,7 +248,7 @@ TurnPort::TurnPort(rtc::Thread* thread,
 
 TurnPort::TurnPort(rtc::Thread* thread,
                    rtc::PacketSocketFactory* factory,
-                   rtc::Network* network,
+                   const rtc::Network* network,
                    uint16_t min_port,
                    uint16_t max_port,
                    const std::string& username,

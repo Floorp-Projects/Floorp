@@ -88,16 +88,18 @@ int ComparePort(const cricket::Port* a, const cricket::Port* b) {
 }
 
 struct NetworkFilter {
-  using Predicate = std::function<bool(rtc::Network*)>;
+  using Predicate = std::function<bool(const rtc::Network*)>;
   NetworkFilter(Predicate pred, const std::string& description)
-      : predRemain([pred](rtc::Network* network) { return !pred(network); }),
+      : predRemain(
+            [pred](const rtc::Network* network) { return !pred(network); }),
         description(description) {}
   Predicate predRemain;
   const std::string description;
 };
 
 using NetworkList = rtc::NetworkManager::NetworkList;
-void FilterNetworks(NetworkList* networks, NetworkFilter filter) {
+void FilterNetworks(std::vector<const rtc::Network*>* networks,
+                    NetworkFilter filter) {
   auto start_to_remove =
       std::partition(networks->begin(), networks->end(), filter.predRemain);
   if (start_to_remove == networks->end()) {
@@ -432,11 +434,11 @@ bool BasicPortAllocatorSession::IsStopped() const {
   return state_ == SessionState::STOPPED;
 }
 
-std::vector<rtc::Network*> BasicPortAllocatorSession::GetFailedNetworks() {
+std::vector<const rtc::Network*>
+BasicPortAllocatorSession::GetFailedNetworks() {
   RTC_DCHECK_RUN_ON(network_thread_);
 
-  std::vector<rtc::Network*> networks = GetNetworks();
-
+  std::vector<const rtc::Network*> networks = GetNetworks();
   // A network interface may have both IPv4 and IPv6 networks. Only if
   // neither of the networks has any connections, the network interface
   // is considered failed and need to be regathered on.
@@ -450,7 +452,7 @@ std::vector<rtc::Network*> BasicPortAllocatorSession::GetFailedNetworks() {
 
   networks.erase(
       std::remove_if(networks.begin(), networks.end(),
-                     [networks_with_connection](rtc::Network* network) {
+                     [networks_with_connection](const rtc::Network* network) {
                        // If a network does not have any connection, it is
                        // considered failed.
                        return networks_with_connection.find(network->name()) !=
@@ -464,7 +466,7 @@ void BasicPortAllocatorSession::RegatherOnFailedNetworks() {
   RTC_DCHECK_RUN_ON(network_thread_);
 
   // Find the list of networks that have no connection.
-  std::vector<rtc::Network*> failed_networks = GetFailedNetworks();
+  std::vector<const rtc::Network*> failed_networks = GetFailedNetworks();
   if (failed_networks.empty()) {
     return;
   }
@@ -487,7 +489,7 @@ void BasicPortAllocatorSession::RegatherOnFailedNetworks() {
 }
 
 void BasicPortAllocatorSession::Regather(
-    const std::vector<rtc::Network*>& networks,
+    const std::vector<const rtc::Network*>& networks,
     bool disable_equivalent_phases,
     IceRegatheringReason reason) {
   RTC_DCHECK_RUN_ON(network_thread_);
@@ -696,9 +698,9 @@ void BasicPortAllocatorSession::OnAllocate(int allocation_epoch) {
   allocation_started_ = true;
 }
 
-std::vector<rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
+std::vector<const rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
   RTC_DCHECK_RUN_ON(network_thread_);
-  std::vector<rtc::Network*> networks;
+  std::vector<const rtc::Network*> networks;
   rtc::NetworkManager* network_manager = allocator_->network_manager();
   RTC_DCHECK(network_manager != nullptr);
   // If the network permission state is BLOCKED, we just act as if the flag has
@@ -712,35 +714,41 @@ std::vector<rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
   // traffic by OS is also used here to avoid any local or public IP leakage
   // during stun process.
   if (flags() & PORTALLOCATOR_DISABLE_ADAPTER_ENUMERATION) {
-    network_manager->GetAnyAddressNetworks(&networks);
+    networks = network_manager->GetAnyAddressNetworks();
   } else {
-    network_manager->GetNetworks(&networks);
+    networks = network_manager->GetNetworks();
     // If network enumeration fails, use the ANY address as a fallback, so we
     // can at least try gathering candidates using the default route chosen by
     // the OS. Or, if the PORTALLOCATOR_ENABLE_ANY_ADDRESS_PORTS flag is
     // set, we'll use ANY address candidates either way.
-    if (networks.empty() || flags() & PORTALLOCATOR_ENABLE_ANY_ADDRESS_PORTS) {
-      network_manager->GetAnyAddressNetworks(&networks);
+    if (networks.empty() ||
+        (flags() & PORTALLOCATOR_ENABLE_ANY_ADDRESS_PORTS)) {
+      std::vector<const rtc::Network*> any_address_networks =
+          network_manager->GetAnyAddressNetworks();
+      networks.insert(networks.end(), any_address_networks.begin(),
+                      any_address_networks.end());
     }
   }
   // Filter out link-local networks if needed.
   if (flags() & PORTALLOCATOR_DISABLE_LINK_LOCAL_NETWORKS) {
     NetworkFilter link_local_filter(
-        [](rtc::Network* network) { return IPIsLinkLocal(network->prefix()); },
+        [](const rtc::Network* network) {
+          return IPIsLinkLocal(network->prefix());
+        },
         "link-local");
     FilterNetworks(&networks, link_local_filter);
   }
   // Do some more filtering, depending on the network ignore mask and "disable
   // costly networks" flag.
   NetworkFilter ignored_filter(
-      [this](rtc::Network* network) {
+      [this](const rtc::Network* network) {
         return allocator_->GetNetworkIgnoreMask() & network->type();
       },
       "ignored");
   FilterNetworks(&networks, ignored_filter);
   if (flags() & PORTALLOCATOR_DISABLE_COSTLY_NETWORKS) {
     uint16_t lowest_cost = rtc::kNetworkCostMax;
-    for (rtc::Network* network : networks) {
+    for (const rtc::Network* network : networks) {
       // Don't determine the lowest cost from a link-local network.
       // On iOS, a device connected to the computer will get a link-local
       // network for communicating with the computer, however this network can't
@@ -751,7 +759,7 @@ std::vector<rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
       lowest_cost = std::min<uint16_t>(lowest_cost, network->GetCost());
     }
     NetworkFilter costly_filter(
-        [lowest_cost](rtc::Network* network) {
+        [lowest_cost](const rtc::Network* network) {
           return network->GetCost() > lowest_cost + rtc::kNetworkCostLow;
         },
         "costly");
@@ -786,7 +794,7 @@ std::vector<rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
 void BasicPortAllocatorSession::DoAllocate(bool disable_equivalent) {
   RTC_DCHECK_RUN_ON(network_thread_);
   bool done_signal_needed = false;
-  std::vector<rtc::Network*> networks = GetNetworks();
+  std::vector<const rtc::Network*> networks = GetNetworks();
   if (networks.empty()) {
     RTC_LOG(LS_WARNING)
         << "Machine has no networks; no ports will be allocated";
@@ -853,8 +861,8 @@ void BasicPortAllocatorSession::DoAllocate(bool disable_equivalent) {
 
 void BasicPortAllocatorSession::OnNetworksChanged() {
   RTC_DCHECK_RUN_ON(network_thread_);
-  std::vector<rtc::Network*> networks = GetNetworks();
-  std::vector<rtc::Network*> failed_networks;
+  std::vector<const rtc::Network*> networks = GetNetworks();
+  std::vector<const rtc::Network*> failed_networks;
   for (AllocationSequence* sequence : sequences_) {
     // Mark the sequence as "network failed" if its network is not in
     // `networks`.
@@ -887,7 +895,7 @@ void BasicPortAllocatorSession::OnNetworksChanged() {
 }
 
 void BasicPortAllocatorSession::DisableEquivalentPhases(
-    rtc::Network* network,
+    const rtc::Network* network,
     PortConfiguration* config,
     uint32_t* flags) {
   RTC_DCHECK_RUN_ON(network_thread_);
@@ -1200,7 +1208,7 @@ BasicPortAllocatorSession::PortData* BasicPortAllocatorSession::FindPort(
 
 std::vector<BasicPortAllocatorSession::PortData*>
 BasicPortAllocatorSession::GetUnprunedPorts(
-    const std::vector<rtc::Network*>& networks) {
+    const std::vector<const rtc::Network*>& networks) {
   RTC_DCHECK_RUN_ON(network_thread_);
   std::vector<PortData*> unpruned_ports;
   for (PortData& port : ports_) {
@@ -1247,7 +1255,7 @@ void BasicPortAllocator::SetVpnList(
 
 AllocationSequence::AllocationSequence(
     BasicPortAllocatorSession* session,
-    rtc::Network* network,
+    const rtc::Network* network,
     PortConfiguration* config,
     uint32_t flags,
     std::function<void()> port_allocation_complete_callback)
@@ -1289,7 +1297,7 @@ void AllocationSequence::OnNetworkFailed() {
   Stop();
 }
 
-void AllocationSequence::DisableEquivalentPhases(rtc::Network* network,
+void AllocationSequence::DisableEquivalentPhases(const rtc::Network* network,
                                                  PortConfiguration* config,
                                                  uint32_t* flags) {
   if (network_failed_) {

@@ -38,7 +38,7 @@ struct RelayServerConfig;
 struct CreateRelayPortArgs {
   rtc::Thread* network_thread;
   rtc::PacketSocketFactory* socket_factory;
-  rtc::Network* network;
+  const rtc::Network* network;
   const ProtocolAddress* server_address;
   const RelayServerConfig* config;
   std::string username;

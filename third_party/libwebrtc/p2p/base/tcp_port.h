@@ -36,7 +36,7 @@ class TCPPort : public Port {
  public:
   static std::unique_ptr<TCPPort> Create(rtc::Thread* thread,
                                          rtc::PacketSocketFactory* factory,
-                                         rtc::Network* network,
+                                         const rtc::Network* network,
                                          uint16_t min_port,
                                          uint16_t max_port,
                                          const std::string& username,
@@ -66,7 +66,7 @@ class TCPPort : public Port {
  protected:
   TCPPort(rtc::Thread* thread,
           rtc::PacketSocketFactory* factory,
-          rtc::Network* network,
+          const rtc::Network* network,
           uint16_t min_port,
           uint16_t max_port,
           const std::string& username,

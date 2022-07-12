@@ -86,7 +86,7 @@ namespace cricket {
 
 TCPPort::TCPPort(rtc::Thread* thread,
                  rtc::PacketSocketFactory* factory,
-                 rtc::Network* network,
+                 const rtc::Network* network,
                  uint16_t min_port,
                  uint16_t max_port,
                  const std::string& username,

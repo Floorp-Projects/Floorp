@@ -108,7 +108,7 @@ std::string Port::ComputeFoundation(const std::string& type,
 Port::Port(rtc::Thread* thread,
            const std::string& type,
            rtc::PacketSocketFactory* factory,
-           rtc::Network* network,
+           const rtc::Network* network,
            const std::string& username_fragment,
            const std::string& password)
     : thread_(thread),
@@ -135,7 +135,7 @@ Port::Port(rtc::Thread* thread,
 Port::Port(rtc::Thread* thread,
            const std::string& type,
            rtc::PacketSocketFactory* factory,
-           rtc::Network* network,
+           const rtc::Network* network,
            uint16_t min_port,
            uint16_t max_port,
            const std::string& username_fragment,
@@ -203,7 +203,7 @@ Port::~Port() {
 const std::string& Port::Type() const {
   return type_;
 }
-rtc::Network* Port::Network() const {
+const rtc::Network* Port::Network() const {
   return network_;
 }
 

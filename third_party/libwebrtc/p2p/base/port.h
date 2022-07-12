@@ -183,13 +183,13 @@ class Port : public PortInterface,
   Port(rtc::Thread* thread,
        const std::string& type,
        rtc::PacketSocketFactory* factory,
-       rtc::Network* network,
+       const rtc::Network* network,
        const std::string& username_fragment,
        const std::string& password);
   Port(rtc::Thread* thread,
        const std::string& type,
        rtc::PacketSocketFactory* factory,
-       rtc::Network* network,
+       const rtc::Network* network,
        uint16_t min_port,
        uint16_t max_port,
        const std::string& username_fragment,
@@ -202,7 +202,7 @@ class Port : public PortInterface,
   // conflit in the value of the 2-tuple, make sure that the implementation that
   // relies on this 2-tuple for RTTI is properly changed.
   const std::string& Type() const override;
-  rtc::Network* Network() const override;
+  const rtc::Network* Network() const override;
 
   // Methods to set/get ICE role and tiebreaker values.
   IceRole GetIceRole() const override;
@@ -457,7 +457,7 @@ class Port : public PortInterface,
   rtc::PacketSocketFactory* const factory_;
   std::string type_;
   bool send_retransmit_count_attribute_;
-  rtc::Network* network_;
+  const rtc::Network* network_;
   uint16_t min_port_;
   uint16_t max_port_;
   std::string content_name_;

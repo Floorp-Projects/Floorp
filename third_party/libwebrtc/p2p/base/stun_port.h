@@ -35,7 +35,7 @@ class UDPPort : public Port {
   static std::unique_ptr<UDPPort> Create(
       rtc::Thread* thread,
       rtc::PacketSocketFactory* factory,
-      rtc::Network* network,
+      const rtc::Network* network,
       rtc::AsyncPacketSocket* socket,
       const std::string& username,
       const std::string& password,
@@ -55,7 +55,7 @@ class UDPPort : public Port {
   static std::unique_ptr<UDPPort> Create(
       rtc::Thread* thread,
       rtc::PacketSocketFactory* factory,
-      rtc::Network* network,
+      const rtc::Network* network,
       uint16_t min_port,
       uint16_t max_port,
       const std::string& username,
@@ -119,7 +119,7 @@ class UDPPort : public Port {
  protected:
   UDPPort(rtc::Thread* thread,
           rtc::PacketSocketFactory* factory,
-          rtc::Network* network,
+          const rtc::Network* network,
           uint16_t min_port,
           uint16_t max_port,
           const std::string& username,
@@ -128,7 +128,7 @@ class UDPPort : public Port {
 
   UDPPort(rtc::Thread* thread,
           rtc::PacketSocketFactory* factory,
-          rtc::Network* network,
+          const rtc::Network* network,
           rtc::AsyncPacketSocket* socket,
           const std::string& username,
           const std::string& password,
@@ -264,7 +264,7 @@ class StunPort : public UDPPort {
   static std::unique_ptr<StunPort> Create(
       rtc::Thread* thread,
       rtc::PacketSocketFactory* factory,
-      rtc::Network* network,
+      const rtc::Network* network,
       uint16_t min_port,
       uint16_t max_port,
       const std::string& username,
@@ -277,7 +277,7 @@ class StunPort : public UDPPort {
  protected:
   StunPort(rtc::Thread* thread,
            rtc::PacketSocketFactory* factory,
-           rtc::Network* network,
+           const rtc::Network* network,
            uint16_t min_port,
            uint16_t max_port,
            const std::string& username,

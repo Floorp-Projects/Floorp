@@ -153,7 +153,7 @@ bool UDPPort::AddressResolver::GetResolvedAddress(
 
 UDPPort::UDPPort(rtc::Thread* thread,
                  rtc::PacketSocketFactory* factory,
-                 rtc::Network* network,
+                 const rtc::Network* network,
                  rtc::AsyncPacketSocket* socket,
                  const std::string& username,
                  const std::string& password,
@@ -169,7 +169,7 @@ UDPPort::UDPPort(rtc::Thread* thread,
 
 UDPPort::UDPPort(rtc::Thread* thread,
                  rtc::PacketSocketFactory* factory,
-                 rtc::Network* network,
+                 const rtc::Network* network,
                  uint16_t min_port,
                  uint16_t max_port,
                  const std::string& username,
@@ -599,7 +599,7 @@ bool UDPPort::HasCandidateWithAddress(const rtc::SocketAddress& addr) const {
 std::unique_ptr<StunPort> StunPort::Create(
     rtc::Thread* thread,
     rtc::PacketSocketFactory* factory,
-    rtc::Network* network,
+    const rtc::Network* network,
     uint16_t min_port,
     uint16_t max_port,
     const std::string& username,
@@ -619,7 +619,7 @@ std::unique_ptr<StunPort> StunPort::Create(
 
 StunPort::StunPort(rtc::Thread* thread,
                    rtc::PacketSocketFactory* factory,
-                   rtc::Network* network,
+                   const rtc::Network* network,
                    uint16_t min_port,
                    uint16_t max_port,
                    const std::string& username,

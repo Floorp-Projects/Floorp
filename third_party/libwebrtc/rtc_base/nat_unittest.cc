@@ -228,7 +228,7 @@ void TestPhysicalInternal(const SocketAddress& int_addr) {
   std::vector<Network*> networks;
   network_manager.GetNetworks(&networks);
   networks.erase(std::remove_if(networks.begin(), networks.end(),
-                                [](rtc::Network* network) {
+                                [](const rtc::Network* network) {
                                   return rtc::kDefaultNetworkIgnoreMask &
                                          network->type();
                                 }),
