@@ -53,9 +53,6 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
   frame->SetSpatialIndex(codec_header.spatial_idx);
   frame->SetId(codec_header.picture_id & (kFrameIdLength - 1));
 
-  if (last_picture_id_ == -1)
-    last_picture_id_ = frame->Id();
-
   if (codec_header.flexible_mode) {
     if (codec_header.num_ref_pics > EncodedFrame::kMaxFrameReferences) {
       return kDrop;
