@@ -56,7 +56,7 @@ struct CatchInfo {
   explicit CatchInfo(uint32_t tagIndex_) : tagIndex(tagIndex_) {}
 };
 
-using CatchInfoVector = Vector<CatchInfo, 0, SystemAllocPolicy>;
+using CatchInfoVector = Vector<CatchInfo, 1, SystemAllocPolicy>;
 
 // Control node, representing labels and stack heights at join points.
 struct Control {
