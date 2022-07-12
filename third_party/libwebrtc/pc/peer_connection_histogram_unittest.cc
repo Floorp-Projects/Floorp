@@ -75,10 +75,10 @@ int MakeUsageFingerprint(std::set<UsageEvent> events) {
 }
 
 class PeerConnectionFactoryForUsageHistogramTest
-    : public rtc::RefCountedObject<PeerConnectionFactory> {
+    : public PeerConnectionFactory {
  public:
   PeerConnectionFactoryForUsageHistogramTest()
-      : rtc::RefCountedObject<PeerConnectionFactory>([] {
+      : PeerConnectionFactory([] {
           PeerConnectionFactoryDependencies dependencies;
           dependencies.network_thread = rtc::Thread::Current();
           dependencies.worker_thread = rtc::Thread::Current();
@@ -330,8 +330,8 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
       const RTCConfiguration& config,
       const PeerConnectionFactoryInterface::Options factory_options,
       PeerConnectionDependencies deps) {
-    rtc::scoped_refptr<PeerConnectionFactoryForUsageHistogramTest> pc_factory(
-        new PeerConnectionFactoryForUsageHistogramTest());
+    auto pc_factory =
+        rtc::make_ref_counted<PeerConnectionFactoryForUsageHistogramTest>();
     pc_factory->SetOptions(factory_options);
 
     // If no allocator is provided, one will be created using a network manager
