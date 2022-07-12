@@ -233,6 +233,7 @@ browsertime-benchmark:
                     default: []
     max-run-time:
         by-subtest:
+            ares6: 1500
             assorted-dom:
                 by-test-platform:
                     .*-qr/.*: 2100
