@@ -7,6 +7,7 @@ const { BookmarkHTMLUtils } = ChromeUtils.import(
 const { BookmarkJSONUtils } = ChromeUtils.import(
   "resource://gre/modules/BookmarkJSONUtils.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const {
   Bookmark,
   BookmarkFolder,
@@ -471,8 +472,8 @@ async function test_restoreOrImport(engine, { replace }) {
     });
     _(`Get Firefox!: ${bmk1.guid}`);
 
-    let backupFilePath = PathUtils.join(
-      PathUtils.tempDir,
+    let backupFilePath = OS.Path.join(
+      OS.Constants.Path.tmpDir,
       `t_b_e_${Date.now()}.json`
     );
 
