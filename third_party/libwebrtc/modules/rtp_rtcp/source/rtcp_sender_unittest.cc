@@ -252,11 +252,18 @@ TEST_F(RtcpSenderTest, DoNotSendCompundBeforeRtp) {
 
 TEST_F(RtcpSenderTest, SendRr) {
   auto rtcp_sender = CreateRtcpSender(GetDefaultConfig());
-  rtcp_sender->SetRTCPStatus(RtcpMode::kReducedSize);
+  rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
   EXPECT_EQ(0, rtcp_sender->SendRTCP(feedback_state(), kRtcpRr));
   EXPECT_EQ(1, parser()->receiver_report()->num_packets());
   EXPECT_EQ(kSenderSsrc, parser()->receiver_report()->sender_ssrc());
   EXPECT_EQ(0U, parser()->receiver_report()->report_blocks().size());
+}
+
+TEST_F(RtcpSenderTest, DoesntSendEmptyRrInReducedSizeMode) {
+  auto rtcp_sender = CreateRtcpSender(GetDefaultConfig());
+  rtcp_sender->SetRTCPStatus(RtcpMode::kReducedSize);
+  rtcp_sender->SendRTCP(feedback_state(), kRtcpRr);
+  EXPECT_EQ(parser()->receiver_report()->num_packets(), 0);
 }
 
 TEST_F(RtcpSenderTest, SendRrWithOneReportBlock) {
@@ -415,7 +422,7 @@ TEST_F(RtcpSenderTest, SendLossNotificationBufferingAllowed) {
 
 TEST_F(RtcpSenderTest, RembNotIncludedBeforeSet) {
   auto rtcp_sender = CreateRtcpSender(GetDefaultConfig());
-  rtcp_sender->SetRTCPStatus(RtcpMode::kReducedSize);
+  rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
 
   rtcp_sender->SendRTCP(feedback_state(), kRtcpRr);
 
@@ -427,7 +434,7 @@ TEST_F(RtcpSenderTest, RembNotIncludedAfterUnset) {
   const int64_t kBitrate = 261011;
   const std::vector<uint32_t> kSsrcs = {kRemoteSsrc, kRemoteSsrc + 1};
   auto rtcp_sender = CreateRtcpSender(GetDefaultConfig());
-  rtcp_sender->SetRTCPStatus(RtcpMode::kReducedSize);
+  rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
   rtcp_sender->SetRemb(kBitrate, kSsrcs);
   rtcp_sender->SendRTCP(feedback_state(), kRtcpRr);
   ASSERT_EQ(1, parser()->receiver_report()->num_packets());
