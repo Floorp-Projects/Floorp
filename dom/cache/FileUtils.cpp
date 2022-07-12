@@ -24,8 +24,11 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
+#include "snappy/snappy.h"
 
 namespace mozilla::dom::cache {
+
+static_assert(SNAPPY_VERSION == 0x010109);
 
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::CloneFileAndAppend;
