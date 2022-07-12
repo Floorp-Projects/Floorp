@@ -157,8 +157,6 @@ rtc_source_set("video_legacy") {
     "call_stats.h",
     "receive_statistics_proxy.cc",
     "receive_statistics_proxy.h",
-    "rtp_streams_synchronizer.cc",
-    "rtp_streams_synchronizer.h",
     "rtp_video_stream_receiver.cc",
     "rtp_video_stream_receiver.h",
     "video_quality_observer.cc",
