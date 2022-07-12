@@ -97,8 +97,6 @@ class FakeTimeoutManager {
     return absl::nullopt;
   }
 
-  void Reset() { timers_.clear(); }
-
  private:
   const std::function<TimeMs()> get_time_;
   webrtc::flat_set<FakeTimeout*> timers_;
