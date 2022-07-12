@@ -9385,6 +9385,11 @@
   value: false
   mirror: always
 
+- name: media.hardware-video-decoding.enabled
+  type: bool
+  value: true
+  mirror: once
+
 - name: media.hardware-video-decoding.force-enabled
   type: bool
   value: false
