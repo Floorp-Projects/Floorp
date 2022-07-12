@@ -26,6 +26,8 @@ const SUPPORTED_OPTIONS = {
   cacheDisabled: true,
   // Enable color scheme simulation.
   colorSchemeSimulation: true,
+  // Enable custom formatters
+  customFormatters: true,
   // Set a custom user agent
   customUserAgent: true,
   // Enable JavaScript
