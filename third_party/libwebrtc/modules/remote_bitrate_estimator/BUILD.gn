@@ -122,6 +122,7 @@ if (rtc_include_tests) {
       "../../api/transport:field_trial_based_config",
       "../../api/transport:mock_network_control",
       "../../api/transport:network_control",
+      "../../api/units:data_rate",
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:rtc_base_approved",
