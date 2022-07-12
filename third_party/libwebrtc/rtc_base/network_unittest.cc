@@ -1058,8 +1058,8 @@ TEST_F(NetworkTest, TestMergeNetworkList) {
   // IPAddresses.
   EXPECT_EQ(list2.size(), 1uL);
   EXPECT_EQ(list2[0]->GetIPs().size(), 2uL);
-  EXPECT_EQ(list2[0]->GetIPs()[0], InterfaceAddress(ip1));
-  EXPECT_EQ(list2[0]->GetIPs()[1], InterfaceAddress(ip2));
+  EXPECT_THAT(list2[0]->GetIPs(), UnorderedElementsAre(InterfaceAddress(ip1),
+                                                       InterfaceAddress(ip2)));
 }
 
 // Test that MergeNetworkList successfully detects the change if
