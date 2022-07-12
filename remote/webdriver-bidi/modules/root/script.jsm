@@ -127,7 +127,7 @@ class ScriptModule extends Module {
    *
    * @param {Object=} options
    * @param {Array<RemoteValue>=} arguments
-   *     The arguments to pass to the function call. [unsupported]
+   *     The arguments to pass to the function call.
    * @param {boolean} awaitPromise
    *     Determines if the command should wait for the return value of the
    *     expression to resolve, if this return value is a Promise.
@@ -177,9 +177,6 @@ class ScriptModule extends Module {
       lazy.assert.array(
         commandArguments,
         `Expected "arguments" to be an array, got ${commandArguments}`
-      );
-      throw new lazy.error.UnsupportedOperationError(
-        `"arguments" parameter is not supported yet`
       );
     }
 
