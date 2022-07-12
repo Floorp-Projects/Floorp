@@ -25,6 +25,8 @@
 #include "prdtoa.h"
 #include <algorithm>
 #include <stdint.h>
+#include <unistd.h>
+
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/java/GeckoAppShellWrappers.h"
 #endif
@@ -62,7 +64,8 @@
 #define PREF_AUDIOIPC_SHM_AREA_SIZE "media.audioipc.shm_area_size"
 
 #if (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)) || \
-    defined(XP_MACOSX) || (defined(XP_WIN) && !defined(_ARM64_))
+    defined(XP_MACOSX) || defined(XP_FREEBSD) ||           \
+    (defined(XP_WIN) && !defined(_ARM64_))
 #  define MOZ_CUBEB_REMOTING
 #endif
 
