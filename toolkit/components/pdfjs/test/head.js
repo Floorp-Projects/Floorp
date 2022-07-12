@@ -27,6 +27,20 @@ async function waitForPdfJSAnnotationLayer(browser, url) {
   return loadPromise;
 }
 
+async function waitForPdfJSCanvas(browser, url) {
+  let loadPromise = BrowserTestUtils.waitForContentEvent(
+    browser,
+    "pagerendered",
+    false,
+    null,
+    true
+  );
+  await SpecialPowers.spawn(browser, [url], contentUrl => {
+    content.location = contentUrl;
+  });
+  return loadPromise;
+}
+
 async function waitForPdfJSSandbox(browser) {
   let loadPromise = BrowserTestUtils.waitForContentEvent(
     browser,
