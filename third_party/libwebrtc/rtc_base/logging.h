@@ -80,9 +80,7 @@
 namespace rtc {
 
 //////////////////////////////////////////////////////////////////////
-
-// Note that the non-standard LoggingSeverity aliases exist because they are
-// still in broad use.  The meanings of the levels are:
+// The meanings of the levels are:
 //  LS_VERBOSE: This level is for data which we do not want to appear in the
 //   normal debug log, but should appear in diagnostic logs.
 //  LS_INFO: Chatty level used in debugging for all sorts of things, the default
