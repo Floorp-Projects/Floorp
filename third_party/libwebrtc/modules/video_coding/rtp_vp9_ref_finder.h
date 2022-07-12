@@ -60,10 +60,6 @@ class RtpVp9RefFinder {
 
   void FlattenFrameIdAndRefs(RtpFrameObject* frame, bool inter_layer_predicted);
 
-  // Save the last picture id in order to detect when there is a gap in frames
-  // that have not yet been fully received.
-  int last_picture_id_ = -1;
-
   // Frames that have been fully received but didn't have all the information
   // needed to determine their references.
   std::deque<std::unique_ptr<RtpFrameObject>> stashed_frames_;
