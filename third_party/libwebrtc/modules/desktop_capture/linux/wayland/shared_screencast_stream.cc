@@ -819,6 +819,9 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
       tmp_src += queue_.current_frame()->stride();
     }
   }
+
+  queue_.current_frame()->mutable_updated_region()->SetRect(
+      DesktopRect::MakeSize(queue_.current_frame()->size()));
 }
 
 void SharedScreenCastStreamPrivate::ConvertRGBxToBGRx(uint8_t* frame,
