@@ -14,6 +14,11 @@ WebDriver BiDi (`1`), and CDP (`2`). Multiple protocols can be activated
 at the same time by using bitwise or with the values. Defaults to `3` (WebDriver
 BiDi and CDP).
 
+### `remote.experimental.enabled`
+
+Defines if WebDriver BiDi experimental commands and events are available for usage.
+Defaults to `true` in Nightly builds, and `false` otherwise.
+
 ### `remote.log.level`
 
 Defines the verbosity of the internal logger.  Available levels

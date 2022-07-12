@@ -4241,6 +4241,13 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   // 3: WebDriver BiDi + CDP
   pref("remote.active-protocols", 3);
 
+  // Enable WebDriver BiDi experimental commands and events.
+  #if defined(NIGHTLY_BUILD)
+    pref("remote.experimental.enabled", true);
+  #else
+    pref("remote.experimental.enabled", false);
+  #endif
+
   // Defines the verbosity of the internal logger.
   //
   // Available levels are, in descending order of severity, "Trace", "Debug",
