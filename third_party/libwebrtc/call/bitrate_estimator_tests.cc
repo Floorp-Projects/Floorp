@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "api/test/create_frame_generator.h"
 #include "call/call.h"
 #include "call/fake_network_pipe.h"
@@ -50,13 +51,17 @@ class LogObserver {
   class Callback : public rtc::LogSink {
    public:
     void OnLogMessage(const std::string& message) override {
+      OnLogMessage(absl::string_view(message));
+    }
+
+    void OnLogMessage(absl::string_view message) override {
       MutexLock lock(&mutex_);
       // Ignore log lines that are due to missing AST extensions, these are
       // logged when we switch back from AST to TOF until the wrapping bitrate
       // estimator gives up on using AST.
-      if (message.find("BitrateEstimator") != std::string::npos &&
-          message.find("packet is missing") == std::string::npos) {
-        received_log_lines_.push_back(message);
+      if (message.find("BitrateEstimator") != absl::string_view::npos &&
+          message.find("packet is missing") == absl::string_view::npos) {
+        received_log_lines_.push_back(std::string(message));
       }
 
       int num_popped = 0;
@@ -66,7 +71,7 @@ class LogObserver {
         received_log_lines_.pop_front();
         expected_log_lines_.pop_front();
         num_popped++;
-        EXPECT_TRUE(a.find(b) != std::string::npos) << a << " != " << b;
+        EXPECT_TRUE(a.find(b) != absl::string_view::npos) << a << " != " << b;
       }
       if (expected_log_lines_.empty()) {
         if (num_popped > 0) {

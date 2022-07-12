@@ -1137,6 +1137,8 @@ if (current_os == "linux" || is_android) {
       ":native_api_jni",
       "../../rtc_base",
     ]
+
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
   }
 
   rtc_library("audio_device_module_base") {
@@ -1620,7 +1622,10 @@ if (is_android) {
       "../../test:test_support",
       "../../testing/gtest",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/memory",
+      "//third_party/abseil-cpp/absl/strings",
+    ]
   }
 
   rtc_android_library("native_unittests_java") {

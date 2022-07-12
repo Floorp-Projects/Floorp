@@ -120,6 +120,13 @@ class LogSink {
                             LoggingSeverity severity);
   virtual void OnLogMessage(const std::string& message) = 0;
 
+  virtual void OnLogMessage(absl::string_view msg,
+                            LoggingSeverity severity,
+                            const char* tag);
+  virtual void OnLogMessage(absl::string_view message,
+                            LoggingSeverity severity);
+  virtual void OnLogMessage(absl::string_view message);
+
  private:
   friend class ::rtc::LogMessage;
 #if RTC_LOG_ENABLED()

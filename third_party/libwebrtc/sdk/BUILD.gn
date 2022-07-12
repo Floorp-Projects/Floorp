@@ -151,6 +151,8 @@ if (is_ios || is_mac) {
       "../rtc_base:checks",
     ]
 
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+
     frameworks = [
       "AVFoundation.framework",
       "CoreMedia.framework",
@@ -182,6 +184,7 @@ if (is_ios || is_mac) {
 
       deps = [
         ":base_objc",
+        ":helpers_objc",
         "../rtc_base",
         "../rtc_base:checks",
         "../rtc_base:logging",
@@ -191,6 +194,8 @@ if (is_ios || is_mac) {
         "..:common_objc",
         ":used_from_extension",
       ]
+
+      absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
     }
 
     rtc_library("file_logger_objc") {

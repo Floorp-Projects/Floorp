@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/event.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/platform_thread.h"
@@ -201,6 +202,9 @@ class LookoutLogSink final : public rtc::LogSink {
   explicit LookoutLogSink(std::string look_for)
       : look_for_(std::move(look_for)) {}
   void OnLogMessage(const std::string& message) override {
+    OnLogMessage(absl::string_view(message));
+  }
+  void OnLogMessage(absl::string_view message) override {
     if (message.find(look_for_) != std::string::npos) {
       when_found_.Set();
     }
