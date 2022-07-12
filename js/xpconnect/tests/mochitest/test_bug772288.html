@@ -24,19 +24,19 @@ SimpleTest.waitForExplicitFinish();
 const Cu = SpecialPowers.Cu;
 
 function doTest() {
-    msg = "XPCOMUtils should be imported on window";
+    msg = "AppConstants should be imported on window";
     try {
-      Cu.import("resource://gre/modules/XPCOMUtils.jsm", window);
-      ok(XPCOMUtils, msg);
+      Cu.import("resource://gre/modules/AppConstants.jsm", window);
+      ok(AppConstants, msg);
     } catch (ex) {
       ok(false, msg + " : " + ex);
     }
 
-    msg = "XPCOMUtils should be imported on myObj";
+    msg = "AppConstants should be imported on myObj";
     try {
       var myObj = {};
-      Cu.import("resource://gre/modules/XPCOMUtils.jsm", myObj);
-      ok(myObj.XPCOMUtils, msg);
+      Cu.import("resource://gre/modules/AppConstants.jsm", myObj);
+      ok(myObj.AppConstants, msg);
     } catch (ex) {
       ok(false, msg + " : " + ex);
     }
