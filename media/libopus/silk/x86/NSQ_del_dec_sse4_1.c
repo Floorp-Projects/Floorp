@@ -387,6 +387,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
     opus_int32   q1_Q0, q1_Q10, q2_Q10, exc_Q14, LPC_exc_Q14, xq_Q14, Gain_Q10;
     opus_int32   tmp1, tmp2, sLF_AR_shp_Q14;
     opus_int32   *pred_lag_ptr, *shp_lag_ptr, *psLPC_Q14;
+    int rdo_offset;
 
     VARDECL( NSQ_sample_pair, psSampleState );
     NSQ_del_dec_struct *psDD;
@@ -399,7 +400,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
     celt_assert( nStatesDelayedDecision > 0 );
     ALLOC( psSampleState, nStatesDelayedDecision, NSQ_sample_pair );
 
-    int rdo_offset = (Lambda_Q10 >> 1) - 512;
+    rdo_offset = (Lambda_Q10 >> 1) - 512;
 
     shp_lag_ptr  = &NSQ->sLTP_shp_Q14[ NSQ->sLTP_shp_buf_idx - lag + HARM_SHAPE_FIR_TAPS / 2 ];
     pred_lag_ptr = &sLTP_Q15[ NSQ->sLTP_buf_idx - lag + LTP_ORDER / 2 ];
