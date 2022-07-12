@@ -7,3 +7,6 @@ ssilkin@webrtc.org
 magjed@webrtc.org
 xalep@webrtc.org
 per-file ...Audio*.java=henrika@webrtc.org
+
+per-file PRESUBMIT.py=jansson@webrtc.org
+per-file PRESUBMIT.py=jleconte@webrtc.org
