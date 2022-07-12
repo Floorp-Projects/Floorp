@@ -14,6 +14,7 @@ import subprocess
 import time
 import zlib
 
+from typing import Optional
 import dataclasses
 import httplib2
 
@@ -53,7 +54,7 @@ class UploaderOptions():
   build_page_url: str
   dashboard_url: str
   input_results_file: str
-  output_json_file: str
+  output_json_file: Optional[str] = None
   wait_timeout_sec: datetime.timedelta = datetime.timedelta(seconds=1200)
   wait_polling_period_sec: datetime.timedelta = datetime.timedelta(seconds=120)
 
@@ -305,5 +306,5 @@ def UploadToDashboard(options):
     exit_code = UploadToDashboardImpl(options)
   except RuntimeError as e:
     print(e)
-    return 2
+    return 1
   return exit_code
