@@ -12,19 +12,19 @@
 
 #include "modules/video_coding/codecs/av1/libaom_av1_decoder.h"
 #include "modules/video_coding/codecs/av1/libaom_av1_encoder_supported.h"
-#include "sdk/android/generated_libaom_av1_jni/LibaomAv1Decoder_jni.h"
-#include "sdk/android/generated_libaom_av1_jni/LibaomAv1Encoder_jni.h"
+#include "sdk/android/generated_libaom_av1_jni_if_supported/LibaomAv1Decoder_jni.h"
+#include "sdk/android/generated_libaom_av1_jni_if_supported/LibaomAv1EncoderIfSupported_jni.h"
 #include "sdk/android/src/jni/jni_helpers.h"
 
 namespace webrtc {
 namespace jni {
 
-static jlong JNI_LibaomAv1Encoder_CreateEncoder(JNIEnv* jni) {
+static jlong JNI_LibaomAv1EncoderIfSupported_CreateEncoder(JNIEnv* jni) {
   return jlongFromPointer(
       webrtc::CreateLibaomAv1EncoderIfSupported().release());
 }
 
-static jboolean JNI_LibaomAv1Encoder_IsSupported(JNIEnv* jni) {
+static jboolean JNI_LibaomAv1EncoderIfSupported_IsSupported(JNIEnv* jni) {
   return webrtc::kIsLibaomAv1EncoderSupported;
 }
 

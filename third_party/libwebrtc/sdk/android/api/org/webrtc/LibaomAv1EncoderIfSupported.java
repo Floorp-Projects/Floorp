@@ -10,7 +10,7 @@
 
 package org.webrtc;
 
-public class LibaomAv1Encoder extends WrappedNativeVideoEncoder {
+public class LibaomAv1EncoderIfSupported extends WrappedNativeVideoEncoder {
   @Override
   public long createNativeVideoEncoder() {
     return nativeCreateEncoder();
