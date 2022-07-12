@@ -99,7 +99,7 @@ function loadItemProperties(item, client, loadedProperties, threadActorID) {
   }
 
   if (shouldLoadCustomFormatterBody(item, loadedProperties)) {
-    promises.push(getCustomFormatterBody(getObjectFront()));
+    promises.push(getCustomFormatterBody(getObjectFront(), item.contents.value.customFormatterIndex));
   }
 
   return Promise.all(promises).then(mergeResponses);

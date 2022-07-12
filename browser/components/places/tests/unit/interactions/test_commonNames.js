@@ -12,8 +12,8 @@ const TEST_URL6 = "https://maps.google.com/";
  * usually, the site's brand name with correct spacing and capitalization.
  */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
 });
 
 add_task(async function setup() {

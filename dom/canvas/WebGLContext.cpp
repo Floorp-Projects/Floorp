@@ -54,6 +54,9 @@
 #include "prenv.h"
 #include "ScopedGLHelpers.h"
 #include "VRManagerChild.h"
+#include "mozilla/gfx/Swizzle.h"
+#include "mozilla/layers/BufferTexture.h"
+#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
@@ -73,6 +76,7 @@
 #include "WebGLFramebuffer.h"
 #include "WebGLMemoryTracker.h"
 #include "WebGLObjectModel.h"
+#include "WebGLParent.h"
 #include "WebGLProgram.h"
 #include "WebGLQuery.h"
 #include "WebGLSampler.h"
@@ -175,6 +179,12 @@ WebGLContext::WebGLContext(HostWebGLContext& host,
 WebGLContext::~WebGLContext() { DestroyResourcesAndContext(); }
 
 void WebGLContext::DestroyResourcesAndContext() {
+  if (mRemoteTextureOwner) {
+    // Clean up any remote textures registered for framebuffer swap chains.
+    mRemoteTextureOwner->UnregisterAllTextureOwners();
+    mRemoteTextureOwner = nullptr;
+  }
+
   if (!gl) return;
 
   mDefaultFB = nullptr;
@@ -1003,17 +1013,14 @@ void InitSwapChain(gl::GLContext& gl, gl::SwapChain& swapChain,
 
 void WebGLContext::Present(WebGLFramebuffer* const xrFb,
                            const layers::TextureType consumerType,
-                           const bool webvr) {
+                           const bool webvr,
+                           const webgl::SwapChainOptions& options) {
   const FuncScope funcScope(*this, "<Present>");
   if (IsContextLost()) return;
 
-  auto swapChain = webvr ? &mWebVRSwapChain : &mSwapChain;
-  if (xrFb) {
-    swapChain = &xrFb->mSwapChain;
-  }
+  auto swapChain = GetSwapChain(xrFb, webvr);
   const gl::MozFramebuffer* maybeFB = nullptr;
   if (xrFb) {
-    swapChain = &xrFb->mSwapChain;
     maybeFB = xrFb->mOpaque.get();
   } else {
     mResolvedDefaultFB = nullptr;
@@ -1021,10 +1028,16 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
 
   InitSwapChain(*gl, *swapChain, consumerType);
 
-  if (maybeFB) {
-    (void)PresentIntoXR(*swapChain, *maybeFB);
-  } else {
-    (void)PresentInto(*swapChain);
+  bool valid =
+      maybeFB ? PresentIntoXR(*swapChain, *maybeFB) : PresentInto(*swapChain);
+  if (!valid) {
+    return;
+  }
+
+  bool useAsync = options.remoteTextureOwnerId.IsValid() &&
+                  options.remoteTextureId.IsValid();
+  if (useAsync) {
+    PushRemoteTexture(nullptr, *swapChain, swapChain->FrontBuffer(), options);
   }
 }
 
@@ -1045,6 +1058,18 @@ void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
 
   InitSwapChain(*gl, srcFb->mSwapChain, consumerType);
 
+  bool useAsync = options.remoteTextureOwnerId.IsValid() &&
+                  options.remoteTextureId.IsValid();
+  // If we're using async present and if there is no way to serialize surfaces,
+  // then a readback is required to do the copy. In this case, there's no reason
+  // to copy into a separate shared surface for the front buffer. Just directly
+  // read back the WebGL framebuffer into and push it as a remote texture.
+  if (useAsync && srcFb->mSwapChain.mFactory->GetConsumerType() ==
+                      layers::TextureType::Unknown) {
+    PushRemoteTexture(srcFb, srcFb->mSwapChain, nullptr, options);
+    return;
+  }
+
   // ColorSpace will need to be part of SwapChainOptions for DTWebgl.
   const auto colorSpace = ToColorSpace2(mOptions);
   auto presenter = srcFb->mSwapChain.Acquire(size, colorSpace);
@@ -1054,12 +1079,140 @@ void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
     return;
   }
 
-  const ScopedFBRebinder saveFB(this);
+  {
+    const ScopedFBRebinder saveFB(this);
 
-  const auto destFb = presenter->Fb();
-  gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
+    const auto destFb = presenter->Fb();
+    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
 
-  BlitBackbufferToCurDriverFB(srcFb, nullptr, options.bgra);
+    BlitBackbufferToCurDriverFB(srcFb, nullptr, options.bgra);
+  }
+
+  if (useAsync) {
+    PushRemoteTexture(srcFb, srcFb->mSwapChain, srcFb->mSwapChain.FrontBuffer(),
+                      options);
+  }
+}
+
+bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
+                                     gl::SwapChain& swapChain,
+                                     std::shared_ptr<gl::SharedSurface> surf,
+                                     const webgl::SwapChainOptions& options) {
+  const auto onFailure = [&]() -> bool {
+    GenerateWarning("Remote texture creation failed.");
+    LoseContext();
+    return false;
+  };
+
+  if (!mRemoteTextureOwner) {
+    // Ensure we have a remote texture owner client for WebGLParent.
+    const auto* outOfProcess = mHost ? mHost->mOwnerData.outOfProcess : nullptr;
+    if (!outOfProcess) {
+      return onFailure();
+    }
+    mRemoteTextureOwner =
+        MakeRefPtr<layers::RemoteTextureOwnerClient>(outOfProcess->OtherPid());
+  }
+
+  layers::RemoteTextureOwnerId ownerId = options.remoteTextureOwnerId;
+  layers::RemoteTextureId textureId = options.remoteTextureId;
+
+  if (!mRemoteTextureOwner->IsRegistered(ownerId)) {
+    // Register a texture owner to represent the swap chain.
+    RefPtr<layers::RemoteTextureOwnerClient> textureOwner = mRemoteTextureOwner;
+    auto destroyedCallback = [textureOwner, ownerId]() {
+      textureOwner->UnregisterTextureOwner(ownerId);
+    };
+
+    swapChain.SetDestroyedCallback(destroyedCallback);
+    mRemoteTextureOwner->RegisterTextureOwner(ownerId);
+  }
+
+  MOZ_ASSERT(fb || surf);
+  gfx::IntSize size;
+  if (surf) {
+    size = surf->mDesc.size;
+  } else {
+    const auto* info = fb->GetCompletenessInfo();
+    MOZ_ASSERT(info);
+    size = gfx::IntSize(info->width, info->height);
+  }
+
+  const auto surfaceFormat = mOptions.alpha ? gfx::SurfaceFormat::B8G8R8A8
+                                            : gfx::SurfaceFormat::B8G8R8X8;
+  Maybe<layers::SurfaceDescriptor> desc;
+  if (surf) {
+    desc = surf->ToSurfaceDescriptor();
+  }
+  if (!desc) {
+    // If we can't serialize to a surface descriptor, then we need to create
+    // a buffer to read back into that will become the remote texture.
+    auto data = mRemoteTextureOwner->CreateOrRecycleBufferTextureData(
+        ownerId, size, surfaceFormat);
+    if (!data) {
+      gfxCriticalNoteOnce << "Failed to allocate BufferTextureData";
+      return onFailure();
+    }
+
+    layers::MappedTextureData mappedData;
+    if (!data->BorrowMappedData(mappedData)) {
+      return onFailure();
+    }
+
+    const auto stride = CheckedInt<size_t>(mappedData.size.width) * 4;
+    const auto byteSize = stride * mappedData.size.height;
+    MOZ_RELEASE_ASSERT(byteSize.isValid());
+    MOZ_RELEASE_ASSERT(mappedData.stride ==
+                       static_cast<int64_t>(stride.value()));
+    Range<uint8_t> range = {mappedData.data, byteSize.value()};
+
+    // If we have a surface representing the front buffer, then try to snapshot
+    // that. Otherwise, when there is no surface, we read back directly from the
+    // WebGL framebuffer.
+    auto valid = surf ? FrontBufferSnapshotInto(surf, Some(range))
+                      : SnapshotInto(fb->mGLName, size, range);
+    if (!valid) {
+      return onFailure();
+    }
+
+    if (!options.bgra) {
+      // If the buffer is already BGRA, we don't need to swizzle. However, if it
+      // is RGBA, then a swizzle to BGRA is required.
+      bool rv = gfx::SwizzleData(mappedData.data, mappedData.stride,
+                                 gfx::SurfaceFormat::R8G8B8A8, mappedData.data,
+                                 mappedData.stride,
+                                 gfx::SurfaceFormat::B8G8R8A8, mappedData.size);
+      MOZ_RELEASE_ASSERT(rv, "SwizzleData failed!");
+    }
+
+    mRemoteTextureOwner->PushTexture(textureId, ownerId, std::move(data),
+                                     /* aSharedSurface */ nullptr);
+    return true;
+  }
+
+  // SharedSurfaces of SurfaceDescriptorD3D10 and SurfaceDescriptorMacIOSurface
+  // need to be kept alive. They will be recycled by
+  // RemoteTextureOwnerClient::GetRecycledSharedSurface() when their usages are
+  // ended.
+  std::shared_ptr<gl::SharedSurface> keepAlive;
+  switch (desc->type()) {
+    case layers::SurfaceDescriptor::TSurfaceDescriptorD3D10:
+    case layers::SurfaceDescriptor::TSurfaceDescriptorMacIOSurface:
+      keepAlive = surf;
+      break;
+    default:
+      break;
+  }
+
+  auto data =
+      MakeUnique<layers::SharedSurfaceTextureData>(*desc, surfaceFormat, size);
+  mRemoteTextureOwner->PushTexture(textureId, ownerId, std::move(data),
+                                   keepAlive);
+  auto recycledSurface = mRemoteTextureOwner->GetRecycledSharedSurface(ownerId);
+  if (recycledSurface) {
+    swapChain.StoreRecycledSurface(recycledSurface);
+  }
+  return true;
 }
 
 void WebGLContext::EndOfFrame() {
@@ -1099,9 +1252,7 @@ Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
     const std::shared_ptr<gl::SharedSurface>& front,
     const Maybe<Range<uint8_t>> maybeDest) {
   const auto& size = front->mDesc.size;
-  const auto ret = Some(*uvec2::FromSize(size));
-  if (!maybeDest) return ret;
-  const auto& dest = *maybeDest;
+  if (!maybeDest) return Some(*uvec2::FromSize(size));
 
   // -
 
@@ -1115,6 +1266,11 @@ Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
 
   // -
 
+  return SnapshotInto(front->mFb ? front->mFb->mFB : 0, size, *maybeDest);
+}
+
+Maybe<uvec2> WebGLContext::SnapshotInto(GLuint srcFb, const gfx::IntSize& size,
+                                        const Range<uint8_t>& dest) {
   gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 1);
   if (IsWebGL2()) {
     gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, 0);
@@ -1138,25 +1294,29 @@ Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
     }
   });
 
-  gl->fBindFramebuffer(fbTarget, front->mFb ? front->mFb->mFB : 0);
+  gl->fBindFramebuffer(fbTarget, srcFb);
   if (pboWas) {
     BindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, nullptr);
   }
 
   // -
 
-  const size_t stride = size.width * 4;
-  const size_t srcByteCount = stride * size.height;
+  const auto stride = CheckedInt<size_t>(size.width) * 4;
+  const auto srcByteCount = stride * size.height;
+  if (!srcByteCount.isValid()) {
+    gfxCriticalError() << "SnapshotInto: invalid srcByteCount, width:"
+                       << size.width << ", height:" << size.height;
+    return {};
+  }
   const auto dstByteCount = dest.length();
-  if (srcByteCount != dstByteCount) {
-    gfxCriticalError() << "FrontBufferSnapshotInto: srcByteCount:"
-                       << srcByteCount << " != dstByteCount:" << dstByteCount;
+  if (srcByteCount.value() != dstByteCount) {
+    gfxCriticalError() << "SnapshotInto: srcByteCount:" << srcByteCount.value()
+                       << " != dstByteCount:" << dstByteCount;
     return {};
   }
   gl->fReadPixels(0, 0, size.width, size.height, LOCAL_GL_RGBA,
                   LOCAL_GL_UNSIGNED_BYTE, dest.begin().get());
-
-  return ret;
+  return Some(*uvec2::FromSize(size));
 }
 
 void WebGLContext::ClearVRSwapChain() { mWebVRSwapChain.ClearPool(); }

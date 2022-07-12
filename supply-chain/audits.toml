@@ -135,3 +135,8 @@ criteria = "safe-to-deploy"
 version = "1.0.2"
 notes = "Very small crate, just hosts the Void type for easier cross-crate interfacing."
 
+[[audits.webdriver]]
+who = "Henrik Skupin <mail@hskupin.info>"
+criteria = "safe-to-deploy"
+version = "0.46.0"
+notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."

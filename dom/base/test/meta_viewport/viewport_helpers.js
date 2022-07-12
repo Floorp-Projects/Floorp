@@ -2,7 +2,6 @@ function scaleRatio(scale) {
   return {
     set: [
       ["layout.css.devPixelsPerPx", "" + scale],
-      ["apz.allow_zooming", true],
       ["dom.meta-viewport.enabled", true],
     ],
   };

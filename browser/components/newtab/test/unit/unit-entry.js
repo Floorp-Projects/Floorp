@@ -535,14 +535,12 @@ const TEST_GLOBAL = {
       getVariable() {},
     },
     newtab: {
-      isEnabled() {},
       getVariable() {},
       getAllVariables() {},
       onUpdate() {},
       off() {},
     },
     pocketNewtab: {
-      isEnabled() {},
       getVariable() {},
       getAllVariables() {},
       onUpdate() {},

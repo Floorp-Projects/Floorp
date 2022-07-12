@@ -67,12 +67,6 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
 
   virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() = 0;
 
-  /**
-   * Override this if it's possible to read data directly into the DT without
-   * copying to an intermediate snapshot.
-   */
-  virtual bool CopySnapshotTo(gfx::DrawTarget* aDT) { return false; }
-
   virtual void ReturnSnapshot(
       already_AddRefed<gfx::SourceSurface> aSnapshot) = 0;
 
@@ -156,8 +150,6 @@ class PersistentBufferProviderAccelerated
   bool IsAccelerated() const override { return true; }
 
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer() override;
-
-  bool CopySnapshotTo(gfx::DrawTarget* aDT) override;
 
   already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
       const gfx::IntRect& aPersistedRect) override;

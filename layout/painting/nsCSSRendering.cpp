@@ -1119,34 +1119,58 @@ void nsImageRenderer::ComputeObjectAnchorPoint(const Position& aPos,
                            aImageSize.height, &aTopLeft->y, &aAnchorPoint->y);
 }
 
-auto nsCSSRendering::FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
-                                                       bool aStopAtThemed)
-    -> NonTransparentBackgroundFrame {
-  NS_ASSERTION(aFrame,
-               "Cannot find NonTransparentBackgroundFrame in a null frame");
+auto nsCSSRendering::FindEffectiveBackgroundColor(nsIFrame* aFrame,
+                                                  bool aStopAtThemed,
+                                                  bool aPreferBodyToCanvas)
+    -> EffectiveBackgroundColor {
+  MOZ_ASSERT(aFrame);
+
+  auto BgColorIfNotTransparent = [](nsIFrame* aFrame) -> Maybe<nscolor> {
+    nscolor c =
+        aFrame->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
+    if (NS_GET_A(c) == 255) {
+      return Some(c);
+    }
+    if (NS_GET_A(c)) {
+      // TODO(emilio): We should maybe just blend with ancestor bg colors and
+      // such, but this is probably good enough for now, matches pre-existing
+      // behavior.
+      const nscolor defaultBg = aFrame->PresContext()->DefaultBackgroundColor();
+      MOZ_ASSERT(NS_GET_A(defaultBg) == 255, "PreferenceSheet guarantees this");
+      return Some(NS_ComposeColors(defaultBg, c));
+    }
+    return Nothing();
+  };
 
   for (nsIFrame* frame = aFrame; frame;
        frame = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(frame)) {
-    // No need to call GetVisitedDependentColor because it always uses this
-    // alpha component anyway.
-    if (NS_GET_A(frame->StyleBackground()->BackgroundColor(frame))) {
-      return {frame, false, false};
+    if (auto bg = BgColorIfNotTransparent(frame)) {
+      return {*bg};
     }
 
     if (aStopAtThemed && frame->IsThemed()) {
-      return {frame, true, false};
+      return {NS_TRANSPARENT, true};
     }
 
     if (IsCanvasFrame(frame)) {
-      nsIFrame* bgFrame = FindBackgroundFrame(frame);
-      if (bgFrame &&
-          NS_GET_A(bgFrame->StyleBackground()->BackgroundColor(bgFrame))) {
-        return {bgFrame, false, true};
+      if (aPreferBodyToCanvas) {
+        if (auto* body = frame->PresContext()->Document()->GetBodyElement()) {
+          if (nsIFrame* f = body->GetPrimaryFrame()) {
+            if (auto bg = BgColorIfNotTransparent(f)) {
+              return {*bg};
+            }
+          }
+        }
+      }
+      if (nsIFrame* bgFrame = FindBackgroundFrame(frame)) {
+        if (auto bg = BgColorIfNotTransparent(bgFrame)) {
+          return {*bg};
+        }
       }
     }
   }
 
-  return {};
+  return {aFrame->PresContext()->DefaultBackgroundColor()};
 }
 
 // Returns true if aFrame is a canvas frame.

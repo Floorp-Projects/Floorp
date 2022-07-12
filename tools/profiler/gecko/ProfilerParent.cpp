@@ -8,6 +8,7 @@
 
 #ifdef MOZ_GECKO_PROFILER
 #  include "nsProfiler.h"
+#  include "platform.h"
 #endif
 
 #include "GeckoProfiler.h"
@@ -24,7 +25,6 @@
 #include "mozilla/Unused.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
-#include "platform.h"
 
 #include <utility>
 

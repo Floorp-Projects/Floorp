@@ -14,6 +14,7 @@ const {
 types.addDictType("target-configuration.configuration", {
   cacheDisabled: "nullable:boolean",
   colorSchemeSimulation: "nullable:string",
+  customFormatters: "nullable:boolean",
   customUserAgent: "nullable:string",
   javascriptEnabled: "nullable:boolean",
   overrideDPPX: "nullable:number",

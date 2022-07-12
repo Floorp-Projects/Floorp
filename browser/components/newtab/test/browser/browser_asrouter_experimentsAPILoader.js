@@ -158,12 +158,10 @@ const getLegacyCFRExperiment = async () => {
   delete recipe.branches[1].features;
   recipe.branches[0].feature = {
     featureId: "cfr",
-    enabled: true,
     value: MESSAGE_CONTENT,
   };
   recipe.branches[1].feature = {
     featureId: "cfr",
-    enabled: true,
     value: MESSAGE_CONTENT,
   };
   return recipe;

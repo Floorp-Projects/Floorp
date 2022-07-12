@@ -118,10 +118,6 @@ PersistentBufferProviderAccelerated::GetFrontBuffer() {
   return GetDrawTargetWebgl()->GetFrontBuffer();
 }
 
-bool PersistentBufferProviderAccelerated::CopySnapshotTo(gfx::DrawTarget* aDT) {
-  return GetDrawTargetWebgl()->CopySnapshotTo(aDT);
-}
-
 already_AddRefed<gfx::DrawTarget>
 PersistentBufferProviderAccelerated::BorrowDrawTarget(
     const gfx::IntRect& aPersistedRect) {

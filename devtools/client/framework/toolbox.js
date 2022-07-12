@@ -291,6 +291,9 @@ function Toolbox(
   this.closeToolbox = this.closeToolbox.bind(this);
   this.destroy = this.destroy.bind(this);
   this._applyCacheSettings = this._applyCacheSettings.bind(this);
+  this._applyCustomFormatterSetting = this._applyCustomFormatterSetting.bind(
+    this
+  );
   this._applyServiceWorkersTestingSettings = this._applyServiceWorkersTestingSettings.bind(
     this
   );
@@ -856,6 +859,10 @@ Toolbox.prototype = {
         options
       );
 
+      // This needs to be done before watching for resources so console messages can be
+      // custom formatted right away.
+      await this._applyCustomFormatterSetting();
+
       // The targetCommand is created right before this code.
       // It means that this call to watchTargets is the first,
       // and we are registering the first target listener, which means
@@ -903,6 +910,10 @@ Toolbox.prototype = {
       Services.prefs.addObserver(
         "devtools.cache.disabled",
         this._applyCacheSettings
+      );
+      Services.prefs.addObserver(
+        "devtools.custom-formatters.enabled",
+        this._applyCustomFormatterSetting
       );
       Services.prefs.addObserver(
         "devtools.serviceWorkers.testing.enabled",
@@ -2188,6 +2199,26 @@ Toolbox.prototype = {
     if (flags.testing) {
       this.emit("cache-reconfigured");
     }
+  },
+
+  /**
+   * Apply the custom formatter setting (from `devtools.custom-formatters.enabled`) to this
+   * toolbox's tab.
+   */
+  _applyCustomFormatterSetting: async function() {
+    if (!this.commands) {
+      return;
+    }
+
+    const customFormatters =
+      Services.prefs.getBoolPref("devtools.custom-formatters", false) &&
+      Services.prefs.getBoolPref("devtools.custom-formatters.enabled", false);
+
+    await this.commands.targetConfigurationCommand.updateConfiguration({
+      customFormatters,
+    });
+
+    this.emitForTests("custom-formatters-reconfigured");
   },
 
   /**
@@ -3963,6 +3994,10 @@ Toolbox.prototype = {
     Services.prefs.removeObserver(
       "devtools.cache.disabled",
       this._applyCacheSettings
+    );
+    Services.prefs.removeObserver(
+      "devtools.custom-formatters.enabled",
+      this._applyCustomFormatterSetting
     );
     Services.prefs.removeObserver(
       "devtools.serviceWorkers.testing.enabled",

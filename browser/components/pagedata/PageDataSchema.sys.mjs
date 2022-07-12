@@ -4,20 +4,21 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["PageDataSchema"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  OpenGraphPageData: "resource:///modules/pagedata/OpenGraphPageData.sys.mjs",
+  SchemaOrgPageData: "resource:///modules/pagedata/SchemaOrgPageData.sys.mjs",
+  TwitterPageData: "resource:///modules/pagedata/TwitterPageData.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
-  OpenGraphPageData: "resource:///modules/pagedata/OpenGraphPageData.jsm",
-  SchemaOrgPageData: "resource:///modules/pagedata/SchemaOrgPageData.jsm",
-  TwitterPageData: "resource:///modules/pagedata/TwitterPageData.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
@@ -94,7 +95,7 @@ async function validateData(schemaName, data) {
 /**
  * A shared API that can be used in parent or child processes
  */
-const PageDataSchema = {
+export const PageDataSchema = {
   // Enumeration of data types. The keys must match the schema name.
   DATA_TYPE: Object.freeze({
     // Note that 1 and 2 were used as types in earlier versions and should not be used here.
