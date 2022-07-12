@@ -57,6 +57,7 @@ rtc_library("rtc_media_base") {
     "../api:rtp_parameters",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api:webrtc_key_value_config",
     "../api/audio:audio_frame_processor",
     "../api/audio_codecs:audio_codecs_api",
     "../api/crypto:frame_decryptor_interface",
@@ -64,7 +65,6 @@ rtc_library("rtc_media_base") {
     "../api/crypto:options",
     "../api/transport:datagram_transport_interface",
     #"../api/transport:stun_types",
-    "../api/transport:webrtc_key_value_config",
     "../api/transport/rtp:rtp_source",
     "../api/units:time_delta",
     "../api/video:video_bitrate_allocation",
@@ -454,6 +454,7 @@ rtc_library("rtc_data_sctp_transport_factory") {
   ]
   deps = [
     ":rtc_data_sctp_transport_internal",
+    "../api:webrtc_key_value_config",
     "../api/transport:sctp_transport_factory_interface",
     "../rtc_base:threading",
     "../rtc_base/experiments:field_trial_parser",
@@ -643,6 +644,7 @@ if (rtc_include_tests) {
         "../test:fake_video_codecs",
         "../test:field_trial",
         "../test:rtp_test_utils",
+        "../test:scoped_key_value_config",
         "../test:test_main",
         "../test:test_support",
         "../test:video_test_common",

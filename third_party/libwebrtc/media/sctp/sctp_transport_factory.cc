@@ -10,12 +10,12 @@
 
 #include "media/sctp/sctp_transport_factory.h"
 
+#include "api/webrtc_key_value_config.h"
 #include "rtc_base/system/unused.h"
 
 #ifdef WEBRTC_HAVE_DCSCTP
 #include "media/sctp/dcsctp_transport.h"          // nogncheck
 #include "system_wrappers/include/clock.h"        // nogncheck
-#include "system_wrappers/include/field_trial.h"  // nogncheck
 #endif
 
 #ifdef WEBRTC_HAVE_USRSCTP
@@ -24,12 +24,14 @@
 
 namespace cricket {
 
-SctpTransportFactory::SctpTransportFactory(rtc::Thread* network_thread)
+SctpTransportFactory::SctpTransportFactory(
+    rtc::Thread* network_thread,
+    const webrtc::WebRtcKeyValueConfig& field_trials)
     : network_thread_(network_thread), use_usrsctp_("Disabled", false) {
   RTC_UNUSED(network_thread_);
 #ifdef WEBRTC_HAVE_DCSCTP
-  webrtc::ParseFieldTrial({&use_usrsctp_}, webrtc::field_trial::FindFullName(
-                                               "WebRTC-DataChannel-Dcsctp"));
+  webrtc::ParseFieldTrial({&use_usrsctp_},
+                          field_trials.Lookup("WebRTC-DataChannel-Dcsctp"));
 #endif
 }
 
