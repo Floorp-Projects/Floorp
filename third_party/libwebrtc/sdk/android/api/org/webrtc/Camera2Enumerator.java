@@ -10,7 +10,6 @@
 
 package org.webrtc;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
@@ -30,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import org.webrtc.CameraEnumerationAndroid.CaptureFormat;
 
-@TargetApi(21)
 public class Camera2Enumerator implements CameraEnumerator {
   private final static String TAG = "Camera2Enumerator";
   private final static double NANO_SECONDS_PER_SECOND = 1.0e9;
@@ -119,10 +117,6 @@ public class Camera2Enumerator implements CameraEnumerator {
    * Checks if API is supported and all cameras have better than legacy support.
    */
   public static boolean isSupported(Context context) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-      return false;
-    }
-
     CameraManager cameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
     try {
       String[] cameraIds = cameraManager.getCameraIdList();

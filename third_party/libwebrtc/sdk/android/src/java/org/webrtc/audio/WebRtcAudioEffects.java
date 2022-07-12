@@ -54,15 +54,11 @@ class WebRtcAudioEffects {
   // Returns true if all conditions for supporting HW Acoustic Echo Cancellation (AEC) are
   // fulfilled.
   public static boolean isAcousticEchoCancelerSupported() {
-    if (Build.VERSION.SDK_INT < 18)
-      return false;
     return isEffectTypeAvailable(AudioEffect.EFFECT_TYPE_AEC, AOSP_ACOUSTIC_ECHO_CANCELER);
   }
 
   // Returns true if all conditions for supporting HW Noise Suppression (NS) are fulfilled.
   public static boolean isNoiseSuppressorSupported() {
-    if (Build.VERSION.SDK_INT < 18)
-      return false;
     return isEffectTypeAvailable(AudioEffect.EFFECT_TYPE_NS, AOSP_NOISE_SUPPRESSOR);
   }
 
@@ -188,9 +184,6 @@ class WebRtcAudioEffects {
   // As an example: Samsung Galaxy S6 includes an AGC in the descriptor but
   // AutomaticGainControl.isAvailable() returns false.
   private boolean effectTypeIsVoIP(UUID type) {
-    if (Build.VERSION.SDK_INT < 18)
-      return false;
-
     return (AudioEffect.EFFECT_TYPE_AEC.equals(type) && isAcousticEchoCancelerSupported())
         || (AudioEffect.EFFECT_TYPE_NS.equals(type) && isNoiseSuppressorSupported());
   }

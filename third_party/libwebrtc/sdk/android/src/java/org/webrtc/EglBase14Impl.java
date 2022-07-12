@@ -10,7 +10,6 @@
 
 package org.webrtc;
 
-import android.annotation.TargetApi;
 import android.graphics.SurfaceTexture;
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;
@@ -28,24 +27,12 @@ import androidx.annotation.Nullable;
  * and an EGLSurface.
  */
 @SuppressWarnings("ReferenceEquality") // We want to compare to EGL14 constants.
-@TargetApi(18)
 class EglBase14Impl implements EglBase14 {
   private static final String TAG = "EglBase14Impl";
-  private static final int EGLExt_SDK_VERSION = Build.VERSION_CODES.JELLY_BEAN_MR2;
-  private static final int CURRENT_SDK_VERSION = Build.VERSION.SDK_INT;
   private EGLContext eglContext;
   @Nullable private EGLConfig eglConfig;
   private EGLDisplay eglDisplay;
   private EGLSurface eglSurface = EGL14.EGL_NO_SURFACE;
-
-  // EGL 1.4 is supported from API 17. But EGLExt that is used for setting presentation
-  // time stamp on a surface is supported from 18 so we require 18.
-  public static boolean isEGL14Supported() {
-    Logging.d(TAG,
-        "SDK version: " + CURRENT_SDK_VERSION
-            + ". isEGL14Supported: " + (CURRENT_SDK_VERSION >= EGLExt_SDK_VERSION));
-    return (CURRENT_SDK_VERSION >= EGLExt_SDK_VERSION);
-  }
 
   public static class Context implements EglBase14.Context {
     private final EGLContext egl14Context;
@@ -56,11 +43,8 @@ class EglBase14Impl implements EglBase14 {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public long getNativeEglContext() {
-      return CURRENT_SDK_VERSION >= Build.VERSION_CODES.LOLLIPOP ? egl14Context.getNativeHandle()
-                                                                 : egl14Context.getHandle();
+      return egl14Context.getNativeHandle();
     }
 
     public Context(android.opengl.EGLContext eglContext) {

@@ -47,16 +47,7 @@ class WebRtcAudioTrack {
 
   // By default, WebRTC creates audio tracks with a usage attribute
   // corresponding to voice communications, such as telephony or VoIP.
-  private static final int DEFAULT_USAGE = getDefaultUsageAttribute();
-
-  private static int getDefaultUsageAttribute() {
-    if (Build.VERSION.SDK_INT >= 21) {
-      return AudioAttributes.USAGE_VOICE_COMMUNICATION;
-    } else {
-      // Not used on SDKs lower than L.
-      return 0;
-    }
-  }
+  private static final int DEFAULT_USAGE = AudioAttributes.USAGE_VOICE_COMMUNICATION;
 
   // Indicates the AudioTrack has started playing audio.
   private static final int AUDIO_TRACK_START = 0;
@@ -128,7 +119,7 @@ class WebRtcAudioTrack {
           byteBuffer.put(emptyBytes);
           byteBuffer.position(0);
         }
-        int bytesWritten = writeBytes(audioTrack, byteBuffer, sizeInBytes);
+        int bytesWritten = audioTrack.write(byteBuffer, sizeInBytes, AudioTrack.WRITE_BLOCKING);
         if (bytesWritten != sizeInBytes) {
           Logging.e(TAG, "AudioTrack.write played invalid number of bytes: " + bytesWritten);
           // If a write() returns a negative value, an error has occurred.
@@ -149,14 +140,6 @@ class WebRtcAudioTrack {
         // TODO(henrika): it is possible to create a delay estimate here by
         // counting number of written frames and subtracting the result from
         // audioTrack.getPlaybackHeadPosition().
-      }
-    }
-
-    private int writeBytes(AudioTrack audioTrack, ByteBuffer byteBuffer, int sizeInBytes) {
-      if (Build.VERSION.SDK_INT >= 21) {
-        return audioTrack.write(byteBuffer, sizeInBytes, AudioTrack.WRITE_BLOCKING);
-      } else {
-        return audioTrack.write(byteBuffer.array(), byteBuffer.arrayOffset(), sizeInBytes);
       }
     }
 
@@ -247,18 +230,14 @@ class WebRtcAudioTrack {
         // On API level 26 or higher, we can use a low latency mode.
         audioTrack = createAudioTrackOnOreoOrHigher(
             sampleRate, channelConfig, minBufferSizeInBytes, audioAttributes);
-      } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        // If we are on API level 21 or higher, it is possible to use a special AudioTrack
+      } else {
+        // As we are on API level 21 or higher, it is possible to use a special AudioTrack
         // constructor that uses AudioAttributes and AudioFormat as input. It allows us to
         // supersede the notion of stream types for defining the behavior of audio playback,
         // and to allow certain platforms or routing policies to use this information for more
         // refined volume or routing decisions.
-        audioTrack = createAudioTrackOnLollipopOrHigher(
+        audioTrack = createAudioTrackBeforeOreo(
             sampleRate, channelConfig, minBufferSizeInBytes, audioAttributes);
-      } else {
-        // Use default constructor for API levels below 21.
-        audioTrack =
-            createAudioTrackOnLowerThanLollipop(sampleRate, channelConfig, minBufferSizeInBytes);
       }
     } catch (IllegalArgumentException e) {
       reportWebRtcAudioTrackInitError(e.getMessage());
@@ -360,18 +339,12 @@ class WebRtcAudioTrack {
   private boolean setStreamVolume(int volume) {
     threadChecker.checkIsOnValidThread();
     Logging.d(TAG, "setStreamVolume(" + volume + ")");
-    if (isVolumeFixed()) {
+    if (audioManager.isVolumeFixed()) {
       Logging.e(TAG, "The device implements a fixed volume policy.");
       return false;
     }
     audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, volume, 0);
     return true;
-  }
-
-  private boolean isVolumeFixed() {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
-      return false;
-    return audioManager.isVolumeFixed();
   }
 
   /** Get current volume level for a phone call audio stream. */
@@ -441,10 +414,9 @@ class WebRtcAudioTrack {
   // Creates and AudioTrack instance using AudioAttributes and AudioFormat as input.
   // It allows certain platforms or routing policies to use this information for more
   // refined volume or routing decisions.
-  @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-  private static AudioTrack createAudioTrackOnLollipopOrHigher(int sampleRateInHz,
-      int channelConfig, int bufferSizeInBytes, @Nullable AudioAttributes overrideAttributes) {
-    Logging.d(TAG, "createAudioTrackOnLollipopOrHigher");
+  private static AudioTrack createAudioTrackBeforeOreo(int sampleRateInHz, int channelConfig,
+      int bufferSizeInBytes, @Nullable AudioAttributes overrideAttributes) {
+    Logging.d(TAG, "createAudioTrackBeforeOreo");
     logNativeOutputSampleRate(sampleRateInHz);
 
     // Create an audio track where the audio usage is for VoIP and the content type is speech.
@@ -487,13 +459,6 @@ class WebRtcAudioTrack {
   private static AudioAttributes.Builder applyAttributesOnQOrHigher(
       AudioAttributes.Builder builder, AudioAttributes overrideAttributes) {
     return builder.setAllowedCapturePolicy(overrideAttributes.getAllowedCapturePolicy());
-  }
-
-  @SuppressWarnings("deprecation") // Deprecated in API level 25.
-  private static AudioTrack createAudioTrackOnLowerThanLollipop(
-      int sampleRateInHz, int channelConfig, int bufferSizeInBytes) {
-    return new AudioTrack(AudioManager.STREAM_VOICE_CALL, sampleRateInHz, channelConfig,
-        AudioFormat.ENCODING_PCM_16BIT, bufferSizeInBytes, AudioTrack.MODE_STREAM);
   }
 
   private void logBufferSizeInFrames() {
