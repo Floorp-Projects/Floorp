@@ -65,7 +65,7 @@ def generate_header(output, data):
 #endif
 
 #ifndef CSS_PROP_ALIAS
-#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) /* nothing */
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, flags_, pref_) /* nothing */
 #define DEFINED_CSS_PROP_ALIAS
 #endif
 
@@ -83,22 +83,22 @@ def generate_header(output, data):
     }
     for prop in data:
         is_internal = "Internal" in prop.flags
+        flags = " | ".join(
+            "CSSPropFlags::{}".format(flag)
+            for flag in prop.flags
+            if flag not in COMPILE_TIME_FLAGS
+        )
+        if not flags:
+            flags = "CSSPropFlags(0)"
         pref = '"' + prop.pref + '"'
+        method = prop.method
         if prop.type() == "alias":
-            params = [prop.name, prop.alias_id, prop.prop_id, prop.method, pref]
+            params = [prop.name, prop.alias_id, prop.prop_id, method, flags, pref]
         else:
-            method = prop.method
             if method == "CssFloat":
                 method = "CSS_PROP_PUBLIC_OR_PRIVATE(CssFloat, Float)"
             elif method.startswith("Moz"):
                 method = "CSS_PROP_DOMPROP_PREFIXED({})".format(method[3:])
-            flags = " | ".join(
-                "CSSPropFlags::{}".format(flag)
-                for flag in prop.flags
-                if flag not in COMPILE_TIME_FLAGS
-            )
-            if not flags:
-                flags = "CSSPropFlags(0)"
             params = [prop.name, prop.id, method, flags, pref]
         excludes = []
         if is_internal:
