@@ -499,6 +499,17 @@ if (is_android) {
     ]
   }
 
+  rtc_android_library("libaom_av1_encoder_java") {
+    visibility = [ "*" ]
+    sources = [ "api/org/webrtc/LibaomAv1Encoder.java" ]
+    deps = [
+      ":base_java",
+      ":video_api_java",
+      ":video_java",
+      "//rtc_base:base_java",
+    ]
+  }
+
   rtc_android_library("libaom_av1_java") {
     visibility = [ "*" ]
     sources = [
@@ -845,6 +856,18 @@ if (current_os == "linux" || is_android) {
       ":generated_libvpx_vp9_jni",
       ":video_jni",
       "../../modules/video_coding:webrtc_vp9",
+    ]
+  }
+
+  rtc_library("libaom_av1_encoder_jni") {
+    visibility = [ "*" ]
+    allow_poison = [ "software_video_codecs" ]
+    sources = [ "src/jni/libaom_av1_encoder.cc" ]
+    deps = [
+      ":base_jni",
+      ":generated_libaom_av1_encoder_jni",
+      ":video_jni",
+      "../../modules/video_coding/codecs/av1:libaom_av1_encoder",
     ]
   }
 
@@ -1308,6 +1331,13 @@ if (current_os == "linux" || is_android) {
       "api/org/webrtc/LibvpxVp9Decoder.java",
       "api/org/webrtc/LibvpxVp9Encoder.java",
     ]
+
+    namespace = "webrtc::jni"
+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
+  }
+
+  generate_jni("generated_libaom_av1_encoder_jni") {
+    sources = [ "api/org/webrtc/LibaomAv1Encoder.java" ]
 
     namespace = "webrtc::jni"
     jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
