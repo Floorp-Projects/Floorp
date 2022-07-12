@@ -21,6 +21,19 @@ namespace webrtc {
 
 class ScreenCastPortal {
  public:
+  using ProxyRequestResponseHandler = void (*)(GObject* object,
+                                               GAsyncResult* result,
+                                               gpointer user_data);
+
+  using SourcesRequestResponseSignalHandler =
+      void (*)(GDBusConnection* connection,
+               const char* sender_name,
+               const char* object_path,
+               const char* interface_name,
+               const char* signal_name,
+               GVariant* parameters,
+               gpointer user_data);
+
   // Values are set based on source type property in
   // xdg-desktop-portal/screencast
   // https://github.com/flatpak/xdg-desktop-portal/blob/master/data/org.freedesktop.portal.ScreenCast.xml
@@ -57,6 +70,13 @@ class ScreenCastPortal {
 
   explicit ScreenCastPortal(ScreenCastPortal::CaptureSourceType source_type,
                             PortalNotifier* notifier);
+  explicit ScreenCastPortal(
+      CaptureSourceType source_type,
+      PortalNotifier* notifier,
+      ProxyRequestResponseHandler proxy_request_response_handler,
+      SourcesRequestResponseSignalHandler
+          sources_request_response_signal_handler,
+      gpointer user_data);
   ~ScreenCastPortal();
 
   // Initialize ScreenCastPortal with series of DBus calls where we try to
@@ -76,6 +96,13 @@ class ScreenCastPortal {
 
   void UnsubscribeSignalHandlers();
 
+  // Set of methods leveraged by remote desktop portal to setup a common session
+  // with screen cast portal.
+  void SetSessionDetails(const xdg_portal::SessionDetails& session_details);
+  uint32_t pipewire_stream_node_id();
+  void SourcesRequest();
+  void OpenPipeWireRemote();
+
  private:
   PortalNotifier* notifier_;
 
@@ -88,6 +115,10 @@ class ScreenCastPortal {
       ScreenCastPortal::CaptureSourceType::kScreen;
 
   CursorMode cursor_mode_ = ScreenCastPortal::CursorMode::kMetadata;
+
+  ProxyRequestResponseHandler proxy_request_response_handler_;
+  SourcesRequestResponseSignalHandler sources_request_response_signal_handler_;
+  gpointer user_data_;
 
   GDBusConnection* connection_ = nullptr;
   GDBusProxy* proxy_ = nullptr;
@@ -121,7 +152,6 @@ class ScreenCastPortal {
                                     const char* signal_name,
                                     GVariant* parameters,
                                     gpointer user_data);
-  void SourcesRequest();
   static void OnSourcesRequested(GDBusProxy* proxy,
                                  GAsyncResult* result,
                                  gpointer user_data);
@@ -145,7 +175,6 @@ class ScreenCastPortal {
                                            GVariant* parameters,
                                            gpointer user_data);
 
-  void OpenPipeWireRemote();
   static void OnOpenPipeWireRemoteRequested(GDBusProxy* proxy,
                                             GAsyncResult* result,
                                             gpointer user_data);

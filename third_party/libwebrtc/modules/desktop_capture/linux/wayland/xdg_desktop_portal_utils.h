@@ -32,6 +32,13 @@ constexpr char kSessionInterfaceName[] = "org.freedesktop.portal.Session";
 constexpr char kRequestInterfaceName[] = "org.freedesktop.portal.Request";
 constexpr char kScreenCastInterfaceName[] = "org.freedesktop.portal.ScreenCast";
 
+struct SessionDetails {
+  GDBusProxy* proxy;
+  GCancellable* cancellable;
+  std::string session_handle;
+  uint32_t pipewire_stream_node_id;
+};
+
 using ProxyRequestCallback = void (*)(GObject*, GAsyncResult*, gpointer);
 using SessionRequestCallback = void (*)(GDBusProxy*, GAsyncResult*, gpointer);
 using SessionRequestResponseSignalHandler = void (*)(GDBusConnection*,

@@ -39,7 +39,24 @@ using xdg_portal::TearDownSession;
 ScreenCastPortal::ScreenCastPortal(
     ScreenCastPortal::CaptureSourceType source_type,
     PortalNotifier* notifier)
-    : notifier_(notifier), capture_source_type_(source_type) {}
+    : ScreenCastPortal(source_type,
+                       notifier,
+                       OnProxyRequested,
+                       OnSourcesRequestResponseSignal,
+                       this) {}
+
+ScreenCastPortal::ScreenCastPortal(
+    CaptureSourceType source_type,
+    PortalNotifier* notifier,
+    ProxyRequestResponseHandler proxy_request_response_handler,
+    SourcesRequestResponseSignalHandler sources_request_response_signal_handler,
+    gpointer user_data)
+    : notifier_(notifier),
+      capture_source_type_(source_type),
+      proxy_request_response_handler_(proxy_request_response_handler),
+      sources_request_response_signal_handler_(
+          sources_request_response_signal_handler),
+      user_data_(user_data) {}
 
 ScreenCastPortal::~ScreenCastPortal() {
   UnsubscribeSignalHandlers();
@@ -72,10 +89,27 @@ void ScreenCastPortal::UnsubscribeSignalHandlers() {
   }
 }
 
+void ScreenCastPortal::SetSessionDetails(
+    const xdg_portal::SessionDetails& session_details) {
+  if (session_details.proxy) {
+    proxy_ = session_details.proxy;
+    connection_ = g_dbus_proxy_get_connection(proxy_);
+  }
+  if (session_details.cancellable) {
+    cancellable_ = session_details.cancellable;
+  }
+  if (!session_details.session_handle.empty()) {
+    session_handle_ = session_details.session_handle;
+  }
+  if (session_details.pipewire_stream_node_id) {
+    pw_stream_node_id_ = session_details.pipewire_stream_node_id;
+  }
+}
+
 void ScreenCastPortal::Start() {
   cancellable_ = g_cancellable_new();
-  RequestSessionProxy(kScreenCastInterfaceName, OnProxyRequested, cancellable_,
-                      this);
+  RequestSessionProxy(kScreenCastInterfaceName, proxy_request_response_handler_,
+                      cancellable_, this);
 }
 
 void ScreenCastPortal::PortalFailed(RequestResponse result) {
@@ -177,8 +211,8 @@ void ScreenCastPortal::SourcesRequest() {
 
   sources_handle_ = PrepareSignalHandle(variant_string.get(), connection_);
   sources_request_signal_id_ = SetupRequestResponseSignal(
-      sources_handle_.c_str(), OnSourcesRequestResponseSignal, this,
-      connection_);
+      sources_handle_.c_str(), sources_request_response_signal_handler_,
+      user_data_, connection_);
 
   RTC_LOG(LS_INFO) << "Requesting sources from the screen cast session.";
   g_dbus_proxy_call(
@@ -314,6 +348,10 @@ void ScreenCastPortal::OnStartRequestResponseSignal(GDBusConnection* connection,
   }
 
   that->OpenPipeWireRemote();
+}
+
+uint32_t ScreenCastPortal::pipewire_stream_node_id() {
+  return pw_stream_node_id_;
 }
 
 void ScreenCastPortal::OpenPipeWireRemote() {
