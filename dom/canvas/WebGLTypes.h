@@ -8,6 +8,7 @@
 
 #include <limits>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -348,28 +349,57 @@ struct FloatOrInt final  // For TexParameter[fi] and friends.
   explicit FloatOrInt(GLfloat x) : isFloat(true), f(x), i(roundf(x)) {}
 };
 
-struct WebGLContextOptions {
+struct WebGLContextOptions final {
   bool alpha = true;
   bool depth = true;
   bool stencil = false;
   bool premultipliedAlpha = true;
+
   bool antialias = true;
   bool preserveDrawingBuffer = false;
   bool failIfMajorPerformanceCaveat = false;
   bool xrCompatible = false;
+
   dom::WebGLPowerPreference powerPreference =
       dom::WebGLPowerPreference::Default;
-  Maybe<dom::PredefinedColorSpace> colorSpace;
+  bool ignoreColorSpace = true;
+  dom::PredefinedColorSpace colorSpace = dom::PredefinedColorSpace::Srgb;
   bool shouldResistFingerprinting = true;
+
   bool enableDebugRendererInfo = false;
+
+  // -
 
   WebGLContextOptions();
   WebGLContextOptions(const WebGLContextOptions&) = default;
 
-  bool operator==(const WebGLContextOptions&) const;
-  bool operator!=(const WebGLContextOptions& rhs) const {
-    return !(*this == rhs);
+  auto Fields() const {
+    // clang-format off
+    return std::tie(
+      alpha,
+      depth,
+      stencil,
+      premultipliedAlpha,
+
+      antialias,
+      preserveDrawingBuffer,
+      failIfMajorPerformanceCaveat,
+      xrCompatible,
+
+      powerPreference,
+      ignoreColorSpace,
+      colorSpace,
+      shouldResistFingerprinting,
+
+      enableDebugRendererInfo);
+    // clang-format on
   }
+
+  using Self = WebGLContextOptions;
+  friend bool operator==(const Self& a, const Self& b) {
+    return a.Fields() == b.Fields();
+  }
+  friend bool operator!=(const Self& a, const Self& b) { return !(a == b); }
 };
 
 namespace gfx {
