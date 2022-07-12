@@ -166,7 +166,7 @@ IPCResult WebGLParent::RecvGetBufferSubData(const GLenum target,
 }
 
 IPCResult WebGLParent::RecvReadPixels(const webgl::ReadPixelsDesc& desc,
-                                      const uint64_t byteSize,
+                                      ReadPixelsBuffer&& buffer,
                                       webgl::ReadPixelsResultIpc* const ret) {
   AUTO_PROFILER_LABEL("WebGLParent::RecvReadPixels", GRAPHICS);
   *ret = {};
@@ -174,6 +174,15 @@ IPCResult WebGLParent::RecvReadPixels(const webgl::ReadPixelsDesc& desc,
     return IPC_FAIL(this, "HostWebGLContext is not initialized.");
   }
 
+  if (buffer.type() == ReadPixelsBuffer::TShmem) {
+    const auto& shmem = buffer.get_Shmem();
+    const auto range = shmem.Range<uint8_t>();
+    const auto res = mHost->ReadPixelsInto(desc, range);
+    *ret = {res, {}};
+    return IPC_OK();
+  }
+
+  const uint64_t byteSize = buffer.get_uint64_t();
   const auto allocSize = std::max<uint64_t>(1, byteSize);
   auto shmem = webgl::RaiiShmem::Alloc(this, allocSize);
   if (!shmem) {

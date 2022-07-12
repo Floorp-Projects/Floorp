@@ -31,6 +31,13 @@ using mozilla::webgl::ShaderPrecisionFormat from "mozilla/dom/WebGLIpdl.h";
 namespace mozilla {
 namespace dom {
 
+union ReadPixelsBuffer {
+  // The buffer needs to be allocated, and the value specifies the maximum size.
+  uint64_t;
+  // The buffer is a pre-allocated Shmem.
+  Shmem;
+};
+
 /**
  * Represents the connection between a WebGLChild actor that issues WebGL
  * command from the content process, and a WebGLParent in the compositor
@@ -57,7 +64,7 @@ parent:
 
   sync GetBufferSubData(uint32_t target, uint64_t srcByteOffset, uint64_t byteSize) returns (Shmem ret);
   sync GetFrontBufferSnapshot() returns (FrontBufferSnapshotIpc ret);
-  sync ReadPixels(ReadPixelsDesc desc, uint64_t maxBytes) returns (ReadPixelsResultIpc ret);
+  sync ReadPixels(ReadPixelsDesc desc, ReadPixelsBuffer buffer) returns (ReadPixelsResultIpc ret);
 
   // -
 
