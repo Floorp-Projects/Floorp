@@ -13,7 +13,6 @@
 # Some functions are cleared for wider webrtc usage; these have default
 # visibility (set to "//*", not the gn default of "*").
 # These are:
-# - rtc_pc_base
 # - rtc_pc
 # - session_description
 # - simulcast_description
@@ -40,13 +39,6 @@ group("pc") {
   deps = [ ":rtc_pc" ]
 }
 
-config("rtc_pc_config") {
-  defines = []
-  if (rtc_enable_sctp) {
-    defines += [ "WEBRTC_HAVE_SCTP" ]
-  }
-}
-
 rtc_library("proxy") {
   visibility = [ ":*" ]
   sources = [
@@ -60,52 +52,6 @@ rtc_library("proxy") {
     "../rtc_base:threading",
     "../rtc_base/system:rtc_export",
   ]
-}
-
-rtc_source_set("rtc_pc_base") {
-  # TODO(bugs.webrtc.org/13661): Reduce visibility if possible
-  visibility = [ "*" ]  # Used by Chromium and others
-  defines = []
-  sources = []
-
-  deps = [
-    ":channel",
-    ":channel_interface",
-    ":channel_manager",
-    ":dtls_srtp_transport",
-    ":dtls_transport",
-    ":external_hmac",
-    ":ice_transport",
-    ":jsep_transport",
-    ":jsep_transport_collection",
-    ":jsep_transport_controller",
-    ":media_protocol_names",
-    ":media_session",
-    ":media_stream_proxy",
-    ":media_stream_track_proxy",
-    ":peer_connection_factory_proxy",
-    ":peer_connection_proxy",
-    ":proxy",
-    ":rtcp_mux_filter",
-    ":rtp_media_utils",
-    ":rtp_receiver_proxy",
-    ":rtp_sender_proxy",
-    ":rtp_transport",
-    ":rtp_transport_internal",
-    ":sctp_data_channel_transport",
-    ":sctp_transport",
-    ":sctp_utils",
-    ":session_description",
-    ":simulcast_description",
-    ":srtp_filter",
-    ":srtp_session",
-    ":srtp_transport",
-    ":transport_stats",
-    ":used_ids",
-    ":video_track_source_proxy",
-  ]
-
-  public_configs = [ ":rtc_pc_config" ]
 }
 
 rtc_source_set("channel") {
@@ -780,7 +726,6 @@ rtc_source_set("peerconnection") {
     ":peer_connection_message_handler",
     ":proxy",
     ":remote_audio_source",
-    ":rtc_pc_base",
     ":rtc_stats_collector",
     ":rtc_stats_traversal",
     ":rtp_parameters_conversion",
@@ -902,7 +847,6 @@ rtc_library("sctp_data_channel") {
   deps = [
     ":data_channel_utils",
     ":proxy",
-    ":rtc_pc_base",
     ":sctp_utils",
     "../api:libjingle_peerconnection_api",
     "../api:priority",
@@ -950,7 +894,6 @@ rtc_library("connection_context") {
   ]
   deps = [
     ":channel_manager",
-    ":rtc_pc_base",
     "../api:callfactory_api",
     "../api:field_trials_view",
     "../api:libjingle_peerconnection_api",
@@ -983,7 +926,6 @@ rtc_source_set("data_channel_controller") {
     ":channel",
     ":data_channel_utils",
     ":peer_connection_internal",
-    ":rtc_pc_base",
     ":sctp_data_channel",
     ":sctp_utils",
     "../api:libjingle_peerconnection_api",
@@ -1014,7 +956,6 @@ rtc_source_set("peer_connection_internal") {
   deps = [
     ":jsep_transport_controller",
     ":peer_connection_message_handler",
-    ":rtc_pc_base",
     ":rtp_transceiver",
     ":rtp_transmission_manager",
     ":sctp_data_channel",
@@ -1033,7 +974,6 @@ rtc_source_set("rtc_stats_collector") {
     ":channel_interface",
     ":data_channel_utils",
     ":peer_connection_internal",
-    ":rtc_pc_base",
     ":rtc_stats_traversal",
     ":rtp_receiver",
     ":rtp_receiver_proxy",
@@ -1115,7 +1055,6 @@ rtc_source_set("sdp_offer_answer") {
     ":media_stream_proxy",
     ":peer_connection_internal",
     ":peer_connection_message_handler",
-    ":rtc_pc_base",
     ":rtc_stats_collector",
     ":rtp_media_utils",
     ":rtp_receiver",
@@ -1207,7 +1146,6 @@ rtc_source_set("peer_connection") {
     ":jsep_transport_controller",
     ":peer_connection_internal",
     ":peer_connection_message_handler",
-    ":rtc_pc_base",
     ":rtc_stats_collector",
     ":rtp_receiver",
     ":rtp_receiver_proxy",
@@ -1323,7 +1261,6 @@ rtc_source_set("stats_collector") {
     ":channel_interface",
     ":data_channel_utils",
     ":peer_connection_internal",
-    ":rtc_pc_base",
     ":rtp_receiver",
     ":rtp_receiver_proxy",
     ":rtp_sender_proxy",
@@ -1395,7 +1332,6 @@ rtc_source_set("webrtc_sdp") {
   deps = [
     ":media_protocol_names",
     ":media_session",
-    ":rtc_pc_base",
     ":sdp_serializer",
     ":session_description",
     ":simulcast_description",
@@ -1432,7 +1368,6 @@ rtc_source_set("webrtc_session_description_factory") {
     ":channel_manager",
     ":connection_context",
     ":media_session",
-    ":rtc_pc_base",
     ":sdp_state_provider",
     ":session_description",
     "../api:libjingle_peerconnection_api",
@@ -1530,7 +1465,6 @@ rtc_source_set("peer_connection_factory") {
     "../pc:audio_track",
     "../pc:connection_context",
     "../pc:media_stream",
-    "../pc:rtc_pc_base",
     "../pc:rtp_parameters_conversion",
     "../pc:session_description",
     "../pc:video_track",
@@ -1590,7 +1524,6 @@ rtc_library("rtp_transceiver") {
     ":channel_interface",
     ":channel_manager",
     ":proxy",
-    ":rtc_pc_base",
     ":rtp_media_utils",
     ":rtp_parameters_conversion",
     ":rtp_receiver",
@@ -1635,7 +1568,6 @@ rtc_library("rtp_transmission_manager") {
     ":audio_rtp_receiver",
     ":channel",
     ":channel_manager",
-    ":rtc_pc_base",
     ":rtp_receiver",
     ":rtp_receiver_proxy",
     ":rtp_sender",
@@ -1695,7 +1627,6 @@ rtc_library("rtp_receiver") {
   deps = [
     ":media_stream",
     ":media_stream_proxy",
-    ":rtc_pc_base",
     ":video_track_source",
     "../api:libjingle_peerconnection_api",
     "../api:media_stream_interface",
@@ -1729,7 +1660,6 @@ rtc_library("audio_rtp_receiver") {
     ":media_stream",
     ":media_stream_track_proxy",
     ":remote_audio_source",
-    ":rtc_pc_base",
     ":rtp_receiver",
     "../api:frame_transformer_interface",
     "../api:libjingle_peerconnection_api",
@@ -1765,7 +1695,6 @@ rtc_library("video_rtp_receiver") {
     ":jitter_buffer_delay",
     ":media_stream",
     ":media_stream_track_proxy",
-    ":rtc_pc_base",
     ":rtp_receiver",
     ":video_rtp_track_source",
     ":video_track",
@@ -1835,14 +1764,12 @@ rtc_library("video_track") {
     "video_track.h",
   ]
   deps = [
-    ":rtc_pc_base",
     ":video_track_source_proxy",
     "../api:media_stream_interface",
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "../api/video:video_frame",
     "../media:rtc_media_base",
-    "../pc:rtc_pc_base",
     "../rtc_base",
     "../rtc_base:checks",
     "../rtc_base:refcount",
@@ -1856,10 +1783,7 @@ rtc_library("video_track") {
 rtc_source_set("sdp_state_provider") {
   visibility = [ ":*" ]
   sources = [ "sdp_state_provider.h" ]
-  deps = [
-    ":rtc_pc_base",
-    "../api:libjingle_peerconnection_api",
-  ]
+  deps = [ "../api:libjingle_peerconnection_api" ]
 }
 
 rtc_library("jitter_buffer_delay") {
@@ -1887,7 +1811,6 @@ rtc_library("remote_audio_source") {
   ]
   deps = [
     ":channel",
-    ":rtc_pc_base",
     "../api:call_api",
     "../api:media_stream_interface",
     "../api:scoped_refptr",
@@ -1948,7 +1871,6 @@ rtc_library("rtp_parameters_conversion") {
     "rtp_parameters_conversion.h",
   ]
   deps = [
-    ":rtc_pc_base",
     ":session_description",
     "../api:array_view",
     "../api:libjingle_peerconnection_api",
@@ -2096,7 +2018,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":pc_test_utils",
       ":peerconnection",
       ":rtc_pc",
-      ":rtc_pc_base",
       ":rtcp_mux_filter",
       ":rtp_media_utils",
       ":rtp_transport",
@@ -2301,7 +2222,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":peerconnection",
       ":proxy",
       ":remote_audio_source",
-      ":rtc_pc_base",
       ":rtc_stats_collector",
       ":rtc_stats_traversal",
       ":rtp_media_utils",
@@ -2498,7 +2418,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":peer_connection_proxy",
       ":peerconnection",
       ":remote_audio_source",
-      ":rtc_pc_base",
       ":rtp_media_utils",
       ":rtp_parameters_conversion",
       ":rtp_receiver",
@@ -2623,7 +2542,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":libjingle_peerconnection",
       ":peer_connection_internal",
       ":peerconnection",
-      ":rtc_pc_base",
       ":rtp_receiver",
       ":rtp_sender",
       ":sctp_data_channel",
