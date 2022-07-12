@@ -101,14 +101,12 @@ RtpTransportControllerSend::RtpTransportControllerSend(
                                 ? nullptr
                                 : new PacedSender(clock,
                                                   &packet_router_,
-                                                  event_log,
                                                   trials,
                                                   process_thread_.get())),
       task_queue_pacer_(
           pacer_settings_.use_task_queue_pacer()
               ? new TaskQueuePacedSender(clock,
                                          &packet_router_,
-                                         event_log,
                                          trials,
                                          task_queue_factory,
                                          pacer_settings_.holdback_window.Get(),

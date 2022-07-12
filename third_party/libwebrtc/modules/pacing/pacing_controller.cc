@@ -97,7 +97,6 @@ const TimeDelta PacingController::kMinSleepTime = TimeDelta::Millis(1);
 
 PacingController::PacingController(Clock* clock,
                                    PacketSender* packet_sender,
-                                   RtcEventLog* event_log,
                                    const WebRtcKeyValueConfig& field_trials,
                                    ProcessMode mode)
     : mode_(mode),

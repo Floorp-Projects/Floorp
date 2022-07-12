@@ -37,7 +37,6 @@
 
 namespace webrtc {
 class Clock;
-class RtcEventLog;
 
 class PacedSender : public RtpPacketPacer, public RtpPacketSender {
  public:
@@ -57,7 +56,6 @@ class PacedSender : public RtpPacketPacer, public RtpPacketSender {
   // optional once all callers have been updated.
   PacedSender(Clock* clock,
               PacketRouter* packet_router,
-              RtcEventLog* event_log,
               const WebRtcKeyValueConfig& field_trials,
               ProcessThread* process_thread = nullptr);
 

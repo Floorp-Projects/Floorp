@@ -20,7 +20,6 @@
 
 #include "absl/types/optional.h"
 #include "api/function_view.h"
-#include "api/rtc_event_log/rtc_event_log.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/transport/network_types.h"
 #include "api/transport/webrtc_key_value_config.h"
@@ -81,7 +80,6 @@ class PacingController {
 
   PacingController(Clock* clock,
                    PacketSender* packet_sender,
-                   RtcEventLog* event_log,
                    const WebRtcKeyValueConfig& field_trials,
                    ProcessMode mode);
 
