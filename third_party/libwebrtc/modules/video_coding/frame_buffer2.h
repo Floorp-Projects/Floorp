@@ -18,9 +18,9 @@
 #include <vector>
 
 #include "absl/container/inlined_vector.h"
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/video/encoded_frame.h"
-#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/inter_frame_delay.h"
 #include "modules/video_coding/jitter_estimator.h"
@@ -49,7 +49,7 @@ class FrameBuffer {
   FrameBuffer(Clock* clock,
               VCMTiming* timing,
               VCMReceiveStatisticsCallback* stats_callback,
-              const WebRtcKeyValueConfig& field_trials);
+              const FieldTrialsView& field_trials);
 
   FrameBuffer() = delete;
   FrameBuffer(const FrameBuffer&) = delete;

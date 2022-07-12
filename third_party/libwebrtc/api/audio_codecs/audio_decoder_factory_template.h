@@ -15,8 +15,8 @@
 #include <vector>
 
 #include "api/audio_codecs/audio_decoder_factory.h"
+#include "api/field_trials_view.h"
 #include "api/scoped_refptr.h"
-#include "api/webrtc_key_value_config.h"
 #include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
@@ -34,7 +34,7 @@ struct Helper<> {
   static std::unique_ptr<AudioDecoder> MakeAudioDecoder(
       const SdpAudioFormat& format,
       absl::optional<AudioCodecPairId> codec_pair_id,
-      const WebRtcKeyValueConfig* field_trials) {
+      const FieldTrialsView* field_trials) {
     return nullptr;
   }
 };
@@ -58,7 +58,7 @@ struct Helper<T, Ts...> {
   static std::unique_ptr<AudioDecoder> MakeAudioDecoder(
       const SdpAudioFormat& format,
       absl::optional<AudioCodecPairId> codec_pair_id,
-      const WebRtcKeyValueConfig* field_trials) {
+      const FieldTrialsView* field_trials) {
     auto opt_config = T::SdpToConfig(format);
     return opt_config ? T::MakeAudioDecoder(*opt_config, codec_pair_id)
                       : Helper<Ts...>::MakeAudioDecoder(format, codec_pair_id,
@@ -69,7 +69,7 @@ struct Helper<T, Ts...> {
 template <typename... Ts>
 class AudioDecoderFactoryT : public AudioDecoderFactory {
  public:
-  explicit AudioDecoderFactoryT(const WebRtcKeyValueConfig* field_trials) {
+  explicit AudioDecoderFactoryT(const FieldTrialsView* field_trials) {
     field_trials_ = field_trials;
   }
 
@@ -90,7 +90,7 @@ class AudioDecoderFactoryT : public AudioDecoderFactory {
                                            field_trials_);
   }
 
-  const WebRtcKeyValueConfig* field_trials_;
+  const FieldTrialsView* field_trials_;
 };
 
 }  // namespace audio_decoder_factory_template_impl
@@ -127,7 +127,7 @@ class AudioDecoderFactoryT : public AudioDecoderFactory {
 // how it is used.
 template <typename... Ts>
 rtc::scoped_refptr<AudioDecoderFactory> CreateAudioDecoderFactory(
-    const WebRtcKeyValueConfig* field_trials = nullptr) {
+    const FieldTrialsView* field_trials = nullptr) {
   // There's no technical reason we couldn't allow zero template parameters,
   // but such a factory couldn't create any decoders, and callers can do this
   // by mistake by simply forgetting the <> altogether. So we forbid it in

@@ -17,10 +17,10 @@
 #include <string>
 
 #include "absl/strings/match.h"
+#include "api/field_trials_view.h"
 #include "api/network_state_predictor.h"
 #include "api/rtc_event_log/rtc_event.h"
 #include "api/rtc_event_log/rtc_event_log.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
 #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
@@ -158,7 +158,7 @@ DataRate LinkCapacityTracker::estimate() const {
   return DataRate::BitsPerSec(capacity_estimate_bps_);
 }
 
-RttBasedBackoff::RttBasedBackoff(const WebRtcKeyValueConfig* key_value_config)
+RttBasedBackoff::RttBasedBackoff(const FieldTrialsView* key_value_config)
     : disabled_("Disabled"),
       configured_limit_("limit", TimeDelta::Seconds(3)),
       drop_fraction_("fraction", 0.8),
@@ -197,7 +197,7 @@ TimeDelta RttBasedBackoff::CorrectedRtt(Timestamp at_time) const {
 RttBasedBackoff::~RttBasedBackoff() = default;
 
 SendSideBandwidthEstimation::SendSideBandwidthEstimation(
-    const WebRtcKeyValueConfig* key_value_config,
+    const FieldTrialsView* key_value_config,
     RtcEventLog* event_log)
     : rtt_backoff_(key_value_config),
       lost_packets_since_last_loss_update_(0),

@@ -23,7 +23,7 @@
 #include "api/audio/audio_frame_processor.h"
 #include "api/audio_codecs/audio_codec_pair_id.h"
 #include "api/call/audio_sink.h"
-#include "api/transport/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 #include "media/base/audio_source.h"
 #include "media/base/media_constants.h"
 #include "media/base/stream_params.h"
@@ -126,7 +126,7 @@ bool IsCodec(const AudioCodec& codec, const char* ref_name) {
 bool FindCodec(const std::vector<AudioCodec>& codecs,
                const AudioCodec& codec,
                AudioCodec* found_codec,
-               const webrtc::WebRtcKeyValueConfig* field_trials) {
+               const webrtc::FieldTrialsView* field_trials) {
   for (const AudioCodec& c : codecs) {
     if (c.Matches(codec, field_trials)) {
       if (found_codec != NULL) {
@@ -206,8 +206,7 @@ absl::optional<int> ComputeSendBitrate(int max_send_bitrate_bps,
   }
 }
 
-bool IsEnabled(const webrtc::WebRtcKeyValueConfig& config,
-               absl::string_view trial) {
+bool IsEnabled(const webrtc::FieldTrialsView& config, absl::string_view trial) {
   return absl::StartsWith(config.Lookup(trial), "Enabled");
 }
 
@@ -229,7 +228,7 @@ struct AdaptivePtimeConfig {
         "use_slow_adaptation", &use_slow_adaptation);
   }
 
-  explicit AdaptivePtimeConfig(const webrtc::WebRtcKeyValueConfig& trials) {
+  explicit AdaptivePtimeConfig(const webrtc::FieldTrialsView& trials) {
     Parser()->Parse(trials.Lookup("WebRTC-Audio-AdaptivePtime"));
 #if WEBRTC_ENABLE_PROTOBUF
     webrtc::audio_network_adaptor::config::ControllerManager config;
@@ -299,7 +298,7 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
     rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
     rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing,
     webrtc::AudioFrameProcessor* audio_frame_processor,
-    const webrtc::WebRtcKeyValueConfig& trials)
+    const webrtc::FieldTrialsView& trials)
     : task_queue_factory_(task_queue_factory),
       adm_(adm),
       encoder_factory_(encoder_factory),

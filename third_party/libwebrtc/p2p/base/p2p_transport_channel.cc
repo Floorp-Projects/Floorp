@@ -24,8 +24,8 @@
 #include "absl/strings/match.h"
 #include "api/async_dns_resolver.h"
 #include "api/candidate.h"
+#include "api/field_trials_view.h"
 #include "api/task_queue/queued_task.h"
-#include "api/webrtc_key_value_config.h"
 #include "logging/rtc_event_log/ice_logger.h"
 #include "p2p/base/basic_async_resolver_factory.h"
 #include "p2p/base/basic_ice_controller.h"
@@ -61,7 +61,7 @@ cricket::PortInterface::CandidateOrigin GetOrigin(
 }
 
 uint32_t GetWeakPingIntervalInFieldTrial(
-    const webrtc::WebRtcKeyValueConfig* field_trials) {
+    const webrtc::FieldTrialsView* field_trials) {
   if (field_trials != nullptr) {
     uint32_t weak_ping_interval =
         ::strtoul(field_trials->Lookup("WebRTC-StunInterPacketDelay").c_str(),
@@ -134,7 +134,7 @@ P2PTransportChannel::P2PTransportChannel(
     const std::string& transport_name,
     int component,
     PortAllocator* allocator,
-    const webrtc::WebRtcKeyValueConfig* field_trials)
+    const webrtc::FieldTrialsView* field_trials)
     : P2PTransportChannel(transport_name,
                           component,
                           allocator,
@@ -154,7 +154,7 @@ P2PTransportChannel::P2PTransportChannel(
         owned_dns_resolver_factory,
     webrtc::RtcEventLog* event_log,
     IceControllerFactoryInterface* ice_controller_factory,
-    const webrtc::WebRtcKeyValueConfig* field_trials)
+    const webrtc::FieldTrialsView* field_trials)
     : transport_name_(transport_name),
       component_(component),
       allocator_(allocator),
@@ -709,7 +709,7 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
 }
 
 void P2PTransportChannel::ParseFieldTrials(
-    const webrtc::WebRtcKeyValueConfig* field_trials) {
+    const webrtc::FieldTrialsView* field_trials) {
   if (field_trials == nullptr) {
     return;
   }

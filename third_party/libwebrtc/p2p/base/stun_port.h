@@ -41,7 +41,7 @@ class UDPPort : public Port {
       const std::string& password,
       bool emit_local_for_anyaddress,
       absl::optional<int> stun_keepalive_interval,
-      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr) {
+      const webrtc::FieldTrialsView* field_trials = nullptr) {
     // Using `new` to access a non-public constructor.
     auto port = absl::WrapUnique(
         new UDPPort(thread, factory, network, socket, username, password,
@@ -63,7 +63,7 @@ class UDPPort : public Port {
       const std::string& password,
       bool emit_local_for_anyaddress,
       absl::optional<int> stun_keepalive_interval,
-      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr) {
+      const webrtc::FieldTrialsView* field_trials = nullptr) {
     // Using `new` to access a non-public constructor.
     auto port = absl::WrapUnique(
         new UDPPort(thread, factory, network, min_port, max_port, username,
@@ -127,7 +127,7 @@ class UDPPort : public Port {
           const std::string& username,
           const std::string& password,
           bool emit_local_for_anyaddress,
-          const webrtc::WebRtcKeyValueConfig* field_trials);
+          const webrtc::FieldTrialsView* field_trials);
 
   UDPPort(rtc::Thread* thread,
           rtc::PacketSocketFactory* factory,
@@ -136,7 +136,7 @@ class UDPPort : public Port {
           const std::string& username,
           const std::string& password,
           bool emit_local_for_anyaddress,
-          const webrtc::WebRtcKeyValueConfig* field_trials);
+          const webrtc::FieldTrialsView* field_trials);
 
   bool Init();
 
@@ -275,7 +275,7 @@ class StunPort : public UDPPort {
       const std::string& password,
       const ServerAddresses& servers,
       absl::optional<int> stun_keepalive_interval,
-      const webrtc::WebRtcKeyValueConfig* field_trials);
+      const webrtc::FieldTrialsView* field_trials);
 
   void PrepareAddress() override;
 
@@ -288,7 +288,7 @@ class StunPort : public UDPPort {
            const std::string& username,
            const std::string& password,
            const ServerAddresses& servers,
-           const webrtc::WebRtcKeyValueConfig* field_trials);
+           const webrtc::FieldTrialsView* field_trials);
 };
 
 }  // namespace cricket

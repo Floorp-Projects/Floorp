@@ -22,7 +22,7 @@
 namespace cricket {
 
 TransportDescriptionFactory::TransportDescriptionFactory(
-    const webrtc::WebRtcKeyValueConfig& field_trials)
+    const webrtc::FieldTrialsView& field_trials)
     : secure_(SEC_DISABLED), field_trials_(field_trials) {}
 
 TransportDescriptionFactory::~TransportDescriptionFactory() = default;

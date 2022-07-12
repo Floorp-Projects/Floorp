@@ -146,7 +146,7 @@ bool HasBweExtension(const RtpHeaderExtensionMap& extensions_map) {
          extensions_map.IsRegistered(kRtpExtensionTransmissionTimeOffset);
 }
 
-double GetMaxPaddingSizeFactor(const WebRtcKeyValueConfig* field_trials) {
+double GetMaxPaddingSizeFactor(const FieldTrialsView* field_trials) {
   // Too low factor means RTX payload padding is rarely used and ineffective.
   // Too high means we risk interrupting regular media packets.
   // In practice, 3x seems to yield reasonable results.

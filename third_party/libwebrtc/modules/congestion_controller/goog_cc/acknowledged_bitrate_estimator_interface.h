@@ -15,8 +15,8 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/transport/network_types.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "api/units/data_rate.h"
 #include "rtc_base/experiments/struct_parameters_parser.h"
 
@@ -28,7 +28,7 @@ struct RobustThroughputEstimatorSettings {
 
   RobustThroughputEstimatorSettings() = delete;
   explicit RobustThroughputEstimatorSettings(
-      const WebRtcKeyValueConfig* key_value_config);
+      const FieldTrialsView* key_value_config);
 
   bool enabled = false;  // Set to true to use RobustThroughputEstimator.
 
@@ -64,7 +64,7 @@ struct RobustThroughputEstimatorSettings {
 class AcknowledgedBitrateEstimatorInterface {
  public:
   static std::unique_ptr<AcknowledgedBitrateEstimatorInterface> Create(
-      const WebRtcKeyValueConfig* key_value_config);
+      const FieldTrialsView* key_value_config);
   virtual ~AcknowledgedBitrateEstimatorInterface();
 
   virtual void IncomingPacketFeedbackVector(

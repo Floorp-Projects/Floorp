@@ -375,7 +375,7 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
       const VideoStreamEncoderSettings& settings,
       VideoStreamEncoder::BitrateAllocationCallbackType
           allocation_callback_type,
-      const WebRtcKeyValueConfig& field_trials)
+      const FieldTrialsView& field_trials)
       : VideoStreamEncoder(time_controller->GetClock(),
                            1 /* number_of_cores */,
                            stats_proxy,
@@ -612,7 +612,7 @@ class MockableSendStatisticsProxy : public SendStatisticsProxy {
   MockableSendStatisticsProxy(Clock* clock,
                               const VideoSendStream::Config& config,
                               VideoEncoderConfig::ContentType content_type,
-                              const WebRtcKeyValueConfig& field_trials)
+                              const FieldTrialsView& field_trials)
       : SendStatisticsProxy(clock, config, content_type, field_trials) {}
 
   VideoSendStream::Stats GetStats() override {
@@ -681,7 +681,7 @@ class SimpleVideoStreamEncoderFactory {
   std::unique_ptr<AdaptedVideoStreamEncoder> CreateWithEncoderQueue(
       std::unique_ptr<FrameCadenceAdapterInterface> zero_hertz_adapter,
       std::unique_ptr<TaskQueueBase, TaskQueueDeleter> encoder_queue,
-      const WebRtcKeyValueConfig* field_trials = nullptr) {
+      const FieldTrialsView* field_trials = nullptr) {
     auto result = std::make_unique<AdaptedVideoStreamEncoder>(
         time_controller_.GetClock(),
         /*number_of_cores=*/1,

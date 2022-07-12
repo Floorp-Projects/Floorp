@@ -42,7 +42,7 @@ constexpr uint32_t kFixedSsrc = 0;
 constexpr char BweSeparateAudioPacketsSettings::kKey[];
 
 BweSeparateAudioPacketsSettings::BweSeparateAudioPacketsSettings(
-    const WebRtcKeyValueConfig* key_value_config) {
+    const FieldTrialsView* key_value_config) {
   Parser()->Parse(
       key_value_config->Lookup(BweSeparateAudioPacketsSettings::kKey));
 }
@@ -62,7 +62,7 @@ DelayBasedBwe::Result::Result()
       recovered_from_overuse(false),
       backoff_in_alr(false) {}
 
-DelayBasedBwe::DelayBasedBwe(const WebRtcKeyValueConfig* key_value_config,
+DelayBasedBwe::DelayBasedBwe(const FieldTrialsView* key_value_config,
                              RtcEventLog* event_log,
                              NetworkStatePredictor* network_state_predictor)
     : event_log_(event_log),

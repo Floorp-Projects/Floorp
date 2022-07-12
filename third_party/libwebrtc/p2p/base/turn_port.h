@@ -216,7 +216,7 @@ class TurnPort : public Port {
            const std::vector<std::string>& tls_elliptic_curves,
            webrtc::TurnCustomizer* customizer,
            rtc::SSLCertificateVerifier* tls_cert_verifier = nullptr,
-           const webrtc::WebRtcKeyValueConfig* field_trials = nullptr);
+           const webrtc::FieldTrialsView* field_trials = nullptr);
 
   TurnPort(rtc::Thread* thread,
            rtc::PacketSocketFactory* factory,
@@ -232,7 +232,7 @@ class TurnPort : public Port {
            const std::vector<std::string>& tls_elliptic_curves,
            webrtc::TurnCustomizer* customizer,
            rtc::SSLCertificateVerifier* tls_cert_verifier = nullptr,
-           const webrtc::WebRtcKeyValueConfig* field_trials = nullptr);
+           const webrtc::FieldTrialsView* field_trials = nullptr);
 
   // NOTE: This method needs to be accessible for StunPort
   // return true if entry was created (i.e channel_number consumed).
@@ -258,7 +258,7 @@ class TurnPort : public Port {
   typedef std::set<rtc::SocketAddress> AttemptedServerSet;
 
   static bool AllowedTurnPort(int port,
-                              const webrtc::WebRtcKeyValueConfig* field_trials);
+                              const webrtc::FieldTrialsView* field_trials);
   void OnMessage(rtc::Message* pmsg) override;
 
   bool CreateTurnClientSocket();
@@ -364,7 +364,7 @@ class TurnPort : public Port {
   // must outlive the TurnPort's lifetime.
   webrtc::TurnCustomizer* turn_customizer_ = nullptr;
 
-  const webrtc::WebRtcKeyValueConfig* field_trials_;
+  const webrtc::FieldTrialsView* field_trials_;
 
   // Optional TurnLoggingId.
   // An identifier set by application that is added to TURN_ALLOCATE_REQUEST

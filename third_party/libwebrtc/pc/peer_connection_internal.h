@@ -179,7 +179,7 @@ class PeerConnectionInternal : public PeerConnectionInterface,
   // Handler for the "channel closed" signal
   virtual void OnSctpDataChannelClosed(DataChannelInterface* channel) {}
 
-  virtual const WebRtcKeyValueConfig& trials() = 0;
+  virtual const FieldTrialsView& trials() = 0;
 };
 
 }  // namespace webrtc

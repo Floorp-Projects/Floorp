@@ -17,9 +17,9 @@
 
 #include "absl/container/inlined_vector.h"
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/units/timestamp.h"
 #include "api/video/encoded_frame.h"
-#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/utility/decoded_frames_history.h"
 
 namespace webrtc {
@@ -37,7 +37,7 @@ class FrameBuffer {
   FrameBuffer(int max_size,
               int max_decode_history,
               // TODO(hta): remove field trials!
-              const WebRtcKeyValueConfig& field_trials);
+              const FieldTrialsView& field_trials);
   FrameBuffer(const FrameBuffer&) = delete;
   FrameBuffer& operator=(const FrameBuffer&) = delete;
   ~FrameBuffer() = default;

@@ -136,7 +136,7 @@ class Call {
   virtual void SetClientBitratePreferences(
       const BitrateSettings& preferences) = 0;
 
-  virtual const WebRtcKeyValueConfig& trials() const = 0;
+  virtual const FieldTrialsView& trials() const = 0;
 
   virtual TaskQueueBase* network_thread() const = 0;
   virtual TaskQueueBase* worker_thread() const = 0;

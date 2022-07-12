@@ -27,8 +27,7 @@ constexpr int kSendSideDelayWindowMs = 1000;
 constexpr int kBitrateStatisticsWindowMs = 1000;
 constexpr size_t kRtpSequenceNumberMapMaxEntries = 1 << 13;
 
-bool IsDisabled(absl::string_view name,
-                const WebRtcKeyValueConfig* field_trials) {
+bool IsDisabled(absl::string_view name, const FieldTrialsView* field_trials) {
   FieldTrialBasedConfig default_trials;
   auto& trials = field_trials ? *field_trials : default_trials;
   return absl::StartsWith(trials.Lookup(name), "Disabled");

@@ -24,7 +24,7 @@ const char kBweReceiveTimeCorrection[] = "WebRTC-Bwe-ReceiveTimeFix";
 }  // namespace
 
 ReceiveTimeCalculatorConfig::ReceiveTimeCalculatorConfig(
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : max_packet_time_repair("maxrep", TimeDelta::Millis(2000)),
       stall_threshold("stall", TimeDelta::Millis(5)),
       tolerance("tol", TimeDelta::Millis(1)),
@@ -39,12 +39,12 @@ ReceiveTimeCalculatorConfig::ReceiveTimeCalculatorConfig(
 ReceiveTimeCalculatorConfig::~ReceiveTimeCalculatorConfig() = default;
 
 ReceiveTimeCalculator::ReceiveTimeCalculator(
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : config_(field_trials) {}
 
 std::unique_ptr<ReceiveTimeCalculator>
 ReceiveTimeCalculator::CreateFromFieldTrial(
-    const WebRtcKeyValueConfig& field_trials) {
+    const FieldTrialsView& field_trials) {
   if (!field_trials.IsEnabled(kBweReceiveTimeCorrection))
     return nullptr;
   return std::make_unique<ReceiveTimeCalculator>(field_trials);

@@ -110,7 +110,7 @@ absl::optional<int> GetFallbackMaxPixels(const std::string& group) {
 }
 
 absl::optional<int> GetFallbackMaxPixelsIfFieldTrialEnabled(
-    const webrtc::WebRtcKeyValueConfig& field_trials) {
+    const webrtc::FieldTrialsView& field_trials) {
   std::string group = field_trials.Lookup(kVp8ForcedFallbackEncoderFieldTrial);
   return (absl::StartsWith(group, "Enabled"))
              ? GetFallbackMaxPixels(group.substr(7))
@@ -118,7 +118,7 @@ absl::optional<int> GetFallbackMaxPixelsIfFieldTrialEnabled(
 }
 
 absl::optional<int> GetFallbackMaxPixelsIfFieldTrialDisabled(
-    const webrtc::WebRtcKeyValueConfig& field_trials) {
+    const webrtc::FieldTrialsView& field_trials) {
   std::string group = field_trials.Lookup(kVp8ForcedFallbackEncoderFieldTrial);
   return (absl::StartsWith(group, "Disabled"))
              ? GetFallbackMaxPixels(group.substr(8))
@@ -132,7 +132,7 @@ SendStatisticsProxy::SendStatisticsProxy(
     Clock* clock,
     const VideoSendStream::Config& config,
     VideoEncoderConfig::ContentType content_type,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : clock_(clock),
       payload_name_(config.rtp.payload_name),
       rtp_config_(config.rtp),

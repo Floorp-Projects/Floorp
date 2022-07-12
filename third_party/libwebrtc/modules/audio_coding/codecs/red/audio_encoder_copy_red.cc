@@ -39,8 +39,7 @@ AudioEncoderCopyRed::Config::Config() = default;
 AudioEncoderCopyRed::Config::Config(Config&&) = default;
 AudioEncoderCopyRed::Config::~Config() = default;
 
-size_t GetMaxRedundancyFromFieldTrial(
-    const WebRtcKeyValueConfig& field_trials) {
+size_t GetMaxRedundancyFromFieldTrial(const FieldTrialsView& field_trials) {
   const std::string red_trial =
       field_trials.Lookup("WebRTC-Audio-Red-For-Opus");
   size_t redundancy = 0;
@@ -51,9 +50,8 @@ size_t GetMaxRedundancyFromFieldTrial(
   return redundancy;
 }
 
-AudioEncoderCopyRed::AudioEncoderCopyRed(
-    Config&& config,
-    const WebRtcKeyValueConfig& field_trials)
+AudioEncoderCopyRed::AudioEncoderCopyRed(Config&& config,
+                                         const FieldTrialsView& field_trials)
     : speech_encoder_(std::move(config.speech_encoder)),
       primary_encoded_(0, kAudioMaxRtpPacketLen),
       max_packet_length_(kAudioMaxRtpPacketLen),

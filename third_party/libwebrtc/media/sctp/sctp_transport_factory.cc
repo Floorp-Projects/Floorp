@@ -10,7 +10,7 @@
 
 #include "media/sctp/sctp_transport_factory.h"
 
-#include "api/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 #include "rtc_base/system/unused.h"
 
 #ifdef WEBRTC_HAVE_DCSCTP
@@ -26,7 +26,7 @@ namespace cricket {
 
 SctpTransportFactory::SctpTransportFactory(
     rtc::Thread* network_thread,
-    const webrtc::WebRtcKeyValueConfig& field_trials)
+    const webrtc::FieldTrialsView& field_trials)
     : network_thread_(network_thread), use_usrsctp_("Disabled", false) {
   RTC_UNUSED(network_thread_);
 #ifdef WEBRTC_HAVE_DCSCTP

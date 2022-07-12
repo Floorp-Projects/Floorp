@@ -92,7 +92,7 @@ TCPPort::TCPPort(rtc::Thread* thread,
                  const std::string& username,
                  const std::string& password,
                  bool allow_listen,
-                 const webrtc::WebRtcKeyValueConfig* field_trials)
+                 const webrtc::FieldTrialsView* field_trials)
     : Port(thread,
            LOCAL_PORT_TYPE,
            factory,

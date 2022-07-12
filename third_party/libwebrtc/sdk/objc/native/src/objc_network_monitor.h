@@ -14,8 +14,8 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
-#include "api/webrtc_key_value_config.h"
 #include "rtc_base/network_monitor.h"
 #include "rtc_base/network_monitor_factory.h"
 #include "rtc_base/string_utils.h"
@@ -33,7 +33,7 @@ class ObjCNetworkMonitorFactory : public rtc::NetworkMonitorFactory {
   ~ObjCNetworkMonitorFactory() override = default;
 
   rtc::NetworkMonitorInterface* CreateNetworkMonitor(
-      const WebRtcKeyValueConfig& field_trials) override;
+      const FieldTrialsView& field_trials) override;
 };
 
 class ObjCNetworkMonitor : public rtc::NetworkMonitorInterface,

@@ -12,11 +12,11 @@
 #define MODULES_VIDEO_CODING_JITTER_ESTIMATOR_H_
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/units/data_size.h"
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
-#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/rtt_filter.h"
 #include "rtc_base/rolling_accumulator.h"
 
@@ -27,7 +27,7 @@ class Clock;
 class VCMJitterEstimator {
  public:
   explicit VCMJitterEstimator(Clock* clock,
-                              const WebRtcKeyValueConfig& field_trials);
+                              const FieldTrialsView& field_trials);
   virtual ~VCMJitterEstimator();
   VCMJitterEstimator(const VCMJitterEstimator&) = delete;
   VCMJitterEstimator& operator=(const VCMJitterEstimator&) = delete;

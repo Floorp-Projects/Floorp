@@ -46,7 +46,7 @@ rtc_library("audio_encoder_opus") {
   deps = [
     ":audio_encoder_opus_config",
     "..:audio_codecs_api",
-    "../../../api:webrtc_key_value_config",
+    "../../../api:field_trials_view",
     "../../../modules/audio_coding:webrtc_opus",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:rtc_export",
@@ -70,7 +70,7 @@ rtc_library("audio_decoder_opus") {
   ]
   deps = [
     "..:audio_codecs_api",
-    "../../../api:webrtc_key_value_config",
+    "../../../api:field_trials_view",
     "../../../modules/audio_coding:webrtc_opus",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:rtc_export",
@@ -92,7 +92,7 @@ rtc_library("audio_encoder_multiopus") {
   sources = [ "audio_encoder_multi_channel_opus.cc" ]
   deps = [
     "..:audio_codecs_api",
-    "../../../api:webrtc_key_value_config",
+    "../../../api:field_trials_view",
     "../../../modules/audio_coding:webrtc_multiopus",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:rtc_export",
@@ -115,7 +115,7 @@ rtc_library("audio_decoder_multiopus") {
   deps = [
     ":audio_decoder_opus_config",
     "..:audio_codecs_api",
-    "../../../api:webrtc_key_value_config",
+    "../../../api:field_trials_view",
     "../../../modules/audio_coding:webrtc_multiopus",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:rtc_export",

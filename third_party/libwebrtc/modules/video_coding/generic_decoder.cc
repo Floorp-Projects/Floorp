@@ -29,7 +29,7 @@ namespace webrtc {
 VCMDecodedFrameCallback::VCMDecodedFrameCallback(
     VCMTiming* timing,
     Clock* clock,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : _clock(clock),
       _timing(timing),
       _timestampMap(kDecoderFrameMemoryLength),

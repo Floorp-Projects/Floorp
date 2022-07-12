@@ -23,7 +23,7 @@ namespace webrtc {
 BufferedFrameDecryptor::BufferedFrameDecryptor(
     OnDecryptedFrameCallback* decrypted_frame_callback,
     OnDecryptionStatusChangeCallback* decryption_status_change_callback,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : generic_descriptor_auth_experiment_(
           !field_trials.IsDisabled("WebRTC-GenericDescriptorAuth")),
       decrypted_frame_callback_(decrypted_frame_callback),

@@ -18,11 +18,11 @@
 #include "api/audio/audio_mixer.h"
 #include "api/call/call_factory_interface.h"
 #include "api/fec_controller.h"
+#include "api/field_trials_view.h"
 #include "api/rtc_event_log/rtc_event_log_factory_interface.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/transport/network_control.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "modules/audio_processing/include/audio_processing.h"
@@ -57,7 +57,7 @@ struct PeerConnectionFactoryComponents {
   std::unique_ptr<VideoEncoderFactory> video_encoder_factory;
   std::unique_ptr<VideoDecoderFactory> video_decoder_factory;
 
-  std::unique_ptr<WebRtcKeyValueConfig> trials;
+  std::unique_ptr<FieldTrialsView> trials;
 
   rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing;
   rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer;

@@ -27,7 +27,7 @@ rtc_library("audio_encoder_g722") {
   deps = [
     ":audio_encoder_g722_config",
     "..:audio_codecs_api",
-    "../../../api:webrtc_key_value_config",
+    "../../../api:field_trials_view",
     "../../../modules/audio_coding:g722",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:safe_minmax",
@@ -48,7 +48,7 @@ rtc_library("audio_decoder_g722") {
   ]
   deps = [
     "..:audio_codecs_api",
-    "../../../api:webrtc_key_value_config",
+    "../../../api:field_trials_view",
     "../../../modules/audio_coding:g722",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:rtc_export",

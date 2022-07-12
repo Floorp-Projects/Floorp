@@ -16,9 +16,9 @@
 #include <vector>
 
 #include "api/fec_controller.h"
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/video/video_stream_encoder_interface.h"
-#include "api/webrtc_key_value_config.h"
 #include "call/bitrate_allocator.h"
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
@@ -69,7 +69,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
       const std::map<uint32_t, RtpState>& suspended_ssrcs,
       const std::map<uint32_t, RtpPayloadState>& suspended_payload_states,
       std::unique_ptr<FecController> fec_controller,
-      const WebRtcKeyValueConfig& field_trials);
+      const FieldTrialsView& field_trials);
 
   ~VideoSendStream() override;
 

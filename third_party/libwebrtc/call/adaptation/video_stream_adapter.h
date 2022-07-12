@@ -18,10 +18,10 @@
 #include "absl/types/optional.h"
 #include "absl/types/variant.h"
 #include "api/adaptation/resource.h"
+#include "api/field_trials_view.h"
 #include "api/rtp_parameters.h"
 #include "api/video/video_adaptation_counters.h"
 #include "api/video/video_stream_encoder_observer.h"
-#include "api/webrtc_key_value_config.h"
 #include "call/adaptation/adaptation_constraint.h"
 #include "call/adaptation/degradation_preference_provider.h"
 #include "call/adaptation/video_source_restrictions.h"
@@ -125,7 +125,7 @@ class VideoStreamAdapter {
  public:
   VideoStreamAdapter(VideoStreamInputStateProvider* input_state_provider,
                      VideoStreamEncoderObserver* encoder_stats_observer,
-                     const WebRtcKeyValueConfig& field_trials);
+                     const FieldTrialsView& field_trials);
   ~VideoStreamAdapter();
 
   VideoSourceRestrictions source_restrictions() const;

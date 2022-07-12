@@ -13,11 +13,11 @@
 
 #include <memory>
 
+#include "api/field_trials_view.h"
 #include "api/network_state_predictor.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/transport/bitrate_settings.h"
 #include "api/transport/network_control.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "rtc_base/task_queue.h"
 
 namespace webrtc {
@@ -43,7 +43,7 @@ struct RtpTransportConfig {
 
   // Key-value mapping of internal configurations to apply,
   // e.g. field trials.
-  const WebRtcKeyValueConfig* trials = nullptr;
+  const FieldTrialsView* trials = nullptr;
 };
 }  // namespace webrtc
 

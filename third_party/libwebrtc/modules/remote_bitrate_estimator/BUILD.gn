@@ -41,11 +41,11 @@ rtc_library("remote_bitrate_estimator") {
   }
 
   deps = [
+    "../../api:field_trials_view",
     "../../api:network_state_predictor_api",
     "../../api:rtp_headers",
     "../../api/transport:field_trial_based_config",
     "../../api/transport:network_control",
-    "../../api/transport:webrtc_key_value_config",
     "../../api/units:data_rate",
     "../../api/units:data_size",
     "../../api/units:time_delta",

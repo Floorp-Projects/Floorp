@@ -31,7 +31,7 @@ namespace webrtc {
 namespace {
 using TimeScopedNetworkConfig = DegradedCall::TimeScopedNetworkConfig;
 
-bool ParseConfigParam(const WebRtcKeyValueConfig& trials,
+bool ParseConfigParam(const FieldTrialsView& trials,
                       absl::string_view exp_name,
                       int* field) {
   std::string group = trials.Lookup(exp_name);
@@ -42,7 +42,7 @@ bool ParseConfigParam(const WebRtcKeyValueConfig& trials,
 }
 
 absl::optional<TimeScopedNetworkConfig> ParseDegradationConfig(
-    const WebRtcKeyValueConfig& trials,
+    const FieldTrialsView& trials,
     bool send) {
   std::string exp_prefix = "WebRTCFakeNetwork";
   if (send) {
@@ -80,7 +80,7 @@ absl::optional<TimeScopedNetworkConfig> ParseDegradationConfig(
 }
 
 std::vector<TimeScopedNetworkConfig> GetNetworkConfigs(
-    const WebRtcKeyValueConfig& trials,
+    const FieldTrialsView& trials,
     bool send) {
   FieldTrialStructList<TimeScopedNetworkConfig> trials_list(
       {FieldTrialStructMember("queue_length_packets",

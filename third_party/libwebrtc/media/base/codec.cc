@@ -129,7 +129,7 @@ bool Codec::operator==(const Codec& c) const {
 }
 
 bool Codec::Matches(const Codec& codec,
-                    const webrtc::WebRtcKeyValueConfig* field_trials) const {
+                    const webrtc::FieldTrialsView* field_trials) const {
   // Match the codec id/name based on the typical static/dynamic name rules.
   // Matching is case-insensitive.
 
@@ -238,9 +238,8 @@ bool AudioCodec::operator==(const AudioCodec& c) const {
   return bitrate == c.bitrate && channels == c.channels && Codec::operator==(c);
 }
 
-bool AudioCodec::Matches(
-    const AudioCodec& codec,
-    const webrtc::WebRtcKeyValueConfig* field_trials) const {
+bool AudioCodec::Matches(const AudioCodec& codec,
+                         const webrtc::FieldTrialsView* field_trials) const {
   // If a nonzero clockrate is specified, it must match the actual clockrate.
   // If a nonzero bitrate is specified, it must match the actual bitrate,
   // unless the codec is VBR (0), where we just force the supplied value.
@@ -326,9 +325,8 @@ bool VideoCodec::operator==(const VideoCodec& c) const {
   return Codec::operator==(c) && packetization == c.packetization;
 }
 
-bool VideoCodec::Matches(
-    const VideoCodec& other,
-    const webrtc::WebRtcKeyValueConfig* field_trials) const {
+bool VideoCodec::Matches(const VideoCodec& other,
+                         const webrtc::FieldTrialsView* field_trials) const {
   return Codec::Matches(other, field_trials) &&
          IsSameCodecSpecific(name, params, other.name, other.params);
 }

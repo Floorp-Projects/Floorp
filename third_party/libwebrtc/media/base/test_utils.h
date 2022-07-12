@@ -39,7 +39,7 @@ inline std::vector<T> MakeVector(const T a[], size_t s) {
 template <class C>
 bool ContainsMatchingCodec(const std::vector<C>& codecs,
                            const C& codec,
-                           const webrtc::WebRtcKeyValueConfig* field_trials) {
+                           const webrtc::FieldTrialsView* field_trials) {
   typename std::vector<C>::const_iterator it;
   for (it = codecs.begin(); it != codecs.end(); ++it) {
     if (it->Matches(codec, field_trials)) {

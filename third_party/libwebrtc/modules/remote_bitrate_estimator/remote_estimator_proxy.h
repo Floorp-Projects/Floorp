@@ -16,8 +16,8 @@
 #include <memory>
 #include <vector>
 
+#include "api/field_trials_view.h"
 #include "api/transport/network_control.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "modules/remote_bitrate_estimator/packet_arrival_map.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -42,7 +42,7 @@ class RemoteEstimatorProxy : public RemoteBitrateEstimator {
       std::vector<std::unique_ptr<rtcp::RtcpPacket>> packets)>;
   RemoteEstimatorProxy(Clock* clock,
                        TransportFeedbackSender feedback_sender,
-                       const WebRtcKeyValueConfig* key_value_config,
+                       const FieldTrialsView* key_value_config,
                        NetworkStateEstimator* network_state_estimator);
   ~RemoteEstimatorProxy() override;
 
@@ -68,7 +68,7 @@ class RemoteEstimatorProxy : public RemoteBitrateEstimator {
                                                     TimeDelta::Millis(100)};
     FieldTrialParameter<double> bandwidth_fraction{"frac", 0.05};
     explicit TransportWideFeedbackConfig(
-        const WebRtcKeyValueConfig* key_value_config) {
+        const FieldTrialsView* key_value_config) {
       ParseFieldTrial({&back_window, &min_interval, &max_interval,
                        &default_interval, &bandwidth_fraction},
                       key_value_config->Lookup(

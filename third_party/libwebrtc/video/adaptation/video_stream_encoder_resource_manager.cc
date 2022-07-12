@@ -266,7 +266,7 @@ VideoStreamEncoderResourceManager::VideoStreamEncoderResourceManager(
     bool experiment_cpu_load_estimator,
     std::unique_ptr<OveruseFrameDetector> overuse_detector,
     DegradationPreferenceProvider* degradation_preference_provider,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : field_trials_(field_trials),
       degradation_preference_provider_(degradation_preference_provider),
       bitrate_constraint_(std::make_unique<BitrateConstraint>()),

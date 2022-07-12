@@ -12,7 +12,7 @@
 #define RTC_BASE_EXPERIMENTS_RATE_CONTROL_SETTINGS_H_
 
 #include "absl/types/optional.h"
-#include "api/transport/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 #include "api/units/data_size.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_encoder_config.h"
@@ -57,7 +57,7 @@ class RateControlSettings final {
 
   static RateControlSettings ParseFromFieldTrials();
   static RateControlSettings ParseFromKeyValueConfig(
-      const WebRtcKeyValueConfig* const key_value_config);
+      const FieldTrialsView* const key_value_config);
 
   // When CongestionWindowPushback is enabled, the pacer is oblivious to
   // the congestion window. The relation between outstanding data and
@@ -93,8 +93,7 @@ class RateControlSettings final {
   bool BitrateAdjusterCanUseNetworkHeadroom() const;
 
  private:
-  explicit RateControlSettings(
-      const WebRtcKeyValueConfig* const key_value_config);
+  explicit RateControlSettings(const FieldTrialsView* const key_value_config);
 
   CongestionWindowConfig congestion_window_config_;
   VideoRateControlConfig video_config_;

@@ -74,7 +74,7 @@ rtc::Thread* MaybeWrapThread(rtc::Thread* signaling_thread,
 std::unique_ptr<SctpTransportFactoryInterface> MaybeCreateSctpFactory(
     std::unique_ptr<SctpTransportFactoryInterface> factory,
     rtc::Thread* network_thread,
-    const WebRtcKeyValueConfig& field_trials) {
+    const FieldTrialsView& field_trials) {
   if (factory) {
     return factory;
   }

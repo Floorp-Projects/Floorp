@@ -24,7 +24,7 @@ namespace {
 constexpr TimeDelta kZeroPlayoutDelayDefaultMinPacing = TimeDelta::Millis(8);
 }  // namespace
 
-VCMTiming::VCMTiming(Clock* clock, const WebRtcKeyValueConfig& field_trials)
+VCMTiming::VCMTiming(Clock* clock, const FieldTrialsView& field_trials)
     : clock_(clock),
       ts_extrapolator_(
           std::make_unique<TimestampExtrapolator>(clock_->CurrentTime())),

@@ -61,13 +61,13 @@ rtc_library("video") {
     ":video_stream_encoder_impl",
     "../api:array_view",
     "../api:fec_controller_api",
+    "../api:field_trials_view",
     "../api:frame_transformer_interface",
     #"../api:libjingle_peerconnection_api",
     "../api:rtp_parameters",
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "../api:transport_api",
-    "../api:webrtc_key_value_config",
     "../api/crypto:frame_decryptor_interface",
     "../api/crypto:options",
     "../api/rtc_event_log",
@@ -169,9 +169,9 @@ rtc_source_set("video_legacy") {
     ":frame_dumping_decoder",
     ":video",
     "../api:array_view",
+    "../api:field_trials_view",
     "../api:scoped_refptr",
     "../api:sequence_checker",
-    "../api:webrtc_key_value_config",
     "../api/crypto:frame_decryptor_interface",
     "../api/task_queue",
     "../api/transport:field_trial_based_config",
@@ -231,8 +231,8 @@ rtc_library("video_stream_decoder_impl") {
   ]
 
   deps = [
+    "../api:field_trials_view",
     "../api:sequence_checker",
-    "../api:webrtc_key_value_config",
     "../api/task_queue",
     "../api/transport:field_trial_based_config",
     "../api/video:encoded_frame",
@@ -279,8 +279,8 @@ rtc_library("frame_cadence_adapter") {
   ]
 
   deps = [
+    "../api:field_trials_view",
     "../api:sequence_checker",
-    "../api:webrtc_key_value_config",
     "../api/task_queue",
     "../api/units:time_delta",
     "../api/video:video_frame",
@@ -312,8 +312,8 @@ rtc_library("frame_buffer_proxy") {
     ":frame_decode_timing",
     ":task_queue_frame_decode_scheduler",
     ":video_receive_stream_timeout_tracker",
+    "../api:field_trials_view",
     "../api:sequence_checker",
-    "../api:webrtc_key_value_config",
     "../api/metronome",
     "../api/task_queue",
     "../api/units:data_size",
@@ -435,9 +435,9 @@ rtc_library("video_stream_encoder_impl") {
 
   deps = [
     ":frame_cadence_adapter",
+    "../api:field_trials_view",
     "../api:rtp_parameters",
     "../api:sequence_checker",
-    "../api:webrtc_key_value_config",
     "../api/adaptation:resource_adaptation_api",
     "../api/task_queue:task_queue",
     "../api/units:data_rate",

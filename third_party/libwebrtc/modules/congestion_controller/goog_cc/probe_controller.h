@@ -18,16 +18,16 @@
 
 #include "absl/base/attributes.h"
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/transport/network_control.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "api/units/data_rate.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 
 namespace webrtc {
 
 struct ProbeControllerConfig {
-  explicit ProbeControllerConfig(const WebRtcKeyValueConfig* key_value_config);
+  explicit ProbeControllerConfig(const FieldTrialsView* key_value_config);
   ProbeControllerConfig(const ProbeControllerConfig&);
   ProbeControllerConfig& operator=(const ProbeControllerConfig&) = default;
   ~ProbeControllerConfig();
@@ -58,7 +58,7 @@ struct ProbeControllerConfig {
 // bitrate is adjusted by an application.
 class ProbeController {
  public:
-  explicit ProbeController(const WebRtcKeyValueConfig* key_value_config,
+  explicit ProbeController(const FieldTrialsView* key_value_config,
                            RtcEventLog* event_log);
   ~ProbeController();
 

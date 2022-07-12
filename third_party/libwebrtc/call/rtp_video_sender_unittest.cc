@@ -119,7 +119,7 @@ class RtpVideoSenderTestFixture {
       const std::map<uint32_t, RtpPayloadState>& suspended_payload_states,
       FrameCountObserver* frame_count_observer,
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-      const WebRtcKeyValueConfig* field_trials = nullptr)
+      const FieldTrialsView* field_trials = nullptr)
       : time_controller_(Timestamp::Millis(1000000)),
         config_(CreateVideoSendStreamConfig(&transport_,
                                             ssrcs,
@@ -162,7 +162,7 @@ class RtpVideoSenderTestFixture {
       int payload_type,
       const std::map<uint32_t, RtpPayloadState>& suspended_payload_states,
       FrameCountObserver* frame_count_observer,
-      const WebRtcKeyValueConfig* field_trials = nullptr)
+      const FieldTrialsView* field_trials = nullptr)
       : RtpVideoSenderTestFixture(ssrcs,
                                   rtx_ssrcs,
                                   payload_type,
@@ -176,7 +176,7 @@ class RtpVideoSenderTestFixture {
       const std::vector<uint32_t>& rtx_ssrcs,
       int payload_type,
       const std::map<uint32_t, RtpPayloadState>& suspended_payload_states,
-      const WebRtcKeyValueConfig* field_trials = nullptr)
+      const FieldTrialsView* field_trials = nullptr)
       : RtpVideoSenderTestFixture(ssrcs,
                                   rtx_ssrcs,
                                   payload_type,

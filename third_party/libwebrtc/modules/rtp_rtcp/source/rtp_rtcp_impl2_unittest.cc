@@ -157,7 +157,7 @@ struct TestConfig {
   bool with_overhead = false;
 };
 
-class FieldTrialConfig : public WebRtcKeyValueConfig {
+class FieldTrialConfig : public FieldTrialsView {
  public:
   static FieldTrialConfig GetFromTestConfig(const TestConfig& config) {
     FieldTrialConfig trials;

@@ -31,7 +31,7 @@ namespace {
 
 class FakeVCMTiming : public webrtc::VCMTiming {
  public:
-  explicit FakeVCMTiming(Clock* clock, const WebRtcKeyValueConfig& field_trials)
+  explicit FakeVCMTiming(Clock* clock, const FieldTrialsView& field_trials)
       : webrtc::VCMTiming(clock, field_trials) {}
 
   Timestamp RenderTime(uint32_t frame_timestamp, Timestamp now) const override {

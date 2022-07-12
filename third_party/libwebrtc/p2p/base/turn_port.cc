@@ -226,7 +226,7 @@ TurnPort::TurnPort(rtc::Thread* thread,
                    const std::vector<std::string>& tls_elliptic_curves,
                    webrtc::TurnCustomizer* customizer,
                    rtc::SSLCertificateVerifier* tls_cert_verifier,
-                   const webrtc::WebRtcKeyValueConfig* field_trials)
+                   const webrtc::FieldTrialsView* field_trials)
     : Port(thread,
            RELAY_PORT_TYPE,
            factory,
@@ -266,7 +266,7 @@ TurnPort::TurnPort(rtc::Thread* thread,
                    const std::vector<std::string>& tls_elliptic_curves,
                    webrtc::TurnCustomizer* customizer,
                    rtc::SSLCertificateVerifier* tls_cert_verifier,
-                   const webrtc::WebRtcKeyValueConfig* field_trials)
+                   const webrtc::FieldTrialsView* field_trials)
     : Port(thread,
            RELAY_PORT_TYPE,
            factory,
@@ -945,9 +945,8 @@ rtc::DiffServCodePoint TurnPort::StunDscpValue() const {
 }
 
 // static
-bool TurnPort::AllowedTurnPort(
-    int port,
-    const webrtc::WebRtcKeyValueConfig* field_trials) {
+bool TurnPort::AllowedTurnPort(int port,
+                               const webrtc::FieldTrialsView* field_trials) {
   // Port 53, 80 and 443 are used for existing deployments.
   // Ports above 1024 are assumed to be OK to use.
   if (port == 53 || port == 80 || port == 443 || port >= 1024) {

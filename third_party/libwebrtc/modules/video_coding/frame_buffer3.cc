@@ -64,7 +64,7 @@ bool IsLastFrameInTemporalUnit(const FrameIteratorT& it) {
 
 FrameBuffer::FrameBuffer(int max_size,
                          int max_decode_history,
-                         const WebRtcKeyValueConfig& field_trials)
+                         const FieldTrialsView& field_trials)
     : legacy_frame_id_jump_behavior_(
           !field_trials.IsDisabled("WebRTC-LegacyFrameIdJumpBehavior")),
       max_size_(max_size),

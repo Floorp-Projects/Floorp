@@ -27,6 +27,7 @@
 #include "api/crypto/crypto_options.h"
 #include "api/data_channel_interface.h"
 #include "api/dtls_transport_interface.h"
+#include "api/field_trials_view.h"
 #include "api/ice_transport_interface.h"
 #include "api/jsep.h"
 #include "api/media_stream_interface.h"
@@ -48,7 +49,6 @@
 #include "api/transport/data_channel_transport_interface.h"
 #include "api/transport/enums.h"
 #include "api/turn_customizer.h"
-#include "api/webrtc_key_value_config.h"
 #include "call/call.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/port.h"
@@ -437,7 +437,7 @@ class PeerConnection : public PeerConnectionInternal,
   }
   void RequestUsagePatternReportForTesting();
 
-  const WebRtcKeyValueConfig& trials() override { return context_->trials(); }
+  const FieldTrialsView& trials() override { return context_->trials(); }
 
  protected:
   // Available for rtc::scoped_refptr creation

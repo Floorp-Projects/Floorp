@@ -111,11 +111,10 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
 
   // For testing only.
   // TODO(zstein): Remove once AsyncDnsResolverFactory is required.
-  P2PTransportChannel(
-      const std::string& transport_name,
-      int component,
-      PortAllocator* allocator,
-      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr);
+  P2PTransportChannel(const std::string& transport_name,
+                      int component,
+                      PortAllocator* allocator,
+                      const webrtc::FieldTrialsView* field_trials = nullptr);
 
   ~P2PTransportChannel() override;
 
@@ -248,7 +247,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
           owned_dns_resolver_factory,
       webrtc::RtcEventLog* event_log,
       IceControllerFactoryInterface* ice_controller_factory,
-      const webrtc::WebRtcKeyValueConfig* field_trials);
+      const webrtc::FieldTrialsView* field_trials);
   bool IsGettingPorts() {
     RTC_DCHECK_RUN_ON(network_thread_);
     return allocator_session()->IsGettingPorts();
@@ -400,7 +399,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   int64_t ComputeEstimatedDisconnectedTimeMs(int64_t now,
                                              Connection* old_connection);
 
-  void ParseFieldTrials(const webrtc::WebRtcKeyValueConfig* field_trials);
+  void ParseFieldTrials(const webrtc::FieldTrialsView* field_trials);
 
   webrtc::ScopedTaskSafety task_safety_;
   std::string transport_name_ RTC_GUARDED_BY(network_thread_);

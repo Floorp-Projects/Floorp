@@ -21,9 +21,9 @@
 #include "absl/algorithm/container.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/field_trials_view.h"
 #include "api/network_state_predictor.h"
 #include "api/transport/network_types.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "api/units/data_rate.h"
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
@@ -101,7 +101,7 @@ double GetLossProbability(double inherent_loss,
 
 }  // namespace
 
-LossBasedBweV2::LossBasedBweV2(const WebRtcKeyValueConfig* key_value_config)
+LossBasedBweV2::LossBasedBweV2(const FieldTrialsView* key_value_config)
     : config_(CreateConfig(key_value_config)) {
   if (!config_.has_value()) {
     RTC_LOG(LS_VERBOSE) << "The configuration does not specify that the "
@@ -225,7 +225,7 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
 // Returns a `LossBasedBweV2::Config` iff the `key_value_config` specifies a
 // configuration for the `LossBasedBweV2` which is explicitly enabled.
 absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
-    const WebRtcKeyValueConfig* key_value_config) {
+    const FieldTrialsView* key_value_config) {
   FieldTrialParameter<bool> enabled("Enabled", false);
   FieldTrialParameter<double> bandwidth_rampup_upper_bound_factor(
       "BwRampupUpperBoundFactor", 1.1);

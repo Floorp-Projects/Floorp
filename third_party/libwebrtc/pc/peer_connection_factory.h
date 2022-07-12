@@ -21,6 +21,7 @@
 #include "absl/strings/string_view.h"
 #include "api/audio_options.h"
 #include "api/fec_controller.h"
+#include "api/field_trials_view.h"
 #include "api/media_stream_interface.h"
 #include "api/media_types.h"
 #include "api/metronome/metronome.h"
@@ -36,7 +37,6 @@
 #include "api/task_queue/task_queue_factory.h"
 #include "api/transport/network_control.h"
 #include "api/transport/sctp_transport_factory_interface.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "call/call.h"
 #include "call/rtp_transport_controller_send_factory_interface.h"
 #include "p2p/base/port_allocator.h"
@@ -115,7 +115,7 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
     return options_;
   }
 
-  const WebRtcKeyValueConfig& trials() const { return context_->trials(); }
+  const FieldTrialsView& trials() const { return context_->trials(); }
 
  protected:
   // Constructor used by the static Create() method. Modifies the dependencies.

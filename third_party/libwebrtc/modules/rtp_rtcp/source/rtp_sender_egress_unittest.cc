@@ -87,7 +87,7 @@ class MockSendSideDelayObserver : public SendSideDelayObserver {
               (override));
 };
 
-class FieldTrialConfig : public WebRtcKeyValueConfig {
+class FieldTrialConfig : public FieldTrialsView {
  public:
   FieldTrialConfig() : overhead_enabled_(false) {}
   ~FieldTrialConfig() override {}

@@ -88,7 +88,7 @@ std::unique_ptr<StructParametersParser> AudioAllocationConfig::Parser() {
 }
 
 AudioAllocationConfig::AudioAllocationConfig(
-    const WebRtcKeyValueConfig& field_trials) {
+    const FieldTrialsView& field_trials) {
   Parser()->Parse(field_trials.Lookup(kKey));
   if (priority_bitrate_raw && !priority_bitrate.IsZero()) {
     RTC_LOG(LS_WARNING) << "'priority_bitrate' and '_raw' are mutually "
@@ -107,7 +107,7 @@ AudioSendStream::AudioSendStream(
     RtcEventLog* event_log,
     RtcpRttStats* rtcp_rtt_stats,
     const absl::optional<RtpState>& suspended_rtp_state,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : AudioSendStream(
           clock,
           config,
@@ -142,7 +142,7 @@ AudioSendStream::AudioSendStream(
     RtcEventLog* event_log,
     const absl::optional<RtpState>& suspended_rtp_state,
     std::unique_ptr<voe::ChannelSendInterface> channel_send,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : clock_(clock),
       field_trials_(field_trials),
       rtp_transport_queue_(rtp_transport->GetWorkerQueue()),

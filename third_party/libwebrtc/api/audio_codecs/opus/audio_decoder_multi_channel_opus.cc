@@ -65,7 +65,7 @@ void AudioDecoderMultiChannelOpus::AppendSupportedDecoders(
 std::unique_ptr<AudioDecoder> AudioDecoderMultiChannelOpus::MakeAudioDecoder(
     AudioDecoderMultiChannelOpusConfig config,
     absl::optional<AudioCodecPairId> /*codec_pair_id*/,
-    const WebRtcKeyValueConfig* field_trials) {
+    const FieldTrialsView* field_trials) {
   return AudioDecoderMultiChannelOpusImpl::MakeAudioDecoder(config);
 }
 }  // namespace webrtc

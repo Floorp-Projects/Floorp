@@ -59,11 +59,11 @@ TargetRateConstraints ConvertConstraints(const BitrateConstraints& contraints,
                             contraints.start_bitrate_bps, clock);
 }
 
-bool IsEnabled(const WebRtcKeyValueConfig& trials, absl::string_view key) {
+bool IsEnabled(const FieldTrialsView& trials, absl::string_view key) {
   return absl::StartsWith(trials.Lookup(key), "Enabled");
 }
 
-bool IsDisabled(const WebRtcKeyValueConfig& trials, absl::string_view key) {
+bool IsDisabled(const FieldTrialsView& trials, absl::string_view key) {
   return absl::StartsWith(trials.Lookup(key), "Disabled");
 }
 
@@ -74,7 +74,7 @@ bool IsRelayed(const rtc::NetworkRoute& route) {
 }  // namespace
 
 RtpTransportControllerSend::PacerSettings::PacerSettings(
-    const WebRtcKeyValueConfig& trials)
+    const FieldTrialsView& trials)
     : tq_disabled("Disabled"),
       holdback_window("holdback_window", PacingController::kMinSleepTime),
       holdback_packets("holdback_packets",
@@ -91,7 +91,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
     const BitrateConstraints& bitrate_config,
     std::unique_ptr<ProcessThread> process_thread,
     TaskQueueFactory* task_queue_factory,
-    const WebRtcKeyValueConfig& trials)
+    const FieldTrialsView& trials)
     : clock_(clock),
       event_log_(event_log),
       bitrate_configurator_(bitrate_config),

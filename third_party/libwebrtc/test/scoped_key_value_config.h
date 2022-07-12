@@ -16,13 +16,13 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "api/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 #include "test/field_trial.h"
 
 namespace webrtc {
 namespace test {
 
-class ScopedKeyValueConfig : public WebRtcKeyValueConfig {
+class ScopedKeyValueConfig : public FieldTrialsView {
  public:
   virtual ~ScopedKeyValueConfig();
   ScopedKeyValueConfig();

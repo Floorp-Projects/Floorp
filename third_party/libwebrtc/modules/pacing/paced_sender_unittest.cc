@@ -48,7 +48,7 @@ class MockCallback : public PacketRouter {
               (override));
 };
 
-class ProcessModeTrials : public WebRtcKeyValueConfig {
+class ProcessModeTrials : public FieldTrialsView {
  public:
   explicit ProcessModeTrials(bool dynamic_process) : mode_(dynamic_process) {}
 

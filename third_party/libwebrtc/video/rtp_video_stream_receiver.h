@@ -103,7 +103,7 @@ class RtpVideoStreamReceiver : public LossNotificationSender,
       OnCompleteFrameCallback* complete_frame_callback,
       rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-      const WebRtcKeyValueConfig* field_trials = nullptr);
+      const FieldTrialsView* field_trials = nullptr);
 
   RtpVideoStreamReceiver(
       Clock* clock,
@@ -125,7 +125,7 @@ class RtpVideoStreamReceiver : public LossNotificationSender,
       OnCompleteFrameCallback* complete_frame_callback,
       rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-      const WebRtcKeyValueConfig* field_trials = nullptr);
+      const FieldTrialsView* field_trials = nullptr);
   ~RtpVideoStreamReceiver() override;
 
   void AddReceiveCodec(uint8_t payload_type,
@@ -331,7 +331,7 @@ class RtpVideoStreamReceiver : public LossNotificationSender,
                                      bool is_keyframe)
       RTC_RUN_ON(worker_task_checker_);
 
-  const WebRtcKeyValueConfig& field_trials_;
+  const FieldTrialsView& field_trials_;
   FieldTrialBasedConfig owned_field_trials_;
 
   Clock* const clock_;

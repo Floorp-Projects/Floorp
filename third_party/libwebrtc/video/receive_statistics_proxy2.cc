@@ -102,7 +102,7 @@ ReceiveStatisticsProxy::ReceiveStatisticsProxy(
     uint32_t remote_ssrc,
     Clock* clock,
     TaskQueueBase* worker_thread,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : clock_(clock),
       start_ms_(clock->TimeInMilliseconds()),
       enable_decode_time_histograms_(

@@ -21,8 +21,8 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/audio_codecs/audio_encoder.h"
+#include "api/field_trials_view.h"
 #include "api/units/time_delta.h"
-#include "api/webrtc_key_value_config.h"
 #include "rtc_base/buffer.h"
 
 namespace webrtc {
@@ -43,8 +43,7 @@ class AudioEncoderCopyRed final : public AudioEncoder {
     std::unique_ptr<AudioEncoder> speech_encoder;
   };
 
-  AudioEncoderCopyRed(Config&& config,
-                      const WebRtcKeyValueConfig& field_trials);
+  AudioEncoderCopyRed(Config&& config, const FieldTrialsView& field_trials);
 
   ~AudioEncoderCopyRed() override;
 

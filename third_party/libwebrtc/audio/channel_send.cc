@@ -103,7 +103,7 @@ class ChannelSend : public ChannelSendInterface,
               uint32_t ssrc,
               rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
               TransportFeedbackObserver* feedback_observer,
-              const WebRtcKeyValueConfig& field_trials);
+              const FieldTrialsView& field_trials);
 
   ~ChannelSend() override;
 
@@ -486,7 +486,7 @@ ChannelSend::ChannelSend(
     uint32_t ssrc,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
     TransportFeedbackObserver* feedback_observer,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : ssrc_(ssrc),
       event_log_(rtc_event_log),
       _timeStamp(0),  // This is just an offset, RTP module will add it's own
@@ -981,7 +981,7 @@ std::unique_ptr<ChannelSendInterface> CreateChannelSend(
     uint32_t ssrc,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
     TransportFeedbackObserver* feedback_observer,
-    const WebRtcKeyValueConfig& field_trials) {
+    const FieldTrialsView& field_trials) {
   return std::make_unique<ChannelSend>(
       clock, task_queue_factory, rtp_transport, rtcp_rtt_stats, rtc_event_log,
       frame_encryptor, crypto_options, extmap_allow_mixed,

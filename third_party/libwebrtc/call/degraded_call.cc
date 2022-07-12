@@ -279,7 +279,7 @@ Call::Stats DegradedCall::GetStats() const {
   return call_->GetStats();
 }
 
-const WebRtcKeyValueConfig& DegradedCall::trials() const {
+const FieldTrialsView& DegradedCall::trials() const {
   return call_->trials();
 }
 

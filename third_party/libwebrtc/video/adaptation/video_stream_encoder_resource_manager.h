@@ -21,6 +21,7 @@
 
 #include "absl/types/optional.h"
 #include "api/adaptation/resource.h"
+#include "api/field_trials_view.h"
 #include "api/rtp_parameters.h"
 #include "api/scoped_refptr.h"
 #include "api/task_queue/task_queue_base.h"
@@ -32,7 +33,6 @@
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_config.h"
-#include "api/webrtc_key_value_config.h"
 #include "call/adaptation/resource_adaptation_processor_interface.h"
 #include "call/adaptation/video_stream_adapter.h"
 #include "call/adaptation/video_stream_input_state_provider.h"
@@ -81,7 +81,7 @@ class VideoStreamEncoderResourceManager
       bool experiment_cpu_load_estimator,
       std::unique_ptr<OveruseFrameDetector> overuse_detector,
       DegradationPreferenceProvider* degradation_preference_provider,
-      const WebRtcKeyValueConfig& field_trials);
+      const FieldTrialsView& field_trials);
   ~VideoStreamEncoderResourceManager() override;
 
   void Initialize(rtc::TaskQueue* encoder_queue);
@@ -183,7 +183,7 @@ class VideoStreamEncoderResourceManager
       const std::map<VideoAdaptationReason, VideoAdaptationCounters>&
           active_counts);
 
-  const WebRtcKeyValueConfig& field_trials_;
+  const FieldTrialsView& field_trials_;
   DegradationPreferenceProvider* const degradation_preference_provider_;
   std::unique_ptr<BitrateConstraint> bitrate_constraint_
       RTC_GUARDED_BY(encoder_queue_);

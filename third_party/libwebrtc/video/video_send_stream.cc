@@ -63,7 +63,7 @@ size_t CalculateMaxHeaderSize(const RtpConfig& config) {
 
 VideoStreamEncoder::BitrateAllocationCallbackType
 GetBitrateAllocationCallbackType(const VideoSendStream::Config& config,
-                                 const WebRtcKeyValueConfig& field_trials) {
+                                 const FieldTrialsView& field_trials) {
   if (webrtc::RtpExtension::FindHeaderExtensionByUri(
           config.rtp.extensions,
           webrtc::RtpExtension::kVideoLayersAllocationUri,
@@ -115,7 +115,7 @@ std::unique_ptr<VideoStreamEncoder> CreateVideoStreamEncoder(
     const VideoStreamEncoderSettings& encoder_settings,
     VideoStreamEncoder::BitrateAllocationCallbackType
         bitrate_allocation_callback_type,
-    const WebRtcKeyValueConfig& field_trials) {
+    const FieldTrialsView& field_trials) {
   std::unique_ptr<TaskQueueBase, TaskQueueDeleter> encoder_queue =
       task_queue_factory->CreateTaskQueue("EncoderQueue",
                                           TaskQueueFactory::Priority::NORMAL);
@@ -147,7 +147,7 @@ VideoSendStream::VideoSendStream(
     const std::map<uint32_t, RtpState>& suspended_ssrcs,
     const std::map<uint32_t, RtpPayloadState>& suspended_payload_states,
     std::unique_ptr<FecController> fec_controller,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : rtp_transport_queue_(transport->GetWorkerQueue()),
       transport_(transport),
       stats_proxy_(clock, config, encoder_config.content_type, field_trials),

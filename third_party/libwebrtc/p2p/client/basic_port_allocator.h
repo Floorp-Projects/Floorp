@@ -15,8 +15,8 @@
 #include <string>
 #include <vector>
 
+#include "api/field_trials_view.h"
 #include "api/turn_customizer.h"
-#include "api/webrtc_key_value_config.h"
 #include "p2p/base/port_allocator.h"
 #include "p2p/client/relay_port_factory_interface.h"
 #include "p2p/client/turn_port_factory.h"
@@ -81,9 +81,7 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
 
   void SetVpnList(const std::vector<rtc::NetworkMask>& vpn_list) override;
 
-  const webrtc::WebRtcKeyValueConfig* field_trials() const {
-    return field_trials_;
-  }
+  const webrtc::FieldTrialsView* field_trials() const { return field_trials_; }
 
  private:
   void OnIceRegathering(PortAllocatorSession* session,
@@ -92,12 +90,12 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
   // This function makes sure that relay_port_factory_ and field_trials_ is set
   // properly.
   void Init(RelayPortFactoryInterface* relay_port_factory,
-            const webrtc::WebRtcKeyValueConfig* field_trials);
+            const webrtc::FieldTrialsView* field_trials);
 
   bool MdnsObfuscationEnabled() const override;
 
-  const webrtc::WebRtcKeyValueConfig* field_trials_;
-  std::unique_ptr<webrtc::WebRtcKeyValueConfig> owned_field_trials_;
+  const webrtc::FieldTrialsView* field_trials_;
+  std::unique_ptr<webrtc::FieldTrialsView> owned_field_trials_;
   rtc::NetworkManager* network_manager_;
   rtc::PacketSocketFactory* socket_factory_;
   int network_ignore_mask_ = rtc::kDefaultNetworkIgnoreMask;
@@ -310,7 +308,7 @@ struct RTC_EXPORT PortConfiguration {
   PortConfiguration(const ServerAddresses& stun_servers,
                     const std::string& username,
                     const std::string& password,
-                    const webrtc::WebRtcKeyValueConfig* field_trials = nullptr);
+                    const webrtc::FieldTrialsView* field_trials = nullptr);
 
   // Returns addresses of both the explicitly configured STUN servers,
   // and TURN servers that should be used as STUN servers.

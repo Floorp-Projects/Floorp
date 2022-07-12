@@ -77,7 +77,7 @@ std::string UmaSuffixForContentType(VideoContentType content_type) {
   return ss.str();
 }
 
-bool EnableDecodeTimeHistogram(const WebRtcKeyValueConfig* field_trials) {
+bool EnableDecodeTimeHistogram(const FieldTrialsView* field_trials) {
   if (field_trials == nullptr) {
     return true;
   }
@@ -89,7 +89,7 @@ bool EnableDecodeTimeHistogram(const WebRtcKeyValueConfig* field_trials) {
 ReceiveStatisticsProxy::ReceiveStatisticsProxy(
     uint32_t remote_ssrc,
     Clock* clock,
-    const WebRtcKeyValueConfig* field_trials)
+    const FieldTrialsView* field_trials)
     : clock_(clock),
       start_ms_(clock->TimeInMilliseconds()),
       enable_decode_time_histograms_(EnableDecodeTimeHistogram(field_trials)),

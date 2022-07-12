@@ -48,7 +48,7 @@ void AudioDecoderG711::AppendSupportedDecoders(
 std::unique_ptr<AudioDecoder> AudioDecoderG711::MakeAudioDecoder(
     const Config& config,
     absl::optional<AudioCodecPairId> /*codec_pair_id*/,
-    const WebRtcKeyValueConfig* field_trials) {
+    const FieldTrialsView* field_trials) {
   if (!config.IsOk()) {
     RTC_DCHECK_NOTREACHED();
     return nullptr;

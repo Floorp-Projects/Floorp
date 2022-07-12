@@ -43,7 +43,7 @@ class FrameBuffer2Proxy : public FrameBufferProxy {
                     FrameSchedulingReceiver* receiver,
                     TimeDelta max_wait_for_keyframe,
                     TimeDelta max_wait_for_frame,
-                    const WebRtcKeyValueConfig& field_trials)
+                    const FieldTrialsView& field_trials)
       : max_wait_for_keyframe_(max_wait_for_keyframe),
         max_wait_for_frame_(max_wait_for_frame),
         frame_buffer_(clock, timing, stats_proxy, field_trials),
@@ -190,7 +190,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
       TimeDelta max_wait_for_keyframe,
       TimeDelta max_wait_for_frame,
       std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler,
-      const WebRtcKeyValueConfig& field_trials)
+      const FieldTrialsView& field_trials)
       : field_trials_(field_trials),
         max_wait_for_keyframe_(max_wait_for_keyframe),
         max_wait_for_frame_(max_wait_for_frame),
@@ -503,7 +503,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
   }
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker worker_sequence_checker_;
-  const WebRtcKeyValueConfig& field_trials_;
+  const FieldTrialsView& field_trials_;
   const TimeDelta max_wait_for_keyframe_;
   const TimeDelta max_wait_for_frame_;
   const absl::optional<RttMultExperiment::Settings> rtt_mult_settings_ =
@@ -559,8 +559,7 @@ enum class FrameBufferArm {
 
 constexpr const char* kFrameBufferFieldTrial = "WebRTC-FrameBuffer3";
 
-FrameBufferArm ParseFrameBufferFieldTrial(
-    const WebRtcKeyValueConfig& field_trials) {
+FrameBufferArm ParseFrameBufferFieldTrial(const FieldTrialsView& field_trials) {
   webrtc::FieldTrialEnum<FrameBufferArm> arm(
       "arm", FrameBufferArm::kFrameBuffer2,
       {
@@ -584,7 +583,7 @@ std::unique_ptr<FrameBufferProxy> FrameBufferProxy::CreateFromFieldTrial(
     TimeDelta max_wait_for_keyframe,
     TimeDelta max_wait_for_frame,
     DecodeSynchronizer* decode_sync,
-    const WebRtcKeyValueConfig& field_trials) {
+    const FieldTrialsView& field_trials) {
   switch (ParseFrameBufferFieldTrial(field_trials)) {
     case FrameBufferArm::kFrameBuffer3: {
       auto scheduler =

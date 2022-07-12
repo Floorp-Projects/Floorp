@@ -14,8 +14,8 @@
 #include <string>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
-#include "api/webrtc_key_value_config.h"
 #include "call/adaptation/adaptation_constraint.h"
 #include "call/adaptation/degradation_preference_provider.h"
 #include "rtc_base/experiments/balanced_degradation_settings.h"
@@ -27,7 +27,7 @@ class BalancedConstraint : public AdaptationConstraint {
  public:
   BalancedConstraint(
       DegradationPreferenceProvider* degradation_preference_provider,
-      const WebRtcKeyValueConfig& field_trials);
+      const FieldTrialsView& field_trials);
   ~BalancedConstraint() override = default;
 
   void OnEncoderTargetBitrateUpdated(

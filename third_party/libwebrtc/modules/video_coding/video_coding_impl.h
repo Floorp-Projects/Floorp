@@ -16,8 +16,8 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
-#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/decoder_database.h"
 #include "modules/video_coding/frame_buffer.h"
 #include "modules/video_coding/generic_decoder.h"
@@ -59,7 +59,7 @@ class VideoReceiver : public Module {
  public:
   VideoReceiver(Clock* clock,
                 VCMTiming* timing,
-                const WebRtcKeyValueConfig& field_trials);
+                const FieldTrialsView& field_trials);
   ~VideoReceiver() override;
 
   void RegisterReceiveCodec(uint8_t payload_type,

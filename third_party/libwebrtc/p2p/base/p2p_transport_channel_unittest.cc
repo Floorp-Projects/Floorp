@@ -4929,7 +4929,7 @@ class P2PTransportChannelMostLikelyToWorkFirstTest
   P2PTransportChannel& StartTransportChannel(
       bool prioritize_most_likely_to_work,
       int stable_writable_connection_ping_interval,
-      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr) {
+      const webrtc::FieldTrialsView* field_trials = nullptr) {
     channel_.reset(
         new P2PTransportChannel("checks", 1, allocator(), field_trials));
     IceConfig config = channel_->config();

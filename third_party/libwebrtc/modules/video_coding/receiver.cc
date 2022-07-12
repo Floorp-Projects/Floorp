@@ -32,7 +32,7 @@ enum { kMaxReceiverDelayMs = 10000 };
 
 VCMReceiver::VCMReceiver(VCMTiming* timing,
                          Clock* clock,
-                         const WebRtcKeyValueConfig& field_trials)
+                         const FieldTrialsView& field_trials)
     : VCMReceiver::VCMReceiver(timing,
                                clock,
                                absl::WrapUnique(EventWrapper::Create()),
@@ -43,7 +43,7 @@ VCMReceiver::VCMReceiver(VCMTiming* timing,
                          Clock* clock,
                          std::unique_ptr<EventWrapper> receiver_event,
                          std::unique_ptr<EventWrapper> jitter_buffer_event,
-                         const WebRtcKeyValueConfig& field_trials)
+                         const FieldTrialsView& field_trials)
     : clock_(clock),
       jitter_buffer_(clock_, std::move(jitter_buffer_event), field_trials),
       timing_(timing),

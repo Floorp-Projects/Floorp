@@ -21,7 +21,7 @@
 namespace webrtc {
 
 rtc::NetworkMonitorInterface* ObjCNetworkMonitorFactory::CreateNetworkMonitor(
-    const WebRtcKeyValueConfig& field_trials) {
+    const FieldTrialsView& field_trials) {
   return new ObjCNetworkMonitor();
 }
 

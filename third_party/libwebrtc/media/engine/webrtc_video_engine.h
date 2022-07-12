@@ -94,7 +94,7 @@ class WebRtcVideoEngine : public VideoEngineInterface {
   WebRtcVideoEngine(
       std::unique_ptr<webrtc::VideoEncoderFactory> video_encoder_factory,
       std::unique_ptr<webrtc::VideoDecoderFactory> video_decoder_factory,
-      const webrtc::WebRtcKeyValueConfig& trials);
+      const webrtc::FieldTrialsView& trials);
 
   ~WebRtcVideoEngine() override;
 
@@ -116,7 +116,7 @@ class WebRtcVideoEngine : public VideoEngineInterface {
   const std::unique_ptr<webrtc::VideoEncoderFactory> encoder_factory_;
   const std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
       bitrate_allocator_factory_;
-  const webrtc::WebRtcKeyValueConfig& trials_;
+  const webrtc::FieldTrialsView& trials_;
 };
 
 class WebRtcVideoChannel : public VideoMediaChannel,
@@ -658,7 +658,7 @@ class EncoderStreamFactory
                        int max_qp,
                        bool is_screenshare,
                        bool conference_mode,
-                       const webrtc::WebRtcKeyValueConfig* trials);
+                       const webrtc::FieldTrialsView* trials);
 
  private:
   std::vector<webrtc::VideoStream> CreateEncoderStreams(
@@ -686,7 +686,7 @@ class EncoderStreamFactory
   // layering and various settings.
   const bool conference_mode_;
   const webrtc::FieldTrialBasedConfig fallback_trials_;
-  const webrtc::WebRtcKeyValueConfig& trials_;
+  const webrtc::FieldTrialsView& trials_;
 };
 
 }  // namespace cricket

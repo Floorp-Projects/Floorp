@@ -687,7 +687,7 @@ if (rtc_build_libvpx) {
     deps = [
       "..:test_support",
       "../../api:array_view",
-      "../../api/transport:webrtc_key_value_config",
+      "../../api:field_trials_view",
       "../../api/video:video_frame",
       "../../api/video_codecs:video_codecs_api",
       "../../modules/video_coding:frame_dependencies_calculator",
