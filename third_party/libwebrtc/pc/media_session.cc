@@ -39,7 +39,6 @@
 #include "rtc_base/string_encode.h"
 #include "rtc_base/third_party/base64/base64.h"
 #include "rtc_base/unique_id_generator.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace {
 
@@ -301,7 +300,8 @@ static StreamParams CreateStreamParamsForNewSenderWithSsrcs(
     const std::string& rtcp_cname,
     bool include_rtx_streams,
     bool include_flexfec_stream,
-    UniqueRandomIdGenerator* ssrc_generator) {
+    UniqueRandomIdGenerator* ssrc_generator,
+    const webrtc::WebRtcKeyValueConfig& field_trials) {
   StreamParams result;
   result.id = sender.track_id;
 
@@ -313,8 +313,7 @@ static StreamParams CreateStreamParamsForNewSenderWithSsrcs(
            "a single media streams. This session has multiple "
            "media streams however, so no FlexFEC SSRC will be generated.";
   }
-  if (include_flexfec_stream &&
-      !webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03")) {
+  if (include_flexfec_stream && !field_trials.IsEnabled("WebRTC-FlexFEC-03")) {
     include_flexfec_stream = false;
     RTC_LOG(LS_WARNING)
         << "WebRTC-FlexFEC trial is not enabled, not sending FlexFEC";
@@ -396,12 +395,12 @@ static void AddSimulcastToMediaDescription(
 // content_description.
 // `current_params` - All currently known StreamParams of any media type.
 template <class C>
-static bool AddStreamParams(
-    const std::vector<SenderOptions>& sender_options,
-    const std::string& rtcp_cname,
-    UniqueRandomIdGenerator* ssrc_generator,
-    StreamParamsVec* current_streams,
-    MediaContentDescriptionImpl<C>* content_description) {
+static bool AddStreamParams(const std::vector<SenderOptions>& sender_options,
+                            const std::string& rtcp_cname,
+                            UniqueRandomIdGenerator* ssrc_generator,
+                            StreamParamsVec* current_streams,
+                            MediaContentDescriptionImpl<C>* content_description,
+                            const webrtc::WebRtcKeyValueConfig& field_trials) {
   // SCTP streams are not negotiated using SDP/ContentDescriptions.
   if (IsSctpProtocol(content_description->protocol())) {
     return true;
@@ -423,7 +422,7 @@ static bool AddStreamParams(
               // Signal SSRCs and legacy simulcast (if requested).
               CreateStreamParamsForNewSenderWithSsrcs(
                   sender, rtcp_cname, include_rtx_streams,
-                  include_flexfec_stream, ssrc_generator)
+                  include_flexfec_stream, ssrc_generator, field_trials)
               :
               // Signal RIDs and spec-compliant simulcast (if requested).
               CreateStreamParamsForNewSenderWithRids(sender, rtcp_cname);
@@ -711,11 +710,12 @@ static bool CreateMediaContentOffer(
     const RtpHeaderExtensions& rtp_extensions,
     UniqueRandomIdGenerator* ssrc_generator,
     StreamParamsVec* current_streams,
-    MediaContentDescriptionImpl<C>* offer) {
+    MediaContentDescriptionImpl<C>* offer,
+    const webrtc::WebRtcKeyValueConfig& field_trials) {
   offer->AddCodecs(codecs);
   if (!AddStreamParams(media_description_options.sender_options,
                        session_options.rtcp_cname, ssrc_generator,
-                       current_streams, offer)) {
+                       current_streams, offer, field_trials)) {
     return false;
   }
 
@@ -1351,7 +1351,8 @@ static bool SetCodecsInAnswer(
     const MediaSessionOptions& session_options,
     UniqueRandomIdGenerator* ssrc_generator,
     StreamParamsVec* current_streams,
-    MediaContentDescriptionImpl<C>* answer) {
+    MediaContentDescriptionImpl<C>* answer,
+    const webrtc::WebRtcKeyValueConfig& field_trials) {
   std::vector<C> negotiated_codecs;
   NegotiateCodecs(local_codecs, offer->codecs(), &negotiated_codecs,
                   media_description_options.codec_preferences.empty());
@@ -1359,7 +1360,7 @@ static bool SetCodecsInAnswer(
   answer->set_protocol(offer->protocol());
   if (!AddStreamParams(media_description_options.sender_options,
                        session_options.rtcp_cname, ssrc_generator,
-                       current_streams, answer)) {
+                       current_streams, answer, field_trials)) {
     return false;  // Something went seriously wrong.
   }
   return true;
@@ -2325,11 +2326,11 @@ bool MediaSessionDescriptionFactory::AddAudioContentForOffer(
   std::vector<std::string> crypto_suites;
   GetSupportedAudioSdesCryptoSuiteNames(session_options.crypto_options,
                                         &crypto_suites);
-  if (!CreateMediaContentOffer(media_description_options, session_options,
-                               filtered_codecs, sdes_policy,
-                               GetCryptos(current_content), crypto_suites,
-                               audio_rtp_extensions, ssrc_generator_,
-                               current_streams, audio.get())) {
+  if (!CreateMediaContentOffer(
+          media_description_options, session_options, filtered_codecs,
+          sdes_policy, GetCryptos(current_content), crypto_suites,
+          audio_rtp_extensions, ssrc_generator_, current_streams, audio.get(),
+          transport_desc_factory_->trials())) {
     return false;
   }
 
@@ -2434,11 +2435,11 @@ bool MediaSessionDescriptionFactory::AddVideoContentForOffer(
   std::vector<std::string> crypto_suites;
   GetSupportedVideoSdesCryptoSuiteNames(session_options.crypto_options,
                                         &crypto_suites);
-  if (!CreateMediaContentOffer(media_description_options, session_options,
-                               filtered_codecs, sdes_policy,
-                               GetCryptos(current_content), crypto_suites,
-                               video_rtp_extensions, ssrc_generator_,
-                               current_streams, video.get())) {
+  if (!CreateMediaContentOffer(
+          media_description_options, session_options, filtered_codecs,
+          sdes_policy, GetCryptos(current_content), crypto_suites,
+          video_rtp_extensions, ssrc_generator_, current_streams, video.get(),
+          transport_desc_factory_->trials())) {
     return false;
   }
 
@@ -2622,8 +2623,8 @@ bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
       audio_transport->secure() ? cricket::SEC_DISABLED : secure();
   if (!SetCodecsInAnswer(offer_audio_description, filtered_codecs,
                          media_description_options, session_options,
-                         ssrc_generator_, current_streams,
-                         audio_answer.get())) {
+                         ssrc_generator_, current_streams, audio_answer.get(),
+                         transport_desc_factory_->trials())) {
     return false;
   }
   if (!CreateMediaContentAnswer(
@@ -2748,8 +2749,8 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
       video_transport->secure() ? cricket::SEC_DISABLED : secure();
   if (!SetCodecsInAnswer(offer_video_description, filtered_codecs,
                          media_description_options, session_options,
-                         ssrc_generator_, current_streams,
-                         video_answer.get())) {
+                         ssrc_generator_, current_streams, video_answer.get(),
+                         transport_desc_factory_->trials())) {
     return false;
   }
   if (!CreateMediaContentAnswer(

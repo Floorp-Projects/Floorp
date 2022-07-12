@@ -37,6 +37,7 @@
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 namespace cricket {
 namespace {
@@ -89,7 +90,7 @@ class JsepTransport2Test : public ::testing::Test, public sigslot::has_slots<> {
       rtc::PacketTransportInternal* rtp_packet_transport,
       rtc::PacketTransportInternal* rtcp_packet_transport) {
     auto srtp_transport = std::make_unique<webrtc::SrtpTransport>(
-        rtcp_packet_transport == nullptr);
+        rtcp_packet_transport == nullptr, field_trials_);
 
     srtp_transport->SetRtpPacketTransport(rtp_packet_transport);
     if (rtcp_packet_transport) {
@@ -102,7 +103,7 @@ class JsepTransport2Test : public ::testing::Test, public sigslot::has_slots<> {
       cricket::DtlsTransportInternal* rtp_dtls_transport,
       cricket::DtlsTransportInternal* rtcp_dtls_transport) {
     auto dtls_srtp_transport = std::make_unique<webrtc::DtlsSrtpTransport>(
-        rtcp_dtls_transport == nullptr);
+        rtcp_dtls_transport == nullptr, field_trials_);
     dtls_srtp_transport->SetDtlsTransports(rtp_dtls_transport,
                                            rtcp_dtls_transport);
     return dtls_srtp_transport;
@@ -192,6 +193,8 @@ class JsepTransport2Test : public ::testing::Test, public sigslot::has_slots<> {
   // The SrtpTransport is owned by `jsep_transport_`. Keep a raw pointer here
   // for testing.
   webrtc::SrtpTransport* sdes_transport_ = nullptr;
+
+  webrtc::test::ScopedKeyValueConfig field_trials_;
 };
 
 // The parameterized tests cover both cases when RTCP mux is enable and

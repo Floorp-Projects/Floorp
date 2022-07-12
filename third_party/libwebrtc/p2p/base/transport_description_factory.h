@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include "api/webrtc_key_value_config.h"
 #include "p2p/base/ice_credentials_iterator.h"
 #include "p2p/base/transport_description.h"
 #include "rtc_base/rtc_certificate.h"
@@ -37,7 +38,8 @@ struct TransportOptions {
 class TransportDescriptionFactory {
  public:
   // Default ctor; use methods below to set configuration.
-  TransportDescriptionFactory();
+  explicit TransportDescriptionFactory(
+      const webrtc::WebRtcKeyValueConfig& field_trials);
   ~TransportDescriptionFactory();
 
   SecurePolicy secure() const { return secure_; }
@@ -73,12 +75,15 @@ class TransportDescriptionFactory {
       const TransportDescription* current_description,
       IceCredentialsIterator* ice_credentials) const;
 
+  const webrtc::WebRtcKeyValueConfig& trials() const { return field_trials_; }
+
  private:
   bool SetSecurityInfo(TransportDescription* description,
                        ConnectionRole role) const;
 
   SecurePolicy secure_;
   rtc::scoped_refptr<rtc::RTCCertificate> certificate_;
+  const webrtc::WebRtcKeyValueConfig& field_trials_;
 };
 
 }  // namespace cricket

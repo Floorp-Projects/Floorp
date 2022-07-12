@@ -15,7 +15,7 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "api/transport/webrtc_key_value_config.h"
+#include "api/webrtc_key_value_config.h"
 
 namespace webrtc {
 namespace test {

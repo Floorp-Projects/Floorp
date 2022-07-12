@@ -132,6 +132,7 @@ JsepTransportController::Config ScenarioIceConnectionImpl::CreateJsepConfig() {
     RTC_DCHECK_RUN_ON(network_thread_);
     observer_->OnPacketReceived(packet);
   };
+  config.field_trials = &field_trials;
   return config;
 }
 

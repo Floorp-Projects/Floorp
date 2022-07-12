@@ -73,7 +73,8 @@ rtc::Thread* MaybeWrapThread(rtc::Thread* signaling_thread,
 
 std::unique_ptr<SctpTransportFactoryInterface> MaybeCreateSctpFactory(
     std::unique_ptr<SctpTransportFactoryInterface> factory,
-    rtc::Thread* network_thread) {
+    rtc::Thread* network_thread,
+    const WebRtcKeyValueConfig& field_trials) {
   if (factory) {
     return factory;
   }
@@ -102,15 +103,15 @@ ConnectionContext::ConnectionContext(
                                             owned_worker_thread_)),
       signaling_thread_(MaybeWrapThread(dependencies->signaling_thread,
                                         wraps_current_thread_)),
+      trials_(dependencies->trials ? std::move(dependencies->trials)
+                                   : std::make_unique<FieldTrialBasedConfig>()),
       network_monitor_factory_(
           std::move(dependencies->network_monitor_factory)),
       call_factory_(std::move(dependencies->call_factory)),
       sctp_factory_(
           MaybeCreateSctpFactory(std::move(dependencies->sctp_factory),
-                                 network_thread())),
-      trials_(dependencies->trials
-                  ? std::move(dependencies->trials)
-                  : std::make_unique<FieldTrialBasedConfig>()) {
+                                 network_thread(),
+                                 *trials_.get())) {
   signaling_thread_->AllowInvokesToThread(worker_thread_);
   signaling_thread_->AllowInvokesToThread(network_thread_);
   worker_thread_->AllowInvokesToThread(network_thread_);

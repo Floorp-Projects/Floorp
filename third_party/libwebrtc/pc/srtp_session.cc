@@ -18,6 +18,7 @@
 #include "absl/base/attributes.h"
 #include "absl/base/const_init.h"
 #include "api/array_view.h"
+#include "api/webrtc_key_value_config.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
 #include "pc/external_hmac.h"
 #include "rtc_base/byte_order.h"
@@ -26,7 +27,6 @@
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/time_utils.h"
-#include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
 #include "third_party/libsrtp/include/srtp.h"
 #include "third_party/libsrtp/include/srtp_priv.h"
@@ -40,8 +40,10 @@ using ::webrtc::ParseRtpSequenceNumber;
 // in srtp.h.
 constexpr int kSrtpErrorCodeBoundary = 28;
 
-SrtpSession::SrtpSession() {
-  dump_plain_rtp_ = webrtc::field_trial::IsEnabled("WebRTC-Debugging-RtpDump");
+SrtpSession::SrtpSession() {}
+
+SrtpSession::SrtpSession(const webrtc::WebRtcKeyValueConfig& field_trials) {
+  dump_plain_rtp_ = field_trials.IsEnabled("WebRTC-Debugging-RtpDump");
 }
 
 SrtpSession::~SrtpSession() {

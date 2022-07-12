@@ -91,6 +91,7 @@ rtc_library("rtc_p2p") {
     "../api:rtc_error",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api:webrtc_key_value_config",
     "../api:wrapping_async_dns_resolver",
     "../api/crypto:options",
     "../api/rtc_event_log",
@@ -240,6 +241,7 @@ if (rtc_include_tests) {
       "../api:mock_async_dns_resolver",
       "../api:packet_socket_factory",
       "../api:scoped_refptr",
+      "../api:webrtc_key_value_config",
       "../api/transport:stun_types",
       "../api/units:time_delta",
       "../rtc_base",
@@ -259,6 +261,7 @@ if (rtc_include_tests) {
       "../system_wrappers:metrics",
       "../test:field_trial",
       "../test:rtc_expect_death",
+      "../test:scoped_key_value_config",
       "../test:test_support",
       "//testing/gtest",
     ]

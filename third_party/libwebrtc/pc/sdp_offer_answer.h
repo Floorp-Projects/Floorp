@@ -220,7 +220,8 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // once. Modifies dependencies.
   void Initialize(
       const PeerConnectionInterface::RTCConfiguration& configuration,
-      PeerConnectionDependencies& dependencies);
+      PeerConnectionDependencies& dependencies,
+      ConnectionContext* context);
 
   rtc::Thread* signaling_thread() const;
   rtc::Thread* network_thread() const;
