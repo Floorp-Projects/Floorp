@@ -33,6 +33,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   Observers: "resource://services-common/observers.js",
+  OS: "resource://gre/modules/osfile.jsm",
   Resource: "resource://services-sync/resource.js",
   Status: "resource://services-sync/status.js",
   Svc: "resource://services-sync/util.js",
@@ -197,24 +198,11 @@ class ErrorSanitizer {
     "28": this.E_NO_SPACE_ON_DEVICE, // ENOSPC
   };
 
-  static DOMErrorSubstitutions = {
-    NotFoundError: this.E_NO_FILE_OR_DIR,
-    NotAllowedError: this.E_PERMISSION_DENIED,
-  };
-
   static reWinError = /^(?<head>Win error (?<errno>\d+))(?<detail>.*) \(.*\r?\n?\)$/m;
   static reUnixError = /^(?<head>Unix error (?<errno>\d+))(?<detail>.*) \(.*\)$/;
 
-  static #cleanOSErrorMessage(message, error = undefined) {
-    if (error instanceof DOMException) {
-      const sub = this.DOMErrorSubstitutions[error.name];
-      message = message.replaceAll("\\", "/");
-      if (sub) {
-        return `${sub} ${message}`;
-      }
-    }
-
-    let match = this.reWinError.exec(message);
+  static #cleanOSErrorMessage(error) {
+    let match = this.reWinError.exec(error);
     if (match) {
       let head =
         this.WindowsErrorSubstitutions[match.groups.errno] || match.groups.head;
@@ -226,7 +214,7 @@ class ErrorSanitizer {
         this.UnixErrorSubstitutions[match.groups.errno] || match.groups.head;
       return head + match.groups.detail;
     }
-    return message;
+    return error;
   }
 
   // A regex we can use to replace the profile dir in error messages. We use a
@@ -234,36 +222,30 @@ class ErrorSanitizer {
   // This escaping function is from:
   // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
   static reProfileDir = new RegExp(
-    PathUtils.profileDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    lazy.OS.Constants.Path.profileDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
     "gi"
   );
 
-  /**
-   * Clean an error message, removing PII and normalizing OS-specific messages.
-   *
-   * @param {string} message The error message
-   * @param {Error?} error The error class instance, if any.
-   */
-  static cleanErrorMessage(message, error = undefined) {
+  // The "public" entry-point.
+  static cleanErrorMessage(error) {
     // There's a chance the profiledir is in the error string which is PII we
     // want to avoid including in the ping.
-    message = error.replace(this.reProfileDir, "[profileDir]");
+    error = error.replace(this.reProfileDir, "[profileDir]");
     // MSG_INVALID_URL from /dom/bindings/Errors.msg -- no way to access this
     // directly from JS.
-    if (message.endsWith("is not a valid URL.")) {
-      message = "<URL> is not a valid URL.";
+    if (error.endsWith("is not a valid URL.")) {
+      error = "<URL> is not a valid URL.";
     }
     // Try to filter things that look somewhat like a URL (in that they contain a
     // colon in the middle of non-whitespace), in case anything else is including
     // these in error messages. Note that JSON.stringified stuff comes through
     // here, so we explicitly ignore double-quotes as well.
-    message = message.replace(/[^\s"]+:[^\s"]+/g, "<URL>");
+    error = error.replace(/[^\s"]+:[^\s"]+/g, "<URL>");
 
     // Anywhere that's normalized the guid in errors we can easily filter
     // to make it easier to aggregate these types of errors
-    message = message.replace(/<guid: ([^>]+)>/g, "<GUID>");
-
-    return this.#cleanOSErrorMessage(message, error);
+    error = error.replace(/<guid: ([^>]+)>/g, "<GUID>");
+    return this.#cleanOSErrorMessage(error);
   }
 }
 
@@ -1177,13 +1159,6 @@ class SyncTelemetryImpl {
 
     if (error instanceof lazy.AuthenticationError) {
       return { name: "autherror", from: error.source };
-    }
-
-    if (error instanceof DOMException) {
-      return {
-        name: "unexpectederror",
-        error: ErrorSanitizer.cleanErrorMessage(error.message, error),
-      };
     }
 
     let httpCode =
