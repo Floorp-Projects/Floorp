@@ -12,6 +12,7 @@
 
 #include "api/webrtc_key_value_config.h"
 #include "rtc_base/checks.h"
+#include "system_wrappers/include/field_trial.h"
 #include "test/field_trial.h"
 
 namespace {
@@ -112,7 +113,9 @@ std::string ScopedKeyValueConfig::LookupRecurse(absl::string_view key) const {
     return parent_->LookupRecurse(key);
   }
 
-  return "";
+  // When at the root, check the global string so that test programs using
+  // a mix between ScopedKeyValueConfig and the global string continue to work
+  return webrtc::field_trial::FindFullName(std::string(key));
 }
 
 }  // namespace test
