@@ -749,7 +749,7 @@ struct ReadPixelsResult {
 };
 
 struct ReadPixelsResultIpc final : public ReadPixelsResult {
-  mozilla::ipc::Shmem shmem = {};
+  Maybe<mozilla::ipc::Shmem> shmem = {};
 };
 
 struct VertAttribPointerDesc final {
