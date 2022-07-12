@@ -45,6 +45,7 @@ if (rtc_include_tests) {
       "../../p2p:rtc_p2p",
       "../../pc:pc_test_utils",
       "../../pc:rtc_pc_base",
+      "../../pc:rtp_transport_internal",
       "../../pc:session_description",
       "../../rtc_base",
       "../../rtc_base:null_socket_server",
