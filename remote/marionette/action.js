@@ -124,7 +124,7 @@ action.State = class {
    * @return {Iterator} Iterator over [id, input source].
    */
   *inputSourcesByType(type) {
-    for (const [id, inputSource] of this.inputStateMap) {
+    for (let [id, inputSource] of this.inputStateMap) {
       if (inputSource.type === type) {
         yield [id, inputSource];
       }
@@ -148,7 +148,7 @@ action.State = class {
       // Reserve pointer ids 0 and 1 for mouse pointers
       const idValues = Array.from(this.pointerIdMap.values());
       if (type === "mouse") {
-        for (const mouseId of [0, 1]) {
+        for (let mouseId of [0, 1]) {
           if (!idValues.includes(mouseId)) {
             pointerId = mouseId;
             break;
@@ -1003,7 +1003,7 @@ class PointerMoveAction extends PointerAction {
       [[inputSource.x, inputSource.y]],
       [target],
       this.duration ?? tickDuration,
-      target => this.performPointerMoveStep(state, inputSource, target, win)
+      target => this.performOnePointerMove(state, inputSource, target, win)
     );
   }
 
@@ -1016,15 +1016,15 @@ class PointerMoveAction extends PointerAction {
    * specifying the viewport coordinates to move to.
    * @param {WindowProxy} win - Current window global.
    */
-  performPointerMoveStep(state, inputSource, targets, win) {
+  performOnePointerMove(state, inputSource, targets, win) {
     if (targets.length !== 1) {
       throw new Error(
-        "PointerMoveAction.performPointerMoveStep requires a single target"
+        "PointerMoveAction.performOnePointerMove requires a single target"
       );
     }
     const target = targets[0];
     lazy.logger.trace(
-      `PointerMoveAction.performPointerMoveStep ${JSON.stringify(target)}`
+      `PointerMoveAction.performOnePointerMove ${JSON.stringify(target)}`
     );
     if (target[0] == inputSource.x && target[1] == inputSource.y) {
       return;
@@ -1068,277 +1068,6 @@ class PointerMoveAction extends PointerAction {
 }
 
 /**
- * Group of actions representing behaviour of all touch pointers during a single tick.
- *
- * For touch pointers, we need to call into the platform once with all
- * the actions so that they are regarded as simultaneous. This means
- * we don't use the `dispatch()` method on the underlying actions, but
- * instead use one on this group object.
- */
-class TouchActionGroup {
-  static type = null;
-
-  constructor() {
-    this.type = this.constructor.type;
-    this.actions = new Map();
-  }
-
-  static forType(type) {
-    const cls = touchActionGroupTypes.get(type);
-    return new cls();
-  }
-
-  /**
-   * Add action corresponding to a specific pointer to the group.
-   *
-   * @param {InputSource} inputSource - State of the current input device.
-   * @param {Action} action - Action to add to the group
-   */
-  addPointer(inputSource, action) {
-    if (action.subtype !== this.type) {
-      throw new Error(
-        `Added action of unexpected type, got ${action.subtype}, expected ${this.type}`
-      );
-    }
-    this.actions.set(action.id, [inputSource, action]);
-  }
-
-  /**
-   * Dispatch the action group to the relevant window.
-   *
-   * This is overridden by subclasses to implement the type-specific
-   * dispatch of the action.
-   *
-   * @param {State} state - Actions state.
-   * @param {null} inputSource
-   *     This is always null; the argument only exists for compatibility
-   *     with {@link Action.dispatch}.
-   * @param {number} tickDuration - Length of the current tick, in ms.
-   * @param {WindowProxy} win - Current window global.
-   * @return {Promise} - Promise that is resolved once the action is complete.
-   */
-  dispatch(state, inputSource, tickDuration, win) {
-    throw new Error(
-      "TouchActionGroup subclass missing dispatch implementation"
-    );
-  }
-}
-
-/**
- * Group of actions representing behaviour of all touch pointers
- * depressed during a single tick.
- */
-class PointerDownTouchActionGroup extends TouchActionGroup {
-  static type = "pointerDown";
-
-  dispatch(state, inputSource, tickDuration, win) {
-    lazy.logger.trace(
-      `Dispatch ${this.constructor.name} with ${Array.from(
-        this.actions.values()
-      ).map(x => x[1].id)}`
-    );
-    return new Promise(resolve => {
-      if (inputSource !== null) {
-        throw new Error(
-          "Expected null inputSource for PointerDownTouchActionGroup.dispatch"
-        );
-      }
-
-      // Only include pointers that are not already depressed
-      const actions = Array.from(this.actions.values()).filter(
-        ([actionInputSource, action]) =>
-          !actionInputSource.isPressed(action.button)
-      );
-      if (actions.length) {
-        const eventData = new MultiTouchEventData("touchstart");
-        for (const [actionInputSource, action] of actions) {
-          // Skip if already pressed
-          eventData.addPointerEventData(actionInputSource, action);
-          actionInputSource.press(action.button);
-          // Append a copy of |action| with pointerUp subtype
-          state.inputsToCancel.push(new PointerUpAction(action.id, action));
-          eventData.update(state, actionInputSource);
-        }
-
-        // Touch start events must include all depressed touch pointers
-        for (const [id, pointerInputSource] of state.inputSourcesByType(
-          "pointer"
-        )) {
-          if (
-            pointerInputSource.pointer.type === "touch" &&
-            !this.actions.has(id) &&
-            pointerInputSource.isPressed(0)
-          ) {
-            eventData.addPointerEventData(pointerInputSource, {});
-            eventData.update(state, pointerInputSource);
-          }
-        }
-        lazy.event.synthesizeMultiTouch(eventData, win);
-      }
-      resolve();
-    });
-  }
-}
-
-/**
- * Group of actions representing behaviour of all touch pointers
- * released during a single tick.
- */
-class PointerUpTouchActionGroup extends TouchActionGroup {
-  static type = "pointerUp";
-
-  dispatch(state, inputSource, tickDuration, win) {
-    lazy.logger.trace(
-      `Dispatch ${this.constructor.name} with ${Array.from(
-        this.actions.values()
-      ).map(x => x[1].id)}`
-    );
-    return new Promise(resolve => {
-      if (inputSource !== null) {
-        throw new Error(
-          "Expected null inputSource for PointerUpTouchActionGroup.dispatch"
-        );
-      }
-
-      // Only include pointers that are not already depressed
-      const actions = Array.from(
-        this.actions.values()
-      ).filter(([actionInputSource, action]) =>
-        actionInputSource.isPressed(action.button)
-      );
-      if (actions.length) {
-        const eventData = new MultiTouchEventData("touchend");
-        for (const [actionInputSource, action] of actions) {
-          eventData.addPointerEventData(actionInputSource, action);
-          actionInputSource.release(action.button);
-          eventData.update(state, actionInputSource);
-        }
-        lazy.event.synthesizeMultiTouch(eventData, win);
-      }
-      resolve();
-    });
-  }
-}
-
-/**
- * Group of actions representing behaviour of all touch pointers
- * moved during a single tick.
- */
-class PointerMoveTouchActionGroup extends TouchActionGroup {
-  static type = "pointerMove";
-
-  dispatch(state, inputSource, tickDuration, win) {
-    lazy.logger.trace(
-      `Dispatch ${this.constructor.name} with ${Array.from(this.actions).map(
-        x => x[1].id
-      )}`
-    );
-    if (inputSource !== null) {
-      throw new Error(
-        "Expected null inputSource for PointerMoveTouchActionGroup.dispatch"
-      );
-    }
-
-    let startCoords = [];
-    let targetCoords = [];
-    for (const [actionInputSource, action] of this.actions.values()) {
-      const target = action.origin.getTargetCoordinates(
-        state,
-        actionInputSource,
-        [action.x, action.y],
-        win
-      );
-      assertInViewPort(target, win);
-      startCoords.push([actionInputSource.x, actionInputSource.y]);
-      targetCoords.push(target);
-    }
-    // Touch move events must include all depressed touch pointers, even if they are static
-    // This can end up generating pointermove events even for static pointers, but Gecko
-    // seems to generate a lot of pointermove events anyway, so this seems like the lesser
-    // problem.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1779206
-    const staticTouchPointers = [];
-    for (const [id, pointerInputSource] of state.inputSourcesByType(
-      "pointer"
-    )) {
-      if (
-        pointerInputSource.pointer.type === "touch" &&
-        !this.actions.has(id) &&
-        pointerInputSource.isPressed(0)
-      ) {
-        staticTouchPointers.push(pointerInputSource);
-      }
-    }
-
-    return moveOverTime(
-      startCoords,
-      targetCoords,
-      this.duration ?? tickDuration,
-      currentTargetCoords =>
-        this.performPointerMoveStep(
-          state,
-          staticTouchPointers,
-          currentTargetCoords,
-          win
-        )
-    );
-  }
-
-  /**
-   * Perform one part of a pointer move corresponding to a specific emitted event.
-   *
-   * @param {State} state - Actions state.
-   * @param {Array.<PointerInputSource>} staticTouchPointers
-   *      Array of PointerInputSource objects for pointers that aren't involved in
-   *      the touch move.
-   * @param {Array.<Array>} targetCoords
-   *      Array of [x, y] arrays specifying the viewport coordinates to move to.
-   * @param {WindowProxy} win - Current window global.
-   */
-  performPointerMoveStep(state, staticTouchPointers, targetCoords, win) {
-    if (targetCoords.length !== this.actions.size) {
-      throw new Error("Expected one target per pointer");
-    }
-
-    const perPointerData = Array.from(this.actions.values()).map(
-      ([inputSource, action], i) => {
-        const target = targetCoords[i];
-        return [inputSource, action, target];
-      }
-    );
-    const reachedTarget = perPointerData.every(
-      ([inputSource, action, target]) =>
-        target[0] === inputSource.x && target[1] === inputSource.y
-    );
-    if (reachedTarget) {
-      return;
-    }
-
-    const eventData = new MultiTouchEventData("touchmove");
-    for (const [inputSource, action, target] of perPointerData) {
-      inputSource.x = target[0];
-      inputSource.y = target[1];
-      eventData.addPointerEventData(inputSource, action);
-      eventData.update(state, inputSource);
-    }
-    for (const inputSource of staticTouchPointers) {
-      eventData.addPointerEventData(inputSource, {});
-      eventData.update(state, inputSource);
-    }
-    lazy.event.synthesizeMultiTouch(eventData, win);
-  }
-}
-
-const touchActionGroupTypes = new Map();
-for (const cls of [
-  PointerDownTouchActionGroup,
-  PointerUpTouchActionGroup,
-  PointerMoveTouchActionGroup,
-]) {
-  touchActionGroupTypes.set(cls.type, cls);
-}
-
-/**
  * Split a transition from startCoord to targetCoord linearly over duration.
  *
  * startCoords and targetCoords are lists of [x,y] positions in some space
@@ -1349,14 +1078,12 @@ for (const cls of [
  * responsible for actually emitting the event, given the current
  * position in the coordinate space.
  *
- * @param {Array.<Array>} startCoords
- *    Array of initial [x, y] coordinates for each input source involved
- *    in the move.
+ * @param {Array.<Array>} startCoords - Array of initial [x, y] coordinates
+ * for each input source involved in the move.
  * @param {number} duration - Time in ms the move will take.
- * @param {Function} callback
- *    Function that actually performs the move. This takes a single parameter
- *    which is an array of [x, y] coordinates corresponding to the move
- *    targets.
+ * @param {Function} callback - Function that actually performs the
+ * move. This takes a single parameter which is an array of [x, y]
+ * coordinates corresponding to the move targets.
  */
 async function moveOverTime(startCoords, targetCoords, duration, callback) {
   lazy.logger.trace(
@@ -1428,7 +1155,7 @@ async function moveOverTime(startCoords, targetCoords, duration, callback) {
 }
 
 const actionTypes = new Map();
-for (const cls of [
+for (let cls of [
   KeyDownAction,
   KeyUpAction,
   PauseAction,
@@ -1451,7 +1178,6 @@ class Pointer {
 
   constructor(id) {
     this.id = id;
-    this.type = this.constructor.type;
   }
 
   /**
@@ -1463,7 +1189,9 @@ class Pointer {
    * @param {WindowProxy} win - Current window global.
    */
   pointerDown(state, inputSource, action, win) {
-    throw new Error(`Unimplemented pointerDown for pointerType ${this.type}`);
+    throw new Error(
+      `Unimplemented pointerDown for pointerType ${this.constructor.type}`
+    );
   }
 
   /**
@@ -1475,7 +1203,9 @@ class Pointer {
    * @param {WindowProxy} win - Current window global.
    */
   pointerUp(state, inputSource, action, win) {
-    throw new Error(`Unimplemented pointerUp for pointerType ${this.type}`);
+    throw new Error(
+      `Unimplemented pointerUp for pointerType ${this.constructor.type}`
+    );
   }
 
   /**
@@ -1488,7 +1218,9 @@ class Pointer {
    * @param {WindowProxy} win - Current window global.
    */
   pointerMove(state, inputSource, targetX, targetY, win) {
-    throw new Error(`Unimplemented pointerMove for pointerType ${this.type}`);
+    throw new Error(
+      `Unimplemented pointerMove for pointerType ${this.constructor.type}`
+    );
   }
 
   /**
@@ -1571,24 +1303,8 @@ class MousePointer extends Pointer {
   }
 }
 
-/*
- * The implementation here is empty because touch actions have to go via the
- * TouchActionGroup. So if we end up calling these methods that's a bug in
- * the code.
- */
-class TouchPointer extends Pointer {
-  static type = "touch";
-}
-
-/*
- * Placeholder for future pen type pointer support.
- */
-class PenPointer extends Pointer {
-  static type = "pen";
-}
-
 const pointerTypes = new Map();
-for (const cls of [MousePointer, TouchPointer, PenPointer]) {
+for (let cls of [MousePointer]) {
   pointerTypes.set(cls.type, cls);
 }
 
@@ -1612,7 +1328,7 @@ action.Chain = class extends Array {
   dispatch(state, win) {
     let i = 1;
     const chainEvents = (async () => {
-      for (const tickActions of this) {
+      for (let tickActions of this) {
         lazy.logger.trace(`Dispatching tick ${i++}/${this.length}`);
         await tickActions.dispatch(state, win);
       }
@@ -1635,7 +1351,7 @@ action.Chain = class extends Array {
     );
 
     const actionsByTick = new this();
-    for (const actionSequence of actions) {
+    for (let actionSequence of actions) {
       const inputSourceActions = Sequence.fromJSON(state, actionSequence);
       for (let i = 0; i < inputSourceActions.length; i++) {
         // new tick
@@ -1660,7 +1376,7 @@ class TickActions extends Array {
    */
   getDuration() {
     let max = 0;
-    for (const action of this) {
+    for (let action of this) {
       if (action.affectsWallClockTime && action.duration) {
         max = Math.max(action.duration, max);
       }
@@ -1681,54 +1397,15 @@ class TickActions extends Array {
    *
    * @param {State} state - Actions state.
    * @param {WindowProxy} win - Current window global.
-   *
    * @return {Promise} - Promise that resolves when tick is complete.
    */
   dispatch(state, win) {
     const tickDuration = this.getDuration();
-    const tickActions = this.groupTickActions(state);
-    const pendingEvents = tickActions.map(([inputSource, action]) =>
-      action.dispatch(state, inputSource, tickDuration, win)
-    );
-    return Promise.all(pendingEvents);
-  }
-
-  /**
-   * Group together actions from input sources that have to be
-   * dispatched together.
-   *
-   * The actual transformation here is to group together touch pointer
-   * actions into {@link TouchActionGroup} instances.
-   *
-   * @param {State} state - Actions state.
-   * @return {Array.<Array.<InputSource?,Action|TouchActionGroup>>}
-   *    Array of pairs. For ungrouped actions each element is
-   *    [InputSource, Action] For touch actions there are multiple
-   *    pointers handled at once, so the first item of the array is
-   *    null, meaning the group has to perform its own handling of the
-   *    relevant state, and the second element is a TouuchActionGroup.
-   */
-  groupTickActions(state) {
-    const touchActions = new Map();
-    const actions = [];
-    for (const action of this) {
+    const pendingEvents = this.map(action => {
       const inputSource = state.getInputSource(action.id);
-      if (action.type == "pointer" && inputSource.pointer.type === "touch") {
-        lazy.logger.debug(
-          `Grouping action ${action.type} ${action.id} ${action.subtype}`
-        );
-        let group = touchActions.get(action.subtype);
-        if (group === undefined) {
-          group = TouchActionGroup.forType(action.subtype);
-          touchActions.set(action.subtype, group);
-          actions.push([null, group]);
-        }
-        group.addPointer(inputSource, action);
-      } else {
-        actions.push([inputSource, action]);
-      }
-    }
-    return actions;
+      return action.dispatch(state, inputSource, tickDuration, win);
+    });
+    return Promise.all(pendingEvents);
   }
 }
 
@@ -1765,7 +1442,7 @@ class Sequence extends Array {
     InputSource.fromJSON(state, actionSequence);
 
     const sequence = new this();
-    for (const actionItem of actions) {
+    for (let actionItem of actions) {
       sequence.push(Action.fromJSON(type, id, actionItem));
     }
 
@@ -1837,7 +1514,7 @@ class PointerEventData extends InputEventData {
   update(state, inputSource) {
     // set modifier properties based on whether any corresponding keys are
     // pressed on any key input source
-    for (const [, otherInputSource] of state.inputSourcesByType("key")) {
+    for (let [, otherInputSource] of state.inputSourcesByType("key")) {
       this.altKey = otherInputSource.alt || this.altKey;
       this.ctrlKey = otherInputSource.ctrl || this.ctrlKey;
       this.metaKey = otherInputSource.meta || this.metaKey;
@@ -1861,68 +1538,6 @@ class MouseEventData extends PointerEventData {
   update(state, inputSource) {
     super.update(state, inputSource);
     this.id = inputSource.pointer.id;
-  }
-}
-
-/**
- * Representation of a multitouch event
- *
- * @param {string} type - Event type.
- */
-class MultiTouchEventData extends PointerEventData {
-  #setGlobalState;
-
-  constructor(type) {
-    super(type);
-    this.id = [];
-    this.x = [];
-    this.y = [];
-    this.rx = [];
-    this.ry = [];
-    this.angle = [];
-    this.force = [];
-    this.#setGlobalState = false;
-  }
-
-  /**
-   * Add the data from one pointer to the event.
-   *
-   * @param {InputSource} inputSource - State of the pointer.
-   * @param {PointerAction} - Action for the pointer.
-   */
-  addPointerEventData(inputSource, action) {
-    this.x.push(inputSource.x);
-    this.y.push(inputSource.y);
-    this.id.push(inputSource.pointer.id);
-    this.rx.push(action.width || 1);
-    this.ry.push(action.height || 1);
-    this.angle.push(0);
-    this.force.push(action.pressure || (this.type === "touchend" ? 0 : 1));
-  }
-
-  update(state, inputSource) {
-    // We call update once per input source, but only want to update global state once.
-    // Instead of introducing a new lifecycle method, or changing the API to allow multiple
-    // input sources in a single call, use a small bit of state to avoid repeatedly setting
-    // global state.
-    if (!this.#setGlobalState) {
-      // set modifier properties based on whether any corresponding keys are
-      // pressed on any key input source
-      for (const [, otherInputSource] of state.inputSourcesByType("key")) {
-        this.altKey = otherInputSource.alt || this.altKey;
-        this.ctrlKey = otherInputSource.ctrl || this.ctrlKey;
-        this.metaKey = otherInputSource.meta || this.metaKey;
-        this.shiftKey = otherInputSource.shift || this.shiftKey;
-      }
-      this.#setGlobalState = true;
-    }
-
-    // Note that we currently emit Touch events that don't have this property
-    // but pointer events should have a `buttons` property, so we'll compute it
-    // anyway.
-    const allButtons = Array.from(inputSource.pressed);
-    this.buttons =
-      this.buttons | allButtons.reduce((a, i) => a + Math.pow(2, i), 0);
   }
 }
 

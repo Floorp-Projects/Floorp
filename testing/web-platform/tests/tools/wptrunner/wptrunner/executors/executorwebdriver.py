@@ -237,9 +237,6 @@ class WebDriverActionSequenceProtocolPart(ActionSequenceProtocolPart):
     def send_actions(self, actions):
         self.webdriver.actions.perform(actions['actions'])
 
-    def release(self):
-        self.webdriver.actions.release()
-
 
 class WebDriverTestDriverProtocolPart(TestDriverProtocolPart):
     def setup(self):
