@@ -59,6 +59,8 @@ luci.builder.defaults.test_presentation.set(
 lucicfg.config(
     config_dir = ".",
     tracked_files = [
+        "chops-weetbix-dev.cfg",
+        "chops-weetbix.cfg",
         "commit-queue.cfg",
         "cr-buildbucket.cfg",
         "luci-logdog.cfg",
@@ -121,6 +123,21 @@ luci.logdog(
 luci.milo(
     logo = "https://storage.googleapis.com/chrome-infra/webrtc-logo-vert-retro-255x305.png",
 )
+
+# Configure Weetbix (config is copied verbatim)
+################################################################################
+
+lucicfg.emit(
+    dest = "chops-weetbix-dev.cfg",
+    data = io.read_file("chops-weetbix-dev.cfg"),
+)
+
+lucicfg.emit(
+    dest = "chops-weetbix.cfg",
+    data = io.read_file("chops-weetbix.cfg"),
+)
+
+################################################################################
 
 luci.notify(tree_closing_enabled = True)
 
