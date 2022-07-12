@@ -4358,11 +4358,35 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
   }
 }
 
-void ClientWebGLContext::RawTexImage(
-    uint32_t level, GLenum respecFormat, uvec3 offset,
-    const webgl::PackingInfo& pi, const webgl::TexUnpackBlobDesc& desc) const {
+void ClientWebGLContext::RawTexImage(uint32_t level, GLenum respecFormat,
+                                     uvec3 offset, const webgl::PackingInfo& pi,
+                                     webgl::TexUnpackBlobDesc&& desc) const {
   const FuncScope funcScope(*this, "tex(Sub)Image[23]D");
   if (IsContextLost()) return;
+  if (desc.sd) {
+    // Shmems are stored in Buffer surface descriptors. We need to ensure first
+    // that all queued commands are flushed and then send the Shmem over IPDL.
+    const auto& sd = *(desc.sd);
+    if (sd.type() == layers::SurfaceDescriptor::TSurfaceDescriptorBuffer &&
+        sd.get_SurfaceDescriptorBuffer().data().type() ==
+            layers::MemoryOrShmem::TShmem) {
+      const auto& inProcess = mNotLost->inProcess;
+      if (inProcess) {
+        inProcess->TexImage(level, respecFormat, offset, pi, desc);
+      } else {
+        const auto& child = mNotLost->outOfProcess;
+        child->FlushPendingCmds();
+        (void)child->SendTexImage(level, respecFormat, offset, pi,
+                                  std::move(desc));
+      }
+    } else {
+      NS_WARNING(
+          "RawTexImage with SurfaceDescriptor only supports "
+          "SurfaceDescriptorBuffer with Shmem");
+    }
+    return;
+  }
+
   Run<RPROC(TexImage)>(level, respecFormat, offset, pi, desc);
 }
 
@@ -4937,6 +4961,30 @@ bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
   }
 
   return true;
+}
+
+bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
+                                      const mozilla::ipc::Shmem& shmem) const {
+  const auto notLost =
+      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+  if (!notLost) return false;
+  const auto& inProcess = notLost->inProcess;
+  if (inProcess) {
+    const auto& shmemBytes = shmem.Range<uint8_t>();
+    inProcess->ReadPixelsInto(desc, shmemBytes);
+    return true;
+  }
+  const auto& child = notLost->outOfProcess;
+  child->FlushPendingCmds();
+  webgl::ReadPixelsResultIpc res = {};
+  // We assume the input is an unsafe shmem which won't be consumed by this
+  // request. Since SendReadPixels expects a Shmem rvalue, we must create a copy
+  // to provide it that can be consumed instead of the original descriptor.
+  mozilla::ipc::Shmem dest = shmem;
+  if (!child->SendReadPixels(desc, dest, &res)) {
+    res = {};
+  }
+  return res.byteStride > 0;
 }
 
 bool ClientWebGLContext::ReadPixels_SharedPrecheck(
