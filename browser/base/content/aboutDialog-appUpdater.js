@@ -7,8 +7,8 @@
 
 /* import-globals-from aboutDialog.js */
 
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+var { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppUpdater: "resource:///modules/AppUpdater.jsm",

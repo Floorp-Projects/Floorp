@@ -6,8 +6,8 @@ const FXA_ENABLED_PREF = "identity.fxaccounts.enabled";
 const DISTRIBUTION_ID_PREF = "distribution.id";
 const DISTRIBUTION_ID_CHINA_REPACK = "MozillaOnline";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"

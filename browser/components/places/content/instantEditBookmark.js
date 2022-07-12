@@ -8,8 +8,8 @@
 // This is defined in browser.js and only used in the star UI.
 /* global setToolbarVisibility */
 
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+var { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {

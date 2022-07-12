@@ -13,8 +13,8 @@ const { AppConstants } = ChromeUtils.import(
 const { BackgroundTasksManager } = ChromeUtils.import(
   "resource://gre/modules/BackgroundTasksManager.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};

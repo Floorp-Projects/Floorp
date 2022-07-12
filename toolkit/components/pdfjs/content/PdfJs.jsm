@@ -27,8 +27,8 @@ const PREF_ISDEFAULT_CACHE_STATE = PREF_PREFIX + ".enabledCache.state";
 const TOPIC_PDFJS_HANDLER_CHANGED = "pdfjs:handlerChanged";
 const PDF_CONTENT_TYPE = "application/pdf";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 var Svc = {};

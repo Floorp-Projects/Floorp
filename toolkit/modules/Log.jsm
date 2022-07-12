@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["Log"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const INTERNAL_FIELDS = new Set(["_level", "_message", "_time", "_namespace"]);
 

@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["Emulation"];
 
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+var { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const { ContentProcessDomain } = ChromeUtils.import(

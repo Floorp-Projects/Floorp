@@ -13,8 +13,8 @@ const PBKDF2_KEY_BYTES = 16;
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Async } = ChromeUtils.import("resource://services-common/async.js");

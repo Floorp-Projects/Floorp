@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["ExtensionStorageSync", "extensionStorageSync"];
 
 const STORAGE_SYNC_ENABLED_PREF = "webextensions.storage.sync.enabled";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const NS_ERROR_DOM_QUOTA_EXCEEDED_ERR = 0x80530016;

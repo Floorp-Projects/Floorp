@@ -20,8 +20,8 @@ const { FormAutofill } = ChromeUtils.import(
 const { FormAutofillUtils } = ChromeUtils.import(
   "resource://autofill/FormAutofillUtils.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};

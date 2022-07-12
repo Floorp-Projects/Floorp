@@ -4,8 +4,8 @@ const { OSKeyStoreTestUtils } = ChromeUtils.import(
 const { OSKeyStore } = ChromeUtils.import(
   "resource://gre/modules/OSKeyStore.jsm"
 );
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+var { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 add_task(async function() {

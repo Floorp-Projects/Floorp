@@ -11,8 +11,8 @@ const EXPORTED_SYMBOLS = [
   "MarionetteEventsParent",
 ];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};

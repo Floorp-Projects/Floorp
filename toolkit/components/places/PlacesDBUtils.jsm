@@ -13,8 +13,8 @@ const CORRUPT_DB_RETAIN_DAYS = 14;
 // Seconds between maintenance runs.
 const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};

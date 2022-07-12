@@ -16,8 +16,8 @@ var EXPORTED_SYMBOLS = [
 ];
 
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const lazy = {};
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
