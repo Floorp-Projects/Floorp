@@ -45,7 +45,6 @@ WEBRTC_ONLY_DEPS = [
     'src/ios',
     'src/testing',
     'src/third_party',
-    'src/third_party/bazel',
     'src/third_party/findbugs',
     'src/third_party/gtest-parallel',
     'src/third_party/yasm/binaries',
