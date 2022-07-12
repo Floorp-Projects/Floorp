@@ -305,7 +305,7 @@ public class NetworkMonitorTest {
     ConnectivityManagerDelegate delegate = new ConnectivityManagerDelegate(
         (ConnectivityManager) InstrumentationRegistry.getTargetContext().getSystemService(
             Context.CONNECTIVITY_SERVICE),
-        availableNetworks, "getAllNetworksFromCache/Enabled/");
+        availableNetworks, "getAllNetworksFromCache:true");
 
     Network[] networks = delegate.getAllNetworks();
     assertTrue(networks.length == 0);
@@ -321,7 +321,8 @@ public class NetworkMonitorTest {
   @Test
   @SmallTest
   public void testConnectivityManager_requestVPN_disabled() {
-    NetworkRequest request = getNetworkRequestForFieldTrials("requestVPN/Disabled");
+    NetworkRequest request =
+        getNetworkRequestForFieldTrials("anyothertext,requestVPN:false,anyothertext");
     assertTrue(request.equals(new NetworkRequest.Builder()
                                   .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                                   .build()));
@@ -330,7 +331,7 @@ public class NetworkMonitorTest {
   @Test
   @SmallTest
   public void testConnectivityManager_requestVPN_enabled() {
-    NetworkRequest request = getNetworkRequestForFieldTrials("requestVPN/Enabled");
+    NetworkRequest request = getNetworkRequestForFieldTrials("requestVPN:true");
     assertTrue(request.equals(new NetworkRequest.Builder()
                                   .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                                   .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
@@ -340,7 +341,7 @@ public class NetworkMonitorTest {
   @Test
   @SmallTest
   public void testConnectivityManager_includeOtherUidNetworks_disabled() {
-    NetworkRequest request = getNetworkRequestForFieldTrials("includeOtherUidNetworks/Disabled");
+    NetworkRequest request = getNetworkRequestForFieldTrials("includeOtherUidNetworks:false");
     assertTrue(request.equals(new NetworkRequest.Builder()
                                   .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                                   .build()));
@@ -349,7 +350,7 @@ public class NetworkMonitorTest {
   @Test
   @SmallTest
   public void testConnectivityManager_includeOtherUidNetworks_enabled() {
-    NetworkRequest request = getNetworkRequestForFieldTrials("includeOtherUidNetworks/Enabled");
+    NetworkRequest request = getNetworkRequestForFieldTrials("includeOtherUidNetworks:true");
     NetworkRequest.Builder builder =
         new NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
