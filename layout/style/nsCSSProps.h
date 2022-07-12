@@ -99,11 +99,11 @@ class nsCSSProps {
   static const nsCString& GetStringValue(nsCSSCounterDesc aCounterDesc);
 
  private:
-  static const Flags kFlagsTable[eCSSProperty_COUNT];
+  static const Flags kFlagsTable[eCSSProperty_COUNT_with_aliases];
 
  public:
   static bool PropHasFlags(nsCSSPropertyID aProperty, Flags aFlags) {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
                "out of range");
     return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
   }
@@ -183,21 +183,20 @@ class nsCSSProps {
     return kIDLNameSortPositionTable[aProperty];
   }
 
-  static bool IsEnabled(nsCSSPropertyID aProperty) {
+ public:
+  static bool IsEnabled(nsCSSPropertyID aProperty, EnabledState aEnabled) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
                "out of range");
     // In the child process, assert that we're not trying to parse stylesheets
     // before we've gotten all our prefs.
     MOZ_ASSERT_IF(!XRE_IsParentProcess(),
                   mozilla::Preferences::ArePrefsInitedInContentProcess());
-    return gPropertyEnabled[aProperty];
-  }
-
- public:
-  static bool IsEnabled(nsCSSPropertyID aProperty, EnabledState aEnabled) {
-    if (IsEnabled(aProperty)) {
+    if (gPropertyEnabled[aProperty]) {
       return true;
     }
+    MOZ_ASSERT(aProperty < eCSSProperty_COUNT,
+               "gPropertyEnabled[aProperty] should have been true for alias "
+               "properties");
     if (aEnabled == EnabledState::IgnoreEnabledState) {
       return true;
     }
