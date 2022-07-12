@@ -612,7 +612,7 @@ void VirtualSocketServer::SetMessageQueue(Thread* msg_queue) {
 }
 
 bool VirtualSocketServer::Wait(int cmsWait, bool process_io) {
-  RTC_DCHECK(msg_queue_ == Thread::Current());
+  RTC_DCHECK_RUN_ON(msg_queue_);
   if (stop_on_idle_ && Thread::Current()->empty()) {
     return false;
   }
@@ -635,7 +635,7 @@ void VirtualSocketServer::SetAlternativeLocalAddress(
 }
 
 bool VirtualSocketServer::ProcessMessagesUntilIdle() {
-  RTC_DCHECK(msg_queue_ == Thread::Current());
+  RTC_DCHECK_RUN_ON(msg_queue_);
   stop_on_idle_ = true;
   while (!msg_queue_->empty()) {
     if (fake_clock_) {
@@ -785,6 +785,8 @@ static double Random() {
 int VirtualSocketServer::Connect(VirtualSocket* socket,
                                  const SocketAddress& remote_addr,
                                  bool use_delay) {
+  RTC_DCHECK(msg_queue_);
+
   uint32_t delay = use_delay ? GetTransitDelay(socket) : 0;
   VirtualSocket* remote = LookupBinding(remote_addr);
   if (!CanInteractWith(socket, remote)) {
@@ -805,15 +807,15 @@ int VirtualSocketServer::Connect(VirtualSocket* socket,
 }
 
 bool VirtualSocketServer::Disconnect(VirtualSocket* socket) {
-  if (socket) {
-    // If we simulate packets being delayed, we should simulate the
-    // equivalent of a FIN being delayed as well.
-    uint32_t delay = GetTransitDelay(socket);
-    // Remove the mapping.
-    msg_queue_->PostDelayed(RTC_FROM_HERE, delay, socket, MSG_ID_DISCONNECT);
-    return true;
-  }
-  return false;
+  if (!socket || !msg_queue_)
+    return false;
+
+  // If we simulate packets being delayed, we should simulate the
+  // equivalent of a FIN being delayed as well.
+  uint32_t delay = GetTransitDelay(socket);
+  // Remove the mapping.
+  msg_queue_->PostDelayed(RTC_FROM_HERE, delay, socket, MSG_ID_DISCONNECT);
+  return true;
 }
 
 bool VirtualSocketServer::Disconnect(const SocketAddress& addr) {
@@ -871,6 +873,9 @@ void VirtualSocketServer::Clear(VirtualSocket* socket) {
 }
 
 void VirtualSocketServer::PostSignalReadEvent(VirtualSocket* socket) {
+  if (!msg_queue_)
+    return;
+
   // Clear the message so it doesn't end up posted multiple times.
   msg_queue_->Clear(socket, MSG_ID_SIGNALREADEVENT);
   msg_queue_->Post(RTC_FROM_HERE, socket, MSG_ID_SIGNALREADEVENT);
@@ -1011,6 +1016,7 @@ void VirtualSocketServer::AddPacketToNetwork(VirtualSocket* sender,
                                              size_t data_size,
                                              size_t header_size,
                                              bool ordered) {
+  RTC_DCHECK(msg_queue_);
   uint32_t send_delay = sender->AddPacket(cur_time, data_size + header_size);
 
   // Find the delay for crossing the many virtual hops of the network.
