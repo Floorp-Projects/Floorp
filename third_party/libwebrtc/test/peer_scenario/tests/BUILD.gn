@@ -22,6 +22,7 @@ if (rtc_include_tests) {
       "../../:test_support",
       "../../../media:rtc_media_base",
       "../../../modules/rtp_rtcp:rtp_rtcp_format",
+      "../../../pc:media_session",
       "../../../pc:rtc_pc_base",
       "../../../pc:session_description",
     ]
