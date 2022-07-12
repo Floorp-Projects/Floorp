@@ -43,6 +43,7 @@ if (rtc_include_tests) {
       "../../modules/audio_device:audio_device_impl",
       "../../modules/rtp_rtcp:rtp_rtcp_format",
       "../../p2p:rtc_p2p",
+      "../../pc:jsep_transport_controller",
       "../../pc:pc_test_utils",
       "../../pc:rtc_pc_base",
       "../../pc:rtp_transport_internal",
