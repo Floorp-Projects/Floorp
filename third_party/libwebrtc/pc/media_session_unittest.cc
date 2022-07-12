@@ -4455,7 +4455,7 @@ namespace {
 template <class Codec>
 bool CodecsMatch(const std::vector<Codec>& codecs1,
                  const std::vector<Codec>& codecs2,
-                 const webrtc::WebRtcKeyValueConfig* field_trials) {
+                 const webrtc::FieldTrialsView* field_trials) {
   if (codecs1.size() != codecs2.size()) {
     return false;
   }

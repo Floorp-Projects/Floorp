@@ -35,17 +35,15 @@ constexpr double kDefaultBackoffFactor = 0.85;
 
 constexpr char kBweBackOffFactorExperiment[] = "WebRTC-BweBackOffFactor";
 
-bool IsEnabled(const WebRtcKeyValueConfig& field_trials,
-               absl::string_view key) {
+bool IsEnabled(const FieldTrialsView& field_trials, absl::string_view key) {
   return absl::StartsWith(field_trials.Lookup(key), "Enabled");
 }
 
-bool IsNotDisabled(const WebRtcKeyValueConfig& field_trials,
-                   absl::string_view key) {
+bool IsNotDisabled(const FieldTrialsView& field_trials, absl::string_view key) {
   return !absl::StartsWith(field_trials.Lookup(key), "Disabled");
 }
 
-double ReadBackoffFactor(const WebRtcKeyValueConfig& key_value_config) {
+double ReadBackoffFactor(const FieldTrialsView& key_value_config) {
   std::string experiment_string =
       key_value_config.Lookup(kBweBackOffFactorExperiment);
   double backoff_factor;
@@ -67,10 +65,10 @@ double ReadBackoffFactor(const WebRtcKeyValueConfig& key_value_config) {
 
 }  // namespace
 
-AimdRateControl::AimdRateControl(const WebRtcKeyValueConfig* key_value_config)
+AimdRateControl::AimdRateControl(const FieldTrialsView* key_value_config)
     : AimdRateControl(key_value_config, /* send_side =*/false) {}
 
-AimdRateControl::AimdRateControl(const WebRtcKeyValueConfig* key_value_config,
+AimdRateControl::AimdRateControl(const FieldTrialsView* key_value_config,
                                  bool send_side)
     : min_configured_bitrate_(congestion_controller::GetMinBitrate()),
       max_configured_bitrate_(DataRate::KilobitsPerSec(30000)),

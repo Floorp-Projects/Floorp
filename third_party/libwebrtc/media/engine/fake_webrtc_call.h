@@ -360,9 +360,7 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
         *trials_, field_trial_string);
   }
 
-  const webrtc::WebRtcKeyValueConfig& trials() const override {
-    return *trials_;
-  }
+  const webrtc::FieldTrialsView& trials() const override { return *trials_; }
 
  private:
   webrtc::AudioSendStream* CreateAudioSendStream(

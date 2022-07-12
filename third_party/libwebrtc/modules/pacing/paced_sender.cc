@@ -30,7 +30,7 @@ const float PacedSender::kDefaultPaceMultiplier = 2.5f;
 
 PacedSender::PacedSender(Clock* clock,
                          PacketRouter* packet_router,
-                         const WebRtcKeyValueConfig& field_trials,
+                         const FieldTrialsView& field_trials,
                          ProcessThread* process_thread)
     : process_mode_(
           absl::StartsWith(field_trials.Lookup("WebRTC-Pacer-DynamicProcess"),

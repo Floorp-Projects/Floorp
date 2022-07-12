@@ -60,11 +60,11 @@ int64_t GetBpsOrDefault(const absl::optional<DataRate>& rate,
   }
 }
 
-bool IsEnabled(const WebRtcKeyValueConfig* config, absl::string_view key) {
+bool IsEnabled(const FieldTrialsView* config, absl::string_view key) {
   return absl::StartsWith(config->Lookup(key), "Enabled");
 }
 
-bool IsNotDisabled(const WebRtcKeyValueConfig* config, absl::string_view key) {
+bool IsNotDisabled(const FieldTrialsView* config, absl::string_view key) {
   return !absl::StartsWith(config->Lookup(key), "Disabled");
 }
 }  // namespace

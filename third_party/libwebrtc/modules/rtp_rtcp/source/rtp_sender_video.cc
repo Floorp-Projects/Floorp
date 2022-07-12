@@ -118,7 +118,7 @@ bool IsNoopDelay(const VideoPlayoutDelay& delay) {
 }
 
 absl::optional<VideoPlayoutDelay> LoadVideoPlayoutDelayOverride(
-    const WebRtcKeyValueConfig* key_value_config) {
+    const FieldTrialsView* key_value_config) {
   RTC_DCHECK(key_value_config);
   FieldTrialOptional<int> playout_delay_min_ms("min_ms", absl::nullopt);
   FieldTrialOptional<int> playout_delay_max_ms("max_ms", absl::nullopt);

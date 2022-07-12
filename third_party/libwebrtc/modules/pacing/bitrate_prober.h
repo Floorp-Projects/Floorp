@@ -24,7 +24,7 @@ namespace webrtc {
 class RtcEventLog;
 
 struct BitrateProberConfig {
-  explicit BitrateProberConfig(const WebRtcKeyValueConfig* key_value_config);
+  explicit BitrateProberConfig(const FieldTrialsView* key_value_config);
   BitrateProberConfig(const BitrateProberConfig&) = default;
   BitrateProberConfig& operator=(const BitrateProberConfig&) = default;
   ~BitrateProberConfig() = default;
@@ -46,7 +46,7 @@ struct BitrateProberConfig {
 // on being protected by the caller.
 class BitrateProber {
  public:
-  explicit BitrateProber(const WebRtcKeyValueConfig& field_trials);
+  explicit BitrateProber(const FieldTrialsView& field_trials);
   ~BitrateProber();
 
   void SetEnabled(bool enable);

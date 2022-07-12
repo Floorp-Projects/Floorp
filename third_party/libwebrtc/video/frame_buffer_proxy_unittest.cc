@@ -198,7 +198,7 @@ class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
               (override));
 };
 
-bool IsFrameBuffer2Enabled(const WebRtcKeyValueConfig& field_trials) {
+bool IsFrameBuffer2Enabled(const FieldTrialsView& field_trials) {
   return field_trials.Lookup("WebRTC-FrameBuffer3").find("arm:FrameBuffer2") !=
          std::string::npos;
 }

@@ -32,7 +32,7 @@ bool AlrExperimentSettings::MaxOneFieldTrialEnabled() {
 }
 
 bool AlrExperimentSettings::MaxOneFieldTrialEnabled(
-    const WebRtcKeyValueConfig& key_value_config) {
+    const FieldTrialsView& key_value_config) {
   return key_value_config.Lookup(kStrictPacingAndProbingExperimentName)
              .empty() ||
          key_value_config.Lookup(kScreenshareProbingBweExperimentName).empty();
@@ -46,7 +46,7 @@ AlrExperimentSettings::CreateFromFieldTrial(const char* experiment_name) {
 
 absl::optional<AlrExperimentSettings>
 AlrExperimentSettings::CreateFromFieldTrial(
-    const WebRtcKeyValueConfig& key_value_config,
+    const FieldTrialsView& key_value_config,
     const char* experiment_name) {
   absl::optional<AlrExperimentSettings> ret;
   std::string group_name = key_value_config.Lookup(experiment_name);

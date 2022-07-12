@@ -16,7 +16,7 @@
 
 #include "api/crypto/crypto_options.h"
 #include "api/crypto/frame_decryptor_interface.h"
-#include "api/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 #include "modules/video_coding/frame_object.h"
 
 namespace webrtc {
@@ -59,7 +59,7 @@ class BufferedFrameDecryptor final {
   explicit BufferedFrameDecryptor(
       OnDecryptedFrameCallback* decrypted_frame_callback,
       OnDecryptionStatusChangeCallback* decryption_status_change_callback,
-      const WebRtcKeyValueConfig& field_trials);
+      const FieldTrialsView& field_trials);
 
   ~BufferedFrameDecryptor();
   // This object cannot be copied.

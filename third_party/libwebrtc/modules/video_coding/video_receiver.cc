@@ -42,7 +42,7 @@ namespace vcm {
 
 VideoReceiver::VideoReceiver(Clock* clock,
                              VCMTiming* timing,
-                             const WebRtcKeyValueConfig& field_trials)
+                             const FieldTrialsView& field_trials)
     : clock_(clock),
       _timing(timing),
       _receiver(_timing, clock_, field_trials),

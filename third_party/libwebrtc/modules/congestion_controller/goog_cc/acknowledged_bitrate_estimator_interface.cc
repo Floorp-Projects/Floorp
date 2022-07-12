@@ -21,7 +21,7 @@ namespace webrtc {
 constexpr char RobustThroughputEstimatorSettings::kKey[];
 
 RobustThroughputEstimatorSettings::RobustThroughputEstimatorSettings(
-    const WebRtcKeyValueConfig* key_value_config) {
+    const FieldTrialsView* key_value_config) {
   Parser()->Parse(
       key_value_config->Lookup(RobustThroughputEstimatorSettings::kKey));
   if (min_packets < 10 || kMaxPackets < min_packets) {
@@ -64,7 +64,7 @@ AcknowledgedBitrateEstimatorInterface::
 
 std::unique_ptr<AcknowledgedBitrateEstimatorInterface>
 AcknowledgedBitrateEstimatorInterface::Create(
-    const WebRtcKeyValueConfig* key_value_config) {
+    const FieldTrialsView* key_value_config) {
   RobustThroughputEstimatorSettings simplified_estimator_settings(
       key_value_config);
   if (simplified_estimator_settings.enabled) {

@@ -58,7 +58,7 @@ constexpr int64_t kLogNonDecodedIntervalMs = 5000;
 FrameBuffer::FrameBuffer(Clock* clock,
                          VCMTiming* timing,
                          VCMReceiveStatisticsCallback* stats_callback,
-                         const WebRtcKeyValueConfig& field_trials)
+                         const FieldTrialsView& field_trials)
     : decoded_frames_history_(kMaxFramesHistory),
       clock_(clock),
       callback_queue_(nullptr),

@@ -60,7 +60,7 @@ VideoFrame CreateFrameWithTimestamps(
 }
 
 std::unique_ptr<FrameCadenceAdapterInterface> CreateAdapter(
-    const WebRtcKeyValueConfig& field_trials,
+    const FieldTrialsView& field_trials,
     Clock* clock) {
   return FrameCadenceAdapterInterface::Create(clock, TaskQueueBase::Current(),
                                               field_trials);

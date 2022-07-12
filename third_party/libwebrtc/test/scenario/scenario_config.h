@@ -52,7 +52,7 @@ struct TransportControllerConfig {
 
 struct CallClientConfig {
   TransportControllerConfig transport;
-  const WebRtcKeyValueConfig* field_trials = nullptr;
+  const FieldTrialsView* field_trials = nullptr;
 };
 
 struct PacketStreamConfig {

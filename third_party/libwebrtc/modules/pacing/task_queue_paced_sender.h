@@ -19,12 +19,12 @@
 
 #include "absl/base/attributes.h"
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
-#include "api/webrtc_key_value_config.h"
 #include "modules/pacing/pacing_controller.h"
 #include "modules/pacing/rtp_packet_pacer.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
@@ -45,7 +45,7 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   // latency.
   TaskQueuePacedSender(Clock* clock,
                        PacingController::PacketSender* packet_sender,
-                       const WebRtcKeyValueConfig& field_trials,
+                       const FieldTrialsView& field_trials,
                        TaskQueueFactory* task_queue_factory,
                        TimeDelta max_hold_back_window,
                        int max_hold_back_window_in_packets);

@@ -17,11 +17,11 @@
 #include <vector>
 
 #include "api/audio_codecs/audio_encoder_factory.h"
+#include "api/field_trials_view.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/transport/rtp/rtp_source.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "call/audio_state.h"
 #include "call/call.h"
 #include "media/base/media_engine.h"
@@ -55,7 +55,7 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
       rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer,
       rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing,
       webrtc::AudioFrameProcessor* audio_frame_processor,
-      const webrtc::WebRtcKeyValueConfig& trials);
+      const webrtc::FieldTrialsView& trials);
 
   WebRtcVoiceEngine() = delete;
   WebRtcVoiceEngine(const WebRtcVoiceEngine&) = delete;

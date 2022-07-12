@@ -282,7 +282,7 @@ webrtc::MdnsResponderInterface* NetworkManager::GetMdnsResponder() const {
 }
 
 NetworkManagerBase::NetworkManagerBase(
-    const webrtc::WebRtcKeyValueConfig* field_trials)
+    const webrtc::FieldTrialsView* field_trials)
     : enumeration_permission_(NetworkManager::ENUMERATION_ALLOWED),
       signal_network_preference_change_(
           field_trials
@@ -515,7 +515,7 @@ bool NetworkManagerBase::IsVpnMacAddress(
 BasicNetworkManager::BasicNetworkManager(
     NetworkMonitorFactory* network_monitor_factory,
     SocketFactory* socket_factory,
-    const webrtc::WebRtcKeyValueConfig* field_trials)
+    const webrtc::FieldTrialsView* field_trials)
     : field_trials_(field_trials),
       network_monitor_factory_(network_monitor_factory),
       socket_factory_(socket_factory),
@@ -1137,15 +1137,13 @@ webrtc::MdnsResponderInterface* Network::GetMdnsResponder() const {
   return mdns_responder_provider_->GetMdnsResponder();
 }
 
-uint16_t Network::GetCost(
-    const webrtc::WebRtcKeyValueConfig* field_trials) const {
+uint16_t Network::GetCost(const webrtc::FieldTrialsView* field_trials) const {
   return GetCost(
-      *webrtc::AlwaysValidPointer<const webrtc::WebRtcKeyValueConfig,
+      *webrtc::AlwaysValidPointer<const webrtc::FieldTrialsView,
                                   webrtc::FieldTrialBasedConfig>(field_trials));
 }
 
-uint16_t Network::GetCost(
-    const webrtc::WebRtcKeyValueConfig& field_trials) const {
+uint16_t Network::GetCost(const webrtc::FieldTrialsView& field_trials) const {
   AdapterType type = IsVpn() ? underlying_type_for_vpn_ : type_;
   const bool use_differentiated_cellular_costs =
       field_trials.IsEnabled("WebRTC-UseDifferentiatedCellularCosts");

@@ -16,9 +16,9 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/frame_transformer_interface.h"
 #include "api/scoped_refptr.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
@@ -131,7 +131,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
 
     // If set, field trials are read from `field_trials`, otherwise
     // defaults to  webrtc::FieldTrialBasedConfig.
-    const WebRtcKeyValueConfig* field_trials = nullptr;
+    const FieldTrialsView* field_trials = nullptr;
 
     // SSRCs for media and retransmission, respectively.
     // FlexFec SSRC is fetched from `flexfec_sender`.

@@ -17,7 +17,7 @@ rtc_library("nack_module") {
   deps = [
     "..:nack_requester",
     "../..:module_api",
-    "../../../api:webrtc_key_value_config",
+    "../../../api:field_trials_view",
     "../../../api/units:time_delta",
     "../../../api/units:timestamp",
     "../../../rtc_base:checks",

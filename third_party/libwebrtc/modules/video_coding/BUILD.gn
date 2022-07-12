@@ -81,8 +81,8 @@ rtc_library("nack_requester") {
 
   deps = [
     "..:module_api",
+    "../../api:field_trials_view",
     "../../api:sequence_checker",
-    "../../api:webrtc_key_value_config",
     "../../api/task_queue",
     "../../api/units:time_delta",
     "../../api/units:timestamp",
@@ -167,7 +167,7 @@ rtc_library("frame_buffer") {
   ]
   deps = [
     ":video_coding_utility",
-    "../../api:webrtc_key_value_config",
+    "../../api:field_trials_view",
     "../../api/units:timestamp",
     "../../api/video:encoded_frame",
     "../../rtc_base:logging",
@@ -188,7 +188,7 @@ rtc_library("timing") {
     "timing.h",
   ]
   deps = [
-    "../../api:webrtc_key_value_config",
+    "../../api:field_trials_view",
     "../../api/units:time_delta",
     "../../api/video:video_rtp_headers",
     "../../rtc_base:logging",
@@ -221,7 +221,7 @@ rtc_library("jitter_estimator") {
   ]
   deps = [
     ":rtt_filter",
-    "../../api:webrtc_key_value_config",
+    "../../api:field_trials_view",
     "../../api/units:data_size",
     "../../api/units:frequency",
     "../../api/units:time_delta",
@@ -312,11 +312,11 @@ rtc_library("video_coding") {
     "..:module_fec_api",
     "../../api:array_view",
     "../../api:fec_controller_api",
+    "../../api:field_trials_view",
     "../../api:rtp_headers",
     "../../api:rtp_packet_info",
     "../../api:scoped_refptr",
     "../../api:sequence_checker",
-    "../../api:webrtc_key_value_config",
     "../../api/task_queue",
     "../../api/units:data_rate",
     "../../api/units:data_size",
@@ -424,10 +424,10 @@ rtc_library("video_coding_legacy") {
     ":video_coding",
     "..:module_api",
     "..:module_api_public",
+    "../../api:field_trials_view",
     "../../api:rtp_headers",
     "../../api:rtp_packet_info",
     "../../api:sequence_checker",
-    "../../api:webrtc_key_value_config",
     "../../api/transport:field_trial_based_config",
     "../../api/units:timestamp",
     "../../api/video:encoded_image",
@@ -501,9 +501,9 @@ rtc_library("video_coding_utility") {
   deps = [
     ":video_codec_interface",
     "../../api:array_view",
+    "../../api:field_trials_view",
     "../../api:scoped_refptr",
     "../../api:sequence_checker",
-    "../../api:webrtc_key_value_config",
     "../../api/video:encoded_frame",
     "../../api/video:encoded_image",
     "../../api/video:video_adaptation",
@@ -767,10 +767,10 @@ rtc_library("webrtc_vp9") {
     ":webrtc_libvpx_interface",
     ":webrtc_vp9_helpers",
     "../../api:fec_controller_api",
+    "../../api:field_trials_view",
     "../../api:refcountedbase",
     "../../api:scoped_refptr",
     "../../api/transport:field_trial_based_config",
-    "../../api/transport:webrtc_key_value_config",
     "../../api/video:video_frame",
     "../../api/video:video_frame_i010",
     "../../api/video:video_rtp_headers",

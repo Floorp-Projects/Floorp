@@ -17,8 +17,8 @@
 #include <string>
 #include <vector>
 
+#include "api/field_trials_view.h"
 #include "api/sctp_transport_interface.h"
-#include "api/webrtc_key_value_config.h"
 #include "pc/peer_connection_internal.h"
 #include "test/scoped_key_value_config.h"
 
@@ -360,7 +360,7 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   void SetSctpDataMid(const std::string& mid) override {}
   void ResetSctpDataMid() override {}
 
-  const WebRtcKeyValueConfig& trials() override { return field_trials_; }
+  const FieldTrialsView& trials() override { return field_trials_; }
 
  protected:
   webrtc::test::ScopedKeyValueConfig field_trials_;

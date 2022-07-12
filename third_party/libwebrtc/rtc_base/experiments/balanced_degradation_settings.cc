@@ -332,7 +332,7 @@ BalancedDegradationSettings::Config::Config(int pixels,
       generic(generic) {}
 
 BalancedDegradationSettings::BalancedDegradationSettings(
-    const WebRtcKeyValueConfig& field_trials) {
+    const FieldTrialsView& field_trials) {
   FieldTrialStructList<Config> configs(
       {FieldTrialStructMember("pixels", [](Config* c) { return &c->pixels; }),
        FieldTrialStructMember("fps", [](Config* c) { return &c->fps; }),

@@ -13,10 +13,10 @@
 
 #include <memory>
 
+#include "api/field_trials_view.h"
 #include "api/metronome/metronome.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/encoded_frame.h"
-#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/timing.h"
 #include "rtc_base/task_queue.h"
@@ -49,7 +49,7 @@ class FrameBufferProxy {
       TimeDelta max_wait_for_keyframe,
       TimeDelta max_wait_for_frame,
       DecodeSynchronizer* decode_sync,
-      const WebRtcKeyValueConfig& field_trials);
+      const FieldTrialsView& field_trials);
   virtual ~FrameBufferProxy() = default;
 
   // Run on the worker thread.

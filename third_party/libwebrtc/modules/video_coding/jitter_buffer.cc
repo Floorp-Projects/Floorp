@@ -110,7 +110,7 @@ void FrameList::Reset(UnorderedFrameList* free_frames) {
 
 VCMJitterBuffer::VCMJitterBuffer(Clock* clock,
                                  std::unique_ptr<EventWrapper> event,
-                                 const WebRtcKeyValueConfig& field_trials)
+                                 const FieldTrialsView& field_trials)
     : clock_(clock),
       running_(false),
       frame_event_(std::move(event)),

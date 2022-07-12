@@ -13,10 +13,10 @@
 
 #include <string>
 
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/units/time_delta.h"
 #include "api/video_codecs/video_decoder.h"
-#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/timestamp_map.h"
@@ -34,7 +34,7 @@ class VCMDecodedFrameCallback : public DecodedImageCallback {
  public:
   VCMDecodedFrameCallback(VCMTiming* timing,
                           Clock* clock,
-                          const WebRtcKeyValueConfig& field_trials);
+                          const FieldTrialsView& field_trials);
   ~VCMDecodedFrameCallback() override;
   void SetUserReceiveCallback(VCMReceiveCallback* receiveCallback);
   VCMReceiveCallback* UserReceiveCallback();

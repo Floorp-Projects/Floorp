@@ -17,9 +17,9 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/field_trials_view.h"
 #include "api/network_state_predictor.h"
 #include "api/transport/network_types.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "api/units/data_rate.h"
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
@@ -31,7 +31,7 @@ class LossBasedBweV2 {
  public:
   // Creates a disabled `LossBasedBweV2` if the
   // `key_value_config` is not valid.
-  explicit LossBasedBweV2(const WebRtcKeyValueConfig* key_value_config);
+  explicit LossBasedBweV2(const FieldTrialsView* key_value_config);
 
   LossBasedBweV2(const LossBasedBweV2&) = delete;
   LossBasedBweV2& operator=(const LossBasedBweV2&) = delete;
@@ -112,7 +112,7 @@ class LossBasedBweV2 {
   };
 
   static absl::optional<Config> CreateConfig(
-      const WebRtcKeyValueConfig* key_value_config);
+      const FieldTrialsView* key_value_config);
   bool IsConfigValid() const;
 
   // Returns `0.0` if not enough loss statistics have been received.

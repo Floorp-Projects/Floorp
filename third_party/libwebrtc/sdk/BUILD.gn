@@ -1585,8 +1585,8 @@ if (is_ios || is_mac) {
         deps = [
           ":network_monitor_objc",
           ":network_monitor_observer",
+          "../api:field_trials_view",
           "../api:sequence_checker",
-          "../api:webrtc_key_value_config",
           "../rtc_base",
           "../rtc_base:threading",
           "../rtc_base/task_utils:pending_task_safety_flag",

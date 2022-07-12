@@ -39,13 +39,13 @@ rtc_library("emulated_network") {
   ]
   deps = [
     "../../api:array_view",
+    "../../api:field_trials_view",
     "../../api:network_emulation_manager_api",
     "../../api:packet_socket_factory",
     "../../api:scoped_refptr",
     "../../api:sequence_checker",
     "../../api:simulated_network_api",
     "../../api:time_controller",
-    "../../api:webrtc_key_value_config",
     "../../api/numerics",
     "../../api/test/network_emulation",
     "../../api/transport:stun_types",

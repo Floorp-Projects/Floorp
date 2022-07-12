@@ -210,7 +210,7 @@ class FrameCadenceAdapterImpl : public FrameCadenceAdapterInterface {
  public:
   FrameCadenceAdapterImpl(Clock* clock,
                           TaskQueueBase* queue,
-                          const WebRtcKeyValueConfig& field_trials);
+                          const FieldTrialsView& field_trials);
   ~FrameCadenceAdapterImpl();
 
   // FrameCadenceAdapterInterface overrides.
@@ -546,7 +546,7 @@ TimeDelta ZeroHertzAdapterMode::RepeatDuration(bool idle_repeat) const {
 FrameCadenceAdapterImpl::FrameCadenceAdapterImpl(
     Clock* clock,
     TaskQueueBase* queue,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : clock_(clock),
       queue_(queue),
       zero_hertz_screenshare_enabled_(
@@ -742,7 +742,7 @@ void FrameCadenceAdapterImpl::MaybeReportFrameRateConstraintUmas() {
 std::unique_ptr<FrameCadenceAdapterInterface>
 FrameCadenceAdapterInterface::Create(Clock* clock,
                                      TaskQueueBase* queue,
-                                     const WebRtcKeyValueConfig& field_trials) {
+                                     const FieldTrialsView& field_trials) {
   return std::make_unique<FrameCadenceAdapterImpl>(clock, queue, field_trials);
 }
 

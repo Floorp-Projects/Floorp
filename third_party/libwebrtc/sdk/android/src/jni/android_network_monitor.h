@@ -19,7 +19,7 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "api/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 #include "rtc_base/network_monitor.h"
 #include "rtc_base/network_monitor_factory.h"
 #include "rtc_base/string_utils.h"
@@ -167,7 +167,7 @@ class AndroidNetworkMonitorFactory : public rtc::NetworkMonitorFactory {
   ~AndroidNetworkMonitorFactory() override;
 
   rtc::NetworkMonitorInterface* CreateNetworkMonitor(
-      const WebRtcKeyValueConfig& field_trials) override;
+      const FieldTrialsView& field_trials) override;
 
  private:
   ScopedJavaGlobalRef<jobject> j_application_context_;

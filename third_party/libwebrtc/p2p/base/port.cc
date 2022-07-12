@@ -111,7 +111,7 @@ Port::Port(rtc::Thread* thread,
            const rtc::Network* network,
            const std::string& username_fragment,
            const std::string& password,
-           const webrtc::WebRtcKeyValueConfig* field_trials)
+           const webrtc::FieldTrialsView* field_trials)
     : thread_(thread),
       factory_(factory),
       type_(type),
@@ -142,7 +142,7 @@ Port::Port(rtc::Thread* thread,
            uint16_t max_port,
            const std::string& username_fragment,
            const std::string& password,
-           const webrtc::WebRtcKeyValueConfig* field_trials)
+           const webrtc::FieldTrialsView* field_trials)
     : thread_(thread),
       factory_(factory),
       type_(type),

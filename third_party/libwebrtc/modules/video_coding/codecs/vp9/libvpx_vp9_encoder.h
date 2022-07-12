@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "api/fec_controller_override.h"
-#include "api/transport/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/vp9_profile.h"
 #include "common_video/include/video_frame_buffer_pool.h"
@@ -37,7 +37,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
  public:
   LibvpxVp9Encoder(const cricket::VideoCodec& codec,
                    std::unique_ptr<LibvpxInterface> interface,
-                   const WebRtcKeyValueConfig& trials);
+                   const FieldTrialsView& trials);
 
   ~LibvpxVp9Encoder() override;
 
@@ -194,7 +194,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
     int frames_before_steady_state;
   } variable_framerate_experiment_;
   static VariableFramerateExperiment ParseVariableFramerateConfig(
-      const WebRtcKeyValueConfig& trials);
+      const FieldTrialsView& trials);
   FramerateControllerDeprecated variable_framerate_controller_;
 
   const struct QualityScalerExperiment {
@@ -203,7 +203,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
     bool enabled;
   } quality_scaler_experiment_;
   static QualityScalerExperiment ParseQualityScalerConfig(
-      const WebRtcKeyValueConfig& trials);
+      const FieldTrialsView& trials);
   const bool external_ref_ctrl_;
 
   // Flags that can affect speed vs quality tradeoff, and are configureable per
@@ -238,7 +238,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
       performance_flags_by_spatial_index_;
   void UpdatePerformanceFlags();
   static PerformanceFlags ParsePerformanceFlagsFromTrials(
-      const WebRtcKeyValueConfig& trials);
+      const FieldTrialsView& trials);
   static PerformanceFlags GetDefaultPerformanceFlags();
 
   int num_steady_state_frames_;

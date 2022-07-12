@@ -123,7 +123,7 @@ class FakeNetworkMonitorFactory : public NetworkMonitorFactory {
  public:
   FakeNetworkMonitorFactory() {}
   NetworkMonitorInterface* CreateNetworkMonitor(
-      const webrtc::WebRtcKeyValueConfig& field_trials) override {
+      const webrtc::FieldTrialsView& field_trials) override {
     return new FakeNetworkMonitor();
   }
 };
@@ -319,7 +319,7 @@ class TestBasicNetworkManager : public BasicNetworkManager {
  public:
   TestBasicNetworkManager(NetworkMonitorFactory* network_monitor_factory,
                           SocketFactory* socket_factory,
-                          const webrtc::WebRtcKeyValueConfig& field_trials)
+                          const webrtc::FieldTrialsView& field_trials)
       : BasicNetworkManager(network_monitor_factory,
                             socket_factory,
                             &field_trials) {}

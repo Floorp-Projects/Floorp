@@ -32,7 +32,7 @@ const int kMaxReorderedPackets = 128;
 const int kNumReorderingBuckets = 10;
 const int kDefaultSendNackDelayMs = 0;
 
-int64_t GetSendNackDelay(const WebRtcKeyValueConfig& field_trials) {
+int64_t GetSendNackDelay(const FieldTrialsView& field_trials) {
   int64_t delay_ms = strtol(
       field_trials.Lookup("WebRTC-SendNackDelayMs").c_str(), nullptr, 10);
   if (delay_ms > 0 && delay_ms <= 20) {
@@ -109,7 +109,7 @@ NackRequester::BackoffSettings::BackoffSettings(TimeDelta min_retry,
 
 absl::optional<NackRequester::BackoffSettings>
 NackRequester::BackoffSettings::ParseFromFieldTrials(
-    const WebRtcKeyValueConfig& field_trials) {
+    const FieldTrialsView& field_trials) {
   // Matches magic number in RTPSender::OnReceivedNack().
   const TimeDelta kDefaultMinRetryInterval = TimeDelta::Millis(5);
   // Upper bound on link-delay considered for exponential backoff.
@@ -139,7 +139,7 @@ NackRequester::NackRequester(TaskQueueBase* current_queue,
                              Clock* clock,
                              NackSender* nack_sender,
                              KeyFrameRequestSender* keyframe_request_sender,
-                             const WebRtcKeyValueConfig& field_trials)
+                             const FieldTrialsView& field_trials)
     : worker_thread_(current_queue),
       clock_(clock),
       nack_sender_(nack_sender),

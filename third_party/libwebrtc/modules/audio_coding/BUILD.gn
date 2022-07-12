@@ -118,7 +118,7 @@ rtc_library("red") {
 
   deps = [
     "../../api:array_view",
-    "../../api:webrtc_key_value_config",
+    "../../api:field_trials_view",
     "../../api/audio_codecs:audio_codecs_api",
     "../../api/units:time_delta",
     "../../common_audio",

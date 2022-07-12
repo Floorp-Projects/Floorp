@@ -15,12 +15,12 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "api/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 
 namespace webrtc {
 namespace test {
 
-class ExplicitKeyValueConfig : public WebRtcKeyValueConfig {
+class ExplicitKeyValueConfig : public FieldTrialsView {
  public:
   explicit ExplicitKeyValueConfig(const std::string& s);
   std::string Lookup(absl::string_view key) const override;

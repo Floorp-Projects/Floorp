@@ -11,9 +11,9 @@
 #ifndef MODULES_VIDEO_CODING_VIDEO_RECEIVER2_H_
 #define MODULES_VIDEO_CODING_VIDEO_RECEIVER2_H_
 
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/video_codecs/video_decoder.h"
-#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/decoder_database.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/generic_decoder.h"
@@ -31,7 +31,7 @@ class VideoReceiver2 {
  public:
   VideoReceiver2(Clock* clock,
                  VCMTiming* timing,
-                 const WebRtcKeyValueConfig& field_trials);
+                 const FieldTrialsView& field_trials);
   ~VideoReceiver2();
 
   void RegisterReceiveCodec(uint8_t payload_type,

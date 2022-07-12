@@ -14,11 +14,11 @@
 #include <memory>
 
 #include "absl/base/attributes.h"
+#include "api/field_trials_view.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
-#include "api/webrtc_key_value_config.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
@@ -81,7 +81,7 @@ class FrameCadenceAdapterInterface
   static std::unique_ptr<FrameCadenceAdapterInterface> Create(
       Clock* clock,
       TaskQueueBase* queue,
-      const WebRtcKeyValueConfig& field_trials);
+      const FieldTrialsView& field_trials);
 
   // Call before using the rest of the API.
   virtual void Initialize(Callback* callback) = 0;

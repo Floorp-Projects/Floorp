@@ -13,10 +13,10 @@
 #include <algorithm>
 #include <memory>
 
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/video/encoded_image.h"
-#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/timing.h"
 #include "rtc_base/memory/always_valid_pointer.h"
@@ -45,7 +45,7 @@ namespace {
 class VideoCodingModuleImpl : public VideoCodingModule {
  public:
   explicit VideoCodingModuleImpl(Clock* clock,
-                                 const WebRtcKeyValueConfig* field_trials)
+                                 const FieldTrialsView* field_trials)
       : VideoCodingModule(),
         field_trials_(field_trials),
         timing_(new VCMTiming(clock, *field_trials_)),
@@ -109,7 +109,7 @@ class VideoCodingModuleImpl : public VideoCodingModule {
   }
 
  private:
-  AlwaysValidPointer<const WebRtcKeyValueConfig, FieldTrialBasedConfig>
+  AlwaysValidPointer<const FieldTrialsView, FieldTrialBasedConfig>
       field_trials_;
   SequenceChecker construction_thread_;
   const std::unique_ptr<VCMTiming> timing_;
@@ -121,7 +121,7 @@ class VideoCodingModuleImpl : public VideoCodingModule {
 // new jitter buffer is in place.
 VideoCodingModule* VideoCodingModule::Create(
     Clock* clock,
-    const WebRtcKeyValueConfig* field_trials) {
+    const FieldTrialsView* field_trials) {
   RTC_DCHECK(clock);
   return new VideoCodingModuleImpl(clock, field_trials);
 }

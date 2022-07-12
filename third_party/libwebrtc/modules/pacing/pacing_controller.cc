@@ -40,17 +40,15 @@ constexpr TimeDelta kMaxProcessingInterval = TimeDelta::Millis(30);
 
 constexpr int kFirstPriority = 0;
 
-bool IsDisabled(const WebRtcKeyValueConfig& field_trials,
-                absl::string_view key) {
+bool IsDisabled(const FieldTrialsView& field_trials, absl::string_view key) {
   return absl::StartsWith(field_trials.Lookup(key), "Disabled");
 }
 
-bool IsEnabled(const WebRtcKeyValueConfig& field_trials,
-               absl::string_view key) {
+bool IsEnabled(const FieldTrialsView& field_trials, absl::string_view key) {
   return absl::StartsWith(field_trials.Lookup(key), "Enabled");
 }
 
-TimeDelta GetDynamicPaddingTarget(const WebRtcKeyValueConfig& field_trials) {
+TimeDelta GetDynamicPaddingTarget(const FieldTrialsView& field_trials) {
   FieldTrialParameter<TimeDelta> padding_target("timedelta",
                                                 TimeDelta::Millis(5));
   ParseFieldTrial({&padding_target},
@@ -94,7 +92,7 @@ const TimeDelta PacingController::kMaxEarlyProbeProcessing =
 
 PacingController::PacingController(Clock* clock,
                                    PacketSender* packet_sender,
-                                   const WebRtcKeyValueConfig& field_trials,
+                                   const FieldTrialsView& field_trials,
                                    ProcessMode mode)
     : mode_(mode),
       clock_(clock),

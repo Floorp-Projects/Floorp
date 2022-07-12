@@ -31,7 +31,7 @@ static constexpr int64_t kMaxTimeMs =
 RemoteEstimatorProxy::RemoteEstimatorProxy(
     Clock* clock,
     TransportFeedbackSender feedback_sender,
-    const WebRtcKeyValueConfig* key_value_config,
+    const FieldTrialsView* key_value_config,
     NetworkStateEstimator* network_state_estimator)
     : clock_(clock),
       feedback_sender_(std::move(feedback_sender)),

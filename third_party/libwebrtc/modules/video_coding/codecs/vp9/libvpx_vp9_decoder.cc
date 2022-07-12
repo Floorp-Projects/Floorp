@@ -96,7 +96,7 @@ ColorSpace ExtractVP9ColorSpace(vpx_color_space_t space_t,
 
 LibvpxVp9Decoder::LibvpxVp9Decoder()
     : LibvpxVp9Decoder(FieldTrialBasedConfig()) {}
-LibvpxVp9Decoder::LibvpxVp9Decoder(const WebRtcKeyValueConfig& trials)
+LibvpxVp9Decoder::LibvpxVp9Decoder(const FieldTrialsView& trials)
     : decode_complete_callback_(nullptr),
       inited_(false),
       decoder_(nullptr),

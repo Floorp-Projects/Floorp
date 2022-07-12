@@ -39,12 +39,12 @@ const char* kVideoHysteresisFieldTrialname =
 const char* kScreenshareHysteresisFieldTrialname =
     "WebRTC-SimulcastScreenshareUpswitchHysteresisPercent";
 
-bool IsEnabled(const WebRtcKeyValueConfig* const key_value_config,
+bool IsEnabled(const FieldTrialsView* const key_value_config,
                absl::string_view key) {
   return absl::StartsWith(key_value_config->Lookup(key), "Enabled");
 }
 
-void ParseHysteresisFactor(const WebRtcKeyValueConfig* const key_value_config,
+void ParseHysteresisFactor(const FieldTrialsView* const key_value_config,
                            absl::string_view key,
                            double* output_value) {
   std::string group_name = key_value_config->Lookup(key);
@@ -94,7 +94,7 @@ std::unique_ptr<StructParametersParser> VideoRateControlConfig::Parser() {
 }
 
 RateControlSettings::RateControlSettings(
-    const WebRtcKeyValueConfig* const key_value_config) {
+    const FieldTrialsView* const key_value_config) {
   std::string congestion_window_config =
       key_value_config->Lookup(CongestionWindowConfig::kKey).empty()
           ? kCongestionWindowDefaultFieldTrialString
@@ -120,7 +120,7 @@ RateControlSettings RateControlSettings::ParseFromFieldTrials() {
 }
 
 RateControlSettings RateControlSettings::ParseFromKeyValueConfig(
-    const WebRtcKeyValueConfig* const key_value_config) {
+    const FieldTrialsView* const key_value_config) {
   FieldTrialBasedConfig field_trial_config;
   return RateControlSettings(key_value_config ? key_value_config
                                               : &field_trial_config);

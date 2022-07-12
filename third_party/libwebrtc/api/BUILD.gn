@@ -172,6 +172,7 @@ rtc_library("libjingle_peerconnection_api") {
     ":audio_options_api",
     ":callfactory_api",
     ":fec_controller_api",
+    ":field_trials_view",
     ":frame_transformer_interface",
     ":libjingle_logging_api",
     ":media_stream_interface",
@@ -201,7 +202,6 @@ rtc_library("libjingle_peerconnection_api") {
     "transport:enums",
     "transport:network_control",
     "transport:sctp_transport_factory_interface",
-    "transport:webrtc_key_value_config",
     "transport/rtp:rtp_source",
     "units:data_rate",
     "units:timestamp",
@@ -1234,9 +1234,15 @@ if (rtc_include_tests) {
   }
 }
 
+rtc_source_set("field_trials_view") {
+  visibility = [ "*" ]
+  sources = [ "field_trials_view.h" ]
+  deps = [ "../rtc_base/system:rtc_export" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+}
+
 rtc_source_set("webrtc_key_value_config") {
   visibility = [ "*" ]
   sources = [ "webrtc_key_value_config.h" ]
-  deps = [ "../rtc_base/system:rtc_export" ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  deps = [ ":field_trials_view" ]
 }

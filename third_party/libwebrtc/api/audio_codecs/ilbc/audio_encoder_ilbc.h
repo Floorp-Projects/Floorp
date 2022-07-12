@@ -19,7 +19,7 @@
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/audio_codecs/audio_format.h"
 #include "api/audio_codecs/ilbc/audio_encoder_ilbc_config.h"
-#include "api/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 
 namespace webrtc {
 
@@ -35,7 +35,7 @@ struct AudioEncoderIlbc {
       const AudioEncoderIlbcConfig& config,
       int payload_type,
       absl::optional<AudioCodecPairId> codec_pair_id = absl::nullopt,
-      const WebRtcKeyValueConfig* field_trials = nullptr);
+      const FieldTrialsView* field_trials = nullptr);
 };
 
 }  // namespace webrtc

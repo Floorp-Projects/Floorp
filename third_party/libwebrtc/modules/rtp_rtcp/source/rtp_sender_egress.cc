@@ -30,7 +30,7 @@ constexpr size_t kRtpSequenceNumberMapMaxEntries = 1 << 13;
 constexpr TimeDelta kUpdateInterval =
     TimeDelta::Millis(kBitrateStatisticsWindowMs);
 
-bool IsTrialSetTo(const WebRtcKeyValueConfig* field_trials,
+bool IsTrialSetTo(const FieldTrialsView* field_trials,
                   absl::string_view name,
                   absl::string_view value) {
   FieldTrialBasedConfig default_trials;

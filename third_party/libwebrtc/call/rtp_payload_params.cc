@@ -127,7 +127,7 @@ void SetVideoTiming(const EncodedImage& image, VideoSendTiming* timing) {
 
 RtpPayloadParams::RtpPayloadParams(const uint32_t ssrc,
                                    const RtpPayloadState* state,
-                                   const WebRtcKeyValueConfig& trials)
+                                   const FieldTrialsView& trials)
     : ssrc_(ssrc),
       generic_picture_id_experiment_(
           absl::StartsWith(trials.Lookup("WebRTC-GenericPictureId"),

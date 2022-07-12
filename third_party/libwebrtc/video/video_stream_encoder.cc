@@ -19,6 +19,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/queued_task.h"
 #include "api/task_queue/task_queue_base.h"
@@ -30,7 +31,6 @@
 #include "api/video/video_layers_allocation.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
-#include "api/webrtc_key_value_config.h"
 #include "call/adaptation/resource_adaptation_processor.h"
 #include "call/adaptation/video_stream_adapter.h"
 #include "modules/video_coding/include/video_codec_initializer.h"
@@ -598,7 +598,7 @@ VideoStreamEncoder::VideoStreamEncoder(
     std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
         encoder_queue,
     BitrateAllocationCallbackType allocation_cb_type,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : field_trials_(field_trials),
       worker_queue_(TaskQueueBase::Current()),
       number_of_cores_(number_of_cores),

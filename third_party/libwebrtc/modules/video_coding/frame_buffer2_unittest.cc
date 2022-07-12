@@ -41,7 +41,7 @@ namespace video_coding {
 
 class VCMTimingFake : public VCMTiming {
  public:
-  explicit VCMTimingFake(Clock* clock, const WebRtcKeyValueConfig& field_trials)
+  explicit VCMTimingFake(Clock* clock, const FieldTrialsView& field_trials)
       : VCMTiming(clock, field_trials) {}
 
   Timestamp RenderTime(uint32_t frame_timestamp, Timestamp now) const override {

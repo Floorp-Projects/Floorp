@@ -14,15 +14,14 @@
 
 #include <memory>
 
+#include "api/field_trials_view.h"
 #include "api/units/time_delta.h"
-#include "api/webrtc_key_value_config.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 
 namespace webrtc {
 
 struct ReceiveTimeCalculatorConfig {
-  explicit ReceiveTimeCalculatorConfig(
-      const WebRtcKeyValueConfig& field_trials);
+  explicit ReceiveTimeCalculatorConfig(const FieldTrialsView& field_trials);
   ReceiveTimeCalculatorConfig(const ReceiveTimeCalculatorConfig&);
   ReceiveTimeCalculatorConfig& operator=(const ReceiveTimeCalculatorConfig&) =
       default;
@@ -44,8 +43,8 @@ struct ReceiveTimeCalculatorConfig {
 class ReceiveTimeCalculator {
  public:
   static std::unique_ptr<ReceiveTimeCalculator> CreateFromFieldTrial(
-      const WebRtcKeyValueConfig& field_trials);
-  explicit ReceiveTimeCalculator(const WebRtcKeyValueConfig& field_trials);
+      const FieldTrialsView& field_trials);
+  explicit ReceiveTimeCalculator(const FieldTrialsView& field_trials);
   int64_t ReconcileReceiveTimes(int64_t packet_time_us_,
                                 int64_t system_time_us_,
                                 int64_t safe_time_us_);

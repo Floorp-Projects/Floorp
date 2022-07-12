@@ -42,6 +42,7 @@ rtc_library("audio") {
   deps = [
     "../api:array_view",
     "../api:call_api",
+    "../api:field_trials_view",
     "../api:frame_transformer_interface",
     "../api:function_view",
     "../api:rtp_headers",
@@ -49,7 +50,6 @@ rtc_library("audio") {
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "../api:transport_api",
-    "../api:webrtc_key_value_config",
     "../api/audio:aec3_factory",
     "../api/audio:audio_frame_api",
     "../api/audio:audio_frame_processor",

@@ -90,7 +90,7 @@ class DegradedCall : public Call, private PacketReceiver {
 
   Stats GetStats() const override;
 
-  const WebRtcKeyValueConfig& trials() const override;
+  const FieldTrialsView& trials() const override;
 
   TaskQueueBase* network_thread() const override;
   TaskQueueBase* worker_thread() const override;

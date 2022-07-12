@@ -18,9 +18,9 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/network_state_predictor.h"
 #include "api/transport/network_types.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "modules/congestion_controller/goog_cc/delay_increase_detector_interface.h"
 #include "modules/congestion_controller/goog_cc/inter_arrival_delta.h"
 #include "modules/congestion_controller/goog_cc/probe_bitrate_estimator.h"
@@ -37,7 +37,7 @@ struct BweSeparateAudioPacketsSettings {
 
   BweSeparateAudioPacketsSettings() = default;
   explicit BweSeparateAudioPacketsSettings(
-      const WebRtcKeyValueConfig* key_value_config);
+      const FieldTrialsView* key_value_config);
 
   bool enabled = false;
   int packet_threshold = 10;
@@ -59,7 +59,7 @@ class DelayBasedBwe {
     BandwidthUsage delay_detector_state;
   };
 
-  explicit DelayBasedBwe(const WebRtcKeyValueConfig* key_value_config,
+  explicit DelayBasedBwe(const FieldTrialsView* key_value_config,
                          RtcEventLog* event_log,
                          NetworkStatePredictor* network_state_predictor);
 
@@ -104,7 +104,7 @@ class DelayBasedBwe {
 
   rtc::RaceChecker network_race_;
   RtcEventLog* const event_log_;
-  const WebRtcKeyValueConfig* const key_value_config_;
+  const FieldTrialsView* const key_value_config_;
 
   // Alternatively, run two separate overuse detectors for audio and video,
   // and fall back to the audio one if we haven't seen a video packet in a

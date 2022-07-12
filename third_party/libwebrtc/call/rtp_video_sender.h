@@ -21,10 +21,10 @@
 #include "api/call/transport.h"
 #include "api/fec_controller.h"
 #include "api/fec_controller_override.h"
+#include "api/field_trials_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/sequence_checker.h"
 #include "api/video_codecs/video_encoder.h"
-#include "api/webrtc_key_value_config.h"
 #include "call/rtp_config.h"
 #include "call/rtp_payload_params.h"
 #include "call/rtp_transport_controller_send_interface.h"
@@ -86,7 +86,7 @@ class RtpVideoSender : public RtpVideoSenderInterface,
       FrameEncryptorInterface* frame_encryptor,
       const CryptoOptions& crypto_options,  // move inside RtpTransport
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-      const WebRtcKeyValueConfig& field_trials);
+      const FieldTrialsView& field_trials);
   ~RtpVideoSender() override;
 
   RtpVideoSender(const RtpVideoSender&) = delete;
@@ -167,7 +167,7 @@ class RtpVideoSender : public RtpVideoSenderInterface,
                                  DataSize overhead_per_packet,
                                  Frequency framerate) const;
 
-  const WebRtcKeyValueConfig& field_trials_;
+  const FieldTrialsView& field_trials_;
   const bool send_side_bwe_with_overhead_;
   const bool use_frame_rate_for_overhead_;
   const bool has_packet_feedback_;

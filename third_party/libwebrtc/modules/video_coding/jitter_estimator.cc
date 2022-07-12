@@ -17,11 +17,11 @@
 #include <cstdint>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/units/data_size.h"
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
-#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/rtt_filter.h"
 #include "rtc_base/experiments/jitter_upper_bound_experiment.h"
 #include "rtc_base/numerics/safe_conversions.h"
@@ -50,7 +50,7 @@ constexpr double kNoiseStdDevOffset = 30.0;
 }  // namespace
 
 VCMJitterEstimator::VCMJitterEstimator(Clock* clock,
-                                       const WebRtcKeyValueConfig& field_trials)
+                                       const FieldTrialsView& field_trials)
     : fps_counter_(30),  // TODO(sprang): Use an estimator with limit based on
                          // time, rather than number of samples.
       time_deviation_upper_bound_(

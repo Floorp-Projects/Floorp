@@ -130,8 +130,7 @@ class WebRtcRecordableEncodedFrame : public RecordableEncodedFrame {
   absl::optional<webrtc::ColorSpace> color_space_;
 };
 
-RenderResolution InitialDecoderResolution(
-    const WebRtcKeyValueConfig& field_trials) {
+RenderResolution InitialDecoderResolution(const FieldTrialsView& field_trials) {
   FieldTrialOptional<int> width("w");
   FieldTrialOptional<int> height("h");
   ParseFieldTrial({&width, &height},

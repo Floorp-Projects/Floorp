@@ -17,8 +17,8 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
-#include "api/webrtc_key_value_config.h"
 #include "call/video_receive_stream.h"
 #include "modules/include/module_common_types.h"
 #include "modules/video_coding/include/video_coding_defines.h"
@@ -45,7 +45,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
  public:
   ReceiveStatisticsProxy(uint32_t remote_ssrc,
                          Clock* clock,
-                         const WebRtcKeyValueConfig* field_trials = nullptr);
+                         const FieldTrialsView* field_trials = nullptr);
   ~ReceiveStatisticsProxy() = default;
 
   VideoReceiveStream::Stats GetStats() const;

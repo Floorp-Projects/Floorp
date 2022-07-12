@@ -100,7 +100,7 @@ class MockRtpPacketPacer : public RtpPacketSender {
               (override));
 };
 
-class FieldTrialConfig : public WebRtcKeyValueConfig {
+class FieldTrialConfig : public FieldTrialsView {
  public:
   FieldTrialConfig() : max_padding_factor_(1200) {}
   ~FieldTrialConfig() override {}

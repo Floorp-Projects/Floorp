@@ -12,17 +12,17 @@
 
 #include <stdint.h>
 
+#include "api/field_trials_view.h"
 #include "api/network_state_predictor.h"
-#include "api/transport/webrtc_key_value_config.h"
 
 namespace webrtc {
 
 bool AdaptiveThresholdExperimentIsDisabled(
-    const WebRtcKeyValueConfig& key_value_config);
+    const FieldTrialsView& key_value_config);
 
 class OveruseDetector {
  public:
-  explicit OveruseDetector(const WebRtcKeyValueConfig* key_value_config);
+  explicit OveruseDetector(const FieldTrialsView* key_value_config);
   virtual ~OveruseDetector();
 
   OveruseDetector(const OveruseDetector&) = delete;
@@ -44,7 +44,7 @@ class OveruseDetector {
 
  private:
   void UpdateThreshold(double modified_offset, int64_t now_ms);
-  void InitializeExperiment(const WebRtcKeyValueConfig& key_value_config);
+  void InitializeExperiment(const FieldTrialsView& key_value_config);
 
   bool in_experiment_;
   double k_up_;

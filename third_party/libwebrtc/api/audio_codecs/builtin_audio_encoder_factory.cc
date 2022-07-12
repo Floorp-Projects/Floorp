@@ -48,7 +48,7 @@ struct NotAdvertised {
       const Config& config,
       int payload_type,
       absl::optional<AudioCodecPairId> codec_pair_id = absl::nullopt,
-      const WebRtcKeyValueConfig* field_trials = nullptr) {
+      const FieldTrialsView* field_trials = nullptr) {
     return T::MakeAudioEncoder(config, payload_type, codec_pair_id,
                                field_trials);
   }

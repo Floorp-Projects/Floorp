@@ -253,9 +253,8 @@ void BasicPortAllocator::AddTurnServer(const RelayServerConfig& turn_server) {
                    turn_port_prune_policy(), turn_customizer());
 }
 
-void BasicPortAllocator::Init(
-    RelayPortFactoryInterface* relay_port_factory,
-    const webrtc::WebRtcKeyValueConfig* field_trials) {
+void BasicPortAllocator::Init(RelayPortFactoryInterface* relay_port_factory,
+                              const webrtc::FieldTrialsView* field_trials) {
   if (relay_port_factory != nullptr) {
     relay_port_factory_ = relay_port_factory;
   } else {
@@ -1686,7 +1685,7 @@ PortConfiguration::PortConfiguration(
     const ServerAddresses& stun_servers,
     const std::string& username,
     const std::string& password,
-    const webrtc::WebRtcKeyValueConfig* field_trials)
+    const webrtc::FieldTrialsView* field_trials)
     : stun_servers(stun_servers), username(username), password(password) {
   if (!stun_servers.empty())
     stun_address = *(stun_servers.begin());

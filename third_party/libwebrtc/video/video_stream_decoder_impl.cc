@@ -24,7 +24,7 @@ VideoStreamDecoderImpl::VideoStreamDecoderImpl(
     VideoDecoderFactory* decoder_factory,
     TaskQueueFactory* task_queue_factory,
     std::map<int, std::pair<SdpVideoFormat, int>> decoder_settings,
-    const WebRtcKeyValueConfig* field_trials)
+    const FieldTrialsView* field_trials)
     : field_trials_(field_trials),
       timing_(Clock::GetRealTimeClock(), *field_trials_),
       decode_callbacks_(this),

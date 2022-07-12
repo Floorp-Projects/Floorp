@@ -194,7 +194,7 @@ void LibvpxVp9Encoder::EncoderOutputCodedPacketCallback(vpx_codec_cx_pkt* pkt,
 
 LibvpxVp9Encoder::LibvpxVp9Encoder(const cricket::VideoCodec& codec,
                                    std::unique_ptr<LibvpxInterface> interface,
-                                   const WebRtcKeyValueConfig& trials)
+                                   const FieldTrialsView& trials)
     : libvpx_(std::move(interface)),
       encoded_image_(),
       encoded_complete_callback_(nullptr),
@@ -1862,8 +1862,7 @@ size_t LibvpxVp9Encoder::SteadyStateSize(int sid, int tid) {
 
 // static
 LibvpxVp9Encoder::VariableFramerateExperiment
-LibvpxVp9Encoder::ParseVariableFramerateConfig(
-    const WebRtcKeyValueConfig& trials) {
+LibvpxVp9Encoder::ParseVariableFramerateConfig(const FieldTrialsView& trials) {
   FieldTrialFlag enabled = FieldTrialFlag("Enabled");
   FieldTrialParameter<double> framerate_limit("min_fps", 5.0);
   FieldTrialParameter<int> qp("min_qp", 32);
@@ -1885,7 +1884,7 @@ LibvpxVp9Encoder::ParseVariableFramerateConfig(
 
 // static
 LibvpxVp9Encoder::QualityScalerExperiment
-LibvpxVp9Encoder::ParseQualityScalerConfig(const WebRtcKeyValueConfig& trials) {
+LibvpxVp9Encoder::ParseQualityScalerConfig(const FieldTrialsView& trials) {
   FieldTrialFlag disabled = FieldTrialFlag("Disabled");
   FieldTrialParameter<int> low_qp("low_qp", kLowVp9QpThreshold);
   FieldTrialParameter<int> high_qp("hihg_qp", kHighVp9QpThreshold);
@@ -1924,7 +1923,7 @@ void LibvpxVp9Encoder::UpdatePerformanceFlags() {
 // static
 LibvpxVp9Encoder::PerformanceFlags
 LibvpxVp9Encoder::ParsePerformanceFlagsFromTrials(
-    const WebRtcKeyValueConfig& trials) {
+    const FieldTrialsView& trials) {
   struct Params : public PerformanceFlags::ParameterSet {
     int min_pixel_count = 0;
   };

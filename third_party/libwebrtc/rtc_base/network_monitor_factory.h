@@ -12,7 +12,7 @@
 #define RTC_BASE_NETWORK_MONITOR_FACTORY_H_
 
 namespace webrtc {
-class WebRtcKeyValueConfig;
+class FieldTrialsView;
 }  // namespace webrtc
 
 namespace rtc {
@@ -29,7 +29,7 @@ class NetworkMonitorInterface;
 class NetworkMonitorFactory {
  public:
   virtual NetworkMonitorInterface* CreateNetworkMonitor(
-      const webrtc::WebRtcKeyValueConfig& field_trials) = 0;
+      const webrtc::FieldTrialsView& field_trials) = 0;
 
   virtual ~NetworkMonitorFactory();
 

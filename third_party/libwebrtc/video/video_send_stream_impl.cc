@@ -192,7 +192,7 @@ uint32_t GetInitialEncoderMaxBitrate(int initial_encoder_max_bitrate) {
 
 }  // namespace
 
-PacingConfig::PacingConfig(const WebRtcKeyValueConfig& field_trials)
+PacingConfig::PacingConfig(const FieldTrialsView& field_trials)
     : pacing_factor("factor", kStrictPacingMultiplier),
       max_pacing_delay("max_delay",
                        TimeDelta::Millis(PacedSender::kMaxQueueLengthMs)) {
@@ -214,7 +214,7 @@ VideoSendStreamImpl::VideoSendStreamImpl(
     double initial_encoder_bitrate_priority,
     VideoEncoderConfig::ContentType content_type,
     RtpVideoSenderInterface* rtp_video_sender,
-    const WebRtcKeyValueConfig& field_trials)
+    const FieldTrialsView& field_trials)
     : clock_(clock),
       has_alr_probing_(config->periodic_alr_bandwidth_probing ||
                        GetAlrSettings(content_type)),

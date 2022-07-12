@@ -38,7 +38,7 @@ class TestUDPPort : public UDPPort {
                              const std::string& username,
                              const std::string& password,
                              bool emit_localhost_for_anyaddress,
-                             const webrtc::WebRtcKeyValueConfig* field_trials) {
+                             const webrtc::FieldTrialsView* field_trials) {
     TestUDPPort* port =
         new TestUDPPort(thread, factory, network, min_port, max_port, username,
                         password, emit_localhost_for_anyaddress, field_trials);
@@ -58,7 +58,7 @@ class TestUDPPort : public UDPPort {
               const std::string& username,
               const std::string& password,
               bool emit_localhost_for_anyaddress,
-              const webrtc::WebRtcKeyValueConfig* field_trials)
+              const webrtc::FieldTrialsView* field_trials)
       : UDPPort(thread,
                 factory,
                 network,
@@ -82,7 +82,7 @@ class FakePortAllocatorSession : public PortAllocatorSession {
                            int component,
                            const std::string& ice_ufrag,
                            const std::string& ice_pwd,
-                           const webrtc::WebRtcKeyValueConfig& field_trials)
+                           const webrtc::FieldTrialsView& field_trials)
       : PortAllocatorSession(content_name,
                              component,
                              ice_ufrag,
@@ -207,7 +207,7 @@ class FakePortAllocatorSession : public PortAllocatorSession {
   uint32_t candidate_filter_ = CF_ALL;
   int transport_info_update_count_ = 0;
   bool running_ = false;
-  const webrtc::WebRtcKeyValueConfig& field_trials_;
+  const webrtc::FieldTrialsView& field_trials_;
 };
 
 class FakePortAllocator : public cricket::PortAllocator {

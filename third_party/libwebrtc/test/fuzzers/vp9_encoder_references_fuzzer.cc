@@ -14,7 +14,7 @@
 #include "absl/base/macros.h"
 #include "absl/container/inlined_vector.h"
 #include "api/array_view.h"
-#include "api/transport/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 #include "api/video/video_frame.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_encoder.h"
@@ -168,7 +168,7 @@ class FrameValidator : public EncodedImageCallback {
   LayerFrame frames_[kMaxFrameHistorySize];
 };
 
-class FieldTrials : public WebRtcKeyValueConfig {
+class FieldTrials : public FieldTrialsView {
  public:
   explicit FieldTrials(FuzzDataHelper& config)
       : flags_(config.ReadOrDefaultValue<uint8_t>(0)) {}

@@ -10,7 +10,7 @@
 
 #include "test/scoped_key_value_config.h"
 
-#include "api/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 #include "rtc_base/checks.h"
 #include "system_wrappers/include/field_trial.h"
 #include "test/field_trial.h"

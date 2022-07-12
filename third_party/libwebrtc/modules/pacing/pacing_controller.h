@@ -19,10 +19,10 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/function_view.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/transport/network_types.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
 #include "modules/pacing/round_robin_packet_queue.h"
@@ -85,7 +85,7 @@ class PacingController {
 
   PacingController(Clock* clock,
                    PacketSender* packet_sender,
-                   const WebRtcKeyValueConfig& field_trials,
+                   const FieldTrialsView& field_trials,
                    ProcessMode mode);
 
   ~PacingController();
@@ -176,7 +176,7 @@ class PacingController {
   const ProcessMode mode_;
   Clock* const clock_;
   PacketSender* const packet_sender_;
-  const WebRtcKeyValueConfig& field_trials_;
+  const FieldTrialsView& field_trials_;
 
   const bool drain_large_queues_;
   const bool send_padding_if_silent_;

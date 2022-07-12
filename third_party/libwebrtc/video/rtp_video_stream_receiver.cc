@@ -19,7 +19,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
 #include "absl/types/optional.h"
-#include "api/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 #include "media/base/media_constants.h"
 #include "modules/pacing/packet_router.h"
 #include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
@@ -59,7 +59,7 @@ namespace {
 constexpr int kPacketBufferStartSize = 512;
 constexpr int kPacketBufferMaxSize = 2048;
 
-int PacketBufferMaxSize(const WebRtcKeyValueConfig& field_trials) {
+int PacketBufferMaxSize(const FieldTrialsView& field_trials) {
   // The group here must be a positive power of 2, in which case that is used as
   // size. All other values shall result in the default value being used.
   const std::string group_name =
@@ -214,7 +214,7 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
     OnCompleteFrameCallback* complete_frame_callback,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-    const WebRtcKeyValueConfig* field_trials)
+    const FieldTrialsView* field_trials)
     : RtpVideoStreamReceiver(clock,
                              transport,
                              rtt_stats,
@@ -246,7 +246,7 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
     OnCompleteFrameCallback* complete_frame_callback,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-    const WebRtcKeyValueConfig* field_trials)
+    const FieldTrialsView* field_trials)
     : field_trials_(field_trials ? *field_trials : owned_field_trials_),
       clock_(clock),
       config_(*config),

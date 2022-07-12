@@ -52,6 +52,7 @@ if (!build_with_chromium) {
     deps = [
       "../../../api:callfactory_api",
       "../../../api:fec_controller_api",
+      "../../../api:field_trials_view",
       "../../../api:libjingle_peerconnection_api",
       "../../../api:packet_socket_factory",
       "../../../api:peer_connection_quality_test_fixture_api",
@@ -59,7 +60,6 @@ if (!build_with_chromium) {
       "../../../api/rtc_event_log",
       "../../../api/task_queue",
       "../../../api/transport:network_control",
-      "../../../api/transport:webrtc_key_value_config",
       "../../../api/video_codecs:video_codecs_api",
       "../../../modules/audio_processing:api",
       "../../../p2p:rtc_p2p",

@@ -21,9 +21,9 @@
 
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
+#include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
 #include "api/transport/field_trial_based_config.h"
-#include "api/webrtc_key_value_config.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/mdns_responder_interface.h"
 #include "rtc_base/memory/always_valid_pointer.h"
@@ -208,8 +208,7 @@ class RTC_EXPORT NetworkManager : public DefaultLocalAddressProvider,
 // Base class for NetworkManager implementations.
 class RTC_EXPORT NetworkManagerBase : public NetworkManager {
  public:
-  NetworkManagerBase(
-      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr);
+  NetworkManagerBase(const webrtc::FieldTrialsView* field_trials = nullptr);
   ~NetworkManagerBase() override;
 
   void GetNetworks(NetworkList* networks) const override;
@@ -281,24 +280,22 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
   ABSL_DEPRECATED(
       "Use the version with socket_factory, see bugs.webrtc.org/13145")
   explicit BasicNetworkManager(
-      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr)
+      const webrtc::FieldTrialsView* field_trials = nullptr)
       : BasicNetworkManager(
             /* network_monitor_factory= */ nullptr,
             /* socket_factory= */ nullptr,
             field_trials) {}
 
   // This is used by lots of downstream code.
-  BasicNetworkManager(
-      SocketFactory* socket_factory,
-      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr)
+  BasicNetworkManager(SocketFactory* socket_factory,
+                      const webrtc::FieldTrialsView* field_trials = nullptr)
       : BasicNetworkManager(/* network_monitor_factory= */ nullptr,
                             socket_factory,
                             field_trials) {}
 
-  BasicNetworkManager(
-      NetworkMonitorFactory* network_monitor_factory,
-      SocketFactory* socket_factory,
-      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr);
+  BasicNetworkManager(NetworkMonitorFactory* network_monitor_factory,
+                      SocketFactory* socket_factory,
+                      const webrtc::FieldTrialsView* field_trials = nullptr);
   ~BasicNetworkManager() override;
 
   void StartUpdating() override;
@@ -372,7 +369,7 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
   bool sent_first_update_ = true;
   int start_count_ = 0;
   // Chromium create BasicNetworkManager() w/o field trials.
-  webrtc::AlwaysValidPointer<const webrtc::WebRtcKeyValueConfig,
+  webrtc::AlwaysValidPointer<const webrtc::FieldTrialsView,
                              webrtc::FieldTrialBasedConfig>
       field_trials_;
   std::vector<std::string> network_ignore_list_;
@@ -548,9 +545,8 @@ class RTC_EXPORT Network {
   // Port::OnNetworkTypeChanged is called).
   ABSL_DEPRECATED(
       "Use the version with field trials, see bugs.webrtc.org/webrtc:10335")
-  uint16_t GetCost(
-      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr) const;
-  uint16_t GetCost(const webrtc::WebRtcKeyValueConfig& field_trials) const;
+  uint16_t GetCost(const webrtc::FieldTrialsView* field_trials = nullptr) const;
+  uint16_t GetCost(const webrtc::FieldTrialsView& field_trials) const;
 
   // A unique id assigned by the network manager, which may be signaled
   // to the remote side in the candidate.

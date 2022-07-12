@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 #include "absl/types/optional.h"
-#include "api/transport/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 
 namespace webrtc {
 struct AlrExperimentSettings {
@@ -34,11 +34,10 @@ struct AlrExperimentSettings {
   static absl::optional<AlrExperimentSettings> CreateFromFieldTrial(
       const char* experiment_name);
   static absl::optional<AlrExperimentSettings> CreateFromFieldTrial(
-      const WebRtcKeyValueConfig& key_value_config,
+      const FieldTrialsView& key_value_config,
       const char* experiment_name);
   static bool MaxOneFieldTrialEnabled();
-  static bool MaxOneFieldTrialEnabled(
-      const WebRtcKeyValueConfig& key_value_config);
+  static bool MaxOneFieldTrialEnabled(const FieldTrialsView& key_value_config);
 
  private:
   AlrExperimentSettings() = default;

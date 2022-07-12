@@ -18,7 +18,7 @@
 #include "absl/base/attributes.h"
 #include "absl/base/const_init.h"
 #include "api/array_view.h"
-#include "api/webrtc_key_value_config.h"
+#include "api/field_trials_view.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
 #include "pc/external_hmac.h"
 #include "rtc_base/byte_order.h"
@@ -42,7 +42,7 @@ constexpr int kSrtpErrorCodeBoundary = 28;
 
 SrtpSession::SrtpSession() {}
 
-SrtpSession::SrtpSession(const webrtc::WebRtcKeyValueConfig& field_trials) {
+SrtpSession::SrtpSession(const webrtc::FieldTrialsView& field_trials) {
   dump_plain_rtp_ = field_trials.IsEnabled("WebRTC-Debugging-RtpDump");
 }
 

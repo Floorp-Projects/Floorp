@@ -14,8 +14,8 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/video_codecs/video_encoder.h"
-#include "api/webrtc_key_value_config.h"
 
 namespace webrtc {
 
@@ -23,7 +23,7 @@ class BalancedDegradationSettings {
  public:
   static constexpr int kNoFpsDiff = -100;
 
-  BalancedDegradationSettings(const WebRtcKeyValueConfig& field_trials);
+  BalancedDegradationSettings(const FieldTrialsView& field_trials);
   ~BalancedDegradationSettings();
 
   struct CodecTypeSpecific {

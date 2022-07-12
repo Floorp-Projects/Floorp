@@ -238,7 +238,7 @@ rtc_library("explicit_key_value_config") {
 
   deps = [
     ":field_trial",
-    "../api:webrtc_key_value_config",
+    "../api:field_trials_view",
     "../rtc_base:checks",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings:strings" ]
@@ -252,7 +252,7 @@ rtc_library("scoped_key_value_config") {
 
   deps = [
     ":field_trial",
-    "../api:webrtc_key_value_config",
+    "../api:field_trials_view",
     "../rtc_base:checks",
     "../system_wrappers:field_trial",
   ]

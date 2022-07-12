@@ -158,7 +158,7 @@ UDPPort::UDPPort(rtc::Thread* thread,
                  const std::string& username,
                  const std::string& password,
                  bool emit_local_for_anyaddress,
-                 const webrtc::WebRtcKeyValueConfig* field_trials)
+                 const webrtc::FieldTrialsView* field_trials)
     : Port(thread,
            LOCAL_PORT_TYPE,
            factory,
@@ -182,7 +182,7 @@ UDPPort::UDPPort(rtc::Thread* thread,
                  const std::string& username,
                  const std::string& password,
                  bool emit_local_for_anyaddress,
-                 const webrtc::WebRtcKeyValueConfig* field_trials)
+                 const webrtc::FieldTrialsView* field_trials)
     : Port(thread,
            LOCAL_PORT_TYPE,
            factory,
@@ -615,7 +615,7 @@ std::unique_ptr<StunPort> StunPort::Create(
     const std::string& password,
     const ServerAddresses& servers,
     absl::optional<int> stun_keepalive_interval,
-    const webrtc::WebRtcKeyValueConfig* field_trials) {
+    const webrtc::FieldTrialsView* field_trials) {
   // Using `new` to access a non-public constructor.
   auto port = absl::WrapUnique(new StunPort(thread, factory, network, min_port,
                                             max_port, username, password,
@@ -635,7 +635,7 @@ StunPort::StunPort(rtc::Thread* thread,
                    const std::string& username,
                    const std::string& password,
                    const ServerAddresses& servers,
-                   const webrtc::WebRtcKeyValueConfig* field_trials)
+                   const webrtc::FieldTrialsView* field_trials)
     : UDPPort(thread,
               factory,
               network,

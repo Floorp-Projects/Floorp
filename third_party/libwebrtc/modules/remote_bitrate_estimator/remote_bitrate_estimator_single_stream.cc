@@ -44,7 +44,7 @@ struct RemoteBitrateEstimatorSingleStream::Detector {
   explicit Detector(int64_t last_packet_time_ms,
                     const OverUseDetectorOptions& options,
                     bool enable_burst_grouping,
-                    const WebRtcKeyValueConfig* key_value_config)
+                    const FieldTrialsView* key_value_config)
       : last_packet_time_ms(last_packet_time_ms),
         inter_arrival(90 * kTimestampGroupLengthMs,
                       kTimestampToMs,
