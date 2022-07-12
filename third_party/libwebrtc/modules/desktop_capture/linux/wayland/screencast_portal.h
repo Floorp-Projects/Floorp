@@ -15,7 +15,7 @@
 
 #include <string>
 
-#include "absl/types/optional.h"
+#include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
 
 namespace webrtc {
 
@@ -43,20 +43,9 @@ class ScreenCastPortal {
   };
 
   // Interface that must be implemented by the ScreenCastPortal consumers.
-  enum class RequestResponse {
-    // Success, the request is carried out.
-    kSuccess,
-    // The user cancelled the interaction.
-    kUserCancelled,
-    // The user interaction was ended in some other way.
-    kError,
-
-    kMaxValue = kError
-  };
-
   class PortalNotifier {
    public:
-    virtual void OnScreenCastRequestResult(RequestResponse result,
+    virtual void OnScreenCastRequestResult(xdg_portal::RequestResponse result,
                                            uint32_t stream_node_id,
                                            int fd) = 0;
     virtual void OnScreenCastSessionClosed() = 0;
@@ -66,7 +55,7 @@ class ScreenCastPortal {
     virtual ~PortalNotifier() = default;
   };
 
-  explicit ScreenCastPortal(CaptureSourceType source_type,
+  explicit ScreenCastPortal(ScreenCastPortal::CaptureSourceType source_type,
                             PortalNotifier* notifier);
   ~ScreenCastPortal();
 
@@ -78,6 +67,14 @@ class ScreenCastPortal {
   // was successful and only then you will be able to get all the required
   // information in order to continue working with PipeWire.
   void Start();
+
+  // Method to notify the reason for failure of a portal request.
+  void PortalFailed(xdg_portal::RequestResponse result);
+
+  // Sends a create session request to the portal.
+  void SessionRequest(GDBusProxy* proxy);
+
+  void UnsubscribeSignalHandlers();
 
  private:
   PortalNotifier* notifier_;
@@ -104,19 +101,9 @@ class ScreenCastPortal {
   guint start_request_signal_id_ = 0;
   guint session_closed_signal_id_ = 0;
 
-  void PortalFailed(RequestResponse result);
-
-  uint32_t SetupRequestResponseSignal(const char* object_path,
-                                      GDBusSignalCallback callback);
-
   static void OnProxyRequested(GObject* object,
                                GAsyncResult* result,
                                gpointer user_data);
-
-  static std::string PrepareSignalHandle(GDBusConnection* connection,
-                                         const char* token);
-
-  void SessionRequest();
   static void OnSessionRequested(GDBusProxy* proxy,
                                  GAsyncResult* result,
                                  gpointer user_data);
