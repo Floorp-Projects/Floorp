@@ -402,6 +402,28 @@ add_test(function test_deserializeDateLocalValueInvalidValues() {
   run_next_test();
 });
 
+add_test(function test_deserializeLocalValuesInvalidType() {
+  const invalidTypes = [undefined, null, false, 42, {}];
+
+  for (const invalidType of invalidTypes) {
+    info(`Checking type: '${invalidType}'`);
+
+    Assert.throws(
+      () => deserialize({ type: invalidType }),
+      /InvalidArgument/,
+      `Got expected error for type ${invalidType}`
+    );
+
+    Assert.throws(
+      () => deserialize({ type: "array", value: [{ type: invalidType }] }),
+      /InvalidArgument/,
+      `Got expected error for nested type ${invalidType}`
+    );
+  }
+
+  run_next_test();
+});
+
 add_test(function test_deserializeLocalValuesInvalidValues() {
   const invalidValues = [
     { type: "array", values: [undefined, null, false, 42, "foo", {}] },
