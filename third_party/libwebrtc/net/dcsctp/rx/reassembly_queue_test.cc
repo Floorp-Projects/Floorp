@@ -389,5 +389,21 @@ TEST_F(ReassemblyQueueTest, HandoverAfterHavingAssembedOneMessage) {
   reasm2.Add(TSN(11), gen_.Ordered({1, 2, 3, 4}, "BE"));
   EXPECT_THAT(reasm2.FlushMessages(), SizeIs(1));
 }
+
+TEST_F(ReassemblyQueueTest, HandleInconsistentForwardTSN) {
+  // Found when fuzzing.
+  ReassemblyQueue reasm("log: ", TSN(10), kBufferSize);
+  // Add TSN=43, SSN=7. Can't be reassembled as previous SSNs aren't known.
+  reasm.Add(TSN(43), Data(kStreamID, SSN(7), MID(0), FSN(0), kPPID,
+                          std::vector<uint8_t>(10), Data::IsBeginning(true),
+                          Data::IsEnd(true), IsUnordered(false)));
+
+  // Invalid, as TSN=44 have to have SSN>=7, but peer says 6.
+  reasm.Handle(ForwardTsnChunk(
+      TSN(44), {ForwardTsnChunk::SkippedStream(kStreamID, SSN(6))}));
+
+  // Don't assemble SSN=7, as that TSN is skipped.
+  EXPECT_FALSE(reasm.HasMessages());
+}
 }  // namespace
 }  // namespace dcsctp
