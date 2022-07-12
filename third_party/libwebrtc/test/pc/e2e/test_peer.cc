@@ -18,6 +18,45 @@
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
+namespace {
+
+class SetRemoteDescriptionCallback
+    : public webrtc::SetRemoteDescriptionObserverInterface {
+ public:
+  void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override {
+    is_called_ = true;
+    error_ = error;
+  }
+
+  bool is_called() const { return is_called_; }
+
+  webrtc::RTCError error() const { return error_; }
+
+ private:
+  bool is_called_ = false;
+  webrtc::RTCError error_;
+};
+
+}  // namespace
+
+bool TestPeer::SetRemoteDescription(
+    std::unique_ptr<SessionDescriptionInterface> desc,
+    std::string* error_out) {
+  RTC_CHECK(wrapper_) << "TestPeer is already closed";
+
+  auto observer = rtc::make_ref_counted<SetRemoteDescriptionCallback>();
+  // We're assuming (and asserting) that the PeerConnection implementation of
+  // SetRemoteDescription is synchronous when called on the signaling thread.
+  pc()->SetRemoteDescription(std::move(desc), observer);
+  RTC_CHECK(observer->is_called());
+  if (!observer->error().ok()) {
+    RTC_LOG(LS_ERROR) << *params_->name
+                      << ": Failed to set remote description: "
+                      << observer->error().message();
+    *error_out = observer->error().message();
+  }
+  return observer->error().ok();
+}
 
 bool TestPeer::AddIceCandidates(
     std::vector<std::unique_ptr<IceCandidateInterface>> candidates) {

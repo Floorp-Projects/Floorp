@@ -15,10 +15,15 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
-#include "absl/types/variant.h"
+#include "api/function_view.h"
+#include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
+#include "api/set_remote_description_observer_interface.h"
 #include "api/test/frame_generator_interface.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "pc/peer_connection_wrapper.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/ref_counted_object.h"
 #include "test/pc/e2e/peer_configurer.h"
 #include "test/pc/e2e/peer_connection_quality_test_params.h"
 
@@ -47,6 +52,14 @@ class TestPeer final {
     return wrapper_->observer();
   }
 
+  // Tell underlying `PeerConnection` to create an Offer.
+  // `observer` will be invoked on the signaling thread when offer is created.
+  void CreateOffer(
+      rtc::scoped_refptr<CreateSessionDescriptionObserver> observer) {
+    RTC_CHECK(wrapper_) << "TestPeer is already closed";
+    pc()->CreateOffer(observer.release(),
+                      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  }
   std::unique_ptr<SessionDescriptionInterface> CreateOffer() {
     RTC_CHECK(wrapper_) << "TestPeer is already closed";
     return wrapper_->CreateOffer();
@@ -63,11 +76,9 @@ class TestPeer final {
     return wrapper_->SetLocalDescription(std::move(desc), error_out);
   }
 
+  // `error_out` will be set only if returned value is false.
   bool SetRemoteDescription(std::unique_ptr<SessionDescriptionInterface> desc,
-                            std::string* error_out = nullptr) {
-    RTC_CHECK(wrapper_) << "TestPeer is already closed";
-    return wrapper_->SetRemoteDescription(std::move(desc), error_out);
-  }
+                            std::string* error_out = nullptr);
 
   rtc::scoped_refptr<RtpTransceiverInterface> AddTransceiver(
       cricket::MediaType media_type,
