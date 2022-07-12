@@ -4,13 +4,11 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["TwitterPageData"];
-
 /**
  * Collects Twitter card (https://developer.twitter.com/en/docs/twitter-for-websites/)
  * related data from a page.
  */
-const TwitterPageData = {
+export const TwitterPageData = {
   /**
    * Collects the twitter data from the page.
    *

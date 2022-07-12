@@ -5407,9 +5407,9 @@ bool PresShell::IsTransparentContainerElement() const {
     if (BrowsingContext* bc = pc->Document()->GetBrowsingContext()) {
       switch (bc->GetEmbedderColorScheme()) {
         case dom::PrefersColorSchemeOverride::Light:
-          return DefaultBackgroundColorScheme() == ColorScheme::Light;
+          return pc->DefaultBackgroundColorScheme() == ColorScheme::Light;
         case dom::PrefersColorSchemeOverride::Dark:
-          return DefaultBackgroundColorScheme() == ColorScheme::Dark;
+          return pc->DefaultBackgroundColorScheme() == ColorScheme::Dark;
         case dom::PrefersColorSchemeOverride::None:
         case dom::PrefersColorSchemeOverride::EndGuard_:
           break;
@@ -5437,34 +5437,11 @@ bool PresShell::IsTransparentContainerElement() const {
   return false;
 }
 
-ColorScheme PresShell::DefaultBackgroundColorScheme() const {
-  Document* doc = GetDocument();
-  // Use a dark background for top-level about:blank that is inaccessible to
-  // content JS.
-  {
-    BrowsingContext* bc = doc->GetBrowsingContext();
-    if (bc && bc->IsTop() && !bc->HasOpener() && doc->GetDocumentURI() &&
-        NS_IsAboutBlank(doc->GetDocumentURI())) {
-      return doc->PreferredColorScheme(Document::IgnoreRFP::Yes);
-    }
-  }
-  // Prefer the root color-scheme (since generally the default canvas
-  // background comes from the root element's background-color), and fall back
-  // to the default color-scheme if not available.
-  if (auto* frame = mFrameConstructor->GetRootElementStyleFrame()) {
-    return LookAndFeel::ColorSchemeForFrame(frame);
-  }
-  return doc->DefaultColorScheme();
-}
-
 nscolor PresShell::GetDefaultBackgroundColorToDraw() const {
-  if (!mPresContext || !mPresContext->GetBackgroundColorDraw()) {
+  if (!mPresContext) {
     return NS_RGB(255, 255, 255);
   }
-
-  return mPresContext->PrefSheetPrefs()
-      .ColorsFor(DefaultBackgroundColorScheme())
-      .mDefaultBackground;
+  return mPresContext->DefaultBackgroundColor();
 }
 
 void PresShell::UpdateCanvasBackground() {

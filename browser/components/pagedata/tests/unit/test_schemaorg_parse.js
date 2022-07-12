@@ -7,8 +7,8 @@
  * structures.
  */
 
-const { SchemaOrgPageData } = ChromeUtils.import(
-  "resource:///modules/pagedata/SchemaOrgPageData.jsm"
+const { SchemaOrgPageData } = ChromeUtils.importESModule(
+  "resource:///modules/pagedata/SchemaOrgPageData.sys.mjs"
 );
 
 /**

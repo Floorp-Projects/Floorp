@@ -672,6 +672,9 @@ struct OpaqueFramebufferOptions final {
 
 struct SwapChainOptions final {
   bool bgra = false;
+  bool forceAsyncPresent = false;
+  layers::RemoteTextureId remoteTextureId;
+  layers::RemoteTextureOwnerId remoteTextureOwnerId;
 };
 
 // -
@@ -746,7 +749,7 @@ struct ReadPixelsResult {
 };
 
 struct ReadPixelsResultIpc final : public ReadPixelsResult {
-  mozilla::ipc::Shmem shmem = {};
+  Maybe<mozilla::ipc::Shmem> shmem = {};
 };
 
 struct VertAttribPointerDesc final {

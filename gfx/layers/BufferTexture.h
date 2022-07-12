@@ -96,6 +96,8 @@ class BufferTextureData : public TextureData {
                     gfx::BackendType aMoz2DBackend)
       : mDescriptor(aDescriptor), mMoz2DBackend(aMoz2DBackend) {}
 
+  virtual ~BufferTextureData() = default;
+
   BufferDescriptor mDescriptor;
   gfx::BackendType mMoz2DBackend;
 };

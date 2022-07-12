@@ -4,12 +4,10 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["OpenGraphPageData"];
-
 /**
  * Collects Open Graph (https://opengraphprotocol.org/) related data from a page.
  */
-const OpenGraphPageData = {
+export const OpenGraphPageData = {
   /**
    * Collects the opengraph data from the page.
    *

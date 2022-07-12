@@ -4,16 +4,17 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["PageDataChild"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
@@ -29,7 +30,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 /**
  * The actor responsible for monitoring a page for page data.
  */
-class PageDataChild extends JSWindowActorChild {
+export class PageDataChild extends JSWindowActorChild {
   #isContentWindowPrivate = true;
   /**
    * Used to debounce notifications about a page being ready.

@@ -4169,28 +4169,20 @@ void nsTextPaintStyle::InitCommonColors() {
     return;
   }
 
-  auto bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame(mFrame);
-  nscolor defaultBgColor = mPresContext->DefaultBackgroundColor();
-  nscolor bgColor = bgFrame.mFrame ? bgFrame.mFrame->GetVisitedDependentColor(
-                                         &nsStyleBackground::mBackgroundColor)
-                                   : defaultBgColor;
-
-  mFrameBackgroundColor = NS_ComposeColors(defaultBgColor, bgColor);
+  auto bgColor = nsCSSRendering::FindEffectiveBackgroundColor(mFrame);
+  mFrameBackgroundColor = bgColor.mColor;
 
   mSystemFieldForegroundColor =
       LookAndFeel::Color(LookAndFeel::ColorID::Fieldtext, mFrame);
   mSystemFieldBackgroundColor =
       LookAndFeel::Color(LookAndFeel::ColorID::Field, mFrame);
 
-  if (bgFrame.mIsThemed) {
+  if (bgColor.mIsThemed) {
     // Assume a native widget has sufficient contrast always
     mSufficientContrast = 0;
     mInitCommonColors = true;
     return;
   }
-
-  NS_ASSERTION(NS_GET_A(defaultBgColor) == 255,
-               "default background color is not opaque");
 
   nscolor defaultWindowBackgroundColor =
       LookAndFeel::Color(LookAndFeel::ColorID::Window, mFrame);

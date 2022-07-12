@@ -409,6 +409,8 @@ function makeSideeffectFreeDebugger() {
   return dbg;
 }
 
+exports.makeSideeffectFreeDebugger = makeSideeffectFreeDebugger;
+
 // Native functions which are considered to be side effect free.
 let gSideEffectFreeNatives; // string => Array(Function)
 

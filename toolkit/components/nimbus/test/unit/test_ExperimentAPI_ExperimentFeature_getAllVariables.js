@@ -79,7 +79,6 @@ add_task(
         features: [
           {
             featureId: "aboutwelcome",
-            enabled: true,
             value: { screens: ["test-value"] },
           },
         ],

@@ -98,6 +98,7 @@ class Texture;
 
 namespace layers {
 class CompositableHost;
+class RemoteTextureOwnerClient;
 class SurfaceDescriptor;
 }  // namespace layers
 
@@ -491,7 +492,9 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   // the back buffer may be invalidated by this swap with the front buffer,
   // unless overriden by explicitly setting the preserveDrawingBuffer option,
   // which may incur a further copy to preserve the back buffer.
-  void Present(WebGLFramebuffer*, layers::TextureType, const bool webvr);
+  void Present(
+      WebGLFramebuffer*, layers::TextureType, const bool webvr,
+      const webgl::SwapChainOptions& options = webgl::SwapChainOptions());
   // CopyToSwapChain forces a copy from the supplied framebuffer into the back
   // buffer before swapping the front and back buffers of the swap chain for
   // compositing. The formats of the framebuffer and the swap chain buffers
@@ -514,6 +517,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   Maybe<uvec2> FrontBufferSnapshotInto(
       const std::shared_ptr<gl::SharedSurface>& front,
       const Maybe<Range<uint8_t>>);
+  Maybe<uvec2> SnapshotInto(GLuint srcFb, const gfx::IntSize& size,
+                            const Range<uint8_t>& dest);
   gl::SwapChain* GetSwapChain(WebGLFramebuffer*, const bool webvr);
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*,
                                                   const bool webvr);
@@ -1232,6 +1237,12 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   gl::SwapChain mSwapChain;
   gl::SwapChain mWebVRSwapChain;
+
+  RefPtr<layers::RemoteTextureOwnerClient> mRemoteTextureOwner;
+
+  bool PushRemoteTexture(WebGLFramebuffer*, gl::SwapChain&,
+                         std::shared_ptr<gl::SharedSurface>,
+                         const webgl::SwapChainOptions& options);
 
   // --
 

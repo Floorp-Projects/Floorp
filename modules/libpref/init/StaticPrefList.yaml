@@ -5250,6 +5250,11 @@
 #endif
   mirror: always
 
+- name: gfx.canvas.accelerated.async-present
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: gfx.canvas.accelerated.cache-items
   type: RelaxedAtomicUint32
   value: 2048
@@ -13484,6 +13489,12 @@
 - name: webgl.out-of-process.async-present
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+# Forces async present to wait for a sync, even while using remote textures.
+- name: webgl.out-of-process.async-present.force-sync
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 # Override the blocklist to assume that GL is threadsafe.

@@ -332,18 +332,28 @@ struct nsCSSRendering {
   }
 
   /**
-   * Find a frame which draws a non-transparent background, for various contrast
-   * checks. Note that this only accounts for background-color and might stop at
-   * themed frames (depending on the argument), so it might not be what you
-   * want.
+   * Find a non-transparent background color on an ancestor, for various
+   * contrast checks. Note that this only accounts for background-color and
+   * might stop at themed frames (depending on the argument), so it might not be
+   * what you want. Note that if we stop at themed frames we might, in fact, end
+   * up returning a transparent color (but then mIsThemed will be set to true).
+   *
+   * For semi-transparent colors, right now we blend with the default
+   * background-color rather than with all ancestor backgrounds.
+   *
+   * If aPreferBodyToCanvas is true, we prefer the background color of the
+   * <body> frame, even though we found a canvas background, because the body
+   * background color is most likely what will be visible as the background
+   * color of the page, even if the html element has a different background
+   * color which prevents that of the body frame to propagate to the viewport.
    */
-  struct NonTransparentBackgroundFrame {
-    nsIFrame* mFrame = nullptr;
+  struct EffectiveBackgroundColor {
+    nscolor mColor = 0;
     bool mIsThemed = false;
-    bool mIsForCanvas = false;
   };
-  static NonTransparentBackgroundFrame FindNonTransparentBackgroundFrame(
-      nsIFrame* aFrame, bool aStopAtThemed = true);
+  static EffectiveBackgroundColor FindEffectiveBackgroundColor(
+      nsIFrame* aFrame, bool aStopAtThemed = true,
+      bool aPreferBodyToCanvas = false);
 
   /**
    * Determine the background color to draw taking into account print settings.

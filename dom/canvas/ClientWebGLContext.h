@@ -295,7 +295,9 @@ class WebGLFramebufferJS final : public nsWrapperCache, public webgl::ObjectJS {
  private:
   bool mHasBeenBound = false;  // !IsFramebuffer until Bind
   std::unordered_map<GLenum, Attachment> mAttachments;
-  Maybe<layers::RemoteTextureOwnerId> mOwnerId;
+  // Holds Some Id if async present is used
+  Maybe<layers::RemoteTextureId> mLastRemoteTextureId;
+  Maybe<layers::RemoteTextureOwnerId> mRemoteTextureOwnerId;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLFramebufferJS)
@@ -742,7 +744,9 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   mutable GLenum mNextError = 0;
   mutable webgl::LossStatus mLossStatus = webgl::LossStatus::Ready;
   mutable bool mAwaitingRestore = false;
-  mutable Maybe<layers::RemoteTextureOwnerId> mOwnerId;
+  // Holds Some Id if async present is used
+  mutable Maybe<layers::RemoteTextureId> mLastRemoteTextureId;
+  mutable Maybe<layers::RemoteTextureOwnerId> mRemoteTextureOwnerId;
 
   // -
 
@@ -1019,10 +1023,19 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   }
   void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
+ private:
+  webgl::SwapChainOptions PrepareAsyncSwapChainOptions(
+      WebGLFramebufferJS* fb, bool webvr,
+      const webgl::SwapChainOptions& options = webgl::SwapChainOptions());
+
+ public:
   layers::TextureType GetTexTypeForSwapChain() const;
-  void Present(WebGLFramebufferJS*, const bool webvr = false);
-  void Present(WebGLFramebufferJS*, layers::TextureType,
-               const bool webvr = false);
+  void Present(
+      WebGLFramebufferJS*, const bool webvr = false,
+      const webgl::SwapChainOptions& options = webgl::SwapChainOptions());
+  void Present(
+      WebGLFramebufferJS*, layers::TextureType, const bool webvr = false,
+      const webgl::SwapChainOptions& options = webgl::SwapChainOptions());
   void CopyToSwapChain(
       WebGLFramebufferJS*,
       const webgl::SwapChainOptions& options = webgl::SwapChainOptions());
@@ -1041,6 +1054,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   RefPtr<gfx::DataSourceSurface> BackBufferSnapshot();
   [[nodiscard]] bool DoReadPixels(const webgl::ReadPixelsDesc&,
                                   Range<uint8_t>) const;
+  [[nodiscard]] bool DoReadPixels(const webgl::ReadPixelsDesc&,
+                                  const mozilla::ipc::Shmem&) const;
   uvec2 DrawingBufferSize();
 
   // -
@@ -1420,7 +1435,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void BufferData(GLenum target, const dom::ArrayBufferView& srcData,
                   GLenum usage, GLuint srcElemOffset = 0,
                   GLuint srcElemCountOverride = 0);
-  void RawBufferData(GLenum target, const Range<const uint8_t>& srcData,
+  void RawBufferData(GLenum target, const uint8_t* srcBytes, size_t srcLen,
                      GLenum usage);
 
   void BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
@@ -1542,7 +1557,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   // Primitive tex upload functions
   void RawTexImage(uint32_t level, GLenum respecFormat, uvec3 offset,
                    const webgl::PackingInfo& pi,
-                   const webgl::TexUnpackBlobDesc&) const;
+                   webgl::TexUnpackBlobDesc&&) const;
   void TexImage(uint8_t funcDims, GLenum target, GLint level,
                 GLenum respecFormat, const ivec3& offset,
                 const Maybe<ivec3>& size, GLint border,

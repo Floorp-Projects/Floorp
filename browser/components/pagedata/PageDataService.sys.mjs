@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["PageDataService"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -271,7 +269,7 @@ class PageDataCache {
  *   the format defined by the schemas at `browser/components/pagedata/schemas`.
  */
 
-const PageDataService = new (class PageDataService extends EventEmitter {
+export const PageDataService = new (class PageDataService extends EventEmitter {
   /**
    * Caches page data discovered from browsers.
    *
@@ -345,10 +343,10 @@ const PageDataService = new (class PageDataService extends EventEmitter {
 
     ChromeUtils.registerWindowActor("PageData", {
       parent: {
-        moduleURI: "resource:///actors/PageDataParent.jsm",
+        esModuleURI: "resource:///actors/PageDataParent.sys.mjs",
       },
       child: {
-        moduleURI: "resource:///actors/PageDataChild.jsm",
+        esModuleURI: "resource:///actors/PageDataChild.sys.mjs",
         events: {
           DOMContentLoaded: {},
           pageshow: {},

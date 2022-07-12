@@ -181,7 +181,9 @@ const objectSpec = generateActorSpec({
       response: RetVal("object.proxySlots"),
     },
     customFormatterBody: {
-      request: {},
+      request: {
+        customFormatterIndex: Arg(0, "number"),
+      },
       response: RetVal("object.customFormatterBody"),
     },
     addWatchpoint: {

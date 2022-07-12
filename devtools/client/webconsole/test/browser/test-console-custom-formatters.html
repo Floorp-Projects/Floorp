@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Webconsole custom formatters test page</title>
+  </head>
+  <body>
+    <p>Custom formatters test page</p>
+    <script>
+      "use strict";
+
+      const variables = [
+        "string",
+        1337,
+        { noFormat: true },
+        { customFormatHeader: "header" },
+        { customFormatHeaderAndBody: "body" },
+      ];
+
+      globalThis.formatted = 0;
+
+      window.devtoolsFormatters = [
+        {
+          // this header shouldn't execute as it has side-effects.
+          header: obj => {
+            globalThis.formatted = globalThis.formatted + 1;
+            return ["span", {}, "SHOULD NOT HAPPEN"];
+          },
+        },
+        {
+          header: obj => {
+            if (obj.hasOwnProperty("customFormatHeader")) {
+              return ["span", {"style": "font-size: 3rem;"}, "custom formatted header"];
+            }
+            return null;
+          },
+          hasBody: obj => false
+        },
+        {
+          header: obj => {
+            if (obj.hasOwnProperty("customFormatHeaderAndBody")) {
+              return ["span", {"style": "font-style: italic;"}, "custom formatted body"];
+            }
+            return null;
+          },
+          hasBody: obj => true,
+          body: obj => ["span", {"style": "font-family: serif; font-size: 2rem;"}, obj.customFormatHeaderAndBody]
+        },
+      ];
+
+      variables.forEach(variable => console.log(variable));
+      </script>
+  </body>
+</html>

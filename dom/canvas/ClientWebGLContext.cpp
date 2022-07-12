@@ -391,27 +391,61 @@ layers::TextureType ClientWebGLContext::GetTexTypeForSwapChain() const {
 }
 
 void ClientWebGLContext::Present(WebGLFramebufferJS* const xrFb,
-                                 const bool webvr) {
+                                 const bool webvr,
+                                 const webgl::SwapChainOptions& options) {
   const auto texType = GetTexTypeForSwapChain();
-  Present(xrFb, texType, webvr);
+  Present(xrFb, texType, webvr, options);
+}
+
+// Fill in remote texture ids to SwapChainOptions if async present is enabled.
+webgl::SwapChainOptions ClientWebGLContext::PrepareAsyncSwapChainOptions(
+    WebGLFramebufferJS* fb, bool webvr,
+    const webgl::SwapChainOptions& options) {
+  // Currently remote texture ids should only be set internally.
+  MOZ_ASSERT(!options.remoteTextureOwnerId.IsValid() &&
+             !options.remoteTextureId.IsValid());
+  auto& ownerId = fb ? fb->mRemoteTextureOwnerId : mRemoteTextureOwnerId;
+  auto& textureId = fb ? fb->mLastRemoteTextureId : mLastRemoteTextureId;
+  // Async present only works when out-of-process. It is not supported in WebVR.
+  // Allow it if it is either forced or if the pref is set.
+  if (!IsContextLost() && !mNotLost->inProcess && !webvr &&
+      (options.forceAsyncPresent ||
+       StaticPrefs::webgl_out_of_process_async_present())) {
+    if (!ownerId) {
+      ownerId = Some(layers::RemoteTextureOwnerId::GetNext());
+    }
+    textureId = Some(layers::RemoteTextureId::GetNext());
+    webgl::SwapChainOptions asyncOptions = options;
+    asyncOptions.remoteTextureOwnerId = *ownerId;
+    asyncOptions.remoteTextureId = *textureId;
+    return asyncOptions;
+  }
+  // Clear the current remote texture id so that we disable async.
+  textureId = Nothing();
+  return options;
 }
 
 void ClientWebGLContext::Present(WebGLFramebufferJS* const xrFb,
                                  const layers::TextureType type,
-                                 const bool webvr) {
+                                 const bool webvr,
+                                 const webgl::SwapChainOptions& options) {
   if (!mIsCanvasDirty && !xrFb) return;
   if (!xrFb) {
     mIsCanvasDirty = false;
   }
   CancelAutoFlush();
-  Run<RPROC(Present)>(xrFb ? xrFb->mId : 0, type, webvr);
+  webgl::SwapChainOptions asyncOptions =
+      PrepareAsyncSwapChainOptions(xrFb, webvr, options);
+  Run<RPROC(Present)>(xrFb ? xrFb->mId : 0, type, webvr, asyncOptions);
 }
 
 void ClientWebGLContext::CopyToSwapChain(
     WebGLFramebufferJS* const fb, const webgl::SwapChainOptions& options) {
   CancelAutoFlush();
   const auto texType = GetTexTypeForSwapChain();
-  Run<RPROC(CopyToSwapChain)>(fb ? fb->mId : 0, texType, options);
+  webgl::SwapChainOptions asyncOptions =
+      PrepareAsyncSwapChainOptions(fb, false, options);
+  Run<RPROC(CopyToSwapChain)>(fb ? fb->mId : 0, texType, asyncOptions);
 }
 
 void ClientWebGLContext::EndOfFrame() {
@@ -432,22 +466,20 @@ Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
   const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
 
-  bool asyncPresent = !vr && StaticPrefs::webgl_out_of_process_async_present();
-  if (asyncPresent) {
-    const auto textureId = layers::RemoteTextureId::GetNext();
-    auto& ownerId = fb ? fb->mOwnerId : mOwnerId;
-    if (!ownerId) {
-      ownerId = Some(layers::RemoteTextureOwnerId::GetNext());
+  Maybe<layers::SurfaceDescriptor> ret;
+
+  // If valid remote texture data was set for async present, then use it.
+  const auto& ownerId = fb ? fb->mRemoteTextureOwnerId : mRemoteTextureOwnerId;
+  const auto& textureId = fb ? fb->mLastRemoteTextureId : mLastRemoteTextureId;
+  if (ownerId && textureId) {
+    if (StaticPrefs::webgl_out_of_process_async_present_force_sync()) {
+      // Request the front buffer from IPDL to cause a sync, even though we
+      // will continue to use the remote texture descriptor after.
+      (void)child->SendGetFrontBuffer(fb ? fb->mId : 0, vr, &ret);
     }
-
-    if (!child->SendPresentFrontBufferToCompositor(fb ? fb->mId : 0, textureId,
-                                                   *ownerId))
-      return {};
-
-    return Some(layers::SurfaceDescriptorRemoteTexture(textureId, *ownerId));
+    return Some(layers::SurfaceDescriptorRemoteTexture(*textureId, *ownerId));
   }
 
-  Maybe<layers::SurfaceDescriptor> ret;
   if (!child->SendGetFrontBuffer(fb ? fb->mId : 0, vr, &ret)) return {};
 
   return ret;
@@ -3309,12 +3341,13 @@ void ClientWebGLContext::BufferData(GLenum target,
   Run<RPROC(BufferData)>(target, RawBuffer<>(range), usage);
 }
 
-void ClientWebGLContext::RawBufferData(GLenum target,
-                                       const Range<const uint8_t>& srcData,
-                                       GLenum usage) {
+void ClientWebGLContext::RawBufferData(GLenum target, const uint8_t* srcBytes,
+                                       size_t srcLen, GLenum usage) {
   const FuncScope funcScope(*this, "bufferData");
 
-  Run<RPROC(BufferData)>(target, RawBuffer<>(srcData), usage);
+  const auto srcBuffer =
+      srcBytes ? RawBuffer<>({srcBytes, srcLen}) : RawBuffer<>(srcLen);
+  Run<RPROC(BufferData)>(target, srcBuffer, usage);
 }
 
 ////
@@ -4325,11 +4358,35 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
   }
 }
 
-void ClientWebGLContext::RawTexImage(
-    uint32_t level, GLenum respecFormat, uvec3 offset,
-    const webgl::PackingInfo& pi, const webgl::TexUnpackBlobDesc& desc) const {
+void ClientWebGLContext::RawTexImage(uint32_t level, GLenum respecFormat,
+                                     uvec3 offset, const webgl::PackingInfo& pi,
+                                     webgl::TexUnpackBlobDesc&& desc) const {
   const FuncScope funcScope(*this, "tex(Sub)Image[23]D");
   if (IsContextLost()) return;
+  if (desc.sd) {
+    // Shmems are stored in Buffer surface descriptors. We need to ensure first
+    // that all queued commands are flushed and then send the Shmem over IPDL.
+    const auto& sd = *(desc.sd);
+    if (sd.type() == layers::SurfaceDescriptor::TSurfaceDescriptorBuffer &&
+        sd.get_SurfaceDescriptorBuffer().data().type() ==
+            layers::MemoryOrShmem::TShmem) {
+      const auto& inProcess = mNotLost->inProcess;
+      if (inProcess) {
+        inProcess->TexImage(level, respecFormat, offset, pi, desc);
+      } else {
+        const auto& child = mNotLost->outOfProcess;
+        child->FlushPendingCmds();
+        (void)child->SendTexImage(level, respecFormat, offset, pi,
+                                  std::move(desc));
+      }
+    } else {
+      NS_WARNING(
+          "RawTexImage with SurfaceDescriptor only supports "
+          "SurfaceDescriptorBuffer with Shmem");
+    }
+    return;
+  }
+
   Run<RPROC(TexImage)>(level, respecFormat, offset, pi, desc);
 }
 
@@ -4863,10 +4920,10 @@ bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
   if (!child->SendReadPixels(desc, dest.length(), &res)) {
     res = {};
   }
-  if (!res.byteStride) return false;
+  if (!res.byteStride || !res.shmem) return false;
   const auto& byteStride = res.byteStride;
   const auto& subrect = res.subrect;
-  const webgl::RaiiShmem shmem{child, res.shmem};
+  const webgl::RaiiShmem shmem{child, res.shmem.ref()};
   if (!shmem) {
     EnqueueError(LOCAL_GL_OUT_OF_MEMORY, "Failed to map in back buffer.");
     return false;
@@ -4904,6 +4961,30 @@ bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
   }
 
   return true;
+}
+
+bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
+                                      const mozilla::ipc::Shmem& shmem) const {
+  const auto notLost =
+      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+  if (!notLost) return false;
+  const auto& inProcess = notLost->inProcess;
+  if (inProcess) {
+    const auto& shmemBytes = shmem.Range<uint8_t>();
+    inProcess->ReadPixelsInto(desc, shmemBytes);
+    return true;
+  }
+  const auto& child = notLost->outOfProcess;
+  child->FlushPendingCmds();
+  webgl::ReadPixelsResultIpc res = {};
+  // We assume the input is an unsafe shmem which won't be consumed by this
+  // request. Since SendReadPixels expects a Shmem rvalue, we must create a copy
+  // to provide it that can be consumed instead of the original descriptor.
+  mozilla::ipc::Shmem dest = shmem;
+  if (!child->SendReadPixels(desc, dest, &res)) {
+    res = {};
+  }
+  return res.byteStride > 0;
 }
 
 bool ClientWebGLContext::ReadPixels_SharedPrecheck(

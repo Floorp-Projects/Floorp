@@ -23,7 +23,7 @@ add_task(async function test_usageBeforeInitialization() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      features: [{ featureId: "purple" }],
     },
   });
 
@@ -99,7 +99,7 @@ add_task(async function test_getExperimentForGroup() {
   const experiment = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      features: [{ featureId: "purple" }],
     },
   });
 
@@ -122,7 +122,7 @@ add_task(async function test_hasExperimentForFeature() {
     ExperimentFakes.experiment("foo", {
       branch: {
         slug: "variant",
-        feature: { featureId: "green", enabled: true },
+        feature: { featureId: "green" },
       },
     })
   );
@@ -130,7 +130,7 @@ add_task(async function test_hasExperimentForFeature() {
     ExperimentFakes.experiment("foo2", {
       branch: {
         slug: "variant",
-        feature: { featureId: "yellow", enabled: true },
+        feature: { featureId: "yellow" },
       },
     })
   );
@@ -139,7 +139,7 @@ add_task(async function test_hasExperimentForFeature() {
       active: false,
       branch: {
         slug: "variant",
-        feature: { featureId: "purple", enabled: true },
+        feature: { featureId: "purple" },
       },
     })
   );
@@ -253,7 +253,7 @@ add_task(async function test_addEnrollment_rollout() {
 });
 
 add_task(async function test_updateExperiment() {
-  const features = [{ featureId: "cfr", enabled: true }];
+  const features = [{ featureId: "cfr" }];
   const experiment = Object.freeze(
     ExperimentFakes.experiment("foo", { features, active: true })
   );
@@ -280,7 +280,7 @@ add_task(async function test_sync_access_before_init() {
   Assert.equal(store.getAll().length, 0, "Start with an empty store");
 
   const syncAccessExp = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "newtab", enabled: "true" }],
+    features: [{ featureId: "newtab" }],
   });
   await store.init();
   store.addEnrollment(syncAccessExp);
@@ -312,7 +312,7 @@ add_task(async function test_sync_access_update() {
 
   let store = ExperimentFakes.store();
   let experiment = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "aboutwelcome", enabled: true }],
+    features: [{ featureId: "aboutwelcome" }],
   });
 
   await store.init();
@@ -324,8 +324,7 @@ add_task(async function test_sync_access_update() {
       features: [
         {
           featureId: "aboutwelcome",
-          enabled: true,
-          value: { bar: "bar" },
+          value: { bar: "bar", enabled: true },
         },
       ],
     },
@@ -339,7 +338,7 @@ add_task(async function test_sync_access_update() {
     // `branch.feature` and not `features` because for sync access (early startup)
     // experiments we only store the `isEarlyStartup` feature
     cachedExperiment.branch.feature.value,
-    { bar: "bar" },
+    { bar: "bar", enabled: true },
     "Got updated value"
   );
 });
@@ -349,7 +348,7 @@ add_task(async function test_sync_features_only() {
 
   let store = ExperimentFakes.store();
   let experiment = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "cfr", enabled: true }],
+    features: [{ featureId: "cfr" }],
   });
 
   await store.init();
@@ -365,7 +364,7 @@ add_task(async function test_sync_features_remotely() {
 
   let store = ExperimentFakes.store();
   let experiment = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "cfr", enabled: true, isEarlyStartup: true }],
+    features: [{ featureId: "cfr", isEarlyStartup: true }],
   });
 
   await store.init();
@@ -385,7 +384,7 @@ add_task(async function test_sync_access_unenroll() {
 
   let store = ExperimentFakes.store();
   let experiment = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "aboutwelcome", enabled: true }],
+    features: [{ featureId: "aboutwelcome" }],
     active: true,
   });
 
@@ -405,10 +404,10 @@ add_task(async function test_sync_access_unenroll_2() {
 
   let store = ExperimentFakes.store();
   let experiment1 = ExperimentFakes.experiment("foo", {
-    features: [{ featureId: "newtab", enabled: true }],
+    features: [{ featureId: "newtab" }],
   });
   let experiment2 = ExperimentFakes.experiment("bar", {
-    features: [{ featureId: "aboutwelcome", enabled: true }],
+    features: [{ featureId: "aboutwelcome" }],
   });
 
   await store.init();
@@ -570,9 +569,7 @@ add_task(async function test_syncDataStore_setDefault() {
   );
 
   let rollout = ExperimentFakes.rollout("foo", {
-    features: [
-      { featureId: "aboutwelcome", enabled: true, value: { remote: true } },
-    ],
+    features: [{ featureId: "aboutwelcome", value: { remote: true } }],
   });
   store.addEnrollment(rollout);
 
@@ -622,7 +619,7 @@ add_task(async function test_addEnrollment_rollout() {
   const stub = sandbox.stub();
   const value = { bar: true };
   let rollout = ExperimentFakes.rollout("foo", {
-    features: [{ featureId: "aboutwelcome", enabled: true, value }],
+    features: [{ featureId: "aboutwelcome", value }],
   });
 
   store._onFeatureUpdate("aboutwelcome", stub);
@@ -653,7 +650,6 @@ add_task(async function test_storeValuePerPref_noVariables() {
           // Ensure it gets saved to prefs
           isEarlyStartup: true,
           featureId: "purple",
-          enabled: true,
         },
       ],
     },
@@ -816,25 +812,25 @@ add_task(async function test_cleanupOldRecipes() {
   const experiment1 = ExperimentFakes.experiment("foo", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      features: [{ featureId: "purple" }],
     },
   });
   const experiment2 = ExperimentFakes.experiment("bar", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      features: [{ featureId: "purple" }],
     },
   });
   const experiment3 = ExperimentFakes.experiment("baz", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      features: [{ featureId: "purple" }],
     },
   });
   const experiment4 = ExperimentFakes.experiment("faz", {
     branch: {
       slug: "variant",
-      features: [{ featureId: "purple", enabled: true }],
+      features: [{ featureId: "purple" }],
     },
   });
   // Exp 2 is kept because it's recent (even though it's not active)

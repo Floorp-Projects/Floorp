@@ -518,8 +518,24 @@ FormAutoComplete.prototype = {
       removable: true,
     }));
 
-    // now put the history results above the datalist suggestions
-    let finalItems = historyResults.concat(items);
+    const isInArray = (value, arr, key) =>
+      arr.find(item => item[key].toUpperCase() === value.toUpperCase());
+
+    // Remove items from history list that are already present in data list.
+    // We do this rather than the opposite ( i.e. remove items from data list)
+    // to reflect the order that is specified in the data list.
+    const dedupedHistoryResults = historyResults.filter(
+      historyRes => !isInArray(historyRes.value, items, "value")
+    );
+
+    // Now put the history results above the datalist suggestions.
+    // Note that we don't need to worry about deduplication of elements inside
+    // the datalist suggestions because the datalist is user-provided.
+    const finalItems = dedupedHistoryResults.concat(items);
+
+    historyResult.wrappedJSObject.entries = historyResult.wrappedJSObject.entries.filter(
+      entry => !isInArray(entry.text, items, "value")
+    );
 
     // This is ugly: there are two FormAutoCompleteResult classes in the
     // tree, one in a module and one in this file. Datalist results need to
