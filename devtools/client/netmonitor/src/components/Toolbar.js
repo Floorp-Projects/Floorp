@@ -506,9 +506,6 @@ class Toolbar extends Component {
       autocompleteProvider: this.autocompleteProvider,
       learnMoreUrl: LEARN_MORE_URL,
       learnMoreTitle: LEARN_MORE_TITLE,
-      // Don't take focus when the keyboard shortcut is triggered in a CodeMirror instance,
-      // so the CodeMirror search UI is displayed.
-      shouldNotFocus: event => !!event.target.closest(".CodeMirror"),
     });
   }
 
