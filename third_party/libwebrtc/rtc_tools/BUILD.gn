@@ -47,6 +47,9 @@ group("rtc_tools") {
       ":unpack_aecdump",
     ]
   }
+  if (!build_with_chromium && rtc_enable_grpc) {
+    deps += [ "data_channel_benchmark" ]
+  }
 }
 
 rtc_library("video_file_reader") {
