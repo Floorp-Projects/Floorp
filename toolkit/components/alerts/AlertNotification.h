@@ -77,7 +77,6 @@ class AlertNotification final : public nsIAlertNotification {
   bool mInPrivateBrowsing;
   bool mSilent;
   nsTArray<uint32_t> mVibrate;
-  nsTArray<RefPtr<nsIAlertAction>> mActions;
 };
 
 }  // namespace mozilla

@@ -9,7 +9,6 @@
 #include "nsIAlertsService.h"
 #include "nsIObserver.h"
 #include "nsIThread.h"
-#include "nsIWindowsAlertsService.h"
 #include "nsRefPtrHashtable.h"
 
 namespace mozilla {
@@ -17,12 +16,11 @@ namespace widget {
 
 class ToastNotificationHandler;
 
-class ToastNotification final : public nsIWindowsAlertsService,
+class ToastNotification final : public nsIAlertsService,
                                 public nsIAlertsDoNotDisturb,
                                 public nsIObserver {
  public:
   NS_DECL_NSIALERTSSERVICE
-  NS_DECL_NSIWINDOWSALERTSSERVICE
   NS_DECL_NSIALERTSDONOTDISTURB
   NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS
