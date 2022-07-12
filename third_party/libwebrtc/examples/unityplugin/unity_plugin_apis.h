@@ -100,7 +100,7 @@ WEBRTC_PLUGIN_API bool RegisterOnAudioBusReady(int peer_connection_id,
 WEBRTC_PLUGIN_API bool RegisterOnLocalSdpReadytoSend(
     int peer_connection_id,
     LOCALSDPREADYTOSEND_CALLBACK callback);
-WEBRTC_PLUGIN_API bool RegisterOnIceCandiateReadytoSend(
+WEBRTC_PLUGIN_API bool RegisterOnIceCandidateReadytoSend(
     int peer_connection_id,
     ICECANDIDATEREADYTOSEND_CALLBACK callback);
 }

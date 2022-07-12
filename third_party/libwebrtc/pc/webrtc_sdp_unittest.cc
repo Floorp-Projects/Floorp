@@ -2783,7 +2783,7 @@ TEST_F(WebRtcSdpTest, DeserializeCandidate) {
 }
 
 // This test verifies the deserialization of candidate-attribute
-// as per RFC 5245. Candiate-attribute will be of the format
+// as per RFC 5245. Candidate-attribute will be of the format
 // candidate:<blah>. This format will be used when candidates
 // are trickled.
 TEST_F(WebRtcSdpTest, DeserializeRawCandidateAttribute) {

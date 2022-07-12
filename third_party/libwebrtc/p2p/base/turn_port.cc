@@ -560,7 +560,7 @@ Connection* TurnPort::CreateConnection(const Candidate& remote_candidate,
     return nullptr;
   }
 
-  // A TURN port will have two candiates, STUN and TURN. STUN may not
+  // A TURN port will have two candidates, STUN and TURN. STUN may not
   // present in all cases. If present stun candidate will be added first
   // and TURN candidate later.
   for (size_t index = 0; index < Candidates().size(); ++index) {

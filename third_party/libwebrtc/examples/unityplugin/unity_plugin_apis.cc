@@ -184,13 +184,13 @@ bool RegisterOnLocalSdpReadytoSend(int peer_connection_id,
   return true;
 }
 
-bool RegisterOnIceCandiateReadytoSend(
+bool RegisterOnIceCandidateReadytoSend(
     int peer_connection_id,
     ICECANDIDATEREADYTOSEND_CALLBACK callback) {
   if (!g_peer_connection_map.count(peer_connection_id))
     return false;
 
-  g_peer_connection_map[peer_connection_id]->RegisterOnIceCandiateReadytoSend(
+  g_peer_connection_map[peer_connection_id]->RegisterOnIceCandidateReadytoSend(
       callback);
   return true;
 }
