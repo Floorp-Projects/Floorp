@@ -167,6 +167,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    washingtonpost: {
+      "https://*.washingtonpost.com/*": {
+        videoWrapperScriptPath: "video-wrappers/washingtonpost.js",
+      },
+    },
+
     primeVideo: {
       "https://*.primevideo.com/*": {
         visibilityThreshold: 0.9,
