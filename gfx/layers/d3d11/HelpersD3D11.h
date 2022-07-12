@@ -52,7 +52,7 @@ static inline bool WaitForFrameGPUQuery(ID3D11Device* aDevice,
 }
 
 inline void ClearResource(ID3D11Device* const device, ID3D11Resource* const res,
-    const std::array<float,4>& vals) {
+                          const std::array<float, 4>& vals) {
   RefPtr<ID3D11RenderTargetView> rtv;
   (void)device->CreateRenderTargetView(res, nullptr, getter_AddRefs(rtv));
 

@@ -14,6 +14,7 @@
 #include "ScopedGLHelpers.h"
 #include "gfxUtils.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/UniquePtr.h"
@@ -129,13 +130,14 @@ const char* const kFragSample_OnePlane = R"(
 )";
 // Ideally this would just change the color-matrix it uses, but this is
 // acceptable debt for now.
-const char* const kFragSample_OnePlane_YUV_via_GBR = R"(
+// `extern` so that we don't get ifdef-dependent const-var-unused Werrors.
+extern const char* const kFragSample_OnePlane_YUV_via_GBR = R"(
   VARYING mediump vec2 vTexCoord0;
   uniform PRECISION SAMPLER uTex0;
 
   vec4 metaSample() {
-    vec4 src = TEXTURE(uTex0, vTexCoord0);
-    return src;
+    vec4 yuva = TEXTURE(uTex0, vTexCoord0).gbra;
+    return yuva;
   }
 )";
 const char* const kFragSample_TwoPlane = R"(
@@ -273,7 +275,7 @@ ScopedSaveMultiTex::ScopedSaveMultiTex(GLContext* const gl,
       gfxCriticalError() << "Unhandled texTarget: " << texTarget;
   }
 
-  for (int i = 0; i < int(mTexUnits.size()); i++) {
+  for (const auto i : IntegerRange(mTexUnits.size())) {
     const auto& unit = mTexUnits[i];
     mGL.fActiveTexture(LOCAL_GL_TEXTURE0 + unit);
     if (mGL.IsSupported(GLFeature::sampler_objects)) {
@@ -285,7 +287,10 @@ ScopedSaveMultiTex::ScopedSaveMultiTex(GLContext* const gl,
 }
 
 ScopedSaveMultiTex::~ScopedSaveMultiTex() {
-  for (int i = mTexUnits.size() - 1; i >= 0; i--) {  // reverse
+  // Unbind in reverse order, in case we have repeats.
+  // Order matters because we unbound samplers during ctor, so now we have to
+  // make sure we rebind them in the right order.
+  for (const auto i : Reversed(IntegerRange(mTexUnits.size()))) {
     const auto& unit = mTexUnits[i];
     mGL.fActiveTexture(LOCAL_GL_TEXTURE0 + unit);
     if (mGL.IsSupported(GLFeature::sampler_objects)) {
@@ -487,7 +492,8 @@ void DrawBlitProg::Draw(const BaseArgs& args,
   gl->fUniformMatrix3fv(mLoc_uTexMatrix0, 1, false, args.texMatrix0.m);
 
   if (args.texUnitForColorLut) {
-    gl->fUniform1i(mLoc_uColorLut, *args.texUnitForColorLut);
+    gl->fUniform1i(mLoc_uColorLut,
+                   AssertedCast<GLint>(*args.texUnitForColorLut));
   }
 
   MOZ_ASSERT(bool(argsYUV) == (mLoc_uColorMatrix != -1));
@@ -600,9 +606,11 @@ GLBlitHelper::GLBlitHelper(GLContext* const gl)
   const auto glslVersion = mGL->ShadingLanguageVersion();
 
   if (mGL->IsGLES()) {
-    // If you run into problems on old android devices, it might be because some devices have OES_EGL_image_external but not OES_EGL_image_external_essl3.
-    // We could just use 100 in that particular case, but then we lose out on e.g. sampler3D.
-    // Let's just try 300 for now, and if we get regressions we'll add an essl100 fallback.
+    // If you run into problems on old android devices, it might be because some
+    // devices have OES_EGL_image_external but not OES_EGL_image_external_essl3.
+    // We could just use 100 in that particular case, but then we lose out on
+    // e.g. sampler3D. Let's just try 300 for now, and if we get regressions
+    // we'll add an essl100 fallback.
     if (glslVersion >= 300) {
       mDrawBlitProg_VersionLine = nsCString("#version 300 es\n");
     } else {
@@ -717,7 +725,8 @@ const DrawBlitProg* GLBlitHelper::CreateDrawBlitProg(
     }
     parts.push_back(kFragBody);
   }
-  mGL->fShaderSource(fs, parts.size(), parts.data(), nullptr);
+  mGL->fShaderSource(fs, AssertedCast<GLint>(parts.size()), parts.data(),
+                     nullptr);
   mGL->fCompileShader(fs);
 
   const auto prog = mGL->fCreateProgram();
@@ -937,7 +946,7 @@ bool GLBlitHelper::Blit(const java::GeckoSurfaceTexture::Ref& surfaceTexture,
   const auto srcOrigin = OriginPos::TopLeft;
   const bool yFlip = (srcOrigin != destOrigin);
   const auto& prog = GetDrawBlitProg(
-      {kFragHeader_TexExt, kFragSample_OnePlane, kFragConvert_None});
+      {kFragHeader_TexExt, {kFragSample_OnePlane, kFragConvert_None}});
   const DrawBlitProg::BaseArgs baseArgs = {transform3, yFlip, destSize,
                                            Nothing()};
   prog->Draw(baseArgs, nullptr);
@@ -1226,8 +1235,7 @@ bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
 
   const auto& prog = GetDrawBlitProg({
       kFragHeader_Tex2DRect,
-      {fragSample,
-      kFragConvert_ColorMatrix},
+      {fragSample, kFragConvert_ColorMatrix},
   });
   prog->Draw(baseArgs, pYuvArgs);
   return true;
@@ -1528,15 +1536,15 @@ std::shared_ptr<gl::Texture> GLBlitHelper::GetColorLutTex(
     const auto maxLutSize = color::ivec3{256};
     auto lutSize = minLutSize;
     if (ct.srcSpace.yuv) {
-      lutSize.x(StaticPrefs::gfx_blithelper_lut_size_ycbcr_y());
-      lutSize.y(StaticPrefs::gfx_blithelper_lut_size_ycbcr_cb());
-      lutSize.z(StaticPrefs::gfx_blithelper_lut_size_ycbcr_cr());
+      lutSize.x(int(StaticPrefs::gfx_blithelper_lut_size_ycbcr_y()));
+      lutSize.y(int(StaticPrefs::gfx_blithelper_lut_size_ycbcr_cb()));
+      lutSize.z(int(StaticPrefs::gfx_blithelper_lut_size_ycbcr_cr()));
     } else {
-      lutSize.x(StaticPrefs::gfx_blithelper_lut_size_rgb_r());
-      lutSize.y(StaticPrefs::gfx_blithelper_lut_size_rgb_g());
-      lutSize.z(StaticPrefs::gfx_blithelper_lut_size_rgb_b());
+      lutSize.x(int(StaticPrefs::gfx_blithelper_lut_size_rgb_r()));
+      lutSize.y(int(StaticPrefs::gfx_blithelper_lut_size_rgb_g()));
+      lutSize.z(int(StaticPrefs::gfx_blithelper_lut_size_rgb_b()));
     }
-    lutSize = max(minLutSize, min(lutSize, maxLutSize)); // Clamp
+    lutSize = max(minLutSize, min(lutSize, maxLutSize));  // Clamp
 
     const auto lut = ct.ToLut3(lutSize);
     const auto& size = lut.size;

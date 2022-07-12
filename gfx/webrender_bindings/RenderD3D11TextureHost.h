@@ -22,8 +22,8 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   RenderDXGITextureHost(WindowsHandle aHandle,
                         Maybe<uint64_t>& aGpuProcessTextureId,
                         uint32_t aArrayIndex, gfx::SurfaceFormat aFormat,
-                        gfx::ColorSpace2,
-                        gfx::ColorRange aColorRange, gfx::IntSize aSize);
+                        gfx::ColorSpace2, gfx::ColorRange aColorRange,
+                        gfx::IntSize aSize);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
