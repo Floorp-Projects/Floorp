@@ -17,7 +17,6 @@
 #include <memory>
 #include <set>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 #include "absl/algorithm/container.h"
@@ -26,7 +25,6 @@
 #include "api/jsep_ice_candidate.h"
 #include "api/rtp_parameters.h"
 #include "api/rtp_transceiver_direction.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "api/uma_metrics.h"
 #include "api/video/video_codec_constants.h"
 #include "call/audio_state.h"

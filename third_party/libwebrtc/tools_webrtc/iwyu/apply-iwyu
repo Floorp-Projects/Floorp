@@ -17,7 +17,7 @@
 
 # Set this to 1 to get more debug information.
 # Set this to 2 to also get a dump of the iwyu tool output.
-DEBUG=2
+DEBUG=0
 
 set -e
 if [ $DEBUG -gt 0 ]; then
@@ -26,6 +26,7 @@ fi
 
 IWYU_TOOL="${IWYU_TOOL:-/usr/bin/iwyu_tool}"
 FIX_INCLUDE="${FIX_INCLUDE:-/usr/bin/fix_include}"
+FIX_INCLUDE_ARGS=''
 IWYU_TOOL_DIR="${IWYU_TOOL_DIR:-tools_webrtc/iwyu}"
 COMPILE_COMMANDS=''
 
@@ -34,9 +35,22 @@ error() {
   exit 1
 }
 
-while getopts 'c:r' opts; do
+usage() {
+  echo "Usage: $0 [ -c compile-commands-file.json ] [-r] file.cc"
+  echo "Runs the IWYU and fix-include on a CC file and its associated .h file"
+  echo "Arguments:"
+  echo " -c compile-commands: Compiler command file"
+  echo " -r : Remove non-required includes from .h file"
+  echo " -h : Print this help message"
+  echo "(default command file: out/Default/compile_commands.json - this"
+  echo "will be generated if not present"
+}
+
+while getopts 'c:rh' opts; do
   case "${opts}" in
     c) COMPILE_COMMANDS="${OPTARG}" ;;
+    r) FIX_INCLUDE_ARGS="${FIX_INCLUDE_ARGS} --nosafe_headers" ;;
+    h) usage; exit 1 ;;
     *) error "Unexpected option ${opts}" ;;
   esac
 done
@@ -84,7 +98,7 @@ else
   # In compile_commands.json, the file name is recorded
   # as a relative path to the build directory.
   pushd "$(dirname "$COMPILE_COMMANDS")" || error "pushd failed"
-  "$FIX_INCLUDE" < /tmp/includefixes$$ || echo "Some files modified"
+  "$FIX_INCLUDE" $FIX_INCLUDE_ARGS < /tmp/includefixes$$ || echo "Some files modified"
   popd
   rm /tmp/includefixes$$
 fi
