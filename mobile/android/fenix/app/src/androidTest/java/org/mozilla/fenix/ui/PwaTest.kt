@@ -44,6 +44,8 @@ class PwaTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPWAPage.toUri()) {
+            waitForPageToLoad()
+            verifyNotificationDotOnMainMenu()
         }.openThreeDotMenu {
         }.clickInstall {
             clickAddAutomaticallyButton()
@@ -63,6 +65,7 @@ class PwaTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPWAPage.toUri()) {
             waitForPageToLoad()
+            verifyNotificationDotOnMainMenu()
         }.openThreeDotMenu {
         }.clickInstall {
             clickAddAutomaticallyButton()
@@ -79,6 +82,7 @@ class PwaTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPWAPage.toUri()) {
             waitForPageToLoad()
+            verifyNotificationDotOnMainMenu()
         }.openThreeDotMenu {
         }.clickInstall {
             clickAddAutomaticallyButton()
