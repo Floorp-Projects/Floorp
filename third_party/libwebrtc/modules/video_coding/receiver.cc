@@ -30,18 +30,22 @@ namespace webrtc {
 
 enum { kMaxReceiverDelayMs = 10000 };
 
-VCMReceiver::VCMReceiver(VCMTiming* timing, Clock* clock)
+VCMReceiver::VCMReceiver(VCMTiming* timing,
+                         Clock* clock,
+                         const WebRtcKeyValueConfig& field_trials)
     : VCMReceiver::VCMReceiver(timing,
                                clock,
                                absl::WrapUnique(EventWrapper::Create()),
-                               absl::WrapUnique(EventWrapper::Create())) {}
+                               absl::WrapUnique(EventWrapper::Create()),
+                               field_trials) {}
 
 VCMReceiver::VCMReceiver(VCMTiming* timing,
                          Clock* clock,
                          std::unique_ptr<EventWrapper> receiver_event,
-                         std::unique_ptr<EventWrapper> jitter_buffer_event)
+                         std::unique_ptr<EventWrapper> jitter_buffer_event,
+                         const WebRtcKeyValueConfig& field_trials)
     : clock_(clock),
-      jitter_buffer_(clock_, std::move(jitter_buffer_event)),
+      jitter_buffer_(clock_, std::move(jitter_buffer_event), field_trials),
       timing_(timing),
       render_wait_event_(std::move(receiver_event)),
       max_video_delay_ms_(kMaxVideoDelayMs) {

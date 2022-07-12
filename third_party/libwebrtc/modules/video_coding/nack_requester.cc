@@ -20,7 +20,6 @@
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/task_queue.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 
@@ -33,10 +32,9 @@ const int kMaxReorderedPackets = 128;
 const int kNumReorderingBuckets = 10;
 const int kDefaultSendNackDelayMs = 0;
 
-int64_t GetSendNackDelay() {
+int64_t GetSendNackDelay(const WebRtcKeyValueConfig& field_trials) {
   int64_t delay_ms = strtol(
-      webrtc::field_trial::FindFullName("WebRTC-SendNackDelayMs").c_str(),
-      nullptr, 10);
+      field_trials.Lookup("WebRTC-SendNackDelayMs").c_str(), nullptr, 10);
   if (delay_ms > 0 && delay_ms <= 20) {
     RTC_LOG(LS_INFO) << "SendNackDelay is set to " << delay_ms;
     return delay_ms;
@@ -110,7 +108,8 @@ NackRequester::BackoffSettings::BackoffSettings(TimeDelta min_retry,
     : min_retry_interval(min_retry), max_rtt(max_rtt), base(base) {}
 
 absl::optional<NackRequester::BackoffSettings>
-NackRequester::BackoffSettings::ParseFromFieldTrials() {
+NackRequester::BackoffSettings::ParseFromFieldTrials(
+    const WebRtcKeyValueConfig& field_trials) {
   // Matches magic number in RTPSender::OnReceivedNack().
   const TimeDelta kDefaultMinRetryInterval = TimeDelta::Millis(5);
   // Upper bound on link-delay considered for exponential backoff.
@@ -126,7 +125,7 @@ NackRequester::BackoffSettings::ParseFromFieldTrials() {
   FieldTrialParameter<TimeDelta> max_rtt("max_rtt", kDefaultMaxRtt);
   FieldTrialParameter<double> base("base", kDefaultBase);
   ParseFieldTrial({&enabled, &min_retry, &max_rtt, &base},
-                  field_trial::FindFullName("WebRTC-ExponentialNackBackoff"));
+                  field_trials.Lookup("WebRTC-ExponentialNackBackoff"));
 
   if (enabled) {
     return NackRequester::BackoffSettings(min_retry.Get(), max_rtt.Get(),
@@ -139,7 +138,8 @@ NackRequester::NackRequester(TaskQueueBase* current_queue,
                              NackPeriodicProcessor* periodic_processor,
                              Clock* clock,
                              NackSender* nack_sender,
-                             KeyFrameRequestSender* keyframe_request_sender)
+                             KeyFrameRequestSender* keyframe_request_sender,
+                             const WebRtcKeyValueConfig& field_trials)
     : worker_thread_(current_queue),
       clock_(clock),
       nack_sender_(nack_sender),
@@ -148,8 +148,8 @@ NackRequester::NackRequester(TaskQueueBase* current_queue,
       initialized_(false),
       rtt_ms_(kDefaultRttMs),
       newest_seq_num_(0),
-      send_nack_delay_ms_(GetSendNackDelay()),
-      backoff_settings_(BackoffSettings::ParseFromFieldTrials()),
+      send_nack_delay_ms_(GetSendNackDelay(field_trials)),
+      backoff_settings_(BackoffSettings::ParseFromFieldTrials(field_trials)),
       processor_registration_(this, periodic_processor) {
   RTC_DCHECK(clock_);
   RTC_DCHECK(nack_sender_);

@@ -18,6 +18,7 @@
 #include "api/task_queue/task_queue_factory.h"
 #include "api/video/video_stream_decoder.h"
 #include "api/video_codecs/sdp_video_format.h"
+#include "api/webrtc_key_value_config.h"
 
 namespace webrtc {
 // The `decoder_settings` parameter is a map between:
@@ -28,7 +29,8 @@ std::unique_ptr<VideoStreamDecoderInterface> CreateVideoStreamDecoder(
     VideoStreamDecoderInterface::Callbacks* callbacks,
     VideoDecoderFactory* decoder_factory,
     TaskQueueFactory* task_queue_factory,
-    std::map<int, std::pair<SdpVideoFormat, int>> decoder_settings);
+    std::map<int, std::pair<SdpVideoFormat, int>> decoder_settings,
+    const WebRtcKeyValueConfig* field_trials = nullptr);
 
 }  // namespace webrtc
 

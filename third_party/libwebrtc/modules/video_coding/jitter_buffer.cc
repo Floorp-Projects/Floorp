@@ -109,7 +109,8 @@ void FrameList::Reset(UnorderedFrameList* free_frames) {
 }
 
 VCMJitterBuffer::VCMJitterBuffer(Clock* clock,
-                                 std::unique_ptr<EventWrapper> event)
+                                 std::unique_ptr<EventWrapper> event,
+                                 const WebRtcKeyValueConfig& field_trials)
     : clock_(clock),
       running_(false),
       frame_event_(std::move(event)),
@@ -122,7 +123,7 @@ VCMJitterBuffer::VCMJitterBuffer(Clock* clock,
       num_consecutive_old_packets_(0),
       num_packets_(0),
       num_duplicated_packets_(0),
-      jitter_estimate_(clock),
+      jitter_estimate_(clock, field_trials),
       missing_sequence_numbers_(SequenceNumberLessThan()),
       latest_received_sequence_number_(0),
       max_nack_list_size_(0),

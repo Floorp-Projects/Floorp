@@ -13,8 +13,8 @@
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "system_wrappers/include/clock.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 namespace {
@@ -25,8 +25,9 @@ constexpr Frequency k90kHz = Frequency::KiloHertz(90);
 }  // namespace
 
 TEST(ReceiverTimingTest, JitterDelay) {
+  test::ScopedKeyValueConfig field_trials;
   SimulatedClock clock(0);
-  VCMTiming timing(&clock);
+  VCMTiming timing(&clock, field_trials);
   timing.Reset();
 
   uint32_t timestamp = 0;
@@ -118,8 +119,9 @@ TEST(ReceiverTimingTest, JitterDelay) {
 
 TEST(ReceiverTimingTest, TimestampWrapAround) {
   constexpr auto kStartTime = Timestamp::Millis(1337);
+  test::ScopedKeyValueConfig field_trials;
   SimulatedClock clock(kStartTime);
-  VCMTiming timing(&clock);
+  VCMTiming timing(&clock, field_trials);
 
   // Provoke a wrap-around. The fifth frame will have wrapped at 25 fps.
   constexpr uint32_t kRtpTicksPerFrame = k90kHz / k25Fps;
@@ -143,7 +145,8 @@ TEST(ReceiverTimingTest, MaxWaitingTimeIsZeroForZeroRenderTime) {
   constexpr TimeDelta kTimeDelta = 1 / Frequency::Hertz(60);
   constexpr Timestamp kZeroRenderTime = Timestamp::Zero();
   SimulatedClock clock(kStartTimeUs);
-  VCMTiming timing(&clock);
+  test::ScopedKeyValueConfig field_trials;
+  VCMTiming timing(&clock, field_trials);
   timing.Reset();
   timing.set_max_playout_delay(TimeDelta::Zero());
   for (int i = 0; i < 10; ++i) {
@@ -175,13 +178,13 @@ TEST(ReceiverTimingTest, MaxWaitingTimeZeroDelayPacingExperiment) {
   // The minimum pacing is enabled by a field trial and active if the RTP
   // playout delay header extension is set to min==0.
   constexpr TimeDelta kMinPacing = TimeDelta::Millis(3);
-  test::ScopedFieldTrials override_field_trials(
+  test::ScopedKeyValueConfig field_trials(
       "WebRTC-ZeroPlayoutDelay/min_pacing:3ms/");
   constexpr int64_t kStartTimeUs = 3.15e13;  // About one year in us.
   constexpr TimeDelta kTimeDelta = 1 / Frequency::Hertz(60);
   constexpr auto kZeroRenderTime = Timestamp::Zero();
   SimulatedClock clock(kStartTimeUs);
-  VCMTiming timing(&clock);
+  VCMTiming timing(&clock, field_trials);
   timing.Reset();
   // MaxWaitingTime() returns zero for evenly spaced video frames.
   for (int i = 0; i < 10; ++i) {
@@ -224,12 +227,12 @@ TEST(ReceiverTimingTest, MaxWaitingTimeZeroDelayPacingExperiment) {
 TEST(ReceiverTimingTest, DefaultMaxWaitingTimeUnaffectedByPacingExperiment) {
   // The minimum pacing is enabled by a field trial but should not have any
   // effect if render_time_ms is greater than 0;
-  test::ScopedFieldTrials override_field_trials(
+  test::ScopedKeyValueConfig field_trials(
       "WebRTC-ZeroPlayoutDelay/min_pacing:3ms/");
   constexpr int64_t kStartTimeUs = 3.15e13;  // About one year in us.
   const TimeDelta kTimeDelta = TimeDelta::Millis(1000.0 / 60.0);
   SimulatedClock clock(kStartTimeUs);
-  VCMTiming timing(&clock);
+  VCMTiming timing(&clock, field_trials);
   timing.Reset();
   clock.AdvanceTime(kTimeDelta);
   auto now = clock.CurrentTime();
@@ -255,13 +258,13 @@ TEST(ReceiverTimingTest, MaxWaitingTimeReturnsZeroIfTooManyFramesQueuedIsTrue) {
   // The minimum pacing is enabled by a field trial and active if the RTP
   // playout delay header extension is set to min==0.
   constexpr TimeDelta kMinPacing = TimeDelta::Millis(3);
-  test::ScopedFieldTrials override_field_trials(
+  test::ScopedKeyValueConfig field_trials(
       "WebRTC-ZeroPlayoutDelay/min_pacing:3ms/");
   constexpr int64_t kStartTimeUs = 3.15e13;  // About one year in us.
   const TimeDelta kTimeDelta = TimeDelta::Millis(1000.0 / 60.0);
   constexpr auto kZeroRenderTime = Timestamp::Zero();
   SimulatedClock clock(kStartTimeUs);
-  VCMTiming timing(&clock);
+  VCMTiming timing(&clock, field_trials);
   timing.Reset();
   // MaxWaitingTime() returns zero for evenly spaced video frames.
   for (int i = 0; i < 10; ++i) {

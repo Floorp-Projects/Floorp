@@ -221,7 +221,7 @@ class FrameBufferProxyFixture
         fake_metronome_(time_controller_.GetTaskQueueFactory(),
                         TimeDelta::Millis(16)),
         decode_sync_(clock_, &fake_metronome_, run_loop_.task_queue()),
-        timing_(clock_),
+        timing_(clock_, field_trials_),
         proxy_(FrameBufferProxy::CreateFromFieldTrial(clock_,
                                                       run_loop_.task_queue(),
                                                       &timing_,

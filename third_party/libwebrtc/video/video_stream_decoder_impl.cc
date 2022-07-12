@@ -23,8 +23,10 @@ VideoStreamDecoderImpl::VideoStreamDecoderImpl(
     VideoStreamDecoderInterface::Callbacks* callbacks,
     VideoDecoderFactory* decoder_factory,
     TaskQueueFactory* task_queue_factory,
-    std::map<int, std::pair<SdpVideoFormat, int>> decoder_settings)
-    : timing_(Clock::GetRealTimeClock()),
+    std::map<int, std::pair<SdpVideoFormat, int>> decoder_settings,
+    const WebRtcKeyValueConfig* field_trials)
+    : field_trials_(field_trials),
+      timing_(Clock::GetRealTimeClock(), *field_trials_),
       decode_callbacks_(this),
       next_frame_info_index_(0),
       callbacks_(callbacks),
@@ -32,7 +34,10 @@ VideoStreamDecoderImpl::VideoStreamDecoderImpl(
       decoder_factory_(decoder_factory),
       decoder_settings_(std::move(decoder_settings)),
       shut_down_(false),
-      frame_buffer_(Clock::GetRealTimeClock(), &timing_, nullptr),
+      frame_buffer_(Clock::GetRealTimeClock(),
+                    &timing_,
+                    nullptr,
+                    *field_trials_),
       bookkeeping_queue_(task_queue_factory->CreateTaskQueue(
           "video_stream_decoder_bookkeeping_queue",
           TaskQueueFactory::Priority::NORMAL)),

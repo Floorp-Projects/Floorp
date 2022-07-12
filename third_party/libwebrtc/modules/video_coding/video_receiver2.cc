@@ -28,10 +28,12 @@
 
 namespace webrtc {
 
-VideoReceiver2::VideoReceiver2(Clock* clock, VCMTiming* timing)
+VideoReceiver2::VideoReceiver2(Clock* clock,
+                               VCMTiming* timing,
+                               const WebRtcKeyValueConfig& field_trials)
     : clock_(clock),
       timing_(timing),
-      decodedFrameCallback_(timing_, clock_),
+      decodedFrameCallback_(timing_, clock_, field_trials),
       codecDataBase_() {
   decoder_sequence_checker_.Detach();
 }

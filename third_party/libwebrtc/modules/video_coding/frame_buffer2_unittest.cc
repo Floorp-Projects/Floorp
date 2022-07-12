@@ -28,6 +28,7 @@
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 #include "test/time_controller/simulated_time_controller.h"
 
 using ::testing::_;
@@ -40,7 +41,8 @@ namespace video_coding {
 
 class VCMTimingFake : public VCMTiming {
  public:
-  explicit VCMTimingFake(Clock* clock) : VCMTiming(clock) {}
+  explicit VCMTimingFake(Clock* clock, const WebRtcKeyValueConfig& field_trials)
+      : VCMTiming(clock, field_trials) {}
 
   Timestamp RenderTime(uint32_t frame_timestamp, Timestamp now) const override {
     if (last_render_time_.IsMinusInfinity()) {
@@ -131,10 +133,11 @@ class TestFrameBuffer2 : public ::testing::Test {
             time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
                 "extract queue",
                 TaskQueueFactory::Priority::NORMAL)),
-        timing_(time_controller_.GetClock()),
+        timing_(time_controller_.GetClock(), field_trials_),
         buffer_(new FrameBuffer(time_controller_.GetClock(),
                                 &timing_,
-                                &stats_callback_)),
+                                &stats_callback_,
+                                field_trials_)),
         rand_(0x34678213) {}
 
   template <typename... T>
@@ -213,6 +216,7 @@ class TestFrameBuffer2 : public ::testing::Test {
 
   uint32_t Rand() { return rand_.Rand<uint32_t>(); }
 
+  test::ScopedKeyValueConfig field_trials_;
   webrtc::GlobalSimulatedTimeController time_controller_;
   rtc::TaskQueue time_task_queue_;
   VCMTimingFake timing_;
@@ -276,9 +280,10 @@ TEST_F(TestFrameBuffer2, OneSuperFrame) {
 }
 
 TEST_F(TestFrameBuffer2, ZeroPlayoutDelay) {
-  VCMTiming timing(time_controller_.GetClock());
-  buffer_.reset(
-      new FrameBuffer(time_controller_.GetClock(), &timing, &stats_callback_));
+  test::ScopedKeyValueConfig field_trials;
+  VCMTiming timing(time_controller_.GetClock(), field_trials);
+  buffer_.reset(new FrameBuffer(time_controller_.GetClock(), &timing,
+                                &stats_callback_, field_trials));
   const VideoPlayoutDelay kPlayoutDelayMs = {0, 0};
   std::unique_ptr<FrameObjectFake> test_frame(new FrameObjectFake());
   test_frame->SetId(0);

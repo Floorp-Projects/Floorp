@@ -33,7 +33,6 @@
 #include "rtc_base/numerics/sequence_number_util.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/clock.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace video_coding {
@@ -58,11 +57,12 @@ constexpr int64_t kLogNonDecodedIntervalMs = 5000;
 
 FrameBuffer::FrameBuffer(Clock* clock,
                          VCMTiming* timing,
-                         VCMReceiveStatisticsCallback* stats_callback)
+                         VCMReceiveStatisticsCallback* stats_callback,
+                         const WebRtcKeyValueConfig& field_trials)
     : decoded_frames_history_(kMaxFramesHistory),
       clock_(clock),
       callback_queue_(nullptr),
-      jitter_estimator_(clock),
+      jitter_estimator_(clock, field_trials),
       timing_(timing),
       stopped_(false),
       protection_mode_(kProtectionNack),
@@ -73,7 +73,7 @@ FrameBuffer::FrameBuffer(Clock* clock,
           "max_decode_queue_size",
           kZeroPlayoutDelayDefaultMaxDecodeQueueSize) {
   ParseFieldTrial({&zero_playout_delay_max_decode_queue_size_},
-                  field_trial::FindFullName("WebRTC-ZeroPlayoutDelay"));
+                  field_trials.Lookup("WebRTC-ZeroPlayoutDelay"));
   callback_checker_.Detach();
 }
 

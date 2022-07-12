@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 
+#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/event_wrapper.h"
 #include "modules/video_coding/include/video_coding.h"
 #include "modules/video_coding/include/video_coding_defines.h"
@@ -28,7 +29,9 @@ class VCMEncodedFrame;
 
 class VCMReceiver {
  public:
-  VCMReceiver(VCMTiming* timing, Clock* clock);
+  VCMReceiver(VCMTiming* timing,
+              Clock* clock,
+              const WebRtcKeyValueConfig& field_trials);
 
   // Using this constructor, you can specify a different event implemetation for
   // the jitter buffer. Useful for unit tests when you want to simulate incoming
@@ -37,7 +40,8 @@ class VCMReceiver {
   VCMReceiver(VCMTiming* timing,
               Clock* clock,
               std::unique_ptr<EventWrapper> receiver_event,
-              std::unique_ptr<EventWrapper> jitter_buffer_event);
+              std::unique_ptr<EventWrapper> jitter_buffer_event,
+              const WebRtcKeyValueConfig& field_trials);
 
   ~VCMReceiver();
 

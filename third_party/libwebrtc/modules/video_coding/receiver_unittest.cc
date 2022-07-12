@@ -24,6 +24,7 @@
 #include "rtc_base/checks.h"
 #include "system_wrappers/include/clock.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 
@@ -31,8 +32,8 @@ class TestVCMReceiver : public ::testing::Test {
  protected:
   TestVCMReceiver()
       : clock_(0),
-        timing_(&clock_),
-        receiver_(&timing_, &clock_),
+        timing_(&clock_, field_trials_),
+        receiver_(&timing_, &clock_, field_trials_),
         stream_generator_(0, clock_.TimeInMilliseconds()) {}
 
   int32_t InsertPacket(int index) {
@@ -78,6 +79,7 @@ class TestVCMReceiver : public ::testing::Test {
     return true;
   }
 
+  test::ScopedKeyValueConfig field_trials_;
   SimulatedClock clock_;
   VCMTiming timing_;
   VCMReceiver receiver_;
@@ -365,16 +367,17 @@ class VCMReceiverTimingTest : public ::testing::Test {
   VCMReceiverTimingTest()
       : clock_(&stream_generator_, &receiver_),
         stream_generator_(0, clock_.TimeInMilliseconds()),
-        timing_(&clock_),
+        timing_(&clock_, field_trials_),
         receiver_(
             &timing_,
             &clock_,
             std::unique_ptr<EventWrapper>(new FrameInjectEvent(&clock_, false)),
-            std::unique_ptr<EventWrapper>(
-                new FrameInjectEvent(&clock_, true))) {}
+            std::unique_ptr<EventWrapper>(new FrameInjectEvent(&clock_, true)),
+            field_trials_) {}
 
   virtual void SetUp() {}
 
+  test::ScopedKeyValueConfig field_trials_;
   SimulatedClockWithFrames clock_;
   StreamGenerator stream_generator_;
   VCMTiming timing_;

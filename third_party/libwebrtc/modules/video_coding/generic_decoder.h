@@ -16,6 +16,7 @@
 #include "api/sequence_checker.h"
 #include "api/units/time_delta.h"
 #include "api/video_codecs/video_decoder.h"
+#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/timestamp_map.h"
@@ -31,7 +32,9 @@ enum { kDecoderFrameMemoryLength = 30 };
 
 class VCMDecodedFrameCallback : public DecodedImageCallback {
  public:
-  VCMDecodedFrameCallback(VCMTiming* timing, Clock* clock);
+  VCMDecodedFrameCallback(VCMTiming* timing,
+                          Clock* clock,
+                          const WebRtcKeyValueConfig& field_trials);
   ~VCMDecodedFrameCallback() override;
   void SetUserReceiveCallback(VCMReceiveCallback* receiveCallback);
   VCMReceiveCallback* UserReceiveCallback();

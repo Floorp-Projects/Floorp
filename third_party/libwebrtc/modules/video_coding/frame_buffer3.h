@@ -19,6 +19,7 @@
 #include "absl/types/optional.h"
 #include "api/units/timestamp.h"
 #include "api/video/encoded_frame.h"
+#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/utility/decoded_frames_history.h"
 
 namespace webrtc {
@@ -33,7 +34,10 @@ class FrameBuffer {
   // The `max_size` determines the maxmimum number of frames the buffer will
   // store, and max_decode_history determines how far back (by frame ID) the
   // buffer will store if a frame was decoded or not.
-  FrameBuffer(int max_size, int max_decode_history);
+  FrameBuffer(int max_size,
+              int max_decode_history,
+              // TODO(hta): remove field trials!
+              const WebRtcKeyValueConfig& field_trials);
   FrameBuffer(const FrameBuffer&) = delete;
   FrameBuffer& operator=(const FrameBuffer&) = delete;
   ~FrameBuffer() = default;
