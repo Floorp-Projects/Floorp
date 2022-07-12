@@ -8037,6 +8037,11 @@ bool ScrollFrameHelper::IsLastSnappedTarget(const nsIFrame* aFrame) const {
 }
 
 void ScrollFrameHelper::TryResnap() {
+  // If there's any async scroll is running, don't clobber the scroll.
+  if (!ScrollAnimationState().isEmpty()) {
+    return;
+  }
+
   if (auto snapTarget = GetSnapPointForResnap()) {
     // We are going to re-snap so that we need to clobber scroll anchoring.
     mAnchor.UserScrolled();
