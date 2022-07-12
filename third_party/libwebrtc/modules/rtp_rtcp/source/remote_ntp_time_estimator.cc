@@ -40,21 +40,21 @@ bool RemoteNtpTimeEstimator::UpdateRtcpTimestamp(int64_t rtt,
                                                  uint32_t ntp_secs,
                                                  uint32_t ntp_frac,
                                                  uint32_t rtp_timestamp) {
-  bool new_rtcp_sr = false;
-  if (!rtp_to_ntp_.UpdateMeasurements(ntp_secs, ntp_frac, rtp_timestamp,
-                                      &new_rtcp_sr)) {
-    return false;
-  }
-  if (!new_rtcp_sr) {
-    // No new RTCP SR since last time this function was called.
-    return true;
+  NtpTime sender_send_time(ntp_secs, ntp_frac);
+  switch (rtp_to_ntp_.UpdateMeasurements(sender_send_time, rtp_timestamp)) {
+    case RtpToNtpEstimator::kInvalidMeasurement:
+      return false;
+    case RtpToNtpEstimator::kSameMeasurement:
+      // No new RTCP SR since last time this function was called.
+      return true;
+    case RtpToNtpEstimator::kNewMeasurement:
+      break;
   }
 
   // Update extrapolator with the new arrival time.
   // The extrapolator assumes the ntp time.
   int64_t receiver_arrival_time_ms = clock_->CurrentNtpInMilliseconds();
-  int64_t sender_send_time_ms = NtpTime(ntp_secs, ntp_frac).ToMs();
-  int64_t sender_arrival_time_ms = sender_send_time_ms + rtt / 2;
+  int64_t sender_arrival_time_ms = sender_send_time.ToMs() + rtt / 2;
   int64_t remote_to_local_clocks_offset =
       receiver_arrival_time_ms - sender_arrival_time_ms;
   ntp_clocks_offset_estimator_.Insert(remote_to_local_clocks_offset);
@@ -62,10 +62,11 @@ bool RemoteNtpTimeEstimator::UpdateRtcpTimestamp(int64_t rtt,
 }
 
 int64_t RemoteNtpTimeEstimator::Estimate(uint32_t rtp_timestamp) {
-  int64_t sender_capture_ntp_ms = 0;
-  if (!rtp_to_ntp_.Estimate(rtp_timestamp, &sender_capture_ntp_ms)) {
+  NtpTime sender_capture = rtp_to_ntp_.Estimate(rtp_timestamp);
+  if (!sender_capture.Valid()) {
     return -1;
   }
+  int64_t sender_capture_ntp_ms = sender_capture.ToMs();
 
   int64_t remote_to_local_clocks_offset =
       ntp_clocks_offset_estimator_.GetFilteredValue();
