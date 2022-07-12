@@ -297,7 +297,7 @@ class TrackingProtectionPanelView(
             view2,
             object : AccessibilityDelegateCompat() {
                 override fun onInitializeAccessibilityNodeInfo(
-                    host: View?,
+                    host: View,
                     info: AccessibilityNodeInfoCompat,
                 ) {
                     info.setTraversalAfter(view1)
