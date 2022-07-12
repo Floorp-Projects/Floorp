@@ -109,18 +109,22 @@ bool IceCredentialsChanged(const std::string& old_ufrag,
   return (old_ufrag != new_ufrag) || (old_pwd != new_pwd);
 }
 
-// static
 std::unique_ptr<P2PTransportChannel> P2PTransportChannel::Create(
     const std::string& transport_name,
     int component,
-    PortAllocator* allocator,
-    webrtc::AsyncDnsResolverFactoryInterface* async_dns_resolver_factory,
-    webrtc::RtcEventLog* event_log,
-    IceControllerFactoryInterface* ice_controller_factory) {
-  return absl::WrapUnique(new P2PTransportChannel(
-      transport_name, component, allocator, async_dns_resolver_factory,
-      /* owned_dns_resolver_factory= */ nullptr, event_log,
-      ice_controller_factory));
+    webrtc::IceTransportInit init) {
+  if (init.async_resolver_factory()) {
+    return absl::WrapUnique(new P2PTransportChannel(
+        transport_name, component, init.port_allocator(), nullptr,
+        std::make_unique<webrtc::WrappingAsyncDnsResolverFactory>(
+            init.async_resolver_factory()),
+        init.event_log(), init.ice_controller_factory()));
+  } else {
+    return absl::WrapUnique(new P2PTransportChannel(
+        transport_name, component, init.port_allocator(),
+        init.async_dns_resolver_factory(), nullptr, init.event_log(),
+        init.ice_controller_factory()));
+  }
 }
 
 P2PTransportChannel::P2PTransportChannel(const std::string& transport_name,
@@ -203,25 +207,6 @@ P2PTransportChannel::P2PTransportChannel(
     ice_controller_ = std::make_unique<BasicIceController>(args);
   }
 }
-
-// Public constructor, exposed for backwards compatibility.
-// Deprecated.
-P2PTransportChannel::P2PTransportChannel(
-    const std::string& transport_name,
-    int component,
-    PortAllocator* allocator,
-    webrtc::AsyncResolverFactory* async_resolver_factory,
-    webrtc::RtcEventLog* event_log,
-    IceControllerFactoryInterface* ice_controller_factory)
-    : P2PTransportChannel(
-          transport_name,
-          component,
-          allocator,
-          nullptr,
-          std::make_unique<webrtc::WrappingAsyncDnsResolverFactory>(
-              async_resolver_factory),
-          event_log,
-          ice_controller_factory) {}
 
 P2PTransportChannel::~P2PTransportChannel() {
   TRACE_EVENT0("webrtc", "P2PTransportChannel::~P2PTransportChannel");
