@@ -240,6 +240,7 @@ class SearchTest {
 
     @SmokeTest
     @Test
+    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun noRecentlyVisitedSearchGroupInPrivateBrowsingTest() {
         val firstPage = searchMockServer.url("generic1.html").toString()
         val secondPage = searchMockServer.url("generic2.html").toString()

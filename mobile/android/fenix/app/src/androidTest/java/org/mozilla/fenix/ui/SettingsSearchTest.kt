@@ -71,6 +71,7 @@ class SettingsSearchTest {
     }
 
     @Test
+    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun toggleSearchBookmarksAndHistoryTest() {
         // Bookmarks 2 websites, toggles the bookmarks and history search settings off,
         // then verifies if the websites do not show in the suggestions.

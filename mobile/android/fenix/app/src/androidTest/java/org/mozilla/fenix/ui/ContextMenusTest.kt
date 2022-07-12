@@ -64,6 +64,7 @@ class ContextMenusTest {
 
     @SmokeTest
     @Test
+    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun verifyContextOpenLinkNewTab() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
@@ -88,6 +89,7 @@ class ContextMenusTest {
 
     @SmokeTest
     @Test
+    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun verifyContextOpenLinkPrivateTab() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)

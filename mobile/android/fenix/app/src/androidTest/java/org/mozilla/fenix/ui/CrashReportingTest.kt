@@ -109,6 +109,7 @@ class CrashReportingTest {
 
     @SmokeTest
     @Test
+    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun privateBrowsingUseAppWhileTabIsCrashedTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)

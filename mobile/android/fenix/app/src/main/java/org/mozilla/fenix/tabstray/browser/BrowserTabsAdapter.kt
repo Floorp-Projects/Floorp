@@ -23,6 +23,7 @@ import org.mozilla.fenix.databinding.TabTrayItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
+import org.mozilla.fenix.tabstray.browser.compose.ComposeGridViewHolder
 import org.mozilla.fenix.tabstray.browser.compose.ComposeListViewHolder
 
 /**
@@ -48,7 +49,8 @@ class BrowserTabsAdapter(
     enum class ViewType(val layoutRes: Int) {
         LIST(BrowserTabViewHolder.ListViewHolder.LAYOUT_ID),
         COMPOSE_LIST(ComposeListViewHolder.LAYOUT_ID),
-        GRID(BrowserTabViewHolder.GridViewHolder.LAYOUT_ID)
+        GRID(BrowserTabViewHolder.GridViewHolder.LAYOUT_ID),
+        COMPOSE_GRID(ComposeGridViewHolder.LAYOUT_ID)
     }
 
     /**
@@ -62,7 +64,11 @@ class BrowserTabsAdapter(
     override fun getItemViewType(position: Int): Int {
         return when {
             context.components.settings.gridTabView -> {
-                ViewType.GRID.layoutRes
+                if (FeatureFlags.composeTabsTray) {
+                    ViewType.COMPOSE_GRID.layoutRes
+                } else {
+                    ViewType.GRID.layoutRes
+                }
             }
             else -> {
                 if (FeatureFlags.composeTabsTray) {
@@ -80,6 +86,15 @@ class BrowserTabsAdapter(
                 ComposeListViewHolder(
                     interactor = interactor,
                     tabsTrayStore = store,
+                    selectionHolder = selectionHolder,
+                    composeItemView = ComposeView(parent.context),
+                    featureName = featureName,
+                    viewLifecycleOwner = viewLifecycleOwner
+                )
+            ViewType.COMPOSE_GRID.layoutRes ->
+                ComposeGridViewHolder(
+                    interactor = interactor,
+                    store = store,
                     selectionHolder = selectionHolder,
                     composeItemView = ComposeView(parent.context),
                     featureName = featureName,
