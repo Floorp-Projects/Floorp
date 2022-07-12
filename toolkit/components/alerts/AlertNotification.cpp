@@ -53,13 +53,6 @@ AlertNotification::Init(const nsAString& aName, const nsAString& aImageURL,
 }
 
 NS_IMETHODIMP
-AlertNotification::InitActions(
-    const nsTArray<RefPtr<nsIAlertAction>>& aActions) {
-  mActions = aActions.Clone();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 AlertNotification::GetName(nsAString& aName) {
   aName = mName;
   return NS_OK;
@@ -156,12 +149,6 @@ AlertNotification::GetSilent(bool* aSilent) {
 NS_IMETHODIMP
 AlertNotification::GetVibrate(nsTArray<uint32_t>& aVibrate) {
   aVibrate = mVibrate.Clone();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AlertNotification::GetActions(nsTArray<RefPtr<nsIAlertAction>>& aActions) {
-  aActions = mActions.Clone();
   return NS_OK;
 }
 

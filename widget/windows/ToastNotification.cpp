@@ -12,7 +12,6 @@
 #include "nsIObserverService.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
-#include "prenv.h"
 #include "ToastNotificationHandler.h"
 #include "WinTaskbar.h"
 #include "mozilla/Services.h"
@@ -20,8 +19,8 @@
 namespace mozilla {
 namespace widget {
 
-NS_IMPL_ISUPPORTS(ToastNotification, nsIAlertsService, nsIWindowsAlertsService,
-                  nsIAlertsDoNotDisturb, nsIObserver)
+NS_IMPL_ISUPPORTS(ToastNotification, nsIAlertsService, nsIAlertsDoNotDisturb,
+                  nsIObserver)
 
 ToastNotification::ToastNotification() = default;
 
@@ -34,11 +33,8 @@ nsresult ToastNotification::Init() {
 
   nsAutoString uid;
   if (NS_WARN_IF(!WinTaskbar::GetAppUserModelID(uid))) {
-    // Windows Toast Notification requires AppId.  But allow `xpcshell` to
-    // create the service to test other functionality.
-    if (!PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
+    // Windows Toast Notification requires AppId
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   nsresult rv =
@@ -159,17 +155,10 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   nsAutoString hostPort;
   MOZ_TRY(aAlert->GetSource(hostPort));
 
-  bool requireInteraction;
-  MOZ_TRY(aAlert->GetRequireInteraction(&requireInteraction));
-
-  nsTArray<RefPtr<nsIAlertAction>> actions;
-  MOZ_TRY(aAlert->GetActions(actions));
-
   RefPtr<ToastNotificationHandler> oldHandler = mActiveHandlers.Get(name);
 
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
-      this, aAlertListener, name, cookie, title, text, hostPort, textClickable,
-      requireInteraction, actions);
+      this, aAlertListener, name, cookie, title, text, hostPort, textClickable);
   mActiveHandlers.InsertOrUpdate(name, RefPtr{handler});
 
   nsresult rv = handler->InitAlertAsync(aAlert);
@@ -185,45 +174,6 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
-                                               nsAString& aString) {
-  NS_ENSURE_ARG(aAlert);
-
-  nsAutoString cookie;
-  MOZ_TRY(aAlert->GetCookie(cookie));
-
-  nsAutoString name;
-  MOZ_TRY(aAlert->GetName(name));
-
-  nsAutoString title;
-  MOZ_TRY(aAlert->GetTitle(title));
-
-  nsAutoString text;
-  MOZ_TRY(aAlert->GetText(text));
-
-  bool textClickable;
-  MOZ_TRY(aAlert->GetTextClickable(&textClickable));
-
-  nsAutoString hostPort;
-  MOZ_TRY(aAlert->GetSource(hostPort));
-
-  bool requireInteraction;
-  MOZ_TRY(aAlert->GetRequireInteraction(&requireInteraction));
-
-  nsTArray<RefPtr<nsIAlertAction>> actions;
-  MOZ_TRY(aAlert->GetActions(actions));
-
-  RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
-      this, nullptr /* aAlertListener */, name, cookie, title, text, hostPort,
-      textClickable, requireInteraction, actions);
-
-  nsAutoString imageURL;
-  MOZ_TRY(aAlert->GetImageURL(imageURL));
-
-  return handler->CreateToastXmlString(imageURL, aString);
 }
 
 NS_IMETHODIMP
