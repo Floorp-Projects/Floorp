@@ -64,94 +64,6 @@ add_setup(function test_setup() {
   Services.fog.initializeFOG();
 });
 
-/**
- * # ExperimentFeature.isEnabled
- */
-
-add_task(async function test_ExperimentFeature_isEnabled_default() {
-  const { sandbox } = await setupForExperimentFeature();
-
-  const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
-
-  const noPrefFeature = new ExperimentFeature("bar", {});
-
-  Assert.equal(
-    noPrefFeature.isEnabled(),
-    null,
-    "should return null if no default pref branch is configured"
-  );
-
-  Services.prefs.clearUserPref("testprefbranch.enabled");
-
-  Assert.equal(
-    featureInstance.isEnabled(),
-    null,
-    "should return null if no default value or pref is set"
-  );
-
-  Assert.equal(
-    featureInstance.isEnabled({ defaultValue: false }),
-    false,
-    "should use the default value param if no pref is set"
-  );
-
-  Services.prefs.setBoolPref("testprefbranch.enabled", false);
-
-  Assert.equal(
-    featureInstance.isEnabled({ defaultValue: true }),
-    false,
-    "should use the default pref value, including if it is false"
-  );
-
-  Services.prefs.clearUserPref("testprefbranch.enabled");
-  sandbox.restore();
-});
-
-add_task(async function test_ExperimentFeature_isEnabled_default_over_remote() {
-  const { manager, sandbox } = await setupForExperimentFeature();
-  const rollout = ExperimentFakes.rollout("foo-rollout", {
-    branch: {
-      slug: "slug",
-      features: [
-        {
-          featureId: "foo",
-          enabled: true,
-          value: FAKE_FEATURE_REMOTE_VALUE,
-        },
-      ],
-    },
-  });
-  await manager.store.ready();
-
-  const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
-
-  Services.prefs.setBoolPref("testprefbranch.enabled", false);
-
-  Assert.equal(
-    featureInstance.isEnabled(),
-    false,
-    "should use the default pref value, including if it is false"
-  );
-
-  await manager.store.addEnrollment(rollout);
-
-  Assert.equal(
-    featureInstance.isEnabled(),
-    false,
-    "Should still use userpref over remote"
-  );
-
-  Services.prefs.clearUserPref("testprefbranch.enabled");
-
-  Assert.equal(
-    featureInstance.isEnabled(),
-    true,
-    "Should use remote value over default pref"
-  );
-
-  sandbox.restore();
-});
-
 add_task(async function test_ExperimentFeature_test_helper_ready() {
   const { manager } = await setupForExperimentFeature();
   await manager.store.ready();
@@ -161,7 +73,6 @@ add_task(async function test_ExperimentFeature_test_helper_ready() {
   await ExperimentFakes.enrollWithRollout(
     {
       featureId: "foo",
-      enabled: true,
       value: { remoteValue: "mochitest", enabled: true },
     },
     {
@@ -169,146 +80,12 @@ add_task(async function test_ExperimentFeature_test_helper_ready() {
     }
   );
 
-  Assert.equal(featureInstance.isEnabled(), true, "enabled by remote config");
   Assert.equal(
     featureInstance.getVariable("remoteValue"),
     "mochitest",
     "set by remote config"
   );
 });
-
-add_task(
-  async function test_ExperimentFeature_isEnabled_prefer_experiment_over_remote() {
-    const { sandbox, manager } = await setupForExperimentFeature();
-    const expected = ExperimentFakes.experiment("foo", {
-      branch: {
-        slug: "treatment",
-        features: [
-          {
-            featureId: "foo",
-            value: { enabled: true },
-          },
-        ],
-      },
-    });
-
-    // Clear any pre-existing data in Glean
-    Services.fog.testResetFOG();
-
-    const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
-
-    await manager.store.ready();
-    await manager.store.addEnrollment(expected);
-
-    const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
-
-    await ExperimentFakes.enrollWithRollout(
-      {
-        featureId: "foo",
-        enabled: false,
-        value: { enabled: false },
-      },
-      {
-        manager,
-      }
-    );
-
-    Assert.equal(
-      featureInstance.isEnabled(),
-      true,
-      "should return the enabled value defined in the experiment not the remote value"
-    );
-
-    Services.prefs.setBoolPref("testprefbranch.enabled", false);
-
-    Assert.equal(
-      featureInstance.isEnabled(),
-      false,
-      "should return the user pref not the experiment value"
-    );
-
-    // Exposure is not triggered if user pref is set
-    Services.prefs.clearUserPref("testprefbranch.enabled");
-
-    Assert.ok(exposureSpy.notCalled, "should not emit exposure by default");
-
-    // Check that there aren't any Glean exposure events yet
-    var exposureEvents = Glean.nimbusEvents.exposure.testGetValue();
-    Assert.equal(
-      undefined,
-      exposureEvents,
-      "no Glean exposure events before exposure"
-    );
-
-    featureInstance.recordExposureEvent();
-
-    Assert.ok(exposureSpy.calledOnce, "should emit exposure event");
-
-    // Check that the Glean exposure event was recorded.
-    exposureEvents = Glean.nimbusEvents.exposure.testGetValue();
-    // We expect only one event
-    Assert.equal(1, exposureEvents.length);
-    // And that one event matches the expected
-    Assert.equal(
-      expected.slug,
-      exposureEvents[0].extra.experiment,
-      "Glean.nimbusEvents.exposure recorded with correct experiment slug"
-    );
-    Assert.equal(
-      expected.branch.slug,
-      exposureEvents[0].extra.branch,
-      "Glean.nimbusEvents.exposure recorded with correct branch slug"
-    );
-    Assert.equal(
-      expected.branch.features[0].featureId,
-      exposureEvents[0].extra.feature_id,
-      "Glean.nimbusEvents.exposure recorded with correct feature id"
-    );
-
-    sandbox.restore();
-  }
-);
-
-add_task(
-  async function test_ExperimentFeature_isEnabled_prefer_experiment_over_remote_legacy() {
-    const { sandbox, manager } = await setupForExperimentFeature();
-    const expected = ExperimentFakes.experiment("foo", {
-      branch: {
-        slug: "treatment",
-        features: [
-          {
-            featureId: "foo",
-            enabled: true,
-            value: { legacy: true },
-          },
-        ],
-      },
-    });
-    const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
-
-    await manager.store.ready();
-    await manager.store.addEnrollment(expected);
-
-    await ExperimentFakes.enrollWithRollout(
-      {
-        featureId: "foo",
-        enabled: false,
-        value: { legacy: true, enabled: false },
-      },
-      {
-        manager,
-      }
-    );
-
-    Assert.equal(
-      featureInstance.isEnabled(),
-      true,
-      "should return the enabled value defined in the experiment not the remote value"
-    );
-
-    sandbox.restore();
-  }
-);
 
 add_task(async function test_record_exposure_event() {
   const { sandbox, manager } = await setupForExperimentFeature();
@@ -458,54 +235,6 @@ add_task(async function test_allow_multiple_exposure_events() {
 
   sandbox.restore();
   await doExperimentCleanup();
-});
-
-add_task(async function test_isEnabled_backwards_compatible() {
-  const PREVIOUS_FEATURE_MANIFEST = {
-    variables: {
-      config: {
-        type: "json",
-        fallbackPref: TEST_FALLBACK_PREF,
-      },
-    },
-  };
-  let sandbox = sinon.createSandbox();
-  const manager = ExperimentFakes.manager();
-  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
-  const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
-  const feature = new ExperimentFeature("foo", PREVIOUS_FEATURE_MANIFEST);
-
-  await manager.onStartup();
-
-  await ExperimentFakes.enrollWithRollout(
-    {
-      featureId: "foo",
-      value: { enabled: false },
-    },
-    {
-      manager,
-    }
-  );
-
-  Assert.ok(!feature.isEnabled(), "Disabled based on remote configs");
-
-  await manager.store.addEnrollment(
-    ExperimentFakes.experiment("blah", {
-      branch: {
-        slug: "treatment",
-        features: [
-          {
-            featureId: "foo",
-            enabled: true,
-            value: {},
-          },
-        ],
-      },
-    })
-  );
-
-  Assert.ok(exposureSpy.notCalled, "Not called until now");
-  Assert.ok(feature.isEnabled(), "Enabled based on experiment recipe");
 });
 
 add_task(async function test_onUpdate_before_store_ready() {

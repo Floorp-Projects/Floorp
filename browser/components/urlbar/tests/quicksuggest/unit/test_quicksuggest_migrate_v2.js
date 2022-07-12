@@ -1341,9 +1341,10 @@ async function withOnlineExperiment(callback) {
           slug: "treatment",
           features: [
             {
-              enabled: true,
               featureId: NimbusFeatures.urlbar.featureId,
-              value: null,
+              value: {
+                enabled: true,
+              },
             },
           ],
         },

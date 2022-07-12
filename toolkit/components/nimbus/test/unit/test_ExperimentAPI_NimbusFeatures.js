@@ -224,7 +224,7 @@ add_task(async function update_remote_defaults_enabled() {
   let feature = new ExperimentFeature("aboutwelcome");
 
   Assert.equal(
-    feature.isEnabled(),
+    feature.getVariable("enabled"),
     true,
     "Feature is enabled by manifest.variables.enabled"
   );
@@ -232,7 +232,7 @@ add_task(async function update_remote_defaults_enabled() {
   await manager.store.addEnrollment(NON_MATCHING_ROLLOUT);
 
   Assert.ok(
-    !feature.isEnabled(),
+    !feature.getVariable("enabled"),
     "Feature is disabled by remote configuration"
   );
 

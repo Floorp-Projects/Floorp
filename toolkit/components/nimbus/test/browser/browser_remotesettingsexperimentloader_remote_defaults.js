@@ -71,7 +71,6 @@ const REMOTE_CONFIGURATION_FOO = ExperimentFakes.recipe("foo-rollout", {
       features: [
         {
           featureId: "foo",
-          enabled: true,
           isEarlyStartup: true,
           value: { remoteValue: 42, enabled: true },
         },
@@ -89,7 +88,6 @@ const REMOTE_CONFIGURATION_BAR = ExperimentFakes.recipe("bar-rollout", {
       features: [
         {
           featureId: "bar",
-          enabled: true,
           isEarlyStartup: true,
           value: { remoteValue: 3, enabled: true },
         },
@@ -163,7 +161,6 @@ add_task(async function test_remote_fetch_and_ready() {
   // async to evaluate targeting
   await Promise.all([fooUpdate, barUpdate]);
 
-  Assert.ok(fooInstance.isEnabled(), "Enabled by remote defaults");
   Assert.equal(
     fooInstance.getVariable("remoteValue"),
     REMOTE_CONFIGURATION_FOO.branches[0].features[0].value.remoteValue,
@@ -332,7 +329,6 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
   let fooCleanup = await ExperimentFakes.enrollWithRollout(
     {
       featureId: "foo",
-      enabled: true,
       isEarlyStartup: true,
       value: { foo: true },
     },
@@ -343,7 +339,6 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
   await ExperimentFakes.enrollWithRollout(
     {
       featureId: "bar",
-      enabled: true,
       isEarlyStartup: true,
       value: { bar: true },
     },
@@ -499,14 +494,14 @@ add_task(async function remote_defaults_active_remote_defaults() {
 
   await updatePromise;
 
-  Assert.ok(barFeature.isEnabled(), "Enabled on first sync");
-  Assert.ok(!fooFeature.isEnabled(), "Targeting doesn't match");
+  Assert.ok(barFeature.getVariable("enabled"), "Enabled on first sync");
+  Assert.ok(!fooFeature.getVariable("enabled"), "Targeting doesn't match");
 
   let featureUpdate = new Promise(resolve => fooFeature.onUpdate(resolve));
   await RemoteSettingsExperimentLoader.updateRecipes("mochitest");
   await featureUpdate;
 
-  Assert.ok(fooFeature.isEnabled(), "Targeting should match");
+  Assert.ok(fooFeature.getVariable("enabled"), "Targeting should match");
   ExperimentAPI._store._deleteForTests("foo");
   ExperimentAPI._store._deleteForTests("bar");
 
@@ -518,6 +513,9 @@ add_task(async function remote_defaults_variables_storage() {
   let barFeature = new ExperimentFeature("bar", {
     description: "mochitest",
     variables: {
+      enabled: {
+        type: "boolean",
+      },
       storage: {
         type: "int",
       },
@@ -542,7 +540,6 @@ add_task(async function remote_defaults_variables_storage() {
 
   let doCleanup = await ExperimentFakes.enrollWithRollout({
     featureId: "bar",
-    enabled: true,
     isEarlyStartup: true,
     value: rolloutValue,
   });
