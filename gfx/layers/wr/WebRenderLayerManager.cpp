@@ -622,14 +622,6 @@ void WebRenderLayerManager::ClearCachedResources() {
   WrBridge()->EndClearCachedResources();
 }
 
-void WebRenderLayerManager::ClearAnimationResources() {
-  if (!WrBridge()->IPCOpen()) {
-    gfxCriticalNote << "IPC Channel is already torn down unexpectedly\n";
-    return;
-  }
-  WrBridge()->SendClearAnimationResources();
-}
-
 void WebRenderLayerManager::WrUpdated() {
   ClearAsyncAnimations();
   mStateManager.mAsyncResourceUpdates.reset();
