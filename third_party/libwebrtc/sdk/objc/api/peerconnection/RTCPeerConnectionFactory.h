@@ -29,6 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
 (RTCVideoDecoderFactory);
 @protocol RTC_OBJC_TYPE
 (RTCVideoEncoderFactory);
+@protocol RTC_OBJC_TYPE
+(RTCSSLCertificateVerifier);
 
 RTC_OBJC_EXPORT
 @interface RTC_OBJC_TYPE (RTCPeerConnectionFactory) : NSObject
@@ -80,6 +82,13 @@ RTC_OBJC_EXPORT
 - (nullable RTC_OBJC_TYPE(RTCPeerConnection) *)
     peerConnectionWithConfiguration:(RTC_OBJC_TYPE(RTCConfiguration) *)configuration
                         constraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
+                           delegate:(nullable id<RTC_OBJC_TYPE(RTCPeerConnectionDelegate)>)delegate;
+
+- (nullable RTC_OBJC_TYPE(RTCPeerConnection) *)
+    peerConnectionWithConfiguration:(RTC_OBJC_TYPE(RTCConfiguration) *)configuration
+                        constraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
+                certificateVerifier:
+                    (id<RTC_OBJC_TYPE(RTCSSLCertificateVerifier)>)certificateVerifier
                            delegate:(nullable id<RTC_OBJC_TYPE(RTCPeerConnectionDelegate)>)delegate;
 
 /** Set the options to be used for subsequently created RTCPeerConnections */
