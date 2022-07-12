@@ -76,9 +76,10 @@ RemoteTextureOwnerClient::CreateOrRecycleBufferTextureData(
     return texture;
   }
 
-  auto* data = BufferTextureData::Create(
-      aSize, aFormat, gfx::BackendType::SKIA, LayersBackend::LAYERS_WR,
-      TextureFlags::DEALLOCATE_CLIENT, ALLOC_DEFAULT, nullptr);
+  auto flags = TextureFlags::DEALLOCATE_CLIENT | TextureFlags::REMOTE_TEXTURE;
+  auto* data = BufferTextureData::Create(aSize, aFormat, gfx::BackendType::SKIA,
+                                         LayersBackend::LAYERS_WR, flags,
+                                         ALLOC_DEFAULT, nullptr);
   return UniquePtr<TextureData>(data);
 }
 
