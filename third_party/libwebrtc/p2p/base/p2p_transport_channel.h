@@ -28,6 +28,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/base/attributes.h"
@@ -36,12 +37,14 @@
 #include "api/async_dns_resolver.h"
 #include "api/async_resolver_factory.h"
 #include "api/candidate.h"
+#include "api/ice_transport_interface.h"
 #include "api/rtc_error.h"
 #include "api/sequence_checker.h"
 #include "api/transport/enums.h"
 #include "api/transport/stun.h"
 #include "logging/rtc_event_log/events/rtc_event_ice_candidate_pair_config.h"
 #include "logging/rtc_event_log/ice_logger.h"
+#include "p2p/base/basic_async_resolver_factory.h"
 #include "p2p/base/candidate_pair_interface.h"
 #include "p2p/base/connection.h"
 #include "p2p/base/ice_controller_factory_interface.h"
@@ -104,15 +107,30 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   static std::unique_ptr<P2PTransportChannel> Create(
       const std::string& transport_name,
       int component,
+      webrtc::IceTransportInit init);
+
+  // TODO(jonaso): This is deprecated and will be removed.
+  static std::unique_ptr<P2PTransportChannel> Create(
+      const std::string& transport_name,
+      int component,
       PortAllocator* allocator,
       webrtc::AsyncDnsResolverFactoryInterface* async_dns_resolver_factory,
       webrtc::RtcEventLog* event_log = nullptr,
-      IceControllerFactoryInterface* ice_controller_factory = nullptr);
+      IceControllerFactoryInterface* ice_controller_factory = nullptr) {
+    webrtc::IceTransportInit init;
+    init.set_port_allocator(allocator);
+    init.set_async_dns_resolver_factory(async_dns_resolver_factory);
+    init.set_event_log(event_log);
+    init.set_ice_controller_factory(ice_controller_factory);
+    return Create(transport_name, component, std::move(init));
+  }
+
   // For testing only.
   // TODO(zstein): Remove once AsyncDnsResolverFactory is required.
   P2PTransportChannel(const std::string& transport_name,
                       int component,
                       PortAllocator* allocator);
+
   ABSL_DEPRECATED("bugs.webrtc.org/12598")
   P2PTransportChannel(
       const std::string& transport_name,
@@ -120,7 +138,17 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
       PortAllocator* allocator,
       webrtc::AsyncResolverFactory* async_resolver_factory,
       webrtc::RtcEventLog* event_log = nullptr,
-      IceControllerFactoryInterface* ice_controller_factory = nullptr);
+      IceControllerFactoryInterface* ice_controller_factory = nullptr)
+      : P2PTransportChannel(
+            transport_name,
+            component,
+            allocator,
+            nullptr,
+            std::make_unique<webrtc::WrappingAsyncDnsResolverFactory>(
+                async_resolver_factory),
+            event_log,
+            ice_controller_factory) {}
+
   ~P2PTransportChannel() override;
 
   P2PTransportChannel(const P2PTransportChannel&) = delete;

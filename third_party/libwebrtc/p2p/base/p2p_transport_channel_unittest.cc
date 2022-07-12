@@ -6074,11 +6074,12 @@ TEST(P2PTransportChannel, InjectIceController) {
   MockIceControllerFactory factory;
   FakePortAllocator pa(rtc::Thread::Current(), nullptr);
   EXPECT_CALL(factory, RecordIceControllerCreated()).Times(1);
-  auto dummy = std::make_unique<cricket::P2PTransportChannel>(
-      "transport_name",
-      /* component= */ 77, &pa,
-      /* async_resolver_factory = */ nullptr,
-      /* event_log = */ nullptr, &factory);
+  webrtc::IceTransportInit init;
+  init.set_port_allocator(&pa);
+  init.set_ice_controller_factory(&factory);
+  auto dummy =
+      P2PTransportChannel::Create("transport_name",
+                                  /* component= */ 77, std::move(init));
 }
 
 class ForgetLearnedStateController : public cricket::BasicIceController {
