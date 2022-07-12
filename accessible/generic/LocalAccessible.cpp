@@ -2966,7 +2966,7 @@ bool LocalAccessible::IsActiveDescendant(LocalAccessible** aWidget) const {
   selector.AppendPrintf(
       "[aria-activedescendant=\"%s\"]",
       NS_ConvertUTF16toUTF8(mContent->GetID()->GetUTF16String()).get());
-  ErrorResult er;
+  IgnoredErrorResult er;
 
   dom::Element* widgetElm =
       docOrShadowRoot->AsNode().QuerySelector(selector, er);
