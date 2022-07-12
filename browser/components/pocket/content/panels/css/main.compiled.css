@@ -5,8 +5,7 @@
  *    user zoom.
  */
 html {
-  font-family: sans-serif;
-  /* 1 */
+  font-family: sans-serif; /* 1 */
 }
 
 /**
@@ -48,10 +47,8 @@ audio,
 canvas,
 progress,
 video {
-  display: inline-block;
-  /* 1 */
-  vertical-align: baseline;
-  /* 2 */
+  display: inline-block; /* 1 */
+  vertical-align: baseline; /* 2 */
 }
 
 /**
@@ -225,12 +222,9 @@ input,
 optgroup,
 select,
 textarea {
-  color: inherit;
-  /* 1 */
-  font: inherit;
-  /* 2 */
-  margin: 0;
-  /* 3 */
+  color: inherit; /* 1 */
+  font: inherit; /* 2 */
+  margin: 0; /* 3 */
 }
 
 /**
@@ -262,8 +256,7 @@ button,
 html input[type=button],
 input[type=reset],
 input[type=submit] {
-  cursor: pointer;
-  /* 3 */
+  cursor: pointer; /* 3 */
 }
 
 /**
@@ -300,10 +293,8 @@ input {
  */
 input[type=checkbox],
 input[type=radio] {
-  box-sizing: border-box;
-  /* 1 */
-  padding: 0;
-  /* 2 */
+  box-sizing: border-box; /* 1 */
+  padding: 0; /* 2 */
 }
 
 /**
@@ -329,10 +320,8 @@ fieldset {
  * 2. Remove padding so people aren't caught out if they zero out fieldsets.
  */
 legend {
-  border: 0;
-  /* 1 */
-  padding: 0;
-  /* 2 */
+  border: 0; /* 1 */
+  padding: 0; /* 2 */
 }
 
 /**
