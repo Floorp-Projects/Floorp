@@ -100,7 +100,7 @@ class VideoReceiveStream2
                       VideoReceiveStream::Config config,
                       CallStats* call_stats,
                       Clock* clock,
-                      VCMTiming* timing,
+                      std::unique_ptr<VCMTiming> timing,
                       NackPeriodicProcessor* nack_periodic_processor,
                       DecodeSynchronizer* decode_sync);
   // Destruction happens on the worker thread. Prior to destruction the caller

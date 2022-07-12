@@ -209,7 +209,7 @@ VideoReceiveStream2::VideoReceiveStream2(
     VideoReceiveStream::Config config,
     CallStats* call_stats,
     Clock* clock,
-    VCMTiming* timing,
+    std::unique_ptr<VCMTiming> timing,
     NackPeriodicProcessor* nack_periodic_processor,
     DecodeSynchronizer* decode_sync)
     : task_queue_factory_(task_queue_factory),
@@ -225,7 +225,7 @@ VideoReceiveStream2::VideoReceiveStream2(
                    call->worker_thread(),
                    call->trials()),
       rtp_receive_statistics_(ReceiveStatistics::Create(clock_)),
-      timing_(timing),
+      timing_(std::move(timing)),
       video_receiver_(clock_, timing_.get()),
       rtp_video_stream_receiver_(call->worker_thread(),
                                  clock_,
