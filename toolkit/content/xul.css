@@ -16,8 +16,6 @@
  * browser.css.
  */
 
-@import url("chrome://global/skin/tooltip.css");
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
@@ -258,13 +256,58 @@ tooltip {
 }
 
 tooltip {
+  appearance: auto;
+  -moz-default-appearance: tooltip;
+  -moz-font-smoothing-background-color: -moz-mac-tooltip;
+
   -moz-box-orient: vertical;
   white-space: pre-wrap;
+
+  background-color: InfoBackground;
+  color: InfoText;
+  font: message-box;
+  padding: 2px 3px;
+  max-width: 40em;
   overflow: clip;
 }
 
 tooltip:not([position]) {
   margin-top: 21px;
+}
+
+/**
+ * It's important that these styles are in a UA sheet, because the default
+ * tooltip is native anonymous content
+ */
+@media (-moz-platform: linux) {
+  tooltip {
+    padding: 6px 10px; /* Matches Adwaita. */
+    line-height: 1.2;
+  }
+}
+
+@media (-moz-platform: windows) {
+  tooltip {
+    appearance: none;
+    border: 1px solid;
+  }
+
+  @media (-moz-windows-default-theme) {
+    tooltip {
+      background-color: #f9f9fb;
+      color: black;
+      border-color: #67676c;
+      border-radius: 4px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      tooltip {
+        background-color: #2b2a33;
+        color: white;
+        border-color: #f9f9fb;
+      }
+    }
+  }
 }
 
 @supports -moz-bool-pref("xul.panel-animations.enabled") {

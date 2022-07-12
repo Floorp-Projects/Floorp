@@ -19,7 +19,6 @@ toolkit.jar:
    skin/classic/global/tabbox.css
    skin/classic/global/toolbar.css
    skin/classic/global/toolbarbutton.css
-   skin/classic/global/tooltip.css
 
    skin/classic/global/icons/Authentication.png                (icons/Authentication.png)
 
