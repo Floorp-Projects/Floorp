@@ -6,7 +6,7 @@ Mozilla does not modify the actual snappy source with the exception of the
 Snappy comes from:
   https://github.com/google/snappy
 
-We are currently using revision: 1.1.8
+We are currently using revision: 1.1.9
 
 To upgrade to a newer version:
   1. Check out the new code using subversion.
@@ -16,9 +16,11 @@ To upgrade to a newer version:
      'snappy-stubs-public.h'.
   4. Copy all source files from the new version into the src subdirectory. The
      following are not needed:
-       - 'CMakeLists.txt' file
+       - 'CMakeLists.txt', 'snappy_benchmark.cc', 'snappy_test_data.cc',
+         'snappy_test_data.h', and 'snappy_test_tool.cc' files
        - 'cmake' subdirectory
        - 'docs' subdirectory
        - 'testdata' subdirectory
+       - 'third_party' subdirectory
   5. Update the revision stamp in this file.
 
