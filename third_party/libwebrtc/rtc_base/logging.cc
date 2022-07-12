@@ -42,6 +42,7 @@ static const int kMaxLogLineSize = 1024 - 60;
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/platform_thread_types.h"
 #include "rtc_base/string_encode.h"
@@ -574,5 +575,21 @@ void LogSink::OnLogMessage(const std::string& msg,
 void LogSink::OnLogMessage(const std::string& msg,
                            LoggingSeverity /* severity */) {
   OnLogMessage(msg);
+}
+
+// Inefficient default implementation, override is recommended.
+void LogSink::OnLogMessage(absl::string_view msg,
+                           LoggingSeverity severity,
+                           const char* tag) {
+  OnLogMessage(tag + (": " + std::string(msg)), severity);
+}
+
+void LogSink::OnLogMessage(absl::string_view msg,
+                           LoggingSeverity /* severity */) {
+  OnLogMessage(msg);
+}
+
+void LogSink::OnLogMessage(absl::string_view msg) {
+  OnLogMessage(std::string(msg));
 }
 }  // namespace rtc

@@ -16,6 +16,7 @@
 
 #include <algorithm>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
@@ -34,7 +35,10 @@ class LogSinkImpl : public LogSink {
 
  private:
   void OnLogMessage(const std::string& message) override {
-    log_data_->append(message);
+    OnLogMessage(absl::string_view(message));
+  }
+  void OnLogMessage(absl::string_view message) override {
+    log_data_->append(message.begin(), message.end());
   }
   std::string* const log_data_;
 };

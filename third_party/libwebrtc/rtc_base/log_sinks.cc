@@ -15,6 +15,7 @@
 #include <cstdio>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 
 namespace rtc {
@@ -36,14 +37,18 @@ FileRotatingLogSink::FileRotatingLogSink(FileRotatingStream* stream)
 FileRotatingLogSink::~FileRotatingLogSink() {}
 
 void FileRotatingLogSink::OnLogMessage(const std::string& message) {
+  OnLogMessage(absl::string_view(message));
+}
+
+void FileRotatingLogSink::OnLogMessage(absl::string_view message) {
   if (!stream_->IsOpen()) {
     std::fprintf(stderr, "Init() must be called before adding this sink.\n");
     return;
   }
-  stream_->Write(message.c_str(), message.size());
+  stream_->Write(message.data(), message.size());
 }
 
-void FileRotatingLogSink::OnLogMessage(const std::string& message,
+void FileRotatingLogSink::OnLogMessage(absl::string_view message,
                                        LoggingSeverity sev,
                                        const char* tag) {
   if (!stream_->IsOpen()) {
@@ -52,7 +57,7 @@ void FileRotatingLogSink::OnLogMessage(const std::string& message,
   }
   stream_->Write(tag, strlen(tag));
   stream_->Write(": ", 2);
-  stream_->Write(message.c_str(), message.size());
+  stream_->Write(message.data(), message.size());
 }
 
 bool FileRotatingLogSink::Init() {

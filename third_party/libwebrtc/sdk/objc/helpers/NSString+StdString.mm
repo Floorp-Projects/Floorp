@@ -10,6 +10,8 @@
 
 #import "NSString+StdString.h"
 
+#include "absl/strings/string_view.h"
+
 @implementation NSString (StdString)
 
 - (std::string)stdString {
@@ -27,6 +29,16 @@
   // using length.
   return [[NSString alloc] initWithBytes:stdString.data()
                                   length:stdString.length()
+                                encoding:NSUTF8StringEncoding];
+}
+
+@end
+
+@implementation NSString (AbslStringView)
+
++ (NSString *)stringForAbslStringView:(const absl::string_view)abslStringView {
+  return [[NSString alloc] initWithBytes:abslStringView.data()
+                                  length:abslStringView.length()
                                 encoding:NSUTF8StringEncoding];
 }
 
