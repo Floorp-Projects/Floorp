@@ -102,7 +102,6 @@ class WebRenderLayerManager final : public WindowRenderer {
                     const mozilla::TimeStamp& aCompositeEnd);
 
   void ClearCachedResources();
-  void ClearAnimationResources();
   void UpdateTextureFactoryIdentifier(
       const TextureFactoryIdentifier& aNewIdentifier);
   TextureFactoryIdentifier GetTextureFactoryIdentifier();

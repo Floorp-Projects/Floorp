@@ -69,7 +69,6 @@ parent:
   sync GetSnapshot(PTexture texture) returns (bool aNeedsYFlip);
   async SetLayersObserverEpoch(LayersObserverEpoch childEpoch);
   async ClearCachedResources();
-  async ClearAnimationResources();
   async SetDefaultClearColor(uint32_t aColor);
   // Invalidate rendered frame
   async InvalidateRenderedFrame();
