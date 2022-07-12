@@ -111,8 +111,7 @@ ABSL_FLAG(int,
 ABSL_FLAG(int,
           ts,
           kParameterNotSpecifiedValue,
-          "Activate (1), deactivate (0) or activate the transient suppressor "
-          "with continuous key events (2)");
+          "Activate (1) or deactivate (0) the transient suppressor");
 ABSL_FLAG(int,
           analog_agc,
           kParameterNotSpecifiedValue,
@@ -218,6 +217,12 @@ ABSL_FLAG(int,
           simulated_mic_kind,
           kParameterNotSpecifiedValue,
           "Specify which microphone kind to use for microphone simulation");
+ABSL_FLAG(int,
+          override_key_pressed,
+          kParameterNotSpecifiedValue,
+          "Always set to true (1) or to false (0) the key press state. If "
+          "unspecified, false is set with Wav files or, with AEC dumps, the "
+          "recorded event is used.");
 ABSL_FLAG(int,
           frame_for_sending_capture_output_used_false,
           kParameterNotSpecifiedValue,
@@ -459,6 +464,8 @@ SimulationSettings CreateSettings() {
   settings.simulate_mic_gain = absl::GetFlag(FLAGS_simulate_mic_gain);
   SetSettingIfSpecified(absl::GetFlag(FLAGS_simulated_mic_kind),
                         &settings.simulated_mic_kind);
+  SetSettingIfFlagSet(absl::GetFlag(FLAGS_override_key_pressed),
+                      &settings.override_key_pressed);
   SetSettingIfSpecified(
       absl::GetFlag(FLAGS_frame_for_sending_capture_output_used_false),
       &settings.frame_for_sending_capture_output_used_false);

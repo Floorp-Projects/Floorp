@@ -164,15 +164,14 @@ void AecDumpBasedSimulator::PrepareProcessStreamCall(
     }
   }
 
-  if (!settings_.use_ts || *settings_.use_ts == 1) {
-    // Transient suppressor activated (1) or not specified.
+  if (settings_.override_key_pressed.has_value()) {
+    // Key pressed state overridden.
+    ap_->set_stream_key_pressed(*settings_.override_key_pressed);
+  } else {
+    // Set the recorded key pressed state.
     if (msg.has_keypress()) {
       ap_->set_stream_key_pressed(msg.keypress());
     }
-  } else {
-    // Transient suppressor deactivated (0) or activated with continuous key
-    // events (2).
-    ap_->set_stream_key_pressed(*settings_.use_ts == 2);
   }
 
   // Level is always logged in AEC dumps.
