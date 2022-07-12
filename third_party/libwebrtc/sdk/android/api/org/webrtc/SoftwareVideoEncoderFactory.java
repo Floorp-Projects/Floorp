@@ -29,8 +29,8 @@ public class SoftwareVideoEncoderFactory implements VideoEncoderFactory {
       return new LibvpxVp9Encoder();
     }
     if (codecName.equalsIgnoreCase(VideoCodecMimeType.AV1.name())
-        && LibaomAv1Encoder.nativeIsSupported()) {
-      return new LibaomAv1Encoder();
+        && LibaomAv1EncoderIfSupported.nativeIsSupported()) {
+      return new LibaomAv1EncoderIfSupported();
     }
 
     return null;
@@ -48,7 +48,7 @@ public class SoftwareVideoEncoderFactory implements VideoEncoderFactory {
     if (LibvpxVp9Encoder.nativeIsSupported()) {
       codecs.add(new VideoCodecInfo(VideoCodecMimeType.VP9.name(), new HashMap<>()));
     }
-    if (LibaomAv1Encoder.nativeIsSupported()) {
+    if (LibaomAv1EncoderIfSupported.nativeIsSupported()) {
       codecs.add(new VideoCodecInfo(VideoCodecMimeType.AV1.name(), new HashMap<>()));
     }
 
