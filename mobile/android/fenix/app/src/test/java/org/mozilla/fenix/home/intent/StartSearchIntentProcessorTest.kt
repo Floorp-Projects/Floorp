@@ -58,7 +58,7 @@ class StartSearchIntentProcessorTest {
         }
         StartSearchIntentProcessor().process(intent, navController, out)
         val options = navOptions {
-            popUpTo = R.id.homeFragment
+            popUpTo(R.id.homeFragment)
         }
 
         assertNotNull(SearchWidget.newTabButton.testGetValue())

@@ -41,7 +41,7 @@ private data class EqNavDirectionsMatcher(private val value: NavDirections) : Ma
 private data class EqNavOptionsMatcher(private val value: NavOptions) : Matcher<NavOptions> {
 
     override fun match(arg: NavOptions?): Boolean =
-        value.popUpTo == arg?.popUpTo && value.isPopUpToInclusive == arg.isPopUpToInclusive
+        value.popUpToId == arg?.popUpToId && value.isPopUpToInclusive() == arg.isPopUpToInclusive()
 
     override fun substitute(map: Map<Any, Any>) =
         copy(value = value.internalSubstitute(map))

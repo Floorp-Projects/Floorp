@@ -48,7 +48,7 @@ class StartSearchIntentProcessor : HomeIntentProcessor {
             }
             directions?.let {
                 val options = navOptions {
-                    popUpTo = R.id.homeFragment
+                    popUpTo(R.id.homeFragment)
                 }
                 navController.nav(null, it, options)
             }
