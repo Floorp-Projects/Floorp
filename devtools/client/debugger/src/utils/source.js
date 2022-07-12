@@ -485,7 +485,27 @@ export function getTextAtPosition(sourceId, asyncContent, location) {
   return lineText.slice(column, column + 100).trim();
 }
 
-export function getSourceClassnames(source, symbols, isBlackBoxed) {
+/**
+ * Compute the CSS classname string to use for the icon of a given source.
+ *
+ * @param {Object} source
+ *        The reducer source object.
+ * @param {Object} symbols
+ *        The reducer symbol object for the given source.
+ * @param {Boolean} isBlackBoxed
+ *        To be set to true, when the given source is blackboxed.
+ * @param {Boolean} hasPrettyTab
+ *        To be set to true, if the given source isn't the pretty printed one,
+ *        but another tab for that source is opened pretty printed.
+ * @return String
+ *        The classname to use.
+ */
+export function getSourceClassnames(
+  source,
+  symbols,
+  isBlackBoxed,
+  hasPrettyTab = false
+) {
   // Conditionals should be ordered by priority of icon!
   const defaultClassName = "file";
 
@@ -493,7 +513,10 @@ export function getSourceClassnames(source, symbols, isBlackBoxed) {
     return defaultClassName;
   }
 
-  if (isPretty(source)) {
+  // In the SourceTree, we don't show the pretty printed sources,
+  // but still want to show the pretty print icon when a pretty printed tab
+  // for the current source is opened.
+  if (isPretty(source) || hasPrettyTab) {
     return "prettyPrint";
   }
 

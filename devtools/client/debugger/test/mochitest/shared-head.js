@@ -1078,6 +1078,25 @@ function findSourceNodeWithText(dbg, text) {
   });
 }
 
+/**
+ * Assert the icon type used in the SourceTree for a given source
+ *
+ * @param {Object} dbg
+ * @param {String} sourceName
+ *        Name of the source displayed in the source tree
+ * @param {String} icon
+ *        Expected icon CSS classname
+ */
+function assertSourceIcon(dbg, sourceName, icon) {
+  const sourceItem = findSourceNodeWithText(dbg, sourceName);
+  ok(sourceItem, `Found the source item for ${sourceName}`);
+  is(
+    sourceItem.querySelector(".source-icon").className,
+    `img source-icon ${icon}`,
+    `The icon for ${sourceName} is correct`
+  );
+}
+
 async function expandAllSourceNodes(dbg, treeNode) {
   const onContextMenu = waitForContextMenu(dbg);
   rightClickEl(dbg, treeNode);

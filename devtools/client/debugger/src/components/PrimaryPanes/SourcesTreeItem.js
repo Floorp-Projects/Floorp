@@ -13,7 +13,6 @@ import AccessibleImage from "../shared/AccessibleImage";
 
 import {
   getGeneratedSourceByURL,
-  hasPrettyTab as checkHasPrettyTab,
   getContext,
   getSourceContent,
 } from "../../selectors";
@@ -43,7 +42,6 @@ class SourceTreeItem extends Component {
       focused: PropTypes.bool.isRequired,
       getBlackBoxSourcesGroups: PropTypes.func.isRequired,
       hasMatchingGeneratedSource: PropTypes.bool.isRequired,
-      hasPrettyTab: PropTypes.bool.isRequired,
       item: PropTypes.object.isRequired,
       loadSourceText: PropTypes.func.isRequired,
       projectRoot: PropTypes.string.isRequired,
@@ -270,7 +268,7 @@ class SourceTreeItem extends Component {
   }
 
   renderIcon(item, depth) {
-    const { projectRoot, source, hasPrettyTab, threads } = this.props;
+    const { projectRoot, source, threads } = this.props;
 
     if (item.name === "Webpack") {
       return <AccessibleImage className="webpack" />;
@@ -317,14 +315,6 @@ class SourceTreeItem extends Component {
         return <AccessibleImage className="globe-small" />;
       }
       return <AccessibleImage className="folder" />;
-    }
-
-    if (this.props.isSourceBlackBoxed) {
-      return <AccessibleImage className="blackBox" />;
-    }
-
-    if (hasPrettyTab) {
-      return <AccessibleImage className="prettyPrint" />;
     }
 
     if (source) {
@@ -413,7 +403,6 @@ const mapStateToProps = (state, props) => {
   return {
     cx: getContext(state),
     hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
-    hasPrettyTab: source ? checkHasPrettyTab(state, source.url) : false,
     sourceContent: source ? getSourceContentValue(state, source) : null,
   };
 };

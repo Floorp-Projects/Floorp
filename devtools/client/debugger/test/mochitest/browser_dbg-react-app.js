@@ -30,4 +30,5 @@ add_task(async function() {
     sourceTab.querySelector(".source-icon.react"),
     "Source tab has a React icon"
   );
+  assertSourceIcon(dbg, "App.js", "react");
 });
