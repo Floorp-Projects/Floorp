@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '464bf1c1712b8f17c7a65cd7aec558f010e41436',
+  'chromium_revision': '2bacc42b75b2b0823b377eb80d7eac38bfbb80ad',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,9 +23,9 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@757ea78481f86822cbe6b6582edef2d311bc1266',
+    'https://chromium.googlesource.com/chromium/src/base@0f8f0209a3fef65f323f0a6a626bcc6cb8c46237',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@57b3452d26cdff545e668aa102525d10cfa6722e',
+    'https://chromium.googlesource.com/chromium/src/build@e8430f658c69b1935353d643ee71b633592dc16f',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@e1471b21ee9c6765ee95e9db0c76fe997ccad35c',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -34,13 +34,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@d11e422ea65ba4b54c007a077b84ef4110cc6367',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@905cc78523b5c37ffa2a81f16bcc8291f8662bb7',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@03bf7a889025ef8e930a679e22aae33e49b64b12',
+    'https://chromium.googlesource.com/chromium/src/testing@c5694d8fc1b2bb7bf470dc666cab3218feff91a2',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@c9246c6fc4176a7a6a6fdf99194e4ff264552f84',
+    'https://chromium.googlesource.com/chromium/src/third_party@6fed3b9b4f88d4fdfe81bc6857edb2764444b096',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -149,7 +149,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@4de5deacd4a7cb46637a3d446b9c0dc258be1159',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@62396c5a83595ec985578fe3e163fde931062615',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@574c39cce3231c69bc9a02ac475c27d944bdb113',
   'src/third_party/findbugs': {
@@ -185,7 +185,7 @@ deps = {
       'dep_type': 'cipd',
   },
   'src/third_party/googletest/src':
-    'https://chromium.googlesource.com/external/github.com/google/googletest.git@0affd45b62371c1de44064a5a5f8817242208442',
+    'https://chromium.googlesource.com/external/github.com/google/googletest.git@af29db7ec28d6df1c7f0f745186884091e602e07',
   'src/third_party/icu': {
     'url': 'https://chromium.googlesource.com/chromium/deps/icu.git@a9359a84a3969b3019db7d62899afb19642eefcd',
   },
@@ -231,7 +231,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@ae44ad76bdf06db6f4e11186dd30cfdbc7d852b0',
+    'https://android.googlesource.com/platform/external/perfetto.git@a8f0cd2c06fe26eb10b280c3c25db17b5d45519e',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@bf672f23a5336cb54dbcb2e4417142139f44cc3e',
   'src/third_party/libyuv':
@@ -288,7 +288,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@772716903dee5528181073031e7cc7a75bdae2f5',
+    'https://chromium.googlesource.com/chromium/src/tools@201492c4b53e6f0f57bc92fc39148ff63db77248',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -481,11 +481,11 @@ deps = {
       'packages': [
         {
           'package': 'infra/tools/luci/isolate/${{platform}}',
-          'version': 'git_revision:cb424e70e75136736a86359ef070aa96425fe7a3',
+          'version': 'git_revision:6da0608e4fa8a3c6d1fa4f855485c0038b05bf72',
         },
         {
           'package': 'infra/tools/luci/swarming/${{platform}}',
-          'version': 'git_revision:cb424e70e75136736a86359ef070aa96425fe7a3',
+          'version': 'git_revision:6da0608e4fa8a3c6d1fa4f855485c0038b05bf72',
         },
       ],
       'dep_type': 'cipd',
