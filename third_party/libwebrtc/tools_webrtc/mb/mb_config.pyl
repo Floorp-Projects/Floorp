@@ -440,6 +440,10 @@
       'gn_args': 'dcheck_always_on=true',
     },
 
+    'dcheck_off': {
+      'gn_args': 'dcheck_always_on=false',
+    },
+
     'debug': {
       'gn_args': 'is_debug=true',
     },
@@ -504,7 +508,7 @@
     # 100% release build without DCHECKs while 'release_bot' is a partial
     # release configs since `dcheck_always_on` is set to true.
     'pure_release_bot': {
-      'mixins': ['release', 'goma'],
+      'mixins': ['release', 'goma', 'dcheck_off'],
     },
     'release_bot': {
       'mixins': ['pure_release_bot', 'dcheck_always_on'],
