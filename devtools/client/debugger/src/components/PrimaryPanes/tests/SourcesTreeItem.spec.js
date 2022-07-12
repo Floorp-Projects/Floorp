@@ -569,6 +569,7 @@ function generateDefaults(overrides) {
     item,
     source,
     projectRoot: "",
+    blackBoxRanges: {},
     clearProjectDirectoryRoot: jest.fn(),
     setProjectDirectoryRoot: jest.fn(),
     toggleBlackBox: jest.fn(),
@@ -576,7 +577,7 @@ function generateDefaults(overrides) {
     focusItem: jest.fn(),
     setExpanded: jest.fn(),
     blackBoxSources: jest.fn(),
-    getSourcesGroups: () => {
+    getBlackBoxSourcesGroups: () => {
       return {
         sourcesInside: [
           makeMockDisplaySource("https://example.com/a.js", "actor1"),

@@ -24,6 +24,7 @@ CompiledModules(
     "project-text-search.js",
     "quick-open.js",
     "source-actors.js",
+    "source-blackbox.js",
     "source-tree.js",
     "sources-content.js",
     "sources.js",

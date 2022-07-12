@@ -31,6 +31,10 @@ add_task(async function() {
     SOURCE_FILES.codeReload1
   );
 
+  // Expand the SourceTree and wait for all sources to be visible,
+  // so that we can assert the visible state of blackboxing in the source tree.
+  await waitForSourcesInSourceTree(dbg, Object.values(SOURCE_FILES));
+
   info("Loads the source file and sets a breakpoint at line 2.");
   await selectSource(dbg, SOURCE_FILES.nestedSource);
   await addBreakpoint(dbg, SOURCE_FILES.nestedSource, 2);
@@ -58,16 +62,8 @@ add_task(async function() {
   await waitForBlackboxCount(dbg, 1);
   await waitForRequestsToSettle(dbg);
 
-  is(
-    findSource(dbg, SOURCE_FILES.nestedSource).isBlackBoxed,
-    true,
-    "nested-source.js is blackboxed"
-  );
-  is(
-    findSource(dbg, SOURCE_FILES.codeReload1).isBlackBoxed,
-    false,
-    "code_reload_1.js is not blackboxed"
-  );
+  assertSourceNodeIsBlackBoxed(dbg, SOURCE_FILES.nestedSource, true);
+  assertSourceNodeIsBlackBoxed(dbg, SOURCE_FILES.codeReload1, false);
 
   info("The invoked function is blackboxed and the debugger does not pause.");
   invokeInTab("computeSomething");
@@ -91,16 +87,8 @@ add_task(async function() {
   await waitForBlackboxCount(dbg, 0);
   await waitForRequestsToSettle(dbg);
 
-  is(
-    findSource(dbg, SOURCE_FILES.nestedSource).isBlackBoxed,
-    false,
-    "nested-source.js is not blackboxed"
-  );
-  is(
-    findSource(dbg, SOURCE_FILES.codeReload1).isBlackBoxed,
-    false,
-    "code_reload_1.js is not blackboxed"
-  );
+  assertSourceNodeIsBlackBoxed(dbg, SOURCE_FILES.nestedSource, false);
+  assertSourceNodeIsBlackBoxed(dbg, SOURCE_FILES.codeReload1, false);
 
   info("All sources are unblackboxed and the debugger pauses on line 2.");
   invokeInTab("computeSomething");
@@ -119,16 +107,8 @@ add_task(async function() {
   await waitForBlackboxCount(dbg, 2);
   await waitForRequestsToSettle(dbg);
 
-  is(
-    findSource(dbg, SOURCE_FILES.nestedSource).isBlackBoxed,
-    true,
-    "nested-source.js is blackboxed"
-  );
-  is(
-    findSource(dbg, SOURCE_FILES.codeReload1).isBlackBoxed,
-    true,
-    "code_reload_1.js is blackboxed"
-  );
+  assertSourceNodeIsBlackBoxed(dbg, SOURCE_FILES.nestedSource, true);
+  assertSourceNodeIsBlackBoxed(dbg, SOURCE_FILES.codeReload1, true);
 
   info("Unblackbox files in this group.");
   rightClickEl(dbg, sourceTreeRootNodeEl);
@@ -142,21 +122,23 @@ add_task(async function() {
   await waitForBlackboxCount(dbg, 0);
   await waitForRequestsToSettle(dbg);
 
-  is(
-    findSource(dbg, SOURCE_FILES.nestedSource).isBlackBoxed,
-    false,
-    "nested-source.js is not blackboxed"
-  );
-  is(
-    findSource(dbg, SOURCE_FILES.codeReload1).isBlackBoxed,
-    false,
-    "code_reload_1.js is not blackboxed"
-  );
+  assertSourceNodeIsBlackBoxed(dbg, SOURCE_FILES.nestedSource, false);
+  assertSourceNodeIsBlackBoxed(dbg, SOURCE_FILES.codeReload1, false);
 });
 
 function waitForBlackboxCount(dbg, count) {
   return waitForState(
     dbg,
     state => Object.keys(dbg.selectors.getBlackBoxRanges()).length === count
+  );
+}
+
+function assertSourceNodeIsBlackBoxed(dbg, sourceFilename, shouldBeBlackBoxed) {
+  const treeItem = findSourceNodeWithText(dbg, sourceFilename);
+  ok(treeItem, `Found tree item for ${sourceFilename}`);
+  is(
+    !!treeItem.querySelector(".img.blackBox"),
+    shouldBeBlackBoxed,
+    `${sourceFilename} is ${shouldBeBlackBoxed ? "" : "not"} blackboxed`
   );
 }

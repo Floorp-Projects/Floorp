@@ -13,6 +13,7 @@ import {
   getIsPaused,
   getCurrentThread,
   getContext,
+  getBlackBoxRanges,
 } from "../../selectors";
 import { isVisible } from "../../utils/ui";
 
@@ -67,6 +68,7 @@ class Tabs extends PureComponent {
       moveTabBySourceId: PropTypes.func.isRequired,
       selectSource: PropTypes.func.isRequired,
       selectedSource: PropTypes.object,
+      blackBoxRanges: PropTypes.object.isRequired,
       startPanelCollapsed: PropTypes.bool.isRequired,
       tabSources: PropTypes.array.isRequired,
       togglePaneCollapse: PropTypes.func.isRequired,
@@ -148,7 +150,7 @@ class Tabs extends PureComponent {
     if (isPretty(source)) {
       return "prettyPrint";
     }
-    if (source.isBlackBoxed) {
+    if (this.props.blackBoxRanges[source.url]) {
       return "blackBox";
     }
     return "file";
@@ -305,12 +307,16 @@ class Tabs extends PureComponent {
   }
 }
 
-const mapStateToProps = state => ({
-  cx: getContext(state),
-  selectedSource: getSelectedSource(state),
-  tabSources: getSourcesForTabs(state),
-  isPaused: getIsPaused(state, getCurrentThread(state)),
-});
+const mapStateToProps = state => {
+  const tabSources = getSourcesForTabs(state);
+  return {
+    cx: getContext(state),
+    selectedSource: getSelectedSource(state),
+    tabSources,
+    blackBoxRanges: getBlackBoxRanges(state),
+    isPaused: getIsPaused(state, getCurrentThread(state)),
+  };
+};
 
 export default connect(mapStateToProps, {
   selectSource: actions.selectSource,

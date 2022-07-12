@@ -14,46 +14,54 @@ class BlackboxLines extends Component {
     return {
       editor: PropTypes.object,
       selectedSource: PropTypes.object,
-      blackboxedRanges: PropTypes.object,
+      blackboxedRangesForSelectedSource: PropTypes.object,
     };
   }
 
   componentDidMount() {
-    const { selectedSource, blackboxedRanges, editor } = this.props;
-    const ranges = blackboxedRanges[selectedSource.url];
-    if (!selectedSource.isBlackBoxed && !ranges) {
+    const {
+      selectedSource,
+      blackboxedRangesForSelectedSource,
+      editor,
+    } = this.props;
+
+    // When `blackboxedRangesForSelectedSource` is undefined, the source isn't blackboxed
+    if (!blackboxedRangesForSelectedSource) {
       return;
     }
-    if (ranges) {
-      if (!ranges.length) {
-        // The whole source was blackboxed
-        this.setAllBlackboxLines(editor);
-      } else {
-        editor.codeMirror.operation(() => {
-          ranges.forEach(range => {
-            const start = toEditorLine(selectedSource.id, range.start.line);
-            const end = toEditorLine(selectedSource.id, range.end.line);
-            editor.codeMirror.eachLine(start, end, lineHandle => {
-              this.setBlackboxLine(editor, lineHandle);
-            });
+
+    // But when `blackboxedRangesForSelectedSource` is defined and the array is empty,
+    // the whole source was blackboxed.
+    if (!blackboxedRangesForSelectedSource.length) {
+      this.setAllBlackboxLines(editor);
+    } else {
+      editor.codeMirror.operation(() => {
+        blackboxedRangesForSelectedSource.forEach(range => {
+          const start = toEditorLine(selectedSource.id, range.start.line);
+          const end = toEditorLine(selectedSource.id, range.end.line);
+          editor.codeMirror.eachLine(start, end, lineHandle => {
+            this.setBlackboxLine(editor, lineHandle);
           });
         });
-      }
+      });
     }
   }
 
   componentDidUpdate() {
-    const { selectedSource, blackboxedRanges, editor } = this.props;
-    const ranges = blackboxedRanges[selectedSource.url];
+    const {
+      selectedSource,
+      blackboxedRangesForSelectedSource,
+      editor,
+    } = this.props;
 
     // when unblackboxed
-    if (!ranges) {
+    if (!blackboxedRangesForSelectedSource) {
       this.clearAllBlackboxLines(editor);
       return;
     }
 
     // When the whole source is blackboxed
-    if (!ranges.length) {
+    if (!blackboxedRangesForSelectedSource.length) {
       this.setAllBlackboxLines(editor);
       return;
     }
@@ -68,7 +76,7 @@ class BlackboxLines extends Component {
           editor.codeMirror.getLineNumber(lineHandle)
         );
 
-        if (this.isLineBlackboxed(ranges, line)) {
+        if (this.isLineBlackboxed(blackboxedRangesForSelectedSource, line)) {
           this.setBlackboxLine(editor, lineHandle);
         } else {
           this.clearBlackboxLine(editor, lineHandle);
@@ -125,9 +133,12 @@ class BlackboxLines extends Component {
 }
 
 const mapStateToProps = state => {
+  const selectedSource = getSelectedSource(state);
   return {
-    blackboxedRanges: getBlackBoxRanges(state),
-    selectedSource: getSelectedSource(state),
+    selectedSource,
+    blackboxedRangesForSelectedSource: selectedSource
+      ? getBlackBoxRanges(state)[selectedSource.url]
+      : undefined,
   };
 };
 

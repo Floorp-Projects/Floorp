@@ -21,6 +21,7 @@ import {
   getSymbols,
   getTabs,
   getContext,
+  getBlackBoxRanges,
 } from "../selectors";
 import { memoizeLast } from "../utils/memoizeLast";
 import { scrollList } from "../utils/result-list";
@@ -128,15 +129,15 @@ export class QuickOpenModal extends Component {
     return index !== -1 ? query.slice(0, index) : query;
   };
 
-  formatSources = memoizeLast((displayedSources, tabs) => {
+  formatSources = memoizeLast((displayedSources, tabs, blackBoxRanges) => {
     const tabUrls = new Set(tabs.map(tab => tab.url));
-    return formatSources(displayedSources, tabUrls);
+    return formatSources(displayedSources, tabUrls, blackBoxRanges);
   });
 
   searchSources = query => {
-    const { displayedSources, tabs } = this.props;
+    const { displayedSources, tabs, blackBoxRanges } = this.props;
 
-    const sources = this.formatSources(displayedSources, tabs);
+    const sources = this.formatSources(displayedSources, tabs, blackBoxRanges);
     const results =
       query == "" ? sources : filter(sources, this.dropGoto(query));
     return this.setResults(results);
@@ -167,7 +168,7 @@ export class QuickOpenModal extends Component {
   };
 
   showTopSources = () => {
-    const { displayedSources, tabs } = this.props;
+    const { displayedSources, tabs, blackBoxRanges } = this.props;
     const tabUrls = new Set(tabs.map(tab => tab.url));
 
     if (tabs.length > 0) {
@@ -176,11 +177,12 @@ export class QuickOpenModal extends Component {
           displayedSources.filter(
             source => !!source.url && tabUrls.has(source.url)
           ),
-          tabUrls
+          tabUrls,
+          blackBoxRanges
         )
       );
     } else {
-      this.setResults(formatSources(displayedSources, tabUrls));
+      this.setResults(formatSources(displayedSources, tabUrls, blackBoxRanges));
     }
   };
 
@@ -447,6 +449,7 @@ function mapStateToProps(state) {
     cx: getContext(state),
     enabled: getQuickOpenEnabled(state),
     displayedSources,
+    blackBoxRanges: getBlackBoxRanges(state),
     selectedSource,
     selectedContentLoaded: selectedSource
       ? !!getSourceContent(state, selectedSource.id)

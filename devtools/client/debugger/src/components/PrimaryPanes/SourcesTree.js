@@ -18,6 +18,7 @@ import {
   getFocusedSourceItem,
   getContext,
   getGeneratedSourceByURL,
+  getBlackBoxRanges,
 } from "../../selectors";
 
 // Actions
@@ -72,6 +73,7 @@ class SourcesTree extends Component {
       selectSource: PropTypes.func.isRequired,
       selectedSource: PropTypes.object,
       setExpandedState: PropTypes.func.isRequired,
+      blackBoxRanges: PropTypes.object.isRequired,
       sourceCount: PropTypes.number,
       sources: PropTypes.object.isRequired,
       threads: PropTypes.array.isRequired,
@@ -179,7 +181,9 @@ class SourcesTree extends Component {
       return path;
     }
 
-    const blackBoxedPart = source.isBlackBoxed ? ":blackboxed" : "";
+    const blackBoxedPart = this.props.blackBoxRanges[source.url]
+      ? ":blackboxed"
+      : "";
 
     return `${path}/${source.id}/${blackBoxedPart}`;
   };
@@ -218,19 +222,33 @@ class SourcesTree extends Component {
     return sourceTree.contents;
   };
 
-  getSourcesGroups = item => {
+  getBlackBoxSourcesGroups = item => {
     const sourcesAll = getAllSources(this.props);
     const sourcesInside = getSourcesInsideGroup(item, this.props);
-    const sourcesOuside = sourcesAll.filter(
+    const sourcesOutside = sourcesAll.filter(
       source => !sourcesInside.includes(source)
     );
+    const allInsideBlackBoxed = sourcesInside.every(
+      source => this.props.blackBoxRanges[source.url]
+    );
+    const allOutsideBlackBoxed = sourcesOutside.every(
+      source => this.props.blackBoxRanges[source.url]
+    );
 
-    return { sourcesInside, sourcesOuside };
+    return {
+      sourcesInside,
+      sourcesOutside,
+      allInsideBlackBoxed,
+      allOutsideBlackBoxed,
+    };
   };
 
   renderItem = (item, depth, focused, _, expanded, { setExpanded }) => {
     const { mainThreadHost, projectRoot, threads } = this.props;
-
+    const source = getSource(item, this.props);
+    const isSourceBlackBoxed = source
+      ? this.props.blackBoxRanges[source.url]
+      : null;
     return (
       <SourcesTreeItem
         item={item}
@@ -241,10 +259,11 @@ class SourcesTree extends Component {
         expanded={expanded}
         focusItem={this.onFocus}
         selectItem={this.selectItem}
-        source={getSource(item, this.props)}
+        source={source}
+        isSourceBlackBoxed={isSourceBlackBoxed}
         projectRoot={projectRoot}
         setExpanded={setExpanded}
-        getSourcesGroups={this.getSourcesGroups}
+        getBlackBoxSourcesGroups={this.getBlackBoxSourcesGroups}
       />
     );
   };
@@ -332,6 +351,7 @@ const mapStateToProps = (state, props) => {
     projectRoot: getProjectDirectoryRoot(state),
     sources: displayedSources,
     sourceCount: Object.values(displayedSources).length,
+    blackBoxRanges: getBlackBoxRanges(state),
   };
 };
 

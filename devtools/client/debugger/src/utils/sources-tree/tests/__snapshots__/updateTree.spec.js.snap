@@ -30,7 +30,6 @@ exports[`calls updateTree.js adds one source 1`] = `
                   \\"filename\\": \\"(index)\\"
                 },
                 \\"thread\\": \\"FakeThread\\",
-                \\"isBlackBoxed\\": false,
                 \\"isPrettyPrinted\\": false,
                 \\"relativeUrl\\": \\"https://davidwalsh.name/\\",
                 \\"isWasm\\": false,
@@ -65,7 +64,6 @@ exports[`calls updateTree.js adds one source 1`] = `
                   \\"filename\\": \\"source1.js\\"
                 },
                 \\"thread\\": \\"FakeThread\\",
-                \\"isBlackBoxed\\": false,
                 \\"isPrettyPrinted\\": false,
                 \\"relativeUrl\\": \\"https://davidwalsh.name/source1.js\\",
                 \\"isWasm\\": false,
@@ -129,7 +127,6 @@ exports[`calls updateTree.js adds two sources 1`] = `
                   \\"filename\\": \\"(index)\\"
                 },
                 \\"thread\\": \\"FakeThread\\",
-                \\"isBlackBoxed\\": false,
                 \\"isPrettyPrinted\\": false,
                 \\"relativeUrl\\": \\"https://davidwalsh.name/\\",
                 \\"isWasm\\": false,
@@ -164,7 +161,6 @@ exports[`calls updateTree.js adds two sources 1`] = `
                   \\"filename\\": \\"source1.js\\"
                 },
                 \\"thread\\": \\"FakeThread\\",
-                \\"isBlackBoxed\\": false,
                 \\"isPrettyPrinted\\": false,
                 \\"relativeUrl\\": \\"https://davidwalsh.name/source1.js\\",
                 \\"isWasm\\": false,
@@ -204,7 +200,6 @@ exports[`calls updateTree.js adds two sources 1`] = `
                   \\"filename\\": \\"source2.js\\"
                 },
                 \\"thread\\": \\"FakeThread\\",
-                \\"isBlackBoxed\\": false,
                 \\"isPrettyPrinted\\": false,
                 \\"relativeUrl\\": \\"https://davidwalsh.name/source2.js\\",
                 \\"isWasm\\": false,
@@ -268,7 +263,6 @@ exports[`calls updateTree.js shows all the sources 1`] = `
                   \\"filename\\": \\"(index)\\"
                 },
                 \\"thread\\": \\"FakeThread\\",
-                \\"isBlackBoxed\\": false,
                 \\"isPrettyPrinted\\": false,
                 \\"relativeUrl\\": \\"https://davidwalsh.name/\\",
                 \\"isWasm\\": false,
@@ -303,7 +297,6 @@ exports[`calls updateTree.js shows all the sources 1`] = `
                   \\"filename\\": \\"source1.js\\"
                 },
                 \\"thread\\": \\"FakeThread\\",
-                \\"isBlackBoxed\\": false,
                 \\"isPrettyPrinted\\": false,
                 \\"relativeUrl\\": \\"https://davidwalsh.name/source1.js\\",
                 \\"isWasm\\": false,
@@ -367,7 +360,6 @@ exports[`calls updateTree.js update sources that change their display URL 1`] = 
                   \\"filename\\": \\"(index)\\"
                 },
                 \\"thread\\": \\"FakeThread\\",
-                \\"isBlackBoxed\\": false,
                 \\"isPrettyPrinted\\": false,
                 \\"relativeUrl\\": \\"https://davidwalsh.name/?param\\",
                 \\"isWasm\\": false,

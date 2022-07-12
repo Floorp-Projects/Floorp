@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getSourcesMap, getSelectedSource, getBlackBoxRanges } from "./sources";
+import { getSourcesMap, getSelectedSource } from "./sources";
+import { getBlackBoxRanges } from "./source-blackbox";
 import { getCurrentThreadFrames } from "./pause";
 import { annotateFrames } from "../utils/pause/frames";
 import { isFrameBlackBoxed } from "../utils/source";

@@ -41,6 +41,7 @@ import {
   getEditorWrapping,
   getHighlightedCalls,
   getBlackBoxRanges,
+  isSourceBlackBoxed,
 } from "../../selectors";
 
 // Redux actions
@@ -110,6 +111,7 @@ class Editor extends PureComponent {
     return {
       selectedSource: PropTypes.object,
       selectedSourceTextContent: PropTypes.object,
+      selectedSourceIsBlackBoxed: PropTypes.bool,
       cx: PropTypes.object.isRequired,
       closeTab: PropTypes.func.isRequired,
       toggleBreakpointAtLine: PropTypes.func.isRequired,
@@ -489,7 +491,7 @@ class Editor extends PureComponent {
     }
 
     // if user clicks gutter to set breakpoint on blackboxed source, un-blackbox the source.
-    if (selectedSource?.isBlackBoxed) {
+    if (this.props.selectedSourceIsBlackBoxed) {
       toggleBlackBox(cx, selectedSource);
     }
 
@@ -710,11 +712,11 @@ class Editor extends PureComponent {
   }
 
   render() {
-    const { selectedSource, skipPausing } = this.props;
+    const { selectedSourceIsBlackBoxed, skipPausing } = this.props;
     return (
       <div
         className={classnames("editor-wrapper", {
-          blackboxed: selectedSource?.isBlackBoxed,
+          blackboxed: selectedSourceIsBlackBoxed,
           "skip-pausing": skipPausing,
         })}
         ref={c => (this.$editorWrapper = c)}
@@ -742,6 +744,9 @@ const mapStateToProps = state => {
     selectedLocation: getSelectedLocation(state),
     selectedSource,
     selectedSourceTextContent: getSelectedSourceTextContent(state),
+    selectedSourceIsBlackBoxed: selectedSource
+      ? isSourceBlackBoxed(state, selectedSource)
+      : null,
     searchOn: getActiveSearch(state) === "file",
     conditionalPanelLocation: getConditionalPanelLocation(state),
     symbols: getSymbols(state, selectedSource),

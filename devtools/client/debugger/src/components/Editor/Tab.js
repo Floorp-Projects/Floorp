@@ -29,6 +29,7 @@ import {
   getSelectedSource,
   getActiveSearch,
   getSourcesForTabs,
+  isSourceBlackBoxed,
   getContext,
 } from "../../selectors";
 
@@ -72,6 +73,7 @@ class Tab extends PureComponent {
       togglePrettyPrint,
       selectedSource,
       source,
+      isBlackBoxed,
     } = this.props;
 
     const tabCount = tabSources.length;
@@ -145,7 +147,7 @@ class Tab extends PureComponent {
       {
         item: {
           ...tabMenuItems.toggleBlackBox,
-          label: source.isBlackBoxed
+          label: isBlackBoxed
             ? L10N.getStr("ignoreContextItem.unignore")
             : L10N.getStr("ignoreContextItem.ignore"),
           disabled: !shouldBlackbox(source),
@@ -251,6 +253,7 @@ const mapStateToProps = (state, { source }) => {
     cx: getContext(state),
     tabSources: getSourcesForTabs(state),
     selectedSource,
+    isBlackBoxed: isSourceBlackBoxed(state, source),
     activeSearch: getActiveSearch(state),
   };
 };

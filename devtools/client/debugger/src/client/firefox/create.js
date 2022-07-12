@@ -259,10 +259,6 @@ function createSourceObject({
 
     // True for source map original files, as well as pretty printed sources
     isOriginal,
-
-    // By default set to false for all sources, but may later be toggled to true
-    // if the whole source is blackboxed.
-    isBlackBoxed: false,
   };
 }
 

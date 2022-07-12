@@ -80,17 +80,25 @@ const showSourceMenuItem = (cx, selectedSource, editorActions) => ({
   click: () => editorActions.showSource(cx, selectedSource.id),
 });
 
-const blackBoxMenuItem = (cx, selectedSource, editorActions) => ({
-  id: "node-menu-blackbox",
-  label: selectedSource.isBlackBoxed
-    ? L10N.getStr("ignoreContextItem.unignore")
-    : L10N.getStr("ignoreContextItem.ignore"),
-  accesskey: selectedSource.isBlackBoxed
-    ? L10N.getStr("ignoreContextItem.unignore.accesskey")
-    : L10N.getStr("ignoreContextItem.ignore.accesskey"),
-  disabled: !shouldBlackbox(selectedSource),
-  click: () => editorActions.toggleBlackBox(cx, selectedSource),
-});
+const blackBoxMenuItem = (
+  cx,
+  selectedSource,
+  blackboxedRanges,
+  editorActions
+) => {
+  const isBlackBoxed = !!blackboxedRanges[selectedSource.url];
+  return {
+    id: "node-menu-blackbox",
+    label: isBlackBoxed
+      ? L10N.getStr("ignoreContextItem.unignore")
+      : L10N.getStr("ignoreContextItem.ignore"),
+    accesskey: isBlackBoxed
+      ? L10N.getStr("ignoreContextItem.unignore.accesskey")
+      : L10N.getStr("ignoreContextItem.ignore.accesskey"),
+    disabled: !shouldBlackbox(selectedSource),
+    click: () => editorActions.toggleBlackBox(cx, selectedSource),
+  };
+};
 
 export const blackBoxLineMenuItem = (
   cx,
@@ -126,7 +134,7 @@ export const blackBoxLineMenuItem = (
   // 2) Multiple lines are blackboxed or
   // 3) Multiple lines are selected in the editor
   const shouldDisable =
-    (selectedSource.isBlackBoxed &&
+    (blackboxedRanges[selectedSource.url] &&
       !blackboxedRanges[selectedSource.url].length) ||
     !isSingleLine;
 
@@ -304,7 +312,7 @@ export function editorMenuItems({
     { type: "separator" },
     showSourceMenuItem(cx, selectedSource, editorActions),
     { type: "separator" },
-    blackBoxMenuItem(cx, selectedSource, editorActions)
+    blackBoxMenuItem(cx, selectedSource, blackboxedRanges, editorActions)
   );
 
   if (features.blackboxLines) {
@@ -327,8 +335,10 @@ export function editorMenuItems({
       ? blackboxRange.start.line !== blackboxRange.end.line
       : startLine !== endLine;
 
+    // When the range is defined and is an empty array,
+    // the whole source is blackboxed
     const theWholeSourceIsBlackBoxed =
-      selectedSource.isBlackBoxed &&
+      blackboxedRanges[selectedSource.url] &&
       !blackboxedRanges[selectedSource.url].length;
 
     if (!theWholeSourceIsBlackBoxed) {

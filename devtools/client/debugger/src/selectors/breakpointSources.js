@@ -5,6 +5,7 @@
 import { createSelector } from "reselect";
 import { getSelectedSource, getSourcesMap } from "./sources";
 import { getBreakpointsList } from "./breakpoints";
+import { getBlackBoxRanges } from "./source-blackbox";
 import { getFilename } from "../utils/source";
 import { getSelectedLocation } from "../utils/selected-location";
 import { sortSelectedBreakpoints } from "../utils/breakpoint";
@@ -20,7 +21,12 @@ function _getBreakpointsForSource(visibleBreakpoints, source, selectedSource) {
 
 // Returns a sorted list of sources for which we have breakpoints
 // We will return generated or original source IDs based on the currently selected source.
-const _getSourcesForBreakpoints = (breakpoints, sourcesMap, selectedSource) => {
+const _getSourcesForBreakpoints = (
+  breakpoints,
+  sourcesMap,
+  selectedSource,
+  blackBoxRanges
+) => {
   const breakpointSourceIds = breakpoints.map(
     breakpoint => getSelectedLocation(breakpoint, selectedSource).sourceId
   );
@@ -33,7 +39,7 @@ const _getSourcesForBreakpoints = (breakpoints, sourcesMap, selectedSource) => {
 
     // Ignore any source that is no longer in the sources reducer
     // or blackboxed sources.
-    if (!source || source.isBlackBoxed) {
+    if (!source || blackBoxRanges[source.url]) {
       continue;
     }
 
@@ -64,7 +70,8 @@ export const getBreakpointSources = createSelector(
   getBreakpointsList,
   getSourcesMap,
   getSelectedSource,
-  (breakpoints, sourcesMap, selectedSource) => {
+  getBlackBoxRanges,
+  (breakpoints, sourcesMap, selectedSource, blackBoxRanges) => {
     const visibleBreakpoints = breakpoints.filter(
       bp =>
         !bp.options.hidden &&
@@ -79,7 +86,8 @@ export const getBreakpointSources = createSelector(
     return _getSourcesForBreakpoints(
       sortedVisibleBreakpoints,
       sourcesMap,
-      selectedSource
+      selectedSource,
+      blackBoxRanges
     );
   }
 );

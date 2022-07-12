@@ -393,6 +393,7 @@ function generateDefaults(overrides) {
     setProjectDirectoryRoot: jest.fn(),
     focusItem: jest.fn(),
     projectRoot: "",
+    blackBoxRanges: {},
     threads: [
       {
         name: "FakeThread",

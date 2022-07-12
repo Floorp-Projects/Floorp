@@ -87,15 +87,6 @@ export function initialSourcesState(state) {
      * boolean
      */
     chromeAndExtensionsEnabled: prefs.chromeAndExtensionsEnabled,
-
-    /* FORMAT:
-     * blackboxedRanges: {
-     *  [source url]: [range, range, ...], -- source lines blackboxed
-     *  [source url]: [], -- whole source blackboxed
-     *  ...
-     * }
-     */
-    blackboxedRanges: state?.blackboxedRanges ?? {},
   };
 }
 
@@ -147,16 +138,6 @@ function update(state = initialSourcesState(), action) {
 
       prefs.pendingSelectedLocation = location;
       return { ...state, pendingSelectedLocation: location };
-
-    case "BLACKBOX":
-      if (action.status === "done") {
-        const { blackboxSources } = action.value;
-        state = updateBlackBoxState(state, blackboxSources);
-        // This is always called after `updateBlackBoxState` as the updated
-        // state is used to update the `isBlackBoxed` property on the source.
-        return updateSourcesBlackboxState(state, blackboxSources);
-      }
-      break;
 
     case "SET_PROJECT_DIRECTORY_ROOT":
       const { url, name } = action;
@@ -359,112 +340,6 @@ function updateRootRelativeValues(
   state.sources = newSourceMap;
 
   return state;
-}
-
-/*
- * Update the "isBlackBoxed" property on the source objects
- */
-function updateSourcesBlackboxState(state, blackboxSources) {
-  const newSourceMap = new Map(state.sources);
-  let changed = false;
-  for (const { source } of blackboxSources) {
-    if (!state.sources.has(source.id)) {
-      // TODO: We may want to consider throwing here once we have a better
-      // handle on async action flow control.
-      continue;
-    }
-
-    // The `isBlackBoxed` flag on the source should be `true` when the source still
-    // has blackboxed lines or the whole source is blackboxed.
-    const isBlackBoxed = !!state.blackboxedRanges[source.url];
-    newSourceMap.set(source.id, {
-      ...state.sources.get(source.id),
-      isBlackBoxed,
-    });
-    changed = true;
-  }
-  if (changed) {
-    state.sources = newSourceMap;
-  }
-
-  return state;
-}
-
-function updateBlackboxRangesForSourceUrl(
-  currentRanges,
-  url,
-  shouldBlackBox,
-  newRanges
-) {
-  if (shouldBlackBox) {
-    // If newRanges is an empty array, it would mean we are blackboxing the whole
-    // source. To do that lets reset the content to an empty array.
-    if (!newRanges.length) {
-      currentRanges[url] = [];
-    } else {
-      currentRanges[url] = currentRanges[url] || [];
-      newRanges.forEach(newRange => {
-        // To avoid adding duplicate ranges make sure
-        // no range alredy exists with same start and end lines.
-        const duplicate = currentRanges[url].findIndex(
-          r =>
-            r.start.line == newRange.start.line &&
-            r.end.line == newRange.end.line
-        );
-        if (duplicate !== -1) {
-          return;
-        }
-        // ranges are sorted in asc
-        const index = currentRanges[url].findIndex(
-          range =>
-            range.end.line <= newRange.start.line &&
-            range.end.column <= newRange.start.column
-        );
-        currentRanges[url].splice(index + 1, 0, newRange);
-      });
-    }
-  } else {
-    // if there are no ranges to blackbox, then we are unblackboxing
-    // the whole source
-    if (!newRanges.length) {
-      delete currentRanges[url];
-      return;
-    }
-    // Remove only the lines represented by the ranges provided.
-    newRanges.forEach(newRange => {
-      const index = currentRanges[url].findIndex(
-        range =>
-          range.start.line === newRange.start.line &&
-          range.end.line === newRange.end.line
-      );
-
-      if (index !== -1) {
-        currentRanges[url].splice(index, 1);
-      }
-    });
-
-    // if the last blackboxed line has been removed, unblackbox the source.
-    if (currentRanges[url].length == 0) {
-      delete currentRanges[url];
-    }
-  }
-}
-
-/*
- * Updates the all the state necessary for blackboxing
- *
- */
-function updateBlackBoxState(state, blackboxSources) {
-  const currentRanges = { ...state.blackboxedRanges };
-  blackboxSources.map(({ source, shouldBlackBox, ranges }) =>
-    updateBlackboxRangesForSourceUrl(
-      currentRanges,
-      source.url,
-      shouldBlackBox,
-      ranges
-    )
-  );
-  return { ...state, blackboxedRanges: currentRanges };
 }
 
 export default update;
