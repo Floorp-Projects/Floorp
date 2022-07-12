@@ -461,7 +461,7 @@ class UnitTest(unittest.TestCase):
          "  'type': 'script',"
          "  'script': '//base/base_unittests_script.py',"
          "}}\n"),
-        '/fake_src/out/Default/base_unittests.runtime_deps':
+        '/fake_src/out/Default/base_unittests_script.runtime_deps':
         ("base_unittests\n"
          "base_unittests_script.py\n"),
     }
