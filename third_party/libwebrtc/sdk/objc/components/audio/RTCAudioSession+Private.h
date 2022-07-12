@@ -73,10 +73,10 @@ NS_ASSUME_NONNULL_BEGIN
 /** Returns a configuration error with the given description. */
 - (NSError *)configurationErrorWithDescription:(NSString *)description;
 
-/** Notifies the reciever that a playout glitch was detected. */
+/** Notifies the receiver that a playout glitch was detected. */
 - (void)notifyDidDetectPlayoutGlitch:(int64_t)totalNumberOfGlitches;
 
-/** Notifies the reciever that there was an error when starting an audio unit. */
+/** Notifies the receiver that there was an error when starting an audio unit. */
 - (void)notifyAudioUnitStartFailedWithError:(OSStatus)error;
 
 // Properties and methods for tests.

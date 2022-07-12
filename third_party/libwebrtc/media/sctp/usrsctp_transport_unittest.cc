@@ -36,7 +36,7 @@ static const int kTransport2Port = 5002;
 
 namespace cricket {
 
-// This is essentially a buffer to hold recieved data. It stores only the last
+// This is essentially a buffer to hold received data. It stores only the last
 // received data. Calling OnDataReceived twice overwrites old data with the
 // newer one.
 // TODO(ldixon): Implement constraints, and allow new data to be added to old

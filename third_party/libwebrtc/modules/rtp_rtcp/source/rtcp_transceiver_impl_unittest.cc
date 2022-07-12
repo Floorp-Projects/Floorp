@@ -1408,7 +1408,7 @@ TEST(RtcpTransceiverImplTest, ParsesRemb) {
 }
 
 TEST(RtcpTransceiverImplTest,
-     CombinesReportBlocksFromSenderAndRecieverReports) {
+     CombinesReportBlocksFromSenderAndReceiverReports) {
   MockNetworkLinkRtcpObserver link_observer;
   RtcpTransceiverConfig config = DefaultTestConfig();
   config.network_link_observer = &link_observer;

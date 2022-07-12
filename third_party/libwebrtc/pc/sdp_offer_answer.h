@@ -386,7 +386,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // to the SDP semantics.
   void FillInMissingRemoteMids(cricket::SessionDescription* remote_description);
 
-  // Returns an RtpTransciever, if available, that can be used to receive the
+  // Returns an RtpTransceiver, if available, that can be used to receive the
   // given media type according to JSEP rules.
   rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
   FindAvailableTransceiverToReceive(cricket::MediaType media_type) const;

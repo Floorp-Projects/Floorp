@@ -70,7 +70,7 @@ TEST(VideoStreamTest, ReceivesFramesFromFileBasedStreams) {
   EXPECT_GE(frame_counts[1], expected_counts[1]);
 }
 
-TEST(VideoStreamTest, RecievesVp8SimulcastFrames) {
+TEST(VideoStreamTest, ReceivesVp8SimulcastFrames) {
   TimeDelta kRunTime = TimeDelta::Millis(500);
   int kFrameRate = 30;
 
