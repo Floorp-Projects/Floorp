@@ -6234,9 +6234,19 @@ fn fill_in_missing_keyframe_values(
         return;
     }
 
+    // Use auto for missing keyframes.
+    // FIXME: This may be a spec issue in css-animations-2 because the spec says the default
+    // keyframe-specific composite is replace, but web-animations-1 uses auto. Use auto now so we
+    // use the value of animation-composition of the element, for missing keyframes.
+    // https://github.com/w3c/csswg-drafts/issues/7476
+    let composition = structs::CompositeOperationOrAuto::Auto;
     let keyframe = match offset {
-        Offset::Zero => unsafe { Gecko_GetOrCreateInitialKeyframe(keyframes, timing_function) },
-        Offset::One => unsafe { Gecko_GetOrCreateFinalKeyframe(keyframes, timing_function) },
+        Offset::Zero => unsafe {
+            Gecko_GetOrCreateInitialKeyframe(keyframes, timing_function, composition)
+        },
+        Offset::One => unsafe {
+            Gecko_GetOrCreateFinalKeyframe(keyframes, timing_function, composition)
+        },
     };
 
     // Append properties that have not been set at this offset.
@@ -6261,6 +6271,9 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
     inherited_timing_function: &nsTimingFunction,
     keyframes: &mut nsTArray<structs::Keyframe>,
 ) -> bool {
+    use style::gecko_bindings::structs::CompositeOperationOrAuto;
+    use style::properties::longhands::animation_composition::single_value::computed_value::T as Composition;
+
     debug_assert!(keyframes.len() == 0, "keyframes should be initially empty");
 
     let element = GeckoElement(element);
@@ -6301,13 +6314,22 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
             },
         };
 
-        // Look for an existing keyframe with the same offset and timing
-        // function or else add a new keyframe at the beginning of the keyframe
-        // array.
+        // Override composite operation if the keyframe has an animation-composition.
+        let composition =
+            step.get_animation_composition(&guard)
+                .map_or(CompositeOperationOrAuto::Auto, |val| match val {
+                    Composition::Replace => CompositeOperationOrAuto::Replace,
+                    Composition::Add => CompositeOperationOrAuto::Add,
+                    Composition::Accumulate => CompositeOperationOrAuto::Accumulate,
+                });
+
+        // Look for an existing keyframe with the same offset, timing function, and compsition, or
+        // else add a new keyframe at the beginning of the keyframe array.
         let keyframe = Gecko_GetOrCreateKeyframeAtStart(
             keyframes,
             step.start_percentage.0 as f32,
             &timing_function,
+            composition,
         );
 
         match step.value {

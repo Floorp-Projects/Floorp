@@ -1094,11 +1094,12 @@ enum class KeyframeInsertPosition {
   LastForOffset,
 };
 
-static Keyframe* GetOrCreateKeyframe(nsTArray<Keyframe>* aKeyframes,
-                                     float aOffset,
-                                     const nsTimingFunction* aTimingFunction,
-                                     KeyframeSearchDirection aSearchDirection,
-                                     KeyframeInsertPosition aInsertPosition) {
+static Keyframe* GetOrCreateKeyframe(
+    nsTArray<Keyframe>* aKeyframes, float aOffset,
+    const nsTimingFunction* aTimingFunction,
+    const CompositeOperationOrAuto aComposition,
+    KeyframeSearchDirection aSearchDirection,
+    KeyframeInsertPosition aInsertPosition) {
   MOZ_ASSERT(aKeyframes, "The keyframe array should be valid");
   MOZ_ASSERT(aTimingFunction, "The timing function should be valid");
   MOZ_ASSERT(aOffset >= 0. && aOffset <= 1.,
@@ -1108,14 +1109,15 @@ static Keyframe* GetOrCreateKeyframe(nsTArray<Keyframe>* aKeyframes,
   switch (aSearchDirection) {
     case KeyframeSearchDirection::Forwards:
       if (nsAnimationManager::FindMatchingKeyframe(
-              *aKeyframes, aOffset, *aTimingFunction, keyframeIndex)) {
+              *aKeyframes, aOffset, *aTimingFunction, aComposition,
+              keyframeIndex)) {
         return &(*aKeyframes)[keyframeIndex];
       }
       break;
     case KeyframeSearchDirection::Backwards:
-      if (nsAnimationManager::FindMatchingKeyframe(Reversed(*aKeyframes),
-                                                   aOffset, *aTimingFunction,
-                                                   keyframeIndex)) {
+      if (nsAnimationManager::FindMatchingKeyframe(
+              Reversed(*aKeyframes), aOffset, *aTimingFunction, aComposition,
+              keyframeIndex)) {
         return &(*aKeyframes)[aKeyframes->Length() - 1 - keyframeIndex];
       }
       keyframeIndex = aKeyframes->Length() - 1;
@@ -1128,33 +1130,37 @@ static Keyframe* GetOrCreateKeyframe(nsTArray<Keyframe>* aKeyframes,
   if (!aTimingFunction->IsLinear()) {
     keyframe->mTimingFunction.emplace(*aTimingFunction);
   }
+  keyframe->mComposite = aComposition;
 
   return keyframe;
 }
 
 Keyframe* Gecko_GetOrCreateKeyframeAtStart(
     nsTArray<Keyframe>* aKeyframes, float aOffset,
-    const nsTimingFunction* aTimingFunction) {
+    const nsTimingFunction* aTimingFunction,
+    const CompositeOperationOrAuto aComposition) {
   MOZ_ASSERT(aKeyframes->IsEmpty() ||
                  aKeyframes->ElementAt(0).mOffset.value() >= aOffset,
              "The offset should be less than or equal to the first keyframe's "
              "offset if there are exisiting keyframes");
 
-  return GetOrCreateKeyframe(aKeyframes, aOffset, aTimingFunction,
+  return GetOrCreateKeyframe(aKeyframes, aOffset, aTimingFunction, aComposition,
                              KeyframeSearchDirection::Forwards,
                              KeyframeInsertPosition::Prepend);
 }
 
 Keyframe* Gecko_GetOrCreateInitialKeyframe(
-    nsTArray<Keyframe>* aKeyframes, const nsTimingFunction* aTimingFunction) {
-  return GetOrCreateKeyframe(aKeyframes, 0., aTimingFunction,
+    nsTArray<Keyframe>* aKeyframes, const nsTimingFunction* aTimingFunction,
+    const CompositeOperationOrAuto aComposition) {
+  return GetOrCreateKeyframe(aKeyframes, 0., aTimingFunction, aComposition,
                              KeyframeSearchDirection::Forwards,
                              KeyframeInsertPosition::LastForOffset);
 }
 
 Keyframe* Gecko_GetOrCreateFinalKeyframe(
-    nsTArray<Keyframe>* aKeyframes, const nsTimingFunction* aTimingFunction) {
-  return GetOrCreateKeyframe(aKeyframes, 1., aTimingFunction,
+    nsTArray<Keyframe>* aKeyframes, const nsTimingFunction* aTimingFunction,
+    const CompositeOperationOrAuto aComposition) {
+  return GetOrCreateKeyframe(aKeyframes, 1., aTimingFunction, aComposition,
                              KeyframeSearchDirection::Backwards,
                              KeyframeInsertPosition::LastForOffset);
 }

@@ -64,13 +64,16 @@ class nsAnimationManager final
   template <class IterType, class TimingFunctionType>
   static bool FindMatchingKeyframe(
       IterType&& aIter, double aOffset,
-      const TimingFunctionType& aTimingFunctionToMatch, size_t& aIndex) {
+      const TimingFunctionType& aTimingFunctionToMatch,
+      mozilla::dom::CompositeOperationOrAuto aCompositionToMatch,
+      size_t& aIndex) {
     aIndex = 0;
     for (mozilla::Keyframe& keyframe : aIter) {
       if (keyframe.mOffset.value() != aOffset) {
         break;
       }
-      if (keyframe.mTimingFunction == aTimingFunctionToMatch) {
+      if (keyframe.mTimingFunction == aTimingFunctionToMatch &&
+          keyframe.mComposite == aCompositionToMatch) {
         return true;
       }
       ++aIndex;
