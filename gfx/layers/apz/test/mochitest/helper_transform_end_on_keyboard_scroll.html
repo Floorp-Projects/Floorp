@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/NativeKeyCodes.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+html, body { margin: 0; }
+
+body {
+  height: 10000px;
+}
+</style>
+
+<script>
+async function test() {
+  // Send a native key event which doesn't cause any scroll, so that now
+  // subsequent native key events will be able to be handled by APZ.  See bug
+  // 1774519 about what happens without this event.
+  const UpArrowKeyCode = nativeArrowUpKey();
+  await new Promise(resolve => {
+    synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US,
+      UpArrowKeyCode, {}  /* no modifier */,
+      "", "", resolve); });
+
+  const transformEndPromise = promiseTransformEnd();
+  const DownArrowKeyCode = nativeArrowDownKey();
+  await new Promise(resolve => {
+    synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US,
+      DownArrowKeyCode, {}  /* no modifier */,
+      "", "", resolve); });
+  await transformEndPromise;
+  ok(true, "Got an APZ:TransformEnd ");
+}
+
+if (getPlatform() == "mac" || getPlatform() == "windows") {
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+} else {
+  ok(true, "Skipping test because native key events are not supported on " +
+     getPlatform());
+  subtestDone();
+}
+</script>

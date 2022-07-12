@@ -2006,6 +2006,12 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
         distance, ScrollSource::Keyboard);
 
     CallDispatchScroll(startPoint, endPoint, handoffState);
+    ParentLayerPoint remainingDelta = endPoint - startPoint;
+    if (remainingDelta != delta) {
+      // If any scrolling happened, set KEYBOARD_SCROLL explicitly so that it
+      // will trigger a TransformEnd notification.
+      SetState(KEYBOARD_SCROLL);
+    }
 
     SetState(NOTHING);
 
@@ -2426,7 +2432,14 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
       ParentLayerPoint startPoint = aEvent.mLocalOrigin;
       ParentLayerPoint endPoint = aEvent.mLocalOrigin - delta;
       RecordScrollPayload(aEvent.mTimeStamp);
+
       CallDispatchScroll(startPoint, endPoint, handoffState);
+      ParentLayerPoint remainingDelta = endPoint - startPoint;
+      if (remainingDelta != delta) {
+        // If any scrolling happened, set KEYBOARD_SCROLL explicitly so that it
+        // will trigger a TransformEnd notification.
+        SetState(WHEEL_SCROLL);
+      }
 
       SetState(NOTHING);
 
