@@ -45,7 +45,8 @@ class WebGLParent : public PWebGLParent, public SupportsWeakPtr {
   IPCResult GetFrontBufferSnapshot(webgl::FrontBufferSnapshotIpc* ret,
                                    IProtocol* aProtocol);
   IPCResult RecvGetFrontBufferSnapshot(webgl::FrontBufferSnapshotIpc* ret);
-  IPCResult RecvReadPixels(const webgl::ReadPixelsDesc&, uint64_t byteSize,
+  IPCResult RecvReadPixels(const webgl::ReadPixelsDesc&,
+                           ReadPixelsBuffer&& buffer,
                            webgl::ReadPixelsResultIpc* ret);
 
   // -
