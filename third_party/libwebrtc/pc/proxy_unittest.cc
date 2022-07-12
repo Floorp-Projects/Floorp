@@ -98,7 +98,7 @@ class SignalingProxyTest : public ::testing::Test {
     ASSERT_TRUE(signaling_thread_->Start());
     fake_ = Fake::Create();
     fake_signaling_proxy_ =
-        FakeSignalingProxy::Create(signaling_thread_.get(), fake_.get());
+        FakeSignalingProxy::Create(signaling_thread_.get(), fake_);
   }
 
  protected:
@@ -186,8 +186,8 @@ class ProxyTest : public ::testing::Test {
     ASSERT_TRUE(signaling_thread_->Start());
     ASSERT_TRUE(worker_thread_->Start());
     fake_ = Fake::Create();
-    fake_proxy_ = FakeProxy::Create(signaling_thread_.get(),
-                                    worker_thread_.get(), fake_.get());
+    fake_proxy_ =
+        FakeProxy::Create(signaling_thread_.get(), worker_thread_.get(), fake_);
   }
 
  protected:

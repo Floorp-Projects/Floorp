@@ -227,26 +227,26 @@ class ConstMethodCall : public QueuedTask {
   constexpr char class_name##ProxyWithInternal<INTERNAL_CLASS>::proxy_name_[];
 // clang-format on
 
-#define PRIMARY_PROXY_MAP_BOILERPLATE(class_name)            \
- protected:                                                  \
-  class_name##ProxyWithInternal(rtc::Thread* primary_thread, \
-                                INTERNAL_CLASS* c)           \
-      : primary_thread_(primary_thread), c_(c) {}            \
-                                                             \
- private:                                                    \
+#define PRIMARY_PROXY_MAP_BOILERPLATE(class_name)                     \
+ protected:                                                           \
+  class_name##ProxyWithInternal(rtc::Thread* primary_thread,          \
+                                rtc::scoped_refptr<INTERNAL_CLASS> c) \
+      : primary_thread_(primary_thread), c_(std::move(c)) {}          \
+                                                                      \
+ private:                                                             \
   mutable rtc::Thread* primary_thread_;
 
-#define SECONDARY_PROXY_MAP_BOILERPLATE(class_name)            \
- protected:                                                    \
-  class_name##ProxyWithInternal(rtc::Thread* primary_thread,   \
-                                rtc::Thread* secondary_thread, \
-                                INTERNAL_CLASS* c)             \
-      : primary_thread_(primary_thread),                       \
-        secondary_thread_(secondary_thread),                   \
-        c_(c) {}                                               \
-                                                               \
- private:                                                      \
-  mutable rtc::Thread* primary_thread_;                        \
+#define SECONDARY_PROXY_MAP_BOILERPLATE(class_name)                   \
+ protected:                                                           \
+  class_name##ProxyWithInternal(rtc::Thread* primary_thread,          \
+                                rtc::Thread* secondary_thread,        \
+                                rtc::scoped_refptr<INTERNAL_CLASS> c) \
+      : primary_thread_(primary_thread),                              \
+        secondary_thread_(secondary_thread),                          \
+        c_(std::move(c)) {}                                           \
+                                                                      \
+ private:                                                             \
+  mutable rtc::Thread* primary_thread_;                               \
   mutable rtc::Thread* secondary_thread_;
 
 // Note that the destructor is protected so that the proxy can only be
@@ -284,15 +284,15 @@ class ConstMethodCall : public QueuedTask {
   void DestroyInternal() { delete c_; }                         \
   INTERNAL_CLASS* c_;
 
-#define BEGIN_PRIMARY_PROXY_MAP(class_name)                        \
-  PROXY_MAP_BOILERPLATE(class_name)                                \
-  PRIMARY_PROXY_MAP_BOILERPLATE(class_name)                        \
-  REFCOUNTED_PROXY_MAP_BOILERPLATE(class_name)                     \
- public:                                                           \
-  static rtc::scoped_refptr<class_name##ProxyWithInternal> Create( \
-      rtc::Thread* primary_thread, INTERNAL_CLASS* c) {            \
-    return rtc::make_ref_counted<class_name##ProxyWithInternal>(   \
-        primary_thread, c);                                        \
+#define BEGIN_PRIMARY_PROXY_MAP(class_name)                                \
+  PROXY_MAP_BOILERPLATE(class_name)                                        \
+  PRIMARY_PROXY_MAP_BOILERPLATE(class_name)                                \
+  REFCOUNTED_PROXY_MAP_BOILERPLATE(class_name)                             \
+ public:                                                                   \
+  static rtc::scoped_refptr<class_name##ProxyWithInternal> Create(         \
+      rtc::Thread* primary_thread, rtc::scoped_refptr<INTERNAL_CLASS> c) { \
+    return rtc::make_ref_counted<class_name##ProxyWithInternal>(           \
+        primary_thread, std::move(c));                                     \
   }
 
 #define BEGIN_PROXY_MAP(class_name)                                \
@@ -302,9 +302,9 @@ class ConstMethodCall : public QueuedTask {
  public:                                                           \
   static rtc::scoped_refptr<class_name##ProxyWithInternal> Create( \
       rtc::Thread* primary_thread, rtc::Thread* secondary_thread,  \
-      INTERNAL_CLASS* c) {                                         \
+      rtc::scoped_refptr<INTERNAL_CLASS> c) {                      \
     return rtc::make_ref_counted<class_name##ProxyWithInternal>(   \
-        primary_thread, secondary_thread, c);                      \
+        primary_thread, secondary_thread, std::move(c));           \
   }
 
 #define PROXY_PRIMARY_THREAD_DESTRUCTOR()                            \
