@@ -122,49 +122,9 @@ event.parseModifiers_ = function(modifiers, win) {
  *     "type".
  * @param {Window} win
  *     Window object.
- *
- * @return {boolean} defaultPrevented
  */
 event.synthesizeMouseAtPoint = function(left, top, opts, win) {
   return _getEventUtils(win).synthesizeMouseAtPoint(left, top, opts, win);
-};
-
-/**
- * Synthesise a touch event at a point.
- *
- * If the type is specified in opts, a touch event of that type is
- * fired. Otherwise, a touchstart followed by a touchend is performed.
- *
- * @param {number} left
- *     Offset from viewport left, in CSS pixels
- * @param {number} top
- *     Offset from viewport top, in CSS pixels
- * @param {Object} opts
- *     Object which may contain the properties "id", "rx", "ry", "angle",
- *     "force", "shiftKey", "ctrlKey", "altKey", "metaKey", "accessKey",
- *     "type".
- * @param {Window} win
- *     Window object.
- *
- * @return {boolean} defaultPrevented
- */
-event.synthesizeTouchAtPoint = function(left, top, opts, win) {
-  return _getEventUtils(win).synthesizeTouchAtPoint(left, top, opts, win);
-};
-
-event.synthesizeMultiTouch = function(opts, win) {
-  const modifiers = _getEventUtils(win)._parseModifiers(opts);
-  win.windowUtils.sendTouchEvent(
-    opts.type,
-    opts.id,
-    opts.x,
-    opts.y,
-    opts.rx,
-    opts.ry,
-    opts.angle,
-    opts.force,
-    modifiers
-  );
 };
 
 /**
