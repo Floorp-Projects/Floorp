@@ -51,8 +51,6 @@ class AudioState : public webrtc::AudioState {
     return config_.audio_device_module.get();
   }
 
-  bool typing_noise_detected() const;
-
   void AddReceivingStream(webrtc::AudioReceiveStream* stream);
   void RemoveReceivingStream(webrtc::AudioReceiveStream* stream);
 

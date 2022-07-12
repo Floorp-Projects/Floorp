@@ -472,7 +472,6 @@ TEST(AudioSendStreamTest, GetStats) {
                 stats.apm_statistics.residual_echo_likelihood);
       EXPECT_EQ(kResidualEchoLikelihoodMax,
                 stats.apm_statistics.residual_echo_likelihood_recent_max);
-      EXPECT_FALSE(stats.typing_noise_detected);
     }
   }
 }

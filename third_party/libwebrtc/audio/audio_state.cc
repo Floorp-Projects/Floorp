@@ -50,11 +50,6 @@ AudioTransport* AudioState::audio_transport() {
   return &audio_transport_;
 }
 
-bool AudioState::typing_noise_detected() const {
-  RTC_DCHECK(thread_checker_.IsCurrent());
-  return audio_transport_.typing_noise_detected();
-}
-
 void AudioState::AddReceivingStream(webrtc::AudioReceiveStream* stream) {
   RTC_DCHECK(thread_checker_.IsCurrent());
   RTC_DCHECK_EQ(0, receiving_streams_.count(stream));

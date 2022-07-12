@@ -143,10 +143,7 @@ void ExtractCommonReceiveProperties(const cricket::MediaReceiverInfo& info,
 }
 
 void SetAudioProcessingStats(StatsReport* report,
-                             bool typing_noise_detected,
                              const AudioProcessingStats& apm_stats) {
-  report->AddBoolean(StatsReport::kStatsValueNameTypingNoiseState,
-                     typing_noise_detected);
   if (apm_stats.delay_median_ms) {
     report->AddInt(StatsReport::kStatsValueNameEchoDelayMedian,
                    *apm_stats.delay_median_ms);
@@ -245,8 +242,7 @@ void ExtractStats(const cricket::VoiceSenderInfo& info,
                   bool use_standard_bytes_stats) {
   ExtractCommonSendProperties(info, report, use_standard_bytes_stats);
 
-  SetAudioProcessingStats(report, info.typing_noise_detected,
-                          info.apm_statistics);
+  SetAudioProcessingStats(report, info.apm_statistics);
 
   const FloatForAdd floats[] = {
       {StatsReport::kStatsValueNameTotalAudioEnergy, info.total_input_energy},
@@ -1354,8 +1350,7 @@ void StatsCollector::UpdateReportFromAudioTrack(AudioTrackInterface* track,
     AudioProcessorInterface::AudioProcessorStatistics stats =
         audio_processor->GetStats(has_remote_tracks);
 
-    SetAudioProcessingStats(report, stats.typing_noise_detected,
-                            stats.apm_statistics);
+    SetAudioProcessingStats(report, stats.apm_statistics);
   }
 }
 

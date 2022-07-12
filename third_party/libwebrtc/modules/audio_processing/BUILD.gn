@@ -151,8 +151,6 @@ rtc_library("audio_processing") {
     "gain_control_impl.cc",
     "gain_control_impl.h",
     "render_queue_item_verifier.h",
-    "typing_detection.cc",
-    "typing_detection.h",
   ]
 
   defines = []
