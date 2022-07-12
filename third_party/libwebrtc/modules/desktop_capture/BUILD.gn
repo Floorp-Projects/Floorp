@@ -564,6 +564,8 @@ rtc_library("desktop_capture_generic") {
       "linux/wayland/scoped_glib.h",
       "linux/wayland/screencast_portal.cc",
       "linux/wayland/screencast_portal.h",
+      "linux/wayland/screencast_stream_utils.cc",
+      "linux/wayland/screencast_stream_utils.h",
       "linux/wayland/shared_screencast_stream.cc",
       "linux/wayland/shared_screencast_stream.h",
       "linux/wayland/xdg_desktop_portal_utils.cc",

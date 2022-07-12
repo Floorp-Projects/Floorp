@@ -29,6 +29,7 @@ class RTC_EXPORT SharedScreenCastStream
  public:
   static rtc::scoped_refptr<SharedScreenCastStream> CreateDefault();
 
+  bool StartScreenCastStream(uint32_t stream_node_id);
   bool StartScreenCastStream(uint32_t stream_node_id, int fd);
   void StopScreenCastStream();
 

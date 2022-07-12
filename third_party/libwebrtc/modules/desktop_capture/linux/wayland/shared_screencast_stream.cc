@@ -12,25 +12,18 @@
 
 #include <libdrm/drm_fourcc.h>
 #include <pipewire/pipewire.h>
-#include <spa/param/format-utils.h>
-#include <spa/param/props.h>
 #include <spa/param/video/format-utils.h>
-#include <spa/utils/result.h>
 #include <sys/mman.h>
 
-#include <string>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 #include "absl/memory/memory.h"
 #include "modules/desktop_capture/linux/wayland/egl_dmabuf.h"
+#include "modules/desktop_capture/linux/wayland/screencast_stream_utils.h"
 #include "modules/desktop_capture/screen_capture_frame_queue.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/sanitizer.h"
-#include "rtc_base/string_encode.h"
-#include "rtc_base/string_to_number.h"
 #include "rtc_base/synchronization/mutex.h"
 
 #if defined(WEBRTC_DLOPEN_PIPEWIRE)
@@ -50,109 +43,15 @@ const char kPipeWireLib[] = "libpipewire-0.3.so.0";
 const char kDrmLib[] = "libdrm.so.2";
 #endif
 
-#if !PW_CHECK_VERSION(0, 3, 29)
-#define SPA_POD_PROP_FLAG_MANDATORY (1u << 3)
-#endif
-#if !PW_CHECK_VERSION(0, 3, 33)
-#define SPA_POD_PROP_FLAG_DONT_FIXATE (1u << 4)
-#endif
-
 constexpr int kCursorBpp = 4;
 constexpr int CursorMetaSize(int w, int h) {
   return (sizeof(struct spa_meta_cursor) + sizeof(struct spa_meta_bitmap) +
           w * h * kCursorBpp);
 }
 
-struct PipeWireVersion {
-  int major = 0;
-  int minor = 0;
-  int micro = 0;
-};
-
 constexpr PipeWireVersion kDmaBufMinVersion = {0, 3, 24};
 constexpr PipeWireVersion kDmaBufModifierMinVersion = {0, 3, 33};
 constexpr PipeWireVersion kDropSingleModifierMinVersion = {0, 3, 40};
-
-PipeWireVersion ParsePipeWireVersion(const char* version) {
-  std::vector<std::string> parsed_version;
-  rtc::split(version, '.', &parsed_version);
-
-  if (parsed_version.size() != 3) {
-    return {};
-  }
-
-  absl::optional<int> major = rtc::StringToNumber<int>(parsed_version.at(0));
-  absl::optional<int> minor = rtc::StringToNumber<int>(parsed_version.at(1));
-  absl::optional<int> micro = rtc::StringToNumber<int>(parsed_version.at(2));
-
-  // Return invalid version if we failed to parse it
-  if (!major || !minor || !micro) {
-    return {0, 0, 0};
-  }
-
-  return {major.value(), micro.value(), micro.value()};
-}
-
-spa_pod* BuildFormat(spa_pod_builder* builder,
-                     uint32_t format,
-                     const std::vector<uint64_t>& modifiers) {
-  bool first = true;
-  spa_pod_frame frames[2];
-  spa_rectangle pw_min_screen_bounds = spa_rectangle{1, 1};
-  spa_rectangle pw_max_screen_bounds = spa_rectangle{UINT32_MAX, UINT32_MAX};
-
-  spa_pod_builder_push_object(builder, &frames[0], SPA_TYPE_OBJECT_Format,
-                              SPA_PARAM_EnumFormat);
-  spa_pod_builder_add(builder, SPA_FORMAT_mediaType,
-                      SPA_POD_Id(SPA_MEDIA_TYPE_video), 0);
-  spa_pod_builder_add(builder, SPA_FORMAT_mediaSubtype,
-                      SPA_POD_Id(SPA_MEDIA_SUBTYPE_raw), 0);
-  spa_pod_builder_add(builder, SPA_FORMAT_VIDEO_format, SPA_POD_Id(format), 0);
-
-  if (modifiers.size()) {
-    if (modifiers.size() == 1 && modifiers[0] == DRM_FORMAT_MOD_INVALID) {
-      spa_pod_builder_prop(builder, SPA_FORMAT_VIDEO_modifier,
-                           SPA_POD_PROP_FLAG_MANDATORY);
-      spa_pod_builder_long(builder, modifiers[0]);
-    } else {
-      spa_pod_builder_prop(
-          builder, SPA_FORMAT_VIDEO_modifier,
-          SPA_POD_PROP_FLAG_MANDATORY | SPA_POD_PROP_FLAG_DONT_FIXATE);
-      spa_pod_builder_push_choice(builder, &frames[1], SPA_CHOICE_Enum, 0);
-
-      // modifiers from the array
-      for (int64_t val : modifiers) {
-        spa_pod_builder_long(builder, val);
-        // Add the first modifier twice as the very first value is the default
-        // option
-        if (first) {
-          spa_pod_builder_long(builder, val);
-          first = false;
-        }
-      }
-      spa_pod_builder_pop(builder, &frames[1]);
-    }
-  }
-
-  spa_pod_builder_add(
-      builder, SPA_FORMAT_VIDEO_size,
-      SPA_POD_CHOICE_RANGE_Rectangle(
-          &pw_min_screen_bounds, &pw_min_screen_bounds, &pw_max_screen_bounds),
-      0);
-
-  return static_cast<spa_pod*>(spa_pod_builder_pop(builder, &frames[0]));
-}
-
-class PipeWireThreadLoopLock {
- public:
-  explicit PipeWireThreadLoopLock(pw_thread_loop* loop) : loop_(loop) {
-    pw_thread_loop_lock(loop_);
-  }
-  ~PipeWireThreadLoopLock() { pw_thread_loop_unlock(loop_); }
-
- private:
-  pw_thread_loop* const loop_;
-};
 
 class ScopedBuf {
  public:
@@ -260,32 +159,6 @@ class SharedScreenCastStreamPrivate {
   static void OnRenegotiateFormat(void* data, uint64_t);
 };
 
-bool operator>=(const PipeWireVersion& current_pw_version,
-                const PipeWireVersion& required_pw_version) {
-  if (!current_pw_version.major && !current_pw_version.minor &&
-      !current_pw_version.micro) {
-    return false;
-  }
-
-  return std::tie(current_pw_version.major, current_pw_version.minor,
-                  current_pw_version.micro) >=
-         std::tie(required_pw_version.major, required_pw_version.minor,
-                  required_pw_version.micro);
-}
-
-bool operator<=(const PipeWireVersion& current_pw_version,
-                const PipeWireVersion& required_pw_version) {
-  if (!current_pw_version.major && !current_pw_version.minor &&
-      !current_pw_version.micro) {
-    return false;
-  }
-
-  return std::tie(current_pw_version.major, current_pw_version.minor,
-                  current_pw_version.micro) <=
-         std::tie(required_pw_version.major, required_pw_version.minor,
-                  required_pw_version.micro);
-}
-
 void SharedScreenCastStreamPrivate::OnCoreError(void* data,
                                                 uint32_t id,
                                                 int seq,
@@ -304,7 +177,7 @@ void SharedScreenCastStreamPrivate::OnCoreInfo(void* data,
       static_cast<SharedScreenCastStreamPrivate*>(data);
   RTC_DCHECK(stream);
 
-  stream->pw_server_version_ = ParsePipeWireVersion(info->version);
+  stream->pw_server_version_ = PipeWireVersion::Parse(info->version);
 }
 
 void SharedScreenCastStreamPrivate::OnCoreDone(void* data,
@@ -457,9 +330,11 @@ void SharedScreenCastStreamPrivate::OnRenegotiateFormat(void* data, uint64_t) {
     for (uint32_t format : {SPA_VIDEO_FORMAT_BGRA, SPA_VIDEO_FORMAT_RGBA,
                             SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
       if (!that->modifiers_.empty()) {
-        params.push_back(BuildFormat(&builder, format, that->modifiers_));
+        params.push_back(BuildFormat(&builder, format, that->modifiers_,
+                                     /*resolution=*/nullptr));
       }
-      params.push_back(BuildFormat(&builder, format, /*modifiers=*/{}));
+      params.push_back(BuildFormat(&builder, format, /*modifiers=*/{},
+                                   /*resolution=*/nullptr));
     }
 
     pw_stream_update_params(that->pw_stream_, params.data(), params.size());
@@ -530,7 +405,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
     return false;
   }
 
-  pw_client_version_ = ParsePipeWireVersion(pw_get_library_version());
+  pw_client_version_ = PipeWireVersion::Parse(pw_get_library_version());
 
   // Initialize event handlers, remote end and stream-related.
   pw_core_events_.version = PW_VERSION_CORE_EVENTS;
@@ -546,7 +421,12 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
   {
     PipeWireThreadLoopLock thread_loop_lock(pw_main_loop_);
 
-    pw_core_ = pw_context_connect_fd(pw_context_, pw_fd_, nullptr, 0);
+    if (!pw_fd_) {
+      pw_core_ = pw_context_connect(pw_context_, nullptr, 0);
+    } else {
+      pw_core_ = pw_context_connect_fd(pw_context_, pw_fd_, nullptr, 0);
+    }
+
     if (!pw_core_) {
       RTC_LOG(LS_ERROR) << "Failed to connect PipeWire context";
       return false;
@@ -590,11 +470,13 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
         modifiers_ = egl_dmabuf_->QueryDmaBufModifiers(format);
 
         if (!modifiers_.empty()) {
-          params.push_back(BuildFormat(&builder, format, modifiers_));
+          params.push_back(BuildFormat(&builder, format, modifiers_,
+                                       /*resolution=*/nullptr));
         }
       }
 
-      params.push_back(BuildFormat(&builder, format, /*modifiers=*/{}));
+      params.push_back(BuildFormat(&builder, format, /*modifiers=*/{},
+                                   /*resolution=*/nullptr));
     }
 
     if (pw_stream_connect(pw_stream_, PW_DIRECTION_INPUT, pw_stream_node_id_,
@@ -735,6 +617,7 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
   if (!src) {
     return;
   }
+
   struct spa_meta_region* video_metadata =
       static_cast<struct spa_meta_region*>(spa_buffer_find_meta_data(
           spa_buffer, SPA_META_VideoCrop, sizeof(*video_metadata)));
@@ -843,6 +726,10 @@ rtc::scoped_refptr<SharedScreenCastStream>
 SharedScreenCastStream::CreateDefault() {
   // Explicit new, to access non-public constructor.
   return rtc::scoped_refptr(new SharedScreenCastStream());
+}
+
+bool SharedScreenCastStream::StartScreenCastStream(uint32_t stream_node_id) {
+  return private_->StartScreenCastStream(stream_node_id, 0);
 }
 
 bool SharedScreenCastStream::StartScreenCastStream(uint32_t stream_node_id,
