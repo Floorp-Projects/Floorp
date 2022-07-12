@@ -149,6 +149,15 @@ class RTC_EXPORT NetworkManager : public DefaultLocalAddressProvider,
   // It makes sure that repeated calls return the same object for a
   // given network, so that quality is tracked appropriately. Does not
   // include ignored networks.
+  virtual std::vector<const Network*> GetNetworks() const {
+    std::vector<Network*> networks;
+    std::vector<const Network*> const_networks;
+    GetNetworks(&networks);
+    const_networks.insert(const_networks.begin(), networks.begin(),
+                          networks.end());
+    return const_networks;
+  }
+  // TODO(bugs.webrtc.org/13869): Delete this overload.
   virtual void GetNetworks(NetworkList* networks) const = 0;
 
   // Returns the current permission state of GetNetworks().
@@ -163,6 +172,15 @@ class RTC_EXPORT NetworkManager : public DefaultLocalAddressProvider,
   // can optionally be called after GetNetworks.
   //
   // TODO(guoweis): remove this body when chromium implements this.
+  virtual std::vector<const Network*> GetAnyAddressNetworks() {
+    std::vector<Network*> networks;
+    std::vector<const Network*> const_networks;
+    GetAnyAddressNetworks(&networks);
+    const_networks.insert(const_networks.begin(), networks.begin(),
+                          networks.end());
+    return const_networks;
+  }
+  // TODO(bugs.webrtc.org/13869): Delete this overload.
   virtual void GetAnyAddressNetworks(NetworkList* networks) {}
 
   // Dumps the current list of networks in the network manager.
@@ -365,12 +383,14 @@ class RTC_EXPORT Network {
   ~Network();
 
   // This signal is fired whenever type() or underlying_type_for_vpn() changes.
-  sigslot::signal1<const Network*> SignalTypeChanged;
+  // Mutable, to support connecting on the const Network passed to cricket::Port
+  // constructor.
+  mutable sigslot::signal1<const Network*> SignalTypeChanged;
 
   // This signal is fired whenever network preference changes.
   sigslot::signal1<const Network*> SignalNetworkPreferenceChanged;
 
-  const DefaultLocalAddressProvider* default_local_address_provider() {
+  const DefaultLocalAddressProvider* default_local_address_provider() const {
     return default_local_address_provider_;
   }
   void set_default_local_address_provider(

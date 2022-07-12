@@ -136,7 +136,7 @@ class TestPort : public Port {
   TestPort(rtc::Thread* thread,
            const std::string& type,
            rtc::PacketSocketFactory* factory,
-           rtc::Network* network,
+           const rtc::Network* network,
            uint16_t min_port,
            uint16_t max_port,
            const std::string& username_fragment,
@@ -786,7 +786,7 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     return port;
   }
   // Overload to create a test port given an rtc::Network directly.
-  std::unique_ptr<TestPort> CreateTestPort(rtc::Network* network,
+  std::unique_ptr<TestPort> CreateTestPort(const rtc::Network* network,
                                            const std::string& username,
                                            const std::string& password) {
     auto port = std::make_unique<TestPort>(&main_, "test", &socket_factory_,
@@ -2106,7 +2106,7 @@ TEST_F(PortTest, TestNetworkInfoAttribute) {
   rport->SetIceTiebreaker(kTiebreaker2);
 
   uint16_t lnetwork_id = 9;
-  lport->Network()->set_id(lnetwork_id);
+  test_network->set_id(lnetwork_id);
   // Send a fake ping from lport to rport.
   lport->PrepareAddress();
   rport->PrepareAddress();
@@ -2127,7 +2127,7 @@ TEST_F(PortTest, TestNetworkInfoAttribute) {
   // Send a fake ping from rport to lport.
   test_network->set_type(rtc::ADAPTER_TYPE_CELLULAR);
   uint16_t rnetwork_id = 8;
-  rport->Network()->set_id(rnetwork_id);
+  test_network->set_id(rnetwork_id);
   Connection* rconn =
       rport->CreateConnection(lport->Candidates()[0], Port::ORIGIN_MESSAGE);
   rconn->Ping(0);

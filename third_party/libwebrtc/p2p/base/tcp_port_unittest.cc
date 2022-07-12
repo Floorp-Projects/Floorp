@@ -85,7 +85,7 @@ class TCPPortTest : public ::testing::Test, public sigslot::has_slots<> {
                         username_, password_, true));
   }
 
-  std::unique_ptr<TCPPort> CreateTCPPort(rtc::Network* network) {
+  std::unique_ptr<TCPPort> CreateTCPPort(const rtc::Network* network) {
     return std::unique_ptr<TCPPort>(TCPPort::Create(
         &main_, &socket_factory_, network, 0, 0, username_, password_, true));
   }

@@ -31,7 +31,7 @@ class TestUDPPort : public UDPPort {
  public:
   static TestUDPPort* Create(rtc::Thread* thread,
                              rtc::PacketSocketFactory* factory,
-                             rtc::Network* network,
+                             const rtc::Network* network,
                              uint16_t min_port,
                              uint16_t max_port,
                              const std::string& username,
@@ -50,7 +50,7 @@ class TestUDPPort : public UDPPort {
  protected:
   TestUDPPort(rtc::Thread* thread,
               rtc::PacketSocketFactory* factory,
-              rtc::Network* network,
+              const rtc::Network* network,
               uint16_t min_port,
               uint16_t max_port,
               const std::string& username,
