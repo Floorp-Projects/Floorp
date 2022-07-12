@@ -11,6 +11,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/ipc/Shmem.h"
 #include <vector>
 
 namespace mozilla {
@@ -23,6 +24,10 @@ class WebGLRenderbufferJS;
 class WebGLTextureJS;
 class WebGLUniformLocationJS;
 class WebGLVertexArrayJS;
+
+namespace ipc {
+class ActorLifecycleProxy;
+}
 
 namespace layers {
 class SurfaceDescriptor;
@@ -68,6 +73,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   RefPtr<WebGLFramebufferJS> mFramebuffer;
   RefPtr<WebGLTextureJS> mTex;
   RefPtr<DrawTargetSkia> mSkia;
+  // The Shmem backing the Skia DT, if applicable.
+  mozilla::ipc::Shmem mShmem;
   // The currently cached snapshot of the WebGL context
   RefPtr<DataSourceSurface> mSnapshot;
   // Whether or not the Skia target has valid contents and is being drawn to
@@ -198,6 +205,10 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     // A memory pressure event may signal from another thread that caches should
     // be cleared if possible.
     Atomic<bool> mShouldClearCaches;
+    // Whether the Shmem is currently being processed by the remote side. If so,
+    // we need to wait for processing to complete before any further commands
+    // modifying the Skia DT can proceed.
+    bool mWaitForShmem = false;
 
     const Matrix& GetTransform() const { return mCurrentTarget->mTransform; }
 
@@ -272,6 +283,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     void ClearAllTextures();
     void ClearEmptyTextureMemory();
     void ClearCachesIfNecessary();
+
+    void WaitForShmem();
   };
 
   RefPtr<SharedContext> mSharedContext;
@@ -432,7 +445,14 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   void FlattenSkia();
   bool FlushFromSkia();
 
+  void WaitForShmem() {
+    if (mSharedContext->mWaitForShmem) {
+      mSharedContext->WaitForShmem();
+    }
+  }
+
   void MarkSkiaChanged() {
+    WaitForShmem();
     if (!mSkiaValid) {
       ReadIntoSkia();
     } else if (mSkiaLayer) {

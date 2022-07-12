@@ -188,6 +188,20 @@ IPCResult WebGLParent::RecvReadPixels(const webgl::ReadPixelsDesc& desc,
   return IPC_OK();
 }
 
+IPCResult WebGLParent::RecvReadPixels(const webgl::ReadPixelsDesc& desc,
+                                      mozilla::ipc::Shmem&& shmem,
+                                      webgl::ReadPixelsResultIpc* const ret) {
+  AUTO_PROFILER_LABEL("WebGLParent::RecvReadPixelsIntoShmem", GRAPHICS);
+  *ret = {};
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+  const auto range = shmem.Range<uint8_t>();
+  const auto res = mHost->ReadPixelsInto(desc, range);
+  *ret = {res, {}};
+  return IPC_OK();
+}
+
 // -
 
 IPCResult WebGLParent::RecvCheckFramebufferStatus(GLenum target,

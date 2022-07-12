@@ -1054,6 +1054,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   RefPtr<gfx::DataSourceSurface> BackBufferSnapshot();
   [[nodiscard]] bool DoReadPixels(const webgl::ReadPixelsDesc&,
                                   Range<uint8_t>) const;
+  [[nodiscard]] bool DoReadPixels(const webgl::ReadPixelsDesc&,
+                                  const mozilla::ipc::Shmem&) const;
   uvec2 DrawingBufferSize();
 
   // -
@@ -1555,7 +1557,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   // Primitive tex upload functions
   void RawTexImage(uint32_t level, GLenum respecFormat, uvec3 offset,
                    const webgl::PackingInfo& pi,
-                   const webgl::TexUnpackBlobDesc&) const;
+                   webgl::TexUnpackBlobDesc&&) const;
   void TexImage(uint8_t funcDims, GLenum target, GLint level,
                 GLenum respecFormat, const ivec3& offset,
                 const Maybe<ivec3>& size, GLint border,
