@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
-import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.navigation.fragment.findNavController
 import mozilla.components.concept.base.crash.Breadcrumb
 import org.mozilla.fenix.NavHostActivity
@@ -25,7 +24,7 @@ val Fragment.requireComponents: Components
     get() = requireContext().components
 
 fun Fragment.nav(@IdRes id: Int?, directions: NavDirections, options: NavOptions? = null) {
-    findNavController(this).nav(id, directions, options)
+    findNavController().nav(id, directions, options)
 }
 
 fun Fragment.getPreferenceKey(@StringRes resourceId: Int): String = getString(resourceId)
