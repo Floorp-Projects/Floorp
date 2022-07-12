@@ -40,17 +40,6 @@ class Clock;
 
 class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
  public:
-  // TODO(bugs.webrtc.org/13417): Remove when downstream usage is gone.
-  ABSL_DEPRECATED("Use the other version instead.")
-  TaskQueuePacedSender(
-      Clock* clock,
-      PacingController::PacketSender* packet_sender,
-      RtcEventLog* event_log,
-      const WebRtcKeyValueConfig* field_trials,
-      TaskQueueFactory* task_queue_factory,
-      TimeDelta max_hold_back_window = PacingController::kMinSleepTime,
-      int max_hold_back_window_in_packets = -1);
-
   // The `hold_back_window` parameter sets a lower bound on time to sleep if
   // there is currently a pacer queue and packets can't immediately be
   // processed. Increasing this reduces thread wakeups at the expense of higher
