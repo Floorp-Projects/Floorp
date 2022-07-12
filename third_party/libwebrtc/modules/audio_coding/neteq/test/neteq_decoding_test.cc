@@ -225,7 +225,6 @@ void NetEqDecodingTest::WrapTest(uint16_t start_seq_no,
 
   // Insert speech for 2 seconds.
   const int kSpeechDurationMs = 2000;
-  int packets_inserted = 0;
   uint16_t last_seq_no;
   uint32_t last_timestamp;
   bool timestamp_wrapped = false;
@@ -240,7 +239,6 @@ void NetEqDecodingTest::WrapTest(uint16_t start_seq_no,
       if (drop_seq_numbers.find(seq_no) == drop_seq_numbers.end()) {
         // This sequence number was not in the set to drop. Insert it.
         ASSERT_EQ(0, neteq_->InsertPacket(rtp_info, payload));
-        ++packets_inserted;
       }
       NetEqNetworkStatistics network_stats;
       ASSERT_EQ(0, neteq_->NetworkStatistics(&network_stats));
