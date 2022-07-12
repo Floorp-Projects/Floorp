@@ -363,10 +363,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
   // Perform expensive psnr and ssim calculations while not holding lock.
   double psnr = -1.0;
   double ssim = -1.0;
-  // TODO(brandtr): Remove `heavy_metrics_computation_enabled` when downstream
-  // has been updated.
-  if ((options_.heavy_metrics_computation_enabled || options_.compute_psnr ||
-       options_.compute_ssim) &&
+  if ((options_.compute_psnr || options_.compute_ssim) &&
       comparison.captured.has_value() && comparison.rendered.has_value()) {
     rtc::scoped_refptr<I420BufferInterface> reference_buffer =
         comparison.captured->video_frame_buffer()->ToI420();
