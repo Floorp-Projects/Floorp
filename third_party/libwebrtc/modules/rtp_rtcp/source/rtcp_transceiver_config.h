@@ -97,6 +97,9 @@ class RtpStreamRtcpHandler {
     int last_clock_rate_ = 90'000;
   };
   virtual RtpStats SentStats() = 0;
+
+  virtual void OnNack(uint32_t sender_ssrc,
+                      rtc::ArrayView<const uint16_t> sequence_numbers) {}
 };
 
 struct RtcpTransceiverConfig {

@@ -351,10 +351,34 @@ void RtcpTransceiverImpl::HandlePayloadSpecificFeedback(
 void RtcpTransceiverImpl::HandleRtpFeedback(
     const rtcp::CommonHeader& rtcp_packet_header,
     Timestamp now) {
-  // Transport feedback is the only message handled right now.
-  if (rtcp_packet_header.fmt() !=
-          rtcp::TransportFeedback::kFeedbackMessageType ||
-      config_.network_link_observer == nullptr) {
+  switch (rtcp_packet_header.fmt()) {
+    case rtcp::Nack::kFeedbackMessageType:
+      HandleNack(rtcp_packet_header);
+      break;
+    case rtcp::TransportFeedback::kFeedbackMessageType:
+      HandleTransportFeedback(rtcp_packet_header, now);
+      break;
+  }
+}
+
+void RtcpTransceiverImpl::HandleNack(
+    const rtcp::CommonHeader& rtcp_packet_header) {
+  rtcp::Nack nack;
+  if (local_senders_.empty() || !nack.Parse(rtcp_packet_header)) {
+    return;
+  }
+  auto it = local_senders_by_ssrc_.find(nack.media_ssrc());
+  if (it != local_senders_by_ssrc_.end()) {
+    it->second->handler->OnNack(nack.sender_ssrc(), nack.packet_ids());
+  }
+}
+
+void RtcpTransceiverImpl::HandleTransportFeedback(
+    const rtcp::CommonHeader& rtcp_packet_header,
+    Timestamp now) {
+  RTC_DCHECK_EQ(rtcp_packet_header.fmt(),
+                rtcp::TransportFeedback::kFeedbackMessageType);
+  if (config_.network_link_observer == nullptr) {
     return;
   }
   rtcp::TransportFeedback feedback;
