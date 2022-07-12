@@ -55,7 +55,7 @@ class MAYBE_FileRotatingStreamTest : public ::testing::Test {
     // Append per-test output path in order to run within gtest parallel.
     dir_path_.append(dir_name.begin(), dir_name.end());
     if (ensure_trailing_delimiter) {
-      dir_path_.append(webrtc::test::kPathDelimiter);
+      dir_path_.append(std::string(webrtc::test::kPathDelimiter));
     }
     ASSERT_TRUE(webrtc::test::CreateDir(dir_path_));
     stream_.reset(new FileRotatingStream(dir_path_, file_prefix, max_file_size,
@@ -192,7 +192,8 @@ TEST_F(MAYBE_FileRotatingStreamTest, WriteWithoutDelimiterAndRead) {
   // Reopen for read.
   std::string expected_contents("bbccd");
   VerifyStreamRead(expected_contents.c_str(), expected_contents.size(),
-                   dir_path_ + webrtc::test::kPathDelimiter, kFilePrefix);
+                   dir_path_ + std::string(webrtc::test::kPathDelimiter),
+                   kFilePrefix);
 }
 
 // Tests that a write operation followed by a read (without trailing delimiter)
@@ -262,7 +263,7 @@ class MAYBE_CallSessionFileRotatingStreamTest : public ::testing::Test {
 
     // Append per-test output path in order to run within gtest parallel.
     dir_path_.append(dir_name.begin(), dir_name.end());
-    dir_path_.append(webrtc::test::kPathDelimiter);
+    dir_path_.append(std::string(webrtc::test::kPathDelimiter));
     ASSERT_TRUE(webrtc::test::CreateDir(dir_path_));
     stream_.reset(
         new CallSessionFileRotatingStream(dir_path_, max_total_log_size));
