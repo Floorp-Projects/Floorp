@@ -48,6 +48,8 @@ class ToastNotificationHandler final
 
   void UnregisterHandler();
 
+  nsresult CreateToastXmlString(const nsAString& aImageURL, nsAString& aString);
+
  protected:
   virtual ~ToastNotificationHandler();
 
@@ -91,8 +93,7 @@ class ToastNotificationHandler final
   void SendFinished();
 
   bool CreateWindowsNotificationFromXml(IXmlDocument* aToastXml);
-  Microsoft::WRL::ComPtr<IXmlDocument> InitializeXmlForTemplate(
-      ToastTemplateType templateType);
+  Microsoft::WRL::ComPtr<IXmlDocument> CreateToastXmlDocument();
 
   HRESULT OnActivate(IToastNotification* notification,
                      IInspectable* inspectable);
