@@ -159,10 +159,17 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   nsAutoString hostPort;
   MOZ_TRY(aAlert->GetSource(hostPort));
 
+  bool requireInteraction;
+  MOZ_TRY(aAlert->GetRequireInteraction(&requireInteraction));
+
+  nsTArray<RefPtr<nsIAlertAction>> actions;
+  MOZ_TRY(aAlert->GetActions(actions));
+
   RefPtr<ToastNotificationHandler> oldHandler = mActiveHandlers.Get(name);
 
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
-      this, aAlertListener, name, cookie, title, text, hostPort, textClickable);
+      this, aAlertListener, name, cookie, title, text, hostPort, textClickable,
+      requireInteraction, actions);
   mActiveHandlers.InsertOrUpdate(name, RefPtr{handler});
 
   nsresult rv = handler->InitAlertAsync(aAlert);
@@ -203,8 +210,15 @@ ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
   nsAutoString hostPort;
   MOZ_TRY(aAlert->GetSource(hostPort));
 
+  bool requireInteraction;
+  MOZ_TRY(aAlert->GetRequireInteraction(&requireInteraction));
+
+  nsTArray<RefPtr<nsIAlertAction>> actions;
+  MOZ_TRY(aAlert->GetActions(actions));
+
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
-      this, nullptr /* aAlertListener */, name, cookie, title, text, hostPort, textClickable);
+      this, nullptr /* aAlertListener */, name, cookie, title, text, hostPort,
+      textClickable, requireInteraction, actions);
 
   nsAutoString imageURL;
   MOZ_TRY(aAlert->GetImageURL(imageURL));

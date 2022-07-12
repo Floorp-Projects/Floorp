@@ -30,7 +30,8 @@ class ToastNotificationHandler final
                            nsIObserver* aAlertListener, const nsAString& aName,
                            const nsAString& aCookie, const nsAString& aTitle,
                            const nsAString& aMsg, const nsAString& aHostPort,
-                           bool aClickable)
+                           bool aClickable, bool aRequireInteraction,
+                           const nsTArray<RefPtr<nsIAlertAction>>& aActions)
       : mBackend(backend),
         mHasImage(false),
         mAlertListener(aAlertListener),
@@ -40,6 +41,8 @@ class ToastNotificationHandler final
         mMsg(aMsg),
         mHostPort(aHostPort),
         mClickable(aClickable),
+        mRequireInteraction(aRequireInteraction),
+        mActions(aActions.Clone()),
         mSentFinished(!aAlertListener) {}
 
   nsresult InitAlertAsync(nsIAlertNotification* aAlert);
@@ -84,6 +87,8 @@ class ToastNotificationHandler final
   nsString mMsg;
   nsString mHostPort;
   bool mClickable;
+  bool mRequireInteraction;
+  nsTArray<RefPtr<nsIAlertAction>> mActions;
   bool mSentFinished;
 
   nsresult TryShowAlert();

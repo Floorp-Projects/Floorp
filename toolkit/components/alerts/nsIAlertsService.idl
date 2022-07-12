@@ -35,6 +35,28 @@ interface nsIAlertNotificationImageListener : nsISupports
   void onImageMissing(in nsISupports aUserData);
 };
 
+[scriptable, uuid(a054c2c9-2787-4686-859c-45609d790056)]
+interface nsIAlertAction : nsISupports
+{
+  /**
+   * Returns a string identifying a user action to be displayed on the alert.
+   *
+   * This string is an opaque identifier that identifies an action in potential
+   * callbacks; it is not displayed to the user.
+   */
+  readonly attribute AString action;
+
+  /**
+   * Returns a string containing action text to be shown to the user.
+   */
+  readonly attribute AString title;
+
+  /**
+   * Returns a string containing the URL of an icon to display with the action.
+   */
+  readonly attribute AString iconURL;
+};
+
 [scriptable, uuid(cf2e4cb6-4b8f-4eca-aea9-d51a8f9f7a50)]
 interface nsIAlertNotification : nsISupports
 {
@@ -53,6 +75,9 @@ interface nsIAlertNotification : nsISupports
             [optional] in boolean aRequireInteraction,
             [optional] in boolean aSilent,
             [optional] in Array<uint32_t> aVibrate);
+
+  /** Initializes an alert notification with actions. */
+  void initActions([optional] in Array<nsIAlertAction> aActions);
 
   /**
    * The name of the notification. On Android, the name is hashed and used as
@@ -143,6 +168,14 @@ interface nsIAlertNotification : nsISupports
    * 400ms.
    */
   readonly attribute Array<uint32_t> vibrate;
+
+  /**
+   * Actions available for users to choose from for interacting with
+   * the notification.
+   *
+   * Implemented only for the system backend on Windows.
+   */
+  readonly attribute Array<nsIAlertAction> actions;
 
   /**
    * Indicates whether this alert should show the source string and action
