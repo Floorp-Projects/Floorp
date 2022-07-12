@@ -77,7 +77,8 @@ RtpTransportControllerSend::PacerSettings::PacerSettings(
     const WebRtcKeyValueConfig& trials)
     : tq_disabled("Disabled"),
       holdback_window("holdback_window", PacingController::kMinSleepTime),
-      holdback_packets("holdback_packets", -1) {
+      holdback_packets("holdback_packets",
+                       TaskQueuePacedSender::kNoPacketHoldback) {
   ParseFieldTrial({&tq_disabled, &holdback_window, &holdback_packets},
                   trials.Lookup("WebRTC-TaskQueuePacer"));
 }
