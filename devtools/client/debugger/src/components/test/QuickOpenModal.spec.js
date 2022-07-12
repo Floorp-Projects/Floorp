@@ -22,7 +22,7 @@ function generateModal(propOverrides, renderType = "shallow") {
     searchType: "sources",
     displayedSources: [],
     blackBoxRanges: {},
-    tabs: [],
+    tabUrls: [],
     selectSpecificLocation: jest.fn(),
     setQuickOpenQuery: jest.fn(),
     highlightLineRange: jest.fn(),
@@ -42,14 +42,6 @@ function generateModal(propOverrides, renderType = "shallow") {
         ? shallow(<QuickOpenModal {...props} />)
         : mount(<QuickOpenModal {...props} />),
     props,
-  };
-}
-
-function generateTab(url) {
-  return {
-    url,
-    isOriginal: false,
-    thread: "FakeThread",
   };
 }
 
@@ -124,10 +116,9 @@ describe("QuickOpenModal", () => {
           {
             url: "mozilla.com",
             displayURL: getDisplayURL("mozilla.com"),
-            relativeUrl: true,
           },
         ],
-        tabs: [generateTab("mozilla.com")],
+        tabUrls: ["mozilla.com"],
       },
       "shallow"
     );
@@ -135,10 +126,10 @@ describe("QuickOpenModal", () => {
       {
         id: undefined,
         icon: "tab result-item-icon",
-        subtitle: "true",
+        subtitle: "mozilla.com",
         title: "mozilla.com",
         url: "mozilla.com",
-        value: "true",
+        value: "mozilla.com",
       },
     ]);
   });

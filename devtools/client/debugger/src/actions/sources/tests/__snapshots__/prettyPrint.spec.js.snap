@@ -15,7 +15,6 @@ Object {
   "isOriginal": true,
   "isPrettyPrinted": true,
   "isWasm": false,
-  "relativeUrl": "/examples/base.js:formatted",
   "thread": "FakeThread",
   "url": "http://localhost:8000/examples/base.js:formatted",
 }
