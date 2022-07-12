@@ -101,8 +101,8 @@ async function getProxySlots(objectFront) {
   return objectFront.getProxySlots();
 }
 
-async function getCustomFormatterBody(objectFront) {
-  return objectFront.customFormatterBody();
+async function getCustomFormatterBody(objectFront, customFormatterIndex) {
+  return objectFront.customFormatterBody(customFormatterIndex);
 }
 
 function iteratorSlice(iterator, start, end) {
