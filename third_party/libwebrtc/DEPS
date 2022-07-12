@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '176855dcc8b016411806e6b5380f39b061aba57f',
+  'chromium_revision': 'f55241d0144f3599fa90e4e6038b96634d2b4d42',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,9 +23,9 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@ad8d9a01a5acc611e0fb335c5f180afc995f77c7',
+    'https://chromium.googlesource.com/chromium/src/base@bee216d6736d6a471879c5fcd32c8aba863d4755',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@0e41ee9abfdfe163bc93c4ce19d17c92f6b0e6e2',
+    'https://chromium.googlesource.com/chromium/src/build@b42b2033819f95b3e43f24e541938c671110966d',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@d8c375426d8f7f4147f7d4109bb63c12655fb8d6',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -34,13 +34,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@332d8dee2dcb4742ab45458f380082c262c41428',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@043ae4b9e442fed9d4a53c88ab708775f8e079cd',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@4c179bb28c6e90c45291f1225700ad34e18ebeb8',
+    'https://chromium.googlesource.com/chromium/src/testing@c4769e51cb122096ea4cdc5ed6f7e57aa2315447',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@fc55284d0c7a6878725513fb3b7ddccb02003f74',
+    'https://chromium.googlesource.com/chromium/src/third_party@7835795588c74a353beb1e03b74d45fabfdf295f',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -149,7 +149,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@76979dae56c08d24b092347a1bdd2abe474555a3',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@bc93924b3b2b84515d91ba49bb60ac0b89d928e1',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@574c39cce3231c69bc9a02ac475c27d944bdb113',
   'src/third_party/findbugs': {
@@ -187,7 +187,7 @@ deps = {
   'src/third_party/googletest/src':
     'https://chromium.googlesource.com/external/github.com/google/googletest.git@b007c54f2944e193ac44fba1bc997cb65826a0b9',
   'src/third_party/icu': {
-    'url': 'https://chromium.googlesource.com/chromium/deps/icu.git@ea8c08d8783fceda86c19618694881149e23f305',
+    'url': 'https://chromium.googlesource.com/chromium/deps/icu.git@a9359a84a3969b3019db7d62899afb19642eefcd',
   },
   'src/third_party/jdk': {
       'packages': [
@@ -231,7 +231,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@9b8eaa21f16d10cffefdf758a8b900e014e4788d',
+    'https://android.googlesource.com/platform/external/perfetto.git@6dadd2c3b267bd4776762dc5c0a4acb391abbc5e',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@df0d06de6d3b64e35b9e75ad72c571af061bc7b3',
   'src/third_party/libyuv':
@@ -288,7 +288,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@4b90fc63cc138bd63ed66f2dfdefae2e82dbf0fd',
+    'https://chromium.googlesource.com/chromium/src/tools@3c7dc0d25c91195a7d9b31947b14739d57f6c728',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
