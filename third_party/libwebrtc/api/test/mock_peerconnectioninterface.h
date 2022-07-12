@@ -25,7 +25,8 @@
 
 namespace webrtc {
 
-class MockPeerConnectionInterface : public PeerConnectionInterface {
+class MockPeerConnectionInterface
+    : public rtc::RefCountedObject<webrtc::PeerConnectionInterface> {
  public:
   static rtc::scoped_refptr<MockPeerConnectionInterface> Create() {
     return rtc::make_ref_counted<MockPeerConnectionInterface>();
@@ -198,9 +199,7 @@ class MockPeerConnectionInterface : public PeerConnectionInterface {
   MOCK_METHOD(void, Close, (), (override));
 };
 
-static_assert(!std::is_abstract<
-                  rtc::RefCountedObject<MockPeerConnectionInterface>>::value,
-              "");
+static_assert(!std::is_abstract<MockPeerConnectionInterface>::value, "");
 
 }  // namespace webrtc
 
