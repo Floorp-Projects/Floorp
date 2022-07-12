@@ -30,12 +30,9 @@ object Versions {
     const val disklrucache = "2.0.2"
     const val leakcanary = "2.8.1"
 
-    const val mozilla_appservices = "93.5.0"
+    const val mozilla_appservices = "93.6.0"
 
     const val mozilla_glean = "50.1.2"
-    // FIXME(bug 1775073): Hack to deploy a tiny bug fix without requiring a full Glean update
-    // Will be removed with the next update again.
-    const val mozilla_glean_plugin = "50.1.1"
 
     const val material = "1.2.1"
 
