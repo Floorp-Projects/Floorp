@@ -170,6 +170,9 @@ pub struct Transaction {
     /// generate_frame().
     generate_frame: GenerateFrame,
 
+    /// Time when this transaction was constructed.
+    creation_time: u64,
+
     /// Set to true in order to force re-rendering even if WebRender can't internally
     /// detect that something has changed.
     pub invalidate_rendered_frame: bool,
@@ -190,6 +193,7 @@ impl Transaction {
             notifications: Vec::new(),
             use_scene_builder_thread: true,
             generate_frame: GenerateFrame::No,
+            creation_time: precise_time_ns(),
             invalidate_rendered_frame: false,
             low_priority: false,
             render_reasons: RenderReasons::empty(),
@@ -404,6 +408,7 @@ impl Transaction {
             notifications: self.notifications,
             use_scene_builder_thread: self.use_scene_builder_thread,
             generate_frame: self.generate_frame,
+            creation_time: Some(self.creation_time),
             invalidate_rendered_frame: self.invalidate_rendered_frame,
             low_priority: self.low_priority,
             blob_rasterizer: None,
@@ -578,6 +583,8 @@ pub struct TransactionMsg {
     pub resource_updates: Vec<ResourceUpdate>,
     /// Whether to trigger frame building and rendering if something has changed.
     pub generate_frame: GenerateFrame,
+    /// Creation time of this transaction.
+    pub creation_time: Option<u64>,
     /// Whether to force frame building and rendering even if no changes are internally
     /// observed.
     pub invalidate_rendered_frame: bool,
@@ -1215,6 +1222,7 @@ impl RenderApi {
             resource_updates: Vec::new(),
             notifications: Vec::new(),
             generate_frame: GenerateFrame::No,
+            creation_time: None,
             invalidate_rendered_frame: false,
             use_scene_builder_thread: false,
             low_priority: false,

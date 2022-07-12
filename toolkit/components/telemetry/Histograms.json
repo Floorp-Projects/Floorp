@@ -16204,6 +16204,17 @@
     "n_buckets": 50,
     "description": "Time taken by WebRender to update the texture cache in milliseconds."
   },
+  "WR_TIME_TO_FRAME_BUILD_MS": {
+    "record_in_processes": [ "main", "gpu" ],
+    "products": [ "firefox" ],
+    "alert_emails": [ "gfx-telemetry-alerts@mozilla.com" ],
+    "bug_numbers": [ 1778395 ],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "description": "Time elapsed (in milliseconds) between the construction of a transaction and the associated frame build beginning."
+  },
   "WEB_AUDIO_BECOMES_AUDIBLE_TIME": {
     "record_in_processes": ["content"],
     "products": ["firefox"],

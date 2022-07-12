@@ -67,6 +67,7 @@ use std::path::PathBuf;
 #[cfg(feature = "replay")]
 use crate::frame_builder::Frame;
 use time::precise_time_ns;
+use core::time::Duration;
 use crate::util::{Recycler, VecHelper, drain_filter};
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -914,6 +915,7 @@ impl RenderBackend {
                 txn.invalidate_rendered_frame,
                 frame_counter,
                 has_built_scene,
+                None,
             );
         }
 
@@ -1261,7 +1263,8 @@ impl RenderBackend {
                 txn.generate_frame.id(),
                 txn.invalidate_rendered_frame,
                 frame_counter,
-                false
+                false,
+                txn.creation_time,
             );
         }
         if built_frame {
@@ -1299,7 +1302,8 @@ impl RenderBackend {
                     None,
                     false,
                     frame_counter,
-                    false);
+                    false,
+                    None);
             }
             #[cfg(feature = "capture")]
             match built_frame {
@@ -1321,6 +1325,7 @@ impl RenderBackend {
         invalidate_rendered_frame: bool,
         frame_counter: &mut u32,
         has_built_scene: bool,
+        start_time: Option<u64>
     ) -> bool {
         let requested_frame = render_frame;
 
@@ -1391,6 +1396,9 @@ impl RenderBackend {
         }
 
         if build_frame {
+            if start_time.is_some() {
+              Telemetry::record_time_to_frame_build(Duration::from_nanos(precise_time_ns() - start_time.unwrap()));
+            }
             profile_scope!("generate frame");
 
             *frame_counter += 1;
