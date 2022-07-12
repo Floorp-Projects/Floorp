@@ -23,10 +23,10 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Bundle;
+import androidx.test.runner.AndroidJUnit4;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import org.chromium.testing.local.LocalRobolectricTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,7 +47,7 @@ import org.webrtc.VideoFrame;
 import org.webrtc.VideoFrame.Buffer;
 import org.webrtc.VideoFrame.I420Buffer;
 
-@RunWith(LocalRobolectricTestRunner.class)
+@RunWith(AndroidJUnit4.class)
 @Config(manifest = Config.NONE)
 public class HardwareVideoEncoderTest {
   private static final VideoEncoder.Settings TEST_ENCODER_SETTINGS = new Settings(
