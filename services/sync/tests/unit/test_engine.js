@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
@@ -125,11 +124,9 @@ add_task(async function test_invalidChangedIDs() {
   let tracker = engine._tracker;
 
   await tracker._beforeSave();
-  await OS.File.writeAtomic(
-    tracker._storage.path,
-    new TextEncoder().encode("5"),
-    { tmpPath: tracker._storage.path + ".tmp" }
-  );
+  await IOUtils.writeUTF8(tracker._storage.path, "5", {
+    tmpPath: tracker._storage.path + ".tmp",
+  });
 
   ok(!tracker._storage.dataReady);
   const changes = await tracker.getChangedIDs();
