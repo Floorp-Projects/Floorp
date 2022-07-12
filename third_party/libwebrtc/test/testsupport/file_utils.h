@@ -92,7 +92,6 @@ bool RemoveFile(absl::string_view file_name);
 // TOOD(alito): Merge these once absl::string_view adoption is complete for this
 // file.
 bool FileExists(absl::string_view file_name);
-bool FileExists(const std::string& file_name);
 
 // Checks if a directory exists.
 bool DirExists(absl::string_view directory_name);
