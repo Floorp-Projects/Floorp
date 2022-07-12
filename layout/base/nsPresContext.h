@@ -267,7 +267,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     return !!mPendingMediaFeatureValuesChange;
   }
 
-  inline nsCSSFrameConstructor* FrameConstructor();
+  inline nsCSSFrameConstructor* FrameConstructor() const;
 
   mozilla::AnimationEventDispatcher* AnimationEventDispatcher() {
     return mAnimationEventDispatcher;
@@ -385,6 +385,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
            !PrefSheetPrefs().mUseDocumentColors;
   }
 
+  mozilla::ColorScheme DefaultBackgroundColorScheme() const;
   nscolor DefaultBackgroundColor() const;
 
   nsISupports* GetContainerWeak() const;

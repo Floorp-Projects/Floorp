@@ -341,16 +341,6 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
   // True if the selection can be set to nothing or disabled options.
   bool mForceSelection : 1;
 
-  // The last computed block size we reflowed at if we're a combobox
-  // dropdown.
-  // XXXbz should we be using a subclass here?  Or just not worry
-  // about the extra member on listboxes?
-  nscoord mLastDropdownComputedBSize;
-
-  // At the time of our last dropdown, the backstop color to draw in case we
-  // are translucent.
-  nscolor mLastDropdownBackstopColor;
-
   RefPtr<mozilla::HTMLSelectEventListener> mEventListener;
 
   static nsListControlFrame* mFocused;
