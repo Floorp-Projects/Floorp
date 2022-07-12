@@ -18,6 +18,9 @@
   # The builders should be sorted by the order they appear in the /builders
   # page on the buildbots, *not* alphabetically.
   'builder_groups': {
+    # This is required because WebRTC mb.py overwrites the default configs
+    # and Chromium's mb.py checks the default config contains 'chromium'.
+    'chromium': {},
     'client.webrtc': {
       # iOS
       'iOS64 Debug': 'ios_debug_bot_arm64',
