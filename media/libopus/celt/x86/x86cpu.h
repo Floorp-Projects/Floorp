@@ -56,8 +56,16 @@
 int opus_select_arch(void);
 # endif
 
+/*MOVD should not impose any alignment restrictions, but the C standard does,
+   and UBSan will report errors if we actually make unaligned accesses.
+  Use this to work around those restrictions (which should hopefully all get
+   optimized to a single MOVD instruction).*/
+#define OP_LOADU_EPI32(x) \
+  (int)((*(unsigned char *)(x) | *((unsigned char *)(x) + 1) << 8U |\
+   *((unsigned char *)(x) + 2) << 16U | (opus_uint32)*((unsigned char *)(x) + 3) << 24U))
+
 #define OP_CVTEPI8_EPI32_M32(x) \
- (_mm_cvtepi8_epi32(_mm_cvtsi32_si128(*(int *)(x))))
+ (_mm_cvtepi8_epi32(_mm_cvtsi32_si128(OP_LOADU_EPI32(x))))
 
 #define OP_CVTEPI16_EPI32_M64(x) \
  (_mm_cvtepi16_epi32(_mm_loadl_epi64((__m128i *)(x))))

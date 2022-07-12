@@ -35,7 +35,7 @@
 #include "pitch.h"
 #include "main.h"
 
-#if !defined(OPUS_X86_PRESUME_SSE4_1)
+#if defined(OPUS_HAVE_RTCD) && !defined(OPUS_X86_PRESUME_SSE4_1)
 
 #if defined(FIXED_POINT)
 

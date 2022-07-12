@@ -609,10 +609,12 @@ static OPUS_INLINE opus_int64 silk_max_64(opus_int64 a, opus_int64 b)
 /* the following seems faster on x86 */
 #define silk_SMMUL(a32, b32)                (opus_int32)silk_RSHIFT64(silk_SMULL((a32), (b32)), 32)
 
-#if !defined(OPUS_X86_MAY_HAVE_SSE4_1)
+#if !defined(OVERRIDE_silk_burg_modified)
 #define silk_burg_modified(res_nrg, res_nrg_Q, A_Q16, x, minInvGain_Q30, subfr_length, nb_subfr, D, arch) \
     ((void)(arch), silk_burg_modified_c(res_nrg, res_nrg_Q, A_Q16, x, minInvGain_Q30, subfr_length, nb_subfr, D, arch))
+#endif
 
+#if !defined(OVERRIDE_silk_inner_prod16)
 #define silk_inner_prod16(inVec1, inVec2, len, arch) \
     ((void)(arch),silk_inner_prod16_c(inVec1, inVec2, len))
 #endif
