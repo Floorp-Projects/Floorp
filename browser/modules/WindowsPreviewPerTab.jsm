@@ -286,7 +286,7 @@ PreviewController.prototype = {
       composite.mozOpaque = false;
 
       let ctx = composite.getContext("2d");
-      let scale = this.win.devicePixelRatio;
+      let scale = this.win.win.devicePixelRatio;
 
       composite.width = winWidth * scale;
       composite.height = winHeight * scale;
