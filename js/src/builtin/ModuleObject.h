@@ -256,7 +256,12 @@ enum class ModuleStatus : int32_t {
   Linked,
   Evaluating,
   Evaluated,
-  Evaluated_Error  // Sub-state of Evaluated with error value set.
+
+  // Sub-state of Evaluated with error value set.
+  //
+  // This is not returned from ModuleObject::status(); use hadEvaluationError()
+  // to check this.
+  Evaluated_Error
 };
 
 // Special values for ModuleObject's AsyncEvaluatingPostOrderSlot slot, which is
