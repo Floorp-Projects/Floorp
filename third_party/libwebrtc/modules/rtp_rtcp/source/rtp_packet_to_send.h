@@ -15,7 +15,6 @@
 
 #include <utility>
 
-#include "absl/base/attributes.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/ref_counted_base.h"
@@ -48,13 +47,6 @@ class RtpPacketToSend : public RtpPacket {
   // Time in local time base as close as it can to frame capture time.
   webrtc::Timestamp capture_time() const { return capture_time_; }
   void set_capture_time(webrtc::Timestamp time) { capture_time_ = time; }
-
-  ABSL_DEPRECATED("Use capture_time() instead")
-  int64_t capture_time_ms() const { return capture_time_.ms_or(-1); }
-  ABSL_DEPRECATED("Use set_capture_time() instead")
-  void set_capture_time_ms(int64_t time) {
-    capture_time_ = webrtc::Timestamp::Millis(time);
-  }
 
   void set_packet_type(RtpPacketMediaType type) { packet_type_ = type; }
   absl::optional<RtpPacketMediaType> packet_type() const {
@@ -106,34 +98,6 @@ class RtpPacketToSend : public RtpPacket {
   void set_network2_time(webrtc::Timestamp time) {
     SetExtension<VideoTimingExtension>(
         VideoSendTiming::GetDeltaCappedMs(time - capture_time_),
-        VideoTimingExtension::kNetwork2TimestampDeltaOffset);
-  }
-
-  ABSL_DEPRECATED("Use set_packetization_finish_time() instead")
-  void set_packetization_finish_time_ms(int64_t time) {
-    SetExtension<VideoTimingExtension>(
-        VideoSendTiming::GetDeltaCappedMs(capture_time_.ms_or(0), time),
-        VideoTimingExtension::kPacketizationFinishDeltaOffset);
-  }
-
-  ABSL_DEPRECATED("Use set_pacer_exit_time() instead")
-  void set_pacer_exit_time_ms(int64_t time) {
-    SetExtension<VideoTimingExtension>(
-        VideoSendTiming::GetDeltaCappedMs(capture_time_.ms_or(0), time),
-        VideoTimingExtension::kPacerExitDeltaOffset);
-  }
-
-  ABSL_DEPRECATED("Use set_network_time() instead")
-  void set_network_time_ms(int64_t time) {
-    SetExtension<VideoTimingExtension>(
-        VideoSendTiming::GetDeltaCappedMs(capture_time_.ms_or(0), time),
-        VideoTimingExtension::kNetworkTimestampDeltaOffset);
-  }
-
-  ABSL_DEPRECATED("Use set_network2_time() instead")
-  void set_network2_time_ms(int64_t time) {
-    SetExtension<VideoTimingExtension>(
-        VideoSendTiming::GetDeltaCappedMs(capture_time_.ms_or(0), time),
         VideoTimingExtension::kNetwork2TimestampDeltaOffset);
   }
 
