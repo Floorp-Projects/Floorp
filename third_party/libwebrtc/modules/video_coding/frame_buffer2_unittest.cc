@@ -65,25 +65,8 @@ class VCMTimingFake : public VCMTiming {
     return render_time - now - kDecodeTime;
   }
 
-  bool GetTimings(TimeDelta* max_decode,
-                  TimeDelta* current_delay,
-                  TimeDelta* target_delay,
-                  TimeDelta* jitter_buffer,
-                  TimeDelta* min_playout_delay,
-                  TimeDelta* render_delay) const override {
-    return true;
-  }
-
   TimeDelta GetCurrentJitter() {
-    TimeDelta max_decode = TimeDelta::Zero();
-    TimeDelta current_delay = TimeDelta::Zero();
-    TimeDelta target_delay = TimeDelta::Zero();
-    TimeDelta jitter_buffer = TimeDelta::Zero();
-    TimeDelta min_playout_delay = TimeDelta::Zero();
-    TimeDelta render_delay = TimeDelta::Zero();
-    VCMTiming::GetTimings(&max_decode, &current_delay, &target_delay,
-                          &jitter_buffer, &min_playout_delay, &render_delay);
-    return jitter_buffer;
+    return VCMTiming::GetTimings().jitter_buffer_delay;
   }
 
  private:
@@ -538,6 +521,8 @@ TEST_F(TestFrameBuffer2, StatsCallback) {
   EXPECT_CALL(stats_callback_,
               OnCompleteFrame(true, kFrameSize, VideoContentType::UNSPECIFIED));
   EXPECT_CALL(stats_callback_, OnFrameBufferTimingsUpdated(_, _, _, _, _, _));
+  // Stats callback requires a previously decoded frame.
+  timing_.StopDecodeTimer(TimeDelta::Millis(1), Timestamp::Zero());
 
   {
     std::unique_ptr<FrameObjectFake> frame(new FrameObjectFake());

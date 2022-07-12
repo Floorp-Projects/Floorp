@@ -239,20 +239,15 @@ TimeDelta VCMTiming::TargetDelayInternal() const {
                   jitter_delay_ + RequiredDecodeTime() + render_delay_);
 }
 
-bool VCMTiming::GetTimings(TimeDelta* max_decode,
-                           TimeDelta* current_delay,
-                           TimeDelta* target_delay,
-                           TimeDelta* jitter_buffer,
-                           TimeDelta* min_playout_delay,
-                           TimeDelta* render_delay) const {
+VCMTiming::VideoDelayTimings VCMTiming::GetTimings() const {
   MutexLock lock(&mutex_);
-  *max_decode = RequiredDecodeTime();
-  *current_delay = current_delay_;
-  *target_delay = TargetDelayInternal();
-  *jitter_buffer = jitter_delay_;
-  *min_playout_delay = min_playout_delay_;
-  *render_delay = render_delay_;
-  return (num_decoded_frames_ > 0);
+  return VideoDelayTimings{.max_decode_duration = RequiredDecodeTime(),
+                           .current_delay = current_delay_,
+                           .target_delay = TargetDelayInternal(),
+                           .jitter_buffer_delay = jitter_delay_,
+                           .min_playout_delay = min_playout_delay_,
+                           .render_delay = render_delay_,
+                           .num_decoded_frames = num_decoded_frames_};
 }
 
 void VCMTiming::SetTimingFrameInfo(const TimingFrameInfo& info) {

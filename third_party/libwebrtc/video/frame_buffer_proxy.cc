@@ -419,18 +419,12 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
   }
 
   void UpdateJitterDelay() {
-    TimeDelta max_decode = TimeDelta::Zero();
-    TimeDelta current_delay = TimeDelta::Zero();
-    TimeDelta target_delay = TimeDelta::Zero();
-    TimeDelta jitter_buffer = TimeDelta::Zero();
-    TimeDelta min_playout_delay = TimeDelta::Zero();
-    TimeDelta render_delay = TimeDelta::Zero();
-    if (timing_->GetTimings(&max_decode, &current_delay, &target_delay,
-                            &jitter_buffer, &min_playout_delay,
-                            &render_delay)) {
+    auto timings = timing_->GetTimings();
+    if (timings.num_decoded_frames) {
       stats_proxy_->OnFrameBufferTimingsUpdated(
-          max_decode.ms(), current_delay.ms(), target_delay.ms(),
-          jitter_buffer.ms(), min_playout_delay.ms(), render_delay.ms());
+          timings.max_decode_duration.ms(), timings.current_delay.ms(),
+          timings.target_delay.ms(), timings.jitter_buffer_delay.ms(),
+          timings.min_playout_delay.ms(), timings.render_delay.ms());
     }
   }
 
