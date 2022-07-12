@@ -363,20 +363,28 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
   // Perform expensive psnr and ssim calculations while not holding lock.
   double psnr = -1.0;
   double ssim = -1.0;
-  if (options_.heavy_metrics_computation_enabled &&
+  // TODO(brandtr): Remove `heavy_metrics_computation_enabled` when downstream
+  // has been updated.
+  if ((options_.heavy_metrics_computation_enabled || options_.compute_psnr ||
+       options_.compute_ssim) &&
       comparison.captured.has_value() && comparison.rendered.has_value()) {
     rtc::scoped_refptr<I420BufferInterface> reference_buffer =
         comparison.captured->video_frame_buffer()->ToI420();
     rtc::scoped_refptr<I420BufferInterface> test_buffer =
         comparison.rendered->video_frame_buffer()->ToI420();
     if (options_.adjust_cropping_before_comparing_frames) {
-      test_buffer =
-          ScaleVideoFrameBuffer(*test_buffer.get(), reference_buffer->width(),
-                                reference_buffer->height());
+      test_buffer = ScaleVideoFrameBuffer(
+          *test_buffer, reference_buffer->width(), reference_buffer->height());
       reference_buffer = test::AdjustCropping(reference_buffer, test_buffer);
     }
-    psnr = I420PSNR(*reference_buffer.get(), *test_buffer.get());
-    ssim = I420SSIM(*reference_buffer.get(), *test_buffer.get());
+    if (options_.compute_psnr) {
+      psnr = options_.use_weighted_psnr
+                 ? I420WeightedPSNR(*reference_buffer, *test_buffer)
+                 : I420PSNR(*reference_buffer, *test_buffer);
+    }
+    if (options_.compute_ssim) {
+      ssim = I420SSIM(*reference_buffer, *test_buffer);
+    }
   }
 
   const FrameStats& frame_stats = comparison.frame_stats;
