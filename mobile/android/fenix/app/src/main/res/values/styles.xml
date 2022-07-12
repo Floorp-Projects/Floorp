@@ -644,7 +644,7 @@
         <item name="android:windowIsFloating">false</item>
     </style>
 
-    <style name="BottomSheetBase" parent="ThemeOverlay.MaterialComponents.Light.BottomSheetDialog">
+    <style name="BottomSheetBase" parent="ThemeOverlay.MaterialComponents.DayNight.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
     </style>
 
