@@ -312,6 +312,10 @@ specific_include_rules = {
     "+rtc_base/thread_annotations.h",
   ],
 
+  "video_encoder_factory_template.*\.h": [
+    "+modules/video_coding",
+  ],
+
   # .cc files in api/ should not be restricted in what they can #include,
   # so we re-add all the top-level directories here. (That's because .h
   # files leak their #includes to whoever's #including them, but .cc files
