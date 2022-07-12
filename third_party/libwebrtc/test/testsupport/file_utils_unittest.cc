@@ -16,6 +16,7 @@
 #include <fstream>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "rtc_base/checks.h"
 #include "test/gmock.h"
@@ -32,15 +33,15 @@ namespace test {
 
 namespace {
 
-std::string Path(const std::string& path) {
-  std::string result = path;
-  std::replace(result.begin(), result.end(), '/', *kPathDelimiter);
+std::string Path(absl::string_view path) {
+  std::string result = std::string(path);
+  std::replace(result.begin(), result.end(), '/', kPathDelimiter[0]);
   return result;
 }
 
 // Remove files and directories in a directory non-recursively and writes the
 // number of deleted items in `num_deleted_entries`.
-void CleanDir(const std::string& dir, size_t* num_deleted_entries) {
+void CleanDir(absl::string_view dir, size_t* num_deleted_entries) {
   RTC_DCHECK(num_deleted_entries);
   *num_deleted_entries = 0;
   absl::optional<std::vector<std::string>> dir_content = ReadDirectory(dir);
@@ -58,8 +59,8 @@ void CleanDir(const std::string& dir, size_t* num_deleted_entries) {
   }
 }
 
-void WriteStringInFile(const std::string& what, const std::string& file_path) {
-  std::ofstream out(file_path);
+void WriteStringInFile(absl::string_view what, absl::string_view file_path) {
+  std::ofstream out(std::string{file_path});
   out << what;
   out.close();
 }
@@ -110,7 +111,7 @@ TEST_F(FileUtilsTest, OutputPathFromUnchangedWorkingDir) {
 // Tests with current working directory set to a directory higher up in the
 // directory tree than the project root dir.
 TEST_F(FileUtilsTest, OutputPathFromRootWorkingDir) {
-  ASSERT_EQ(0, chdir(kPathDelimiter));
+  ASSERT_EQ(0, chdir(kPathDelimiter.data()));
 
   std::string expected_end = ExpectedRootDirByPlatform();
   std::string result = webrtc::test::OutputPath();
@@ -179,7 +180,7 @@ TEST_F(FileUtilsTest, ResourcePathReturnsCorrectPath) {
 }
 
 TEST_F(FileUtilsTest, ResourcePathFromRootWorkingDir) {
-  ASSERT_EQ(0, chdir(kPathDelimiter));
+  ASSERT_EQ(0, chdir(kPathDelimiter.data()));
   std::string resource = webrtc::test::ResourcePath("whatever", "ext");
 #if !defined(WEBRTC_IOS)
   ASSERT_NE(resource.find("resources"), std::string::npos);
@@ -202,7 +203,8 @@ TEST_F(FileUtilsTest, GetFileSizeExistingFile) {
 }
 
 TEST_F(FileUtilsTest, GetFileSizeNonExistingFile) {
-  ASSERT_EQ(0u, webrtc::test::GetFileSize("non-existing-file.tmp"));
+  ASSERT_EQ(0u, webrtc::test::GetFileSize(
+                    absl::string_view("non-existing-file.tmp")));
 }
 
 TEST_F(FileUtilsTest, DirExists) {

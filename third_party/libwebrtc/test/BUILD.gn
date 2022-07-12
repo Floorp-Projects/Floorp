@@ -632,6 +632,7 @@ if (is_ios) {
       "../rtc_base:rtc_base_approved",
       "../sdk:helpers_objc",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings:strings" ]
   }
 }
 
@@ -662,7 +663,10 @@ rtc_library("fileutils") {
     "../rtc_base:checks",
     "../rtc_base:stringutils",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings:strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
   if (is_ios) {
     deps += [ ":fileutils_ios_objc" ]
   }
@@ -679,6 +683,7 @@ rtc_library("fileutils") {
 rtc_source_set("fileutils_override_api") {
   testonly = true
   sources = [ "testsupport/file_utils_override.h" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings:strings" ]
 }
 
 rtc_library("fileutils_override_impl") {
@@ -691,7 +696,10 @@ rtc_library("fileutils_override_impl") {
     "../rtc_base:macromagic",
     "../rtc_base:stringutils",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings:strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
   if (is_ios) {
     deps += [ ":fileutils_ios_objc" ]
   }
@@ -742,7 +750,10 @@ rtc_library("fileutils_unittests") {
     ":test_support",
     "../rtc_base:checks",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings:strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("direct_transport") {
