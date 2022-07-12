@@ -58,12 +58,10 @@ def _CreateParser():
                       required=True,
                       help='Which dashboard to use.')
   parser.add_argument('--input-results-file',
-                      type=argparse.FileType('rb'),
                       required=True,
                       help='A HistogramSet proto file with output from '
                       'WebRTC tests.')
   parser.add_argument('--output-json-file',
-                      type=argparse.FileType('w'),
                       help='Where to write the output (for debugging).')
   parser.add_argument('--outdir',
                       required=True,
