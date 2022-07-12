@@ -44,9 +44,6 @@ class OffscreenCanvasRenderingContext2D final
   NS_IMETHOD InitializeWithDrawTarget(
       nsIDocShell* aShell, NotNull<gfx::DrawTarget*> aTarget) override;
 
-  bool SetFontInternal(const nsACString& aFont,
-                       mozilla::ErrorResult& aError) override;
-
  private:
   void AddShutdownObserver() override;
   void RemoveShutdownObserver() override;

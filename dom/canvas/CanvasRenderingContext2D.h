@@ -592,8 +592,11 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                    ErrorResult& aError);
 
   // Returns whether the font was successfully updated.
-  virtual bool SetFontInternal(const nsACString& aFont,
-                               mozilla::ErrorResult& aError);
+  bool SetFontInternal(const nsACString& aFont, mozilla::ErrorResult& aError);
+
+  // Helper for SetFontInternal in the case where we have no PresShell.
+  bool SetFontInternalDisconnected(const nsACString& aFont,
+                                   mozilla::ErrorResult& aError);
 
   // Clears the target and updates mOpaque based on mOpaqueAttrValue and
   // mContextAttributesHasAlpha.
