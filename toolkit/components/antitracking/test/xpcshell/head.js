@@ -3,8 +3,8 @@
 
 /* import-globals-from ../../../../components/url-classifier/tests/unit/head_urlclassifier.js */
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"

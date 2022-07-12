@@ -5,6 +5,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-disable no-unused-vars */
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );

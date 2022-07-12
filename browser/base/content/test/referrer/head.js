@@ -1,5 +1,5 @@
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+var { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const REFERRER_URL_BASE = "/browser/browser/base/content/test/referrer/";

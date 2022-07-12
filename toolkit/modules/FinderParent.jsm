@@ -10,8 +10,8 @@ const kModalHighlightPref = "findbar.modalHighlight";
 const kSoundEnabledPref = "accessibility.typeaheadfind.enablesound";
 const kNotFoundSoundPref = "accessibility.typeaheadfind.soundURL";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};

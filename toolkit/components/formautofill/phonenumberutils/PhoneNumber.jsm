@@ -9,8 +9,8 @@
 
 var EXPORTED_SYMBOLS = ["PhoneNumber"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const { PHONE_NUMBER_META_DATA } = ChromeUtils.import(

@@ -3,8 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 const EXPORTED_SYMBOLS = ["SnapshotSelector"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"

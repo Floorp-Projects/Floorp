@@ -14,7 +14,7 @@ const ITEM_FLASH_DURATION = 300; // ms
 const { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.sys.mjs");
 const EventEmitter = require("devtools/shared/event-emitter");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");

@@ -2,20 +2,22 @@ diff --git a/media/libopus/sources.mozbuild b/media/libopus/sources.mozbuild
 index 8a39b9f..dfc2c62 100644
 --- a/media/libopus/sources.mozbuild
 +++ b/media/libopus/sources.mozbuild
-@@ -2,8 +2,6 @@
+@@ -2,8 +2,5 @@
  celt_sources = [
      'celt/bands.c',
-     'celt/celt.c',
+-    'celt/celt.c',
 -    'celt/celt_decoder.c',
 -    'celt/celt_encoder.c',
      'celt/celt_lpc.c',
      'celt/cwrs.c',
      'celt/entcode.c',
-@@ -20,6 +18,15 @@ celt_sources = [
+@@ -20,6 +18,17 @@ celt_sources = [
      'celt/vq.c',
  ]
  
 +opus_nonunified_sources = [
++    # Disabled because of undefined reference to celt_fatal at link time
++    'celt/celt.c',
 +    # Disabled because of name clash of opus_custom_encoder_get_size.
 +    'celt/celt_decoder.c',
 +    'celt/celt_encoder.c',

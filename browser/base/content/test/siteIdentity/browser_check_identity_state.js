@@ -415,7 +415,7 @@ add_task(async function test_file() {
 async function resourceUriTest(secureCheck) {
   let oldTab = await loadNewTab("about:robots");
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
-  let dataURI = "resource://gre/modules/XPCOMUtils.jsm";
+  let dataURI = "resource://gre/modules/XPCOMUtils.sys.mjs";
 
   let newTab = await loadNewTab(dataURI);
 

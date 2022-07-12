@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 function getConsoleMessages() {
   let consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
   let messages = consoleService.getMessageArray().map((m) => m.toString());

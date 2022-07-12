@@ -246,6 +246,15 @@ class Accessible {
 
   virtual Maybe<float> Opacity() const = 0;
 
+  /**
+   * Get the live region attributes (if any) for this single Accessible. This
+   * does not propagate attributes from ancestors. If any argument is null, that
+   * attribute is not fetched.
+   */
+  virtual void LiveRegionAttributes(nsAString* aLive, nsAString* aRelevant,
+                                    Maybe<bool>* aAtomic,
+                                    nsAString* aBusy) const = 0;
+
   LayoutDeviceIntSize Size() const;
 
   LayoutDeviceIntPoint Position(uint32_t aCoordType);
@@ -474,7 +483,9 @@ class Accessible {
    * Provide a human readable description of the accessible,
    * including memory address, role, name, DOM tag and DOM ID.
    */
-  void DebugDescription(nsCString& aDesc);
+  void DebugDescription(nsCString& aDesc) const;
+
+  static void DebugPrint(const char* aPrefix, const Accessible* aAccessible);
 #endif
 
   /**

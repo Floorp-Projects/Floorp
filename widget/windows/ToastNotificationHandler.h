@@ -30,7 +30,8 @@ class ToastNotificationHandler final
                            nsIObserver* aAlertListener, const nsAString& aName,
                            const nsAString& aCookie, const nsAString& aTitle,
                            const nsAString& aMsg, const nsAString& aHostPort,
-                           bool aClickable)
+                           bool aClickable, bool aRequireInteraction,
+                           const nsTArray<RefPtr<nsIAlertAction>>& aActions)
       : mBackend(backend),
         mHasImage(false),
         mAlertListener(aAlertListener),
@@ -40,6 +41,8 @@ class ToastNotificationHandler final
         mMsg(aMsg),
         mHostPort(aHostPort),
         mClickable(aClickable),
+        mRequireInteraction(aRequireInteraction),
+        mActions(aActions.Clone()),
         mSentFinished(!aAlertListener) {}
 
   nsresult InitAlertAsync(nsIAlertNotification* aAlert);
@@ -47,6 +50,8 @@ class ToastNotificationHandler final
   void OnWriteBitmapFinished(nsresult rv);
 
   void UnregisterHandler();
+
+  nsresult CreateToastXmlString(const nsAString& aImageURL, nsAString& aString);
 
  protected:
   virtual ~ToastNotificationHandler();
@@ -82,6 +87,8 @@ class ToastNotificationHandler final
   nsString mMsg;
   nsString mHostPort;
   bool mClickable;
+  bool mRequireInteraction;
+  nsTArray<RefPtr<nsIAlertAction>> mActions;
   bool mSentFinished;
 
   nsresult TryShowAlert();
@@ -91,8 +98,7 @@ class ToastNotificationHandler final
   void SendFinished();
 
   bool CreateWindowsNotificationFromXml(IXmlDocument* aToastXml);
-  Microsoft::WRL::ComPtr<IXmlDocument> InitializeXmlForTemplate(
-      ToastTemplateType templateType);
+  Microsoft::WRL::ComPtr<IXmlDocument> CreateToastXmlDocument();
 
   HRESULT OnActivate(IToastNotification* notification,
                      IInspectable* inspectable);

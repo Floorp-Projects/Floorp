@@ -2,10 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * This file tests the method defineLazyProxy from XPCOMUtils.jsm.
+ * This file tests the method defineLazyProxy from XPCOMUtils.sys.mjs.
  */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
 
 add_task(function test_lazy_proxy() {
   let tmp = {};

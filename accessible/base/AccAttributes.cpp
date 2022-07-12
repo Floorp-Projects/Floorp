@@ -9,7 +9,8 @@
 
 using namespace mozilla::a11y;
 
-bool AccAttributes::GetAttribute(nsAtom* aAttrName, nsAString& aAttrValue) {
+bool AccAttributes::GetAttribute(nsAtom* aAttrName,
+                                 nsAString& aAttrValue) const {
   if (auto value = mData.Lookup(aAttrName)) {
     StringFromValueAndName(aAttrName, *value, aAttrValue);
     return true;

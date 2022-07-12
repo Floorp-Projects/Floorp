@@ -11,8 +11,8 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const { BaseStudyAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseStudyAction.jsm"

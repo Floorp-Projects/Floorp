@@ -5,8 +5,8 @@
 
 // Globals
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",

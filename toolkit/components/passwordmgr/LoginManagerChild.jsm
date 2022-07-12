@@ -27,8 +27,8 @@ const SUBMIT_FORM_IS_REMOVED = 3;
 const LOG_MESSAGE_FORM_SUBMISSION = "form submission";
 const LOG_MESSAGE_FIELD_EDIT = "field edit";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
