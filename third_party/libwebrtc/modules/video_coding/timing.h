@@ -16,6 +16,7 @@
 #include "absl/types/optional.h"
 #include "api/units/time_delta.h"
 #include "api/video/video_timing.h"
+#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/codec_timer.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -32,7 +33,7 @@ class VCMTiming {
   static constexpr auto kDefaultRenderDelay = TimeDelta::Millis(10);
   static constexpr auto kDelayMaxChangeMsPerS = 100;
 
-  explicit VCMTiming(Clock* clock);
+  VCMTiming(Clock* clock, const WebRtcKeyValueConfig& field_trials);
   virtual ~VCMTiming() = default;
 
   // Resets the timing to the initial state.

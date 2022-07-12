@@ -226,7 +226,7 @@ VideoReceiveStream2::VideoReceiveStream2(
                    call->trials()),
       rtp_receive_statistics_(ReceiveStatistics::Create(clock_)),
       timing_(std::move(timing)),
-      video_receiver_(clock_, timing_.get()),
+      video_receiver_(clock_, timing_.get(), call->trials()),
       rtp_video_stream_receiver_(call->worker_thread(),
                                  clock_,
                                  &transport_adapter_,

@@ -613,6 +613,7 @@ webrtc_fuzzer_test("frame_buffer2_fuzzer") {
   deps = [
     "../../modules/video_coding:timing",
     "../../modules/video_coding/",
+    "../../test:scoped_key_value_config",
     "../time_controller:time_controller",
   ]
 }
@@ -625,6 +626,7 @@ webrtc_fuzzer_test("frame_buffer3_fuzzer") {
     "../../api/video:encoded_frame",
     "../../modules/video_coding:frame_buffer",
     "../../rtc_base:rtc_numerics",
+    "../../test:scoped_key_value_config",
   ]
 }
 

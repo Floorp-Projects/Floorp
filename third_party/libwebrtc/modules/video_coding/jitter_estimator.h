@@ -16,6 +16,7 @@
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
+#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/rtt_filter.h"
 #include "rtc_base/rolling_accumulator.h"
 
@@ -25,7 +26,8 @@ class Clock;
 
 class VCMJitterEstimator {
  public:
-  explicit VCMJitterEstimator(Clock* clock);
+  explicit VCMJitterEstimator(Clock* clock,
+                              const WebRtcKeyValueConfig& field_trials);
   virtual ~VCMJitterEstimator();
   VCMJitterEstimator(const VCMJitterEstimator&) = delete;
   VCMJitterEstimator& operator=(const VCMJitterEstimator&) = delete;

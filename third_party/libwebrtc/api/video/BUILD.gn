@@ -277,6 +277,7 @@ rtc_library("video_stream_decoder_create") {
 
   deps = [
     ":video_stream_decoder",
+    "../../api:webrtc_key_value_config",
     "../../rtc_base:rtc_base_approved",
     "../../video:video_stream_decoder_impl",
     "../task_queue",

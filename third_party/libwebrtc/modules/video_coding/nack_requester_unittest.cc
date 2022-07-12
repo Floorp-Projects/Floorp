@@ -16,9 +16,9 @@
 #include <memory>
 
 #include "system_wrappers/include/clock.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
 #include "test/run_loop.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 // TODO(bugs.webrtc.org/11594): Use the use the GlobalSimulatedTimeController
@@ -86,7 +86,7 @@ class TestNackRequester : public ::testing::TestWithParam<bool>,
         std::make_unique<NackPeriodicProcessor>(interval);
     nack_module_ = std::make_unique<NackRequester>(
         TaskQueueBase::Current(), nack_periodic_processor_.get(), clock_.get(),
-        this, this);
+        this, this, field_trial_);
     nack_module_->UpdateRtt(kDefaultRttMs);
     return *nack_module_.get();
   }
@@ -94,7 +94,7 @@ class TestNackRequester : public ::testing::TestWithParam<bool>,
   static constexpr int64_t kDefaultRttMs = 20;
   test::RunLoop loop_;
   std::unique_ptr<SimulatedClock> clock_;
-  test::ScopedFieldTrials field_trial_;
+  test::ScopedKeyValueConfig field_trial_;
   std::unique_ptr<NackPeriodicProcessor> nack_periodic_processor_;
   std::unique_ptr<NackRequester> nack_module_;
   std::vector<uint16_t> sent_nacks_;
@@ -387,7 +387,8 @@ class TestNackRequesterWithFieldTrial : public ::testing::Test,
                      &nack_periodic_processor_,
                      clock_.get(),
                      this,
-                     this),
+                     this,
+                     nack_delay_field_trial_),
         keyframes_requested_(0) {}
 
   void SendNack(const std::vector<uint16_t>& sequence_numbers,
@@ -398,7 +399,7 @@ class TestNackRequesterWithFieldTrial : public ::testing::Test,
 
   void RequestKeyFrame() override { ++keyframes_requested_; }
 
-  test::ScopedFieldTrials nack_delay_field_trial_;
+  test::ScopedKeyValueConfig nack_delay_field_trial_;
   std::unique_ptr<SimulatedClock> clock_;
   NackPeriodicProcessor nack_periodic_processor_;
   NackRequester nack_module_;

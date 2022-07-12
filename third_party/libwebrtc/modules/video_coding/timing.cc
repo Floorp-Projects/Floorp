@@ -16,7 +16,6 @@
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/time/timestamp_extrapolator.h"
 #include "system_wrappers/include/clock.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
@@ -25,7 +24,7 @@ namespace {
 constexpr TimeDelta kZeroPlayoutDelayDefaultMinPacing = TimeDelta::Millis(8);
 }  // namespace
 
-VCMTiming::VCMTiming(Clock* clock)
+VCMTiming::VCMTiming(Clock* clock, const WebRtcKeyValueConfig& field_trials)
     : clock_(clock),
       ts_extrapolator_(
           std::make_unique<TimestampExtrapolator>(clock_->CurrentTime())),
@@ -42,9 +41,9 @@ VCMTiming::VCMTiming(Clock* clock)
                                      kZeroPlayoutDelayDefaultMinPacing),
       last_decode_scheduled_(Timestamp::Zero()) {
   ParseFieldTrial({&low_latency_renderer_enabled_},
-                  field_trial::FindFullName("WebRTC-LowLatencyRenderer"));
+                  field_trials.Lookup("WebRTC-LowLatencyRenderer"));
   ParseFieldTrial({&zero_playout_delay_min_pacing_},
-                  field_trial::FindFullName("WebRTC-ZeroPlayoutDelay"));
+                  field_trials.Lookup("WebRTC-ZeroPlayoutDelay"));
 }
 
 void VCMTiming::Reset() {

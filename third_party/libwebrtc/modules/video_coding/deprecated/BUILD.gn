@@ -17,6 +17,7 @@ rtc_library("nack_module") {
   deps = [
     "..:nack_requester",
     "../..:module_api",
+    "../../../api:webrtc_key_value_config",
     "../../../api/units:time_delta",
     "../../../api/units:timestamp",
     "../../../rtc_base:checks",
@@ -27,7 +28,6 @@ rtc_library("nack_module") {
     "../../../rtc_base/experiments:field_trial_parser",
     "../../../rtc_base/synchronization:mutex",
     "../../../system_wrappers",
-    "../../../system_wrappers:field_trial",
     "../../utility",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]

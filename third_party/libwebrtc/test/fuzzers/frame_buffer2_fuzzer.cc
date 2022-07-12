@@ -10,6 +10,7 @@
 
 #include "modules/video_coding/frame_buffer2.h"
 #include "modules/video_coding/timing.h"
+#include "test/scoped_key_value_config.h"
 #include "test/time_controller/simulated_time_controller.h"
 
 namespace webrtc {
@@ -68,9 +69,10 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
   rtc::TaskQueue task_queue(
       time_controller.GetTaskQueueFactory()->CreateTaskQueue(
           "time_tq", TaskQueueFactory::Priority::NORMAL));
-  VCMTiming timing(time_controller.GetClock());
+  test::ScopedKeyValueConfig field_trials;
+  VCMTiming timing(time_controller.GetClock(), field_trials);
   video_coding::FrameBuffer frame_buffer(time_controller.GetClock(), &timing,
-                                         nullptr);
+                                         nullptr, field_trials);
 
   bool next_frame_task_running = false;
 

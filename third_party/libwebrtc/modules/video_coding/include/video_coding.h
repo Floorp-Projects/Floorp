@@ -13,6 +13,7 @@
 
 #include "api/video/video_frame.h"
 #include "api/video_codecs/video_decoder.h"
+#include "api/webrtc_key_value_config.h"
 #include "modules/include/module.h"
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 #include "modules/video_coding/include/video_coding_defines.h"
@@ -28,7 +29,9 @@ struct CodecSpecificInfo;
 class VideoCodingModule : public Module {
  public:
   // DEPRECATED.
-  static VideoCodingModule* Create(Clock* clock);
+  static VideoCodingModule* Create(
+      Clock* clock,
+      const WebRtcKeyValueConfig* field_trials = nullptr);
 
   /*
    *   Receiver

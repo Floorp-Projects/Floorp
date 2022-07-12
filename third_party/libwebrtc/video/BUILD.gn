@@ -232,7 +232,9 @@ rtc_library("video_stream_decoder_impl") {
 
   deps = [
     "../api:sequence_checker",
+    "../api:webrtc_key_value_config",
     "../api/task_queue",
+    "../api/transport:field_trial_based_config",
     "../api/video:encoded_frame",
     "../api/video:video_frame",
     "../api/video:video_rtp_headers",
@@ -242,6 +244,7 @@ rtc_library("video_stream_decoder_impl") {
     "../modules/video_coding:timing",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_task_queue",
+    "../rtc_base/memory:always_valid_pointer",
     "../rtc_base/synchronization:mutex",
     "../system_wrappers",
   ]

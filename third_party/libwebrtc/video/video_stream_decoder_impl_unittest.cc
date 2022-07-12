@@ -16,6 +16,7 @@
 #include "api/video_codecs/video_decoder.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 #include "test/time_controller/simulated_time_controller.h"
 
 namespace webrtc {
@@ -163,12 +164,14 @@ class VideoStreamDecoderImplTest : public ::testing::Test {
                               &decoder_factory_,
                               time_controller_.GetTaskQueueFactory(),
                               {{1, std::make_pair(SdpVideoFormat("VP8"), 1)},
-                               {2, std::make_pair(SdpVideoFormat("AV1"), 1)}}) {
+                               {2, std::make_pair(SdpVideoFormat("AV1"), 1)}},
+                              &field_trials_) {
     // Set the min playout delay to a value greater than zero to not activate
     // the low-latency renderer.
     video_stream_decoder_.SetMinPlayoutDelay(TimeDelta::Millis(10));
   }
 
+  test::ScopedKeyValueConfig field_trials_;
   NiceMock<MockVideoStreamDecoderCallbacks> callbacks_;
   FakeVideoDecoderFactory decoder_factory_;
   GlobalSimulatedTimeController time_controller_;

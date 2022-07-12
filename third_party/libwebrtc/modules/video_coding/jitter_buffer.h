@@ -17,6 +17,7 @@
 #include <set>
 #include <vector>
 
+#include "api/webrtc_key_value_config.h"
 #include "modules/include/module_common_types.h"
 #include "modules/include/module_common_types_public.h"
 #include "modules/video_coding/decoding_state.h"
@@ -70,7 +71,9 @@ class FrameList
 
 class VCMJitterBuffer {
  public:
-  VCMJitterBuffer(Clock* clock, std::unique_ptr<EventWrapper> event);
+  VCMJitterBuffer(Clock* clock,
+                  std::unique_ptr<EventWrapper> event,
+                  const WebRtcKeyValueConfig& field_trials);
 
   ~VCMJitterBuffer();
 

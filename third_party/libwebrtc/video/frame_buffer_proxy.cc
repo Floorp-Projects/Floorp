@@ -42,10 +42,11 @@ class FrameBuffer2Proxy : public FrameBufferProxy {
                     rtc::TaskQueue* decode_queue,
                     FrameSchedulingReceiver* receiver,
                     TimeDelta max_wait_for_keyframe,
-                    TimeDelta max_wait_for_frame)
+                    TimeDelta max_wait_for_frame,
+                    const WebRtcKeyValueConfig& field_trials)
       : max_wait_for_keyframe_(max_wait_for_keyframe),
         max_wait_for_frame_(max_wait_for_frame),
-        frame_buffer_(clock, timing, stats_proxy),
+        frame_buffer_(clock, timing, stats_proxy, field_trials),
         decode_queue_(decode_queue),
         stats_proxy_(stats_proxy),
         receiver_(receiver) {
@@ -190,7 +191,8 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
       TimeDelta max_wait_for_frame,
       std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler,
       const WebRtcKeyValueConfig& field_trials)
-      : max_wait_for_keyframe_(max_wait_for_keyframe),
+      : field_trials_(field_trials),
+        max_wait_for_keyframe_(max_wait_for_keyframe),
         max_wait_for_frame_(max_wait_for_frame),
         clock_(clock),
         worker_queue_(worker_queue),
@@ -199,9 +201,10 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
         receiver_(receiver),
         timing_(timing),
         frame_decode_scheduler_(std::move(frame_decode_scheduler)),
-        jitter_estimator_(clock_),
+        jitter_estimator_(clock_, field_trials),
         buffer_(std::make_unique<FrameBuffer>(kMaxFramesBuffered,
-                                              kMaxFramesHistory)),
+                                              kMaxFramesHistory,
+                                              field_trials)),
         decode_timing_(clock_, timing_),
         timeout_tracker_(clock_,
                          worker_queue_,
@@ -251,8 +254,8 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
   void Clear() override {
     RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
     stats_proxy_->OnDroppedFrames(buffer_->CurrentSize());
-    buffer_ =
-        std::make_unique<FrameBuffer>(kMaxFramesBuffered, kMaxFramesHistory);
+    buffer_ = std::make_unique<FrameBuffer>(kMaxFramesBuffered,
+                                            kMaxFramesHistory, field_trials_);
     frame_decode_scheduler_->CancelOutstanding();
   }
 
@@ -500,6 +503,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
   }
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker worker_sequence_checker_;
+  const WebRtcKeyValueConfig& field_trials_;
   const TimeDelta max_wait_for_keyframe_;
   const TimeDelta max_wait_for_frame_;
   const absl::optional<RttMultExperiment::Settings> rtt_mult_settings_ =
@@ -612,7 +616,7 @@ std::unique_ptr<FrameBufferProxy> FrameBufferProxy::CreateFromFieldTrial(
     default:
       return std::make_unique<FrameBuffer2Proxy>(
           clock, timing, stats_proxy, decode_queue, receiver,
-          max_wait_for_keyframe, max_wait_for_frame);
+          max_wait_for_keyframe, max_wait_for_frame, field_trials);
   }
 }
 

@@ -13,6 +13,7 @@
 
 #include "api/sequence_checker.h"
 #include "api/video_codecs/video_decoder.h"
+#include "api/webrtc_key_value_config.h"
 #include "modules/video_coding/decoder_database.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/generic_decoder.h"
@@ -28,7 +29,9 @@ namespace webrtc {
 // VideoCodingModule api.
 class VideoReceiver2 {
  public:
-  VideoReceiver2(Clock* clock, VCMTiming* timing);
+  VideoReceiver2(Clock* clock,
+                 VCMTiming* timing,
+                 const WebRtcKeyValueConfig& field_trials);
   ~VideoReceiver2();
 
   void RegisterReceiveCodec(uint8_t payload_type,

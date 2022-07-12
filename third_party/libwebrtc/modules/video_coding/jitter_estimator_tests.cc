@@ -23,8 +23,8 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/clock.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 
@@ -33,10 +33,12 @@ class TestVCMJitterEstimator : public ::testing::Test {
   TestVCMJitterEstimator() : fake_clock_(0) {}
 
   virtual void SetUp() {
-    estimator_ = std::make_unique<VCMJitterEstimator>(&fake_clock_);
+    estimator_ =
+        std::make_unique<VCMJitterEstimator>(&fake_clock_, field_trials_);
   }
 
   SimulatedClock fake_clock_;
+  test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<VCMJitterEstimator> estimator_;
 };
 
@@ -78,8 +80,8 @@ TEST_F(TestVCMJitterEstimator, TestLowRate) {
 }
 
 TEST_F(TestVCMJitterEstimator, TestLowRateDisabled) {
-  test::ScopedFieldTrials field_trials(
-      "WebRTC-ReducedJitterDelayKillSwitch/Enabled/");
+  test::ScopedKeyValueConfig field_trials(
+      field_trials_, "WebRTC-ReducedJitterDelayKillSwitch/Enabled/");
   SetUp();
 
   ValueGenerator gen(10);
@@ -132,7 +134,7 @@ TEST_F(TestVCMJitterEstimator, TestUpperBound) {
     rtc::SimpleStringBuilder ssb(string_buf);
     ssb << JitterUpperBoundExperiment::kJitterUpperBoundExperimentName
         << "/Enabled-" << context.upper_bound << "/";
-    test::ScopedFieldTrials field_trials(ssb.str());
+    test::ScopedKeyValueConfig field_trials(field_trials_, ssb.str());
     SetUp();
 
     ValueGenerator gen(50);

@@ -325,7 +325,7 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
 
   if (config_.rtp.nack.rtp_history_ms != 0) {
     nack_module_ = std::make_unique<DEPRECATED_NackModule>(
-        clock_, &rtcp_feedback_buffer_, &rtcp_feedback_buffer_);
+        clock_, &rtcp_feedback_buffer_, &rtcp_feedback_buffer_, field_trials_);
     process_thread_->RegisterModule(nack_module_.get(), RTC_FROM_HERE);
   }
 

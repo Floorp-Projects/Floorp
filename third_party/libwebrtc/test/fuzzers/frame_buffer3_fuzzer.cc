@@ -13,6 +13,7 @@
 #include "modules/video_coding/frame_buffer3.h"
 #include "rtc_base/numerics/sequence_number_util.h"
 #include "test/fuzzers/fuzz_data_helper.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 namespace {
@@ -31,7 +32,9 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
     return;
   }
 
-  FrameBuffer buffer(/*max_frame_slots=*/100, /*max_decode_history=*/1000);
+  test::ScopedKeyValueConfig field_trials;
+  FrameBuffer buffer(/*max_frame_slots=*/100, /*max_decode_history=*/1000,
+                     field_trials);
   test::FuzzDataHelper helper(rtc::MakeArrayView(data, size));
   SeqNumUnwrapper<uint16_t, kFrameIdLength> unwrapper;
 

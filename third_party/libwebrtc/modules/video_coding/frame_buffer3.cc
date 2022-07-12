@@ -19,7 +19,6 @@
 #include "absl/container/inlined_vector.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/sequence_number_util.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
@@ -63,9 +62,11 @@ bool IsLastFrameInTemporalUnit(const FrameIteratorT& it) {
 }
 }  // namespace
 
-FrameBuffer::FrameBuffer(int max_size, int max_decode_history)
+FrameBuffer::FrameBuffer(int max_size,
+                         int max_decode_history,
+                         const WebRtcKeyValueConfig& field_trials)
     : legacy_frame_id_jump_behavior_(
-          !field_trial::IsDisabled("WebRTC-LegacyFrameIdJumpBehavior")),
+          !field_trials.IsDisabled("WebRTC-LegacyFrameIdJumpBehavior")),
       max_size_(max_size),
       decoded_frame_history_(max_decode_history) {}
 
