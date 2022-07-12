@@ -42,7 +42,7 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/virtual_socket_server.h"
 #include "system_wrappers/include/metrics.h"
-#include "test/field_trial.h"
+#include "test/scoped_key_value_config.h"
 
 namespace {
 
@@ -451,9 +451,13 @@ class P2PTransportChannelTestBase : public ::testing::Test,
       int component,
       const IceParameters& local_ice,
       const IceParameters& remote_ice) {
-    auto channel = P2PTransportChannel::Create(
-        "test content name", component, GetAllocator(endpoint),
+    webrtc::IceTransportInit init;
+    init.set_port_allocator(GetAllocator(endpoint));
+    init.set_async_dns_resolver_factory(
         GetEndpoint(endpoint)->async_dns_resolver_factory_);
+    init.set_field_trials(&field_trials_);
+    auto channel = P2PTransportChannel::Create("test content name", component,
+                                               std::move(init));
     channel->SignalReadyToSend.connect(
         this, &P2PTransportChannelTestBase::OnReadyToSend);
     channel->SignalCandidateGathered.connect(
@@ -994,6 +998,8 @@ class P2PTransportChannelTestBase : public ::testing::Test,
   void OnNominated(Connection* conn) { nominated_ = true; }
   bool nominated() { return nominated_; }
 
+  webrtc::test::ScopedKeyValueConfig field_trials_;
+
  private:
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   std::unique_ptr<rtc::NATSocketServer> nss_;
@@ -1257,7 +1263,7 @@ class P2PTransportChannelTestWithFieldTrials
       public ::testing::WithParamInterface<std::string> {
  public:
   void Test(const Result& expected) override {
-    webrtc::test::ScopedFieldTrials field_trials(GetParam());
+    webrtc::test::ScopedKeyValueConfig field_trials(field_trials_, GetParam());
     P2PTransportChannelTest::Test(expected);
   }
 };
@@ -2423,8 +2429,8 @@ TEST_F(P2PTransportChannelTest,
 // acknowledgement in the connectivity check from the remote peer.
 TEST_F(P2PTransportChannelTest,
        CanConnectWithPiggybackCheckAcknowledgementWhenCheckResponseBlocked) {
-  webrtc::test::ScopedFieldTrials field_trials(
-      "WebRTC-PiggybackIceCheckAcknowledgement/Enabled/");
+  webrtc::test::ScopedKeyValueConfig field_trials(
+      field_trials_, "WebRTC-PiggybackIceCheckAcknowledgement/Enabled/");
   rtc::ScopedFakeClock clock;
   ConfigureEndpoints(OPEN, OPEN, kOnlyLocalPorts, kOnlyLocalPorts);
   IceConfig ep1_config;
@@ -4057,10 +4063,10 @@ TEST_F(P2PTransportChannelPingTest, TestSelectConnectionBeforeNomination) {
 // that sends a ping directly when a connection has been nominated
 // i.e on the ICE_CONTROLLED-side.
 TEST_F(P2PTransportChannelPingTest, TestPingOnNomination) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-IceFieldTrials/send_ping_on_nomination_ice_controlled:true/");
   FakePortAllocator pa(rtc::Thread::Current(), nullptr);
-  P2PTransportChannel ch("receiving state change", 1, &pa);
+  P2PTransportChannel ch("receiving state change", 1, &pa, &field_trials);
   PrepareChannel(&ch);
   ch.SetIceConfig(ch.config());
   ch.SetIceRole(ICEROLE_CONTROLLED);
@@ -4097,10 +4103,10 @@ TEST_F(P2PTransportChannelPingTest, TestPingOnNomination) {
 // that sends a ping directly when switching to a new connection
 // on the ICE_CONTROLLING-side.
 TEST_F(P2PTransportChannelPingTest, TestPingOnSwitch) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-IceFieldTrials/send_ping_on_switch_ice_controlling:true/");
   FakePortAllocator pa(rtc::Thread::Current(), nullptr);
-  P2PTransportChannel ch("receiving state change", 1, &pa);
+  P2PTransportChannel ch("receiving state change", 1, &pa, &field_trials);
   PrepareChannel(&ch);
   ch.SetIceConfig(ch.config());
   ch.SetIceRole(ICEROLE_CONTROLLING);
@@ -4134,10 +4140,10 @@ TEST_F(P2PTransportChannelPingTest, TestPingOnSwitch) {
 // that sends a ping directly when selecteing a new connection
 // on the ICE_CONTROLLING-side (i.e also initial selection).
 TEST_F(P2PTransportChannelPingTest, TestPingOnSelected) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-IceFieldTrials/send_ping_on_selected_ice_controlling:true/");
   FakePortAllocator pa(rtc::Thread::Current(), nullptr);
-  P2PTransportChannel ch("receiving state change", 1, &pa);
+  P2PTransportChannel ch("receiving state change", 1, &pa, &field_trials);
   PrepareChannel(&ch);
   ch.SetIceConfig(ch.config());
   ch.SetIceRole(ICEROLE_CONTROLLING);
@@ -4881,10 +4887,10 @@ TEST_F(P2PTransportChannelPingTest, TestPortDestroyedAfterTimeoutAndPruned) {
 }
 
 TEST_F(P2PTransportChannelPingTest, TestMaxOutstandingPingsFieldTrial) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-IceFieldTrials/max_outstanding_pings:3/");
   FakePortAllocator pa(rtc::Thread::Current(), nullptr);
-  P2PTransportChannel ch("max", 1, &pa);
+  P2PTransportChannel ch("max", 1, &pa, &field_trials);
   ch.SetIceConfig(ch.config());
   PrepareChannel(&ch);
   ch.MaybeStartGathering();
@@ -4922,8 +4928,10 @@ class P2PTransportChannelMostLikelyToWorkFirstTest
 
   P2PTransportChannel& StartTransportChannel(
       bool prioritize_most_likely_to_work,
-      int stable_writable_connection_ping_interval) {
-    channel_.reset(new P2PTransportChannel("checks", 1, allocator()));
+      int stable_writable_connection_ping_interval,
+      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr) {
+    channel_.reset(
+        new P2PTransportChannel("checks", 1, allocator(), field_trials));
     IceConfig config = channel_->config();
     config.prioritize_most_likely_candidate_pairs =
         prioritize_most_likely_to_work;
@@ -5090,9 +5098,9 @@ TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest,
 // I.e that we never create connection between relay and non-relay.
 TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest,
        TestSkipRelayToNonRelayConnectionsFieldTrial) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-IceFieldTrials/skip_relay_to_non_relay_connections:true/");
-  P2PTransportChannel& ch = StartTransportChannel(true, 500);
+  P2PTransportChannel& ch = StartTransportChannel(true, 500, &field_trials);
   EXPECT_TRUE_WAIT(ch.ports().size() == 2, kDefaultTimeout);
   EXPECT_EQ(ch.ports()[0]->Type(), LOCAL_PORT_TYPE);
   EXPECT_EQ(ch.ports()[1]->Type(), RELAY_PORT_TYPE);
@@ -5143,8 +5151,10 @@ TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest, TestTcpTurn) {
 TEST(P2PTransportChannelResolverTest, HostnameCandidateIsResolved) {
   ResolverFactoryFixture resolver_fixture;
   FakePortAllocator allocator(rtc::Thread::Current(), nullptr);
-  auto channel =
-      P2PTransportChannel::Create("tn", 0, &allocator, &resolver_fixture);
+  webrtc::IceTransportInit init;
+  init.set_port_allocator(&allocator);
+  init.set_async_dns_resolver_factory(&resolver_fixture);
+  auto channel = P2PTransportChannel::Create("tn", 0, std::move(init));
   Candidate hostname_candidate;
   SocketAddress hostname_address("fake.test", 1000);
   hostname_candidate.set_address(hostname_address);
@@ -5906,7 +5916,8 @@ TEST_F(P2PTransportChannelTest,
 // i.e surface_ice_candidates_on_ice_transport_type_changed requires
 // coordination outside of webrtc to function properly.
 TEST_F(P2PTransportChannelTest, SurfaceRequiresCoordination) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
+      field_trials_,
       "WebRTC-IceFieldTrials/skip_relay_to_non_relay_connections:true/");
   rtc::ScopedFakeClock clock;
 
@@ -5970,7 +5981,7 @@ TEST_F(P2PTransportChannelTest, SurfaceRequiresCoordination) {
 }
 
 TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampening0) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-IceFieldTrials/initial_select_dampening:0/");
 
   constexpr int kMargin = 10;
@@ -5978,7 +5989,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampening0) {
   clock.AdvanceTime(webrtc::TimeDelta::Seconds(1));
 
   FakePortAllocator pa(rtc::Thread::Current(), nullptr);
-  P2PTransportChannel ch("test channel", 1, &pa);
+  P2PTransportChannel ch("test channel", 1, &pa, &field_trials);
   PrepareChannel(&ch);
   ch.SetIceConfig(ch.config());
   ch.MaybeStartGathering();
@@ -5994,7 +6005,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampening0) {
 }
 
 TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampening) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-IceFieldTrials/initial_select_dampening:100/");
 
   constexpr int kMargin = 10;
@@ -6002,7 +6013,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampening) {
   clock.AdvanceTime(webrtc::TimeDelta::Seconds(1));
 
   FakePortAllocator pa(rtc::Thread::Current(), nullptr);
-  P2PTransportChannel ch("test channel", 1, &pa);
+  P2PTransportChannel ch("test channel", 1, &pa, &field_trials);
   PrepareChannel(&ch);
   ch.SetIceConfig(ch.config());
   ch.MaybeStartGathering();
@@ -6018,7 +6029,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampening) {
 }
 
 TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampeningPingReceived) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-IceFieldTrials/initial_select_dampening_ping_received:100/");
 
   constexpr int kMargin = 10;
@@ -6026,7 +6037,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampeningPingReceived) {
   clock.AdvanceTime(webrtc::TimeDelta::Seconds(1));
 
   FakePortAllocator pa(rtc::Thread::Current(), nullptr);
-  P2PTransportChannel ch("test channel", 1, &pa);
+  P2PTransportChannel ch("test channel", 1, &pa, &field_trials);
   PrepareChannel(&ch);
   ch.SetIceConfig(ch.config());
   ch.MaybeStartGathering();
@@ -6043,7 +6054,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampeningPingReceived) {
 }
 
 TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampeningBoth) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-IceFieldTrials/"
       "initial_select_dampening:100,initial_select_dampening_ping_received:"
       "50/");
@@ -6053,7 +6064,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampeningBoth) {
   clock.AdvanceTime(webrtc::TimeDelta::Seconds(1));
 
   FakePortAllocator pa(rtc::Thread::Current(), nullptr);
-  P2PTransportChannel ch("test channel", 1, &pa);
+  P2PTransportChannel ch("test channel", 1, &pa, &field_trials);
   PrepareChannel(&ch);
   ch.SetIceConfig(ch.config());
   ch.MaybeStartGathering();
@@ -6128,8 +6139,12 @@ class ForgetLearnedStateControllerFactory
 TEST_F(P2PTransportChannelPingTest, TestForgetLearnedState) {
   ForgetLearnedStateControllerFactory factory;
   FakePortAllocator pa(rtc::Thread::Current(), nullptr);
-  auto ch = P2PTransportChannel::Create("ping sufficiently", 1, &pa, nullptr,
-                                        nullptr, &factory);
+  webrtc::IceTransportInit init;
+  init.set_port_allocator(&pa);
+  init.set_ice_controller_factory(&factory);
+  auto ch =
+      P2PTransportChannel::Create("ping sufficiently", 1, std::move(init));
+
   PrepareChannel(ch.get());
   ch->MaybeStartGathering();
   ch->AddRemoteCandidate(CreateUdpCandidate(LOCAL_PORT_TYPE, "1.1.1.1", 1, 1));
@@ -6246,7 +6261,7 @@ TEST_P(GatherAfterConnectedTest, GatherAfterConnected) {
   const std::string field_trial =
       std::string("WebRTC-IceFieldTrials/stop_gather_on_strongly_connected:") +
       (stop_gather_on_strongly_connected ? "true/" : "false/");
-  webrtc::test::ScopedFieldTrials field_trials(field_trial);
+  webrtc::test::ScopedKeyValueConfig field_trials(field_trials_, field_trial);
 
   rtc::ScopedFakeClock clock;
   // Use local + relay
@@ -6307,7 +6322,7 @@ TEST_P(GatherAfterConnectedTest, GatherAfterConnectedMultiHomed) {
   const std::string field_trial =
       std::string("WebRTC-IceFieldTrials/stop_gather_on_strongly_connected:") +
       (stop_gather_on_strongly_connected ? "true/" : "false/");
-  webrtc::test::ScopedFieldTrials field_trials(field_trial);
+  webrtc::test::ScopedKeyValueConfig field_trials(field_trials_, field_trial);
 
   rtc::ScopedFakeClock clock;
   // Use local + relay

@@ -29,7 +29,6 @@
 #include "rtc_base/socket_address.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/task_utils/to_queued_task.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace cricket {
 
@@ -223,7 +222,8 @@ TurnPort::TurnPort(rtc::Thread* thread,
                    const ProtocolAddress& server_address,
                    const RelayCredentials& credentials,
                    int server_priority,
-                   webrtc::TurnCustomizer* customizer)
+                   webrtc::TurnCustomizer* customizer,
+                   const webrtc::WebRtcKeyValueConfig* field_trials)
     : Port(thread, RELAY_PORT_TYPE, factory, network, username, password),
       server_address_(server_address),
       tls_cert_verifier_(nullptr),
@@ -236,7 +236,8 @@ TurnPort::TurnPort(rtc::Thread* thread,
       state_(STATE_CONNECTING),
       server_priority_(server_priority),
       allocate_mismatch_retries_(0),
-      turn_customizer_(customizer) {
+      turn_customizer_(customizer),
+      field_trials_(field_trials) {
   request_manager_.SignalSendPacket.connect(this, &TurnPort::OnSendStunPacket);
 }
 
@@ -253,7 +254,8 @@ TurnPort::TurnPort(rtc::Thread* thread,
                    const std::vector<std::string>& tls_alpn_protocols,
                    const std::vector<std::string>& tls_elliptic_curves,
                    webrtc::TurnCustomizer* customizer,
-                   rtc::SSLCertificateVerifier* tls_cert_verifier)
+                   rtc::SSLCertificateVerifier* tls_cert_verifier,
+                   const webrtc::WebRtcKeyValueConfig* field_trials)
     : Port(thread,
            RELAY_PORT_TYPE,
            factory,
@@ -275,7 +277,8 @@ TurnPort::TurnPort(rtc::Thread* thread,
       state_(STATE_CONNECTING),
       server_priority_(server_priority),
       allocate_mismatch_retries_(0),
-      turn_customizer_(customizer) {
+      turn_customizer_(customizer),
+      field_trials_(field_trials) {
   request_manager_.SignalSendPacket.connect(this, &TurnPort::OnSendStunPacket);
 }
 
@@ -338,7 +341,7 @@ void TurnPort::PrepareAddress() {
     server_address_.address.SetPort(TURN_DEFAULT_PORT);
   }
 
-  if (!AllowedTurnPort(server_address_.address.port())) {
+  if (!AllowedTurnPort(server_address_.address.port(), field_trials_)) {
     // This can only happen after a 300 ALTERNATE SERVER, since the port can't
     // be created with a disallowed port number.
     RTC_LOG(LS_ERROR) << "Attempt to start allocation with disallowed port# "
@@ -930,7 +933,9 @@ rtc::DiffServCodePoint TurnPort::StunDscpValue() const {
 }
 
 // static
-bool TurnPort::AllowedTurnPort(int port) {
+bool TurnPort::AllowedTurnPort(
+    int port,
+    const webrtc::WebRtcKeyValueConfig* field_trials) {
   // Port 53, 80 and 443 are used for existing deployments.
   // Ports above 1024 are assumed to be OK to use.
   if (port == 53 || port == 80 || port == 443 || port >= 1024) {
@@ -938,7 +943,7 @@ bool TurnPort::AllowedTurnPort(int port) {
   }
   // Allow any port if relevant field trial is set. This allows disabling the
   // check.
-  if (webrtc::field_trial::IsEnabled("WebRTC-Turn-AllowSystemPorts")) {
+  if (field_trials && field_trials->IsEnabled("WebRTC-Turn-AllowSystemPorts")) {
     return true;
   }
   return false;
@@ -1228,7 +1233,8 @@ bool TurnPort::CreateOrRefreshEntry(const rtc::SocketAddress& addr,
       RTC_DCHECK(GetConnection(addr));
     }
 
-    if (webrtc::field_trial::IsEnabled("WebRTC-TurnAddMultiMapping")) {
+    if (field_trials_ &&
+        field_trials_->IsEnabled("WebRTC-TurnAddMultiMapping")) {
       if (entry->get_remote_ufrag() != remote_ufrag) {
         RTC_LOG(LS_INFO) << ToString()
                          << ": remote ufrag updated."
@@ -1627,7 +1633,8 @@ void TurnCreatePermissionRequest::Prepare(StunMessage* request) {
   request->SetType(TURN_CREATE_PERMISSION_REQUEST);
   request->AddAttribute(std::make_unique<StunXorAddressAttribute>(
       STUN_ATTR_XOR_PEER_ADDRESS, ext_addr_));
-  if (webrtc::field_trial::IsEnabled("WebRTC-TurnAddMultiMapping")) {
+  if (port_->field_trials_ &&
+      port_->field_trials_->IsEnabled("WebRTC-TurnAddMultiMapping")) {
     request->AddAttribute(std::make_unique<cricket::StunByteStringAttribute>(
         STUN_ATTR_MULTI_MAPPING, remote_ufrag_));
   }

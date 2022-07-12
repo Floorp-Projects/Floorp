@@ -109,45 +109,13 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
       int component,
       webrtc::IceTransportInit init);
 
-  // TODO(jonaso): This is deprecated and will be removed.
-  static std::unique_ptr<P2PTransportChannel> Create(
-      const std::string& transport_name,
-      int component,
-      PortAllocator* allocator,
-      webrtc::AsyncDnsResolverFactoryInterface* async_dns_resolver_factory,
-      webrtc::RtcEventLog* event_log = nullptr,
-      IceControllerFactoryInterface* ice_controller_factory = nullptr) {
-    webrtc::IceTransportInit init;
-    init.set_port_allocator(allocator);
-    init.set_async_dns_resolver_factory(async_dns_resolver_factory);
-    init.set_event_log(event_log);
-    init.set_ice_controller_factory(ice_controller_factory);
-    return Create(transport_name, component, std::move(init));
-  }
-
   // For testing only.
   // TODO(zstein): Remove once AsyncDnsResolverFactory is required.
-  P2PTransportChannel(const std::string& transport_name,
-                      int component,
-                      PortAllocator* allocator);
-
-  ABSL_DEPRECATED("bugs.webrtc.org/12598")
   P2PTransportChannel(
       const std::string& transport_name,
       int component,
       PortAllocator* allocator,
-      webrtc::AsyncResolverFactory* async_resolver_factory,
-      webrtc::RtcEventLog* event_log = nullptr,
-      IceControllerFactoryInterface* ice_controller_factory = nullptr)
-      : P2PTransportChannel(
-            transport_name,
-            component,
-            allocator,
-            nullptr,
-            std::make_unique<webrtc::WrappingAsyncDnsResolverFactory>(
-                async_resolver_factory),
-            event_log,
-            ice_controller_factory) {}
+      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr);
 
   ~P2PTransportChannel() override;
 
@@ -278,8 +246,9 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
       // on release, this pointer is set.
       std::unique_ptr<webrtc::AsyncDnsResolverFactoryInterface>
           owned_dns_resolver_factory,
-      webrtc::RtcEventLog* event_log = nullptr,
-      IceControllerFactoryInterface* ice_controller_factory = nullptr);
+      webrtc::RtcEventLog* event_log,
+      IceControllerFactoryInterface* ice_controller_factory,
+      const webrtc::WebRtcKeyValueConfig* field_trials);
   bool IsGettingPorts() {
     RTC_DCHECK_RUN_ON(network_thread_);
     return allocator_session()->IsGettingPorts();
@@ -431,6 +400,8 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   int64_t ComputeEstimatedDisconnectedTimeMs(int64_t now,
                                              Connection* old_connection);
 
+  void ParseFieldTrials(const webrtc::WebRtcKeyValueConfig* field_trials);
+
   webrtc::ScopedTaskSafety task_safety_;
   std::string transport_name_ RTC_GUARDED_BY(network_thread_);
   int component_ RTC_GUARDED_BY(network_thread_);
@@ -531,7 +502,8 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   // from connection->last_data_received() that uses rtc::TimeMillis().
   int64_t last_data_received_ms_ = 0;
 
-  IceFieldTrials field_trials_;
+  // Parsed field trials.
+  IceFieldTrials ice_field_trials_;
 };
 
 }  // namespace cricket

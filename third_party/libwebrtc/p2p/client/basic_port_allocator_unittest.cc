@@ -42,9 +42,9 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/virtual_socket_server.h"
 #include "system_wrappers/include/metrics.h"
-#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 using rtc::IPAddress;
 using rtc::SocketAddress;
@@ -2444,12 +2444,12 @@ TEST_F(BasicPortAllocatorTest, TestUseTurnServerAsStunSever) {
 }
 
 TEST_F(BasicPortAllocatorTest, TestDoNotUseTurnServerAsStunSever) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-UseTurnServerAsStunServer/Disabled/");
   ServerAddresses stun_servers;
   stun_servers.insert(kStunAddr);
   PortConfiguration port_config(stun_servers, "" /* user_name */,
-                                "" /* password */);
+                                "" /* password */, &field_trials);
   RelayServerConfig turn_servers =
       CreateTurnServers(kTurnUdpIntAddr, kTurnTcpIntAddr);
   port_config.AddRelay(turn_servers);

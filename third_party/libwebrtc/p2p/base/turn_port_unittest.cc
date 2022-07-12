@@ -41,8 +41,8 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/virtual_socket_server.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 using rtc::SocketAddress;
 
@@ -293,9 +293,10 @@ class TurnPortTest : public ::testing::Test,
                                    const std::string& password,
                                    const ProtocolAddress& server_address) {
     RelayCredentials credentials(username, password);
-    turn_port_ = TurnPort::Create(
-        &main_, &socket_factory_, network, 0, 0, kIceUfrag1, kIcePwd1,
-        server_address, credentials, 0, {}, {}, turn_customizer_.get());
+    turn_port_ =
+        TurnPort::Create(&main_, &socket_factory_, network, 0, 0, kIceUfrag1,
+                         kIcePwd1, server_address, credentials, 0, {}, {},
+                         turn_customizer_.get(), nullptr, &field_trials_);
     if (!turn_port_) {
       return false;
     }
@@ -327,9 +328,10 @@ class TurnPortTest : public ::testing::Test,
     }
 
     RelayCredentials credentials(username, password);
-    turn_port_ = TurnPort::Create(
-        &main_, &socket_factory_, MakeNetwork(kLocalAddr1), socket_.get(),
-        kIceUfrag1, kIcePwd1, server_address, credentials, 0, nullptr);
+    turn_port_ =
+        TurnPort::Create(&main_, &socket_factory_, MakeNetwork(kLocalAddr1),
+                         socket_.get(), kIceUfrag1, kIcePwd1, server_address,
+                         credentials, 0, nullptr, &field_trials_);
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
     ConnectSignals();
@@ -760,6 +762,7 @@ class TurnPortTest : public ::testing::Test,
   }
 
  protected:
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   rtc::ScopedFakeClock fake_clock_;
   // When a "create port" helper method is called with an IP, we create a
   // Network with that IP and add it to this list. Using a list instead of a
@@ -1852,8 +1855,8 @@ TEST_F(TurnPortTest, TestTurnDangerousAlternateServer) {
 }
 
 TEST_F(TurnPortTest, TestTurnDangerousServerAllowedWithFieldTrial) {
-  webrtc::test::ScopedFieldTrials override_field_trials(
-      "WebRTC-Turn-AllowSystemPorts/Enabled/");
+  webrtc::test::ScopedKeyValueConfig override_field_trials(
+      field_trials_, "WebRTC-Turn-AllowSystemPorts/Enabled/");
   CreateTurnPort(kTurnUsername, kTurnPassword, kTurnDangerousProtoAddr);
   ASSERT_TRUE(turn_port_);
 }

@@ -20,6 +20,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
+#include "api/transport/field_trial_based_config.h"
 #include "p2p/base/basic_packet_socket_factory.h"
 #include "p2p/base/port.h"
 #include "p2p/base/stun_port.h"
@@ -31,7 +32,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/trace_event.h"
-#include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
 
 using rtc::CreateRandomId;
@@ -152,7 +152,7 @@ BasicPortAllocator::BasicPortAllocator(
     webrtc::TurnCustomizer* customizer,
     RelayPortFactoryInterface* relay_port_factory)
     : network_manager_(network_manager), socket_factory_(socket_factory) {
-  InitRelayPortFactory(relay_port_factory);
+  Init(relay_port_factory, nullptr);
   RTC_DCHECK(relay_port_factory_ != nullptr);
   RTC_DCHECK(network_manager_ != nullptr);
   RTC_DCHECK(socket_factory_ != nullptr);
@@ -162,7 +162,7 @@ BasicPortAllocator::BasicPortAllocator(
 
 BasicPortAllocator::BasicPortAllocator(rtc::NetworkManager* network_manager)
     : network_manager_(network_manager), socket_factory_(nullptr) {
-  InitRelayPortFactory(nullptr);
+  Init(nullptr, nullptr);
   RTC_DCHECK(relay_port_factory_ != nullptr);
   RTC_DCHECK(network_manager_ != nullptr);
 }
@@ -177,7 +177,7 @@ BasicPortAllocator::BasicPortAllocator(rtc::NetworkManager* network_manager,
                                        rtc::PacketSocketFactory* socket_factory,
                                        const ServerAddresses& stun_servers)
     : network_manager_(network_manager), socket_factory_(socket_factory) {
-  InitRelayPortFactory(nullptr);
+  Init(nullptr, nullptr);
   RTC_DCHECK(relay_port_factory_ != nullptr);
   RTC_DCHECK(network_manager_ != nullptr);
   SetConfiguration(stun_servers, std::vector<RelayServerConfig>(), 0,
@@ -251,13 +251,21 @@ void BasicPortAllocator::AddTurnServer(const RelayServerConfig& turn_server) {
                    turn_port_prune_policy(), turn_customizer());
 }
 
-void BasicPortAllocator::InitRelayPortFactory(
-    RelayPortFactoryInterface* relay_port_factory) {
+void BasicPortAllocator::Init(
+    RelayPortFactoryInterface* relay_port_factory,
+    const webrtc::WebRtcKeyValueConfig* field_trials) {
   if (relay_port_factory != nullptr) {
     relay_port_factory_ = relay_port_factory;
   } else {
     default_relay_port_factory_.reset(new TurnPortFactory());
     relay_port_factory_ = default_relay_port_factory_.get();
+  }
+
+  if (field_trials != nullptr) {
+    field_trials_ = field_trials;
+  } else {
+    owned_field_trials_ = std::make_unique<webrtc::FieldTrialBasedConfig>();
+    field_trials_ = owned_field_trials_.get();
   }
 }
 
@@ -602,8 +610,9 @@ void BasicPortAllocatorSession::UpdateIceParametersInternal() {
 void BasicPortAllocatorSession::GetPortConfigurations() {
   RTC_DCHECK_RUN_ON(network_thread_);
 
-  auto config = std::make_unique<PortConfiguration>(allocator_->stun_servers(),
-                                                    username(), password());
+  auto config = std::make_unique<PortConfiguration>(
+      allocator_->stun_servers(), username(), password(),
+      allocator()->field_trials());
 
   for (const RelayServerConfig& turn_server : allocator_->turn_servers()) {
     config->AddRelay(turn_server);
@@ -1565,6 +1574,7 @@ void AllocationSequence::CreateTurnPort(const RelayServerConfig& config) {
     args.server_address = &(*relay_port);
     args.config = &config;
     args.turn_customizer = session_->allocator()->turn_customizer();
+    args.field_trials = session_->allocator()->field_trials();
 
     std::unique_ptr<cricket::Port> port;
     // Shared socket mode must be enabled only for UDP based ports. Hence
@@ -1658,24 +1668,19 @@ void AllocationSequence::OnPortDestroyed(PortInterface* port) {
   }
 }
 
-// PortConfiguration
-PortConfiguration::PortConfiguration(const rtc::SocketAddress& stun_address,
-                                     const std::string& username,
-                                     const std::string& password)
-    : stun_address(stun_address), username(username), password(password) {
-  if (!stun_address.IsNil())
-    stun_servers.insert(stun_address);
-}
-
-PortConfiguration::PortConfiguration(const ServerAddresses& stun_servers,
-                                     const std::string& username,
-                                     const std::string& password)
+PortConfiguration::PortConfiguration(
+    const ServerAddresses& stun_servers,
+    const std::string& username,
+    const std::string& password,
+    const webrtc::WebRtcKeyValueConfig* field_trials)
     : stun_servers(stun_servers), username(username), password(password) {
   if (!stun_servers.empty())
     stun_address = *(stun_servers.begin());
   // Note that this won't change once the config is initialized.
-  use_turn_server_as_stun_server_disabled =
-      webrtc::field_trial::IsDisabled("WebRTC-UseTurnServerAsStunServer");
+  if (field_trials) {
+    use_turn_server_as_stun_server_disabled =
+        field_trials->IsDisabled("WebRTC-UseTurnServerAsStunServer");
+  }
 }
 
 ServerAddresses PortConfiguration::StunServers() {
