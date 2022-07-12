@@ -6,7 +6,11 @@
 
 const EXPORTED_SYMBOLS = ["error"];
 
-class MessageHandlerError extends Error {
+const { RemoteError } = ChromeUtils.import(
+  "chrome://remote/content/shared/RemoteError.jsm"
+);
+
+class MessageHandlerError extends RemoteError {
   /**
    * @param {(string|Error)=} x
    *     Optional string describing error situation or Error instance
@@ -21,6 +25,10 @@ class MessageHandlerError extends Error {
     if (typeof x?.stack !== "undefined") {
       this.stack = x.stack;
     }
+  }
+
+  get isMessageHandlerError() {
+    return true;
   }
 
   /**

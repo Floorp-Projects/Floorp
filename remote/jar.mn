@@ -19,6 +19,7 @@ remote.jar:
   content/shared/Navigate.jsm (shared/Navigate.jsm)
   content/shared/PDF.jsm (shared/PDF.jsm)
   content/shared/RecommendedPreferences.jsm (shared/RecommendedPreferences.jsm)
+  content/shared/RemoteError.jsm (shared/RemoteError.jsm)
   content/shared/Stack.jsm (shared/Stack.jsm)
   content/shared/Sync.jsm (shared/Sync.jsm)
   content/shared/TabManager.jsm (shared/TabManager.jsm)
