@@ -105,7 +105,7 @@ class nsCSSProps {
   static bool PropHasFlags(nsCSSPropertyID aProperty, Flags aFlags) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
                "out of range");
-    return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
+    return (kFlagsTable[aProperty] & aFlags) == aFlags;
   }
 
   static nsCSSPropertyID Physicalize(nsCSSPropertyID aProperty,
@@ -141,8 +141,7 @@ class nsCSSProps {
     MOZ_ASSERT(eCSSProperty_COUNT_no_shorthands <= aProperty &&
                    aProperty < eCSSProperty_COUNT,
                "out of range");
-    return nsCSSProps::kSubpropertyTable[aProperty -
-                                         eCSSProperty_COUNT_no_shorthands];
+    return kSubpropertyTable[aProperty - eCSSProperty_COUNT_no_shorthands];
   }
 
  private:
