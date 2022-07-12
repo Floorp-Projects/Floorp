@@ -55,7 +55,6 @@
 #include "test/configurable_frame_size_encoder.h"
 #include "test/fake_encoder.h"
 #include "test/fake_texture_frame.h"
-#include "test/field_trial.h"
 #include "test/frame_forwarder.h"
 #include "test/frame_generator_capturer.h"
 #include "test/frame_utils.h"
@@ -659,9 +658,10 @@ TEST_F(VideoSendStreamTest, SupportsUlpfecWithoutExtensions) {
 class VideoSendStreamWithoutUlpfecTest : public test::CallTest {
  protected:
   VideoSendStreamWithoutUlpfecTest()
-      : field_trial_("WebRTC-DisableUlpFecExperiment/Enabled/") {}
+      : field_trial_(field_trials_, "WebRTC-DisableUlpFecExperiment/Enabled/") {
+  }
 
-  test::ScopedFieldTrials field_trial_;
+  test::ScopedKeyValueConfig field_trial_;
 };
 
 TEST_F(VideoSendStreamWithoutUlpfecTest, NoUlpfecIfDisabledThroughFieldTrial) {
@@ -1680,10 +1680,9 @@ TEST_F(VideoSendStreamTest, DISABLED_RelayToDirectRoute) {
   static const int kStartBitrateBps = 300000;
   static const int kRelayBandwidthCapBps = 800000;
   static const int kMinPacketsToSend = 100;
-  webrtc::test::ScopedFieldTrials field_trials(
-      std::string(field_trial::GetFieldTrialString()) +
-      "WebRTC-Bwe-NetworkRouteConstraints/relay_cap:" +
-      std::to_string(kRelayBandwidthCapBps) + "bps/");
+  webrtc::test::ScopedKeyValueConfig field_trials(
+      field_trials_, "WebRTC-Bwe-NetworkRouteConstraints/relay_cap:" +
+                         std::to_string(kRelayBandwidthCapBps) + "bps/");
 
   class RelayToDirectRouteTest : public test::EndToEndTest {
    public:
@@ -2677,8 +2676,8 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
   // TODO(bugs.webrtc.org/12058): If these fields trial are on, we get lower
   // bitrates than expected by this test, due to encoder pushback and subtracted
   // overhead.
-  webrtc::test::ScopedFieldTrials field_trials(
-      std::string(field_trial::GetFieldTrialString()) +
+  webrtc::test::ScopedKeyValueConfig field_trials(
+      field_trials_,
       "WebRTC-VideoRateControl/bitrate_adjuster:false/"
       "WebRTC-SendSideBwe-WithOverhead/Disabled/");
 

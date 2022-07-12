@@ -33,7 +33,6 @@
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/clock.h"
-#include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
 #include "system_wrappers/include/ntp_time.h"
 
@@ -209,7 +208,9 @@ class ZeroHertzAdapterMode : public AdapterMode {
 
 class FrameCadenceAdapterImpl : public FrameCadenceAdapterInterface {
  public:
-  FrameCadenceAdapterImpl(Clock* clock, TaskQueueBase* queue);
+  FrameCadenceAdapterImpl(Clock* clock,
+                          TaskQueueBase* queue,
+                          const WebRtcKeyValueConfig& field_trials);
   ~FrameCadenceAdapterImpl();
 
   // FrameCadenceAdapterInterface overrides.
@@ -542,12 +543,14 @@ TimeDelta ZeroHertzAdapterMode::RepeatDuration(bool idle_repeat) const {
              : frame_delay_;
 }
 
-FrameCadenceAdapterImpl::FrameCadenceAdapterImpl(Clock* clock,
-                                                 TaskQueueBase* queue)
+FrameCadenceAdapterImpl::FrameCadenceAdapterImpl(
+    Clock* clock,
+    TaskQueueBase* queue,
+    const WebRtcKeyValueConfig& field_trials)
     : clock_(clock),
       queue_(queue),
       zero_hertz_screenshare_enabled_(
-          !field_trial::IsDisabled("WebRTC-ZeroHertzScreenshare")) {}
+          !field_trials.IsDisabled("WebRTC-ZeroHertzScreenshare")) {}
 
 FrameCadenceAdapterImpl::~FrameCadenceAdapterImpl() {
   RTC_DLOG(LS_VERBOSE) << __func__ << " this " << this;
@@ -737,8 +740,10 @@ void FrameCadenceAdapterImpl::MaybeReportFrameRateConstraintUmas() {
 }  // namespace
 
 std::unique_ptr<FrameCadenceAdapterInterface>
-FrameCadenceAdapterInterface::Create(Clock* clock, TaskQueueBase* queue) {
-  return std::make_unique<FrameCadenceAdapterImpl>(clock, queue);
+FrameCadenceAdapterInterface::Create(Clock* clock,
+                                     TaskQueueBase* queue,
+                                     const WebRtcKeyValueConfig& field_trials) {
+  return std::make_unique<FrameCadenceAdapterImpl>(clock, queue, field_trials);
 }
 
 }  // namespace webrtc

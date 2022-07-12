@@ -171,8 +171,10 @@ rtc_source_set("video_legacy") {
     "../api:array_view",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api:webrtc_key_value_config",
     "../api/crypto:frame_decryptor_interface",
     "../api/task_queue",
+    "../api/transport:field_trial_based_config",
     "../api/units:timestamp",
     "../api/video:encoded_image",
     "../api/video:recordable_encoded_frame",
@@ -275,6 +277,7 @@ rtc_library("frame_cadence_adapter") {
 
   deps = [
     "../api:sequence_checker",
+    "../api:webrtc_key_value_config",
     "../api/task_queue",
     "../api/units:time_delta",
     "../api/video:video_frame",
@@ -307,6 +310,7 @@ rtc_library("frame_buffer_proxy") {
     ":task_queue_frame_decode_scheduler",
     ":video_receive_stream_timeout_tracker",
     "../api:sequence_checker",
+    "../api:webrtc_key_value_config",
     "../api/metronome",
     "../api/task_queue",
     "../api/units:data_size",
@@ -952,6 +956,7 @@ if (rtc_include_tests) {
       "../test:field_trial",
       "../test:mock_frame_transformer",
       "../test:mock_transport",
+      "../test:scoped_key_value_config",
       "../test:test_support",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]

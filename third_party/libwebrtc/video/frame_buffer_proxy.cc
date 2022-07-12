@@ -26,7 +26,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/thread_annotations.h"
-#include "system_wrappers/include/field_trial.h"
 #include "video/frame_decode_timing.h"
 #include "video/task_queue_frame_decode_scheduler.h"
 #include "video/video_receive_stream_timeout_tracker.h"
@@ -189,7 +188,8 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
       FrameSchedulingReceiver* receiver,
       TimeDelta max_wait_for_keyframe,
       TimeDelta max_wait_for_frame,
-      std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler)
+      std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler,
+      const WebRtcKeyValueConfig& field_trials)
       : max_wait_for_keyframe_(max_wait_for_keyframe),
         max_wait_for_frame_(max_wait_for_frame),
         clock_(clock),
@@ -222,7 +222,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     RTC_LOG(LS_WARNING) << "Using FrameBuffer3";
 
     ParseFieldTrial({&zero_playout_delay_max_decode_queue_size_},
-                    field_trial::FindFullName("WebRTC-ZeroPlayoutDelay"));
+                    field_trials.Lookup("WebRTC-ZeroPlayoutDelay"));
   }
 
 #if defined(WEBRTC_MOZILLA_BUILD)
@@ -561,7 +561,8 @@ enum class FrameBufferArm {
 
 constexpr const char* kFrameBufferFieldTrial = "WebRTC-FrameBuffer3";
 
-FrameBufferArm ParseFrameBufferFieldTrial() {
+FrameBufferArm ParseFrameBufferFieldTrial(
+    const WebRtcKeyValueConfig& field_trials) {
   webrtc::FieldTrialEnum<FrameBufferArm> arm(
       "arm", FrameBufferArm::kFrameBuffer2,
       {
@@ -569,7 +570,7 @@ FrameBufferArm ParseFrameBufferFieldTrial() {
           {"FrameBuffer3", FrameBufferArm::kFrameBuffer3},
           {"SyncDecoding", FrameBufferArm::kSyncDecode},
       });
-  ParseFieldTrial({&arm}, field_trial::FindFullName(kFrameBufferFieldTrial));
+  ParseFieldTrial({&arm}, field_trials.Lookup(kFrameBufferFieldTrial));
   return arm.Get();
 }
 
@@ -584,14 +585,16 @@ std::unique_ptr<FrameBufferProxy> FrameBufferProxy::CreateFromFieldTrial(
     FrameSchedulingReceiver* receiver,
     TimeDelta max_wait_for_keyframe,
     TimeDelta max_wait_for_frame,
-    DecodeSynchronizer* decode_sync) {
-  switch (ParseFrameBufferFieldTrial()) {
+    DecodeSynchronizer* decode_sync,
+    const WebRtcKeyValueConfig& field_trials) {
+  switch (ParseFrameBufferFieldTrial(field_trials)) {
     case FrameBufferArm::kFrameBuffer3: {
       auto scheduler =
           std::make_unique<TaskQueueFrameDecodeScheduler>(clock, worker_queue);
       return std::make_unique<FrameBuffer3Proxy>(
           clock, worker_queue, timing, stats_proxy, decode_queue, receiver,
-          max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler));
+          max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler),
+          field_trials);
     }
     case FrameBufferArm::kSyncDecode: {
       std::unique_ptr<FrameDecodeScheduler> scheduler;
@@ -607,7 +610,8 @@ std::unique_ptr<FrameBufferProxy> FrameBufferProxy::CreateFromFieldTrial(
       }
       return std::make_unique<FrameBuffer3Proxy>(
           clock, worker_queue, timing, stats_proxy, decode_queue, receiver,
-          max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler));
+          max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler),
+          field_trials);
     }
     case FrameBufferArm::kFrameBuffer2:
       ABSL_FALLTHROUGH_INTENDED;

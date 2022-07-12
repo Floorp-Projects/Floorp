@@ -18,6 +18,7 @@
 #include "api/units/time_delta.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
+#include "api/webrtc_key_value_config.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
@@ -79,7 +80,8 @@ class FrameCadenceAdapterInterface
   // Callback::OnFrame on the |queue|.
   static std::unique_ptr<FrameCadenceAdapterInterface> Create(
       Clock* clock,
-      TaskQueueBase* queue);
+      TaskQueueBase* queue,
+      const WebRtcKeyValueConfig& field_trials);
 
   // Call before using the rest of the API.
   virtual void Initialize(Callback* callback) = 0;

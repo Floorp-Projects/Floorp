@@ -611,8 +611,9 @@ class MockableSendStatisticsProxy : public SendStatisticsProxy {
  public:
   MockableSendStatisticsProxy(Clock* clock,
                               const VideoSendStream::Config& config,
-                              VideoEncoderConfig::ContentType content_type)
-      : SendStatisticsProxy(clock, config, content_type) {}
+                              VideoEncoderConfig::ContentType content_type,
+                              const WebRtcKeyValueConfig& field_trials)
+      : SendStatisticsProxy(clock, config, content_type, field_trials) {}
 
   VideoSendStream::Stats GetStats() override {
     MutexLock lock(&lock_);
@@ -741,7 +742,8 @@ class SimpleVideoStreamEncoderFactory {
       std::make_unique<MockableSendStatisticsProxy>(
           time_controller_.GetClock(),
           VideoSendStream::Config(nullptr),
-          webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo);
+          webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo,
+          field_trials_);
   std::unique_ptr<VideoBitrateAllocatorFactory> bitrate_allocator_factory_ =
       CreateBuiltinVideoBitrateAllocatorFactory();
   VideoStreamEncoderSettings encoder_settings_{
@@ -816,7 +818,8 @@ class VideoStreamEncoderTest : public ::testing::Test {
         stats_proxy_(new MockableSendStatisticsProxy(
             time_controller_.GetClock(),
             video_send_config_,
-            webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo)),
+            webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo,
+            field_trials_)),
         sink_(&time_controller_, &fake_encoder_) {}
 
   void SetUp() override {
@@ -852,7 +855,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
     TaskQueueBase* encoder_queue_ptr = encoder_queue.get();
     std::unique_ptr<FrameCadenceAdapterInterface> cadence_adapter =
         FrameCadenceAdapterInterface::Create(time_controller_.GetClock(),
-                                             encoder_queue_ptr);
+                                             encoder_queue_ptr, field_trials_);
     video_stream_encoder_ = std::make_unique<VideoStreamEncoderUnderTest>(
         &time_controller_, std::move(cadence_adapter), std::move(encoder_queue),
         stats_proxy_.get(), video_send_config_.encoder_settings,
@@ -8901,10 +8904,11 @@ TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
   };
 
   // Lots of boiler plate.
+  test::ScopedKeyValueConfig field_trials;
   GlobalSimulatedTimeController time_controller(Timestamp::Millis(0));
   auto stats_proxy = std::make_unique<MockableSendStatisticsProxy>(
       time_controller.GetClock(), VideoSendStream::Config(nullptr),
-      webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo);
+      webrtc::VideoEncoderConfig::ContentType::kRealtimeVideo, field_trials);
   SimpleVideoStreamEncoderFactory::MockFakeEncoder mock_fake_encoder(
       time_controller.GetClock());
   test::VideoEncoderProxyFactory encoder_factory(&mock_fake_encoder);
@@ -8920,8 +8924,6 @@ TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
 
   std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
       encoder_queue(new SuperLazyTaskQueue());
-
-  test::ScopedKeyValueConfig field_trials;
 
   // Construct a VideoStreamEncoder instance and let it go out of scope without
   // doing anything else (including calling Stop()). This should be fine since
@@ -9200,7 +9202,8 @@ TEST(VideoStreamEncoderFrameCadenceTest,
   test::ScopedKeyValueConfig field_trials(
       "WebRTC-ZeroHertzScreenshare/Enabled/");
   auto adapter = FrameCadenceAdapterInterface::Create(
-      factory.GetTimeController()->GetClock(), encoder_queue.get());
+      factory.GetTimeController()->GetClock(), encoder_queue.get(),
+      field_trials);
   FrameCadenceAdapterInterface* adapter_ptr = adapter.get();
 
   MockVideoSourceInterface mock_source;

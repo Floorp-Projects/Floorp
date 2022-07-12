@@ -188,7 +188,7 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
                  ? nullptr
                  : rtc::make_ref_counted<
                        StrictMock<webrtc::test::MockAudioProcessing>>()),
-        call_() {
+        call_(&field_trials_) {
     // AudioDeviceModule.
     AdmSetupExpectations(adm_);
 
@@ -787,6 +787,7 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
 
  protected:
   const bool use_null_apm_;
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
   rtc::scoped_refptr<webrtc::test::MockAudioDeviceModule> adm_;
   rtc::scoped_refptr<StrictMock<webrtc::test::MockAudioProcessing>> apm_;
@@ -797,7 +798,6 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
   cricket::AudioRecvParameters recv_parameters_;
   FakeAudioSource fake_source_;
   webrtc::AudioProcessing::Config apm_config_;
-  webrtc::test::ScopedKeyValueConfig field_trials_;
 };
 
 INSTANTIATE_TEST_SUITE_P(TestBothWithAndWithoutNullApm,

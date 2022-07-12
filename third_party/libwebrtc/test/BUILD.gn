@@ -864,6 +864,7 @@ rtc_library("test_common") {
     ":fake_video_codecs",
     ":fileutils",
     ":mock_transport",
+    ":scoped_key_value_config",
     ":test_support",
     ":video_test_common",
     "../api:array_view",

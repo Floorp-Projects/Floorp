@@ -25,7 +25,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/mod_ops.h"
 #include "rtc_base/strings/string_builder.h"
-#include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
@@ -110,17 +109,17 @@ absl::optional<int> GetFallbackMaxPixels(const std::string& group) {
   return absl::optional<int>(max_pixels);
 }
 
-absl::optional<int> GetFallbackMaxPixelsIfFieldTrialEnabled() {
-  std::string group =
-      webrtc::field_trial::FindFullName(kVp8ForcedFallbackEncoderFieldTrial);
+absl::optional<int> GetFallbackMaxPixelsIfFieldTrialEnabled(
+    const webrtc::WebRtcKeyValueConfig& field_trials) {
+  std::string group = field_trials.Lookup(kVp8ForcedFallbackEncoderFieldTrial);
   return (absl::StartsWith(group, "Enabled"))
              ? GetFallbackMaxPixels(group.substr(7))
              : absl::optional<int>();
 }
 
-absl::optional<int> GetFallbackMaxPixelsIfFieldTrialDisabled() {
-  std::string group =
-      webrtc::field_trial::FindFullName(kVp8ForcedFallbackEncoderFieldTrial);
+absl::optional<int> GetFallbackMaxPixelsIfFieldTrialDisabled(
+    const webrtc::WebRtcKeyValueConfig& field_trials) {
+  std::string group = field_trials.Lookup(kVp8ForcedFallbackEncoderFieldTrial);
   return (absl::StartsWith(group, "Disabled"))
              ? GetFallbackMaxPixels(group.substr(8))
              : absl::optional<int>();
@@ -132,12 +131,15 @@ const int SendStatisticsProxy::kStatsTimeoutMs = 5000;
 SendStatisticsProxy::SendStatisticsProxy(
     Clock* clock,
     const VideoSendStream::Config& config,
-    VideoEncoderConfig::ContentType content_type)
+    VideoEncoderConfig::ContentType content_type,
+    const WebRtcKeyValueConfig& field_trials)
     : clock_(clock),
       payload_name_(config.rtp.payload_name),
       rtp_config_(config.rtp),
-      fallback_max_pixels_(GetFallbackMaxPixelsIfFieldTrialEnabled()),
-      fallback_max_pixels_disabled_(GetFallbackMaxPixelsIfFieldTrialDisabled()),
+      fallback_max_pixels_(
+          GetFallbackMaxPixelsIfFieldTrialEnabled(field_trials)),
+      fallback_max_pixels_disabled_(
+          GetFallbackMaxPixelsIfFieldTrialDisabled(field_trials)),
       content_type_(content_type),
       start_ms_(clock->TimeInMilliseconds()),
       encode_time_(kEncodeTimeWeigthFactor),

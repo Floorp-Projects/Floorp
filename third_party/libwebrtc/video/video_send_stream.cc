@@ -22,7 +22,6 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "system_wrappers/include/clock.h"
-#include "system_wrappers/include/field_trial.h"
 #include "video/adaptation/overuse_frame_detector.h"
 #include "video/frame_cadence_adapter.h"
 #include "video/video_stream_encoder.h"
@@ -63,7 +62,8 @@ size_t CalculateMaxHeaderSize(const RtpConfig& config) {
 }
 
 VideoStreamEncoder::BitrateAllocationCallbackType
-GetBitrateAllocationCallbackType(const VideoSendStream::Config& config) {
+GetBitrateAllocationCallbackType(const VideoSendStream::Config& config,
+                                 const WebRtcKeyValueConfig& field_trials) {
   if (webrtc::RtpExtension::FindHeaderExtensionByUri(
           config.rtp.extensions,
           webrtc::RtpExtension::kVideoLayersAllocationUri,
@@ -73,7 +73,7 @@ GetBitrateAllocationCallbackType(const VideoSendStream::Config& config) {
     return VideoStreamEncoder::BitrateAllocationCallbackType::
         kVideoLayersAllocation;
   }
-  if (field_trial::IsEnabled("WebRTC-Target-Bitrate-Rtcp")) {
+  if (field_trials.IsEnabled("WebRTC-Target-Bitrate-Rtcp")) {
     return VideoStreamEncoder::BitrateAllocationCallbackType::
         kVideoBitrateAllocation;
   }
@@ -123,7 +123,8 @@ std::unique_ptr<VideoStreamEncoder> CreateVideoStreamEncoder(
   return std::make_unique<VideoStreamEncoder>(
       clock, num_cpu_cores, stats_proxy, encoder_settings,
       std::make_unique<OveruseFrameDetector>(stats_proxy),
-      FrameCadenceAdapterInterface::Create(clock, encoder_queue_ptr),
+      FrameCadenceAdapterInterface::Create(clock, encoder_queue_ptr,
+                                           field_trials),
       std::move(encoder_queue), bitrate_allocation_callback_type, field_trials);
 }
 
@@ -149,17 +150,17 @@ VideoSendStream::VideoSendStream(
     const WebRtcKeyValueConfig& field_trials)
     : rtp_transport_queue_(transport->GetWorkerQueue()),
       transport_(transport),
-      stats_proxy_(clock, config, encoder_config.content_type),
+      stats_proxy_(clock, config, encoder_config.content_type, field_trials),
       config_(std::move(config)),
       content_type_(encoder_config.content_type),
-      video_stream_encoder_(
-          CreateVideoStreamEncoder(clock,
-                                   num_cpu_cores,
-                                   task_queue_factory,
-                                   &stats_proxy_,
-                                   config_.encoder_settings,
-                                   GetBitrateAllocationCallbackType(config_),
-                                   field_trials)),
+      video_stream_encoder_(CreateVideoStreamEncoder(
+          clock,
+          num_cpu_cores,
+          task_queue_factory,
+          &stats_proxy_,
+          config_.encoder_settings,
+          GetBitrateAllocationCallbackType(config_, field_trials),
+          field_trials)),
       encoder_feedback_(
           clock,
           config_.rtp.ssrcs,
@@ -191,7 +192,8 @@ VideoSendStream::VideoSendStream(
                    encoder_config.max_bitrate_bps,
                    encoder_config.bitrate_priority,
                    encoder_config.content_type,
-                   rtp_video_sender_) {
+                   rtp_video_sender_,
+                   field_trials) {
   RTC_DCHECK(config_.encoder_settings.encoder_factory);
   RTC_DCHECK(config_.encoder_settings.bitrate_allocator_factory);
 

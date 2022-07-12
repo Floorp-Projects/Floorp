@@ -527,6 +527,7 @@ if (rtc_include_tests) {
       "../rtc_base:threading",
       "../rtc_base/synchronization:mutex",
       "../rtc_base/third_party/sigslot",
+      "../test:scoped_key_value_config",
       "../test:test_support",
       "//testing/gtest",
     ]

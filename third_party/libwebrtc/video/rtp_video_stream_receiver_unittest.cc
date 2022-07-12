@@ -33,12 +33,11 @@
 #include "rtc_base/byte_buffer.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/clock.h"
-#include "system_wrappers/include/field_trial.h"
-#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_frame_transformer.h"
 #include "test/mock_transport.h"
+#include "test/scoped_key_value_config.h"
 
 using ::testing::_;
 using ::testing::ElementsAre;
@@ -144,7 +143,7 @@ class RtpVideoStreamReceiverTest : public ::testing::Test {
  public:
   RtpVideoStreamReceiverTest() : RtpVideoStreamReceiverTest("") {}
   explicit RtpVideoStreamReceiverTest(std::string field_trials)
-      : override_field_trials_(field_trials),
+      : field_trials_(field_trials),
         config_(CreateConfig()),
         process_thread_(ProcessThread::Create("TestThread")) {
     rtp_receive_statistics_ =
@@ -153,7 +152,7 @@ class RtpVideoStreamReceiverTest : public ::testing::Test {
         Clock::GetRealTimeClock(), &mock_transport_, nullptr, nullptr, &config_,
         rtp_receive_statistics_.get(), nullptr, nullptr, process_thread_.get(),
         &mock_nack_sender_, &mock_key_frame_request_sender_,
-        &mock_on_complete_frame_callback_, nullptr, nullptr);
+        &mock_on_complete_frame_callback_, nullptr, nullptr, &field_trials_);
     rtp_video_stream_receiver_->AddReceiveCodec(kPayloadType,
                                                 kVideoCodecGeneric, {},
                                                 /*raw_payload=*/false);
@@ -211,7 +210,7 @@ class RtpVideoStreamReceiverTest : public ::testing::Test {
     return config;
   }
 
-  const webrtc::test::ScopedFieldTrials override_field_trials_;
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   VideoReceiveStream::Config config_;
   MockNackSender mock_nack_sender_;
   MockKeyFrameRequestSender mock_key_frame_request_sender_;
@@ -1159,7 +1158,7 @@ TEST_F(RtpVideoStreamReceiverTest, TransformFrame) {
       Clock::GetRealTimeClock(), &mock_transport_, nullptr, nullptr, &config_,
       rtp_receive_statistics_.get(), nullptr, nullptr, process_thread_.get(),
       &mock_nack_sender_, nullptr, &mock_on_complete_frame_callback_, nullptr,
-      mock_frame_transformer);
+      mock_frame_transformer, &field_trials_);
   receiver->AddReceiveCodec(kPayloadType, kVideoCodecGeneric, {},
                             /*raw_payload=*/false);
 

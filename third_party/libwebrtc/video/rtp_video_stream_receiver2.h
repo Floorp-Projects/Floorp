@@ -97,7 +97,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
       KeyFrameRequestSender* keyframe_request_sender,
       OnCompleteFrameCallback* complete_frame_callback,
       rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
-      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer);
+      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+      const WebRtcKeyValueConfig& field_trials);
   ~RtpVideoStreamReceiver2() override;
 
   void AddReceiveCodec(uint8_t payload_type,
@@ -294,6 +295,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
                                      bool is_keyframe)
       RTC_RUN_ON(packet_sequence_checker_);
 
+  const WebRtcKeyValueConfig& field_trials_;
   Clock* const clock_;
   // Ownership of this object lies with VideoReceiveStream, which owns `this`.
   const VideoReceiveStream::Config& config_;

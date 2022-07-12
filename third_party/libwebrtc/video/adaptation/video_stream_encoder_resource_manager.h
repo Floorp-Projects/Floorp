@@ -183,6 +183,7 @@ class VideoStreamEncoderResourceManager
       const std::map<VideoAdaptationReason, VideoAdaptationCounters>&
           active_counts);
 
+  const WebRtcKeyValueConfig& field_trials_;
   DegradationPreferenceProvider* const degradation_preference_provider_;
   std::unique_ptr<BitrateConstraint> bitrate_constraint_
       RTC_GUARDED_BY(encoder_queue_);

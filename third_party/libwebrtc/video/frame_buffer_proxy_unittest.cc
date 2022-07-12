@@ -28,11 +28,10 @@
 #include "api/video/video_timing.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
-#include "system_wrappers/include/field_trial.h"
-#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/run_loop.h"
+#include "test/scoped_key_value_config.h"
 #include "test/time_controller/simulated_time_controller.h"
 #include "video/decode_synchronizer.h"
 
@@ -199,9 +198,9 @@ class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
               (override));
 };
 
-bool IsFrameBuffer2Enabled() {
-  return field_trial::FindFullName("WebRTC-FrameBuffer3")
-             .find("arm:FrameBuffer2") != std::string::npos;
+bool IsFrameBuffer2Enabled(const WebRtcKeyValueConfig& field_trials) {
+  return field_trials.Lookup("WebRTC-FrameBuffer3").find("arm:FrameBuffer2") !=
+         std::string::npos;
 }
 
 }  // namespace
@@ -231,7 +230,8 @@ class FrameBufferProxyFixture
                                                       this,
                                                       kMaxWaitForKeyframe,
                                                       kMaxWaitForFrame,
-                                                      &decode_sync_)) {
+                                                      &decode_sync_,
+                                                      field_trials_)) {
     // Avoid starting with negative render times.
     timing_.set_min_playout_delay(TimeDelta::Millis(10));
 
@@ -302,7 +302,7 @@ class FrameBufferProxyFixture
   int dropped_frames() const { return dropped_frames_; }
 
  protected:
-  test::ScopedFieldTrials field_trials_;
+  test::ScopedKeyValueConfig field_trials_;
   GlobalSimulatedTimeController time_controller_;
   Clock* const clock_;
   test::RunLoop run_loop_;
@@ -676,7 +676,7 @@ TEST_P(FrameBufferProxyTest, FrameCompleteCalledOnceForSingleTemporalUnit) {
 
 TEST_P(FrameBufferProxyTest, FrameCompleteCalledOnceForCompleteTemporalUnit) {
   // FrameBuffer2 logs the complete frame on the arrival of the last layer.
-  if (IsFrameBuffer2Enabled())
+  if (IsFrameBuffer2Enabled(field_trials_))
     return;
   StartNextDecodeForceKeyframe();
 
@@ -753,7 +753,7 @@ TEST_P(FrameBufferProxyTest, NextFrameWithOldTimestamp) {
                           .AsLast()
                           .Build());
   // FrameBuffer2 drops the frame, while FrameBuffer3 will continue the stream.
-  if (!IsFrameBuffer2Enabled()) {
+  if (!IsFrameBuffer2Enabled(field_trials_)) {
     EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(WithId(2)));
   } else {
     EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), TimedOut());

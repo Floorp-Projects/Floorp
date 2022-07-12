@@ -252,6 +252,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
 
   void RequestEncoderSwitch() RTC_RUN_ON(&encoder_queue_);
 
+  const WebRtcKeyValueConfig& field_trials_;
   TaskQueueBase* const worker_queue_;
 
   const uint32_t number_of_cores_;
