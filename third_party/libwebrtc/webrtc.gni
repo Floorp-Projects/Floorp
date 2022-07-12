@@ -534,16 +534,6 @@ template("rtc_test") {
       }
     }
 
-    if (using_sanitizer) {
-      if (is_linux) {
-        if (!defined(invoker.data)) {
-          data = []
-        }
-        data +=
-            [ "//third_party/llvm-build/Release+Asserts/lib/libstdc++.so.6" ]
-      }
-    }
-
     # TODO(crbug.com/webrtc/13556): Adding the .app folder in the runtime_deps
     # shoulnd't be necessary. this code should be removed and the same solution
     # as Chromium should be used.
