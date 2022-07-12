@@ -59,7 +59,7 @@ class RtpTransportControllerSend final
       const BitrateConstraints& bitrate_config,
       std::unique_ptr<ProcessThread> process_thread,
       TaskQueueFactory* task_queue_factory,
-      const WebRtcKeyValueConfig* trials);
+      const WebRtcKeyValueConfig& trials);
   ~RtpTransportControllerSend() override;
 
   RtpTransportControllerSend(const RtpTransportControllerSend&) = delete;
@@ -132,7 +132,7 @@ class RtpTransportControllerSend final
 
  private:
   struct PacerSettings {
-    explicit PacerSettings(const WebRtcKeyValueConfig* trials);
+    explicit PacerSettings(const WebRtcKeyValueConfig& trials);
 
     bool use_task_queue_pacer() const { return !tq_disabled.Get(); }
 

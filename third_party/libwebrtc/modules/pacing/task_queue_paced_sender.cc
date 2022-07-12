@@ -29,6 +29,22 @@ TaskQueuePacedSender::TaskQueuePacedSender(
     TaskQueueFactory* task_queue_factory,
     TimeDelta max_hold_back_window,
     int max_hold_back_window_in_packets)
+    : TaskQueuePacedSender(clock,
+                           packet_sender,
+                           event_log,
+                           *field_trials,
+                           task_queue_factory,
+                           max_hold_back_window,
+                           max_hold_back_window_in_packets) {}
+
+TaskQueuePacedSender::TaskQueuePacedSender(
+    Clock* clock,
+    PacingController::PacketSender* packet_sender,
+    RtcEventLog* event_log,
+    const WebRtcKeyValueConfig& field_trials,
+    TaskQueueFactory* task_queue_factory,
+    TimeDelta max_hold_back_window,
+    int max_hold_back_window_in_packets)
     : clock_(clock),
       max_hold_back_window_(max_hold_back_window),
       max_hold_back_window_in_packets_(max_hold_back_window_in_packets),

@@ -82,7 +82,7 @@ class PacingController {
   PacingController(Clock* clock,
                    PacketSender* packet_sender,
                    RtcEventLog* event_log,
-                   const WebRtcKeyValueConfig* field_trials,
+                   const WebRtcKeyValueConfig& field_trials,
                    ProcessMode mode);
 
   ~PacingController();
@@ -176,8 +176,7 @@ class PacingController {
   const ProcessMode mode_;
   Clock* const clock_;
   PacketSender* const packet_sender_;
-  const std::unique_ptr<FieldTrialBasedConfig> fallback_field_trials_;
-  const WebRtcKeyValueConfig* field_trials_;
+  const WebRtcKeyValueConfig& field_trials_;
 
   const bool drain_large_queues_;
   const bool send_padding_if_silent_;

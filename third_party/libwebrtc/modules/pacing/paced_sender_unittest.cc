@@ -19,7 +19,6 @@
 #include "modules/pacing/packet_router.h"
 #include "modules/utility/include/mock/mock_process_thread.h"
 #include "system_wrappers/include/clock.h"
-#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -80,7 +79,7 @@ class PacedSenderTest
         .WillOnce(SaveArg<0>(&paced_module_));
 
     pacer_ = std::make_unique<PacedSender>(&clock_, &callback_, nullptr,
-                                           &trials_, &process_thread_);
+                                           trials_, &process_thread_);
     EXPECT_CALL(process_thread_, WakeUp).WillRepeatedly([&](Module* module) {
       clock_.AdvanceTimeMilliseconds(module->TimeUntilNextProcess());
     });
