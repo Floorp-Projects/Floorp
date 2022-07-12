@@ -652,7 +652,7 @@ GLuint DCLayerTree::GetOrCreateFbo(int aWidth, int aHeight) {
 }
 
 bool DCLayerTree::EnsureVideoProcessorAtLeast(const gfx::IntSize& aInputSize,
-                                       const gfx::IntSize& aOutputSize) {
+                                              const gfx::IntSize& aOutputSize) {
   HRESULT hr;
 
   if (!mVideoDevice || !mVideoContext) {
@@ -893,7 +893,8 @@ bool IsYuv(const gfx::SurfaceFormat aFormat) {
   MOZ_ASSERT_UNREACHABLE();
 }
 
-void DCSurfaceSwapChain::AttachExternalImage(wr::ExternalImageId aExternalImage) {
+void DCSurfaceSwapChain::AttachExternalImage(
+    wr::ExternalImageId aExternalImage) {
   RenderTextureHost* texture =
       RenderThread::Get()->GetRenderTexture(aExternalImage);
   MOZ_RELEASE_ASSERT(texture);
@@ -1084,7 +1085,8 @@ static CspaceTransformPlan ChooseCspaceTransformPlan(
 
       // Let's do DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020 +
       // DXGI_FORMAT_R10G10B10A2_UNORM
-      plan = { // Rec2020 g2.2 rgb10
+      plan = {
+          // Rec2020 g2.2 rgb10
           plan.srcSpace,
           {color::Chromaticities::Rec2020(),
            {color::PiecewiseGammaDesc::Srgb()}},
@@ -1092,10 +1094,11 @@ static CspaceTransformPlan ChooseCspaceTransformPlan(
                                                      // gamma!
           DXGI_FORMAT_R10G10B10A2_UNORM,
       };
-      plan = { // Actually, that doesn't work, so use scRGB g1.0 rgb16f
+      plan = {
+          // Actually, that doesn't work, so use scRGB g1.0 rgb16f
           plan.srcSpace,
           {color::Chromaticities::Rec709(), {}},
-          DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709, // scRGB
+          DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709,  // scRGB
           DXGI_FORMAT_R16G16B16A16_FLOAT,
       };
       break;
@@ -1122,14 +1125,21 @@ Maybe<gfx::Matrix> DCSurfaceSwapChain::EnsurePresented(
 
   // When video is rendered to axis aligned integer rectangle, video scaling
   // should be done by stretching in the VideoProcessor.
-  // Sotaro has observed a reduction in gpu queue tasks by doing scaling ourselves (via VideoProcessor) instead of having DComp handle it.
+  // Sotaro has observed a reduction in gpu queue tasks by doing scaling
+  // ourselves (via VideoProcessor) instead of having DComp handle it.
   if (StaticPrefs::gfx_webrender_dcomp_video_vp_scaling_win_AtStartup() &&
       aTransform.PreservesAxisAlignedRectangles()) {
-    const auto absScales = aTransform.ScaleFactors(); // E.g. [2, 0, 0, -2] => [2, 2]
-    const auto presentationTransformUnscaled = presentationTransform.Copy().PreScale(1 / absScales.xScale, 1 / absScales.yScale);
-    const auto dstSizeScaled = gfx::IntSize::Round(gfx::Size(dstSize) * aTransform.ScaleFactors());
-    const auto presentSizeOld = presentationTransform.TransformSize(gfx::Size(dstSize));
-    const auto presentSizeNew = presentationTransformUnscaled.TransformSize(gfx::Size(dstSizeScaled));
+    const auto absScales =
+        aTransform.ScaleFactors();  // E.g. [2, 0, 0, -2] => [2, 2]
+    const auto presentationTransformUnscaled =
+        presentationTransform.Copy().PreScale(1 / absScales.xScale,
+                                              1 / absScales.yScale);
+    const auto dstSizeScaled =
+        gfx::IntSize::Round(gfx::Size(dstSize) * aTransform.ScaleFactors());
+    const auto presentSizeOld =
+        presentationTransform.TransformSize(gfx::Size(dstSize));
+    const auto presentSizeNew =
+        presentationTransformUnscaled.TransformSize(gfx::Size(dstSizeScaled));
     if (gfx::FuzzyEqual(presentSizeNew.width, presentSizeOld.width, 0.1f) &&
         gfx::FuzzyEqual(presentSizeNew.height, presentSizeOld.height, 0.1f)) {
       dstSize = dstSizeScaled;
@@ -1139,8 +1149,8 @@ Maybe<gfx::Matrix> DCSurfaceSwapChain::EnsurePresented(
 
   // 4:2:2 subsampled formats like YUY2 must have an even width, and 4:2:0
   // subsampled formats like NV12 must have an even width and height.
-  // And we should be able to pad width and height because we clip the Visual to the unpadded rect.
-  // Just do this unconditionally.
+  // And we should be able to pad width and height because we clip the Visual to
+  // the unpadded rect. Just do this unconditionally.
   if (dstSize.width % 2 == 1) {
     dstSize.width += 1;
   }
@@ -1511,7 +1521,7 @@ bool DCSurfaceSwapChain::CallBlitHelper() const {
 
   if (plan.srcSpace != plan.dstSpace) {
     if (!mDest->lut) {
-      mDest->lut = blitHelper->GetColorLutTex({ plan.srcSpace, plan.dstSpace });
+      mDest->lut = blitHelper->GetColorLutTex({plan.srcSpace, plan.dstSpace});
     }
     MOZ_ASSERT(mDest->lut);
     gl->fActiveTexture(LOCAL_GL_TEXTURE0 + LUT_TEX_UNIT);

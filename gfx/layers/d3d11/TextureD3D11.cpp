@@ -963,9 +963,9 @@ void DXGITextureHostD3D11::UnlockInternal() {
 
 void DXGITextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGITextureHost(
-      mHandle, mGpuProcessTextureId, mArrayIndex, mFormat, mColorSpace,
-      mColorRange, mSize);
+  RefPtr<wr::RenderTextureHost> texture =
+      new wr::RenderDXGITextureHost(mHandle, mGpuProcessTextureId, mArrayIndex,
+                                    mFormat, mColorSpace, mColorRange, mSize);
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
