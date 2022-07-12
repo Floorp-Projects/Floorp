@@ -19,11 +19,12 @@
 
 namespace webrtc {
 
-class MockRtpTransceiver final
-    : public rtc::RefCountedObject<RtpTransceiverInterface> {
+class MockRtpTransceiver : public RtpTransceiverInterface {
  public:
+  MockRtpTransceiver() = default;
+
   static rtc::scoped_refptr<MockRtpTransceiver> Create() {
-    return rtc::scoped_refptr<MockRtpTransceiver>(new MockRtpTransceiver());
+    return rtc::make_ref_counted<MockRtpTransceiver>();
   }
 
   MOCK_METHOD(cricket::MediaType, media_type, (), (const, override));
@@ -79,9 +80,6 @@ class MockRtpTransceiver final
               (rtc::ArrayView<const RtpHeaderExtensionCapability>
                    header_extensions_to_offer),
               (override));
-
- private:
-  MockRtpTransceiver() = default;
 };
 
 }  // namespace webrtc
