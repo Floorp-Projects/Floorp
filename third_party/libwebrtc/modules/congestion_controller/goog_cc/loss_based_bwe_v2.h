@@ -140,6 +140,9 @@ class LossBasedBweV2 {
   // Returns false if there exists an overusing state in the window.
   bool TrendlineEsimateAllowBitrateIncrease() const;
 
+  // Returns true if there exists an overusing state in the window.
+  bool TrendlineEsimateAllowEmergencyBackoff() const;
+
   // Returns false if no observation was created.
   bool PushBackObservation(rtc::ArrayView<const PacketResult> packet_results,
                            BandwidthUsage delay_detector_state);
