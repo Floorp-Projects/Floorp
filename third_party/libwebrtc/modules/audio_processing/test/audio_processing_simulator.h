@@ -119,6 +119,7 @@ struct SimulationSettings {
   absl::optional<float> analog_mic_gain_emulation_initial_level;
   absl::optional<int> ns_level;
   absl::optional<bool> ns_analysis_on_linear_aec_output;
+  absl::optional<bool> override_key_pressed;
   absl::optional<int> maximum_internal_processing_rate;
   int initial_mic_level;
   bool simulate_mic_gain = false;
