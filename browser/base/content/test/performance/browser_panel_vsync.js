@@ -38,16 +38,12 @@ add_task(
       DownloadsPanel.panel,
       "popuphidden"
     );
-    EventUtils.synthesizeNativeMouseEvent({
-      type: "click",
-      target: downloadsButton,
-      atCenter: true,
-    });
-
-    await Promise.all([
-      hiddenPromise,
-      TestUtils.waitForCondition(() => !ChromeUtils.vsyncEnabled()),
-    ]);
+    EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
+    await hiddenPromise;
+    await TestUtils.waitForCondition(
+      () => !ChromeUtils.vsyncEnabled(),
+      "wait for vsync to be disabled again"
+    );
 
     ok(!ChromeUtils.vsyncEnabled(), "vsync should still be off");
     is(
