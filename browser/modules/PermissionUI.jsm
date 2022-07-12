@@ -61,8 +61,8 @@ var EXPORTED_SYMBOLS = ["PermissionUI"];
  * imported, subclassed, and have prompt() called directly, without
  * the caller having called into createPermissionPrompt.
  */
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const lazy = {};
 ChromeUtils.defineModuleGetter(

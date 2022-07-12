@@ -26,8 +26,8 @@ if (Constants.Win) {
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
 }
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+var { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};

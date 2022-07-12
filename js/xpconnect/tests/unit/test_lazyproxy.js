@@ -5,7 +5,7 @@
  * This file tests the method defineLazyProxy from XPCOMUtils.jsm.
  */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
 
 add_task(function test_lazy_proxy() {
   let tmp = {};
