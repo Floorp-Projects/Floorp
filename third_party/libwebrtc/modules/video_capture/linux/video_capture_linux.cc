@@ -382,6 +382,7 @@ bool VideoCaptureModuleV4L2::CaptureProcess() {
   rSet.revents = 0;
 
   retVal = poll(&rSet, 1, 1000);
+
   {
     MutexLock lock(&capture_lock_);
 
