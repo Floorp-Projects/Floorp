@@ -50,7 +50,7 @@ export function parseLineColumn(query) {
   }
 }
 
-export function formatSourcesForList(source, tabUrls) {
+function formatSourceForList(source, tabUrls, isBlackBoxed) {
   const title = getFilename(source);
   const relativeUrlWithQuery = `${source.relativeUrl}${getSourceQueryString(
     source
@@ -63,7 +63,7 @@ export function formatSourcesForList(source, tabUrls) {
     subtitle,
     icon: tabUrls.has(source.url)
       ? "tab result-item-icon"
-      : `result-item-icon ${getSourceClassnames(source)}`,
+      : `result-item-icon ${getSourceClassnames(source, null, isBlackBoxed)}`,
     id: source.id,
     url: source.url,
   };
@@ -111,14 +111,16 @@ export function formatShortcutResults() {
   ];
 }
 
-export function formatSources(sources, tabUrls) {
+export function formatSources(sources, tabUrls, blackBoxRanges) {
   const formattedSources = [];
 
   for (let i = 0; i < sources.length; ++i) {
     const source = sources[i];
 
     if (!!source.relativeUrl && !isPretty(source)) {
-      formattedSources.push(formatSourcesForList(source, tabUrls));
+      formattedSources.push(
+        formatSourceForList(source, tabUrls, !!blackBoxRanges[source.url])
+      );
     }
   }
 

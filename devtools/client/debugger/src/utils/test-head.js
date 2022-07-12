@@ -83,7 +83,6 @@ function createSourceObject(filename, props = {}) {
     id: filename,
     url: makeSourceURL(filename),
     thread: props.thread || "FakeThread",
-    isBlackBoxed: !!props.isBlackBoxed,
     isPrettyPrinted: false,
     isExtension: false,
     isOriginal: filename.includes("originalSource"),
@@ -132,7 +131,6 @@ function createMakeSource() {
       sourceMapBaseURL: props.sourceMapBaseURL || null,
       sourceMapURL: props.sourceMapURL || null,
       introductionType: props.introductionType || null,
-      isBlackBoxed: !!props.isBlackBoxed,
       extensionName: null,
     };
   };

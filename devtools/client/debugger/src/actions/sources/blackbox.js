@@ -9,7 +9,7 @@
 
 import { isOriginalId, originalToGeneratedId } from "devtools-source-map";
 import { recordEvent } from "../../utils/telemetry";
-import { getSourceActorsForSource } from "../../selectors";
+import { getSourceActorsForSource, isSourceBlackBoxed } from "../../selectors";
 
 import { PROMISE } from "../utils/middleware/promise";
 
@@ -61,7 +61,7 @@ async function blackboxSourceActors(
  * @param {Object} source - The source to be blackboxed/unblackboxed.
  * @param {Boolean} [shouldBlackBox] - Specifies if the source should be blackboxed (true
  *                                     or unblackboxed (false). When this is not provided
- *                                     option is decided based on the `isBlackBoxed` value
+ *                                     option is decided based on the blackboxed state
  *                                     of the source.
  * @param {Array} [ranges] - List of line/column offsets to blackbox, these
  *                           are provided only when blackboxing lines.
@@ -73,11 +73,11 @@ async function blackboxSourceActors(
  */
 export function toggleBlackBox(cx, source, shouldBlackBox, ranges) {
   return async thunkArgs => {
-    const { dispatch } = thunkArgs;
+    const { dispatch, getState } = thunkArgs;
     shouldBlackBox =
       typeof shouldBlackBox == "boolean"
         ? shouldBlackBox
-        : !source.isBlackBoxed;
+        : !isSourceBlackBoxed(getState(), source);
 
     return dispatch({
       type: "BLACKBOX",
@@ -101,10 +101,10 @@ export function toggleBlackBox(cx, source, shouldBlackBox, ranges) {
  */
 export function blackBoxSources(cx, sourcesToBlackBox, shouldBlackBox) {
   return async thunkArgs => {
-    const { dispatch } = thunkArgs;
+    const { dispatch, getState } = thunkArgs;
 
     const sources = sourcesToBlackBox.filter(
-      source => source.isBlackBoxed !== shouldBlackBox
+      source => isSourceBlackBoxed(getState(), source) !== shouldBlackBox
     );
 
     return dispatch({

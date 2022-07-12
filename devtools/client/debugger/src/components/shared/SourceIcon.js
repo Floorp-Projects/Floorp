@@ -11,7 +11,7 @@ import AccessibleImage from "./AccessibleImage";
 
 import { getSourceClassnames, isPretty } from "../../utils/source";
 import { getFramework } from "../../utils/tabs";
-import { getSymbols, getTabs } from "../../selectors";
+import { getSymbols, getTabs, isSourceBlackBoxed } from "../../selectors";
 
 import "./SourceIcon.css";
 
@@ -26,7 +26,7 @@ class SourceIcon extends PureComponent {
   }
 
   render() {
-    const { modifier, source, symbols, framework } = this.props;
+    const { modifier, source, symbols, framework, isBlackBoxed } = this.props;
     let iconClass = "";
 
     if (isPretty(source)) {
@@ -34,7 +34,7 @@ class SourceIcon extends PureComponent {
     } else {
       iconClass = framework
         ? framework.toLowerCase()
-        : getSourceClassnames(source, symbols);
+        : getSourceClassnames(source, symbols, isBlackBoxed);
     }
 
     if (modifier) {
@@ -51,5 +51,6 @@ class SourceIcon extends PureComponent {
 
 export default connect((state, props) => ({
   symbols: getSymbols(state, props.source),
+  isBlackBoxed: props.source ? isSourceBlackBoxed(state, props.source) : null,
   framework: getFramework(getTabs(state), props.source.url),
 }))(SourceIcon);

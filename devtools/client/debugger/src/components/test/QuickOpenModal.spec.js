@@ -21,6 +21,7 @@ function generateModal(propOverrides, renderType = "shallow") {
     query: "",
     searchType: "sources",
     displayedSources: [],
+    blackBoxRanges: {},
     tabs: [],
     selectSpecificLocation: jest.fn(),
     setQuickOpenQuery: jest.fn(),

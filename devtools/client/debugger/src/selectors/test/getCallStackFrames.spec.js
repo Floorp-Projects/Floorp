@@ -34,7 +34,7 @@ describe("getCallStackFrames selector", () => {
         state.frames,
         state.sources,
         state.selectedSource,
-        true
+        {}
       );
 
       expect(frames[0]).not.toHaveProperty("library");
@@ -162,7 +162,8 @@ describe("getCallStackFrames selector", () => {
       const frames = getCallStackFrames.resultFunc(
         state.frames,
         state.sources,
-        state.selectedSource
+        state.selectedSource,
+        {}
       );
 
       // frames from 1-8 and 10-17 are babel frames.

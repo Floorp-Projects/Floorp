@@ -236,7 +236,6 @@ export const getDisplayedSources = createSelector(
         thread: source.thread,
         isExtension: source.isExtension,
         isPrettyPrinted: source.isPrettyPrinted,
-        isBlackBoxed: source.isBlackBoxed,
         isOriginal: source.isOriginal,
         url: source.url,
         // quick-open codebase uses this attribute:
@@ -357,7 +356,3 @@ export const getSelectedBreakableLines = createSelector(
   },
   breakableLines => new Set(breakableLines || [])
 );
-
-export function getBlackBoxRanges(state) {
-  return state.sources.blackboxedRanges;
-}

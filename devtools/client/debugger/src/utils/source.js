@@ -76,7 +76,8 @@ export function shouldBlackbox(source) {
  */
 export function isFrameBlackBoxed(frame, source, blackboxedRanges) {
   return (
-    !!source?.isBlackBoxed &&
+    source &&
+    !!blackboxedRanges[source.url] &&
     (!blackboxedRanges[source.url].length ||
       !!findBlackBoxRange(source, blackboxedRanges, {
         start: frame.location.line,
@@ -484,7 +485,7 @@ export function getTextAtPosition(sourceId, asyncContent, location) {
   return lineText.slice(column, column + 100).trim();
 }
 
-export function getSourceClassnames(source, symbols) {
+export function getSourceClassnames(source, symbols, isBlackBoxed) {
   // Conditionals should be ordered by priority of icon!
   const defaultClassName = "file";
 
@@ -496,7 +497,7 @@ export function getSourceClassnames(source, symbols) {
     return "prettyPrint";
   }
 
-  if (source.isBlackBoxed) {
+  if (isBlackBoxed) {
     return "blackBox";
   }
 

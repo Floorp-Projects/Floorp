@@ -79,16 +79,22 @@ class EditorMenu extends Component {
   }
 }
 
-const mapStateToProps = (state, props) => ({
-  cx: getThreadContext(state),
-  blackboxedRanges: getBlackBoxRanges(state),
-  isPaused: getIsCurrentThreadPaused(state),
-  hasMappedLocation:
-    (props.selectedSource.isOriginal ||
-      isSourceWithMap(state, props.selectedSource.id) ||
-      isPretty(props.selectedSource)) &&
-    !getPrettySource(state, props.selectedSource.id),
-});
+const mapStateToProps = (state, props) => {
+  // This component is a no-op when contextmenu is false
+  if (!props.contextMenu) {
+    return {};
+  }
+  return {
+    cx: getThreadContext(state),
+    blackboxedRanges: getBlackBoxRanges(state),
+    isPaused: getIsCurrentThreadPaused(state),
+    hasMappedLocation:
+      (props.selectedSource.isOriginal ||
+        isSourceWithMap(state, props.selectedSource.id) ||
+        isPretty(props.selectedSource)) &&
+      !getPrettySource(state, props.selectedSource.id),
+  };
+};
 
 const mapDispatchToProps = dispatch => ({
   editorActions: editorItemActions(dispatch),

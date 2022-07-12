@@ -2,6 +2,7 @@
 
 exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
 <QuickOpenModal
+  blackBoxRanges={Object {}}
   clearHighlightLineRange={[MockFunction]}
   closeQuickOpen={[MockFunction]}
   cx={
@@ -135,6 +136,7 @@ exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
 
 exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
 <QuickOpenModal
+  blackBoxRanges={Object {}}
   clearHighlightLineRange={[MockFunction]}
   closeQuickOpen={[MockFunction]}
   cx={
@@ -252,6 +254,7 @@ exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
 
 exports[`QuickOpenModal Basic render with mount 1`] = `
 <QuickOpenModal
+  blackBoxRanges={Object {}}
   clearHighlightLineRange={[MockFunction]}
   closeQuickOpen={[MockFunction]}
   cx={
@@ -419,6 +422,7 @@ exports[`QuickOpenModal Renders when enabled 1`] = `
 
 exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] = `
 <QuickOpenModal
+  blackBoxRanges={Object {}}
   clearHighlightLineRange={[MockFunction]}
   closeQuickOpen={[MockFunction]}
   cx={
@@ -541,6 +545,7 @@ exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] 
 
 exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
 <QuickOpenModal
+  blackBoxRanges={Object {}}
   clearHighlightLineRange={[MockFunction]}
   closeQuickOpen={[MockFunction]}
   cx={
@@ -705,6 +710,7 @@ exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
 
 exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
 <QuickOpenModal
+  blackBoxRanges={Object {}}
   clearHighlightLineRange={[MockFunction]}
   closeQuickOpen={[MockFunction]}
   cx={
@@ -826,6 +832,7 @@ exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
 
 exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
 <QuickOpenModal
+  blackBoxRanges={Object {}}
   clearHighlightLineRange={[MockFunction]}
   closeQuickOpen={[MockFunction]}
   cx={
@@ -958,6 +965,7 @@ exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
 
 exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] = `
 <QuickOpenModal
+  blackBoxRanges={Object {}}
   clearHighlightLineRange={[MockFunction]}
   closeQuickOpen={[MockFunction]}
   cx={
@@ -1079,6 +1087,7 @@ exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] =
 
 exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
 <QuickOpenModal
+  blackBoxRanges={Object {}}
   clearHighlightLineRange={[MockFunction]}
   closeQuickOpen={[MockFunction]}
   cx={
@@ -1228,6 +1237,7 @@ exports[`QuickOpenModal shows loading loads with function type search 1`] = `
 
 exports[`QuickOpenModal updateResults on enable 1`] = `
 <QuickOpenModal
+  blackBoxRanges={Object {}}
   clearHighlightLineRange={[MockFunction]}
   closeQuickOpen={[MockFunction]}
   cx={
@@ -1258,6 +1268,7 @@ exports[`QuickOpenModal updateResults on enable 1`] = `
 
 exports[`QuickOpenModal updateResults on enable 2`] = `
 <QuickOpenModal
+  blackBoxRanges={Object {}}
   clearHighlightLineRange={[MockFunction]}
   closeQuickOpen={[MockFunction]}
   cx={

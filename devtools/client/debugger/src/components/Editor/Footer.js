@@ -14,6 +14,7 @@ import {
   getPaneCollapse,
   getContext,
   getGeneratedSource,
+  isSourceBlackBoxed,
   canPrettyPrintSource,
 } from "../../selectors";
 
@@ -40,6 +41,7 @@ class SourceFooter extends PureComponent {
       jumpToMappedLocation: PropTypes.func.isRequired,
       mappedSource: PropTypes.object,
       selectedSource: PropTypes.object,
+      isSelectedSourceBlackBoxed: PropTypes.bool.isRequired,
       sourceLoaded: PropTypes.bool.isRequired,
       toggleBlackBox: PropTypes.func.isRequired,
       togglePaneCollapse: PropTypes.func.isRequired,
@@ -116,7 +118,13 @@ class SourceFooter extends PureComponent {
   }
 
   blackBoxButton() {
-    const { cx, selectedSource, toggleBlackBox, sourceLoaded } = this.props;
+    const {
+      cx,
+      selectedSource,
+      isSelectedSourceBlackBoxed,
+      toggleBlackBox,
+      sourceLoaded,
+    } = this.props;
 
     if (!selectedSource) {
       return;
@@ -126,7 +134,7 @@ class SourceFooter extends PureComponent {
       return;
     }
 
-    const blackboxed = selectedSource.isBlackBoxed;
+    const blackboxed = isSelectedSourceBlackBoxed;
 
     const tooltip = blackboxed
       ? L10N.getStr("sourceFooter.unignore")
@@ -258,6 +266,9 @@ const mapStateToProps = state => {
   return {
     cx: getContext(state),
     selectedSource,
+    isSelectedSourceBlackBoxed: selectedSource
+      ? isSourceBlackBoxed(state, selectedSource)
+      : null,
     sourceLoaded: !!sourceTextContent,
     mappedSource: getGeneratedSource(state, selectedSource),
     prettySource: getPrettySource(
