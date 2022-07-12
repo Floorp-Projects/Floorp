@@ -23,6 +23,7 @@ class SmoothMsdScrollAnimation final : public AsyncPanZoomAnimation {
                            const CSSPoint& aInitialVelocity,
                            const CSSPoint& aDestination, double aSpringConstant,
                            double aDampingRatio,
+                           ScrollSnapTargetIds&& aSnapTargetIds,
                            ScrollTriggeredByScript aTriggeredByScript);
 
   /**
@@ -35,6 +36,7 @@ class SmoothMsdScrollAnimation final : public AsyncPanZoomAnimation {
                 const TimeDuration& aDelta) override;
 
   void SetDestination(const CSSPoint& aNewDestination,
+                      ScrollSnapTargetIds&& aSnapTargetIds,
                       ScrollTriggeredByScript aTriggeredByScript);
   CSSPoint GetDestination() const;
   SmoothMsdScrollAnimation* AsSmoothMsdScrollAnimation() override;
@@ -43,10 +45,13 @@ class SmoothMsdScrollAnimation final : public AsyncPanZoomAnimation {
     return mTriggeredByScript == ScrollTriggeredByScript::Yes;
   }
 
+  ScrollSnapTargetIds TakeSnapTargetIds() { return std::move(mSnapTargetIds); }
+
  private:
   AsyncPanZoomController& mApzc;
   AxisPhysicsMSDModel mXAxisModel;
   AxisPhysicsMSDModel mYAxisModel;
+  ScrollSnapTargetIds mSnapTargetIds;
   ScrollTriggeredByScript mTriggeredByScript;
 };
 

@@ -306,6 +306,21 @@ struct ParamTraits<mozilla::APZScrollAnimationType>
           mozilla::APZScrollAnimationType::TriggeredByUserInput> {};
 
 template <>
+struct ParamTraits<mozilla::ScrollSnapTargetIds> {
+  typedef mozilla::ScrollSnapTargetIds paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mIdsOnX);
+    WriteParam(aWriter, aParam.mIdsOnY);
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mIdsOnX) &&
+           ReadParam(aReader, &aResult->mIdsOnY);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::layers::RepaintRequest>
     : BitfieldHelper<mozilla::layers::RepaintRequest> {
   typedef mozilla::layers::RepaintRequest paramType;
@@ -327,6 +342,7 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
     WriteParam(aWriter, aParam.mPaintRequestTime);
     WriteParam(aWriter, aParam.mScrollUpdateType);
     WriteParam(aWriter, aParam.mScrollAnimationType);
+    WriteParam(aWriter, aParam.mLastSnapTargetIds);
     WriteParam(aWriter, aParam.mIsRootContent);
     WriteParam(aWriter, aParam.mIsScrollInfoLayer);
   }
@@ -349,6 +365,7 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
         ReadParam(aReader, &aResult->mPaintRequestTime) &&
         ReadParam(aReader, &aResult->mScrollUpdateType) &&
         ReadParam(aReader, &aResult->mScrollAnimationType) &&
+        ReadParam(aReader, &aResult->mLastSnapTargetIds) &&
         ReadBoolForBitfield(aReader, aResult, &paramType::SetIsRootContent) &&
         ReadBoolForBitfield(aReader, aResult,
                             &paramType::SetIsScrollInfoLayer));
