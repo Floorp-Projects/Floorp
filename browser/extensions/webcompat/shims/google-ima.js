@@ -332,7 +332,7 @@ if (!window.google?.ima?.VERSION) {
       // If autoplay is disabled and the page is trying to autoplay a tracking
       // ad, then IMA fails with an error, and the page is expected to request
       // ads again later when the user clicks to play.
-      CheckCanAutoplay.then(
+      CheckCanAutoplay().then(
         () => {
           const { ADS_MANAGER_LOADED } = AdsManagerLoadedEvent.Type;
           this._dispatch(new ima.AdsManagerLoadedEvent(ADS_MANAGER_LOADED));
