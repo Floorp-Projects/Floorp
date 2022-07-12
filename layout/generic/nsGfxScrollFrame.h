@@ -876,7 +876,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // either the layout or the visual scroll range (APZ will happily smooth
   // scroll to either).
   void ApzSmoothScrollTo(const nsPoint& aDestination, ScrollOrigin aOrigin,
-                         ScrollTriggeredByScript aTriggeredByScript);
+                         ScrollTriggeredByScript aTriggeredByScript,
+                         UniquePtr<ScrollSnapTargetIds> aSnapTargetIds);
 
   // Removes any RefreshDriver observers we might have registered.
   void RemoveObservers();
