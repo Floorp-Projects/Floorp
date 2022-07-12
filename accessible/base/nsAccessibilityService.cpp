@@ -1242,6 +1242,21 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
   return newAcc;
 }
 
+#if defined(ANDROID)
+#  include "mozilla/Monitor.h"
+#  include "mozilla/Maybe.h"
+
+static Maybe<Monitor> sAndroidMonitor;
+
+mozilla::Monitor& nsAccessibilityService::GetAndroidMonitor() {
+  if (!sAndroidMonitor.isSome()) {
+    sAndroidMonitor.emplace("nsAccessibility::sAndroidMonitor");
+  }
+
+  return *sAndroidMonitor;
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService private
 
@@ -1359,6 +1374,11 @@ void nsAccessibilityService::Shutdown() {
   NS_IF_RELEASE(gXPCApplicationAccessible);
   gXPCApplicationAccessible = nullptr;
 
+#if defined(ANDROID)
+  // Don't allow the service to shut down while an a11y request is being handled
+  // in the UI thread, as the request may depend on state from the service.
+  MonitorAutoLock mal(GetAndroidMonitor());
+#endif
   NS_RELEASE(gAccessibilityService);
   gAccessibilityService = nullptr;
 
@@ -1554,21 +1574,6 @@ void nsAccessibilityService::MarkupAttributes(
     aAttributes->SetAttribute(info->name, info->value);
   }
 }
-
-#if defined(ANDROID)
-#  include "mozilla/Monitor.h"
-#  include "mozilla/Maybe.h"
-
-static Maybe<Monitor> sAndroidMonitor;
-
-mozilla::Monitor& nsAccessibilityService::GetAndroidMonitor() {
-  if (!sAndroidMonitor.isSome()) {
-    sAndroidMonitor.emplace("nsAccessibility::sAndroidMonitor");
-  }
-
-  return *sAndroidMonitor;
-}
-#endif
 
 LocalAccessible* nsAccessibilityService::AddNativeRootAccessible(
     void* aAtkAccessible) {
