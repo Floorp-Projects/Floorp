@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test feature policy - permission delegation to nested browsing contexts</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+const SAME_ORIGIN = new URL("empty.html", location).href;
+const CROSS_ORIGIN = "https://example.org" + new URL(SAME_ORIGIN).pathname;
+
+async function makeChild(target, testParams) {
+  // eslint-disable-next-line no-shadow
+  await SpecialPowers.spawn(target, [testParams], async testParams => {
+    const ifr = this.content.document.createElement(testParams.elem);
+    ifr.setAttribute(
+      testParams.elem === "object" ? "data" : "src",
+      testParams.url
+    );
+
+    return new Promise(resolve => {
+      ifr.onload = async function() {
+        const isAllowed = await SpecialPowers.spawn(ifr, [], () =>
+          this.content.document.featurePolicy.allowsFeature("microphone")
+        );
+        Assert.equal(
+          isAllowed,
+          testParams.allow,
+          `permission delegation to ${ifr.outerHTML}`
+        );
+        resolve();
+      };
+      this.content.document.body.appendChild(ifr);
+    });
+  });
+}
+
+(async () => {
+  info("Checking direct children");
+  for (const elemType of ["iframe", "embed", "object"]) {
+    await makeChild(window, { url: SAME_ORIGIN, elem: elemType, allow: true });
+    await makeChild(window, {
+      url: CROSS_ORIGIN,
+      elem: elemType,
+      allow: false,
+    });
+  }
+
+  info("Checking children nested inside cross-origin iframe");
+  const ifr = document.createElement("iframe");
+  ifr.setAttribute("src", CROSS_ORIGIN);
+  ifr.onload = async function() {
+    for (const elemType of ["iframe", "embed", "object"]) {
+      await makeChild(ifr, { url: SAME_ORIGIN, elem: elemType, allow: false });
+      await makeChild(ifr, { url: CROSS_ORIGIN, elem: elemType, allow: false });
+    }
+    SimpleTest.finish();
+  }
+  document.body.appendChild(ifr);
+})();
+
+</script>
+</body>
+</html>
