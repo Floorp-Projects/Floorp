@@ -3,181 +3,190 @@
   "$id": "resource://activity-stream/schemas/MessagingExperiment.schema.json",
   "title": "Messaging Experiment",
   "description": "A Firefox Messaging System message.",
-  "allOf": [
+  "oneOf": [
     {
+      "description": "An empty FxMS message.",
       "type": "object",
-      "properties": {
-        "template": {
-          "type": "string",
-          "enum": [
-            "cfr_urlbar_chiclet",
-            "cfr_doorhanger",
-            "milestone_message",
-            "infobar",
-            "pb_newtab",
-            "spotlight",
-            "toolbar_badge",
-            "update_action",
-            "whatsnew_panel_message"
+      "additionalProperties": false
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "properties": {
+            "template": {
+              "type": "string",
+              "enum": [
+                "cfr_urlbar_chiclet",
+                "cfr_doorhanger",
+                "milestone_message",
+                "infobar",
+                "pb_newtab",
+                "spotlight",
+                "toolbar_badge",
+                "update_action",
+                "whatsnew_panel_message"
+              ]
+            }
+          },
+          "required": [
+            "template"
           ]
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": [
+                  "cfr_urlbar_chiclet"
+                ]
+              }
+            },
+            "required": [
+              "template"
+            ]
+          },
+          "then": {
+            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/CFRUrlbarChiclet"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": [
+                  "cfr_doorhanger",
+                  "milestone_message"
+                ]
+              }
+            },
+            "required": [
+              "template"
+            ]
+          },
+          "then": {
+            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ExtensionDoorhanger"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": [
+                  "infobar"
+                ]
+              }
+            },
+            "required": [
+              "template"
+            ]
+          },
+          "then": {
+            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/InfoBar"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": [
+                  "pb_newtab"
+                ]
+              }
+            },
+            "required": [
+              "template"
+            ]
+          },
+          "then": {
+            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/NewtabPromoMessage"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": [
+                  "spotlight"
+                ]
+              }
+            },
+            "required": [
+              "template"
+            ]
+          },
+          "then": {
+            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Spotlight"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": [
+                  "toolbar_badge"
+                ]
+              }
+            },
+            "required": [
+              "template"
+            ]
+          },
+          "then": {
+            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ToolbarBadgeMessage"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": [
+                  "update_action"
+                ]
+              }
+            },
+            "required": [
+              "template"
+            ]
+          },
+          "then": {
+            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/UpdateAction"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": [
+                  "whatsnew_panel_message"
+                ]
+              }
+            },
+            "required": [
+              "template"
+            ]
+          },
+          "then": {
+            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/WhatsNewMessage"
+          }
         }
-      },
-      "required": [
-        "template"
       ]
-    },
-    {
-      "if": {
-        "type": "object",
-        "properties": {
-          "template": {
-            "type": "string",
-            "enum": [
-              "cfr_urlbar_chiclet"
-            ]
-          }
-        },
-        "required": [
-          "template"
-        ]
-      },
-      "then": {
-        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/CFRUrlbarChiclet"
-      }
-    },
-    {
-      "if": {
-        "type": "object",
-        "properties": {
-          "template": {
-            "type": "string",
-            "enum": [
-              "cfr_doorhanger",
-              "milestone_message"
-            ]
-          }
-        },
-        "required": [
-          "template"
-        ]
-      },
-      "then": {
-        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ExtensionDoorhanger"
-      }
-    },
-    {
-      "if": {
-        "type": "object",
-        "properties": {
-          "template": {
-            "type": "string",
-            "enum": [
-              "infobar"
-            ]
-          }
-        },
-        "required": [
-          "template"
-        ]
-      },
-      "then": {
-        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/InfoBar"
-      }
-    },
-    {
-      "if": {
-        "type": "object",
-        "properties": {
-          "template": {
-            "type": "string",
-            "enum": [
-              "pb_newtab"
-            ]
-          }
-        },
-        "required": [
-          "template"
-        ]
-      },
-      "then": {
-        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/NewtabPromoMessage"
-      }
-    },
-    {
-      "if": {
-        "type": "object",
-        "properties": {
-          "template": {
-            "type": "string",
-            "enum": [
-              "spotlight"
-            ]
-          }
-        },
-        "required": [
-          "template"
-        ]
-      },
-      "then": {
-        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Spotlight"
-      }
-    },
-    {
-      "if": {
-        "type": "object",
-        "properties": {
-          "template": {
-            "type": "string",
-            "enum": [
-              "toolbar_badge"
-            ]
-          }
-        },
-        "required": [
-          "template"
-        ]
-      },
-      "then": {
-        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/ToolbarBadgeMessage"
-      }
-    },
-    {
-      "if": {
-        "type": "object",
-        "properties": {
-          "template": {
-            "type": "string",
-            "enum": [
-              "update_action"
-            ]
-          }
-        },
-        "required": [
-          "template"
-        ]
-      },
-      "then": {
-        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/UpdateAction"
-      }
-    },
-    {
-      "if": {
-        "type": "object",
-        "properties": {
-          "template": {
-            "type": "string",
-            "enum": [
-              "whatsnew_panel_message"
-            ]
-          }
-        },
-        "required": [
-          "template"
-        ]
-      },
-      "then": {
-        "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/WhatsNewMessage"
-      }
     }
   ],
   "$defs": {
