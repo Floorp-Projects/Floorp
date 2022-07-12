@@ -18,22 +18,22 @@ add_task(async function test_web_accessible_resources() {
     let urls = [
       {
         name: "iframe",
-        url: browser.runtime.getURL("accessible.html"),
+        path: "accessible.html",
         shouldLoad: canLoad,
       },
       {
         name: "iframe",
-        url: browser.runtime.getURL("inaccessible.html"),
+        path: "inaccessible.html",
         shouldLoad: false,
       },
       {
         name: "img",
-        url: browser.runtime.getURL("image.png"),
-        shouldLoad: canLoad,
+        path: "image.png",
+        shouldLoad: true,
       },
       {
         name: "script",
-        url: browser.runtime.getURL("script.js"),
+        path: "script.js",
         shouldLoad: canLoad,
       },
     ];
@@ -62,10 +62,17 @@ add_task(async function test_web_accessible_resources() {
       });
     }
     for (let test of urls) {
-      let loaded = await test_element_src(test.name, test.url);
-      browser.test.assertEq(loaded, test.shouldLoad, "resource loaded");
+      let loaded = await test_element_src(
+        test.name,
+        browser.runtime.getURL(test.path)
+      );
+      browser.test.assertEq(
+        loaded,
+        test.shouldLoad,
+        `resource loaded ${test.path} in ${window.location.href}`
+      );
     }
-    browser.test.notifyPass("web-accessible-resources");
+    browser.test.sendMessage("complete");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -83,8 +90,12 @@ add_task(async function test_web_accessible_resources() {
 
       web_accessible_resources: [
         {
-          resources: ["/accessible.html", "/image.png", "/script.js"],
+          resources: ["/accessible.html", "/script.js"],
           matches: ["http://example.com/data/*"],
+        },
+        {
+          resources: ["/image.png"],
+          matches: ["<all_urls>"],
         },
       ],
     },
@@ -114,13 +125,13 @@ add_task(async function test_web_accessible_resources() {
     "http://example.com/data/"
   );
 
-  await extension.awaitFinish("web-accessible-resources");
+  await extension.awaitMessage("complete");
   await page.close();
 
   // None of the test resources are loadable in example.org
   page = await ExtensionTestUtils.loadContentPage("http://example.org/data/");
 
-  await extension.awaitFinish("web-accessible-resources");
+  await extension.awaitMessage("complete");
 
   await page.close();
   await extension.unload();
