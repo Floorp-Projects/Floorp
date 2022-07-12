@@ -638,9 +638,10 @@ TEST_F(NetworkTest, MergeWithChangedIP) {
   EXPECT_EQ(changed_ip, network_to_change->GetIPs().at(0));
 }
 
+// TODO(bugs.webrtc.org/13846): Re-enable when the ASan issue is fixed.
 // Testing a similar case to above, but checking that a network can be updated
 // with additional IPs (not just a replacement).
-TEST_F(NetworkTest, TestMultipleIPMergeNetworkList) {
+TEST_F(NetworkTest, DISABLED_TestMultipleIPMergeNetworkList) {
   PhysicalSocketServer socket_server;
   BasicNetworkManager manager(&socket_server);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
