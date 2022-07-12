@@ -123,8 +123,9 @@ bool DataTracker::IsTSNValid(TSN tsn) const {
   return true;
 }
 
-void DataTracker::Observe(TSN tsn,
+bool DataTracker::Observe(TSN tsn,
                           AnyDataChunk::ImmediateAckFlag immediate_ack) {
+  bool is_duplicate = false;
   UnwrappedTSN unwrapped_tsn = tsn_unwrapper_.Unwrap(tsn);
 
   // IsTSNValid must be called prior to calling this method.
@@ -143,6 +144,7 @@ void DataTracker::Observe(TSN tsn,
     // packet arrives with duplicate DATA chunk(s) bundled with new DATA chunks,
     // the endpoint MAY immediately send a SACK."
     UpdateAckState(AckState::kImmediate, "duplicate data");
+    is_duplicate = true;
   } else {
     if (unwrapped_tsn == last_cumulative_acked_tsn_.next_value()) {
       last_cumulative_acked_tsn_ = unwrapped_tsn;
@@ -167,6 +169,7 @@ void DataTracker::Observe(TSN tsn,
         // delay. If a packet arrives with duplicate DATA chunk(s) bundled with
         // new DATA chunks, the endpoint MAY immediately send a SACK."
         // No need to do this. SACKs are sent immediately on packet loss below.
+        is_duplicate = true;
       }
     }
   }
@@ -208,6 +211,7 @@ void DataTracker::Observe(TSN tsn,
   } else if (ack_state_ == AckState::kDelayed) {
     UpdateAckState(AckState::kImmediate, "received DATA when already delayed");
   }
+  return !is_duplicate;
 }
 
 void DataTracker::HandleForwardTsn(TSN new_cumulative_ack) {

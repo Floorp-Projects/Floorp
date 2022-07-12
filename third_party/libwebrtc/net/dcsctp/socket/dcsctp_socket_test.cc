@@ -2214,5 +2214,53 @@ TEST_P(DcSctpSocketParametrizedTest, CanLoseFirstOrderedMessage) {
   MaybeHandoverSocketAndSendMessage(a, std::move(z));
 }
 
+TEST(DcSctpSocketTest, ReceiveBothUnorderedAndOrderedWithSameTSN) {
+  /* This issue was found by fuzzing. */
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+
+  a.socket.Connect();
+  std::vector<uint8_t> init_data = a.cb.ConsumeSentPacket();
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket init_packet,
+                              SctpPacket::Parse(init_data));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      InitChunk init_chunk,
+      InitChunk::Parse(init_packet.descriptors()[0].data));
+  z.socket.ReceivePacket(init_data);
+  a.socket.ReceivePacket(z.cb.ConsumeSentPacket());
+  z.socket.ReceivePacket(a.cb.ConsumeSentPacket());
+  a.socket.ReceivePacket(z.cb.ConsumeSentPacket());
+
+  // Receive a short unordered message with tsn=INITIAL_TSN+1
+  TSN tsn = init_chunk.initial_tsn();
+  AnyDataChunk::Options opts;
+  opts.is_beginning = Data::IsBeginning(true);
+  opts.is_end = Data::IsEnd(true);
+  opts.is_unordered = IsUnordered(true);
+  z.socket.ReceivePacket(
+      SctpPacket::Builder(z.socket.verification_tag(), z.options)
+          .Add(DataChunk(TSN(*tsn + 1), StreamID(1), SSN(0), PPID(53),
+                         std::vector<uint8_t>(10), opts))
+          .Build());
+
+  // Now receive a longer _ordered_ message with [INITIAL_TSN, INITIAL_TSN+1].
+  // This isn't allowed as it reuses TSN=53 with different properties, but it
+  // shouldn't cause any issues.
+  opts.is_unordered = IsUnordered(false);
+  opts.is_end = Data::IsEnd(false);
+  z.socket.ReceivePacket(
+      SctpPacket::Builder(z.socket.verification_tag(), z.options)
+          .Add(DataChunk(tsn, StreamID(1), SSN(0), PPID(53),
+                         std::vector<uint8_t>(10), opts))
+          .Build());
+
+  opts.is_beginning = Data::IsBeginning(false);
+  opts.is_end = Data::IsEnd(true);
+  z.socket.ReceivePacket(
+      SctpPacket::Builder(z.socket.verification_tag(), z.options)
+          .Add(DataChunk(TSN(*tsn + 1), StreamID(1), SSN(0), PPID(53),
+                         std::vector<uint8_t>(10), opts))
+          .Build());
+}
 }  // namespace
 }  // namespace dcsctp
