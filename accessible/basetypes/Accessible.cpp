@@ -351,8 +351,9 @@ void Accessible::GetPositionAndSetSize(int32_t* aPosInSet, int32_t* aSetSize) {
 }
 
 #ifdef A11Y_LOG
-void Accessible::DebugDescription(nsCString& aDesc) {
+void Accessible::DebugDescription(nsCString& aDesc) const {
   aDesc.Truncate();
+  aDesc.AppendPrintf("%s", IsRemote() ? "Remote" : "Local");
   aDesc.AppendPrintf("[%p] ", this);
   nsAutoString role;
   GetAccService()->GetStringRole(Role(), role);
@@ -380,6 +381,14 @@ void Accessible::DebugDescription(nsCString& aDesc) {
     aDesc.Append("'");
   }
 }
+
+void Accessible::DebugPrint(const char* aPrefix,
+                            const Accessible* aAccessible) {
+  nsAutoCString desc;
+  aAccessible->DebugDescription(desc);
+  printf("%s %s\n", aPrefix, desc.get());
+}
+
 #endif
 
 void Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut) {
