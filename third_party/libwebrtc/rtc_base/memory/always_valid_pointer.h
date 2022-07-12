@@ -11,17 +11,28 @@
 #define RTC_BASE_MEMORY_ALWAYS_VALID_POINTER_H_
 
 #include <memory>
+#include <utility>
+
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
 // This template allows the instantiation of a pointer to Interface in such a
 // way that if it is passed a null pointer, an object of class Default will be
 // created, which will be deallocated when the pointer is deleted.
-template <typename Interface, typename Default>
+template <typename Interface, typename Default = Interface>
 class AlwaysValidPointer {
  public:
   explicit AlwaysValidPointer(Interface* pointer)
       : owned_instance_(pointer ? nullptr : std::make_unique<Default>()),
+        pointer_(pointer ? pointer : owned_instance_.get()) {
+    RTC_DCHECK(pointer_);
+  }
+
+  template <typename... Args>
+  AlwaysValidPointer(Interface* pointer, Args... args)
+      : owned_instance_(
+            pointer ? nullptr : std::make_unique<Default>(std::move(args...))),
         pointer_(pointer ? pointer : owned_instance_.get()) {
     RTC_DCHECK(pointer_);
   }
