@@ -167,12 +167,12 @@ rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceModule(
 
 std::unique_ptr<cricket::MediaEngineInterface> CreateMediaEngine(
     PeerConnectionFactoryComponents* pcf_dependencies,
-    rtc::scoped_refptr<AudioDeviceModule> audio_device_module,
-    rtc::scoped_refptr<AudioProcessing> audio_processing) {
+    rtc::scoped_refptr<AudioDeviceModule> audio_device_module) {
   cricket::MediaEngineDependencies media_deps;
   media_deps.task_queue_factory = pcf_dependencies->task_queue_factory.get();
   media_deps.adm = audio_device_module;
-  media_deps.audio_processing = audio_processing;
+  media_deps.audio_processing = pcf_dependencies->audio_processing;
+  media_deps.audio_mixer = pcf_dependencies->audio_mixer;
   media_deps.video_encoder_factory =
       std::move(pcf_dependencies->video_encoder_factory);
   media_deps.video_decoder_factory =
@@ -315,11 +315,13 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
   params->rtc_configuration.sdp_semantics = SdpSemantics::kUnifiedPlan;
 
   // Create peer connection factory.
-  rtc::scoped_refptr<AudioProcessing> audio_processing =
-      webrtc::AudioProcessingBuilder().Create();
-  if (params->aec_dump_path && audio_processing) {
-    audio_processing->CreateAndAttachAecDump(*params->aec_dump_path, -1,
-                                             task_queue_);
+  if (components->pcf_dependencies->audio_processing == nullptr) {
+    components->pcf_dependencies->audio_processing =
+        webrtc::AudioProcessingBuilder().Create();
+  }
+  if (params->aec_dump_path) {
+    components->pcf_dependencies->audio_processing->CreateAndAttachAecDump(
+        *params->aec_dump_path, -1, task_queue_);
   }
   rtc::scoped_refptr<AudioDeviceModule> audio_device_module =
       CreateAudioDeviceModule(
@@ -333,11 +335,15 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
                           components->pcf_dependencies.get(),
                           video_analyzer_helper_);
   std::unique_ptr<cricket::MediaEngineInterface> media_engine =
-      CreateMediaEngine(components->pcf_dependencies.get(), audio_device_module,
-                        audio_processing);
+      CreateMediaEngine(components->pcf_dependencies.get(),
+                        audio_device_module);
 
   std::unique_ptr<rtc::Thread> worker_thread =
       time_controller_.CreateThread("worker_thread");
+  // Store `webrtc::AudioProcessing` into local variable before move of
+  // `components->pcf_dependencies`
+  rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing =
+      components->pcf_dependencies->audio_processing;
   PeerConnectionFactoryDependencies pcf_deps = CreatePCFDependencies(
       std::move(components->pcf_dependencies), std::move(media_engine),
       signaling_thread_, worker_thread.get(), components->network_thread);

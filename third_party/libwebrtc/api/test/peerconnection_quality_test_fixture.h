@@ -20,6 +20,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/async_resolver_factory.h"
+#include "api/audio/audio_mixer.h"
 #include "api/call/call_factory_interface.h"
 #include "api/fec_controller.h"
 #include "api/function_view.h"
@@ -41,6 +42,7 @@
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "media/base/media_constants.h"
+#include "modules/audio_processing/include/audio_processing.h"
 #include "rtc_base/network.h"
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/ssl_certificate.h"
@@ -357,6 +359,10 @@ class PeerConnectionE2EQualityTestFixture {
     // Set a custom NetEqFactory to be used in the call.
     virtual PeerConfigurer* SetNetEqFactory(
         std::unique_ptr<NetEqFactory> neteq_factory) = 0;
+    virtual PeerConfigurer* SetAudioProcessing(
+        rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing) = 0;
+    virtual PeerConfigurer* SetAudioMixer(
+        rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer) = 0;
 
     // The parameters of the following 4 methods will be passed to the
     // PeerConnectionInterface implementation that will be created for this
