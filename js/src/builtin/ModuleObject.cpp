@@ -45,7 +45,9 @@ using mozilla::Some;
 
 static_assert(ModuleStatus::Unlinked < ModuleStatus::Linking &&
                   ModuleStatus::Linking < ModuleStatus::Linked &&
-                  ModuleStatus::Linked < ModuleStatus::Evaluated &&
+                  ModuleStatus::Linked < ModuleStatus::Evaluating &&
+                  ModuleStatus::Evaluating < ModuleStatus::EvaluatingAsync &&
+                  ModuleStatus::EvaluatingAsync < ModuleStatus::Evaluated &&
                   ModuleStatus::Evaluated < ModuleStatus::Evaluated_Error,
               "Module statuses are ordered incorrectly");
 
@@ -1213,6 +1215,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
 bool ModuleObject::execute(JSContext* cx, Handle<ModuleObject*> self) {
 #ifdef DEBUG
   MOZ_ASSERT(self->status() == ModuleStatus::Evaluating ||
+             self->status() == ModuleStatus::EvaluatingAsync ||
              self->status() == ModuleStatus::Evaluated);
   MOZ_ASSERT(!self->hadEvaluationError());
   if (!AssertFrozen(cx, self)) {
@@ -2391,7 +2394,8 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Rooted<ModuleObject*> module(cx, &result->as<ModuleObject>());
-  if (module->status() != ModuleStatus::Evaluated) {
+  if (module->status() != ModuleStatus::EvaluatingAsync &&
+      module->status() != ModuleStatus::Evaluated) {
     JS_ReportErrorASCII(
         cx, "Unevaluated or errored module returned by module resolve hook");
     return RejectPromiseWithPendingError(cx, promise);
