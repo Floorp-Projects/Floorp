@@ -191,6 +191,11 @@ void AudioRtpReceiver::RestartMediaChannel_w(
   if (!media_channel_)
     return;  // Can't restart.
 
+  // Make sure the safety flag is marked as `alive` for cases where the media
+  // channel was provided via the ctor and not an explicit call to
+  // SetMediaChannel.
+  worker_thread_safety_->SetAlive();
+
   if (state != MediaSourceInterface::kInitializing) {
     if (ssrc_ == ssrc)
       return;
