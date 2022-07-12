@@ -25,8 +25,10 @@
 
 namespace dcsctp {
 namespace {
+using ::testing::ElementsAre;
 using ::testing::MockFunction;
 using ::testing::NiceMock;
+using ::testing::Property;
 
 class TraditionalReassemblyStreamsTest : public testing::Test {
  protected:
@@ -230,6 +232,25 @@ TEST_F(TraditionalReassemblyStreamsTest,
   TraditionalReassemblyStreams streams2("", on_assembled.AsStdFunction(),
                                         &state);
   EXPECT_EQ(streams2.Add(tsn(4), gen_.Unordered({7})), 1);
+}
+
+TEST_F(TraditionalReassemblyStreamsTest, CanDeleteFirstOrderedMessage) {
+  NiceMock<MockFunction<ReassemblyStreams::OnAssembledMessage>> on_assembled;
+  EXPECT_CALL(on_assembled,
+              Call(ElementsAre(tsn(2)),
+                   Property(&DcSctpMessage::payload, ElementsAre(2, 3, 4))));
+
+  TraditionalReassemblyStreams streams("", on_assembled.AsStdFunction());
+
+  // Not received, SID=1. TSN=1, SSN=0
+  gen_.Ordered({1}, "BE");
+  // And deleted (SID=1, TSN=1, SSN=0)
+  ForwardTsnChunk::SkippedStream skipped[] = {
+      ForwardTsnChunk::SkippedStream(StreamID(1), SSN(0))};
+  EXPECT_EQ(streams.HandleForwardTsn(tsn(1), skipped), 0u);
+
+  // Receive SID=1, TSN=2, SSN=1
+  EXPECT_EQ(streams.Add(tsn(2), gen_.Ordered({2, 3, 4}, "BE")), 0);
 }
 
 }  // namespace

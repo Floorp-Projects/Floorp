@@ -261,11 +261,11 @@ size_t TraditionalReassemblyStreams::OrderedStream::EraseTo(SSN ssn) {
 
 int TraditionalReassemblyStreams::Add(UnwrappedTSN tsn, Data data) {
   if (data.is_unordered) {
-    auto it = unordered_streams_.emplace(data.stream_id, this).first;
+    auto it = unordered_streams_.try_emplace(data.stream_id, this).first;
     return it->second.Add(tsn, std::move(data));
   }
 
-  auto it = ordered_streams_.emplace(data.stream_id, this).first;
+  auto it = ordered_streams_.try_emplace(data.stream_id, this).first;
   return it->second.Add(tsn, std::move(data));
 }
 
@@ -280,10 +280,9 @@ size_t TraditionalReassemblyStreams::HandleForwardTsn(
   }
 
   for (const auto& skipped_stream : skipped_streams) {
-    auto it = ordered_streams_.find(skipped_stream.stream_id);
-    if (it != ordered_streams_.end()) {
-      bytes_removed += it->second.EraseTo(skipped_stream.ssn);
-    }
+    auto it =
+        ordered_streams_.try_emplace(skipped_stream.stream_id, this).first;
+    bytes_removed += it->second.EraseTo(skipped_stream.ssn);
   }
 
   return bytes_removed;
