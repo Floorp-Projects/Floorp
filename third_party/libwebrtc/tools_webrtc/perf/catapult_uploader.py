@@ -253,7 +253,7 @@ def _AddBuildInfo(histograms, options):
 
 
 def _DumpOutput(histograms, output_file):
-  with open(output_file, 'wb') as f:
+  with open(output_file, 'w') as f:
     json.dump(_ApplyHacks(histograms.AsDicts()), f, indent=4)
 
 
