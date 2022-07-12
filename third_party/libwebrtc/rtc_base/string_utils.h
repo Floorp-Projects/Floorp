@@ -82,9 +82,6 @@ inline std::string ToUtf8(const std::wstring& wstr) {
 
 #endif  // WEBRTC_WIN
 
-// Remove leading and trailing whitespaces.
-std::string string_trim(const std::string& s);
-
 // TODO(jonasolsson): replace with absl::Hex when that becomes available.
 std::string ToHex(int i);
 
