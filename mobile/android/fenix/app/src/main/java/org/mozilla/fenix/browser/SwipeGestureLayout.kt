@@ -106,8 +106,8 @@ class SwipeGestureLayout @JvmOverloads constructor(
         listeners.add(listener)
     }
 
-    override fun onInterceptTouchEvent(event: MotionEvent?): Boolean {
-        return when (event?.actionMasked) {
+    override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+        return when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 handledInitialScroll = false
                 gestureDetector.onTouchEvent(event)
@@ -117,8 +117,8 @@ class SwipeGestureLayout @JvmOverloads constructor(
         }
     }
 
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        return when (event?.actionMasked) {
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        return when (event.actionMasked) {
             MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> {
                 gestureDetector.onTouchEvent(event)
                 // If the active listener is not null here, then we haven't detected a fling
