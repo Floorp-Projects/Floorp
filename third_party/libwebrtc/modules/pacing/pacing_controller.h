@@ -79,6 +79,11 @@ class PacingController {
 
   static const TimeDelta kMinSleepTime;
 
+  // Allow probes to be processed slightly ahead of inteded send time. Currently
+  // set to 1ms as this is intended to allow times be rounded down to the
+  // nearest millisecond.
+  static const TimeDelta kMaxEarlyProbeProcessing;
+
   PacingController(Clock* clock,
                    PacketSender* packet_sender,
                    RtcEventLog* event_log,
@@ -158,6 +163,7 @@ class PacingController {
   // Updates the number of bytes that can be sent for the next time interval.
   void UpdateBudgetWithElapsedTime(TimeDelta delta);
   void UpdateBudgetWithSentData(DataSize size);
+  void UpdatePaddingBudgetWithSentData(DataSize size);
 
   DataSize PaddingToAdd(DataSize recommended_probe_size,
                         DataSize data_sent) const;
@@ -169,7 +175,6 @@ class PacingController {
   void OnPacketSent(RtpPacketMediaType packet_type,
                     DataSize packet_size,
                     Timestamp send_time);
-  void OnPaddingSent(DataSize padding_sent);
 
   Timestamp CurrentTime() const;
 
@@ -196,9 +201,9 @@ class PacingController {
   mutable Timestamp last_timestamp_;
   bool paused_;
 
-  // In dynamic mode, `media_budget_` and `padding_budget_` will be used to
+  // In periodic mode, `media_budget_` and `padding_budget_` will be used to
   // track when packets can be sent.
-  // In periodic mode, `media_debt_` and `padding_debt_` will be used together
+  // In dynamic mode, `media_debt_` and `padding_debt_` will be used together
   // with the target rates.
 
   // This is the media budget, keeping track of how many bits of media
@@ -229,7 +234,7 @@ class PacingController {
   DataSize congestion_window_size_;
   DataSize outstanding_data_;
 
-  TimeDelta queue_time_limit;
+  TimeDelta queue_time_limit_;
   bool account_for_audio_;
   bool include_overhead_;
 };
