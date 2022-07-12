@@ -292,11 +292,20 @@ class TurnPortTest : public ::testing::Test,
                                    const std::string& username,
                                    const std::string& password,
                                    const ProtocolAddress& server_address) {
-    RelayCredentials credentials(username, password);
-    turn_port_ =
-        TurnPort::Create(&main_, &socket_factory_, network, 0, 0, kIceUfrag1,
-                         kIcePwd1, server_address, credentials, 0, {}, {},
-                         turn_customizer_.get(), nullptr, &field_trials_);
+    RelayServerConfig config;
+    config.credentials = RelayCredentials(username, password);
+    CreateRelayPortArgs args;
+    args.network_thread = &main_;
+    args.socket_factory = &socket_factory_;
+    args.network = network;
+    args.username = kIceUfrag1;
+    args.password = kIcePwd1;
+    args.server_address = &server_address;
+    args.config = &config;
+    args.turn_customizer = turn_customizer_.get();
+    args.field_trials = &field_trials_;
+
+    turn_port_ = TurnPort::Create(args, 0, 0);
     if (!turn_port_) {
       return false;
     }
@@ -327,11 +336,19 @@ class TurnPortTest : public ::testing::Test,
                                         &TurnPortTest::OnSocketReadPacket);
     }
 
-    RelayCredentials credentials(username, password);
-    turn_port_ =
-        TurnPort::Create(&main_, &socket_factory_, MakeNetwork(kLocalAddr1),
-                         socket_.get(), kIceUfrag1, kIcePwd1, server_address,
-                         credentials, 0, nullptr, &field_trials_);
+    RelayServerConfig config;
+    config.credentials = RelayCredentials(username, password);
+    CreateRelayPortArgs args;
+    args.network_thread = &main_;
+    args.socket_factory = &socket_factory_;
+    args.network = MakeNetwork(kLocalAddr1);
+    args.username = kIceUfrag1;
+    args.password = kIcePwd1;
+    args.server_address = &server_address;
+    args.config = &config;
+    args.turn_customizer = turn_customizer_.get();
+    args.field_trials = &field_trials_;
+    turn_port_ = TurnPort::Create(args, socket_.get());
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
     ConnectSignals();

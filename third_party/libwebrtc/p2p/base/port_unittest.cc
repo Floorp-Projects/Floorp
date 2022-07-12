@@ -556,11 +556,21 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
       ProtocolType int_proto,
       ProtocolType ext_proto,
       const rtc::SocketAddress& server_addr) {
-    return TurnPort::Create(&main_, socket_factory, MakeNetwork(addr), 0, 0,
-                            username_, password_,
-                            ProtocolAddress(server_addr, int_proto),
-                            kRelayCredentials, 0, {}, {}, nullptr, nullptr);
+    RelayServerConfig config;
+    config.credentials = kRelayCredentials;
+    ProtocolAddress server_address(server_addr, int_proto);
+    CreateRelayPortArgs args;
+    args.network_thread = &main_;
+    args.socket_factory = socket_factory;
+    args.network = MakeNetwork(addr);
+    args.username = username_;
+    args.password = password_;
+    args.server_address = &server_address;
+    args.config = &config;
+
+    return TurnPort::Create(args, 0, 0);
   }
+
   std::unique_ptr<rtc::NATServer> CreateNatServer(const SocketAddress& addr,
                                                   rtc::NATType type) {
     return std::make_unique<rtc::NATServer>(type, ss_.get(), addr, addr,
