@@ -782,8 +782,9 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
       svgFrame->PaintSVG(aContext, SVGUtils::GetCSSPxToDevPxMatrix(aTarget),
                          aImgParams, dirtyRect);
     };
-    FilterInstance::PaintFilteredFrame(aFrame, target, callback, dirtyRegion,
-                                       aImgParams);
+    FilterInstance::PaintFilteredFrame(
+        aFrame, aFrame->StyleEffects()->mFilters.AsSpan(), target, callback,
+        dirtyRegion, aImgParams);
   } else {
     svgFrame->PaintSVG(*target, aTransform, aImgParams, aDirtyRect);
   }

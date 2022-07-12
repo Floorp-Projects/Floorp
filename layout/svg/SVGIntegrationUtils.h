@@ -206,6 +206,7 @@ class SVGIntegrationUtils final {
    * Paint non-SVG frame with filter and opacity effect.
    */
   static void PaintFilter(const PaintFramesParams& aParams,
+                          Span<const StyleFilter> aFilters,
                           const SVGFilterPaintCallback& aCallback);
 
   /**

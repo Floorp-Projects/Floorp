@@ -991,10 +991,11 @@ void SVGIntegrationUtils::PaintMaskAndClipPath(
 }
 
 void SVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams,
+                                      Span<const StyleFilter> aFilters,
                                       const SVGFilterPaintCallback& aCallback) {
   MOZ_ASSERT(!aParams.builder->IsForGenerateGlyphMask(),
              "Filter effect is discarded while generating glyph mask.");
-  MOZ_ASSERT(aParams.frame->StyleEffects()->HasFilters(),
+  MOZ_ASSERT(!aFilters.IsEmpty(),
              "Should not use this method when no filter effect on this frame");
 
   nsIFrame* frame = aParams.frame;
@@ -1032,8 +1033,8 @@ void SVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams,
   /* Paint the child and apply filters */
   nsRegion dirtyRegion = aParams.dirtyRect - offsets.offsetToBoundingBox;
 
-  FilterInstance::PaintFilteredFrame(frame, &context, aCallback, &dirtyRegion,
-                                     aParams.imgParams, opacity);
+  FilterInstance::PaintFilteredFrame(frame, aFilters, &context, aCallback,
+                                     &dirtyRegion, aParams.imgParams, opacity);
 }
 
 bool SVGIntegrationUtils::CreateWebRenderCSSFilters(
