@@ -85,11 +85,6 @@ bool FileExists(absl::string_view file_name) {
   return stat(std::string(file_name).c_str(), &file_info) == 0;
 }
 
-bool FileExists(const std::string& file_name) {
-  struct stat file_info = {0};
-  return stat(file_name.c_str(), &file_info) == 0;
-}
-
 bool DirExists(absl::string_view directory_name) {
   struct stat directory_info = {0};
   return stat(std::string(directory_name).c_str(), &directory_info) == 0 &&

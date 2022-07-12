@@ -198,13 +198,12 @@ TEST_F(FileUtilsTest, GetFileSizeExistingFile) {
   ASSERT_GT(fprintf(file, "%s", "Dummy data"), 0)
       << "Failed to write to file: " << temp_filename;
   fclose(file);
-  ASSERT_GT(webrtc::test::GetFileSize(std::string(temp_filename.c_str())), 0u);
+  ASSERT_GT(webrtc::test::GetFileSize(temp_filename), 0u);
   remove(temp_filename.c_str());
 }
 
 TEST_F(FileUtilsTest, GetFileSizeNonExistingFile) {
-  ASSERT_EQ(0u, webrtc::test::GetFileSize(
-                    absl::string_view("non-existing-file.tmp")));
+  ASSERT_EQ(0u, webrtc::test::GetFileSize("non-existing-file.tmp"));
 }
 
 TEST_F(FileUtilsTest, DirExists) {
