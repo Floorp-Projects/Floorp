@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '674598587ab3c360318fb5c696d87f941770b072',
+  'chromium_revision': '3a6fd7d38b62d44a747a8d385cd6f1402039ebb4',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,9 +23,9 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@cff566f02292a8fa818cc7cceff5df0f1528fc80',
+    'https://chromium.googlesource.com/chromium/src/base@08d4ca7d7a079065468d9ec65496ea52cafebaa9',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@25cfbb99b680ee76320102c35488b5b737cac2c4',
+    'https://chromium.googlesource.com/chromium/src/build@cef7fc3d5135ada930fb08bcebb97545063cd69e',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@113dd1badbcbffea108a8c95ac7c89c22bfd25f3',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -34,13 +34,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@a1933158c9430a912583d0d280ff826d4bad4fd2',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@d4729beee3f8efb012536f83c79c18aad41e38b7',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@3a3158679d7f58d1c2d10de9c7c350d4971ce811',
+    'https://chromium.googlesource.com/chromium/src/testing@c60f74e7ace93e7e815d617193d1de13b1c1954f',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@3c0799498064c0d20e7a5f2ac36c92506a65b931',
+    'https://chromium.googlesource.com/chromium/src/third_party@c671395e43a423e2abecd3f2cb7a750ff58aab4f',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -231,7 +231,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@ed54518ee42cbdec9fb90a12c4b256f2c5f8d22e',
+    'https://android.googlesource.com/platform/external/perfetto.git@86fc023993c5b9b98d2333c389af8c2a3026ffcc',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@df0d06de6d3b64e35b9e75ad72c571af061bc7b3',
   'src/third_party/libyuv':
@@ -288,7 +288,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@da243b94e839d8ecd6db9186ac891d4d54d21a76',
+    'https://chromium.googlesource.com/chromium/src/tools@57304806ceca8cb833da780754384840ff84e9e6',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
