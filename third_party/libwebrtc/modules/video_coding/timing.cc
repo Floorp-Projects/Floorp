@@ -68,19 +68,9 @@ void VCMTiming::set_min_playout_delay(TimeDelta min_playout_delay) {
   min_playout_delay_ = min_playout_delay;
 }
 
-TimeDelta VCMTiming::min_playout_delay() {
-  MutexLock lock(&mutex_);
-  return min_playout_delay_;
-}
-
 void VCMTiming::set_max_playout_delay(TimeDelta max_playout_delay) {
   MutexLock lock(&mutex_);
   max_playout_delay_ = max_playout_delay;
-}
-
-TimeDelta VCMTiming::max_playout_delay() {
-  MutexLock lock(&mutex_);
-  return max_playout_delay_;
 }
 
 void VCMTiming::SetJitterDelay(TimeDelta jitter_delay) {
@@ -246,6 +236,7 @@ VCMTiming::VideoDelayTimings VCMTiming::GetTimings() const {
                            .target_delay = TargetDelayInternal(),
                            .jitter_buffer_delay = jitter_delay_,
                            .min_playout_delay = min_playout_delay_,
+                           .max_playout_delay = max_playout_delay_,
                            .render_delay = render_delay_,
                            .num_decoded_frames = num_decoded_frames_};
 }

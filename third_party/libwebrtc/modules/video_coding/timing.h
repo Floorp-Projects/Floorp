@@ -47,11 +47,9 @@ class VCMTiming {
 
   // Set/get the minimum playout delay from capture to render.
   void set_min_playout_delay(TimeDelta min_playout_delay);
-  TimeDelta min_playout_delay();
 
   // Set/get the maximum playout delay from capture to render in ms.
   void set_max_playout_delay(TimeDelta max_playout_delay);
-  TimeDelta max_playout_delay();
 
   // Increases or decreases the current delay to get closer to the target delay.
   // Calculates how long it has been since the previous call to this function,
@@ -100,6 +98,7 @@ class VCMTiming {
     TimeDelta target_delay;
     TimeDelta jitter_buffer_delay;
     TimeDelta min_playout_delay;
+    TimeDelta max_playout_delay;
     TimeDelta render_delay;
     size_t num_decoded_frames;
   };
