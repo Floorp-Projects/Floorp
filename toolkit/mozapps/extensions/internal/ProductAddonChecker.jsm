@@ -13,6 +13,7 @@ const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { CertUtils } = ChromeUtils.import(
   "resource://gre/modules/CertUtils.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const lazy = {};
 
@@ -36,6 +37,8 @@ logger.manageLevelFromPref("extensions.logging.productaddons.level");
  * ensure that we fail cleanly in such case.
  */
 const TIMEOUT_DELAY_MS = 20000;
+// How much of a file to read into memory at a time for hashing
+const HASH_CHUNK_SIZE = 8192;
 
 /**
  * Gets the status of an XMLHttpRequest either directly or from its underlying
@@ -422,13 +425,13 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
         return;
       }
       (async function() {
-        const path = await IOUtils.createUniqueFile(
-          PathUtils.osTempDir,
-          "tmpaddon"
+        let f = await OS.File.openUnique(
+          OS.Path.join(OS.Constants.Path.tmpDir, "tmpaddon")
         );
+        let path = f.path;
         logger.info(`Downloaded file will be saved to ${path}`);
-        await IOUtils.write(path, new Uint8Array(sr.response));
-
+        await f.file.close();
+        await OS.File.writeAtomic(path, new Uint8Array(sr.response));
         return path;
       })().then(resolve, reject);
     };
@@ -465,6 +468,51 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
 }
 
 /**
+ * Convert a string containing binary values to hex.
+ */
+function binaryToHex(input) {
+  let result = "";
+  for (let i = 0; i < input.length; ++i) {
+    let hex = input.charCodeAt(i).toString(16);
+    if (hex.length == 1) {
+      hex = "0" + hex;
+    }
+    result += hex;
+  }
+  return result;
+}
+
+/**
+ * Calculates the hash of a file.
+ *
+ * @param  hashFunction
+ *         The type of hash function to use, must be supported by nsICryptoHash.
+ * @param  path
+ *         The path of the file to hash.
+ * @return a promise that resolves to hash of the file or rejects with a JS
+ *         exception in case of error.
+ */
+var computeHash = async function(hashFunction, path) {
+  let file = await OS.File.open(path, { existing: true, read: true });
+  try {
+    let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+      Ci.nsICryptoHash
+    );
+    hasher.initWithString(hashFunction);
+
+    let bytes;
+    do {
+      bytes = await file.read(HASH_CHUNK_SIZE);
+      hasher.update(bytes, bytes.length);
+    } while (bytes.length == HASH_CHUNK_SIZE);
+
+    return binaryToHex(hasher.finish(false));
+  } finally {
+    await file.close();
+  }
+};
+
+/**
  * Verifies that a downloaded file matches what was expected.
  *
  * @param  properties
@@ -477,7 +525,7 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
  */
 var verifyFile = async function(properties, path) {
   if (properties.size !== undefined) {
-    let stat = await IOUtils.stat(path);
+    let stat = await OS.File.stat(path);
     if (stat.size != properties.size) {
       throw new Error(
         "Downloaded file was " +
@@ -491,7 +539,7 @@ var verifyFile = async function(properties, path) {
 
   if (properties.hashFunction !== undefined) {
     let expectedDigest = properties.hashValue.toLowerCase();
-    let digest = await IOUtils.computeHexDigest(path, properties.hashFunction);
+    let digest = await computeHash(properties.hashFunction, path);
     if (digest != expectedDigest) {
       throw new Error(
         "Hash was `" + digest + "` but expected `" + expectedDigest + "`."
@@ -562,7 +610,7 @@ const ProductAddonChecker = {
       await verifyFile(addon, path);
       return path;
     } catch (e) {
-      await IOUtils.remove(path);
+      await OS.File.remove(path);
       throw e;
     }
   },
@@ -570,6 +618,8 @@ const ProductAddonChecker = {
 
 // For test use only.
 const ProductAddonCheckerTestUtils = {
+  computeHash,
+
   /**
    * Used to override ServiceRequest calls with a mock request.
    * @param mockRequest The mocked ServiceRequest object.
