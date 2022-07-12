@@ -82,7 +82,8 @@ static bool SetAttribute(IXmlElement* element, const HSTRING name,
 
 static bool AddActionNode(IXmlDocument* toastXml, IXmlNode* actionsNode,
                           const nsAString& actionTitle,
-                          const nsAString& actionArgs) {
+                          const nsAString& actionArgs,
+                          const nsAString& actionPlacement = u""_ns) {
   ComPtr<IXmlElement> action;
   HRESULT hr =
       toastXml->CreateElement(HStringReference(L"action").Get(), &action);
@@ -99,10 +100,12 @@ static bool AddActionNode(IXmlDocument* toastXml, IXmlNode* actionsNode,
           action.Get(), HStringReference(L"arguments").Get(), actionArgs))) {
     return false;
   }
-  if (NS_WARN_IF(!SetAttribute(action.Get(),
-                               HStringReference(L"placement").Get(),
-                               u"contextmenu"_ns))) {
-    return false;
+  if (!actionPlacement.IsEmpty()) {
+    if (NS_WARN_IF(!SetAttribute(action.Get(),
+                                 HStringReference(L"placement").Get(),
+                                 actionPlacement))) {
+      return false;
+    }
   }
 
   // Add <action> to <actions>
@@ -256,6 +259,17 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     return nullptr;
   }
 
+  if (mRequireInteraction) {
+    ComPtr<IXmlElement> toastNode;
+    hr = toastNodeRoot.As(&toastNode);
+    if (NS_WARN_IF(FAILED(hr))) {
+      return nullptr;
+    }
+
+    SetAttribute(toastNode.Get(), HStringReference(L"scenario").Get(),
+                 u"reminder"_ns);
+  }
+
   ComPtr<IXmlElement> actions;
   hr = toastXml->CreateElement(HStringReference(L"actions").Get(), &actions);
   if (NS_WARN_IF(FAILED(hr))) {
@@ -313,13 +327,28 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
                                  formatStrings, disableButtonTitle);
 
     AddActionNode(toastXml.Get(), actionsNode.Get(), disableButtonTitle,
-                  u"snooze"_ns);
+                  u"snooze"_ns, u"contextmenu"_ns);
   }
 
   nsAutoString settingsButtonTitle;
   bundle->GetStringFromName("webActions.settings.label", settingsButtonTitle);
   AddActionNode(toastXml.Get(), actionsNode.Get(), settingsButtonTitle,
-                u"settings"_ns);
+                u"settings"_ns, u"contextmenu"_ns);
+
+  for (const auto& action : mActions) {
+    // Bug 1778596: include per-action icon from image URL.
+    nsString title;
+    if (NS_WARN_IF(NS_FAILED(action->GetTitle(title)))) {
+      return nullptr;
+    }
+
+    nsString actionString;
+    if (NS_WARN_IF(NS_FAILED(action->GetAction(actionString)))) {
+      return nullptr;
+    }
+
+    AddActionNode(toastXml.Get(), actionsNode.Get(), title, actionString);
+  }
 
   ComPtr<IXmlNode> appendedChild;
   hr = toastNodeRoot->AppendChild(actionsNode.Get(), &appendedChild);
