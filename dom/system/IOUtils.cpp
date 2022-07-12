@@ -268,6 +268,43 @@ static void RejectShuttingDown(Promise* aPromise) {
                   IOUtils::IOError(NS_ERROR_ABORT).WithMessage(SHUTDOWN_ERROR));
 }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+
+static bool AssertParentProcessWithCallerLocationImpl(GlobalObject& aGlobal,
+                                                      nsCString& reason) {
+  if (MOZ_LIKELY(XRE_IsParentProcess())) {
+    return true;
+  }
+
+  AutoJSAPI jsapi;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ALWAYS_TRUE(global);
+  MOZ_ALWAYS_TRUE(jsapi.Init(global));
+
+  JSContext* cx = jsapi.cx();
+
+  JS::AutoFilename scriptFilename;
+  unsigned lineNo = 0;
+  unsigned colNo = 0;
+
+  NS_ENSURE_TRUE(
+      JS::DescribeScriptedCaller(cx, &scriptFilename, &lineNo, &colNo), false);
+
+  NS_ENSURE_TRUE(scriptFilename.get(), false);
+
+  reason.AppendPrintf(" Called from %s:%d:%d.", scriptFilename.get(), lineNo,
+                      colNo);
+  return false;
+}
+
+static void AssertParentProcessWithCallerLocation(GlobalObject& aGlobal) {
+  nsCString reason = "IOUtils can only be used in the parent process."_ns;
+  if (!AssertParentProcessWithCallerLocationImpl(aGlobal, reason)) {
+    MOZ_CRASH_UNSAFE_PRINTF("%s", reason.get());
+  }
+}
+#endif
+
 // IOUtils implementation
 /* static */
 IOUtils::StateMutex IOUtils::sState{"IOUtils::sState"};
@@ -277,7 +314,10 @@ template <typename Fn>
 already_AddRefed<Promise> IOUtils::WithPromiseAndState(GlobalObject& aGlobal,
                                                        ErrorResult& aError,
                                                        Fn aFn) {
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  AssertParentProcessWithCallerLocation(aGlobal);
+#endif
+
   RefPtr<Promise> promise = CreateJSPromise(aGlobal, aError);
   if (!promise) {
     return nullptr;
