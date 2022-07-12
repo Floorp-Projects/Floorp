@@ -39,7 +39,7 @@ class VideoTrack : public MediaStreamTrack<VideoTrackInterface>,
  public:
   static rtc::scoped_refptr<VideoTrack> Create(
       const std::string& label,
-      VideoTrackSourceInterface* source,
+      rtc::scoped_refptr<VideoTrackSourceInterface> source,
       rtc::Thread* worker_thread);
 
   void AddOrUpdateSink(rtc::VideoSinkInterface<VideoFrame>* sink,

@@ -276,8 +276,9 @@ rtc::scoped_refptr<VideoTrackInterface> PeerConnectionFactory::CreateVideoTrack(
     const std::string& id,
     VideoTrackSourceInterface* source) {
   RTC_DCHECK(signaling_thread()->IsCurrent());
-  rtc::scoped_refptr<VideoTrackInterface> track(
-      VideoTrack::Create(id, source, worker_thread()));
+  rtc::scoped_refptr<VideoTrackInterface> track = VideoTrack::Create(
+      id, rtc::scoped_refptr<VideoTrackSourceInterface>(source),
+      worker_thread());
   return VideoTrackProxy::Create(signaling_thread(), worker_thread(), track);
 }
 
@@ -285,8 +286,8 @@ rtc::scoped_refptr<AudioTrackInterface> PeerConnectionFactory::CreateAudioTrack(
     const std::string& id,
     AudioSourceInterface* source) {
   RTC_DCHECK(signaling_thread()->IsCurrent());
-  rtc::scoped_refptr<AudioTrackInterface> track(
-      AudioTrack::Create(id, rtc::scoped_refptr<AudioSourceInterface>(source)));
+  rtc::scoped_refptr<AudioTrackInterface> track =
+      AudioTrack::Create(id, rtc::scoped_refptr<AudioSourceInterface>(source));
   return AudioTrackProxy::Create(signaling_thread(), track);
 }
 
