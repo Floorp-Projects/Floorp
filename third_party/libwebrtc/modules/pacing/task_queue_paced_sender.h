@@ -26,6 +26,7 @@
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
+#include "api/webrtc_key_value_config.h"
 #include "modules/pacing/pacing_controller.h"
 #include "modules/pacing/rtp_packet_pacer.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
@@ -144,6 +145,16 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   Stats GetStats() const;
 
   Clock* const clock_;
+  // If `kSlackedTaskQueuePacedSenderFieldTrial` is enabled, delayed tasks
+  // invoking MaybeProcessPackets() are scheduled using low precision instead of
+  // high precision, resulting in less idle wake ups and packets being sent in
+  // bursts if the `task_queue_` implementation supports slack.
+  //
+  // When probing, high precision is used regardless of `allow_low_precision_`
+  // to ensure good bandwidth estimation.
+  const bool allow_low_precision_;
+  // The holdback window prevents too frequent delayed MaybeProcessPackets()
+  // calls. These are only applicable if `allow_low_precision_` is false.
   const TimeDelta max_hold_back_window_;
   const int max_hold_back_window_in_packets_;
 
