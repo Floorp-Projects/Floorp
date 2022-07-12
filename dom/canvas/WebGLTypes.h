@@ -359,8 +359,7 @@ struct WebGLContextOptions {
   bool xrCompatible = false;
   dom::WebGLPowerPreference powerPreference =
       dom::WebGLPowerPreference::Default;
-  dom::PredefinedColorSpace colorSpace = dom::PredefinedColorSpace::Srgb;
-  bool ignoreColorSpace = true;  // Our legacy behavior.
+  Maybe<dom::PredefinedColorSpace> colorSpace;
   bool shouldResistFingerprinting = true;
   bool enableDebugRendererInfo = false;
 

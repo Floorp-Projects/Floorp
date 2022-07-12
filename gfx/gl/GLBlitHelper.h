@@ -7,8 +7,12 @@
 #ifndef GLBLITHELPER_H_
 #define GLBLITHELPER_H_
 
+#include <array>
 #include <cstdint>
 #include <map>
+#include <memory>
+#include <unordered_map>
+#include "Colorspaces.h"
 #include "GLConsts.h"
 #include "GLContextTypes.h"
 #include "GLTypes.h"
@@ -78,8 +82,9 @@ class DMABUFSurfaceImage;
 namespace gl {
 
 class BindAnglePlanes;
-class GLContext;
 class GLBlitHelper;
+class GLContext;
+class Texture;
 
 bool GuessDivisors(const gfx::IntSize& ySize, const gfx::IntSize& uvSize,
                    gfx::IntSize* const out_divisors);
@@ -90,10 +95,27 @@ struct Mat {
 
   float& at(const uint8_t x, const uint8_t y) { return m[N * x + y]; }
 
-  static Mat<N> Zero();
-  static Mat<N> I();
+  static Mat<N> I() {
+    auto ret = Mat<N>{};
+    for (uint8_t i = 0; i < N; i++) {
+      ret.at(i, i) = 1.0f;
+    }
+    return ret;
+  }
 
-  Mat<N> operator*(const Mat<N>& r) const;
+  Mat<N> operator*(const Mat<N>& r) const {
+    Mat<N> ret;
+    for (uint8_t x = 0; x < N; x++) {
+      for (uint8_t y = 0; y < N; y++) {
+        float sum = 0.0f;
+        for (uint8_t i = 0; i < N; i++) {
+          sum += at(i, y) * r.at(x, i);
+        }
+        ret.at(x, y) = sum;
+      }
+    }
+    return ret;
+  }
 };
 typedef Mat<3> Mat3;
 
@@ -108,17 +130,18 @@ class DrawBlitProg final {
   const GLint mLoc_uDestMatrix;
   const GLint mLoc_uTexMatrix0;
   const GLint mLoc_uTexMatrix1;
+  const GLint mLoc_uColorLut;
   const GLint mLoc_uColorMatrix;
   GLenum mType_uColorMatrix = 0;
 
  public:
   struct Key final {
-    const char* const fragHeader;
-    const char* const fragBody;
+    const char* fragHeader = nullptr;
+    std::array<const char*, 2> fragParts = {};
 
-    bool operator<(const Key& x) const {
-      if (fragHeader != x.fragHeader) return fragHeader < x.fragHeader;
-      return fragBody < x.fragBody;
+    auto Members() const { return std::tie(fragHeader, fragParts); }
+    friend bool operator<(const Key& a, const Key& b) {
+      return a.Members() < b.Members();
     }
   };
 
@@ -131,10 +154,11 @@ class DrawBlitProg final {
     gfx::IntSize
         destSize;  // Always needed for (at least) setting the viewport.
     Maybe<gfx::IntRect> destRect;
+    Maybe<uint32_t> texUnitForColorLut;
   };
   struct YUVArgs final {
     Mat3 texMatrix1;
-    gfx::YUVColorSpace colorSpace;
+    Maybe<gfx::YUVColorSpace> colorSpaceForMatrix;
   };
 
   void Draw(const BaseArgs& args, const YUVArgs* argsYUV = nullptr) const;
@@ -142,14 +166,15 @@ class DrawBlitProg final {
 
 class ScopedSaveMultiTex final {
   GLContext& mGL;
-  const uint8_t mTexCount;
+  const std::vector<uint8_t> mTexUnits;
   const GLenum mTexTarget;
   const GLuint mOldTexUnit;
   GLuint mOldTexSampler[3];
   GLuint mOldTex[3];
 
  public:
-  ScopedSaveMultiTex(GLContext* gl, uint8_t texCount, GLenum texTarget);
+  ScopedSaveMultiTex(GLContext* gl, const std::vector<uint8_t>& texUnits,
+                     GLenum texTarget);
   ~ScopedSaveMultiTex();
 };
 
@@ -170,6 +195,23 @@ class GLBlitHelper final {
   GLuint mYuvUploads[3] = {};
   gfx::IntSize mYuvUploads_YSize = {0, 0};
   gfx::IntSize mYuvUploads_UVSize = {0, 0};
+
+ public:
+  struct ColorLutKey {
+    color::ColorspaceDesc src;
+    color::ColorspaceDesc dst;
+
+    auto Members() const { return std::tie(src, dst); }
+    INLINE_AUTO_MAPPABLE(ColorLutKey)
+  };
+
+ private:
+  mutable std::unordered_map<ColorLutKey, std::weak_ptr<gl::Texture>,
+                             ColorLutKey::Hasher>
+      mColorLutTexMap;
+
+ public:
+  std::shared_ptr<gl::Texture> GetColorLutTex(const ColorLutKey& key) const;
 
 #ifdef XP_WIN
   mutable RefPtr<ID3D11Device> mD3D11;
@@ -270,13 +312,21 @@ class GLBlitHelper final {
 #endif
 };
 
+// -
+// For DrawBlitProg::Key::fragParts
+
 extern const char* const kFragHeader_Tex2D;
 extern const char* const kFragHeader_Tex2DRect;
 extern const char* const kFragHeader_TexExt;
-extern const char* const kFragBody_RGBA;
-extern const char* const kFragBody_CrYCb;
-extern const char* const kFragBody_NV12;
-extern const char* const kFragBody_PlanarYUV;
+
+extern const char* const kFragSample_OnePlane;
+extern const char* const kFragSample_TwoPlane;
+extern const char* const kFragSample_ThreePlane;
+
+extern const char* const kFragConvert_None;
+extern const char* const kFragConvert_BGR;
+extern const char* const kFragConvert_ColorMatrix;
+extern const char* const kFragConvert_ColorLut;
 
 }  // namespace gl
 }  // namespace mozilla

@@ -28,7 +28,7 @@ class D3D11RecycleAllocator final : public TextureClientRecycleAllocator {
                         gfx::SurfaceFormat aPreferredFormat);
 
   already_AddRefed<TextureClient> CreateOrRecycleClient(
-      gfx::YUVColorSpace aColorSpace, gfx::ColorRange aColorRange,
+      gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
       const gfx::IntSize& aSize);
 
   void SetPreferredSurfaceFormat(gfx::SurfaceFormat aPreferredFormat);
@@ -52,7 +52,7 @@ class D3D11RecycleAllocator final : public TextureClientRecycleAllocator {
 class D3D11ShareHandleImage final : public Image {
  public:
   D3D11ShareHandleImage(const gfx::IntSize& aSize, const gfx::IntRect& aRect,
-                        gfx::YUVColorSpace aColorSpace,
+                        gfx::ColorSpace2 aColorSpace,
                         gfx::ColorRange aColorRange);
   virtual ~D3D11ShareHandleImage() = default;
 
@@ -66,7 +66,6 @@ class D3D11ShareHandleImage final : public Image {
 
   ID3D11Texture2D* GetTexture() const;
 
-  gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
   gfx::ColorRange GetColorRange() const { return mColorRange; }
 
  private:
@@ -80,7 +79,11 @@ class D3D11ShareHandleImage final : public Image {
 
   gfx::IntSize mSize;
   gfx::IntRect mPictureRect;
-  gfx::YUVColorSpace mYUVColorSpace;
+
+ public:
+  const gfx::ColorSpace2 mColorSpace;
+
+ private:
   gfx::ColorRange mColorRange;
   RefPtr<TextureClient> mTextureClient;
   RefPtr<ID3D11Texture2D> mTexture;
