@@ -210,8 +210,16 @@ void ReassemblyQueue::AddReassembledMessage(
                        << ", payload=" << message.payload().size() << " bytes";
 
   for (const UnwrappedTSN tsn : tsns) {
-    // Update watermark, or insert into delivered_tsns_
-    if (tsn == last_assembled_tsn_watermark_.next_value()) {
+    if (tsn <= last_assembled_tsn_watermark_) {
+      // This can be provoked by a misbehaving peer by sending FORWARD-TSN with
+      // invalid SSNs, allowing ordered messages to stay in the queue that
+      // should've been discarded.
+      RTC_DLOG(LS_VERBOSE)
+          << log_prefix_
+          << "Message is built from fragments already seen - skipping";
+      return;
+    } else if (tsn == last_assembled_tsn_watermark_.next_value()) {
+      // Update watermark, or insert into delivered_tsns_
       last_assembled_tsn_watermark_.Increment();
     } else {
       delivered_tsns_.insert(tsn);
