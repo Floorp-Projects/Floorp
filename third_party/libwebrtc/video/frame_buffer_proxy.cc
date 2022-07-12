@@ -157,7 +157,7 @@ struct FrameMetadata {
         contentType(frame.contentType()),
         delayed_by_retransmission(frame.delayed_by_retransmission()),
         rtp_timestamp(frame.Timestamp()),
-        receive_time_ms(frame.ReceivedTime()) {}
+        receive_time(frame.ReceivedTimestamp()) {}
 
   const bool is_last_spatial_layer;
   const bool is_keyframe;
@@ -165,8 +165,14 @@ struct FrameMetadata {
   const VideoContentType contentType;
   const bool delayed_by_retransmission;
   const uint32_t rtp_timestamp;
-  const int64_t receive_time_ms;
+  const absl::optional<Timestamp> receive_time;
 };
+
+Timestamp ReceiveTime(const EncodedFrame& frame) {
+  absl::optional<Timestamp> ts = frame.ReceivedTimestamp();
+  RTC_DCHECK(ts.has_value()) << "Received frame must have a timestamp set!";
+  return *ts;
+}
 
 // Encapsulates use of the new frame buffer for use in VideoReceiveStream. This
 // behaves the same as the FrameBuffer2Proxy but uses frame_buffer3 instead.
@@ -194,7 +200,6 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
         timing_(timing),
         frame_decode_scheduler_(std::move(frame_decode_scheduler)),
         jitter_estimator_(clock_),
-        inter_frame_delay_(clock_->TimeInMilliseconds()),
         buffer_(std::make_unique<FrameBuffer>(kMaxFramesBuffered,
                                               kMaxFramesHistory)),
         decode_timing_(clock_, timing_),
@@ -262,12 +267,10 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     if (complete_units < buffer_->GetTotalNumberOfContinuousTemporalUnits()) {
       stats_proxy_->OnCompleteFrame(metadata.is_keyframe, metadata.size,
                                     metadata.contentType);
-      RTC_DCHECK_GE(metadata.receive_time_ms, 0)
-          << "Frame receive time must be positive for received frames, was "
-          << metadata.receive_time_ms << ".";
-      if (!metadata.delayed_by_retransmission && metadata.receive_time_ms >= 0)
+      RTC_DCHECK(metadata.receive_time) << "Frame receive time must be set!";
+      if (!metadata.delayed_by_retransmission && metadata.receive_time)
         timing_->IncomingTimestamp(metadata.rtp_timestamp,
-                                   Timestamp::Millis(metadata.receive_time_ms));
+                                   *metadata.receive_time);
       MaybeScheduleFrameForRelease();
     }
 
@@ -315,7 +318,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
     bool superframe_delayed_by_retransmission = false;
     DataSize superframe_size = DataSize::Zero();
     const EncodedFrame& first_frame = *frames.front();
-    int64_t receive_time_ms = first_frame.ReceivedTime();
+    Timestamp receive_time = ReceiveTime(first_frame);
 
     if (first_frame.is_keyframe())
       keyframe_required_ = false;
@@ -333,17 +336,15 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
 
       superframe_delayed_by_retransmission |=
           frame->delayed_by_retransmission();
-      receive_time_ms = std::max(receive_time_ms, frame->ReceivedTime());
+      receive_time = std::max(receive_time, ReceiveTime(*frame));
       superframe_size += DataSize::Bytes(frame->size());
     }
 
     if (!superframe_delayed_by_retransmission) {
-      int64_t frame_delay;
-
-      if (inter_frame_delay_.CalculateDelay(first_frame.Timestamp(),
-                                            &frame_delay, receive_time_ms)) {
-        jitter_estimator_.UpdateEstimate(TimeDelta::Millis(frame_delay),
-                                         superframe_size);
+      auto frame_delay = inter_frame_delay_.CalculateDelay(
+          first_frame.Timestamp(), receive_time);
+      if (frame_delay) {
+        jitter_estimator_.UpdateEstimate(*frame_delay, superframe_size);
       }
 
       float rtt_mult = protection_mode_ == kProtectionNackFEC ? 0.0 : 1.0;

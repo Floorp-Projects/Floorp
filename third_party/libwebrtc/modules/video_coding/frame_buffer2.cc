@@ -64,7 +64,6 @@ FrameBuffer::FrameBuffer(Clock* clock,
       callback_queue_(nullptr),
       jitter_estimator_(clock),
       timing_(timing),
-      inter_frame_delay_(clock_->TimeInMilliseconds()),
       stopped_(false),
       protection_mode_(kProtectionNack),
       stats_callback_(stats_callback),
@@ -316,12 +315,11 @@ std::unique_ptr<EncodedFrame> FrameBuffer::GetNextFrame() {
   }
 
   if (!superframe_delayed_by_retransmission) {
-    int64_t frame_delay;
+    auto frame_delay = inter_frame_delay_.CalculateDelay(
+        first_frame.Timestamp(), Timestamp::Millis(receive_time_ms));
 
-    if (inter_frame_delay_.CalculateDelay(first_frame.Timestamp(), &frame_delay,
-                                          receive_time_ms)) {
-      jitter_estimator_.UpdateEstimate(TimeDelta::Millis(frame_delay),
-                                       superframe_size);
+    if (frame_delay) {
+      jitter_estimator_.UpdateEstimate(*frame_delay, superframe_size);
     }
 
     float rtt_mult = protection_mode_ == kProtectionNackFEC ? 0.0 : 1.0;

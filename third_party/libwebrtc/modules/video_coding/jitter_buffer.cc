@@ -9,11 +9,11 @@
  */
 #include "modules/video_coding/jitter_buffer.h"
 
-
 #include <algorithm>
 #include <limits>
 #include <utility>
 
+#include "api/units/timestamp.h"
 #include "modules/video_coding/frame_buffer.h"
 #include "modules/video_coding/include/video_coding.h"
 #include "modules/video_coding/inter_frame_delay.h"
@@ -123,7 +123,6 @@ VCMJitterBuffer::VCMJitterBuffer(Clock* clock,
       num_packets_(0),
       num_duplicated_packets_(0),
       jitter_estimate_(clock),
-      inter_frame_delay_(clock_->TimeInMilliseconds()),
       missing_sequence_numbers_(SequenceNumberLessThan()),
       latest_received_sequence_number_(0),
       max_nack_list_size_(0),
@@ -192,7 +191,7 @@ void VCMJitterBuffer::Flush() {
   num_consecutive_old_packets_ = 0;
   // Also reset the jitter and delay estimates
   jitter_estimate_.Reset();
-  inter_frame_delay_.Reset(clock_->TimeInMilliseconds());
+  inter_frame_delay_.Reset();
   waiting_for_completion_.frame_size = 0;
   waiting_for_completion_.timestamp = 0;
   waiting_for_completion_.latest_packet_time = -1;
@@ -392,13 +391,13 @@ VCMFrameBufferEnum VCMJitterBuffer::InsertPacket(const VCMPacket& packet,
   if (error != kNoError)
     return error;
 
-  int64_t now_ms = clock_->TimeInMilliseconds();
+  Timestamp now = clock_->CurrentTime();
   // We are keeping track of the first and latest seq numbers, and
   // the number of wraps to be able to calculate how many packets we expect.
   if (first_packet_since_reset_) {
     // Now it's time to start estimating jitter
     // reset the delay estimate.
-    inter_frame_delay_.Reset(now_ms);
+    inter_frame_delay_.Reset();
   }
 
   // Empty packets may bias the jitter estimate (lacking size component),
@@ -408,9 +407,9 @@ VCMFrameBufferEnum VCMJitterBuffer::InsertPacket(const VCMPacket& packet,
       // This can get bad if we have a lot of duplicate packets,
       // we will then count some packet multiple times.
       waiting_for_completion_.frame_size += packet.sizeBytes;
-      waiting_for_completion_.latest_packet_time = now_ms;
+      waiting_for_completion_.latest_packet_time = now.ms();
     } else if (waiting_for_completion_.latest_packet_time >= 0 &&
-               waiting_for_completion_.latest_packet_time + 2000 <= now_ms) {
+               waiting_for_completion_.latest_packet_time + 2000 <= now.ms()) {
       // A packet should never be more than two seconds late
       UpdateJitterEstimate(waiting_for_completion_, true);
       waiting_for_completion_.latest_packet_time = -1;
@@ -425,7 +424,7 @@ VCMFrameBufferEnum VCMJitterBuffer::InsertPacket(const VCMPacket& packet,
   frame_data.rtt_ms = kDefaultRtt;
   frame_data.rolling_average_packets_per_frame = average_packets_per_frame_;
   VCMFrameBufferEnum buffer_state =
-      frame->InsertPacket(packet, now_ms, frame_data);
+      frame->InsertPacket(packet, now.ms(), frame_data);
 
   if (buffer_state > 0) {
     if (first_packet_since_reset_) {
@@ -873,14 +872,14 @@ void VCMJitterBuffer::UpdateJitterEstimate(int64_t latest_packet_time_ms,
   if (latest_packet_time_ms == -1) {
     return;
   }
-  int64_t frame_delay;
-  bool not_reordered = inter_frame_delay_.CalculateDelay(
-      timestamp, &frame_delay, latest_packet_time_ms);
+  auto frame_delay = inter_frame_delay_.CalculateDelay(
+      timestamp, Timestamp::Millis(latest_packet_time_ms));
+
+  bool not_reordered = frame_delay.has_value();
   // Filter out frames which have been reordered in time by the network
   if (not_reordered) {
     // Update the jitter estimate with the new samples
-    jitter_estimate_.UpdateEstimate(TimeDelta::Millis(frame_delay),
-                                    DataSize::Bytes(frame_size),
+    jitter_estimate_.UpdateEstimate(*frame_delay, DataSize::Bytes(frame_size),
                                     incomplete_frame);
   }
 }
