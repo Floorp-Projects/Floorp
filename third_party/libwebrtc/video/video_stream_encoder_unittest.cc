@@ -8714,7 +8714,7 @@ constexpr std::pair<VideoCodecType, bool> kVP8DisallowConversion =
 constexpr std::pair<VideoCodecType, bool> kVP9DisallowConversion =
     std::make_pair(kVideoCodecVP9, /*allow_i420_conversion=*/false);
 constexpr std::pair<VideoCodecType, bool> kAV1AllowConversion =
-    std::make_pair(kVideoCodecAV1, /*allow_i420_conversion=*/true);
+    std::make_pair(kVideoCodecAV1, /*allow_i420_conversion=*/false);
 constexpr std::pair<VideoCodecType, bool> kMultiplexDisallowConversion =
     std::make_pair(kVideoCodecMultiplex, /*allow_i420_conversion=*/false);
 #if defined(WEBRTC_USE_H264)
