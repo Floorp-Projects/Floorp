@@ -52,7 +52,7 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
   void RegisterOnFailure(FAILURE_CALLBACK callback);
   void RegisterOnAudioBusReady(AUDIOBUSREADY_CALLBACK callback);
   void RegisterOnLocalSdpReadytoSend(LOCALSDPREADYTOSEND_CALLBACK callback);
-  void RegisterOnIceCandiateReadytoSend(
+  void RegisterOnIceCandidateReadytoSend(
       ICECANDIDATEREADYTOSEND_CALLBACK callback);
   bool SetRemoteDescription(const char* type, const char* sdp);
   bool AddIceCandidate(const char* sdp,
@@ -121,7 +121,7 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
   AUDIOBUSREADY_CALLBACK OnAudioReady = nullptr;
 
   LOCALSDPREADYTOSEND_CALLBACK OnLocalSdpReady = nullptr;
-  ICECANDIDATEREADYTOSEND_CALLBACK OnIceCandiateReady = nullptr;
+  ICECANDIDATEREADYTOSEND_CALLBACK OnIceCandidateReady = nullptr;
 
   bool is_mute_audio_ = false;
   bool is_record_audio_ = false;

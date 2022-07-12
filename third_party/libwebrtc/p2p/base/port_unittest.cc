@@ -2626,7 +2626,7 @@ TEST_F(PortTest, TestCandidateFoundation) {
 }
 
 // This test verifies the related addresses of different types of
-// ICE candiates.
+// ICE candidates.
 TEST_F(PortTest, TestCandidateRelatedAddress) {
   auto nat_server = CreateNatServer(kNatAddr1, NAT_OPEN_CONE);
   auto udpport = CreateUdpPort(kLocalAddr1);

@@ -286,9 +286,9 @@ void SimplePeerConnection::OnIceCandidate(
     return;
   }
 
-  if (OnIceCandiateReady)
-    OnIceCandiateReady(sdp.c_str(), candidate->sdp_mline_index(),
-                       candidate->sdp_mid().c_str());
+  if (OnIceCandidateReady)
+    OnIceCandidateReady(sdp.c_str(), candidate->sdp_mline_index(),
+                        candidate->sdp_mid().c_str());
 }
 
 void SimplePeerConnection::RegisterOnLocalI420FrameReady(
@@ -327,9 +327,9 @@ void SimplePeerConnection::RegisterOnLocalSdpReadytoSend(
   OnLocalSdpReady = callback;
 }
 
-void SimplePeerConnection::RegisterOnIceCandiateReadytoSend(
+void SimplePeerConnection::RegisterOnIceCandidateReadytoSend(
     ICECANDIDATEREADYTOSEND_CALLBACK callback) {
-  OnIceCandiateReady = callback;
+  OnIceCandidateReady = callback;
 }
 
 bool SimplePeerConnection::SetRemoteDescription(const char* type,

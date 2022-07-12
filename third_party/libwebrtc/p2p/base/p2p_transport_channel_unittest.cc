@@ -6307,11 +6307,11 @@ TEST_P(GatherAfterConnectedTest, GatherAfterConnected) {
   clock.AdvanceTime(webrtc::TimeDelta::Millis(10 * delay));
 
   if (stop_gather_on_strongly_connected) {
-    // The relay candiates gathered has not been propagated to channel.
+    // The relay candidates gathered has not been propagated to channel.
     EXPECT_EQ(ep1->saved_candidates_.size(), 0u);
     EXPECT_EQ(ep2->saved_candidates_.size(), 0u);
   } else {
-    // The relay candiates gathered has been propagated to channel.
+    // The relay candidates gathered has been propagated to channel.
     EXPECT_EQ(ep1->saved_candidates_.size(), 1u);
     EXPECT_EQ(ep2->saved_candidates_.size(), 1u);
   }
@@ -6369,11 +6369,11 @@ TEST_P(GatherAfterConnectedTest, GatherAfterConnectedMultiHomed) {
   clock.AdvanceTime(webrtc::TimeDelta::Millis(10 * delay));
 
   if (stop_gather_on_strongly_connected) {
-    // The relay candiates gathered has not been propagated to channel.
+    // The relay candidates gathered has not been propagated to channel.
     EXPECT_EQ(ep1->saved_candidates_.size(), 0u);
     EXPECT_EQ(ep2->saved_candidates_.size(), 0u);
   } else {
-    // The relay candiates gathered has been propagated.
+    // The relay candidates gathered has been propagated.
     EXPECT_EQ(ep1->saved_candidates_.size(), 2u);
     EXPECT_EQ(ep2->saved_candidates_.size(), 1u);
   }
