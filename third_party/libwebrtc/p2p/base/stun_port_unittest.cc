@@ -20,6 +20,7 @@
 #include "rtc_base/ssl_adapter.h"
 #include "rtc_base/virtual_socket_server.h"
 #include "test/gmock.h"
+#include "test/scoped_key_value_config.h"
 
 using cricket::ServerAddresses;
 using rtc::SocketAddress;
@@ -77,7 +78,7 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
     stun_port_ = cricket::StunPort::Create(
         rtc::Thread::Current(), &socket_factory_, &network_, 0, 0,
         rtc::CreateRandomString(16), rtc::CreateRandomString(22), stun_servers,
-        absl::nullopt);
+        absl::nullopt, &field_trials_);
     stun_port_->set_stun_keepalive_delay(stun_keepalive_delay_);
     // If `stun_keepalive_lifetime_` is negative, let the stun port
     // choose its lifetime from the network type.
@@ -104,7 +105,7 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
     stun_port_ = cricket::UDPPort::Create(
         rtc::Thread::Current(), &socket_factory_, &network_, socket_.get(),
         rtc::CreateRandomString(16), rtc::CreateRandomString(22), false,
-        absl::nullopt);
+        absl::nullopt, &field_trials_);
     ASSERT_TRUE(stun_port_ != NULL);
     ServerAddresses stun_servers;
     stun_servers.insert(server_addr);
@@ -175,6 +176,7 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
 
  protected:
   cricket::IceCandidateErrorEvent error_event_;
+  webrtc::test::ScopedKeyValueConfig field_trials_;
 };
 
 class StunPortTestWithRealClock : public StunPortTestBase {};

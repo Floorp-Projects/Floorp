@@ -22,7 +22,9 @@
 #include "api/candidate.h"
 #include "api/packet_socket_factory.h"
 #include "api/rtc_error.h"
+#include "api/transport/field_trial_based_config.h"
 #include "api/transport/stun.h"
+#include "api/webrtc_key_value_config.h"
 #include "logging/rtc_event_log/events/rtc_event_ice_candidate_pair.h"
 #include "logging/rtc_event_log/events/rtc_event_ice_candidate_pair_config.h"
 #include "logging/rtc_event_log/ice_logger.h"
@@ -35,6 +37,7 @@
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/callback_list.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/memory/always_valid_pointer.h"
 #include "rtc_base/net_helper.h"
 #include "rtc_base/network.h"
 #include "rtc_base/proxy_info.h"
@@ -185,7 +188,8 @@ class Port : public PortInterface,
        rtc::PacketSocketFactory* factory,
        const rtc::Network* network,
        const std::string& username_fragment,
-       const std::string& password);
+       const std::string& password,
+       const webrtc::WebRtcKeyValueConfig* field_trials = nullptr);
   Port(rtc::Thread* thread,
        const std::string& type,
        rtc::PacketSocketFactory* factory,
@@ -193,7 +197,8 @@ class Port : public PortInterface,
        uint16_t min_port,
        uint16_t max_port,
        const std::string& username_fragment,
-       const std::string& password);
+       const std::string& password,
+       const webrtc::WebRtcKeyValueConfig* field_trials = nullptr);
   ~Port() override;
 
   // Note that the port type does NOT uniquely identify different subclasses of
@@ -494,6 +499,9 @@ class Port : public PortInterface,
       MdnsNameRegistrationStatus::kNotStarted;
 
   rtc::WeakPtrFactory<Port> weak_factory_;
+  webrtc::AlwaysValidPointer<const webrtc::WebRtcKeyValueConfig,
+                             webrtc::FieldTrialBasedConfig>
+      field_trials_;
 
   bool MaybeObfuscateAddress(Candidate* c,
                              const std::string& type,

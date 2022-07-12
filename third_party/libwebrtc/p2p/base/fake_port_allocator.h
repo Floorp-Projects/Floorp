@@ -20,6 +20,7 @@
 #include "p2p/base/udp_port.h"
 #include "rtc_base/net_helpers.h"
 #include "rtc_base/thread.h"
+#include "test/scoped_key_value_config.h"
 
 namespace rtc {
 class SocketFactory;
@@ -36,10 +37,11 @@ class TestUDPPort : public UDPPort {
                              uint16_t max_port,
                              const std::string& username,
                              const std::string& password,
-                             bool emit_localhost_for_anyaddress) {
+                             bool emit_localhost_for_anyaddress,
+                             const webrtc::WebRtcKeyValueConfig* field_trials) {
     TestUDPPort* port =
         new TestUDPPort(thread, factory, network, min_port, max_port, username,
-                        password, emit_localhost_for_anyaddress);
+                        password, emit_localhost_for_anyaddress, field_trials);
     if (!port->Init()) {
       delete port;
       port = nullptr;
@@ -55,7 +57,8 @@ class TestUDPPort : public UDPPort {
               uint16_t max_port,
               const std::string& username,
               const std::string& password,
-              bool emit_localhost_for_anyaddress)
+              bool emit_localhost_for_anyaddress,
+              const webrtc::WebRtcKeyValueConfig* field_trials)
       : UDPPort(thread,
                 factory,
                 network,
@@ -63,7 +66,8 @@ class TestUDPPort : public UDPPort {
                 max_port,
                 username,
                 password,
-                emit_localhost_for_anyaddress) {}
+                emit_localhost_for_anyaddress,
+                field_trials) {}
 };
 
 // A FakePortAllocatorSession can be used with either a real or fake socket
@@ -77,7 +81,8 @@ class FakePortAllocatorSession : public PortAllocatorSession {
                            const std::string& content_name,
                            int component,
                            const std::string& ice_ufrag,
-                           const std::string& ice_pwd)
+                           const std::string& ice_pwd,
+                           const webrtc::WebRtcKeyValueConfig& field_trials)
       : PortAllocatorSession(content_name,
                              component,
                              ice_ufrag,
@@ -96,7 +101,8 @@ class FakePortAllocatorSession : public PortAllocatorSession {
         port_(),
         port_config_count_(0),
         stun_servers_(allocator->stun_servers()),
-        turn_servers_(allocator->turn_servers()) {
+        turn_servers_(allocator->turn_servers()),
+        field_trials_(field_trials) {
     ipv4_network_.AddIP(rtc::IPAddress(INADDR_LOOPBACK));
     ipv6_network_.AddIP(rtc::IPAddress(in6addr_loopback));
   }
@@ -112,7 +118,8 @@ class FakePortAllocatorSession : public PortAllocatorSession {
               ? ipv6_network_
               : ipv4_network_;
       port_.reset(TestUDPPort::Create(network_thread_, factory_, &network, 0, 0,
-                                      username(), password(), false));
+                                      username(), password(), false,
+                                      &field_trials_));
       RTC_DCHECK(port_);
       port_->SubscribePortDestroyed(
           [this](PortInterface* port) { OnPortDestroyed(port); });
@@ -200,6 +207,7 @@ class FakePortAllocatorSession : public PortAllocatorSession {
   uint32_t candidate_filter_ = CF_ALL;
   int transport_info_update_count_ = 0;
   bool running_ = false;
+  const webrtc::WebRtcKeyValueConfig& field_trials_;
 };
 
 class FakePortAllocator : public cricket::PortAllocator {
@@ -231,7 +239,7 @@ class FakePortAllocator : public cricket::PortAllocator {
       const std::string& ice_pwd) override {
     return new FakePortAllocatorSession(this, network_thread_, factory_,
                                         content_name, component, ice_ufrag,
-                                        ice_pwd);
+                                        ice_pwd, field_trials_);
   }
 
   bool initialized() const { return initialized_; }
@@ -245,6 +253,7 @@ class FakePortAllocator : public cricket::PortAllocator {
   }
 
  private:
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   rtc::Thread* network_thread_;
   rtc::PacketSocketFactory* factory_;
   std::unique_ptr<rtc::BasicPacketSocketFactory> owned_factory_;

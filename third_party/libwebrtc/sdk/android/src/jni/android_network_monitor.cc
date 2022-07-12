@@ -577,7 +577,8 @@ AndroidNetworkMonitorFactory::AndroidNetworkMonitorFactory(
 AndroidNetworkMonitorFactory::~AndroidNetworkMonitorFactory() = default;
 
 rtc::NetworkMonitorInterface*
-AndroidNetworkMonitorFactory::CreateNetworkMonitor() {
+AndroidNetworkMonitorFactory::CreateNetworkMonitor(
+    const WebRtcKeyValueConfig& field_trials) {
   return new AndroidNetworkMonitor(AttachCurrentThreadIfNeeded(),
                                    j_application_context_);
 }

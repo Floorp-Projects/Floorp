@@ -1587,6 +1587,7 @@ if (is_ios || is_mac) {
           ":network_monitor_objc",
           ":network_monitor_observer",
           "../api:sequence_checker",
+          "../api:webrtc_key_value_config",
           "../rtc_base",
           "../rtc_base:threading",
           "../rtc_base/task_utils:pending_task_safety_flag",

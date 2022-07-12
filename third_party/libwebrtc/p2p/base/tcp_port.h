@@ -34,18 +34,20 @@ class TCPConnection;
 // call this TCPPort::OnReadPacket (3 arg) to dispatch to a connection.
 class TCPPort : public Port {
  public:
-  static std::unique_ptr<TCPPort> Create(rtc::Thread* thread,
-                                         rtc::PacketSocketFactory* factory,
-                                         const rtc::Network* network,
-                                         uint16_t min_port,
-                                         uint16_t max_port,
-                                         const std::string& username,
-                                         const std::string& password,
-                                         bool allow_listen) {
+  static std::unique_ptr<TCPPort> Create(
+      rtc::Thread* thread,
+      rtc::PacketSocketFactory* factory,
+      const rtc::Network* network,
+      uint16_t min_port,
+      uint16_t max_port,
+      const std::string& username,
+      const std::string& password,
+      bool allow_listen,
+      const webrtc::WebRtcKeyValueConfig* field_trials = nullptr) {
     // Using `new` to access a non-public constructor.
     return absl::WrapUnique(new TCPPort(thread, factory, network, min_port,
                                         max_port, username, password,
-                                        allow_listen));
+                                        allow_listen, field_trials));
   }
   ~TCPPort() override;
 
@@ -71,7 +73,8 @@ class TCPPort : public Port {
           uint16_t max_port,
           const std::string& username,
           const std::string& password,
-          bool allow_listen);
+          bool allow_listen,
+          const webrtc::WebRtcKeyValueConfig* field_trials);
 
   // Handles sending using the local TCP socket.
   int SendTo(const void* data,

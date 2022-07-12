@@ -110,7 +110,8 @@ Port::Port(rtc::Thread* thread,
            rtc::PacketSocketFactory* factory,
            const rtc::Network* network,
            const std::string& username_fragment,
-           const std::string& password)
+           const std::string& password,
+           const webrtc::WebRtcKeyValueConfig* field_trials)
     : thread_(thread),
       factory_(factory),
       type_(type),
@@ -127,7 +128,8 @@ Port::Port(rtc::Thread* thread,
       ice_role_(ICEROLE_UNKNOWN),
       tiebreaker_(0),
       shared_socket_(true),
-      weak_factory_(this) {
+      weak_factory_(this),
+      field_trials_(field_trials) {
   RTC_DCHECK(factory_ != NULL);
   Construct();
 }
@@ -139,7 +141,8 @@ Port::Port(rtc::Thread* thread,
            uint16_t min_port,
            uint16_t max_port,
            const std::string& username_fragment,
-           const std::string& password)
+           const std::string& password,
+           const webrtc::WebRtcKeyValueConfig* field_trials)
     : thread_(thread),
       factory_(factory),
       type_(type),
@@ -156,7 +159,8 @@ Port::Port(rtc::Thread* thread,
       ice_role_(ICEROLE_UNKNOWN),
       tiebreaker_(0),
       shared_socket_(false),
-      weak_factory_(this) {
+      weak_factory_(this),
+      field_trials_(field_trials) {
   RTC_DCHECK(factory_ != NULL);
   Construct();
 }
@@ -171,7 +175,7 @@ void Port::Construct() {
     password_ = rtc::CreateRandomString(ICE_PWD_LENGTH);
   }
   network_->SignalTypeChanged.connect(this, &Port::OnNetworkTypeChanged);
-  network_cost_ = network_->GetCost();
+  network_cost_ = network_->GetCost(*field_trials_);
 
   thread_->PostDelayed(RTC_FROM_HERE, timeout_delay_, this,
                        MSG_DESTROY_IF_DEAD);
@@ -880,7 +884,7 @@ std::string Port::ToString() const {
 
 // TODO(honghaiz): Make the network cost configurable from user setting.
 void Port::UpdateNetworkCost() {
-  uint16_t new_cost = network_->GetCost();
+  uint16_t new_cost = network_->GetCost(*field_trials_);
   if (network_cost_ == new_cost) {
     return;
   }

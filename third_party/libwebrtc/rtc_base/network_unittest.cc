@@ -36,6 +36,7 @@
 #include "rtc_base/logging.h"  // For RTC_LOG_GLE
 #endif
 #include "test/field_trial.h"
+#include "test/scoped_key_value_config.h"
 
 using ::testing::Contains;
 using ::testing::Not;
@@ -121,7 +122,8 @@ class FakeNetworkMonitor : public NetworkMonitorInterface {
 class FakeNetworkMonitorFactory : public NetworkMonitorFactory {
  public:
   FakeNetworkMonitorFactory() {}
-  NetworkMonitorInterface* CreateNetworkMonitor() override {
+  NetworkMonitorInterface* CreateNetworkMonitor(
+      const webrtc::WebRtcKeyValueConfig& field_trials) override {
     return new FakeNetworkMonitor();
   }
 };
@@ -309,14 +311,18 @@ class NetworkTest : public ::testing::Test, public sigslot::has_slots<> {
 #endif  // defined(WEBRTC_POSIX)
 
  protected:
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   bool callback_called_;
 };
 
 class TestBasicNetworkManager : public BasicNetworkManager {
  public:
   TestBasicNetworkManager(NetworkMonitorFactory* network_monitor_factory,
-                          SocketFactory* socket_factory)
-      : BasicNetworkManager(network_monitor_factory, socket_factory) {}
+                          SocketFactory* socket_factory,
+                          const webrtc::WebRtcKeyValueConfig& field_trials)
+      : BasicNetworkManager(network_monitor_factory,
+                            socket_factory,
+                            &field_trials) {}
   using BasicNetworkManager::QueryDefaultLocalAddress;
   using BasicNetworkManager::set_default_local_addresses;
 };
@@ -404,7 +410,7 @@ TEST_F(NetworkTest, DISABLED_TestCreateNetworks) {
 // ALLOWED.
 TEST_F(NetworkTest, TestUpdateNetworks) {
   PhysicalSocketServer socket_server;
-  BasicNetworkManager manager(nullptr, &socket_server);
+  BasicNetworkManager manager(nullptr, &socket_server, &field_trials_);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
                                         &NetworkTest::OnNetworksChanged);
   EXPECT_EQ(NetworkManager::ENUMERATION_ALLOWED,
@@ -798,7 +804,7 @@ TEST_F(NetworkTest, IPv6NetworksPreferredOverIPv4) {
 // to be preference-ordered by name. For example, "eth0" before "eth1".
 TEST_F(NetworkTest, NetworksSortedByInterfaceName) {
   PhysicalSocketServer socket_server;
-  BasicNetworkManager manager(&socket_server);
+  BasicNetworkManager manager(&socket_server, &field_trials_);
   Network* eth0 = new Network("test_eth0", "Test Network Adapter 1",
                               IPAddress(0x65432100U), 24);
   eth0->AddIP(IPAddress(0x65432100U));
@@ -896,7 +902,8 @@ TEST_F(NetworkTest, TestGetAdapterTypeFromNetworkMonitor) {
   std::string ipv6_address = "1000:2000:3000:4000:0:0:0:1";
   std::string ipv6_mask = "FFFF:FFFF:FFFF:FFFF::";
   PhysicalSocketServer socket_server;
-  BasicNetworkManager manager_without_monitor(nullptr, &socket_server);
+  BasicNetworkManager manager_without_monitor(nullptr, &socket_server,
+                                              &field_trials_);
   manager_without_monitor.StartUpdating();
   // A network created without a network monitor will get UNKNOWN type.
   ifaddrs* addr_list = InstallIpv6Network(if_name, ipv6_address, ipv6_mask,
@@ -906,7 +913,8 @@ TEST_F(NetworkTest, TestGetAdapterTypeFromNetworkMonitor) {
 
   // With the fake network monitor the type should be correctly determined.
   FakeNetworkMonitorFactory factory;
-  BasicNetworkManager manager_with_monitor(&factory, &socket_server);
+  BasicNetworkManager manager_with_monitor(&factory, &socket_server,
+                                           &field_trials_);
   manager_with_monitor.StartUpdating();
   // Add the same ipv6 address as before but it has the right network type
   // detected by the network monitor now.
@@ -1004,7 +1012,7 @@ TEST_F(NetworkTest, TestNetworkMonitorIsAdapterAvailable) {
   // Sanity check that both interfaces are included by default.
   FakeNetworkMonitorFactory factory;
   PhysicalSocketServer socket_server;
-  BasicNetworkManager manager(&factory, &socket_server);
+  BasicNetworkManager manager(&factory, &socket_server, &field_trials_);
   manager.StartUpdating();
   CallConvertIfAddrs(manager, list, /*include_ignored=*/false, &result);
   EXPECT_EQ(2u, result.size());
@@ -1151,7 +1159,7 @@ TEST_F(NetworkTest, TestIPv6Selection) {
 TEST_F(NetworkTest, TestNetworkMonitoring) {
   FakeNetworkMonitorFactory factory;
   PhysicalSocketServer socket_server;
-  BasicNetworkManager manager(&factory, &socket_server);
+  BasicNetworkManager manager(&factory, &socket_server, &field_trials_);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
                                         &NetworkTest::OnNetworksChanged);
   manager.StartUpdating();
@@ -1182,7 +1190,7 @@ TEST_F(NetworkTest, MAYBE_DefaultLocalAddress) {
   IPAddress ip;
   FakeNetworkMonitorFactory factory;
   PhysicalSocketServer socket_server;
-  TestBasicNetworkManager manager(&factory, &socket_server);
+  TestBasicNetworkManager manager(&factory, &socket_server, field_trials_);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
                                         &NetworkTest::OnNetworksChanged);
   manager.StartUpdating();
@@ -1358,7 +1366,7 @@ TEST_F(NetworkTest, WebRTC_BindUsingInterfaceName) {
   // Sanity check that both interfaces are included by default.
   FakeNetworkMonitorFactory factory;
   PhysicalSocketServer socket_server;
-  BasicNetworkManager manager(&factory, &socket_server);
+  BasicNetworkManager manager(&factory, &socket_server, &field_trials_);
   manager.StartUpdating();
   CallConvertIfAddrs(manager, list, /*include_ignored=*/false, &result);
   EXPECT_EQ(2u, result.size());
@@ -1390,6 +1398,7 @@ TEST_F(NetworkTest, WebRTC_BindUsingInterfaceName) {
 TEST_F(NetworkTest, NetworkCostVpn_Default) {
   IPAddress ip1;
   EXPECT_TRUE(IPFromString("2400:4030:1:2c00:be30:0:0:1", &ip1));
+  webrtc::test::ScopedKeyValueConfig field_trials;
 
   Network* net1 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
   net1->set_type(ADAPTER_TYPE_VPN);
@@ -1398,13 +1407,13 @@ TEST_F(NetworkTest, NetworkCostVpn_Default) {
   Network* net2 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
   net2->set_type(ADAPTER_TYPE_ETHERNET);
 
-  EXPECT_EQ(net1->GetCost(), net2->GetCost());
+  EXPECT_EQ(net1->GetCost(field_trials), net2->GetCost(field_trials));
   delete net1;
   delete net2;
 }
 
 TEST_F(NetworkTest, NetworkCostVpn_VpnMoreExpensive) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-AddNetworkCostToVpn/Enabled/");
 
   IPAddress ip1;
@@ -1417,13 +1426,13 @@ TEST_F(NetworkTest, NetworkCostVpn_VpnMoreExpensive) {
   Network* net2 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
   net2->set_type(ADAPTER_TYPE_ETHERNET);
 
-  EXPECT_GT(net1->GetCost(), net2->GetCost());
+  EXPECT_GT(net1->GetCost(field_trials), net2->GetCost(field_trials));
   delete net1;
   delete net2;
 }
 
 TEST_F(NetworkTest, GuessAdapterFromNetworkCost) {
-  webrtc::test::ScopedFieldTrials field_trials(
+  webrtc::test::ScopedKeyValueConfig field_trials(
       "WebRTC-AddNetworkCostToVpn/Enabled/"
       "WebRTC-UseDifferentiatedCellularCosts/Enabled/");
 
@@ -1435,7 +1444,8 @@ TEST_F(NetworkTest, GuessAdapterFromNetworkCost) {
       continue;
     Network net1("em1", "em1", TruncateIP(ip1, 64), 64);
     net1.set_type(type);
-    auto [guess, vpn] = Network::GuessAdapterFromNetworkCost(net1.GetCost());
+    auto [guess, vpn] =
+        Network::GuessAdapterFromNetworkCost(net1.GetCost(field_trials));
     EXPECT_FALSE(vpn);
     if (type == rtc::ADAPTER_TYPE_LOOPBACK) {
       EXPECT_EQ(guess, rtc::ADAPTER_TYPE_ETHERNET);
@@ -1451,7 +1461,8 @@ TEST_F(NetworkTest, GuessAdapterFromNetworkCost) {
     Network net1("em1", "em1", TruncateIP(ip1, 64), 64);
     net1.set_type(rtc::ADAPTER_TYPE_VPN);
     net1.set_underlying_type_for_vpn(type);
-    auto [guess, vpn] = Network::GuessAdapterFromNetworkCost(net1.GetCost());
+    auto [guess, vpn] =
+        Network::GuessAdapterFromNetworkCost(net1.GetCost(field_trials));
     EXPECT_TRUE(vpn);
     if (type == rtc::ADAPTER_TYPE_LOOPBACK) {
       EXPECT_EQ(guess, rtc::ADAPTER_TYPE_ETHERNET);
