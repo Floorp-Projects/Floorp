@@ -56,6 +56,7 @@ class DelayBasedBwe {
     DataRate target_bitrate = DataRate::Zero();
     bool recovered_from_overuse;
     bool backoff_in_alr;
+    BandwidthUsage delay_detector_state;
   };
 
   explicit DelayBasedBwe(const WebRtcKeyValueConfig* key_value_config,
