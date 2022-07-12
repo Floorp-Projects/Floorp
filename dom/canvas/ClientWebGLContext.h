@@ -1433,7 +1433,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void BufferData(GLenum target, const dom::ArrayBufferView& srcData,
                   GLenum usage, GLuint srcElemOffset = 0,
                   GLuint srcElemCountOverride = 0);
-  void RawBufferData(GLenum target, const Range<const uint8_t>& srcData,
+  void RawBufferData(GLenum target, const uint8_t* srcBytes, size_t srcLen,
                      GLenum usage);
 
   void BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,

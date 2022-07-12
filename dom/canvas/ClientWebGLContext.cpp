@@ -3341,12 +3341,13 @@ void ClientWebGLContext::BufferData(GLenum target,
   Run<RPROC(BufferData)>(target, RawBuffer<>(range), usage);
 }
 
-void ClientWebGLContext::RawBufferData(GLenum target,
-                                       const Range<const uint8_t>& srcData,
-                                       GLenum usage) {
+void ClientWebGLContext::RawBufferData(GLenum target, const uint8_t* srcBytes,
+                                       size_t srcLen, GLenum usage) {
   const FuncScope funcScope(*this, "bufferData");
 
-  Run<RPROC(BufferData)>(target, RawBuffer<>(srcData), usage);
+  const auto srcBuffer =
+      srcBytes ? RawBuffer<>({srcBytes, srcLen}) : RawBuffer<>(srcLen);
+  Run<RPROC(BufferData)>(target, srcBuffer, usage);
 }
 
 ////
