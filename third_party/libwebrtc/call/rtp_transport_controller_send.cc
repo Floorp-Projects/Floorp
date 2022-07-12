@@ -129,6 +129,8 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       relay_bandwidth_cap_("relay_cap", DataRate::PlusInfinity()),
       transport_overhead_bytes_per_packet_(0),
       network_available_(false),
+      congestion_window_size_(DataSize::PlusInfinity()),
+      is_congested_(false),
       retransmission_rate_limiter_(clock, kRetransmitWindowSizeMs),
       task_queue_(task_queue_factory->CreateTaskQueue(
           "rtp_send_controller",
@@ -200,6 +202,15 @@ void RtpTransportControllerSend::UpdateControlState() {
   // We won't create control_handler_ until we have an observers.
   RTC_DCHECK(observer_ != nullptr);
   observer_->OnTargetTransferRate(*update);
+}
+
+void RtpTransportControllerSend::UpdateCongestedState() {
+  bool congested = transport_feedback_adapter_.GetOutstandingData() >=
+                   congestion_window_size_;
+  if (congested != is_congested_) {
+    is_congested_ = congested;
+    pacer()->SetCongested(congested);
+  }
 }
 
 RtpPacketPacer* RtpTransportControllerSend::pacer() {
@@ -361,7 +372,8 @@ void RtpTransportControllerSend::OnNetworkRouteChanged(
       } else {
         UpdateInitialConstraints(msg.constraints);
       }
-      pacer()->UpdateOutstandingData(DataSize::Zero());
+      is_congested_ = false;
+      pacer()->SetCongested(false);
     });
   }
 }
@@ -382,7 +394,8 @@ void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
     } else {
       pacer()->Pause();
     }
-    pacer()->UpdateOutstandingData(DataSize::Zero());
+    is_congested_ = false;
+    pacer()->SetCongested(false);
 
     if (controller_) {
       control_handler_->SetNetworkAvailability(network_available_);
@@ -421,12 +434,11 @@ void RtpTransportControllerSend::OnSentPacket(
     absl::optional<SentPacket> packet_msg =
         transport_feedback_adapter_.ProcessSentPacket(sent_packet);
     if (packet_msg) {
-      // Only update outstanding data in pacer if:
+      // Only update outstanding data if:
       // 1. Packet feadback is used.
       // 2. The packet has not yet received an acknowledgement.
       // 3. It is not a retransmission of an earlier packet.
-      pacer()->UpdateOutstandingData(
-          transport_feedback_adapter_.GetOutstandingData());
+      UpdateCongestedState();
       if (controller_)
         PostUpdates(controller_->OnSentPacket(*packet_msg));
     }
@@ -584,10 +596,8 @@ void RtpTransportControllerSend::OnTransportFeedback(
       if (controller_)
         PostUpdates(controller_->OnTransportPacketsFeedback(*feedback_msg));
 
-      // Only update outstanding data in pacer if any packet is first time
-      // acked.
-      pacer()->UpdateOutstandingData(
-          transport_feedback_adapter_.GetOutstandingData());
+      // Only update outstanding data if any packet is first time acked.
+      UpdateCongestedState();
     }
   });
 }
@@ -679,7 +689,8 @@ void RtpTransportControllerSend::UpdateStreamsConfig() {
 
 void RtpTransportControllerSend::PostUpdates(NetworkControlUpdate update) {
   if (update.congestion_window) {
-    pacer()->SetCongestionWindow(*update.congestion_window);
+    congestion_window_size_ = *update.congestion_window;
+    UpdateCongestedState();
   }
   if (update.pacer_config) {
     pacer()->SetPacingRates(update.pacer_config->data_rate(),

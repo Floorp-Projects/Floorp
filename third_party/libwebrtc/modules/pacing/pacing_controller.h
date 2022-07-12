@@ -97,8 +97,7 @@ class PacingController {
   void Resume();  // Resume sending packets.
   bool IsPaused() const;
 
-  void SetCongestionWindow(DataSize congestion_window_size);
-  void UpdateOutstandingData(DataSize outstanding_data);
+  void SetCongested(bool congested);
 
   // Sets the pacing rates. Must be called once before packets can be sent.
   void SetPacingRates(DataRate pacing_rate, DataRate padding_rate);
@@ -144,8 +143,6 @@ class PacingController {
   // Check queue of pending packets and send them or padding packets, if budget
   // is available.
   void ProcessPackets();
-
-  bool Congested() const;
 
   bool IsProbing() const;
 
@@ -225,8 +222,7 @@ class PacingController {
   RoundRobinPacketQueue packet_queue_;
   uint64_t packet_counter_;
 
-  DataSize congestion_window_size_;
-  DataSize outstanding_data_;
+  bool congested_;
 
   TimeDelta queue_time_limit;
   bool account_for_audio_;
