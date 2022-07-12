@@ -34,6 +34,9 @@ class EncodedFrame : public webrtc::VCMEncodedFrame {
   // When this frame was received.
   // TODO(bugs.webrtc.org/13756): Use Timestamp instead of int.
   virtual int64_t ReceivedTime() const = 0;
+  // Returns a Timestamp from `ReceivedTime`, or nullopt if there is no receive
+  // time.
+  absl::optional<webrtc::Timestamp> ReceivedTimestamp() const;
 
   // When this frame should be rendered.
   // TODO(bugs.webrtc.org/13756): Use Timestamp instead of int.

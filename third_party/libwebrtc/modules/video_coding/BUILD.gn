@@ -234,6 +234,20 @@ rtc_library("jitter_estimator") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("inter_frame_delay") {
+  sources = [
+    "inter_frame_delay.cc",
+    "inter_frame_delay.h",
+  ]
+  deps = [
+    "..:module_api_public",
+    "../../api/units:frequency",
+    "../../api/units:time_delta",
+    "../../api/units:timestamp",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
 rtc_library("video_coding") {
   visibility = [ "*" ]
   sources = [
@@ -255,8 +269,6 @@ rtc_library("video_coding") {
     "h264_sps_pps_tracker.cc",
     "h264_sps_pps_tracker.h",
     "include/video_codec_initializer.h",
-    "inter_frame_delay.cc",
-    "inter_frame_delay.h",
     "internal_defines.h",
     "loss_notification_controller.cc",
     "loss_notification_controller.h",
@@ -288,8 +300,8 @@ rtc_library("video_coding") {
     ":encoded_frame",
     ":frame_buffer",
     ":frame_helpers",
+    ":inter_frame_delay",
     ":jitter_estimator",
-    ":packet_buffer",
     ":rtt_filter",
     ":timing",
     ":video_codec_interface",
@@ -404,6 +416,7 @@ rtc_library("video_coding_legacy") {
   deps = [
     ":codec_globals_headers",
     ":encoded_frame",
+    ":inter_frame_delay",
     ":jitter_estimator",
     ":timing",
     ":video_codec_interface",
@@ -1131,6 +1144,7 @@ if (rtc_include_tests) {
       "h264_sprop_parameter_sets_unittest.cc",
       "h264_sps_pps_tracker_unittest.cc",
       "histogram_unittest.cc",
+      "inter_frame_delay_unittest.cc",
       "jitter_buffer_unittest.cc",
       "jitter_estimator_tests.cc",
       "loss_notification_controller_unittest.cc",
@@ -1175,6 +1189,7 @@ if (rtc_include_tests) {
       ":frame_buffer",
       ":frame_dependencies_calculator",
       ":h264_packet_buffer",
+      ":inter_frame_delay",
       ":jitter_estimator",
       ":nack_requester",
       ":packet_buffer",

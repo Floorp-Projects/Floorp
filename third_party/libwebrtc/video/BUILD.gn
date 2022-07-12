@@ -100,6 +100,7 @@ rtc_library("video") {
     "../modules/video_coding:codec_globals_headers",
     "../modules/video_coding:frame_buffer",
     "../modules/video_coding:frame_helpers",
+    "../modules/video_coding:inter_frame_delay",
     "../modules/video_coding:jitter_estimator",
     "../modules/video_coding:nack_requester",
     "../modules/video_coding:packet_buffer",
