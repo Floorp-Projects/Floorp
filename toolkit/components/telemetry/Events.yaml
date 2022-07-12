@@ -971,23 +971,6 @@ normandy:
       reason: The way that the preference change was detected ("observer", "sideload", or "onEnroll")
       enrollmentId: A unique ID for this enrollment that will be included in all related Telemetry.
 
-  validation_failed:
-    objects: ["nimbus_experiment"]
-    methods: ["validationFailed"]
-    release_channel_collection: "opt-out"
-    products:
-      - "firefox"
-    record_in_processes: ["main"]
-    description: >
-      This records when validation of a recipe fails.
-    bug_numbers: [1762652]
-    notification_emails: ["barret@mozilla.com"]
-    expiry_version: never
-    extra_keys:
-      reason: Why validation failed (one of "invalid-recipe", "invalid-branch", or "invalid-reason").
-      branch: If reason == invalid-branch, the branch that failed validation.
-      feature: If reason == invalid-feature, the invalid feature ID.
-
 pwmgr:
   open_management:
     objects: ["aboutprotections", "autocomplete", "capturedoorhanger", "contextmenu", "direct", "fxamenu", "mainmenu", "pageinfo", "preferences", "snippet"]
