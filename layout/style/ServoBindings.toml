@@ -65,6 +65,7 @@ rusty-enums = [
     "mozilla::dom::CallerType",
     "mozilla::dom::IterationCompositeOperation",
     "mozilla::dom::CompositeOperation",
+    "mozilla::dom::CompositeOperationOrAuto",
     "mozilla::InheritTarget",
     "mozilla::css::DocumentMatchingFunction",
     "mozilla::css::SheetParsingMode",
