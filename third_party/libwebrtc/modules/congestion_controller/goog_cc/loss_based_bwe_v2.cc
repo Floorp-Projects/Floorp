@@ -838,9 +838,10 @@ bool LossBasedBweV2::PushBackObservation(
       last_send_time - last_send_time_most_recent_observation_;
 
   // Too small to be meaningful.
-  if (observation_duration < config_->observation_duration_lower_bound &&
-      (delay_detector_state == BandwidthUsage::kBwNormal ||
-       !config_->trendline_integration_enabled)) {
+  if (observation_duration <= TimeDelta::Zero() ||
+      (observation_duration < config_->observation_duration_lower_bound &&
+       (delay_detector_state == BandwidthUsage::kBwNormal ||
+        !config_->trendline_integration_enabled))) {
     return false;
   }
 
