@@ -12,13 +12,14 @@
 
 #include <algorithm>
 #include <utility>
-
+#include "absl/memory/memory.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/event.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/trace_event.h"
 
 namespace webrtc {
-
-const int TaskQueuePacedSender::kNoPacketHoldback = -1;
 
 TaskQueuePacedSender::TaskQueuePacedSender(
     Clock* clock,
@@ -40,11 +41,10 @@ TaskQueuePacedSender::TaskQueuePacedSender(
       is_started_(false),
       is_shutdown_(false),
       packet_size_(/*alpha=*/0.95),
-      include_overhead_(false),
       task_queue_(task_queue_factory->CreateTaskQueue(
           "TaskQueuePacedSender",
           TaskQueueFactory::Priority::NORMAL)) {
-  RTC_DCHECK_GE(max_hold_back_window_, PacingController::kMinSleepTime);
+  packet_size_.Apply(1, 0);
 }
 
 TaskQueuePacedSender::~TaskQueuePacedSender() {
@@ -140,11 +140,7 @@ void TaskQueuePacedSender::EnqueuePackets(
   task_queue_.PostTask([this, packets_ = std::move(packets)]() mutable {
     RTC_DCHECK_RUN_ON(&task_queue_);
     for (auto& packet : packets_) {
-      size_t packet_size = packet->payload_size() + packet->padding_size();
-      if (include_overhead_) {
-        packet_size += packet->headers_size();
-      }
-      packet_size_.Apply(1, packet_size);
+      packet_size_.Apply(1, packet->size());
       RTC_DCHECK_GE(packet->capture_time(), Timestamp::Zero());
       pacing_controller_.EnqueuePacket(std::move(packet));
     }
@@ -163,7 +159,6 @@ void TaskQueuePacedSender::SetAccountForAudioPackets(bool account_for_audio) {
 void TaskQueuePacedSender::SetIncludeOverhead() {
   task_queue_.PostTask([this]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
-    include_overhead_ = true;
     pacing_controller_.SetIncludeOverhead();
     MaybeProcessPackets(Timestamp::MinusInfinity());
   });
@@ -199,16 +194,13 @@ absl::optional<Timestamp> TaskQueuePacedSender::FirstSentPacketTime() const {
 
 TimeDelta TaskQueuePacedSender::OldestPacketWaitTime() const {
   Timestamp oldest_packet = GetStats().oldest_packet_enqueue_time;
-  if (oldest_packet.IsInfinite()) {
+  if (oldest_packet.IsInfinite())
     return TimeDelta::Zero();
-  }
 
   // (webrtc:9716): The clock is not always monotonic.
   Timestamp current = clock_->CurrentTime();
-  if (current < oldest_packet) {
+  if (current < oldest_packet)
     return TimeDelta::Zero();
-  }
-
   return current - oldest_packet;
 }
 
@@ -221,70 +213,70 @@ void TaskQueuePacedSender::MaybeProcessPackets(
     Timestamp scheduled_process_time) {
   RTC_DCHECK_RUN_ON(&task_queue_);
 
-#if RTC_TRACE_EVENTS_ENABLED
-  TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
-               "TaskQueuePacedSender::MaybeProcessPackets");
-#endif
-
   if (is_shutdown_ || !is_started_) {
     return;
   }
 
-  Timestamp next_send_time = pacing_controller_.NextSendTime();
-  RTC_DCHECK(next_send_time.IsFinite());
+  // Normally, run ProcessPackets() only if this is the scheduled task.
+  // If it is not but it is already time to process and there either is
+  // no scheduled task or the schedule has shifted forward in time, run
+  // anyway and clear any schedule.
+  Timestamp next_process_time = pacing_controller_.NextSendTime();
   const Timestamp now = clock_->CurrentTime();
-
-  TimeDelta early_execute_margin =
-      pacing_controller_.IsProbing()
-          ? PacingController::kMaxEarlyProbeProcessing
-          : TimeDelta::Zero();
-
-  // Process packets and update stats.
-  while (next_send_time <= now + early_execute_margin) {
-    pacing_controller_.ProcessPackets();
-    next_send_time = pacing_controller_.NextSendTime();
-    RTC_DCHECK(next_send_time.IsFinite());
-  }
-  UpdateStats();
-
-  // Ignore retired scheduled task, otherwise reset `next_process_time_`.
-  if (scheduled_process_time.IsFinite()) {
-    if (scheduled_process_time != next_process_time_) {
-      return;
-    }
+  const bool is_scheduled_call = next_process_time_ == scheduled_process_time;
+  if (is_scheduled_call) {
+    // Indicate no pending scheduled call.
     next_process_time_ = Timestamp::MinusInfinity();
   }
+  if (is_scheduled_call ||
+      (now >= next_process_time && (next_process_time_.IsInfinite() ||
+                                    next_process_time < next_process_time_))) {
+    pacing_controller_.ProcessPackets();
+    next_process_time = pacing_controller_.NextSendTime();
+  }
 
-  // Do not hold back in probing.
-  TimeDelta hold_back_window = TimeDelta::Zero();
-  if (!pacing_controller_.IsProbing()) {
-    hold_back_window = max_hold_back_window_;
-    DataRate pacing_rate = pacing_controller_.pacing_rate();
-    if (max_hold_back_window_in_packets_ != kNoPacketHoldback &&
-        !pacing_rate.IsZero() &&
-        packet_size_.filtered() != rtc::ExpFilter::kValueUndefined) {
-      TimeDelta avg_packet_send_time =
-          DataSize::Bytes(packet_size_.filtered()) / pacing_rate;
-      hold_back_window =
-          std::min(hold_back_window,
-                   avg_packet_send_time * max_hold_back_window_in_packets_);
+  TimeDelta hold_back_window = max_hold_back_window_;
+  DataRate pacing_rate = pacing_controller_.pacing_rate();
+  DataSize avg_packet_size = DataSize::Bytes(packet_size_.filtered());
+  if (max_hold_back_window_in_packets_ > 0 && !pacing_rate.IsZero() &&
+      !avg_packet_size.IsZero()) {
+    TimeDelta avg_packet_send_time = avg_packet_size / pacing_rate;
+    hold_back_window =
+        std::min(hold_back_window,
+                 avg_packet_send_time * max_hold_back_window_in_packets_);
+  }
+
+  absl::optional<TimeDelta> time_to_next_process;
+  if (pacing_controller_.IsProbing() &&
+      next_process_time != next_process_time_) {
+    // If we're probing and there isn't already a wakeup scheduled for the next
+    // process time, always post a task and just round sleep time down to
+    // nearest millisecond.
+    if (next_process_time.IsMinusInfinity()) {
+      time_to_next_process = TimeDelta::Zero();
+    } else {
+      time_to_next_process =
+          std::max(TimeDelta::Zero(),
+                   (next_process_time - now).RoundDownTo(TimeDelta::Millis(1)));
     }
+  } else if (next_process_time_.IsMinusInfinity() ||
+             next_process_time <= next_process_time_ - hold_back_window) {
+    // Schedule a new task since there is none currently scheduled
+    // (`next_process_time_` is infinite), or the new process time is at least
+    // one holdback window earlier than whatever is currently scheduled.
+    time_to_next_process = std::max(next_process_time - now, hold_back_window);
   }
 
-  // Calculate next process time.
-  TimeDelta time_to_next_process =
-      std::max(hold_back_window, next_send_time - now - early_execute_margin);
-  next_send_time = now + time_to_next_process;
+  if (time_to_next_process) {
+    // Set a new scheduled process time and post a delayed task.
+    next_process_time_ = next_process_time;
 
-  // If no in flight task or in flight task is later than `next_send_time`,
-  // schedule a new one. Previous in flight task will be retired.
-  if (next_process_time_.IsMinusInfinity() ||
-      next_process_time_ > next_send_time) {
     task_queue_.PostDelayedHighPrecisionTask(
-        [this, next_send_time]() { MaybeProcessPackets(next_send_time); },
-        time_to_next_process.RoundUpTo(TimeDelta::Millis(1)).ms<uint32_t>());
-    next_process_time_ = next_send_time;
+        [this, next_process_time]() { MaybeProcessPackets(next_process_time); },
+        time_to_next_process->ms<uint32_t>());
   }
+
+  UpdateStats();
 }
 
 void TaskQueuePacedSender::UpdateStats() {
