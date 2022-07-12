@@ -31,6 +31,17 @@ rtc::scoped_refptr<I420BufferInterface> WrapI420Buffer(
     int v_stride,
     std::function<void()> no_longer_used);
 
+rtc::scoped_refptr<I422BufferInterface> WrapI422Buffer(
+    int width,
+    int height,
+    const uint8_t* y_plane,
+    int y_stride,
+    const uint8_t* u_plane,
+    int u_stride,
+    const uint8_t* v_plane,
+    int v_stride,
+    std::function<void()> no_longer_used);
+
 rtc::scoped_refptr<I444BufferInterface> WrapI444Buffer(
     int width,
     int height,

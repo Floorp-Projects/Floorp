@@ -17,6 +17,7 @@
 
 #include "api/scoped_refptr.h"
 #include "api/video/i420_buffer.h"
+#include "api/video/i422_buffer.h"
 #include "api/video/i444_buffer.h"
 #include "api/video/nv12_buffer.h"
 #include "rtc_base/race_checker.h"
@@ -44,6 +45,7 @@ class VideoFrameBufferPool {
   // and there are less than `max_number_of_buffers` pending, a buffer is
   // created. Returns null otherwise.
   rtc::scoped_refptr<I420Buffer> CreateI420Buffer(int width, int height);
+  rtc::scoped_refptr<I422Buffer> CreateI422Buffer(int width, int height);
   rtc::scoped_refptr<I444Buffer> CreateI444Buffer(int width, int height);
   rtc::scoped_refptr<NV12Buffer> CreateNV12Buffer(int width, int height);
 
