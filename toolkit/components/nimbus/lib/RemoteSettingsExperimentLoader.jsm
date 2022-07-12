@@ -411,22 +411,16 @@ class _RemoteSettingsExperimentLoader {
           );
         }
 
-        if (feature.enabled ?? true) {
-          const result = validator.validate(value);
-          if (!result.valid) {
-            Cu.reportError(
-              `Experiment ${id} branch ${branchIdx} feature ${featureId} does not validate: ${JSON.stringify(
-                result.errors,
-                undefined,
-                2
-              )}`
-            );
-            return false;
-          }
-        } else {
-          lazy.log.debug(
-            `Experiment ${id} branch ${branchIdx} feature ${featureId} disabled; skipping validation`
+        const result = validator.validate(value);
+        if (!result.valid) {
+          Cu.reportError(
+            `Experiment ${id} branch ${branchIdx} feature ${featureId} does not validate: ${JSON.stringify(
+              result.errors,
+              undefined,
+              2
+            )}`
           );
+          return false;
         }
       }
     }
