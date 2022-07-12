@@ -170,3 +170,19 @@ wr:
       - gfx-telemetry-alerts@mozilla.com
     expires: never
     telemetry_mirror: WR_TIME_TO_FRAME_BUILD_MS
+  time_to_render_start:
+    type: timing_distribution
+    description: >
+      Time elapsed between the construction of a frame and the start of
+      rendering.
+    time_unit: microsecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1778395
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1778395
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: WR_TIME_TO_RENDER_START_MS

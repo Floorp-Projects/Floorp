@@ -398,6 +398,11 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
     frame = frameInfo;
   }
 
+  // Sadly this doesn't include the lock, since we don't have the frame there
+  // yet.
+  glean::wr::time_to_render_start.AccumulateRawDuration(TimeStamp::Now() -
+                                                        frame.mStartTime);
+
   // It is for ensuring that PrepareForUse() is called before
   // RenderTextureHost::Lock().
   HandleRenderTextureOps();
