@@ -25,6 +25,7 @@ function makeAlert(options) {
     options.silent,
     options.vibrate || []
   );
+  alert.initActions(options.actions || []);
   return alert;
 }
 
@@ -37,6 +38,10 @@ add_task(async () => {
   let title = "title";
   let text = "text";
   let imageURL = "file:///image.png";
+  let actions = [
+    { action: "action1", title: "title1", iconURL: "file:///iconURL1.png" },
+    { action: "action2", title: "title2", iconURL: "file:///iconURL2.png" },
+  ];
 
   let alert = makeAlert({ name, title, text });
   let expected =
@@ -46,5 +51,15 @@ add_task(async () => {
   alert = makeAlert({ name, title, text, imageURL });
   expected =
     '<toast><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="settings" placement="contextmenu"/></actions></toast>';
+  Assert.equal(expected, alertsService.getXmlStringForWindowsAlert(alert));
+
+  alert = makeAlert({ name, title, text, imageURL, requireInteraction: true });
+  expected =
+    '<toast scenario="reminder"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="settings" placement="contextmenu"/></actions></toast>';
+  Assert.equal(expected, alertsService.getXmlStringForWindowsAlert(alert));
+
+  alert = makeAlert({ name, title, text, imageURL, actions });
+  expected =
+    '<toast><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="settings" placement="contextmenu"/><action content="title1" arguments="action1"/><action content="title2" arguments="action2"/></actions></toast>';
   Assert.equal(expected, alertsService.getXmlStringForWindowsAlert(alert));
 });
