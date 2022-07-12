@@ -252,7 +252,8 @@ rtc::scoped_refptr<I422Buffer> I422Buffer::Rotate(
 
   RTC_CHECK_EQ(
       0,
-      I422Rotate(src.DataY(), src.StrideY(), src.DataU(), src.StrideU(),
+      webrtc::I422Rotate(
+                 src.DataY(), src.StrideY(), src.DataU(), src.StrideU(),
                  src.DataV(), src.StrideV(), buffer->MutableDataY(),
                  buffer->StrideY(), buffer->MutableDataU(), buffer->StrideU(),
                  buffer->MutableDataV(), buffer->StrideV(), src.width(),
@@ -337,7 +338,8 @@ void I422Buffer::CropAndScaleFrom(const I422BufferInterface& src,
       src.DataU() + src.StrideU() * uv_offset_y + uv_offset_x;
   const uint8_t* v_plane =
       src.DataV() + src.StrideV() * uv_offset_y + uv_offset_x;
-  int res = I422Scale(y_plane, src.StrideY(), u_plane, src.StrideU(), v_plane,
+  int res = 
+      webrtc::I422Scale(y_plane, src.StrideY(), u_plane, src.StrideU(), v_plane,
                       src.StrideV(), crop_width, crop_height, MutableDataY(),
                       StrideY(), MutableDataU(), StrideU(), MutableDataV(),
                       StrideV(), width(), height(), libyuv::kFilterBox);
