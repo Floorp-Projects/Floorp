@@ -244,7 +244,6 @@ class ContextMenusTest {
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24457")
     @SmokeTest
     @Test
     fun selectAndSearchTextTest() {
