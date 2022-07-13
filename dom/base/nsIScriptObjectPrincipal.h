@@ -27,6 +27,8 @@ class nsIScriptObjectPrincipal : public nsISupports {
 
   virtual nsIPrincipal* GetPrincipal() = 0;
 
+  virtual nsIPrincipal* GetEffectiveCookiePrincipal() = 0;
+
   virtual nsIPrincipal* GetEffectiveStoragePrincipal() = 0;
 
   virtual nsIPrincipal* PartitionedPrincipal() = 0;
