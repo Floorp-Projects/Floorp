@@ -12,7 +12,9 @@
 #define MODULES_DESKTOP_CAPTURE_DESKTOP_AND_CURSOR_COMPOSER_H_
 
 #include <memory>
-
+#if defined(WEBRTC_USE_GIO)
+#include "modules/desktop_capture/desktop_capture_metadata.h"
+#endif  // defined(WEBRTC_USE_GIO)
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capture_types.h"
 #include "modules/desktop_capture/desktop_capturer.h"
@@ -59,6 +61,9 @@ class RTC_EXPORT DesktopAndCursorComposer
   bool SelectSource(SourceId id) override;
   bool FocusOnSelectedSource() override;
   bool IsOccluded(const DesktopVector& pos) override;
+#if defined(WEBRTC_USE_GIO)
+  DesktopCaptureMetadata GetMetadata() override;
+#endif  // defined(WEBRTC_USE_GIO)
 
   // MouseCursorMonitor::Callback interface.
   void OnMouseCursor(MouseCursor* cursor) override;

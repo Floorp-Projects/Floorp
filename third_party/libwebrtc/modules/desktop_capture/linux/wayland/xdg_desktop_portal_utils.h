@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "modules/desktop_capture/linux/wayland/scoped_glib.h"
+#include "modules/desktop_capture/linux/wayland/xdg_session_details.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -31,13 +32,6 @@ constexpr char kDesktopRequestObjectPath[] =
 constexpr char kSessionInterfaceName[] = "org.freedesktop.portal.Session";
 constexpr char kRequestInterfaceName[] = "org.freedesktop.portal.Request";
 constexpr char kScreenCastInterfaceName[] = "org.freedesktop.portal.ScreenCast";
-
-struct SessionDetails {
-  GDBusProxy* proxy;
-  GCancellable* cancellable;
-  std::string session_handle;
-  uint32_t pipewire_stream_node_id;
-};
 
 using ProxyRequestCallback = void (*)(GObject*, GAsyncResult*, gpointer);
 using SessionRequestCallback = void (*)(GDBusProxy*, GAsyncResult*, gpointer);

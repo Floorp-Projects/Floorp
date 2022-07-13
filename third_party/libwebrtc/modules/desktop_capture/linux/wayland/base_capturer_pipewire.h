@@ -13,16 +13,21 @@
 
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/linux/wayland/screen_capture_portal_interface.h"
 #include "modules/desktop_capture/linux/wayland/screencast_portal.h"
 #include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
 #include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
+#include "modules/desktop_capture/linux/wayland/xdg_session_details.h"
 
 namespace webrtc {
 
 class BaseCapturerPipeWire : public DesktopCapturer,
                              public ScreenCastPortal::PortalNotifier {
  public:
-  BaseCapturerPipeWire(const DesktopCaptureOptions& options);
+  explicit BaseCapturerPipeWire(const DesktopCaptureOptions& options);
+  BaseCapturerPipeWire(
+      const DesktopCaptureOptions& options,
+      std::unique_ptr<xdg_portal::ScreenCapturePortalInterface> portal);
   ~BaseCapturerPipeWire() override;
 
   BaseCapturerPipeWire(const BaseCapturerPipeWire&) = delete;
@@ -40,11 +45,13 @@ class BaseCapturerPipeWire : public DesktopCapturer,
                                  int fd) override;
   void OnScreenCastSessionClosed() override;
 
+  xdg_portal::SessionDetails GetSessionDetails();
+
  private:
   DesktopCaptureOptions options_ = {};
   Callback* callback_ = nullptr;
   bool capturer_failed_ = false;
-  std::unique_ptr<ScreenCastPortal> screencast_portal_;
+  std::unique_ptr<xdg_portal::ScreenCapturePortalInterface> portal_;
 };
 
 }  // namespace webrtc
