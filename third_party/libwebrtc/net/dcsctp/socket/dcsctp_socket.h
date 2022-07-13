@@ -155,6 +155,8 @@ class DcSctpSocket : public DcSctpSocketInterface {
   void MaybeSendShutdownOrAck();
   // If the socket is shutting down, responds SHUTDOWN to any incoming DATA.
   void MaybeSendShutdownOnPacketReceived(const SctpPacket& packet);
+  // If there are streams pending to be reset, send a request to reset them.
+  void MaybeSendResetStreamsRequest();
   // Sends a INIT chunk.
   void SendInit();
   // Sends a SHUTDOWN chunk.

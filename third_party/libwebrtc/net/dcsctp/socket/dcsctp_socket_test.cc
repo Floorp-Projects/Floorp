@@ -61,6 +61,7 @@ using ::testing::ElementsAre;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::SizeIs;
+using ::testing::UnorderedElementsAre;
 
 constexpr SendOptions kSendOptions;
 constexpr size_t kLargeMessageSize = DcSctpOptions::kMaxSafeMTUSize * 20;
@@ -2261,6 +2262,59 @@ TEST(DcSctpSocketTest, ReceiveBothUnorderedAndOrderedWithSameTSN) {
           .Add(DataChunk(TSN(*tsn + 1), StreamID(1), SSN(0), PPID(53),
                          std::vector<uint8_t>(10), opts))
           .Build());
+}
+
+TEST(DcSctpSocketTest, CloseTwoStreamsAtTheSameTime) {
+  // Reported as https://crbug.com/1312009.
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+
+  EXPECT_CALL(z.cb, OnIncomingStreamsReset(ElementsAre(StreamID(1)))).Times(1);
+  EXPECT_CALL(z.cb, OnIncomingStreamsReset(ElementsAre(StreamID(2)))).Times(1);
+  EXPECT_CALL(a.cb, OnStreamsResetPerformed(ElementsAre(StreamID(1)))).Times(1);
+  EXPECT_CALL(a.cb, OnStreamsResetPerformed(ElementsAre(StreamID(2)))).Times(1);
+
+  ConnectSockets(a, z);
+
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(53), {1, 2}), kSendOptions);
+  a.socket.Send(DcSctpMessage(StreamID(2), PPID(53), {1, 2}), kSendOptions);
+
+  ExchangeMessages(a, z);
+
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(1)}));
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(2)}));
+
+  ExchangeMessages(a, z);
+}
+
+TEST(DcSctpSocketTest, CloseThreeStreamsAtTheSameTime) {
+  // Similar to CloseTwoStreamsAtTheSameTime, but ensuring that the two
+  // remaining streams are reset at the same time in the second request.
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+
+  EXPECT_CALL(z.cb, OnIncomingStreamsReset(ElementsAre(StreamID(1)))).Times(1);
+  EXPECT_CALL(z.cb, OnIncomingStreamsReset(
+                        UnorderedElementsAre(StreamID(2), StreamID(3))))
+      .Times(1);
+  EXPECT_CALL(a.cb, OnStreamsResetPerformed(ElementsAre(StreamID(1)))).Times(1);
+  EXPECT_CALL(a.cb, OnStreamsResetPerformed(
+                        UnorderedElementsAre(StreamID(2), StreamID(3))))
+      .Times(1);
+
+  ConnectSockets(a, z);
+
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(53), {1, 2}), kSendOptions);
+  a.socket.Send(DcSctpMessage(StreamID(2), PPID(53), {1, 2}), kSendOptions);
+  a.socket.Send(DcSctpMessage(StreamID(3), PPID(53), {1, 2}), kSendOptions);
+
+  ExchangeMessages(a, z);
+
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(1)}));
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(2)}));
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(3)}));
+
+  ExchangeMessages(a, z);
 }
 }  // namespace
 }  // namespace dcsctp
