@@ -122,9 +122,10 @@ class nsCSPContext : public nsIContentSecurityPolicy {
       mozilla::dom::Element* aTriggeringElement,
       nsICSPEventListener* aCSPEventListener, nsIURI* aBlockedURI,
       BlockedContentSource aBlockedContentSource, nsIURI* aOriginalURI,
-      const nsAString& aViolatedDirective, uint32_t aViolatedPolicyIndex,
-      const nsAString& aObserverSubject, const nsAString& aSourceFile,
-      const nsAString& aScriptSample, uint32_t aLineNum, uint32_t aColumnNum);
+      const nsAString& aViolatedDirective, const nsAString& aEffectiveDirective,
+      uint32_t aViolatedPolicyIndex, const nsAString& aObserverSubject,
+      const nsAString& aSourceFile, const nsAString& aScriptSample,
+      uint32_t aLineNum, uint32_t aColumnNum);
 
   // Hands off! Don't call this method unless you know what you
   // are doing. It's only supposed to be called from within
@@ -161,6 +162,7 @@ class nsCSPContext : public nsIContentSecurityPolicy {
                              nsICSPEventListener* aCSPEventListener,
                              const nsAString& aNonce, const nsAString& aContent,
                              const nsAString& aViolatedDirective,
+                             const nsAString& aEffectiveDirective,
                              uint32_t aViolatedPolicyIndex,
                              uint32_t aLineNumber, uint32_t aColumnNumber);
 

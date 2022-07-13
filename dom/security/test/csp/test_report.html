@@ -50,7 +50,7 @@ window.checkResults = function(reportObj) {
 
   is(cspReport["blocked-uri"], "inline", "Incorrect blocked-uri");
 
-  is(cspReport["violated-directive"], "default-src", "Incorrect violated-directive");
+  is(cspReport["violated-directive"], "script-src-elem", "Incorrect violated-directive");
 
   is(cspReport["original-policy"], "default-src 'none' 'report-sample'; report-uri http://mochi.test:8888/foo.sjs",
      "Incorrect original-policy");
