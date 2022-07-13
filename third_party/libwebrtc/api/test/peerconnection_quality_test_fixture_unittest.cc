@@ -59,7 +59,7 @@ TEST(PclfVideoSubscription, WhenSpecIsNotSetFieldsAreCompared) {
 
 TEST(PclfVideoSubscription, GetMaxResolutionForEmptyReturnsNullopt) {
   absl::optional<VideoSubscription::Resolution> resolution =
-      VideoSubscription::GetMaxResolution({});
+      VideoSubscription::GetMaxResolution(std::vector<VideoConfig>{});
   ASSERT_FALSE(resolution.has_value());
 }
 

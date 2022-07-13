@@ -372,6 +372,8 @@ class PeerConnectionE2EQualityTestFixture {
     // dimensions: width, height and fps.
     static absl::optional<VideoSubscription::Resolution> GetMaxResolution(
         rtc::ArrayView<const VideoConfig> video_configs);
+    static absl::optional<VideoSubscription::Resolution> GetMaxResolution(
+        rtc::ArrayView<const VideoSubscription::Resolution> resolutions);
 
     // Subscribes receiver to all streams sent by the specified peer with
     // specified resolution. It will override any resolution that was used in

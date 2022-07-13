@@ -50,20 +50,31 @@ operator==(const Resolution& other) const {
 absl::optional<VideoSubscription::Resolution>
 PeerConnectionE2EQualityTestFixture::VideoSubscription::GetMaxResolution(
     rtc::ArrayView<const VideoConfig> video_configs) {
-  if (video_configs.empty()) {
+  std::vector<VideoSubscription::Resolution> resolutions;
+  for (const auto& video_config : video_configs) {
+    resolutions.push_back(VideoSubscription::Resolution(
+        video_config.width, video_config.height, video_config.fps));
+  }
+  return GetMaxResolution(resolutions);
+}
+
+absl::optional<VideoSubscription::Resolution>
+PeerConnectionE2EQualityTestFixture::VideoSubscription::GetMaxResolution(
+    rtc::ArrayView<const VideoSubscription::Resolution> resolutions) {
+  if (resolutions.empty()) {
     return absl::nullopt;
   }
 
   VideoSubscription::Resolution max_resolution;
-  for (const VideoConfig& config : video_configs) {
-    if (max_resolution.width() < config.width) {
-      max_resolution.set_width(config.width);
+  for (const VideoSubscription::Resolution& resolution : resolutions) {
+    if (max_resolution.width() < resolution.width()) {
+      max_resolution.set_width(resolution.width());
     }
-    if (max_resolution.height() < config.height) {
-      max_resolution.set_height(config.height);
+    if (max_resolution.height() < resolution.height()) {
+      max_resolution.set_height(resolution.height());
     }
-    if (max_resolution.fps() < config.fps) {
-      max_resolution.set_fps(config.fps);
+    if (max_resolution.fps() < resolution.fps()) {
+      max_resolution.set_fps(resolution.fps());
     }
   }
   return max_resolution;
