@@ -980,7 +980,10 @@ rtc_source_set("peer_connection_internal") {
   ]
 }
 rtc_source_set("rtc_stats_collector") {
-  visibility = [ ":*" ]
+  visibility = [
+    ":*",
+    "../api:*",
+  ]
   sources = [
     "rtc_stats_collector.cc",
     "rtc_stats_collector.h",
