@@ -26,7 +26,6 @@
 #include "jit/MacroAssembler.h"
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "vm/Interpreter.h"
-#include "vm/TraceLogging.h"
 
 #include "debugger/DebugAPI-inl.h"
 #include "gc/GC-inl.h"

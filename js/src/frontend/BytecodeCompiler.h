@@ -15,7 +15,6 @@
 #include "frontend/FunctionSyntaxKind.h"
 #include "js/SourceText.h"
 #include "js/UniquePtr.h"  // js::UniquePtr
-#include "vm/TraceLogging.h"
 
 /*
  * Structure of all of the support classes.

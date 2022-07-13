@@ -32,7 +32,6 @@
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
-#include "vm/TraceLogging.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmInstance.h"
 

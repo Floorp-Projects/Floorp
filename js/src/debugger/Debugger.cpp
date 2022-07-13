@@ -100,7 +100,6 @@
 #include "vm/SavedStacks.h"           // for SavedStacks
 #include "vm/Scope.h"                 // for Scope
 #include "vm/StringType.h"            // for JSString, PropertyName
-#include "vm/TraceLogging.h"          // for TraceLoggerForCurrentThread
 #include "vm/WrapperObject.h"         // for CrossCompartmentWrapperObject
 #include "wasm/WasmDebug.h"           // for DebugState
 #include "wasm/WasmInstance.h"        // for Instance

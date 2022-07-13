@@ -20,7 +20,6 @@
 #include "jit/SafepointIndex.h"
 #include "jit/Safepoints.h"
 #include "jit/Snapshots.h"
-#include "vm/TraceLoggingTypes.h"
 
 namespace js {
 namespace jit {

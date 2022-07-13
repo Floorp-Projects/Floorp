@@ -14,7 +14,6 @@
 #include "gc/ParallelWork.h"
 #include "vm/HelperThreadState.h"
 #include "vm/Runtime.h"
-#include "vm/TraceLogging.h"
 
 using namespace js;
 using namespace js::gc;

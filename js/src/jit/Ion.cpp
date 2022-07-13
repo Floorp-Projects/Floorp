@@ -59,7 +59,6 @@
 #include "util/WindowsWrapper.h"
 #include "vm/HelperThreads.h"
 #include "vm/Realm.h"
-#include "vm/TraceLogging.h"
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
 #endif

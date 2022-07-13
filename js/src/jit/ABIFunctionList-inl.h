@@ -45,11 +45,7 @@
 #include "vm/Interpreter.h"      // js::TypeOfObject
 #include "vm/NativeObject.h"     // js::NativeObject
 #include "vm/RegExpShared.h"     // js::ExecuteRegExpAtomRaw
-#include "vm/TraceLogging.h"     // js::TraceLogStartEventPrivate,
-                                 // js::TraceLogStartEvent,
-                                 // js::TraceLogStopEventPrivate
-
-#include "wasm/WasmBuiltins.h"  // js::wasm::*
+#include "wasm/WasmBuiltins.h"   // js::wasm::*
 
 #include "builtin/Boolean-inl.h"  // js::EmulatesUndefined
 
@@ -168,8 +164,6 @@ namespace jit {
   _(js::RegExpPrototypeOptimizableRaw)                                \
   _(js::SetIteratorObject::next)                                      \
   _(js::StringToNumberPure)                                           \
-  _(js::TraceLogStartEventPrivate)                                    \
-  _(js::TraceLogStopEventPrivate)                                     \
   _(js::TypeOfObject)
 
 // List of all ABI functions to be used with callWithABI, which are
@@ -178,10 +172,7 @@ namespace jit {
 // is not overloaded, you should prefer adding the function to
 // ABIFUNCTION_LIST instead. This list must be sorted with the name of the C++
 // function.
-#define ABIFUNCTION_AND_TYPE_LIST(_)                       \
-  _(js::TraceLogStartEvent,                                \
-    void (*)(TraceLoggerThread*, const TraceLoggerEvent&)) \
-  _(JS::ToInt32, int32_t (*)(double))
+#define ABIFUNCTION_AND_TYPE_LIST(_) _(JS::ToInt32, int32_t (*)(double))
 
 // List of all ABI function signature which are using a computed function
 // pointer instead of a statically known function pointer.

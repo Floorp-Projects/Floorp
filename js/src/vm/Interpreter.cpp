@@ -59,7 +59,6 @@
 #include "vm/SharedStencil.h"  // GCThingIndex
 #include "vm/StringType.h"
 #include "vm/ThrowMsgKind.h"  // ThrowMsgKind
-#include "vm/TraceLogging.h"
 #ifdef ENABLE_RECORD_TUPLE
 #  include "vm/RecordType.h"
 #  include "vm/TupleType.h"

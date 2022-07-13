@@ -31,8 +31,6 @@
 #include "util/Text.h"
 #include "vm/HelperThreads.h"
 #include "vm/Time.h"
-#include "vm/TraceLogging.h"
-#include "vm/TraceLoggingTypes.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmCraneliftCompile.h"

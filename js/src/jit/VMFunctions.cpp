@@ -33,7 +33,6 @@
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/SelfHosting.h"
 #include "vm/StaticStrings.h"
-#include "vm/TraceLogging.h"
 #include "vm/TypedArrayObject.h"
 #include "wasm/TypedObject.h"
 

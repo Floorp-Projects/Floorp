@@ -22,7 +22,6 @@
 #include "vm/PropMap.h"
 #include "vm/Runtime.h"
 #include "vm/StringType.h"
-#include "vm/TraceLogging.h"
 
 #include "gc/ArenaList-inl.h"
 #include "gc/Heap-inl.h"

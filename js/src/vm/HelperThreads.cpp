@@ -39,7 +39,6 @@
 #include "vm/MutexIDs.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Time.h"
-#include "vm/TraceLogging.h"
 #include "wasm/WasmGenerator.h"
 
 #include "debugger/DebugAPI-inl.h"

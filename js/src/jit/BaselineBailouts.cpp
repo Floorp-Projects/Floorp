@@ -31,7 +31,6 @@
 #include "util/Memory.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/TraceLogging.h"
 
 #include "jit/JitFrames-inl.h"
 #include "vm/JSScript-inl.h"
