@@ -86,6 +86,7 @@ rtc_library("audio") {
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../rtc_base",
     "../rtc_base:audio_format_to_string",
+    "../rtc_base:buffer",
     "../rtc_base:checks",
     "../rtc_base:location",
     "../rtc_base:logging",

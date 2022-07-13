@@ -404,6 +404,7 @@ rtc_library("video_test_support") {
     "../modules/video_coding:webrtc_h264",
     "../modules/video_coding:webrtc_vp8",
     "../modules/video_coding:webrtc_vp9",
+    "../rtc_base:buffer",
     "../rtc_base:checks",
     "../rtc_base:criticalsection",
     "../rtc_base:logging",
@@ -1084,6 +1085,7 @@ rtc_library("copy_to_file_audio_capturer") {
     "../api:array_view",
     "../common_audio",
     "../modules/audio_device:audio_device_impl",
+    "../rtc_base:buffer",
     "../rtc_base:rtc_base_approved",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]

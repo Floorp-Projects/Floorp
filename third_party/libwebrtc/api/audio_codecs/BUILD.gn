@@ -33,6 +33,7 @@ rtc_library("audio_codecs_api") {
     "..:bitrate_allocation",
     "..:scoped_refptr",
     "../../api:field_trials_view",
+    "../../rtc_base:buffer",
     "../../rtc_base:checks",
     "../../rtc_base:refcount",
     "../../rtc_base:rtc_base_approved",

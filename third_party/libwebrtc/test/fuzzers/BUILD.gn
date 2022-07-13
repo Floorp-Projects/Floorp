@@ -343,6 +343,7 @@ rtc_library("audio_encoder_fuzzer") {
     ":fuzz_data_helper",
     "../../api:array_view",
     "../../api/audio_codecs:audio_codecs_api",
+    "../../rtc_base:buffer",
     "../../rtc_base:checks",
     "../../rtc_base:rtc_base_approved",
   ]
@@ -569,6 +570,7 @@ webrtc_fuzzer_test("comfort_noise_decoder_fuzzer") {
   deps = [
     "../../api:array_view",
     "../../modules/audio_coding:webrtc_cng",
+    "../../rtc_base:buffer",
     "../../rtc_base:rtc_base_approved",
   ]
 }
