@@ -1,0 +1,8 @@
+{
+  "webrtc": {
+      "exclusions": [
+          "DEPS",
+          "infra/specs/.*"
+      ]
+  }
+}

@@ -1,0 +1,93 @@
+# Copyright (c) 2022 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+{
+  'basic_suites': {
+    'desktop_tests': {
+      'audio_decoder_unittests': {},
+      'common_audio_unittests': {},
+      'common_video_unittests': {},
+      'dcsctp_unittests': {},
+      'low_bandwidth_audio_test': {},
+      'modules_tests': {
+        'swarming': {
+          'shards': 2
+        },
+      },
+      'modules_unittests': {
+        'swarming': {
+          'shards': 6
+        },
+      },
+      'peerconnection_unittests': {
+        'swarming': {
+          'shards': 4
+        },
+      },
+      'rtc_media_unittests': {},
+      'rtc_pc_unittests': {},
+      'rtc_stats_unittests': {},
+      'rtc_unittests': {
+        'swarming': {
+          'shards': 6
+        },
+      },
+      'system_wrappers_unittests': {},
+      'test_support_unittests': {},
+      'tools_unittests': {},
+      'video_engine_tests': {
+        'swarming': {
+          'shards': 4
+        },
+      },
+      'voip_unittests': {},
+      'webrtc_nonparallel_tests': {},
+    },
+    'video_capture_tests_baremetal': {
+      # Run video_capture_tests on the baremetal pool for the video camera.
+      'video_capture_tests': {
+        'swarming': {
+          'dimension_sets': [{
+            'pool': 'WebRTC-baremetal'
+          }],
+        },
+      }
+    },
+    'webrtc_perf_tests_baremetal': {
+      # Run webrtc_perf_tests on the baremetal pool to test the WebRTC machines.
+      'webrtc_perf_tests': {
+        'args': [
+          '--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/',
+          '--nologs',
+          '--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json',
+        ],
+        'remove_mixins': ['result_adapter'],
+        'resultdb': {
+          'result_format': 'gtest_json',
+          'result_file': '${ISOLATED_OUTDIR}/gtest_output.json',
+        },
+        'swarming': {
+          'dimension_sets': [{
+            'pool': 'WebRTC-baremetal'
+          }],
+        },
+      }
+    },
+  },
+  'compound_suites': {
+    'desktop_and_video_capture_tests': [
+      'desktop_tests',
+      'video_capture_tests_baremetal',
+    ],
+    'desktop_and_video_capture_and_webrtc_perf_tests': [
+      'desktop_tests',
+      'video_capture_tests_baremetal',
+      'webrtc_perf_tests_baremetal',
+    ],
+  },
+}
