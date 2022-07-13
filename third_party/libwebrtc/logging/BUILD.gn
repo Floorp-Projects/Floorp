@@ -367,6 +367,7 @@ if (rtc_enable_protobuf) {
       "../api/task_queue",
       "../rtc_base:checks",
       "../rtc_base:logging",
+      "../rtc_base:macromagic",
       "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_task_queue",
       "../rtc_base:safe_minmax",
@@ -389,6 +390,7 @@ rtc_library("fake_rtc_event_log") {
   deps = [
     "../api/rtc_event_log",
     "../rtc_base",
+    "../rtc_base:macromagic",
     "../rtc_base/synchronization:mutex",
   ]
 }
@@ -504,6 +506,7 @@ if (rtc_enable_protobuf) {
         "../modules/audio_coding:audio_network_adaptor",
         "../modules/rtp_rtcp:rtp_rtcp_format",
         "../rtc_base:checks",
+        "../rtc_base:macromagic",
         "../rtc_base:rtc_base_approved",
         "../rtc_base:rtc_base_tests_utils",
         "../system_wrappers",

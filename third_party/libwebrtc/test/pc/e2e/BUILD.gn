@@ -327,6 +327,7 @@ if (!build_with_chromium) {
         "../../../api/video_codecs:video_codecs_api",
         "../../../modules/audio_processing:api",
         "../../../rtc_base",
+        "../../../rtc_base:macromagic",
         "../../../rtc_base:threading",
       ]
       absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
@@ -508,6 +509,7 @@ if (!build_with_chromium) {
         "../../../api:rtc_stats_api",
         "../../../api:stats_observer_interface",
         "../../../rtc_base:logging",
+        "../../../rtc_base:macromagic",
         "../../../rtc_base:rtc_base_approved",
         "../../../rtc_base/synchronization:mutex",
       ]

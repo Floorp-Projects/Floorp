@@ -24,6 +24,7 @@ rtc_library("rtc_stats") {
   deps = [
     "../api:rtc_stats_api",
     "../rtc_base:checks",
+    "../rtc_base:macromagic",
     "../rtc_base:rtc_base_approved",
   ]
 }

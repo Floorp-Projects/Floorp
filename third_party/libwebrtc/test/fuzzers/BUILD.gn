@@ -508,6 +508,7 @@ webrtc_fuzzer_test("audio_processing_fuzzer") {
     "../../modules/audio_processing/aec3",
     "../../modules/audio_processing/aec_dump",
     "../../modules/audio_processing/aec_dump:aec_dump_impl",
+    "../../rtc_base:macromagic",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base:safe_minmax",
@@ -524,6 +525,7 @@ webrtc_fuzzer_test("agc_fuzzer") {
     "../../modules/audio_processing",
     "../../modules/audio_processing:api",
     "../../modules/audio_processing:audio_buffer",
+    "../../rtc_base:macromagic",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:safe_minmax",
   ]

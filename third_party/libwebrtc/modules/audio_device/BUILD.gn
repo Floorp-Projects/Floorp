@@ -72,6 +72,7 @@ rtc_library("audio_device_buffer") {
     "../../common_audio:common_audio_c",
     "../../rtc_base:checks",
     "../../rtc_base:logging",
+    "../../rtc_base:macromagic",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base/synchronization:mutex",
@@ -113,6 +114,7 @@ rtc_source_set("windows_core_audio_utility") {
       "../../api/units:time_delta",
       "../../rtc_base:checks",
       "../../rtc_base:logging",
+      "../../rtc_base:macromagic",
       "../../rtc_base:rtc_base_approved",
     ]
 
@@ -150,6 +152,7 @@ rtc_source_set("audio_device_module_from_input_and_output") {
       "../../api/task_queue",
       "../../rtc_base:checks",
       "../../rtc_base:logging",
+      "../../rtc_base:macromagic",
       "../../rtc_base:rtc_base_approved",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -175,6 +178,7 @@ rtc_library("audio_device_impl") {
     "../../rtc_base",
     "../../rtc_base:checks",
     "../../rtc_base:logging",
+    "../../rtc_base:macromagic",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base/synchronization:mutex",
@@ -397,6 +401,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../rtc_base:checks",
       "../../rtc_base:ignore_wundef",
       "../../rtc_base:logging",
+      "../../rtc_base:macromagic",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base/synchronization:mutex",
       "../../system_wrappers",

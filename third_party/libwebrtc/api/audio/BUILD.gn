@@ -21,6 +21,7 @@ rtc_library("audio_frame_api") {
     "..:rtp_packet_info",
     "../../rtc_base:checks",
     "../../rtc_base:logging",
+    "../../rtc_base:macromagic",
     "../../rtc_base:rtc_base_approved",
   ]
 }

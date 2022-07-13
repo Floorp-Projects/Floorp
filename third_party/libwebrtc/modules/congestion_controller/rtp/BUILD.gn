@@ -60,6 +60,7 @@ rtc_library("transport_feedback") {
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
+    "../../../rtc_base:macromagic",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/network:sent_packet",
     "../../../rtc_base/synchronization:mutex",

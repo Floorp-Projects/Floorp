@@ -667,7 +667,10 @@ rtc_source_set("bitrate_allocation") {
 rtc_source_set("simulated_network_api") {
   visibility = [ "*" ]
   sources = [ "test/simulated_network.h" ]
-  deps = [ "../rtc_base" ]
+  deps = [
+    "../rtc_base",
+    "../rtc_base:macromagic",
+  ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
