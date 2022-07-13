@@ -298,6 +298,27 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
+  if (codec_settings->mode == VideoCodecMode::kScreensharing) {
+    ret = aom_codec_control(&ctx_, AV1E_SET_TUNE_CONTENT, AOM_CONTENT_SCREEN);
+    if (ret != AOM_CODEC_OK) {
+      RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
+                          << " on control AV1E_SET_TUNE_CONTENT.";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+    ret = aom_codec_control(&ctx_, AV1E_SET_ENABLE_PALETTE, 1);
+    if (ret != AOM_CODEC_OK) {
+      RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
+                          << " on control AV1E_SET_ENABLE_PALETTE.";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+    ret = aom_codec_control(&ctx_, AV1E_SET_ENABLE_INTRABC, 0);
+    if (ret != AOM_CODEC_OK) {
+      RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
+                          << " on control AV1E_SET_ENABLE_INTRABC.";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+  }
+
   if (cfg_.g_threads == 4 && cfg_.g_w == 640 &&
       (cfg_.g_h == 360 || cfg_.g_h == 480)) {
     ret = aom_codec_control(&ctx_, AV1E_SET_TILE_ROWS,
