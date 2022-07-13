@@ -35,7 +35,7 @@ std::unique_ptr<MediaEngineInterface> CreateMediaEngine(
   const webrtc::FieldTrialsView& trials =
       dependencies.trials ? *dependencies.trials : *fallback_trials;
   auto audio_engine = std::make_unique<WebRtcVoiceEngine>(
-      dependencies.task_queue_factory, std::move(dependencies.adm),
+      dependencies.task_queue_factory, dependencies.adm.get(),
       std::move(dependencies.audio_encoder_factory),
       std::move(dependencies.audio_decoder_factory),
       std::move(dependencies.audio_mixer),

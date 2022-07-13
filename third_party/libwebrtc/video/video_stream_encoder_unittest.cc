@@ -205,7 +205,7 @@ class FakeNV12NativeBuffer : public webrtc::VideoFrameBuffer {
     }
     return nullptr;
   }
-  const NV12BufferInterface* GetNV12() const { return nv12_buffer_; }
+  const NV12BufferInterface* GetNV12() const { return nv12_buffer_.get(); }
 
  private:
   friend class rtc::RefCountedObject<FakeNV12NativeBuffer>;

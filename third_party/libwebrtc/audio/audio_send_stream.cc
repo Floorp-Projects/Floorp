@@ -122,7 +122,7 @@ AudioSendStream::AudioSendStream(
                                  config.send_transport,
                                  rtcp_rtt_stats,
                                  event_log,
-                                 config.frame_encryptor,
+                                 config.frame_encryptor.get(),
                                  config.crypto_options,
                                  config.rtp.extmap_allow_mixed,
                                  config.rtcp_report_interval_ms,

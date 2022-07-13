@@ -84,7 +84,7 @@ GetBitrateAllocationCallbackType(const VideoSendStream::Config& config,
 RtpSenderFrameEncryptionConfig CreateFrameEncryptionConfig(
     const VideoSendStream::Config* config) {
   RtpSenderFrameEncryptionConfig frame_encryption_config;
-  frame_encryption_config.frame_encryptor = config->frame_encryptor;
+  frame_encryption_config.frame_encryptor = config->frame_encryptor.get();
   frame_encryption_config.crypto_options = config->crypto_options;
   return frame_encryption_config;
 }
