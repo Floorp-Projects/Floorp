@@ -250,6 +250,10 @@ class RTC_EXPORT NetworkManagerBase : public NetworkManager {
 
   Network* GetNetworkFromAddress(const rtc::IPAddress& ip) const;
 
+  // To enable subclasses to get the networks list, without interfering with
+  // refactoring of the interface GetNetworks method.
+  const NetworkList& GetNetworksInternal() const { return networks_; }
+
  private:
   friend class NetworkTest;
 
