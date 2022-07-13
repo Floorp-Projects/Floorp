@@ -777,15 +777,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
       WasmInstanceSourceWeakMap;
   WasmInstanceSourceWeakMap wasmInstanceSources;
 
-  // Keep track of tracelogger last drained identifiers to know if there are
-  // lost events.
-#ifdef NIGHTLY_BUILD
-  uint32_t traceLoggerLastDrainedSize;
-  uint32_t traceLoggerLastDrainedIteration;
-#endif
-  uint32_t traceLoggerScriptedCallsLastDrainedSize;
-  uint32_t traceLoggerScriptedCallsLastDrainedIteration;
-
   class QueryBase;
   class ScriptQuery;
   class SourceQuery;
