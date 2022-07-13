@@ -1,5 +1,6 @@
-{%- let e = ci.get_error_definition(name).unwrap() %}
-public enum {{ type_name }} {
+{% import "macros.swift" as swift %}
+{%- let e = self.inner() %}
+public enum {{ e|type_name }} {
 
     {% if e.is_flat() %}
     {% for variant in e.variants() %}
@@ -15,10 +16,10 @@ public enum {{ type_name }} {
     {%- endif %}
 }
 
-fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
-    typealias SwiftType = {{ type_name }}
+fileprivate struct {{ e|ffi_converter_name }}: FfiConverterRustBuffer {
+    typealias SwiftType = {{ e|type_name }}
 
-    static func read(from buf: Reader) throws -> {{ type_name }} {
+    static func read(from buf: Reader) throws -> {{ e|type_name }} {
         let variant: Int32 = try buf.readInt()
         switch variant {
 
@@ -46,7 +47,7 @@ fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
         }
     }
 
-    static func write(_ value: {{ type_name }}, into buf: Writer) {
+    static func write(_ value: {{ e|type_name }}, into buf: Writer) {
         switch value {
 
         {% if e.is_flat() %}
@@ -77,7 +78,7 @@ fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
     }
 }
 
-{% if !contains_object_references %}
-extension {{ type_name }}: Equatable, Hashable {}
+{% if !self.contains_object_references() %}
+extension {{ e|type_name }}: Equatable, Hashable {}
 {% endif %}
-extension {{ type_name }}: Error { }
+extension {{ e|type_name }}: Error { }
