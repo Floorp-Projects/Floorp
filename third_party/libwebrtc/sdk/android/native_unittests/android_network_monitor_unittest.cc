@@ -13,8 +13,9 @@
 #include "rtc_base/ip_address.h"
 #include "sdk/android/native_unittests/application_context_provider.h"
 #include "sdk/android/src/jni/jni_helpers.h"
+#include "system_wrappers/include/field_trial.h"
+#include "test/field_trial.h"
 #include "test/gtest.h"
-#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 namespace test {
@@ -46,8 +47,8 @@ class AndroidNetworkMonitorTest : public ::testing::Test {
   AndroidNetworkMonitorTest() {
     JNIEnv* env = AttachCurrentThreadIfNeeded();
     ScopedJavaLocalRef<jobject> context = test::GetAppContextForTest(env);
-    network_monitor_ = std::make_unique<jni::AndroidNetworkMonitor>(
-        env, context, field_trials_);
+    network_monitor_ =
+        std::make_unique<jni::AndroidNetworkMonitor>(env, context);
   }
 
   void SetUp() override {
@@ -61,7 +62,6 @@ class AndroidNetworkMonitorTest : public ::testing::Test {
   }
 
  protected:
-  test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<jni::AndroidNetworkMonitor> network_monitor_;
 };
 
@@ -102,8 +102,7 @@ TEST_F(AndroidNetworkMonitorTest, TestFindNetworkHandleUsingFullIpv6Address) {
 
 TEST_F(AndroidNetworkMonitorTest,
        TestFindNetworkHandleIgnoringIpv6TemporaryPart) {
-  ScopedKeyValueConfig field_trials(
-      field_trials_,
+  ScopedFieldTrials field_trials(
       "WebRTC-FindNetworkHandleWithoutIpv6TemporaryPart/Enabled/");
   // Start() updates the states introduced by the field trial.
   network_monitor_->Start();
@@ -155,8 +154,7 @@ TEST_F(AndroidNetworkMonitorTest, TestFindNetworkHandleUsingIfName) {
 }
 
 TEST_F(AndroidNetworkMonitorTest, TestUnderlyingVpnType) {
-  ScopedKeyValueConfig field_trials(field_trials_,
-                                    "WebRTC-BindUsingInterfaceName/Enabled/");
+  ScopedFieldTrials field_trials("WebRTC-BindUsingInterfaceName/Enabled/");
   jni::NetworkHandle ipv4_handle = 100;
   rtc::IPAddress ipv4_address(kTestIpv4Address);
   jni::NetworkInformation net_info =

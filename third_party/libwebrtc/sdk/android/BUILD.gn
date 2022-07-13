@@ -1631,7 +1631,6 @@ if (is_android) {
       ":native_api_video",
       ":opensles_audio_device_module",
       ":video_jni",
-      "../../api:field_trials_view",
       "../../api:scoped_refptr",
       "../../api/rtc_event_log:rtc_event_log_factory",
       "../../api/task_queue:default_task_queue_factory",
@@ -1658,8 +1657,9 @@ if (is_android) {
       "../../rtc_base/synchronization:mutex",
       "../../rtc_base/system:inline",
       "../../system_wrappers",
+      "../../system_wrappers:field_trial",
+      "../../test:field_trial",
       "../../test:fileutils",
-      "../../test:scoped_key_value_config",
       "../../test:test_support",
       "../../testing/gtest",
     ]
