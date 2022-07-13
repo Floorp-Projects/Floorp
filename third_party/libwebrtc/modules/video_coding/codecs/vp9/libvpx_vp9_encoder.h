@@ -224,7 +224,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
       //  1 = disable deblock for top-most TL
       //  2 = disable deblock for all TLs
       int deblock_mode = 0;
-      bool denoiser_on = true;
+      bool allow_denoising = true;
     };
     // Map from min pixel count to settings for that resolution and above.
     // E.g. if you want some settings A if below wvga (640x360) and some other
