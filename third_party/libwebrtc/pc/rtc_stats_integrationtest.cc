@@ -810,11 +810,11 @@ class RTCStatsReportVerifier {
       const RTCInboundRTPStreamStats& inbound_stream) {
     RTCStatsVerifier verifier(report_.get(), &inbound_stream);
     VerifyRTCReceivedRtpStreamStats(inbound_stream, verifier,
-                                    inbound_stream.media_type.is_defined() &&
+                                    inbound_stream.kind.is_defined() &&
                                         *inbound_stream.media_type == "audio");
     verifier.TestMemberIsOptionalIDReference(
         inbound_stream.remote_id, RTCRemoteOutboundRtpStreamStats::kType);
-    if (inbound_stream.media_type.is_defined() &&
+    if (inbound_stream.kind.is_defined() &&
         *inbound_stream.media_type == "video") {
       verifier.TestMemberIsNonNegative<uint64_t>(inbound_stream.qp_sum);
       verifier.TestMemberIsDefined(inbound_stream.decoder_implementation);
@@ -823,7 +823,7 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(inbound_stream.decoder_implementation);
     }
     verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.packets_received);
-    if (inbound_stream.media_type.is_defined() &&
+    if (inbound_stream.kind.is_defined() &&
         *inbound_stream.media_type == "audio") {
       verifier.TestMemberIsNonNegative<uint64_t>(
           inbound_stream.fec_packets_received);
@@ -855,7 +855,7 @@ class RTCStatsReportVerifier {
         inbound_stream.jitter_buffer_delay);
     verifier.TestMemberIsNonNegative<uint64_t>(
         inbound_stream.jitter_buffer_emitted_count);
-    if (inbound_stream.media_type.is_defined() &&
+    if (inbound_stream.kind.is_defined() &&
         *inbound_stream.media_type == "video") {
       verifier.TestMemberIsUndefined(inbound_stream.total_samples_received);
       verifier.TestMemberIsUndefined(inbound_stream.concealed_samples);
@@ -907,7 +907,7 @@ class RTCStatsReportVerifier {
     // Test runtime too short to get an estimate (at least two RTCP sender
     // reports need to be received).
     verifier.MarkMemberTested(inbound_stream.estimated_playout_timestamp, true);
-    if (inbound_stream.media_type.is_defined() &&
+    if (inbound_stream.kind.is_defined() &&
         *inbound_stream.media_type == "video") {
       verifier.TestMemberIsDefined(inbound_stream.frames_decoded);
       verifier.TestMemberIsDefined(inbound_stream.key_frames_decoded);
@@ -938,7 +938,7 @@ class RTCStatsReportVerifier {
       const RTCOutboundRTPStreamStats& outbound_stream) {
     RTCStatsVerifier verifier(report_.get(), &outbound_stream);
     VerifyRTCRTPStreamStats(outbound_stream, verifier);
-    if (outbound_stream.media_type.is_defined() &&
+    if (outbound_stream.kind.is_defined() &&
         *outbound_stream.media_type == "video") {
       verifier.TestMemberIsIDReference(outbound_stream.media_source_id,
                                        RTCVideoSourceStats::kType);
@@ -967,7 +967,7 @@ class RTCStatsReportVerifier {
         outbound_stream.header_bytes_sent);
     verifier.TestMemberIsNonNegative<uint64_t>(
         outbound_stream.retransmitted_bytes_sent);
-    if (outbound_stream.media_type.is_defined() &&
+    if (outbound_stream.kind.is_defined() &&
         *outbound_stream.media_type == "video") {
       verifier.TestMemberIsDefined(outbound_stream.frames_encoded);
       verifier.TestMemberIsDefined(outbound_stream.key_frames_encoded);

@@ -518,7 +518,7 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   // TODO(hbos): This is only implemented for video; implement it for audio as
   // well.
   RTCStatsMember<std::string> decoder_implementation;
-  // FIR and PLI counts are only defined for |media_type == "video"|.
+  // FIR and PLI counts are only defined for |kind == "video"|.
   RTCStatsMember<uint32_t> fir_count;
   RTCStatsMember<uint32_t> pli_count;
   RTCStatsMember<uint32_t> nack_count;
@@ -569,7 +569,7 @@ class RTC_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
   // TODO(hbos): This is only implemented for video; implement it for audio as
   // well.
   RTCStatsMember<std::string> encoder_implementation;
-  // FIR and PLI counts are only defined for |media_type == "video"|.
+  // FIR and PLI counts are only defined for |kind == "video"|.
   RTCStatsMember<uint32_t> fir_count;
   RTCStatsMember<uint32_t> pli_count;
   RTCStatsMember<uint32_t> nack_count;
