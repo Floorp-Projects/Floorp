@@ -610,7 +610,7 @@ NSUInteger GetMaxSampleRate(const webrtc::H264ProfileLevelId &profile_level_id) 
     (NSString *)kCVPixelBufferMetalCompatibilityKey : @(YES),
 #elif defined(WEBRTC_IOS)
     (NSString *)kCVPixelBufferOpenGLESCompatibilityKey : @(YES),
-#elif defined(WEBRTC_MAC)
+#elif defined(WEBRTC_MAC) && !defined(WEBRTC_ARCH_ARM64)
     (NSString *)kCVPixelBufferOpenGLCompatibilityKey : @(YES),
 #endif
     (NSString *)kCVPixelBufferIOSurfacePropertiesKey : @{},
