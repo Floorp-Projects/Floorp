@@ -298,6 +298,7 @@ rtc_library("rtc_audio_video") {
     "../rtc_base:ignore_wundef",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
+    "../rtc_base:race_checker",
     "../rtc_base:rtc_task_queue",
     "../rtc_base:safe_conversions",
     "../rtc_base:stringutils",

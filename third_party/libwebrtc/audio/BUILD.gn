@@ -90,6 +90,7 @@ rtc_library("audio") {
     "../rtc_base:location",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
+    "../rtc_base:race_checker",
     "../rtc_base:rate_limiter",
     "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",

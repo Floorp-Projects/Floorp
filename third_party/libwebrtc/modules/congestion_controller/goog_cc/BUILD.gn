@@ -237,6 +237,7 @@ rtc_library("delay_based_bwe") {
     "../../../logging:rtc_event_bwe",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
+    "../../../rtc_base:race_checker",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/experiments:field_trial_parser",
     "../../../system_wrappers:metrics",
