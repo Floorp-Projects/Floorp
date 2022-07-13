@@ -37,6 +37,7 @@ rtc_library("utility") {
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:rtc_event",
     "../../rtc_base/system:arch",
     "../../system_wrappers",
   ]

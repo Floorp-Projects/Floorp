@@ -85,6 +85,7 @@ if (rtc_include_tests) {
       "../../rtc_base:checks",
       "../../rtc_base:gunit_helpers",
       "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:rtc_event",
       "../../rtc_base:rtc_task_queue",
       "../../rtc_base:task_queue_for_test",
       "../../rtc_base/synchronization:mutex",

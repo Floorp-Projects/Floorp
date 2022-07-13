@@ -74,6 +74,7 @@ if (rtc_enable_protobuf) {
       "../../../rtc_base:macromagic",
       "../../../rtc_base:protobuf_utils",
       "../../../rtc_base:rtc_base_approved",
+      "../../../rtc_base:rtc_event",
       "../../../rtc_base:rtc_task_queue",
       "../../../rtc_base/system:file_wrapper",
       "../../../system_wrappers",

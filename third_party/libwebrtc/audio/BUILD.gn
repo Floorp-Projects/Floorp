@@ -92,6 +92,7 @@ rtc_library("audio") {
     "../rtc_base:rate_limiter",
     "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:rtc_event",
     "../rtc_base:rtc_task_queue",
     "../rtc_base:safe_minmax",
     "../rtc_base:threading",
