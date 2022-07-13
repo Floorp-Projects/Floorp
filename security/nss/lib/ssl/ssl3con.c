@@ -3136,6 +3136,9 @@ ssl3_HandleAlert(sslSocket *ss, sslBuffer *buf)
         case bad_certificate_hash_value:
             error = SSL_ERROR_BAD_CERT_HASH_VALUE_ALERT;
             break;
+        case no_application_protocol:
+            error = SSL_ERROR_NEXT_PROTOCOL_NO_PROTOCOL;
+            break;
         case ech_required:
             error = SSL_ERROR_ECH_REQUIRED_ALERT;
             break;

@@ -773,14 +773,14 @@ NSS_SecureMemcmp(const void *ia, const void *ib, size_t n)
 {
     const unsigned char *a = (const unsigned char *)ia;
     const unsigned char *b = (const unsigned char *)ib;
-    size_t i;
-    unsigned char r = 0;
+    int r = 0;
 
-    for (i = 0; i < n; ++i) {
-        r |= *a++ ^ *b++;
+    for (size_t i = 0; i < n; ++i) {
+        r |= a[i] ^ b[i];
     }
 
-    return r;
+    /* 0 <= r < 256, so -r has bit 8 set when r != 0 */
+    return 1 & (-r >> 8);
 }
 
 /*
@@ -790,10 +790,13 @@ NSS_SecureMemcmp(const void *ia, const void *ib, size_t n)
 unsigned int
 NSS_SecureMemcmpZero(const void *mem, size_t n)
 {
-    PRUint8 zero = 0;
-    size_t i;
-    for (i = 0; i < n; ++i) {
-        zero |= *(PRUint8 *)((uintptr_t)mem + i);
+    const unsigned char *a = (const unsigned char *)mem;
+    int r = 0;
+
+    for (size_t i = 0; i < n; ++i) {
+        r |= a[i];
     }
-    return zero;
+
+    /* 0 <= r < 256, so -r has bit 8 set when r != 0 */
+    return 1 & (-r >> 8);
 }
