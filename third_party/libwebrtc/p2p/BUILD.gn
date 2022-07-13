@@ -103,6 +103,7 @@ rtc_library("rtc_p2p") {
     "../rtc_base",
     "../rtc_base:async_resolver_interface",
     "../rtc_base:buffer",
+    "../rtc_base:buffer_queue",
     "../rtc_base:callback_list",
     "../rtc_base:checks",
     "../rtc_base:ip_address",
