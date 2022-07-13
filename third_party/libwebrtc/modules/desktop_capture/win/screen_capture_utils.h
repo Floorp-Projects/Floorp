@@ -29,6 +29,9 @@ WEBRTC_DECLARE_HANDLE(HMONITOR);
 
 namespace webrtc {
 
+// Returns true if the system has at least one active display.
+bool HasActiveDisplay();
+
 // Output the list of active screens into `screens`. Returns true if succeeded,
 // or false if it fails to enumerate the display devices. If the `device_names`
 // is provided, it will be filled with the DISPLAY_DEVICE.DeviceName in UTF-8
