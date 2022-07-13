@@ -203,6 +203,12 @@ bool DesktopAndCursorComposer::IsOccluded(const DesktopVector& pos) {
   return desktop_capturer_->IsOccluded(pos);
 }
 
+#if defined(WEBRTC_USE_GIO)
+DesktopCaptureMetadata DesktopAndCursorComposer::GetMetadata() {
+  return desktop_capturer_->GetMetadata();
+}
+#endif  // defined(WEBRTC_USE_GIO)
+
 void DesktopAndCursorComposer::OnCaptureResult(
     DesktopCapturer::Result result,
     std::unique_ptr<DesktopFrame> frame) {

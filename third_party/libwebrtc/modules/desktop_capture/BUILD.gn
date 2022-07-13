@@ -6,6 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+import("//build/config/linux/gtk/gtk.gni")
 import("//build/config/linux/pkg_config.gni")
 import("//build/config/ui.gni")
 #import("//tools/generate_stubs/rules.gni")
@@ -272,6 +273,13 @@ if (!build_with_mozilla) {
       if (!rtc_link_pipewire) {
         defines += [ "WEBRTC_DLOPEN_PIPEWIRE" ]
       }
+
+      # Chromecast build config overrides `WEBRTC_USE_PIPEWIRE` even when
+      # `rtc_use_pipewire` is not set, which causes pipewire_config to not be
+      # included in targets. More details in: webrtc:13898
+      if (is_linux && !is_chromecast) {
+        defines += [ "WEBRTC_USE_GIO" ]
+      }
     }
   }
 }
@@ -379,7 +387,9 @@ rtc_library("desktop_capture_generic") {
     "window_finder.cc",
     "window_finder.h",
   ]
-
+  if (is_linux && !is_chromecast && rtc_use_pipewire) {
+    sources += [ "desktop_capture_metadata.h" ]
+  }
   if (is_mac) {
     sources += [
       "mac/desktop_configuration.h",
@@ -391,7 +401,6 @@ rtc_library("desktop_capture_generic") {
       "mac/window_list_utils.h",
     ]
   }
-
   if (rtc_use_x11_extensions || rtc_use_pipewire) {
     include_dirs += [ "/third_party/libwebrtc/third_party/pipewire" ]
     sources += [
@@ -562,6 +571,7 @@ rtc_library("desktop_capture_generic") {
       "linux/wayland/mouse_cursor_monitor_pipewire.h",
       "linux/wayland/scoped_glib.cc",
       "linux/wayland/scoped_glib.h",
+      "linux/wayland/screen_capture_portal_interface.h",
       "linux/wayland/screencast_portal.cc",
       "linux/wayland/screencast_portal.h",
       "linux/wayland/screencast_stream_utils.cc",
@@ -570,6 +580,7 @@ rtc_library("desktop_capture_generic") {
       "linux/wayland/shared_screencast_stream.h",
       "linux/wayland/xdg_desktop_portal_utils.cc",
       "linux/wayland/xdg_desktop_portal_utils.h",
+      "linux/wayland/xdg_session_details.h",
     ]
     } else {
     sources += [
