@@ -58,8 +58,6 @@ vendoring:
     - bug1137614.patch
     - input_frame_validation.patch
     - input_frame_validation_vp9.patch
-    - rename_duplicate_files.patch
-    - win64_build_fix.patch
 
   update-actions:
     - action: move-file
@@ -68,6 +66,14 @@ vendoring:
     - action: move-file
       from: '{vendor_dir}/vpx_dsp/loongarch/quantize_lsx.c'
       to: '{vendor_dir}/vpx_dsp/loongarch/quantize_intrin_lsx.c'
+    - action: run-command
+      command: patch
+      args: ['-p1', '-i', '{yaml_dir}/rename_duplicate_files.patch', '-d', '{yaml_dir}/libvpx']
+      cwd: '{yaml_dir}'
+    - action: run-command
+      command: patch
+      args: ['-p1', '-i', '{yaml_dir}/win64_build_fix.patch', '-d', '{yaml_dir}/libvpx']
+      cwd: '{yaml_dir}'
     - action: run-script
       script: '{yaml_dir}/generate_sources_mozbuild.sh'
       cwd: '{yaml_dir}'
