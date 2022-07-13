@@ -11670,18 +11670,11 @@ static void SetWorkerContextOptions(JSContext* cx) {
 }
 
 static int Shell(JSContext* cx, OptionParser* op) {
-  if (JS::TraceLoggerSupported()) {
-    JS::StartTraceLogger(cx);
-  }
 #ifdef JS_STRUCTURED_SPEW
   cx->spewer().enableSpewing();
 #endif
 
   auto exitShell = MakeScopeExit([&] {
-    if (JS::TraceLoggerSupported()) {
-      JS::SpewTraceLoggerForCurrentProcess();
-      JS::StopTraceLogger(cx);
-    }
 #ifdef JS_STRUCTURED_SPEW
     cx->spewer().disableSpewing();
 #endif
