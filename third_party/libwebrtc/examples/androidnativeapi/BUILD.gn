@@ -48,6 +48,7 @@ if (is_android) {
     deps = [
       ":generated_jni",
       "../../api:scoped_refptr",
+      "../../api:sequence_checker",
       "../../rtc_base/synchronization:mutex",
       "//api:libjingle_peerconnection_api",
       "//api/rtc_event_log:rtc_event_log_factory",

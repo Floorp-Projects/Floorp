@@ -487,6 +487,7 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
       deps = [
         "../api:libjingle_peerconnection_api",
         "../api:scoped_refptr",
+        "../api:sequence_checker",
         "../api/audio_codecs:builtin_audio_decoder_factory",
         "../api/audio_codecs:builtin_audio_encoder_factory",
         "../api/rtc_event_log:rtc_event_log_factory",

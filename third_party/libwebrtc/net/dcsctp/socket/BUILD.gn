@@ -138,6 +138,7 @@ rtc_library("dcsctp_socket") {
     "../../../api:array_view",
     "../../../api:refcountedbase",
     "../../../api:scoped_refptr",
+    "../../../api:sequence_checker",
     "../../../api/task_queue:task_queue",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
