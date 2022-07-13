@@ -10271,12 +10271,12 @@
 
 - name: network.cookie.sameSite.noneRequiresSecure
   type: bool
-  value: true
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: network.cookie.sameSite.schemeful
   type: bool
-  value: true
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: network.cookie.thirdparty.sessionOnly
