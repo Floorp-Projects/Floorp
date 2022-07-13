@@ -165,7 +165,7 @@ def main():
     return 1
 
   for error in errors:
-    error = error.split('\\n')
+    error = error.split('\n')
     target_msg = 'The target:'
     if target_msg not in error:
       target_msg = 'It is not in any dependency of'
