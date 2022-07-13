@@ -718,15 +718,6 @@ void HandleException(ResumeFromException* rfe) {
       IonScript* ionScript = nullptr;
       bool invalidated = frame.checkInvalidation(&ionScript);
 
-#ifdef JS_TRACE_LOGGING
-      if (logger && cx->realm()->isDebuggee() && logger->enabled()) {
-        logger->disable(/* force = */ true,
-                        "Forcefully disabled tracelogger, due to "
-                        "throwing an exception with an active Debugger "
-                        "in IonMonkey.");
-      }
-#endif
-
       // If we hit OOM or overrecursion while bailing out, we don't
       // attempt to bail out a second time for this Ion frame. Just unwind
       // and continue at the next frame.

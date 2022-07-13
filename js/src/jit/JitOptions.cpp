@@ -310,14 +310,6 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(wasmBatchIonThreshold, 1100);
   SET_DEFAULT(wasmBatchCraneliftThreshold, 5000);
 
-#ifdef JS_TRACE_LOGGING
-  // Toggles whether the traceLogger should be on or off.  In either case,
-  // some data structures will always be created and initialized such as
-  // the traceLoggerState.  However, unless this option is set to true
-  // the traceLogger will not be recording any events.
-  SET_DEFAULT(enableTraceLogger, false);
-#endif
-
   // Dumps a representation of parsed regexps to stderr
   SET_DEFAULT(traceRegExpParser, false);
   // Dumps the calls made to the regexp assembler to stderr

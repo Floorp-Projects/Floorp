@@ -74,9 +74,6 @@ struct DefaultJitOptions {
   bool osr;
   bool wasmFoldOffsets;
   bool wasmDelayTier2;
-#ifdef JS_TRACE_LOGGING
-  bool enableTraceLogger;
-#endif
   bool traceRegExpParser;
   bool traceRegExpAssembler;
   bool traceRegExpInterpreter;
