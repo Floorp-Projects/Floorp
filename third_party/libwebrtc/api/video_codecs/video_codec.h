@@ -29,6 +29,7 @@ namespace webrtc {
 
 // Video codec
 enum class VideoCodecComplexity {
+  kComplexityLow = -1,
   kComplexityNormal = 0,
   kComplexityHigh = 1,
   kComplexityHigher = 2,

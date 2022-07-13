@@ -804,6 +804,7 @@ rtc_library("webrtc_vp9") {
     "../../rtc_base:logging",
     "../../rtc_base:stringutils",
     "../../rtc_base:timeutils",
+    "../../rtc_base/containers:flat_map",
     "../../rtc_base/experiments:encoder_info_settings",
     "../../rtc_base/experiments:field_trial_parser",
     "../../rtc_base/experiments:rate_control_settings",
