@@ -400,9 +400,9 @@ bool LibvpxVp9Encoder::SetSvcRates(
 
   if (seen_active_layer && performance_flags_.use_per_layer_speed) {
     bool denoiser_on =
-        AllowDenoising() &&
+        AllowDenoising() && codec_.VP9()->denoisingOn &&
         performance_flags_by_spatial_index_[num_active_spatial_layers_ - 1]
-            .denoiser_on;
+            .allow_denoising;
     libvpx_->codec_control(encoder_, VP9E_SET_NOISE_SENSITIVITY,
                            denoiser_on ? 1 : 0);
   }
@@ -824,9 +824,9 @@ int LibvpxVp9Encoder::InitAndSetControlSettings(const VideoCodec* inst) {
           performance_flags_by_spatial_index_[si].deblock_mode;
     }
     bool denoiser_on =
-        AllowDenoising() &&
+        AllowDenoising() && inst->VP9().denoisingOn &&
         performance_flags_by_spatial_index_[num_spatial_layers_ - 1]
-            .denoiser_on;
+            .allow_denoising;
     libvpx_->codec_control(encoder_, VP9E_SET_NOISE_SENSITIVITY,
                            denoiser_on ? 1 : 0);
   }
@@ -1962,7 +1962,7 @@ LibvpxVp9Encoder::ParsePerformanceFlagsFromTrials(
        FieldTrialStructMember("deblock_mode",
                               [](Params* p) { return &p->deblock_mode; }),
        FieldTrialStructMember("denoiser",
-                              [](Params* p) { return &p->denoiser_on; })},
+                              [](Params* p) { return &p->allow_denoising; })},
       {});
 
   FieldTrialFlag per_layer_speed("use_per_layer_speed");
