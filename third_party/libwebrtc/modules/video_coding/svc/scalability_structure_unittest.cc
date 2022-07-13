@@ -317,7 +317,7 @@ TEST_P(ScalabilityStructureTest, ProduceNoFrameForDisabledLayers) {
 INSTANTIATE_TEST_SUITE_P(
     Svc,
     ScalabilityStructureTest,
-    Values(SvcTestParam{"NONE", /*num_temporal_units=*/3},
+    Values(SvcTestParam{"L1T1", /*num_temporal_units=*/3},
            SvcTestParam{"L1T2", /*num_temporal_units=*/4},
            SvcTestParam{"L1T3", /*num_temporal_units=*/8},
            SvcTestParam{"L2T1", /*num_temporal_units=*/3},

@@ -55,7 +55,7 @@ constexpr int kFramerate = 30;
 
 VideoCodec DefaultCodecSettings() {
   VideoCodec codec_settings;
-  codec_settings.SetScalabilityMode("NONE");
+  codec_settings.SetScalabilityMode("L1T1");
   codec_settings.width = kWidth;
   codec_settings.height = kHeight;
   codec_settings.maxFramerate = kFramerate;
@@ -318,7 +318,7 @@ TEST_P(LibaomAv1SvcTest, SetRatesMatchMeasuredBitrate) {
 INSTANTIATE_TEST_SUITE_P(
     Svc,
     LibaomAv1SvcTest,
-    Values(SvcTestParam{"NONE", /*num_frames_to_generate=*/4},
+    Values(SvcTestParam{"L1T1", /*num_frames_to_generate=*/4},
            SvcTestParam{"L1T2",
                         /*num_frames_to_generate=*/4,
                         /*configured_bitrates=*/

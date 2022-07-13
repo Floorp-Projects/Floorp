@@ -52,7 +52,7 @@ TEST_P(VideoCodecTestAv1, HighBitrate) {
   auto config = CreateConfig("foreman_cif");
   config.SetCodecSettings(cricket::kAv1CodecName, 1, 1, 1, false, true, true,
                           kCifWidth, kCifHeight);
-  config.codec_settings.SetScalabilityMode("NONE");
+  config.codec_settings.SetScalabilityMode("L1T1");
   config.num_frames = kNumFramesLong;
   auto fixture = CreateVideoCodecTestFixture(config);
 
@@ -70,7 +70,7 @@ TEST_P(VideoCodecTestAv1, VeryLowBitrate) {
   auto config = CreateConfig("foreman_cif");
   config.SetCodecSettings(cricket::kAv1CodecName, 1, 1, 1, false, true, true,
                           kCifWidth, kCifHeight);
-  config.codec_settings.SetScalabilityMode("NONE");
+  config.codec_settings.SetScalabilityMode("L1T1");
   auto fixture = CreateVideoCodecTestFixture(config);
 
   std::vector<RateProfile> rate_profiles = {{50, 30, 0}};
@@ -90,7 +90,7 @@ TEST_P(VideoCodecTestAv1, Hd) {
   auto config = CreateConfig("ConferenceMotion_1280_720_50");
   config.SetCodecSettings(cricket::kAv1CodecName, 1, 1, 1, false, true, true,
                           kHdWidth, kHdHeight);
-  config.codec_settings.SetScalabilityMode("NONE");
+  config.codec_settings.SetScalabilityMode("L1T1");
   config.num_frames = kNumFramesLong;
   auto fixture = CreateVideoCodecTestFixture(config);
 

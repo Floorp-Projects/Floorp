@@ -24,7 +24,7 @@ TEST(Av1SvcConfigTest, RequireScalabilityMode) {
   video_codec.SetScalabilityMode("Unknown");
   EXPECT_FALSE(SetAv1SvcConfig(video_codec));
 
-  video_codec.SetScalabilityMode("NONE");
+  video_codec.SetScalabilityMode("L1T1");
   EXPECT_TRUE(SetAv1SvcConfig(video_codec));
 }
 
