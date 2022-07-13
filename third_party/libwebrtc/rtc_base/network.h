@@ -117,6 +117,9 @@ class NetworkMask {
 class RTC_EXPORT NetworkManager : public DefaultLocalAddressProvider,
                                   public MdnsResponderProvider {
  public:
+  using NetworkList ABSL_DEPRECATED("bugs.webrtc.org/13869") =
+      std::vector<Network*>;
+
   // This enum indicates whether adapter enumeration is allowed.
   enum EnumerationPermission {
     ENUMERATION_ALLOWED,  // Adapter enumeration is allowed. Getting 0 network
@@ -210,6 +213,13 @@ class RTC_EXPORT NetworkManagerBase : public NetworkManager {
 
   // `stats` will be populated even if |*changed| is false.
   void MergeNetworkList(std::vector<std::unique_ptr<Network>> list,
+                        bool* changed,
+                        NetworkManager::Stats* stats);
+  ABSL_DEPRECATED("bugs.webrtc.org/13869")
+  void MergeNetworkList(std::vector<Network*> list, bool* changed);
+
+  ABSL_DEPRECATED("bugs.webrtc.org/13869")
+  void MergeNetworkList(std::vector<Network*> list,
                         bool* changed,
                         NetworkManager::Stats* stats);
 

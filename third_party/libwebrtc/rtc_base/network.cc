@@ -329,6 +329,27 @@ void NetworkManagerBase::MergeNetworkList(
   MergeNetworkList(std::move(new_networks), changed, &stats);
 }
 
+// TODO(bugs.webrtc.org/13869): Legacy method, taking ownership of raw pointers.
+// Delete, as soon as downstream users are updated.
+void NetworkManagerBase::MergeNetworkList(std::vector<Network*> list,
+                                          bool* changed,
+                                          NetworkManager::Stats* stats) {
+  std::vector<std::unique_ptr<Network>> list_owned;
+  list_owned.reserve(list.size());
+  for (Network* network : list) {
+    list_owned.push_back(absl::WrapUnique(network));
+  }
+  MergeNetworkList(std::move(list_owned), changed, stats);
+}
+
+// TODO(bugs.webrtc.org/13869): Legacy method, taking ownership of raw pointers.
+// Delete, as soon as downstream users are updated.
+void NetworkManagerBase::MergeNetworkList(std::vector<Network*> list,
+                                          bool* changed) {
+  NetworkManager::Stats stats;
+  MergeNetworkList(list, changed, &stats);
+}
+
 void NetworkManagerBase::MergeNetworkList(
     std::vector<std::unique_ptr<Network>> new_networks,
     bool* changed,
