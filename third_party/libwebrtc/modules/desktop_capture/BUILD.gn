@@ -39,6 +39,7 @@ rtc_library("primitives") {
   deps = [
     "../../api:scoped_refptr",
     "../../rtc_base:checks",
+    "../../rtc_base:refcount",
     "../../rtc_base/system:rtc_export",
     #"//third_party/libyuv",
   ]
@@ -468,6 +469,7 @@ rtc_library("desktop_capture_generic") {
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
+    "../../rtc_base:refcount",
     "../../rtc_base/synchronization:mutex",
     "../../rtc_base/system:arch",
     "../../rtc_base/system:no_unique_address",

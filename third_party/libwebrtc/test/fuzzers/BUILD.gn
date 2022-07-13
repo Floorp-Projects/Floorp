@@ -415,6 +415,7 @@ webrtc_fuzzer_test("residual_echo_detector_fuzzer") {
   deps = [
     "../../api/audio:echo_detector_creator",
     "../../rtc_base:checks",
+    "../../rtc_base:refcount",
     "../../rtc_base:rtc_base_approved",
   ]
 }

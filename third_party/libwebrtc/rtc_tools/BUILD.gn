@@ -63,6 +63,7 @@ rtc_library("video_file_reader") {
     "../api/video:video_rtp_headers",
     "../rtc_base:checks",
     "../rtc_base:logging",
+    "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",
   ]
   absl_deps = [
@@ -113,6 +114,7 @@ rtc_library("video_quality_analysis") {
     "../common_video",
     "../rtc_base:checks",
     "../rtc_base:logging",
+    "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",
     "../test:perf_test",
     "//third_party/libyuv",
@@ -381,6 +383,7 @@ if (!build_with_chromium) {
         "../rtc_base:ignore_wundef",
         "../rtc_base:logging",
         "../rtc_base:macromagic",
+        "../rtc_base:refcount",
 
         # TODO(kwiberg): Remove this dependency.
         "../api/audio_codecs:audio_codecs_api",

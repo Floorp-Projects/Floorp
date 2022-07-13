@@ -140,6 +140,7 @@ rtc_library("dcsctp_socket") {
     "../../../api/task_queue:task_queue",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
+    "../../../rtc_base:refcount",
     "../../../rtc_base:rtc_base_approved",
     "../common:internal_types",
     "../packet:bounded_io",
