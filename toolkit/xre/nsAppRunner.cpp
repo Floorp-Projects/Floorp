@@ -4873,25 +4873,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return 0;
   }
 
-#ifdef MOZ_BACKGROUNDTASKS
-  if (BackgroundTasks::IsBackgroundTaskMode()) {
-    // Allow tests to specify profile path via the environment.
-    if (!EnvHasValue("XRE_PROFILE_PATH")) {
-      nsString installHash;
-      mDirProvider.GetInstallHash(installHash);
-
-      nsCOMPtr<nsIFile> file;
-      nsresult rv = BackgroundTasks::CreateEphemeralProfileDirectory(
-          NS_LossyConvertUTF16toASCII(installHash), getter_AddRefs(file));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return 1;
-      }
-
-      SaveFileToEnv("XRE_PROFILE_PATH", file);
-    }
-  }
-#endif
-
   mProfileSvc = NS_GetToolkitProfileService();
   if (!mProfileSvc) {
     // We failed to choose or create profile - notify user and quit

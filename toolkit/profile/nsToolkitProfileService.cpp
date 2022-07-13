@@ -58,6 +58,9 @@
 #include "nsProxyRelease.h"
 #include "prinrval.h"
 #include "prthread.h"
+#ifdef MOZ_BACKGROUNDTASKS
+#  include "mozilla/BackgroundTasks.h"
+#endif
 
 using namespace mozilla;
 
@@ -1474,6 +1477,37 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
   if (ar == ARG_FOUND) {
     return NS_ERROR_SHOW_PROFILE_MANAGER;
   }
+
+#ifdef MOZ_BACKGROUNDTASKS
+  if (BackgroundTasks::IsBackgroundTaskMode()) {
+    nsString installHash;
+    rv = gDirServiceProvider->GetInstallHash(installHash);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = BackgroundTasks::CreateEphemeralProfileDirectory(
+        NS_LossyConvertUTF16toASCII(installHash), getter_AddRefs(file));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // In background task mode, NS_ERROR_UNEXPECTED is handled specially to
+      // exit with a non-zero exit code.
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    // We don't expect a matching profile, but just in case.
+    GetProfileByDir(file, nullptr, getter_AddRefs(mCurrent));
+
+    // Background task mode does not enable legacy telemetry, so this is for
+    // completeness only.
+    mStartupReason = u"backgroundtask"_ns;
+
+    nsCOMPtr<nsIFile> localDir = file;
+    file.forget(aRootDir);
+    localDir.forget(aLocalDir);
+
+    NS_IF_ADDREF(*aProfile = mCurrent);
+    return NS_OK;
+  }
+#endif
 
   if (mIsFirstRun && mUseDedicatedProfile &&
       !mInstallSection.Equals(mLegacyInstallSection)) {

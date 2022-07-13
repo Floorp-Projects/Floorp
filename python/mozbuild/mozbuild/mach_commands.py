@@ -1809,7 +1809,14 @@ def _run_desktop(
     no_profile_option_given = all(
         p not in params for p in ["-profile", "--profile", "-P"]
     )
-    if no_profile_option_given and not noprofile:
+    no_backgroundtask_mode_option_given = all(
+        p not in params for p in ["-backgroundtask", "--backgroundtask"]
+    )
+    if (
+        no_profile_option_given
+        and no_backgroundtask_mode_option_given
+        and not noprofile
+    ):
         prefs = {
             "browser.aboutConfig.showWarning": False,
             "browser.shell.checkDefaultBrowser": False,
