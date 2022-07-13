@@ -18,6 +18,7 @@
 #include <deque>
 #include <limits>
 #include <set>
+#include <string>
 
 #include "common_audio/include/audio_util.h"
 #include "common_audio/signal_processing/include/signal_processing_library.h"
@@ -32,7 +33,6 @@
 namespace webrtc {
 
 static const float kMeanIIRCoefficient = 0.5f;
-static const float kVoiceThreshold = 0.02f;
 
 // TODO(aluebs): Check if these values work also for 48kHz.
 static const size_t kMinVoiceBin = 3;
@@ -44,10 +44,23 @@ float ComplexMagnitude(float a, float b) {
   return std::abs(a) + std::abs(b);
 }
 
+std::string GetVadModeLabel(TransientSuppressor::VadMode vad_mode) {
+  switch (vad_mode) {
+    case TransientSuppressor::VadMode::kDefault:
+      return "default";
+    case TransientSuppressor::VadMode::kRnnVad:
+      return "RNN VAD";
+    case TransientSuppressor::VadMode::kNoVad:
+      return "no VAD";
+  }
+}
+
 }  // namespace
 
-TransientSuppressorImpl::TransientSuppressorImpl()
-    : data_length_(0),
+TransientSuppressorImpl::TransientSuppressorImpl(VadMode vad_mode)
+    : vad_mode_(vad_mode),
+      analyzed_audio_is_silent_(false),
+      data_length_(0),
       detection_length_(0),
       analysis_length_(0),
       buffer_delay_(0),
@@ -62,7 +75,9 @@ TransientSuppressorImpl::TransientSuppressorImpl()
       use_hard_restoration_(false),
       chunks_since_voice_change_(0),
       seed_(182),
-      using_reference_(false) {}
+      using_reference_(false) {
+  RTC_LOG(LS_INFO) << "VAD mode: " << GetVadModeLabel(vad_mode_);
+}
 
 TransientSuppressorImpl::~TransientSuppressorImpl() {}
 
@@ -304,15 +319,33 @@ void TransientSuppressorImpl::UpdateKeypress(bool key_pressed) {
 }
 
 void TransientSuppressorImpl::UpdateRestoration(float voice_probability) {
-  const int kHardRestorationOffsetDelay = 3;
-  const int kHardRestorationOnsetDelay = 80;
-
-  bool not_voiced = voice_probability < kVoiceThreshold;
+  bool not_voiced;
+  switch (vad_mode_) {
+    case TransientSuppressor::VadMode::kDefault: {
+      constexpr float kVoiceThreshold = 0.02f;
+      not_voiced = voice_probability < kVoiceThreshold;
+      break;
+    }
+    case TransientSuppressor::VadMode::kRnnVad: {
+      constexpr float kVoiceThreshold = 0.7f;
+      not_voiced = voice_probability < kVoiceThreshold;
+      break;
+    }
+    case TransientSuppressor::VadMode::kNoVad:
+      // Always assume that voice is detected.
+      not_voiced = false;
+      break;
+  }
 
   if (not_voiced == use_hard_restoration_) {
     chunks_since_voice_change_ = 0;
   } else {
     ++chunks_since_voice_change_;
+
+    // Number of 10 ms frames to wait to transition to and from hard
+    // restoration.
+    constexpr int kHardRestorationOffsetDelay = 3;
+    constexpr int kHardRestorationOnsetDelay = 80;
 
     if ((use_hard_restoration_ &&
          chunks_since_voice_change_ > kHardRestorationOffsetDelay) ||
