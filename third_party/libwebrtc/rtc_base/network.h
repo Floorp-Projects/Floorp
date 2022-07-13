@@ -148,11 +148,6 @@ class RTC_EXPORT NetworkManager : public DefaultLocalAddressProvider,
   virtual void StartUpdating() = 0;
   virtual void StopUpdating() = 0;
 
-  // TODO(bugs.webrtc.org/13869): Delete after override in downstream subclasses
-  // is deleted.
-  ABSL_DEPRECATED("bugs.webrtc.org/13869")
-  virtual void GetNetworks(NetworkList* networks) const {}
-
   // Returns the current list of networks available on this machine.
   // StartUpdating() must be called before this method is called.
   // It makes sure that repeated calls return the same object for a
