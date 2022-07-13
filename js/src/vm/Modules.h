@@ -38,9 +38,6 @@ bool ModuleLink(JSContext* cx, Handle<ModuleObject*> module);
 bool ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
                     MutableHandle<Value> result);
 
-bool GatherAvailableModuleAncestors(JSContext* cx, Handle<ModuleObject*> module,
-                                    MutableHandle<ModuleVector> sortedList);
-
 void AsyncModuleExecutionFulfilled(JSContext* cx, Handle<ModuleObject*> module);
 
 void AsyncModuleExecutionRejected(JSContext* cx, Handle<ModuleObject*> module,
