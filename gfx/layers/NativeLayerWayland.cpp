@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include "gfxUtils.h"
-#include "nsGtkUtils.h"
 #include "GLContextProvider.h"
 #include "GLBlitHelper.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -390,10 +389,10 @@ NativeLayerWayland::~NativeLayerWayland() {
     mSurfacePoolHandle->ReturnBufferToPool(mFrontBuffer);
     mFrontBuffer = nullptr;
   }
-  MozClearPointer(mCallback, wl_callback_destroy);
-  MozClearPointer(mViewport, wp_viewport_destroy);
-  MozClearPointer(mWlSubsurface, wl_subsurface_destroy);
-  MozClearPointer(mWlSurface, wl_surface_destroy);
+  g_clear_pointer(&mCallback, wl_callback_destroy);
+  g_clear_pointer(&mViewport, wp_viewport_destroy);
+  g_clear_pointer(&mWlSubsurface, wl_subsurface_destroy);
+  g_clear_pointer(&mWlSurface, wl_surface_destroy);
 }
 
 void NativeLayerWayland::AttachExternalImage(
@@ -631,7 +630,7 @@ void NativeLayerWayland::EnsureParentSurface(wl_surface* aParentSurface) {
   MutexAutoLock lock(mMutex);
 
   if (aParentSurface != mParentWlSurface) {
-    MozClearPointer(mWlSubsurface, wl_subsurface_destroy);
+    g_clear_pointer(&mWlSubsurface, wl_subsurface_destroy);
     mSubsurfacePosition = IntPoint(0, 0);
 
     if (aParentSurface) {
@@ -741,7 +740,7 @@ void NativeLayerWayland::FrameCallbackHandler(wl_callback* aCallback,
   MutexAutoLock lock(mMutex);
 
   MOZ_RELEASE_ASSERT(aCallback == mCallback);
-  MozClearPointer(mCallback, wl_callback_destroy);
+  g_clear_pointer(&mCallback, wl_callback_destroy);
 
   for (const RefPtr<CallbackMultiplexHelper>& callbackMultiplexHelper :
        mCallbackMultiplexHelpers) {
