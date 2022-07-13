@@ -166,7 +166,7 @@ HRESULT WgcScreenSource::CreateCaptureItem(
   // Ensure the monitor is still valid (hasn't disconnected) before trying to
   // create the item. On versions of Windows before Win11, `CreateForMonitor`
   // will crash if no displays are connected.
-  if (!IsMonitorValid(*hmonitor_))
+  if (!IsMonitorValid(hmonitor_.value()))
     return E_ABORT;
 
   ComPtr<WGC::IGraphicsCaptureItem> item;
