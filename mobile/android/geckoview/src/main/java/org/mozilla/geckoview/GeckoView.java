@@ -105,13 +105,26 @@ public class GeckoView extends FrameLayout {
       onGlobalLayout();
       if (GeckoView.this.mSurfaceWrapper != null) {
         final SurfaceViewWrapper wrapper = GeckoView.this.mSurfaceWrapper;
-        mDisplay.surfaceChanged(
-            new GeckoDisplay.SurfaceInfo.Builder(wrapper.getSurface())
-                .surfaceControl(wrapper.getSurfaceControl())
-                .size(wrapper.getWidth(), wrapper.getHeight())
-                .build());
-        mDisplay.setDynamicToolbarMaxHeight(mDynamicToolbarMaxHeight);
-        GeckoView.this.setActive(true);
+
+        // On some devices, we have seen that the Surface can become abandoned sometime in between
+        // the surfaceChanged callback and attempting to use the Surface here. In such cases,
+        // rendering in to the Surface will always fail, resulting in the user being presented a
+        // blank, unresponsive screen or the application crashing. To work around this, check
+        // whether the Surface is in such a state, and if so toggle the SurfaceView's visibility
+        // in order to request a new Surface. See bug 1772839.
+        final boolean isAbandoned = SurfaceViewWrapper.isSurfaceAbandoned(wrapper.getSurface());
+        if (isAbandoned && wrapper.getView().getVisibility() == View.VISIBLE) {
+          wrapper.getView().setVisibility(View.INVISIBLE);
+          wrapper.getView().setVisibility(View.VISIBLE);
+        } else {
+          mDisplay.surfaceChanged(
+              new GeckoDisplay.SurfaceInfo.Builder(wrapper.getSurface())
+                  .surfaceControl(wrapper.getSurfaceControl())
+                  .size(wrapper.getWidth(), wrapper.getHeight())
+                  .build());
+          mDisplay.setDynamicToolbarMaxHeight(mDynamicToolbarMaxHeight);
+          GeckoView.this.setActive(true);
+        }
       }
     }
 
