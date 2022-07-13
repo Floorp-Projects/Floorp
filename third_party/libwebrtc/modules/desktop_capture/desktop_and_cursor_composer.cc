@@ -218,7 +218,7 @@ void DesktopAndCursorComposer::OnCaptureResult(
         !desktop_capturer_->IsOccluded(cursor_position_)) {
       DesktopVector relative_position =
           cursor_position_.subtract(frame->top_left());
-#if defined(WEBRTC_MAC)
+#if defined(WEBRTC_MAC) || defined(CHROMEOS)
       // On OSX, the logical(DIP) and physical coordinates are used mixingly.
       // For example, the captured cursor has its size in physical pixels(2x)
       // and location in logical(DIP) pixels on Retina monitor. This will cause
