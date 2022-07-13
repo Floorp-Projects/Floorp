@@ -180,7 +180,7 @@ impl Builder {
 }
 
 /// Represents a request to upload a ping.
-#[derive(PartialEq, Eq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct PingRequest {
     /// The Job ID to identify this request,
     /// this is the same as the ping UUID.

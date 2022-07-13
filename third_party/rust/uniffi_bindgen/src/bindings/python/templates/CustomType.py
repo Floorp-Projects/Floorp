@@ -1,5 +1,5 @@
-{%- match python_config.custom_types.get(name.as_str())  %}
-{% when None %}
+{%- match config %}
+{%- when None %}
 {#- No custom type config, just forward all methods to our builtin type #}
 class FfiConverterType{{ name }}:
     @staticmethod
@@ -18,16 +18,7 @@ class FfiConverterType{{ name }}:
     def lower(value):
         return {{ builtin|ffi_converter_name }}.lower(value)
 
-{%- when Some(config) %}
-
-{%- match config.imports %}
-{%- when Some(imports) %}
-{%- for import_name in imports %}
-{{ self.add_import(import_name) }}
-{%- endfor %}
-{%- else %}
-{%- endmatch %}
-
+{%- when Some with (config) %}
 {#- Custom type config supplied, use it to convert the builtin type #}
 class FfiConverterType{{ name }}:
     @staticmethod

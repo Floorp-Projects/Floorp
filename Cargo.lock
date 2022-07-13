@@ -58,14 +58,14 @@ checksum = "85965b6739a430150bdd138e2374a98af0c3ee0d030b3bb7fc3bddff58d0102e"
 
 [[package]]
 name = "android_logger"
-version = "0.11.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b74b7ddf197de32e415d197aa21c1c0cb36e01e4794fd801302280ac7847ee02"
+checksum = "d9ed09b18365ed295d722d0b5ed59c01b79a826ff2d2a8f73d5ecca8e6fb2f66"
 dependencies = [
  "android_log-sys",
- "env_logger 0.9.0",
+ "env_logger 0.8.999",
+ "lazy_static",
  "log",
- "once_cell",
 ]
 
 [[package]]
@@ -642,6 +642,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cbdb825da8a5df079a43676dbe042702f1707b1109f713a01420fbb4cc71fa27"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "cargo_metadata"
+version = "0.13.999"
+dependencies = [
+ "cargo_metadata 0.14.2",
 ]
 
 [[package]]
@@ -2270,9 +2277,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "50.1.2"
+version = "50.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "813fa9059f1a7d9da4fcf6cff6c77e6226fc26f58797d1659d16a8279c4655f2"
+checksum = "0857be0c251ae1fc3b5672237c99f5115a6546cd8b171cb240173098ab5e9629"
 dependencies = [
  "chrono",
  "crossbeam-channel",
@@ -2290,15 +2297,15 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "50.1.2"
+version = "50.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5edb2b6cf2938242adda6ece26ac29b2238c693c423331c8a68ce980c348b28"
+checksum = "f1bdfa0e2e6476190b4762c4cdc87c1a7a0347f601864b091cf9ad674a909c68"
 dependencies = [
  "android_logger",
  "bincode",
  "chrono",
  "crossbeam-channel",
- "env_logger 0.9.0",
+ "env_logger 0.8.999",
  "ffi-support",
  "flate2",
  "log",
@@ -3735,6 +3742,13 @@ dependencies = [
  "cfg-if 0.1.999",
  "libc",
  "void",
+]
+
+[[package]]
+name = "nom"
+version = "5.999.999"
+dependencies = [
+ "nom 6.1.2",
 ]
 
 [[package]]
@@ -5676,14 +5690,13 @@ checksum = "957e51f3646910546462e67d5f7599b9e4fb8acdd304b087a6494730f9eebf04"
 
 [[package]]
 name = "uniffi"
-version = "0.19.3"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc1de33ad46ce00bc9a31cea44e80ef69175d3a23007335216fe3996880a310d"
+checksum = "d0fe14882ae6ea89f31ac922ad8e6f76b3f346f07965791a60ade60cc3bcdd60"
 dependencies = [
  "anyhow",
  "bytes 1.1.0",
- "camino",
- "cargo_metadata",
+ "cargo_metadata 0.13.999",
  "lazy_static",
  "log",
  "paste",
@@ -5692,18 +5705,15 @@ dependencies = [
 
 [[package]]
 name = "uniffi_bindgen"
-version = "0.19.3"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b18e05c55840ddd690ba211f72bb1f2f6ca8c50bfeb7d7211ea5ee60b0f9be07"
+checksum = "49a9810482e988792ed22fc6747d872bd32600f7e3bfc11fe93019d155d7e89c"
 dependencies = [
  "anyhow",
  "askama",
- "camino",
- "cargo_metadata",
+ "cargo_metadata 0.13.999",
  "clap",
- "fs-err",
  "heck",
- "lazy_static",
  "paste",
  "serde",
  "toml 0.5.9",
@@ -5712,22 +5722,20 @@ dependencies = [
 
 [[package]]
 name = "uniffi_build"
-version = "0.19.3"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fff0860625e4e621f0317e5f6ac9e79966262bd86a6cfb2049e8425df23afbd"
+checksum = "bcb7401cfd8da93541c23a0683c1dab3c782d2a118254536106b0aa4d9b30607"
 dependencies = [
  "anyhow",
- "camino",
  "uniffi_bindgen",
 ]
 
 [[package]]
 name = "uniffi_macros"
-version = "0.19.3"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7956a6c1fb12bff15e537028ea2174f000f90dd4f87912233b276ea782d420f2"
+checksum = "4e7b60ccb030ef51b0c85eb9ca55f28ff68b82c1a29d2bc0c7053777010af0d3"
 dependencies = [
- "camino",
  "glob",
  "proc-macro2",
  "quote",
@@ -6085,12 +6093,12 @@ dependencies = [
 
 [[package]]
 name = "weedle2"
-version = "3.0.0"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d730d941cf471131c40a64cf2e8a595822009f51e64c05c5afdbc85af155857"
+checksum = "8a69b360c3d0df7dc1a18124677ee8476576c806418f30a360a6cf6cf4e072a6"
 dependencies = [
  "fs-err",
- "nom 6.1.2",
+ "nom 5.999.999",
 ]
 
 [[package]]

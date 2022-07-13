@@ -39,7 +39,7 @@ use anyhow::{bail, Result};
 use super::attributes::{ArgumentAttributes, FunctionAttributes};
 use super::ffi::{FFIArgument, FFIFunction};
 use super::literal::{convert_default_value, Literal};
-use super::types::{Type, TypeIterator};
+use super::types::{IterTypes, Type, TypeIterator};
 use super::{APIConverter, ComponentInterface};
 
 /// Represents a standalone function.
@@ -89,10 +89,23 @@ impl Function {
     }
 
     pub fn derive_ffi_func(&mut self, ci_prefix: &str) -> Result<()> {
-        self.ffi_func.name = format!("{}_{}", ci_prefix, self.name);
+        self.ffi_func.name.push_str(ci_prefix);
+        self.ffi_func.name.push('_');
+        self.ffi_func.name.push_str(&self.name);
         self.ffi_func.arguments = self.arguments.iter().map(|arg| arg.into()).collect();
         self.ffi_func.return_type = self.return_type.as_ref().map(|rt| rt.into());
         Ok(())
+    }
+}
+
+impl IterTypes for Function {
+    fn iter_types(&self) -> TypeIterator<'_> {
+        Box::new(
+            self.arguments
+                .iter()
+                .flat_map(IterTypes::iter_types)
+                .chain(self.return_type.iter_types()),
+        )
     }
 }
 
@@ -152,20 +165,19 @@ impl Argument {
     pub fn name(&self) -> &str {
         &self.name
     }
-
     pub fn type_(&self) -> Type {
         self.type_.clone()
     }
-
     pub fn by_ref(&self) -> bool {
         self.by_ref
     }
-
     pub fn default_value(&self) -> Option<Literal> {
         self.default.clone()
     }
+}
 
-    pub fn iter_types(&self) -> TypeIterator<'_> {
+impl IterTypes for Argument {
+    fn iter_types(&self) -> TypeIterator<'_> {
         self.type_.iter_types()
     }
 }

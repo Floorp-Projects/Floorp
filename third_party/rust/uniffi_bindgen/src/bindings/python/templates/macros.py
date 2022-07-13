@@ -32,7 +32,7 @@ rust_call(
 
 {%- macro _arg_list_ffi_call(func) %}
     {%- for arg in func.arguments() %}
-        {{ arg|lower_fn }}({{ arg.name()|var_name }})
+        {{ arg|lower_fn }}({{ arg.name() }})
         {%- if !loop.last %},{% endif %}
     {%- endfor %}
 {%- endmacro -%}
@@ -46,10 +46,25 @@ rust_call(
     {%- for arg in func.arguments() -%}
         {{ arg.name()|var_name }}
         {%- match arg.default_value() %}
-        {%- when Some with(literal) %} = DEFAULT
+        {%- when Some with(literal) %} = {{ literal|literal_py(arg.type_().borrow()) }}
         {%- else %}
         {%- endmatch %}
         {%- if !loop.last %},{% endif -%}
+    {%- endfor %}
+{%- endmacro %}
+
+{#-
+// Field lists as used in Python declarations of Records.
+// Note the var_name.
+-#}
+{%- macro field_list_decl(item) %}
+    {%- for field in item.fields() -%}
+        {{ field.name()|var_name }}
+        {%- match field.default_value() %}
+            {%- when Some with(literal) %} = {{ literal|literal_py(field) }}
+            {%- else %}
+        {%- endmatch -%}
+        {% if !loop.last %}, {% endif %}
     {%- endfor %}
 {%- endmacro %}
 
@@ -64,38 +79,14 @@ rust_call(
     ctypes.POINTER(RustCallStatus),
 {% endmacro -%}
 
-{#
- # Setup function arguments by initializing default values and passing other
- # values through coerce.
- #}
-{%- macro setup_args(func) %}
+{%- macro coerce_args(func) %}
     {%- for arg in func.arguments() %}
-    {%- match arg.default_value() %}
-    {%- when None %}
-    {{ arg.name()|var_name }} = {{ arg.name()|var_name|coerce_py(arg.type_().borrow()) -}}
-    {%- when Some with(literal) %}
-    if {{ arg.name()|var_name }} is DEFAULT:
-        {{ arg.name()|var_name }} = {{ literal|literal_py(arg.type_().borrow()) }}
-    else:
-        {{ arg.name()|var_name }} = {{ arg.name()|var_name|coerce_py(arg.type_().borrow()) -}}
-    {%- endmatch %}
+    {{ arg.name() }} = {{ arg.name()|coerce_py(arg.type_().borrow()) -}}
     {% endfor -%}
 {%- endmacro -%}
 
-{#
- # Exactly the same thing as `setup_args()` but with an extra 4 spaces of
- # indent so that it works with object methods.
- #}
-{%- macro setup_args_extra_indent(func) %}
+{%- macro coerce_args_extra_indent(func) %}
         {%- for arg in func.arguments() %}
-        {%- match arg.default_value() %}
-        {%- when None %}
-        {{ arg.name()|var_name }} = {{ arg.name()|var_name|coerce_py(arg.type_().borrow()) -}}
-        {%- when Some with(literal) %}
-        if {{ arg.name()|var_name }} is DEFAULT:
-            {{ arg.name()|var_name }} = {{ literal|literal_py(arg.type_().borrow()) }}
-        else:
-            {{ arg.name()|var_name }} = {{ arg.name()|var_name|coerce_py(arg.type_().borrow()) -}}
-        {%- endmatch %}
-        {% endfor -%}
+        {{ arg.name() }} = {{ arg.name()|coerce_py(arg.type_().borrow()) }}
+        {%- endfor %}
 {%- endmacro -%}
