@@ -40,6 +40,47 @@
       }
     }
   },
+  'chrome-tester-service-account': {
+    'swarming': {
+      'service_account':
+      'chrome-tester@chops-service-accounts.iam.gserviceaccount.com'
+    }
+  },
+  'chromium-tester-service-account': {
+    'swarming': {
+      'service_account':
+      'chromium-tester@chops-service-accounts.iam.gserviceaccount.com'
+    }
+  },
+  'has_native_resultdb_integration': {
+    'resultdb': {
+      'enable': True,
+      'has_native_resultdb_integration': True
+    }
+  },
+  'ios-device-15.3': {
+    'swarming': {
+      'dimensions': {
+        'os': 'iOS-15.3',
+        'pool': 'chrome.tests'
+      }
+    }
+  },
+  'ios-simulator-14': {
+    '$mixin_append': {
+      'args': ['--platform', 'iPhone X', '--version', '14.0']
+    }
+  },
+  'ios_runtime_cache_14_0': {
+    '$mixin_append': {
+      'swarming': {
+        'named_caches': [{
+          'name': 'runtime_ios_14_0',
+          'path': 'Runtime-ios-14.0'
+        }]
+      }
+    }
+  },
   'linux': {
     'swarming': {
       'dimensions': {
@@ -80,6 +121,18 @@
       }
     }
   },
+  'mac_toolchain': {
+    'swarming': {
+      'cipd_packages': [{
+        'cipd_package':
+        'infra/tools/mac_toolchain/${platform}',
+        'location':
+        '.',
+        'revision':
+        'git_revision:723fc1a6c8cdf2631a57851f5610e598db0c1de1'
+      }]
+    }
+  },
   'marshmallow': {
     'swarming': {
       'dimensions': {
@@ -107,6 +160,11 @@
       'result_format': 'json'
     }
   },
+  'webrtc-xctest': {
+    '$mixin_append': {
+      'args': ['--xctest', '--undefok=enable-run-ios-unittests-with-xctest']
+    }
+  },
   'win': {
     'swarming': {
       'dimensions': {
@@ -126,6 +184,33 @@
       'dimensions': {
         'cpu': 'x86-64'
       }
+    }
+  },
+  'xcode_12a7209': {
+    '$mixin_append': {
+      'args': ['--xcode-build-version', '12a7209'],
+      'swarming': {
+        'named_caches': [{
+          'name': 'xcode_ios_12a7209',
+          'path': 'Xcode.app'
+        }]
+      }
+    }
+  },
+  'xcode_13_main': {
+    '$mixin_append': {
+      'args': ['--xcode-build-version', '13c100']
+    },
+    'swarming': {
+      'named_caches': [{
+        'name': 'xcode_ios_13c100',
+        'path': 'Xcode.app'
+      }]
+    }
+  },
+  'xcode_parallelization': {
+    '$mixin_append': {
+      'args': ['--xcode-parallelization']
     }
   }
 }
