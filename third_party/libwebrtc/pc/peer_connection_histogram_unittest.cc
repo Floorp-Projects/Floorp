@@ -346,14 +346,15 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
     auto observer = std::make_unique<ObserverForUsageHistogramTest>();
     deps.observer = observer.get();
 
-    auto pc = pc_factory->CreatePeerConnection(config, std::move(deps));
-    if (!pc) {
+    auto result =
+        pc_factory->CreatePeerConnectionOrError(config, std::move(deps));
+    if (!result.ok()) {
       return nullptr;
     }
 
-    observer->SetPeerConnectionInterface(pc.get());
+    observer->SetPeerConnectionInterface(result.value());
     auto wrapper = std::make_unique<PeerConnectionWrapperForUsageHistogramTest>(
-        pc_factory, pc, std::move(observer));
+        pc_factory, result.MoveValue(), std::move(observer));
     return wrapper;
   }
 
