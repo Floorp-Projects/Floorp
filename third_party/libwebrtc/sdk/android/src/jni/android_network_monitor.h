@@ -70,7 +70,8 @@ struct NetworkInformation {
 class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface {
  public:
   AndroidNetworkMonitor(JNIEnv* env,
-                        const JavaRef<jobject>& j_application_context);
+                        const JavaRef<jobject>& j_application_context,
+                        const FieldTrialsView& field_trials);
   ~AndroidNetworkMonitor() override;
 
   // TODO(sakal): Remove once down stream dependencies have been updated.
@@ -160,6 +161,8 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface {
 
   rtc::scoped_refptr<PendingTaskSafetyFlag> safety_flag_
       RTC_PT_GUARDED_BY(network_thread_) = nullptr;
+
+  const FieldTrialsView& field_trials_;
 };
 
 class AndroidNetworkMonitorFactory : public rtc::NetworkMonitorFactory {
