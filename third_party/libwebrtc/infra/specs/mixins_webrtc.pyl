@@ -193,6 +193,14 @@
       'result_format': 'json'
     }
   },
+  'shamu': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'shamu',
+        'os': 'Android',
+      },
+    },
+  },
   'timeout-3h': {
     'swarming': {
       'hard_timeout': 10800,
