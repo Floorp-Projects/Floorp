@@ -259,7 +259,7 @@ void FakeVideoSendStream::ReconfigureVideoEncoder(
   }
   video_streams_ =
       config.video_stream_factory->CreateEncoderStreams(width, height, config);
-  if (config.encoder_specific_settings != NULL) {
+  if (config.encoder_specific_settings != nullptr) {
     const unsigned char num_temporal_layers = static_cast<unsigned char>(
         video_streams_.back().num_temporal_layers.value_or(1));
     if (config_.rtp.payload_name == "VP8") {
@@ -286,7 +286,7 @@ void FakeVideoSendStream::ReconfigureVideoEncoder(
                     << config_.rtp.payload_name;
     }
   }
-  codec_settings_set_ = config.encoder_specific_settings != NULL;
+  codec_settings_set_ = config.encoder_specific_settings != nullptr;
   encoder_config_ = std::move(config);
   ++num_encoder_reconfigurations_;
 }
