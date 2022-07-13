@@ -602,6 +602,41 @@
       }
     ]
   },
+  "Android32 (more configs)": {
+    "gtest_tests": [
+      {
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_gtest_merge.py"
+        },
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "cipd_packages": [
+            {
+              "cipd_package": "infra/tools/luci/logdog/butler/${platform}",
+              "location": "bin",
+              "revision": "git_revision:ff387eadf445b24c935f1cf7d6ddd279f8a6b04c"
+            }
+          ],
+          "dimension_sets": [
+            {
+              "android_devices": "1",
+              "device_os": "MMB29Q",
+              "device_type": "bullhead",
+              "os": "Android"
+            }
+          ],
+          "shards": 4
+        },
+        "test": "peerconnection_unittests",
+        "test_id_prefix": "ninja://pc:peerconnection_unittests/"
+      }
+    ]
+  },
   "Android32 Builder arm": {
     "gtest_tests": [
       {
@@ -679,6 +714,32 @@
         },
         "test": "webrtc_perf_tests",
         "test_id_prefix": "ninja://:webrtc_perf_tests/"
+      }
+    ]
+  },
+  "Linux (more configs)": {
+    "isolated_scripts": [
+      {
+        "isolate_name": "peerconnection_unittests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "peerconnection_unittests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ],
+          "shards": 4
+        },
+        "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       }
     ]
   },
@@ -1130,6 +1191,7 @@
       }
     ]
   },
+  "Linux64 Release (Libfuzzer)": {},
   "Mac64 Builder": {
     "isolated_scripts": [
       {
@@ -1587,6 +1649,32 @@
           ]
         },
         "test_id_prefix": "ninja://:webrtc_nonparallel_tests/"
+      }
+    ]
+  },
+  "Win (more configs)": {
+    "isolated_scripts": [
+      {
+        "isolate_name": "peerconnection_unittests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "peerconnection_unittests",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Windows-7-SP1"
+            }
+          ],
+          "shards": 4
+        },
+        "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       }
     ]
   },

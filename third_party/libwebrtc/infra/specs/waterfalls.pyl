@@ -21,6 +21,15 @@
           'junit_tests': 'android_junit_tests',
         },
       },
+      'Android32 (more configs)': {
+        'mixins': [
+          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'has_native_resultdb_integration'
+        ],
+        'test_suites': {
+          'gtest_tests': 'more_configs_tests',
+        },
+      },
       'Android32 Builder arm': {
         'test_suites': {
           'gtest_tests': 'android_perf_tests',
@@ -29,6 +38,13 @@
       'Android32 Builder arm64': {
         'test_suites': {
           'gtest_tests': 'android_perf_tests',
+        },
+      },
+      'Linux (more configs)': {
+        'os_type': 'linux',
+        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'more_configs_tests',
         },
       },
       'Linux64 Builder': {
@@ -44,6 +60,7 @@
           'isolated_scripts': 'linux_tests',
         },
       },
+      'Linux64 Release (Libfuzzer)': {},
       'Mac64 Builder': {
         'os_type': 'mac',
         'mixins': ['mac', 'x86-64'],
@@ -56,6 +73,13 @@
         'mixins': ['mac11', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'mac_tests',
+        },
+      },
+      'Win (more configs)': {
+        'os_type': 'win',
+        'mixins': ['win7', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'more_configs_tests',
         },
       },
       'Win32 Builder (Clang)': {
@@ -155,6 +179,15 @@
           'junit_tests': 'android_junit_tests',
         },
       },
+      'android_arm_more_configs': {
+        'mixins': [
+          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'has_native_resultdb_integration'
+        ],
+        'test_suites': {
+          'gtest_tests': 'more_configs_tests',
+        },
+      },
       'android_arm_rel': {
         'mixins': [
           'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
@@ -248,11 +281,19 @@
           'isolated_scripts': 'linux_tests',
         },
       },
+      'linux_libfuzzer_rel': {},
       'linux_memcheck': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'linux_tests',
+        },
+      },
+      'linux_more_configs': {
+        'os_type': 'linux',
+        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'more_configs_tests',
         },
       },
       'linux_msan': {
@@ -385,6 +426,13 @@
         'mixins': ['win7', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'win_tests_tryserver',
+        },
+      },
+      'win_x86_more_configs': {
+        'os_type': 'win',
+        'mixins': ['win7', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'more_configs_tests',
         },
       },
     },
