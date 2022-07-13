@@ -652,7 +652,6 @@ void HandleExceptionWasm(JSContext* cx, wasm::WasmFrameIter* iter,
 
 void HandleException(ResumeFromException* rfe) {
   JSContext* cx = TlsContext.get();
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
 
 #ifdef DEBUG
   cx->runtime()->jitRuntime()->clearDisallowArbitraryCode();
@@ -743,8 +742,6 @@ void HandleException(ResumeFromException* rfe) {
         probes::ExitScript(cx, script, script->function(),
                            /* popProfilerFrame = */ false);
         if (!frames.more()) {
-          TraceLogStopEvent(logger, TraceLogger_IonMonkey);
-          TraceLogStopEvent(logger, TraceLogger_Scripts);
           break;
         }
         ++frames;
@@ -767,9 +764,6 @@ void HandleException(ResumeFromException* rfe) {
           rfe->kind != ExceptionResumeKind::ForcedReturnBaseline) {
         return;
       }
-
-      TraceLogStopEvent(logger, TraceLogger_Baseline);
-      TraceLogStopEvent(logger, TraceLogger_Scripts);
 
       // Unwind profiler pseudo-stack
       JSScript* script = frame.script();

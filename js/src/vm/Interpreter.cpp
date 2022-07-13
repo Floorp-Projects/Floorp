@@ -2074,11 +2074,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
   RootedScript script(cx);
   SET_SCRIPT(REGS.fp()->script());
 
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-  TraceLoggerEvent scriptEvent(TraceLogger_Scripts, script);
-  TraceLogStartEvent(logger, scriptEvent);
-  TraceLogStartEvent(logger, TraceLogger_Interpreter);
-
   /*
    * Pool of rooters for use in this interpreter frame. References to these
    * are used for local variables within interpreter cases. This avoids
@@ -2287,9 +2282,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       if (activation.entryFrame() != REGS.fp()) {
         // Stop the engine. (No details about which engine exactly, could be
         // interpreter, Baseline or IonMonkey.)
-        TraceLogStopEvent(logger, TraceLogger_Engine);
-        TraceLogStopEvent(logger, TraceLogger_Scripts);
-
         if (MOZ_LIKELY(!frameHalfInitialized)) {
           interpReturnOK =
               DebugAPI::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
@@ -3383,12 +3375,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
       SET_SCRIPT(REGS.fp()->script());
 
-      {
-        TraceLoggerEvent event(TraceLogger_Scripts, script);
-        TraceLogStartEvent(logger, event);
-        TraceLogStartEvent(logger, TraceLogger_Interpreter);
-      }
-
       if (!REGS.fp()->prologue(cx)) {
         goto prologue_error;
       }
@@ -4324,11 +4310,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         }
         SET_SCRIPT(generatorScript);
 
-        TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-        TraceLoggerEvent scriptEvent(TraceLogger_Scripts, script);
-        TraceLogStartEvent(logger, scriptEvent);
-        TraceLogStartEvent(logger, TraceLogger_Interpreter);
-
         if (!probes::EnterScript(cx, generatorScript,
                                  generatorScript->function(), REGS.fp())) {
           goto error;
@@ -4588,9 +4569,6 @@ exit:
   }
 
   gc::MaybeVerifyBarriers(cx, true);
-
-  TraceLogStopEvent(logger, TraceLogger_Engine);
-  TraceLogStopEvent(logger, scriptEvent);
 
   /*
    * This path is used when it's guaranteed the method can be finished
