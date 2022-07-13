@@ -32,7 +32,6 @@
 #include "ScopedGLHelpers.h"
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"
-#include "nsGtkUtils.h"
 
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/ScopeExit.h"
@@ -710,7 +709,7 @@ bool DMABufSurfaceRGBA::CreateWlBuffer() {
 }
 
 void DMABufSurfaceRGBA::ReleaseWlBuffer() {
-  MozClearPointer(mWlBuffer, wl_buffer_destroy);
+  g_clear_pointer(&mWlBuffer, wl_buffer_destroy);
 }
 
 // We should synchronize DMA Buffer object access from CPU to avoid potential
