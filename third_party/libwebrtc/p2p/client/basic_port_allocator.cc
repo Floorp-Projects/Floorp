@@ -98,7 +98,6 @@ struct NetworkFilter {
   const std::string description;
 };
 
-using NetworkList = rtc::NetworkManager::NetworkList;
 void FilterNetworks(std::vector<const rtc::Network*>* networks,
                     NetworkFilter filter) {
   auto start_to_remove =

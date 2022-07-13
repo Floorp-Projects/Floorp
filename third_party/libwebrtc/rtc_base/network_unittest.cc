@@ -140,6 +140,16 @@ bool SameNameAndPrefix(const rtc::Network& a, const rtc::Network& b) {
   return true;
 }
 
+std::vector<const Network*> CopyNetworkPointers(
+    const std::vector<std::unique_ptr<Network>>& owning_list) {
+  std::vector<const Network*> ptr_list;
+  ptr_list.reserve(owning_list.size());
+  for (const auto& network : owning_list) {
+    ptr_list.push_back(network.get());
+  }
+  return ptr_list;
+}
+
 }  // namespace
 
 class NetworkTest : public ::testing::Test, public sigslot::has_slots<> {
@@ -150,10 +160,10 @@ class NetworkTest : public ::testing::Test, public sigslot::has_slots<> {
 
   NetworkManager::Stats MergeNetworkList(
       BasicNetworkManager& network_manager,
-      const NetworkManager::NetworkList& list,
+      std::vector<std::unique_ptr<Network>> list,
       bool* changed) {
     NetworkManager::Stats stats;
-    network_manager.MergeNetworkList(list, changed, &stats);
+    network_manager.MergeNetworkList(std::move(list), changed, &stats);
     return stats;
   }
 
@@ -169,11 +179,11 @@ class NetworkTest : public ::testing::Test, public sigslot::has_slots<> {
     return network_manager.QueryDefaultLocalAddress(family);
   }
 
-  NetworkManager::NetworkList GetNetworks(
+  std::vector<std::unique_ptr<Network>> GetNetworks(
       const BasicNetworkManager& network_manager,
       bool include_ignored) {
     RTC_DCHECK_RUN_ON(network_manager.thread_);
-    NetworkManager::NetworkList list;
+    std::vector<std::unique_ptr<Network>> list;
     network_manager.CreateNetworks(include_ignored, &list);
     return list;
   }
@@ -184,9 +194,6 @@ class NetworkTest : public ::testing::Test, public sigslot::has_slots<> {
         network_manager.network_monitor_.get());
   }
   void ClearNetworks(BasicNetworkManager& network_manager) {
-    for (const auto& kv : network_manager.networks_map_) {
-      delete kv.second;
-    }
     network_manager.networks_.clear();
     network_manager.networks_map_.clear();
   }
@@ -199,10 +206,11 @@ class NetworkTest : public ::testing::Test, public sigslot::has_slots<> {
 
 #if defined(WEBRTC_POSIX)
   // Separated from CreateNetworks for tests.
-  static void CallConvertIfAddrs(const BasicNetworkManager& network_manager,
-                                 struct ifaddrs* interfaces,
-                                 bool include_ignored,
-                                 NetworkManager::NetworkList* networks) {
+  static void CallConvertIfAddrs(
+      const BasicNetworkManager& network_manager,
+      struct ifaddrs* interfaces,
+      bool include_ignored,
+      std::vector<std::unique_ptr<Network>>* networks) {
     RTC_DCHECK_RUN_ON(network_manager.thread_);
     // Use the base IfAddrsConverter for test cases.
     std::unique_ptr<IfAddrsConverter> ifaddrs_converter(new IfAddrsConverter());
@@ -247,11 +255,11 @@ class NetworkTest : public ::testing::Test, public sigslot::has_slots<> {
                                      BasicNetworkManager& network_manager) {
     ifaddrs* addr_list = nullptr;
     addr_list = AddIpv6Address(addr_list, if_name, ipv6_address, ipv6_mask, 0);
-    NetworkManager::NetworkList result;
+    std::vector<std::unique_ptr<Network>> result;
     bool changed;
     NetworkManager::Stats stats;
     CallConvertIfAddrs(network_manager, addr_list, true, &result);
-    network_manager.MergeNetworkList(result, &changed, &stats);
+    network_manager.MergeNetworkList(std::move(result), &changed, &stats);
     return addr_list;
   }
 
@@ -289,11 +297,11 @@ class NetworkTest : public ::testing::Test, public sigslot::has_slots<> {
                                      BasicNetworkManager& network_manager) {
     ifaddrs* addr_list = nullptr;
     addr_list = AddIpv4Address(addr_list, if_name, ipv4_address, ipv4_mask);
-    NetworkManager::NetworkList result;
+    std::vector<std::unique_ptr<Network>> result;
     bool changed;
     NetworkManager::Stats stats;
     CallConvertIfAddrs(network_manager, addr_list, true, &result);
-    network_manager.MergeNetworkList(result, &changed, &stats);
+    network_manager.MergeNetworkList(std::move(result), &changed, &stats);
     return addr_list;
   }
 
@@ -374,10 +382,9 @@ TEST_F(NetworkTest, TestIgnoreList) {
 TEST_F(NetworkTest, DISABLED_TestCreateNetworks) {
   PhysicalSocketServer socket_server;
   BasicNetworkManager manager(&socket_server);
-  NetworkManager::NetworkList result = GetNetworks(manager, true);
+  std::vector<std::unique_ptr<Network>> result = GetNetworks(manager, true);
   // We should be able to bind to any addresses we find.
-  NetworkManager::NetworkList::iterator it;
-  for (it = result.begin(); it != result.end(); ++it) {
+  for (auto it = result.begin(); it != result.end(); ++it) {
     sockaddr_storage storage;
     memset(&storage, 0, sizeof(storage));
     IPAddress ip = (*it)->GetBestIP();
@@ -401,7 +408,6 @@ TEST_F(NetworkTest, DISABLED_TestCreateNetworks) {
       close(fd);
 #endif
     }
-    delete (*it);
   }
 }
 
@@ -452,14 +458,15 @@ TEST_F(NetworkTest, TestBasicMergeNetworkList) {
   BasicNetworkManager manager(&socket_server);
 
   // Add ipv4_network1 to the list of networks.
-  NetworkManager::NetworkList list;
-  list.push_back(new Network(ipv4_network1));
+  std::vector<std::unique_ptr<Network>> list;
+  list.push_back(std::make_unique<Network>(ipv4_network1));
   bool changed;
-  NetworkManager::Stats stats = MergeNetworkList(manager, list, &changed);
+  NetworkManager::Stats stats =
+      MergeNetworkList(manager, std::move(list), &changed);
   EXPECT_TRUE(changed);
   EXPECT_EQ(stats.ipv6_network_count, 0);
   EXPECT_EQ(stats.ipv4_network_count, 1);
-  list.clear();
+  list.clear();  // It is fine to call .clear() on a moved-from vector.
 
   std::vector<const rtc::Network*> current = manager.GetNetworks();
   EXPECT_EQ(1U, current.size());
@@ -469,8 +476,8 @@ TEST_F(NetworkTest, TestBasicMergeNetworkList) {
   EXPECT_EQ(1, net_id1);
 
   // Replace ipv4_network1 with ipv4_network2.
-  list.push_back(new Network(ipv4_network2));
-  stats = MergeNetworkList(manager, list, &changed);
+  list.push_back(std::make_unique<Network>(ipv4_network2));
+  stats = MergeNetworkList(manager, std::move(list), &changed);
   EXPECT_TRUE(changed);
   EXPECT_EQ(stats.ipv6_network_count, 0);
   EXPECT_EQ(stats.ipv4_network_count, 1);
@@ -485,9 +492,9 @@ TEST_F(NetworkTest, TestBasicMergeNetworkList) {
   EXPECT_LT(net_id1, net_id2);
 
   // Add Network2 back.
-  list.push_back(new Network(ipv4_network1));
-  list.push_back(new Network(ipv4_network2));
-  stats = MergeNetworkList(manager, list, &changed);
+  list.push_back(std::make_unique<Network>(ipv4_network1));
+  list.push_back(std::make_unique<Network>(ipv4_network2));
+  stats = MergeNetworkList(manager, std::move(list), &changed);
   EXPECT_TRUE(changed);
   EXPECT_EQ(stats.ipv6_network_count, 0);
   EXPECT_EQ(stats.ipv4_network_count, 2);
@@ -503,9 +510,9 @@ TEST_F(NetworkTest, TestBasicMergeNetworkList) {
 
   // Call MergeNetworkList() again and verify that we don't get update
   // notification.
-  list.push_back(new Network(ipv4_network2));
-  list.push_back(new Network(ipv4_network1));
-  stats = MergeNetworkList(manager, list, &changed);
+  list.push_back(std::make_unique<Network>(ipv4_network2));
+  list.push_back(std::make_unique<Network>(ipv4_network1));
+  stats = MergeNetworkList(manager, std::move(list), &changed);
   EXPECT_FALSE(changed);
   EXPECT_EQ(stats.ipv6_network_count, 0);
   EXPECT_EQ(stats.ipv4_network_count, 2);
@@ -522,7 +529,7 @@ TEST_F(NetworkTest, TestBasicMergeNetworkList) {
 
 // Sets up some test IPv6 networks and appends them to list.
 // Four networks are added - public and link local, for two interfaces.
-void SetupNetworks(NetworkManager::NetworkList* list) {
+void SetupNetworks(std::vector<std::unique_ptr<Network>>* list) {
   IPAddress ip;
   IPAddress prefix;
   EXPECT_TRUE(IPFromString("abcd::1234:5678:abcd:ef12", &ip));
@@ -546,10 +553,10 @@ void SetupNetworks(NetworkManager::NetworkList* list) {
   Network ipv6_eth1_publicnetwork1_ip1("test_eth1", "Test NetworkAdapter 1",
                                        prefix, 64);
   ipv6_eth1_publicnetwork1_ip1.AddIP(ip);
-  list->push_back(new Network(ipv6_eth0_linklocalnetwork));
-  list->push_back(new Network(ipv6_eth1_linklocalnetwork));
-  list->push_back(new Network(ipv6_eth0_publicnetwork1_ip1));
-  list->push_back(new Network(ipv6_eth1_publicnetwork1_ip1));
+  list->push_back(std::make_unique<Network>(ipv6_eth0_linklocalnetwork));
+  list->push_back(std::make_unique<Network>(ipv6_eth1_linklocalnetwork));
+  list->push_back(std::make_unique<Network>(ipv6_eth0_publicnetwork1_ip1));
+  list->push_back(std::make_unique<Network>(ipv6_eth1_publicnetwork1_ip1));
 }
 
 // Test that the basic network merging case works.
@@ -558,11 +565,12 @@ TEST_F(NetworkTest, TestIPv6MergeNetworkList) {
   BasicNetworkManager manager(&socket_server);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
                                         &NetworkTest::OnNetworksChanged);
-  NetworkManager::NetworkList original_list;
-  SetupNetworks(&original_list);
+  std::vector<std::unique_ptr<Network>> networks;
+  SetupNetworks(&networks);
+  std::vector<const Network*> original_list = CopyNetworkPointers(networks);
   bool changed = false;
   NetworkManager::Stats stats =
-      MergeNetworkList(manager, original_list, &changed);
+      MergeNetworkList(manager, std::move(networks), &changed);
   EXPECT_TRUE(changed);
   EXPECT_EQ(stats.ipv6_network_count, 4);
   EXPECT_EQ(stats.ipv4_network_count, 0);
@@ -579,16 +587,19 @@ TEST_F(NetworkTest, TestNoChangeMerge) {
   BasicNetworkManager manager(&socket_server);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
                                         &NetworkTest::OnNetworksChanged);
-  NetworkManager::NetworkList original_list;
-  SetupNetworks(&original_list);
+  std::vector<std::unique_ptr<Network>> networks;
+  SetupNetworks(&networks);
+  std::vector<const Network*> original_list = CopyNetworkPointers(networks);
   bool changed = false;
-  MergeNetworkList(manager, original_list, &changed);
+  MergeNetworkList(manager, std::move(networks), &changed);
   EXPECT_TRUE(changed);
   // Second list that describes the same networks but with new objects.
-  NetworkManager::NetworkList second_list;
-  SetupNetworks(&second_list);
+  std::vector<std::unique_ptr<Network>> second_networks;
+  SetupNetworks(&second_networks);
+  std::vector<const Network*> second_list =
+      CopyNetworkPointers(second_networks);
   changed = false;
-  MergeNetworkList(manager, second_list, &changed);
+  MergeNetworkList(manager, std::move(second_networks), &changed);
   EXPECT_FALSE(changed);
   std::vector<const Network*> resulting_list = manager.GetNetworks();
   // Verify that the original members are in the merged list.
@@ -607,47 +618,48 @@ TEST_F(NetworkTest, MergeWithChangedIP) {
   BasicNetworkManager manager(&socket_server);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
                                         &NetworkTest::OnNetworksChanged);
-  NetworkManager::NetworkList original_list;
+  std::vector<std::unique_ptr<Network>> original_list;
   SetupNetworks(&original_list);
   // Make a network that we're going to change.
   IPAddress ip;
   EXPECT_TRUE(IPFromString("2401:fa01:4:1000:be30:faa:fee:faa", &ip));
   IPAddress prefix = TruncateIP(ip, 64);
-  Network* network_to_change =
-      new Network("test_eth0", "Test Network Adapter 1", prefix, 64);
-  Network* changed_network = new Network(*network_to_change);
+  std::unique_ptr<Network> network_to_change = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", prefix, 64);
+  std::unique_ptr<Network> changed_network =
+      std::make_unique<Network>(*network_to_change);
   network_to_change->AddIP(ip);
   IPAddress changed_ip;
   EXPECT_TRUE(IPFromString("2401:fa01:4:1000:be30:f00:f00:f00", &changed_ip));
   changed_network->AddIP(changed_ip);
-  original_list.push_back(network_to_change);
+  const Network* const network_to_change_ptr = network_to_change.get();
+  original_list.push_back(std::move(network_to_change));
+  const size_t original_size = original_list.size();
   bool changed = false;
-  MergeNetworkList(manager, original_list, &changed);
-  NetworkManager::NetworkList second_list;
+  MergeNetworkList(manager, std::move(original_list), &changed);
+  std::vector<std::unique_ptr<Network>> second_list;
   SetupNetworks(&second_list);
-  second_list.push_back(changed_network);
+  second_list.push_back(std::move(changed_network));
   changed = false;
-  MergeNetworkList(manager, second_list, &changed);
+  MergeNetworkList(manager, std::move(second_list), &changed);
   EXPECT_TRUE(changed);
   std::vector<const Network*> list = manager.GetNetworks();
-  EXPECT_EQ(original_list.size(), list.size());
+  EXPECT_EQ(original_size, list.size());
   // Make sure the original network is still in the merged list.
-  EXPECT_THAT(list, Contains(network_to_change));
-  EXPECT_EQ(changed_ip, network_to_change->GetIPs().at(0));
+  EXPECT_THAT(list, Contains(network_to_change_ptr));
+  EXPECT_EQ(changed_ip, network_to_change_ptr->GetIPs().at(0));
 }
 
-// TODO(bugs.webrtc.org/13846): Re-enable when the ASan issue is fixed.
-// Testing a similar case to above, but checking that a network can be updated
-// with additional IPs (not just a replacement).
-TEST_F(NetworkTest, DISABLED_TestMultipleIPMergeNetworkList) {
+TEST_F(NetworkTest, TestMultipleIPMergeNetworkList) {
   PhysicalSocketServer socket_server;
   BasicNetworkManager manager(&socket_server);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
                                         &NetworkTest::OnNetworksChanged);
-  NetworkManager::NetworkList original_list;
+  std::vector<std::unique_ptr<Network>> original_list;
   SetupNetworks(&original_list);
+  const Network* const network_ptr = original_list[2].get();
   bool changed = false;
-  MergeNetworkList(manager, original_list, &changed);
+  MergeNetworkList(manager, std::move(original_list), &changed);
   EXPECT_TRUE(changed);
   IPAddress ip;
   IPAddress check_ip;
@@ -660,9 +672,14 @@ TEST_F(NetworkTest, DISABLED_TestMultipleIPMergeNetworkList) {
   // This is the IP that already existed in the public network on eth0.
   EXPECT_TRUE(IPFromString("2401:fa00:4:1000:be30:5bff:fee5:c3", &check_ip));
   ipv6_eth0_publicnetwork1_ip2.AddIP(ip);
-  original_list.push_back(new Network(ipv6_eth0_publicnetwork1_ip2));
+
+  std::vector<std::unique_ptr<Network>> second_list;
+  SetupNetworks(&second_list);
+  second_list.push_back(
+      std::make_unique<Network>(ipv6_eth0_publicnetwork1_ip2));
   changed = false;
-  MergeNetworkList(manager, original_list, &changed);
+  const auto network_copy = std::make_unique<Network>(*second_list[2]);
+  MergeNetworkList(manager, std::move(second_list), &changed);
   EXPECT_TRUE(changed);
   // There should still be four networks.
   std::vector<const Network*> list = manager.GetNetworks();
@@ -670,11 +687,11 @@ TEST_F(NetworkTest, DISABLED_TestMultipleIPMergeNetworkList) {
   // Check the gathered IPs.
   int matchcount = 0;
   for (const Network* network : list) {
-    if (SameNameAndPrefix(*network, *original_list[2])) {
+    if (SameNameAndPrefix(*network, *network_copy)) {
       ++matchcount;
       EXPECT_EQ(1, matchcount);
       // This should be the same network object as before.
-      EXPECT_EQ(network, original_list[2]);
+      EXPECT_EQ(network, network_ptr);
       // But with two addresses now.
       EXPECT_THAT(network->GetIPs(),
                   UnorderedElementsAre(InterfaceAddress(check_ip),
@@ -692,10 +709,10 @@ TEST_F(NetworkTest, TestMultiplePublicNetworksOnOneInterfaceMerge) {
   BasicNetworkManager manager(&socket_server);
   manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
                                         &NetworkTest::OnNetworksChanged);
-  NetworkManager::NetworkList original_list;
+  std::vector<std::unique_ptr<Network>> original_list;
   SetupNetworks(&original_list);
   bool changed = false;
-  MergeNetworkList(manager, original_list, &changed);
+  MergeNetworkList(manager, std::move(original_list), &changed);
   EXPECT_TRUE(changed);
   IPAddress ip;
   IPAddress prefix;
@@ -705,9 +722,12 @@ TEST_F(NetworkTest, TestMultiplePublicNetworksOnOneInterfaceMerge) {
   Network ipv6_eth0_publicnetwork2_ip1("test_eth0", "Test NetworkAdapter 1",
                                        prefix, 64);
   ipv6_eth0_publicnetwork2_ip1.AddIP(ip);
-  original_list.push_back(new Network(ipv6_eth0_publicnetwork2_ip1));
+  std::vector<std::unique_ptr<Network>> second_list;
+  SetupNetworks(&second_list);
+  second_list.push_back(
+      std::make_unique<Network>(ipv6_eth0_publicnetwork2_ip1));
   changed = false;
-  MergeNetworkList(manager, original_list, &changed);
+  MergeNetworkList(manager, std::move(second_list), &changed);
   EXPECT_TRUE(changed);
   // There should be five networks now.
   std::vector<const Network*> list = manager.GetNetworks();
@@ -731,9 +751,9 @@ TEST_F(NetworkTest, TestCreateAndDumpNetworks) {
   PhysicalSocketServer socket_server;
   BasicNetworkManager manager(&socket_server);
   manager.StartUpdating();
-  NetworkManager::NetworkList list = GetNetworks(manager, true);
+  std::vector<std::unique_ptr<Network>> list = GetNetworks(manager, true);
   bool changed;
-  MergeNetworkList(manager, list, &changed);
+  MergeNetworkList(manager, std::move(list), &changed);
   manager.DumpNetworks();
 }
 
@@ -742,20 +762,13 @@ TEST_F(NetworkTest, TestIPv6Toggle) {
   BasicNetworkManager manager(&socket_server);
   manager.StartUpdating();
   bool ipv6_found = false;
-  NetworkManager::NetworkList list;
-  list = GetNetworks(manager, true);
-  for (NetworkManager::NetworkList::iterator it = list.begin();
-       it != list.end(); ++it) {
-    if ((*it)->prefix().family() == AF_INET6) {
+  for (const auto& network : GetNetworks(manager, true)) {
+    if (network->prefix().family() == AF_INET6) {
       ipv6_found = true;
       break;
     }
   }
   EXPECT_TRUE(ipv6_found);
-  for (NetworkManager::NetworkList::iterator it = list.begin();
-       it != list.end(); ++it) {
-    delete (*it);
-  }
 }
 
 // Test that when network interfaces are sorted and given preference values,
@@ -775,14 +788,14 @@ TEST_F(NetworkTest, IPv6NetworksPreferredOverIPv4) {
                                        prefix, 64);
   ipv6_eth1_publicnetwork1_ip1.AddIP(ip);
 
-  NetworkManager::NetworkList list;
-  list.push_back(new Network(ipv4_network1));
-  list.push_back(new Network(ipv6_eth1_publicnetwork1_ip1));
-  Network* net1 = list[0];
-  Network* net2 = list[1];
+  std::vector<std::unique_ptr<Network>> list;
+  list.push_back(std::make_unique<Network>(ipv4_network1));
+  list.push_back(std::make_unique<Network>(ipv6_eth1_publicnetwork1_ip1));
+  const Network* net1 = list[0].get();
+  const Network* net2 = list[1].get();
 
   bool changed = false;
-  MergeNetworkList(manager, list, &changed);
+  MergeNetworkList(manager, std::move(list), &changed);
   ASSERT_TRUE(changed);
   // After sorting IPv6 network should be higher order than IPv4 networks.
   EXPECT_TRUE(net1->preference() < net2->preference());
@@ -793,23 +806,25 @@ TEST_F(NetworkTest, IPv6NetworksPreferredOverIPv4) {
 TEST_F(NetworkTest, NetworksSortedByInterfaceName) {
   PhysicalSocketServer socket_server;
   BasicNetworkManager manager(&socket_server, &field_trials_);
-  Network* eth0 = new Network("test_eth0", "Test Network Adapter 1",
-                              IPAddress(0x65432100U), 24);
+  auto eth0 = std::make_unique<Network>("test_eth0", "Test Network Adapter 1",
+                                        IPAddress(0x65432100U), 24);
   eth0->AddIP(IPAddress(0x65432100U));
-  Network* eth1 = new Network("test_eth1", "Test Network Adapter 2",
-                              IPAddress(0x12345600U), 24);
+  auto eth1 = std::make_unique<Network>("test_eth1", "Test Network Adapter 2",
+                                        IPAddress(0x12345600U), 24);
   eth1->AddIP(IPAddress(0x12345600U));
-  NetworkManager::NetworkList list;
+  std::vector<std::unique_ptr<Network>> list;
+  const Network* eth0_ptr = eth0.get();
+  const Network* eth1_ptr = eth1.get();
   // Add them to the list in the opposite of the expected sorted order, to
   // ensure sorting actually occurs.
-  list.push_back(eth1);
-  list.push_back(eth0);
+  list.push_back(std::move(eth1));
+  list.push_back(std::move(eth0));
 
   bool changed = false;
-  MergeNetworkList(manager, list, &changed);
+  MergeNetworkList(manager, std::move(list), &changed);
   ASSERT_TRUE(changed);
   // "test_eth0" should be preferred over "test_eth1".
-  EXPECT_TRUE(eth0->preference() > eth1->preference());
+  EXPECT_TRUE(eth0_ptr->preference() > eth1_ptr->preference());
 }
 
 TEST_F(NetworkTest, TestNetworkAdapterTypes) {
@@ -837,7 +852,7 @@ TEST_F(NetworkTest, TestConvertIfAddrsNoAddress) {
   memset(&list, 0, sizeof(list));
   list.ifa_name = const_cast<char*>("test_iface");
 
-  NetworkManager::NetworkList result;
+  std::vector<std::unique_ptr<Network>> result;
   PhysicalSocketServer socket_server;
   BasicNetworkManager manager(&socket_server);
   manager.StartUpdating();
@@ -854,7 +869,7 @@ TEST_F(NetworkTest, TestConvertIfAddrsMultiAddressesOnOneInterface) {
                         "FFFF:FFFF:FFFF:FFFF::", 0);
   list = AddIpv6Address(list, if_name, "1000:2000:3000:4000:0:0:0:2",
                         "FFFF:FFFF:FFFF:FFFF::", 0);
-  NetworkManager::NetworkList result;
+  std::vector<std::unique_ptr<Network>> result;
   PhysicalSocketServer socket_server;
   BasicNetworkManager manager(&socket_server);
   manager.StartUpdating();
@@ -862,7 +877,7 @@ TEST_F(NetworkTest, TestConvertIfAddrsMultiAddressesOnOneInterface) {
   EXPECT_EQ(1U, result.size());
   bool changed;
   // This ensures we release the objects created in CallConvertIfAddrs.
-  MergeNetworkList(manager, result, &changed);
+  MergeNetworkList(manager, std::move(result), &changed);
   ReleaseIfAddrs(list);
 }
 
@@ -875,7 +890,7 @@ TEST_F(NetworkTest, TestConvertIfAddrsNotRunning) {
   list.ifa_addr = &ifa_addr;
   list.ifa_netmask = &ifa_netmask;
 
-  NetworkManager::NetworkList result;
+  std::vector<std::unique_ptr<Network>> result;
   PhysicalSocketServer socket_server;
   BasicNetworkManager manager(&socket_server);
   manager.StartUpdating();
@@ -995,7 +1010,7 @@ TEST_F(NetworkTest, TestNetworkMonitorIsAdapterAvailable) {
                         "FFFF:FFFF:FFFF:FFFF::", 0);
   list = AddIpv6Address(list, if_name2, "1000:2000:3000:4000:0:0:0:2",
                         "FFFF:FFFF:FFFF:FFFF::", 0);
-  NetworkManager::NetworkList result;
+  std::vector<std::unique_ptr<Network>> result;
 
   // Sanity check that both interfaces are included by default.
   FakeNetworkMonitorFactory factory;
@@ -1006,7 +1021,7 @@ TEST_F(NetworkTest, TestNetworkMonitorIsAdapterAvailable) {
   EXPECT_EQ(2u, result.size());
   bool changed;
   // This ensures we release the objects created in CallConvertIfAddrs.
-  MergeNetworkList(manager, result, &changed);
+  MergeNetworkList(manager, std::move(result), &changed);
   result.clear();
 
   // Now simulate one interface being unavailable.
@@ -1016,7 +1031,7 @@ TEST_F(NetworkTest, TestNetworkMonitorIsAdapterAvailable) {
   EXPECT_EQ(1u, result.size());
   EXPECT_EQ(if_name2, result[0]->name());
 
-  MergeNetworkList(manager, result, &changed);
+  MergeNetworkList(manager, std::move(result), &changed);
   ReleaseIfAddrs(list);
 }
 
@@ -1027,7 +1042,7 @@ TEST_F(NetworkTest, TestNetworkMonitorIsAdapterAvailable) {
 TEST_F(NetworkTest, TestMergeNetworkList) {
   PhysicalSocketServer socket_server;
   BasicNetworkManager manager(&socket_server);
-  NetworkManager::NetworkList list;
+  std::vector<std::unique_ptr<Network>> list;
 
   // Create 2 IPAddress classes with only last digit different.
   IPAddress ip1, ip2;
@@ -1035,17 +1050,17 @@ TEST_F(NetworkTest, TestMergeNetworkList) {
   EXPECT_TRUE(IPFromString("2400:4030:1:2c00:be30:0:0:2", &ip2));
 
   // Create 2 networks with the same prefix and length.
-  Network* net1 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
-  Network* net2 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
+  auto net1 = std::make_unique<Network>("em1", "em1", TruncateIP(ip1, 64), 64);
+  auto net2 = std::make_unique<Network>("em1", "em1", TruncateIP(ip1, 64), 64);
 
   // Add different IP into each.
   net1->AddIP(ip1);
   net2->AddIP(ip2);
 
-  list.push_back(net1);
-  list.push_back(net2);
+  list.push_back(std::move(net1));
+  list.push_back(std::move(net2));
   bool changed;
-  MergeNetworkList(manager, list, &changed);
+  MergeNetworkList(manager, std::move(list), &changed);
   EXPECT_TRUE(changed);
 
   std::vector<const Network*> list2 = manager.GetNetworks();
@@ -1069,39 +1084,40 @@ TEST_F(NetworkTest, TestMergeNetworkListWithInactiveNetworks) {
                    IPAddress(0x00010000U), 16);
   network1.AddIP(IPAddress(0x12345678));
   network2.AddIP(IPAddress(0x00010004));
-  NetworkManager::NetworkList list;
-  Network* net1 = new Network(network1);
-  list.push_back(net1);
+  std::vector<std::unique_ptr<Network>> list;
+  auto net1 = std::make_unique<Network>(network1);
+  const Network* const net1_ptr = net1.get();
+  list.push_back(std::move(net1));
   bool changed;
-  MergeNetworkList(manager, list, &changed);
+  MergeNetworkList(manager, std::move(list), &changed);
   EXPECT_TRUE(changed);
   list.clear();
 
   std::vector<const Network*> current = manager.GetNetworks();
   ASSERT_EQ(1U, current.size());
-  EXPECT_EQ(net1, current[0]);
+  EXPECT_EQ(net1_ptr, current[0]);
 
   list.clear();
-  Network* net2 = new Network(network2);
-  list.push_back(net2);
-  MergeNetworkList(manager, list, &changed);
+  auto net2 = std::make_unique<Network>(network2);
+  const Network* const net2_ptr = net2.get();
+  list.push_back(std::move(net2));
+  MergeNetworkList(manager, std::move(list), &changed);
   EXPECT_TRUE(changed);
   list.clear();
 
   current = manager.GetNetworks();
   ASSERT_EQ(1U, current.size());
-  EXPECT_EQ(net2, current[0]);
-
+  EXPECT_EQ(net2_ptr, current[0]);
   // Now network1 is inactive. Try to merge it again.
   list.clear();
-  list.push_back(new Network(network1));
-  MergeNetworkList(manager, list, &changed);
+  list.push_back(std::make_unique<Network>(network1));
+  MergeNetworkList(manager, std::move(list), &changed);
   EXPECT_TRUE(changed);
   list.clear();
   current = manager.GetNetworks();
   ASSERT_EQ(1U, current.size());
   EXPECT_TRUE(current[0]->active());
-  EXPECT_EQ(net1, current[0]);
+  EXPECT_EQ(net1_ptr, current[0]);
 }
 
 // Test that the filtering logic follows the defined ruleset in network.h.
@@ -1220,9 +1236,10 @@ TEST_F(NetworkTest, MAYBE_DefaultLocalAddress) {
   EXPECT_TRUE(IPFromString("abcd::1234:5678:abcd:2222", &ip2));
   ipv6_network.AddIP(ip1);
   ipv6_network.AddIP(ip2);
-  BasicNetworkManager::NetworkList list(1, new Network(ipv6_network));
+  std::vector<std::unique_ptr<Network>> list;
+  list.push_back(std::make_unique<Network>(ipv6_network));
   bool changed;
-  MergeNetworkList(manager, list, &changed);
+  MergeNetworkList(manager, std::move(list), &changed);
   // If the set default address is not in any network, GetDefaultLocalAddress
   // should return it.
   IPAddress ip3;
@@ -1247,15 +1264,15 @@ TEST_F(NetworkTest, TestWhenNetworkListChangeReturnsChangedFlag) {
 
   IPAddress ip1;
   EXPECT_TRUE(IPFromString("2400:4030:1:2c00:be30:0:0:1", &ip1));
-  Network* net1 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
+  auto net1 = std::make_unique<Network>("em1", "em1", TruncateIP(ip1, 64), 64);
   net1->set_type(ADAPTER_TYPE_CELLULAR_3G);
   net1->AddIP(ip1);
-  NetworkManager::NetworkList list;
-  list.push_back(net1);
+  std::vector<std::unique_ptr<Network>> list;
+  list.push_back(std::move(net1));
 
   {
     bool changed;
-    MergeNetworkList(manager, list, &changed);
+    MergeNetworkList(manager, std::move(list), &changed);
     EXPECT_TRUE(changed);
     std::vector<const Network*> list2 = manager.GetNetworks();
     EXPECT_EQ(list2.size(), 1uL);
@@ -1264,13 +1281,14 @@ TEST_F(NetworkTest, TestWhenNetworkListChangeReturnsChangedFlag) {
 
   // Modify net1 from 3G to 4G
   {
-    Network* net2 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
+    auto net2 =
+        std::make_unique<Network>("em1", "em1", TruncateIP(ip1, 64), 64);
     net2->set_type(ADAPTER_TYPE_CELLULAR_4G);
     net2->AddIP(ip1);
     list.clear();
-    list.push_back(net2);
+    list.push_back(std::move(net2));
     bool changed;
-    MergeNetworkList(manager, list, &changed);
+    MergeNetworkList(manager, std::move(list), &changed);
 
     // Change from 3G to 4G shall not trigger OnNetworksChanged,
     // i.e changed = false.
@@ -1282,13 +1300,14 @@ TEST_F(NetworkTest, TestWhenNetworkListChangeReturnsChangedFlag) {
 
   // Don't modify.
   {
-    Network* net2 = new Network("em1", "em1", TruncateIP(ip1, 64), 64);
+    auto net2 =
+        std::make_unique<Network>("em1", "em1", TruncateIP(ip1, 64), 64);
     net2->set_type(ADAPTER_TYPE_CELLULAR_4G);
     net2->AddIP(ip1);
     list.clear();
-    list.push_back(net2);
+    list.push_back(std::move(net2));
     bool changed;
-    MergeNetworkList(manager, list, &changed);
+    MergeNetworkList(manager, std::move(list), &changed);
 
     // No change.
     EXPECT_FALSE(changed);
@@ -1344,7 +1363,7 @@ TEST_F(NetworkTest, WebRTC_BindUsingInterfaceName) {
   list = AddIpv6Address(list, if_name1, "1000:2000:3000:4000:0:0:0:1",
                         "FFFF:FFFF:FFFF:FFFF::", 0);
   list = AddIpv4Address(list, if_name2, "192.168.0.2", "255.255.255.255");
-  NetworkManager::NetworkList result;
+  std::vector<std::unique_ptr<Network>> result;
 
   // Sanity check that both interfaces are included by default.
   FakeNetworkMonitorFactory factory;
@@ -1356,7 +1375,7 @@ TEST_F(NetworkTest, WebRTC_BindUsingInterfaceName) {
   ReleaseIfAddrs(list);
   bool changed;
   // This ensures we release the objects created in CallConvertIfAddrs.
-  MergeNetworkList(manager, result, &changed);
+  MergeNetworkList(manager, std::move(result), &changed);
   result.clear();
 
   FakeNetworkMonitor* network_monitor = GetNetworkMonitor(manager);
