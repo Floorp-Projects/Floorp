@@ -88,8 +88,6 @@
           "a=maxptime:60\r\n"
           "a=ssrc:1504474588 cname:V+FdIC5AJpxLhdYQ\r\n"
           "a=ssrc:1504474588 msid:ARDAMS ARDAMSa0\r\n"
-          "a=ssrc:1504474588 mslabel:ARDAMS\r\n"
-          "a=ssrc:1504474588 label:ARDAMSa0\r\n"
           "m=video 9 UDP/TLS/RTP/SAVPF 100 116 117 96\r\n"
           "c=IN IP4 0.0.0.0\r\n"
           "a=rtcp:9 IN IP4 0.0.0.0\r\n"
@@ -118,12 +116,8 @@
           "a=ssrc-group:FID 498297514 1644357692\r\n"
           "a=ssrc:498297514 cname:V+FdIC5AJpxLhdYQ\r\n"
           "a=ssrc:498297514 msid:ARDAMS ARDAMSv0\r\n"
-          "a=ssrc:498297514 mslabel:ARDAMS\r\n"
-          "a=ssrc:498297514 label:ARDAMSv0\r\n"
           "a=ssrc:1644357692 cname:V+FdIC5AJpxLhdYQ\r\n"
-          "a=ssrc:1644357692 msid:ARDAMS ARDAMSv0\r\n"
-          "a=ssrc:1644357692 mslabel:ARDAMS\r\n"
-          "a=ssrc:1644357692 label:ARDAMSv0\r\n";
+          "a=ssrc:1644357692 msid:ARDAMS ARDAMSv0\r\n";
 }
 
 @end
