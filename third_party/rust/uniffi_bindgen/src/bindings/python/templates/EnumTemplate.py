@@ -4,18 +4,18 @@
 # when none of the variants have associated data, or a generic nested-class
 # construct when they do.
 #}
-{%- let e = self.inner() %}
+{%- let e = ci.get_enum_definition(name).unwrap() %}
 {% if e.is_flat() %}
 
-class {{ e|type_name }}(enum.Enum):
+class {{ type_name }}(enum.Enum):
     {% for variant in e.variants() -%}
     {{ variant.name()|enum_variant_py }} = {{ loop.index }}
     {% endfor %}
 {% else %}
 
-class {{ e|type_name }}:
+class {{ type_name }}:
     def __init__(self):
-        raise RuntimeError("{{ e|type_name }} cannot be instantiated directly")
+        raise RuntimeError("{{ type_name }} cannot be instantiated directly")
 
     # Each enum variant is a nested class of the enum itself.
     {% for variant in e.variants() -%}
@@ -30,7 +30,7 @@ class {{ e|type_name }}:
             {% endif %}
 
         def __str__(self):
-            return "{{ e|type_name }}.{{ variant.name()|enum_variant_py }}({% for field in variant.fields() %}{{ field.name() }}={}{% if loop.last %}{% else %}, {% endif %}{% endfor %})".format({% for field in variant.fields() %}self.{{ field.name() }}{% if loop.last %}{% else %}, {% endif %}{% endfor %})
+            return "{{ type_name }}.{{ variant.name()|enum_variant_py }}({% for field in variant.fields() %}{{ field.name()|var_name }}={}{% if loop.last %}{% else %}, {% endif %}{% endfor %})".format({% for field in variant.fields() %}self.{{ field.name()|var_name }}{% if loop.last %}{% else %}, {% endif %}{% endfor %})
 
         def __eq__(self, other):
             if not other.is_{{ variant.name()|var_name }}():
@@ -46,19 +46,19 @@ class {{ e|type_name }}:
     # whether an instance is that variant.
     {% for variant in e.variants() -%}
     def is_{{ variant.name()|var_name }}(self):
-        return isinstance(self, {{ e|type_name }}.{{ variant.name()|enum_variant_py }})
+        return isinstance(self, {{ type_name }}.{{ variant.name()|enum_variant_py }})
     {% endfor %}
 
 # Now, a little trick - we make each nested variant class be a subclass of the main
 # enum class, so that method calls and instance checks etc will work intuitively.
 # We might be able to do this a little more neatly with a metaclass, but this'll do.
 {% for variant in e.variants() -%}
-{{ e|type_name }}.{{ variant.name()|enum_variant_py }} = type("{{ e|type_name }}.{{ variant.name()|enum_variant_py }}", ({{ e|type_name }}.{{variant.name()|enum_variant_py}}, {{ e|type_name }},), {})
+{{ type_name }}.{{ variant.name()|enum_variant_py }} = type("{{ type_name }}.{{ variant.name()|enum_variant_py }}", ({{ type_name }}.{{variant.name()|enum_variant_py}}, {{ type_name }},), {})
 {% endfor %}
 
 {% endif %}
 
-class {{ e|ffi_converter_name }}(FfiConverterRustBuffer):
+class {{ ffi_converter_name }}(FfiConverterRustBuffer):
     @staticmethod
     def read(buf):
         variant = buf.readI32()
@@ -66,9 +66,9 @@ class {{ e|ffi_converter_name }}(FfiConverterRustBuffer):
         {%- for variant in e.variants() %}
         if variant == {{ loop.index }}:
             {%- if e.is_flat() %}
-            return {{ e|type_name }}.{{variant.name()|enum_variant_py}}
+            return {{ type_name }}.{{variant.name()|enum_variant_py}}
             {%- else %}
-            return {{ e|type_name }}.{{variant.name()|enum_variant_py}}(
+            return {{ type_name }}.{{variant.name()|enum_variant_py}}(
                 {%- for field in variant.fields() %}
                 {{ field|read_fn }}(buf),
                 {%- endfor %}
@@ -80,7 +80,7 @@ class {{ e|ffi_converter_name }}(FfiConverterRustBuffer):
     def write(value, buf):
         {%- for variant in e.variants() %}
         {%- if e.is_flat() %}
-        if value == {{ e|type_name }}.{{ variant.name()|enum_variant_py }}:
+        if value == {{ type_name }}.{{ variant.name()|enum_variant_py }}:
             buf.writeI32({{ loop.index }})
         {%- else %}
         if value.is_{{ variant.name()|var_name }}():
