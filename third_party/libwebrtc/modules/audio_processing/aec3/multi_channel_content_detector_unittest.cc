@@ -10,6 +10,7 @@
 
 #include "modules/audio_processing/aec3/multi_channel_content_detector.h"
 
+#include "system_wrappers/include/metrics.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -352,6 +353,118 @@ TEST_P(MultiChannelContentDetectorHysteresisBehavior,
     EXPECT_TRUE(mc.IsProperMultiChannelContentDetected());
     EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetected());
   }
+}
+
+class MultiChannelContentDetectorMetricsDisabled
+    : public ::testing::Test,
+      public ::testing::WithParamInterface<std::tuple<bool, int>> {};
+
+INSTANTIATE_TEST_SUITE_P(
+    /*no prefix*/,
+    MultiChannelContentDetectorMetricsDisabled,
+    ::testing::Values(std::tuple<bool, int>(false, 2),
+                      std::tuple<bool, int>(true, 1)));
+
+// Test that no metrics are logged when they are clearly uninteresting and would
+// dilute relevant data: when the reference audio is single channel, or when
+// dynamic detection is disabled.
+TEST_P(MultiChannelContentDetectorMetricsDisabled, ReportsNoMetrics) {
+  metrics::Reset();
+  constexpr int kNumFramesPerSecond = 100;
+  const bool detect_stereo_content = std::get<0>(GetParam());
+  const int channel_count = std::get<1>(GetParam());
+  std::vector<std::vector<std::vector<float>>> audio_frame = {
+      std::vector<std::vector<float>>(channel_count,
+                                      std::vector<float>(160, 100.0f))};
+  {
+    MultiChannelContentDetector mc(
+        /*detect_stereo_content=*/detect_stereo_content,
+        /*num_render_input_channels=*/channel_count,
+        /*detection_threshold=*/0.0f,
+        /*stereo_detection_timeout_threshold_seconds=*/1,
+        /*stereo_detection_hysteresis_seconds=*/0.0f);
+    for (int k = 0; k < 20 * kNumFramesPerSecond; ++k) {
+      mc.UpdateDetection(audio_frame);
+    }
+  }
+  EXPECT_METRIC_EQ(
+      0, metrics::NumSamples("WebRTC.Audio.EchoCanceller."
+                             "ProcessingPersistentMultichannelContent"));
+  EXPECT_METRIC_EQ(
+      0, metrics::NumSamples("WebRTC.Audio.EchoCanceller."
+                             "PersistentMultichannelContentEverDetected"));
+}
+
+// Tests that after 3 seconds, no metrics are reported.
+TEST(MultiChannelContentDetectorMetrics, ReportsNoMetricsForShortLifetime) {
+  metrics::Reset();
+  constexpr int kNumFramesPerSecond = 100;
+  constexpr int kTooFewFramesToLogMetrics = 3 * kNumFramesPerSecond;
+  std::vector<std::vector<std::vector<float>>> audio_frame = {
+      std::vector<std::vector<float>>(2, std::vector<float>(160, 100.0f))};
+  {
+    MultiChannelContentDetector mc(
+        /*detect_stereo_content=*/true,
+        /*num_render_input_channels=*/2,
+        /*detection_threshold=*/0.0f,
+        /*stereo_detection_timeout_threshold_seconds=*/1,
+        /*stereo_detection_hysteresis_seconds=*/0.0f);
+    for (int k = 0; k < kTooFewFramesToLogMetrics; ++k) {
+      mc.UpdateDetection(audio_frame);
+    }
+  }
+  EXPECT_METRIC_EQ(
+      0, metrics::NumSamples("WebRTC.Audio.EchoCanceller."
+                             "ProcessingPersistentMultichannelContent"));
+  EXPECT_METRIC_EQ(
+      0, metrics::NumSamples("WebRTC.Audio.EchoCanceller."
+                             "PersistentMultichannelContentEverDetected"));
+}
+
+// Tests that after 25 seconds, metrics are reported.
+TEST(MultiChannelContentDetectorMetrics, ReportsMetrics) {
+  metrics::Reset();
+  constexpr int kNumFramesPerSecond = 100;
+  std::vector<std::vector<std::vector<float>>> true_stereo_frame = {
+      {std::vector<float>(160, 100.0f), std::vector<float>(160, 101.0f)}};
+  std::vector<std::vector<std::vector<float>>> fake_stereo_frame = {
+      {std::vector<float>(160, 100.0f), std::vector<float>(160, 100.0f)}};
+  {
+    MultiChannelContentDetector mc(
+        /*detect_stereo_content=*/true,
+        /*num_render_input_channels=*/2,
+        /*detection_threshold=*/0.0f,
+        /*stereo_detection_timeout_threshold_seconds=*/1,
+        /*stereo_detection_hysteresis_seconds=*/0.0f);
+    for (int k = 0; k < 10 * kNumFramesPerSecond; ++k) {
+      mc.UpdateDetection(true_stereo_frame);
+    }
+    for (int k = 0; k < 15 * kNumFramesPerSecond; ++k) {
+      mc.UpdateDetection(fake_stereo_frame);
+    }
+  }
+  // After 10 seconds of true stereo and the remainder fake stereo, we expect
+  // one lifetime metric sample (multichannel detected) and two periodic samples
+  // (one multichannel, one mono).
+
+  // Check lifetime metric.
+  EXPECT_METRIC_EQ(
+      1, metrics::NumSamples("WebRTC.Audio.EchoCanceller."
+                             "PersistentMultichannelContentEverDetected"));
+  EXPECT_METRIC_EQ(
+      1, metrics::NumEvents("WebRTC.Audio.EchoCanceller."
+                             "PersistentMultichannelContentEverDetected", 1));
+
+  // Check periodic metric.
+  EXPECT_METRIC_EQ(
+      2, metrics::NumSamples("WebRTC.Audio.EchoCanceller."
+                             "ProcessingPersistentMultichannelContent"));
+  EXPECT_METRIC_EQ(
+      1, metrics::NumEvents("WebRTC.Audio.EchoCanceller."
+                             "ProcessingPersistentMultichannelContent", 0));
+  EXPECT_METRIC_EQ(
+      1, metrics::NumEvents("WebRTC.Audio.EchoCanceller."
+                             "ProcessingPersistentMultichannelContent", 1));
 }
 
 }  // namespace webrtc
