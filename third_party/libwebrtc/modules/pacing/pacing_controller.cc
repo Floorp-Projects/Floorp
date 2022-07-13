@@ -193,7 +193,15 @@ void PacingController::SetProbingEnabled(bool enabled) {
 
 void PacingController::SetPacingRates(DataRate pacing_rate,
                                       DataRate padding_rate) {
-  RTC_DCHECK_GT(pacing_rate, DataRate::Zero());
+  static constexpr DataRate kMaxRate = DataRate::KilobitsPerSec(100'000);
+  RTC_CHECK_GT(pacing_rate, DataRate::Zero());
+  RTC_CHECK_GE(padding_rate, DataRate::Zero());
+  if (pacing_rate > kMaxRate || padding_rate > kMaxRate) {
+    RTC_LOG(LS_WARNING) << "Very high pacing rates ( > " << kMaxRate.kbps()
+                        << " kbps) configured: pacing = " << pacing_rate.kbps()
+                        << " kbps, padding = " << padding_rate.kbps()
+                        << " kbps.";
+  }
   media_rate_ = pacing_rate;
   padding_rate_ = padding_rate;
   pacing_bitrate_ = pacing_rate;
@@ -478,7 +486,12 @@ void PacingController::ProcessPackets() {
   }
 
   DataSize data_sent = DataSize::Zero();
-  while (true) {
+  // Circuit breaker, making sure main loop isn't forever.
+  static constexpr int kMaxIterations = 1 << 16;
+  int iteration = 0;
+  int packets_sent = 0;
+  int padding_packets_generated = 0;
+  for (; iteration < kMaxIterations; ++iteration) {
     // Fetch packet, so long as queue is not empty or budget is not
     // exhausted.
     std::unique_ptr<RtpPacketToSend> rtp_packet =
@@ -490,6 +503,7 @@ void PacingController::ProcessPackets() {
         std::vector<std::unique_ptr<RtpPacketToSend>> padding_packets =
             packet_sender_->GeneratePadding(padding_to_add);
         if (!padding_packets.empty()) {
+          padding_packets_generated += padding_packets.size();
           for (auto& packet : padding_packets) {
             EnqueuePacket(std::move(packet));
           }
@@ -520,6 +534,7 @@ void PacingController::ProcessPackets() {
         EnqueuePacket(std::move(packet));
       }
       data_sent += packet_size;
+      ++packets_sent;
 
       // Send done, update send time.
       OnPacketSent(packet_type, packet_size, now);
@@ -544,6 +559,19 @@ void PacingController::ProcessPackets() {
         UpdateBudgetWithElapsedTime(UpdateTimeAndGetElapsed(target_send_time));
       }
     }
+  }
+
+  if (iteration >= kMaxIterations) {
+    // Circuit break activated. Log warning, adjust send time and return.
+    // TODO(sprang): Consider completely clearing state.
+    RTC_LOG(LS_ERROR) << "PacingController exceeded max iterations in "
+                         "send-loop: packets sent = "
+                      << packets_sent << ", padding packets generated = "
+                      << padding_packets_generated
+                      << ", bytes sent = " << data_sent.bytes();
+    last_send_time_ = now;
+    last_process_time_ = now;
+    return;
   }
 
   if (is_probing) {
