@@ -18,8 +18,6 @@ import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.InactiveTabsAdapter
 import org.mozilla.fenix.tabstray.browser.InactiveTabsInteractor
-import org.mozilla.fenix.tabstray.browser.TabGroupAdapter
-import org.mozilla.fenix.tabstray.browser.TitleHeaderAdapter
 import org.mozilla.fenix.tabstray.viewholders.AbstractPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.NormalBrowserPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.PrivateBrowserPageViewHolder
@@ -51,8 +49,6 @@ class TrayPagerAdapter(
                 inactiveTabsInteractor = inactiveTabsInteractor,
                 featureName = INACTIVE_TABS_FEATURE_NAME,
             ),
-            TabGroupAdapter(context, browserInteractor, tabsTrayStore, TAB_GROUP_FEATURE_NAME, lifecycleOwner),
-            TitleHeaderAdapter(),
             BrowserTabsAdapter(context, browserInteractor, tabsTrayStore, TABS_TRAY_FEATURE_NAME, lifecycleOwner)
         )
     }
@@ -139,7 +135,6 @@ class TrayPagerAdapter(
 
         // Telemetry keys for identifying from which app features the a was opened / closed.
         const val TABS_TRAY_FEATURE_NAME = "Tabs tray"
-        const val TAB_GROUP_FEATURE_NAME = "Tab group"
         const val INACTIVE_TABS_FEATURE_NAME = "Inactive tabs"
 
         val POSITION_NORMAL_TABS = Page.NormalTabs.ordinal

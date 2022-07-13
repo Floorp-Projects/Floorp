@@ -22,10 +22,9 @@ class NormalTabsBinding(
     private val tabsTray: TabsTray
 ) : AbstractBinding<TabsTrayState>(store) {
     override suspend fun onState(flow: Flow<TabsTrayState>) {
-        flow.ifChanged { Pair(it.normalTabs, it.searchTermPartition) }
+        flow.ifChanged { it.normalTabs }
             .collect {
-                // Getting the selectedTabId from the BrowserStore at a different time might lead to a race.
-                tabsTray.updateTabs(it.normalTabs, it.searchTermPartition, browserStore.state.selectedTabId)
+                tabsTray.updateTabs(it.normalTabs, null, browserStore.state.selectedTabId)
             }
     }
 }

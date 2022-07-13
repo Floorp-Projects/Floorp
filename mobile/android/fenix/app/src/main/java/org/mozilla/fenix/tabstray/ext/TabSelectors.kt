@@ -7,11 +7,8 @@ package org.mozilla.fenix.tabstray.ext
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.TabGroup
 import mozilla.components.browser.state.state.TabSessionState
 import org.mozilla.fenix.ext.maxActiveTime
-import org.mozilla.fenix.tabstray.SEARCH_TERM_TAB_GROUPS
-import org.mozilla.fenix.tabstray.SEARCH_TERM_TAB_GROUPS_MIN_SIZE
 
 /**
  * The currently selected tab if there's one that is private.
@@ -38,24 +35,13 @@ fun BrowserState.findPrivateTab(tabId: String): TabSessionState? {
  * The list of normal tabs in the tabs tray filtered appropriately based on feature flags.
  */
 fun BrowserState.getNormalTrayTabs(
-    searchTermTabGroupsAreEnabled: Boolean,
     inactiveTabsEnabled: Boolean
 ): List<TabSessionState> {
-    val tabGroupsTabIds = getTabGroups()?.flatMap { it.tabIds } ?: emptyList()
     return normalTabs.run {
-        if (searchTermTabGroupsAreEnabled && tabGroupsTabIds.isNotEmpty() && inactiveTabsEnabled) {
-            filter { it.isNormalTabActive(maxActiveTime) }.filter { tabGroupsTabIds.contains(it.id) }
-        } else if (inactiveTabsEnabled) {
+        if (inactiveTabsEnabled) {
             filter { it.isNormalTabActive(maxActiveTime) }
-        } else if (searchTermTabGroupsAreEnabled && tabGroupsTabIds.isNotEmpty()) {
-            filter { it.isNormalTab() }.filter { tabGroupsTabIds.contains(it.id) }
         } else {
             this
         }
     }
-}
-
-fun BrowserState.getTabGroups(): List<TabGroup>? {
-    return tabPartitions[SEARCH_TERM_TAB_GROUPS]?.tabGroups
-        ?.filter { it.tabIds.size >= SEARCH_TERM_TAB_GROUPS_MIN_SIZE }
 }

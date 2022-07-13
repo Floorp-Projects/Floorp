@@ -722,7 +722,7 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Private Mode)</string>
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Other tabs</string>
+    <string name="tab_tray_header_title_1" moz:removedIn="104" tools:ignore="UnusedResources">Other tabs</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
