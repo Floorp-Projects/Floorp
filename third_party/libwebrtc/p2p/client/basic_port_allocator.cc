@@ -30,6 +30,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/strings/string_builder.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
@@ -139,6 +140,14 @@ bool IsAllowedByCandidateFilter(const Candidate& c, uint32_t filter) {
     return ((filter & CF_HOST) != 0);
   }
   return false;
+}
+
+std::string NetworksToString(const std::vector<const rtc::Network*>& networks) {
+  rtc::StringBuilder ost;
+  for (auto n : networks) {
+    ost << n->name() << " ";
+  }
+  return ost.Release();
 }
 
 }  // namespace
@@ -801,7 +810,7 @@ void BasicPortAllocatorSession::DoAllocate(bool disable_equivalent) {
         << "Machine has no networks; no ports will be allocated";
     done_signal_needed = true;
   } else {
-    RTC_LOG(LS_INFO) << "Allocate ports on " << networks.size() << " networks";
+    RTC_LOG(LS_INFO) << "Allocate ports on " << NetworksToString(networks);
     PortConfiguration* config =
         configs_.empty() ? nullptr : configs_.back().get();
     for (uint32_t i = 0; i < networks.size(); ++i) {
