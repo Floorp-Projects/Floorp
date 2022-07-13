@@ -376,10 +376,6 @@ class PeerConnectionE2EQualityTestFixture {
   // peer should receive and in which resolution (width x height x fps).
   class VideoSubscription {
    public:
-    // Kept for backward compatibility
-    // TODO(titovartem): remove it when downstream projects will stop use it.
-    using Resolution = VideoResolution;
-
     // Returns the resolution constructed as maximum from all resolution
     // dimensions: width, height and fps.
     static absl::optional<VideoResolution> GetMaxResolution(
