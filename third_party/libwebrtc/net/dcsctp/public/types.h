@@ -107,10 +107,11 @@ constexpr inline DurationMs operator-(TimeMs lhs, TimeMs rhs) {
 
 // The maximum number of times the socket should attempt to retransmit a
 // message which fails the first time in unreliable mode.
-class MaxRetransmits : public webrtc::StrongAlias<class TimeMsTag, uint16_t> {
+class MaxRetransmits
+    : public webrtc::StrongAlias<class MaxRetransmitsTag, uint16_t> {
  public:
   constexpr explicit MaxRetransmits(const UnderlyingType& v)
-      : webrtc::StrongAlias<class TimeMsTag, uint16_t>(v) {}
+      : webrtc::StrongAlias<class MaxRetransmitsTag, uint16_t>(v) {}
 
   // There should be no limit - the message should be sent reliably.
   static constexpr MaxRetransmits NoLimit() {
