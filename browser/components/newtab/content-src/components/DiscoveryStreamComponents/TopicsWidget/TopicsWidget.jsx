@@ -96,7 +96,7 @@ export function _TopicsWidget(props) {
       </div>
       <SafeAnchor
         className="ds-topics-widget-button button primary"
-        url={`https://getpocket.com/explore${queryParams}`}
+        url={`https://getpocket.com/${queryParams}`}
         dispatch={dispatch}
         onLinkClick={() => onLinkClick("more-topics")}
       >

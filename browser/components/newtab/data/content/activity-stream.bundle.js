@@ -8120,7 +8120,7 @@ function _TopicsWidget(props) {
     className: "ds-topics-widget-list-container"
   }, /*#__PURE__*/external_React_default().createElement("ul", null, topics.map(mapTopicItem))), /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
     className: "ds-topics-widget-button button primary",
-    url: `https://getpocket.com/explore${queryParams}`,
+    url: `https://getpocket.com/${queryParams}`,
     dispatch: dispatch,
     onLinkClick: () => onLinkClick("more-topics")
   }, "More Topics"), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
