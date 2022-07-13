@@ -57,7 +57,10 @@ std::string GetVadModeLabel(TransientSuppressor::VadMode vad_mode) {
 
 }  // namespace
 
-TransientSuppressorImpl::TransientSuppressorImpl(VadMode vad_mode)
+TransientSuppressorImpl::TransientSuppressorImpl(VadMode vad_mode,
+                                                 int sample_rate_hz,
+                                                 int detector_rate_hz,
+                                                 int num_channels)
     : vad_mode_(vad_mode),
       analyzed_audio_is_silent_(false),
       data_length_(0),
@@ -77,6 +80,7 @@ TransientSuppressorImpl::TransientSuppressorImpl(VadMode vad_mode)
       seed_(182),
       using_reference_(false) {
   RTC_LOG(LS_INFO) << "VAD mode: " << GetVadModeLabel(vad_mode_);
+  Initialize(sample_rate_hz, detector_rate_hz, num_channels);
 }
 
 TransientSuppressorImpl::~TransientSuppressorImpl() {}

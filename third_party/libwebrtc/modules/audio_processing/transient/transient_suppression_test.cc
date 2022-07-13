@@ -166,9 +166,10 @@ void void_main() {
 
   Agc agc;
 
-  TransientSuppressorImpl suppressor(TransientSuppressor::VadMode::kDefault);
-  suppressor.Initialize(absl::GetFlag(FLAGS_sample_rate_hz), detection_rate_hz,
-                        absl::GetFlag(FLAGS_num_channels));
+  TransientSuppressorImpl suppressor(TransientSuppressor::VadMode::kDefault,
+                                     absl::GetFlag(FLAGS_sample_rate_hz),
+                                     detection_rate_hz,
+                                     absl::GetFlag(FLAGS_num_channels));
 
   const size_t audio_buffer_size = absl::GetFlag(FLAGS_chunk_size_ms) *
                                    absl::GetFlag(FLAGS_sample_rate_hz) / 1000;

@@ -23,8 +23,8 @@ TEST_P(TransientSuppressorImplTest,
        TypingDetectionLogicWorksAsExpectedForMono) {
   static const int kNumChannels = 1;
 
-  TransientSuppressorImpl ts(GetParam());
-  ts.Initialize(ts::kSampleRate16kHz, ts::kSampleRate16kHz, kNumChannels);
+  TransientSuppressorImpl ts(GetParam(), ts::kSampleRate16kHz,
+                             ts::kSampleRate16kHz, kNumChannels);
 
   // Each key-press enables detection.
   EXPECT_FALSE(ts.detection_enabled_);

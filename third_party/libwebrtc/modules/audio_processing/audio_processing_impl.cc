@@ -1705,15 +1705,17 @@ void AudioProcessingImpl::InitializeTransientSuppressor() {
     // Attempt to create a transient suppressor, if one is not already created.
     if (!submodules_.transient_suppressor) {
       submodules_.transient_suppressor = CreateTransientSuppressor(
-          submodule_creation_overrides_, transient_suppressor_vad_mode_);
-    }
-    if (submodules_.transient_suppressor) {
+          submodule_creation_overrides_, transient_suppressor_vad_mode_,
+          proc_fullband_sample_rate_hz(), capture_nonlocked_.split_rate,
+          num_proc_channels());
+      if (!submodules_.transient_suppressor) {
+        RTC_LOG(LS_WARNING)
+            << "No transient suppressor created (probably disabled)";
+      }
+    } else {
       submodules_.transient_suppressor->Initialize(
           proc_fullband_sample_rate_hz(), capture_nonlocked_.split_rate,
           num_proc_channels());
-    } else {
-      RTC_LOG(LS_WARNING)
-          << "No transient suppressor created (probably disabled)";
     }
   } else {
     submodules_.transient_suppressor.reset();
