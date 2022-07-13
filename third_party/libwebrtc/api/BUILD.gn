@@ -1204,6 +1204,7 @@ if (rtc_include_tests) {
       ":time_controller",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
+      "../rtc_base:platform_thread",
       "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_event",
       "../rtc_base:rtc_task_queue",
