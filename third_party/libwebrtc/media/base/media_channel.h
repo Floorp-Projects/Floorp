@@ -137,6 +137,8 @@ struct VideoOptions {
   // Force screencast to use a minimum bitrate. This flag comes from
   // the PeerConnection constraint 'googScreencastMinBitrate'. It is
   // copied to the encoder config by WebRtcVideoChannel.
+  // TODO(https://crbug.com/1315155): Remove the ability to set it in Chromium
+  // and delete this flag (it should default to 100 kbps).
   absl::optional<int> screencast_min_bitrate_kbps;
   // Set by screencast sources. Implies selection of encoding settings
   // suitable for screencast. Most likely not the right way to do
