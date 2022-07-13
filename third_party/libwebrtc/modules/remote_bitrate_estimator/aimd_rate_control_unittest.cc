@@ -351,11 +351,13 @@ TEST(AimdRateControlTest, EstimateNotLimitedByNetworkEstimateIfDisabled) {
             network_estimate.link_capacity_upper);
 }
 
-TEST(AimdRateControlTest, EstimateLimitedByNetworkEstimateInAlrIfSet) {
+TEST(AimdRateControlTest,
+     EstimateSlowlyIncreaseToUpperLinkCapacityEstimateIfConfigured) {
   // Even if alr is detected, the delay based estimator is allowed to increase
   // up to a percentage of upper link capacity.
   test::ScopedFieldTrials override_field_trials(
-      "WebRTC-Bwe-EstimateBoundedIncrease/ratio:0.85,ignore_acked:true/"
+      "WebRTC-Bwe-EstimateBoundedIncrease/"
+      "ratio:0.85,ignore_acked:true,immediate_incr:false/"
       "WebRTC-DontIncreaseDelayBasedBweInAlr/Enabled/");
   auto states = CreateAimdRateControlStates(/*send_side=*/true);
   constexpr int kInitialBitrateBps = 123000;
@@ -365,11 +367,40 @@ TEST(AimdRateControlTest, EstimateLimitedByNetworkEstimateInAlrIfSet) {
   NetworkStateEstimate network_estimate;
   network_estimate.link_capacity_upper = DataRate::KilobitsPerSec(200);
   states.aimd_rate_control->SetNetworkStateEstimate(network_estimate);
-  for (int i = 0; i < 100; ++i) {
+  for (int i = 0; i < 10; ++i) {
+    UpdateRateControl(states, BandwidthUsage::kBwNormal, absl::nullopt,
+                      states.simulated_clock->TimeInMilliseconds());
+    states.simulated_clock->AdvanceTimeMilliseconds(100);
+    EXPECT_LT(states.aimd_rate_control->LatestEstimate(),
+              network_estimate.link_capacity_upper * 0.85);
+  }
+  for (int i = 0; i < 50; ++i) {
     UpdateRateControl(states, BandwidthUsage::kBwNormal, absl::nullopt,
                       states.simulated_clock->TimeInMilliseconds());
     states.simulated_clock->AdvanceTimeMilliseconds(100);
   }
+  EXPECT_EQ(states.aimd_rate_control->LatestEstimate(),
+            network_estimate.link_capacity_upper * 0.85);
+}
+
+TEST(AimdRateControlTest,
+     EstimateImmediatelyIncreaseToUpperLinkCapacityEstimateIfConfigured) {
+  // Even if alr is detected, the delay based estimator is allowed to increase
+  // up to a percentage of upper link capacity.
+  test::ScopedFieldTrials override_field_trials(
+      "WebRTC-Bwe-EstimateBoundedIncrease/"
+      "ratio:0.85,ignore_acked:true,immediate_incr:true/"
+      "WebRTC-DontIncreaseDelayBasedBweInAlr/Enabled/");
+  auto states = CreateAimdRateControlStates(/*send_side=*/true);
+  constexpr int kInitialBitrateBps = 123000;
+  SetEstimate(states, kInitialBitrateBps);
+  states.aimd_rate_control->SetInApplicationLimitedRegion(true);
+
+  NetworkStateEstimate network_estimate;
+  network_estimate.link_capacity_upper = DataRate::KilobitsPerSec(200);
+  states.aimd_rate_control->SetNetworkStateEstimate(network_estimate);
+  UpdateRateControl(states, BandwidthUsage::kBwNormal, absl::nullopt,
+                    states.simulated_clock->TimeInMilliseconds());
   EXPECT_EQ(states.aimd_rate_control->LatestEstimate(),
             network_estimate.link_capacity_upper * 0.85);
 }

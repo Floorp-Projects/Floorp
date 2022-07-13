@@ -98,7 +98,7 @@ AimdRateControl::AimdRateControl(const FieldTrialsView* key_value_config,
   ParseFieldTrial(
       {&disable_estimate_bounded_increase_, &estimate_bounded_increase_ratio_,
        &ignore_throughput_limit_if_network_estimate_,
-       &ignore_network_estimate_decrease_},
+       &ignore_network_estimate_decrease_, &increase_to_network_estimate_},
       key_value_config->Lookup("WebRTC-Bwe-EstimateBoundedIncrease"));
   // E.g
   // WebRTC-BweAimdRateControlConfig/initial_backoff_interval:100ms/
@@ -301,7 +301,10 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
 
       if (current_bitrate_ < increase_limit) {
         DataRate increased_bitrate = DataRate::MinusInfinity();
-        if (link_capacity_.has_estimate()) {
+        if (increase_to_network_estimate_ && network_estimate_ &&
+            network_estimate_->link_capacity_upper.IsFinite()) {
+          increased_bitrate = increase_limit;
+        } else if (link_capacity_.has_estimate()) {
           // The link_capacity estimate is reset if the measured throughput
           // is too far from the estimate. We can therefore assume that our
           // target rate is reasonably close to link capacity and use additive
