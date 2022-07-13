@@ -62,6 +62,7 @@ if (rtc_include_tests) {
       "../../api:time_controller",
       "../../api/units:time_delta",
       "../../rtc_base",
+      "../../rtc_base:location",
       "../../rtc_base:macromagic",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_event",
