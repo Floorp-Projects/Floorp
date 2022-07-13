@@ -42,10 +42,6 @@ internal class MediaNotification(
         return buildNotification(data, mediaSessionCompat, sessionState !is CustomTabSessionState)
     }
 
-    fun createDummy(mediaSessionCompat: MediaSessionCompat): Notification {
-        return buildNotification(NotificationData(), mediaSessionCompat, false)
-    }
-
     private fun buildNotification(
         data: NotificationData,
         mediaSession: MediaSessionCompat,
@@ -140,8 +136,7 @@ private suspend fun SessionState.toNotificationData(
                 getUpdateNotificationFlag()
             )
         )
-        // Dummy notification that is only used to satisfy the requirement to ALWAYS call
-        // startForeground with a notification.
+        // Dummy notification used of all other media states.
         else -> NotificationData()
     }
 }

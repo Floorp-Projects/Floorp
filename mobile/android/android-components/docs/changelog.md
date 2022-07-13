@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **feature-media**:
+  * 🚒 Bug fixed [issue #12433](https://github.com/mozilla-mobile/android-components/issues/12433) Prevent media notifications updates that would cause it to flicker or loose the action button.
+
 * **browser-awesomebar**:
   * 🚒 Bug fixed [issue #12469](https://github.com/mozilla-mobile/android-components/issues/12469) Cancel previous queries from the application-services persistence layer before new suggestions requests.
 

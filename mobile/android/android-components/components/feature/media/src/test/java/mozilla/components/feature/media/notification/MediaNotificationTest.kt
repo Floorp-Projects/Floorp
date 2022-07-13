@@ -42,16 +42,6 @@ class MediaNotificationTest {
     }
 
     @Test
-    fun `media session notification for dummy state`() {
-        val notification =
-            MediaNotification(context, AbstractMediaSessionService::class.java).createDummy(mock())
-
-        assertEquals("", notification.text)
-        assertEquals("", notification.title)
-        assertEquals(R.drawable.mozac_feature_media_playing, notification.iconResource)
-    }
-
-    @Test
     fun `media session notification for playing state`() = runTest {
         val state = BrowserState(
             tabs = listOf(
