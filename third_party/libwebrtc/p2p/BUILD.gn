@@ -9,7 +9,7 @@
 import("../webrtc.gni")
 
 group("p2p") {
-  public_deps = [
+  deps = [
     ":libstunprober",
     ":rtc_p2p",
   ]
