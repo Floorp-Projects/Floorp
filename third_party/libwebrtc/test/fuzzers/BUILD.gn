@@ -173,6 +173,7 @@ webrtc_fuzzer_test("ulpfec_generator_fuzzer") {
     "../../modules/rtp_rtcp:fec_test_helper",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
     "../../rtc_base:checks",
+    "../../rtc_base:copy_on_write_buffer",
     "../../rtc_base:rtc_base_approved",
     "../../system_wrappers",
   ]
@@ -661,6 +662,7 @@ webrtc_fuzzer_test("sctp_utils_fuzzer") {
     "../../api:libjingle_peerconnection_api",
     "../../pc:libjingle_peerconnection",
     "../../pc:sctp_utils",
+    "../../rtc_base:copy_on_write_buffer",
     "../../rtc_base:rtc_base_approved",
   ]
 }

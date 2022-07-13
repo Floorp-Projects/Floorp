@@ -1104,6 +1104,7 @@ rtc_library("neteq_tools_minimal") {
     "../../api/neteq:neteq_api",
     "../../rtc_base:buffer",
     "../../rtc_base:checks",
+    "../../rtc_base:copy_on_write_buffer",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:safe_conversions",
     "../../rtc_base:stringutils",

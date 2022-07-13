@@ -65,6 +65,7 @@ rtc_source_set("datagram_transport_interface") {
   deps = [
     "..:array_view",
     "..:rtc_error",
+    "../../rtc_base:copy_on_write_buffer",
     "../../rtc_base:rtc_base_approved",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
