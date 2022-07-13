@@ -27,7 +27,10 @@ class TransientDetector;
 // restoration algorithm that attenuates unexpected spikes in the spectrum.
 class TransientSuppressorImpl : public TransientSuppressor {
  public:
-  explicit TransientSuppressorImpl(VadMode vad_mode);
+  TransientSuppressorImpl(VadMode vad_mode,
+                          int sample_rate_hz,
+                          int detector_rate_hz,
+                          int num_channels);
   ~TransientSuppressorImpl() override;
 
   int Initialize(int sample_rate_hz,
