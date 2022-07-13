@@ -280,7 +280,7 @@ absl::string_view NetworkTypeToStatsNetworkAdapterType(rtc::AdapterType type) {
       break;
   }
   RTC_DCHECK_NOTREACHED();
-  return nullptr;
+  return {};
 }
 
 const char* QualityLimitationReasonToRTCQualityLimitationReason(

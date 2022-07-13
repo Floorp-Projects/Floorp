@@ -99,12 +99,12 @@ TYPED_TEST_P(BasicNumberTest, TestInvalidInputs) {
   EXPECT_EQ(absl::nullopt, StringToNumber<T>(" -5"));
   EXPECT_EQ(absl::nullopt, StringToNumber<T>("5 "));
   // Test various types of empty inputs
-  EXPECT_EQ(absl::nullopt, StringToNumber<T>(nullptr));
+  EXPECT_EQ(absl::nullopt, StringToNumber<T>({nullptr, 0}));
   EXPECT_EQ(absl::nullopt, StringToNumber<T>(""));
   EXPECT_EQ(absl::nullopt, StringToNumber<T>(std::string()));
   EXPECT_EQ(absl::nullopt, StringToNumber<T>(std::string("")));
   EXPECT_EQ(absl::nullopt, StringToNumber<T>(absl::string_view()));
-  EXPECT_EQ(absl::nullopt, StringToNumber<T>(absl::string_view(nullptr)));
+  EXPECT_EQ(absl::nullopt, StringToNumber<T>(absl::string_view(nullptr, 0)));
   EXPECT_EQ(absl::nullopt, StringToNumber<T>(absl::string_view("")));
   // Test strings with embedded nuls.
   EXPECT_EQ(absl::nullopt, StringToNumber<T>(absl::string_view(
