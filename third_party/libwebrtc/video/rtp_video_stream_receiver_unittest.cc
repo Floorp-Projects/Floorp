@@ -337,7 +337,7 @@ TEST_F(RtpVideoStreamReceiverTest, CacheColorSpaceFromLastPacketOfKeyframe) {
 
 TEST_F(RtpVideoStreamReceiverTest, GenericKeyFrame) {
   RtpPacketReceived rtp_packet;
-  rtc::CopyOnWriteBuffer data({1, 2, 3, 4});
+  rtc::CopyOnWriteBuffer data({'1', '2', '3', '4'});
   rtp_packet.SetPayloadType(kPayloadType);
   rtp_packet.SetSequenceNumber(1);
   RTPVideoHeader video_header =
@@ -357,7 +357,7 @@ TEST_F(RtpVideoStreamReceiverTest, PacketInfoIsPropagatedIntoVideoFrames) {
   extension_map.Register<AbsoluteCaptureTimeExtension>(kId0);
   RtpPacketReceived rtp_packet(&extension_map);
   rtp_packet.SetPayloadType(kPayloadType);
-  rtc::CopyOnWriteBuffer data({1, 2, 3, 4});
+  rtc::CopyOnWriteBuffer data({'1', '2', '3', '4'});
   rtp_packet.SetSequenceNumber(1);
   rtp_packet.SetTimestamp(1);
   rtp_packet.SetSsrc(kSsrc);
@@ -388,7 +388,7 @@ TEST_F(RtpVideoStreamReceiverTest,
   RtpPacketReceived rtp_packet(&extension_map);
   rtp_packet.SetPayloadType(kPayloadType);
 
-  rtc::CopyOnWriteBuffer data({1, 2, 3, 4});
+  rtc::CopyOnWriteBuffer data({'1', '2', '3', '4'});
   uint16_t sequence_number = 1;
   uint32_t rtp_timestamp = 1;
   rtp_packet.SetSequenceNumber(sequence_number);
@@ -465,7 +465,7 @@ TEST_F(RtpVideoStreamReceiverTest,
 TEST_F(RtpVideoStreamReceiverTest, GenericKeyFrameBitstreamError) {
   RtpPacketReceived rtp_packet;
   rtp_packet.SetPayloadType(kPayloadType);
-  rtc::CopyOnWriteBuffer data({1, 2, 3, 4});
+  rtc::CopyOnWriteBuffer data({'1', '2', '3', '4'});
   rtp_packet.SetSequenceNumber(1);
   RTPVideoHeader video_header =
       GetGenericVideoHeader(VideoFrameType::kVideoFrameKey);
@@ -567,7 +567,7 @@ TEST_P(RtpVideoStreamReceiverTestH264, OutOfBandFmtpSpsPps) {
   video_header.is_last_packet_in_frame = true;
   video_header.codec = kVideoCodecH264;
   video_header.frame_type = VideoFrameType::kVideoFrameKey;
-  rtc::CopyOnWriteBuffer data({1, 2, 3});
+  rtc::CopyOnWriteBuffer data({'1', '2', '3'});
   mock_on_complete_frame_callback_.AppendExpectedBitstream(
       kH264StartCode, sizeof(kH264StartCode));
   mock_on_complete_frame_callback_.AppendExpectedBitstream(data.data(),
@@ -649,7 +649,7 @@ TEST_P(RtpVideoStreamReceiverTestH264, ForceSpsPpsIdrIsKeyframe) {
 TEST_F(RtpVideoStreamReceiverTest, PaddingInMediaStream) {
   RtpPacketReceived rtp_packet;
   RTPVideoHeader video_header = GetDefaultH264VideoHeader();
-  rtc::CopyOnWriteBuffer data({1, 2, 3});
+  rtc::CopyOnWriteBuffer data({'1', '2', '3'});
   rtp_packet.SetPayloadType(kPayloadType);
   rtp_packet.SetSequenceNumber(2);
   video_header.is_first_packet_in_frame = true;
@@ -686,7 +686,7 @@ TEST_F(RtpVideoStreamReceiverTest, PaddingInMediaStream) {
 TEST_F(RtpVideoStreamReceiverTest, RequestKeyframeIfFirstFrameIsDelta) {
   RtpPacketReceived rtp_packet;
   rtp_packet.SetPayloadType(kPayloadType);
-  rtc::CopyOnWriteBuffer data({1, 2, 3, 4});
+  rtc::CopyOnWriteBuffer data({'1', '2', '3', '4'});
   rtp_packet.SetSequenceNumber(1);
   RTPVideoHeader video_header =
       GetGenericVideoHeader(VideoFrameType::kVideoFrameDelta);
@@ -700,7 +700,7 @@ TEST_F(RtpVideoStreamReceiverTest, RequestKeyframeWhenPacketBufferGetsFull) {
 
   RtpPacketReceived rtp_packet;
   rtp_packet.SetPayloadType(kPayloadType);
-  rtc::CopyOnWriteBuffer data({1, 2, 3, 4});
+  rtc::CopyOnWriteBuffer data({'1', '2', '3', '4'});
   RTPVideoHeader video_header =
       GetGenericVideoHeader(VideoFrameType::kVideoFrameDelta);
   // Incomplete frames so that the packet buffer is filling up.
@@ -1164,7 +1164,7 @@ TEST_F(RtpVideoStreamReceiverTest, TransformFrame) {
 
   RtpPacketReceived rtp_packet;
   rtp_packet.SetPayloadType(kPayloadType);
-  rtc::CopyOnWriteBuffer data({1, 2, 3, 4});
+  rtc::CopyOnWriteBuffer data({'1', '2', '3', '4'});
   rtp_packet.SetSequenceNumber(1);
   RTPVideoHeader video_header =
       GetGenericVideoHeader(VideoFrameType::kVideoFrameKey);
@@ -1204,7 +1204,7 @@ INSTANTIATE_TEST_SUITE_P(PlayoutDelay,
                          Values(kDefaultBehavior, kOverridePlayoutDelay));
 
 TEST_P(RtpVideoStreamReceiverTestPlayoutDelay, PlayoutDelay) {
-  rtc::CopyOnWriteBuffer payload_data({1, 2, 3, 4});
+  rtc::CopyOnWriteBuffer payload_data({'1', '2', '3', '4'});
   RtpHeaderExtensionMap extension_map;
   extension_map.Register<PlayoutDelayLimits>(1);
   RtpPacketToSend packet_to_send(&extension_map);

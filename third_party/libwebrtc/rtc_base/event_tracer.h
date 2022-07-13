@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
@@ -73,7 +74,7 @@ namespace rtc {
 namespace tracing {
 // Set up internal event tracer.
 RTC_EXPORT void SetupInternalTracer();
-RTC_EXPORT bool StartInternalCapture(const char* filename);
+RTC_EXPORT bool StartInternalCapture(absl::string_view filename);
 RTC_EXPORT void StartInternalCaptureToFile(FILE* file);
 RTC_EXPORT void StopInternalCapture();
 // Make sure we run this, this will tear down the internal tracing.

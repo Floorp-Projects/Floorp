@@ -25,7 +25,7 @@ namespace test {
 std::vector<WavBasedSimulator::SimulationEventType>
 WavBasedSimulator::GetCustomEventChain(const std::string& filename) {
   std::vector<WavBasedSimulator::SimulationEventType> call_chain;
-  FileWrapper file_wrapper = FileWrapper::OpenReadOnly(filename.c_str());
+  FileWrapper file_wrapper = FileWrapper::OpenReadOnly(filename);
 
   RTC_CHECK(file_wrapper.is_open())
       << "Could not open the custom call order file, reverting "

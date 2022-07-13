@@ -1600,7 +1600,7 @@ TEST_F(ApmTest, DebugDumpFromFileHandle) {
 
   const std::string filename =
       test::TempFilename(test::OutputPath(), "debug_aec");
-  FileWrapper f = FileWrapper::OpenWriteOnly(filename.c_str());
+  FileWrapper f = FileWrapper::OpenWriteOnly(filename);
   ASSERT_TRUE(f.is_open());
 
 #ifdef WEBRTC_AUDIOPROC_DEBUG_DUMP

@@ -63,7 +63,7 @@ std::string MakeNetworkKey(absl::string_view name,
 // Utility function that attempts to determine an adapter type by an interface
 // name (e.g., "wlan0"). Can be used by NetworkManager subclasses when other
 // mechanisms fail to determine the type.
-RTC_EXPORT AdapterType GetAdapterTypeFromName(const char* network_name);
+RTC_EXPORT AdapterType GetAdapterTypeFromName(absl::string_view network_name);
 
 class DefaultLocalAddressProvider {
  public:

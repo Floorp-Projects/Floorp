@@ -216,7 +216,7 @@ bool MatchTypeNameWithIndexPattern(absl::string_view network_name,
 // result of the downstream network filtering, see e.g.
 // BasicPortAllocatorSession::GetNetworks when
 // PORTALLOCATOR_DISABLE_COSTLY_NETWORKS is turned on.
-AdapterType GetAdapterTypeFromName(const char* network_name) {
+AdapterType GetAdapterTypeFromName(absl::string_view network_name) {
   if (MatchTypeNameWithIndexPattern(network_name, "lo")) {
     // Note that we have a more robust way to determine if a network interface
     // is a loopback interface by checking the flag IFF_LOOPBACK in ifa_flags of

@@ -956,7 +956,7 @@ int OpenSSLStreamAdapter::ContinueSSL() {
   return 0;
 }
 
-void OpenSSLStreamAdapter::Error(const char* context,
+void OpenSSLStreamAdapter::Error(absl::string_view context,
                                  int err,
                                  uint8_t alert,
                                  bool signal) {

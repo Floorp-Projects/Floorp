@@ -252,11 +252,11 @@ void OpenSSLAdapter::SetRole(SSLRole role) {
   role_ = role;
 }
 
-int OpenSSLAdapter::StartSSL(const char* hostname) {
+int OpenSSLAdapter::StartSSL(absl::string_view hostname) {
   if (state_ != SSL_NONE)
     return -1;
 
-  ssl_host_name_ = hostname;
+  ssl_host_name_.assign(hostname.data(), hostname.size());
 
   if (GetSocket()->GetState() != Socket::CS_CONNECTED) {
     state_ = SSL_WAIT;
@@ -422,7 +422,7 @@ int OpenSSLAdapter::ContinueSSL() {
   return 0;
 }
 
-void OpenSSLAdapter::Error(const char* context, int err, bool signal) {
+void OpenSSLAdapter::Error(absl::string_view context, int err, bool signal) {
   RTC_LOG(LS_WARNING) << "OpenSSLAdapter::Error(" << context << ", " << err
                       << ")";
   state_ = SSL_ERROR;

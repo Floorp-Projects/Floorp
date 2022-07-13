@@ -447,7 +447,7 @@ class LogMessage {
   LogMessage(const char* file,
              int line,
              LoggingSeverity sev,
-             const std::string& tag);
+             absl::string_view tag);
   ~LogMessage();
 
   LogMessage(const LogMessage&) = delete;
@@ -493,7 +493,7 @@ class LogMessage {
   static int GetMinLogSeverity();
   // Parses the provided parameter stream to configure the options above.
   // Useful for configuring logging from the command line.
-  static void ConfigureLogging(const char* params);
+  static void ConfigureLogging(absl::string_view params);
   // Checks the current global debug severity and if the `streams_` collection
   // is empty. If `severity` is smaller than the global severity and if the
   // `streams_` collection is empty, the LogMessage will be considered a noop
@@ -524,7 +524,7 @@ class LogMessage {
   LogMessage(const char* file,
              int line,
              LoggingSeverity sev,
-             const std::string& tag) {}
+             absl::string_view tag) {}
   ~LogMessage() = default;
 
   inline void AddTag(const char* tag) {}
@@ -542,7 +542,7 @@ class LogMessage {
   inline static void RemoveLogToStream(LogSink* stream) {}
   inline static int GetLogToStream(LogSink* stream = nullptr) { return 0; }
   inline static int GetMinLogSeverity() { return 0; }
-  inline static void ConfigureLogging(const char* params) {}
+  inline static void ConfigureLogging(absl::string_view params) {}
   static constexpr bool IsNoop(LoggingSeverity severity) { return true; }
   template <LoggingSeverity S>
   static constexpr bool IsNoop() {
@@ -569,11 +569,11 @@ class LogMessage {
 
 // These write out the actual log messages.
 #if defined(WEBRTC_ANDROID)
-  static void OutputToDebug(const std::string& msg,
+  static void OutputToDebug(absl::string_view msg,
                             LoggingSeverity severity,
                             const char* tag);
 #else
-  static void OutputToDebug(const std::string& msg, LoggingSeverity severity);
+  static void OutputToDebug(absl::string_view msg, LoggingSeverity severity);
 #endif  // defined(WEBRTC_ANDROID)
 
   // Called from the dtor (or from a test) to append optional extra error
@@ -610,11 +610,11 @@ class LogMessage {
   // Next methods do nothing; no one will call these functions.
   inline static void UpdateMinLogSeverity() {}
 #if defined(WEBRTC_ANDROID)
-  inline static void OutputToDebug(const std::string& msg,
+  inline static void OutputToDebug(absl::string_view msg,
                                    LoggingSeverity severity,
                                    const char* tag) {}
 #else
-  inline static void OutputToDebug(const std::string& msg,
+  inline static void OutputToDebug(absl::string_view msg,
                                    LoggingSeverity severity) {}
 #endif  // defined(WEBRTC_ANDROID)
   inline void FinishPrintStream() {}

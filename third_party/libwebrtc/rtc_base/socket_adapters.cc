@@ -411,8 +411,9 @@ void AsyncHttpsProxySocket::ProcessLine(char* data, size_t len) {
   } else if ((state_ == PS_AUTHENTICATE) &&
              absl::StartsWithIgnoreCase(data, "Proxy-Authenticate:")) {
     std::string response, auth_method;
-    switch (HttpAuthenticate(data + 19, len - 19, proxy_, "CONNECT", "/", user_,
-                             pass_, context_, response, auth_method)) {
+    switch (HttpAuthenticate(absl::string_view(data + 19, len - 19), proxy_,
+                             "CONNECT", "/", user_, pass_, context_, response,
+                             auth_method)) {
       case HAR_IGNORE:
         RTC_LOG(LS_VERBOSE) << "Ignoring Proxy-Authenticate: " << auth_method;
         if (!unknown_mechanisms_.empty())
