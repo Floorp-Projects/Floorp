@@ -318,9 +318,12 @@ void Conductor::OnMessageFromPeer(int peer_id, const std::string& message) {
     return;
   }
 
-  Json::Reader reader;
+  Json::CharReaderBuilder factory;
+  std::unique_ptr<Json::CharReader> reader =
+      absl::WrapUnique(factory.newCharReader());
   Json::Value jmessage;
-  if (!reader.parse(message, jmessage)) {
+  if (!reader->parse(message.data(), message.data() + message.length(),
+                     &jmessage, nullptr)) {
     RTC_LOG(LS_WARNING) << "Received unknown message. " << message;
     return;
   }
