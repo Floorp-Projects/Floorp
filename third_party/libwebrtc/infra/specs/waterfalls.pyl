@@ -184,7 +184,7 @@
       },
       'MacARM64 M1 Release': {
         'os_type': 'mac',
-        'mixins': ['mac-m1', 'resultdb-json-format'],
+        'mixins': ['mac-m1', 'baremetal-pool', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
         },
@@ -608,7 +608,7 @@
       },
       'mac_dbg_m1': {
         'os_type': 'mac',
-        'mixins': ['mac-m1', 'resultdb-json-format'],
+        'mixins': ['mac-m1', 'baremetal-try-pool', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
         },
@@ -622,7 +622,7 @@
       },
       'mac_rel_m1': {
         'os_type': 'mac',
-        'mixins': ['mac-m1', 'resultdb-json-format'],
+        'mixins': ['mac-m1', 'baremetal-try-pool', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
         },

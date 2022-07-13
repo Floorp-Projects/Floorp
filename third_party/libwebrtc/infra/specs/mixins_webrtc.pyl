@@ -144,7 +144,6 @@
       'dimensions': {
         'cpu': 'arm64-64-Apple_M1',
         'os': 'Mac',
-        'pool': 'WebRTC-baremetal-try',
       }
     }
   },
