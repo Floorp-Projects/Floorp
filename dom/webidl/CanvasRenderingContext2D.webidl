@@ -306,6 +306,7 @@ interface mixin CanvasTextDrawingStyles {
   attribute DOMString textAlign; // "start", "end", "left", "right", "center" (default: "start")
   attribute DOMString textBaseline; // "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" (default: "alphabetic")
   attribute DOMString direction; // "ltr", "rtl", "inherit" (default: "inherit")
+  attribute DOMString fontKerning; // "auto", "normal", "none" (default: "auto")
 };
 
 interface mixin CanvasPathMethods {

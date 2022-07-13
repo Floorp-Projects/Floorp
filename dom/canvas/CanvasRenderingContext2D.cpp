@@ -1009,6 +1009,7 @@ CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
       textAlign(aOther.textAlign),
       textBaseline(aOther.textBaseline),
       textDirection(aOther.textDirection),
+      fontKerning(aOther.fontKerning),
       shadowColor(aOther.shadowColor),
       transform(aOther.transform),
       shadowOffset(aOther.shadowOffset),
@@ -3436,6 +3437,10 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   resizedFont.size =
       fontStyle->mSize.ScaledBy(1.0f / c->CSSToDevPixelScale().scale);
 
+  // Our FontKerning constants (see the enum definition) are the same as the
+  // NS_FONT_KERNING_* values so we can simply assign here.
+  resizedFont.kerning = uint8_t(CurrentState().fontKerning);
+
   c->Document()->FlushUserFontSet();
 
   nsFontMetrics::Params params;
@@ -3527,6 +3532,22 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
   }
 
   fontStyle.size = size;
+
+  // Set the kerning feature, if required by the fontKerning attribute.
+  gfxFontFeature setting{TRUETYPE_TAG('k', 'e', 'r', 'n'), 0};
+  switch (CurrentState().fontKerning) {
+    case FontKerning::NONE:
+      setting.mValue = 0;
+      fontStyle.featureSettings.AppendElement(setting);
+      break;
+    case FontKerning::NORMAL:
+      setting.mValue = 1;
+      fontStyle.featureSettings.AppendElement(setting);
+      break;
+    default:
+      // auto case implies use user agent default
+      break;
+  }
 
   // If we have a canvas element, get its lang (if known).
   RefPtr<nsAtom> language;
@@ -3651,6 +3672,34 @@ void CanvasRenderingContext2D::GetDirection(nsAString& aDirection) {
       break;
     case TextDirection::INHERIT:
       aDirection.AssignLiteral("inherit");
+      break;
+  }
+}
+
+void CanvasRenderingContext2D::SetFontKerning(const nsAString& aFontKerning) {
+  auto oldValue = CurrentState().fontKerning;
+  if (aFontKerning.EqualsLiteral("auto")) {
+    CurrentState().fontKerning = FontKerning::AUTO;
+  } else if (aFontKerning.EqualsLiteral("normal")) {
+    CurrentState().fontKerning = FontKerning::NORMAL;
+  } else if (aFontKerning.EqualsLiteral("none")) {
+    CurrentState().fontKerning = FontKerning::NONE;
+  }
+  if (CurrentState().fontKerning != oldValue) {
+    CurrentState().fontGroup = nullptr;
+  }
+}
+
+void CanvasRenderingContext2D::GetFontKerning(nsAString& aFontKerning) {
+  switch (CurrentState().fontKerning) {
+    case FontKerning::AUTO:
+      aFontKerning.AssignLiteral("auto");
+      break;
+    case FontKerning::NORMAL:
+      aFontKerning.AssignLiteral("normal");
+      break;
+    case FontKerning::NONE:
+      aFontKerning.AssignLiteral("none");
       break;
   }
 }
