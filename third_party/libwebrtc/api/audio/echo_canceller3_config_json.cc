@@ -423,6 +423,8 @@ void Aec3ConfigFromJsonString(absl::string_view json_string,
               &cfg.multi_channel.stereo_detection_threshold);
     ReadParam(section, "stereo_detection_timeout_threshold_seconds",
               &cfg.multi_channel.stereo_detection_timeout_threshold_seconds);
+    ReadParam(section, "stereo_detection_hysteresis_seconds",
+              &cfg.multi_channel.stereo_detection_hysteresis_seconds);
   }
 }
 
@@ -754,7 +756,9 @@ std::string Aec3ConfigToJsonString(const EchoCanceller3Config& config) {
   ost << "\"stereo_detection_threshold\": "
       << config.multi_channel.stereo_detection_threshold << ",";
   ost << "\"stereo_detection_timeout_threshold_seconds\": "
-      << config.multi_channel.stereo_detection_timeout_threshold_seconds;
+      << config.multi_channel.stereo_detection_timeout_threshold_seconds << ",";
+  ost << "\"stereo_detection_hysteresis_seconds\": "
+      << config.multi_channel.stereo_detection_hysteresis_seconds;
   ost << "}";
 
   ost << "}";

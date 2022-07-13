@@ -241,6 +241,7 @@ struct RTC_EXPORT EchoCanceller3Config {
     bool detect_stereo_content = true;
     float stereo_detection_threshold = 0.0f;
     int stereo_detection_timeout_threshold_seconds = 300;
+    float stereo_detection_hysteresis_seconds = 2.0f;
   } multi_channel;
 };
 }  // namespace webrtc

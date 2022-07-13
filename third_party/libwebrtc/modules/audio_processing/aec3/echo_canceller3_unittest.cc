@@ -947,6 +947,7 @@ TEST(EchoCanceller3, DetectionOfProperStereo) {
 
   mono_config.multi_channel.detect_stereo_content = true;
   mono_config.multi_channel.stereo_detection_threshold = 0.0f;
+  mono_config.multi_channel.stereo_detection_hysteresis_seconds = 0.0f;
   multichannel_config = mono_config;
   mono_config.filter.coarse_initial.length_blocks = kNumBlocksForMonoConfig;
   multichannel_config->filter.coarse_initial.length_blocks =
@@ -994,6 +995,7 @@ TEST(EchoCanceller3, DetectionOfProperStereoUsingThreshold) {
   mono_config.multi_channel.detect_stereo_content = true;
   mono_config.multi_channel.stereo_detection_threshold =
       kStereoDetectionThreshold;
+  mono_config.multi_channel.stereo_detection_hysteresis_seconds = 0.0f;
   multichannel_config = mono_config;
   mono_config.filter.coarse_initial.length_blocks = kNumBlocksForMonoConfig;
   multichannel_config->filter.coarse_initial.length_blocks =
@@ -1018,6 +1020,64 @@ TEST(EchoCanceller3, DetectionOfProperStereoUsingThreshold) {
 
   RunAecInStereo(buffer, aec3, 100.0f,
                  100.0f + kStereoDetectionThreshold + 10.0f);
+  EXPECT_TRUE(aec3.StereoRenderProcessingActiveForTesting());
+  EXPECT_EQ(
+      aec3.GetActiveConfigForTesting().filter.coarse_initial.length_blocks,
+      kNumBlocksForSurroundConfig);
+}
+
+TEST(EchoCanceller3, DetectionOfProperStereoUsingHysteresis) {
+  constexpr int kSampleRateHz = 16000;
+  constexpr int kNumChannels = 2;
+  AudioBuffer buffer(/*input_rate=*/kSampleRateHz,
+                     /*input_num_channels=*/kNumChannels,
+                     /*input_rate=*/kSampleRateHz,
+                     /*buffer_num_channels=*/kNumChannels,
+                     /*output_rate=*/kSampleRateHz,
+                     /*output_num_channels=*/kNumChannels);
+
+  constexpr size_t kNumBlocksForMonoConfig = 1;
+  constexpr size_t kNumBlocksForSurroundConfig = 2;
+  EchoCanceller3Config mono_config;
+  absl::optional<EchoCanceller3Config> surround_config;
+
+  mono_config.multi_channel.detect_stereo_content = true;
+  mono_config.multi_channel.stereo_detection_hysteresis_seconds = 0.5f;
+  surround_config = mono_config;
+  mono_config.filter.coarse_initial.length_blocks = kNumBlocksForMonoConfig;
+  surround_config->filter.coarse_initial.length_blocks =
+      kNumBlocksForSurroundConfig;
+
+  EchoCanceller3 aec3(mono_config, surround_config,
+                      /*sample_rate_hz=*/kSampleRateHz,
+                      /*num_render_channels=*/kNumChannels,
+                      /*num_capture_input_channels=*/kNumChannels);
+
+  EXPECT_FALSE(aec3.StereoRenderProcessingActiveForTesting());
+  EXPECT_EQ(
+      aec3.GetActiveConfigForTesting().filter.coarse_initial.length_blocks,
+      kNumBlocksForMonoConfig);
+
+  RunAecInStereo(buffer, aec3, 100.0f, 100.0f);
+  EXPECT_FALSE(aec3.StereoRenderProcessingActiveForTesting());
+  EXPECT_EQ(
+      aec3.GetActiveConfigForTesting().filter.coarse_initial.length_blocks,
+      kNumBlocksForMonoConfig);
+
+  constexpr int kNumFramesPerSecond = 100;
+  for (int k = 0;
+       k < static_cast<int>(
+               kNumFramesPerSecond *
+               mono_config.multi_channel.stereo_detection_hysteresis_seconds);
+       ++k) {
+    RunAecInStereo(buffer, aec3, 100.0f, 101.0f);
+    EXPECT_FALSE(aec3.StereoRenderProcessingActiveForTesting());
+    EXPECT_EQ(
+        aec3.GetActiveConfigForTesting().filter.coarse_initial.length_blocks,
+        kNumBlocksForMonoConfig);
+  }
+
+  RunAecInStereo(buffer, aec3, 100.0f, 101.0f);
   EXPECT_TRUE(aec3.StereoRenderProcessingActiveForTesting());
   EXPECT_EQ(
       aec3.GetActiveConfigForTesting().filter.coarse_initial.length_blocks,
