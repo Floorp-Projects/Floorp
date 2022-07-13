@@ -5002,9 +5002,11 @@ update:
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
       - bytesized@mozilla.com
+      - telemetry-client-dev@thunderbird.net
     release_channel_collection: opt-out
     products:
       - 'firefox'
+      - 'thunderbird'
     record_in_processes:
       - main
 
