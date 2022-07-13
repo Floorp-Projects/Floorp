@@ -443,11 +443,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ]
     }
     if (is_android) {
-      # Need to disable error due to the line in
-      # base/android/jni_android.h triggering it:
-      # const BASE_EXPORT jobject GetApplicationContext()
-      # error: type qualifiers ignored on function return type
-      cflags = [ "-Wno-ignored-qualifiers" ]
       sources += [
         "android/audio_device_unittest.cc",
         "android/audio_manager_unittest.cc",
@@ -455,8 +450,10 @@ if (rtc_include_tests && !build_with_chromium) {
         "android/ensure_initialized.h",
       ]
       deps += [
-        "../../base",
+        "../../sdk/android:internal_jni",
         "../../sdk/android:libjingle_peerconnection_java",
+        "../../sdk/android:native_api_jni",
+        "../../sdk/android:native_test_jni_onload",
       ]
     }
     if (!rtc_include_internal_audio_device) {

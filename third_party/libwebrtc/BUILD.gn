@@ -654,7 +654,12 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
     data = video_engine_tests_resources
     if (is_android) {
-      deps += [ "//testing/android/native_test:native_test_native_code" ]
+      use_default_launcher = false
+      deps += [
+        "//build/android/gtest_apk:native_test_instrumentation_test_runner_java",
+        "//testing/android/native_test:native_test_java",
+        "//testing/android/native_test:native_test_support",
+      ]
       shard_timeout = 900
     }
     if (is_ios) {
@@ -699,7 +704,12 @@ if (rtc_include_tests && !build_with_chromium) {
 
     data = webrtc_perf_tests_resources
     if (is_android) {
-      deps += [ "//testing/android/native_test:native_test_native_code" ]
+      use_default_launcher = false
+      deps += [
+        "//build/android/gtest_apk:native_test_instrumentation_test_runner_java",
+        "//testing/android/native_test:native_test_java",
+        "//testing/android/native_test:native_test_support",
+      ]
       shard_timeout = 4500
     }
     if (is_ios) {
