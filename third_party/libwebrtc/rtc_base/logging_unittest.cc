@@ -22,6 +22,7 @@
 #include "rtc_base/event.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/time_utils.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 
 namespace rtc {
@@ -297,6 +298,21 @@ TEST(LogTest, NoopSeverityDoesNotRunStringFormatting) {
   };
   RTC_LOG(LS_VERBOSE) << "This should not be logged: " << cb();
   EXPECT_FALSE(was_called);
+}
+
+struct TestStruct {};
+std::string ToLogString(TestStruct foo) {
+  return "bar";
+}
+
+TEST(LogTest, ToLogStringUsedForUnknownTypes) {
+  std::string str;
+  LogSinkImpl stream(&str);
+  LogMessage::AddLogToStream(&stream, LS_INFO);
+  TestStruct t;
+  RTC_LOG(LS_INFO) << t;
+  EXPECT_THAT(str, ::testing::HasSubstr("bar"));
+  LogMessage::RemoveLogToStream(&stream);
 }
 
 }  // namespace rtc
