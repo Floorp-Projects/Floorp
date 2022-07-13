@@ -1201,7 +1201,7 @@ void SdpOfferAnswerHandler::Initialize(
   // Use 100 kbps as the default minimum screencast bitrate unless this path is
   // kill-switched.
   if (!video_options_.screencast_min_bitrate_kbps.has_value() &&
-      !context_->trials().IsEnabled(kDefaultScreencastMinBitrateKillSwitch)) {
+      !pc_->trials().IsEnabled(kDefaultScreencastMinBitrateKillSwitch)) {
     video_options_.screencast_min_bitrate_kbps = 100;
   }
   audio_options_.combined_audio_video_bwe =
@@ -1235,7 +1235,8 @@ void SdpOfferAnswerHandler::Initialize(
           [this](const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
             RTC_DCHECK_RUN_ON(signaling_thread());
             transport_controller_s()->SetLocalCertificate(certificate);
-          });
+          },
+          pc_->trials());
 
   if (pc_->options()->disable_encryption) {
     webrtc_session_desc_factory_->SetSdesPolicy(cricket::SEC_DISABLED);

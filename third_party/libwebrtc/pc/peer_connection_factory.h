@@ -115,7 +115,9 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
     return options_;
   }
 
-  const FieldTrialsView& trials() const { return context_->trials(); }
+  const FieldTrialsView& field_trials() const {
+    return context_->field_trials();
+  }
 
  protected:
   // Constructor used by the static Create() method. Modifies the dependencies.
@@ -138,7 +140,8 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   }
 
   std::unique_ptr<RtcEventLog> CreateRtcEventLog_w();
-  std::unique_ptr<Call> CreateCall_w(RtcEventLog* event_log);
+  std::unique_ptr<Call> CreateCall_w(RtcEventLog* event_log,
+                                     const FieldTrialsView& field_trials);
 
   rtc::scoped_refptr<ConnectionContext> context_;
   PeerConnectionFactoryInterface::Options options_

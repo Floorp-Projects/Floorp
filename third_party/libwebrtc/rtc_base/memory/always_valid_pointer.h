@@ -37,6 +37,36 @@ class AlwaysValidPointer {
     RTC_DCHECK(pointer_);
   }
 
+  // Create a pointer by
+  // a) taking over ownership of |instance|
+  // b) or fallback to |pointer|, without taking ownership.
+  // c) or Default.
+  AlwaysValidPointer(std::unique_ptr<Interface>&& instance, Interface* pointer)
+      : owned_instance_(
+            instance
+                ? std::move(instance)
+                : (pointer == nullptr ? std::make_unique<Default>() : nullptr)),
+        pointer_(owned_instance_ ? owned_instance_.get() : pointer) {
+    RTC_DCHECK(pointer_);
+  }
+
+  // Create a pointer by
+  // a) taking over ownership of |instance|
+  // b) or fallback to |pointer|, without taking ownership.
+  // c) or Default (with forwarded args).
+  template <typename... Args>
+  AlwaysValidPointer(std::unique_ptr<Interface>&& instance,
+                     Interface* pointer,
+                     Args... args)
+      : owned_instance_(
+            instance ? std::move(instance)
+                     : (pointer == nullptr
+                            ? std::make_unique<Default>(std::move(args...))
+                            : nullptr)),
+        pointer_(owned_instance_ ? owned_instance_.get() : pointer) {
+    RTC_DCHECK(pointer_);
+  }
+
   Interface* get() { return pointer_; }
   Interface* operator->() { return pointer_; }
   Interface& operator*() { return *pointer_; }

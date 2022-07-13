@@ -243,9 +243,12 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
       worker_thread()->Invoke<std::unique_ptr<RtcEventLog>>(
           RTC_FROM_HERE, [this] { return CreateRtcEventLog_w(); });
 
+  const FieldTrialsView* trials =
+      dependencies.trials ? dependencies.trials.get() : &field_trials();
   std::unique_ptr<Call> call = worker_thread()->Invoke<std::unique_ptr<Call>>(
-      RTC_FROM_HERE,
-      [this, &event_log] { return CreateCall_w(event_log.get()); });
+      RTC_FROM_HERE, [this, &event_log, trials] {
+        return CreateCall_w(event_log.get(), *trials);
+      });
 
   auto result = PeerConnection::Create(context_, options_, std::move(event_log),
                                        std::move(call), configuration,
@@ -307,7 +310,8 @@ std::unique_ptr<RtcEventLog> PeerConnectionFactory::CreateRtcEventLog_w() {
 }
 
 std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
-    RtcEventLog* event_log) {
+    RtcEventLog* event_log,
+    const FieldTrialsView& field_trials) {
   RTC_DCHECK_RUN_ON(worker_thread());
 
   webrtc::Call::Config call_config(event_log, network_thread());
@@ -324,7 +328,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
   FieldTrialParameter<DataRate> max_bandwidth("max",
                                               DataRate::KilobitsPerSec(2000));
   ParseFieldTrial({&min_bandwidth, &start_bandwidth, &max_bandwidth},
-                  trials().Lookup("WebRTC-PcFactoryDefaultBitrates"));
+                  field_trials.Lookup("WebRTC-PcFactoryDefaultBitrates"));
 
   call_config.bitrate_config.min_bitrate_bps =
       rtc::saturated_cast<int>(min_bandwidth->bps());
@@ -347,7 +351,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
     RTC_LOG(LS_INFO) << "Using default network controller factory";
   }
 
-  call_config.trials = &trials();
+  call_config.trials = &field_trials;
   call_config.rtp_transport_controller_send_factory =
       transport_controller_send_factory_.get();
   call_config.metronome = metronome_.get();
@@ -356,7 +360,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
 }
 
 bool PeerConnectionFactory::IsTrialEnabled(absl::string_view key) const {
-  return absl::StartsWith(trials().Lookup(key), "Enabled");
+  return absl::StartsWith(field_trials().Lookup(key), "Enabled");
 }
 
 }  // namespace webrtc

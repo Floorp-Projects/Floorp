@@ -135,9 +135,10 @@ WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
     std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator,
     const rtc::scoped_refptr<rtc::RTCCertificate>& certificate,
     std::function<void(const rtc::scoped_refptr<rtc::RTCCertificate>&)>
-        on_certificate_ready)
+        on_certificate_ready,
+    const FieldTrialsView& field_trials)
     : signaling_thread_(context->signaling_thread()),
-      transport_desc_factory_(context->trials()),
+      transport_desc_factory_(field_trials),
       session_desc_factory_(context->channel_manager(),
                             &transport_desc_factory_),
       // RFC 4566 suggested a Network Time Protocol (NTP) format timestamp
