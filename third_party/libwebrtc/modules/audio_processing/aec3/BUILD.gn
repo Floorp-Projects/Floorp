@@ -147,6 +147,7 @@ rtc_library("aec3") {
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../../../rtc_base:macromagic",
+    "../../../rtc_base:race_checker",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:safe_minmax",
     "../../../rtc_base:swap_queue",

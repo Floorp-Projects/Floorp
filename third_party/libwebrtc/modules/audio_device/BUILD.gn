@@ -421,6 +421,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../rtc_base:ignore_wundef",
       "../../rtc_base:logging",
       "../../rtc_base:macromagic",
+      "../../rtc_base:race_checker",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_event",
       "../../rtc_base:safe_conversions",
