@@ -1098,7 +1098,7 @@
     "FAIL"
   ],
   "navigation Page.goto should navigate to URL with hash and fire requests without hash (navigation.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "navigation Page.goto should work with self requesting page (navigation.spec.ts)": [
     "PASS"

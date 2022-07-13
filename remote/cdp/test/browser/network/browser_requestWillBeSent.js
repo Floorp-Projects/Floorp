@@ -5,9 +5,14 @@
 
 const BASE_PATH = "https://example.com/browser/remote/cdp/test/browser/network";
 const FRAMESET_URL = `${BASE_PATH}/doc_frameset.html`;
-const FRAMESET_JS_URL = `${BASE_PATH}/file_framesetEvents.js`;
+const FRAMESET_URL_JS = `${BASE_PATH}/file_framesetEvents.js`;
+const PAGE_EMPTY_URL = `${BASE_PATH}/doc_empty.html`;
 const PAGE_URL = `${BASE_PATH}/doc_networkEvents.html`;
-const PAGE_JS_URL = `${BASE_PATH}/file_networkEvents.js`;
+const PAGE_EMPTY_HASH = `#`;
+const PAGE_HASH = `#foo`;
+const PAGE_URL_WITH_HASH = `${PAGE_URL}${PAGE_HASH}`;
+const PAGE_URL_WITH_EMPTY_HASH = `${PAGE_URL}${PAGE_EMPTY_HASH}`;
+const PAGE_URL_JS = `${BASE_PATH}/file_networkEvents.js`;
 
 add_task(async function noEventsWhenNetworkDomainDisabled({ client }) {
   const history = configureHistory(client, 0);
@@ -52,6 +57,7 @@ add_task(async function documentNavigationWithResource({ client }) {
   is(docRequest.documentURL, FRAMESET_URL, "documentURL matches requested url");
   is(docRequest.frameId, frameIdNav, "Got the expected frame id");
   is(docRequest.request.url, FRAMESET_URL, "Got the Document request");
+  is(docRequest.request.urlFragment, undefined, "Has no URL fragment set");
   is(docRequest.request.method, "GET", "Has the expected request method");
   is(
     docRequest.requestId,
@@ -73,7 +79,7 @@ add_task(async function documentNavigationWithResource({ client }) {
     "documentURL is trigger document for the script request"
   );
   is(scriptRequest.frameId, frameIdNav, "Got the expected frame id");
-  is(scriptRequest.request.url, FRAMESET_JS_URL, "Got the Script request");
+  is(scriptRequest.request.url, FRAMESET_URL_JS, "Got the Script request");
   is(scriptRequest.request.method, "GET", "Has the expected request method");
   is(
     scriptRequest.request.headers.host,
@@ -122,7 +128,7 @@ add_task(async function documentNavigationWithResource({ client }) {
     subscriptRequest.loaderId === docRequest.loaderId,
     "The same loaderId is used for dependent requests (Bug 1637838)"
   );
-  is(subscriptRequest.request.url, PAGE_JS_URL, "Got the Script request");
+  is(subscriptRequest.request.url, PAGE_URL_JS, "Got the Script request");
   is(
     subscriptRequest.request.method,
     "GET",
@@ -134,6 +140,70 @@ add_task(async function documentNavigationWithResource({ client }) {
     "Script request has headers"
   );
   assertEventOrder(events[2], events[3]);
+});
+
+add_task(async function documentNavigationToURLWithHash({ client }) {
+  const { Page, Network } = client;
+
+  await loadURL(PAGE_EMPTY_URL);
+
+  await Network.enable();
+  await Page.enable();
+
+  const history = configureHistory(client, 4);
+
+  const frameNavigated = Page.frameNavigated();
+  const { frameId: frameIdNav } = await Page.navigate({
+    url: PAGE_URL_WITH_HASH,
+  });
+  await frameNavigated;
+  ok(frameIdNav, "Page.navigate returned a frameId");
+
+  info("Wait for Network events");
+  const events = await history.record();
+  is(events.length, 2, "Expected number of Network.requestWillBeSent events");
+
+  // Check top-level document request only for fragment usage
+  const docRequest = events[0].payload;
+  is(docRequest.documentURL, PAGE_URL, "documentURL matches requested URL");
+  is(docRequest.request.url, PAGE_URL, "Request url matches requested URL");
+  is(
+    docRequest.request.urlFragment,
+    PAGE_HASH,
+    "Request URL fragment is present"
+  );
+});
+
+add_task(async function documentNavigationToURLWithEmptyHash({ client }) {
+  const { Page, Network } = client;
+
+  await loadURL(PAGE_EMPTY_URL);
+
+  await Network.enable();
+  await Page.enable();
+
+  const history = configureHistory(client, 4);
+
+  const frameNavigated = Page.frameNavigated();
+  const { frameId: frameIdNav } = await Page.navigate({
+    url: PAGE_URL_WITH_EMPTY_HASH,
+  });
+  await frameNavigated;
+  ok(frameIdNav, "Page.navigate returned a frameId");
+
+  info("Wait for Network events");
+  const events = await history.record();
+  is(events.length, 2, "Expected number of Network.requestWillBeSent events");
+
+  // Check top-level document request only for fragment usage
+  const docRequest = events[0].payload;
+  is(docRequest.documentURL, PAGE_URL, "documentURL matches requested URL");
+  is(docRequest.request.url, PAGE_URL, "Request url matches requested URL");
+  is(
+    docRequest.request.urlFragment,
+    PAGE_EMPTY_HASH,
+    "Request URL fragment is present"
+  );
 });
 
 function configureHistory(client, total) {

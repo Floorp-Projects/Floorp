@@ -396,10 +396,13 @@ class Network extends Domain {
 
   _onRequest(eventName, httpChannel, data) {
     const wrappedChannel = ChannelWrapper.get(httpChannel);
+    const urlFragment = httpChannel.URI.hasRef
+      ? "#" + httpChannel.URI.ref
+      : undefined;
 
     const request = {
-      url: httpChannel.URI.spec,
-      urlFragment: undefined,
+      url: httpChannel.URI.specIgnoringRef,
+      urlFragment,
       method: httpChannel.requestMethod,
       headers: headersAsObject(data.headers),
       postData: undefined,
@@ -412,7 +415,8 @@ class Network extends Domain {
     this.emit("Network.requestWillBeSent", {
       requestId: data.requestId,
       loaderId: data.loaderId,
-      documentURL: wrappedChannel.documentURL || httpChannel.URI.spec,
+      documentURL:
+        wrappedChannel.documentURL || httpChannel.URI.specIgnoringRef,
       request,
       timestamp: Date.now() / 1000,
       wallTime: undefined,
