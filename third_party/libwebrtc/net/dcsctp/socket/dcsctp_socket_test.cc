@@ -27,7 +27,6 @@
 #include "net/dcsctp/packet/chunk/data_chunk.h"
 #include "net/dcsctp/packet/chunk/data_common.h"
 #include "net/dcsctp/packet/chunk/error_chunk.h"
-#include "net/dcsctp/packet/chunk/forward_tsn_chunk.h"
 #include "net/dcsctp/packet/chunk/heartbeat_ack_chunk.h"
 #include "net/dcsctp/packet/chunk/heartbeat_request_chunk.h"
 #include "net/dcsctp/packet/chunk/idata_chunk.h"
@@ -2021,89 +2020,6 @@ TEST_P(DcSctpSocketParametrizedTest, SendsOnlyLargePackets) {
   }
 
   MaybeHandoverSocketAndSendMessage(a, std::move(z));
-}
-
-TEST_P(DcSctpSocketParametrizedTest, DoesntBundleForwardTsnWithData) {
-  SocketUnderTest a("A");
-  auto z = std::make_unique<SocketUnderTest>("Z");
-
-  ConnectSockets(a, *z);
-  z = MaybeHandoverSocket(std::move(z));
-
-  // Force an RTT measurement using heartbeats.
-  AdvanceTime(a, *z, a.options.heartbeat_interval);
-
-  // HEARTBEAT
-  std::vector<uint8_t> hb_req_a = a.cb.ConsumeSentPacket();
-  std::vector<uint8_t> hb_req_z = z->cb.ConsumeSentPacket();
-
-  constexpr DurationMs kRtt = DurationMs(80);
-  AdvanceTime(a, *z, kRtt);
-  z->socket.ReceivePacket(hb_req_a);
-  a.socket.ReceivePacket(hb_req_z);
-
-  // HEARTBEAT_ACK
-  a.socket.ReceivePacket(z->cb.ConsumeSentPacket());
-  z->socket.ReceivePacket(a.cb.ConsumeSentPacket());
-
-  SendOptions send_options;
-  send_options.max_retransmissions = 0;
-  std::vector<uint8_t> payload(a.options.mtu - 100);
-
-  // Send an initial message that is received, but the SACK was lost
-  a.socket.Send(DcSctpMessage(StreamID(1), PPID(51), payload), send_options);
-  // DATA
-  z->socket.ReceivePacket(a.cb.ConsumeSentPacket());
-  // SACK (lost)
-  std::vector<uint8_t> sack = z->cb.ConsumeSentPacket();
-
-  // Queue enough messages to fill the congestion window.
-  do {
-    a.socket.Send(DcSctpMessage(StreamID(1), PPID(51), payload), send_options);
-  } while (!a.cb.ConsumeSentPacket().empty());
-
-  // Enqueue at least one more.
-  a.socket.Send(DcSctpMessage(StreamID(1), PPID(51), payload), send_options);
-
-  // Let all of them expire by T3-RTX and inspect what's sent.
-  AdvanceTime(a, *z, a.options.rto_initial);
-
-  std::vector<uint8_t> sent1 = a.cb.ConsumeSentPacket();
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet1, SctpPacket::Parse(sent1));
-
-  EXPECT_THAT(packet1.descriptors(), SizeIs(1));
-  EXPECT_EQ(packet1.descriptors()[0].type, ForwardTsnChunk::kType);
-
-  std::vector<uint8_t> sent2 = a.cb.ConsumeSentPacket();
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet2, SctpPacket::Parse(sent2));
-
-  EXPECT_GE(packet2.descriptors().size(), 1u);
-  EXPECT_EQ(packet2.descriptors()[0].type, DataChunk::kType);
-
-  // Drop all remaining packets that A has sent.
-  while (!a.cb.ConsumeSentPacket().empty()) {
-  }
-
-  // Replay the SACK, and see if a FORWARD-TSN is sent again.
-  a.socket.ReceivePacket(sack);
-
-  // It shouldn't be sent as not enough time has passed yet. Instead, more
-  // DATA chunks are sent, that are in the queue.
-  std::vector<uint8_t> sent3 = a.cb.ConsumeSentPacket();
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet3, SctpPacket::Parse(sent3));
-
-  EXPECT_GE(packet2.descriptors().size(), 1u);
-  EXPECT_EQ(packet3.descriptors()[0].type, DataChunk::kType);
-
-  // Now let RTT time pass, to allow a FORWARD-TSN to be sent again.
-  AdvanceTime(a, *z, kRtt);
-  a.socket.ReceivePacket(sack);
-
-  std::vector<uint8_t> sent4 = a.cb.ConsumeSentPacket();
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet4, SctpPacket::Parse(sent4));
-
-  EXPECT_THAT(packet4.descriptors(), SizeIs(1));
-  EXPECT_EQ(packet4.descriptors()[0].type, ForwardTsnChunk::kType);
 }
 
 TEST(DcSctpSocketTest, SendMessagesAfterHandover) {
