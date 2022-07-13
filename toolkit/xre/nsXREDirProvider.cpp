@@ -265,6 +265,28 @@ nsresult nsXREDirProvider::GetUserProfilesLocalDir(nsIFile** aResult) {
   return NS_OK;
 }
 
+#ifdef MOZ_BACKGROUNDTASKS
+nsresult nsXREDirProvider::GetBackgroundTasksProfilesRootDir(
+    nsIFile** aResult) {
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = GetUserDataDirectory(getter_AddRefs(file), false);
+
+  if (NS_SUCCEEDED(rv)) {
+#  if !defined(XP_UNIX) || defined(XP_MACOSX)
+    // Sibling to regular user "Profiles" directory.
+    rv = file->AppendNative("Background Tasks Profiles"_ns);
+#  endif
+    // We must create the directory here if it does not exist.
+    nsresult tmp = EnsureDirectoryExists(file);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+  }
+  file.swap(*aResult);
+  return rv;
+}
+#endif
+
 #if defined(XP_UNIX) || defined(XP_MACOSX)
 /**
  * Get the directory that is the parent of the system-wide directories

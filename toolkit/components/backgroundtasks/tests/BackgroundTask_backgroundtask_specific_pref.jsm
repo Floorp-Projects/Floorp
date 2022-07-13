@@ -14,7 +14,19 @@ async function runBackgroundTask(commandLine) {
   let exitCode = Services.prefs.getIntPref(pref, 4);
 
   console.error(
-    `runBackgroundTask: backgroundtask_specific_pref read pref '${pref}', exiting with exitCode ${exitCode}`
+    `runBackgroundTask: backgroundtask_specific_pref read pref '${pref}' with value ${exitCode}`
+  );
+
+  if (commandLine.length > 1) {
+    let newValue = Number.parseInt(commandLine.getArgument(1), 10);
+    console.error(
+      `runBackgroundTask: backgroundtask_specific_pref wrote pref '${pref}' with value ${newValue}`
+    );
+    Services.prefs.setIntPref(pref, newValue);
+  }
+
+  console.error(
+    `runBackgroundTask: backgroundtask_specific_pref exiting with exitCode ${exitCode}`
   );
 
   return exitCode;

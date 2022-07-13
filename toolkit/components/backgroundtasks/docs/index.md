@@ -62,9 +62,11 @@ Background task mode supports using the JavaScript debugger and the Firefox Devt
 
 ## The background task mode runtime environment
 
-### Background tasks run in ephemeral temporary profiles
+### Most background tasks run in ephemeral temporary profiles
 
-Background tasks are intended for periodic maintenance tasks, especially global/per-installation maintenance tasks.  To allow background tasks to run at the same time as regular, headed Firefox browsing sessions, they run with an ephemeral temporary profile.  This ephemeral profile is deleted when the background task main process exits.  Every background task applies the preferences in [`backgroundtasks/defaults/backgroundtasks.js`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/defaults/backgroundtasks.js), but any additional preference configuration must be handled by the individual task.  Over time, we anticipate a small library of background task functionality to grow to make it easier to lock and read specific prefs from the default browsing profile, to declare per-installation prefs, etc.
+Background tasks are intended for periodic maintenance tasks, especially global/per-installation maintenance tasks.  To allow background tasks to run at the same time as regular, headed Firefox browsing sessions, by default they run with an ephemeral temporary profile.  This ephemeral profile is deleted when the background task main process exits.  Every background task applies the preferences in [`backgroundtasks/defaults/backgroundtasks.js`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/defaults/backgroundtasks.js), but any additional preference configuration must be handled by the individual task.  Over time, we anticipate a small library of background task functionality to grow to make it easier to lock and read specific prefs from the default browsing profile, to declare per-installation prefs, etc.
+
+It is possible to run background tasks in non-emphemeral, i.e., persistent, profiles.  See [Bug 1775132](https://bugzilla.mozilla.org/show_bug.cgi?id=1775132) for details.
 
 ### Background tasks limit the XPCOM instance graph by default
 

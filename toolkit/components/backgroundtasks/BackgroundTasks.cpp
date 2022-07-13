@@ -13,7 +13,6 @@
 #include "nsXULAppAPI.h"
 #include "prenv.h"
 #include "prtime.h"
-#include "SpecialSystemDirectory.h"
 
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/LateWriteChecks.h"
@@ -25,7 +24,7 @@ namespace mozilla {
 NS_IMPL_ISUPPORTS(BackgroundTasks, nsIBackgroundTasks);
 
 BackgroundTasks::BackgroundTasks(Maybe<nsCString> aBackgroundTask)
-    : mBackgroundTask(std::move(aBackgroundTask)) {
+    : mBackgroundTask(std::move(aBackgroundTask)), mIsEphemeralProfile(false) {
   // Log when a background task is created.
   if (mBackgroundTask.isSome()) {
     MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
@@ -55,17 +54,29 @@ void BackgroundTasks::Shutdown() {
       !EnvHasValue("MOZ_BACKGROUNDTASKS_NO_REMOVE_PROFILE")) {
     AutoSuspendLateWriteChecks suspend;
 
-    // Log that the ephemeral profile is being removed.
-    if (MOZ_LOG_TEST(sBackgroundTasksLog, mozilla::LogLevel::Info)) {
-      nsAutoString path;
-      if (NS_SUCCEEDED(sSingleton->mProfD->GetPath(path))) {
-        MOZ_LOG(
-            sBackgroundTasksLog, mozilla::LogLevel::Info,
-            ("Removing profile: %s", NS_LossyConvertUTF16toASCII(path).get()));
+    if (sSingleton->mIsEphemeralProfile) {
+      // Log that the ephemeral profile is being removed.
+      if (MOZ_LOG_TEST(sBackgroundTasksLog, mozilla::LogLevel::Info)) {
+        nsAutoString path;
+        if (NS_SUCCEEDED(sSingleton->mProfD->GetPath(path))) {
+          MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
+                  ("Removing profile: %s",
+                   NS_LossyConvertUTF16toASCII(path).get()));
+        }
+      }
+
+      Unused << sSingleton->mProfD->Remove(/* aRecursive */ true);
+    } else {
+      // Log that the non-ephemeral profile is not being removed.
+      if (MOZ_LOG_TEST(sBackgroundTasksLog, mozilla::LogLevel::Debug)) {
+        nsAutoString path;
+        if (NS_SUCCEEDED(sSingleton->mProfD->GetPath(path))) {
+          MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Debug,
+                  ("Not removing non-ephemeral profile: %s",
+                   NS_LossyConvertUTF16toASCII(path).get()));
+        }
       }
     }
-
-    Unused << sSingleton->mProfD->Remove(/* aRecursive */ true);
   }
 
   sSingleton = nullptr;
@@ -105,13 +116,19 @@ bool BackgroundTasks::IsBackgroundTaskMode() {
 }
 
 nsresult BackgroundTasks::CreateEphemeralProfileDirectory(
-    const nsCString& aInstallHash, nsIFile** aFile) {
+    nsIFile* aRootDir, const nsCString& aProfilePrefix, nsIFile** aFile) {
   if (!XRE_IsParentProcess()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv =
-      GetSingleton()->CreateEphemeralProfileDirectoryImpl(aInstallHash, aFile);
+  Maybe<nsCString> task = GetBackgroundTasks();
+  sSingleton->mIsEphemeralProfile =
+      task.isSome() && IsEphemeralProfileTaskName(task.ref());
+
+  MOZ_RELEASE_ASSERT(sSingleton->mIsEphemeralProfile);
+
+  nsresult rv = sSingleton->CreateEphemeralProfileDirectoryImpl(
+      aRootDir, aProfilePrefix, aFile);
 
   // Log whether the ephemeral profile was created.
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -131,8 +148,41 @@ nsresult BackgroundTasks::CreateEphemeralProfileDirectory(
   return rv;
 }
 
+nsresult BackgroundTasks::CreateNonEphemeralProfileDirectory(
+    nsIFile* aRootDir, const nsCString& aProfilePrefix, nsIFile** aFile) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Maybe<nsCString> task = GetBackgroundTasks();
+  sSingleton->mIsEphemeralProfile =
+      task.isSome() && IsEphemeralProfileTaskName(task.ref());
+
+  MOZ_RELEASE_ASSERT(!sSingleton->mIsEphemeralProfile);
+
+  nsresult rv = sSingleton->CreateNonEphemeralProfileDirectoryImpl(
+      aRootDir, aProfilePrefix, aFile);
+
+  // Log whether the non-ephemeral profile was created.
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Warning,
+            ("Failed to create non-ephemeral profile directory!"));
+  } else {
+    if (MOZ_LOG_TEST(sBackgroundTasksLog, mozilla::LogLevel::Info)) {
+      nsAutoString path;
+      if (aFile && *aFile && NS_SUCCEEDED((*aFile)->GetPath(path))) {
+        MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
+                ("Non-ephemeral profile directory existed or was created: %s",
+                 NS_LossyConvertUTF16toASCII(path).get()));
+      }
+    }
+  }
+
+  return rv;
+}
+
 bool BackgroundTasks::IsEphemeralProfile() {
-  return sSingleton && sSingleton->mProfD;
+  return sSingleton && sSingleton->mIsEphemeralProfile && sSingleton->mProfD;
 }
 
 nsresult BackgroundTasks::RunBackgroundTask(nsICommandLine* aCmdLine) {
@@ -157,8 +207,18 @@ bool BackgroundTasks::IsUpdatingTaskName(const nsCString& aName) {
          aName.EqualsLiteral("shouldprocessupdates");
 }
 
-nsresult BackgroundTasks::CreateEphemeralProfileDirectoryImpl(
-    const nsCString& aInstallHash, nsIFile** aFile) {
+bool BackgroundTasks::IsEphemeralProfileTaskName(const nsCString& aName) {
+  return !(aName.EqualsLiteral("backgroundupdate") ||
+           aName.EqualsLiteral("not_ephemeral_profile"));
+}
+
+nsCString BackgroundTasks::GetProfilePrefix(const nsCString& aInstallHash) {
+  return nsPrintfCString("%sBackgroundTask-%s-%s", MOZ_APP_VENDOR,
+                         aInstallHash.get(), GetBackgroundTasks().ref().get());
+}
+
+nsresult BackgroundTasks::CreateNonEphemeralProfileDirectoryImpl(
+    nsIFile* aRootDir, const nsCString& aProfilePrefix, nsIFile** aFile) {
   if (mBackgroundTask.isNothing()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -170,25 +230,58 @@ nsresult BackgroundTasks::CreateEphemeralProfileDirectoryImpl(
     rv = mProfD->Clone(getter_AddRefs(file));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    // We don't have the directory service at this point.
-    rv = GetSpecialSystemDirectory(OS_TemporaryDirectory, getter_AddRefs(file));
+    file = aRootDir;
+
+    // The base path is
+    // /{UAppData}/Background Tasks
+    // Profiles/[salt].[vendor]BackgroundTask-[pathHash]-[taskName].
+    rv = file->AppendNative(aProfilePrefix);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCString profilePrefix =
-        nsPrintfCString("%sBackgroundTask-%s-%s", MOZ_APP_VENDOR,
-                        aInstallHash.get(), mBackgroundTask.ref().get());
+    // Create the persistent profile directory if it does not exist.
+    bool exists;
+    rv = file->Exists(&exists);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!exists) {
+      rv = file->Create(nsIFile::DIRECTORY_TYPE, 0700);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    rv = file->Clone(getter_AddRefs(mProfD));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  file.forget(aFile);
+  return NS_OK;
+}
+
+nsresult BackgroundTasks::CreateEphemeralProfileDirectoryImpl(
+    nsIFile* aRootDir, const nsCString& aProfilePrefix, nsIFile** aFile) {
+  if (mBackgroundTask.isNothing()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv;
+
+  nsCOMPtr<nsIFile> file;
+  if (mProfD) {
+    rv = mProfD->Clone(getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    file = aRootDir;
 
     // Windows file cleanup is unreliable, so let's take a moment to clean up
     // any prior background task profiles. We can continue if there was an error
     // as creating a new ephemeral profile does not require cleaning up the old.
-    rv = RemoveStaleEphemeralProfileDirectories(file, profilePrefix);
+    rv = RemoveStaleEphemeralProfileDirectories(file, aProfilePrefix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Warning,
               ("Error cleaning up stale ephemeral profile directories."));
     }
 
     // The base path is /tmp/[vendor]BackgroundTask-[pathHash]-[taskName].
-    rv = file->AppendNative(profilePrefix);
+    rv = file->AppendNative(aProfilePrefix);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create a unique profile directory.  This can fail if there are too many
