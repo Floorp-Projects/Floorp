@@ -525,10 +525,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   uintptr_t* addressOfSimulatorStackLimit();
 #endif
 
-#ifdef JS_TRACE_LOGGING
-  js::UnprotectedData<js::TraceLoggerThread*> traceLogger;
-#endif
-
  public:
   // State used by util/DoubleToString.cpp.
   js::ContextData<DtoaState*> dtoaState;
