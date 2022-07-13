@@ -17,6 +17,8 @@ namespace xdg_portal {
 
 std::string RequestResponseToString(RequestResponse request) {
   switch (request) {
+    case RequestResponse::kUnknown:
+      return "kUnknown";
     case RequestResponse::kSuccess:
       return "kSuccess";
     case RequestResponse::kUserCancelled:
