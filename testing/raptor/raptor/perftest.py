@@ -454,8 +454,11 @@ class Perftest(object):
         pass
 
     def run_tests(self, tests, test_names):
+        tests_to_run = tests
+        if self.results_handler.existing_results:
+            tests_to_run = []
         try:
-            for test in tests:
+            for test in tests_to_run:
                 try:
                     self.run_test(test, timeout=int(test.get("page_timeout")))
                 except RuntimeError as e:

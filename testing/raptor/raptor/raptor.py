@@ -146,6 +146,7 @@ def main(args=sys.argv[1:]):
         )
         os.sys.exit(1)
 
+    raptor.results_handler.use_existing_results(args.browsertime_existing_results)
     success = raptor.run_tests(raptor_test_list, raptor_test_names)
 
     if not success:

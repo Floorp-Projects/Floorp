@@ -64,6 +64,7 @@ class PerftestResultsHandler(object):
         self.cold = cold
         self.chimera = chimera
         self.perfstats = perfstats
+        self.existing_results = None
 
     @abstractmethod
     def add(self, new_result_json):
@@ -174,6 +175,9 @@ class PerftestResultsHandler(object):
             self.supporting_data = []
         self.supporting_data.append(supporting_data)
 
+    def use_existing_results(self, directory):
+        self.existing_results = directory
+
     def _get_expected_perfherder(self, output):
         def is_resource_test():
             if self.power_test or self.cpu_test or self.memory_test:
@@ -282,7 +286,7 @@ class RaptorResultsHandler(PerftestResultsHandler):
         output = RaptorOutput(
             self.results,
             self.supporting_data,
-            test_config["subtest_alert_on"],
+            test_config.get("subtest_alert_on", []),
             self.app,
         )
         output.set_browser_meta(self.browser_name, self.browser_version)
@@ -327,7 +331,11 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         return self._root_results_dir
 
     def result_dir_for_test(self, test):
-        return os.path.join(self._root_results_dir, test["name"])
+        if self.existing_results is None:
+            results_root = self._root_results_dir
+        else:
+            results_root = self.existing_results
+        return os.path.join(results_root, test["name"])
 
     def remove_result_dir_for_test(self, test):
         test_result_dir = self.result_dir_for_test(test)
@@ -361,6 +369,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         page_count,
         test_name,
         accept_zero_vismet,
+        load_existing,
     ):
         """
         Receive a json blob that contains the results direct from the browsertime tool. Parse
@@ -528,6 +537,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 raise MissingResultsError(
                     "Missing results for all cold browser cycles."
                 )
+        elif load_existing:
+            pass  # Use whatever is there.
         else:
             if len(raw_btresults) != int(page_cycles):
                 raise MissingResultsError(
@@ -846,6 +857,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 test_config.get("page_count", []),
                 test["name"],
                 accept_zero_vismet,
+                self.existing_results is not None,
             ):
 
                 def _new_standard_result(new_result, subtest_unit="ms"):
@@ -934,7 +946,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         output = BrowsertimeOutput(
             self.results,
             self.supporting_data,
-            test_config["subtest_alert_on"],
+            test_config.get("subtest_alert_on", []),
             self.app,
         )
         output.set_browser_meta(self.browser_name, self.browser_version)

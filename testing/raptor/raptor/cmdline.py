@@ -441,6 +441,12 @@ def create_parser(mach_interface=False):
         help="path to geckodriver executable",
     )
     add_arg(
+        "--browsertime-existing-results",
+        dest="browsertime_existing_results",
+        default=None,
+        help="load existing results instead of running tests",
+    )
+    add_arg(
         "--verbose",
         dest="verbose",
         action="store_true",
