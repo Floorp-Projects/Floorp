@@ -83,6 +83,11 @@ class BrowsertimeRunner(NodeRunner):
             "help": "Use the window recorder",
         },
         "viewport-size": {"type": str, "default": "1280x1024", "help": "Viewport size"},
+        "existing-results": {
+            "type": str,
+            "default": None,
+            "help": "Directory containing existing results to load.",
+        },
     }
 
     def __init__(self, env, mach_cmd):
@@ -348,6 +353,14 @@ class BrowsertimeRunner(NodeRunner):
     def run(self, metadata):
         self._test_script = metadata.script
         self.setup()
+
+        existing = self.get_arg("browsertime-existing-results")
+        if existing:
+            metadata.add_result(
+                {"results": existing, "name": self._test_script["name"]}
+            )
+            return metadata
+
         cycles = self.get_arg("cycles", 1)
         for cycle in range(1, cycles + 1):
 
