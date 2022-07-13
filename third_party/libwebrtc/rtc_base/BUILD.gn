@@ -92,6 +92,7 @@ rtc_library("rtc_base_approved") {
     ":rtc_event",
     ":safe_conversions",
     ":stringutils",
+    ":strong_alias",
     ":timeutils",
     ":type_traits",
     "../api:array_view",
@@ -139,7 +140,7 @@ rtc_library("rtc_base_approved") {
     "rate_statistics.h",
     "rate_tracker.cc",
     "rate_tracker.h",
-    "strong_alias.h",
+    "strong_alias.h",  # Transitional, use :strong_alias
     "swap_queue.h",
     "timestamp_aligner.cc",
     "timestamp_aligner.h",
@@ -178,6 +179,11 @@ rtc_library("rtc_base_approved") {
   if (is_android) {
     libs = [ "log" ]
   }
+}
+
+rtc_source_set("strong_alias") {
+  visibility = [ "*" ]
+  sources = [ "strong_alias.h" ]
 }
 
 rtc_source_set("macromagic") {
@@ -1445,6 +1451,7 @@ if (rtc_include_tests) {
         ":socket_address",
         ":socket_server",
         ":stringutils",
+        ":strong_alias",
         ":testclient",
         ":threading",
         ":timeutils",
