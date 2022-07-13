@@ -519,6 +519,7 @@ void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
     // initial connect() (i.e. `pretending_to_be_writable_` is false) . We have
     // to manually destroy here as this connection, as never connected, will not
     // be scheduled for ping to trigger destroy.
+    socket_->UnsubscribeClose(this);
     Destroy();
   }
 }
@@ -557,6 +558,11 @@ void TCPConnection::CreateOutgoingTcpSocket() {
   int opts = (remote_candidate().protocol() == SSLTCP_PROTOCOL_NAME)
                  ? rtc::PacketSocketFactory::OPT_TLS_FAKE
                  : 0;
+
+  if (socket_) {
+    socket_->UnsubscribeClose(this);
+  }
+
   rtc::PacketSocketTcpOptions tcp_opts;
   tcp_opts.opts = opts;
   socket_.reset(port()->socket_factory()->CreateClientTcpSocket(
@@ -590,7 +596,8 @@ void TCPConnection::ConnectSocketSignals(rtc::AsyncPacketSocket* socket) {
   }
   socket->SignalReadPacket.connect(this, &TCPConnection::OnReadPacket);
   socket->SignalReadyToSend.connect(this, &TCPConnection::OnReadyToSend);
-  socket->SignalClose.connect(this, &TCPConnection::OnClose);
+  socket->SubscribeClose(
+      this, [this](rtc::AsyncPacketSocket* s, int err) { OnClose(s, err); });
 }
 
 }  // namespace cricket

@@ -306,6 +306,10 @@ TurnPort::~TurnPort() {
   while (!entries_.empty()) {
     DestroyEntry(entries_.front());
   }
+
+  if (socket_)
+    socket_->UnsubscribeClose(this);
+
   if (!SharedSocket()) {
     delete socket_;
   }
@@ -451,7 +455,9 @@ bool TurnPort::CreateTurnClientSocket() {
   if (server_address_.proto == PROTO_TCP ||
       server_address_.proto == PROTO_TLS) {
     socket_->SignalConnect.connect(this, &TurnPort::OnSocketConnect);
-    socket_->SignalClose.connect(this, &TurnPort::OnSocketClose);
+    socket_->SubscribeClose(this, [this](rtc::AsyncPacketSocket* s, int err) {
+      OnSocketClose(s, err);
+    });
   } else {
     state_ = STATE_CONNECTED;
   }
@@ -542,6 +548,9 @@ void TurnPort::OnAllocateMismatch() {
                    << ": Allocating a new socket after "
                       "STUN_ERROR_ALLOCATION_MISMATCH, retry: "
                    << allocate_mismatch_retries_ + 1;
+
+  socket_->UnsubscribeClose(this);
+
   if (SharedSocket()) {
     ResetSharedSocket();
   } else {

@@ -937,6 +937,7 @@ rtc_library("rtc_base") {
   deps = [
     ":async_resolver_interface",
     ":async_socket",
+    ":callback_list",
     ":checks",
     ":ip_address",
     ":logging",

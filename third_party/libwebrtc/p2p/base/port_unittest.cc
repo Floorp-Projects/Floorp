@@ -672,8 +672,8 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     // Ensure redundant SignalClose events on TcpConnection won't break tcp
     // reconnection. Chromium will fire SignalClose for all outstanding IPC
     // packets during reconnection.
-    tcp_conn1->socket()->SignalClose(tcp_conn1->socket(), 0);
-    tcp_conn2->socket()->SignalClose(tcp_conn2->socket(), 0);
+    tcp_conn1->socket()->NotifyClosedForTest(0);
+    tcp_conn2->socket()->NotifyClosedForTest(0);
 
     // Speed up destroying ch2's connection such that the test is ready to
     // accept a new connection from ch1 before ch1's connection destroys itself.
@@ -1625,7 +1625,7 @@ TEST_F(PortTest, TestDisableInterfaceOfTcpPort) {
   lconn->Ping(0);
 
   // Now disconnect the client socket...
-  socket->SignalClose(socket, 1);
+  socket->NotifyClosedForTest(1);
 
   // And prevent new sockets from being created.
   socket_factory.set_next_client_tcp_socket(nullptr);
