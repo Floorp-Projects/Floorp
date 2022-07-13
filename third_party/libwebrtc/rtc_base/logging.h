@@ -57,6 +57,7 @@
 #include <atomic>
 #include <sstream>  // no-presubmit-check TODO(webrtc:8982)
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "absl/base/attributes.h"
@@ -285,8 +286,15 @@ inline Val<LogArgType::kLogMetadataTag, LogMetadataTag> MakeVal(
 template <typename T, class = void>
 struct has_to_log_string : std::false_type {};
 template <typename T>
-struct has_to_log_string<T, decltype(ToLogString(std::declval<T>()))>
-    : std::true_type {};
+struct has_to_log_string<T,
+                         absl::enable_if_t<std::is_convertible<
+                             decltype(ToLogString(std::declval<T>())),
+                             std::string>::value>> : std::true_type {};
+
+template <typename T, absl::enable_if_t<has_to_log_string<T>::value>* = nullptr>
+ToStringVal MakeVal(const T& x) {
+  return {ToLogString(x)};
+}
 
 // Handle arbitrary types other than the above by falling back to stringstream.
 // TODO(bugs.webrtc.org/9278): Get rid of this overload when callers don't need
@@ -306,11 +314,6 @@ ToStringVal MakeVal(const T& x) {
   std::ostringstream os;  // no-presubmit-check TODO(webrtc:8982)
   os << x;
   return {os.str()};
-}
-
-template <typename T, absl::enable_if_t<has_to_log_string<T>::value>* = nullptr>
-ToStringVal MakeVal(const T& x) {
-  return {ToLogString(x)};
 }
 
 #if RTC_LOG_ENABLED()
