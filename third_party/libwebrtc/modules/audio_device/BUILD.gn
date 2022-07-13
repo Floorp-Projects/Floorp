@@ -191,6 +191,7 @@ rtc_library("audio_device_impl") {
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
     "../../rtc_base:platform_thread",
+    "../../rtc_base:random",
     "../../rtc_base:refcount",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_event",

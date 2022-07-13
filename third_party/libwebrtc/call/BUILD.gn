@@ -212,6 +212,7 @@ rtc_library("rtp_sender") {
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
+    "../rtc_base:random",
     "../rtc_base:rate_limiter",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_task_queue",
@@ -400,6 +401,7 @@ rtc_library("simulated_network") {
     "../api/units:timestamp",
     "../rtc_base:checks",
     "../rtc_base:macromagic",
+    "../rtc_base:random",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/synchronization:mutex",
   ]
@@ -496,6 +498,7 @@ if (rtc_include_tests) {
         "../rtc_base:checks",
         "../rtc_base:logging",
         "../rtc_base:macromagic",
+        "../rtc_base:random",
         "../rtc_base:rate_limiter",
         "../rtc_base:rtc_base_approved",
         "../rtc_base:rtc_event",

@@ -102,6 +102,7 @@ if (rtc_include_tests) {
       "../../modules/video_coding:video_coding_utility",
       "../../rtc_base:checks",
       "../../rtc_base:logging",
+      "../../rtc_base:random",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_base_tests_utils",
       "../../rtc_base:rtc_event",

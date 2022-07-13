@@ -145,6 +145,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":metrics",
       ":system_wrappers",
       "../rtc_base:checks",
+      "../rtc_base:random",
       "../rtc_base:rtc_base_approved",
       "../test:rtc_expect_death",
       "../test:test_main",

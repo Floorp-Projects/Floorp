@@ -66,6 +66,7 @@ if (rtc_include_tests) {
       "../../rtc_base:checks",
       "../../rtc_base:logging",
       "../../rtc_base:platform_thread",
+      "../../rtc_base:random",
       "../../rtc_base:timeutils",
     ]
     if (rtc_desktop_capture_supported) {
@@ -129,6 +130,7 @@ if (rtc_include_tests) {
       "../../rtc_base:checks",
       "../../rtc_base:logging",
       "../../rtc_base:macromagic",
+      "../../rtc_base:random",
       "../../rtc_base:timeutils",
 
       # TODO(bugs.webrtc.org/9987): Remove this dep on rtc_base:rtc_base once
@@ -474,6 +476,7 @@ rtc_library("desktop_capture_generic") {
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
+    "../../rtc_base:random",
     "../../rtc_base:refcount",
     "../../rtc_base:stringutils",
     "../../rtc_base:timeutils",
