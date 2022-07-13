@@ -20,19 +20,19 @@ namespace webrtc {
 namespace webrtc_pc_e2e {
 namespace {
 
-using VideoSubscription = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::VideoSubscription;
+using VideoResolution = ::webrtc::webrtc_pc_e2e::
+    PeerConnectionE2EQualityTestFixture::VideoResolution;
 using VideoConfig =
     ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
+using VideoSubscription = ::webrtc::webrtc_pc_e2e::
+    PeerConnectionE2EQualityTestFixture::VideoSubscription;
 
 TEST(PclfVideoSubscription, MaxFromSenderSpecEqualIndependentOfOtherFields) {
-  VideoSubscription::Resolution r1(
-      VideoSubscription::Resolution::Spec::kMaxFromSender);
+  VideoResolution r1(VideoResolution::Spec::kMaxFromSender);
   r1.set_width(1);
   r1.set_height(2);
   r1.set_fps(3);
-  VideoSubscription::Resolution r2(
-      VideoSubscription::Resolution::Spec::kMaxFromSender);
+  VideoResolution r2(VideoResolution::Spec::kMaxFromSender);
   r1.set_width(4);
   r1.set_height(5);
   r1.set_fps(6);
@@ -40,16 +40,16 @@ TEST(PclfVideoSubscription, MaxFromSenderSpecEqualIndependentOfOtherFields) {
 }
 
 TEST(PclfVideoSubscription, WhenSpecIsNotSetFieldsAreCompared) {
-  VideoSubscription::Resolution test_resolution(/*width=*/1, /*height=*/2,
-                                                /*fps=*/3);
-  VideoSubscription::Resolution equal_resolution(/*width=*/1, /*height=*/2,
-                                                 /*fps=*/3);
-  VideoSubscription::Resolution different_width(/*width=*/10, /*height=*/2,
-                                                /*fps=*/3);
-  VideoSubscription::Resolution different_height(/*width=*/1, /*height=*/20,
-                                                 /*fps=*/3);
-  VideoSubscription::Resolution different_fps(/*width=*/1, /*height=*/20,
-                                              /*fps=*/30);
+  VideoResolution test_resolution(/*width=*/1, /*height=*/2,
+                                  /*fps=*/3);
+  VideoResolution equal_resolution(/*width=*/1, /*height=*/2,
+                                   /*fps=*/3);
+  VideoResolution different_width(/*width=*/10, /*height=*/2,
+                                  /*fps=*/3);
+  VideoResolution different_height(/*width=*/1, /*height=*/20,
+                                   /*fps=*/3);
+  VideoResolution different_fps(/*width=*/1, /*height=*/20,
+                                /*fps=*/30);
 
   EXPECT_EQ(test_resolution, equal_resolution);
   EXPECT_NE(test_resolution, different_width);
@@ -58,7 +58,7 @@ TEST(PclfVideoSubscription, WhenSpecIsNotSetFieldsAreCompared) {
 }
 
 TEST(PclfVideoSubscription, GetMaxResolutionForEmptyReturnsNullopt) {
-  absl::optional<VideoSubscription::Resolution> resolution =
+  absl::optional<VideoResolution> resolution =
       VideoSubscription::GetMaxResolution(std::vector<VideoConfig>{});
   ASSERT_FALSE(resolution.has_value());
 }
@@ -68,7 +68,7 @@ TEST(PclfVideoSubscription, GetMaxResolutionSelectMaxForEachDimention) {
   VideoConfig max_height(/*width=*/1, /*height=*/100, /*fps=*/1);
   VideoConfig max_fps(/*width=*/1, /*height=*/1, /*fps=*/10);
 
-  absl::optional<VideoSubscription::Resolution> resolution =
+  absl::optional<VideoResolution> resolution =
       VideoSubscription::GetMaxResolution(
           std::vector<VideoConfig>{max_width, max_height, max_fps});
   ASSERT_TRUE(resolution.has_value());
