@@ -84,6 +84,7 @@ rtc_library("rtc_base_approved") {
     ":atomicops",
     ":bit_buffer",
     ":checks",
+    ":histogram_percentile_counter",
     ":location",
     ":logging",
     ":macromagic",
@@ -135,8 +136,8 @@ rtc_library("rtc_base_approved") {
     "event_tracer.cc",
     "event_tracer.h",
     "location.h",  # Transitional, use :location
-    "numerics/histogram_percentile_counter.cc",
-    "numerics/histogram_percentile_counter.h",
+    "numerics/histogram_percentile_counter.h",  # Transitional, use
+                                                # :histogram_percentile_counter
     "numerics/mod_ops.h",  # Transitional, use :mod_ops
     "numerics/moving_max_counter.h",  # Transitional, use :moving_max_counter
     "numerics/sample_counter.h",  # Transitional, use :sample_counter
@@ -240,6 +241,16 @@ rtc_library("bit_buffer") {
   ]
   deps = [ ":checks" ]
   absl_deps = [ "//third_party/abseil-cpp/absl/numeric:bits" ]
+}
+
+rtc_library("histogram_percentile_counter") {
+  visibility = [ "*" ]
+  sources = [
+    "numerics/histogram_percentile_counter.cc",
+    "numerics/histogram_percentile_counter.h",
+  ]
+  deps = [ ":checks" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("location") {
@@ -1546,6 +1557,7 @@ if (rtc_include_tests) {
         ":criticalsection",
         ":divide_round",
         ":gunit_helpers",
+        ":histogram_percentile_counter",
         ":ip_address",
         ":location",
         ":logging",
