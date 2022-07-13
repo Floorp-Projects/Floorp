@@ -136,18 +136,12 @@ void RRSendQueue::OutgoingStream::Add(DcSctpMessage message,
   RTC_DCHECK(IsConsistent());
 }
 
-absl::optional<SendQueue::DataToSend> RRSendQueue::OutgoingStream::Produce(
-    TimeMs now,
-    size_t max_size) {
+SendQueue::DataToSend RRSendQueue::OutgoingStream::Produce(TimeMs now,
+                                                           size_t max_size) {
   RTC_DCHECK(!items_.empty());
 
   Item* item = &items_.front();
   DcSctpMessage& message = item->message;
-
-  if (item->remaining_size > max_size && max_size < kMinimumFragmentedPayload) {
-    RTC_DCHECK(IsConsistent());
-    return absl::nullopt;
-  }
 
   // Allocate Message ID and SSN when the first fragment is sent.
   if (!item->message_id.has_value()) {
@@ -354,22 +348,20 @@ absl::optional<SendQueue::DataToSend> RRSendQueue::Produce(TimeMs now,
     RTC_DCHECK(stream_it != streams_.end());
   }
 
-  absl::optional<DataToSend> data = stream_it->second.Produce(now, max_size);
-  if (data.has_value()) {
-    RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Producing DATA, type="
-                         << (data->data.is_unordered ? "unordered" : "ordered")
-                         << "::"
-                         << (*data->data.is_beginning && *data->data.is_end
-                                 ? "complete"
-                                 : *data->data.is_beginning
-                                       ? "first"
-                                       : *data->data.is_end ? "last" : "middle")
-                         << ", stream_id=" << *stream_it->first
-                         << ", ppid=" << *data->data.ppid
-                         << ", length=" << data->data.payload.size();
+  DataToSend data = stream_it->second.Produce(now, max_size);
+  RTC_DLOG(LS_VERBOSE) << log_prefix_ << "Producing DATA, type="
+                       << (data.data.is_unordered ? "unordered" : "ordered")
+                       << "::"
+                       << (*data.data.is_beginning && *data.data.is_end
+                               ? "complete"
+                               : *data.data.is_beginning
+                                     ? "first"
+                                     : *data.data.is_end ? "last" : "middle")
+                       << ", stream_id=" << *stream_it->first
+                       << ", ppid=" << *data.data.ppid
+                       << ", length=" << data.data.payload.size();
 
-    previous_message_has_ended_ = *data->data.is_end;
-  }
+  previous_message_has_ended_ = *data.data.is_end;
 
   RTC_DCHECK(IsConsistent());
   return data;
