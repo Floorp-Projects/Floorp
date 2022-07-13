@@ -298,7 +298,6 @@ if (!build_with_chromium) {
         "../../../api:media_stream_interface",
         "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api/video:video_frame",
-        "../../../pc:peerconnection",
         "../../../pc:session_description",
         "../../../pc:video_track_source",
       ]
@@ -398,7 +397,6 @@ if (!build_with_chromium) {
         "../../../api/units:time_delta",
         "../../../api/units:timestamp",
         "../../../pc:pc_test_utils",
-        "../../../pc:peerconnection",
         "../../../pc:sdp_utils",
         "../../../rtc_base",
         "../../../rtc_base:gunit_helpers",
@@ -828,7 +826,6 @@ if (!build_with_chromium) {
       "../../../api:rtp_parameters",
       "../../../media:rtc_media_base",
       "../../../p2p:rtc_p2p",
-      "../../../pc:peerconnection",
       "../../../pc:sdp_utils",
       "../../../pc:session_description",
       "../../../pc:simulcast_description",

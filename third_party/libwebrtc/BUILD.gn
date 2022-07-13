@@ -483,7 +483,6 @@ if (!build_with_chromium) {
       "modules/video_capture:video_capture_internal_impl",
       #"p2p:rtc_p2p",
       #"pc:libjingle_peerconnection",
-      #"pc:peerconnection",
       #"pc:rtc_pc",
       "rtc_base",
       #"sdk",
