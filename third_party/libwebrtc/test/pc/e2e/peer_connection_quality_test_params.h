@@ -139,6 +139,7 @@ struct Params {
   double video_encoder_bitrate_multiplier = 1.0;
 
   PeerConnectionInterface::RTCConfiguration rtc_configuration;
+  PeerConnectionInterface::RTCOfferAnswerOptions rtc_offer_answer_options;
   BitrateSettings bitrate_settings;
   std::vector<PeerConnectionE2EQualityTestFixture::VideoCodecConfig>
       video_codecs;
