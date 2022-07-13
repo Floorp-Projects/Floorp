@@ -56,6 +56,7 @@ if (rtc_include_tests) {
     deps = [
       ":pending_task_safety_flag",
       ":to_queued_task",
+      "..:logging",
       "..:rtc_base_approved",
       "..:rtc_task_queue",
       "..:task_queue_for_test",

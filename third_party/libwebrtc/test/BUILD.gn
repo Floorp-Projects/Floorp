@@ -69,6 +69,7 @@ rtc_library("frame_generator_impl") {
     "../rtc_base",
     "../rtc_base:checks",
     "../rtc_base:criticalsection",
+    "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_event",
     "../rtc_base/synchronization:mutex",

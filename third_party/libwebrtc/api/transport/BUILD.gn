@@ -102,6 +102,7 @@ rtc_source_set("stun_types") {
     "../../api:array_view",
     "../../rtc_base:checks",
     "../../rtc_base:ip_address",
+    "../../rtc_base:logging",
     "../../rtc_base:rtc_base",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:socket_address",

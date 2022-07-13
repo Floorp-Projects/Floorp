@@ -70,6 +70,7 @@ if (rtc_enable_protobuf) {
       "../../../api/task_queue",
       "../../../rtc_base:checks",
       "../../../rtc_base:ignore_wundef",
+      "../../../rtc_base:logging",
       "../../../rtc_base:protobuf_utils",
       "../../../rtc_base:rtc_base_approved",
       "../../../rtc_base:rtc_task_queue",

@@ -25,6 +25,7 @@ rtc_library("rr_send_queue") {
     ":send_queue",
     "../../../api:array_view",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
     "../packet:data",
     "../public:socket",
@@ -45,6 +46,7 @@ rtc_library("rr_send_queue") {
 rtc_library("retransmission_error_counter") {
   deps = [
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
     "../public:types",
   ]
@@ -73,6 +75,7 @@ rtc_library("outstanding_data") {
     ":send_queue",
     "../../../api:array_view",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
     "../common:math",
     "../common:sequence_numbers",
@@ -101,6 +104,7 @@ rtc_library("retransmission_queue") {
     ":send_queue",
     "../../../api:array_view",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
     "../common:math",
     "../common:sequence_numbers",

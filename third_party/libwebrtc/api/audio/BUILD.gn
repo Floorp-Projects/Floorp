@@ -20,6 +20,7 @@ rtc_library("audio_frame_api") {
   deps = [
     "..:rtp_packet_info",
     "../../rtc_base:checks",
+    "../../rtc_base:logging",
     "../../rtc_base:rtc_base_approved",
   ]
 }
@@ -64,6 +65,7 @@ rtc_library("aec3_config_json") {
   deps = [
     ":aec3_config",
     "../../rtc_base:checks",
+    "../../rtc_base:logging",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_json",
     "../../rtc_base/system:rtc_export",

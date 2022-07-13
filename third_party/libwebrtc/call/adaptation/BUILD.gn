@@ -44,6 +44,7 @@ rtc_library("resource_adaptation") {
     "../../api/video_codecs:video_codecs_api",
     "../../modules/video_coding:video_coding_utility",
     "../../rtc_base:checks",
+    "../../rtc_base:logging",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base/experiments:balanced_degradation_settings",

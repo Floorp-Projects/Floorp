@@ -35,6 +35,7 @@ rtc_library("utility") {
     "../../api/task_queue",
     "../../common_audio",
     "../../rtc_base:checks",
+    "../../rtc_base:logging",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:arch",
     "../../system_wrappers",

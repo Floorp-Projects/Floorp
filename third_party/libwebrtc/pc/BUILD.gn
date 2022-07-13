@@ -186,7 +186,10 @@ rtc_source_set("external_hmac") {
     "external_hmac.cc",
     "external_hmac.h",
   ]
-  deps = [ "../rtc_base:rtc_base_approved" ]
+  deps = [
+    "../rtc_base:logging",
+    "../rtc_base:rtc_base_approved",
+  ]
   if (rtc_build_libsrtp) {
     deps += [ "//third_party/libsrtp" ]
   }
@@ -336,6 +339,7 @@ rtc_source_set("media_session") {
     "../p2p:rtc_p2p",
     "../rtc_base",
     "../rtc_base:checks",
+    "../rtc_base:logging",
     "../rtc_base/third_party/base64",
   ]
   absl_deps = [
@@ -499,6 +503,7 @@ rtc_source_set("sctp_transport") {
     "../p2p:rtc_p2p",
     "../rtc_base",
     "../rtc_base:checks",
+    "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:threading",
@@ -521,6 +526,7 @@ rtc_source_set("sctp_utils") {
     "../api:priority",
     "../api/transport:datagram_transport_interface",
     "../media:rtc_media_base",
+    "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -592,6 +598,7 @@ rtc_source_set("srtp_transport") {
     "../p2p:rtc_p2p",
     "../rtc_base",
     "../rtc_base:checks",
+    "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/third_party/base64",
     "../rtc_base/third_party/sigslot",
@@ -1590,6 +1597,7 @@ rtc_library("rtp_transmission_manager") {
     "../media:rtc_media_base",
     "../rtc_base",
     "../rtc_base:checks",
+    "../rtc_base:logging",
     "../rtc_base:threading",
     "../rtc_base:weak_ptr",
     "../rtc_base/third_party/sigslot",
@@ -1714,6 +1722,7 @@ rtc_library("video_rtp_receiver") {
     "../media:rtc_media_base",
     "../rtc_base",
     "../rtc_base:checks",
+    "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:threading",
     "../rtc_base/system:no_unique_address",
@@ -1855,6 +1864,7 @@ rtc_library("rtp_sender") {
     "../api/crypto:frame_encryptor_interface",
     "../media:rtc_media_base",
     "../rtc_base:checks",
+    "../rtc_base:logging",
     "../rtc_base:rtc_base",
     "../rtc_base:threading",
     "../rtc_base/synchronization:mutex",
@@ -1881,6 +1891,7 @@ rtc_library("rtp_parameters_conversion") {
     "../api:rtp_parameters",
     "../media:rtc_media_base",
     "../rtc_base:checks",
+    "../rtc_base:logging",
     "../rtc_base:rtc_base",
   ]
   absl_deps = [
@@ -1901,6 +1912,7 @@ rtc_library("dtmf_sender") {
     "../api:libjingle_peerconnection_api",
     "../api:scoped_refptr",
     "../rtc_base:checks",
+    "../rtc_base:logging",
     "../rtc_base:rtc_base",
     "../rtc_base:threading",
     "../rtc_base/task_utils:pending_task_safety_flag",
@@ -2059,6 +2071,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
+      "../rtc_base:logging",
       "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:socket_address",
@@ -2148,6 +2161,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:scoped_refptr",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
+      "../rtc_base:logging",
       "../rtc_base:rtc_base_approved",
       "../test:test_support",
     ]
@@ -2307,6 +2321,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
       "../rtc_base:ip_address",
+      "../rtc_base:logging",
       "../rtc_base:network_constants",
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:rtc_json",
@@ -2486,6 +2501,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
       "../rtc_base:ip_address",
+      "../rtc_base:logging",
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:rtc_json",
       "../rtc_base:socket_address",
@@ -2584,6 +2600,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
+      "../rtc_base:logging",
       "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_task_queue",
       "../rtc_base:task_queue_for_test",

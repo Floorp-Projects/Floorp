@@ -63,6 +63,7 @@ if (rtc_include_tests) {
       "../../api:function_view",
       "../../api:scoped_refptr",
       "../../rtc_base:checks",
+      "../../rtc_base:logging",
     ]
     if (rtc_desktop_capture_supported) {
       deps += [
@@ -123,6 +124,7 @@ if (rtc_include_tests) {
       ":desktop_capture_mock",
       ":primitives",
       "../../rtc_base:checks",
+      "../../rtc_base:logging",
 
       # TODO(bugs.webrtc.org/9987): Remove this dep on rtc_base:rtc_base once
       # rtc_base:threading is fully defined.
@@ -181,6 +183,7 @@ if (rtc_include_tests) {
       ":primitives",
       "../../api:scoped_refptr",
       "../../rtc_base:checks",
+      "../../rtc_base:logging",
       "../../rtc_base:rtc_base_approved",
       "../../system_wrappers",
     ]
@@ -318,6 +321,7 @@ if (is_mac) {
       "../../api:scoped_refptr",
       "../../rtc_base",
       "../../rtc_base:checks",
+      "../../rtc_base:logging",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base/system:rtc_export",
       "../../sdk:helpers_objc",
@@ -461,6 +465,7 @@ rtc_library("desktop_capture_generic") {
     "../../api:sequence_checker",
     "../../rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
     "../../rtc_base:checks",
+    "../../rtc_base:logging",
     "../../rtc_base/synchronization:mutex",
     "../../rtc_base/system:arch",
     "../../rtc_base/system:no_unique_address",
