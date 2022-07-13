@@ -384,6 +384,7 @@ if (!build_with_chromium) {
         "../rtc_base:ignore_wundef",
         "../rtc_base:logging",
         "../rtc_base:macromagic",
+        "../rtc_base:rate_statistics",
         "../rtc_base:refcount",
 
         # TODO(kwiberg): Remove this dependency.

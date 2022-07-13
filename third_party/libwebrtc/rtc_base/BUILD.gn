@@ -95,6 +95,7 @@ rtc_library("rtc_base_approved") {
     ":platform_thread_types",
     ":race_checker",
     ":random",
+    ":rate_statistics",
     ":rate_tracker",
     ":refcount",
     ":rtc_event",
@@ -145,8 +146,7 @@ rtc_library("rtc_base_approved") {
     "one_time_event.h",  # Transitional, use :one_time_event
     "race_checker.h",  # Transitional, use :race_checker
     "random.h",  # Transitional, use :random
-    "rate_statistics.cc",
-    "rate_statistics.h",
+    "rate_statistics.h",  # Transitional, use :rate_statistics
     "rate_tracker.h",  # Transitional, use :rate_tracker
     "strong_alias.h",  # Transitional, use :strong_alias
     "swap_queue.h",  # Transitional, use :swap_queue
@@ -285,6 +285,21 @@ rtc_library("random") {
     ":checks",
     ":safe_conversions",
   ]
+}
+
+rtc_library("rate_statistics") {
+  visibility = [ "*" ]
+  sources = [
+    "rate_statistics.cc",
+    "rate_statistics.h",
+  ]
+  deps = [
+    ":checks",
+    ":logging",
+    ":safe_conversions",
+    "system:rtc_export",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("rate_tracker") {
@@ -505,6 +520,7 @@ rtc_library("rate_limiter") {
   ]
   deps = [
     ":macromagic",
+    ":rate_statistics",
     ":rtc_base_approved",
     "../system_wrappers",
     "synchronization:mutex",
@@ -1581,6 +1597,7 @@ if (rtc_include_tests) {
         ":platform_thread",
         ":random",
         ":rate_limiter",
+        ":rate_statistics",
         ":rate_tracker",
         ":refcount",
         ":rtc_base",
