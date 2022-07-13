@@ -188,8 +188,6 @@ static const char kSdpFullString[] =
     "a=rtpmap:104 ISAC/32000\r\n"
     "a=ssrc:1 cname:stream_1_cname\r\n"
     "a=ssrc:1 msid:local_stream_1 audio_track_id_1\r\n"
-    "a=ssrc:1 mslabel:local_stream_1\r\n"
-    "a=ssrc:1 label:audio_track_id_1\r\n"
     "m=video 3457 RTP/SAVPF 120\r\n"
     "c=IN IP4 74.125.224.39\r\n"
     "a=rtcp:3456 IN IP4 74.125.224.39\r\n"
@@ -214,12 +212,8 @@ static const char kSdpFullString[] =
     "a=ssrc-group:FEC 2 3\r\n"
     "a=ssrc:2 cname:stream_1_cname\r\n"
     "a=ssrc:2 msid:local_stream_1 video_track_id_1\r\n"
-    "a=ssrc:2 mslabel:local_stream_1\r\n"
-    "a=ssrc:2 label:video_track_id_1\r\n"
     "a=ssrc:3 cname:stream_1_cname\r\n"
-    "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n"
-    "a=ssrc:3 mslabel:local_stream_1\r\n"
-    "a=ssrc:3 label:video_track_id_1\r\n";
+    "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n";
 
 // SDP reference string without the candidates.
 static const char kSdpString[] =
@@ -245,8 +239,6 @@ static const char kSdpString[] =
     "a=rtpmap:104 ISAC/32000\r\n"
     "a=ssrc:1 cname:stream_1_cname\r\n"
     "a=ssrc:1 msid:local_stream_1 audio_track_id_1\r\n"
-    "a=ssrc:1 mslabel:local_stream_1\r\n"
-    "a=ssrc:1 label:audio_track_id_1\r\n"
     "m=video 9 RTP/SAVPF 120\r\n"
     "c=IN IP4 0.0.0.0\r\n"
     "a=rtcp:9 IN IP4 0.0.0.0\r\n"
@@ -259,12 +251,8 @@ static const char kSdpString[] =
     "a=ssrc-group:FEC 2 3\r\n"
     "a=ssrc:2 cname:stream_1_cname\r\n"
     "a=ssrc:2 msid:local_stream_1 video_track_id_1\r\n"
-    "a=ssrc:2 mslabel:local_stream_1\r\n"
-    "a=ssrc:2 label:video_track_id_1\r\n"
     "a=ssrc:3 cname:stream_1_cname\r\n"
-    "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n"
-    "a=ssrc:3 mslabel:local_stream_1\r\n"
-    "a=ssrc:3 label:video_track_id_1\r\n";
+    "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n";
 
 // draft-ietf-mmusic-sctp-sdp-03
 static const char kSdpSctpDataChannelString[] =
@@ -339,9 +327,7 @@ static const char kSdpAudioString[] =
     "a=sendrecv\r\n"
     "a=rtpmap:111 opus/48000/2\r\n"
     "a=ssrc:1 cname:stream_1_cname\r\n"
-    "a=ssrc:1 msid:local_stream audio_track_id_1\r\n"
-    "a=ssrc:1 mslabel:local_stream\r\n"
-    "a=ssrc:1 label:audio_track_id_1\r\n";
+    "a=ssrc:1 msid:local_stream audio_track_id_1\r\n";
 
 static const char kSdpVideoString[] =
     "m=video 9 RTP/SAVPF 120\r\n"
@@ -352,9 +338,7 @@ static const char kSdpVideoString[] =
     "a=sendrecv\r\n"
     "a=rtpmap:120 VP8/90000\r\n"
     "a=ssrc:2 cname:stream_1_cname\r\n"
-    "a=ssrc:2 msid:local_stream video_track_id_1\r\n"
-    "a=ssrc:2 mslabel:local_stream\r\n"
-    "a=ssrc:2 label:video_track_id_1\r\n";
+    "a=ssrc:2 msid:local_stream video_track_id_1\r\n";
 
 // Reference sdp string using bundle-only.
 static const char kBundleOnlySdpFullString[] =
@@ -395,8 +379,6 @@ static const char kBundleOnlySdpFullString[] =
     "a=rtpmap:104 ISAC/32000\r\n"
     "a=ssrc:1 cname:stream_1_cname\r\n"
     "a=ssrc:1 msid:local_stream_1 audio_track_id_1\r\n"
-    "a=ssrc:1 mslabel:local_stream_1\r\n"
-    "a=ssrc:1 label:audio_track_id_1\r\n"
     "m=video 0 RTP/SAVPF 120\r\n"
     "c=IN IP4 0.0.0.0\r\n"
     "a=rtcp:9 IN IP4 0.0.0.0\r\n"
@@ -409,12 +391,8 @@ static const char kBundleOnlySdpFullString[] =
     "a=ssrc-group:FEC 2 3\r\n"
     "a=ssrc:2 cname:stream_1_cname\r\n"
     "a=ssrc:2 msid:local_stream_1 video_track_id_1\r\n"
-    "a=ssrc:2 mslabel:local_stream_1\r\n"
-    "a=ssrc:2 label:video_track_id_1\r\n"
     "a=ssrc:3 cname:stream_1_cname\r\n"
-    "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n"
-    "a=ssrc:3 mslabel:local_stream_1\r\n"
-    "a=ssrc:3 label:video_track_id_1\r\n";
+    "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n";
 
 // Plan B SDP reference string, with 2 streams, 2 audio tracks and 3 video
 // tracks.
@@ -455,12 +433,8 @@ static const char kPlanBSdpFullString[] =
     "a=rtpmap:104 ISAC/32000\r\n"
     "a=ssrc:1 cname:stream_1_cname\r\n"
     "a=ssrc:1 msid:local_stream_1 audio_track_id_1\r\n"
-    "a=ssrc:1 mslabel:local_stream_1\r\n"
-    "a=ssrc:1 label:audio_track_id_1\r\n"
     "a=ssrc:4 cname:stream_2_cname\r\n"
     "a=ssrc:4 msid:local_stream_2 audio_track_id_2\r\n"
-    "a=ssrc:4 mslabel:local_stream_2\r\n"
-    "a=ssrc:4 label:audio_track_id_2\r\n"
     "m=video 3457 RTP/SAVPF 120\r\n"
     "c=IN IP4 74.125.224.39\r\n"
     "a=rtcp:3456 IN IP4 74.125.224.39\r\n"
@@ -485,20 +459,12 @@ static const char kPlanBSdpFullString[] =
     "a=ssrc-group:FEC 2 3\r\n"
     "a=ssrc:2 cname:stream_1_cname\r\n"
     "a=ssrc:2 msid:local_stream_1 video_track_id_1\r\n"
-    "a=ssrc:2 mslabel:local_stream_1\r\n"
-    "a=ssrc:2 label:video_track_id_1\r\n"
     "a=ssrc:3 cname:stream_1_cname\r\n"
     "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n"
-    "a=ssrc:3 mslabel:local_stream_1\r\n"
-    "a=ssrc:3 label:video_track_id_1\r\n"
     "a=ssrc:5 cname:stream_2_cname\r\n"
     "a=ssrc:5 msid:local_stream_2 video_track_id_2\r\n"
-    "a=ssrc:5 mslabel:local_stream_2\r\n"
-    "a=ssrc:5 label:video_track_id_2\r\n"
     "a=ssrc:6 cname:stream_2_cname\r\n"
-    "a=ssrc:6 msid:local_stream_2 video_track_id_3\r\n"
-    "a=ssrc:6 mslabel:local_stream_2\r\n"
-    "a=ssrc:6 label:video_track_id_3\r\n";
+    "a=ssrc:6 msid:local_stream_2 video_track_id_3\r\n";
 
 // Unified Plan SDP reference string, with 2 streams, 2 audio tracks and 3 video
 // tracks.
@@ -654,8 +620,6 @@ static const char kUnifiedPlanSdpFullStringWithSpecialMsid[] =
     "a=rtpmap:104 ISAC/32000\r\n"
     "a=ssrc:1 cname:stream_1_cname\r\n"
     "a=ssrc:1 msid:local_stream_1 audio_track_id_1\r\n"
-    "a=ssrc:1 mslabel:local_stream_1\r\n"
-    "a=ssrc:1 label:audio_track_id_1\r\n"
     // Audio track 2, with two stream ids.
     "m=audio 9 RTP/SAVPF 111 103 104\r\n"
     "c=IN IP4 0.0.0.0\r\n"
@@ -677,8 +641,6 @@ static const char kUnifiedPlanSdpFullStringWithSpecialMsid[] =
     // The support for Plan B msid signaling only includes the
     // first media stream id "local_stream_1."
     "a=ssrc:4 msid:local_stream_1 audio_track_id_2\r\n"
-    "a=ssrc:4 mslabel:local_stream_1\r\n"
-    "a=ssrc:4 label:audio_track_id_2\r\n"
     // Audio track 3, with no stream ids.
     "m=audio 9 RTP/SAVPF 111 103 104\r\n"
     "c=IN IP4 0.0.0.0\r\n"
@@ -696,9 +658,7 @@ static const char kUnifiedPlanSdpFullStringWithSpecialMsid[] =
     "a=rtpmap:103 ISAC/16000\r\n"
     "a=rtpmap:104 ISAC/32000\r\n"
     "a=ssrc:7 cname:stream_2_cname\r\n"
-    "a=ssrc:7 msid:- audio_track_id_3\r\n"
-    "a=ssrc:7 mslabel:-\r\n"
-    "a=ssrc:7 label:audio_track_id_3\r\n";
+    "a=ssrc:7 msid:- audio_track_id_3\r\n";
 
 // SDP string for unified plan without SSRCs
 static const char kUnifiedPlanSdpFullStringNoSsrc[] =
@@ -2667,21 +2627,6 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithRejectedAudioVideo) {
   EXPECT_TRUE(TestDeserializeRejected(true, true));
 }
 
-// Tests that we can still handle the sdp uses mslabel and label instead of
-// msid for backward compatibility.
-TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutMsid) {
-  jdesc_.description()->set_msid_supported(false);
-  JsepSessionDescription jdesc(kDummyType);
-  std::string sdp_without_msid = kSdpFullString;
-  Replace("msid", "xmsid", &sdp_without_msid);
-  // Deserialize
-  EXPECT_TRUE(SdpDeserialize(sdp_without_msid, &jdesc));
-  // Verify
-  EXPECT_TRUE(CompareSessionDescription(jdesc_, jdesc));
-  EXPECT_FALSE(jdesc.description()->msid_signaling() &
-               ~cricket::kMsidSignalingSsrcAttribute);
-}
-
 TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithExtmapAllowMixed) {
   jdesc_.description()->set_extmap_allow_mixed(true);
   std::string sdp_with_extmap_allow_mixed = kSdpFullString;
@@ -3118,7 +3063,7 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutEndLineBreak) {
   // Deserialize
   SdpParseError error;
   EXPECT_FALSE(webrtc::SdpDeserialize(sdp, &jdesc, &error));
-  const std::string lastline = "a=ssrc:3 label:video_track_id_1";
+  const std::string lastline = "a=ssrc:3 msid:local_stream_1 video_track_id_1";
   EXPECT_EQ(lastline, error.line);
   EXPECT_EQ("Invalid SDP line.", error.description);
 }
@@ -4283,15 +4228,16 @@ TEST_F(WebRtcSdpTest, DeserializeEmptySessionName) {
 
 // Simulcast malformed input test for invalid format.
 TEST_F(WebRtcSdpTest, DeserializeSimulcastNegative_EmptyAttribute) {
-  ExpectParseFailureWithNewLines("a=ssrc:3 label:video_track_id_1\r\n",
-                                 "a=simulcast:\r\n", "a=simulcast:");
+  ExpectParseFailureWithNewLines(
+      "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n", "a=simulcast:\r\n",
+      "a=simulcast:");
 }
 
 // Tests that duplicate simulcast entries in the SDP triggers a parse failure.
 TEST_F(WebRtcSdpTest, DeserializeSimulcastNegative_DuplicateAttribute) {
-  ExpectParseFailureWithNewLines("a=ssrc:3 label:video_track_id_1\r\n",
-                                 "a=simulcast:send 1\r\na=simulcast:recv 2\r\n",
-                                 "a=simulcast:");
+  ExpectParseFailureWithNewLines(
+      "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n",
+      "a=simulcast:send 1\r\na=simulcast:recv 2\r\n", "a=simulcast:");
 }
 
 // Validates that deserialization uses the a=simulcast: attribute
@@ -4710,4 +4656,14 @@ TEST_F(WebRtcSdpTest, MaxChannels) {
       "a=rtpmap:108 ISAC/16000/512\r\n";
 
   ExpectParseFailure(sdp, "a=rtpmap:108 ISAC/16000/512");
+}
+
+// This tests parsing of SDP with unknown ssrc-specific attributes.
+TEST_F(WebRtcSdpTest, ParseIgnoreUnknownSsrcSpecificAttribute) {
+  std::string sdp = kSdpString;
+  sdp += "a=ssrc:1 mslabel:something\r\n";
+
+  JsepSessionDescription output(kDummyType);
+  SdpParseError error;
+  ASSERT_TRUE(webrtc::SdpDeserialize(sdp, &output, &error));
 }

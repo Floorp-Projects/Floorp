@@ -125,8 +125,7 @@ static const char kSdpStringWithStream1PlanB[] =
     "a=rtcp-mux\r\n"
     "a=rtpmap:103 ISAC/16000\r\n"
     "a=ssrc:1 cname:stream1\r\n"
-    "a=ssrc:1 mslabel:stream1\r\n"
-    "a=ssrc:1 label:audiotrack0\r\n"
+    "a=ssrc:1 msid:stream1 audiotrack0\r\n"
     "m=video 1 RTP/AVPF 120\r\n"
     "a=ice-ufrag:e5785931\r\n"
     "a=ice-pwd:36fb7878390db89481c1d46daa4278d8\r\n"
@@ -137,11 +136,10 @@ static const char kSdpStringWithStream1PlanB[] =
     "a=rtcp-mux\r\n"
     "a=rtpmap:120 VP8/90000\r\n"
     "a=ssrc:2 cname:stream1\r\n"
-    "a=ssrc:2 mslabel:stream1\r\n"
-    "a=ssrc:2 label:videotrack0\r\n";
-// Same string as above but with the MID changed to the Unified Plan default.
-// This is needed so that this SDP can be used as an answer for a Unified Plan
-// offer.
+    "a=ssrc:2 msid:stream1 videotrack0\r\n";
+// Same string as above but with the MID changed to the Unified Plan default and
+// a=msid added. This is needed so that this SDP can be used as an answer for a
+// Unified Plan offer.
 static const char kSdpStringWithStream1UnifiedPlan[] =
     "v=0\r\n"
     "o=- 0 0 IN IP4 127.0.0.1\r\n"
@@ -156,9 +154,8 @@ static const char kSdpStringWithStream1UnifiedPlan[] =
     "a=sendrecv\r\n"
     "a=rtcp-mux\r\n"
     "a=rtpmap:103 ISAC/16000\r\n"
+    "a=msid:stream1 audiotrack0\r\n"
     "a=ssrc:1 cname:stream1\r\n"
-    "a=ssrc:1 mslabel:stream1\r\n"
-    "a=ssrc:1 label:audiotrack0\r\n"
     "m=video 1 RTP/AVPF 120\r\n"
     "a=ice-ufrag:e5785931\r\n"
     "a=ice-pwd:36fb7878390db89481c1d46daa4278d8\r\n"
@@ -168,9 +165,8 @@ static const char kSdpStringWithStream1UnifiedPlan[] =
     "a=sendrecv\r\n"
     "a=rtcp-mux\r\n"
     "a=rtpmap:120 VP8/90000\r\n"
-    "a=ssrc:2 cname:stream1\r\n"
-    "a=ssrc:2 mslabel:stream1\r\n"
-    "a=ssrc:2 label:videotrack0\r\n";
+    "a=msid:stream1 videotrack0\r\n"
+    "a=ssrc:2 cname:stream1\r\n";
 
 // Reference SDP with a MediaStream with label "stream1" and audio track with
 // id "audio_1";
@@ -188,8 +184,7 @@ static const char kSdpStringWithStream1AudioTrackOnly[] =
     "a=sendrecv\r\n"
     "a=rtpmap:103 ISAC/16000\r\n"
     "a=ssrc:1 cname:stream1\r\n"
-    "a=ssrc:1 mslabel:stream1\r\n"
-    "a=ssrc:1 label:audiotrack0\r\n"
+    "a=ssrc:1 msid:stream1 audiotrack0\r\n"
     "a=rtcp-mux\r\n";
 
 // Reference SDP with two MediaStreams with label "stream1" and "stream2. Each
@@ -430,8 +425,6 @@ static const char kDtlsSdesFallbackSdp[] =
     "a=rtcp-mux\r\n"
     "a=mid:audio\r\n"
     "a=ssrc:1 cname:stream1\r\n"
-    "a=ssrc:1 mslabel:stream1\r\n"
-    "a=ssrc:1 label:audiotrack0\r\n"
     "a=ice-ufrag:e5785931\r\n"
     "a=ice-pwd:36fb7878390db89481c1d46daa4278d8\r\n"
     "a=rtpmap:0 pcmu/8000\r\n"
