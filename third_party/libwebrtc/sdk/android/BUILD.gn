@@ -1599,6 +1599,20 @@ if (is_android) {
     ]
   }
 
+  rtc_library("native_test_jni_onload") {
+    testonly = true
+
+    sources = [ "native_unittests/test_jni_onload.cc" ]
+
+    deps = [
+      ":base_jni",
+      ":internal_jni",
+      ":native_api_base",
+      ":native_api_jni",
+      "../../rtc_base:checks",
+    ]
+  }
+
   rtc_library("native_unittests") {
     testonly = true
 
@@ -1611,7 +1625,6 @@ if (is_android) {
       "native_unittests/java_types_unittest.cc",
       "native_unittests/peerconnection/peer_connection_factory_unittest.cc",
       "native_unittests/stacktrace/stacktrace_unittest.cc",
-      "native_unittests/test_jni_onload.cc",
       "native_unittests/video/video_source_unittest.cc",
     ]
 
@@ -1632,6 +1645,7 @@ if (is_android) {
       ":native_api_peerconnection",
       ":native_api_stacktrace",
       ":native_api_video",
+      ":native_test_jni_onload",
       ":opensles_audio_device_module",
       ":video_jni",
       "../../api:field_trials_view",
