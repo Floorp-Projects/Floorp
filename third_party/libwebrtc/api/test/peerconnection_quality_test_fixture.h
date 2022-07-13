@@ -179,8 +179,48 @@ class PeerConnectionE2EQualityTestFixture {
     std::vector<RtpEncodingParameters> encoding_params;
   };
 
+  class VideoResolution {
+   public:
+    // Determines special resolutions, which can't be expressed in terms of
+    // width, height and fps.
+    enum class Spec {
+      // No extra spec set. It describes a regular resolution described by
+      // width, height and fps.
+      kNone,
+      // Describes resolution which contains max value among all sender's
+      // video streams in each dimension (width, height, fps).
+      kMaxFromSender
+    };
+
+    VideoResolution(size_t width, size_t height, int32_t fps);
+    explicit VideoResolution(Spec spec = Spec::kNone);
+
+    bool operator==(const VideoResolution& other) const;
+    bool operator!=(const VideoResolution& other) const {
+      return !(*this == other);
+    }
+
+    size_t width() const { return width_; }
+    void set_width(size_t width) { width_ = width; }
+    size_t height() const { return height_; }
+    void set_height(size_t height) { height_ = height; }
+    int32_t fps() const { return fps_; }
+    void set_fps(int32_t fps) { fps_ = fps; }
+
+    // Returns if it is a regular resolution or not. The resolution is regular
+    // if it's spec is `Spec::kNone`.
+    bool IsRegular() const { return spec_ == Spec::kNone; }
+
+   private:
+    size_t width_ = 0;
+    size_t height_ = 0;
+    int32_t fps_ = 0;
+    Spec spec_ = Spec::kNone;
+  };
+
   // Contains properties of single video stream.
   struct VideoConfig {
+    explicit VideoConfig(const VideoResolution& resolution);
     VideoConfig(size_t width, size_t height, int32_t fps)
         : width(width), height(height), fps(fps) {}
     VideoConfig(std::string stream_label,
@@ -197,6 +237,10 @@ class PeerConnectionE2EQualityTestFixture {
     // Video stream height.
     const size_t height;
     const int32_t fps;
+    VideoResolution GetResolution() const {
+      return VideoResolution(width, height, fps);
+    }
+
     // Have to be unique among all specified configs for all peers in the call.
     // Will be auto generated if omitted.
     absl::optional<std::string> stream_label;
@@ -332,55 +376,24 @@ class PeerConnectionE2EQualityTestFixture {
   // peer should receive and in which resolution (width x height x fps).
   class VideoSubscription {
    public:
-    class Resolution {
-     public:
-      // Determines special resolutions, which can't be expressed in terms of
-      // width, height and fps.
-      enum class Spec {
-        // No extra spec set. It describes a regular resolution described by
-        // width, height and fps.
-        kNone,
-        // Describes resolution which contains max value among all sender's
-        // video streams in each dimension (width, height, fps).
-        kMaxFromSender
-      };
-
-      Resolution(size_t width, size_t height, int32_t fps);
-      explicit Resolution(const VideoConfig& video_config);
-      explicit Resolution(Spec spec = Spec::kNone);
-
-      bool operator==(const Resolution& other) const;
-      bool operator!=(const Resolution& other) const {
-        return !(*this == other);
-      }
-
-      size_t width() const { return width_; }
-      void set_width(size_t width) { width_ = width; }
-      size_t height() const { return height_; }
-      void set_height(size_t height) { height_ = height; }
-      int32_t fps() const { return fps_; }
-      void set_fps(int32_t fps) { fps_ = fps; }
-
-     private:
-      size_t width_ = 0;
-      size_t height_ = 0;
-      int32_t fps_ = 0;
-      Spec spec_ = Spec::kNone;
-    };
+    // Kept for backward compatibility
+    // TODO(titovartem): remove it when downstream projects will stop use it.
+    using Resolution = VideoResolution;
 
     // Returns the resolution constructed as maximum from all resolution
     // dimensions: width, height and fps.
-    static absl::optional<VideoSubscription::Resolution> GetMaxResolution(
+    static absl::optional<VideoResolution> GetMaxResolution(
         rtc::ArrayView<const VideoConfig> video_configs);
-    static absl::optional<VideoSubscription::Resolution> GetMaxResolution(
-        rtc::ArrayView<const VideoSubscription::Resolution> resolutions);
+    static absl::optional<VideoResolution> GetMaxResolution(
+        rtc::ArrayView<const VideoResolution> resolutions);
 
     // Subscribes receiver to all streams sent by the specified peer with
     // specified resolution. It will override any resolution that was used in
     // `SubscribeToAll` independently from methods call order.
     VideoSubscription& SubscribeToPeer(
         absl::string_view peer_name,
-        Resolution resolution = Resolution(Resolution::Spec::kMaxFromSender)) {
+        VideoResolution resolution =
+            VideoResolution(VideoResolution::Spec::kMaxFromSender)) {
       peers_resolution_[std::string(peer_name)] = resolution;
       return *this;
     }
@@ -390,7 +403,8 @@ class PeerConnectionE2EQualityTestFixture {
     // override resolution passed to this function independently from methods
     // call order.
     VideoSubscription& SubscribeToAllPeers(
-        Resolution resolution = Resolution(Resolution::Spec::kMaxFromSender)) {
+        VideoResolution resolution =
+            VideoResolution(VideoResolution::Spec::kMaxFromSender)) {
       default_resolution_ = resolution;
       return *this;
     }
@@ -399,7 +413,7 @@ class PeerConnectionE2EQualityTestFixture {
     // set for this sender, then will return resolution used for all streams.
     // If subscription doesn't subscribe to all streams, `absl::nullopt` will be
     // returned.
-    absl::optional<Resolution> GetResolutionForPeer(
+    absl::optional<VideoResolution> GetResolutionForPeer(
         absl::string_view peer_name) const {
       auto it = peers_resolution_.find(std::string(peer_name));
       if (it == peers_resolution_.end()) {
@@ -419,8 +433,8 @@ class PeerConnectionE2EQualityTestFixture {
     }
 
    private:
-    absl::optional<Resolution> default_resolution_ = absl::nullopt;
-    std::map<std::string, Resolution> peers_resolution_;
+    absl::optional<VideoResolution> default_resolution_ = absl::nullopt;
+    std::map<std::string, VideoResolution> peers_resolution_;
   };
 
   // This class is used to fully configure one peer inside the call.
