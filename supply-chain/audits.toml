@@ -1,6 +1,12 @@
 
 # cargo-vet audits file
 
+[[audits.android_logger]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.11.0"
+notes = "Small crate, wrapping Android log functionality, reviewed by janerik"
+
 [[audits.android_system_properties]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -57,10 +63,22 @@ criteria = "safe-to-deploy"
 version = "50.1.0"
 notes = "Maintained by the Glean team at Mozilla"
 
+[[audits.glean]]
+who = "Travis Long <tlong@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "50.1.2"
+notes = "Maintained by the Glean team at Mozilla"
+
 [[audits.glean-core]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "50.1.0"
+notes = "Maintained by the Glean team at Mozilla"
+
+[[audits.glean-core]]
+who = "Travis Long <tlong@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "50.1.2"
 notes = "Maintained by the Glean team at Mozilla"
 
 [[audits.linked-hash-map]]
@@ -129,11 +147,41 @@ criteria = "safe-to-deploy"
 delta = "0.1.19 -> 0.1.20"
 notes = "I am the author of most of these changes upstream, and prepared the release myself, at which point I looked at the other changes since 0.1.19."
 
+[[audits.uniffi]]
+who = "Travis Long <tlong@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.19.3"
+notes = "Maintained by the Glean and Application Services teams"
+
+[[audits.uniffi_bindgen]]
+who = "Travis Long <tlong@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.19.3"
+notes = "Maintained by the Glean and Application Services teams."
+
+[[audits.uniffi_build]]
+who = "Travis Long <tlong@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.19.3"
+notes = "Maintained by the Glean and Application Services teams."
+
+[[audits.uniffi_macros]]
+who = "Travis Long <tlong@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.19.3"
+notes = "Maintained by the Glean and Application Services teams."
+
 [[audits.void]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
 version = "1.0.2"
 notes = "Very small crate, just hosts the Void type for easier cross-crate interfacing."
+
+[[audits.weedle2]]
+who = "Travis Long <tlong@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "3.0.0"
+notes = "Maintained by the Glean and Application Services teams."
 
 [[audits.webdriver]]
 who = "Henrik Skupin <mail@hskupin.info>"

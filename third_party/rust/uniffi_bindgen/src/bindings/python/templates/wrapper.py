@@ -28,6 +28,9 @@ import datetime
 import {{ module_name }}
 {%- endfor %}
 
+# Used for default argument values
+DEFAULT = object()
+
 {% include "RustBufferTemplate.py" %}
 {% include "Helpers.py" %}
 {% include "RustBufferHelper.py" %}
@@ -37,28 +40,30 @@ import {{ module_name }}
 {% include "NamespaceLibraryTemplate.py" %}
 
 # Public interface members begin here.
-{% for code in self.declaration_code() %}
-{{ code }}
+{{ type_helper_code }}
+
+{%- for func in ci.function_definitions() %}
+{%- include "TopLevelFunctionTemplate.py" %}
 {%- endfor %}
 
 __all__ = [
     "InternalError",
-    {%- for e in ci.iter_enum_definitions() %}
+    {%- for e in ci.enum_definitions() %}
     "{{ e|type_name }}",
     {%- endfor %}
-    {%- for record in ci.iter_record_definitions() %}
+    {%- for record in ci.record_definitions() %}
     "{{ record|type_name }}",
     {%- endfor %}
-    {%- for func in ci.iter_function_definitions() %}
+    {%- for func in ci.function_definitions() %}
     "{{ func.name()|fn_name }}",
     {%- endfor %}
-    {%- for obj in ci.iter_object_definitions() %}
+    {%- for obj in ci.object_definitions() %}
     "{{ obj|type_name }}",
     {%- endfor %}
-    {%- for e in ci.iter_error_definitions() %}
+    {%- for e in ci.error_definitions() %}
     "{{ e|type_name }}",
     {%- endfor %}
-    {%- for c in ci.iter_callback_interface_definitions() %}
+    {%- for c in ci.callback_interface_definitions() %}
     "{{ c.name()|class_name }}",
     {%- endfor %}
 ]
