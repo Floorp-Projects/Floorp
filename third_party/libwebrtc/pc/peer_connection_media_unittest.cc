@@ -141,13 +141,15 @@ class PeerConnectionMediaBaseTest : public ::testing::Test {
     auto observer = std::make_unique<MockPeerConnectionObserver>();
     auto modified_config = config;
     modified_config.sdp_semantics = sdp_semantics_;
-    auto pc = pc_factory->CreatePeerConnection(modified_config,
-                                               std::move(fake_port_allocator),
-                                               nullptr, observer.get());
-    if (!pc) {
+    PeerConnectionDependencies pc_dependencies(observer.get());
+    pc_dependencies.allocator = std::move(fake_port_allocator);
+    auto result = pc_factory->CreatePeerConnectionOrError(
+        modified_config, std::move(pc_dependencies));
+    if (!result.ok()) {
       return nullptr;
     }
 
+    auto pc = result.MoveValue();
     observer->SetPeerConnectionInterface(pc.get());
     auto wrapper = std::make_unique<PeerConnectionWrapperForMediaTest>(
         pc_factory, pc, std::move(observer));

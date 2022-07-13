@@ -117,15 +117,15 @@ class PeerConnectionJsepTest : public ::testing::Test {
         CreateModularPeerConnectionFactory(
             CreatePeerConnectionFactoryDependencies());
     auto observer = std::make_unique<MockPeerConnectionObserver>();
-    auto pc = pc_factory->CreatePeerConnection(config, nullptr, nullptr,
-                                               observer.get());
-    if (!pc) {
+    auto result = pc_factory->CreatePeerConnectionOrError(
+        config, PeerConnectionDependencies(observer.get()));
+    if (!result.ok()) {
       return nullptr;
     }
 
-    observer->SetPeerConnectionInterface(pc.get());
-    return std::make_unique<PeerConnectionWrapper>(pc_factory, pc,
-                                                   std::move(observer));
+    observer->SetPeerConnectionInterface(result.value());
+    return std::make_unique<PeerConnectionWrapper>(
+        pc_factory, result.MoveValue(), std::move(observer));
   }
 
   std::unique_ptr<rtc::VirtualSocketServer> vss_;

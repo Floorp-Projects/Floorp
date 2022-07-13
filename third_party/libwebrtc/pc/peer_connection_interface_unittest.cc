@@ -749,10 +749,13 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
 
     RTCConfiguration modified_config = config;
     modified_config.sdp_semantics = sdp_semantics_;
-    pc_ = pc_factory_->CreatePeerConnection(
-        modified_config, std::move(port_allocator), std::move(cert_generator),
-        &observer_);
-    ASSERT_TRUE(pc_.get() != NULL);
+    PeerConnectionDependencies pc_dependencies(&observer_);
+    pc_dependencies.cert_generator = std::move(cert_generator);
+    pc_dependencies.allocator = std::move(port_allocator);
+    auto result = pc_factory_->CreatePeerConnectionOrError(
+        modified_config, std::move(pc_dependencies));
+    ASSERT_TRUE(result.ok());
+    pc_ = result.MoveValue();
     observer_.SetPeerConnectionInterface(pc_.get());
     EXPECT_EQ(PeerConnectionInterface::kStable, observer_.state_);
   }
@@ -763,9 +766,10 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
     server.uri = uri;
     config.servers.push_back(server);
     config.sdp_semantics = sdp_semantics_;
-    rtc::scoped_refptr<PeerConnectionInterface> pc =
-        pc_factory_->CreatePeerConnection(config, nullptr, nullptr, &observer_);
-    EXPECT_EQ(nullptr, pc);
+    PeerConnectionDependencies pc_dependencies(&observer_);
+    auto result = pc_factory_->CreatePeerConnectionOrError(
+        config, std::move(pc_dependencies));
+    EXPECT_FALSE(result.ok());
   }
 
   void CreatePeerConnectionExpectFail(
@@ -775,9 +779,10 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
     server.password = kTurnPassword;
     config.servers.push_back(server);
     config.sdp_semantics = sdp_semantics_;
-    rtc::scoped_refptr<PeerConnectionInterface> pc =
-        pc_factory_->CreatePeerConnection(config, nullptr, nullptr, &observer_);
-    EXPECT_EQ(nullptr, pc);
+    PeerConnectionDependencies pc_dependencies(&observer_);
+    auto result = pc_factory_->CreatePeerConnectionOrError(
+        config, std::move(pc_dependencies));
+    EXPECT_FALSE(result.ok());
   }
 
   void CreatePeerConnectionWithDifferentConfigurations() {
@@ -1384,11 +1389,12 @@ TEST_P(PeerConnectionInterfaceTest,
           webrtc::CreateBuiltinVideoEncoderFactory(),
           webrtc::CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
           nullptr /* audio_processing */));
-  rtc::scoped_refptr<PeerConnectionInterface> pc(
-      pc_factory->CreatePeerConnection(config, std::move(port_allocator),
-                                       nullptr, &observer_));
-  EXPECT_TRUE(pc.get());
-  observer_.SetPeerConnectionInterface(pc.get());
+  PeerConnectionDependencies pc_dependencies(&observer_);
+  pc_dependencies.allocator = std::move(port_allocator);
+  auto result = pc_factory_->CreatePeerConnectionOrError(
+      config, std::move(pc_dependencies));
+  EXPECT_TRUE(result.ok());
+  observer_.SetPeerConnectionInterface(result.value());
 
   // Now validate that the config fields set above were applied to the
   // PortAllocator, as flags or otherwise.
@@ -1902,31 +1908,30 @@ TEST_P(PeerConnectionInterfaceTest, CreateSctpDataChannel) {
   CreatePeerConnection(rtc_config);
 
   webrtc::DataChannelInit config;
-  rtc::scoped_refptr<DataChannelInterface> channel =
-      pc_->CreateDataChannel("1", &config);
-  EXPECT_TRUE(channel != NULL);
-  EXPECT_TRUE(channel->reliable());
+  auto channel = pc_->CreateDataChannelOrError("1", &config);
+  EXPECT_TRUE(channel.ok());
+  EXPECT_TRUE(channel.value()->reliable());
   EXPECT_TRUE(observer_.renegotiation_needed_);
   observer_.renegotiation_needed_ = false;
 
   config.ordered = false;
-  channel = pc_->CreateDataChannel("2", &config);
-  EXPECT_TRUE(channel != NULL);
-  EXPECT_TRUE(channel->reliable());
+  channel = pc_->CreateDataChannelOrError("2", &config);
+  EXPECT_TRUE(channel.ok());
+  EXPECT_TRUE(channel.value()->reliable());
   EXPECT_FALSE(observer_.renegotiation_needed_);
 
   config.ordered = true;
   config.maxRetransmits = 0;
-  channel = pc_->CreateDataChannel("3", &config);
-  EXPECT_TRUE(channel != NULL);
-  EXPECT_FALSE(channel->reliable());
+  channel = pc_->CreateDataChannelOrError("3", &config);
+  EXPECT_TRUE(channel.ok());
+  EXPECT_FALSE(channel.value()->reliable());
   EXPECT_FALSE(observer_.renegotiation_needed_);
 
   config.maxRetransmits = absl::nullopt;
   config.maxRetransmitTime = 0;
-  channel = pc_->CreateDataChannel("4", &config);
-  EXPECT_TRUE(channel != NULL);
-  EXPECT_FALSE(channel->reliable());
+  channel = pc_->CreateDataChannelOrError("4", &config);
+  EXPECT_TRUE(channel.ok());
+  EXPECT_FALSE(channel.value()->reliable());
   EXPECT_FALSE(observer_.renegotiation_needed_);
 }
 
@@ -1939,9 +1944,8 @@ TEST_P(PeerConnectionInterfaceTest, CreateSctpDataChannelWithMinusOne) {
   webrtc::DataChannelInit config;
   config.maxRetransmitTime = -1;
   config.maxRetransmits = -1;
-  rtc::scoped_refptr<DataChannelInterface> channel =
-      pc_->CreateDataChannel("1", &config);
-  EXPECT_TRUE(channel != NULL);
+  auto channel = pc_->CreateDataChannelOrError("1", &config);
+  EXPECT_TRUE(channel.ok());
 }
 
 // This tests that no data channel is returned if both maxRetransmits and
@@ -1956,9 +1960,8 @@ TEST_P(PeerConnectionInterfaceTest,
   config.maxRetransmits = 0;
   config.maxRetransmitTime = 0;
 
-  rtc::scoped_refptr<DataChannelInterface> channel =
-      pc_->CreateDataChannel(label, &config);
-  EXPECT_TRUE(channel == NULL);
+  auto channel = pc_->CreateDataChannelOrError(label, &config);
+  EXPECT_FALSE(channel.ok());
 }
 
 // The test verifies that creating a SCTP data channel with an id already in use
@@ -1969,27 +1972,26 @@ TEST_P(PeerConnectionInterfaceTest,
   CreatePeerConnection(rtc_config);
 
   webrtc::DataChannelInit config;
-  rtc::scoped_refptr<DataChannelInterface> channel;
 
   config.id = 1;
   config.negotiated = true;
-  channel = pc_->CreateDataChannel("1", &config);
-  EXPECT_TRUE(channel != NULL);
-  EXPECT_EQ(1, channel->id());
+  auto channel = pc_->CreateDataChannelOrError("1", &config);
+  EXPECT_TRUE(channel.ok());
+  EXPECT_EQ(1, channel.value()->id());
 
-  channel = pc_->CreateDataChannel("x", &config);
-  EXPECT_TRUE(channel == NULL);
+  channel = pc_->CreateDataChannelOrError("x", &config);
+  EXPECT_FALSE(channel.ok());
 
   config.id = cricket::kMaxSctpSid;
   config.negotiated = true;
-  channel = pc_->CreateDataChannel("max", &config);
-  EXPECT_TRUE(channel != NULL);
-  EXPECT_EQ(config.id, channel->id());
+  channel = pc_->CreateDataChannelOrError("max", &config);
+  EXPECT_TRUE(channel.ok());
+  EXPECT_EQ(config.id, channel.value()->id());
 
   config.id = cricket::kMaxSctpSid + 1;
   config.negotiated = true;
-  channel = pc_->CreateDataChannel("x", &config);
-  EXPECT_TRUE(channel == NULL);
+  channel = pc_->CreateDataChannelOrError("x", &config);
+  EXPECT_FALSE(channel.ok());
 }
 
 // Verifies that duplicated label is allowed for SCTP data channel.
@@ -1998,13 +2000,11 @@ TEST_P(PeerConnectionInterfaceTest, SctpDuplicatedLabelAllowed) {
   CreatePeerConnection(rtc_config);
 
   std::string label = "test";
-  rtc::scoped_refptr<DataChannelInterface> channel =
-      pc_->CreateDataChannel(label, nullptr);
-  EXPECT_NE(channel, nullptr);
+  auto channel = pc_->CreateDataChannelOrError(label, nullptr);
+  EXPECT_TRUE(channel.ok());
 
-  rtc::scoped_refptr<DataChannelInterface> dup_channel =
-      pc_->CreateDataChannel(label, nullptr);
-  EXPECT_NE(dup_channel, nullptr);
+  auto dup_channel = pc_->CreateDataChannelOrError(label, nullptr);
+  EXPECT_TRUE(dup_channel.ok());
 }
 
 #ifdef WEBRTC_HAVE_SCTP
@@ -2017,8 +2017,7 @@ TEST_P(PeerConnectionInterfaceTest, DISABLED_TestRejectSctpDataChannelInAnswer)
   RTCConfiguration rtc_config;
   CreatePeerConnection(rtc_config);
 
-  rtc::scoped_refptr<DataChannelInterface> offer_channel(
-      pc_->CreateDataChannel("offer_channel", NULL));
+  auto offer_channel = pc_->CreateDataChannelOrError("offer_channel", NULL);
 
   CreateOfferAsLocalDescription();
 
@@ -2033,7 +2032,7 @@ TEST_P(PeerConnectionInterfaceTest, DISABLED_TestRejectSctpDataChannelInAnswer)
   data_info->rejected = true;
 
   DoSetRemoteDescription(std::move(answer));
-  EXPECT_EQ(DataChannelInterface::kClosed, offer_channel->state());
+  EXPECT_EQ(DataChannelInterface::kClosed, offer_channel.value()->state());
 }
 
 // Test that we can create a session description from an SDP string from
@@ -2456,7 +2455,7 @@ TEST_F(PeerConnectionInterfaceTestPlanB, CloseAndTestMethods) {
   pc_->RemoveStream(local_stream);
   EXPECT_FALSE(pc_->AddStream(local_stream));
 
-  EXPECT_TRUE(pc_->CreateDataChannel("test", NULL) == NULL);
+  EXPECT_FALSE(pc_->CreateDataChannelOrError("test", NULL).ok());
 
   EXPECT_TRUE(pc_->local_description() != NULL);
   EXPECT_TRUE(pc_->remote_description() != NULL);
@@ -3340,7 +3339,7 @@ TEST_P(PeerConnectionInterfaceTest,
 
   // First, create an offer with only a data channel and apply it as a remote
   // description.
-  pc_->CreateDataChannel("test", nullptr);
+  pc_->CreateDataChannelOrError("test", nullptr);
   std::unique_ptr<SessionDescriptionInterface> offer;
   ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
   EXPECT_TRUE(DoSetRemoteDescription(std::move(offer)));
@@ -3660,11 +3659,12 @@ class PeerConnectionMediaConfigTest : public ::testing::Test {
   }
   const cricket::MediaConfig TestCreatePeerConnection(
       const RTCConfiguration& config) {
-    rtc::scoped_refptr<PeerConnectionInterface> pc(
-        pcf_->CreatePeerConnection(config, nullptr, nullptr, &observer_));
-    EXPECT_TRUE(pc.get());
-    observer_.SetPeerConnectionInterface(pc.get());
-    return pc->GetConfiguration().media_config;
+    PeerConnectionDependencies pc_dependencies(&observer_);
+    auto result =
+        pcf_->CreatePeerConnectionOrError(config, std::move(pc_dependencies));
+    EXPECT_TRUE(result.ok());
+    observer_.SetPeerConnectionInterface(result.value());
+    return result.value()->GetConfiguration().media_config;
   }
 
   rtc::scoped_refptr<PeerConnectionFactoryForTest> pcf_;
@@ -3675,11 +3675,12 @@ class PeerConnectionMediaConfigTest : public ::testing::Test {
 TEST_F(PeerConnectionMediaConfigTest, TestCreateAndClose) {
   PeerConnectionInterface::RTCConfiguration config;
   config.sdp_semantics = SdpSemantics::kUnifiedPlan;
-  rtc::scoped_refptr<PeerConnectionInterface> pc(
-      pcf_->CreatePeerConnection(config, nullptr, nullptr, &observer_));
-  EXPECT_TRUE(pc.get());
-  observer_.SetPeerConnectionInterface(pc.get());  // Required.
-  pc->Close();                                     // No abort -> ok.
+  PeerConnectionDependencies pc_dependencies(&observer_);
+  auto result =
+      pcf_->CreatePeerConnectionOrError(config, std::move(pc_dependencies));
+  EXPECT_TRUE(result.ok());
+  observer_.SetPeerConnectionInterface(result.value());
+  result.value()->Close();  // No abort -> ok.
   SUCCEED();
 }
 

@@ -410,7 +410,9 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
 
   void CreateDataChannel(const std::string& label,
                          const webrtc::DataChannelInit* init) {
-    data_channels_.push_back(pc()->CreateDataChannel(label, init));
+    auto data_channel_or_error = pc()->CreateDataChannelOrError(label, init);
+    ASSERT_TRUE(data_channel_or_error.ok());
+    data_channels_.push_back(data_channel_or_error.MoveValue());
     ASSERT_TRUE(data_channels_.back().get() != nullptr);
     data_observers_.push_back(
         std::make_unique<MockDataChannelObserver>(data_channels_.back()));
@@ -825,8 +827,11 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     modified_config.set_cpu_adaptation(false);
 
     dependencies.observer = this;
-    return peer_connection_factory_->CreatePeerConnection(
-        modified_config, std::move(dependencies));
+    auto peer_connection_or_error =
+        peer_connection_factory_->CreatePeerConnectionOrError(
+            modified_config, std::move(dependencies));
+    return peer_connection_or_error.ok() ? peer_connection_or_error.MoveValue()
+                                         : nullptr;
   }
 
   void set_signaling_message_receiver(

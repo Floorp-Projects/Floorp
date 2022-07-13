@@ -135,12 +135,12 @@ class PeerConnectionRtpBaseTest : public ::testing::Test {
   std::unique_ptr<PeerConnectionWrapper> CreatePeerConnectionInternal(
       const RTCConfiguration& config) {
     auto observer = std::make_unique<MockPeerConnectionObserver>();
-    auto pc = pc_factory_->CreatePeerConnection(config, nullptr, nullptr,
-                                                observer.get());
-    EXPECT_TRUE(pc.get());
-    observer->SetPeerConnectionInterface(pc.get());
-    return std::make_unique<PeerConnectionWrapper>(pc_factory_, pc,
-                                                   std::move(observer));
+    auto result = pc_factory_->CreatePeerConnectionOrError(
+        config, PeerConnectionDependencies(observer.get()));
+    EXPECT_TRUE(result.ok());
+    observer->SetPeerConnectionInterface(result.value());
+    return std::make_unique<PeerConnectionWrapper>(
+        pc_factory_, result.MoveValue(), std::move(observer));
   }
 };
 

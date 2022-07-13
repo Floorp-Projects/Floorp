@@ -167,15 +167,17 @@ class PeerConnectionIceBaseTest : public ::testing::Test {
     modified_config.sdp_semantics = sdp_semantics_;
     auto observer = std::make_unique<MockPeerConnectionObserver>();
     auto port_allocator_copy = port_allocator.get();
-    auto pc = pc_factory_->CreatePeerConnection(
-        modified_config, std::move(port_allocator), nullptr, observer.get());
-    if (!pc) {
+    PeerConnectionDependencies pc_dependencies(observer.get());
+    pc_dependencies.allocator = std::move(port_allocator);
+    auto result = pc_factory_->CreatePeerConnectionOrError(
+        modified_config, std::move(pc_dependencies));
+    if (!result.ok()) {
       return nullptr;
     }
 
-    observer->SetPeerConnectionInterface(pc.get());
+    observer->SetPeerConnectionInterface(result.value());
     auto wrapper = std::make_unique<PeerConnectionWrapperForIceTest>(
-        pc_factory_, pc, std::move(observer));
+        pc_factory_, result.MoveValue(), std::move(observer));
     wrapper->set_network(fake_network);
     wrapper->port_allocator_ = port_allocator_copy;
     return wrapper;
@@ -1415,12 +1417,12 @@ class PeerConnectionIceConfigTest : public ::testing::Test {
     std::unique_ptr<cricket::FakePortAllocator> port_allocator(
         new cricket::FakePortAllocator(rtc::Thread::Current(), nullptr));
     port_allocator_ = port_allocator.get();
-    rtc::scoped_refptr<PeerConnectionInterface> pc(
-        pc_factory_->CreatePeerConnection(config, std::move(port_allocator),
-                                          nullptr /* cert_generator */,
-                                          &observer_));
-    EXPECT_TRUE(pc.get());
-    pc_ = std::move(pc);
+    PeerConnectionDependencies pc_dependencies(&observer_);
+    pc_dependencies.allocator = std::move(port_allocator);
+    auto result = pc_factory_->CreatePeerConnectionOrError(
+        config, std::move(pc_dependencies));
+    EXPECT_TRUE(result.ok());
+    pc_ = result.MoveValue();
   }
 
   rtc::scoped_refptr<PeerConnectionFactoryInterface> pc_factory_ = nullptr;

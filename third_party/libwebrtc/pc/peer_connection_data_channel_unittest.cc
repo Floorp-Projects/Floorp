@@ -138,15 +138,15 @@ class PeerConnectionDataChannelBaseTest : public ::testing::Test {
     auto observer = std::make_unique<MockPeerConnectionObserver>();
     RTCConfiguration modified_config = config;
     modified_config.sdp_semantics = sdp_semantics_;
-    auto pc = pc_factory->CreatePeerConnection(modified_config, nullptr,
-                                               nullptr, observer.get());
-    if (!pc) {
+    auto result = pc_factory->CreatePeerConnectionOrError(
+        modified_config, PeerConnectionDependencies(observer.get()));
+    if (!result.ok()) {
       return nullptr;
     }
 
-    observer->SetPeerConnectionInterface(pc.get());
+    observer->SetPeerConnectionInterface(result.value());
     auto wrapper = std::make_unique<PeerConnectionWrapperForDataChannelTest>(
-        pc_factory, pc, std::move(observer));
+        pc_factory, result.MoveValue(), std::move(observer));
     wrapper->set_sctp_transport_factory(fake_sctp_transport_factory);
     return wrapper;
   }
@@ -159,7 +159,7 @@ class PeerConnectionDataChannelBaseTest : public ::testing::Test {
     if (!wrapper) {
       return nullptr;
     }
-    EXPECT_TRUE(wrapper->pc()->CreateDataChannel("dc", nullptr));
+    EXPECT_TRUE(wrapper->pc()->CreateDataChannelOrError("dc", nullptr).ok());
     return wrapper;
   }
 
@@ -222,7 +222,7 @@ TEST_P(PeerConnectionDataChannelTest, SctpContentAndTransportNameSetCorrectly) {
   // transport.
   caller->AddAudioTrack("a");
   caller->AddVideoTrack("v");
-  caller->pc()->CreateDataChannel("dc", nullptr);
+  caller->pc()->CreateDataChannelOrError("dc", nullptr);
 
   auto offer = caller->CreateOffer();
   const auto& offer_contents = offer->description()->contents();
