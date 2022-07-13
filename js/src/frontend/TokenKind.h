@@ -82,6 +82,7 @@
   MACRO(Number, "numeric literal")                                     \
   MACRO(String, "string literal")                                      \
   MACRO(BigInt, "bigint literal")                                      \
+  IF_DECORATORS(MACRO(At, "'@'"))                                      \
                                                                        \
   /* start of template literal with substitutions */                   \
   MACRO(TemplateHead, "'${'")                                          \
@@ -122,6 +123,7 @@
   MACRO(Import, "keyword 'import'")                                    \
   MACRO(Class, "keyword 'class'")                                      \
   MACRO(Extends, "keyword 'extends'")                                  \
+  IF_DECORATORS(MACRO(Accessor, "keyword 'accessor'"))                 \
   MACRO(Super, "keyword 'super'")                                      \
   RANGE(KeywordLast, Super)                                            \
                                                                        \
