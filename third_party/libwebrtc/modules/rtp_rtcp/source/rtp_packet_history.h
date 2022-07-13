@@ -18,7 +18,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/attributes.h"
 #include "api/function_view.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -64,16 +63,7 @@ class RtpPacketHistory {
 
   // Set RTT, used to avoid premature retransmission and to prevent over-writing
   // a packet in the history before we are reasonably sure it has been received.
-  ABSL_DEPRECATED("Use SetRtt below that takes TimeDelta")
-  void SetRtt(int64_t rtt_ms) { SetRtt(TimeDelta::Millis(rtt_ms)); }
-
   void SetRtt(TimeDelta rtt);
-
-  ABSL_DEPRECATED("Use PutRtpPacket below that take Timestamp")
-  void PutRtpPacket(std::unique_ptr<RtpPacketToSend> packet,
-                    int64_t send_time_ms) {
-    PutRtpPacket(std::move(packet), Timestamp::Millis(send_time_ms));
-  }
 
   void PutRtpPacket(std::unique_ptr<RtpPacketToSend> packet,
                     Timestamp send_time);
