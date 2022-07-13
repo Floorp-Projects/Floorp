@@ -788,8 +788,6 @@ bool ScriptLoader::PreloadURIComparator::Equals(const PreloadInfo& aPi,
 static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
                                   Document* aDocument) {
   nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
-  nsresult rv = NS_OK;
-
   if (!csp) {
     // no CSP --> allow
     return true;
@@ -810,8 +808,8 @@ static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
       aElement->GetParserCreated() != mozilla::dom::NOT_FROM_PARSER;
 
   bool allowInlineScript = false;
-  rv = csp->GetAllowsInline(
-      nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE, nonce, parserCreated,
+  nsresult rv = csp->GetAllowsInline(
+      nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE, nonce, parserCreated,
       scriptContent, nullptr /* nsICSPEventListener */, u""_ns,
       aElement->GetScriptLineNumber(), aElement->GetScriptColumnNumber(),
       &allowInlineScript);

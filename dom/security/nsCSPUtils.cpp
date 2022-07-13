@@ -255,9 +255,11 @@ void CSP_LogLocalizedStr(const char* aName, const nsTArray<nsString>& aParams,
 }
 
 /* ===== Helpers ============================ */
+// This implements
+// https://w3c.github.io/webappsec-csp/#effective-directive-for-a-request.
+// However the spec doesn't currently cover all request destinations, which
+// we roughly represent using nsContentPolicyType.
 CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
-  // We need to know if this is a worker so child-src  can handle that case
-  // correctly.
   switch (aType) {
     case nsIContentPolicy::TYPE_IMAGE:
     case nsIContentPolicy::TYPE_IMAGESET:
@@ -278,7 +280,11 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_INTERNAL_PAINTWORKLET:
     case nsIContentPolicy::TYPE_INTERNAL_CHROMEUTILS_COMPILED_SCRIPT:
     case nsIContentPolicy::TYPE_INTERNAL_FRAME_MESSAGEMANAGER_SCRIPT:
-      return nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE;
+      // (https://github.com/w3c/webappsec-csp/issues/554)
+      // Some of these types are not explicitly defined in the spec.
+      //
+      // Chrome seems to use script-src-elem for worklet!
+      return nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_STYLESHEET:
     case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
@@ -1210,6 +1216,16 @@ void nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const {
       outCSP.mWorker_src.Value() = std::move(srcs);
       return;
 
+    case nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE:
+      outCSP.mScript_src_elem.Construct();
+      outCSP.mScript_src_elem.Value() = std::move(srcs);
+      return;
+
+    case nsIContentSecurityPolicy::SCRIPT_SRC_ATTR_DIRECTIVE:
+      outCSP.mScript_src_attr.Construct();
+      outCSP.mScript_src_attr.Value() = std::move(srcs);
+      return;
+
     default:
       NS_ASSERTION(false, "cannot find directive to convert CSP to JSON");
   }
@@ -1277,13 +1293,22 @@ bool nsCSPChildSrcDirective::equals(CSPDirective aDirective) const {
 /* =============== nsCSPScriptSrcDirective ============= */
 
 nsCSPScriptSrcDirective::nsCSPScriptSrcDirective(CSPDirective aDirective)
-    : nsCSPDirective(aDirective), mRestrictWorkers(false) {}
+    : nsCSPDirective(aDirective),
+      mRestrictWorkers(false),
+      mRestrictScriptElem(false),
+      mRestrictScriptAttr(false) {}
 
 nsCSPScriptSrcDirective::~nsCSPScriptSrcDirective() = default;
 
 bool nsCSPScriptSrcDirective::equals(CSPDirective aDirective) const {
   if (aDirective == nsIContentSecurityPolicy::WORKER_SRC_DIRECTIVE) {
     return mRestrictWorkers;
+  }
+  if (aDirective == nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE) {
+    return mRestrictScriptElem;
+  }
+  if (aDirective == nsIContentSecurityPolicy::SCRIPT_SRC_ATTR_DIRECTIVE) {
+    return mRestrictScriptAttr;
   }
   return (mDirective == aDirective);
 }
