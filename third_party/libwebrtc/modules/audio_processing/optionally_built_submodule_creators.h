@@ -31,7 +31,8 @@ struct ApmSubmoduleCreationOverrides {
 // * WEBRTC_EXCLUDE_TRANSIENT_SUPPRESSOR is defined
 // * The corresponding override in `overrides` is enabled.
 std::unique_ptr<TransientSuppressor> CreateTransientSuppressor(
-    const ApmSubmoduleCreationOverrides& overrides);
+    const ApmSubmoduleCreationOverrides& overrides,
+    TransientSuppressor::VadMode vad_mode);
 
 }  // namespace webrtc
 

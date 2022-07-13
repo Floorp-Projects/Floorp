@@ -205,7 +205,10 @@ rtc_library("audio_processing") {
     "transient:transient_suppressor_api",
     "vad",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 
   deps += [
     "../../common_audio",

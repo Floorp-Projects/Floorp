@@ -17,6 +17,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/strings/match.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/audio/audio_frame.h"
@@ -65,6 +66,29 @@ bool EnforceSplitBandHpf() {
 bool UseSetupSpecificDefaultAec3Congfig() {
   return !field_trial::IsEnabled(
       "WebRTC-Aec3SetupSpecificDefaultConfigDefaultsKillSwitch");
+}
+
+// If the "WebRTC-Audio-TransientSuppressorVadMode" field trial is unspecified,
+// returns `TransientSuppressor::VadMode::kDefault`, otherwise parses the field
+// trial and returns the specified mode:
+// - WebRTC-Audio-TransientSuppressorVadMode/Enabled-Default returns `kDefault`;
+// - WebRTC-Audio-TransientSuppressorVadMode/Enabled-RnnVad returns `kRnnVad`;
+// - WebRTC-Audio-TransientSuppressorVadMode/Enabled-NoVad returns `kNoVad`.
+TransientSuppressor::VadMode GetTransientSuppressorVadMode() {
+  constexpr char kFieldTrial[] = "WebRTC-Audio-TransientSuppressorVadMode";
+  std::string full_name = webrtc::field_trial::FindFullName(kFieldTrial);
+  if (full_name.empty() || absl::EndsWith(full_name, "-Default")) {
+    return TransientSuppressor::VadMode::kDefault;
+  }
+  if (absl::EndsWith(full_name, "-RnnVad")) {
+    return TransientSuppressor::VadMode::kRnnVad;
+  }
+  if (absl::EndsWith(full_name, "-NoVad")) {
+    return TransientSuppressor::VadMode::kNoVad;
+  }
+  // Fallback to default.
+  RTC_LOG(LS_WARNING) << "Invalid parameter for " << kFieldTrial;
+  return TransientSuppressor::VadMode::kDefault;
 }
 
 // Identify the native processing rate that best handles a sample rate.
@@ -241,6 +265,7 @@ AudioProcessingImpl::AudioProcessingImpl(
           UseSetupSpecificDefaultAec3Congfig()),
       use_denormal_disabler_(
           !field_trial::IsEnabled("WebRTC-ApmDenormalDisablerKillSwitch")),
+      transient_suppressor_vad_mode_(GetTransientSuppressorVadMode()),
       capture_runtime_settings_(RuntimeSettingQueueSize()),
       render_runtime_settings_(RuntimeSettingQueueSize()),
       capture_runtime_settings_enqueuer_(&capture_runtime_settings_),
@@ -1244,14 +1269,21 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
                                       capture_buffer->num_frames()));
     }
 
-    // TODO(aluebs): Investigate if the transient suppression placement should
-    // be before or after the AGC.
     if (submodules_.transient_suppressor) {
-      float voice_probability =
-          submodules_.agc_manager.get()
-              ? submodules_.agc_manager->voice_probability()
-              : 1.f;
-
+      float voice_probability = 1.0f;
+      switch (transient_suppressor_vad_mode_) {
+        case TransientSuppressor::VadMode::kDefault:
+          if (submodules_.agc_manager) {
+            voice_probability = submodules_.agc_manager->voice_probability();
+          }
+          break;
+        case TransientSuppressor::VadMode::kRnnVad:
+          // TODO(bugs.webrtc.org/13663): Use RNN VAD.
+          break;
+        case TransientSuppressor::VadMode::kNoVad:
+          // The transient suppressor will ignore `voice_probability`.
+          break;
+      }
       submodules_.transient_suppressor->Suppress(
           capture_buffer->channels()[0], capture_buffer->num_frames(),
           capture_buffer->num_channels(),
@@ -1672,8 +1704,8 @@ void AudioProcessingImpl::InitializeTransientSuppressor() {
       !constants_.transient_suppressor_forced_off) {
     // Attempt to create a transient suppressor, if one is not already created.
     if (!submodules_.transient_suppressor) {
-      submodules_.transient_suppressor =
-          CreateTransientSuppressor(submodule_creation_overrides_);
+      submodules_.transient_suppressor = CreateTransientSuppressor(
+          submodule_creation_overrides_, transient_suppressor_vad_mode_);
     }
     if (submodules_.transient_suppressor) {
       submodules_.transient_suppressor->Initialize(

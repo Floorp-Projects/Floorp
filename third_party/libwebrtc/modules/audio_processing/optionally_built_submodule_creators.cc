@@ -17,14 +17,15 @@
 namespace webrtc {
 
 std::unique_ptr<TransientSuppressor> CreateTransientSuppressor(
-    const ApmSubmoduleCreationOverrides& overrides) {
+    const ApmSubmoduleCreationOverrides& overrides,
+    TransientSuppressor::VadMode vad_mode) {
 #ifdef WEBRTC_EXCLUDE_TRANSIENT_SUPPRESSOR
   return nullptr;
 #else
   if (overrides.transient_suppression) {
     return nullptr;
   }
-  return std::make_unique<TransientSuppressorImpl>();
+  return std::make_unique<TransientSuppressorImpl>(vad_mode);
 #endif
 }
 

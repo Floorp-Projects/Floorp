@@ -73,6 +73,7 @@ if (rtc_include_tests) {
         "transient_suppression_test.cc",
       ]
       deps = [
+        ":transient_suppressor_api",
         ":transient_suppressor_impl",
         "..:audio_processing",
         "../../../common_audio",
@@ -103,6 +104,7 @@ if (rtc_include_tests) {
       "wpd_tree_unittest.cc",
     ]
     deps = [
+      ":transient_suppressor_api",
       ":transient_suppressor_impl",
       "../../../rtc_base:stringutils",
       "../../../rtc_base/system:file_wrapper",
