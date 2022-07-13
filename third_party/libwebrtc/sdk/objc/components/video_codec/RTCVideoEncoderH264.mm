@@ -605,59 +605,38 @@ NSUInteger GetMaxSampleRate(const webrtc::H264ProfileLevelId &profile_level_id) 
 
   // Set source image buffer attributes. These attributes will be present on
   // buffers retrieved from the encoder's pixel buffer pool.
-  const size_t attributesSize = 3;
-  CFTypeRef keys[attributesSize] = {
+  NSDictionary *sourceAttributes = @{
 #if defined(WEBRTC_IOS) && (TARGET_OS_MACCATALYST || TARGET_OS_SIMULATOR)
-      kCVPixelBufferMetalCompatibilityKey,
+    (NSString *)kCVPixelBufferMetalCompatibilityKey : @(YES),
 #elif defined(WEBRTC_IOS)
-      kCVPixelBufferOpenGLESCompatibilityKey,
+    (NSString *)kCVPixelBufferOpenGLESCompatibilityKey : @(YES),
 #elif defined(WEBRTC_MAC)
-      kCVPixelBufferOpenGLCompatibilityKey,
+    (NSString *)kCVPixelBufferOpenGLCompatibilityKey : @(YES),
 #endif
-      kCVPixelBufferIOSurfacePropertiesKey,
-      kCVPixelBufferPixelFormatTypeKey};
-  CFDictionaryRef ioSurfaceValue = CreateCFTypeDictionary(nullptr, nullptr, 0);
-  int64_t pixelFormatType = framePixelFormat;
-  CFNumberRef pixelFormat = CFNumberCreate(nullptr, kCFNumberLongType, &pixelFormatType);
-  CFTypeRef values[attributesSize] = {kCFBooleanTrue, ioSurfaceValue, pixelFormat};
-  CFDictionaryRef sourceAttributes = CreateCFTypeDictionary(keys, values, attributesSize);
-  if (ioSurfaceValue) {
-    CFRelease(ioSurfaceValue);
-    ioSurfaceValue = nullptr;
-  }
-  if (pixelFormat) {
-    CFRelease(pixelFormat);
-    pixelFormat = nullptr;
-  }
-  CFMutableDictionaryRef encoder_specs = nullptr;
+    (NSString *)kCVPixelBufferIOSurfacePropertiesKey : @{},
+    (NSString *)kCVPixelBufferPixelFormatTypeKey : @(framePixelFormat),
+  };
+
+  NSDictionary *encoder_specs;
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
   // Currently hw accl is supported above 360p on mac, below 360p
   // the compression session will be created with hw accl disabled.
-  encoder_specs = CFDictionaryCreateMutable(
-      nullptr, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-  CFDictionarySetValue(encoder_specs,
-                       kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder,
-                       kCFBooleanTrue);
+  encoder_specs = @{
+    (NSString *)kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder : @(YES),
+  };
+
 #endif
-  OSStatus status =
-      VTCompressionSessionCreate(nullptr,  // use default allocator
-                                 _width,
-                                 _height,
-                                 kCMVideoCodecType_H264,
-                                 encoder_specs,  // use hardware accelerated encoder if available
-                                 sourceAttributes,
-                                 nullptr,  // use default compressed data allocator
-                                 compressionOutputCallback,
-                                 nullptr,
-                                 &_compressionSession);
-  if (sourceAttributes) {
-    CFRelease(sourceAttributes);
-    sourceAttributes = nullptr;
-  }
-  if (encoder_specs) {
-    CFRelease(encoder_specs);
-    encoder_specs = nullptr;
-  }
+  OSStatus status = VTCompressionSessionCreate(
+      nullptr,  // use default allocator
+      _width,
+      _height,
+      kCMVideoCodecType_H264,
+      (__bridge CFDictionaryRef)encoder_specs,  // use hardware accelerated encoder if available
+      (__bridge CFDictionaryRef)sourceAttributes,
+      nullptr,  // use default compressed data allocator
+      compressionOutputCallback,
+      nullptr,
+      &_compressionSession);
   if (status != noErr) {
     RTC_LOG(LS_ERROR) << "Failed to create compression session: " << status;
     return WEBRTC_VIDEO_CODEC_ERROR;

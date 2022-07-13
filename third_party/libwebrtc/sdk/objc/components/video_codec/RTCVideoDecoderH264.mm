@@ -202,48 +202,30 @@ void decompressionOutputCallback(void *decoderRef,
   // CVPixelBuffers directly to the renderer.
   // TODO(tkchin): Maybe only set OpenGL/IOSurface keys if we know that that
   // we can pass CVPixelBuffers as native handles in decoder output.
-#if TARGET_OS_SIMULATOR
-  static size_t const attributesSize = 2;
-#else
-  static size_t const attributesSize = 3;
-#endif
-
-  CFTypeRef keys[attributesSize] = {
+  NSDictionary *attributes = @{
 #if defined(WEBRTC_IOS) && (TARGET_OS_MACCATALYST || TARGET_OS_SIMULATOR)
-      kCVPixelBufferMetalCompatibilityKey,
+    (NSString *)kCVPixelBufferMetalCompatibilityKey : @(YES),
 #elif defined(WEBRTC_IOS)
-      kCVPixelBufferOpenGLESCompatibilityKey,
+    (NSString *)kCVPixelBufferOpenGLESCompatibilityKey : @(YES),
 #elif defined(WEBRTC_MAC)
-      kCVPixelBufferOpenGLCompatibilityKey,
+    (NSString *)kCVPixelBufferOpenGLCompatibilityKey : @(YES),
 #endif
 #if !(TARGET_OS_SIMULATOR)
-      kCVPixelBufferIOSurfacePropertiesKey,
+    (NSString *)kCVPixelBufferIOSurfacePropertiesKey : @{},
 #endif
-      kCVPixelBufferPixelFormatTypeKey};
-  CFDictionaryRef ioSurfaceValue = CreateCFTypeDictionary(nullptr, nullptr, 0);
-  int64_t nv12type = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
-  CFNumberRef pixelFormat = CFNumberCreate(nullptr, kCFNumberLongType, &nv12type);
-#if TARGET_OS_SIMULATOR
-  CFTypeRef values[attributesSize] = {kCFBooleanTrue, pixelFormat};
-#else
-  CFTypeRef values[attributesSize] = {kCFBooleanTrue, ioSurfaceValue, pixelFormat};
-#endif
+    (NSString *)
+    kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange),
+  };
 
-  CFDictionaryRef attributes = CreateCFTypeDictionary(keys, values, attributesSize);
-  if (ioSurfaceValue) {
-    CFRelease(ioSurfaceValue);
-    ioSurfaceValue = nullptr;
-  }
-  if (pixelFormat) {
-    CFRelease(pixelFormat);
-    pixelFormat = nullptr;
-  }
   VTDecompressionOutputCallbackRecord record = {
       decompressionOutputCallback, (__bridge void *)self,
   };
-  OSStatus status = VTDecompressionSessionCreate(
-      nullptr, _videoFormat, nullptr, attributes, &record, &_decompressionSession);
-  CFRelease(attributes);
+  OSStatus status = VTDecompressionSessionCreate(nullptr,
+                                                 _videoFormat,
+                                                 nullptr,
+                                                 (__bridge CFDictionaryRef)attributes,
+                                                 &record,
+                                                 &_decompressionSession);
   if (status != noErr) {
     RTC_LOG(LS_ERROR) << "Failed to create decompression session: " << status;
     [self destroyDecompressionSession];
