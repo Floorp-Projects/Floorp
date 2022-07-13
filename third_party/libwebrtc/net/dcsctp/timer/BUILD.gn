@@ -12,7 +12,6 @@ rtc_library("timer") {
   deps = [
     "../../../api:array_view",
     "../../../api/task_queue:task_queue",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/containers:flat_map",
@@ -35,7 +34,6 @@ rtc_library("task_queue_timeout") {
   deps = [
     "../../../api:array_view",
     "../../../api/task_queue:task_queue",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/task_utils:pending_task_safety_flag",

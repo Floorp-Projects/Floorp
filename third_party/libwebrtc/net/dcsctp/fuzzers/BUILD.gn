@@ -13,7 +13,6 @@ rtc_library("dcsctp_fuzzers") {
   deps = [
     "../../../api:array_view",
     "../../../api/task_queue:task_queue",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
     "../common:math",
