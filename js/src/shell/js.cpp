@@ -632,7 +632,6 @@ bool shell::enableShadowRealms = false;
 #ifdef NIGHTLY_BUILD
 bool shell::enableArrayGrouping = true;
 #endif
-bool shell::enableArrayFindLast = false;
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 bool shell::enableChangeArrayByCopy = false;
 #endif
@@ -4253,7 +4252,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
 #ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(enableArrayGrouping)
 #endif
-      .setArrayFindLastEnabled(enableArrayFindLast)
 #ifdef ENABLE_NEW_SET_METHODS
       .setNewSetMethodsEnabled(enableNewSetMethods)
 #endif
@@ -11108,7 +11106,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef NIGHTLY_BUILD
   enableArrayGrouping = op.getBoolOption("enable-array-grouping");
 #endif
-  enableArrayFindLast = op.getBoolOption("enable-array-find-last");
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   enableChangeArrayByCopy = op.getBoolOption("enable-change-array-by-copy");
 #endif
@@ -12136,8 +12133,6 @@ int main(int argc, char** argv) {
       !op.addBoolOption('\0', "enable-shadow-realms", "Enable ShadowRealms") ||
       !op.addBoolOption('\0', "enable-array-grouping",
                         "Enable Array Grouping") ||
-      !op.addBoolOption('\0', "enable-array-find-last",
-                        "Enable Array.findLast/findLastIndex") ||
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       !op.addBoolOption('\0', "enable-change-array-by-copy",
                         "Enable change-array-by-copy methods") ||

@@ -138,7 +138,6 @@ extern bool enableShadowRealms;
 extern bool enableArrayGrouping;
 extern bool enablePrivateClassFields;
 extern bool enablePrivateClassMethods;
-extern bool enableArrayFindLast;
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 extern bool enableChangeArrayByCopy;
 #endif
