@@ -478,18 +478,12 @@ struct HelperThreadStats {
  * Measurements that not associated with any individual runtime.
  */
 struct GlobalStats {
-#define FOR_EACH_SIZE(MACRO) MACRO(_, MallocHeap, tracelogger)
-
   explicit GlobalStats(mozilla::MallocSizeOf mallocSizeOf)
       : mallocSizeOf_(mallocSizeOf) {}
-
-  FOR_EACH_SIZE(DECL_SIZE_ZERO);
 
   HelperThreadStats helperThread;
 
   mozilla::MallocSizeOf mallocSizeOf_;
-
-#undef FOR_EACH_SIZE
 };
 
 /**
@@ -509,7 +503,6 @@ struct RuntimeSizes {
   MACRO(_, MallocHeap, sharedIntlData)              \
   MACRO(_, MallocHeap, uncompressedSourceCache)     \
   MACRO(_, MallocHeap, scriptData)                  \
-  MACRO(_, MallocHeap, tracelogger)                 \
   MACRO(_, MallocHeap, wasmRuntime)                 \
   MACRO(_, Ignore, wasmGuardPages)                  \
   MACRO(_, MallocHeap, jitLazyLink)

@@ -749,12 +749,6 @@ JS_PUBLIC_API bool JS::CollectGlobalStats(GlobalStats* gStats) {
     HelperThreadState().addSizeOfIncludingThis(gStats, lock);
   }
 
-#ifdef JS_TRACE_LOGGING
-  // Global data used by TraceLogger
-  gStats->tracelogger += SizeOfTraceLogState(gStats->mallocSizeOf_);
-  gStats->tracelogger += SizeOfTraceLogGraphState(gStats->mallocSizeOf_);
-#endif
-
   return true;
 }
 
