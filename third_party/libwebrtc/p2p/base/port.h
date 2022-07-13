@@ -381,15 +381,14 @@ class Port : public PortInterface,
                                        const std::string& relay_protocol,
                                        const rtc::SocketAddress& base_address);
 
-  // TODO(tommi): Make protected after updating ProxyConnection.
-  rtc::WeakPtr<Port> NewWeakPtr() { return weak_factory_.GetWeakPtr(); }
-
  protected:
   enum { MSG_DESTROY_IF_DEAD = 0, MSG_FIRST_AVAILABLE };
 
   virtual void UpdateNetworkCost();
 
   void set_type(const std::string& type) { type_ = type; }
+
+  rtc::WeakPtr<Port> NewWeakPtr() { return weak_factory_.GetWeakPtr(); }
 
   void AddAddress(const rtc::SocketAddress& address,
                   const rtc::SocketAddress& base_address,
