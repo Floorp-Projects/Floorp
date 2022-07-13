@@ -59,12 +59,13 @@ class StunProberTest : public ::testing::Test {
                     bool shared_socket,
                     uint16_t interval,
                     uint16_t pings_per_ip) {
-    prober = std::make_unique<StunProber>(
+    prober_ = std::make_unique<StunProber>(
         socket_factory, rtc::Thread::Current(), std::move(networks));
-    prober->Start(addrs, shared_socket, interval, pings_per_ip,
-                  100 /* timeout_ms */, [this](StunProber* prober, int result) {
-                    this->StopCallback(prober, result);
-                  });
+    prober_->Start(addrs, shared_socket, interval, pings_per_ip,
+                   100 /* timeout_ms */,
+                   [this](StunProber* prober, int result) {
+                     StopCallback(prober, result);
+                   });
   }
 
   void RunProber(bool shared_mode) {
@@ -100,7 +101,7 @@ class StunProberTest : public ::testing::Test {
     WAIT(stopped_, 1000);
 
     StunProber::Stats stats;
-    EXPECT_TRUE(prober->GetStats(&stats));
+    EXPECT_TRUE(prober_->GetStats(&stats));
     EXPECT_EQ(stats.success_percent, 100);
     EXPECT_TRUE(stats.nat_type > stunprober::NATTYPE_NONE);
     EXPECT_EQ(stats.srflx_addrs, srflx_addresses);
@@ -118,7 +119,7 @@ class StunProberTest : public ::testing::Test {
 
   std::unique_ptr<rtc::VirtualSocketServer> ss_;
   rtc::AutoSocketServerThread main_;
-  std::unique_ptr<StunProber> prober;
+  std::unique_ptr<StunProber> prober_;
   int result_ = 0;
   bool stopped_ = false;
   std::unique_ptr<cricket::TestStunServer> stun_server_1_;
