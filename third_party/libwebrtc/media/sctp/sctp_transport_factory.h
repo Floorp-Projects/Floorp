@@ -13,25 +13,21 @@
 
 #include <memory>
 
-#include "api/field_trials_view.h"
 #include "api/transport/sctp_transport_factory_interface.h"
 #include "media/sctp/sctp_transport_internal.h"
-#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/thread.h"
 
 namespace cricket {
 
 class SctpTransportFactory : public webrtc::SctpTransportFactoryInterface {
  public:
-  explicit SctpTransportFactory(rtc::Thread* network_thread,
-                                const webrtc::FieldTrialsView& field_trials);
+  explicit SctpTransportFactory(rtc::Thread* network_thread);
 
   std::unique_ptr<SctpTransportInternal> CreateSctpTransport(
       rtc::PacketTransportInternal* transport) override;
 
  private:
   rtc::Thread* network_thread_;
-  webrtc::FieldTrialFlag use_usrsctp_;
 };
 
 }  // namespace cricket

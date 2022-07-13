@@ -417,35 +417,6 @@ if (rtc_build_dcsctp) {
   }
 }
 
-if (rtc_build_usrsctp) {
-  rtc_library("rtc_data_usrsctp_transport") {
-    defines = [
-      # "SCTP_DEBUG" # Uncomment for SCTP debugging.
-    ]
-    sources = [
-      "sctp/usrsctp_transport.cc",
-      "sctp/usrsctp_transport.h",
-    ]
-    deps = [
-      ":rtc_data_sctp_transport_internal",
-      "../media:rtc_media_base",
-      "../p2p:rtc_p2p",
-      "../rtc_base",
-      "../rtc_base:rtc_base_approved",
-      "../rtc_base:threading",
-      "../rtc_base/synchronization:mutex",
-      "../rtc_base/task_utils:pending_task_safety_flag",
-      "../rtc_base/task_utils:to_queued_task",
-      "../rtc_base/third_party/sigslot:sigslot",
-      "//third_party/usrsctp",
-    ]
-    absl_deps = [
-      "//third_party/abseil-cpp/absl/algorithm:container",
-      "//third_party/abseil-cpp/absl/types:optional",
-    ]
-  }
-}
-
 rtc_library("rtc_data_sctp_transport_factory") {
   defines = []
   sources = [
@@ -454,16 +425,13 @@ rtc_library("rtc_data_sctp_transport_factory") {
   ]
   deps = [
     ":rtc_data_sctp_transport_internal",
-    "../api:field_trials_view",
     "../api/transport:sctp_transport_factory_interface",
     "../rtc_base:threading",
-    "../rtc_base/experiments:field_trial_parser",
     "../rtc_base/system:unused",
   ]
 
   if (rtc_enable_sctp) {
-    assert(rtc_build_dcsctp || rtc_build_usrsctp,
-           "An SCTP backend is required to enable SCTP")
+    assert(rtc_build_dcsctp, "An SCTP backend is required to enable SCTP")
   }
 
   if (rtc_build_dcsctp) {
@@ -473,11 +441,6 @@ rtc_library("rtc_data_sctp_transport_factory") {
       "../system_wrappers",
       "../system_wrappers:field_trial",
     ]
-  }
-
-  if (rtc_build_usrsctp) {
-    defines += [ "WEBRTC_HAVE_USRSCTP" ]
-    deps += [ ":rtc_data_usrsctp_transport" ]
   }
 }
 }
@@ -684,21 +647,6 @@ if (rtc_include_tests) {
       # See bugs.webrtc.org/5569
       if (!is_ios) {
         sources += [ "engine/webrtc_voice_engine_unittest.cc" ]
-      }
-
-      if (rtc_build_usrsctp) {
-        sources += [
-          "sctp/usrsctp_transport_reliability_unittest.cc",
-          "sctp/usrsctp_transport_unittest.cc",
-        ]
-        deps += [
-          ":rtc_data_sctp_transport_internal",
-          ":rtc_data_usrsctp_transport",
-          "../rtc_base:rtc_event",
-          "../rtc_base/task_utils:pending_task_safety_flag",
-          "../rtc_base/task_utils:to_queued_task",
-          "//third_party/usrsctp",
-        ]
       }
 
       if (rtc_opus_support_120ms_ptime) {

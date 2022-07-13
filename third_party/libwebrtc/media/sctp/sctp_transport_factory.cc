@@ -10,29 +10,18 @@
 
 #include "media/sctp/sctp_transport_factory.h"
 
-#include "api/field_trials_view.h"
 #include "rtc_base/system/unused.h"
 
 #ifdef WEBRTC_HAVE_DCSCTP
-#include "media/sctp/dcsctp_transport.h"          // nogncheck
-#include "system_wrappers/include/clock.h"        // nogncheck
-#endif
-
-#ifdef WEBRTC_HAVE_USRSCTP
-#include "media/sctp/usrsctp_transport.h"  // nogncheck
+#include "media/sctp/dcsctp_transport.h"    // nogncheck
+#include "system_wrappers/include/clock.h"  // nogncheck
 #endif
 
 namespace cricket {
 
-SctpTransportFactory::SctpTransportFactory(
-    rtc::Thread* network_thread,
-    const webrtc::FieldTrialsView& field_trials)
-    : network_thread_(network_thread), use_usrsctp_("Disabled", false) {
+SctpTransportFactory::SctpTransportFactory(rtc::Thread* network_thread)
+    : network_thread_(network_thread) {
   RTC_UNUSED(network_thread_);
-#ifdef WEBRTC_HAVE_DCSCTP
-  webrtc::ParseFieldTrial({&use_usrsctp_},
-                          field_trials.Lookup("WebRTC-DataChannel-Dcsctp"));
-#endif
 }
 
 std::unique_ptr<SctpTransportInternal>
@@ -40,16 +29,8 @@ SctpTransportFactory::CreateSctpTransport(
     rtc::PacketTransportInternal* transport) {
   std::unique_ptr<SctpTransportInternal> result;
 #ifdef WEBRTC_HAVE_DCSCTP
-  if (!use_usrsctp_.Get()) {
-    result = std::unique_ptr<SctpTransportInternal>(new webrtc::DcSctpTransport(
-        network_thread_, transport, webrtc::Clock::GetRealTimeClock()));
-  }
-#endif
-#ifdef WEBRTC_HAVE_USRSCTP
-  if (!result) {
-    result = std::unique_ptr<SctpTransportInternal>(
-        new UsrsctpTransport(network_thread_, transport));
-  }
+  result = std::unique_ptr<SctpTransportInternal>(new webrtc::DcSctpTransport(
+      network_thread_, transport, webrtc::Clock::GetRealTimeClock()));
 #endif
   return result;
 }

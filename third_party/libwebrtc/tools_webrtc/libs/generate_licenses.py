@@ -64,7 +64,6 @@ LIB_TO_LICENSES_DICT = {
     'pffft': ['third_party/pffft/LICENSE'],
     'protobuf': ['third_party/protobuf/LICENSE'],
     'rnnoise': ['third_party/rnnoise/COPYING'],
-    'usrsctp': ['third_party/usrsctp/LICENSE'],
     'webrtc': ['LICENSE'],
     'zlib': ['third_party/zlib/LICENSE'],
     'base64': ['rtc_base/third_party/base64/LICENSE'],

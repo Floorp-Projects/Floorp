@@ -315,9 +315,6 @@ declare_args() {
   # Enable the dcsctp backend for DataChannels and related unittests
   rtc_build_dcsctp = !build_with_mozilla && rtc_enable_sctp
 
-  # Enable the usrsctp backend for DataChannels and related unittests
-  rtc_build_usrsctp = !build_with_mozilla && rtc_enable_sctp
-
   # Enable gRPC used for negotiation in multiprocess tests
   rtc_enable_grpc = rtc_enable_protobuf && (is_linux || is_mac)
 }
