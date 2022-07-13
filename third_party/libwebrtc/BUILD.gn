@@ -731,6 +731,24 @@ if (rtc_include_tests && !build_with_chromium) {
   }
 }
 
+# Build target for standalone dcsctp
+rtc_static_library("dcsctp") {
+  # Only the root target should depend on this.
+  visibility = [ "//:default" ]
+  sources = []
+  complete_static_lib = true
+  suppressed_configs += [ "//build/config/compiler:thin_archive" ]
+  defines = []
+  deps = [
+    "net/dcsctp/public:factory",
+    "net/dcsctp/public:socket",
+    "net/dcsctp/public:types",
+    "net/dcsctp/socket:dcsctp_socket",
+    "net/dcsctp/timer:task_queue_timeout",
+    "rtc_base",
+  ]
+}
+
 # ---- Poisons ----
 #
 # Here is one empty dummy target for each poison type (needed because
