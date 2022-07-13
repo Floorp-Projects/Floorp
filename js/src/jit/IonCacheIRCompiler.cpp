@@ -1727,9 +1727,14 @@ bool IonCacheIRCompiler::emitGuardAndGetIterator(ObjOperandId objId,
   // Ensure the iterator is reusable: see NativeIterator::isReusable.
   masm.branchIfNativeIteratorNotReusable(niScratch, failure->label());
 
-  // Pre-write barrier for store to 'objectBeingIterated_'.
+  // 'objectBeingIterated_' must be nullptr, so we don't need a pre-barrier.
   Address iterObjAddr(niScratch, NativeIterator::offsetOfObjectBeingIterated());
-  EmitPreBarrier(masm, iterObjAddr, MIRType::Object);
+#ifdef DEBUG
+  Label ok;
+  masm.branchPtr(Assembler::Equal, iterObjAddr, ImmPtr(nullptr), &ok);
+  masm.assumeUnreachable("iterator with non-null object");
+  masm.bind(&ok);
+#endif
 
   // Mark iterator as active.
   Address iterFlagsAddr(niScratch, NativeIterator::offsetOfFlagsAndCount());

@@ -25,8 +25,9 @@ class PropertyIteratorObject;
 
 struct NativeIterator {
  private:
-  // Object being iterated.  Non-null except in NativeIterator sentinels and
-  // empty property iterators created when |null| or |undefined| is iterated.
+  // Object being iterated.  Non-null except in NativeIterator sentinels,
+  // the empty iterator singleton (for iterating |null| or |undefined|), and
+  // inactive iterators.
   GCPtr<JSObject*> objectBeingIterated_ = {};
 
   // Internal iterator object.
@@ -137,7 +138,14 @@ struct NativeIterator {
 
   JSObject* objectBeingIterated() const { return objectBeingIterated_; }
 
-  void changeObjectBeingIterated(JSObject& obj) { objectBeingIterated_ = &obj; }
+  void initObjectBeingIterated(JSObject& obj) {
+    MOZ_ASSERT(!objectBeingIterated_);
+    objectBeingIterated_.init(&obj);
+  }
+  void clearObjectBeingIterated() {
+    MOZ_ASSERT(objectBeingIterated_);
+    objectBeingIterated_ = nullptr;
+  }
 
   GCPtr<Shape*>* shapesBegin() const {
     static_assert(
