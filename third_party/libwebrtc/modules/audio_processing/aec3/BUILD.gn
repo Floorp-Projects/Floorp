@@ -149,6 +149,7 @@ rtc_library("aec3") {
     "../../../rtc_base:macromagic",
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:safe_minmax",
+    "../../../rtc_base:swap_queue",
     "../../../rtc_base/experiments:field_trial_parser",
     "../../../rtc_base/system:arch",
     "../../../system_wrappers",

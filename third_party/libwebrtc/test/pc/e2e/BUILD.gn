@@ -212,6 +212,7 @@ if (!build_with_chromium) {
         "../../../api:peer_connection_quality_test_fixture_api",
         "../../../modules/audio_device:audio_device_impl",
         "../../../rtc_base:rtc_base_approved",
+        "../../../rtc_base:swap_queue",
       ]
     }
 
