@@ -227,7 +227,7 @@ var UrlbarTestUtils = {
     let typeIcon = element.querySelector(".urlbarView-type-icon");
     await win.document.l10n.translateFragment(element);
     details.displayed = {
-      title: element.getElementsByClassName("urlbarView-title")[0].textContent,
+      title: element.getElementsByClassName("urlbarView-title")[0]?.textContent,
       action: actions.length ? actions[0].textContent : null,
       url: urls.length ? urls[0].textContent : null,
       typeIcon: typeIcon
