@@ -17,7 +17,6 @@
 #include <memory>
 #include <queue>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 #include "absl/algorithm/container.h"
