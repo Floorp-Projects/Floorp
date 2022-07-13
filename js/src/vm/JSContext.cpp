@@ -967,9 +967,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 #ifdef JS_SIMULATOR
       simulator_(this, nullptr),
 #endif
-#ifdef JS_TRACE_LOGGING
-      traceLogger(nullptr),
-#endif
       dtoaState(this, nullptr),
       suppressGC(this, 0),
 #ifdef DEBUG
@@ -1040,12 +1037,6 @@ JSContext::~JSContext() {
 
 #ifdef JS_SIMULATOR
   js::jit::Simulator::Destroy(simulator_);
-#endif
-
-#ifdef JS_TRACE_LOGGING
-  if (traceLogger) {
-    DestroyTraceLogger(traceLogger);
-  }
 #endif
 
   if (isolate) {
