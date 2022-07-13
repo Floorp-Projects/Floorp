@@ -196,10 +196,6 @@ JitExecStatus jit::EnterBaselineInterpreterAtBranch(JSContext* cx,
     data.calleeToken = CalleeToToken(fp->script());
   }
 
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-  TraceLogStopEvent(logger, TraceLogger_Interpreter);
-  TraceLogStartEvent(logger, TraceLogger_Baseline);
-
   JitExecStatus status = EnterBaseline(cx, data);
   if (status != JitExec_Ok) {
     return status;

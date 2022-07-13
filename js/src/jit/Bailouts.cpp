@@ -125,9 +125,6 @@ bool jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo) {
   MOZ_ASSERT(!frame.ionScript()->invalidated());
   JitFrameLayout* currentFramePtr = frame.jsFrame();
 
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-  TraceLogTimestamp(logger, TraceLogger_Bailout);
-
   JitSpew(JitSpew_IonBailouts, "Took bailout! Snapshot offset: %u",
           frame.snapshotOffset());
 
@@ -196,9 +193,6 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
   BailoutFrameInfo bailoutData(jitActivations, sp);
   JSJitFrameIter frame(jitActivations->asJit());
   JitFrameLayout* currentFramePtr = frame.jsFrame();
-
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-  TraceLogTimestamp(logger, TraceLogger_Invalidation);
 
   JitSpew(JitSpew_IonBailouts, "Took invalidation bailout! Snapshot offset: %u",
           frame.snapshotOffset());
