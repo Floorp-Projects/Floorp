@@ -250,6 +250,43 @@ def test_browser_desktop(*mocked):
     assert "--firefox.binaryPath" in cmd
 
 
+@mock.patch("mozperftest.test.browsertime.runner.install_package")
+@mock.patch(
+    "mozperftest.test.noderunner.NodeRunner.verify_node_install", new=lambda x: True
+)
+@mock.patch("mozbuild.artifact_cache.ArtifactCache.fetch", new=fetch)
+@mock.patch(
+    "mozperftest.test.browsertime.runner.BrowsertimeRunner._setup_node_packages",
+    new=lambda x, y: None,
+)
+def test_existing_results(*mocked):
+    mach_cmd, metadata, env = get_running_env(
+        browsertime_existing_results="/some/path",
+        tests=[EXAMPLE_TEST],
+    )
+    browser = env.layers[TEST]
+    sys = env.layers[SYSTEM]
+
+    try:
+        with sys as s, browser as b, silence():
+            # just checking that the setup_helper property gets
+            # correctly initialized
+            browsertime = browser.layers[-1]
+            assert browsertime.setup_helper is not None
+            helper = browsertime.setup_helper
+            assert browsertime.setup_helper is helper
+
+            m = b(s(metadata))
+            results = m.get_results()
+            assert len(results) == 1
+            assert results[0]["results"] == "/some/path"
+            assert results[0]["name"] == "Example"
+    finally:
+        shutil.rmtree(mach_cmd._mach_context.state_dir)
+
+    assert mach_cmd.run_process.call_count == 0
+
+
 def test_add_options():
     mach_cmd, metadata, env = get_running_env()
     options = [("one", 1), ("two", 2)]
