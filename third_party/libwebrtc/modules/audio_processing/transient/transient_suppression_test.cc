@@ -200,12 +200,11 @@ void void_main() {
       audio_buffer_f[i] = audio_buffer_i[i];
     }
 
-    ASSERT_EQ(0, suppressor.Suppress(
-                     audio_buffer_f.get(), audio_buffer_size,
-                     absl::GetFlag(FLAGS_num_channels), detection_buffer.get(),
-                     detection_buffer_size, reference_buffer.get(),
-                     audio_buffer_size, agc.voice_probability(), true))
-        << "The transient suppressor could not suppress the frame";
+    suppressor.Suppress(audio_buffer_f.get(), audio_buffer_size,
+                        absl::GetFlag(FLAGS_num_channels),
+                        detection_buffer.get(), detection_buffer_size,
+                        reference_buffer.get(), audio_buffer_size,
+                        agc.voice_probability(), true);
 
     // Write result to out file.
     WritePCM(out_file, audio_buffer_size, absl::GetFlag(FLAGS_num_channels),
