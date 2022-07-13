@@ -1777,47 +1777,65 @@ void js::AsyncModuleExecutionFulfilled(JSContext* cx,
   // Step 13. Return unused.
 }
 
-// https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionrejected
+// https://tc39.es/ecma262/#sec-async-module-execution-rejected
+// ES2023 16.2.1.5.2.5 AsyncModuleExecutionRejected
 void js::AsyncModuleExecutionRejected(JSContext* cx,
                                       Handle<ModuleObject*> module,
                                       HandleValue error) {
-  // Step 1.
-  MOZ_ASSERT(module->status() == ModuleStatus::EvaluatingAsync);
-
-  // Step 2.
-  if (!module->isAsyncEvaluating()) {
+  // Step 1. If module.[[Status]] is evaluated, then:
+  if (module->status() == ModuleStatus::Evaluated) {
+    // Step 1.a. Assert: module.[[EvaluationError]] is not empty
     MOZ_ASSERT(module->hadEvaluationError());
+
+    // Step 1.b. Return unused.
     return;
   }
 
-  ModuleObject::onTopLevelEvaluationFinished(module);
+  // Step 2. Assert: module.[[Status]] is evaluating-async.
+  MOZ_ASSERT(module->status() == ModuleStatus::EvaluatingAsync);
 
-  // Step 3.
+  // Step 3. Assert: module.[[AsyncEvaluation]] is true.
+  MOZ_ASSERT(module->isAsyncEvaluating());
+
+  // Step 4. 4. Assert: module.[[EvaluationError]] is empty.
   MOZ_ASSERT(!module->hadEvaluationError());
 
-  // Step 4.
+  ModuleObject::onTopLevelEvaluationFinished(module);
+
+  // Step 5. Set module.[[EvaluationError]] to ThrowCompletion(error).
   module->setEvaluationError(error);
 
-  // Step 5.
+  // Step 6. Set module.[[Status]] to evaluated.
+  MOZ_ASSERT(module->status() == ModuleStatus::Evaluated);
+
+  // Note: This step is no longer in the spec. We do this to ensure the
+  // that the async evaluating state is set to false after evaluation has
+  // finished.
   module->setAsyncEvaluatingFalse();
 
-  // Step 6.
-  uint32_t length = module->asyncParentModules()->length();
+  // Step 7. For each Cyclic Module Record m of module.[[AsyncParentModules]],
+  //         do:
+  Rooted<ListObject*> parents(cx, module->asyncParentModules());
   Rooted<ModuleObject*> parent(cx);
-  for (uint32_t i = 0; i < length; i++) {
-    parent =
-        &module->asyncParentModules()->get(i).toObject().as<ModuleObject>();
+  for (uint32_t i = 0; i < parents->length(); i++) {
+    parent = &parents->get(i).toObject().as<ModuleObject>();
+
+    // Step 7.a. Perform AsyncModuleExecutionRejected(m, error).
     AsyncModuleExecutionRejected(cx, parent, error);
   }
 
-  // Step 7.
+  // Step 8. If module.[[TopLevelCapability]] is not empty, then:
   if (module->hasTopLevelCapability()) {
+    // Step 8.a. Assert: module.[[CycleRoot]] is module.
     MOZ_ASSERT(module->getCycleRoot() == module);
+
+    // Step 8.b. Perform ! Call(module.[[TopLevelCapability]].[[Reject]],
+    //           undefined, error).
     if (!ModuleObject::topLevelCapabilityReject(cx, module, error)) {
       // If Reject fails, there's nothing more we can do here.
       cx->clearPendingException();
     }
   }
 
-  // Return undefined.
+  // Step 9. Return unused.
 }
