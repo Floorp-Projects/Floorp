@@ -9,6 +9,9 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/PlacesUIUtils.jsm"
 );
 
+// Cutoff of 1.5 minutes + 1 second to determine what text string to display
+export const nowThresholdMs = 91000;
+
 export function formatURIForDisplay(uriString) {
   // TODO: Bug 1764816: Make sure we handle file:///, jar:, blob, IP4/IP6 etc. addresses
   let uri;
@@ -36,8 +39,6 @@ export function convertTimestamp(timestamp, fluentStrings) {
     {}
   );
   const elapsed = Date.now() - timestamp;
-  // Cutoff of 1.5 minutes + 1 second to determine what text string to display
-  const nowThresholdMs = 91000;
   let formattedTime;
   if (elapsed <= nowThresholdMs) {
     // Use a different string for very recent timestamps
