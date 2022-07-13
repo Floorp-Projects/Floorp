@@ -494,11 +494,7 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.setAttribution = this.setAttribution.bind(this);
     this.onCopyTargetingParams = this.onCopyTargetingParams.bind(this);
     this.onNewTargetingParams = this.onNewTargetingParams.bind(this);
-    this.handleUpdateWNMessages = this.handleUpdateWNMessages.bind(this);
-    this.handleForceWNP = this.handleForceWNP.bind(this);
-    this.handleCloseWNP = this.handleCloseWNP.bind(this);
     this.resetPanel = this.resetPanel.bind(this);
-    this.restoreWNMessageState = this.restoreWNMessageState.bind(this);
     this.toggleJSON = this.toggleJSON.bind(this);
     this.toggleAllMessages = this.toggleAllMessages.bind(this);
     this.resetGroups = this.resetGroups.bind(this);
@@ -508,7 +504,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.state = {
       messageFilter: "all",
       messageGroupsFilter: "all",
-      WNMessages: [],
       collapsedMessages: [],
       modifiedMessages: [],
       evaluationStatus: {},
@@ -609,7 +604,6 @@ export class ASRouterAdminInner extends React.PureComponent {
 
   resetPanel() {
     this.resetAllJSON();
-    this.handleCloseWNP();
   }
 
   handleOverride(id) {
@@ -620,23 +614,6 @@ export class ASRouterAdminInner extends React.PureComponent {
           message: state.message,
         });
       });
-  }
-
-  async handleUpdateWNMessages() {
-    await this.restoreWNMessageState();
-    let messages = this.state.WNMessages;
-
-    for (const msg of messages) {
-      ASRouterUtils.modifyMessageJson(JSON.parse(msg));
-    }
-  }
-
-  handleForceWNP() {
-    ASRouterUtils.sendMessage({ type: "FORCE_WHATSNEW_PANEL" });
-  }
-
-  handleCloseWNP() {
-    ASRouterUtils.sendMessage({ type: "CLOSE_WHATSNEW_PANEL" });
   }
 
   expireCache() {
@@ -942,25 +919,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     );
   }
 
-  restoreWNMessageState() {
-    // check the page for checked boxes, and reset the state of WNMessages based on that.
-    let tempState = [];
-    let messageCheckboxes = document.querySelectorAll('input[type="checkbox"]');
-    // put the JSON of all the checked checkboxes in the array
-    for (const checkbox of messageCheckboxes) {
-      let trimmedId = checkbox.id.replace(" checkbox", "");
-      let msg = document.getElementById(`${trimmedId}-textarea`).value;
-
-      if (checkbox.checked) {
-        tempState.push(msg);
-      }
-    }
-
-    this.setState({
-      WNMessages: tempState,
-    });
-  }
-
   modifyJson(content) {
     const message = JSON.parse(
       document.getElementById(`${content.id}-textarea`).value
@@ -971,58 +929,6 @@ export class ASRouterAdminInner extends React.PureComponent {
         message: state.message,
       });
     });
-  }
-
-  renderWNMessageItem(msg) {
-    const isBlocked =
-      this.state.messageBlockList.includes(msg.id) ||
-      this.state.messageBlockList.includes(msg.campaign);
-    const impressions = this.state.messageImpressions[msg.id]
-      ? this.state.messageImpressions[msg.id].length
-      : 0;
-
-    const isCollapsed = this.state.collapsedMessages.includes(msg.id);
-
-    let itemClassName = "message-item";
-    if (isBlocked) {
-      itemClassName += " blocked";
-    }
-
-    return (
-      <tr className={itemClassName} key={`${msg.id}-${msg.provider}`}>
-        <td className="message-id">
-          <span>
-            {msg.id} <br />
-            <br />({impressions} impressions)
-          </span>
-        </td>
-        <td>
-          <ToggleMessageJSON
-            msgId={`${msg.id}`}
-            toggleJSON={this.toggleJSON}
-            isCollapsed={isCollapsed}
-          />
-        </td>
-        <td>
-          <input
-            type="checkbox"
-            id={`${msg.id} checkbox`}
-            name={`${msg.id} checkbox`}
-          />
-        </td>
-        <td className={`message-summary`}>
-          <pre className={isCollapsed ? "collapsed" : "expanded"}>
-            <textarea
-              id={`${msg.id}-textarea`}
-              className="wnp-textarea"
-              name={msg.id}
-            >
-              {JSON.stringify(msg, null, 2)}
-            </textarea>
-          </pre>
-        </td>
-      </tr>
-    );
   }
 
   toggleAllMessages(messagesToShow) {
@@ -1089,22 +995,6 @@ export class ASRouterAdminInner extends React.PureComponent {
     return (
       <table>
         <tbody>{messagesToShow.map(msg => this.renderMessageItem(msg))}</tbody>
-      </table>
-    );
-  }
-
-  renderWNMessages() {
-    if (!this.state.messages) {
-      return null;
-    }
-    const messagesToShow = this.state.messages.filter(
-      message => message.provider === "whats-new-panel" && message.content.body
-    );
-    return (
-      <table>
-        <tbody>
-          {messagesToShow.map(msg => this.renderWNMessageItem(msg))}
-        </tbody>
       </table>
     );
   }
@@ -1633,74 +1523,9 @@ export class ASRouterAdminInner extends React.PureComponent {
     return <p>No errors</p>;
   }
 
-  renderWNPTests() {
-    if (!this.state.messages) {
-      return null;
-    }
-    let messagesToShow = this.state.messages.filter(
-      message => message.provider === "whats-new-panel"
-    );
-
-    return (
-      <div>
-        <p className="helpLink">
-          <span className="icon icon-small-spacer icon-info" />{" "}
-          <span>
-            To correctly render selected messages, click 'Open What's New
-            Panel', select the messages you want to see, and click 'Render
-            Selected Messages'.
-            <br />
-            <br />
-            To modify a message, select it, modify the JSON and click 'Render
-            Selected Messages' again to see your changes.
-            <br />
-            Click 'Reset Panel' to close the panel and reset all JSON to its
-            original state.
-          </span>
-        </p>
-        <div>
-          <button
-            className="ASRouterButton primary button"
-            onClick={this.handleForceWNP}
-          >
-            Open What's New Panel
-          </button>
-          <button
-            className="ASRouterButton secondary button"
-            onClick={this.handleUpdateWNMessages}
-          >
-            Render Selected Messages
-          </button>
-          <button
-            className="ASRouterButton secondary button"
-            onClick={this.resetPanel}
-          >
-            Reset Panel
-          </button>
-          <h2>Messages</h2>
-          <button
-            className="ASRouterButton slim button"
-            // eslint-disable-next-line react/jsx-no-bind
-            onClick={e => this.toggleAllMessages(messagesToShow)}
-          >
-            Collapse/Expand All
-          </button>
-          {this.renderWNMessages()}
-        </div>
-      </div>
-    );
-  }
-
   getSection() {
     const [section] = this.props.location.routes;
     switch (section) {
-      case "wnpanel":
-        return (
-          <React.Fragment>
-            <h2>What's New Panel</h2>
-            {this.renderWNPTests()}
-          </React.Fragment>
-        );
       case "targeting":
         return (
           <React.Fragment>
@@ -1811,9 +1636,6 @@ export class ASRouterAdminInner extends React.PureComponent {
           <ul>
             <li>
               <a href="#devtools">General</a>
-            </li>
-            <li>
-              <a href="#devtools-wnpanel">What's New Panel</a>
             </li>
             <li>
               <a href="#devtools-targeting">Targeting</a>
