@@ -247,6 +247,7 @@ rtc_library("explicit_key_value_config") {
 }
 
 rtc_library("scoped_key_value_config") {
+  visibility = [ "*" ]
   sources = [
     "scoped_key_value_config.cc",
     "scoped_key_value_config.h",
