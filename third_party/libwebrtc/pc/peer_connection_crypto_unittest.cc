@@ -211,7 +211,6 @@ SdpContentMutator RemoveDtlsFingerprint() {
 // no SDES cryptos.
 TEST_P(PeerConnectionCryptoTest, CorrectCryptoInOfferWhenDtlsEnabled) {
   RTCConfiguration config;
-  config.enable_dtls_srtp.emplace(true);
   auto caller = CreatePeerConnectionWithAudioVideo(config);
 
   auto offer = caller->CreateOffer();
@@ -225,7 +224,6 @@ TEST_P(PeerConnectionCryptoTest, CorrectCryptoInOfferWhenDtlsEnabled) {
 }
 TEST_P(PeerConnectionCryptoTest, CorrectCryptoInAnswerWhenDtlsEnabled) {
   RTCConfiguration config;
-  config.enable_dtls_srtp.emplace(true);
   auto caller = CreatePeerConnectionWithAudioVideo(config);
   auto callee = CreatePeerConnectionWithAudioVideo(config);
 
@@ -240,6 +238,7 @@ TEST_P(PeerConnectionCryptoTest, CorrectCryptoInAnswerWhenDtlsEnabled) {
                              answer->description()));
 }
 
+#if defined(WEBRTC_FUCHSIA)
 // When DTLS is disabled, the SDP offer/answer should include SDES cryptos and
 // should not have a DTLS fingerprint.
 TEST_P(PeerConnectionCryptoTest, CorrectCryptoInOfferWhenDtlsDisabled) {
@@ -256,6 +255,7 @@ TEST_P(PeerConnectionCryptoTest, CorrectCryptoInOfferWhenDtlsDisabled) {
   EXPECT_TRUE(SdpContentsAll(HaveProtocol(cricket::kMediaProtocolSavpf),
                              offer->description()));
 }
+
 TEST_P(PeerConnectionCryptoTest, CorrectCryptoInAnswerWhenDtlsDisabled) {
   RTCConfiguration config;
   config.enable_dtls_srtp.emplace(false);
@@ -293,6 +293,7 @@ TEST_P(PeerConnectionCryptoTest, CorrectCryptoInOfferWhenEncryptionDisabled) {
   EXPECT_TRUE(SdpContentsAll(HaveProtocol(cricket::kMediaProtocolAvpf),
                              offer->description()));
 }
+
 TEST_P(PeerConnectionCryptoTest, CorrectCryptoInAnswerWhenEncryptionDisabled) {
   PeerConnectionFactoryInterface::Options options;
   options.disable_encryption = true;
@@ -462,13 +463,13 @@ TEST_P(PeerConnectionCryptoTest, FailToSetRemoteAnswerWithNoCryptosWhenSdesOn) {
 
   EXPECT_FALSE(caller->SetRemoteDescription(std::move(answer)));
 }
+#endif
 
 // The following group tests that two PeerConnections can successfully exchange
 // an offer/answer when DTLS is on and that they will refuse any offer/answer
 // applied locally/remotely if it does not include a DTLS fingerprint.
 TEST_P(PeerConnectionCryptoTest, ExchangeOfferAnswerWhenDtlsOn) {
   RTCConfiguration config;
-  config.enable_dtls_srtp.emplace(true);
   auto caller = CreatePeerConnectionWithAudioVideo(config);
   auto callee = CreatePeerConnectionWithAudioVideo(config);
 
@@ -483,7 +484,6 @@ TEST_P(PeerConnectionCryptoTest, ExchangeOfferAnswerWhenDtlsOn) {
 TEST_P(PeerConnectionCryptoTest,
        FailToSetLocalOfferWithNoFingerprintWhenDtlsOn) {
   RTCConfiguration config;
-  config.enable_dtls_srtp.emplace(true);
   auto caller = CreatePeerConnectionWithAudioVideo(config);
 
   auto offer = caller->CreateOffer();
@@ -494,7 +494,6 @@ TEST_P(PeerConnectionCryptoTest,
 TEST_P(PeerConnectionCryptoTest,
        FailToSetRemoteOfferWithNoFingerprintWhenDtlsOn) {
   RTCConfiguration config;
-  config.enable_dtls_srtp.emplace(true);
   auto caller = CreatePeerConnectionWithAudioVideo(config);
   auto callee = CreatePeerConnectionWithAudioVideo(config);
 
@@ -506,7 +505,6 @@ TEST_P(PeerConnectionCryptoTest,
 TEST_P(PeerConnectionCryptoTest,
        FailToSetLocalAnswerWithNoFingerprintWhenDtlsOn) {
   RTCConfiguration config;
-  config.enable_dtls_srtp.emplace(true);
   auto caller = CreatePeerConnectionWithAudioVideo(config);
   auto callee = CreatePeerConnectionWithAudioVideo(config);
 
@@ -517,7 +515,6 @@ TEST_P(PeerConnectionCryptoTest,
 TEST_P(PeerConnectionCryptoTest,
        FailToSetRemoteAnswerWithNoFingerprintWhenDtlsOn) {
   RTCConfiguration config;
-  config.enable_dtls_srtp.emplace(true);
   auto caller = CreatePeerConnectionWithAudioVideo(config);
   auto callee = CreatePeerConnectionWithAudioVideo(config);
 
@@ -528,6 +525,7 @@ TEST_P(PeerConnectionCryptoTest,
   EXPECT_FALSE(caller->SetRemoteDescription(std::move(answer)));
 }
 
+#if defined(WEBRTC_FUCHSIA)
 // Test that an offer/answer can be exchanged when encryption is disabled.
 TEST_P(PeerConnectionCryptoTest, ExchangeOfferAnswerWhenNoEncryption) {
   PeerConnectionFactoryInterface::Options options;
@@ -547,19 +545,18 @@ TEST_P(PeerConnectionCryptoTest, ExchangeOfferAnswerWhenNoEncryption) {
   ASSERT_TRUE(answer);
   ASSERT_TRUE(caller->SetRemoteDescription(std::move(answer)));
 }
+#endif
 
 // Tests that a DTLS call can be established when the certificate is specified
 // in the PeerConnection config and no certificate generator is specified.
 TEST_P(PeerConnectionCryptoTest,
        ExchangeOfferAnswerWhenDtlsCertificateInConfig) {
   RTCConfiguration caller_config;
-  caller_config.enable_dtls_srtp.emplace(true);
   caller_config.certificates.push_back(
       FakeRTCCertificateGenerator::GenerateCertificate());
   auto caller = CreatePeerConnectionWithAudioVideo(caller_config);
 
   RTCConfiguration callee_config;
-  callee_config.enable_dtls_srtp.emplace(true);
   callee_config.certificates.push_back(
       FakeRTCCertificateGenerator::GenerateCertificate());
   auto callee = CreatePeerConnectionWithAudioVideo(callee_config);
@@ -630,7 +627,6 @@ class PeerConnectionCryptoDtlsCertGenTest
 
 TEST_P(PeerConnectionCryptoDtlsCertGenTest, TestCertificateGeneration) {
   RTCConfiguration config;
-  config.enable_dtls_srtp.emplace(true);
   auto owned_fake_certificate_generator =
       std::make_unique<FakeRTCCertificateGenerator>();
   auto* fake_certificate_generator = owned_fake_certificate_generator.get();
@@ -754,7 +750,6 @@ TEST_P(PeerConnectionCryptoTest, SessionErrorIfFingerprintInvalid) {
 
   auto caller = CreatePeerConnectionWithAudioVideo();
   RTCConfiguration callee_config;
-  callee_config.enable_dtls_srtp.emplace(true);
   callee_config.certificates.push_back(callee_certificate);
   auto callee = CreatePeerConnectionWithAudioVideo(callee_config);
 
