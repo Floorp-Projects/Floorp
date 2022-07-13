@@ -104,9 +104,6 @@ void TransmissionControlBlock::MaybeSendForwardTsn(SctpPacket::Builder& builder,
 
 void TransmissionControlBlock::SendBufferedPackets(SctpPacket::Builder& builder,
                                                    TimeMs now) {
-  // FORWARD-TSNs are sent as separate packets to avoid bugs.webrtc.org/12961.
-  MaybeSendForwardTsn(builder, now);
-
   for (int packet_idx = 0;
        packet_idx < options_.max_burst && retransmission_queue_.can_send_data();
        ++packet_idx) {
@@ -131,6 +128,7 @@ void TransmissionControlBlock::SendBufferedPackets(SctpPacket::Builder& builder,
         builder.Add(data_tracker_.CreateSelectiveAck(
             reassembly_queue_.remaining_bytes()));
       }
+      MaybeSendForwardTsn(builder, now);
       absl::optional<ReConfigChunk> reconfig =
           stream_reset_handler_.MakeStreamResetRequest();
       if (reconfig.has_value()) {
