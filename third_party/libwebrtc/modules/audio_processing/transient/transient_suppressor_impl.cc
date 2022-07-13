@@ -85,9 +85,19 @@ TransientSuppressorImpl::TransientSuppressorImpl(VadMode vad_mode,
 
 TransientSuppressorImpl::~TransientSuppressorImpl() {}
 
-int TransientSuppressorImpl::Initialize(int sample_rate_hz,
-                                        int detection_rate_hz,
-                                        int num_channels) {
+void TransientSuppressorImpl::Initialize(int sample_rate_hz,
+                                         int detection_rate_hz,
+                                         int num_channels) {
+  RTC_DCHECK(sample_rate_hz == ts::kSampleRate8kHz ||
+             sample_rate_hz == ts::kSampleRate16kHz ||
+             sample_rate_hz == ts::kSampleRate32kHz ||
+             sample_rate_hz == ts::kSampleRate48kHz);
+  RTC_DCHECK(detection_rate_hz == ts::kSampleRate8kHz ||
+             detection_rate_hz == ts::kSampleRate16kHz ||
+             detection_rate_hz == ts::kSampleRate32kHz ||
+             detection_rate_hz == ts::kSampleRate48kHz);
+  RTC_DCHECK_GT(num_channels, 0);
+
   switch (sample_rate_hz) {
     case ts::kSampleRate8kHz:
       analysis_length_ = 128u;
@@ -106,24 +116,13 @@ int TransientSuppressorImpl::Initialize(int sample_rate_hz,
       window_ = kBlocks480w1024;
       break;
     default:
-      return -1;
-  }
-  if (detection_rate_hz != ts::kSampleRate8kHz &&
-      detection_rate_hz != ts::kSampleRate16kHz &&
-      detection_rate_hz != ts::kSampleRate32kHz &&
-      detection_rate_hz != ts::kSampleRate48kHz) {
-    return -1;
-  }
-  if (num_channels <= 0) {
-    return -1;
+      RTC_DCHECK_NOTREACHED();
+      return;
   }
 
   detector_.reset(new TransientDetector(detection_rate_hz));
   data_length_ = sample_rate_hz * ts::kChunkSizeMs / 1000;
-  if (data_length_ > analysis_length_) {
-    RTC_DCHECK_NOTREACHED();
-    return -1;
-  }
+  RTC_DCHECK_LE(data_length_, analysis_length_);
   buffer_delay_ = analysis_length_ - data_length_;
 
   complex_analysis_length_ = analysis_length_ / 2 + 1;
@@ -174,28 +173,26 @@ int TransientSuppressorImpl::Initialize(int sample_rate_hz,
   chunks_since_voice_change_ = 0;
   seed_ = 182;
   using_reference_ = false;
-  return 0;
 }
 
-int TransientSuppressorImpl::Suppress(float* data,
-                                      size_t data_length,
-                                      int num_channels,
-                                      const float* detection_data,
-                                      size_t detection_length,
-                                      const float* reference_data,
-                                      size_t reference_length,
-                                      float voice_probability,
-                                      bool key_pressed) {
+void TransientSuppressorImpl::Suppress(float* data,
+                                       size_t data_length,
+                                       int num_channels,
+                                       const float* detection_data,
+                                       size_t detection_length,
+                                       const float* reference_data,
+                                       size_t reference_length,
+                                       float voice_probability,
+                                       bool key_pressed) {
   if (!data || data_length != data_length_ || num_channels != num_channels_ ||
       detection_length != detection_length_ || voice_probability < 0 ||
       voice_probability > 1) {
-    return -1;
+    return;
   }
 
   UpdateKeypress(key_pressed);
   UpdateBuffers(data);
 
-  int result = 0;
   if (detection_enabled_) {
     UpdateRestoration(voice_probability);
 
@@ -208,7 +205,7 @@ int TransientSuppressorImpl::Suppress(float* data,
     float detector_result = detector_->Detect(detection_data, detection_length,
                                               reference_data, reference_length);
     if (detector_result < 0) {
-      return -1;
+      return;
     }
 
     using_reference_ = detector_->using_reference();
@@ -238,7 +235,6 @@ int TransientSuppressorImpl::Suppress(float* data,
                                 : &in_buffer_[i * analysis_length_],
            data_length_ * sizeof(*data));
   }
-  return result;
 }
 
 // This should only be called when detection is enabled. UpdateBuffers() must

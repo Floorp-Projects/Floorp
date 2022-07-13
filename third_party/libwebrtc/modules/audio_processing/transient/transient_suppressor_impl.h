@@ -33,19 +33,19 @@ class TransientSuppressorImpl : public TransientSuppressor {
                           int num_channels);
   ~TransientSuppressorImpl() override;
 
-  int Initialize(int sample_rate_hz,
-                 int detector_rate_hz,
-                 int num_channels) override;
+  void Initialize(int sample_rate_hz,
+                  int detector_rate_hz,
+                  int num_channels) override;
 
-  int Suppress(float* data,
-               size_t data_length,
-               int num_channels,
-               const float* detection_data,
-               size_t detection_length,
-               const float* reference_data,
-               size_t reference_length,
-               float voice_probability,
-               bool key_pressed) override;
+  void Suppress(float* data,
+                size_t data_length,
+                int num_channels,
+                const float* detection_data,
+                size_t detection_length,
+                const float* reference_data,
+                size_t reference_length,
+                float voice_probability,
+                bool key_pressed) override;
 
  private:
   FRIEND_TEST_ALL_PREFIXES(TransientSuppressorImplTest,
