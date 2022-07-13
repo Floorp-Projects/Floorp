@@ -77,7 +77,7 @@ def main(args=sys.argv[1:]):
             args.device_name,
         )
     except Exception:
-        sys.exit(4)
+        sys.exit(4)  # TBPL_RETRY
 
 
 if __name__ == "__main__":

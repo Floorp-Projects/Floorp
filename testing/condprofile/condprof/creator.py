@@ -98,6 +98,8 @@ class ProfileCreator:
             try:
                 with self.env.get_browser():
                     metadata = await self.build_profile(device, headless)
+            except Exception:
+                raise
             finally:
                 if not self.skip_logs:
                     self.env.dump_logs()
