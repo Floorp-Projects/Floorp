@@ -6,7 +6,10 @@ const SAMESITE_TOP_PAGE = SAMESITE_DOMAIN + SAMESITE_PATH + "sameSite.sjs";
 
 add_task(async _ => {
   await SpecialPowers.pushPrefEnv({
-    set: [["network.cookie.sameSite.laxByDefault", true]],
+    set: [
+      ["network.cookie.sameSite.laxByDefault", true],
+      ["network.cookie.sameSite.noneRequiresSecure", true],
+    ],
   });
 
   const expected = [];
