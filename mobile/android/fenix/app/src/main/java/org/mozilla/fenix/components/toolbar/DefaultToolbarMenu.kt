@@ -184,6 +184,7 @@ open class DefaultToolbarMenu(
             label = context.getString(R.string.browser_menu_install_on_homescreen),
             notificationTint = getColor(context, R.color.fx_mobile_icon_color_information)
         ),
+        isCollapsingMenuLimit = true,
         isHighlighted = {
             !context.settings().installPwaOpened
         }
