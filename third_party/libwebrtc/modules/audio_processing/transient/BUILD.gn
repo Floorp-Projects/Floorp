@@ -48,6 +48,14 @@ rtc_library("transient_suppressor_impl") {
   ]
 }
 
+rtc_library("voice_probability_delay_unit") {
+  sources = [
+    "voice_probability_delay_unit.cc",
+    "voice_probability_delay_unit.h",
+  ]
+  deps = [ "../../../rtc_base:checks" ]
+}
+
 if (rtc_include_tests) {
   if (!build_with_chromium) {
     rtc_executable("click_annotate") {
@@ -71,10 +79,12 @@ if (rtc_include_tests) {
         "file_utils.cc",
         "file_utils.h",
         "transient_suppression_test.cc",
+        "voice_probability_delay_unit_unittest.cc",
       ]
       deps = [
         ":transient_suppressor_api",
         ":transient_suppressor_impl",
+        ":voice_probability_delay_unit",
         "..:audio_processing",
         "../../../common_audio",
         "../../../rtc_base:rtc_base_approved",
@@ -100,12 +110,14 @@ if (rtc_include_tests) {
       "moving_moments_unittest.cc",
       "transient_detector_unittest.cc",
       "transient_suppressor_unittest.cc",
+      "voice_probability_delay_unit_unittest.cc",
       "wpd_node_unittest.cc",
       "wpd_tree_unittest.cc",
     ]
     deps = [
       ":transient_suppressor_api",
       ":transient_suppressor_impl",
+      ":voice_probability_delay_unit",
       "../../../rtc_base:stringutils",
       "../../../rtc_base/system:file_wrapper",
       "../../../test:fileutils",
