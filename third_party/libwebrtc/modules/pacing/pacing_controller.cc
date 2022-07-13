@@ -471,21 +471,6 @@ void PacingController::ProcessPackets() {
     if (pacing_info.probe_cluster_id != PacedPacketInfo::kNotAProbe) {
       recommended_probe_size = prober_.RecommendedMinProbeSize();
       RTC_DCHECK_GT(recommended_probe_size, DataSize::Zero());
-
-      // If first packet in probe, insert a small padding packet so we have a
-      // more reliable start window for the rate estimation.
-      if (pacing_info.probe_cluster_bytes_sent == 0) {
-        auto padding = packet_sender_->GeneratePadding(DataSize::Bytes(1));
-        // If no RTP modules sending media are registered, we may not get a
-        // padding packet back.
-        if (!padding.empty()) {
-          // Insert with high priority so larger media packets don't preempt it.
-          EnqueuePacketInternal(std::move(padding[0]), kFirstPriority);
-          // We should never get more than one padding packets with a requested
-          // size of 1 byte.
-          RTC_DCHECK_EQ(padding.size(), 1u);
-        }
-      }
     } else {
       // No valid probe cluster returned, probe might have timed out.
       is_probing = false;
@@ -546,10 +531,13 @@ void PacingController::ProcessPackets() {
       // Send done, update send time.
       OnPacketSent(packet_type, packet_size, now);
 
-      // If we are currently probing, we need to stop the send loop when we
-      // have reached the send target.
-      if (is_probing && data_sent >= recommended_probe_size) {
-        break;
+      if (is_probing) {
+        pacing_info.probe_cluster_bytes_sent += packet_size.bytes();
+        // If we are currently probing, we need to stop the send loop when we
+        // have reached the send target.
+        if (data_sent >= recommended_probe_size) {
+          break;
+        }
       }
 
       // Update target send time in case that are more packets that we are late
@@ -627,6 +615,22 @@ std::unique_ptr<RtpPacketToSend> PacingController::GetPendingPacket(
     const PacedPacketInfo& pacing_info,
     Timestamp target_send_time,
     Timestamp now) {
+  const bool is_probe =
+      pacing_info.probe_cluster_id != PacedPacketInfo::kNotAProbe;
+  // If first packet in probe, insert a small padding packet so we have a
+  // more reliable start window for the rate estimation.
+  if (is_probe && pacing_info.probe_cluster_bytes_sent == 0) {
+    auto padding = packet_sender_->GeneratePadding(DataSize::Bytes(1));
+    // If no RTP modules sending media are registered, we may not get a
+    // padding packet back.
+    if (!padding.empty()) {
+      // We should never get more than one padding packets with a requested
+      // size of 1 byte.
+      RTC_DCHECK_EQ(padding.size(), 1u);
+      return std::move(padding[0]);
+    }
+  }
+
   if (packet_queue_.Empty()) {
     return nullptr;
   }
@@ -636,7 +640,6 @@ std::unique_ptr<RtpPacketToSend> PacingController::GetPendingPacket(
   // Unpaced audio packets and probes are exempted from send checks.
   bool unpaced_audio_packet =
       !pace_audio_ && packet_queue_.LeadingAudioPacketEnqueueTime().has_value();
-  bool is_probe = pacing_info.probe_cluster_id != PacedPacketInfo::kNotAProbe;
   if (!unpaced_audio_packet && !is_probe) {
     if (congested_) {
       // Don't send anything if congested.
