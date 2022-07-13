@@ -63,14 +63,12 @@ void LoudnessHistogramTest::RunTest(bool enable_circular_buff,
 
   InputOutput io;
   int num_updates = 0;
-  int num_reset = 0;
   while (fread(&io, sizeof(InputOutput), 1, in_file) == 1) {
     if (io.rms < 0) {
       // We have to reset.
       hist_->Reset();
       TestClean();
       num_updates = 0;
-      num_reset++;
       // Read the next chunk of input.
       if (fread(&io, sizeof(InputOutput), 1, in_file) != 1)
         break;
