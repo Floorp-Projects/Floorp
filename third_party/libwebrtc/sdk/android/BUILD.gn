@@ -699,6 +699,7 @@ if (current_os == "linux" || is_android) {
       "../../rtc_base:rtc_task_queue",
       "../../rtc_base:safe_conversions",
       "../../rtc_base:threading",
+      "../../rtc_base:timestamp_aligner",
       "../../rtc_base:timeutils",
       "../../rtc_base/synchronization:mutex",
       "../../rtc_base/task_utils:to_queued_task",
