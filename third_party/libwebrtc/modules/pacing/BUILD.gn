@@ -48,6 +48,7 @@ rtc_library("pacing") {
     "../../logging:rtc_event_bwe",
     "../../logging:rtc_event_pacing",
     "../../rtc_base:checks",
+    "../../rtc_base:location",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
     "../../rtc_base:rtc_base_approved",
