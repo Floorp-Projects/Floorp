@@ -257,7 +257,7 @@
       'Perf Android32 (M AOSP Nexus6)': {
         'mixins': [
           'shamu', 'marshmallow_generic', 'android-devices', 'perf-pool',
-          'timeout-3h', 'has_native_resultdb_integration'
+          'perf-output', 'timeout-3h', 'has_native_resultdb_integration'
         ],
         'test_suites': {
           'gtest_tests': 'android_perf_tests',
@@ -266,7 +266,7 @@
       'Perf Android32 (M Nexus5)': {
         'mixins': [
           'hammerhead', 'marshmallow_generic', 'android-devices', 'perf-pool',
-          'timeout-3h', 'has_native_resultdb_integration'
+          'perf-output', 'timeout-3h', 'has_native_resultdb_integration'
         ],
         'test_suites': {
           'gtest_tests': 'android_perf_tests',
@@ -275,7 +275,7 @@
       'Perf Android64 (M Nexus5X)': {
         'mixins': [
           'bullhead', 'marshmallow', 'android-devices', 'perf-pool',
-          'timeout-3h', 'has_native_resultdb_integration'
+          'perf-output', 'timeout-3h', 'has_native_resultdb_integration'
         ],
         'test_suites': {
           'gtest_tests': 'android_perf_tests',
@@ -284,7 +284,7 @@
       'Perf Android64 (O Pixel2)': {
         'mixins': [
           'walleye', 'android-devices', 'perf-pool', 'timeout-3h',
-          'has_native_resultdb_integration'
+          'perf-output', 'has_native_resultdb_integration'
         ],
         'test_suites': {
           'gtest_tests': 'android_perf_tests',
