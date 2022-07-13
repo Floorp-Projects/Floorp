@@ -821,8 +821,8 @@ lkgr_config = {
     "project": "webrtc",
     "source_url": WEBRTC_GIT,
     "status_url": "https://webrtc-status.appspot.com",
-    "allowed_lag": 150,  # hours
-    "allowed_gap": 4,  # commits behind
+    "allowed_lag": 4,  # hours (up to 10x during low commit volume periods)
+    "allowed_gap": 150,  # commits behind
     "error_recipients": WEBRTC_TROOPER_EMAIL,
     "buckets": {
         "webrtc/ci": {
