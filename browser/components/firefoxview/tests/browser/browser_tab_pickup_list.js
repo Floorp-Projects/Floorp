@@ -356,3 +356,35 @@ add_task(async function test_empty_list() {
     }
   );
 });
+
+add_task(async function test_time_updates_correctly() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      setupMocks(syncedTabsData3, syncedTabsData4);
+      await setupListState(browser);
+
+      document.querySelector("tab-pickup-list").nowThresholdMs = 2000;
+
+      const timeLabel = document.querySelector("span.synced-tab-li-time");
+
+      ok(
+        (timeLabel.textContent = "Just now"),
+        "tab-pickup list item time is 'Just now'"
+      );
+
+      await BrowserTestUtils.waitForMutationCondition(
+        timeLabel,
+        { characterData: true },
+        () => (timeLabel.textContent = "2 seconds ago")
+      );
+
+      cleanup();
+    }
+  );
+});

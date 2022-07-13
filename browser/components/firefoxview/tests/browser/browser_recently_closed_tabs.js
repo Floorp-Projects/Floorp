@@ -237,3 +237,41 @@ add_task(async function test_max_list_items() {
     }
   );
 });
+
+add_task(async function test_time_updates_correctly() {
+  clearHistory();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      document.querySelector("recently-closed-tabs-list").nowThresholdMs = 2000;
+
+      const closedObjectsChanged = TestUtils.topicObserved(
+        "sessionstore-closed-objects-changed"
+      );
+
+      const tab1 = await add_new_tab(URLs[0]);
+
+      await close_tab(tab1);
+      await closedObjectsChanged;
+
+      const timeLabel = document.querySelector("span.closed-tab-li-time");
+
+      ok(
+        (timeLabel.textContent = "Just now"),
+        "recently-closed-tabs list item time is 'Just now'"
+      );
+
+      await BrowserTestUtils.waitForMutationCondition(
+        timeLabel,
+        { characterData: true },
+        () => (timeLabel.textContent = "2 seconds ago")
+      );
+    }
+  );
+});

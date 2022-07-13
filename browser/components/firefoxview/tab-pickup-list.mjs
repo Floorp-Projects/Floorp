@@ -15,6 +15,7 @@ import {
   formatURIForDisplay,
   convertTimestamp,
   createFaviconElement,
+  nowThresholdMs,
 } from "./helpers.mjs";
 
 const SYNCED_TABS_CHANGED = "services.sync.tabs.changed";
@@ -23,6 +24,8 @@ class TabPickupList extends HTMLElement {
   constructor() {
     super();
     this.maxTabsLength = 3;
+    // We do this for testing purposes
+    this.nowThresholdMs = nowThresholdMs;
     this.boundObserve = (...args) => this.getSyncedTabData(...args);
   }
 
@@ -48,7 +51,13 @@ class TabPickupList extends HTMLElement {
     this.addEventListener("click", this);
 
     this.getSyncedTabData();
+    this.intervalID = setInterval(this.updateTime, this.nowThresholdMs);
+
     Services.obs.addObserver(this.boundObserve, SYNCED_TABS_CHANGED);
+  }
+
+  disconnectedCallback() {
+    clearInterval(this.intervalID);
   }
 
   handleEvent(event) {
@@ -64,6 +73,16 @@ class TabPickupList extends HTMLElement {
     Services.obs.removeObserver(this.boundObserve, SYNCED_TABS_CHANGED);
   }
 
+  updateTime() {
+    const timeElements = this.querySelectorAll("span.synced-tab-li-time");
+
+    for (let timeEl of timeElements) {
+      timeEl.textContent = convertTimestamp(
+        parseInt(timeEl.getAttribute("data-timestamp")),
+        this.fluentStrings
+      );
+    }
+  }
   openTab(event) {
     event.preventDefault();
     const item = event.target.closest(".synced-tab-li");
@@ -161,12 +180,11 @@ class TabPickupList extends HTMLElement {
       targetURI,
     });
 
+    const lastUsedMs = tab.lastUsed * 1000;
     const time = document.createElement("span");
-    time.textContent = convertTimestamp(
-      tab.lastUsed * 1000,
-      this.fluentStrings
-    );
+    time.textContent = convertTimestamp(lastUsedMs, this.fluentStrings);
     time.classList.add("synced-tab-li-time");
+    time.setAttribute("data-timestamp", lastUsedMs);
 
     const url = document.createElement("span");
     const device = document.createElement("span");
