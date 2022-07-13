@@ -83,6 +83,7 @@
   },
   'ios-device-perf': {
     'swarming': {
+      'idempotent': False,
       'dimensions': {
         'os': 'iOS-12.4.1',
         'pool': 'WebRTC',
@@ -212,6 +213,11 @@
       }
     }
   },
+  'out_dir_arg': {
+    '$mixin_append': {
+      'args': ['--out-dir', '${ISOLATED_OUTDIR}']
+    }
+  },
   'perf-low-bandwidth-audio-perf-test': {
     'merge': {
       'script': '//tools_webrtc/perf/process_perf_results_py2.py',
@@ -227,6 +233,7 @@
   },
   'perf-pool': {
     'swarming': {
+      'idempotent': False,
       'dimensions': {
         'pool': 'WebRTC-perf'
       }

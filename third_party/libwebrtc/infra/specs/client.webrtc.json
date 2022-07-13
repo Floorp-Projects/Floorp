@@ -2558,6 +2558,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -2945,6 +2948,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -3332,6 +3338,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -3719,6 +3728,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -4106,6 +4118,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -4493,6 +4508,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -4881,6 +4899,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -5270,6 +5291,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -5658,6 +5682,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -6073,6 +6100,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -6479,6 +6509,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -6880,6 +6913,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -7293,6 +7329,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -7722,6 +7761,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -8131,6 +8173,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -8444,7 +8489,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
@@ -8491,7 +8538,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
@@ -8538,7 +8587,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
@@ -8585,7 +8636,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
@@ -8632,7 +8685,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "modules_tests",
         "merge": {
@@ -8679,7 +8734,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "modules_unittests",
         "merge": {
@@ -8726,7 +8783,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_media_unittests",
         "merge": {
@@ -8773,7 +8832,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
@@ -8820,7 +8881,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_stats_unittests",
         "merge": {
@@ -8867,7 +8930,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_unittests",
         "merge": {
@@ -8915,6 +8980,8 @@
           "12.4",
           "--xcode-build-version",
           "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}",
           "--xcode-parallelization"
         ],
         "isolate_name": "sdk_framework_unittests",
@@ -8962,7 +9029,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
@@ -9009,7 +9078,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "test_support_unittests",
         "merge": {
@@ -9056,7 +9127,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "tools_unittests",
         "merge": {
@@ -9103,7 +9176,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "video_capture_tests",
         "merge": {
@@ -9150,7 +9225,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "video_engine_tests",
         "merge": {
@@ -9197,7 +9274,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "voip_unittests",
         "merge": {
@@ -9244,7 +9323,9 @@
           "--version",
           "12.4",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
@@ -9295,7 +9376,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
@@ -9342,7 +9425,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
@@ -9389,7 +9474,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
@@ -9436,7 +9523,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
@@ -9483,7 +9572,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "modules_tests",
         "merge": {
@@ -9530,7 +9621,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "modules_unittests",
         "merge": {
@@ -9577,7 +9670,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_media_unittests",
         "merge": {
@@ -9624,7 +9719,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
@@ -9671,7 +9768,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_stats_unittests",
         "merge": {
@@ -9718,7 +9817,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_unittests",
         "merge": {
@@ -9766,6 +9867,8 @@
           "13.6",
           "--xcode-build-version",
           "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}",
           "--xcode-parallelization"
         ],
         "isolate_name": "sdk_framework_unittests",
@@ -9813,7 +9916,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
@@ -9860,7 +9965,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "test_support_unittests",
         "merge": {
@@ -9907,7 +10014,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "tools_unittests",
         "merge": {
@@ -9954,7 +10063,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "video_capture_tests",
         "merge": {
@@ -10001,7 +10112,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "video_engine_tests",
         "merge": {
@@ -10048,7 +10161,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "voip_unittests",
         "merge": {
@@ -10095,7 +10210,9 @@
           "--version",
           "13.6",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
@@ -10146,7 +10263,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
@@ -10193,7 +10312,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
@@ -10240,7 +10361,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
@@ -10287,7 +10410,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
@@ -10334,7 +10459,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "modules_tests",
         "merge": {
@@ -10381,7 +10508,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "modules_unittests",
         "merge": {
@@ -10428,7 +10557,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_media_unittests",
         "merge": {
@@ -10475,7 +10606,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
@@ -10522,7 +10655,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_stats_unittests",
         "merge": {
@@ -10569,7 +10704,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_unittests",
         "merge": {
@@ -10617,6 +10754,8 @@
           "14.0",
           "--xcode-build-version",
           "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}",
           "--xcode-parallelization"
         ],
         "isolate_name": "sdk_framework_unittests",
@@ -10664,7 +10803,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
@@ -10711,7 +10852,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "test_support_unittests",
         "merge": {
@@ -10758,7 +10901,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "tools_unittests",
         "merge": {
@@ -10805,7 +10950,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "video_capture_tests",
         "merge": {
@@ -10852,7 +10999,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "video_engine_tests",
         "merge": {
@@ -10899,7 +11048,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "voip_unittests",
         "merge": {
@@ -10946,7 +11097,9 @@
           "--version",
           "14.0",
           "--xcode-build-version",
-          "12a7209"
+          "12a7209",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {

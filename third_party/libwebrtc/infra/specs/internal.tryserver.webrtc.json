@@ -8,7 +8,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
@@ -50,7 +52,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
@@ -93,7 +97,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "modules_tests",
         "merge": {
@@ -137,7 +143,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "modules_unittests",
         "merge": {
@@ -179,7 +187,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
@@ -221,7 +231,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_stats_unittests",
         "merge": {
@@ -263,7 +275,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
@@ -305,7 +319,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "test_support_unittests",
         "merge": {
@@ -347,7 +363,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "tools_unittests",
         "merge": {
@@ -389,7 +407,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "video_capture_tests",
         "merge": {
@@ -431,7 +451,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "video_engine_tests",
         "merge": {
@@ -477,7 +499,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
@@ -519,7 +543,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
@@ -562,7 +588,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "modules_tests",
         "merge": {
@@ -606,7 +634,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "modules_unittests",
         "merge": {
@@ -648,7 +678,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
@@ -690,7 +722,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "rtc_stats_unittests",
         "merge": {
@@ -732,7 +766,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
@@ -774,7 +810,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "test_support_unittests",
         "merge": {
@@ -816,7 +854,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "tools_unittests",
         "merge": {
@@ -858,7 +898,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "video_capture_tests",
         "merge": {
@@ -900,7 +942,9 @@
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
-          "13c100"
+          "13c100",
+          "--out-dir",
+          "${ISOLATED_OUTDIR}"
         ],
         "isolate_name": "video_engine_tests",
         "merge": {

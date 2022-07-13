@@ -16,6 +16,8 @@
       'low_bandwidth_audio_perf_test': {
         'mixins': ['perf-low-bandwidth-audio-perf-test'],
         'args': [
+          '.',
+          '--remove',
           '--android',
           '--adb-path',
           '../../third_party/android_sdk/public/platform-tools/adb',
@@ -73,7 +75,8 @@
     },
     'desktop_perf_tests': {
       'low_bandwidth_audio_perf_test': {
-        'mixins': ['perf-low-bandwidth-audio-perf-test']
+        'mixins': ['perf-low-bandwidth-audio-perf-test'],
+        'args': ['.', '--remove'],
       },
       'webrtc_perf_tests': {
         'mixins': ['perf-webrtc-perf-tests'],
@@ -88,7 +91,9 @@
       'common_audio_unittests': {},
       'common_video_unittests': {},
       'dcsctp_unittests': {},
-      'low_bandwidth_audio_test': {},
+      'low_bandwidth_audio_test': {
+        'args': ['--quick']
+      },
       'modules_tests': {
         'swarming': {
           'shards': 2

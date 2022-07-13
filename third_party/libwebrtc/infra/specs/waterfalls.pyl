@@ -200,7 +200,8 @@
       'iOS64 Sim Debug (iOS 12)': {
         'mixins': [
           'mac11', 'chromium-tester-service-account', 'ios-simulator-12.4',
-          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration'
+          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration',
+          'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
@@ -209,7 +210,8 @@
       'iOS64 Sim Debug (iOS 13)': {
         'mixins': [
           'mac11', 'chromium-tester-service-account', 'ios-simulator-13.6',
-          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration'
+          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration',
+          'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
@@ -218,7 +220,8 @@
       'iOS64 Sim Debug (iOS 14.0)': {
         'mixins': [
           'mac11', 'chromium-tester-service-account', 'ios-simulator-14.0',
-          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration'
+          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration',
+          'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
@@ -316,7 +319,8 @@
       'iOS64 Debug': {
         'mixins': [
           'ios-device-15.3', 'webrtc-xctest', 'chrome-tester-service-account',
-          'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration'
+          'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
+          'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_device_tests',
@@ -325,7 +329,8 @@
       'iOS64 Perf': {
         'mixins': [
           'ios-device-perf', 'timeout-3h', 'chrome-tester-service-account',
-          'xcode_12d4e', 'mac_toolchain', 'has_native_resultdb_integration'
+          'xcode_12d4e', 'mac_toolchain', 'has_native_resultdb_integration',
+          'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_perf_tests',
@@ -334,7 +339,8 @@
       'iOS64 Release': {
         'mixins': [
           'ios-device-15.3', 'webrtc-xctest', 'chrome-tester-service-account',
-          'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration'
+          'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
+          'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_device_tests',
@@ -349,7 +355,8 @@
       'ios_arm64_dbg': {
         'mixins': [
           'ios-device-15.3', 'webrtc-xctest', 'chrome-tester-service-account',
-          'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration'
+          'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
+          'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_device_tests',
@@ -358,7 +365,8 @@
       'ios_arm64_rel': {
         'mixins': [
           'ios-device-15.3', 'webrtc-xctest', 'chrome-tester-service-account',
-          'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration'
+          'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
+          'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_device_tests',
@@ -432,7 +440,8 @@
       'ios_sim_x64_dbg_ios12': {
         'mixins': [
           'mac11', 'chromium-tester-service-account', 'ios-simulator-12.4',
-          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration'
+          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration',
+          'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
@@ -441,7 +450,8 @@
       'ios_sim_x64_dbg_ios13': {
         'mixins': [
           'mac11', 'chromium-tester-service-account', 'ios-simulator-13.6',
-          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration'
+          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration',
+          'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
@@ -450,7 +460,8 @@
       'ios_sim_x64_dbg_ios14': {
         'mixins': [
           'mac11', 'chromium-tester-service-account', 'ios-simulator-14.0',
-          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration'
+          'xcode_12a7209', 'mac_toolchain', 'has_native_resultdb_integration',
+          'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
