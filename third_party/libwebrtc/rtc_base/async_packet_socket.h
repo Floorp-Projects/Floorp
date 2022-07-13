@@ -13,9 +13,12 @@
 
 #include <vector>
 
+#include "api/sequence_checker.h"
+#include "rtc_base/callback_list.h"
 #include "rtc_base/dscp.h"
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/socket.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/time_utils.h"
@@ -100,6 +103,11 @@ class RTC_EXPORT AsyncPacketSocket : public sigslot::has_slots<> {
   virtual int GetError() const = 0;
   virtual void SetError(int error) = 0;
 
+  // Register a callback to be called when the socket is closed.
+  void SubscribeClose(const void* removal_tag,
+                      std::function<void(AsyncPacketSocket*, int)> callback);
+  void UnsubscribeClose(const void* removal_tag);
+
   // Emitted each time a packet is read. Used only for UDP and
   // connected TCP sockets.
   sigslot::signal5<AsyncPacketSocket*,
@@ -126,9 +134,25 @@ class RTC_EXPORT AsyncPacketSocket : public sigslot::has_slots<> {
   // CONNECTING to CONNECTED.
   sigslot::signal1<AsyncPacketSocket*> SignalConnect;
 
-  // Emitted for client TCP sockets when state is changed from
-  // CONNECTED to CLOSED.
-  sigslot::signal2<AsyncPacketSocket*, int> SignalClose;
+  void NotifyClosedForTest(int err) { NotifyClosed(err); }
+
+ protected:
+  // TODO(bugs.webrtc.org/11943): Remove after updating downstream code.
+  void SignalClose(AsyncPacketSocket* s, int err) {
+    RTC_DCHECK_EQ(s, this);
+    NotifyClosed(err);
+  }
+
+  void NotifyClosed(int err) {
+    RTC_DCHECK_RUN_ON(&network_checker_);
+    on_close_.Send(this, err);
+  }
+
+  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker network_checker_;
+
+ private:
+  webrtc::CallbackList<AsyncPacketSocket*, int> on_close_
+      RTC_GUARDED_BY(&network_checker_);
 };
 
 // Listen socket, producing an AsyncPacketSocket when a peer connects.

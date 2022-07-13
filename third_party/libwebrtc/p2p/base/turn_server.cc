@@ -195,7 +195,10 @@ void TurnServer::AcceptConnection(rtc::Socket* server_socket) {
     cricket::AsyncStunTCPSocket* tcp_socket =
         new cricket::AsyncStunTCPSocket(accepted_socket);
 
-    tcp_socket->SignalClose.connect(this, &TurnServer::OnInternalSocketClose);
+    tcp_socket->SubscribeClose(this,
+                               [this](rtc::AsyncPacketSocket* s, int err) {
+                                 OnInternalSocketClose(s, err);
+                               });
     // Finally add the socket so it can start communicating with the client.
     AddInternalSocket(tcp_socket, info.proto);
   }
@@ -564,6 +567,7 @@ void TurnServer::DestroyInternalSocket(rtc::AsyncPacketSocket* socket) {
   InternalSocketMap::iterator iter = server_sockets_.find(socket);
   if (iter != server_sockets_.end()) {
     rtc::AsyncPacketSocket* socket = iter->first;
+    socket->UnsubscribeClose(this);
     socket->SignalReadPacket.disconnect(this);
     server_sockets_.erase(iter);
     std::unique_ptr<rtc::AsyncPacketSocket> socket_to_delete =

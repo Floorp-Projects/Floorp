@@ -1305,7 +1305,7 @@ TEST_F(TurnPortTest, TestSocketCloseWillDestroyConnection) {
                                                   Port::ORIGIN_MESSAGE);
   EXPECT_NE(nullptr, conn);
   EXPECT_TRUE(!turn_port_->connections().empty());
-  turn_port_->socket()->SignalClose(turn_port_->socket(), 1);
+  turn_port_->socket()->NotifyClosedForTest(1);
   EXPECT_TRUE_SIMULATED_WAIT(turn_port_->connections().empty(),
                              kConnectionDestructionDelay, fake_clock_);
 }
