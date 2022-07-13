@@ -198,6 +198,7 @@ rtc_source_set("external_hmac") {
   deps = [
     "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:zero_memory",
   ]
   if (rtc_build_libsrtp) {
     deps += [ "//third_party/libsrtp" ]
@@ -563,6 +564,7 @@ rtc_source_set("srtp_filter") {
     "../rtc_base",
     "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:zero_memory",
     "../rtc_base/third_party/base64",
   ]
   absl_deps = [
@@ -622,6 +624,7 @@ rtc_source_set("srtp_transport") {
     "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:safe_conversions",
+    "../rtc_base:zero_memory",
     "../rtc_base/third_party/base64",
     "../rtc_base/third_party/sigslot",
   ]
