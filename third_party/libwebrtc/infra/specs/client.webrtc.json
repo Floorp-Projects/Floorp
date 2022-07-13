@@ -8831,7 +8831,6 @@
       },
       {
         "args": [
-          "--readline-timeout=360",
           "--platform",
           "iPhone X",
           "--version",
@@ -9683,7 +9682,6 @@
       },
       {
         "args": [
-          "--readline-timeout=360",
           "--platform",
           "iPhone X",
           "--version",
@@ -10535,7 +10533,6 @@
       },
       {
         "args": [
-          "--readline-timeout=360",
           "--platform",
           "iPhone X",
           "--version",

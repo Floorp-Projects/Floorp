@@ -89,6 +89,7 @@
       },
       {
         "args": [
+          "--readline-timeout=1200",
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
@@ -119,6 +120,8 @@
               "pool": "chrome.tests"
             }
           ],
+          "hard_timeout": 7200,
+          "io_timeout": 7200,
           "named_caches": [
             {
               "name": "xcode_ios_13c100",
@@ -555,6 +558,7 @@
       },
       {
         "args": [
+          "--readline-timeout=1200",
           "--xctest",
           "--undefok=enable-run-ios-unittests-with-xctest",
           "--xcode-build-version",
@@ -585,6 +589,8 @@
               "pool": "chrome.tests"
             }
           ],
+          "hard_timeout": 7200,
+          "io_timeout": 7200,
           "named_caches": [
             {
               "name": "xcode_ios_13c100",
