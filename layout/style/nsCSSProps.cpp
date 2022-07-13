@@ -178,10 +178,12 @@ const nsCString& nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc) {
   return sNullStr;
 }
 
-const CSSPropFlags nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
+const CSSPropFlags nsCSSProps::kFlagsTable[eCSSProperty_COUNT_with_aliases] = {
 #define CSS_PROP_LONGHAND(name_, id_, method_, flags_, ...) flags_,
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, ...) flags_,
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, flags_, ...) flags_,
 #include "mozilla/ServoCSSPropList.h"
+#undef CSS_PROP_ALIAS
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP_LONGHAND
 };
@@ -200,7 +202,8 @@ bool nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
   IS_ENABLED_BY_DEFAULT(flags_),
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, ...) \
   IS_ENABLED_BY_DEFAULT(flags_),
-#define CSS_PROP_ALIAS(...) true,
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, flags_, ...) \
+  IS_ENABLED_BY_DEFAULT(flags_),
 #include "mozilla/ServoCSSPropList.h"
 #undef CSS_PROP_ALIAS
 #undef CSS_PROP_SHORTHAND

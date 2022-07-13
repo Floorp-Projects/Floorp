@@ -79,16 +79,19 @@ RefPtr<IdleSchedulerChild::MayGCPromise> IdleSchedulerChild::MayGCNow() {
   if (mIsRequestingGC || mIsDoingGC) {
     return MayGCPromise::CreateAndResolve(false, __func__);
   }
+  TimeStamp wait_since = TimeStamp::Now();
 
   mIsRequestingGC = true;
   return SendRequestGC()->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self = RefPtr(this)](bool aIgnored) {
+      [self = RefPtr(this), wait_since](bool aIgnored) {
         // Only one of these may be true at a time.
         MOZ_ASSERT(!(self->mIsRequestingGC && self->mIsDoingGC));
 
         // The parent process always says yes, sometimes after a delay.
         if (self->mIsRequestingGC) {
+          Telemetry::AccumulateTimeDelta(Telemetry::GC_WAIT_FOR_IDLE_MS,
+                                         wait_since);
           self->mIsRequestingGC = false;
           self->mIsDoingGC = true;
           return MayGCPromise::CreateAndResolve(true, __func__);
