@@ -14,7 +14,6 @@ rtc_library("webrtc_fuzzer_main") {
   sources = [ "webrtc_fuzzer_main.cc" ]
   deps = [
     "../../rtc_base:logging",
-    "../../rtc_base:rtc_base_approved",
     "//testing/libfuzzer:libfuzzer_main",
   ]
 
@@ -131,7 +130,6 @@ webrtc_fuzzer_test("forward_error_correction_fuzzer") {
     "../../modules/rtp_rtcp",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
     "../../rtc_base:byte_buffer",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -141,7 +139,6 @@ webrtc_fuzzer_test("flexfec_header_reader_fuzzer") {
     "../../api:scoped_refptr",
     "../../modules/rtp_rtcp",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -161,7 +158,6 @@ webrtc_fuzzer_test("ulpfec_header_reader_fuzzer") {
     "../../modules/rtp_rtcp",
     "../../modules/rtp_rtcp:fec_test_helper",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -174,7 +170,6 @@ webrtc_fuzzer_test("ulpfec_generator_fuzzer") {
     "../../modules/rtp_rtcp:rtp_rtcp_format",
     "../../rtc_base:checks",
     "../../rtc_base:copy_on_write_buffer",
-    "../../rtc_base:rtc_base_approved",
     "../../system_wrappers",
   ]
 }
@@ -185,7 +180,6 @@ webrtc_fuzzer_test("ulpfec_receiver_fuzzer") {
     ":fuzz_data_helper",
     "../../modules/rtp_rtcp",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -194,7 +188,6 @@ webrtc_fuzzer_test("flexfec_receiver_fuzzer") {
   deps = [
     "../../modules/rtp_rtcp",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -213,7 +206,6 @@ webrtc_fuzzer_test("rtcp_receiver_fuzzer") {
     "../../modules/rtp_rtcp",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
     "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
     "../../system_wrappers",
   ]
   seed_corpus = "corpora/rtcp-corpus"
@@ -257,7 +249,6 @@ rtc_library("audio_decoder_fuzzer") {
     "../../api/audio_codecs:audio_codecs_api",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
     "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -347,7 +338,6 @@ rtc_library("audio_encoder_fuzzer") {
     "../../api/audio_codecs:audio_codecs_api",
     "../../rtc_base:buffer",
     "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -396,7 +386,6 @@ webrtc_fuzzer_test("neteq_rtp_fuzzer") {
     "../../modules/audio_coding:neteq_tools_minimal",
     "../../modules/audio_coding:pcm16b",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -410,7 +399,6 @@ webrtc_fuzzer_test("neteq_signal_fuzzer") {
     "../../modules/audio_coding:neteq_tools_minimal",
     "../../modules/audio_coding:pcm16b",
     "../../rtc_base:random",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:safe_conversions",
   ]
 }
@@ -421,7 +409,6 @@ webrtc_fuzzer_test("residual_echo_detector_fuzzer") {
     "../../api/audio:echo_detector_creator",
     "../../rtc_base:checks",
     "../../rtc_base:refcount",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -494,7 +481,6 @@ rtc_library("audio_processing_fuzzer_helper") {
     "../../modules/audio_processing:api",
     "../../modules/audio_processing:audio_frame_proxies",
     "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -515,7 +501,6 @@ webrtc_fuzzer_test("audio_processing_fuzzer") {
     "../../modules/audio_processing/aec_dump",
     "../../modules/audio_processing/aec_dump:aec_dump_impl",
     "../../rtc_base:macromagic",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base:safe_minmax",
     "../../system_wrappers:field_trial",
@@ -532,7 +517,6 @@ webrtc_fuzzer_test("agc_fuzzer") {
     "../../modules/audio_processing:api",
     "../../modules/audio_processing:audio_buffer",
     "../../rtc_base:macromagic",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:safe_minmax",
   ]
 
@@ -573,7 +557,6 @@ webrtc_fuzzer_test("comfort_noise_decoder_fuzzer") {
     "../../api:array_view",
     "../../modules/audio_coding:webrtc_cng",
     "../../rtc_base:buffer",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -650,7 +633,6 @@ webrtc_fuzzer_test("field_trial_fuzzer") {
 webrtc_fuzzer_test("string_to_number_fuzzer") {
   sources = [ "string_to_number_fuzzer.cc" ]
   deps = [
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:stringutils",
   ]
   seed_corpus = "corpora/string_to_number-corpus"
@@ -663,7 +645,6 @@ webrtc_fuzzer_test("sctp_utils_fuzzer") {
     "../../pc:libjingle_peerconnection",
     "../../pc:sctp_utils",
     "../../rtc_base:copy_on_write_buffer",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -675,7 +656,6 @@ webrtc_fuzzer_test("dcsctp_socket_fuzzer") {
     "../../net/dcsctp/public:types",
     "../../net/dcsctp/socket:dcsctp_socket",
     "../../rtc_base:logging",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -691,7 +671,6 @@ webrtc_fuzzer_test("ssl_certificate_fuzzer") {
 webrtc_fuzzer_test("vp8_replay_fuzzer") {
   sources = [ "vp8_replay_fuzzer.cc" ]
   deps = [
-    "../../rtc_base:rtc_base_approved",
     "utils:rtp_replayer",
   ]
   seed_corpus = "corpora/rtpdump-corpus/vp8"
@@ -725,7 +704,6 @@ if (rtc_build_libvpx) {
 webrtc_fuzzer_test("vp9_replay_fuzzer") {
   sources = [ "vp9_replay_fuzzer.cc" ]
   deps = [
-    "../../rtc_base:rtc_base_approved",
     "utils:rtp_replayer",
   ]
   seed_corpus = "corpora/rtpdump-corpus/vp9"

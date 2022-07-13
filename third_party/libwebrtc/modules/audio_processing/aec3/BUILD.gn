@@ -148,7 +148,6 @@ rtc_library("aec3") {
     "../../../rtc_base:logging",
     "../../../rtc_base:macromagic",
     "../../../rtc_base:race_checker",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:safe_minmax",
     "../../../rtc_base:swap_queue",
     "../../../rtc_base/experiments:field_trial_parser",
@@ -177,7 +176,6 @@ rtc_source_set("aec3_fft") {
     "../../../api:array_view",
     "../../../common_audio/third_party/ooura:fft_size_128",
     "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:arch",
   ]
 }
@@ -194,7 +192,6 @@ rtc_source_set("render_buffer") {
     ":fft_data",
     "../../../api:array_view",
     "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:arch",
   ]
 }
@@ -226,7 +223,6 @@ rtc_source_set("matched_filter") {
   deps = [
     ":aec3_common",
     "../../../api:array_view",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:arch",
   ]
 }
@@ -314,7 +310,6 @@ if (rtc_include_tests) {
       "../../../rtc_base:checks",
       "../../../rtc_base:macromagic",
       "../../../rtc_base:random",
-      "../../../rtc_base:rtc_base_approved",
       "../../../rtc_base:safe_minmax",
       "../../../rtc_base:stringutils",
       "../../../rtc_base/system:arch",

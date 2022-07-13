@@ -49,7 +49,6 @@ rtc_library("common_audio") {
     "../rtc_base:checks",
     "../rtc_base:gtest_prod",
     "../rtc_base:logging",
-    "../rtc_base:rtc_base_approved",
     "../rtc_base:safe_conversions",
     "../rtc_base:sanitizer",
     "../rtc_base:timeutils",
@@ -185,7 +184,6 @@ rtc_library("common_audio_c") {
     ":common_audio_cc",
     "../rtc_base:checks",
     "../rtc_base:compile_assert_c",
-    "../rtc_base:rtc_base_approved",
     "../rtc_base:sanitizer",
     "../rtc_base/system:arch",
     "../system_wrappers",
@@ -201,7 +199,6 @@ rtc_library("common_audio_cc") {
   ]
 
   deps = [
-    "../rtc_base:rtc_base_approved",
     "../rtc_base:safe_conversions",
     "../system_wrappers",
   ]
@@ -211,7 +208,6 @@ rtc_source_set("sinc_resampler") {
   sources = [ "resampler/sinc_resampler.h" ]
   deps = [
     "../rtc_base:gtest_prod",
-    "../rtc_base:rtc_base_approved",
     "../rtc_base/memory:aligned_malloc",
     "../rtc_base/system:arch",
     "../system_wrappers",
@@ -234,7 +230,6 @@ rtc_library("fir_filter_factory") {
   deps = [
     ":fir_filter",
     "../rtc_base:checks",
-    "../rtc_base:rtc_base_approved",
     "../rtc_base/system:arch",
     "../system_wrappers",
   ]
@@ -263,7 +258,6 @@ if (target_cpu == "x86" || target_cpu == "x64") {
       ":fir_filter",
       ":sinc_resampler",
       "../rtc_base:checks",
-      "../rtc_base:rtc_base_approved",
       "../rtc_base/memory:aligned_malloc",
     ]
   }
@@ -284,7 +278,6 @@ if (target_cpu == "x86" || target_cpu == "x64") {
       ":fir_filter",
       ":sinc_resampler",
       "../rtc_base:checks",
-      "../rtc_base:rtc_base_approved",
       "../rtc_base/memory:aligned_malloc",
     ]
   }
@@ -309,7 +302,6 @@ if (rtc_build_with_neon) {
       ":fir_filter",
       ":sinc_resampler",
       "../rtc_base:checks",
-      "../rtc_base:rtc_base_approved",
       "../rtc_base/memory:aligned_malloc",
     ]
   }
@@ -331,7 +323,6 @@ if (rtc_build_with_neon) {
     deps = [
       ":common_audio_c",
       "../rtc_base:checks",
-      "../rtc_base:rtc_base_approved",
       "../rtc_base/system:arch",
     ]
   }
@@ -381,7 +372,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":sinc_resampler",
       "../rtc_base:checks",
       "../rtc_base:macromagic",
-      "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:stringutils",
       "../rtc_base:timeutils",

@@ -39,7 +39,6 @@ rtc_library("utility") {
     "../../rtc_base:location",
     "../../rtc_base:logging",
     "../../rtc_base:platform_thread",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_event",
     "../../rtc_base:timeutils",
     "../../rtc_base/system:arch",
@@ -55,7 +54,6 @@ rtc_library("mock_process_thread") {
   deps = [
     ":utility",
     "../../rtc_base:location",
-    "../../rtc_base:rtc_base_approved",
     "../../test:test_support",
   ]
 }
@@ -72,7 +70,6 @@ if (rtc_include_tests) {
       "../../api/task_queue",
       "../../api/task_queue:task_queue_test",
       "../../rtc_base:location",
-      "../../rtc_base:rtc_base_approved",
       "../../rtc_base:timeutils",
       "../../test:test_support",
     ]

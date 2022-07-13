@@ -22,7 +22,6 @@ rtc_library("audio_frame_api") {
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:timeutils",
   ]
 }
@@ -39,7 +38,6 @@ rtc_source_set("audio_mixer_api") {
   deps = [
     ":audio_frame_api",
     "../../rtc_base:refcount",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -51,7 +49,6 @@ rtc_library("aec3_config") {
   ]
   deps = [
     "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:safe_minmax",
     "../../rtc_base/system:rtc_export",
   ]
@@ -69,7 +66,6 @@ rtc_library("aec3_config_json") {
     ":aec3_config",
     "../../rtc_base:checks",
     "../../rtc_base:logging",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_json",
     "../../rtc_base:stringutils",
     "../../rtc_base/system:rtc_export",
@@ -90,7 +86,6 @@ rtc_library("aec3_factory") {
     ":aec3_config",
     ":echo_control",
     "../../modules/audio_processing/aec3",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:rtc_export",
   ]
 }

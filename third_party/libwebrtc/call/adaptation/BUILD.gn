@@ -47,7 +47,6 @@ rtc_library("resource_adaptation") {
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
     "../../rtc_base:refcount",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base:safe_conversions",
     "../../rtc_base:stringutils",
@@ -86,7 +85,6 @@ if (rtc_include_tests) {
       "../../api/video_codecs:video_codecs_api",
       "../../rtc_base:checks",
       "../../rtc_base:gunit_helpers",
-      "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_event",
       "../../rtc_base:rtc_task_queue",
       "../../rtc_base:stringutils",
@@ -122,7 +120,6 @@ if (rtc_include_tests) {
       "../../api/task_queue:task_queue",
       "../../api/video:video_stream_encoder",
       "../../rtc_base:refcount",
-      "../../rtc_base:rtc_base_approved",
       "../../rtc_base/task_utils:to_queued_task",
       "../../test:test_support",
     ]

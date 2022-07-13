@@ -33,7 +33,6 @@ rtc_library("video_processing") {
     "../../common_video",
     "../../modules/utility",
     "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:arch",
     "../../system_wrappers",
     #"//third_party/libyuv",
@@ -65,7 +64,6 @@ if (build_video_processing_sse2) {
 
     deps = [
       ":denoiser_filter",
-      "../../rtc_base:rtc_base_approved",
       "../../system_wrappers",
     ]
 

@@ -23,7 +23,6 @@ rtc_library("network_emulation") {
     "../../../rtc_base:checks",
     "../../../rtc_base:copy_on_write_buffer",
     "../../../rtc_base:ip_address",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:socket_address",
     "../../numerics",
     "../../task_queue",

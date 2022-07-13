@@ -55,7 +55,6 @@ if (!build_with_chromium && !build_with_mozilla) {
       "../pc:peer_connection_factory",
       "../pc:webrtc_sdp",
       "../rtc_base",
-      "../rtc_base:rtc_base_approved",
       "../rtc_base:threading",
       "../stats:rtc_stats",
       "audio:audio_mixer_api",
@@ -94,7 +93,6 @@ rtc_library("rtp_packet_info") {
     ":rtp_headers",
     ":scoped_refptr",
     "../rtc_base:refcount",
-    "../rtc_base:rtc_base_approved",
     "../rtc_base/system:rtc_export",
     "units:timestamp",
   ]
@@ -227,7 +225,6 @@ rtc_library("libjingle_peerconnection_api") {
     "../rtc_base",
     "../rtc_base:checks",
     "../rtc_base:ip_address",
-    "../rtc_base:rtc_base_approved",
     "../rtc_base:socket_address",
     "../rtc_base:threading",
     "../rtc_base/system:rtc_export",
@@ -613,7 +610,6 @@ rtc_library("rtc_event_log_output_file") {
     ":libjingle_logging_api",
     "../rtc_base:checks",
     "../rtc_base:logging",
-    "../rtc_base:rtc_base_approved",
     "../rtc_base/system:file_wrapper",
     "rtc_event_log",
   ]
@@ -634,7 +630,6 @@ rtc_source_set("rtc_stats_api") {
     "../api:refcountedbase",
     "../rtc_base:checks",
     "../rtc_base:refcount",
-    "../rtc_base:rtc_base_approved",
     "../rtc_base/system:rtc_export",
   ]
 }
@@ -865,7 +860,6 @@ if (rtc_include_tests) {
     deps = [
       ":simulcast_test_fixture_api",
       "../modules/video_coding:simulcast_test_fixture_impl",
-      "../rtc_base:rtc_base_approved",
       "video_codecs:video_codecs_api",
     ]
   }
@@ -897,7 +891,6 @@ if (rtc_include_tests) {
       ":videocodec_test_fixture_api",
       "../modules/video_coding:video_codecs_test_framework",
       "../modules/video_coding:videocodec_test_impl",
-      "../rtc_base:rtc_base_approved",
       "video_codecs:video_codecs_api",
     ]
   }
@@ -982,7 +975,6 @@ if (rtc_include_tests) {
       ":rtp_parameters",
       "../rtc_base:checks",
       "../rtc_base:refcount",
-      "../rtc_base:rtc_base_approved",
       "crypto:frame_encryptor_interface",
     ]
   }
@@ -1000,7 +992,6 @@ if (rtc_include_tests) {
       ":rtp_parameters",
       "../rtc_base:checks",
       "../rtc_base:refcount",
-      "../rtc_base:rtc_base_approved",
       "crypto:frame_decryptor_interface",
     ]
   }
@@ -1215,7 +1206,6 @@ if (rtc_include_tests) {
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
       "../rtc_base:platform_thread",
-      "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_event",
       "../rtc_base:rtc_task_queue",
       "../rtc_base:task_queue_for_test",

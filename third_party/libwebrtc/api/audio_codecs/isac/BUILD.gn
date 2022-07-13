@@ -67,7 +67,6 @@ rtc_library("audio_encoder_isac_fix") {
     "..:audio_codecs_api",
     "../../../api:field_trials_view",
     "../../../modules/audio_coding:isac_fix",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:stringutils",
     "../../../rtc_base/system:rtc_export",
   ]
@@ -88,7 +87,6 @@ rtc_library("audio_decoder_isac_fix") {
     "..:audio_codecs_api",
     "../../../api:field_trials_view",
     "../../../modules/audio_coding:isac_fix",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:rtc_export",
   ]
   absl_deps = [
@@ -108,7 +106,6 @@ rtc_library("audio_encoder_isac_float") {
     "..:audio_codecs_api",
     "../../../api:field_trials_view",
     "../../../modules/audio_coding:isac",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:stringutils",
     "../../../rtc_base/system:rtc_export",
   ]
@@ -129,7 +126,6 @@ rtc_library("audio_decoder_isac_float") {
     "..:audio_codecs_api",
     "../../../api:field_trials_view",
     "../../../modules/audio_coding:isac",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:rtc_export",
   ]
   absl_deps = [

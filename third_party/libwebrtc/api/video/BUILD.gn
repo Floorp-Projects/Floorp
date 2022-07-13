@@ -29,7 +29,6 @@ rtc_library("video_rtp_headers") {
   deps = [
     "..:array_view",
     "../../rtc_base:logging",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:safe_conversions",
     "../../rtc_base:stringutils",
     "../../rtc_base/system:rtc_export",
@@ -71,7 +70,6 @@ rtc_library("video_frame") {
     "..:video_track_source_constraints",
     "../../rtc_base:checks",
     "../../rtc_base:refcount",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:timeutils",
     "../../rtc_base/memory:aligned_malloc",
     "../../rtc_base/system:rtc_export",
@@ -153,7 +151,6 @@ rtc_library("encoded_image") {
     "..:scoped_refptr",
     "../../rtc_base:checks",
     "../../rtc_base:refcount",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:rtc_export",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -257,7 +254,6 @@ rtc_source_set("video_bitrate_allocator_factory") {
   sources = [ "video_bitrate_allocator_factory.h" ]
   deps = [
     ":video_bitrate_allocator",
-    "../../rtc_base:rtc_base_approved",
     "../video_codecs:video_codecs_api",
   ]
 }
@@ -287,7 +283,6 @@ rtc_library("video_stream_decoder_create") {
   deps = [
     ":video_stream_decoder",
     "../../api:field_trials_view",
-    "../../rtc_base:rtc_base_approved",
     "../../video:video_stream_decoder_impl",
     "../task_queue",
     "../video_codecs:video_codecs_api",

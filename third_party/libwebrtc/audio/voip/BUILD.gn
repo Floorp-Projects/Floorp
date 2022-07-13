@@ -51,7 +51,6 @@ rtc_library("audio_channel") {
     "../../rtc_base:location",
     "../../rtc_base:logging",
     "../../rtc_base:refcount",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
