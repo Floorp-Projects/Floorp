@@ -269,6 +269,12 @@
       }
     }
   },
+  'timeout-2h': {
+    'swarming': {
+      'hard_timeout': 7200,
+      'io_timeout': 7200
+    }
+  },
   'timeout-3h': {
     'swarming': {
       'hard_timeout': 10800,

@@ -128,7 +128,13 @@
       #'apprtcmobile_tests': {'mixins': ['xcodebuild-device-runner']},
       'common_audio_unittests': {},
       'common_video_unittests': {},
-      'modules_tests': {},
+      'modules_tests': {
+        'mixins': ['timeout-2h'],
+        'args': [
+          # Some tests exceed the default 180 seconds readline timeout.
+          '--readline-timeout=1200',
+        ]
+      },
       'modules_unittests': {},
       'rtc_pc_unittests': {},
       'rtc_stats_unittests': {},
@@ -155,12 +161,7 @@
       'common_audio_unittests': {},
       'common_video_unittests': {},
       'dcsctp_unittests': {},
-      'modules_tests': {
-        'args': [
-          # Some tests exceed the default 180 seconds readline timeout.
-          '--readline-timeout=360',
-        ],
-      },
+      'modules_tests': {},
       'modules_unittests': {},
       'rtc_media_unittests': {},
       'rtc_pc_unittests': {},
