@@ -55,7 +55,7 @@ void BackgroundTasks::Shutdown() {
       !EnvHasValue("MOZ_BACKGROUNDTASKS_NO_REMOVE_PROFILE")) {
     AutoSuspendLateWriteChecks suspend;
 
-    // Log that the temporary profile is being removed.
+    // Log that the ephemeral profile is being removed.
     if (MOZ_LOG_TEST(sBackgroundTasksLog, mozilla::LogLevel::Info)) {
       nsAutoString path;
       if (NS_SUCCEEDED(sSingleton->mProfD->GetPath(path))) {
@@ -104,25 +104,25 @@ bool BackgroundTasks::IsBackgroundTaskMode() {
   return GetBackgroundTasks().isSome();
 }
 
-nsresult BackgroundTasks::CreateTemporaryProfileDirectory(
+nsresult BackgroundTasks::CreateEphemeralProfileDirectory(
     const nsCString& aInstallHash, nsIFile** aFile) {
   if (!XRE_IsParentProcess()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsresult rv =
-      GetSingleton()->CreateTemporaryProfileDirectoryImpl(aInstallHash, aFile);
+      GetSingleton()->CreateEphemeralProfileDirectoryImpl(aInstallHash, aFile);
 
-  // Log whether the temporary profile was created.
+  // Log whether the ephemeral profile was created.
   if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Warning,
-            ("Failed to create temporary profile directory!"));
+            ("Failed to create ephemeral profile directory!"));
   } else {
     if (MOZ_LOG_TEST(sBackgroundTasksLog, mozilla::LogLevel::Info)) {
       nsAutoString path;
       if (aFile && *aFile && NS_SUCCEEDED((*aFile)->GetPath(path))) {
         MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
-                ("Created temporary profile directory: %s",
+                ("Created ephemeral profile directory: %s",
                  NS_LossyConvertUTF16toASCII(path).get()));
       }
     }
@@ -131,7 +131,7 @@ nsresult BackgroundTasks::CreateTemporaryProfileDirectory(
   return rv;
 }
 
-bool BackgroundTasks::IsUsingTemporaryProfile() {
+bool BackgroundTasks::IsEphemeralProfile() {
   return sSingleton && sSingleton->mProfD;
 }
 
@@ -157,7 +157,7 @@ bool BackgroundTasks::IsUpdatingTaskName(const nsCString& aName) {
          aName.EqualsLiteral("shouldprocessupdates");
 }
 
-nsresult BackgroundTasks::CreateTemporaryProfileDirectoryImpl(
+nsresult BackgroundTasks::CreateEphemeralProfileDirectoryImpl(
     const nsCString& aInstallHash, nsIFile** aFile) {
   if (mBackgroundTask.isNothing()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -180,11 +180,11 @@ nsresult BackgroundTasks::CreateTemporaryProfileDirectoryImpl(
 
     // Windows file cleanup is unreliable, so let's take a moment to clean up
     // any prior background task profiles. We can continue if there was an error
-    // as creating a new temporary profile does not require cleaning up the old.
-    rv = RemoveStaleTemporaryProfileDirectories(file, profilePrefix);
+    // as creating a new ephemeral profile does not require cleaning up the old.
+    rv = RemoveStaleEphemeralProfileDirectories(file, profilePrefix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Warning,
-              ("Error cleaning up stale temporary profile directories."));
+              ("Error cleaning up stale ephemeral profile directories."));
     }
 
     // The base path is /tmp/[vendor]BackgroundTask-[pathHash]-[taskName].
@@ -204,7 +204,7 @@ nsresult BackgroundTasks::CreateTemporaryProfileDirectoryImpl(
   return NS_OK;
 }
 
-nsresult BackgroundTasks::RemoveStaleTemporaryProfileDirectories(
+nsresult BackgroundTasks::RemoveStaleEphemeralProfileDirectories(
     nsIFile* const aRoot, const nsCString& aPrefix) {
   nsresult rv;
 
@@ -259,13 +259,13 @@ nsresult BackgroundTasks::RemoveStaleTemporaryProfileDirectories(
 
   nsCOMPtr<nsIFile> entry;
   int removedProfiles = 0;
-  // Limit the number of stale temporary profiles we clean up so that we don't
+  // Limit the number of stale ephemeral profiles we clean up so that we don't
   // timeout the background task.
   const int kMaxRemovedProfiles = 5;
 
-  // Loop over the temporary directory entries, deleting folders matching our
+  // Loop over the ephemeral directory entries, deleting folders matching our
   // profile prefix. Continue if there is an error interacting with the entry to
-  // more reliably make progress on cleaning up stale temporary profiles.
+  // more reliably make progress on cleaning up stale ephemeral profiles.
   while (removedProfiles < kMaxRemovedProfiles &&
          NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(entry))) &&
          entry) {
@@ -292,7 +292,7 @@ nsresult BackgroundTasks::RemoveStaleTemporaryProfileDirectories(
         continue;
       }
       PRTime now = PR_Now() / PR_USEC_PER_MSEC;
-      // Timeout only needs to be large enough to prevent deleting a temporary
+      // Timeout only needs to be large enough to prevent deleting a ephemeral
       // profile between it being created and locked.
       if (now - profileModifyTime < timeoutMillis) {
         MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Debug,
@@ -303,7 +303,7 @@ nsresult BackgroundTasks::RemoveStaleTemporaryProfileDirectories(
     }
 
     // Check if the profile is locked. If successful drop the lock so we can
-    // delete the folder. Background tasks' temporary profiles are not reused or
+    // delete the folder. Background tasks' ephemeral profiles are not reused or
     // remembered once released, so we don't need to hold this lock while
     // deleting it.
     nsProfileLock lock;
@@ -320,7 +320,7 @@ nsresult BackgroundTasks::RemoveStaleTemporaryProfileDirectories(
         nsAutoString path;
         if (NS_SUCCEEDED(entry->GetPath(path))) {
           MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Warning,
-                  ("Error removing stale temporary profile directory: %s",
+                  ("Error removing stale ephemeral profile directory: %s",
                    NS_LossyConvertUTF16toASCII(path).get()));
         }
       }
@@ -332,7 +332,7 @@ nsresult BackgroundTasks::RemoveStaleTemporaryProfileDirectories(
       nsAutoString path;
       if (NS_SUCCEEDED(entry->GetPath(path))) {
         MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
-                ("Removed stale temporary profile directory: %s",
+                ("Removed stale ephemeral profile directory: %s",
                  NS_LossyConvertUTF16toASCII(path).get()));
       }
     }
