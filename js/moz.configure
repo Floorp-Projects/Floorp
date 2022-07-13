@@ -150,6 +150,24 @@ def enable_record_tuple(value):
 set_config("ENABLE_RECORD_TUPLE", enable_record_tuple)
 set_define("ENABLE_RECORD_TUPLE", enable_record_tuple)
 
+# Enable decorators
+# ===================================================
+option(
+    "--enable-decorators",
+    default=False,
+    help="Enable experimental JS Decorators support",
+)
+
+
+@depends("--enable-decorators")
+def enable_decorators(value):
+    if value:
+        return True
+
+
+set_config("ENABLE_DECORATORS", enable_decorators)
+set_define("ENABLE_DECORATORS", enable_decorators)
+
 # JIT support
 # =======================================================
 @depends(target, "--enable-record-tuple")
