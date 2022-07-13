@@ -8,7 +8,7 @@
 #define MOZILLA_GFX_DCLAYER_TREE_H
 
 #include "WinUtils.h"
-#include <dxgitype.h>
+#include <DXGIType.h>
 #include <dxgiformat.h>
 #include <unordered_map>
 #include <vector>
