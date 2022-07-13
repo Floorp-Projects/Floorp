@@ -212,25 +212,6 @@ bool IsIdentifierNameOrPrivateName(const char16_t* chars, size_t length);
 /* True if str is a keyword. Defined in TokenStream.cpp. */
 bool IsKeyword(TaggedParserAtomIndex atom);
 
-class MOZ_STACK_CLASS AutoFrontendTraceLog {
-#ifdef JS_TRACE_LOGGING
-  TraceLoggerThread* logger_;
-  mozilla::Maybe<TraceLoggerEvent> frontendEvent_;
-  mozilla::Maybe<AutoTraceLog> frontendLog_;
-  mozilla::Maybe<AutoTraceLog> typeLog_;
-#endif
-
- public:
-  AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
-                       const ErrorReporter& reporter);
-
-  AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
-                       const ErrorReporter& reporter, FunctionBox* funbox);
-
-  AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
-                       const ErrorReporter& reporter, ParseNode* pn);
-};
-
 } /* namespace frontend */
 } /* namespace js */
 
