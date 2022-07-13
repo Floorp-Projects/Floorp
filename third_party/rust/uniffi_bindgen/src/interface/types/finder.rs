@@ -35,7 +35,7 @@ pub(in super::super) trait TypeFinder {
 
 impl<T: TypeFinder> TypeFinder for &[T] {
     fn add_type_definitions_to(&self, types: &mut TypeUniverse) -> Result<()> {
-        for item in *self {
+        for item in self.iter() {
             item.add_type_definitions_to(types)?;
         }
         Ok(())

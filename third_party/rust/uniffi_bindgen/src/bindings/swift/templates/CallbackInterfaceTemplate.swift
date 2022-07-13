@@ -1,6 +1,9 @@
-{%- let cbi = ci.get_callback_interface_definition(name).unwrap() %}
+{% import "macros.swift" as swift %}
+{%- let cbi = self.inner() %}
+{%- let type_name = cbi|type_name %}
+{%- let canonical_type_name = cbi|canonical_name %}
+{%- let ffi_converter = cbi|ffi_converter_name %}
 {%- let foreign_callback = format!("foreignCallback{}", canonical_type_name) %}
-{%- if self.include_once_check("CallbackInterfaceRuntime.swift") %}{%- include "CallbackInterfaceRuntime.swift" %}{%- endif %}
 
 // Declaration and FfiConverters for {{ type_name }} Callback Interface
 
@@ -56,10 +59,10 @@ fileprivate let {{ foreign_callback }} : ForeignCallback =
     }
     {% endfor %}
 
-        let cb = try! {{ ffi_converter_name }}.lift(handle)
+        let cb = try! {{ ffi_converter }}.lift(handle)
         switch method {
             case IDX_CALLBACK_FREE:
-                {{ ffi_converter_name }}.drop(handle: handle)
+                {{ ffi_converter }}.drop(handle: handle)
                 // No return value.
                 // See docs of ForeignCallback in `uniffi/src/ffi/foreigncallbacks.rs`
                 return 0
@@ -83,7 +86,7 @@ fileprivate let {{ foreign_callback }} : ForeignCallback =
     }
 
 // FFIConverter protocol for callback interfaces
-fileprivate struct {{ ffi_converter_name }} {
+fileprivate struct {{ ffi_converter }} {
     // Initialize our callback method with the scaffolding code
     private static var callbackInitialized = false
     private static func initCallback() {
@@ -105,7 +108,7 @@ fileprivate struct {{ ffi_converter_name }} {
     private static var handleMap = ConcurrentHandleMap<{{ type_name }}>()
 }
 
-extension {{ ffi_converter_name }} : FfiConverter {
+extension {{ ffi_converter }} : FfiConverter {
     typealias SwiftType = {{ type_name }}
     // We can use Handle as the FFIType because it's a typealias to UInt64
     typealias FfiType = Handle

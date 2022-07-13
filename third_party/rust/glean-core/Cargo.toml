@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "glean-core"
-version = "50.1.2"
+version = "50.1.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -76,10 +76,10 @@ version = "1.0.4"
 version = "0.1.40"
 
 [dependencies.uniffi]
-version = "0.19.3"
+version = "0.18.0"
 
 [dependencies.uniffi_macros]
-version = "0.19.3"
+version = "0.18.0"
 
 [dependencies.uuid]
 version = "0.8.1"
@@ -95,7 +95,7 @@ version = "0.1.0"
 version = "0.1.12"
 
 [dev-dependencies.env_logger]
-version = "0.9.0"
+version = "0.8.0"
 features = [
     "termcolor",
     "atty",
@@ -110,14 +110,14 @@ version = "0.4"
 version = "3.1.0"
 
 [build-dependencies.uniffi_build]
-version = "0.19.3"
+version = "0.18.0"
 features = ["builtin-bindgen"]
 
 [features]
 rkv-safe-mode = []
 
 [target."cfg(not(target_os = \"android\"))".dependencies.env_logger]
-version = "0.9.0"
+version = "0.8.0"
 features = [
     "termcolor",
     "atty",
@@ -126,7 +126,7 @@ features = [
 default-features = false
 
 [target."cfg(target_os = \"android\")".dependencies.android_logger]
-version = "0.11.0"
+version = "0.10.0"
 default-features = false
 
 [target."cfg(target_os = \"ios\")".dependencies.oslog]

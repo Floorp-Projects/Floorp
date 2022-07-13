@@ -57,16 +57,16 @@
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
+use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::hash::{Hash, Hasher};
-use std::{collections::HashSet, iter};
 
 use anyhow::{bail, Result};
 
 use super::attributes::{ConstructorAttributes, InterfaceAttributes, MethodAttributes};
 use super::ffi::{FFIArgument, FFIFunction, FFIType};
 use super::function::Argument;
-use super::types::{Type, TypeIterator};
+use super::types::{IterTypes, Type, TypeIterator};
 use super::{APIConverter, ComponentInterface};
 
 /// An "object" is an opaque type that can be instantiated and passed around by reference,
@@ -148,17 +148,19 @@ impl Object {
         self.uses_deprecated_threadsafe_attribute
     }
 
-    pub fn iter_ffi_function_definitions(&self) -> impl Iterator<Item = &FFIFunction> {
-        iter::once(&self.ffi_func_free)
-            .chain(self.constructors.iter().map(|f| &f.ffi_func))
-            .chain(self.methods.iter().map(|f| &f.ffi_func))
+    pub fn iter_ffi_function_definitions(&self) -> Vec<FFIFunction> {
+        vec![self.ffi_object_free().clone()]
+            .into_iter()
+            .chain(self.constructors.iter().map(|f| f.ffi_func.clone()))
+            .chain(self.methods.iter().map(|f| f.ffi_func.clone()))
+            .collect()
     }
 
     pub fn derive_ffi_funcs(&mut self, ci_prefix: &str) -> Result<()> {
         self.ffi_func_free.name = format!("ffi_{}_{}_object_free", ci_prefix, self.name);
         self.ffi_func_free.arguments = vec![FFIArgument {
             name: "ptr".to_string(),
-            type_: FFIType::RustArcPtr(self.name().to_string()),
+            type_: FFIType::RustArcPtr,
         }];
         self.ffi_func_free.return_type = None;
         for cons in self.constructors.iter_mut() {
@@ -169,13 +171,15 @@ impl Object {
         }
         Ok(())
     }
+}
 
-    pub fn iter_types(&self) -> TypeIterator<'_> {
+impl IterTypes for Object {
+    fn iter_types(&self) -> TypeIterator<'_> {
         Box::new(
             self.methods
                 .iter()
-                .map(Method::iter_types)
-                .chain(self.constructors.iter().map(Constructor::iter_types))
+                .map(IterTypes::iter_types)
+                .chain(self.constructors.iter().map(IterTypes::iter_types))
                 .flatten(),
         )
     }
@@ -222,7 +226,7 @@ impl APIConverter<Object> for weedle::InterfaceDefinition<'_> {
                     if !member_names.insert(method.name.clone()) {
                         bail!("Duplicate interface member name: \"{}\"", method.name())
                     }
-                    method.object_name = object.name.clone();
+                    method.object_name.push_str(object.name.as_str());
                     object.methods.push(method);
                 }
                 _ => bail!("no support for interface member type {:?} yet", member),
@@ -275,14 +279,20 @@ impl Constructor {
         self.name == "new"
     }
 
-    fn derive_ffi_func(&mut self, ci_prefix: &str, obj_name: &str) {
-        self.ffi_func.name = format!("{}_{}_{}", ci_prefix, obj_name, self.name);
+    fn derive_ffi_func(&mut self, ci_prefix: &str, obj_prefix: &str) {
+        self.ffi_func.name.push_str(ci_prefix);
+        self.ffi_func.name.push('_');
+        self.ffi_func.name.push_str(obj_prefix);
+        self.ffi_func.name.push('_');
+        self.ffi_func.name.push_str(&self.name);
         self.ffi_func.arguments = self.arguments.iter().map(Into::into).collect();
-        self.ffi_func.return_type = Some(FFIType::RustArcPtr(obj_name.to_string()));
+        self.ffi_func.return_type = Some(FFIType::RustArcPtr);
     }
+}
 
-    pub fn iter_types(&self) -> TypeIterator<'_> {
-        Box::new(self.arguments.iter().flat_map(Argument::iter_types))
+impl IterTypes for Constructor {
+    fn iter_types(&self) -> TypeIterator<'_> {
+        Box::new(self.arguments.iter().flat_map(IterTypes::iter_types))
     }
 }
 
@@ -389,18 +399,24 @@ impl Method {
     }
 
     pub fn derive_ffi_func(&mut self, ci_prefix: &str, obj_prefix: &str) -> Result<()> {
-        self.ffi_func.name = format!("{}_{}_{}", ci_prefix, obj_prefix, self.name);
+        self.ffi_func.name.push_str(ci_prefix);
+        self.ffi_func.name.push('_');
+        self.ffi_func.name.push_str(obj_prefix);
+        self.ffi_func.name.push('_');
+        self.ffi_func.name.push_str(&self.name);
         self.ffi_func.arguments = self.full_arguments().iter().map(Into::into).collect();
         self.ffi_func.return_type = self.return_type.as_ref().map(Into::into);
         Ok(())
     }
+}
 
-    pub fn iter_types(&self) -> TypeIterator<'_> {
+impl IterTypes for Method {
+    fn iter_types(&self) -> TypeIterator<'_> {
         Box::new(
             self.arguments
                 .iter()
-                .flat_map(Argument::iter_types)
-                .chain(self.return_type.iter().flat_map(Type::iter_types)),
+                .flat_map(IterTypes::iter_types)
+                .chain(self.return_type.iter_types()),
         )
     }
 }
@@ -465,18 +481,28 @@ mod test {
             };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.object_definitions().len(), 1);
+        assert_eq!(ci.iter_object_definitions().len(), 1);
         ci.get_object_definition("Testing").unwrap();
 
-        assert_eq!(ci.iter_types().count(), 6);
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "u16"));
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "u32"));
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "Sequenceu32"));
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "string"));
+        assert_eq!(ci.iter_types().len(), 6);
+        assert!(ci.iter_types().iter().any(|t| t.canonical_name() == "u16"));
+        assert!(ci.iter_types().iter().any(|t| t.canonical_name() == "u32"));
         assert!(ci
             .iter_types()
+            .iter()
+            .any(|t| t.canonical_name() == "Sequenceu32"));
+        assert!(ci
+            .iter_types()
+            .iter()
+            .any(|t| t.canonical_name() == "string"));
+        assert!(ci
+            .iter_types()
+            .iter()
             .any(|t| t.canonical_name() == "Optionalstring"));
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "TypeTesting"));
+        assert!(ci
+            .iter_types()
+            .iter()
+            .any(|t| t.canonical_name() == "TypeTesting"));
     }
 
     #[test]
@@ -490,7 +516,7 @@ mod test {
             };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.object_definitions().len(), 1);
+        assert_eq!(ci.iter_object_definitions().len(), 1);
 
         let obj = ci.get_object_definition("Testing").unwrap();
         assert!(obj.primary_constructor().is_some());
@@ -520,7 +546,7 @@ mod test {
             };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.object_definitions().len(), 1);
+        assert_eq!(ci.iter_object_definitions().len(), 1);
 
         let obj = ci.get_object_definition("Testing").unwrap();
         assert!(obj.primary_constructor().is_some());

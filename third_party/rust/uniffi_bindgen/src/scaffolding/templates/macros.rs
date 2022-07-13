@@ -3,12 +3,12 @@
 #}
 
 {%- macro to_rs_call(func) -%}
-r#{{ func.name() }}({% call _arg_list_rs_call(func) -%})
+{{ func.name() }}({% call _arg_list_rs_call(func) -%})
 {%- endmacro -%}
 
 {%- macro _arg_list_rs_call(func) %}
     {%- for arg in func.full_arguments() %}
-        match {{- arg.type_().borrow()|ffi_converter }}::try_lift(r#{{ arg.name() }}) {
+        match {{- arg.type_().borrow()|ffi_converter }}::try_lift({{ arg.name() }}) {
         {%- if arg.by_ref() %}
             Ok(ref val) => val,
         {% else %}
@@ -36,7 +36,7 @@ r#{{ func.name() }}({% call _arg_list_rs_call(func) -%})
 -#}
 {%- macro arg_list_ffi_decl(func) %}
     {%- for arg in func.arguments() %}
-        r#{{- arg.name() }}: {{ arg.type_().borrow()|type_ffi -}},
+        {{- arg.name() }}: {{ arg.type_().borrow()|type_ffi -}},
     {%- endfor %}
     call_status: &mut uniffi::RustCallStatus
 {%- endmacro -%}
@@ -45,7 +45,7 @@ r#{{ func.name() }}({% call _arg_list_rs_call(func) -%})
     {{- prefix -}}
     {%- if meth.arguments().len() > 0 %}, {# whitespace #}
         {%- for arg in meth.arguments() %}
-            r#{{- arg.name() }}: {{ arg.type_().borrow()|type_rs -}}{% if loop.last %}{% else %},{% endif %}
+            {{- arg.name() }}: {{ arg.type_().borrow()|type_rs -}}{% if loop.last %}{% else %},{% endif %}
         {%- endfor %}
     {%- endif %}
 {%- endmacro -%}
@@ -57,7 +57,7 @@ r#{{ func.name() }}({% call _arg_list_rs_call(func) -%})
 {% macro ret(func) %}{% match func.return_type() %}{% when Some with (return_type) %}{{ return_type|ffi_converter }}::lower(_retval){% else %}_retval{% endmatch %}{% endmacro %}
 
 {% macro construct(obj, cons) %}
-    r#{{- obj.name() }}::{% call to_rs_call(cons) -%}
+    {{- obj.name() }}::{% call to_rs_call(cons) -%}
 {% endmacro %}
 
 {% macro to_rs_constructor_call(obj, cons) %}
@@ -81,17 +81,17 @@ r#{{ func.name() }}({% call _arg_list_rs_call(func) -%})
 {% match meth.throws_type() -%}
 {% when Some with (e) -%}
 uniffi::call_with_result(call_status, || {
-    let _retval =  r#{{ obj.name() }}::{% call to_rs_call(meth) %}.map_err(Into::into).map_err({{ e|ffi_converter }}::lower)?;
+    let _retval =  {{ obj.name() }}::{% call to_rs_call(meth) %}.map_err(Into::into).map_err({{ e|ffi_converter }}::lower)?;
     Ok({% call ret(meth) %})
 })
 {% else %}
 uniffi::call_with_output(call_status, || {
     {% match meth.return_type() -%}
     {% when Some with (return_type) -%}
-    let retval = r#{{ obj.name() }}::{% call to_rs_call(meth) %};
+    let retval = {{ obj.name() }}::{% call to_rs_call(meth) %};
     {{ return_type|ffi_converter }}::lower(retval)
     {% else -%}
-    r#{{ obj.name() }}::{% call to_rs_call(meth) %}
+    {{ obj.name() }}::{% call to_rs_call(meth) %}
     {% endmatch -%}
 })
 {% endmatch -%}
