@@ -165,12 +165,6 @@ double GetMaxPaddingSizeFactor(const FieldTrialsView* field_trials) {
 
 RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
                      RtpPacketHistory* packet_history,
-                     RtpPacketSender* packet_sender,
-                     PacketSequencer*)
-    : RTPSender(config, packet_history, packet_sender) {}
-
-RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
-                     RtpPacketHistory* packet_history,
                      RtpPacketSender* packet_sender)
     : clock_(config.clock),
       random_(clock_->TimeInMicroseconds()),

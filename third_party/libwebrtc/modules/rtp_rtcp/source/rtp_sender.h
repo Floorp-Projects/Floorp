@@ -26,7 +26,6 @@
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/include/rtp_packet_sender.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "modules/rtp_rtcp/source/packet_sequencer.h"
 #include "modules/rtp_rtcp/source/rtp_packet_history.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
@@ -47,14 +46,6 @@ class RTPSender {
   RTPSender(const RtpRtcpInterface::Configuration& config,
             RtpPacketHistory* packet_history,
             RtpPacketSender* packet_sender);
-
-  ABSL_DEPRECATED("bugs.webrtc.org/11340")
-  RTPSender(const RtpRtcpInterface::Configuration& config,
-            RtpPacketHistory* packet_history,
-            RtpPacketSender* packet_sender,
-            PacketSequencer* packet_sequencer);
-
-  RTPSender() = delete;
   RTPSender(const RTPSender&) = delete;
   RTPSender& operator=(const RTPSender&) = delete;
 
