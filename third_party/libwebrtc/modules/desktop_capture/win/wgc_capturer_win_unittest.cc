@@ -361,6 +361,18 @@ TEST_F(WgcCapturerWinTest, CaptureAllMonitors) {
   EXPECT_GT(frame_->size().height(), 0);
 }
 
+TEST_F(WgcCapturerWinTest, NoMonitors) {
+  if (HasActiveDisplay()) {
+    RTC_LOG(LS_INFO) << "Skip WgcCapturerWinTest designed specifically for "
+                        "systems with no monitors";
+    GTEST_SKIP();
+  }
+
+  // A bug in `CreateForMonitor` prevents screen capture when no displays are
+  // attached.
+  EXPECT_FALSE(IsWgcSupported(CaptureType::kScreen));
+}
+
 // Window specific tests.
 TEST_F(WgcCapturerWinTest, FocusOnWindow) {
   capturer_ = WgcCapturerWin::CreateRawWindowCapturer(
