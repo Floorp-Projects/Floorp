@@ -45,11 +45,6 @@
           'gtest_tests': 'android_perf_tests',
         },
       },
-      'Android32 Builder arm64': {
-        'test_suites': {
-          'gtest_tests': 'android_perf_tests',
-        },
-      },
       'Android32 Builder x86': {},
       'Android32 Builder x86 (dbg)': {},
       'Android64 (M Nexus5X)': {
@@ -72,6 +67,11 @@
           'junit_tests': 'android_junit_tests',
         },
       },
+      'Android64 Builder arm64': {
+        'test_suites': {
+          'gtest_tests': 'android_perf_tests',
+        },
+      },
       'Android64 Builder x64 (dbg)': {},
       'Linux (more configs)': {
         'os_type': 'linux',
@@ -84,42 +84,42 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Linux MSan': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Linux Tsan v2': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Linux UBSan': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Linux UBSan vptr': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Linux32 Debug': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Linux32 Debug (ARM)': {},
@@ -127,7 +127,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Linux32 Release (ARM)': {},
@@ -141,7 +141,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Linux64 Debug (ARM)': {},
@@ -158,7 +158,7 @@
         'os_type': 'mac',
         'mixins': ['mac11', 'x86-64', 'cores-12', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'mac_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Mac64 Builder': {
@@ -172,7 +172,7 @@
         'os_type': 'mac',
         'mixins': ['mac11', 'x86-64', 'cores-12', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'mac_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Mac64 Release': {
@@ -186,7 +186,7 @@
         'os_type': 'mac',
         'mixins': ['mac-m1', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'mac_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Win (more configs)': {
@@ -214,7 +214,7 @@
         'os_type': 'win',
         'mixins': ['win10-1703', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'win_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'Win64 Debug (Clang)': {},
@@ -510,7 +510,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'linux_compile_arm64_dbg': {},
@@ -523,7 +523,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'linux_libfuzzer_rel': {},
@@ -531,7 +531,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'linux_more_configs': {
@@ -545,7 +545,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'linux_rel': {
@@ -559,42 +559,42 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'linux_ubsan': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'linux_ubsan_vptr': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'linux_x86_dbg': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'linux_x86_rel': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'linux_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'mac_asan': {
         'os_type': 'mac',
         'mixins': ['mac11', 'x86-64', 'resultdb-json-format', 'cores-12'],
         'test_suites': {
-          'isolated_scripts': 'mac_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'mac_compile_dbg': {},
@@ -603,14 +603,14 @@
         'os_type': 'mac',
         'mixins': ['mac11', 'x86-64', 'resultdb-json-format', 'cores-12'],
         'test_suites': {
-          'isolated_scripts': 'mac_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'mac_dbg_m1': {
         'os_type': 'mac',
         'mixins': ['mac-m1', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'mac_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'mac_rel': {
@@ -624,14 +624,14 @@
         'os_type': 'mac',
         'mixins': ['mac-m1', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'mac_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'win_asan': {
         'os_type': 'win',
         'mixins': ['win10-1703', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'win_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'win_compile_x64_clang_dbg': {},
@@ -642,28 +642,28 @@
         'os_type': 'win',
         'mixins': ['win7', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'win_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'win_x64_clang_dbg_win10': {
         'os_type': 'win',
         'mixins': ['win10-1703', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'win_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'win_x64_clang_rel': {
         'os_type': 'win',
         'mixins': ['win7', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'win_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'win_x86_clang_dbg': {
         'os_type': 'win',
         'mixins': ['win7', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'win_tests',
+          'isolated_scripts': 'desktop_tests',
         },
       },
       'win_x86_clang_rel': {
