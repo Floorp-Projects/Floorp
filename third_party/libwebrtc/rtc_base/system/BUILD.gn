@@ -30,6 +30,7 @@ rtc_library("file_wrapper") {
     "..:criticalsection",
     "..:safe_conversions",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 if (rtc_include_tests) {

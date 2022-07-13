@@ -206,7 +206,7 @@ int32_t FileAudioDevice::StartPlayout() {
 
   // PLAYOUT
   if (!_outputFilename.empty()) {
-    _outputFile = FileWrapper::OpenWriteOnly(_outputFilename.c_str());
+    _outputFile = FileWrapper::OpenWriteOnly(_outputFilename);
     if (!_outputFile.is_open()) {
       RTC_LOG(LS_ERROR) << "Failed to open playout file: " << _outputFilename;
       _playing = false;
@@ -266,7 +266,7 @@ int32_t FileAudioDevice::StartRecording() {
   }
 
   if (!_inputFilename.empty()) {
-    _inputFile = FileWrapper::OpenReadOnly(_inputFilename.c_str());
+    _inputFile = FileWrapper::OpenReadOnly(_inputFilename);
     if (!_inputFile.is_open()) {
       RTC_LOG(LS_ERROR) << "Failed to open audio input file: "
                         << _inputFilename;

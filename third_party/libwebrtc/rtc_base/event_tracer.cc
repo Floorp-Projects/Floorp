@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/sequence_checker.h"
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
@@ -367,11 +368,11 @@ void StartInternalCaptureToFile(FILE* file) {
   }
 }
 
-bool StartInternalCapture(const char* filename) {
+bool StartInternalCapture(absl::string_view filename) {
   if (!g_event_logger)
     return false;
 
-  FILE* file = fopen(filename, "w");
+  FILE* file = fopen(std::string(filename).c_str(), "w");
   if (!file) {
     RTC_LOG(LS_ERROR) << "Failed to open trace file '" << filename
                       << "' for writing.";

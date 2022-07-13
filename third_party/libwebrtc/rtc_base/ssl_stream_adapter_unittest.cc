@@ -685,7 +685,7 @@ class SSLStreamAdapterTestBase : public ::testing::Test,
       return server_ssl_->GetSslVersion();
   }
 
-  bool ExportKeyingMaterial(const char* label,
+  bool ExportKeyingMaterial(absl::string_view label,
                             const unsigned char* context,
                             size_t context_len,
                             bool use_context,

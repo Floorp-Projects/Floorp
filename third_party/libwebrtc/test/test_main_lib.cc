@@ -201,7 +201,7 @@ class TestMainImpl : public TestMain {
     const bool capture_events = !trace_event_path.empty();
     if (capture_events) {
       rtc::tracing::SetupInternalTracer();
-      rtc::tracing::StartInternalCapture(trace_event_path.c_str());
+      rtc::tracing::StartInternalCapture(trace_event_path);
     }
 
     absl::optional<std::vector<std::string>> metrics_to_plot =

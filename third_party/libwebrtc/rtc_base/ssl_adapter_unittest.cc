@@ -110,7 +110,7 @@ class SSLAdapterTestDummyClient : public sigslot::has_slots<> {
       RTC_LOG(LS_INFO) << "Starting " << GetSSLProtocolName(ssl_mode_)
                        << " handshake with " << hostname;
 
-      if (ssl_adapter_->StartSSL(std::string(hostname).c_str()) != 0) {
+      if (ssl_adapter_->StartSSL(hostname) != 0) {
         return -1;
       }
     }

@@ -19,7 +19,10 @@ rtc_library("alr_experiment") {
     "../../api:field_trials_view",
     "../../api/transport:field_trial_based_config",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings:strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("field_trial_parser") {

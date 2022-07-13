@@ -705,6 +705,7 @@ rtc_library("net_helpers") {
       ":win32",
     ]
   }
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("async_resolver_interface") {

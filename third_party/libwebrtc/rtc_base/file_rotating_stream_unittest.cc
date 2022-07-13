@@ -79,28 +79,28 @@ class MAYBE_FileRotatingStreamTest : public ::testing::Test {
 
   // Checks that the stream reads in the expected contents and then returns an
   // end of stream result.
-  void VerifyStreamRead(const char* expected_contents,
-                        const size_t expected_length,
+  void VerifyStreamRead(absl::string_view expected_contents,
                         absl::string_view dir_path,
-                        const char* file_prefix) {
+                        absl::string_view file_prefix) {
+    size_t expected_length = expected_contents.size();
     FileRotatingStreamReader reader(dir_path, file_prefix);
     EXPECT_EQ(reader.GetSize(), expected_length);
     std::unique_ptr<uint8_t[]> buffer(new uint8_t[expected_length]);
     memset(buffer.get(), 0, expected_length);
     EXPECT_EQ(expected_length, reader.ReadAll(buffer.get(), expected_length));
-    EXPECT_EQ(0, memcmp(expected_contents, buffer.get(), expected_length));
+    EXPECT_EQ(0,
+              memcmp(expected_contents.data(), buffer.get(), expected_length));
   }
 
-  void VerifyFileContents(const char* expected_contents,
-                          const size_t expected_length,
+  void VerifyFileContents(absl::string_view expected_contents,
                           absl::string_view file_path) {
+    size_t expected_length = expected_contents.size();
     std::unique_ptr<uint8_t[]> buffer(new uint8_t[expected_length + 1]);
-    webrtc::FileWrapper f =
-        webrtc::FileWrapper::OpenReadOnly(std::string(file_path));
+    webrtc::FileWrapper f = webrtc::FileWrapper::OpenReadOnly(file_path);
     ASSERT_TRUE(f.is_open());
     size_t size_read = f.Read(buffer.get(), expected_length + 1);
     EXPECT_EQ(size_read, expected_length);
-    EXPECT_EQ(0, memcmp(expected_contents, buffer.get(),
+    EXPECT_EQ(0, memcmp(expected_contents.data(), buffer.get(),
                         std::min(expected_length, size_read)));
   }
 
@@ -151,8 +151,7 @@ TEST_F(MAYBE_FileRotatingStreamTest, WriteAndRead) {
     WriteAndFlush(message.c_str(), message.size());
     // Since the max log size is 2, we will be causing rotation. Read from the
     // next file.
-    VerifyFileContents(message.c_str(), message.size(),
-                       stream_->GetFilePath(1));
+    VerifyFileContents(message, stream_->GetFilePath(1));
   }
   // Check that exactly three files exist.
   for (size_t i = 0; i < arraysize(messages); ++i) {
@@ -167,8 +166,7 @@ TEST_F(MAYBE_FileRotatingStreamTest, WriteAndRead) {
 
   // Reopen for read.
   std::string expected_contents("bbccd");
-  VerifyStreamRead(expected_contents.c_str(), expected_contents.size(),
-                   dir_path_, kFilePrefix);
+  VerifyStreamRead(expected_contents, dir_path_, kFilePrefix);
 }
 
 // Tests that a write operation (with dir name without delimiter) followed by a
@@ -191,7 +189,7 @@ TEST_F(MAYBE_FileRotatingStreamTest, WriteWithoutDelimiterAndRead) {
 
   // Reopen for read.
   std::string expected_contents("bbccd");
-  VerifyStreamRead(expected_contents.c_str(), expected_contents.size(),
+  VerifyStreamRead(expected_contents,
                    dir_path_ + std::string(webrtc::test::kPathDelimiter),
                    kFilePrefix);
 }
@@ -215,8 +213,8 @@ TEST_F(MAYBE_FileRotatingStreamTest, WriteAndReadWithoutDelimiter) {
 
   // Reopen for read.
   std::string expected_contents("bbccd");
-  VerifyStreamRead(expected_contents.c_str(), expected_contents.size(),
-                   dir_path_.substr(0, dir_path_.size() - 1), kFilePrefix);
+  VerifyStreamRead(expected_contents, dir_path_.substr(0, dir_path_.size() - 1),
+                   kFilePrefix);
 }
 
 // Tests that writing data greater than the total capacity of the files
@@ -230,11 +228,9 @@ TEST_F(MAYBE_FileRotatingStreamTest, WriteOverflowAndRead) {
   std::string message("foobarbaz");
   WriteAndFlush(message.c_str(), message.size());
   std::string expected_file_contents("z");
-  VerifyFileContents(expected_file_contents.c_str(),
-                     expected_file_contents.size(), stream_->GetFilePath(0));
+  VerifyFileContents(expected_file_contents, stream_->GetFilePath(0));
   std::string expected_stream_contents("arbaz");
-  VerifyStreamRead(expected_stream_contents.c_str(),
-                   expected_stream_contents.size(), dir_path_, kFilePrefix);
+  VerifyStreamRead(expected_stream_contents, dir_path_, kFilePrefix);
 }
 
 // Tests that the returned file paths have the right folder and prefix.
@@ -286,15 +282,16 @@ class MAYBE_CallSessionFileRotatingStreamTest : public ::testing::Test {
 
   // Checks that the stream reads in the expected contents and then returns an
   // end of stream result.
-  void VerifyStreamRead(const char* expected_contents,
-                        const size_t expected_length,
+  void VerifyStreamRead(absl::string_view expected_contents,
                         absl::string_view dir_path) {
+    size_t expected_length = expected_contents.size();
     CallSessionFileRotatingStreamReader reader(dir_path);
     EXPECT_EQ(reader.GetSize(), expected_length);
     std::unique_ptr<uint8_t[]> buffer(new uint8_t[expected_length]);
     memset(buffer.get(), 0, expected_length);
     EXPECT_EQ(expected_length, reader.ReadAll(buffer.get(), expected_length));
-    EXPECT_EQ(0, memcmp(expected_contents, buffer.get(), expected_length));
+    EXPECT_EQ(0,
+              memcmp(expected_contents.data(), buffer.get(), expected_length));
   }
 
   std::unique_ptr<CallSessionFileRotatingStream> stream_;
@@ -310,8 +307,7 @@ TEST_F(MAYBE_CallSessionFileRotatingStreamTest, WriteAndReadSmallest) {
   std::string message("abcde");
   WriteAndFlush(message.c_str(), message.size());
   std::string expected_contents("abe");
-  VerifyStreamRead(expected_contents.c_str(), expected_contents.size(),
-                   dir_path_);
+  VerifyStreamRead(expected_contents, dir_path_);
 }
 
 // Tests that writing and reading to a stream with capacity lesser than 4MB
@@ -323,8 +319,7 @@ TEST_F(MAYBE_CallSessionFileRotatingStreamTest, WriteAndReadSmall) {
   std::string message("123456789");
   WriteAndFlush(message.c_str(), message.size());
   std::string expected_contents("1234789");
-  VerifyStreamRead(expected_contents.c_str(), expected_contents.size(),
-                   dir_path_);
+  VerifyStreamRead(expected_contents, dir_path_);
 }
 
 // Tests that writing and reading to a stream with capacity greater than 4MB

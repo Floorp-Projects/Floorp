@@ -14,6 +14,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "api/ref_counted_base.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -66,7 +67,7 @@ void PostTaskToGlobalQueue(std::unique_ptr<webrtc::QueuedTask> task) {
 }  // namespace
 #endif
 
-int ResolveHostname(const std::string& hostname,
+int ResolveHostname(absl::string_view hostname,
                     int family,
                     std::vector<IPAddress>* addresses) {
 #ifdef __native_client__
@@ -99,7 +100,8 @@ int ResolveHostname(const std::string& hostname,
   // https://android.googlesource.com/platform/bionic/+/
   // 7e0bfb511e85834d7c6cb9631206b62f82701d60/libc/netbsd/net/getaddrinfo.c#1657
   hints.ai_flags = AI_ADDRCONFIG;
-  int ret = getaddrinfo(hostname.c_str(), nullptr, &hints, &result);
+  int ret =
+      getaddrinfo(std::string(hostname).c_str(), nullptr, &hints, &result);
   if (ret != 0) {
     return ret;
   }
@@ -151,8 +153,7 @@ void AsyncResolver::Start(const SocketAddress& addr) {
       [this, addr, caller_task_queue = webrtc::TaskQueueBase::Current(),
        state = state_] {
         std::vector<IPAddress> addresses;
-        int error =
-            ResolveHostname(addr.hostname().c_str(), addr.family(), &addresses);
+        int error = ResolveHostname(addr.hostname(), addr.family(), &addresses);
         webrtc::MutexLock lock(&state->mutex);
         if (state->status == State::Status::kLive) {
           caller_task_queue->PostTask(webrtc::ToQueuedTask(

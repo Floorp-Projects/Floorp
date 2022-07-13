@@ -173,7 +173,7 @@ class OpenSSLStreamAdapter final : public SSLStreamAdapter {
   // `alert` indicates an alert description (one of the SSL_AD constants) to
   // send to the remote endpoint when closing the association. If 0, a normal
   // shutdown will be performed.
-  void Error(const char* context, int err, uint8_t alert, bool signal);
+  void Error(absl::string_view context, int err, uint8_t alert, bool signal);
   void Cleanup(uint8_t alert);
 
   // Flush the input buffers by reading left bytes (for DTLS)

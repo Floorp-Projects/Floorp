@@ -120,14 +120,14 @@ const ConstantToLabel SECURITY_ERRORS[] = {
 typedef std::pair<std::string, std::string> HttpAttribute;
 typedef std::vector<HttpAttribute> HttpAttributeList;
 
-inline bool IsEndOfAttributeName(size_t pos, size_t len, const char* data) {
-  if (pos >= len)
+inline bool IsEndOfAttributeName(size_t pos, absl::string_view data) {
+  if (pos >= data.size())
     return true;
   if (isspace(static_cast<unsigned char>(data[pos])))
     return true;
   // The reason for this complexity is that some attributes may contain trailing
   // equal signs (like base64 tokens in Negotiate auth headers)
-  if ((pos + 1 < len) && (data[pos] == '=') &&
+  if ((pos + 1 < data.size()) && (data[pos] == '=') &&
       !isspace(static_cast<unsigned char>(data[pos + 1])) &&
       (data[pos + 1] != '=')) {
     return true;
@@ -135,10 +135,10 @@ inline bool IsEndOfAttributeName(size_t pos, size_t len, const char* data) {
   return false;
 }
 
-void HttpParseAttributes(const char* data,
-                         size_t len,
+void HttpParseAttributes(absl::string_view data,
                          HttpAttributeList& attributes) {
   size_t pos = 0;
+  const size_t len = data.size();
   while (true) {
     // Skip leading whitespace
     while ((pos < len) && isspace(static_cast<unsigned char>(data[pos]))) {
@@ -151,12 +151,12 @@ void HttpParseAttributes(const char* data,
 
     // Find end of attribute name
     size_t start = pos;
-    while (!IsEndOfAttributeName(pos, len, data)) {
+    while (!IsEndOfAttributeName(pos, data)) {
       ++pos;
     }
 
     HttpAttribute attribute;
-    attribute.first.assign(data + start, data + pos);
+    attribute.first.assign(data.data() + start, data.data() + pos);
 
     // Attribute has value?
     if ((pos < len) && (data[pos] == '=')) {
@@ -250,8 +250,7 @@ struct NegotiateAuthContext : public HttpAuthContext {
 
 }  // anonymous namespace
 
-HttpAuthResult HttpAuthenticate(const char* challenge,
-                                size_t len,
+HttpAuthResult HttpAuthenticate(absl::string_view challenge,
                                 const SocketAddress& server,
                                 absl::string_view method,
                                 absl::string_view uri,
@@ -261,7 +260,7 @@ HttpAuthResult HttpAuthenticate(const char* challenge,
                                 std::string& response,
                                 std::string& auth_method) {
   HttpAttributeList args;
-  HttpParseAttributes(challenge, len, args);
+  HttpParseAttributes(challenge, args);
   HttpHasNthAttribute(args, 0, &auth_method, nullptr);
 
   if (context && (context->auth_method != auth_method))

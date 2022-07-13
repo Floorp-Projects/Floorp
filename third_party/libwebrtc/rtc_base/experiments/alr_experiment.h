@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
 
@@ -32,10 +33,10 @@ struct AlrExperimentSettings {
   static const char kScreenshareProbingBweExperimentName[];
   static const char kStrictPacingAndProbingExperimentName[];
   static absl::optional<AlrExperimentSettings> CreateFromFieldTrial(
-      const char* experiment_name);
+      absl::string_view experiment_name);
   static absl::optional<AlrExperimentSettings> CreateFromFieldTrial(
       const FieldTrialsView& key_value_config,
-      const char* experiment_name);
+      absl::string_view experiment_name);
   static bool MaxOneFieldTrialEnabled();
   static bool MaxOneFieldTrialEnabled(const FieldTrialsView& key_value_config);
 
