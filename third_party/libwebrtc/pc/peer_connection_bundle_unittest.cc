@@ -488,7 +488,7 @@ TEST_P(PeerConnectionBundleMatrixTest,
 INSTANTIATE_TEST_SUITE_P(
     PeerConnectionBundleTest,
     PeerConnectionBundleMatrixTest,
-    Combine(Values(SdpSemantics::kPlanB, SdpSemantics::kUnifiedPlan),
+    Combine(Values(SdpSemantics::kPlanB_DEPRECATED, SdpSemantics::kUnifiedPlan),
             Values(std::make_tuple(BundlePolicy::kBundlePolicyBalanced,
                                    BundleIncluded::kBundleInAnswer,
                                    false,
@@ -891,7 +891,7 @@ TEST_P(PeerConnectionBundleTest, RemoveContentFromBundleGroup) {
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionBundleTest,
                          PeerConnectionBundleTest,
-                         Values(SdpSemantics::kPlanB,
+                         Values(SdpSemantics::kPlanB_DEPRECATED,
                                 SdpSemantics::kUnifiedPlan));
 
 // According to RFC5888, if an endpoint understands the semantics of an

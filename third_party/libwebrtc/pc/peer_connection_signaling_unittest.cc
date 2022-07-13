@@ -468,7 +468,7 @@ TEST_P(PeerConnectionSignalingStateTest, SetRemoteAnswer) {
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionSignalingTest,
                          PeerConnectionSignalingStateTest,
-                         Combine(Values(SdpSemantics::kPlanB,
+                         Combine(Values(SdpSemantics::kPlanB_DEPRECATED,
                                         SdpSemantics::kUnifiedPlan),
                                  Values(SignalingState::kStable,
                                         SignalingState::kHaveLocalOffer,
@@ -1100,7 +1100,7 @@ TEST_P(PeerConnectionSignalingTest, MidAttributeMaxLength) {
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionSignalingTest,
                          PeerConnectionSignalingTest,
-                         Values(SdpSemantics::kPlanB,
+                         Values(SdpSemantics::kPlanB_DEPRECATED,
                                 SdpSemantics::kUnifiedPlan));
 
 class PeerConnectionSignalingUnifiedPlanTest

@@ -1640,7 +1640,7 @@ TEST_F(PeerConnectionJsepTest, AnswerBeforeOfferFails) {
 // two video tracks.
 TEST_F(PeerConnectionJsepTest, TwoVideoPlanBToUnifiedPlanFails) {
   RTCConfiguration config_planb;
-  config_planb.sdp_semantics = SdpSemantics::kPlanB;
+  config_planb.sdp_semantics = SdpSemantics::kPlanB_DEPRECATED;
   auto caller = CreatePeerConnection(config_planb);
   auto callee = CreatePeerConnection();
   caller->AddVideoTrack("video1");
@@ -1656,7 +1656,7 @@ TEST_F(PeerConnectionJsepTest, TwoVideoPlanBToUnifiedPlanFails) {
 TEST_F(PeerConnectionJsepTest, OneVideoUnifiedPlanToTwoVideoPlanBFails) {
   auto caller = CreatePeerConnection();
   RTCConfiguration config_planb;
-  config_planb.sdp_semantics = SdpSemantics::kPlanB;
+  config_planb.sdp_semantics = SdpSemantics::kPlanB_DEPRECATED;
   auto callee = CreatePeerConnection(config_planb);
   caller->AddVideoTrack("video");
   callee->AddVideoTrack("video1");
@@ -1809,7 +1809,7 @@ TEST_F(PeerConnectionJsepTest, RollbackSupportedInUnifiedPlan) {
 
 TEST_F(PeerConnectionJsepTest, RollbackNotSupportedInPlanB) {
   RTCConfiguration config;
-  config.sdp_semantics = SdpSemantics::kPlanB;
+  config.sdp_semantics = SdpSemantics::kPlanB_DEPRECATED;
   config.enable_implicit_rollback = true;
   auto caller = CreatePeerConnection(config);
   auto callee = CreatePeerConnection(config);

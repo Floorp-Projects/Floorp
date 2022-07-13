@@ -87,7 +87,7 @@ class DataChannelIntegrationTestPlanB
     : public PeerConnectionIntegrationBaseTest {
  protected:
   DataChannelIntegrationTestPlanB()
-      : PeerConnectionIntegrationBaseTest(SdpSemantics::kPlanB) {}
+      : PeerConnectionIntegrationBaseTest(SdpSemantics::kPlanB_DEPRECATED) {}
 };
 
 class DataChannelIntegrationTestUnifiedPlan
@@ -910,7 +910,7 @@ TEST_P(DataChannelIntegrationTest,
 
 INSTANTIATE_TEST_SUITE_P(DataChannelIntegrationTest,
                          DataChannelIntegrationTest,
-                         Values(SdpSemantics::kPlanB,
+                         Values(SdpSemantics::kPlanB_DEPRECATED,
                                 SdpSemantics::kUnifiedPlan));
 
 TEST_F(DataChannelIntegrationTestUnifiedPlan,
