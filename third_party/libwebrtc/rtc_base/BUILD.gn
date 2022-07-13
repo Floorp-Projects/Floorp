@@ -97,6 +97,7 @@ rtc_library("rtc_base_approved") {
     ":refcount",
     ":rtc_event",
     ":safe_conversions",
+    ":sample_counter",
     ":stringutils",
     ":strong_alias",
     ":swap_queue",
@@ -138,8 +139,7 @@ rtc_library("rtc_base_approved") {
     "numerics/histogram_percentile_counter.h",
     "numerics/mod_ops.h",  # Transitional, use :mod_ops
     "numerics/moving_max_counter.h",  # Transitional, use :moving_max_counter
-    "numerics/sample_counter.cc",
-    "numerics/sample_counter.h",
+    "numerics/sample_counter.h",  # Transitional, use :sample_counter
     "one_time_event.h",  # Transitional, use :one_time_event
     "race_checker.h",  # Transitional, use :race_checker
     "random.h",  # Transitional, use :random
@@ -274,6 +274,19 @@ rtc_library("random") {
     ":checks",
     ":safe_conversions",
   ]
+}
+
+rtc_library("sample_counter") {
+  visibility = [ "*" ]
+  sources = [
+    "numerics/sample_counter.cc",
+    "numerics/sample_counter.h",
+  ]
+  deps = [
+    ":checks",
+    ":safe_conversions",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("timestamp_aligner") {
@@ -1553,6 +1566,7 @@ if (rtc_include_tests) {
         ":rtc_task_queue",
         ":safe_compare",
         ":safe_minmax",
+        ":sample_counter",
         ":sanitizer",
         ":socket",
         ":socket_address",
