@@ -507,7 +507,7 @@ void VideoProcessor::WriteDecodedFrame(const I420BufferInterface& decoded_frame,
     scaled_buffer = I420Buffer::Create(input_video_width, input_video_height);
     scaled_buffer->ScaleFrom(decoded_frame);
 
-    scaled_frame = scaled_buffer;
+    scaled_frame = scaled_buffer.get();
   }
 
   // Ensure there is no padding.

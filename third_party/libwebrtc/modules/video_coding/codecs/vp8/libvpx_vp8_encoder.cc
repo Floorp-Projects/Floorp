@@ -1367,7 +1367,7 @@ LibvpxVp8Encoder::PrepareBuffers(rtc::scoped_refptr<VideoFrameBuffer> buffer) {
   // Prepare `raw_images_` from `mapped_buffer` and, if simulcast, scaled
   // versions of `buffer`.
   std::vector<rtc::scoped_refptr<VideoFrameBuffer>> prepared_buffers;
-  SetRawImagePlanes(&raw_images_[0], mapped_buffer);
+  SetRawImagePlanes(&raw_images_[0], mapped_buffer.get());
   prepared_buffers.push_back(mapped_buffer);
   for (size_t i = 1; i < encoders_.size(); ++i) {
     // Native buffers should implement optimized scaling and is the preferred
@@ -1410,7 +1410,7 @@ LibvpxVp8Encoder::PrepareBuffers(rtc::scoped_refptr<VideoFrameBuffer> buffer) {
           << VideoFrameBufferTypeToString(mapped_buffer->type());
       return {};
     }
-    SetRawImagePlanes(&raw_images_[i], scaled_buffer);
+    SetRawImagePlanes(&raw_images_[i], scaled_buffer.get());
     prepared_buffers.push_back(scaled_buffer);
   }
   return prepared_buffers;
