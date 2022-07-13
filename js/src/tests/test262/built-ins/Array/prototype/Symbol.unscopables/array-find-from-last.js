@@ -1,4 +1,3 @@
-// |reftest| shell-option(--enable-array-find-last) skip-if(!xulRuntime.shell) -- requires shell-options
 // Copyright (C) 2022 Microsoft. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
