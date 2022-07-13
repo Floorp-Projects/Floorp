@@ -42,10 +42,6 @@ size_t hex_decode(ArrayView<char> buffer, absl::string_view source);
 size_t hex_decode_with_delimiter(ArrayView<char> buffer,
                                  absl::string_view source,
                                  char delimiter);
-size_t hex_decode_with_delimiter(char* buffer,
-                                 size_t buflen,
-                                 absl::string_view source,
-                                 char delimiter);
 
 // Joins the source vector of strings into a single string, with each
 // field in source being separated by delimiter. No trailing delimiter is added.

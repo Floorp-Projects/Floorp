@@ -130,14 +130,6 @@ size_t hex_decode_with_delimiter(ArrayView<char> cbuffer,
   return bufpos;
 }
 
-size_t hex_decode_with_delimiter(char* buffer,
-                                 size_t buflen,
-                                 absl::string_view source,
-                                 char delimiter) {
-  return hex_decode_with_delimiter(ArrayView<char>(buffer, buflen), source,
-                                   delimiter);
-}
-
 size_t hex_decode(ArrayView<char> buffer, absl::string_view source) {
   return hex_decode_with_delimiter(buffer, source, 0);
 }
