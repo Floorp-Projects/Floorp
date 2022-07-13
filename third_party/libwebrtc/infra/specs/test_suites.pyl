@@ -48,46 +48,44 @@
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
     },
-    'video_capture_tests_baremetal': {
-      # Run video_capture_tests on the baremetal pool for the video camera.
+    'video_capture_tests_linux': {
       'video_capture_tests': {
-        'swarming': {
-          'dimension_sets': [{
-            'pool': 'WebRTC-baremetal'
-          }],
-        },
+        'remove_mixins': ['linux-bionic'],
+        'mixins': ['linux', 'baremetal-pool'],
       }
     },
-    'webrtc_perf_tests_baremetal': {
-      # Run webrtc_perf_tests on the baremetal pool to test the WebRTC machines.
+    'video_capture_tests_linux_tryserver': {
+      'video_capture_tests': {
+        'remove_mixins': ['linux-bionic'],
+        'mixins': ['linux', 'baremetal-try-pool'],
+      }
+    },
+    'video_capture_tests_win': {
+      'video_capture_tests': {
+        'remove_mixins': ['win7'],
+        'mixins': ['win', 'baremetal-pool'],
+      }
+    },
+    'webrtc_perf_tests_linux_tryserver': {
       'webrtc_perf_tests': {
-        'args': [
-          '--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/',
-          '--nologs',
-          '--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json',
-        ],
-        'remove_mixins': ['result_adapter'],
-        'resultdb': {
-          'result_format': 'gtest_json',
-          'result_file': '${ISOLATED_OUTDIR}/gtest_output.json',
-        },
-        'swarming': {
-          'dimension_sets': [{
-            'pool': 'WebRTC-baremetal'
-          }],
-        },
+        'remove_mixins': ['linux-bionic', 'resultdb-json-format'],
+        'mixins': ['linux', 'baremetal-try-pool', 'quick-perf-tests'],
       }
     },
   },
   'compound_suites': {
-    'desktop_and_video_capture_tests': [
+    'desktop_tests_linux': [
       'desktop_tests',
-      'video_capture_tests_baremetal',
+      'video_capture_tests_linux',
     ],
-    'desktop_and_video_capture_and_webrtc_perf_tests': [
+    'desktop_tests_linux_tryserver': [
       'desktop_tests',
-      'video_capture_tests_baremetal',
-      'webrtc_perf_tests_baremetal',
+      'video_capture_tests_linux_tryserver',
+      'webrtc_perf_tests_linux_tryserver',
+    ],
+    'desktop_tests_win': [
+      'desktop_tests',
+      'video_capture_tests_win',
     ],
   },
 }
