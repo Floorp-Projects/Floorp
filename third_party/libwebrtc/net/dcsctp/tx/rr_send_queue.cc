@@ -44,7 +44,9 @@ bool RRSendQueue::OutgoingStream::HasDataToSend(TimeMs now) {
   while (!items_.empty()) {
     RRSendQueue::OutgoingStream::Item& item = items_.front();
     if (item.message_id.has_value()) {
-      // Already partially sent messages can always continue to be sent.
+      // Already partially sent messages can always continue to be sent. This
+      // ensures e.g. that paused streams with partially sent messages get to
+      // send the partial message in full before resetting.
       return true;
     }
 
