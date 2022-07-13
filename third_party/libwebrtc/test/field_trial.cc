@@ -10,23 +10,21 @@
 
 #include "test/field_trial.h"
 
-#include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <map>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 #include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace test {
 
-ScopedFieldTrials::ScopedFieldTrials(const std::string& config)
-    : previous_field_trials_(webrtc::field_trial::GetFieldTrialString()) {
-  RTC_CHECK(webrtc::field_trial::FieldTrialsStringIsValid(config.c_str()))
-      << "Invalid field trials string: " << config;
-  current_field_trials_ = config;
+ScopedFieldTrials::ScopedFieldTrials(absl::string_view config)
+    : current_field_trials_(config),
+      previous_field_trials_(webrtc::field_trial::GetFieldTrialString()) {
+  RTC_CHECK(webrtc::field_trial::FieldTrialsStringIsValid(
+      current_field_trials_.c_str()))
+      << "Invalid field trials string: " << current_field_trials_;
   webrtc::field_trial::InitFieldTrialsFromString(current_field_trials_.c_str());
 }
 
