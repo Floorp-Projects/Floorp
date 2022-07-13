@@ -26,8 +26,8 @@ bool SetAv1SvcConfig(VideoCodec& video_codec) {
 
   absl::string_view scalability_mode = video_codec.ScalabilityMode();
   if (scalability_mode.empty()) {
-    RTC_LOG(LS_WARNING) << "Scalability mode is not set, using 'NONE'.";
-    scalability_mode = "NONE";
+    RTC_LOG(LS_WARNING) << "Scalability mode is not set, using 'L1T1'.";
+    scalability_mode = "L1T1";
   }
 
   std::unique_ptr<ScalableVideoController> structure =

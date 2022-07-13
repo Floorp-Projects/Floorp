@@ -45,7 +45,7 @@ std::unique_ptr<ScalableVideoController> CreateH() {
   return std::make_unique<T>(factor);
 }
 
-constexpr ScalableVideoController::StreamLayersConfig kConfigNone = {
+constexpr ScalableVideoController::StreamLayersConfig kConfigL1T1 = {
     /*num_spatial_layers=*/1, /*num_temporal_layers=*/1,
     /*uses_reference_scaling=*/false};
 
@@ -114,7 +114,7 @@ constexpr ScalableVideoController::StreamLayersConfig kConfigS3T3 = {
     {4, 2, 1}};
 
 constexpr NamedStructureFactory kFactories[] = {
-    {"NONE", Create<ScalableVideoControllerNoLayering>, kConfigNone},
+    {"L1T1", Create<ScalableVideoControllerNoLayering>, kConfigL1T1},
     {"L1T2", Create<ScalabilityStructureL1T2>, kConfigL1T2},
     {"L1T3", Create<ScalabilityStructureL1T3>, kConfigL1T3},
     {"L2T1", Create<ScalabilityStructureL2T1>, kConfigL2T1},
