@@ -265,6 +265,9 @@ mozJSModuleLoader::mozJSModuleLoader()
     : mImports(16),
       mInProgressImports(16),
       mFallbackImports(16),
+#ifdef STARTUP_RECORDER_ENABLED
+      mImportStacks(16),
+#endif
       mLocations(16),
       mInitialized(false),
       mLoaderGlobal(dom::RootingCx()),
@@ -464,12 +467,29 @@ static size_t SizeOfTableExcludingThis(
   return n;
 }
 
+#ifdef STARTUP_RECORDER_ENABLED
+template <class Key, class Data, class UserData, class Converter>
+static size_t SizeOfStringTableExcludingThis(
+    const nsBaseHashtable<Key, Data, UserData, Converter>& aTable,
+    MallocSizeOf aMallocSizeOf) {
+  size_t n = aTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (const auto& entry : aTable) {
+    n += entry.GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    n += entry.GetData().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  }
+  return n;
+}
+#endif
+
 size_t mozJSModuleLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
   size_t n = aMallocSizeOf(this);
   n += SizeOfTableExcludingThis(mImports, aMallocSizeOf);
   n += mLocations.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += SizeOfTableExcludingThis(mInProgressImports, aMallocSizeOf);
   n += SizeOfTableExcludingThis(mFallbackImports, aMallocSizeOf);
+#ifdef STARTUP_RECORDER_ENABLED
+  n += SizeOfStringTableExcludingThis(mImportStacks, aMallocSizeOf);
+#endif
   return n;
 }
 
@@ -979,6 +999,9 @@ void mozJSModuleLoader::UnloadModules() {
   }
   mServicesObj = nullptr;
 
+#ifdef STARTUP_RECORDER_ENABLED
+  mImportStacks.Clear();
+#endif
   mFallbackImports.Clear();
   mInProgressImports.Clear();
   mImports.Clear();
@@ -1169,6 +1192,18 @@ nsresult mozJSModuleLoader::GetLoadedJSAndESModules(
   return NS_OK;
 }
 
+#ifdef STARTUP_RECORDER_ENABLED
+void mozJSModuleLoader::RecordImportStack(JSContext* aCx,
+                                          const nsACString& aLocation) {
+  if (!Preferences::GetBool("browser.startup.record", false)) {
+    return;
+  }
+
+  mImportStacks.InsertOrUpdate(
+      aLocation, xpc_PrintJSStack(aCx, false, false, false).get());
+}
+#endif
+
 nsresult mozJSModuleLoader::GetModuleImportStack(const nsACString& aLocation,
                                                  nsACString& retval) {
 #ifdef STARTUP_RECORDER_ENABLED
@@ -1176,13 +1211,12 @@ nsresult mozJSModuleLoader::GetModuleImportStack(const nsACString& aLocation,
   MOZ_ASSERT(mInitialized);
 
   ModuleLoaderInfo info(aLocation);
-
-  ModuleEntry* mod;
-  if (!mImports.Get(info.Key(), &mod)) {
+  auto str = mImportStacks.Lookup(info.Key());
+  if (!str) {
     return NS_ERROR_FAILURE;
   }
 
-  retval = mod->importStack;
+  retval = *str;
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1441,9 +1475,7 @@ nsresult mozJSModuleLoader::Import(JSContext* aCx, const nsACString& aLocation,
     }
 
 #ifdef STARTUP_RECORDER_ENABLED
-    if (Preferences::GetBool("browser.startup.record", false)) {
-      newEntry->importStack = xpc_PrintJSStack(aCx, false, false, false).get();
-    }
+    RecordImportStack(aCx, aLocation);
 #endif
 
     mod = newEntry.get();
@@ -1589,6 +1621,12 @@ nsresult mozJSModuleLoader::ImportESModule(
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aLocation);
   NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef STARTUP_RECORDER_ENABLED
+  if (!mModuleLoader->IsModuleFetched(uri)) {
+    RecordImportStack(aCx, aLocation);
+  }
+#endif
 
   nsCOMPtr<nsIPrincipal> principal =
       mModuleLoader->GetGlobalObject()->PrincipalOrNull();

@@ -137,7 +137,9 @@ add_task(async function() {
             : "";
         }
         for (let module of Cu.loadedESModules) {
-          modules[module] = "";
+          modules[module] = collectStacks
+            ? Cu.getModuleImportStack(module)
+            : "";
         }
         let services = {};
         for (let contractID of Object.keys(Cc)) {
