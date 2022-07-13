@@ -316,6 +316,7 @@ void RtcpTransceiverImpl::HandleSenderReport(
       remote_senders_[sender_report.sender_ssrc()];
   remote_sender.last_received_sender_report = {{now, sender_report.ntp()}};
   const auto& received_report_blocks = sender_report.report_blocks();
+  CallbackOnReportBlocks(sender_report.sender_ssrc(), received_report_blocks);
   report_blocks.insert(report_blocks.end(), received_report_blocks.begin(),
                        received_report_blocks.end());
 
@@ -332,8 +333,23 @@ void RtcpTransceiverImpl::HandleReceiverReport(
     return;
   }
   const auto& received_report_blocks = receiver_report.report_blocks();
+  CallbackOnReportBlocks(receiver_report.sender_ssrc(), received_report_blocks);
   report_blocks.insert(report_blocks.end(), received_report_blocks.begin(),
                        received_report_blocks.end());
+}
+
+void RtcpTransceiverImpl::CallbackOnReportBlocks(
+    uint32_t sender_ssrc,
+    rtc::ArrayView<const rtcp::ReportBlock> report_blocks) {
+  if (local_senders_.empty()) {
+    return;
+  }
+  for (const rtcp::ReportBlock& block : report_blocks) {
+    auto sender_it = local_senders_by_ssrc_.find(block.source_ssrc());
+    if (sender_it != local_senders_by_ssrc_.end()) {
+      sender_it->second->handler->OnReportBlock(sender_ssrc, block);
+    }
+  }
 }
 
 void RtcpTransceiverImpl::HandlePayloadSpecificFeedback(

@@ -102,6 +102,8 @@ class RtpStreamRtcpHandler {
                       rtc::ArrayView<const uint16_t> sequence_numbers) {}
   virtual void OnFir(uint32_t sender_ssrc) {}
   virtual void OnPli(uint32_t sender_ssrc) {}
+  virtual void OnReportBlock(uint32_t sender_ssrc,
+                             const rtcp::ReportBlock& report_block) {}
 };
 
 struct RtcpTransceiverConfig {

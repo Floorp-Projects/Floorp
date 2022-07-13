@@ -89,6 +89,10 @@ class MockRtpStreamRtcpHandler : public RtpStreamRtcpHandler {
               (override));
   MOCK_METHOD(void, OnFir, (uint32_t), (override));
   MOCK_METHOD(void, OnPli, (uint32_t), (override));
+  MOCK_METHOD(void,
+              OnReportBlock,
+              (uint32_t, const rtcp::ReportBlock&),
+              (override));
 
  private:
   int num_calls_ = 0;
@@ -1538,6 +1542,54 @@ TEST(RtcpTransceiverImplTest,
   packet.Append(std::move(rr2));
 
   EXPECT_CALL(link_observer, OnReportBlocks(receive_time, SizeIs(64)));
+
+  rtcp_transceiver.ReceivePacket(packet.Build(), receive_time);
+}
+
+TEST(RtcpTransceiverImplTest,
+     CallbackOnReportBlocksFromSenderAndReceiverReports) {
+  static constexpr uint32_t kRemoteSsrc = 5678;
+  // Has registered sender, report block attached to sender report.
+  static constexpr uint32_t kMediaSsrc1 = 1234;
+  // No registered sender, report block attached to receiver report.
+  // Such report block shouldn't prevent handling following report block.
+  static constexpr uint32_t kMediaSsrc2 = 1235;
+  // Has registered sender, no report block attached.
+  static constexpr uint32_t kMediaSsrc3 = 1236;
+  // Has registered sender, report block attached to receiver report.
+  static constexpr uint32_t kMediaSsrc4 = 1237;
+
+  MockNetworkLinkRtcpObserver link_observer;
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  Timestamp receive_time = Timestamp::Seconds(5678);
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  MockRtpStreamRtcpHandler local_stream1;
+  MockRtpStreamRtcpHandler local_stream3;
+  MockRtpStreamRtcpHandler local_stream4;
+  EXPECT_CALL(local_stream1, OnReportBlock(kRemoteSsrc, _));
+  EXPECT_CALL(local_stream3, OnReportBlock).Times(0);
+  EXPECT_CALL(local_stream4, OnReportBlock(kRemoteSsrc, _));
+
+  ASSERT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc1, &local_stream1));
+  ASSERT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc3, &local_stream3));
+  ASSERT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc4, &local_stream4));
+
+  // Assemble compound packet with multiple RTCP packets in it.
+  rtcp::CompoundPacket packet;
+  auto sr = std::make_unique<rtcp::SenderReport>();
+  sr->SetSenderSsrc(kRemoteSsrc);
+  std::vector<ReportBlock> rb(1);
+  rb[0].SetMediaSsrc(kMediaSsrc1);
+  sr->SetReportBlocks(std::move(rb));
+  packet.Append(std::move(sr));
+  auto rr = std::make_unique<rtcp::ReceiverReport>();
+  rr->SetSenderSsrc(kRemoteSsrc);
+  rb = std::vector<ReportBlock>(2);
+  rb[0].SetMediaSsrc(kMediaSsrc2);
+  rb[1].SetMediaSsrc(kMediaSsrc4);
+  rr->SetReportBlocks(std::move(rb));
+  packet.Append(std::move(rr));
 
   rtcp_transceiver.ReceivePacket(packet.Build(), receive_time);
 }
