@@ -29,6 +29,7 @@
 #include "rtc_base/network.h"
 #include "rtc_base/numerics/event_based_exponential_moving_average.h"
 #include "rtc_base/rate_tracker.h"
+#include "rtc_base/weak_ptr.h"
 
 namespace cricket {
 
@@ -310,8 +311,8 @@ class Connection : public CandidatePairInterface, public sigslot::has_slots<> {
   void SendResponseMessage(const StunMessage& response);
 
   // An accessor for unit tests.
-  Port* PortForTest() { return port_; }
-  const Port* PortForTest() const { return port_; }
+  Port* PortForTest() { return port_.get(); }
+  const Port* PortForTest() const { return port_.get(); }
 
   // Public for unit tests.
   uint32_t acked_nomination() const;
@@ -319,7 +320,7 @@ class Connection : public CandidatePairInterface, public sigslot::has_slots<> {
 
  protected:
   // Constructs a new connection to the given remote port.
-  Connection(Port* port, size_t index, const Candidate& candidate);
+  Connection(rtc::WeakPtr<Port> port, size_t index, const Candidate& candidate);
 
   // Called back when StunRequestManager has a stun packet to send
   void OnSendStunPacket(const void* data, size_t size, StunRequest* req);
@@ -348,8 +349,8 @@ class Connection : public CandidatePairInterface, public sigslot::has_slots<> {
   void set_connected(bool value);
 
   // The local port where this connection sends and receives packets.
-  Port* port() { return port_; }
-  const Port* port() const { return port_; }
+  Port* port() { return port_.get(); }
+  const Port* port() const { return port_.get(); }
 
   // NOTE: A pointer to the network thread is held by `port_` so in theory we
   // shouldn't need to hold on to this pointer here, but rather defer to
@@ -358,7 +359,7 @@ class Connection : public CandidatePairInterface, public sigslot::has_slots<> {
   // TODO(tommi): This ^^^ should be fixed.
   webrtc::TaskQueueBase* const network_thread_;
   const uint32_t id_;
-  Port* const port_;
+  rtc::WeakPtr<Port> port_;
   size_t local_candidate_index_ RTC_GUARDED_BY(network_thread_);
   Candidate remote_candidate_;
 
@@ -470,6 +471,11 @@ class Connection : public CandidatePairInterface, public sigslot::has_slots<> {
 // ProxyConnection defers all the interesting work to the port.
 class ProxyConnection : public Connection {
  public:
+  ProxyConnection(rtc::WeakPtr<Port> port,
+                  size_t index,
+                  const Candidate& remote_candidate);
+
+  // TODO(tommi): Remove this ctor once it's no longer needed.
   ProxyConnection(Port* port, size_t index, const Candidate& remote_candidate);
 
   int Send(const void* data,

@@ -588,7 +588,7 @@ Connection* TurnPort::CreateConnection(const Candidate& remote_candidate,
         next_channel_number_++;
       }
       ProxyConnection* conn =
-          new ProxyConnection(this, index, remote_candidate);
+          new ProxyConnection(NewWeakPtr(), index, remote_candidate);
       AddOrReplaceConnection(conn);
       return conn;
     }
