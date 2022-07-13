@@ -49,6 +49,7 @@ if (rtc_include_tests) {
       "../../rtc_base:logging",
       "../../rtc_base:macromagic",
       "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:stringutils",
       "../../test:field_trial",
       "../../test:test_support",
       "//testing/gtest",

@@ -89,6 +89,7 @@ rtc_library("rtc_base_approved") {
     ":rtc_task_queue",
     ":safe_compare",
     ":safe_conversions",
+    ":stringutils",
     ":type_traits",
     "../api:array_view",
     "../api:scoped_refptr",
@@ -180,7 +181,6 @@ rtc_library("rtc_base_approved") {
   public_deps += [  # no-presubmit-check TODO(webrtc:8603)
     ":platform_thread",
     ":platform_thread_types",
-    ":stringutils",
     ":timeutils",
     "../api:sequence_checker",
   ]
@@ -915,6 +915,7 @@ if (is_win) {
       ":logging",
       ":macromagic",
       ":rtc_base_approved",
+      ":stringutils",
     ]
 
     libs = [
@@ -1244,6 +1245,7 @@ rtc_library("rtc_base_tests_utils") {
     ":socket_address",
     ":socket_factory",
     ":socket_server",
+    ":stringutils",
     ":threading",
     "../api/units:time_delta",
     "../api/units:timestamp",

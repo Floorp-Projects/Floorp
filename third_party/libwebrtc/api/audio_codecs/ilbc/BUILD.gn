@@ -32,6 +32,7 @@ rtc_library("audio_encoder_ilbc") {
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:safe_conversions",
     "../../../rtc_base:safe_minmax",
+    "../../../rtc_base:stringutils",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/strings",

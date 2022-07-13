@@ -56,6 +56,7 @@ rtc_library("video_adaptation") {
     "../../rtc_base:rtc_numerics",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base:safe_conversions",
+    "../../rtc_base:stringutils",
     "../../rtc_base:timeutils",
     "../../rtc_base/experiments:balanced_degradation_settings",
     "../../rtc_base/experiments:field_trial_parser",

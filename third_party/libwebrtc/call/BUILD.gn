@@ -73,6 +73,7 @@ rtc_library("call_interfaces") {
     "../rtc_base:checks",
     "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:stringutils",
     "../rtc_base/network:sent_packet",
   ]
   absl_deps = [
@@ -123,6 +124,7 @@ rtc_library("rtp_interfaces") {
     "../rtc_base:checks",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_task_queue",
+    "../rtc_base:stringutils",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
@@ -150,6 +152,7 @@ rtc_library("rtp_receiver") {
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:stringutils",
     "../rtc_base/containers:flat_map",
     "../rtc_base/containers:flat_set",
   ]
@@ -319,6 +322,7 @@ rtc_library("call") {
     "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_task_queue",
     "../rtc_base:safe_minmax",
+    "../rtc_base:stringutils",
     "../rtc_base/experiments:field_trial_parser",
     "../rtc_base/network:sent_packet",
     "../rtc_base/system:no_unique_address",
@@ -561,6 +565,7 @@ if (rtc_include_tests) {
         "../rtc_base:macromagic",
         "../rtc_base:rtc_base_approved",
         "../rtc_base:rtc_event",
+        "../rtc_base:stringutils",
         "../rtc_base:task_queue_for_test",
         "../rtc_base:threading",
         "../rtc_base/synchronization:mutex",

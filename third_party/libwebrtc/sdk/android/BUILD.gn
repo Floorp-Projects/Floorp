@@ -590,6 +590,7 @@ if (current_os == "linux" || is_android) {
       "../../rtc_base:macromagic",
       "../../rtc_base:refcount",
       "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:stringutils",
       "../../rtc_base:threading",
       "../../rtc_base/task_utils:pending_task_safety_flag",
       "../../rtc_base/task_utils:to_queued_task",
@@ -803,6 +804,7 @@ if (current_os == "linux" || is_android) {
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_task_queue",
       "../../rtc_base:safe_conversions",
+      "../../rtc_base:stringutils",
       "../../rtc_base:threading",
       "../../system_wrappers:field_trial",
     ]
@@ -1640,6 +1642,7 @@ if (is_android) {
       "../../rtc_base:macromagic",
       "../../rtc_base:rtc_base",
       "../../rtc_base:rtc_event",
+      "../../rtc_base:stringutils",
       "../../rtc_base:threading",
       "../../rtc_base/synchronization:mutex",
       "../../rtc_base/system:inline",

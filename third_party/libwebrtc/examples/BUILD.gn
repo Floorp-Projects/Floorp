@@ -70,6 +70,7 @@ rtc_library("read_auth_file") {
   deps = [
     "../api:array_view",
     "../rtc_base",
+    "../rtc_base:stringutils",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings:strings" ]
 }
@@ -688,6 +689,7 @@ if (is_linux || is_chromeos || is_win) {
       "../rtc_base:macromagic",
       "../rtc_base:net_helpers",
       "../rtc_base:refcount",
+      "../rtc_base:stringutils",
       "../rtc_base:threading",
       "../rtc_base/third_party/sigslot",
       "../system_wrappers:field_trial",
@@ -764,6 +766,7 @@ if (is_linux || is_chromeos || is_win) {
     deps = [
       "../rtc_base:checks",
       "../rtc_base:rtc_base_approved",
+      "../rtc_base:stringutils",
       "../system_wrappers:field_trial",
       "../test:field_trial",
       "//third_party/abseil-cpp/absl/flags:flag",

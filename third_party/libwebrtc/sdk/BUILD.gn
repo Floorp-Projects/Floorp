@@ -364,6 +364,7 @@ if (is_ios || is_mac) {
         deps = [
           "../rtc_base",
           "../rtc_base:network_constants",
+          "../rtc_base:stringutils",
           "../rtc_base:threading",
         ]
 
@@ -1610,6 +1611,7 @@ if (is_ios || is_mac) {
           "../rtc_base",
           "../rtc_base:logging",
           "../rtc_base:macromagic",
+          "../rtc_base:stringutils",
           "../rtc_base:threading",
           "../rtc_base/task_utils:pending_task_safety_flag",
           "../rtc_base/task_utils:to_queued_task",
