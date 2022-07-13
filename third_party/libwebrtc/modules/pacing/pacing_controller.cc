@@ -38,8 +38,6 @@ constexpr TimeDelta kMaxElapsedTime = TimeDelta::Seconds(2);
 // time. Applies only to periodic mode.
 constexpr TimeDelta kMaxProcessingInterval = TimeDelta::Millis(30);
 
-constexpr int kFirstPriority = 0;
-
 bool IsDisabled(const FieldTrialsView& field_trials, absl::string_view key) {
   return absl::StartsWith(field_trials.Lookup(key), "Disabled");
 }
@@ -54,29 +52,6 @@ TimeDelta GetDynamicPaddingTarget(const FieldTrialsView& field_trials) {
   ParseFieldTrial({&padding_target},
                   field_trials.Lookup("WebRTC-Pacer-DynamicPaddingTarget"));
   return padding_target.Get();
-}
-
-int GetPriorityForType(RtpPacketMediaType type) {
-  // Lower number takes priority over higher.
-  switch (type) {
-    case RtpPacketMediaType::kAudio:
-      // Audio is always prioritized over other packet types.
-      return kFirstPriority + 1;
-    case RtpPacketMediaType::kRetransmission:
-      // Send retransmissions before new media.
-      return kFirstPriority + 2;
-    case RtpPacketMediaType::kVideo:
-    case RtpPacketMediaType::kForwardErrorCorrection:
-      // Video has "normal" priority, in the old speak.
-      // Send redundancy concurrently to video. If it is delayed it might have a
-      // lower chance of being useful.
-      return kFirstPriority + 3;
-    case RtpPacketMediaType::kPadding:
-      // Packets that are in themselves likely useless, only sent to keep the
-      // BWE high.
-      return kFirstPriority + 4;
-  }
-  RTC_CHECK_NOTREACHED();
 }
 
 }  // namespace
@@ -217,10 +192,24 @@ void PacingController::EnqueuePacket(std::unique_ptr<RtpPacketToSend> packet) {
   RTC_DCHECK(pacing_bitrate_ > DataRate::Zero())
       << "SetPacingRate must be called before InsertPacket.";
   RTC_CHECK(packet->packet_type());
-  // Get priority first and store in temporary, to avoid chance of object being
-  // moved before GetPriorityForType() being called.
-  const int priority = GetPriorityForType(*packet->packet_type());
-  EnqueuePacketInternal(std::move(packet), priority);
+
+  prober_.OnIncomingPacket(DataSize::Bytes(packet->payload_size()));
+
+  Timestamp now = CurrentTime();
+  if (mode_ == ProcessMode::kDynamic && packet_queue_.Empty()) {
+    // If queue is empty, we need to "fast-forward" the last process time,
+    // so that we don't use passed time as budget for sending the first new
+    // packet.
+    Timestamp target_process_time = now;
+    Timestamp next_send_time = NextSendTime();
+    if (next_send_time.IsFinite()) {
+      // There was already a valid planned send time, such as a keep-alive.
+      // Use that as last process time only if it's prior to now.
+      target_process_time = std::min(now, next_send_time);
+    }
+    UpdateBudgetWithElapsedTime(UpdateTimeAndGetElapsed(target_process_time));
+  }
+  packet_queue_.Push(now, packet_counter_++, std::move(packet));
 }
 
 void PacingController::SetAccountForAudioPackets(bool account_for_audio) {
@@ -264,29 +253,6 @@ absl::optional<Timestamp> PacingController::FirstSentPacketTime() const {
 
 Timestamp PacingController::OldestPacketEnqueueTime() const {
   return packet_queue_.OldestEnqueueTime();
-}
-
-void PacingController::EnqueuePacketInternal(
-    std::unique_ptr<RtpPacketToSend> packet,
-    int priority) {
-  prober_.OnIncomingPacket(DataSize::Bytes(packet->payload_size()));
-
-  Timestamp now = CurrentTime();
-
-  if (mode_ == ProcessMode::kDynamic && packet_queue_.Empty()) {
-    // If queue is empty, we need to "fast-forward" the last process time,
-    // so that we don't use passed time as budget for sending the first new
-    // packet.
-    Timestamp target_process_time = now;
-    Timestamp next_send_time = NextSendTime();
-    if (next_send_time.IsFinite()) {
-      // There was already a valid planned send time, such as a keep-alive.
-      // Use that as last process time only if it's prior to now.
-      target_process_time = std::min(now, next_send_time);
-    }
-    UpdateBudgetWithElapsedTime(UpdateTimeAndGetElapsed(target_process_time));
-  }
-  packet_queue_.Push(priority, now, packet_counter_++, std::move(packet));
 }
 
 TimeDelta PacingController::UpdateTimeAndGetElapsed(Timestamp now) {

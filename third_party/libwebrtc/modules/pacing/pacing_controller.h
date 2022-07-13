@@ -150,8 +150,6 @@ class PacingController {
   bool IsProbing() const;
 
  private:
-  void EnqueuePacketInternal(std::unique_ptr<RtpPacketToSend> packet,
-                             int priority);
   TimeDelta UpdateTimeAndGetElapsed(Timestamp now);
   bool ShouldSendKeepalive(Timestamp now) const;
 
