@@ -11,14 +11,6 @@
 var currentTest = 1;
 var currentStep = 1;
 
-/*
-window.addEventListener("storage", onStorageEvent, false);
-
-function onStorageEvent(event)
-{
-}
-*/
-
 async function doNextTest()
 {
   // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
@@ -36,7 +28,7 @@ async function doNextTest()
   }
 
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.partition.always_partition_third_party_non_cookie_storage", false]],
+    set: [["privacy.partition.always_partition_third_party_non_cookie_storage", true]],
   });
 
   // We must perform the first step of the test
@@ -44,13 +36,16 @@ async function doNextTest()
   currentStep = 1;
   doStep();
 
+  let hash = "#aps";
+  if (isXOrigin) hash += "xorigin";
+
   switch (currentTest)
   {
     case 1:
       // Open a window from the same origin and check data
       // are copied but not further modified on our side
       slaveOrigin = "http://mochi.test:8888";
-      slave = window.open(slaveOrigin + slavePath + "frameEqual.html");
+      slave = window.open(slaveOrigin + slavePath + "frameNotEqual.html" + hash);
       break;
 
     case 2:
@@ -58,7 +53,7 @@ async function doNextTest()
       // Open a window from a different origin and check data
       // are NOT copied and not modified on our side
       slaveOrigin = "https://example.com";
-      slave = window.open(slaveOrigin + slavePath + "frameNotEqual.html");
+      slave = window.open(slaveOrigin + slavePath + "frameNotEqual.html" + hash);
       break;
 
     case 3:
