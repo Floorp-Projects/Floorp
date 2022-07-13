@@ -25,6 +25,7 @@
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/encoded_image.h"
 #include "api/video/i420_buffer.h"
+#include "api/video/render_resolution.h"
 #include "api/video/video_adaptation_reason.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "api/video/video_codec_constants.h"
@@ -1609,6 +1610,16 @@ void VideoStreamEncoder::MaybeEncodeVideoFrame(const VideoFrame& video_frame,
   if (!last_frame_info_ || video_frame.width() != last_frame_info_->width ||
       video_frame.height() != last_frame_info_->height ||
       video_frame.is_texture() != last_frame_info_->is_texture) {
+    if ((!last_frame_info_ || video_frame.width() != last_frame_info_->width ||
+         video_frame.height() != last_frame_info_->height) &&
+        settings_.encoder_switch_request_callback && encoder_selector_) {
+      if (auto encoder = encoder_selector_->OnResolutionChange(
+              {video_frame.width(), video_frame.height()})) {
+        settings_.encoder_switch_request_callback->RequestEncoderSwitch(
+            *encoder, /*allow_default_fallback=*/false);
+      }
+    }
+
     pending_encoder_reconfiguration_ = true;
     last_frame_info_ = VideoFrameInfo(video_frame.width(), video_frame.height(),
                                       video_frame.is_texture());
