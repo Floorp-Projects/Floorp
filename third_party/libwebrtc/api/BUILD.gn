@@ -1210,6 +1210,7 @@ if (rtc_include_tests) {
       ":scoped_refptr",
       ":sequence_checker",
       ":time_controller",
+      "../rtc_base:buffer",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
       "../rtc_base:platform_thread",

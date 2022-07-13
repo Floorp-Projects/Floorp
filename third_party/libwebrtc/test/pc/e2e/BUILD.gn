@@ -423,6 +423,7 @@ if (!build_with_chromium) {
       deps = [
         ":single_process_encoded_image_data_injector",
         "../../../api/video:encoded_image",
+        "../../../rtc_base:buffer",
         "../../../rtc_base:rtc_base_approved",
         "../../../test:test_support",
       ]
@@ -435,6 +436,7 @@ if (!build_with_chromium) {
       deps = [
         ":video_frame_tracking_id_injector",
         "../../../api/video:encoded_image",
+        "../../../rtc_base:buffer",
         "../../../rtc_base:rtc_base_approved",
         "../../../test:test_support",
       ]

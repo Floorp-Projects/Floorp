@@ -226,6 +226,7 @@ rtc_library("rtc_event_rtp_rtcp") {
     "../api/rtc_event_log",
     "../api/units:timestamp",
     "../modules/rtp_rtcp:rtp_rtcp_format",
+    "../rtc_base:buffer",
     "../rtc_base:checks",
     "../rtc_base:rtc_base_approved",
   ]
@@ -302,6 +303,7 @@ rtc_library("rtc_event_log_impl_encoder") {
     "../api/transport:network_control",
     "../rtc_base:bit_buffer",
     "../rtc_base:bitstream_reader",
+    "../rtc_base:buffer",
     "../rtc_base:checks",
     "../rtc_base:ignore_wundef",
     "../rtc_base:logging",
@@ -512,6 +514,7 @@ if (rtc_enable_protobuf) {
         "../call:call_interfaces",
         "../modules/audio_coding:audio_network_adaptor",
         "../modules/rtp_rtcp:rtp_rtcp_format",
+        "../rtc_base:buffer",
         "../rtc_base:checks",
         "../rtc_base:macromagic",
         "../rtc_base:random",

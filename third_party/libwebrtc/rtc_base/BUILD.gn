@@ -83,6 +83,7 @@ rtc_library("rtc_base_approved") {
   deps = [
     ":atomicops",
     ":bit_buffer",
+    ":buffer",
     ":checks",
     ":histogram_percentile_counter",
     ":location",
@@ -127,7 +128,7 @@ rtc_library("rtc_base_approved") {
 
   sources = [
     "bit_buffer.h",  # Transitional, use :bit_buffer
-    "buffer.h",
+    "buffer.h",  # Transitional, use :buffer
     "buffer_queue.cc",
     "buffer_queue.h",
     "byte_buffer.cc",
@@ -191,6 +192,18 @@ rtc_library("rtc_base_approved") {
     public_deps +=  # no-presubmit-check TODO(webrtc:8603)
         [ ":timestamp_aligner" ]
   }
+}
+
+rtc_source_set("buffer") {
+  visibility = [ "*" ]
+  sources = [ "buffer.h" ]
+  deps = [
+    ":checks",
+    ":type_traits",
+    ":zero_memory",
+    "../api:array_view",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_source_set("mod_ops") {
@@ -1091,6 +1104,7 @@ rtc_library("rtc_base") {
   deps = [
     ":async_resolver_interface",
     ":async_socket",
+    ":buffer",
     ":callback_list",
     ":checks",
     ":ip_address",
@@ -1497,6 +1511,7 @@ if (rtc_include_tests) {
         "socket_unittest.h",
       ]
       deps = [
+        ":buffer",
         ":checks",
         ":gunit_helpers",
         ":ip_address",
@@ -1581,6 +1596,7 @@ if (rtc_include_tests) {
         ":bit_buffer",
         ":bitstream_reader",
         ":bounded_inline_vector",
+        ":buffer",
         ":checks",
         ":criticalsection",
         ":divide_round",
@@ -1740,6 +1756,7 @@ if (rtc_include_tests) {
       ]
       deps = [
         ":atomicops",
+        ":buffer",
         ":checks",
         ":gunit_helpers",
         ":ip_address",

@@ -277,6 +277,7 @@ if (rtc_include_tests) {
       ":sctp_packet",
       ":tlv_trait",
       "../../../api:array_view",
+      "../../../rtc_base:buffer",
       "../../../rtc_base:checks",
       "../../../rtc_base:gunit_helpers",
       "../../../rtc_base:rtc_base_approved",
