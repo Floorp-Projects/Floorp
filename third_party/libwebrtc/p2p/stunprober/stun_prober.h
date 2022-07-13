@@ -95,12 +95,6 @@ class RTC_EXPORT StunProber : public sigslot::has_slots<> {
     std::set<std::string> srflx_addrs;
   };
 
-  // TODO(bugs.webrtc.org/13869): Delete, use constructor with const
-  // rtc::Network*.
-  ABSL_DEPRECATED("bugs.webrtc.org/13869")
-  StunProber(rtc::PacketSocketFactory* socket_factory,
-             rtc::Thread* thread,
-             const rtc::NetworkManager::NetworkList& networks);
   StunProber(rtc::PacketSocketFactory* socket_factory,
              rtc::Thread* thread,
              std::vector<const rtc::Network*> networks);

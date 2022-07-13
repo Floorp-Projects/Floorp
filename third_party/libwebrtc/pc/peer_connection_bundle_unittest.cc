@@ -92,13 +92,14 @@ constexpr int kDefaultTimeout = 10000;
 
 class FakeNetworkManagerWithNoAnyNetwork : public rtc::FakeNetworkManager {
  public:
-  void GetAnyAddressNetworks(NetworkList* networks) override {
+  std::vector<const rtc::Network*> GetAnyAddressNetworks() override {
     // This function allocates networks that are owned by the
     // NetworkManager. But some tests assume that they can release
     // all networks independent of the network manager.
     // In order to prevent use-after-free issues, don't allow this
     // function to have any effect when run in tests.
     RTC_LOG(LS_INFO) << "FakeNetworkManager::GetAnyAddressNetworks ignored";
+    return {};
   }
 };
 
