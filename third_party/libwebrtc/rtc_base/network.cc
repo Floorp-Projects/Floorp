@@ -737,17 +737,14 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
     if (adapter_addrs->OperStatus == IfOperStatusUp) {
       PIP_ADAPTER_UNICAST_ADDRESS address = adapter_addrs->FirstUnicastAddress;
       PIP_ADAPTER_PREFIX prefixlist = adapter_addrs->FirstPrefix;
-      std::string name;
-      std::string description;
-#if !defined(NDEBUG)
-      name = ToUtf8(adapter_addrs->FriendlyName,
-                    wcslen(adapter_addrs->FriendlyName));
-#endif
-      description = ToUtf8(adapter_addrs->Description,
-                           wcslen(adapter_addrs->Description));
+      std::string description = ToUtf8(adapter_addrs->Description,
+                                       wcslen(adapter_addrs->Description));
+
       for (; address; address = address->Next) {
-#if defined(NDEBUG)
-        name = rtc::ToString(count);
+        std::string name = rtc::ToString(count);
+#if !defined(NDEBUG)
+        name = ToUtf8(adapter_addrs->FriendlyName,
+                      wcslen(adapter_addrs->FriendlyName));
 #endif
 
         IPAddress ip;
