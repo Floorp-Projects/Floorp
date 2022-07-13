@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'e3e593ee7a9700c6e572ad0d329220532fe20194',
+  'chromium_revision': 'a8000f6b5db8c40fd71bb01904b01ebf2a954fcb',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -25,7 +25,7 @@ deps = {
   'src/base':
     'https://chromium.googlesource.com/chromium/src/base@2309c1f7597ef63ab9b10e6db7b724e092a629e9',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@f3dac754650e5f86e1e2e692bc843411a546c5d0',
+    'https://chromium.googlesource.com/chromium/src/build@4c94a19167b9b058042b8a50c886c7d50a40b04f',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@c2e4795660817c2776dbabd778b92ed58c074032',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -34,19 +34,19 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@0c59cae8e0f295898a276c16c572e889147cbc93',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@e2f7272d91c286c5a17bf1bbc8d2ed376bedce25',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@d7555f4ee32400af6cd2ad5513c80811220d45be',
+    'https://chromium.googlesource.com/chromium/src/testing@b72227d2fb5ad21240967da95cd70c32272bd4cc',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@a8f9e1584d41d3f2656dd57fa69bb9cf5e47e4d3',
+    'https://chromium.googlesource.com/chromium/src/third_party@55b7cf84460ae2039729b085a445823c334a6d94',
 
   'src/buildtools/linux64': {
     'packages': [
       {
         'package': 'gn/gn/linux-amd64',
-        'version': 'git_revision:ee7f7afa7e606888e36c2a7dd9d44e8c8040051e',
+        'version': 'git_revision:100c708fe73708eb6e5ce788beff96f5a4d41d60',
       }
     ],
     'dep_type': 'cipd',
@@ -56,7 +56,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/mac-${{arch}}',
-        'version': 'git_revision:ee7f7afa7e606888e36c2a7dd9d44e8c8040051e',
+        'version': 'git_revision:100c708fe73708eb6e5ce788beff96f5a4d41d60',
       }
     ],
     'dep_type': 'cipd',
@@ -66,7 +66,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/windows-amd64',
-        'version': 'git_revision:ee7f7afa7e606888e36c2a7dd9d44e8c8040051e',
+        'version': 'git_revision:100c708fe73708eb6e5ce788beff96f5a4d41d60',
       }
     ],
     'dep_type': 'cipd',
@@ -140,7 +140,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@e09741c609dcd5f5274d40182c5e2cc9a002d5ba',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@e2b1d1a886b6826a306509e0e6ca9bdee441d8eb',
+    'https://chromium.googlesource.com/catapult.git@4ebf976f7f97d18a11ae545dfe81ac963bff7332',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -231,7 +231,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@be7e3b9ba78503da04d08f06502aa8f86e9b0ac4',
+    'https://android.googlesource.com/platform/external/perfetto.git@71cbb3f996fe8eafb3937369418dbf9927a776bd',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@bf672f23a5336cb54dbcb2e4417142139f44cc3e',
   'src/third_party/libyuv':
@@ -288,7 +288,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@0560aaa75a646f7832155b821ab2d7ed2303f7d5',
+    'https://chromium.googlesource.com/chromium/src/tools@d817ed889e801f025eb773908f7813ac6e021caa',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
