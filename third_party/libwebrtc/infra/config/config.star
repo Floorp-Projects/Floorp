@@ -42,9 +42,6 @@ def make_goma_properties(enable_ats = True, jobs = None):
 # useful when a failure can be safely ignored while fixing it without
 # blocking the LKGR finder on it.
 skipped_lkgr_bots = [
-    # TODO(crbug.com/1311236): return to lkgr once the issue is fixed.
-    "Linux32 Debug",
-    "Linux32 Release",
 ]
 
 # Use LUCI Scheduler BBv2 names and add Scheduler realms configs.
@@ -725,13 +722,9 @@ ios_builder_macos11("iOS API Framework Builder", "iOS|fat|size", recipe = "ios_a
 ios_try_job_macos11("ios_api_framework", recipe = "ios_api_framework")
 
 linux_builder("Linux32 Debug", "Linux|x86|dbg")
-
-# TODO(crbug.com/1311236): return to CQ once the issue is fixed.
-linux_try_job("linux_x86_dbg", cq = None)
+linux_try_job("linux_x86_dbg")
 linux_builder("Linux32 Release", "Linux|x86|rel")
-
-# TODO(crbug.com/1311236): return to CQ once the issue is fixed.
-linux_try_job("linux_x86_rel", cq = None)
+linux_try_job("linux_x86_rel")
 linux_builder("Linux64 Debug", "Linux|x64|dbg")
 linux_try_job("linux_dbg", cq = None)
 linux_try_job("linux_compile_dbg")
