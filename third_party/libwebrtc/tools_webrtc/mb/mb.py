@@ -44,7 +44,8 @@ class WebRTCMetaBuildWrapper(mb.MetaBuildWrapper):
     assert self.default_config
     assert self.default_isolate_map
     self.default_config = os.path.join(_SCRIPT_DIR, 'mb_config.pyl')
-    self.default_isolate_map = os.path.join(_SCRIPT_DIR, 'gn_isolate_map.pyl')
+    self.default_isolate_map = os.path.join(_SRC_DIR, 'infra', 'specs',
+                                            'gn_isolate_map.pyl')
 
   def GetSwarmingCommand(self, target, vals):
     isolate_map = self.ReadIsolateMap()
