@@ -50,8 +50,7 @@ class AudioChecksum : public AudioSink {
       finished_ = true;
       checksum_->Finish(checksum_result_.data(), checksum_result_.size());
     }
-    return rtc::hex_encode(checksum_result_.data<char>(),
-                           checksum_result_.size());
+    return rtc::hex_encode(checksum_result_);
   }
 
  private:

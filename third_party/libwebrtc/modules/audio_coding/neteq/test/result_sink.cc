@@ -10,8 +10,9 @@
 
 #include "modules/audio_coding/neteq/test/result_sink.h"
 
-#include <vector>
+#include <string>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/ignore_wundef.h"
 #include "rtc_base/message_digest.h"
 #include "rtc_base/string_encode.h"
@@ -91,10 +92,10 @@ void ResultSink::AddResult(const NetEqNetworkStatistics& stats_raw) {
 }
 
 void ResultSink::VerifyChecksum(const std::string& checksum) {
-  std::vector<char> buffer;
+  std::string buffer;
   buffer.resize(digest_->Size());
-  digest_->Finish(&buffer[0], buffer.size());
-  const std::string result = rtc::hex_encode(&buffer[0], digest_->Size());
+  digest_->Finish(buffer.data(), buffer.size());
+  const std::string result = rtc::hex_encode(buffer);
   if (checksum.size() == result.size()) {
     EXPECT_EQ(checksum, result);
   } else {

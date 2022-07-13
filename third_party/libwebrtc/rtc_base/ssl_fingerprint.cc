@@ -18,6 +18,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/message_digest.h"
 #include "rtc_base/rtc_certificate.h"
@@ -68,8 +69,8 @@ std::unique_ptr<SSLFingerprint> SSLFingerprint::CreateUniqueFromRfc4572(
     return nullptr;
 
   char value[rtc::MessageDigest::kMaxSize];
-  size_t value_len = rtc::hex_decode_with_delimiter(
-      value, sizeof(value), fingerprint.data(), fingerprint.length(), ':');
+  size_t value_len =
+      rtc::hex_decode_with_delimiter(ArrayView<char>(value), fingerprint, ':');
   if (!value_len)
     return nullptr;
 
@@ -110,8 +111,8 @@ bool SSLFingerprint::operator==(const SSLFingerprint& other) const {
 }
 
 std::string SSLFingerprint::GetRfc4572Fingerprint() const {
-  std::string fingerprint =
-      rtc::hex_encode_with_delimiter(digest.data<char>(), digest.size(), ':');
+  std::string fingerprint = rtc::hex_encode_with_delimiter(
+      absl::string_view(digest.data<char>(), digest.size()), ':');
   absl::c_transform(fingerprint, fingerprint.begin(), ::toupper);
   return fingerprint;
 }

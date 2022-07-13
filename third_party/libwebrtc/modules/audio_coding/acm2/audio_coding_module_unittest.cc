@@ -1114,8 +1114,7 @@ class AcmSenderBitExactnessOldApi : public ::testing::Test,
     // Extract and verify the payload checksum.
     rtc::Buffer checksum_result(payload_checksum_->Size());
     payload_checksum_->Finish(checksum_result.data(), checksum_result.size());
-    checksum_string =
-        rtc::hex_encode(checksum_result.data<char>(), checksum_result.size());
+    checksum_string = rtc::hex_encode(checksum_result);
     ExpectChecksumEq(payload_checksum_ref, checksum_string);
 
     // Verify number of packets produced.

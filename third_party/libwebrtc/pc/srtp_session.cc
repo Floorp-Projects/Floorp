@@ -17,6 +17,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/base/const_init.h"
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/field_trials_view.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
@@ -471,13 +472,16 @@ void SrtpSession::DumpPacket(const void* buf, int len, bool outbound) {
   int64_t minutes = (time_of_day / (60 * 1000)) % 60;
   int64_t seconds = (time_of_day / 1000) % 60;
   int64_t millis = time_of_day % 1000;
-  RTC_LOG(LS_VERBOSE) << "\n" << (outbound ? "O" : "I") << " "
-    << std::setfill('0') << std::setw(2) << hours << ":"
-    << std::setfill('0') << std::setw(2) << minutes << ":"
-    << std::setfill('0') << std::setw(2) << seconds << "."
-    << std::setfill('0') << std::setw(3) << millis << " "
-    << "000000 " << rtc::hex_encode_with_delimiter((const char *)buf, len, ' ')
-    << " # RTP_DUMP";
+  RTC_LOG(LS_VERBOSE) << "\n"
+                      << (outbound ? "O" : "I") << " " << std::setfill('0')
+                      << std::setw(2) << hours << ":" << std::setfill('0')
+                      << std::setw(2) << minutes << ":" << std::setfill('0')
+                      << std::setw(2) << seconds << "." << std::setfill('0')
+                      << std::setw(3) << millis << " "
+                      << "000000 "
+                      << rtc::hex_encode_with_delimiter(
+                             absl::string_view((const char*)buf, len), ' ')
+                      << " # RTP_DUMP";
 }
 
 }  // namespace cricket
