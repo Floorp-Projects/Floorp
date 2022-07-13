@@ -2448,6 +2448,8 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
   }
 
   JS::CloneDataPolicy clonePolicy;
+  clonePolicy.allowErrorStackFrames();
+
   if (callerInnerWindow && callerInnerWindow->IsSharedMemoryAllowed()) {
     clonePolicy.allowSharedMemoryObjects();
   }
@@ -2466,8 +2468,8 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
   if (ContentChild* cc = ContentChild::GetSingleton()) {
     // The clone scope gets set when we write the message data based on the
     // requirements of that data that we're writing.
-    // If the message data contins a shared memory object, then CloneScope would
-    // return SameProcess. Otherwise, it returns DifferentProcess.
+    // If the message data contains a shared memory object, then CloneScope
+    // would return SameProcess. Otherwise, it returns DifferentProcess.
     if (message.CloneScope() ==
         StructuredCloneHolder::StructuredCloneScope::DifferentProcess) {
       ClonedMessageData clonedMessageData;

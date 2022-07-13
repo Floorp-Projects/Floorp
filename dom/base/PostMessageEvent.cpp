@@ -164,6 +164,8 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP PostMessageEvent::Run() {
       do_QueryObject(targetWindow);
 
   JS::CloneDataPolicy cloneDataPolicy;
+  cloneDataPolicy.allowErrorStackFrames();
+
   MOZ_DIAGNOSTIC_ASSERT(targetWindow);
   if (mCallerAgentClusterId.isSome() && targetWindow->GetDocGroup() &&
       targetWindow->GetDocGroup()->AgentClusterId().Equals(
@@ -187,7 +189,13 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP PostMessageEvent::Run() {
     holder = &mHolder.ref<StructuredCloneHolder>();
   } else {
     MOZ_ASSERT(mHolder.constructed<ipc::StructuredCloneData>());
-    mHolder.ref<ipc::StructuredCloneData>().Read(cx, &messageData, rv);
+    // It's not possible to send shared objects over IPC so we have a different
+    // policy.
+    JS::CloneDataPolicy cloneDataPolicyIPC;
+    cloneDataPolicyIPC.allowErrorStackFrames();
+
+    mHolder.ref<ipc::StructuredCloneData>().Read(cx, &messageData,
+                                                 cloneDataPolicyIPC, rv);
     holder = &mHolder.ref<ipc::StructuredCloneData>();
   }
   if (NS_WARN_IF(rv.Failed())) {

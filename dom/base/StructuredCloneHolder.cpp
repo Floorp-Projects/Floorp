@@ -373,6 +373,10 @@ void StructuredCloneHolder::Read(nsIGlobalObject* aGlobal, JSContext* aCx,
                                  const JS::CloneDataPolicy& aCloneDataPolicy,
                                  ErrorResult& aRv) {
   MOZ_ASSERT(aGlobal);
+  // Error stacks require the reading (deserialization) of principals, which is only
+  // possible on the main thread.
+  MOZ_ASSERT_IF(aCloneDataPolicy.areErrorStackFramesAllowed(),
+                NS_IsMainThread());
 
   mozilla::AutoRestore<nsIGlobalObject*> guard(mGlobal);
   auto errorMessageGuard = MakeScopeExit([&] { mErrorMessage.Truncate(); });
