@@ -49,7 +49,7 @@ vendoring:
 updatebot:
     maintainer-phab: "pdfjs-reviewers"
     maintainer-bz: cdenizet@mozilla.com
-    fuzzy-query: "'debug | 'opt"
+    fuzzy-query: "'debug | 'opt !san !android"
     fuzzy-paths:
       - toolkit/components/pdfjs/test
       - browser/base/content/test/static
