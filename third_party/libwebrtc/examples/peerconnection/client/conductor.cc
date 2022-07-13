@@ -246,9 +246,7 @@ void Conductor::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
     return;
   }
 
-  Json::StyledWriter writer;
   Json::Value jmessage;
-
   jmessage[kCandidateSdpMidName] = candidate->sdp_mid();
   jmessage[kCandidateSdpMlineIndexName] = candidate->sdp_mline_index();
   std::string sdp;
@@ -257,7 +255,9 @@ void Conductor::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
     return;
   }
   jmessage[kCandidateSdpName] = sdp;
-  SendMessage(writer.write(jmessage));
+
+  Json::StreamWriterBuilder factory;
+  SendMessage(Json::writeString(factory, jmessage));
 }
 
 //
@@ -579,12 +579,13 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
     return;
   }
 
-  Json::StyledWriter writer;
   Json::Value jmessage;
   jmessage[kSessionDescriptionTypeName] =
       webrtc::SdpTypeToString(desc->GetType());
   jmessage[kSessionDescriptionSdpName] = sdp;
-  SendMessage(writer.write(jmessage));
+
+  Json::StreamWriterBuilder factory;
+  SendMessage(Json::writeString(factory, jmessage));
 }
 
 void Conductor::OnFailure(webrtc::RTCError error) {
