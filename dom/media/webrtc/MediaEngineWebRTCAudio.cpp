@@ -211,8 +211,12 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
 
   mAudioProcessingConfig.high_pass_filter.enabled = aPrefs.mHPFOn;
 
-  mAudioProcessingConfig.residual_echo_detector.enabled =
-      aPrefs.mResidualEchoOn;
+  // See https://bugs.chromium.org/p/webrtc/issues/detail?id=11539 for more
+  // info.  Our pref defaults to false, and if this is truly as unhelpful
+  // as the upstream bug claim, we could delete the pref that drive this:
+  // media.getusermedia.residual_echo_enabled.  See Bug 1779498.
+  //mAudioProcessingConfig.residual_echo_detector.enabled =
+  //    aPrefs.mResidualEchoOn;
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   CubebUtils::AudioDeviceID deviceID = mDeviceInfo->DeviceID();
