@@ -873,6 +873,7 @@ if (is_ios || is_mac) {
         "../modules/video_coding:video_codec_interface",
         "../rtc_base",
         "../rtc_base:refcount",
+        "../rtc_base:safe_conversions",
       ]
     }
 
@@ -1037,6 +1038,7 @@ if (is_ios || is_mac) {
         "../rtc_base:checks",
         "../rtc_base:logging",
         "../rtc_base:network_constants",
+        "../rtc_base:safe_conversions",
         "../stats:rtc_stats",
         "../system_wrappers:field_trial",
         "../system_wrappers:metrics",

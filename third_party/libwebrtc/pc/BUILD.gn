@@ -608,6 +608,7 @@ rtc_source_set("srtp_transport") {
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:safe_conversions",
     "../rtc_base/third_party/base64",
     "../rtc_base/third_party/sigslot",
   ]
@@ -2513,6 +2514,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:rtc_event",
       "../rtc_base:rtc_json",
+      "../rtc_base:safe_conversions",
       "../rtc_base:socket_address",
       "../rtc_base:threading",
       "../rtc_base:timeutils",

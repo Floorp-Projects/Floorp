@@ -50,6 +50,7 @@ rtc_library("common_audio") {
     "../rtc_base:gtest_prod",
     "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:safe_conversions",
     "../rtc_base:sanitizer",
     "../rtc_base/memory:aligned_malloc",
     "../rtc_base/system:arch",
@@ -200,6 +201,7 @@ rtc_library("common_audio_cc") {
 
   deps = [
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:safe_conversions",
     "../system_wrappers",
   ]
 }

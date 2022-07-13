@@ -30,6 +30,7 @@ rtc_library("video_rtp_headers") {
     "..:array_view",
     "../../rtc_base:logging",
     "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:safe_conversions",
     "../../rtc_base/system:rtc_export",
     "../units:data_rate",
     "../units:time_delta",

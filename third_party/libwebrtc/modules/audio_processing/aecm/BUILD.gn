@@ -20,6 +20,7 @@ rtc_library("aecm_core") {
     "../../../common_audio:common_audio_c",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../../../rtc_base:safe_conversions",
     "../../../rtc_base:sanitizer",
     "../../../system_wrappers",
     "../utility:legacy_delay_estimator",

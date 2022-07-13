@@ -49,6 +49,7 @@ rtc_library("lib") {
     "../../../../rtc_base:checks",
     "../../../../rtc_base:logging",
     "../../../../rtc_base:rtc_base_approved",
+    "../../../../rtc_base:safe_conversions",
     "../../../../test:fileutils",
   ]
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
