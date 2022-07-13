@@ -15,6 +15,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/memory/memory.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/transport/field_trial_based_config.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
@@ -85,12 +86,16 @@ void RtpReplayer::Replay(
 std::vector<VideoReceiveStream::Config> RtpReplayer::ReadConfigFromFile(
     const std::string& replay_config,
     Transport* transport) {
-  Json::Reader json_reader;
+  Json::CharReaderBuilder factory;
+  std::unique_ptr<Json::CharReader> json_reader =
+      absl::WrapUnique(factory.newCharReader());
   Json::Value json_configs;
-  if (!json_reader.parse(replay_config, json_configs)) {
+  Json::String errors;
+  if (!json_reader->parse(replay_config.data(),
+                          replay_config.data() + replay_config.length(),
+                          &json_configs, &errors)) {
     RTC_LOG(LS_ERROR)
-        << "Error parsing JSON replay configuration for the fuzzer"
-        << json_reader.getFormatedErrorMessages();
+        << "Error parsing JSON replay configuration for the fuzzer: " << errors;
     return {};
   }
 
