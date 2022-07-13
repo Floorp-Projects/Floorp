@@ -23,6 +23,7 @@ namespace webrtc {
 // multichannel, or only upmixed mono. To allow for differences introduced by
 // hardware drivers, a threshold `detection_threshold` is used for the
 // detection.
+// Logs metrics continously and upon destruction.
 class MultiChannelContentDetector {
  public:
   // If |stereo_detection_timeout_threshold_seconds| <= 0, no timeout is
@@ -50,10 +51,38 @@ class MultiChannelContentDetector {
   }
 
  private:
+  // Tracks and logs metrics for the amount of multichannel content detected.
+  class MetricsLogger {
+   public:
+    MetricsLogger();
+
+    // The destructor logs call summary statistics.
+    ~MetricsLogger();
+
+    // Updates and logs metrics.
+    void Update(bool persistent_multichannel_content_detected);
+
+   private:
+    int frame_counter_ = 0;
+
+    // Counts the number of frames of persistent multichannel audio observed
+    // during the current metrics collection interval.
+    int persistent_multichannel_frame_counter_ = 0;
+
+    // Indicates whether persistent multichannel content has ever been detected.
+    bool any_multichannel_content_detected_ = false;
+  };
+
   const bool detect_stereo_content_;
   const float detection_threshold_;
   const absl::optional<int> detection_timeout_threshold_frames_;
   const int stereo_detection_hysteresis_frames_;
+
+  // Collects and reports metrics on the amount of multichannel content
+  // detected. Only created if |num_render_input_channels| > 1 and
+  // |detect_stereo_content_| is true.
+  const std::unique_ptr<MetricsLogger> metrics_logger_;
+
   bool persistent_multichannel_content_detected_;
   bool temporary_multichannel_content_detected_ = false;
   int64_t frames_since_stereo_detected_last_ = 0;

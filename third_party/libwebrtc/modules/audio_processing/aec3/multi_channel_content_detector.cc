@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (c) 2022 The WebRTC project authors. All Rights Reserved.
  *
@@ -14,6 +13,7 @@
 #include <cmath>
 
 #include "rtc_base/checks.h"
+#include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
 
@@ -42,7 +42,47 @@ bool HasStereoContent(const std::vector<std::vector<std::vector<float>>>& frame,
   return false;
 }
 
+// In order to avoid logging metrics for very short lifetimes that are unlikely
+// to reflect real calls and that may dilute the "real" data, logging is limited
+// to lifetimes of at leats 5 seconds.
+constexpr int kMinNumberOfFramesRequiredToLogMetrics = 500;
+
+// Continuous metrics are logged every 10 seconds.
+constexpr int kFramesPer10Seconds = 1000;
+
 }  // namespace
+
+MultiChannelContentDetector::MetricsLogger::MetricsLogger() {}
+
+MultiChannelContentDetector::MetricsLogger::~MetricsLogger() {
+  if (frame_counter_ < kMinNumberOfFramesRequiredToLogMetrics)
+    return;
+
+  RTC_HISTOGRAM_BOOLEAN(
+      "WebRTC.Audio.EchoCanceller.PersistentMultichannelContentEverDetected",
+      any_multichannel_content_detected_ ? 1 : 0);
+}
+
+void MultiChannelContentDetector::MetricsLogger::Update(
+    bool persistent_multichannel_content_detected) {
+  ++frame_counter_;
+  if (persistent_multichannel_content_detected) {
+    any_multichannel_content_detected_ = true;
+    ++persistent_multichannel_frame_counter_;
+  }
+
+  if (frame_counter_ < kMinNumberOfFramesRequiredToLogMetrics)
+    return;
+  if (frame_counter_ % kFramesPer10Seconds != 0)
+    return;
+  const bool mostly_multichannel_last_10_seconds =
+      (persistent_multichannel_frame_counter_ >= kFramesPer10Seconds / 2);
+  RTC_HISTOGRAM_BOOLEAN(
+      "WebRTC.Audio.EchoCanceller.ProcessingPersistentMultichannelContent",
+      mostly_multichannel_last_10_seconds ? 1 : 0);
+
+  persistent_multichannel_frame_counter_ = 0;
+}
 
 MultiChannelContentDetector::MultiChannelContentDetector(
     bool detect_stereo_content,
@@ -59,6 +99,9 @@ MultiChannelContentDetector::MultiChannelContentDetector(
               : absl::nullopt),
       stereo_detection_hysteresis_frames_(static_cast<int>(
           stereo_detection_hysteresis_seconds * kNumFramesPerSecond)),
+      metrics_logger_((detect_stereo_content && num_render_input_channels > 1)
+                          ? std::make_unique<MetricsLogger>()
+                          : nullptr),
       persistent_multichannel_content_detected_(
           !detect_stereo_content && num_render_input_channels > 1) {}
 
@@ -94,6 +137,9 @@ bool MultiChannelContentDetector::UpdateDetection(
   temporary_multichannel_content_detected_ =
       persistent_multichannel_content_detected_ ? false
                                                 : stereo_detected_in_frame;
+
+  if (metrics_logger_)
+    metrics_logger_->Update(persistent_multichannel_content_detected_);
 
   return previous_persistent_multichannel_content_detected !=
          persistent_multichannel_content_detected_;
