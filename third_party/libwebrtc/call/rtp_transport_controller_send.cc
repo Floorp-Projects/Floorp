@@ -76,9 +76,8 @@ bool IsRelayed(const rtc::NetworkRoute& route) {
 RtpTransportControllerSend::PacerSettings::PacerSettings(
     const FieldTrialsView& trials)
     : tq_disabled("Disabled"),
-      holdback_window("holdback_window", PacingController::kMinSleepTime),
-      holdback_packets("holdback_packets",
-                       TaskQueuePacedSender::kNoPacketHoldback) {
+      holdback_window("holdback_window", TimeDelta::Millis(5)),
+      holdback_packets("holdback_packets", 3) {
   ParseFieldTrial({&tq_disabled, &holdback_window, &holdback_packets},
                   trials.Lookup("WebRTC-TaskQueuePacer"));
 }
