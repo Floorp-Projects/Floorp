@@ -48,6 +48,7 @@ rtc_library("video_adaptation") {
     "../../call/adaptation:resource_adaptation",
     "../../modules/video_coding:video_coding_utility",
     "../../rtc_base:checks",
+    "../../rtc_base:event_tracer",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
     "../../rtc_base:refcount",

@@ -89,6 +89,7 @@ rtc_library("rtc_base_approved") {
     ":byte_order",
     ":checks",
     ":copy_on_write_buffer",
+    ":event_tracer",
     ":histogram_percentile_counter",
     ":location",
     ":logging",
@@ -137,8 +138,7 @@ rtc_library("rtc_base_approved") {
     "byte_buffer.h",  # Transitional, use :byte_buffer
     "byte_order.h",  # Transitional, use :byte_order
     "copy_on_write_buffer.h",  # Transitional, use :copy_on_write_buffer
-    "event_tracer.cc",
-    "event_tracer.h",
+    "event_tracer.h",  # Transitional, use :event_tracer
     "location.h",  # Transitional, use :location
     "numerics/histogram_percentile_counter.h",  # Transitional, use
                                                 # :histogram_percentile_counter
@@ -153,7 +153,7 @@ rtc_library("rtc_base_approved") {
     "strong_alias.h",  # Transitional, use :strong_alias
     "swap_queue.h",  # Transitional, use :swap_queue
     "timestamp_aligner.h",  # Transitional, use :timestamp_aligner
-    "trace_event.h",
+    "trace_event.h",  # Transitional, use :event_tracer
     "zero_memory.h",  # Transitional, use :zero_memory
   ]
 
@@ -304,6 +304,29 @@ rtc_library("copy_on_write_buffer") {
     "../api:scoped_refptr",
     "system:rtc_export",
   ]
+}
+
+rtc_library("event_tracer") {
+  visibility = [ "*" ]
+  sources = [
+    "event_tracer.cc",
+    "event_tracer.h",
+    "trace_event.h",
+  ]
+  deps = [
+    ":atomicops",
+    ":checks",
+    ":logging",
+    ":macromagic",
+    ":platform_thread",
+    ":platform_thread_types",
+    ":rtc_event",
+    ":timeutils",
+    "../api:sequence_checker",
+    "synchronization:mutex",
+    "system:rtc_export",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("histogram_percentile_counter") {
@@ -1027,6 +1050,7 @@ rtc_library("threading") {
     ":byte_order",
     ":checks",
     ":criticalsection",
+    ":event_tracer",
     ":ip_address",
     ":location",
     ":logging",
@@ -1662,6 +1686,7 @@ if (rtc_include_tests) {
         ":copy_on_write_buffer",
         ":criticalsection",
         ":divide_round",
+        ":event_tracer",
         ":gunit_helpers",
         ":histogram_percentile_counter",
         ":ip_address",

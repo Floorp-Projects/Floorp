@@ -179,6 +179,7 @@ rtc_library("audio_processing") {
     "../../common_audio/third_party/ooura:fft_size_256",
     "../../rtc_base:atomicops",
     "../../rtc_base:checks",
+    "../../rtc_base:event_tracer",
     "../../rtc_base:gtest_prod",
     "../../rtc_base:ignore_wundef",
     "../../rtc_base:logging",
