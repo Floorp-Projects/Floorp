@@ -539,7 +539,7 @@ def ci_builder(
         name = name,
         dimensions = dimensions,
         properties = properties,
-        bucket = "ci",
+        bucket = "perf" if perf_cat else "ci",
         service_account = "webrtc-ci-builder@chops-service-accounts.iam.gserviceaccount.com",
         triggered_by = ["webrtc-gitiles-trigger-main"] if enabled else None,
         repo = WEBRTC_GIT,
