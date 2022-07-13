@@ -95,9 +95,12 @@ rtc_library("rtc_base_approved") {
     ":safe_conversions",
     ":stringutils",
     ":strong_alias",
+    ":swap_queue",
     ":timestamp_aligner",
     ":timeutils",
     ":type_traits",
+    ":zero_memory",
+    ":zero_memory",
     "../api:array_view",
     "../api:scoped_refptr",
     "../api:sequence_checker",
@@ -143,11 +146,10 @@ rtc_library("rtc_base_approved") {
     "rate_tracker.cc",
     "rate_tracker.h",
     "strong_alias.h",  # Transitional, use :strong_alias
-    "swap_queue.h",
+    "swap_queue.h",  # Transitional, use :swap_queue
     "timestamp_aligner.h",  # Transitional, use :timestamp_aligner
     "trace_event.h",
-    "zero_memory.cc",
-    "zero_memory.h",
+    "zero_memory.h",  # Transitional, use :zero_memory
   ]
 
   if (is_win) {
@@ -199,6 +201,13 @@ rtc_source_set("strong_alias") {
   sources = [ "strong_alias.h" ]
 }
 
+rtc_source_set("swap_queue") {
+  visibility = [ "*" ]
+  sources = [ "swap_queue.h" ]
+  deps = [ ":checks" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
+}
+
 rtc_source_set("macromagic") {
   sources = [
     "arraysize.h",
@@ -240,6 +249,18 @@ rtc_library("timestamp_aligner") {
     ":logging",
     ":timeutils",
     "system:rtc_export",
+  ]
+}
+
+rtc_library("zero_memory") {
+  visibility = [ "*" ]
+  sources = [
+    "zero_memory.cc",
+    "zero_memory.h",
+  ]
+  deps = [
+    ":checks",
+    "../api:array_view",
   ]
 }
 
@@ -998,6 +1019,7 @@ rtc_library("rtc_base") {
     ":stringutils",
     ":threading",
     ":timeutils",
+    ":zero_memory",
     "../api:array_view",
     "../api:field_trials_view",
     "../api:function_view",
@@ -1495,10 +1517,12 @@ if (rtc_include_tests) {
         ":socket_server",
         ":stringutils",
         ":strong_alias",
+        ":swap_queue",
         ":testclient",
         ":threading",
         ":timestamp_aligner",
         ":timeutils",
+        ":zero_memory",
         "../api:array_view",
         "../api:scoped_refptr",
         "../api/numerics",
