@@ -88,6 +88,8 @@ struct NetEqLifetimeStatistics {
   // these events.
   int32_t interruption_count = 0;
   int32_t total_interruption_duration_ms = 0;
+  // Total number of comfort noise samples generated during DTX.
+  uint64_t generated_noise_samples = 0;
 };
 
 // Metrics that describe the operations performed in NetEq, and the internal

@@ -64,6 +64,9 @@ class StatisticsCalculator {
   // Reports that `num_samples` samples were removed through accelerate.
   void AcceleratedSamples(size_t num_samples);
 
+  // Reports that `num_samples` comfort noise samples were generated.
+  void GeneratedNoiseSamples(size_t num_samples);
+
   // Reports that `num_packets` packets were discarded.
   virtual void PacketsDiscarded(size_t num_packets);
 
