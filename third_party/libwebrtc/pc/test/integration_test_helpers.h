@@ -346,7 +346,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     // TODO(perkj): Test audio source when it is implemented. Currently audio
     // always use the default input.
     return peer_connection_factory_->CreateAudioTrack(rtc::CreateRandomUuid(),
-                                                      source);
+                                                      source.get());
   }
 
   rtc::scoped_refptr<webrtc::VideoTrackInterface> CreateLocalVideoTrack() {
@@ -415,7 +415,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     data_channels_.push_back(data_channel_or_error.MoveValue());
     ASSERT_TRUE(data_channels_.back().get() != nullptr);
     data_observers_.push_back(
-        std::make_unique<MockDataChannelObserver>(data_channels_.back()));
+        std::make_unique<MockDataChannelObserver>(data_channels_.back().get()));
   }
 
   // Return the last observed data channel.
@@ -423,7 +423,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     if (data_channels_.size() == 0) {
       return nullptr;
     }
-    return data_channels_.back();
+    return data_channels_.back().get();
   }
   // Return all data channels.
   const std::vector<rtc::scoped_refptr<DataChannelInterface>>& data_channels() {
@@ -466,7 +466,8 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
       webrtc::MediaStreamTrackInterface* track) {
     auto observer = rtc::make_ref_counted<MockStatsObserver>();
     EXPECT_TRUE(peer_connection_->GetStats(
-        observer, nullptr, PeerConnectionInterface::kStatsOutputLevelStandard));
+        observer.get(), nullptr,
+        PeerConnectionInterface::kStatsOutputLevelStandard));
     EXPECT_TRUE_WAIT(observer->called(), kDefaultTimeout);
     return observer;
   }
@@ -481,7 +482,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   rtc::scoped_refptr<const webrtc::RTCStatsReport> NewGetStats() {
     auto callback =
         rtc::make_ref_counted<webrtc::MockRTCStatsCollectorCallback>();
-    peer_connection_->GetStats(callback);
+    peer_connection_->GetStats(callback.get());
     EXPECT_TRUE_WAIT(callback->called(), kDefaultTimeout);
     return callback->report();
   }
@@ -542,7 +543,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
       ADD_FAILURE();
       return nullptr;
     }
-    return pc()->remote_streams();
+    return pc()->remote_streams().get();
   }
 
   StreamCollectionInterface* local_streams() {
@@ -550,7 +551,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
       ADD_FAILURE();
       return nullptr;
     }
-    return pc()->local_streams();
+    return pc()->local_streams().get();
   }
 
   webrtc::PeerConnectionInterface::SignalingState signaling_state() {
@@ -619,8 +620,8 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   std::unique_ptr<SessionDescriptionInterface> CreateOfferAndWait() {
     auto observer =
         rtc::make_ref_counted<MockCreateSessionDescriptionObserver>();
-    pc()->CreateOffer(observer, offer_answer_options_);
-    return WaitForDescriptionFromObserver(observer);
+    pc()->CreateOffer(observer.get(), offer_answer_options_);
+    return WaitForDescriptionFromObserver(observer.get());
   }
   bool Rollback() {
     return SetRemoteDescription(
@@ -856,9 +857,10 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
             config, false /* remote */));
     rtc::scoped_refptr<webrtc::VideoTrackInterface> track(
         peer_connection_factory_->CreateVideoTrack(
-            rtc::CreateRandomUuid(), video_track_sources_.back()));
+            rtc::CreateRandomUuid(), video_track_sources_.back().get()));
     if (!local_video_renderer_) {
-      local_video_renderer_.reset(new webrtc::FakeVideoTrackRenderer(track));
+      local_video_renderer_.reset(
+          new webrtc::FakeVideoTrackRenderer(track.get()));
     }
     return track;
   }
@@ -900,8 +902,8 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   std::unique_ptr<SessionDescriptionInterface> CreateAnswer() {
     auto observer =
         rtc::make_ref_counted<MockCreateSessionDescriptionObserver>();
-    pc()->CreateAnswer(observer, offer_answer_options_);
-    return WaitForDescriptionFromObserver(observer);
+    pc()->CreateAnswer(observer.get(), offer_answer_options_);
+    return WaitForDescriptionFromObserver(observer.get());
   }
 
   std::unique_ptr<SessionDescriptionInterface> WaitForDescriptionFromObserver(
@@ -930,7 +932,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     std::string sdp;
     EXPECT_TRUE(desc->ToString(&sdp));
     RTC_LOG(LS_INFO) << debug_name_ << ": local SDP contents=\n" << sdp;
-    pc()->SetLocalDescription(observer, desc.release());
+    pc()->SetLocalDescription(observer.get(), desc.release());
     RemoveUnusedVideoRenderers();
     // As mentioned above, we need to send the message immediately after
     // SetLocalDescription.
@@ -942,7 +944,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   bool SetRemoteDescription(std::unique_ptr<SessionDescriptionInterface> desc) {
     auto observer = rtc::make_ref_counted<MockSetSessionDescriptionObserver>();
     RTC_LOG(LS_INFO) << debug_name_ << ": SetRemoteDescription";
-    pc()->SetRemoteDescription(observer, desc.release());
+    pc()->SetRemoteDescription(observer.get(), desc.release());
     RemoveUnusedVideoRenderers();
     EXPECT_TRUE_WAIT(observer->called(), kDefaultTimeout);
     return observer->result();
@@ -1056,7 +1058,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
       ASSERT_TRUE(fake_video_renderers_.find(video_track->id()) ==
                   fake_video_renderers_.end());
       fake_video_renderers_[video_track->id()] =
-          std::make_unique<FakeVideoTrackRenderer>(video_track);
+          std::make_unique<FakeVideoTrackRenderer>(video_track.get());
     }
   }
   void OnRemoveTrack(
@@ -1139,7 +1141,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     RTC_LOG(LS_INFO) << debug_name_ << ": OnDataChannel";
     data_channels_.push_back(data_channel);
     data_observers_.push_back(
-        std::make_unique<MockDataChannelObserver>(data_channel));
+        std::make_unique<MockDataChannelObserver>(data_channel.get()));
   }
 
   std::string debug_name_;

@@ -144,7 +144,7 @@ class PeerConnectionDataChannelBaseTest : public ::testing::Test {
       return nullptr;
     }
 
-    observer->SetPeerConnectionInterface(result.value());
+    observer->SetPeerConnectionInterface(result.value().get());
     auto wrapper = std::make_unique<PeerConnectionWrapperForDataChannelTest>(
         pc_factory, result.MoveValue(), std::move(observer));
     wrapper->set_sctp_transport_factory(fake_sctp_transport_factory);

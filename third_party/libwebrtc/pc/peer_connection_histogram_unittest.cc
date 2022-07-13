@@ -352,7 +352,7 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
       return nullptr;
     }
 
-    observer->SetPeerConnectionInterface(result.value());
+    observer->SetPeerConnectionInterface(result.value().get());
     auto wrapper = std::make_unique<PeerConnectionWrapperForUsageHistogramTest>(
         pc_factory, result.MoveValue(), std::move(observer));
     return wrapper;

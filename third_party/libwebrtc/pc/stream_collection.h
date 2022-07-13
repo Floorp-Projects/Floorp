@@ -34,14 +34,14 @@ class StreamCollection : public StreamCollectionInterface {
   virtual size_t count() { return media_streams_.size(); }
 
   virtual MediaStreamInterface* at(size_t index) {
-    return media_streams_.at(index);
+    return media_streams_.at(index).get();
   }
 
   virtual MediaStreamInterface* find(const std::string& id) {
     for (StreamVector::iterator it = media_streams_.begin();
          it != media_streams_.end(); ++it) {
       if ((*it)->id().compare(id) == 0) {
-        return (*it);
+        return (*it).get();
       }
     }
     return NULL;
@@ -49,7 +49,8 @@ class StreamCollection : public StreamCollectionInterface {
 
   virtual MediaStreamTrackInterface* FindAudioTrack(const std::string& id) {
     for (size_t i = 0; i < media_streams_.size(); ++i) {
-      MediaStreamTrackInterface* track = media_streams_[i]->FindAudioTrack(id);
+      MediaStreamTrackInterface* track =
+          media_streams_[i]->FindAudioTrack(id).get();
       if (track) {
         return track;
       }
@@ -59,7 +60,8 @@ class StreamCollection : public StreamCollectionInterface {
 
   virtual MediaStreamTrackInterface* FindVideoTrack(const std::string& id) {
     for (size_t i = 0; i < media_streams_.size(); ++i) {
-      MediaStreamTrackInterface* track = media_streams_[i]->FindVideoTrack(id);
+      MediaStreamTrackInterface* track =
+          media_streams_[i]->FindVideoTrack(id).get();
       if (track) {
         return track;
       }

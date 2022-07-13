@@ -427,8 +427,8 @@ class RTCStatsCollectorWrapper {
       rtc::scoped_refptr<FakePeerConnectionForStats> pc)
       : pc_(pc),
         stats_collector_(
-            RTCStatsCollector::Create(pc, 50 * rtc::kNumMicrosecsPerMillisec)) {
-  }
+            RTCStatsCollector::Create(pc.get(),
+                                      50 * rtc::kNumMicrosecsPerMillisec)) {}
 
   rtc::scoped_refptr<RTCStatsCollector> stats_collector() {
     return stats_collector_;
@@ -631,7 +631,7 @@ class RTCStatsCollectorWrapper {
  private:
   rtc::scoped_refptr<const RTCStatsReport> WaitForReport(
       rtc::scoped_refptr<RTCStatsObtainer> callback) {
-    EXPECT_TRUE_WAIT(callback->report(), kGetStatsReportTimeoutMs);
+    EXPECT_TRUE_WAIT(callback->report() != nullptr, kGetStatsReportTimeoutMs);
     int64_t after = rtc::TimeUTCMicros();
     for (const RTCStats& stats : *callback->report()) {
       if (stats.type() == RTCRemoteInboundRtpStreamStats::kType ||
@@ -920,7 +920,7 @@ class RTCStatsCollectorTest : public ::testing::Test {
 TEST_F(RTCStatsCollectorTest, SingleCallback) {
   rtc::scoped_refptr<const RTCStatsReport> result;
   stats_->stats_collector()->GetStatsReport(RTCStatsObtainer::Create(&result));
-  EXPECT_TRUE_WAIT(result, kGetStatsReportTimeoutMs);
+  EXPECT_TRUE_WAIT(result != nullptr, kGetStatsReportTimeoutMs);
 }
 
 TEST_F(RTCStatsCollectorTest, MultipleCallbacks) {
@@ -928,9 +928,9 @@ TEST_F(RTCStatsCollectorTest, MultipleCallbacks) {
   stats_->stats_collector()->GetStatsReport(RTCStatsObtainer::Create(&a));
   stats_->stats_collector()->GetStatsReport(RTCStatsObtainer::Create(&b));
   stats_->stats_collector()->GetStatsReport(RTCStatsObtainer::Create(&c));
-  EXPECT_TRUE_WAIT(a, kGetStatsReportTimeoutMs);
-  EXPECT_TRUE_WAIT(b, kGetStatsReportTimeoutMs);
-  EXPECT_TRUE_WAIT(c, kGetStatsReportTimeoutMs);
+  EXPECT_TRUE_WAIT(a != nullptr, kGetStatsReportTimeoutMs);
+  EXPECT_TRUE_WAIT(b != nullptr, kGetStatsReportTimeoutMs);
+  EXPECT_TRUE_WAIT(c != nullptr, kGetStatsReportTimeoutMs);
 
   EXPECT_EQ(a.get(), b.get());
   EXPECT_EQ(b.get(), c.get());
@@ -959,9 +959,9 @@ TEST_F(RTCStatsCollectorTest, MultipleCallbacksWithInvalidatedCacheInBetween) {
   // Cache is invalidated after 50 ms.
   fake_clock_.AdvanceTime(TimeDelta::Millis(51));
   stats_->stats_collector()->GetStatsReport(RTCStatsObtainer::Create(&c));
-  EXPECT_TRUE_WAIT(a, kGetStatsReportTimeoutMs);
-  EXPECT_TRUE_WAIT(b, kGetStatsReportTimeoutMs);
-  EXPECT_TRUE_WAIT(c, kGetStatsReportTimeoutMs);
+  EXPECT_TRUE_WAIT(a != nullptr, kGetStatsReportTimeoutMs);
+  EXPECT_TRUE_WAIT(b != nullptr, kGetStatsReportTimeoutMs);
+  EXPECT_TRUE_WAIT(c != nullptr, kGetStatsReportTimeoutMs);
   EXPECT_EQ(a.get(), b.get());
   // The act of doing `AdvanceTime` processes all messages. If this was not the
   // case we might not require `c` to be fresher than `b`.
@@ -1748,10 +1748,10 @@ TEST_F(RTCStatsCollectorTest,
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
 
   RTCMediaStreamStats expected_local_stream(
-      IdForType<RTCMediaStreamStats>(report), report->timestamp_us());
+      IdForType<RTCMediaStreamStats>(report.get()), report->timestamp_us());
   expected_local_stream.stream_identifier = local_stream->id();
   expected_local_stream.track_ids = {
-      IdForType<RTCMediaStreamTrackStats>(report)};
+      IdForType<RTCMediaStreamTrackStats>(report.get())};
   ASSERT_TRUE(report->Get(expected_local_stream.id()))
       << "Did not find " << expected_local_stream.id() << " in "
       << report->ToJson();
@@ -1760,7 +1760,7 @@ TEST_F(RTCStatsCollectorTest,
       report->Get(expected_local_stream.id())->cast_to<RTCMediaStreamStats>());
 
   RTCMediaStreamTrackStats expected_local_audio_track_ssrc1(
-      IdForType<RTCMediaStreamTrackStats>(report), report->timestamp_us(),
+      IdForType<RTCMediaStreamTrackStats>(report.get()), report->timestamp_us(),
       RTCMediaStreamTrackKind::kAudio);
   expected_local_audio_track_ssrc1.track_identifier = local_audio_track->id();
   expected_local_audio_track_ssrc1.media_source_id =
@@ -1819,10 +1819,10 @@ TEST_F(RTCStatsCollectorTest,
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
 
   RTCMediaStreamStats expected_remote_stream(
-      IdForType<RTCMediaStreamStats>(report), report->timestamp_us());
+      IdForType<RTCMediaStreamStats>(report.get()), report->timestamp_us());
   expected_remote_stream.stream_identifier = remote_stream->id();
-  expected_remote_stream.track_ids =
-      std::vector<std::string>({IdForType<RTCMediaStreamTrackStats>(report)});
+  expected_remote_stream.track_ids = std::vector<std::string>(
+      {IdForType<RTCMediaStreamTrackStats>(report.get())});
   ASSERT_TRUE(report->Get(expected_remote_stream.id()))
       << "Did not find " << expected_remote_stream.id() << " in "
       << report->ToJson();
@@ -1831,7 +1831,7 @@ TEST_F(RTCStatsCollectorTest,
       report->Get(expected_remote_stream.id())->cast_to<RTCMediaStreamStats>());
 
   RTCMediaStreamTrackStats expected_remote_audio_track(
-      IdForType<RTCMediaStreamTrackStats>(report), report->timestamp_us(),
+      IdForType<RTCMediaStreamTrackStats>(report.get()), report->timestamp_us(),
       RTCMediaStreamTrackKind::kAudio);
   expected_remote_audio_track.track_identifier = remote_audio_track->id();
   // `expected_remote_audio_track.media_source_id` should be undefined
@@ -2168,7 +2168,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   expected_video.ssrc = 1;
   expected_video.media_type = "video";
   expected_video.kind = "video";
-  expected_video.track_id = IdForType<RTCMediaStreamTrackStats>(report);
+  expected_video.track_id = IdForType<RTCMediaStreamTrackStats>(report.get());
   expected_video.transport_id = "RTCTransport_TransportName_1";
   expected_video.codec_id = "RTCCodec_VideoMid_Inbound_42";
   expected_video.fir_count = 5;
@@ -2259,7 +2259,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Audio) {
   expected_audio.ssrc = 1;
   expected_audio.media_type = "audio";
   expected_audio.kind = "audio";
-  expected_audio.track_id = IdForType<RTCMediaStreamTrackStats>(report);
+  expected_audio.track_id = IdForType<RTCMediaStreamTrackStats>(report.get());
   expected_audio.transport_id = "RTCTransport_TransportName_1";
   expected_audio.codec_id = "RTCCodec_AudioMid_Outbound_42";
   expected_audio.packets_sent = 2;
@@ -2661,7 +2661,7 @@ TEST_F(RTCStatsCollectorTest, CollectNoStreamRTCOutboundRTPStreamStats_Audio) {
   expected_audio.ssrc = 1;
   expected_audio.media_type = "audio";
   expected_audio.kind = "audio";
-  expected_audio.track_id = IdForType<RTCMediaStreamTrackStats>(report);
+  expected_audio.track_id = IdForType<RTCMediaStreamTrackStats>(report.get());
   expected_audio.transport_id = "RTCTransport_TransportName_1";
   expected_audio.codec_id = "RTCCodec_AudioMid_Outbound_42";
   expected_audio.packets_sent = 2;
@@ -3200,7 +3200,7 @@ TEST_F(RTCStatsCollectorTest, CollectEchoReturnLossFromTrackAudioProcessor) {
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
 
   RTCMediaStreamTrackStats expected_local_audio_track_ssrc1(
-      IdForType<RTCMediaStreamTrackStats>(report), report->timestamp_us(),
+      IdForType<RTCMediaStreamTrackStats>(report.get()), report->timestamp_us(),
       RTCMediaStreamTrackKind::kAudio);
   expected_local_audio_track_ssrc1.track_identifier = local_audio_track->id();
   expected_local_audio_track_ssrc1.media_source_id =
@@ -3493,7 +3493,8 @@ class FakeRTCStatsCollector : public RTCStatsCollector,
 TEST(RTCStatsCollectorTestWithFakeCollector, ThreadUsageAndResultsMerging) {
   auto pc = rtc::make_ref_counted<FakePeerConnectionForStats>();
   rtc::scoped_refptr<FakeRTCStatsCollector> stats_collector(
-      FakeRTCStatsCollector::Create(pc, 50 * rtc::kNumMicrosecsPerMillisec));
+      FakeRTCStatsCollector::Create(pc.get(),
+                                    50 * rtc::kNumMicrosecsPerMillisec));
   stats_collector->VerifyThreadUsageAndResultsMerging();
 }
 

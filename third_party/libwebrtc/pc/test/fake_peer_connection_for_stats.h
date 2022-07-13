@@ -180,7 +180,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
   void RemoveSender(rtc::scoped_refptr<RtpSenderInterface> sender) {
     GetOrCreateFirstTransceiverOfType(sender->media_type())
         ->internal()
-        ->RemoveSender(sender);
+        ->RemoveSender(sender.get());
   }
 
   rtc::scoped_refptr<RtpReceiverInterface> AddReceiver(
@@ -198,7 +198,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
   void RemoveReceiver(rtc::scoped_refptr<RtpReceiverInterface> receiver) {
     GetOrCreateFirstTransceiverOfType(receiver->media_type())
         ->internal()
-        ->RemoveReceiver(receiver);
+        ->RemoveReceiver(receiver.get());
   }
 
   FakeVoiceMediaChannelForStats* AddVoiceChannel(

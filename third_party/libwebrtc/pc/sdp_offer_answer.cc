@@ -1100,10 +1100,10 @@ class SdpOfferAnswerHandler::SetSessionDescriptionObserverAdapter
       return;
     if (error.ok()) {
       handler_->pc_->message_handler()->PostSetSessionDescriptionSuccess(
-          inner_observer_);
+          inner_observer_.get());
     } else {
       handler_->pc_->message_handler()->PostSetSessionDescriptionFailure(
-          inner_observer_, std::move(error));
+          inner_observer_.get(), std::move(error));
     }
   }
 
@@ -2029,7 +2029,7 @@ void SdpOfferAnswerHandler::ApplyRemoteDescriptionUpdateTransceiverState(
   // Once all processing has finished, fire off callbacks.
   auto observer = pc_->Observer();
   for (const auto& transceiver : now_receiving_transceivers) {
-    pc_->stats()->AddTrack(transceiver->receiver()->track());
+    pc_->stats()->AddTrack(transceiver->receiver()->track().get());
     observer->OnTrack(transceiver);
     observer->OnAddTrack(transceiver->receiver(),
                          transceiver->receiver()->streams());
@@ -2076,7 +2076,7 @@ void SdpOfferAnswerHandler::PlanBUpdateSendersAndReceivers(
           RtpTransceiverDirectionHasSend(audio_desc->direction());
       UpdateRemoteSendersList(GetActiveStreams(audio_desc),
                               default_audio_track_needed, audio_desc->type(),
-                              new_streams);
+                              new_streams.get());
     }
   }
 
@@ -2091,7 +2091,7 @@ void SdpOfferAnswerHandler::PlanBUpdateSendersAndReceivers(
           RtpTransceiverDirectionHasSend(video_desc->direction());
       UpdateRemoteSendersList(GetActiveStreams(video_desc),
                               default_video_track_needed, video_desc->type(),
-                              new_streams);
+                              new_streams.get());
     }
   }
 
@@ -2229,7 +2229,8 @@ void SdpOfferAnswerHandler::DoCreateOffer(
     std::string error = "CreateOffer called when PeerConnection is closed.";
     RTC_LOG(LS_ERROR) << error;
     pc_->message_handler()->PostCreateSessionDescriptionFailure(
-        observer, RTCError(RTCErrorType::INVALID_STATE, std::move(error)));
+        observer.get(),
+        RTCError(RTCErrorType::INVALID_STATE, std::move(error)));
     return;
   }
 
@@ -2239,7 +2240,7 @@ void SdpOfferAnswerHandler::DoCreateOffer(
     std::string error_message = GetSessionErrorMsg();
     RTC_LOG(LS_ERROR) << "CreateOffer: " << error_message;
     pc_->message_handler()->PostCreateSessionDescriptionFailure(
-        observer,
+        observer.get(),
         RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error_message)));
     return;
   }
@@ -2248,7 +2249,8 @@ void SdpOfferAnswerHandler::DoCreateOffer(
     std::string error = "CreateOffer called with invalid options.";
     RTC_LOG(LS_ERROR) << error;
     pc_->message_handler()->PostCreateSessionDescriptionFailure(
-        observer, RTCError(RTCErrorType::INVALID_PARAMETER, std::move(error)));
+        observer.get(),
+        RTCError(RTCErrorType::INVALID_PARAMETER, std::move(error)));
     return;
   }
 
@@ -2258,14 +2260,15 @@ void SdpOfferAnswerHandler::DoCreateOffer(
     RTCError error = HandleLegacyOfferOptions(options);
     if (!error.ok()) {
       pc_->message_handler()->PostCreateSessionDescriptionFailure(
-          observer, std::move(error));
+          observer.get(), std::move(error));
       return;
     }
   }
 
   cricket::MediaSessionOptions session_options;
   GetOptionsForOffer(options, &session_options);
-  webrtc_session_desc_factory_->CreateOffer(observer, options, session_options);
+  webrtc_session_desc_factory_->CreateOffer(observer.get(), options,
+                                            session_options);
 }
 
 void SdpOfferAnswerHandler::CreateAnswer(
@@ -2313,7 +2316,7 @@ void SdpOfferAnswerHandler::DoCreateAnswer(
     std::string error_message = GetSessionErrorMsg();
     RTC_LOG(LS_ERROR) << "CreateAnswer: " << error_message;
     pc_->message_handler()->PostCreateSessionDescriptionFailure(
-        observer,
+        observer.get(),
         RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error_message)));
     return;
   }
@@ -2325,7 +2328,8 @@ void SdpOfferAnswerHandler::DoCreateAnswer(
         "have-remote-offer or have-local-pranswer.";
     RTC_LOG(LS_ERROR) << error;
     pc_->message_handler()->PostCreateSessionDescriptionFailure(
-        observer, RTCError(RTCErrorType::INVALID_STATE, std::move(error)));
+        observer.get(),
+        RTCError(RTCErrorType::INVALID_STATE, std::move(error)));
     return;
   }
 
@@ -2349,7 +2353,7 @@ void SdpOfferAnswerHandler::DoCreateAnswer(
 
   cricket::MediaSessionOptions session_options;
   GetOptionsForAnswer(options, &session_options);
-  webrtc_session_desc_factory_->CreateAnswer(observer, session_options);
+  webrtc_session_desc_factory_->CreateAnswer(observer.get(), session_options);
 }
 
 void SdpOfferAnswerHandler::DoSetRemoteDescription(
@@ -2775,7 +2779,7 @@ bool SdpOfferAnswerHandler::AddStream(MediaStreamInterface* local_stream) {
   if (pc_->IsClosed()) {
     return false;
   }
-  if (!CanAddLocalMediaStream(local_streams_, local_stream)) {
+  if (!CanAddLocalMediaStream(local_streams_.get(), local_stream)) {
     return false;
   }
 
@@ -4245,7 +4249,7 @@ void SdpOfferAnswerHandler::RemoveRemoteStreamsIfEmpty(
   for (const auto& remote_stream : remote_streams) {
     if (remote_stream->GetAudioTracks().empty() &&
         remote_stream->GetVideoTracks().empty()) {
-      remote_streams_->RemoveStream(remote_stream);
+      remote_streams_->RemoveStream(remote_stream.get());
       removed_streams->push_back(remote_stream);
     }
   }
@@ -4373,7 +4377,7 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
         rtp_manager()->FindSenderInfo(*current_senders, stream_id, sender_id);
     if (!sender_info) {
       current_senders->push_back(RtpSenderInfo(stream_id, sender_id, ssrc));
-      rtp_manager()->OnRemoteSenderAdded(current_senders->back(), stream,
+      rtp_manager()->OnRemoteSenderAdded(current_senders->back(), stream.get(),
                                          media_type);
     }
   }
@@ -4398,7 +4402,7 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
       current_senders->push_back(
           RtpSenderInfo(kDefaultStreamId, default_sender_id, /*ssrc=*/0));
       rtp_manager()->OnRemoteSenderAdded(current_senders->back(),
-                                         default_stream, media_type);
+                                         default_stream.get(), media_type);
     }
   }
 }
@@ -4633,7 +4637,7 @@ void SdpOfferAnswerHandler::UpdateEndedRemoteMediaStreams() {
   }
 
   for (auto& stream : streams_to_remove) {
-    remote_streams_->RemoveStream(stream);
+    remote_streams_->RemoveStream(stream.get());
     pc_->Observer()->OnRemoveStream(std::move(stream));
   }
 }

@@ -75,7 +75,7 @@ TEST(GoogCcPeerScenarioTest, MAYBE_NoBweChangeFromVideoUnmute) {
   auto get_bwe = [&] {
     auto callback =
         rtc::make_ref_counted<webrtc::MockRTCStatsCollectorCallback>();
-    caller->pc()->GetStats(callback);
+    caller->pc()->GetStats(callback.get());
     s.net()->time_controller()->Wait([&] { return callback->called(); });
     auto stats =
         callback->report()->GetStatsOfType<RTCIceCandidatePairStats>()[0];

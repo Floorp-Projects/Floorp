@@ -104,6 +104,7 @@ class scoped_refptr {
   }
 
   T* get() const { return ptr_; }
+  explicit operator bool() const { return ptr_ != nullptr; }
   operator T*() const { return ptr_; }
   T& operator*() const { return *ptr_; }
   T* operator->() const { return ptr_; }

@@ -138,7 +138,7 @@ class PeerConnectionRtpBaseTest : public ::testing::Test {
     auto result = pc_factory_->CreatePeerConnectionOrError(
         config, PeerConnectionDependencies(observer.get()));
     EXPECT_TRUE(result.ok());
-    observer->SetPeerConnectionInterface(result.value());
+    observer->SetPeerConnectionInterface(result.value().get());
     return std::make_unique<PeerConnectionWrapper>(
         pc_factory_, result.MoveValue(), std::move(observer));
   }
@@ -921,7 +921,7 @@ TEST_P(PeerConnectionRtpTest,
       rtc::make_ref_counted<webrtc::MockSetSessionDescriptionObserver>();
 
   auto offer = caller->CreateOfferAndSetAsLocal();
-  callee->pc()->SetRemoteDescription(observer, offer.release());
+  callee->pc()->SetRemoteDescription(observer.get(), offer.release());
   callee = nullptr;
   rtc::Thread::Current()->ProcessMessages(0);
   EXPECT_FALSE(observer->called());
@@ -1989,7 +1989,7 @@ TEST_P(PeerConnectionRtpTest, CreateTwoSendersWithSameTrack) {
   EXPECT_TRUE(sender1->SetTrack(nullptr));
   auto sender2 = caller->AddTrack(track);
   EXPECT_TRUE(sender2);
-  EXPECT_TRUE(sender1->SetTrack(track));
+  EXPECT_TRUE(sender1->SetTrack(track.get()));
 
   if (sdp_semantics_ == SdpSemantics::kPlanB_DEPRECATED) {
     // TODO(hbos): When https://crbug.com/webrtc/8734 is resolved, this should
