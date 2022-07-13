@@ -3692,7 +3692,7 @@ TEST_F(PeerConnectionMediaConfigTest, TestDefaults) {
 
   const cricket::MediaConfig& media_config = TestCreatePeerConnection(config);
 
-  EXPECT_FALSE(media_config.enable_dscp);
+  EXPECT_TRUE(media_config.enable_dscp);
   EXPECT_TRUE(media_config.video.enable_cpu_adaptation);
   EXPECT_TRUE(media_config.video.enable_prerenderer_smoothing);
   EXPECT_FALSE(media_config.video.suspend_below_min_bitrate);
