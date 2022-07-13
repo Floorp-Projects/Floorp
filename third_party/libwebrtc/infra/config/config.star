@@ -527,7 +527,7 @@ def ci_builder(
 
     if enabled:
         add_milo(name, {"ci": ci_cat, "perf": perf_cat})
-        if ci_cat:
+        if ci_cat and not perf_cat:
             lkgr_builders.append(name)
     dimensions.update({"pool": "luci.webrtc.ci", "cpu": kwargs.pop("cpu", DEFAULT_CPU)})
     properties = properties or {}
