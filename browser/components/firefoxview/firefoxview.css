@@ -293,6 +293,8 @@ body > main > aside {
 }
 
 .synced-tabs-container.loading > .card,
+.synced-tabs-container.loading > tab-pickup-list,
+.synced-tabs-container.loading > .placeholder-content,
 .synced-tabs-container:not(.loading) > .loading-content {
   display: none;
 }
