@@ -25,6 +25,7 @@
 #include "js/ShadowRealmCallbacks.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
+#include "js/StructuredClone.h"
 #include "js/TypeDecls.h"
 #include "js/Wrapper.h"
 #include "vm/GlobalObject.h"
@@ -275,16 +276,24 @@ static bool PerformShadowRealmEval(JSContext* cx, HandleString sourceText,
   } while (false);  // AutoRealm
 
   if (!compileSuccess) {
-    // MG:XXX: figure out how to extract the syntax error information for
-    // re-throw here (See DebuggerObject::getErrorColumnNumber ?)
-    //
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1769848
+    // Clone the exception into the current global and re-throw, as the
+    // exception has to come from the current global.
+    Rooted<Value> exception(cx);
+    if (!JS_GetPendingException(cx, &exception)) {
+      return false;
+    }
 
-    // The SyntaxError here needs to come from the calling global, so has to
-    // happen outside the AutoRealm above.
+    // Clear our exception now that we've got it, so that we don't
+    // do the following call with an exception already pending.
     JS_ClearPendingException(cx);
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_SHADOW_REALM_GENERIC_SYNTAX);
+
+    Rooted<Value> clonedException(cx);
+    if (!JS_StructuredClone(cx, exception, &clonedException, nullptr,
+                            nullptr)) {
+      return false;
+    }
+
+    JS_SetPendingException(cx, clonedException);
     return false;
   }
 
