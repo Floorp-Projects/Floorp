@@ -179,7 +179,6 @@ int64_t StreamGenerator::GenerateFrame(RtpStream::PacketList* packets,
   StreamMap::iterator it =
       std::min_element(streams_.begin(), streams_.end(), RtpStream::Compare);
   (*it).second->GenerateFrame(time_now_us, packets);
-  int i = 0;
   for (RtpStream::PacketList::iterator packet_it = packets->begin();
        packet_it != packets->end(); ++packet_it) {
     int capacity_bpus = capacity_ / 1000;
@@ -189,7 +188,6 @@ int64_t StreamGenerator::GenerateFrame(RtpStream::PacketList* packets,
         std::max(time_now_us + required_network_time_us,
                  prev_arrival_time_us_ + required_network_time_us);
     (*packet_it)->arrival_time = prev_arrival_time_us_;
-    ++i;
   }
   it = std::min_element(streams_.begin(), streams_.end(), RtpStream::Compare);
   return std::max((*it).second->next_rtp_time(), time_now_us);
