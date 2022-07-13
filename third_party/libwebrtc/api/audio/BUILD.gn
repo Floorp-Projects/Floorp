@@ -23,6 +23,7 @@ rtc_library("audio_frame_api") {
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
     "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:timeutils",
   ]
 }
 

@@ -90,6 +90,7 @@ rtc_library("rtc_base_approved") {
     ":safe_compare",
     ":safe_conversions",
     ":stringutils",
+    ":timeutils",
     ":type_traits",
     "../api:array_view",
     "../api:scoped_refptr",
@@ -181,7 +182,6 @@ rtc_library("rtc_base_approved") {
   public_deps += [  # no-presubmit-check TODO(webrtc:8603)
     ":platform_thread",
     ":platform_thread_types",
-    ":timeutils",
     "../api:sequence_checker",
   ]
 }
@@ -953,6 +953,7 @@ rtc_library("rtc_base") {
     ":socket_server",
     ":stringutils",
     ":threading",
+    ":timeutils",
     "../api:array_view",
     "../api:field_trials_view",
     "../api:function_view",
@@ -1247,6 +1248,7 @@ rtc_library("rtc_base_tests_utils") {
     ":socket_server",
     ":stringutils",
     ":threading",
+    ":timeutils",
     "../api/units:time_delta",
     "../api/units:timestamp",
     "../test:scoped_key_value_config",
@@ -1350,6 +1352,7 @@ if (rtc_include_tests) {
         ":socket_server",
         ":testclient",
         ":threading",
+        ":timeutils",
         "../system_wrappers",
         "../test:fileutils",
         "../test:test_main",
@@ -1441,6 +1444,7 @@ if (rtc_include_tests) {
         ":stringutils",
         ":testclient",
         ":threading",
+        ":timeutils",
         "../api:array_view",
         "../api:scoped_refptr",
         "../api/numerics",
@@ -1477,6 +1481,7 @@ if (rtc_include_tests) {
         ":rtc_event",
         ":rtc_task_queue",
         ":task_queue_for_test",
+        ":timeutils",
         "../test:test_main",
         "../test:test_support",
       ]
@@ -1577,6 +1582,7 @@ if (rtc_include_tests) {
         ":stringutils",
         ":testclient",
         ":threading",
+        ":timeutils",
         "../api:array_view",
         "../api/task_queue",
         "../api/task_queue:task_queue_test",

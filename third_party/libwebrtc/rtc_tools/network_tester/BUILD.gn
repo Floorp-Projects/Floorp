@@ -53,6 +53,7 @@ if (rtc_enable_protobuf) {
       "../../rtc_base:rtc_task_queue",
       "../../rtc_base:socket_address",
       "../../rtc_base:threading",
+      "../../rtc_base:timeutils",
       "../../rtc_base/synchronization:mutex",
       "../../rtc_base/system:no_unique_address",
       "../../rtc_base/third_party/sigslot",

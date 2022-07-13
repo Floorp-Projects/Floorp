@@ -29,6 +29,7 @@ rtc_library("rtp_replayer") {
     "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:rtc_base_tests_utils",
     "../../../rtc_base:rtc_json",
+    "../../../rtc_base:timeutils",
     "../../../system_wrappers",
     "../../../test:call_config_utils",
     "../../../test:encoder_settings",

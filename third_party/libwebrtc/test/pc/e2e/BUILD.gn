@@ -672,6 +672,7 @@ if (!build_with_chromium) {
       "../../../rtc_base:rtc_event",
       "../../../rtc_base:rtc_numerics",
       "../../../rtc_base:stringutils",
+      "../../../rtc_base:timeutils",
       "../../../rtc_base/synchronization:mutex",
       "../../../rtc_tools:video_quality_analysis",
       "../../../system_wrappers",

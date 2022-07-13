@@ -72,6 +72,7 @@ rtc_library("video_frame") {
     "../../rtc_base:checks",
     "../../rtc_base:refcount",
     "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:timeutils",
     "../../rtc_base/memory:aligned_malloc",
     "../../rtc_base/system:rtc_export",
     #"//third_party/libyuv",

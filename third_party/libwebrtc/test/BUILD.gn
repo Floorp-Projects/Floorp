@@ -915,6 +915,7 @@ rtc_library("test_common") {
     "../rtc_base:rtc_event",
     "../rtc_base:task_queue_for_test",
     "../rtc_base:threading",
+    "../rtc_base:timeutils",
     "../rtc_base/task_utils:to_queued_task",
     "../system_wrappers",
     "../system_wrappers:field_trial",
