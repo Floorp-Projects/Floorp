@@ -210,7 +210,6 @@ EXPORTS.js += [
     "../public/Symbol.h",
     "../public/TelemetryTimers.h",
     "../public/TraceKind.h",
-    "../public/TraceLoggerAPI.h",
     "../public/TracingAPI.h",
     "../public/Transcoding.h",
     "../public/TypeDecls.h",
