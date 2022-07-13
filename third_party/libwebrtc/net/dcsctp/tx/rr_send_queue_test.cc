@@ -323,6 +323,36 @@ TEST_F(RRSendQueueTest, EnqueuedItemsArePausedDuringStreamReset) {
   EXPECT_EQ(buf_.total_buffered_amount(), 0u);
 }
 
+TEST_F(RRSendQueueTest, PausedStreamsStillSendPartialMessagesUntilEnd) {
+  constexpr size_t kPayloadSize = 100;
+  constexpr size_t kFragmentSize = 50;
+  std::vector<uint8_t> payload(kPayloadSize);
+
+  buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
+  buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
+
+  absl::optional<SendQueue::DataToSend> chunk_one =
+      buf_.Produce(kNow, kFragmentSize);
+  ASSERT_TRUE(chunk_one.has_value());
+  EXPECT_EQ(chunk_one->data.stream_id, kStreamID);
+  EXPECT_EQ(buf_.total_buffered_amount(), 2 * kPayloadSize - kFragmentSize);
+
+  // This will stop the second message from being sent.
+  StreamID stream_ids[] = {StreamID(1)};
+  buf_.PrepareResetStreams(stream_ids);
+  EXPECT_EQ(buf_.total_buffered_amount(), 1 * kPayloadSize - kFragmentSize);
+
+  // Should still produce fragments until end of message.
+  absl::optional<SendQueue::DataToSend> chunk_two =
+      buf_.Produce(kNow, kFragmentSize);
+  ASSERT_TRUE(chunk_two.has_value());
+  EXPECT_EQ(chunk_two->data.stream_id, kStreamID);
+  EXPECT_EQ(buf_.total_buffered_amount(), 0ul);
+
+  // But shouldn't produce any more messages as the stream is paused.
+  EXPECT_FALSE(buf_.Produce(kNow, kFragmentSize).has_value());
+}
+
 TEST_F(RRSendQueueTest, CommittingResetsSSN) {
   std::vector<uint8_t> payload(50);
 
