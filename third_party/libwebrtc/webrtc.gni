@@ -972,14 +972,13 @@ template("rtc_shared_library") {
   }
 }
 
-if (is_ios) {
-  # TODO: Generate module.modulemap file to enable use in Swift
-  # projects. See "mac_framework_bundle_with_umbrella_header".
-  template("ios_framework_bundle_with_umbrella_header") {
+if (is_mac || is_ios) {
+  template("apple_framework_bundle_with_umbrella_header") {
     forward_variables_from(invoker, [ "output_name" ])
     this_target_name = target_name
     umbrella_header_path =
         "$target_gen_dir/$output_name.framework/WebRTC/$output_name.h"
+    modulemap_path = "$target_gen_dir/Modules/module.modulemap"
 
     action_foreach("create_bracket_include_headers_$target_name") {
       script = "//tools_webrtc/apple/copy_framework_header.py"
@@ -997,101 +996,62 @@ if (is_ios) {
       ]
     }
 
-    ios_framework_bundle(target_name) {
-      forward_variables_from(invoker, "*", [ "public_headers" ])
-      public_headers = get_target_outputs(
-              ":create_bracket_include_headers_$this_target_name")
-      deps += [
-        ":copy_umbrella_header_$target_name",
-        ":create_bracket_include_headers_$target_name",
-      ]
+    if (is_mac) {
+      mac_framework_bundle(target_name) {
+        forward_variables_from(invoker, "*", [ "configs" ])
+        if (defined(invoker.configs)) {
+          configs += invoker.configs
+        }
+
+        framework_version = "A"
+        framework_contents = [
+          "Headers",
+          "Modules",
+          "Resources",
+        ]
+
+        ldflags = [
+          "-all_load",
+          "-install_name",
+          "@rpath/$output_name.framework/$output_name",
+        ]
+
+        deps += [
+          ":copy_framework_headers_$this_target_name",
+          ":copy_modulemap_$this_target_name",
+          ":copy_umbrella_header_$this_target_name",
+          ":create_bracket_include_headers_$this_target_name",
+          ":modulemap_$this_target_name",
+          ":umbrella_header_$this_target_name",
+        ]
+      }
+    }
+    if (is_ios) {
+      ios_framework_bundle(target_name) {
+        forward_variables_from(invoker,
+                               "*",
+                               [
+                                 "configs",
+                                 "public_headers",
+                               ])
+        if (defined(invoker.configs)) {
+          configs += invoker.configs
+        }
+        public_headers = get_target_outputs(
+                ":create_bracket_include_headers_$this_target_name")
+
+        deps += [
+          ":copy_umbrella_header_$this_target_name",
+          ":create_bracket_include_headers_$this_target_name",
+        ]
+      }
     }
 
-    action("umbrella_header_$target_name") {
-      public_headers = get_target_outputs(
-              ":create_bracket_include_headers_$this_target_name")
-
-      script = "//tools_webrtc/ios/generate_umbrella_header.py"
-
-      outputs = [ umbrella_header_path ]
-      args = [
-               "--out",
-               rebase_path(umbrella_header_path, root_build_dir),
-               "--sources",
-             ] + public_headers
-      deps = [ ":create_bracket_include_headers_$this_target_name" ]
-    }
-
-    if (target_environment == "catalyst") {
+    if (is_mac || target_environment == "catalyst") {
       # Catalyst frameworks use the same layout as regular Mac frameworks.
       headers_dir = "Versions/A/Headers"
     } else {
       headers_dir = "Headers"
-    }
-    copy("copy_umbrella_header_$target_name") {
-      sources = [ umbrella_header_path ]
-      outputs =
-          [ "$root_out_dir/$output_name.framework/$headers_dir/$output_name.h" ]
-
-      deps = [ ":umbrella_header_$target_name" ]
-    }
-  }
-
-  set_defaults("ios_framework_bundle_with_umbrella_header") {
-    configs = default_shared_library_configs
-  }
-}
-
-if (is_mac) {
-  template("mac_framework_bundle_with_umbrella_header") {
-    forward_variables_from(invoker, [ "output_name" ])
-    this_target_name = target_name
-    umbrella_header_path = "$target_gen_dir/umbrella_header/$output_name.h"
-    modulemap_path = "$target_gen_dir/Modules/module.modulemap"
-
-    mac_framework_bundle(target_name) {
-      forward_variables_from(invoker, "*", [ "configs" ])
-      if (defined(invoker.configs)) {
-        configs += invoker.configs
-      }
-
-      framework_version = "A"
-      framework_contents = [
-        "Headers",
-        "Modules",
-        "Resources",
-      ]
-
-      ldflags = [
-        "-all_load",
-        "-install_name",
-        "@rpath/$output_name.framework/$output_name",
-      ]
-
-      deps += [
-        ":copy_framework_headers_$this_target_name",
-        ":copy_modulemap_$this_target_name",
-        ":copy_umbrella_header_$this_target_name",
-        ":create_bracket_include_headers_$this_target_name",
-        ":modulemap_$this_target_name",
-        ":umbrella_header_$this_target_name",
-      ]
-    }
-
-    action_foreach("create_bracket_include_headers_$this_target_name") {
-      script = "//tools_webrtc/apple/copy_framework_header.py"
-      sources = invoker.sources
-      output_name = invoker.output_name
-      outputs = [
-        "$target_gen_dir/$output_name.framework/WebRTC/{{source_file_part}}",
-      ]
-      args = [
-        "--input",
-        "{{source}}",
-        "--output",
-        rebase_path(target_gen_dir, root_build_dir) +
-            "/$output_name.framework/WebRTC/{{source_file_part}}",
-      ]
     }
 
     bundle_data("copy_framework_headers_$this_target_name") {
@@ -1134,11 +1094,12 @@ if (is_mac) {
       deps = [ ":create_bracket_include_headers_$this_target_name" ]
     }
 
-    bundle_data("copy_umbrella_header_$this_target_name") {
+    copy("copy_umbrella_header_$target_name") {
       sources = [ umbrella_header_path ]
-      outputs = [ "{{bundle_contents_dir}}/Headers/$output_name.h" ]
+      outputs =
+          [ "$root_out_dir/$output_name.framework/$headers_dir/$output_name.h" ]
 
-      deps = [ ":umbrella_header_$this_target_name" ]
+      deps = [ ":umbrella_header_$target_name" ]
     }
   }
 }
