@@ -236,6 +236,7 @@ if (rtc_include_tests) {
       "../../../api/units:time_delta",
       "../../../call:simulated_network",
       "../../../rtc_base:checks",
+      "../../../rtc_base:copy_on_write_buffer",
       "../../../rtc_base:gunit_helpers",
       "../../../rtc_base:logging",
       "../../../rtc_base:rtc_base_approved",

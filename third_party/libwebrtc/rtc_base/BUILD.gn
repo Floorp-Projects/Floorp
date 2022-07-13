@@ -88,6 +88,7 @@ rtc_library("rtc_base_approved") {
     ":byte_buffer",
     ":byte_order",
     ":checks",
+    ":copy_on_write_buffer",
     ":histogram_percentile_counter",
     ":location",
     ":logging",
@@ -135,8 +136,7 @@ rtc_library("rtc_base_approved") {
     "buffer_queue.h",  # Transitional, use :buffer_queue
     "byte_buffer.h",  # Transitional, use :byte_buffer
     "byte_order.h",  # Transitional, use :byte_order
-    "copy_on_write_buffer.cc",
-    "copy_on_write_buffer.h",
+    "copy_on_write_buffer.h",  # Transitional, use :copy_on_write_buffer
     "event_tracer.cc",
     "event_tracer.h",
     "location.h",  # Transitional, use :location
@@ -287,6 +287,22 @@ rtc_library("buffer_queue") {
     ":macromagic",
     "../api:sequence_checker",
     "system:no_unique_address",
+  ]
+}
+
+rtc_library("copy_on_write_buffer") {
+  visibility = [ "*" ]
+  sources = [
+    "copy_on_write_buffer.cc",
+    "copy_on_write_buffer.h",
+  ]
+  deps = [
+    ":buffer",
+    ":checks",
+    ":refcount",
+    ":type_traits",
+    "../api:scoped_refptr",
+    "system:rtc_export",
   ]
 }
 
@@ -1147,6 +1163,7 @@ rtc_library("rtc_base") {
     ":byte_order",
     ":callback_list",
     ":checks",
+    ":copy_on_write_buffer",
     ":ip_address",
     ":location",
     ":logging",
@@ -1642,6 +1659,7 @@ if (rtc_include_tests) {
         ":byte_buffer",
         ":byte_order",
         ":checks",
+        ":copy_on_write_buffer",
         ":criticalsection",
         ":divide_round",
         ":gunit_helpers",
