@@ -17,7 +17,6 @@
     <link rel="stylesheet" href="chrome://browser/content/firefoxview.css">
     <script type="module" src="chrome://browser/content/tabs-pickup.mjs"></script>
     <script type="module" src="chrome://browser/content/firefoxview.mjs"></script>
-    <script type="module" src="chrome://browser/content/colorways-card.mjs"></script>
     <script type="module" src="chrome://browser/content/recently-closed-tabs.mjs"></script>
     <script type="module" src="chrome://browser/content/tab-pickup-list.mjs"></script>
   </head>
@@ -105,21 +104,19 @@
         </header>
       </section>
 
-      <aside class="content-container" is="colorways-card">
-        <template id="colorways-no-collection-template">
-          <div class="content-container">
-            <div id="no-current-colorway-collection-notice" data-l10n-id="firefoxview-no-current-colorway-collection"></div>
-          </div>
-        </template>
-        <template id="colorways-active-collection-template">
-          <figure>
-            <img id="colorways-collection-figure">
-          </figure>
-          <h1 id="colorways-collection-title"></h1>
-          <span id="colorways-collection-expiry-date"><span></span></span>
-          <div id="colorways-collection-description"></div>
-          <button class="primary" id="colorways-button" data-l10n-id="firefoxview-try-colorways-button"></button>
-        </template>
+      <template id="colorways-no-collection-template">
+        <div class="content-container">
+          <div id="no-current-colorway-collection-notice" data-l10n-id="firefoxview-no-current-colorway-collection"></div>
+        </div>
+      </template>
+      <template id="colorways-active-collection-template">
+        <img id="colorways-collection-graphic">
+        <h1 id="colorways-collection-title"></h1>
+        <span id="colorways-collection-expiry-date"><span></span></span>
+        <div id="colorways-collection-description"></div>
+        <button class="primary" id="colorways-button" data-l10n-id="firefoxview-try-colorways-button"></button>
+      </template>
+      <aside class="content-container">
         <section id="colorways"></section>
       </aside>
 

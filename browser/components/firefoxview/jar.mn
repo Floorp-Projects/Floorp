@@ -10,5 +10,4 @@ browser.jar:
     content/browser/tabs-pickup.mjs
     content/browser/tab-pickup-list.mjs
     content/browser/recently-closed-tabs.mjs
-    content/browser/colorways-card.mjs
     content/browser/colorway-background.svg (content/colorway-background.svg)
