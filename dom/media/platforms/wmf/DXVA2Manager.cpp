@@ -1047,9 +1047,8 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   NS_ENSURE_TRUE(aOutImage, E_POINTER);
   MOZ_ASSERT(mTextureClientAllocator);
 
-  RefPtr<D3D11ShareHandleImage> image =
-      new D3D11ShareHandleImage(gfx::IntSize(mWidth, mHeight), aRegion,
-                                ToColorSpace2(mYUVColorSpace), mColorRange);
+  RefPtr<D3D11ShareHandleImage> image = new D3D11ShareHandleImage(
+      gfx::IntSize(mWidth, mHeight), aRegion, mYUVColorSpace, mColorRange);
 
   // Retrieve the DXGI_FORMAT for the current video sample.
   RefPtr<IMFMediaBuffer> buffer;
@@ -1174,7 +1173,7 @@ HRESULT D3D11DXVA2Manager::WrapTextureWithImage(IMFSample* aVideoSample,
 
   RefPtr<D3D11TextureIMFSampleImage> image = new D3D11TextureIMFSampleImage(
       aVideoSample, texture, arrayIndex, gfx::IntSize(mWidth, mHeight), aRegion,
-      ToColorSpace2(mYUVColorSpace), mColorRange);
+      mYUVColorSpace, mColorRange);
   image->AllocateTextureClient(mKnowsCompositor, mIMFSampleUsageInfo);
 
   RefPtr<IMFSampleWrapper> wrapper = image->GetIMFSampleWrapper();
