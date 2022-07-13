@@ -368,12 +368,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       } adaptive_digital;
     } gain_controller2;
 
-    // TODO(bugs.webrtc.org/11539): Deprecated. Delete this flag. Replaced by
-    // injectable submodule.
-    struct ResidualEchoDetector {
-      bool enabled = false;
-    } residual_echo_detector;
-
     std::string ToString() const;
   };
 
