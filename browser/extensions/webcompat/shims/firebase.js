@@ -36,4 +36,34 @@ if (!window.wrappedJSObject.serviceWorker) {
   Object.defineProperty(navigator.wrappedJSObject, "serviceWorker", {
     value: cloneInto(sw, window, { cloneFunctions: true }),
   });
+
+  if (!win.PushManager) {
+    Object.defineProperty(win, "PushManager", {
+      value: cloneInto({}, window, { cloneFunctions: true }),
+    });
+  }
+
+  if (!win.PushSubscription) {
+    const ps = {
+      prototype: {
+        getKey() {},
+      },
+    };
+
+    Object.defineProperty(win, "PushSubscription", {
+      value: cloneInto(ps, window, { cloneFunctions: true }),
+    });
+  }
+
+  if (!win.ServiceWorkerRegistration) {
+    const swr = {
+      prototype: {
+        showNotification() {},
+      },
+    };
+
+    Object.defineProperty(win, "ServiceWorkerRegistration", {
+      value: cloneInto(swr, window, { cloneFunctions: true }),
+    });
+  }
 }
