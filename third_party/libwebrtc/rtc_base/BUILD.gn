@@ -71,6 +71,7 @@ rtc_source_set("callback_list") {
     "../api:function_view",
     "system:assume",
     "system:inline",
+    "system:rtc_export",
   ]
 }
 
