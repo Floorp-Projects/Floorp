@@ -13,6 +13,8 @@
 
 #include <cmath>
 
+#include "rtc_base/checks.h"
+
 namespace webrtc {
 
 namespace {
@@ -23,8 +25,8 @@ constexpr int kNumFramesPerSecond = 100;
 // whether the signal is a proper stereo signal. To allow for differences
 // introduced by hardware drivers, a threshold `detection_threshold` is used for
 // the detection.
-bool IsProperStereo(const std::vector<std::vector<std::vector<float>>>& frame,
-                    float detection_threshold) {
+bool HasStereoContent(const std::vector<std::vector<std::vector<float>>>& frame,
+                      float detection_threshold) {
   if (frame[0].size() < 2) {
     return false;
   }
@@ -46,7 +48,8 @@ MultiChannelContentDetector::MultiChannelContentDetector(
     bool detect_stereo_content,
     int num_render_input_channels,
     float detection_threshold,
-    int stereo_detection_timeout_threshold_seconds)
+    int stereo_detection_timeout_threshold_seconds,
+    float stereo_detection_hysteresis_seconds)
     : detect_stereo_content_(detect_stereo_content),
       detection_threshold_(detection_threshold),
       detection_timeout_threshold_frames_(
@@ -54,29 +57,46 @@ MultiChannelContentDetector::MultiChannelContentDetector(
               ? absl::make_optional(stereo_detection_timeout_threshold_seconds *
                                     kNumFramesPerSecond)
               : absl::nullopt),
-      proper_multichannel_content_detected_(!detect_stereo_content &&
-                                            num_render_input_channels > 1) {}
+      stereo_detection_hysteresis_frames_(static_cast<int>(
+          stereo_detection_hysteresis_seconds * kNumFramesPerSecond)),
+      persistent_multichannel_content_detected_(
+          !detect_stereo_content && num_render_input_channels > 1) {}
 
 bool MultiChannelContentDetector::UpdateDetection(
     const std::vector<std::vector<std::vector<float>>>& frame) {
-  if (!detect_stereo_content_)
+  if (!detect_stereo_content_) {
+    RTC_DCHECK_EQ(frame[0].size() > 1,
+                  persistent_multichannel_content_detected_);
     return false;
-
-  const bool previous_proper_multichannel_content_detected =
-      proper_multichannel_content_detected_;
-
-  if (IsProperStereo(frame, detection_threshold_)) {
-    proper_multichannel_content_detected_ = true;
-    frames_since_stereo_detected_ = 0;
-  } else {
-    ++frames_since_stereo_detected_;
-    if (detection_timeout_threshold_frames_ &&
-        frames_since_stereo_detected_ >= *detection_timeout_threshold_frames_) {
-      proper_multichannel_content_detected_ = false;
-    }
   }
-  return previous_proper_multichannel_content_detected !=
-         proper_multichannel_content_detected_;
+
+  const bool previous_persistent_multichannel_content_detected =
+      persistent_multichannel_content_detected_;
+  const bool stereo_detected_in_frame =
+      HasStereoContent(frame, detection_threshold_);
+
+  consecutive_frames_with_stereo_ =
+      stereo_detected_in_frame ? consecutive_frames_with_stereo_ + 1 : 0;
+  frames_since_stereo_detected_last_ =
+      stereo_detected_in_frame ? 0 : frames_since_stereo_detected_last_ + 1;
+
+  // Detect persistent multichannel content.
+  if (consecutive_frames_with_stereo_ > stereo_detection_hysteresis_frames_) {
+    persistent_multichannel_content_detected_ = true;
+  }
+  if (detection_timeout_threshold_frames_.has_value() &&
+      frames_since_stereo_detected_last_ >=
+          *detection_timeout_threshold_frames_) {
+    persistent_multichannel_content_detected_ = false;
+  }
+
+  // Detect temporary multichannel content.
+  temporary_multichannel_content_detected_ =
+      persistent_multichannel_content_detected_ ? false
+                                                : stereo_detected_in_frame;
+
+  return previous_persistent_multichannel_content_detected !=
+         persistent_multichannel_content_detected_;
 }
 
 }  // namespace webrtc

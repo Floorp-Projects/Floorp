@@ -704,7 +704,9 @@ EchoCanceller3::EchoCanceller3(
           config_selector_.active_config()
               .multi_channel.stereo_detection_threshold,
           config_selector_.active_config()
-              .multi_channel.stereo_detection_timeout_threshold_seconds),
+              .multi_channel.stereo_detection_timeout_threshold_seconds,
+          config_selector_.active_config()
+              .multi_channel.stereo_detection_hysteresis_seconds),
       output_framer_(num_bands_, num_capture_channels_),
       capture_blocker_(num_bands_, num_capture_channels_),
       render_transfer_queue_(
@@ -772,12 +774,12 @@ void EchoCanceller3::Initialize() {
   RTC_DCHECK_RUNS_SERIALIZED(&capture_race_checker_);
 
   num_render_channels_to_aec_ =
-      multichannel_content_detector_.IsMultiChannelContentDetected()
+      multichannel_content_detector_.IsProperMultiChannelContentDetected()
           ? num_render_input_channels_
           : 1;
 
   config_selector_.Update(
-      multichannel_content_detector_.IsMultiChannelContentDetected());
+      multichannel_content_detector_.IsProperMultiChannelContentDetected());
 
   for (std::vector<std::vector<float>>& block_band : render_block_) {
     block_band.resize(num_render_channels_to_aec_);

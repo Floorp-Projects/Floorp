@@ -31,24 +31,33 @@ class MultiChannelContentDetector {
   MultiChannelContentDetector(bool detect_stereo_content,
                               int num_render_input_channels,
                               float detection_threshold,
-                              int stereo_detection_timeout_threshold_seconds);
+                              int stereo_detection_timeout_threshold_seconds,
+                              float stereo_detection_hysteresis_seconds);
 
   // Compares the left and right channels in the render `frame` to determine
   // whether the signal is a proper multichannel signal. Returns a bool
-  // indicating whether a change in the multichannel was detected.
+  // indicating whether a change in the proper multichannel content was
+  // detected.
   bool UpdateDetection(
       const std::vector<std::vector<std::vector<float>>>& frame);
 
-  bool IsMultiChannelContentDetected() const {
-    return proper_multichannel_content_detected_;
+  bool IsProperMultiChannelContentDetected() const {
+    return persistent_multichannel_content_detected_;
+  }
+
+  bool IsTemporaryMultiChannelContentDetectedForTesting() const {
+    return temporary_multichannel_content_detected_;
   }
 
  private:
   const bool detect_stereo_content_;
   const float detection_threshold_;
   const absl::optional<int> detection_timeout_threshold_frames_;
-  bool proper_multichannel_content_detected_;
-  int frames_since_stereo_detected_ = 0;
+  const int stereo_detection_hysteresis_frames_;
+  bool persistent_multichannel_content_detected_;
+  bool temporary_multichannel_content_detected_ = false;
+  int64_t frames_since_stereo_detected_last_ = 0;
+  int64_t consecutive_frames_with_stereo_ = 0;
 };
 
 }  // namespace webrtc
