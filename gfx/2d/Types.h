@@ -386,49 +386,17 @@ enum class YUVRangedColorSpace : uint8_t {
 // one.
 // Some times Worse Is Better.
 enum class ColorSpace2 : uint8_t {
-  UNKNOWN,  // Really "DISPLAY". Eventually we will remove this.
+  UNKNOWN,  // Eventually we will remove this.
   SRGB,
-  DISPLAY_P3,
   BT601_525,  // aka smpte170m NTSC
   BT709,      // Same gamut as SRGB, but different gamma.
   BT601_625 =
       BT709,  // aka bt470bg PAL. Basically BT709, just Xg is 0.290 not 0.300.
   BT2020,
+  DISPLAY_P3,
   _First = UNKNOWN,
-  _Last = BT2020,
+  _Last = DISPLAY_P3,
 };
-
-inline ColorSpace2 ToColorSpace2(const YUVColorSpace in) {
-  switch (in) {
-    case YUVColorSpace::BT601:
-      return ColorSpace2::BT601_525;
-    case YUVColorSpace::BT709:
-      return ColorSpace2::BT709;
-    case YUVColorSpace::BT2020:
-      return ColorSpace2::BT2020;
-    case YUVColorSpace::Identity:
-      return ColorSpace2::SRGB;
-  }
-  MOZ_ASSERT_UNREACHABLE();
-}
-
-inline YUVColorSpace ToYUVColorSpace(const ColorSpace2 in) {
-  switch (in) {
-    case ColorSpace2::BT601_525:
-      return YUVColorSpace::BT601;
-    case ColorSpace2::BT709:
-      return YUVColorSpace::BT709;
-    case ColorSpace2::BT2020:
-      return YUVColorSpace::BT2020;
-    case ColorSpace2::SRGB:
-      return YUVColorSpace::Identity;
-
-    case ColorSpace2::UNKNOWN:
-    case ColorSpace2::DISPLAY_P3:
-      MOZ_CRASH("Bad ColorSpace2 for ToYUVColorSpace");
-  }
-  MOZ_ASSERT_UNREACHABLE();
-}
 
 struct FromYUVRangedColorSpaceT final {
   const YUVColorSpace space;
