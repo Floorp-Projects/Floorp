@@ -204,15 +204,6 @@ class alignas(uintptr_t) BaselineScript final : public TrailingArray {
   uint32_t profilerEnterToggleOffset_ = 0;
   uint32_t profilerExitToggleOffset_ = 0;
 
-  // The offsets and event used for Tracelogger toggling.
-#ifdef JS_TRACE_LOGGING
-#  ifdef DEBUG
-  bool traceLoggerScriptsEnabled_ = false;
-  bool traceLoggerEngineEnabled_ = false;
-#  endif
-  TraceLoggerEvent traceLoggerScriptEvent_ = {};
-#endif
-
  private:
   // Offset (in bytes) from `this` to the start of each trailing array. Each
   // array ends where following one begins. There is no implicit padding (except
@@ -296,14 +287,6 @@ class alignas(uintptr_t) BaselineScript final : public TrailingArray {
                                     traceLoggerToggleOffsetsOffset());
   }
 
-#ifdef JS_TRACE_LOGGING
-  // By default tracelogger is disabled. Therefore we disable the logging code
-  // by default. We store the offsets we must patch to enable the logging.
-  mozilla::Span<uint32_t> traceLoggerToggleOffsets() {
-    return makeSpan<uint32_t>(traceLoggerToggleOffsetsOffset(), endOffset());
-  }
-#endif
-
  public:
   static BaselineScript* New(JSContext* cx, uint32_t warmUpCheckPrologueOffset,
                              uint32_t profilerEnterToggleOffset,
@@ -379,16 +362,6 @@ class alignas(uintptr_t) BaselineScript final : public TrailingArray {
   bool isProfilerInstrumentationOn() const {
     return flags_ & PROFILER_INSTRUMENTATION_ON;
   }
-
-#ifdef JS_TRACE_LOGGING
-  void initTraceLogger(JSScript* script, const Vector<CodeOffset>& offsets);
-  void toggleTraceLoggerScripts(JSScript* script, bool enable);
-  void toggleTraceLoggerEngine(bool enable);
-
-  static size_t offsetOfTraceLoggerScriptEvent() {
-    return offsetof(BaselineScript, traceLoggerScriptEvent_);
-  }
-#endif
 
   static size_t offsetOfResumeEntriesOffset() {
     static_assert(sizeof(Offset) == sizeof(uint32_t),
