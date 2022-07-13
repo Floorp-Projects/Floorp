@@ -59,6 +59,7 @@ class FakeMBW(mb.WebRTCMetaBuildWrapper):
     self.rmdirs = []
 
   def ExpandUser(self, path):
+    # pylint: disable=no-self-use
     return '$HOME/%s' % path
 
   def Exists(self, path):
@@ -715,7 +716,7 @@ class UnitTest(unittest.TestCase):
         'vpython3',
         '../../testing/test_env.py',
         '../../tools_webrtc/gtest-parallel-wrapper.py',
-        '--output_dir=${ISOLATED_OUTDIR}\\test_logs',
+        '--output_dir=${ISOLATED_OUTDIR}/test_logs',
         '--gtest_color=no',
         '--timeout=900',
         '--retry_failed=3',
