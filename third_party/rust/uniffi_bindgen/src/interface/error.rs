@@ -85,7 +85,7 @@
 use anyhow::Result;
 
 use super::enum_::{Enum, Variant};
-use super::types::{Type, TypeIterator};
+use super::types::{IterTypes, Type, TypeIterator};
 use super::{APIConverter, ComponentInterface};
 
 /// Represents an Error that might be thrown by functions/methods in the component interface.
@@ -129,8 +129,10 @@ impl Error {
     pub fn is_flat(&self) -> bool {
         self.enum_.is_flat()
     }
+}
 
-    pub fn iter_types(&self) -> TypeIterator<'_> {
+impl IterTypes for Error {
+    fn iter_types(&self) -> TypeIterator<'_> {
         self.wrapped_enum().iter_types()
     }
 }
@@ -159,7 +161,7 @@ mod test {
             enum Testing { "one", "two", "three" };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.error_definitions().len(), 1);
+        assert_eq!(ci.iter_error_definitions().len(), 1);
         let error = ci.get_error_definition("Testing").unwrap();
         assert_eq!(
             error
@@ -182,7 +184,7 @@ mod test {
             enum Testing { "one", "two", "one" };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.error_definitions().len(), 1);
+        assert_eq!(ci.iter_error_definitions().len(), 1);
         assert_eq!(
             ci.get_error_definition("Testing").unwrap().variants().len(),
             3
@@ -201,7 +203,7 @@ mod test {
             };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.error_definitions().len(), 1);
+        assert_eq!(ci.iter_error_definitions().len(), 1);
         let error: &Error = ci.get_error_definition("Testing").unwrap();
         assert_eq!(
             error

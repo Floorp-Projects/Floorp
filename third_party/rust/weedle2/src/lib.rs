@@ -32,8 +32,8 @@
     many0,
     opt,
     recognize,
-    separated_list0,
-    separated_list1,
+    separated_list,
+    separated_nonempty_list,
     terminated
 )]
 extern crate nom;
@@ -47,7 +47,7 @@ use self::literal::StringLit;
 use self::mixin::MixinMembers;
 use self::namespace::NamespaceMembers;
 use self::types::{AttributedType, ReturnType};
-pub use nom::{error::Error, error::ErrorKind, Err, IResult};
+pub use nom::{error::ErrorKind, Err, IResult};
 
 #[macro_use]
 mod macros;
@@ -80,7 +80,7 @@ pub mod types;
 ///
 /// println!("{:?}", parsed);
 /// ```
-pub fn parse(raw: &str) -> Result<Definitions<'_>, Err<Error<&str>>> {
+pub fn parse(raw: &str) -> Result<Definitions<'_>, Err<(&str, ErrorKind)>> {
     let (remaining, parsed) = Definitions::parse(raw)?;
     assert!(
         remaining.is_empty(),

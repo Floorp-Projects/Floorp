@@ -47,7 +47,7 @@
 use anyhow::{bail, Result};
 
 use super::literal::{convert_default_value, Literal};
-use super::types::{Type, TypeIterator};
+use super::types::{IterTypes, Type, TypeIterator};
 use super::{APIConverter, ComponentInterface};
 
 /// Represents a "data class" style object, for passing around complex values.
@@ -75,9 +75,11 @@ impl Record {
     pub fn fields(&self) -> Vec<&Field> {
         self.fields.iter().collect()
     }
+}
 
-    pub fn iter_types(&self) -> TypeIterator<'_> {
-        Box::new(self.fields.iter().flat_map(Field::iter_types))
+impl IterTypes for Record {
+    fn iter_types(&self) -> TypeIterator<'_> {
+        Box::new(self.fields.iter().flat_map(IterTypes::iter_types))
     }
 }
 
@@ -109,16 +111,16 @@ impl Field {
     pub fn name(&self) -> &str {
         &self.name
     }
-
     pub fn type_(&self) -> Type {
         self.type_.clone()
     }
-
     pub fn default_value(&self) -> Option<Literal> {
         self.default.clone()
     }
+}
 
-    pub fn iter_types(&self) -> TypeIterator<'_> {
+impl IterTypes for Field {
+    fn iter_types(&self) -> TypeIterator<'_> {
         self.type_.iter_types()
     }
 }
@@ -165,7 +167,7 @@ mod test {
             };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.record_definitions().len(), 3);
+        assert_eq!(ci.iter_record_definitions().len(), 3);
 
         let record = ci.get_record_definition("Empty").unwrap();
         assert_eq!(record.name(), "Empty");
@@ -212,18 +214,25 @@ mod test {
             };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.record_definitions().len(), 1);
+        assert_eq!(ci.iter_record_definitions().len(), 1);
         let record = ci.get_record_definition("Testing").unwrap();
         assert_eq!(record.fields().len(), 2);
         assert_eq!(record.fields()[0].name(), "maybe_name");
         assert_eq!(record.fields()[1].name(), "value");
 
-        assert_eq!(ci.iter_types().count(), 4);
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "u32"));
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "string"));
+        assert_eq!(ci.iter_types().len(), 4);
+        assert!(ci.iter_types().iter().any(|t| t.canonical_name() == "u32"));
         assert!(ci
             .iter_types()
+            .iter()
+            .any(|t| t.canonical_name() == "string"));
+        assert!(ci
+            .iter_types()
+            .iter()
             .any(|t| t.canonical_name() == "Optionalstring"));
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "TypeTesting"));
+        assert!(ci
+            .iter_types()
+            .iter()
+            .any(|t| t.canonical_name() == "TypeTesting"));
     }
 }
