@@ -1286,6 +1286,7 @@ if (rtc_include_tests) {
       "../../media:rtc_media_base",
       "../../rtc_base",
       "../../rtc_base:checks",
+      "../../rtc_base:histogram_percentile_counter",
       "../../rtc_base:location",
       "../../rtc_base:platform_thread",
       "../../rtc_base:random",
