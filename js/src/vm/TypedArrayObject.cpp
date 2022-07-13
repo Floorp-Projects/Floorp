@@ -1996,6 +1996,8 @@ bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
     JS_SELF_HOSTED_FN("filter", "TypedArrayFilter", 1, 0),
     JS_SELF_HOSTED_FN("find", "TypedArrayFind", 1, 0),
     JS_SELF_HOSTED_FN("findIndex", "TypedArrayFindIndex", 1, 0),
+    JS_SELF_HOSTED_FN("findLast", "TypedArrayFindLast", 1, 0),
+    JS_SELF_HOSTED_FN("findLastIndex", "TypedArrayFindLastIndex", 1, 0),
     JS_SELF_HOSTED_FN("forEach", "TypedArrayForEach", 1, 0),
     JS_SELF_HOSTED_FN("indexOf", "TypedArrayIndexOf", 2, 0),
     JS_SELF_HOSTED_FN("join", "TypedArrayJoin", 1, 0),
@@ -2017,11 +2019,6 @@ bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
     JS_SELF_HOSTED_FN("at", "TypedArrayAt", 1, 0),
     JS_FS_END};
 
-const JSFunctionSpec arrayFindLastProtoFunctions[] = {
-    JS_SELF_HOSTED_FN("findLast", "TypedArrayFindLast", 1, 0),
-    JS_SELF_HOSTED_FN("findLastIndex", "TypedArrayFindLastIndex", 1, 0),
-    JS_FS_END};
-
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 const JSFunctionSpec changeArrayByCopyProtoFunctions[] = {
     JS_SELF_HOSTED_FN("toReversed", "TypedArrayToReversed", 0, 0),
@@ -2034,11 +2031,6 @@ const JSFunctionSpec changeArrayByCopyProtoFunctions[] = {
 
 static bool TypedArrayProtoFinish(JSContext* cx, JS::HandleObject ctor,
                                   JS::HandleObject proto) {
-  if (cx->realm()->creationOptions().getArrayFindLastEnabled()) {
-    if (!js::DefineFunctions(cx, proto, arrayFindLastProtoFunctions)) {
-      return false;
-    }
-  }
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   if (cx->options().changeArrayByCopy()) {
     if (!js::DefineFunctions(cx, proto, changeArrayByCopyProtoFunctions)) {
