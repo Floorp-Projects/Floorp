@@ -1,12 +1,8 @@
 diff --git a/vpx_dsp/vpx_dsp.mk b/vpx_dsp/vpx_dsp.mk
+index 13999af04..6519d828c 100644
 --- a/vpx_dsp/vpx_dsp.mk
 +++ b/vpx_dsp/vpx_dsp.mk
-@@ -160,17 +160,17 @@ DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve
- DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve8_horiz_dspr2.c
- DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve8_vert_dspr2.c
- 
- DSP_SRCS-$(HAVE_VSX)  += ppc/vpx_convolve_vsx.c
- 
+@@ -177,7 +177,7 @@ DSP_SRCS-$(HAVE_LSX) += loongarch/vpx_convolve_lsx.h
  # loop filters
  DSP_SRCS-yes += loopfilter.c
  
@@ -15,8 +11,12 @@ diff --git a/vpx_dsp/vpx_dsp.mk b/vpx_dsp/vpx_dsp.mk
  DSP_SRCS-$(HAVE_AVX2)  += x86/loopfilter_avx2.c
  
  ifeq ($(HAVE_NEON_ASM),yes)
- DSP_SRCS-yes  += arm/loopfilter_16_neon$(ASM)
- DSP_SRCS-yes  += arm/loopfilter_8_neon$(ASM)
- DSP_SRCS-yes  += arm/loopfilter_4_neon$(ASM)
- else
- DSP_SRCS-$(HAVE_NEON)   += arm/loopfilter_neon.c
+@@ -328,7 +328,7 @@ DSP_SRCS-$(HAVE_SSSE3)  += x86/quantize_ssse3.h
+ DSP_SRCS-$(HAVE_AVX)    += x86/quantize_avx.c
+ DSP_SRCS-$(HAVE_NEON)   += arm/quantize_neon.c
+ DSP_SRCS-$(HAVE_VSX)    += ppc/quantize_vsx.c
+-DSP_SRCS-$(HAVE_LSX)    += loongarch/quantize_lsx.c
++DSP_SRCS-$(HAVE_LSX)    += loongarch/quantize_intrin_lsx.c
+ ifeq ($(CONFIG_VP9_HIGHBITDEPTH),yes)
+ DSP_SRCS-$(HAVE_SSE2)   += x86/highbd_quantize_intrin_sse2.c
+ endif

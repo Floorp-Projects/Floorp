@@ -65,6 +65,9 @@ vendoring:
     - action: move-file
       from: '{vendor_dir}/vpx_dsp/x86/loopfilter_sse2.c'
       to: '{vendor_dir}/vpx_dsp/x86/loopfilter_intrin_sse2.c'
+    - action: move-file
+      from: '{vendor_dir}/vpx_dsp/loongarch/quantize_lsx.c'
+      to: '{vendor_dir}/vpx_dsp/loongarch/quantize_intrin_lsx.c'
     - action: run-script
       script: '{yaml_dir}/generate_sources_mozbuild.sh'
       cwd: '{yaml_dir}'
