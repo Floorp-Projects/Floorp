@@ -65,6 +65,7 @@
 #include "test/mappable_native_buffer.h"
 #include "test/scoped_key_value_config.h"
 #include "test/time_controller/simulated_time_controller.h"
+#include "test/video_encoder_nullable_proxy_factory.h"
 #include "test/video_encoder_proxy_factory.h"
 #include "video/frame_cadence_adapter.h"
 #include "video/send_statistics_proxy.h"
@@ -7688,6 +7689,57 @@ TEST_F(VideoStreamEncoderTest,
       .WillOnce([&encode_attempted]() { encode_attempted.Set(); });
 
   video_source_.IncomingCapturedFrame(CreateFrame(1, nullptr));
+  encode_attempted.Wait(3000);
+
+  AdvanceTime(TimeDelta::Zero());
+
+  video_stream_encoder_->Stop();
+
+  // The encoders produced by the VideoEncoderProxyFactory have a pointer back
+  // to it's factory, so in order for the encoder instance in the
+  // `video_stream_encoder_` to be destroyed before the `encoder_factory` we
+  // reset the `video_stream_encoder_` here.
+  video_stream_encoder_.reset();
+}
+
+TEST_F(VideoStreamEncoderTest, NullEncoderReturnSwitch) {
+  // As a variant of EncoderSelectorBrokenEncoderSwitch, when a null
+  // VideoEncoder is passed in encoder_factory, it checks whether
+  // Codec Switch occurs without a crash.
+  constexpr int kSufficientBitrateToNotDrop = 1000;
+  constexpr int kDontCare = 100;
+
+  NiceMock<MockEncoderSelector> encoder_selector;
+  StrictMock<MockEncoderSwitchRequestCallback> switch_callback;
+  video_send_config_.encoder_settings.encoder_switch_request_callback =
+      &switch_callback;
+  auto encoder_factory =
+      std::make_unique<test::VideoEncoderNullableProxyFactory>(
+          /*encoder=*/nullptr, &encoder_selector);
+  video_send_config_.encoder_settings.encoder_factory = encoder_factory.get();
+
+  // Reset encoder for new configuration to take effect.
+  ConfigureEncoder(video_encoder_config_.Copy());
+  // The VideoStreamEncoder needs some bitrate before it can start encoding,
+  // setting some bitrate so that subsequent calls to WaitForEncodedFrame does
+  // not fail.
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      /*target_bitrate=*/DataRate::KilobitsPerSec(kSufficientBitrateToNotDrop),
+      /*stable_target_bitrate=*/
+      DataRate::KilobitsPerSec(kSufficientBitrateToNotDrop),
+      /*link_allocation=*/DataRate::KilobitsPerSec(kSufficientBitrateToNotDrop),
+      /*fraction_lost=*/0,
+      /*round_trip_time_ms=*/0,
+      /*cwnd_reduce_ratio=*/0);
+  ON_CALL(encoder_selector, OnEncoderBroken)
+      .WillByDefault(Return(SdpVideoFormat("AV2")));
+  rtc::Event encode_attempted;
+  EXPECT_CALL(switch_callback,
+              RequestEncoderSwitch(Field(&SdpVideoFormat::name, "AV2"),
+                                   /*allow_default_fallback=*/_))
+      .WillOnce([&encode_attempted]() { encode_attempted.Set(); });
+
+  video_source_.IncomingCapturedFrame(CreateFrame(1, kDontCare, kDontCare));
   encode_attempted.Wait(3000);
 
   AdvanceTime(TimeDelta::Zero());

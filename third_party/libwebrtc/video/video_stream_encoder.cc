@@ -903,9 +903,12 @@ void VideoStreamEncoder::ReconfigureEncoder() {
 
     encoder_ = settings_.encoder_factory->CreateVideoEncoder(
         encoder_config_.video_format);
-    // TODO(nisse): What to do if creating the encoder fails? Crash,
-    // or just discard incoming frames?
-    RTC_CHECK(encoder_);
+    if (!encoder_) {
+      RTC_LOG(LS_ERROR) << "CreateVideoEncoder failed, failing encoder format: "
+                        << encoder_config_.video_format.ToString();
+      RequestEncoderSwitch();
+      return;
+    }
 
     if (encoder_selector_) {
       encoder_selector_->OnCurrentEncoder(encoder_config_.video_format);
@@ -2171,7 +2174,7 @@ void VideoStreamEncoder::OnBitrateUpdated(DataRate target_bitrate,
 }
 
 bool VideoStreamEncoder::DropDueToSize(uint32_t pixel_count) const {
-  if (!stream_resource_manager_.DropInitialFrames() ||
+  if (!encoder_ || !stream_resource_manager_.DropInitialFrames() ||
       !encoder_target_bitrate_bps_.has_value()) {
     return false;
   }
