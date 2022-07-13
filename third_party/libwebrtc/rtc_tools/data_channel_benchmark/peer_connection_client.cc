@@ -159,7 +159,6 @@ bool PeerConnectionClient::InitializePeerConnection(
   server.urls.push_back(kStunServer);
   config.servers.push_back(server);
   config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
-  config.enable_dtls_srtp = true;
 
   webrtc::PeerConnectionDependencies dependencies(this);
   auto result =

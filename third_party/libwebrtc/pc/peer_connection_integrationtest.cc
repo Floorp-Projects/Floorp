@@ -269,6 +269,7 @@ TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithDtls) {
                                     webrtc::kEnumCounterKeyProtocolSdes));
 }
 
+#if defined(WEBRTC_FUCHSIA)
 // Uses SDES instead of DTLS for key agreement.
 TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithSdes) {
   PeerConnectionInterface::RTCConfiguration sdes_config;
@@ -292,6 +293,7 @@ TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithSdes) {
       0, webrtc::metrics::NumEvents("WebRTC.PeerConnection.KeyProtocol",
                                     webrtc::kEnumCounterKeyProtocolDtls));
 }
+#endif
 
 // Basic end-to-end test specifying the `enable_encrypted_rtp_header_extensions`
 // option to offer encrypted versions of all header extensions alongside the

@@ -396,6 +396,7 @@ TEST_P(PeerConnectionEndToEndTest, Call) {
   WaitForCallEstablished();
 }
 
+#if defined(IS_FUCHSIA)
 TEST_P(PeerConnectionEndToEndTest, CallWithSdesKeyNegotiation) {
   config_.enable_dtls_srtp = false;
   CreatePcs(webrtc::CreateOpusAudioEncoderFactory(),
@@ -404,6 +405,7 @@ TEST_P(PeerConnectionEndToEndTest, CallWithSdesKeyNegotiation) {
   Negotiate();
   WaitForCallEstablished();
 }
+#endif
 
 TEST_P(PeerConnectionEndToEndTest, CallWithCustomCodec) {
   class IdLoggingAudioEncoderFactory : public webrtc::AudioEncoderFactory {
