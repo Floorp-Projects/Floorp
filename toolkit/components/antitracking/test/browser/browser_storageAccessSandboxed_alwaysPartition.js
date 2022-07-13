@@ -29,11 +29,11 @@ AntiTracking.runTest(
   },
   [
     ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ], // extra prefs
   false, // no window open test
   false, // no user-interaction test
-  0, // no blocking notifications
+  Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expected blocking notifications
   false, // run in normal window
   "allow-scripts allow-same-origin allow-popups"
 );
@@ -71,7 +71,7 @@ AntiTracking.runTest(
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ], // extra prefs
   false, // no window open test
   false, // no user-interaction test
@@ -96,7 +96,7 @@ AntiTracking.runTest(
   null, // cleanup function
   [
     ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ], // extra prefs
   false, // no window open test
   false, // no user-interaction test
@@ -124,7 +124,7 @@ AntiTracking.runTest(
   null, // cleanup function
   [
     ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ], // extra prefs
   false, // no window open test
   false, // no user-interaction test
@@ -149,7 +149,7 @@ AntiTracking.runTest(
   null, // cleanup function
   [
     ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ], // extra prefs
   false, // no window open test
   false, // no user-interaction test
@@ -177,7 +177,7 @@ AntiTracking.runTest(
   null, // cleanup function
   [
     ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ], // extra prefs
   false, // no window open test
   false, // no user-interaction test
@@ -207,7 +207,7 @@ AntiTracking.runTest(
   },
   [
     ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ], // extra prefs
   false, // no window open test
   false, // no user-interaction test

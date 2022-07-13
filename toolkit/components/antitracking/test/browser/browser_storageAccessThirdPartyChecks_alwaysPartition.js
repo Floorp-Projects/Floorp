@@ -1,5 +1,8 @@
 /* import-globals-from antitracking_head.js */
 
+const allBlocked = Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL;
+const foreignBlocked = Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN;
+
 const APS_PREF =
   "privacy.partition.always_partition_third_party_non_cookie_storage";
 
@@ -40,7 +43,7 @@ AntiTracking._createTask({
 
     await runChecks("image");
   },
-  extraPrefs: [[APS_PREF, false]],
+  extraPrefs: [[APS_PREF, true]],
   expectedBlockingNotifications:
     Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
   runInPrivateWindow: false,
@@ -52,6 +55,8 @@ AntiTracking._createTask({
     "http://tracking.example.org",
     "http://tracking.example.org",
     "http://tracking.example.org",
+    "http://tracking.example.org",
+    "http://trackertest.org",
   ],
 });
 
@@ -76,18 +81,15 @@ AntiTracking._createTask({
   },
   extraPrefs: [
     ["network.cookie.rejectForeignWithExceptions.enabled", false],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ],
-  expectedBlockingNotifications: 0,
+  expectedBlockingNotifications: foreignBlocked,
   runInPrivateWindow: false,
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
   thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
-  errorMessageDomains: [
-    "http://tracking.example.org",
-    "http://tracking.example.org",
-  ],
+  errorMessageDomains: ["http://tracking.example.org"],
 });
 
 add_task(async _ => {
@@ -108,17 +110,14 @@ AntiTracking._createTask({
 
     await callRequestStorageAccess(null, true);
   },
-  extraPrefs: [[APS_PREF, false]],
-  expectedBlockingNotifications: 0,
+  extraPrefs: [[APS_PREF, true]],
+  expectedBlockingNotifications: allBlocked,
   runInPrivateWindow: false,
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
   thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
-  errorMessageDomains: [
-    "http://tracking.example.org",
-    "http://tracking.example.org",
-  ],
+  errorMessageDomains: ["http://example.net", "http://tracking.example.org"],
 });
 
 add_task(async _ => {
@@ -139,17 +138,14 @@ AntiTracking._createTask({
 
     await callRequestStorageAccess(null, true);
   },
-  extraPrefs: [[APS_PREF, false]],
-  expectedBlockingNotifications: 0,
+  extraPrefs: [[APS_PREF, true]],
+  expectedBlockingNotifications: foreignBlocked,
   runInPrivateWindow: false,
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
   thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
-  errorMessageDomains: [
-    "http://tracking.example.org",
-    "http://tracking.example.org",
-  ],
+  errorMessageDomains: ["http://tracking.example.org"],
 });
 
 add_task(async _ => {
