@@ -940,6 +940,7 @@ if (current_os == "linux" || is_android) {
       ":generated_external_classes_jni",
       ":generated_native_api_jni",
       ":internal_jni",
+      "../../rtc_base:atomicops",
       "//api:array_view",
       "//rtc_base:checks",
       "//rtc_base:rtc_base_approved",
