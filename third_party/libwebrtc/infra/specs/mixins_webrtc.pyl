@@ -28,6 +28,36 @@
       },
     },
   },
+  'ios-device-15.3': {
+    'swarming': {
+      'dimensions': {
+        'os': 'iOS-15.3',
+        'pool': 'chrome.tests',
+      },
+    },
+  },
+  'ios_runtime_cache_14_0': {
+    '$mixin_append': {
+      'swarming': {
+        'named_caches': [
+          {
+            'name': 'runtime_ios_14_0',
+            'path': 'Runtime-ios-14.0',
+          },
+        ],
+      },
+    },
+  },
+  'ios-simulator-14': {
+    '$mixin_append': {
+      'args': [
+        '--platform',
+        'iPhone X',
+        '--version',
+        '14.0',
+      ],
+    }
+  },
   'quick-perf-tests': {
     '$mixin_append': {
       'args': [
@@ -84,11 +114,32 @@
       'result_format': 'json'
     }
   },
+  'webrtc-xctest': {
+    '$mixin_append': {
+      'args': [
+        '--xctest',
+        '--undefok=enable-run-ios-unittests-with-xctest',
+      ],
+    },
+  },
   'win': {
     'swarming': {
       'dimensions': {
         'os': 'Windows'
       }
     }
+  },
+  'xcode_12a7209': {
+    '$mixin_append': {
+      'args': ['--xcode-build-version', '12a7209'],
+      'swarming': {
+        'named_caches': [
+          {
+            'name': 'xcode_ios_12a7209',
+            'path': 'Xcode.app',
+          },
+        ],
+      },
+    },
   },
 }

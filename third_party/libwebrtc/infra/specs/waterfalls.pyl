@@ -12,10 +12,12 @@
     'mixins': [],
     'machines': {
       'Android32 (M Nexus5X)': {
-        'mixins':
-        ['bullhead', 'marshmallow', 'android-devices', 'logdog-butler'],
+        'mixins': [
+          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'has_native_resultdb_integration'
+        ],
         'test_suites': {
-          'isolated_scripts': 'android_tests',
+          'gtest_tests': 'android_tests',
           'junit_tests': 'android_junit_tests',
         },
       },
@@ -40,6 +42,31 @@
           'isolated_scripts': 'win_tests',
         },
       },
+      'iOS64 Sim Debug (iOS 14.0)': {
+        'mixins': [
+          'mac11', 'chromium-tester-service-account', 'ios-simulator-14',
+          'xcode_12a7209', 'ios_runtime_cache_14_0', 'mac_toolchain',
+          'has_native_resultdb_integration'
+        ],
+        'test_suites': {
+          'isolated_scripts': 'ios_simulator_tests',
+        },
+      },
+    },
+  },
+  {
+    'name': 'internal.client.webrtc',
+    'mixins': [],
+    'machines': {
+      'iOS64 Release': {
+        'mixins': [
+          'ios-device-15.3', 'webrtc-xctest', 'chrome-tester-service-account',
+          'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration'
+        ],
+        'test_suites': {
+          'isolated_scripts': 'ios_device_tests',
+        },
+      },
     },
   },
   {
@@ -47,10 +74,12 @@
     'mixins': [],
     'machines': {
       'android_arm_rel': {
-        'mixins':
-        ['bullhead', 'marshmallow', 'android-devices', 'logdog-butler'],
+        'mixins': [
+          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'has_native_resultdb_integration'
+        ],
         'test_suites': {
-          'isolated_scripts': 'android_tests_tryserver',
+          'gtest_tests': 'android_tests_tryserver',
           'junit_tests': 'android_junit_tests',
         },
       },
