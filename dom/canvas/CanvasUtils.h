@@ -21,6 +21,7 @@ namespace mozilla {
 namespace dom {
 class Document;
 class HTMLCanvasElement;
+class OffscreenCanvas;
 }  // namespace dom
 
 namespace CanvasUtils {
@@ -45,6 +46,10 @@ inline bool CheckSaneSubrectSize(int32_t x, int32_t y, int32_t w, int32_t h,
 // onto it would make it such.
 
 void DoDrawImageSecurityCheck(dom::HTMLCanvasElement* aCanvasElement,
+                              nsIPrincipal* aPrincipal, bool forceWriteOnly,
+                              bool CORSUsed);
+
+void DoDrawImageSecurityCheck(dom::OffscreenCanvas* aOffscreenCanvas,
                               nsIPrincipal* aPrincipal, bool forceWriteOnly,
                               bool CORSUsed);
 
