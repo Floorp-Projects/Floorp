@@ -502,6 +502,18 @@ void ApplyEncoderBitrateLimitsIfSingleActiveStream(
                encoder_bitrate_limits->max_bitrate_bps);
 }
 
+absl::optional<int> ParseVp9LowTierCoreCountThreshold(
+    const webrtc::FieldTrialsView& trials) {
+  FieldTrialFlag disable_low_tier("Disabled");
+  FieldTrialParameter<int> max_core_count("max_core_count", 2);
+  ParseFieldTrial({&disable_low_tier, &max_core_count},
+                  trials.Lookup("WebRTC-VP9-LowTierOptimizations"));
+  if (disable_low_tier.Get()) {
+    return absl::nullopt;
+  }
+  return max_core_count.Get();
+}
+
 }  //  namespace
 
 VideoStreamEncoder::EncoderRateSettings::EncoderRateSettings()
@@ -668,6 +680,8 @@ VideoStreamEncoder::VideoStreamEncoder(
           !field_trials.IsEnabled("WebRTC-QpParsingKillSwitch")),
       switch_encoder_on_init_failures_(!field_trials.IsDisabled(
           kSwitchEncoderOnInitializationFailuresFieldTrial)),
+      vp9_low_tier_core_threshold_(
+          ParseVp9LowTierCoreCountThreshold(field_trials)),
       encoder_queue_(std::move(encoder_queue)) {
   TRACE_EVENT0("webrtc", "VideoStreamEncoder::VideoStreamEncoder");
   RTC_DCHECK_RUN_ON(worker_queue_);
@@ -1145,6 +1159,12 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     encoder_reset_required = RequiresEncoderReset(
         send_codec_, codec, was_encode_called_since_last_initialization_);
   }
+
+  if (codec.codecType == VideoCodecType::kVideoCodecVP9 &&
+      number_of_cores_ <= vp9_low_tier_core_threshold_.value_or(0)) {
+    codec.SetVideoEncoderComplexity(VideoCodecComplexity::kComplexityLow);
+  }
+
   send_codec_ = codec;
 
   // Keep the same encoder, as long as the video_format is unchanged.
