@@ -78,6 +78,7 @@ rtc_library("interval_budget") {
   deps = [
     "../../rtc_base:checks",
     "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:safe_conversions",
   ]
 }
 

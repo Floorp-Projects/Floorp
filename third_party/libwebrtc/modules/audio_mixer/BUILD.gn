@@ -98,6 +98,7 @@ if (rtc_include_tests) {
       "../../api/audio:audio_frame_api",
       "../../rtc_base:checks",
       "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:safe_conversions",
     ]
   }
 

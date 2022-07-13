@@ -37,6 +37,7 @@ rtc_library("system_wrappers") {
     "../modules:module_api_public",
     "../rtc_base:checks",
     "../rtc_base:logging",
+    "../rtc_base:safe_conversions",
     "../rtc_base/synchronization:mutex",
     "../rtc_base/system:arch",
     "../rtc_base/system:rtc_export",

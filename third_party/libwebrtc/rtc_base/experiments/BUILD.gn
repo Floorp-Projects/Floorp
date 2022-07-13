@@ -206,6 +206,7 @@ rtc_library("rate_control_settings") {
   deps = [
     ":field_trial_parser",
     "..:logging",
+    "..:safe_conversions",
     "../:rtc_base_approved",
     "../../api:field_trials_view",
     "../../api/transport:field_trial_based_config",

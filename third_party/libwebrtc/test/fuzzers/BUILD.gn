@@ -407,6 +407,7 @@ webrtc_fuzzer_test("neteq_signal_fuzzer") {
     "../../modules/audio_coding:neteq_tools_minimal",
     "../../modules/audio_coding:pcm16b",
     "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:safe_conversions",
   ]
 }
 
