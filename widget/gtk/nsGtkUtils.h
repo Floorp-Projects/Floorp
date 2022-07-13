@@ -20,32 +20,4 @@ static inline gpointer FuncToGpointer(T aFunction) {
       (reinterpret_cast<void (*)()>(aFunction)));
 }
 
-// Type-safe alternative to glib's g_clear_pointer.
-//
-// Using `g_clear_pointer` itself causes UBSan to report undefined
-// behavior. The function-based definition of `g_clear_pointer` (as
-// opposed to the older preprocessor macro) treats the `destroy`
-// function as a `void (*)(void *)`, but the actual destroy functions
-// that are used (say `wl_buffer_destroy`) usually have more specific
-// pointer types.
-//
-// C++ draft n4901 [expr.call] para 6:
-//
-//     Calling a function through an expression whose function type E
-//     is different from the function type F of the called function’s
-//     definition results in undefined behavior unless the type
-//     “pointer to F” can be converted to the type “pointer to E” via
-//     a function pointer conversion (7.3.14).
-//
-// §7.3.14 only talks about converting between noexcept and ordinary
-// function pointers.
-template <class T>
-static inline void MozClearPointer(T*& pointer, void (*destroy)(T*)) {
-  T* hold = pointer;
-  pointer = nullptr;
-  if (hold) {
-    destroy(hold);
-  }
-}
-
 #endif  // nsGtkUtils_h__

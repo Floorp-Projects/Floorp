@@ -14,7 +14,6 @@
 #include "gfxPlatform.h"
 #include "mozilla/WidgetUtilsGtk.h"
 #include "mozilla/gfx/Tools.h"
-#include "nsGtkUtils.h"
 #include "nsPrintfCString.h"
 #include "prenv.h"  // For PR_GetEnv
 
@@ -141,7 +140,7 @@ WaylandShmPool::~WaylandShmPool() {
     munmap(mImageData, mAllocatedSize);
     mImageData = MAP_FAILED;
   }
-  MozClearPointer(mShmPool, wl_shm_pool_destroy);
+  g_clear_pointer(&mShmPool, wl_shm_pool_destroy);
   if (mShmPoolFd >= 0) {
     close(mShmPoolFd);
     mShmPoolFd = -1;
@@ -218,7 +217,7 @@ WaylandBufferSHM::WaylandBufferSHM(const LayoutDeviceIntSize& aSize)
     : WaylandBuffer(aSize) {}
 
 WaylandBufferSHM::~WaylandBufferSHM() {
-  MozClearPointer(mWLBuffer, wl_buffer_destroy);
+  g_clear_pointer(&mWLBuffer, wl_buffer_destroy);
 }
 
 already_AddRefed<gfx::DrawTarget> WaylandBufferSHM::Lock() {

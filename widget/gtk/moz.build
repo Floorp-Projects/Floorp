@@ -28,7 +28,6 @@ if CONFIG["MOZ_WAYLAND"]:
 EXPORTS += [
     "MozContainer.h",
     "nsGTKToolkit.h",
-    "nsGtkUtils.h",
     "nsImageToPixbuf.h",
 ]
 
