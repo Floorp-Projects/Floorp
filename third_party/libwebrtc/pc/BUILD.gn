@@ -546,6 +546,7 @@ rtc_source_set("sctp_utils") {
     "../api:priority",
     "../api/transport:datagram_transport_interface",
     "../media:rtc_media_base",
+    "../rtc_base:byte_buffer",
     "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
   ]
@@ -2381,6 +2382,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../modules/rtp_rtcp:rtp_rtcp_format",
       "../p2p:fake_port_allocator",
       "../p2p:p2p_server_utils",
+      "../rtc_base:byte_buffer",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
       "../rtc_base:ip_address",

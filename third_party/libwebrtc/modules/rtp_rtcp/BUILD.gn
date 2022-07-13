@@ -297,6 +297,7 @@ rtc_library("rtp_rtcp") {
     "../../rtc_base:bit_buffer",
     "../../rtc_base:bitstream_reader",
     "../../rtc_base:buffer",
+    "../../rtc_base:byte_buffer",
     "../../rtc_base:checks",
     "../../rtc_base:divide_round",
     "../../rtc_base:gtest_prod",

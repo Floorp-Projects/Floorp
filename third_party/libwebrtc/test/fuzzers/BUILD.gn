@@ -130,6 +130,7 @@ webrtc_fuzzer_test("forward_error_correction_fuzzer") {
     "../../api:scoped_refptr",
     "../../modules/rtp_rtcp",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
+    "../../rtc_base:byte_buffer",
     "../../rtc_base:rtc_base_approved",
   ]
 }
