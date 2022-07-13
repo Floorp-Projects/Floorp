@@ -29,7 +29,6 @@
 #include "threading/ProtectedData.h"
 #include "util/TrailingArray.h"
 #include "vm/JSScript.h"
-#include "vm/TraceLogging.h"
 
 namespace js {
 

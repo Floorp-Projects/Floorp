@@ -24,7 +24,6 @@
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"
-#include "vm/TraceLogging.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"

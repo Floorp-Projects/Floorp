@@ -19,7 +19,6 @@
 #include "jit/ScriptFromCalleeToken.h"
 #include "vm/JSContext.h"
 #include "vm/Stack.h"
-#include "vm/TraceLogging.h"
 
 #include "vm/JSScript-inl.h"
 #include "vm/Probes-inl.h"

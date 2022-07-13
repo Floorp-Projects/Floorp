@@ -34,7 +34,6 @@
 #include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"
-#include "vm/TraceLogging.h"
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
 #endif

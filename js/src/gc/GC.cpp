@@ -252,7 +252,6 @@
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
 #include "vm/Time.h"
-#include "vm/TraceLogging.h"
 #include "vm/WrapperObject.h"
 
 #include "gc/Heap-inl.h"

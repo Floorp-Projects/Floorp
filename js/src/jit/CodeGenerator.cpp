@@ -72,7 +72,6 @@
 #include "vm/StaticStrings.h"
 #include "vm/StringObject.h"
 #include "vm/StringType.h"
-#include "vm/TraceLogging.h"
 #include "vm/TypedArrayObject.h"
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"

@@ -502,13 +502,6 @@ if CONFIG["MOZ_INSTRUMENTS"]:
         "devtools/Instruments.cpp",
     ]
 
-if CONFIG["ENABLE_TRACE_LOGGING"]:
-    SOURCES += [
-        "vm/TraceLogging.cpp",
-        "vm/TraceLoggingGraph.cpp",
-        "vm/TraceLoggingTypes.cpp",
-    ]
-
 if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
         "advapi32",

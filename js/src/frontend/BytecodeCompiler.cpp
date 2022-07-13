@@ -30,7 +30,6 @@
 #include "vm/JSScript.h"       // ScriptSource, UncompressedSourceCache
 #include "vm/ModuleBuilder.h"  // js::ModuleBuilder
 #include "vm/Time.h"           // AutoIncrementalTimer
-#include "vm/TraceLogging.h"
 #include "wasm/AsmJS.h"
 
 #include "vm/GeckoProfiler-inl.h"

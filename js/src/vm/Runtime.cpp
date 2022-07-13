@@ -46,9 +46,7 @@
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/PromiseObject.h"  // js::PromiseObject
-#include "vm/TraceLogging.h"
-#include "vm/TraceLoggingGraph.h"
-#include "vm/Warnings.h"  // js::WarnNumberUC
+#include "vm/Warnings.h"       // js::WarnNumberUC
 #include "wasm/WasmSignalHandlers.h"
 
 #include "debugger/DebugAPI-inl.h"

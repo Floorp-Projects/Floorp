@@ -20,12 +20,9 @@
 #include "jit/JitOptions.h"      // JitOptions
 #include "js/TypeDecls.h"        // jsbytecode
 #include "util/TrailingArray.h"  // TrailingArray
-#include "vm/TraceLogging.h"     // TraceLoggerEvent
 
 namespace js {
 namespace jit {
-
-using TraceLoggerEventVector = Vector<TraceLoggerEvent, 0, SystemAllocPolicy>;
 
 class SnapshotWriter;
 class RecoverWriter;
@@ -129,9 +126,6 @@ class alignas(8) IonScript final : public TrailingArray {
   // Number of times we tried to enter this script via OSR but failed due to
   // a LOOPENTRY pc other than osrPc_.
   uint32_t osrPcMismatchCounter_ = 0;
-
-  // TraceLogger events that are baked into the IonScript.
-  TraceLoggerEventVector traceLoggerEvents_;
 
 #ifdef DEBUG
   // A hash of the ICScripts used in this compilation.
@@ -356,10 +350,7 @@ class alignas(8) IonScript final : public TrailingArray {
   bool hasProfilingInstrumentation() const {
     return hasProfilingInstrumentation_;
   }
-  [[nodiscard]] bool addTraceLoggerEvent(TraceLoggerEvent& event) {
-    MOZ_ASSERT(event.hasTextId());
-    return traceLoggerEvents_.append(std::move(event));
-  }
+
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this);
   }

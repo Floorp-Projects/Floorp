@@ -15,8 +15,6 @@
 #include "frontend/SharedContext.h"
 #include "util/Poison.h"
 #include "util/StringBuffer.h"
-#include "vm/TraceLogging.h"
-#include "vm/TraceLoggingTypes.h"
 
 using namespace js;
 using namespace js::frontend;

@@ -14,8 +14,6 @@
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "util/CheckedArithmetic.h"
-#include "vm/TraceLogging.h"
-#include "vm/TraceLoggingTypes.h"
 
 #include "vm/BytecodeUtil-inl.h"
 

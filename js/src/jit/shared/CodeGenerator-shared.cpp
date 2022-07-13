@@ -23,7 +23,6 @@
 #include "jit/SafepointIndex.h"
 #include "js/Conversions.h"
 #include "util/Memory.h"
-#include "vm/TraceLogging.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "vm/JSScript-inl.h"
