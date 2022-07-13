@@ -18,6 +18,13 @@
           'isolated_scripts': 'desktop_tests_linux',
         },
       },
+      'Mac64 Release': {
+        'os_type': 'mac',
+        'mixins': ['mac11', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'desktop_tests_mac',
+        },
+      },
       'Win32 Release (Clang)': {
         'os_type': 'win',
         'mixins': ['win7', 'x86-64', 'resultdb-json-format'],
@@ -36,6 +43,20 @@
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests_linux_tryserver',
+        },
+      },
+      'mac_rel': {
+        'os_type': 'mac',
+        'mixins': ['mac11', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'desktop_tests_mac_tryserver',
+        },
+      },
+      'win_x86_clang_rel': {
+        'os_type': 'win',
+        'mixins': ['win7', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'desktop_tests_win_tryserver',
         },
       },
     },

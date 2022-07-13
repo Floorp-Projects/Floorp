@@ -22,15 +22,12 @@
     },
   },
   'quick-perf-tests': {
-    'args': [
-      '--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/',
-      '--nologs',
-      '--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json',
-    ],
-    'resultdb': {
-      'result_format': 'gtest_json',
-      'result_file': '${ISOLATED_OUTDIR}/gtest_output.json',
-    },
+    '$mixin_append': {
+      'args': [
+        '--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/',
+        '--nologs',
+      ],
+    }
   },
   'linux': {
     'swarming': {
@@ -38,6 +35,31 @@
         'os': 'Ubuntu'
       }
     }
+  },
+  'mac': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Mac'
+      }
+    }
+  },
+  'mac11': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Mac-11'
+      }
+    }
+  },
+  'resultdb-gtest-json-format': {
+    '$mixin_append': {
+      'args': [
+        '--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json',
+      ],
+    },
+    'resultdb': {
+      'result_format': 'gtest_json',
+      'result_file': '${ISOLATED_OUTDIR}/gtest_output.json',
+    },
   },
   'resultdb-json-format': {
     'resultdb': {
