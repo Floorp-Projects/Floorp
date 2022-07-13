@@ -96,22 +96,43 @@ void FillSubFrameView(
 }
 
 void FillSubFrameView(
+    bool proper_downmix_needed,
     std::vector<std::vector<std::vector<float>>>* frame,
     size_t sub_frame_index,
     std::vector<std::vector<rtc::ArrayView<float>>>* sub_frame_view) {
   RTC_DCHECK_GE(1, sub_frame_index);
   RTC_DCHECK_EQ(frame->size(), sub_frame_view->size());
-  if ((*frame)[0].size() > (*sub_frame_view)[0].size()) {
-    RTC_DCHECK_EQ((*sub_frame_view)[0].size(), 1);
-    // Downmix the audio to mono (should only be done when the audio contains
-    // fake-stereo or fake-multichannel).
+  const size_t frame_num_channels = (*frame)[0].size();
+  const size_t sub_frame_num_channels = (*sub_frame_view)[0].size();
+  if (frame_num_channels > sub_frame_num_channels) {
+    RTC_DCHECK_EQ(sub_frame_num_channels, 1u);
+    if (proper_downmix_needed) {
+      // When a proper downmix is needed (which is the case when proper stereo
+      // is present in the echo reference signal but the echo canceller does the
+      // processing in mono) downmix the echo reference by averaging the channel
+      // content (otherwise downmixing is done by selecting channel 0).
+      for (size_t band = 0; band < frame->size(); ++band) {
+        for (size_t ch = 1; ch < frame_num_channels; ++ch) {
+          for (size_t k = 0; k < kSubFrameLength; ++k) {
+            (*frame)[band][/*channel=*/0]
+                    [sub_frame_index * kSubFrameLength + k] +=
+                (*frame)[band][ch][sub_frame_index * kSubFrameLength + k];
+          }
+        }
+        const float one_by_num_channels = 1.0f / frame_num_channels;
+        for (size_t k = 0; k < kSubFrameLength; ++k) {
+          (*frame)[band][/*channel=*/0][sub_frame_index * kSubFrameLength +
+                                        k] *= one_by_num_channels;
+        }
+      }
+    }
     for (size_t band = 0; band < frame->size(); ++band) {
       (*sub_frame_view)[band][/*channel=*/0] = rtc::ArrayView<float>(
           &(*frame)[band][/*channel=*/0][sub_frame_index * kSubFrameLength],
           kSubFrameLength);
     }
   } else {
-    RTC_DCHECK_EQ((*frame)[0].size(), (*sub_frame_view)[0].size());
+    RTC_DCHECK_EQ(frame_num_channels, sub_frame_num_channels);
     for (size_t band = 0; band < frame->size(); ++band) {
       for (size_t channel = 0; channel < (*frame)[band].size(); ++channel) {
         (*sub_frame_view)[band][channel] = rtc::ArrayView<float>(
@@ -126,6 +147,7 @@ void ProcessCaptureFrameContent(
     AudioBuffer* linear_output,
     AudioBuffer* capture,
     bool level_change,
+    bool aec_reference_is_downmixed_stereo,
     bool saturated_microphone_signal,
     size_t sub_frame_index,
     FrameBlocker* capture_blocker,
@@ -149,7 +171,9 @@ void ProcessCaptureFrameContent(
 
   capture_blocker->InsertSubFrameAndExtractBlock(*capture_sub_frame_view,
                                                  capture_block);
-  block_processor->ProcessCapture(level_change, saturated_microphone_signal,
+  block_processor->ProcessCapture(/*echo_path_gain_change=*/level_change ||
+                                      aec_reference_is_downmixed_stereo,
+                                  saturated_microphone_signal,
                                   linear_output_block, capture_block);
   output_framer->InsertBlockAndExtractSubFrame(*capture_block,
                                                capture_sub_frame_view);
@@ -163,6 +187,7 @@ void ProcessCaptureFrameContent(
 
 void ProcessRemainingCaptureFrameContent(
     bool level_change,
+    bool aec_reference_is_downmixed_stereo,
     bool saturated_microphone_signal,
     FrameBlocker* capture_blocker,
     BlockFramer* linear_output_framer,
@@ -175,8 +200,10 @@ void ProcessRemainingCaptureFrameContent(
   }
 
   capture_blocker->ExtractBlock(block);
-  block_processor->ProcessCapture(level_change, saturated_microphone_signal,
-                                  linear_output_block, block);
+  block_processor->ProcessCapture(
+      /*echo_path_gain_change=*/level_change ||
+          aec_reference_is_downmixed_stereo,
+      saturated_microphone_signal, linear_output_block, block);
   output_framer->InsertBlock(*block);
 
   if (linear_output_framer) {
@@ -186,13 +213,15 @@ void ProcessRemainingCaptureFrameContent(
 }
 
 void BufferRenderFrameContent(
+    bool proper_downmix_needed,
     std::vector<std::vector<std::vector<float>>>* render_frame,
     size_t sub_frame_index,
     FrameBlocker* render_blocker,
     BlockProcessor* block_processor,
     std::vector<std::vector<std::vector<float>>>* block,
     std::vector<std::vector<rtc::ArrayView<float>>>* sub_frame_view) {
-  FillSubFrameView(render_frame, sub_frame_index, sub_frame_view);
+  FillSubFrameView(proper_downmix_needed, render_frame, sub_frame_index,
+                   sub_frame_view);
   render_blocker->InsertSubFrameAndExtractBlock(*sub_frame_view, block);
   block_processor->BufferRender(*block);
 }
@@ -863,22 +892,26 @@ void EchoCanceller3::ProcessCapture(AudioBuffer* capture,
 
   EmptyRenderQueue();
 
-  ProcessCaptureFrameContent(linear_output, capture, level_change,
-                             saturated_microphone_signal_, 0, &capture_blocker_,
-                             linear_output_framer_.get(), &output_framer_,
-                             block_processor_.get(), linear_output_block_.get(),
-                             &linear_output_sub_frame_view_, &capture_block_,
-                             &capture_sub_frame_view_);
+  ProcessCaptureFrameContent(
+      linear_output, capture, level_change,
+      multichannel_content_detector_.IsTemporaryMultiChannelContentDetected(),
+      saturated_microphone_signal_, 0, &capture_blocker_,
+      linear_output_framer_.get(), &output_framer_, block_processor_.get(),
+      linear_output_block_.get(), &linear_output_sub_frame_view_,
+      &capture_block_, &capture_sub_frame_view_);
 
-  ProcessCaptureFrameContent(linear_output, capture, level_change,
-                             saturated_microphone_signal_, 1, &capture_blocker_,
-                             linear_output_framer_.get(), &output_framer_,
-                             block_processor_.get(), linear_output_block_.get(),
-                             &linear_output_sub_frame_view_, &capture_block_,
-                             &capture_sub_frame_view_);
+  ProcessCaptureFrameContent(
+      linear_output, capture, level_change,
+      multichannel_content_detector_.IsTemporaryMultiChannelContentDetected(),
+      saturated_microphone_signal_, 1, &capture_blocker_,
+      linear_output_framer_.get(), &output_framer_, block_processor_.get(),
+      linear_output_block_.get(), &linear_output_sub_frame_view_,
+      &capture_block_, &capture_sub_frame_view_);
 
   ProcessRemainingCaptureFrameContent(
-      level_change, saturated_microphone_signal_, &capture_blocker_,
+      level_change,
+      multichannel_content_detector_.IsTemporaryMultiChannelContentDetected(),
+      saturated_microphone_signal_, &capture_blocker_,
       linear_output_framer_.get(), &output_framer_, block_processor_.get(),
       linear_output_block_.get(), &capture_block_);
 
@@ -944,13 +977,17 @@ void EchoCanceller3::EmptyRenderQueue() {
     }
 
     // Buffer frame content.
-    BufferRenderFrameContent(&render_queue_output_frame_, 0,
-                             render_blocker_.get(), block_processor_.get(),
-                             &render_block_, &render_sub_frame_view_);
+    BufferRenderFrameContent(
+        /*proper_downmix_needed=*/multichannel_content_detector_
+            .IsTemporaryMultiChannelContentDetected(),
+        &render_queue_output_frame_, 0, render_blocker_.get(),
+        block_processor_.get(), &render_block_, &render_sub_frame_view_);
 
-    BufferRenderFrameContent(&render_queue_output_frame_, 1,
-                             render_blocker_.get(), block_processor_.get(),
-                             &render_block_, &render_sub_frame_view_);
+    BufferRenderFrameContent(
+        /*proper_downmix_needed=*/multichannel_content_detector_
+            .IsTemporaryMultiChannelContentDetected(),
+        &render_queue_output_frame_, 1, render_blocker_.get(),
+        block_processor_.get(), &render_block_, &render_sub_frame_view_);
 
     BufferRemainingRenderFrameContent(render_blocker_.get(),
                                       block_processor_.get(), &render_block_);
