@@ -22,6 +22,7 @@
 //   * MACRO_: other text
 #define FOR_EACH_COMMON_PROPERTYNAME_(MACRO0, MACRO1, MACRO2, MACRO_)          \
   MACRO_(abort, abort, "abort")                                                \
+  IF_DECORATORS(MACRO_(accessor, accessor, "accessor"))                        \
   MACRO_(add, add, "add")                                                      \
   MACRO_(allowContentIter, allowContentIter, "allowContentIter")               \
   MACRO_(ambiguous, ambiguous, "ambiguous")                                    \

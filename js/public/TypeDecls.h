@@ -148,4 +148,11 @@ using jsid = JS::PropertyKey;
 #  define IF_JS_STREAMS(x, ...) __VA_ARGS__
 #endif
 
+// Follows the same pattern as IF_RECORD_TUPLE
+#ifdef ENABLE_DECORATORS
+#  define IF_DECORATORS(x, ...) x
+#else
+#  define IF_DECORATORS(x, ...) __VA_ARGS__
+#endif
+
 #endif /* js_TypeDecls_h */

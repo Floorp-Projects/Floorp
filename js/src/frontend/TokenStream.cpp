@@ -3314,6 +3314,12 @@ template <typename Unit, class AnyCharsAccess>
         }
         break;
 
+#ifdef ENABLE_DECORATORS
+      case '@':
+        simpleKind = TokenKind::At;
+        break;
+#endif
+
       default:
         // We consumed a bad ASCII code point/unit.  Put it back so the
         // error location is the bad code point.
