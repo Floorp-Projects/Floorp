@@ -357,7 +357,6 @@ void Port::AddOrReplaceConnection(Connection* conn) {
     ret.first->second = conn;
   }
   conn->SignalDestroyed.connect(this, &Port::OnConnectionDestroyed);
-  SignalConnectionCreated(this, conn);
 }
 
 void Port::OnReadPacket(const char* data,
