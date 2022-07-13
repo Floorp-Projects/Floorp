@@ -39,6 +39,10 @@ std::unique_ptr<DelayManager> CreateDelayManager(
   return std::make_unique<DelayManager>(config, neteq_config.tick_timer);
 }
 
+bool IsExpand(NetEq::Mode mode) {
+  return mode == NetEq::Mode::kExpand || mode == NetEq::Mode::kCodecPlc;
+}
+
 }  // namespace
 
 DecisionLogic::DecisionLogic(NetEqController::Config config)
@@ -112,6 +116,12 @@ NetEq::Operation DecisionLogic::GetDecision(const NetEqStatus& status,
     cng_state_ = kCngInternalOn;
   }
 
+  if (IsExpand(status.last_mode)) {
+    ++num_consecutive_expands_;
+  } else {
+    num_consecutive_expands_ = 0;
+  }
+
   prev_time_scale_ =
       prev_time_scale_ &&
       (status.last_mode == NetEq::Mode::kAccelerateSuccess ||
@@ -163,9 +173,7 @@ NetEq::Operation DecisionLogic::GetDecision(const NetEqStatus& status,
   // Note that the MuteFactor is in Q14, so a value of 16384 corresponds to 1.
   const int target_level_samples =
       delay_manager_->TargetDelayMs() * sample_rate_ / 1000;
-  if ((status.last_mode == NetEq::Mode::kExpand ||
-       status.last_mode == NetEq::Mode::kCodecPlc) &&
-      status.expand_mutefactor < 16384 / 2 &&
+  if (IsExpand(status.last_mode) && status.expand_mutefactor < 16384 / 2 &&
       status.packet_buffer_info.span_samples <
           static_cast<size_t>(target_level_samples * kPostponeDecodingLevel /
                               100) &&
@@ -192,12 +200,8 @@ NetEq::Operation DecisionLogic::GetDecision(const NetEqStatus& status,
   }
 }
 
-void DecisionLogic::ExpandDecision(NetEq::Operation operation) {
-  if (operation == NetEq::Operation::kExpand) {
-    num_consecutive_expands_++;
-  } else {
-    num_consecutive_expands_ = 0;
-  }
+void DecisionLogic::NotifyMutedState() {
+  ++num_consecutive_expands_;
 }
 
 absl::optional<int> DecisionLogic::PacketArrived(
@@ -334,10 +338,9 @@ NetEq::Operation DecisionLogic::FuturePacketAvailable(
   // Check if we should continue with an ongoing expand because the new packet
   // is too far into the future.
   uint32_t timestamp_leap = available_timestamp - target_timestamp;
-  if ((prev_mode == NetEq::Mode::kExpand ||
-       prev_mode == NetEq::Mode::kCodecPlc) &&
-      !ReinitAfterExpands(timestamp_leap) && !MaxWaitForPacket() &&
-      PacketTooEarly(timestamp_leap) && UnderTargetLevel()) {
+  if (IsExpand(prev_mode) && !ReinitAfterExpands(timestamp_leap) &&
+      !MaxWaitForPacket() && PacketTooEarly(timestamp_leap) &&
+      UnderTargetLevel()) {
     if (play_dtmf) {
       // Still have DTMF to play, so do not do expand.
       return NetEq::Operation::kDtmf;

@@ -895,28 +895,28 @@ class AcmReceiverBitExactnessOldApi : public ::testing::Test {
     defined(WEBRTC_ARCH_X86_64)
 TEST_F(AcmReceiverBitExactnessOldApi, 8kHzOutput) {
   std::string checksum_reference = GetCPUInfo(kAVX2) != 0
-                                       ? "d8671dd38dab43fc9ca64a45c048c218"
+                                       ? "f531f3b7dabe96d9e928dece1d3a340b"
                                        : "4710c99559aec2f9f02a983ba2146f2d";
   Run(/*output_freq_hz=*/8000, checksum_reference);
 }
 
 TEST_F(AcmReceiverBitExactnessOldApi, 16kHzOutput) {
   std::string checksum_reference = GetCPUInfo(kAVX2) != 0
-                                       ? "abcb31509af46545edb4f6700728a4de"
+                                       ? "c68d7ee520bb35b6d053e017b37bc2b3"
                                        : "70b3217df49834b7093c631531068bd0";
   Run(/*output_freq_hz=*/16000, checksum_reference);
 }
 
 TEST_F(AcmReceiverBitExactnessOldApi, 32kHzOutput) {
   std::string checksum_reference = GetCPUInfo(kAVX2) != 0
-                                       ? "8489b7743d6cd1903807ac81e5ee493d"
+                                       ? "dc790e447442ff6105467f29ab7315ae"
                                        : "2679e4e596e33259228c62df545eb635";
   Run(/*output_freq_hz=*/32000, checksum_reference);
 }
 
 TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutput) {
   std::string checksum_reference = GetCPUInfo(kAVX2) != 0
-                                       ? "454996a7adb3f62b259a53a09ff624cf"
+                                       ? "d118436e154a976009171c4d451d5574"
                                        : "f0148c5ef84e74e019ac7057af839102";
   Run(/*output_freq_hz=*/48000, checksum_reference);
 }
@@ -996,7 +996,7 @@ TEST_F(AcmReceiverBitExactnessOldApi, 48kHzOutputExternalDecoder) {
 
   auto factory = rtc::make_ref_counted<ADFactory>();
   std::string checksum_reference = GetCPUInfo(kAVX2) != 0
-                                       ? "454996a7adb3f62b259a53a09ff624cf"
+                                       ? "d118436e154a976009171c4d451d5574"
                                        : "f0148c5ef84e74e019ac7057af839102";
   Run(48000, checksum_reference, factory,
       [](AudioCodingModule* acm) {

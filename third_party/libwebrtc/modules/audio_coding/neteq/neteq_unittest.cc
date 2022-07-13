@@ -57,10 +57,10 @@ TEST_F(NetEqDecodingTest, MAYBE_TestBitExactness) {
       webrtc::test::ResourcePath("audio_coding/neteq_universal_new", "rtp");
 
   const std::string output_checksum =
-      "ba4fae83a52f5e9d95b0910f05d540114285697b";
+      "5e56fabfacd6fa202f3a00bcb4e034d6d817e6b3";
 
   const std::string network_stats_checksum =
-      "fa878a8464ef1cb3d01503b7f927c3e2ce6f02c4";
+      "dfbf60f913a25a1f2f1066f85b4b08c24eed0ef2";
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
                    absl::GetFlag(FLAGS_gen_ref));
@@ -79,11 +79,11 @@ TEST_F(NetEqDecodingTest, MAYBE_TestOpusBitExactness) {
   // The checksum depends on SSE being enabled, the second part is the non-SSE
   // checksum.
   const std::string output_checksum =
-      "6e23d8827ae54ca352e1448ae363bdfd2878c78e|"
-      "47cddbf3494b0233f48cb350676e704807237545";
+      "919e5eb3ba901192878f2354b981a15508c8373c|"
+      "c5eb0a8fcf7e8255a40f821cb815e1096619efeb";
 
   const std::string network_stats_checksum =
-      "f89a9533dbb35a4c449b44c3ed120f7f1c7f90b6";
+      "3d043e47e5f4bb81d37e7bce8c44bf802965c853";
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
                    absl::GetFlag(FLAGS_gen_ref));

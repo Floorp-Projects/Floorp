@@ -1367,13 +1367,6 @@ TEST_F(NetEqImplTest, DecodingError) {
   // We are not expecting anything for output.speech_type_, since an error was
   // returned.
 
-  // Pull audio again, should continue an expansion.
-  EXPECT_EQ(NetEq::kOK, neteq_->GetAudio(&output, &muted));
-  EXPECT_EQ(kMaxOutputSize, output.samples_per_channel_);
-  EXPECT_EQ(1u, output.num_channels_);
-  EXPECT_EQ(AudioFrame::kPLC, output.speech_type_);
-  EXPECT_THAT(output.packet_infos_, IsEmpty());
-
   // Pull audio again, should behave normal.
   EXPECT_EQ(NetEq::kOK, neteq_->GetAudio(&output, &muted));
   EXPECT_EQ(kMaxOutputSize, output.samples_per_channel_);
