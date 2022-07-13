@@ -26,6 +26,8 @@ let expectedKeys = ["at",
 		    "fill",
 		    "find",
 		    "findIndex",
+		    "findLast",
+		    "findLastIndex",
 		    "flat",
 		    "flatMap",
 		    "includes",
@@ -38,10 +40,6 @@ if (typeof getBuildConfiguration === "undefined") {
 
 if (typeof getRealmConfiguration === "undefined") {
   var getRealmConfiguration = SpecialPowers.Cu.getJSTestingFunctions().getRealmConfiguration;
-}
-
-if (getRealmConfiguration().enableArrayFindLast) {
-    expectedKeys.push("findLast", "findLastIndex");
 }
 
 if (!getBuildConfiguration().release_or_beta && getRealmConfiguration().enableArrayGrouping) {
