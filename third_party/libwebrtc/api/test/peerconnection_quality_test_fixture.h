@@ -431,6 +431,8 @@ class PeerConnectionE2EQualityTestFixture {
     virtual PeerConfigurer* SetAecDumpPath(std::string path) = 0;
     virtual PeerConfigurer* SetRTCConfiguration(
         PeerConnectionInterface::RTCConfiguration configuration) = 0;
+    virtual PeerConfigurer* SetRTCOfferAnswerOptions(
+        PeerConnectionInterface::RTCOfferAnswerOptions options) = 0;
     // Set bitrate parameters on PeerConnection. This constraints will be
     // applied to all summed RTP streams for this peer.
     virtual PeerConfigurer* SetBitrateSettings(

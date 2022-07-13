@@ -190,6 +190,11 @@ class PeerConfigurerImpl final
     params_->rtc_configuration = std::move(configuration);
     return this;
   }
+  PeerConfigurer* SetRTCOfferAnswerOptions(
+      PeerConnectionInterface::RTCOfferAnswerOptions options) override {
+    params_->rtc_offer_answer_options = std::move(options);
+    return this;
+  }
   PeerConfigurer* SetBitrateSettings(
       BitrateSettings bitrate_settings) override {
     params_->bitrate_settings = bitrate_settings;
