@@ -108,16 +108,18 @@ nsresult ComponentModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT_IF(jsapi.HasException(), NS_FAILED(rv));
   MOZ_ASSERT(bool(script) == NS_SUCCEEDED(rv));
 
-  // Check for failure to load script source and abort.
-  bool threwException = jsapi.HasException();
-  if (NS_FAILED(rv) && !threwException) {
-    return rv;
+  if (NS_FAILED(rv) && !jsapi.HasException()) {
+    nsAutoCString uri;
+    nsresult rv2 = aRequest->mURI->GetSpec(uri);
+    NS_ENSURE_SUCCESS(rv2, rv2);
+
+    JS_ReportErrorUTF8(cx, "Failed to load %s", PromiseFlatCString(uri).get());
   }
 
-  // Otherwise remember the results so we can report them later.
+  // Remember the results so we can report them later.
   ComponentLoadContext* context = aRequest->GetComponentLoadContext();
   context->mRv = rv;
-  if (threwException) {
+  if (NS_FAILED(context->mRv)) {
     context->mExceptionValue.init(cx);
     if (!jsapi.StealException(&context->mExceptionValue)) {
       return NS_ERROR_OUT_OF_MEMORY;
