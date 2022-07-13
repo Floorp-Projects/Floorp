@@ -366,6 +366,13 @@ Timestamp PacingController::NextSendTime() const {
     RTC_DCHECK_GT(media_rate_, DataRate::Zero());
     TimeDelta drain_time =
         std::max(media_debt_ / media_rate_, padding_debt_ / padding_rate_);
+
+    if (drain_time.IsZero() &&
+        (!media_debt_.IsZero() || !padding_debt_.IsZero())) {
+      // We have a non-zero debt, but drain time is smaller than tick size of
+      // TimeDelta, round it up to the smallest possible non-zero delta.
+      drain_time = TimeDelta::Micros(1);
+    }
     next_send_time = last_process_time_ + drain_time;
   } else {
     // Nothing to do.
