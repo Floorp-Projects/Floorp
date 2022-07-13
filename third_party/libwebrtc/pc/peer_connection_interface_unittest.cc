@@ -942,7 +942,7 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
   void InitiateCall() {
     CreatePeerConnectionWithoutDtls();
     // Create a local stream with audio&video tracks.
-    if (sdp_semantics_ == SdpSemantics::kPlanB) {
+    if (sdp_semantics_ == SdpSemantics::kPlanB_DEPRECATED) {
       AddAudioVideoStream(kStreamId1, "audio_track", "video_track");
     } else {
       // Unified Plan does not support AddStream, so just add an audio and video
@@ -1235,7 +1235,7 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
   }
 
   const char* GetSdpStringWithStream1() const {
-    if (sdp_semantics_ == SdpSemantics::kPlanB) {
+    if (sdp_semantics_ == SdpSemantics::kPlanB_DEPRECATED) {
       return kSdpStringWithStream1PlanB;
     } else {
       return kSdpStringWithStream1UnifiedPlan;
@@ -1243,7 +1243,7 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
   }
 
   const char* GetSdpStringWithStream1And2() const {
-    if (sdp_semantics_ == SdpSemantics::kPlanB) {
+    if (sdp_semantics_ == SdpSemantics::kPlanB_DEPRECATED) {
       return kSdpStringWithStream1And2PlanB;
     } else {
       return kSdpStringWithStream1And2UnifiedPlan;
@@ -1274,7 +1274,7 @@ class PeerConnectionInterfaceTestPlanB
     : public PeerConnectionInterfaceBaseTest {
  protected:
   PeerConnectionInterfaceTestPlanB()
-      : PeerConnectionInterfaceBaseTest(SdpSemantics::kPlanB) {}
+      : PeerConnectionInterfaceBaseTest(SdpSemantics::kPlanB_DEPRECATED) {}
 };
 
 // Generate different CNAMEs when PeerConnections are created.
@@ -1588,7 +1588,7 @@ TEST_P(PeerConnectionInterfaceTest, AddTrackWithoutStream) {
   EXPECT_EQ(audio_track, audio_sender->track());
   EXPECT_EQ("video_track", video_sender->id());
   EXPECT_EQ(video_track, video_sender->track());
-  if (sdp_semantics_ == SdpSemantics::kPlanB) {
+  if (sdp_semantics_ == SdpSemantics::kPlanB_DEPRECATED) {
     // If the ID is truly a random GUID, it should be infinitely unlikely they
     // will be the same.
     EXPECT_NE(video_sender->stream_ids(), audio_sender->stream_ids());
@@ -2007,7 +2007,6 @@ TEST_P(PeerConnectionInterfaceTest, SctpDuplicatedLabelAllowed) {
   EXPECT_NE(dup_channel, nullptr);
 }
 
-
 #ifdef WEBRTC_HAVE_SCTP
 // This tests that SCTP data channels can be rejected in an answer.
 TEST_P(PeerConnectionInterfaceTest, TestRejectSctpDataChannelInAnswer)
@@ -2097,15 +2096,15 @@ TEST_P(PeerConnectionInterfaceTest, ReceiveUpdatedAudioOfferWithBadCodecs) {
   AddAudioTrack("audio_label");
   CreateOfferAsLocalDescription();
 
-  const char* answer_sdp =
-      (sdp_semantics_ == SdpSemantics::kPlanB ? webrtc::kAudioSdpPlanB
-                                              : webrtc::kAudioSdpUnifiedPlan);
+  const char* answer_sdp = (sdp_semantics_ == SdpSemantics::kPlanB_DEPRECATED
+                                ? webrtc::kAudioSdpPlanB
+                                : webrtc::kAudioSdpUnifiedPlan);
   std::unique_ptr<SessionDescriptionInterface> answer(
       webrtc::CreateSessionDescription(SdpType::kAnswer, answer_sdp, nullptr));
   EXPECT_TRUE(DoSetSessionDescription(std::move(answer), false));
 
   const char* reoffer_sdp =
-      (sdp_semantics_ == SdpSemantics::kPlanB
+      (sdp_semantics_ == SdpSemantics::kPlanB_DEPRECATED
            ? webrtc::kAudioSdpWithUnsupportedCodecsPlanB
            : webrtc::kAudioSdpWithUnsupportedCodecsUnifiedPlan);
   std::unique_ptr<SessionDescriptionInterface> updated_offer(
@@ -2400,7 +2399,7 @@ TEST_P(PeerConnectionInterfaceTest, CloseAndTestStreamsAndStates) {
 
   // With Plan B, verify the stream count. The analog with Unified Plan is the
   // RtpTransceiver count.
-  if (sdp_semantics_ == SdpSemantics::kPlanB) {
+  if (sdp_semantics_ == SdpSemantics::kPlanB_DEPRECATED) {
     ASSERT_EQ(1u, pc_->local_streams()->count());
     ASSERT_EQ(1u, pc_->remote_streams()->count());
   } else {
@@ -2415,7 +2414,7 @@ TEST_P(PeerConnectionInterfaceTest, CloseAndTestStreamsAndStates) {
   EXPECT_EQ(PeerConnectionInterface::kIceGatheringComplete,
             pc_->ice_gathering_state());
 
-  if (sdp_semantics_ == SdpSemantics::kPlanB) {
+  if (sdp_semantics_ == SdpSemantics::kPlanB_DEPRECATED) {
     EXPECT_EQ(1u, pc_->local_streams()->count());
     EXPECT_EQ(1u, pc_->remote_streams()->count());
   } else {
@@ -2425,7 +2424,7 @@ TEST_P(PeerConnectionInterfaceTest, CloseAndTestStreamsAndStates) {
 
   auto audio_receiver = GetFirstReceiverOfType(cricket::MEDIA_TYPE_AUDIO);
   auto video_receiver = GetFirstReceiverOfType(cricket::MEDIA_TYPE_VIDEO);
-  if (sdp_semantics_ == SdpSemantics::kPlanB) {
+  if (sdp_semantics_ == SdpSemantics::kPlanB_DEPRECATED) {
     ASSERT_TRUE(audio_receiver);
     ASSERT_TRUE(video_receiver);
     // Track state may be updated asynchronously.
@@ -3651,7 +3650,7 @@ TEST_P(PeerConnectionInterfaceTest, ExtmapAllowMixedIsConfigurable) {
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionInterfaceTest,
                          PeerConnectionInterfaceTest,
-                         Values(SdpSemantics::kPlanB,
+                         Values(SdpSemantics::kPlanB_DEPRECATED,
                                 SdpSemantics::kUnifiedPlan));
 
 class PeerConnectionMediaConfigTest : public ::testing::Test {

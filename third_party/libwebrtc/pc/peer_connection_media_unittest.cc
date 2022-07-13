@@ -226,7 +226,7 @@ class PeerConnectionMediaTestUnifiedPlan : public PeerConnectionMediaBaseTest {
 class PeerConnectionMediaTestPlanB : public PeerConnectionMediaBaseTest {
  protected:
   PeerConnectionMediaTestPlanB()
-      : PeerConnectionMediaBaseTest(SdpSemantics::kPlanB) {}
+      : PeerConnectionMediaBaseTest(SdpSemantics::kPlanB_DEPRECATED) {}
 };
 
 TEST_P(PeerConnectionMediaTest,
@@ -694,7 +694,7 @@ INSTANTIATE_TEST_SUITE_P(
     PeerConnectionMediaTest,
     PeerConnectionMediaOfferDirectionTest,
     Combine(
-        Values(SdpSemantics::kPlanB, SdpSemantics::kUnifiedPlan),
+        Values(SdpSemantics::kPlanB_DEPRECATED, SdpSemantics::kUnifiedPlan),
         Values(std::make_tuple(false, -1, RtpTransceiverDirection::kInactive),
                std::make_tuple(false, 0, RtpTransceiverDirection::kInactive),
                std::make_tuple(false, 1, RtpTransceiverDirection::kRecvOnly),
@@ -808,7 +808,7 @@ TEST_P(PeerConnectionMediaAnswerDirectionTest, VerifyRejected) {
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionMediaTest,
                          PeerConnectionMediaAnswerDirectionTest,
-                         Combine(Values(SdpSemantics::kPlanB,
+                         Combine(Values(SdpSemantics::kPlanB_DEPRECATED,
                                         SdpSemantics::kUnifiedPlan),
                                  Values(RtpTransceiverDirection::kInactive,
                                         RtpTransceiverDirection::kSendOnly,
@@ -1049,7 +1049,7 @@ constexpr char kMLinesOutOfOrder[] =
 INSTANTIATE_TEST_SUITE_P(
     PeerConnectionMediaTest,
     PeerConnectionMediaInvalidMediaTest,
-    Combine(Values(SdpSemantics::kPlanB, SdpSemantics::kUnifiedPlan),
+    Combine(Values(SdpSemantics::kPlanB_DEPRECATED, SdpSemantics::kUnifiedPlan),
             Values(std::make_tuple("remove video",
                                    RemoveVideoContent,
                                    kMLinesOutOfOrder),
@@ -2243,7 +2243,7 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionMediaTest,
                          PeerConnectionMediaTest,
-                         Values(SdpSemantics::kPlanB,
+                         Values(SdpSemantics::kPlanB_DEPRECATED,
                                 SdpSemantics::kUnifiedPlan));
 
 }  // namespace webrtc

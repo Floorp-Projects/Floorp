@@ -1202,7 +1202,7 @@ TEST_F(PeerConnectionIceTestUnifiedPlan,
 class PeerConnectionIceTestPlanB : public PeerConnectionIceBaseTest {
  protected:
   PeerConnectionIceTestPlanB()
-      : PeerConnectionIceBaseTest(SdpSemantics::kPlanB) {}
+      : PeerConnectionIceBaseTest(SdpSemantics::kPlanB_DEPRECATED) {}
 };
 
 TEST_F(PeerConnectionIceTestPlanB,
@@ -1301,7 +1301,7 @@ TEST_P(PeerConnectionIceUfragPwdAnswerTest, TestIncludedInAnswer) {
 INSTANTIATE_TEST_SUITE_P(
     PeerConnectionIceTest,
     PeerConnectionIceUfragPwdAnswerTest,
-    Combine(Values(SdpSemantics::kPlanB, SdpSemantics::kUnifiedPlan),
+    Combine(Values(SdpSemantics::kPlanB_DEPRECATED, SdpSemantics::kUnifiedPlan),
             Values(std::make_pair(true, true),      // Both changed.
                    std::make_pair(true, false),     // Only ufrag changed.
                    std::make_pair(false, true))));  // Only pwd changed.
@@ -1398,7 +1398,7 @@ TEST_P(PeerConnectionIceTest,
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionIceTest,
                          PeerConnectionIceTest,
-                         Values(SdpSemantics::kPlanB,
+                         Values(SdpSemantics::kPlanB_DEPRECATED,
                                 SdpSemantics::kUnifiedPlan));
 
 class PeerConnectionIceConfigTest : public ::testing::Test {
