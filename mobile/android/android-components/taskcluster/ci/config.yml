@@ -103,7 +103,6 @@ treeherder:
         support-images: support-images
         support-ktx: support-ktx
         support-locale: support-locale
-        support-migration: support-migration
         support-rusthttp: support-rusthttp
         support-rusterrors: support-rusterrors
         support-rustlog: support-rustlog

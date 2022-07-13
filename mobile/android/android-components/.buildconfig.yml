@@ -320,10 +320,6 @@ projects:
     path: components/support/ktx
     description: 'A set of Kotlin extensions.'
     publish: true
-  support-migration:
-    path: components/support/migration
-    description: 'Helper code to migrate from a Fennec-based (Firefox for Android) app to an Android Components based app.'
-    publish: true
   support-test:
     path: components/support/test
     description: 'A collection of helpers for testing components (local unit tests).'

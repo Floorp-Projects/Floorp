@@ -114,7 +114,6 @@
 /components/support/images/                 @mozilla-mobile/act
 /components/support/ktx/                    @amejia481
 /components/support/locale/                 @amejia481
-/components/support/migration/              @grigoryk
 /components/support/rusthttp/               @mozilla-mobile/ast
 /components/support/rustlog/                @mozilla-mobile/ast
 /components/support/sync-telemetry/         @grigoryk
