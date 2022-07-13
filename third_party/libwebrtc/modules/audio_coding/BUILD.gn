@@ -129,6 +129,7 @@ rtc_library("red") {
     "../../api/units:time_delta",
     "../../common_audio",
     "../../rtc_base:buffer",
+    "../../rtc_base:byte_order",
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:rtc_base_approved",
