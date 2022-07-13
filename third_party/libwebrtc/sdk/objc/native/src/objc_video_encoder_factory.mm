@@ -134,6 +134,17 @@ class ObjcVideoEncoderSelector : public VideoEncoderFactory::EncoderSelectorInte
     return absl::nullopt;
   }
 
+  absl::optional<SdpVideoFormat> OnResolutionChange(const RenderResolution &resolution) override {
+    if ([selector_ respondsToSelector:@selector(encoderForResolutionChangeBySize:)]) {
+      RTC_OBJC_TYPE(RTCVideoCodecInfo) *info = [selector_
+          encoderForResolutionChangeBySize:CGSizeMake(resolution.Width(), resolution.Height())];
+      if (info) {
+        return [info nativeSdpVideoFormat];
+      }
+    }
+    return absl::nullopt;
+  }
+
  private:
   id<RTC_OBJC_TYPE(RTCVideoEncoderSelector)> selector_;
 };
