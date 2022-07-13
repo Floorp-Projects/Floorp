@@ -29,6 +29,10 @@
 #include "sdk/android/src/jni/jni_helpers.h"
 
 namespace webrtc {
+namespace test {
+class AndroidNetworkMonitorTest;
+}  // namespace test
+
 namespace jni {
 
 typedef int64_t NetworkHandle;
@@ -120,6 +124,7 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface {
       absl::string_view ifname) const;
 
  private:
+  void reset();
   void OnNetworkConnected_n(const NetworkInformation& network_info);
   void OnNetworkDisconnected_n(NetworkHandle network_handle);
   void OnNetworkPreference_n(NetworkType type,
@@ -163,6 +168,8 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface {
       RTC_PT_GUARDED_BY(network_thread_) = nullptr;
 
   const FieldTrialsView& field_trials_;
+
+  friend class webrtc::test::AndroidNetworkMonitorTest;
 };
 
 class AndroidNetworkMonitorFactory : public rtc::NetworkMonitorFactory {
