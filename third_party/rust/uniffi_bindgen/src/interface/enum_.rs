@@ -79,7 +79,7 @@
 use anyhow::{bail, Result};
 
 use super::record::Field;
-use super::types::{Type, TypeIterator};
+use super::types::{IterTypes, Type, TypeIterator};
 use super::{APIConverter, ComponentInterface};
 
 /// Represents an enum with named variants, each of which may have named
@@ -113,9 +113,11 @@ impl Enum {
     pub fn is_flat(&self) -> bool {
         self.flat
     }
+}
 
-    pub fn iter_types(&self) -> TypeIterator<'_> {
-        Box::new(self.variants.iter().flat_map(Variant::iter_types))
+impl IterTypes for Enum {
+    fn iter_types(&self) -> TypeIterator<'_> {
+        Box::new(self.variants.iter().flat_map(IterTypes::iter_types))
     }
 }
 
@@ -191,9 +193,11 @@ impl Variant {
     pub fn has_fields(&self) -> bool {
         !self.fields.is_empty()
     }
+}
 
-    pub fn iter_types(&self) -> TypeIterator<'_> {
-        Box::new(self.fields.iter().flat_map(Field::iter_types))
+impl IterTypes for Variant {
+    fn iter_types(&self) -> TypeIterator<'_> {
+        Box::new(self.fields.iter().flat_map(IterTypes::iter_types))
     }
 }
 
@@ -280,7 +284,7 @@ mod test {
             enum Testing { "one", "two", "one" };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.enum_definitions().len(), 1);
+        assert_eq!(ci.iter_enum_definitions().len(), 1);
         assert_eq!(
             ci.get_enum_definition("Testing").unwrap().variants().len(),
             3
@@ -313,8 +317,8 @@ mod test {
             };
         "##;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.enum_definitions().len(), 3);
-        assert_eq!(ci.function_definitions().len(), 4);
+        assert_eq!(ci.iter_enum_definitions().len(), 3);
+        assert_eq!(ci.iter_function_definitions().len(), 4);
 
         // The "flat" enum with no associated data.
         let e = ci.get_enum_definition("TestEnum").unwrap();
