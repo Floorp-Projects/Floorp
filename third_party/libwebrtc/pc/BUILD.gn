@@ -584,6 +584,7 @@ rtc_source_set("srtp_session") {
     "../rtc_base:macromagic",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:stringutils",
+    "../rtc_base:timeutils",
     "../rtc_base/synchronization:mutex",
     "../system_wrappers:metrics",
   ]
@@ -938,6 +939,7 @@ rtc_library("connection_context") {
     "../rtc_base:socket_factory",
     "../rtc_base:socket_server",
     "../rtc_base:threading",
+    "../rtc_base:timeutils",
     "../rtc_base/task_utils:to_queued_task",
   ]
 }
@@ -2349,6 +2351,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:socket_address",
       "../rtc_base:stringutils",
       "../rtc_base:threading",
+      "../rtc_base:timeutils",
       "../rtc_base/synchronization:mutex",
       "../rtc_base/third_party/base64",
       "../rtc_base/third_party/sigslot",
@@ -2628,6 +2631,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:stringutils",
       "../rtc_base:task_queue_for_test",
       "../rtc_base:threading",
+      "../rtc_base:timeutils",
       "../rtc_base/synchronization:mutex",
       "../rtc_base/task_utils:repeating_task",
       "../rtc_base/third_party/sigslot",

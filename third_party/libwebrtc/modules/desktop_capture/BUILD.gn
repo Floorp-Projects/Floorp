@@ -65,6 +65,7 @@ if (rtc_include_tests) {
       "../../api:scoped_refptr",
       "../../rtc_base:checks",
       "../../rtc_base:logging",
+      "../../rtc_base:timeutils",
     ]
     if (rtc_desktop_capture_supported) {
       deps += [
@@ -127,6 +128,7 @@ if (rtc_include_tests) {
       "../../rtc_base:checks",
       "../../rtc_base:logging",
       "../../rtc_base:macromagic",
+      "../../rtc_base:timeutils",
 
       # TODO(bugs.webrtc.org/9987): Remove this dep on rtc_base:rtc_base once
       # rtc_base:threading is fully defined.
@@ -325,6 +327,7 @@ if (is_mac) {
       "../../rtc_base:checks",
       "../../rtc_base:logging",
       "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:timeutils",
       "../../rtc_base/system:rtc_export",
       "../../sdk:helpers_objc",
     ]
@@ -471,6 +474,7 @@ rtc_library("desktop_capture_generic") {
     "../../rtc_base:macromagic",
     "../../rtc_base:refcount",
     "../../rtc_base:stringutils",
+    "../../rtc_base:timeutils",
     "../../rtc_base/synchronization:mutex",
     "../../rtc_base/system:arch",
     "../../rtc_base/system:no_unique_address",

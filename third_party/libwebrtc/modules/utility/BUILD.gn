@@ -38,6 +38,7 @@ rtc_library("utility") {
     "../../rtc_base:logging",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_event",
+    "../../rtc_base:timeutils",
     "../../rtc_base/system:arch",
     "../../system_wrappers",
   ]
@@ -67,6 +68,7 @@ if (rtc_include_tests) {
       "../../api/task_queue",
       "../../api/task_queue:task_queue_test",
       "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:timeutils",
       "../../test:test_support",
     ]
   }

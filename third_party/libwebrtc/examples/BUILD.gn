@@ -927,6 +927,7 @@ if (!build_with_chromium) {
       "../rtc_base:rtc_base_approved",
       "../rtc_base:socket_address",
       "../rtc_base:threading",
+      "../rtc_base:timeutils",
       "../test:scoped_key_value_config",
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",
