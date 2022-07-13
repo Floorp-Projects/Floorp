@@ -770,83 +770,6 @@ void BaselineScript::removePendingIonCompileTask(JSRuntime* rt,
   script->updateJitCodeRaw(rt);
 }
 
-#ifdef JS_TRACE_LOGGING
-void BaselineScript::initTraceLogger(JSScript* script,
-                                     const Vector<CodeOffset>& offsets) {
-#  ifdef DEBUG
-  traceLoggerScriptsEnabled_ = TraceLogTextIdEnabled(TraceLogger_Scripts);
-  traceLoggerEngineEnabled_ = TraceLogTextIdEnabled(TraceLogger_Engine);
-#  endif
-
-  mozilla::Span<uint32_t> scriptOffsets = traceLoggerToggleOffsets();
-
-  MOZ_ASSERT(offsets.length() == scriptOffsets.size());
-
-  for (size_t i = 0; i < offsets.length(); i++) {
-    scriptOffsets[i] = offsets[i].offset();
-  }
-
-  if (TraceLogTextIdEnabled(TraceLogger_Engine) ||
-      TraceLogTextIdEnabled(TraceLogger_Scripts)) {
-    traceLoggerScriptEvent_ = TraceLoggerEvent(TraceLogger_Scripts, script);
-    for (uint32_t offset : scriptOffsets) {
-      CodeLocationLabel label(method_, CodeOffset(offset));
-      Assembler::ToggleToCmp(label);
-    }
-  }
-}
-
-void BaselineScript::toggleTraceLoggerScripts(JSScript* script, bool enable) {
-  DebugOnly<bool> engineEnabled = TraceLogTextIdEnabled(TraceLogger_Engine);
-  MOZ_ASSERT(enable == !traceLoggerScriptsEnabled_);
-  MOZ_ASSERT(engineEnabled == traceLoggerEngineEnabled_);
-
-  // Patch the logging script textId to be correct.
-  // When logging log the specific textId else the global Scripts textId.
-  if (enable && !traceLoggerScriptEvent_.hasTextId()) {
-    traceLoggerScriptEvent_ = TraceLoggerEvent(TraceLogger_Scripts, script);
-  }
-
-  AutoWritableJitCode awjc(method());
-
-  // Enable/Disable the traceLogger.
-  for (uint32_t offset : traceLoggerToggleOffsets()) {
-    CodeLocationLabel label(method_, CodeOffset(offset));
-    if (enable) {
-      Assembler::ToggleToCmp(label);
-    } else {
-      Assembler::ToggleToJmp(label);
-    }
-  }
-
-#  if DEBUG
-  traceLoggerScriptsEnabled_ = enable;
-#  endif
-}
-
-void BaselineScript::toggleTraceLoggerEngine(bool enable) {
-  DebugOnly<bool> scriptsEnabled = TraceLogTextIdEnabled(TraceLogger_Scripts);
-  MOZ_ASSERT(enable == !traceLoggerEngineEnabled_);
-  MOZ_ASSERT(scriptsEnabled == traceLoggerScriptsEnabled_);
-
-  AutoWritableJitCode awjc(method());
-
-  // Enable/Disable the traceLogger prologue and epilogue.
-  for (uint32_t offset : traceLoggerToggleOffsets()) {
-    CodeLocationLabel label(method_, CodeOffset(offset));
-    if (enable) {
-      Assembler::ToggleToCmp(label);
-    } else {
-      Assembler::ToggleToJmp(label);
-    }
-  }
-
-#  if DEBUG
-  traceLoggerEngineEnabled_ = enable;
-#  endif
-}
-#endif
-
 static void ToggleProfilerInstrumentation(JitCode* code,
                                           uint32_t profilerEnterToggleOffset,
                                           uint32_t profilerExitToggleOffset,
@@ -992,32 +915,6 @@ void jit::ToggleBaselineProfiling(JSContext* cx, bool enable) {
     }
   }
 }
-
-#ifdef JS_TRACE_LOGGING
-void jit::ToggleBaselineTraceLoggerScripts(JSRuntime* runtime, bool enable) {
-  for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
-      if (!base->hasBaselineScript()) {
-        continue;
-      }
-      JSScript* script = base->asJSScript();
-      script->baselineScript()->toggleTraceLoggerScripts(script, enable);
-    }
-  }
-}
-
-void jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable) {
-  for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
-      if (!base->hasBaselineScript()) {
-        continue;
-      }
-      JSScript* script = base->asJSScript();
-      script->baselineScript()->toggleTraceLoggerEngine(enable);
-    }
-  }
-}
-#endif
 
 void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
                                uint32_t interpretOpNoDebugTrapOffset,
