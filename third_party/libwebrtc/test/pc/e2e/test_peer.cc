@@ -53,7 +53,9 @@ bool TestPeer::SetRemoteDescription(
     RTC_LOG(LS_ERROR) << *params_->name
                       << ": Failed to set remote description: "
                       << observer->error().message();
-    *error_out = observer->error().message();
+    if (error_out) {
+      *error_out = observer->error().message();
+    }
   }
   return observer->error().ok();
 }
