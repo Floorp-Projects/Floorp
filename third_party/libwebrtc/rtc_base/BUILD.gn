@@ -1573,6 +1573,8 @@ if (rtc_include_tests) {
         ":net_helpers",
         ":null_socket_server",
         ":refcount",
+        ":rtc_base",
+        ":rtc_base_approved",
         ":rtc_base_tests_utils",
         ":rtc_event",
         ":safe_conversions",
@@ -1625,7 +1627,7 @@ if (rtc_include_tests) {
         "//third_party/abseil-cpp/absl/strings",
         "//third_party/abseil-cpp/absl/types:optional",
       ]
-      public_deps = [ ":rtc_base" ]  # no-presubmit-check TODO(webrtc:8603)
+
       if (build_with_chromium) {
         include_dirs = [ "../../boringssl/src/include" ]
       }
