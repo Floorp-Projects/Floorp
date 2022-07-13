@@ -82,6 +82,7 @@ rtc_library("rtc_base_approved") {
   visibility = [ "*" ]
   deps = [
     ":atomicops",
+    ":bit_buffer",
     ":checks",
     ":location",
     ":logging",
@@ -89,6 +90,7 @@ rtc_library("rtc_base_approved") {
     ":one_time_event",
     ":platform_thread",
     ":platform_thread_types",
+    ":race_checker",
     ":random",
     ":refcount",
     ":rtc_event",
@@ -118,8 +120,7 @@ rtc_library("rtc_base_approved") {
   public_deps = []  # no-presubmit-check TODO(webrtc:8603)
 
   sources = [
-    "bit_buffer.cc",
-    "bit_buffer.h",
+    "bit_buffer.h",  # Transitional, use :bit_buffer
     "buffer.h",
     "buffer_queue.cc",
     "buffer_queue.h",
@@ -138,8 +139,7 @@ rtc_library("rtc_base_approved") {
     "numerics/sample_counter.cc",
     "numerics/sample_counter.h",
     "one_time_event.h",  # Transitional, use :one_time_event
-    "race_checker.cc",
-    "race_checker.h",
+    "race_checker.h",  # Transitional, use :race_checker
     "random.h",  # Transitional, use :random
     "rate_statistics.cc",
     "rate_statistics.h",
@@ -217,6 +217,16 @@ rtc_source_set("macromagic") {
   deps = [ "system:arch" ]
 }
 
+rtc_library("bit_buffer") {
+  visibility = [ "*" ]
+  sources = [
+    "bit_buffer.cc",
+    "bit_buffer.h",
+  ]
+  deps = [ ":checks" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/numeric:bits" ]
+}
+
 rtc_library("location") {
   visibility = [ "*" ]
   sources = [
@@ -224,6 +234,19 @@ rtc_library("location") {
     "location.h",
   ]
   deps = [ "system:rtc_export" ]
+}
+
+rtc_library("race_checker") {
+  visibility = [ "*" ]
+  sources = [
+    "race_checker.cc",
+    "race_checker.h",
+  ]
+  deps = [
+    ":checks",
+    ":macromagic",
+    ":platform_thread_types",
+  ]
 }
 
 rtc_library("random") {
@@ -1487,6 +1510,7 @@ if (rtc_include_tests) {
       }
       deps = [
         ":atomicops",
+        ":bit_buffer",
         ":bitstream_reader",
         ":bounded_inline_vector",
         ":checks",

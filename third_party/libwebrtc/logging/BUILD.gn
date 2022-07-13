@@ -269,6 +269,7 @@ rtc_library("rtc_event_number_encodings") {
   defines = []
 
   deps = [
+    "../rtc_base:bit_buffer",
     "../rtc_base:bitstream_reader",
     "../rtc_base:checks",
     "../rtc_base:ignore_wundef",
@@ -299,6 +300,7 @@ rtc_library("rtc_event_log_impl_encoder") {
     "../api:rtp_headers",
     "../api:rtp_parameters",
     "../api/transport:network_control",
+    "../rtc_base:bit_buffer",
     "../rtc_base:bitstream_reader",
     "../rtc_base:checks",
     "../rtc_base:ignore_wundef",
