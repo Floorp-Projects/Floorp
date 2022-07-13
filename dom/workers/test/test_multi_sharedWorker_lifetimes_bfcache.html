@@ -127,7 +127,10 @@
             SpecialPowers.pushPermissions([{'type': 'storageAccessAPI', 'allow': 1, 'context': document}], () =>{
               SpecialPowers.wrap(document).requestStorageAccess().then(() => {
                 // If Fission is disabled, the pref is no-op.
-                SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+                SpecialPowers.pushPrefEnv({set: [
+                  ["fission.bfcacheInParent", true],
+                  ["privacy.partition.always_partition_third_party_non_cookie_storage", false],
+                ]}, () => {
                   testGenerator.next();
                 });
               }).then(() => {

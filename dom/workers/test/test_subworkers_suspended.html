@@ -122,11 +122,15 @@
     // the iframe containing this page is isolated from first-party storage access,
     // which isolates BroadcastChannel communication.
     SpecialPowers.wrap(document).notifyUserGestureActivation();
-    SpecialPowers.pushPermissions([{'type': 'storageAccessAPI', 'allow': 1, 'context': document}], () =>{
-      SpecialPowers.wrap(document).requestStorageAccess().then(() => {
-        runTest();
-      }).then(() => {
-        SpecialPowers.removePermission("3rdPartyStorage^http://mochi.test:8888", "http://mochi.xorigin-test:8888");
+    SpecialPowers.pushPrefEnv({
+      set: [["privacy.partition.always_partition_third_party_non_cookie_storage", false]],
+    }).then(() => {
+      SpecialPowers.pushPermissions([{'type': 'storageAccessAPI', 'allow': 1, 'context': document}], () =>{
+        SpecialPowers.wrap(document).requestStorageAccess().then(() => {
+          runTest();
+        }).then(() => {
+          SpecialPowers.removePermission("3rdPartyStorage^http://mochi.test:8888", "http://mochi.xorigin-test:8888");
+        });
       });
     });
   } else {
