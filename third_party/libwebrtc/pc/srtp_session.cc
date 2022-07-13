@@ -27,12 +27,88 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/string_encode.h"
+#include "rtc_base/thread_annotations.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/metrics.h"
 #include "third_party/libsrtp/include/srtp.h"
 #include "third_party/libsrtp/include/srtp_priv.h"
 
 namespace cricket {
+
+namespace {
+class LibSrtpInitializer {
+ public:
+  // Returns singleton instance of this class. Instance created on first use,
+  // and never destroyed.
+  static LibSrtpInitializer& Get() {
+    static LibSrtpInitializer* const instance = new LibSrtpInitializer();
+    return *instance;
+  }
+  void ProhibitLibsrtpInitialization();
+
+  // These methods are responsible for initializing libsrtp (if the usage count
+  // is incremented from 0 to 1) or deinitializing it (when decremented from 1
+  // to 0).
+  //
+  // Returns true if successful (will always be successful if already inited).
+  bool IncrementLibsrtpUsageCountAndMaybeInit(
+      srtp_event_handler_func_t* handler);
+  void DecrementLibsrtpUsageCountAndMaybeDeinit();
+
+ private:
+  LibSrtpInitializer() = default;
+
+  webrtc::Mutex mutex_;
+  int usage_count_ RTC_GUARDED_BY(mutex_) = 0;
+};
+
+void LibSrtpInitializer::ProhibitLibsrtpInitialization() {
+  webrtc::MutexLock lock(&mutex_);
+  ++usage_count_;
+}
+
+bool LibSrtpInitializer::IncrementLibsrtpUsageCountAndMaybeInit(
+    srtp_event_handler_func_t* handler) {
+  webrtc::MutexLock lock(&mutex_);
+
+  RTC_DCHECK_GE(usage_count_, 0);
+  if (usage_count_ == 0) {
+    int err;
+    err = srtp_init();
+    if (err != srtp_err_status_ok) {
+      RTC_LOG(LS_ERROR) << "Failed to init SRTP, err=" << err;
+      return false;
+    }
+
+    err = srtp_install_event_handler(handler);
+    if (err != srtp_err_status_ok) {
+      RTC_LOG(LS_ERROR) << "Failed to install SRTP event handler, err=" << err;
+      return false;
+    }
+
+    err = external_crypto_init();
+    if (err != srtp_err_status_ok) {
+      RTC_LOG(LS_ERROR) << "Failed to initialize fake auth, err=" << err;
+      return false;
+    }
+  }
+  ++usage_count_;
+  return true;
+}
+
+void LibSrtpInitializer::DecrementLibsrtpUsageCountAndMaybeDeinit() {
+  webrtc::MutexLock lock(&mutex_);
+
+  RTC_DCHECK_GE(usage_count_, 1);
+  if (--usage_count_ == 0) {
+    int err = srtp_shutdown();
+    if (err) {
+      RTC_LOG(LS_ERROR) << "srtp_shutdown failed. err=" << err;
+    }
+  }
+}
+
+}  // namespace
 
 using ::webrtc::ParseRtpSequenceNumber;
 
@@ -53,7 +129,7 @@ SrtpSession::~SrtpSession() {
     srtp_dealloc(session_);
   }
   if (inited_) {
-    DecrementLibsrtpUsageCountAndMaybeDeinit();
+    LibSrtpInitializer::Get().DecrementLibsrtpUsageCountAndMaybeDeinit();
   }
 }
 
@@ -354,7 +430,8 @@ bool SrtpSession::SetKey(int type,
 
   // This is the first time we need to actually interact with libsrtp, so
   // initialize it if needed.
-  if (IncrementLibsrtpUsageCountAndMaybeInit()) {
+  if (LibSrtpInitializer::Get().IncrementLibsrtpUsageCountAndMaybeInit(
+          &SrtpSession::HandleEventThunk)) {
     inited_ = true;
   } else {
     return false;
@@ -377,54 +454,8 @@ bool SrtpSession::UpdateKey(int type,
   return DoSetKey(type, cs, key, len, extension_ids);
 }
 
-ABSL_CONST_INIT int g_libsrtp_usage_count = 0;
-ABSL_CONST_INIT webrtc::GlobalMutex g_libsrtp_lock(absl::kConstInit);
-
 void ProhibitLibsrtpInitialization() {
-  webrtc::GlobalMutexLock ls(&g_libsrtp_lock);
-  ++g_libsrtp_usage_count;
-}
-
-// static
-bool SrtpSession::IncrementLibsrtpUsageCountAndMaybeInit() {
-  webrtc::GlobalMutexLock ls(&g_libsrtp_lock);
-
-  RTC_DCHECK_GE(g_libsrtp_usage_count, 0);
-  if (g_libsrtp_usage_count == 0) {
-    int err;
-    err = srtp_init();
-    if (err != srtp_err_status_ok) {
-      RTC_LOG(LS_ERROR) << "Failed to init SRTP, err=" << err;
-      return false;
-    }
-
-    err = srtp_install_event_handler(&SrtpSession::HandleEventThunk);
-    if (err != srtp_err_status_ok) {
-      RTC_LOG(LS_ERROR) << "Failed to install SRTP event handler, err=" << err;
-      return false;
-    }
-
-    err = external_crypto_init();
-    if (err != srtp_err_status_ok) {
-      RTC_LOG(LS_ERROR) << "Failed to initialize fake auth, err=" << err;
-      return false;
-    }
-  }
-  ++g_libsrtp_usage_count;
-  return true;
-}
-
-// static
-void SrtpSession::DecrementLibsrtpUsageCountAndMaybeDeinit() {
-  webrtc::GlobalMutexLock ls(&g_libsrtp_lock);
-
-  RTC_DCHECK_GE(g_libsrtp_usage_count, 1);
-  if (--g_libsrtp_usage_count == 0) {
-    int err = srtp_shutdown();
-    if (err) {
-      RTC_LOG(LS_ERROR) << "srtp_shutdown failed. err=" << err;
-    }
-  }
+  LibSrtpInitializer::Get().ProhibitLibsrtpInitialization();
 }
 
 void SrtpSession::HandleEvent(const srtp_event_data_t* ev) {
