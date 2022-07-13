@@ -377,6 +377,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":fir_filter_factory",
       ":sinc_resampler",
       "../rtc_base:checks",
+      "../rtc_base:macromagic",
       "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base/system:arch",

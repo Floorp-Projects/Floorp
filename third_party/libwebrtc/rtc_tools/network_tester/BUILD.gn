@@ -47,6 +47,7 @@ if (rtc_enable_protobuf) {
       "../../rtc_base:checks",
       "../../rtc_base:ignore_wundef",
       "../../rtc_base:ip_address",
+      "../../rtc_base:macromagic",
       "../../rtc_base:protobuf_utils",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_task_queue",

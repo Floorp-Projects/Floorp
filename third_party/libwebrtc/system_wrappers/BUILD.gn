@@ -105,6 +105,7 @@ rtc_library("metrics") {
   deps = [
     "../rtc_base:atomicops",
     "../rtc_base:checks",
+    "../rtc_base:macromagic",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/synchronization:mutex",
   ]

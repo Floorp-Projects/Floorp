@@ -685,6 +685,7 @@ if (is_linux || is_chromeos || is_win) {
       "../pc:video_track_source",
       "../rtc_base:checks",
       "../rtc_base:logging",
+      "../rtc_base:macromagic",
       "../rtc_base:net_helpers",
       "../rtc_base:threading",
       "../rtc_base/third_party/sigslot",
