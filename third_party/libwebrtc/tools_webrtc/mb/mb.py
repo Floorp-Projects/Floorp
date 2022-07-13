@@ -117,8 +117,7 @@ class WebRTCMetaBuildWrapper(mb.MetaBuildWrapper):
           '../../third_party/gtest-parallel/gtest_parallel.py',
           '../../tools_webrtc/gtest-parallel-wrapper.py',
       ]
-      sep = '\\' if self.platform == 'win32' else '/'
-      output_dir = '${ISOLATED_OUTDIR}' + sep + 'test_logs'
+      output_dir = '${ISOLATED_OUTDIR}/test_logs'
       timeout = isolate_map[target].get('timeout', 900)
       cmdline += [
           '../../tools_webrtc/gtest-parallel-wrapper.py',
