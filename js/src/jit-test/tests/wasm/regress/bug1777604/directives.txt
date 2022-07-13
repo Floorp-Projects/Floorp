@@ -1,1 +1,0 @@
-|jit-test| --ion-offthread-compile=off; --ion-eager; include:wasm.js
