@@ -191,6 +191,10 @@ class BackgroundTasksManager {
       `${Services.appinfo.processID}: Running background task named '${name}'` +
         ` (with ${commandLine.length} arguments)`
     );
+    lazy.log.debug(
+      `${Services.appinfo.processID}: Background task using profile` +
+        ` '${Services.dirsvc.get("ProfD", Ci.nsIFile).path}'`
+    );
 
     let exitCode = BackgroundTasksManager.EXIT_CODE.NOT_FOUND;
     try {

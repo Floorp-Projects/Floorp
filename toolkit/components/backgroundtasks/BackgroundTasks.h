@@ -49,8 +49,11 @@ class BackgroundTasks final : public nsIBackgroundTasks {
 
   static bool IsBackgroundTaskMode();
 
-  static nsresult CreateEphemeralProfileDirectory(const nsCString& aInstallHash,
-                                                  nsIFile** aFile);
+  static nsresult CreateEphemeralProfileDirectory(
+      nsIFile* aRootDir, const nsCString& aProfilePrefix, nsIFile** aFile);
+
+  static nsresult CreateNonEphemeralProfileDirectory(
+      nsIFile* aRootDir, const nsCString& aProfilePrefix, nsIFile** aFile);
 
   static bool IsEphemeralProfile();
 
@@ -60,21 +63,42 @@ class BackgroundTasks final : public nsIBackgroundTasks {
    * Whether the given task name should process updates.  Most tasks should not
    * process updates to avoid Firefox being updated unexpectedly.
    *
-   * Right now, we only process updates for the `backgroundupdate` task and the
-   * test-only `shouldprocessupdates` task.
+   * At the time of writing, we only process updates for the `backgroundupdate`
+   * task and the test-only `shouldprocessupdates` task.
    */
   static bool IsUpdatingTaskName(const nsCString& aName);
+
+  /**
+   * Whether the given task name should use a temporary ephemeral
+   * profile.  Most tasks should use a temporary ephemeral profile to
+   * allow concurrent task invocation and to simplify reasoning.
+   *
+   * At the time of writing, we use temporary ephemeral profiles for all tasks
+   * save the `backgroundupdate` task and the test-only `notephemeralprofile`
+   * task.
+   */
+  static bool IsEphemeralProfileTaskName(const nsCString& aName);
+
+  /**
+   * Get the installation-specific profile prefix for the current task name and
+   * the given install hash.
+   */
+  static nsCString GetProfilePrefix(const nsCString& aInstallHash);
 
  protected:
   static StaticRefPtr<BackgroundTasks> sSingleton;
   static LazyLogModule sBackgroundTasksLog;
 
   Maybe<nsCString> mBackgroundTask;
+  bool mIsEphemeralProfile;
   nsCOMPtr<nsIFile> mProfD;
 
-  nsresult CreateEphemeralProfileDirectoryImpl(const nsCString& aInstallHash,
+  nsresult CreateEphemeralProfileDirectoryImpl(nsIFile* aRootDir,
+                                               const nsCString& aProfilePrefix,
                                                nsIFile** aFile);
 
+  nsresult CreateNonEphemeralProfileDirectoryImpl(
+      nsIFile* aRootDir, const nsCString& aProfilePrefix, nsIFile** aFile);
   /*
    * Iterates children of `aRoot` and removes unlocked profiles matching
    * `aPrefix`.

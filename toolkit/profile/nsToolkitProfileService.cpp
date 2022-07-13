@@ -60,6 +60,7 @@
 #include "prthread.h"
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasks.h"
+#  include "SpecialSystemDirectory.h"
 #endif
 
 using namespace mozilla;
@@ -1266,6 +1267,8 @@ nsToolkitProfileService::SelectStartupProfile(
   return rv;
 }
 
+static void SaltProfileName(nsACString& aName);
+
 /**
  * Selects or creates a profile to use based on the profiles database, any
  * environment variables and any command line arguments. Will not create
@@ -1480,31 +1483,98 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
 #ifdef MOZ_BACKGROUNDTASKS
   if (BackgroundTasks::IsBackgroundTaskMode()) {
+    // There are two cases:
+    // 1. ephemeral profile: create a new one in temporary directory.
+    // 2. non-ephemeral (persistent) profile:
+    //    a. if no salted profile is known, create a new one in
+    //       background task-specific directory.
+    //    b. if salted profile is know, use salted path.
     nsString installHash;
     rv = gDirServiceProvider->GetInstallHash(installHash);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCString profilePrefix(BackgroundTasks::GetProfilePrefix(
+        NS_LossyConvertUTF16toASCII(installHash)));
+
+    nsCString taskName(BackgroundTasks::GetBackgroundTasks().ref());
+
     nsCOMPtr<nsIFile> file;
-    nsresult rv = BackgroundTasks::CreateEphemeralProfileDirectory(
-        NS_LossyConvertUTF16toASCII(installHash), getter_AddRefs(file));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      // In background task mode, NS_ERROR_UNEXPECTED is handled specially to
-      // exit with a non-zero exit code.
-      return NS_ERROR_UNEXPECTED;
+
+    if (BackgroundTasks::IsEphemeralProfileTaskName(taskName)) {
+      // Background task mode does not enable legacy telemetry, so this is for
+      // completeness and testing only.
+      mStartupReason = u"backgroundtask-ephemeral"_ns;
+
+      nsCOMPtr<nsIFile> rootDir;
+      rv = GetSpecialSystemDirectory(OS_TemporaryDirectory,
+                                     getter_AddRefs(rootDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsresult rv = BackgroundTasks::CreateEphemeralProfileDirectory(
+          rootDir, profilePrefix, getter_AddRefs(file));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        // In background task mode, NS_ERROR_UNEXPECTED is handled specially to
+        // exit with a non-zero exit code.
+        return NS_ERROR_UNEXPECTED;
+      }
+      *aDidCreate = true;
+    } else {
+      // Background task mode does not enable legacy telemetry, so this is for
+      // completeness and testing only.
+      mStartupReason = u"backgroundtask-not-ephemeral"_ns;
+
+      // A non-ephemeral profile is required.
+      nsCOMPtr<nsIFile> rootDir;
+      nsresult rv = gDirServiceProvider->GetBackgroundTasksProfilesRootDir(
+          getter_AddRefs(rootDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsAutoCString buffer;
+      rv = mProfileDB.GetString("BackgroundTasksProfiles", profilePrefix.get(),
+                                buffer);
+      if (NS_SUCCEEDED(rv)) {
+        // We have a record of one!  Use it.
+        rv = rootDir->Clone(getter_AddRefs(file));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = file->AppendNative(buffer);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        nsCString saltedProfilePrefix = profilePrefix;
+        SaltProfileName(saltedProfilePrefix);
+
+        nsresult rv = BackgroundTasks::CreateNonEphemeralProfileDirectory(
+            rootDir, saltedProfilePrefix, getter_AddRefs(file));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          // In background task mode, NS_ERROR_UNEXPECTED is handled specially
+          // to exit with a non-zero exit code.
+          return NS_ERROR_UNEXPECTED;
+        }
+        *aDidCreate = true;
+
+        // Keep a record of the salted name.  It's okay if this doesn't succeed:
+        // not great, but it's better for tasks (particularly,
+        // `backgroundupdate`) to run and not persist state correctly than to
+        // not run at all.
+        rv =
+            mProfileDB.SetString("BackgroundTasksProfiles", profilePrefix.get(),
+                                 saltedProfilePrefix.get());
+        Unused << NS_WARN_IF(NS_FAILED(rv));
+
+        if (NS_SUCCEEDED(rv)) {
+          rv = Flush();
+          Unused << NS_WARN_IF(NS_FAILED(rv));
+        }
+      }
     }
-
-    // We don't expect a matching profile, but just in case.
-    GetProfileByDir(file, nullptr, getter_AddRefs(mCurrent));
-
-    // Background task mode does not enable legacy telemetry, so this is for
-    // completeness only.
-    mStartupReason = u"backgroundtask"_ns;
 
     nsCOMPtr<nsIFile> localDir = file;
     file.forget(aRootDir);
     localDir.forget(aLocalDir);
 
-    NS_IF_ADDREF(*aProfile = mCurrent);
+    // Background tasks never use profiles known to the profile service.
+    *aProfile = nullptr;
+
     return NS_OK;
   }
 #endif

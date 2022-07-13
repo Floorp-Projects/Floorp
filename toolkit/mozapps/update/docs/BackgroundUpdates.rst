@@ -171,11 +171,13 @@ The task then fishes configuration settings from the default profile, namely:
 -  The (legacy) Telemetry client ID, so that background update Telemetry
    can be correlated with other Firefox Telemetry
 
-The background task creates a temporary profile for itself to load, because a
+The background task creates a distinct profile for itself to load, because a
 profile must be present in order for most of the Firefox code that it relies on
-to function.
+to function.  This distinct profile is non-ephemeral, i.e., persistent, but not
+visible to users: see `bug 1775132
+<https://bugzilla.mozilla.org/show_bug.cgi?id=1775132>`__
 
-After setting up the temporary profile and reading all the configuration we need
+After setting up this profile and reading all the configuration we need
 into it, the regular
 `UpdateService.jsm <https://searchfox.org/mozilla-central/source/toolkit/mozapps/update/UpdateService.jsm>`__
 check process is initiated. To the greatest extent possible, this process is

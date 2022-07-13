@@ -66,6 +66,7 @@ TESTING_JS_MODULES.backgroundtasks += [
     "tests/BackgroundTask_file_exists.jsm",
     "tests/BackgroundTask_jsdebugger.jsm",
     "tests/BackgroundTask_localization.jsm",
+    "tests/BackgroundTask_not_ephemeral_profile.jsm",
     "tests/BackgroundTask_policies.jsm",
     "tests/BackgroundTask_profile_is_slim.jsm",
     "tests/BackgroundTask_shouldnotprocessupdates.jsm",
