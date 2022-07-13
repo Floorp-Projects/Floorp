@@ -121,7 +121,7 @@ function run_test() {
   makeTest(0, { "blocked-uri": "inline" }, false, function(csp) {
     let inlineOK = true;
     inlineOK = csp.getAllowsInline(
-      Ci.nsIContentSecurityPolicy.SCRIPT_SRC_DIRECTIVE,
+      Ci.nsIContentSecurityPolicy.SCRIPT_SRC_ELEM_DIRECTIVE,
       "", // aNonce
       false, // aParserCreated
       null, // aTriggeringElement
@@ -193,7 +193,7 @@ function run_test() {
   makeTest(3, { "blocked-uri": "inline" }, true, function(csp) {
     let inlineOK = true;
     inlineOK = csp.getAllowsInline(
-      Ci.nsIContentSecurityPolicy.SCRIPT_SRC_DIRECTIVE,
+      Ci.nsIContentSecurityPolicy.SCRIPT_SRC_ELEM_DIRECTIVE,
       "", // aNonce
       false, // aParserCreated
       null, // aTriggeringElement
