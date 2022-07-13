@@ -42,14 +42,15 @@ int TotalDelay(int sends) {
 class StunRequestTest : public ::testing::Test, public sigslot::has_slots<> {
  public:
   StunRequestTest()
-      : manager_(rtc::Thread::Current()),
+      : manager_(rtc::Thread::Current(),
+                 [this](const void* data, size_t size, StunRequest* request) {
+                   OnSendPacket(data, size, request);
+                 }),
         request_count_(0),
         response_(NULL),
         success_(false),
         failure_(false),
-        timeout_(false) {
-    manager_.SignalSendPacket.connect(this, &StunRequestTest::OnSendPacket);
-  }
+        timeout_(false) {}
 
   void OnSendPacket(const void* data, size_t size, StunRequest* req) {
     request_count_++;

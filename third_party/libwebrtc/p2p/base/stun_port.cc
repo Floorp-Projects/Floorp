@@ -169,7 +169,11 @@ UDPPort::UDPPort(rtc::Thread* thread,
            username,
            password,
            field_trials),
-      request_manager_(thread),
+      request_manager_(
+          thread,
+          [this](const void* data, size_t size, StunRequest* request) {
+            OnSendPacket(data, size, request);
+          }),
       socket_(socket),
       error_(0),
       ready_(false),
@@ -195,7 +199,11 @@ UDPPort::UDPPort(rtc::Thread* thread,
            username,
            password,
            field_trials),
-      request_manager_(thread),
+      request_manager_(
+          thread,
+          [this](const void* data, size_t size, StunRequest* request) {
+            OnSendPacket(data, size, request);
+          }),
       socket_(nullptr),
       error_(0),
       ready_(false),
@@ -218,7 +226,6 @@ bool UDPPort::Init() {
   socket_->SignalSentPacket.connect(this, &UDPPort::OnSentPacket);
   socket_->SignalReadyToSend.connect(this, &UDPPort::OnReadyToSend);
   socket_->SignalAddressReady.connect(this, &UDPPort::OnLocalAddressReady);
-  request_manager_.SignalSendPacket.connect(this, &UDPPort::OnSendPacket);
   return true;
 }
 

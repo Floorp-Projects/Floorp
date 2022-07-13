@@ -300,7 +300,10 @@ Connection::Connection(rtc::WeakPtr<Port> port,
       connected_(true),
       pruned_(false),
       use_candidate_attr_(false),
-      requests_(port_->thread()),
+      requests_(port_->thread(),
+                [this](const void* data, size_t size, StunRequest* request) {
+                  OnSendStunPacket(data, size, request);
+                }),
       rtt_(DEFAULT_RTT),
       last_ping_sent_(0),
       last_ping_received_(0),
@@ -312,10 +315,6 @@ Connection::Connection(rtc::WeakPtr<Port> port,
       field_trials_(&kDefaultFieldTrials),
       rtt_estimate_(DEFAULT_RTT_ESTIMATE_HALF_TIME_MS) {
   RTC_DCHECK_RUN_ON(network_thread_);
-  // All of our connections start in WAITING state.
-  // TODO(mallinath) - Start connections from STATE_FROZEN.
-  // Wire up to send stun packets
-  requests_.SignalSendPacket.connect(this, &Connection::OnSendStunPacket);
   RTC_LOG(LS_INFO) << ToString() << ": Connection created";
 }
 

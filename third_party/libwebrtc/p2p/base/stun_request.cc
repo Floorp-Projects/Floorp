@@ -43,7 +43,10 @@ const int STUN_MAX_RETRANSMISSIONS = 8;           // Total sends: 9
 // work well.
 const int STUN_MAX_RTO = 8000;  // milliseconds, or 5 doublings
 
-StunRequestManager::StunRequestManager(rtc::Thread* thread) : thread_(thread) {}
+StunRequestManager::StunRequestManager(
+    rtc::Thread* thread,
+    std::function<void(const void*, size_t, StunRequest*)> send_packet)
+    : thread_(thread), send_packet_(std::move(send_packet)) {}
 
 StunRequestManager::~StunRequestManager() = default;
 
@@ -181,6 +184,13 @@ void StunRequestManager::OnRequestTimedOut(StunRequest* request) {
   requests_.erase(request->id());
 }
 
+void StunRequestManager::SendPacket(const void* data,
+                                    size_t size,
+                                    StunRequest* request) {
+  RTC_DCHECK_EQ(this, request->manager());
+  send_packet_(data, size, request);
+}
+
 StunRequest::StunRequest(StunRequestManager& manager)
     : manager_(manager),
       msg_(new StunMessage()),
@@ -239,7 +249,7 @@ void StunRequest::OnMessage(rtc::Message* pmsg) {
 
   rtc::ByteBufferWriter buf;
   msg_->Write(&buf);
-  manager_.SignalSendPacket(buf.Data(), buf.Length(), this);
+  manager_.SendPacket(buf.Data(), buf.Length(), this);
 
   OnSent();
   manager_.network_thread()->PostDelayed(RTC_FROM_HERE, resend_delay(), this,

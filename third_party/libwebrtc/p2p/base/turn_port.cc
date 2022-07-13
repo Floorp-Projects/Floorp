@@ -242,15 +242,17 @@ TurnPort::TurnPort(rtc::Thread* thread,
       socket_(socket),
       error_(0),
       stun_dscp_value_(rtc::DSCP_NO_CHANGE),
-      request_manager_(thread),
+      request_manager_(
+          thread,
+          [this](const void* data, size_t size, StunRequest* request) {
+            OnSendStunPacket(data, size, request);
+          }),
       next_channel_number_(TURN_CHANNEL_NUMBER_START),
       state_(STATE_CONNECTING),
       server_priority_(server_priority),
       allocate_mismatch_retries_(0),
       turn_customizer_(customizer),
-      field_trials_(field_trials) {
-  request_manager_.SignalSendPacket.connect(this, &TurnPort::OnSendStunPacket);
-}
+      field_trials_(field_trials) {}
 
 TurnPort::TurnPort(rtc::Thread* thread,
                    rtc::PacketSocketFactory* factory,
@@ -284,15 +286,17 @@ TurnPort::TurnPort(rtc::Thread* thread,
       socket_(NULL),
       error_(0),
       stun_dscp_value_(rtc::DSCP_NO_CHANGE),
-      request_manager_(thread),
+      request_manager_(
+          thread,
+          [this](const void* data, size_t size, StunRequest* request) {
+            OnSendStunPacket(data, size, request);
+          }),
       next_channel_number_(TURN_CHANNEL_NUMBER_START),
       state_(STATE_CONNECTING),
       server_priority_(server_priority),
       allocate_mismatch_retries_(0),
       turn_customizer_(customizer),
-      field_trials_(field_trials) {
-  request_manager_.SignalSendPacket.connect(this, &TurnPort::OnSendStunPacket);
-}
+      field_trials_(field_trials) {}
 
 TurnPort::~TurnPort() {
   // TODO(juberti): Should this even be necessary?
