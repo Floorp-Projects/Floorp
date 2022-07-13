@@ -22,6 +22,9 @@
 { include: ['"rdbx.h"', "private", '"third_party/libsrtp/include/srtp_priv.h"', "public"] },
 { include: ['"auth.h"', "private", '"third_party/libsrtp/include/srtp_priv.h"', "public"] },
 
+# pthread internals
+{ include: ['<bits/pthread_types.h>', "private", '<pthread.h>', "public"] },
+
 # Needed to agree with presubmit tests for includes (and not include <iosfwd>)
 { symbol: ["std::string", "public", "<string>", "public"] },
 { symbol: ["std::move", "public", "<utility>", "public"] },
