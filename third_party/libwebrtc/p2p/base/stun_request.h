@@ -54,10 +54,6 @@ class StunRequestManager {
   // transmission. For testing only.
   bool HasRequestForTest(int msg_type);
 
-  // Removes a stun request that was added previously.  This will happen
-  // automatically when a request succeeds, fails, or times out.
-  void Remove(StunRequest* request);
-
   // Removes all stun requests that were added previously.
   void Clear();
 
@@ -65,6 +61,9 @@ class StunRequestManager {
   // outstanding requests, and if so, processes it appropriately.
   bool CheckResponse(StunMessage* msg);
   bool CheckResponse(const char* data, size_t size);
+
+  // Called from a StunRequest when a timeout occurs.
+  void OnRequestTimedOut(StunRequest* request);
 
   bool empty() const;
 
@@ -75,7 +74,7 @@ class StunRequestManager {
   sigslot::signal3<const void*, size_t, StunRequest*> SignalSendPacket;
 
  private:
-  typedef std::map<std::string, StunRequest*> RequestMap;
+  typedef std::map<std::string, std::unique_ptr<StunRequest>> RequestMap;
 
   rtc::Thread* const thread_;
   RequestMap requests_ RTC_GUARDED_BY(thread_);
