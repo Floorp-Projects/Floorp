@@ -457,6 +457,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":test_support",
       "../rtc_base",
       "../rtc_base:checks",
+      "../rtc_base:event_tracer",
       "../rtc_base:logging",
       "../rtc_base:rtc_base_approved",
       "../rtc_base:threading",

@@ -108,6 +108,7 @@ rtc_library("rtc_p2p") {
     "../rtc_base:byte_order",
     "../rtc_base:callback_list",
     "../rtc_base:checks",
+    "../rtc_base:event_tracer",
     "../rtc_base:ip_address",
     "../rtc_base:location",
     "../rtc_base:logging",

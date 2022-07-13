@@ -803,6 +803,7 @@ if (current_os == "linux" || is_android) {
       "../../pc:webrtc_sdp",
       "../../rtc_base",
       "../../rtc_base:checks",
+      "../../rtc_base:event_tracer",
       "../../rtc_base:logging",
       "../../rtc_base:refcount",
       "../../rtc_base:rtc_base_approved",

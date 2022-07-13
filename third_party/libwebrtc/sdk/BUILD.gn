@@ -1039,6 +1039,7 @@ if (is_ios || is_mac) {
         "../pc:webrtc_sdp",
         "../rtc_base",
         "../rtc_base:checks",
+        "../rtc_base:event_tracer",
         "../rtc_base:logging",
         "../rtc_base:network_constants",
         "../rtc_base:safe_conversions",

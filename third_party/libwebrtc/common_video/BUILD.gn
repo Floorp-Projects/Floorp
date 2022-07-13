@@ -60,6 +60,7 @@ rtc_library("common_video") {
     "../rtc_base:bitstream_reader",
     "../rtc_base:buffer",
     "../rtc_base:checks",
+    "../rtc_base:event_tracer",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:race_checker",

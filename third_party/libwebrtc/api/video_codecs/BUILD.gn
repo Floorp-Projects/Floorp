@@ -194,6 +194,7 @@ rtc_library("rtc_software_fallback_wrappers") {
     "../../modules/video_coding:video_codec_interface",
     "../../modules/video_coding:video_coding_utility",
     "../../rtc_base:checks",
+    "../../rtc_base:event_tracer",
     "../../rtc_base:logging",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:rtc_export",
