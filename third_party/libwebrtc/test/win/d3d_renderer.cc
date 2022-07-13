@@ -194,8 +194,9 @@ void D3dRenderer::OnFrame(const webrtc::VideoFrame& frame) {
 
   d3d_device_->BeginScene();
   d3d_device_->SetFVF(D3DFVF_CUSTOMVERTEX);
-  d3d_device_->SetStreamSource(0, vertex_buffer_, 0, sizeof(D3dCustomVertex));
-  d3d_device_->SetTexture(0, texture_);
+  d3d_device_->SetStreamSource(0, vertex_buffer_.get(), 0,
+                               sizeof(D3dCustomVertex));
+  d3d_device_->SetTexture(0, texture_.get());
   d3d_device_->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
   d3d_device_->EndScene();
 

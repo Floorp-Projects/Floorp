@@ -40,7 +40,8 @@ void MediaHelper::MaybeAddAudio(TestPeer* peer) {
   rtc::scoped_refptr<webrtc::AudioSourceInterface> source =
       peer->pc_factory()->CreateAudioSource(audio_config.audio_options);
   rtc::scoped_refptr<AudioTrackInterface> track =
-      peer->pc_factory()->CreateAudioTrack(*audio_config.stream_label, source);
+      peer->pc_factory()->CreateAudioTrack(*audio_config.stream_label,
+                                           source.get());
   std::string sync_group = audio_config.sync_group
                                ? audio_config.sync_group.value()
                                : audio_config.stream_label.value();
@@ -71,7 +72,7 @@ MediaHelper::MaybeAddVideo(TestPeer* peer) {
                      << video_config.stream_label.value();
     rtc::scoped_refptr<VideoTrackInterface> track =
         peer->pc_factory()->CreateVideoTrack(video_config.stream_label.value(),
-                                             source);
+                                             source.get());
     if (video_config.content_hint.has_value()) {
       track->set_content_hint(video_config.content_hint.value());
     }

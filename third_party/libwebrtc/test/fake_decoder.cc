@@ -49,7 +49,7 @@ int32_t FakeDecoder::Decode(const EncodedImage& input,
   }
 
   rtc::scoped_refptr<I420Buffer> buffer = I420Buffer::Create(width_, height_);
-  I420Buffer::SetBlack(buffer);
+  I420Buffer::SetBlack(buffer.get());
   VideoFrame frame = VideoFrame::Builder()
                          .set_video_frame_buffer(buffer)
                          .set_rotation(webrtc::kVideoRotation_0)

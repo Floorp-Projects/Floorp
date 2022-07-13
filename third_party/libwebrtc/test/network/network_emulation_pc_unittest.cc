@@ -167,7 +167,7 @@ TEST(NetworkEmulationManagerPCTest, Run) {
     rtc::scoped_refptr<webrtc::AudioSourceInterface> source =
         alice_pcf->CreateAudioSource(cricket::AudioOptions());
     rtc::scoped_refptr<AudioTrackInterface> track =
-        alice_pcf->CreateAudioTrack("audio", source);
+        alice_pcf->CreateAudioTrack("audio", source.get());
     alice->AddTransceiver(track);
 
     // Connect peers.
@@ -276,7 +276,7 @@ TEST(NetworkEmulationManagerPCTest, RunTURN) {
     rtc::scoped_refptr<webrtc::AudioSourceInterface> source =
         alice_pcf->CreateAudioSource(cricket::AudioOptions());
     rtc::scoped_refptr<AudioTrackInterface> track =
-        alice_pcf->CreateAudioTrack("audio", source);
+        alice_pcf->CreateAudioTrack("audio", source.get());
     alice->AddTransceiver(track);
 
     // Connect peers.
