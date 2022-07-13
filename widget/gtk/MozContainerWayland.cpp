@@ -219,7 +219,7 @@ void moz_container_wayland_add_initial_draw_callback(
 static void moz_container_wayland_clear_initial_draw_callback_locked(
     const MutexAutoLock& aProofOfLock, MozContainer* container) {
   MozContainerWayland* wl_container = &MOZ_CONTAINER(container)->wl_container;
-  MozClearPointer(wl_container->frame_callback_handler, wl_callback_destroy);
+  g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
   wl_container->initial_draw_cbs.clear();
 }
 
@@ -244,8 +244,7 @@ static void moz_container_wayland_frame_callback_handler(
   {
     // Protect mozcontainer internals changes by container_lock.
     MutexAutoLock lock(*wl_container->container_lock);
-    wl_callback_destroy(wl_container->frame_callback_handler);
-    wl_container->frame_callback_handler = nullptr;
+    g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
     // It's possible that container is already unmapped so quit in such case.
     if (!wl_container->surface) {
       LOGWAYLAND("  container is unmapped, quit.");
@@ -343,10 +342,10 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
     wl_container->surface = nullptr;
   }
 
-  MozClearPointer(wl_container->eglwindow, wl_egl_window_destroy);
-  MozClearPointer(wl_container->subsurface, wl_subsurface_destroy);
-  MozClearPointer(wl_container->surface, wl_surface_destroy);
-  MozClearPointer(wl_container->viewport, wp_viewport_destroy);
+  g_clear_pointer(&wl_container->eglwindow, wl_egl_window_destroy);
+  g_clear_pointer(&wl_container->subsurface, wl_subsurface_destroy);
+  g_clear_pointer(&wl_container->surface, wl_surface_destroy);
+  g_clear_pointer(&wl_container->viewport, wp_viewport_destroy);
 
   wl_container->ready_to_draw = false;
   wl_container->buffer_scale = 1;
@@ -585,7 +584,7 @@ static bool moz_container_wayland_surface_create_locked(
       wl_subcompositor_get_subsurface(WaylandDisplayGet()->GetSubcompositor(),
                                       wl_container->surface, parent_surface);
   if (!wl_container->subsurface) {
-    MozClearPointer(wl_container->surface, wl_surface_destroy);
+    g_clear_pointer(&wl_container->surface, wl_surface_destroy);
     LOGWAYLAND("    Failed - can't create sub-surface!");
     return false;
   }
@@ -603,7 +602,7 @@ static bool moz_container_wayland_surface_create_locked(
   // If there's pending frame callback it's for wrong parent surface,
   // so delete it.
   if (wl_container->frame_callback_handler) {
-    MozClearPointer(wl_container->frame_callback_handler, wl_callback_destroy);
+    g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
   }
   wl_container->frame_callback_handler = wl_surface_frame(parent_surface);
   wl_callback_add_listener(wl_container->frame_callback_handler,
