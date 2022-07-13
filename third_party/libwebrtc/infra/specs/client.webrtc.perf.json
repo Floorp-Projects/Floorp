@@ -13,7 +13,7 @@
             "--test-suite",
             "low_bandwidth_audio_perf_test"
           ],
-          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+          "script": "//tools_webrtc/perf/process_perf_results_py2.py"
         },
         "name": "low_bandwidth_audio_perf_test",
         "resultdb": {
@@ -46,7 +46,7 @@
             "--test-suite",
             "webrtc_perf_tests"
           ],
-          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+          "script": "//tools_webrtc/perf/process_perf_results_py2.py"
         },
         "name": "webrtc_perf_tests",
         "resultdb": {
