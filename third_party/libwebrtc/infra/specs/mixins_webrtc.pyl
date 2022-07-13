@@ -36,6 +36,15 @@
       },
     },
   },
+  'ios-device-perf': {
+    'swarming': {
+      'dimensions': {
+        'os': 'iOS-12.4.1',
+        'pool': 'WebRTC',
+        'id': 'build15-a7',
+      },
+    },
+  },
   'ios_runtime_cache_14_0': {
     '$mixin_append': {
       'swarming': {
@@ -98,6 +107,28 @@
       }
     }
   },
+  'perf-low-bandwidth-audio-perf-test': {
+    'merge': {
+      'script': '../../tools_webrtc/perf/process_perf_results_py2.py',
+      'args': ['--test-suite', 'low_bandwidth_audio_perf_test'],
+    },
+  },
+  'perf-pool': {
+    'swarming': {
+      'dimensions': {
+        'pool': 'WebRTC-perf',
+      },
+    },
+  },
+  'perf-webrtc-perf-tests': {
+    'merge': {
+      'script': '../../tools_webrtc/perf/process_perf_results_py2.py',
+      'args': ['--test-suite', 'webrtc_perf_tests'],
+    },
+    '$mixin_append': {
+      'args': ['--nologs']
+    }
+  },
   'resultdb-gtest-json-format': {
     '$mixin_append': {
       'args': [
@@ -113,6 +144,12 @@
     'resultdb': {
       'result_format': 'json'
     }
+  },
+  'timeout-3h': {
+    'swarming': {
+      'hard_timeout': 10800,
+      'io_timeout': 10800,
+    },
   },
   'webrtc-xctest': {
     '$mixin_append': {

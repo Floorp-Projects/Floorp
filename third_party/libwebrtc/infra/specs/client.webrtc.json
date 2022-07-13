@@ -602,6 +602,125 @@
       }
     ]
   },
+  "Android32 Builder arm": {
+    "gtest_tests": [
+      {
+        "args": [
+          "--android",
+          "--adb-path",
+          "../../third_party/android_sdk/public/platform-tools/adb"
+        ],
+        "merge": {
+          "args": [
+            "--test-suite",
+            "low_bandwidth_audio_perf_test"
+          ],
+          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true
+        },
+        "test": "low_bandwidth_audio_perf_test",
+        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
+      },
+      {
+        "args": [
+          "--nologs"
+        ],
+        "merge": {
+          "args": [
+            "--test-suite",
+            "webrtc_perf_tests"
+          ],
+          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true
+        },
+        "test": "webrtc_perf_tests",
+        "test_id_prefix": "ninja://:webrtc_perf_tests/"
+      }
+    ]
+  },
+  "Android32 Builder arm64": {
+    "gtest_tests": [
+      {
+        "args": [
+          "--android",
+          "--adb-path",
+          "../../third_party/android_sdk/public/platform-tools/adb"
+        ],
+        "merge": {
+          "args": [
+            "--test-suite",
+            "low_bandwidth_audio_perf_test"
+          ],
+          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true
+        },
+        "test": "low_bandwidth_audio_perf_test",
+        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
+      },
+      {
+        "args": [
+          "--nologs"
+        ],
+        "merge": {
+          "args": [
+            "--test-suite",
+            "webrtc_perf_tests"
+          ],
+          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true
+        },
+        "test": "webrtc_perf_tests",
+        "test_id_prefix": "ninja://:webrtc_perf_tests/"
+      }
+    ]
+  },
+  "Linux64 Builder": {
+    "isolated_scripts": [
+      {
+        "isolate_name": "low_bandwidth_audio_perf_test",
+        "merge": {
+          "args": [
+            "--test-suite",
+            "low_bandwidth_audio_perf_test"
+          ],
+          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+        },
+        "name": "low_bandwidth_audio_perf_test",
+        "swarming": {
+          "can_use_on_swarming_builders": true
+        },
+        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
+      },
+      {
+        "args": [
+          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
+          "--save_worst_frame",
+          "--nologs"
+        ],
+        "isolate_name": "webrtc_perf_tests",
+        "merge": {
+          "args": [
+            "--test-suite",
+            "webrtc_perf_tests"
+          ],
+          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+        },
+        "name": "webrtc_perf_tests",
+        "swarming": {
+          "can_use_on_swarming_builders": true
+        },
+        "test_id_prefix": "ninja://:webrtc_perf_tests/"
+      }
+    ]
+  },
   "Linux64 Release": {
     "isolated_scripts": [
       {
@@ -1011,6 +1130,57 @@
       }
     ]
   },
+  "Mac64 Builder": {
+    "isolated_scripts": [
+      {
+        "isolate_name": "low_bandwidth_audio_perf_test",
+        "merge": {
+          "args": [
+            "--test-suite",
+            "low_bandwidth_audio_perf_test"
+          ],
+          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+        },
+        "name": "low_bandwidth_audio_perf_test",
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Mac"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
+      },
+      {
+        "args": [
+          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
+          "--save_worst_frame",
+          "--nologs"
+        ],
+        "isolate_name": "webrtc_perf_tests",
+        "merge": {
+          "args": [
+            "--test-suite",
+            "webrtc_perf_tests"
+          ],
+          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+        },
+        "name": "webrtc_perf_tests",
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Mac"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://:webrtc_perf_tests/"
+      }
+    ]
+  },
   "Mac64 Release": {
     "isolated_scripts": [
       {
@@ -1417,6 +1587,45 @@
           ]
         },
         "test_id_prefix": "ninja://:webrtc_nonparallel_tests/"
+      }
+    ]
+  },
+  "Win32 Builder (Clang)": {
+    "isolated_scripts": [
+      {
+        "isolate_name": "low_bandwidth_audio_perf_test",
+        "merge": {
+          "args": [
+            "--test-suite",
+            "low_bandwidth_audio_perf_test"
+          ],
+          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+        },
+        "name": "low_bandwidth_audio_perf_test",
+        "swarming": {
+          "can_use_on_swarming_builders": true
+        },
+        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
+      },
+      {
+        "args": [
+          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
+          "--save_worst_frame",
+          "--nologs"
+        ],
+        "isolate_name": "webrtc_perf_tests",
+        "merge": {
+          "args": [
+            "--test-suite",
+            "webrtc_perf_tests"
+          ],
+          "script": "../../tools_webrtc/perf/process_perf_results_py2.py"
+        },
+        "name": "webrtc_perf_tests",
+        "swarming": {
+          "can_use_on_swarming_builders": true
+        },
+        "test_id_prefix": "ninja://:webrtc_perf_tests/"
       }
     ]
   },
@@ -2020,12 +2229,8 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
-        "$mixin_append": {
-          "args": [
-            "--readline-timeout=360"
-          ]
-        },
         "args": [
+          "--readline-timeout=360",
           "--platform",
           "iPhone X",
           "--version",
