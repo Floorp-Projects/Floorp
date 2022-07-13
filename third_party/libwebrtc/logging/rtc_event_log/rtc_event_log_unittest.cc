@@ -904,31 +904,39 @@ TEST_P(RtcEventLogCircularBufferTest, KeepsMostRecentEvents) {
       std::make_unique<rtc::ScopedFakeClock>();
   fake_clock->SetTime(Timestamp::Seconds(kStartTimeSeconds));
 
-  auto task_queue_factory = CreateDefaultTaskQueueFactory();
-  RtcEventLogFactory rtc_event_log_factory(task_queue_factory.get());
-  // When `log` goes out of scope, the contents are flushed
-  // to the output.
-  std::unique_ptr<RtcEventLog> log =
-      rtc_event_log_factory.CreateRtcEventLog(encoding_type_);
+  // Create a scope for the TQ and event log factories.
+  // This way, we make sure that task queue instances that may rely on a clock
+  // have been torn down before we run the verification steps at the end of
+  // the test.
+  int64_t start_time_us, utc_start_time_us, stop_time_us;
 
-  for (size_t i = 0; i < kNumEvents; i++) {
-    // The purpose of the test is to verify that the log can handle
-    // more events than what fits in the internal circular buffer. The exact
-    // type of events does not matter so we chose ProbeSuccess events for
-    // simplicity.
-    // We base the various values on the index. We use this for some basic
-    // consistency checks when we read back.
-    log->Log(std::make_unique<RtcEventProbeResultSuccess>(
-        i, kStartBitrate + i * 1000));
+  {
+    auto task_queue_factory = CreateDefaultTaskQueueFactory();
+    RtcEventLogFactory rtc_event_log_factory(task_queue_factory.get());
+    // When `log` goes out of scope, the contents are flushed
+    // to the output.
+    std::unique_ptr<RtcEventLog> log =
+        rtc_event_log_factory.CreateRtcEventLog(encoding_type_);
+
+    for (size_t i = 0; i < kNumEvents; i++) {
+      // The purpose of the test is to verify that the log can handle
+      // more events than what fits in the internal circular buffer. The exact
+      // type of events does not matter so we chose ProbeSuccess events for
+      // simplicity.
+      // We base the various values on the index. We use this for some basic
+      // consistency checks when we read back.
+      log->Log(std::make_unique<RtcEventProbeResultSuccess>(
+          i, kStartBitrate + i * 1000));
+      fake_clock->AdvanceTime(TimeDelta::Millis(10));
+    }
+    start_time_us = rtc::TimeMicros();
+    utc_start_time_us = rtc::TimeUTCMicros();
+    log->StartLogging(log_output_factory_->Create(temp_filename),
+                      RtcEventLog::kImmediateOutput);
     fake_clock->AdvanceTime(TimeDelta::Millis(10));
+    stop_time_us = rtc::TimeMicros();
+    log->StopLogging();
   }
-  int64_t start_time_us = rtc::TimeMicros();
-  int64_t utc_start_time_us = rtc::TimeUTCMicros();
-  log->StartLogging(log_output_factory_->Create(temp_filename),
-                    RtcEventLog::kImmediateOutput);
-  fake_clock->AdvanceTime(TimeDelta::Millis(10));
-  int64_t stop_time_us = rtc::TimeMicros();
-  log->StopLogging();
 
   // Read the generated log from memory.
   ParsedRtcEventLog parsed_log;
