@@ -33,6 +33,7 @@ rtc_library("congestion_controller") {
     "../../api/units:data_rate",
     "../../api/units:time_delta",
     "../../api/units:timestamp",
+    "../../rtc_base:logging",
     "../../rtc_base/synchronization:mutex",
     "../pacing",
     "../remote_bitrate_estimator",

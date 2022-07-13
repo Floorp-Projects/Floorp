@@ -114,6 +114,7 @@ if (!build_with_chromium) {
     sources = [ "quality_assessment/vad.cc" ]
     deps = [
       "../../../../common_audio",
+      "../../../../rtc_base:logging",
       "../../../../rtc_base:rtc_base_approved",
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",
@@ -126,6 +127,7 @@ if (!build_with_chromium) {
     deps = [
       "../..",
       "../../../../common_audio",
+      "../../../../rtc_base:logging",
       "../../../../rtc_base:rtc_base_approved",
       "../../vad",
       "//third_party/abseil-cpp/absl/flags:flag",
@@ -139,6 +141,7 @@ if (!build_with_chromium) {
     deps = [
       "../..",
       "../../../../common_audio",
+      "../../../../rtc_base:logging",
       "../../../../rtc_base:rtc_base_approved",
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",

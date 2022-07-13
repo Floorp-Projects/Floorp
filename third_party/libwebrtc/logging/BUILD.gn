@@ -302,6 +302,7 @@ rtc_library("rtc_event_log_impl_encoder") {
     "../rtc_base:bitstream_reader",
     "../rtc_base:checks",
     "../rtc_base:ignore_wundef",
+    "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
   ]
   absl_deps = [
@@ -365,6 +366,7 @@ if (rtc_enable_protobuf) {
       "../api/rtc_event_log",
       "../api/task_queue",
       "../rtc_base:checks",
+      "../rtc_base:logging",
       "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_task_queue",
       "../rtc_base:safe_minmax",
@@ -445,6 +447,7 @@ if (rtc_enable_protobuf) {
       "../modules/rtp_rtcp:rtp_rtcp_format",
       "../rtc_base:checks",
       "../rtc_base:ignore_wundef",
+      "../rtc_base:logging",
       "../rtc_base:protobuf_utils",
       "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_numerics",

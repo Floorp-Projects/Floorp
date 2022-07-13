@@ -13,6 +13,7 @@ import("../../webrtc.gni")
 rtc_library("webrtc_fuzzer_main") {
   sources = [ "webrtc_fuzzer_main.cc" ]
   deps = [
+    "../../rtc_base:logging",
     "../../rtc_base:rtc_base_approved",
     "//testing/libfuzzer:libfuzzer_main",
   ]
@@ -659,6 +660,7 @@ webrtc_fuzzer_test("dcsctp_socket_fuzzer") {
     "../../net/dcsctp/public:socket",
     "../../net/dcsctp/public:types",
     "../../net/dcsctp/socket:dcsctp_socket",
+    "../../rtc_base:logging",
     "../../rtc_base:rtc_base_approved",
   ]
 }

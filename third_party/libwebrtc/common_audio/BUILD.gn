@@ -48,6 +48,7 @@ rtc_library("common_audio") {
     "../api:array_view",
     "../rtc_base:checks",
     "../rtc_base:gtest_prod",
+    "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:sanitizer",
     "../rtc_base/memory:aligned_malloc",

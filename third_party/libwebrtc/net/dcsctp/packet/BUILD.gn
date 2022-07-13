@@ -29,6 +29,7 @@ rtc_library("tlv_trait") {
     ":bounded_io",
     "../../../api:array_view",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
   ]
   absl_deps = [
@@ -71,6 +72,7 @@ rtc_library("parameter") {
     ":tlv_trait",
     "../../../api:array_view",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
     "../common:internal_types",
     "../common:math",
@@ -115,6 +117,7 @@ rtc_library("error_cause") {
     ":tlv_trait",
     "../../../api:array_view",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
     "../common:internal_types",
     "../common:math",
@@ -167,6 +170,7 @@ rtc_library("chunk") {
     ":tlv_trait",
     "../../../api:array_view",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
     "../common:math",
     "../common:str_join",
@@ -223,6 +227,7 @@ rtc_library("chunk_validators") {
   deps = [
     ":chunk",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
   ]
   sources = [
@@ -238,6 +243,7 @@ rtc_library("sctp_packet") {
     ":crc32c",
     "../../../api:array_view",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
     "../common:internal_types",
     "../common:math",
