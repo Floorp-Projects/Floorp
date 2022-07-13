@@ -773,16 +773,10 @@ static PropertyIteratorObject* CreatePropertyIterator(
 
   // This also registers |ni| with |propIter|.
   bool hadError = false;
-  NativeIterator* ni = new (mem) NativeIterator(
-      cx, propIter, objBeingIterated, props, numShapes, shapesHash, &hadError);
+  new (mem) NativeIterator(cx, propIter, objBeingIterated, props, numShapes,
+                           shapesHash, &hadError);
   if (hadError) {
     return nullptr;
-  }
-
-  ObjectRealm& realm = objBeingIterated ? ObjectRealm::get(objBeingIterated)
-                                        : ObjectRealm::get(propIter);
-  if (!ni->isEmptyIteratorSingleton()) {
-    RegisterEnumerator(realm, ni);
   }
 
   return propIter;
@@ -1081,6 +1075,7 @@ static JSObject* GetIterator(JSContext* cx, HandleObject obj) {
   if (!iterobj) {
     return nullptr;
   }
+  RegisterEnumerator(ObjectRealm::get(obj), iterobj->getNativeIterator());
 
   cx->check(iterobj);
 
@@ -1395,7 +1390,7 @@ PropertyIteratorObject* GlobalObject::getOrCreateEmptyIterator(JSContext* cx) {
     if (!iter) {
       return nullptr;
     }
-    MOZ_ASSERT(iter->getNativeIterator()->isEmptyIteratorSingleton());
+    iter->getNativeIterator()->markEmptyIteratorSingleton();
     cx->global()->data().emptyIterator.init(iter);
   }
   return cx->global()->data().emptyIterator;
