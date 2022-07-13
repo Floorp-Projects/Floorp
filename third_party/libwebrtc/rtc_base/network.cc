@@ -27,6 +27,7 @@
 #include <memory>
 
 #include "absl/algorithm/container.h"
+#include "absl/memory/memory.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "api/transport/field_trial_based_config.h"
@@ -57,12 +58,13 @@ const int kNetworksUpdateIntervalMs = 2000;
 
 const int kHighestNetworkPreference = 127;
 
-typedef struct {
-  Network* net;
+struct AddressList {
+  std::unique_ptr<Network> net;
   std::vector<InterfaceAddress> ips;
-} AddressList;
+};
 
-bool CompareNetworks(const Network* a, const Network* b) {
+bool CompareNetworks(const std::unique_ptr<Network>& a,
+                     const std::unique_ptr<Network>& b) {
   if (a->prefix_length() == b->prefix_length()) {
     if (a->name() == b->name()) {
       return a->prefix() < b->prefix();
@@ -264,10 +266,6 @@ AdapterType GetAdapterTypeFromName(absl::string_view network_name) {
   return ADAPTER_TYPE_UNKNOWN;
 }
 
-NetworkManager::NetworkManager() {}
-
-NetworkManager::~NetworkManager() {}
-
 NetworkManager::EnumerationPermission NetworkManager::enumeration_permission()
     const {
   return ENUMERATION_ALLOWED;
@@ -288,12 +286,6 @@ NetworkManagerBase::NetworkManagerBase(
           field_trials
               ? field_trials->IsEnabled("WebRTC-SignalNetworkPreferenceChange")
               : false) {}
-
-NetworkManagerBase::~NetworkManagerBase() {
-  for (const auto& kv : networks_map_) {
-    delete kv.second;
-  }
-}
 
 NetworkManager::EnumerationPermission
 NetworkManagerBase::enumeration_permission() const {
@@ -330,41 +322,61 @@ std::vector<const Network*> NetworkManagerBase::GetNetworks() const {
   return result;
 }
 
-void NetworkManagerBase::MergeNetworkList(const NetworkList& new_networks,
-                                          bool* changed) {
+void NetworkManagerBase::MergeNetworkList(
+    std::vector<std::unique_ptr<Network>> new_networks,
+    bool* changed) {
   NetworkManager::Stats stats;
-  MergeNetworkList(new_networks, changed, &stats);
+  MergeNetworkList(std::move(new_networks), changed, &stats);
 }
 
-void NetworkManagerBase::MergeNetworkList(const NetworkList& new_networks,
+// TODO(bugs.webrtc.org/13869): Legacy method, taking ownership of raw pointers.
+// Delete, as soon as downstream users are updated.
+void NetworkManagerBase::MergeNetworkList(std::vector<Network*> list,
                                           bool* changed,
                                           NetworkManager::Stats* stats) {
+  std::vector<std::unique_ptr<Network>> list_owned;
+  list_owned.reserve(list.size());
+  for (Network* network : list) {
+    list_owned.push_back(absl::WrapUnique(network));
+  }
+  MergeNetworkList(std::move(list_owned), changed, stats);
+}
+
+// TODO(bugs.webrtc.org/13869): Legacy method, taking ownership of raw pointers.
+// Delete, as soon as downstream users are updated.
+void NetworkManagerBase::MergeNetworkList(std::vector<Network*> list,
+                                          bool* changed) {
+  NetworkManager::Stats stats;
+  MergeNetworkList(list, changed, &stats);
+}
+
+void NetworkManagerBase::MergeNetworkList(
+    std::vector<std::unique_ptr<Network>> new_networks,
+    bool* changed,
+    NetworkManager::Stats* stats) {
   *changed = false;
   // AddressList in this map will track IP addresses for all Networks
   // with the same key.
   std::map<std::string, AddressList> consolidated_address_list;
-  NetworkList list(new_networks);
-  absl::c_sort(list, CompareNetworks);
+  absl::c_sort(new_networks, CompareNetworks);
   // First, build a set of network-keys to the ipaddresses.
-  for (Network* network : list) {
+  for (auto& network : new_networks) {
     bool might_add_to_merged_list = false;
     std::string key = MakeNetworkKey(network->name(), network->prefix(),
                                      network->prefix_length());
+    const std::vector<InterfaceAddress>& addresses = network->GetIPs();
     if (consolidated_address_list.find(key) ==
         consolidated_address_list.end()) {
       AddressList addrlist;
-      addrlist.net = network;
-      consolidated_address_list[key] = addrlist;
+      addrlist.net = std::move(network);
+      consolidated_address_list[key] = std::move(addrlist);
       might_add_to_merged_list = true;
     }
-    const std::vector<InterfaceAddress>& addresses = network->GetIPs();
     AddressList& current_list = consolidated_address_list[key];
     for (const InterfaceAddress& address : addresses) {
       current_list.ips.push_back(address);
     }
-    if (!might_add_to_merged_list) {
-      delete network;
-    } else {
+    if (might_add_to_merged_list) {
       if (current_list.ips[0].family() == AF_INET) {
         stats->ipv4_network_count++;
       } else {
@@ -376,23 +388,24 @@ void NetworkManagerBase::MergeNetworkList(const NetworkList& new_networks,
 
   // Next, look for existing network objects to re-use.
   // Result of Network merge. Element in this list should have unique key.
-  NetworkList merged_list;
-  for (const auto& kv : consolidated_address_list) {
+  std::vector<Network*> merged_list;
+  for (auto& kv : consolidated_address_list) {
     const std::string& key = kv.first;
-    Network* net = kv.second.net;
+    std::unique_ptr<Network> net = std::move(kv.second.net);
     auto existing = networks_map_.find(key);
     if (existing == networks_map_.end()) {
-      // This network is new. Place it in the network map.
-      merged_list.push_back(net);
-      networks_map_[key] = net;
+      // This network is new.
       net->set_id(next_available_network_id_++);
-      // Also, we might have accumulated IPAddresses from the first
+      // We might have accumulated IPAddresses from the first
       // step, set it here.
       net->SetIPs(kv.second.ips, true);
+      // Place it in the network map.
+      merged_list.push_back(net.get());
+      networks_map_[key] = std::move(net);
       *changed = true;
     } else {
       // This network exists in the map already. Reset its IP addresses.
-      Network* existing_net = existing->second;
+      Network* existing_net = existing->second.get();
       *changed = existing_net->SetIPs(kv.second.ips, *changed);
       merged_list.push_back(existing_net);
       if (net->type() != ADAPTER_TYPE_UNKNOWN &&
@@ -414,9 +427,6 @@ void NetworkManagerBase::MergeNetworkList(const NetworkList& new_networks,
         }
       }
       RTC_DCHECK(net->active());
-      if (existing_net != net) {
-        delete net;
-      }
     }
     networks_map_[key]->set_mdns_responder_provider(this);
   }
@@ -432,9 +442,9 @@ void NetworkManagerBase::MergeNetworkList(const NetworkList& new_networks,
     networks_ = merged_list;
     // Reset the active states of all networks.
     for (const auto& kv : networks_map_) {
-      Network* network = kv.second;
+      const std::unique_ptr<Network>& network = kv.second;
       // If `network` is in the newly generated `networks_`, it is active.
-      bool found = absl::c_linear_search(networks_, network);
+      bool found = absl::c_linear_search(networks_, network.get());
       network->set_active(found);
     }
     absl::c_sort(networks_, SortNetworks);
@@ -541,19 +551,21 @@ void BasicNetworkManager::OnNetworksChanged() {
 
 #if defined(__native_client__)
 
-bool BasicNetworkManager::CreateNetworks(bool include_ignored,
-                                         NetworkList* networks) const {
+bool BasicNetworkManager::CreateNetworks(
+    bool include_ignored,
+    std::vector<std::unique_ptr<Network>>* networks) const {
   RTC_DCHECK_NOTREACHED();
   RTC_LOG(LS_WARNING) << "BasicNetworkManager doesn't work on NaCl yet";
   return false;
 }
 
 #elif defined(WEBRTC_POSIX)
-void BasicNetworkManager::ConvertIfAddrs(struct ifaddrs* interfaces,
-                                         IfAddrsConverter* ifaddrs_converter,
-                                         bool include_ignored,
-                                         NetworkList* networks) const {
-  NetworkMap current_networks;
+void BasicNetworkManager::ConvertIfAddrs(
+    struct ifaddrs* interfaces,
+    IfAddrsConverter* ifaddrs_converter,
+    bool include_ignored,
+    std::vector<std::unique_ptr<Network>>* networks) const {
+  std::map<std::string, Network*> current_networks;
 
   for (struct ifaddrs* cursor = interfaces; cursor != nullptr;
        cursor = cursor->ifa_next) {
@@ -627,9 +639,9 @@ void BasicNetworkManager::ConvertIfAddrs(struct ifaddrs* interfaces,
     auto iter = current_networks.find(key);
     if (iter == current_networks.end()) {
       // TODO(phoglund): Need to recognize other types as well.
-      std::unique_ptr<Network> network(
-          new Network(cursor->ifa_name, cursor->ifa_name, prefix, prefix_length,
-                      adapter_type));
+      auto network =
+          std::make_unique<Network>(cursor->ifa_name, cursor->ifa_name, prefix,
+                                    prefix_length, adapter_type);
       network->set_default_local_address_provider(this);
       network->set_scope_id(scope_id);
       network->AddIP(ip);
@@ -638,7 +650,7 @@ void BasicNetworkManager::ConvertIfAddrs(struct ifaddrs* interfaces,
       network->set_network_preference(network_preference);
       if (include_ignored || !network->ignored()) {
         current_networks[key] = network.get();
-        networks->push_back(network.release());
+        networks->push_back(std::move(network));
       }
     } else {
       Network* existing_network = iter->second;
@@ -653,8 +665,9 @@ void BasicNetworkManager::ConvertIfAddrs(struct ifaddrs* interfaces,
   }
 }
 
-bool BasicNetworkManager::CreateNetworks(bool include_ignored,
-                                         NetworkList* networks) const {
+bool BasicNetworkManager::CreateNetworks(
+    bool include_ignored,
+    std::vector<std::unique_ptr<Network>>* networks) const {
   struct ifaddrs* interfaces;
   int error = getifaddrs(&interfaces);
   if (error != 0) {
@@ -715,9 +728,10 @@ unsigned int GetPrefix(PIP_ADAPTER_PREFIX prefixlist,
   return best_length;
 }
 
-bool BasicNetworkManager::CreateNetworks(bool include_ignored,
-                                         NetworkList* networks) const {
-  NetworkMap current_networks;
+bool BasicNetworkManager::CreateNetworks(
+    bool include_ignored,
+    std::vector<std::unique_ptr<Network>>* networks) const {
+  std::map<std::string, Network*> current_networks;
   // MSDN recommends a 15KB buffer for the first try at GetAdaptersAddresses.
   size_t buffer_size = 16384;
   std::unique_ptr<char[]> adapter_info(new char[buffer_size]);
@@ -822,8 +836,8 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
             adapter_type = ADAPTER_TYPE_VPN;
           }
 
-          std::unique_ptr<Network> network(new Network(
-              name, description, prefix, prefix_length, adapter_type));
+          auto network = std::make_unique<Network>(name, description, prefix,
+                                                   prefix_length, adapter_type);
           network->set_underlying_type_for_vpn(vpn_underlying_adapter_type);
           network->set_default_local_address_provider(this);
           network->set_mdns_responder_provider(this);
@@ -833,7 +847,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
           network->set_ignored(ignored);
           if (include_ignored || !network->ignored()) {
             current_networks[key] = network.get();
-            networks->push_back(network.release());
+            networks->push_back(std::move(network));
           }
         } else {
           (*existing_network).second->AddIP(ip);
@@ -1002,13 +1016,13 @@ void BasicNetworkManager::UpdateNetworksOnce() {
   if (!start_count_)
     return;
 
-  NetworkList list;
+  std::vector<std::unique_ptr<Network>> list;
   if (!CreateNetworks(false, &list)) {
     SignalError();
   } else {
     bool changed;
     NetworkManager::Stats stats;
-    MergeNetworkList(list, &changed, &stats);
+    MergeNetworkList(std::move(list), &changed, &stats);
     set_default_local_addresses(QueryDefaultLocalAddress(AF_INET),
                                 QueryDefaultLocalAddress(AF_INET6));
     if (changed || !sent_first_update_) {
