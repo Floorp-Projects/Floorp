@@ -100,6 +100,9 @@ class RtcpTransceiverImpl {
                           std::vector<rtcp::ReportBlock>& report_blocks);
   void HandleReceiverReport(const rtcp::CommonHeader& rtcp_packet_header,
                             std::vector<rtcp::ReportBlock>& report_blocks);
+  void CallbackOnReportBlocks(
+      uint32_t sender_ssrc,
+      rtc::ArrayView<const rtcp::ReportBlock> report_blocks);
   void HandlePayloadSpecificFeedback(
       const rtcp::CommonHeader& rtcp_packet_header,
       Timestamp now);
