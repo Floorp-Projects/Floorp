@@ -334,7 +334,7 @@ PeerConnectionTestWrapper::GetUserMedia(
     rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
         peer_connection_factory_->CreateAudioTrack(kAudioTrackLabelBase,
                                                    source.get()));
-    stream->AddTrack(audio_track.get());
+    stream->AddTrack(audio_track);
   }
 
   if (video) {
@@ -351,7 +351,7 @@ PeerConnectionTestWrapper::GetUserMedia(
         peer_connection_factory_->CreateVideoTrack(videotrack_label,
                                                    source.get()));
 
-    stream->AddTrack(video_track.get());
+    stream->AddTrack(video_track);
   }
   return stream;
 }
