@@ -68,7 +68,8 @@ void nsICanvasRenderingContextInternal::DoSecurityCheck(
   if (mCanvasElement) {
     mozilla::CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement, aPrincipal,
                                                    aForceWriteOnly, aCORSUsed);
-  } else if (mOffscreenCanvas && (aForceWriteOnly || aCORSUsed)) {
-    mOffscreenCanvas->SetWriteOnly();
+  } else if (mOffscreenCanvas) {
+    mozilla::CanvasUtils::DoDrawImageSecurityCheck(mOffscreenCanvas, aPrincipal,
+                                                   aForceWriteOnly, aCORSUsed);
   }
 }
