@@ -1,11 +1,5 @@
-{%- import "macros.swift" as swift -%}
-{%- let outer_type = self.outer() %}
-{%- let dict_type = outer_type|type_name %}
-{%- let key_type = self.key() %}
-{%- let value_type = self.value() %}
-
-fileprivate struct {{ outer_type|ffi_converter_name }}: FfiConverterRustBuffer {
-    fileprivate static func write(_ value: {{ dict_type }}, into buf: Writer) {
+fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
+    fileprivate static func write(_ value: {{ type_name }}, into buf: Writer) {
         let len = Int32(value.count)
         buf.writeInt(len)
         for (key, value) in value {
@@ -14,9 +8,9 @@ fileprivate struct {{ outer_type|ffi_converter_name }}: FfiConverterRustBuffer {
         }
     }
 
-    fileprivate static func read(from buf: Reader) throws -> {{ dict_type }} {
+    fileprivate static func read(from buf: Reader) throws -> {{ type_name }} {
         let len: Int32 = try buf.readInt()
-        var dict = {{ dict_type }}()
+        var dict = {{ type_name }}()
         dict.reserveCapacity(Int(len))
         for _ in 0..<len {
             let key = try {{ key_type|read_fn }}(from: buf)

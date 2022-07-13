@@ -21,11 +21,11 @@ macro_rules! ident_tag (
             match tag!($i, $tok) {
                 Err(e) => Err(e),
                 Ok((i, o)) => {
-                    use nom::{character::is_alphanumeric, Err as NomErr, error::ErrorKind};
+                    use nom::{character::is_alphanumeric, Err as NomErr, error::Error, error::ErrorKind};
                     let mut res = Ok((i, o));
                     if let Some(&c) = i.as_bytes().first() {
                         if is_alphanumeric(c) || c == b'_' || c == b'-' {
-                            res = Err(NomErr::Error(($i, ErrorKind::Tag)));
+                            res = Err(NomErr::Error(Error::new($i, ErrorKind::Tag)));
                         }
                     }
                     res

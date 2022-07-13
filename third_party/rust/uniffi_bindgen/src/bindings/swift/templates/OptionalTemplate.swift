@@ -1,7 +1,5 @@
-{%- let inner_type = self.inner() %}
-{%- let outer_type = self.outer() %}
-fileprivate struct {{ outer_type|ffi_converter_name }}: FfiConverterRustBuffer {
-    typealias SwiftType = {{ outer_type|type_name }}
+fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
+    typealias SwiftType = {{ type_name }}
 
     static func write(_ value: SwiftType, into buf: Writer) {
         guard let value = value else {

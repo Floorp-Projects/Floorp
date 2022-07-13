@@ -48,6 +48,7 @@ use std::{
     collections::{hash_map::DefaultHasher, HashSet},
     convert::TryFrom,
     hash::{Hash, Hasher},
+    iter,
     str::FromStr,
 };
 
@@ -55,7 +56,7 @@ use anyhow::{bail, Result};
 
 pub mod types;
 pub use types::Type;
-use types::{IterTypes, TypeIterator, TypeUniverse};
+use types::{TypeIterator, TypeUniverse};
 
 mod attributes;
 mod callbacks;
@@ -100,7 +101,7 @@ pub struct ComponentInterface {
     errors: Vec<Error>,
 }
 
-impl<'ci> ComponentInterface {
+impl ComponentInterface {
     /// Parse a `ComponentInterface` from a string containing a WebIDL definition.
     pub fn from_webidl(idl: &str) -> Result<Self> {
         let mut ci = Self {
@@ -140,9 +141,9 @@ impl<'ci> ComponentInterface {
         self.namespace.as_str()
     }
 
-    /// List the definitions for every Enum type in the interface.
-    pub fn iter_enum_definitions(&self) -> Vec<Enum> {
-        self.enums.to_vec()
+    /// Get the definitions for every Enum type in the interface.
+    pub fn enum_definitions(&self) -> &[Enum] {
+        &self.enums
     }
 
     /// Get an Enum definition by name, or None if no such Enum is defined.
@@ -151,9 +152,9 @@ impl<'ci> ComponentInterface {
         self.enums.iter().find(|e| e.name == name)
     }
 
-    /// List the definitions for every Record type in the interface.
-    pub fn iter_record_definitions(&self) -> Vec<Record> {
-        self.records.to_vec()
+    /// Get the definitions for every Record type in the interface.
+    pub fn record_definitions(&self) -> &[Record] {
+        &self.records
     }
 
     /// Get a Record definition by name, or None if no such Record is defined.
@@ -162,9 +163,9 @@ impl<'ci> ComponentInterface {
         self.records.iter().find(|r| r.name == name)
     }
 
-    /// List the definitions for every Function in the interface.
-    pub fn iter_function_definitions(&self) -> Vec<Function> {
-        self.functions.to_vec()
+    /// Get the definitions for every Function in the interface.
+    pub fn function_definitions(&self) -> &[Function] {
+        &self.functions
     }
 
     /// Get a Function definition by name, or None if no such Function is defined.
@@ -173,9 +174,9 @@ impl<'ci> ComponentInterface {
         self.functions.iter().find(|f| f.name == name)
     }
 
-    /// List the definitions for every Object type in the interface.
-    pub fn iter_object_definitions(&self) -> Vec<Object> {
-        self.objects.to_vec()
+    /// Get the definitions for every Object type in the interface.
+    pub fn object_definitions(&self) -> &[Object] {
+        &self.objects
     }
 
     /// Get an Object definition by name, or None if no such Object is defined.
@@ -184,9 +185,9 @@ impl<'ci> ComponentInterface {
         self.objects.iter().find(|o| o.name == name)
     }
 
-    /// List the definitions for every Callback Interface type in the interface.
-    pub fn iter_callback_interface_definitions(&self) -> Vec<CallbackInterface> {
-        self.callback_interfaces.to_vec()
+    /// Get the definitions for every Callback Interface type in the interface.
+    pub fn callback_interface_definitions(&self) -> &[CallbackInterface] {
+        &self.callback_interfaces
     }
 
     /// Get a Callback interface definition by name, or None if no such interface is defined.
@@ -195,9 +196,9 @@ impl<'ci> ComponentInterface {
         self.callback_interfaces.iter().find(|o| o.name == name)
     }
 
-    /// List the definitions for every Error type in the interface.
-    pub fn iter_error_definitions(&self) -> Vec<Error> {
-        self.errors.to_vec()
+    /// Get the definitions for every Error type in the interface.
+    pub fn error_definitions(&self) -> &[Error] {
+        &self.errors
     }
 
     /// Get an Error definition by name, or None if no such Error is defined.
@@ -207,30 +208,24 @@ impl<'ci> ComponentInterface {
     }
 
     /// Get details about all `Type::External` types
-    pub fn iter_external_types(&self) -> Vec<(String, String)> {
-        self.types
-            .iter_known_types()
-            .filter_map(|t| match t {
-                Type::External { name, crate_name } => Some((name, crate_name)),
-                _ => None,
-            })
-            .collect()
+    pub fn iter_external_types(&self) -> impl Iterator<Item = (&String, &String)> {
+        self.types.iter_known_types().filter_map(|t| match t {
+            Type::External { name, crate_name } => Some((name, crate_name)),
+            _ => None,
+        })
     }
 
     /// Get details about all `Type::Custom` types
-    pub fn iter_custom_types(&self) -> Vec<(String, Type)> {
-        self.types
-            .iter_known_types()
-            .filter_map(|t| match t {
-                Type::Custom { name, builtin } => Some((name, *builtin)),
-                _ => None,
-            })
-            .collect()
+    pub fn iter_custom_types(&self) -> impl Iterator<Item = (&String, &Type)> {
+        self.types.iter_known_types().filter_map(|t| match t {
+            Type::Custom { name, builtin } => Some((name, &**builtin)),
+            _ => None,
+        })
     }
 
     /// Iterate over all known types in the interface.
-    pub fn iter_types(&self) -> Vec<Type> {
-        self.types.iter_known_types().collect()
+    pub fn iter_types(&self) -> impl Iterator<Item = &Type> {
+        self.types.iter_known_types()
     }
 
     /// Get a specific type
@@ -240,13 +235,10 @@ impl<'ci> ComponentInterface {
 
     /// Iterate over all types contained in the given item.
     ///
-    /// This method uses `IterTypes::iter_types` to iterate over the types contained within the
-    /// given item, but additionally recurses into the definition of user-defined types like records
-    /// and enums to yield the types that *they* contain.
-    fn iter_types_in_item<'a, T: IterTypes>(
-        &'a self,
-        item: &'a T,
-    ) -> impl Iterator<Item = &'a Type> + 'a {
+    /// This method uses `iter_types` to iterate over the types contained within the given type,
+    /// but additionally recurses into the definition of user-defined types like records and enums
+    /// to yield the types that *they* contain.
+    fn iter_types_in_item<'a>(&'a self, item: &'a Type) -> impl Iterator<Item = &'a Type> + 'a {
         RecursiveTypeIterator::new(self, item)
     }
 
@@ -254,13 +246,13 @@ impl<'ci> ComponentInterface {
     ///
     /// This is important to know in language bindings that cannot integrate object types
     /// tightly with the host GC, and hence need to perform manual destruction of objects.
-    pub fn item_contains_object_references<T: IterTypes>(&self, item: &T) -> bool {
+    pub fn item_contains_object_references(&self, item: &Type) -> bool {
         self.iter_types_in_item(item)
             .any(|t| matches!(t, Type::Object(_)))
     }
 
     /// Check whether the given item contains any (possibly nested) unsigned types
-    pub fn item_contains_unsigned_types<T: IterTypes>(&self, item: &T) -> bool {
+    pub fn item_contains_unsigned_types(&self, item: &Type) -> bool {
         self.iter_types_in_item(item)
             .any(|t| matches!(t, Type::UInt8 | Type::UInt16 | Type::UInt32 | Type::UInt64))
     }
@@ -402,10 +394,10 @@ impl<'ci> ComponentInterface {
     ///
     /// The set of FFI functions is derived automatically from the set of higher-level types
     /// along with the builtin FFI helper functions.
-    pub fn iter_ffi_function_definitions(&self) -> Vec<FFIFunction> {
-        let mut functions = self.iter_user_ffi_function_definitions();
-        functions.append(&mut self.iter_rust_buffer_ffi_function_definitions());
-        functions
+    pub fn iter_ffi_function_definitions(&self) -> impl Iterator<Item = FFIFunction> + '_ {
+        self.iter_user_ffi_function_definitions()
+            .cloned()
+            .chain(self.iter_rust_buffer_ffi_function_definitions())
     }
 
     /// List all FFI functions definitions for user-defined interfaces
@@ -414,9 +406,8 @@ impl<'ci> ComponentInterface {
     ///   - Top-level functions
     ///   - Object methods
     ///   - Callback interfaces
-    pub fn iter_user_ffi_function_definitions(&self) -> Vec<FFIFunction> {
-        vec![]
-            .into_iter()
+    pub fn iter_user_ffi_function_definitions(&self) -> impl Iterator<Item = &FFIFunction> + '_ {
+        iter::empty()
             .chain(
                 self.objects
                     .iter()
@@ -425,20 +416,20 @@ impl<'ci> ComponentInterface {
             .chain(
                 self.callback_interfaces
                     .iter()
-                    .flat_map(|cb| cb.iter_ffi_function_definitions()),
+                    .map(|cb| cb.ffi_init_callback()),
             )
-            .chain(self.functions.iter().map(|f| f.ffi_func.clone()))
-            .collect()
+            .chain(self.functions.iter().map(|f| &f.ffi_func))
     }
 
     /// List all FFI functions definitions for RustBuffer functionality
-    pub fn iter_rust_buffer_ffi_function_definitions(&self) -> Vec<FFIFunction> {
-        vec![
+    pub fn iter_rust_buffer_ffi_function_definitions(&self) -> impl Iterator<Item = FFIFunction> {
+        [
             self.ffi_rustbuffer_alloc(),
             self.ffi_rustbuffer_from_bytes(),
             self.ffi_rustbuffer_free(),
             self.ffi_rustbuffer_reserve(),
         ]
+        .into_iter()
     }
 
     //
@@ -483,7 +474,7 @@ impl<'ci> ComponentInterface {
         if !self.namespace.is_empty() {
             bail!("duplicate namespace definition");
         }
-        self.namespace.push_str(&defn.name);
+        self.namespace = defn.name;
         Ok(())
     }
 
@@ -541,8 +532,8 @@ impl<'ci> ComponentInterface {
             bail!("missing namespace definition");
         }
         // To keep codegen tractable, enum variant names must not shadow type names.
-        for e in self.enums.iter() {
-            for variant in e.variants.iter() {
+        for e in &self.enums {
+            for variant in &e.variants {
                 if self.types.get_type_definition(variant.name()).is_some() {
                     bail!(
                         "Enum variant names must not shadow type names: \"{}\"",
@@ -598,22 +589,16 @@ impl Hash for ComponentInterface {
     }
 }
 
-impl IterTypes for ComponentInterface {
-    fn iter_types(&self) -> TypeIterator<'_> {
-        self.types.iter_types()
-    }
-}
-
-/// Stateful iterator for yielding all types contained in a given item.
+/// Stateful iterator for yielding all types contained in a given type.
 ///
 /// This struct is the implementation of [`ComponentInterface::iter_types_in_item`] and should be
 /// considered an opaque implementation detail. It's a separate struct because I couldn't
 /// figure out a way to implement it using iterators and closures that would make the lifetimes
 /// work out correctly.
 ///
-/// The idea here is that we want to yield all the types from `IterTypes::iter_types` on a
-/// given item, and additionally we want to recurse into the definition of any user-provided
-/// types like records, enums, etc so we can also yield the types contained therein.
+/// The idea here is that we want to yield all the types from `iter_types` on a given type, and
+/// additionally we want to recurse into the definition of any user-provided types like records,
+/// enums, etc so we can also yield the types contained therein.
 ///
 /// To guard against infinite recursion, we maintain a list of previously-seen user-defined
 /// types, ensuring that we recurse into the definition of those types only once. To simplify
@@ -633,7 +618,7 @@ struct RecursiveTypeIterator<'a> {
 
 impl<'a> RecursiveTypeIterator<'a> {
     /// Allocate a new `RecursiveTypeIterator` over the given item.
-    fn new<T: IterTypes>(ci: &'a ComponentInterface, item: &'a T) -> RecursiveTypeIterator<'a> {
+    fn new(ci: &'a ComponentInterface, item: &'a Type) -> RecursiveTypeIterator<'a> {
         RecursiveTypeIterator {
             ci,
             // We begin by iterating over the types from the item itself.
@@ -672,14 +657,14 @@ impl<'a> RecursiveTypeIterator<'a> {
             // to a non-existent type, we just leave the existing iterator in place and allow the recursive
             // call to `next()` to try again with the next pending type.
             let next_iter = match next_type {
-                Type::Record(nm) => self.ci.get_record_definition(nm).map(IterTypes::iter_types),
-                Type::Enum(nm) => self.ci.get_enum_definition(nm).map(IterTypes::iter_types),
-                Type::Error(nm) => self.ci.get_error_definition(nm).map(IterTypes::iter_types),
-                Type::Object(nm) => self.ci.get_object_definition(nm).map(IterTypes::iter_types),
+                Type::Record(nm) => self.ci.get_record_definition(nm).map(Record::iter_types),
+                Type::Enum(nm) => self.ci.get_enum_definition(nm).map(Enum::iter_types),
+                Type::Error(nm) => self.ci.get_error_definition(nm).map(Error::iter_types),
+                Type::Object(nm) => self.ci.get_object_definition(nm).map(Object::iter_types),
                 Type::CallbackInterface(nm) => self
                     .ci
                     .get_callback_interface_definition(nm)
-                    .map(IterTypes::iter_types),
+                    .map(CallbackInterface::iter_types),
                 _ => None,
             };
             if let Some(next_iter) = next_iter {
@@ -720,7 +705,7 @@ trait APIBuilder {
 /// by processing each in turn.
 impl<T: APIBuilder> APIBuilder for Vec<T> {
     fn process(&self, ci: &mut ComponentInterface) -> Result<()> {
-        for item in self.iter() {
+        for item in self {
             item.process(ci)?;
         }
         Ok(())
