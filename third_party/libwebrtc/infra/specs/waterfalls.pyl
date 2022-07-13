@@ -40,11 +40,7 @@
           'gtest_tests': 'more_configs_tests',
         },
       },
-      'Android32 Builder arm': {
-        'test_suites': {
-          'gtest_tests': 'android_perf_tests',
-        },
-      },
+      'Android32 Builder arm': {},
       'Android32 Builder x86': {},
       'Android32 Builder x86 (dbg)': {},
       'Android64 (M Nexus5X)': {
@@ -67,11 +63,7 @@
           'junit_tests': 'android_junit_tests',
         },
       },
-      'Android64 Builder arm64': {
-        'test_suites': {
-          'gtest_tests': 'android_perf_tests',
-        },
-      },
+      'Android64 Builder arm64': {},
       'Android64 Builder x64 (dbg)': {},
       'Linux (more configs)': {
         'os_type': 'linux',
@@ -131,12 +123,7 @@
         },
       },
       'Linux32 Release (ARM)': {},
-      'Linux64 Builder': {
-        'os_type': 'linux',
-        'test_suites': {
-          'isolated_scripts': 'desktop_perf_tests',
-        },
-      },
+      'Linux64 Builder': {},
       'Linux64 Debug': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
@@ -161,13 +148,7 @@
           'isolated_scripts': 'desktop_tests',
         },
       },
-      'Mac64 Builder': {
-        'os_type': 'mac',
-        'mixins': ['mac', 'x86-64'],
-        'test_suites': {
-          'isolated_scripts': 'desktop_perf_tests',
-        },
-      },
+      'Mac64 Builder': {},
       'Mac64 Debug': {
         'os_type': 'mac',
         'mixins': ['mac11', 'x86-64', 'cores-12', 'resultdb-json-format'],
@@ -196,12 +177,7 @@
           'isolated_scripts': 'more_configs_tests',
         },
       },
-      'Win32 Builder (Clang)': {
-        'os_type': 'win',
-        'test_suites': {
-          'isolated_scripts': 'desktop_perf_tests',
-        },
-      },
+      'Win32 Builder (Clang)': {},
       'Win32 Debug (Clang)': {},
       'Win32 Release (Clang)': {
         'os_type': 'win',
@@ -451,34 +427,8 @@
       'android_compile_x64_rel': {},
       'android_compile_x86_dbg': {},
       'android_compile_x86_rel': {},
-      'ios_compile_arm64_dbg': {
-        'recipe_config': 'webrtc_ios',
-        'chromium_apply_config': ['mac_toolchain'],
-        'chromium_config_kwargs': {
-          'BUILD_CONFIG': 'Debug',
-          'TARGET_PLATFORM': 'ios',
-          'TARGET_ARCH': 'arm',
-          'TARGET_BITS': 64,
-        },
-        'bot_type': 'builder',
-        'testing': {
-          'platform': 'mac'
-        },
-      },
-      'ios_compile_arm64_rel': {
-        'recipe_config': 'webrtc_ios',
-        'chromium_apply_config': ['mac_toolchain'],
-        'chromium_config_kwargs': {
-          'BUILD_CONFIG': 'Release',
-          'TARGET_PLATFORM': 'ios',
-          'TARGET_ARCH': 'arm',
-          'TARGET_BITS': 64,
-        },
-        'bot_type': 'builder',
-        'testing': {
-          'platform': 'mac'
-        },
-      },
+      'ios_compile_arm64_dbg': {},
+      'ios_compile_arm64_rel': {},
       'ios_sim_x64_dbg_ios12': {
         'mixins': [
           'mac11', 'chromium-tester-service-account', 'ios-simulator-12.4',
