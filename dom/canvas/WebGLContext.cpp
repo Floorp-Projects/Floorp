@@ -1058,16 +1058,16 @@ void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
     return;
   }
 
-  // ColorSpace will need to be part of SwapChainOptions for DTWebgl.
-  const auto colorSpace = ToColorSpace2(mOptions);
-  auto presenter = srcFb->mSwapChain.Acquire(size, colorSpace);
-  if (!presenter) {
-    GenerateWarning("Swap chain surface creation failed.");
-    LoseContext();
-    return;
-  }
-
   {
+    // ColorSpace will need to be part of SwapChainOptions for DTWebgl.
+    const auto colorSpace = ToColorSpace2(mOptions);
+    auto presenter = srcFb->mSwapChain.Acquire(size, colorSpace);
+    if (!presenter) {
+      GenerateWarning("Swap chain surface creation failed.");
+      LoseContext();
+      return;
+    }
+
     const ScopedFBRebinder saveFB(this);
 
     const auto destFb = presenter->Fb();
