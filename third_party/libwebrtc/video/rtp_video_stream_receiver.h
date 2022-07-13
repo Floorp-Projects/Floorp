@@ -18,7 +18,6 @@
 #include <string>
 #include <vector>
 
-#include "absl/base/attributes.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/crypto/frame_decryptor_interface.h"
@@ -27,7 +26,6 @@
 #include "api/units/timestamp.h"
 #include "api/video/color_space.h"
 #include "api/video/video_codec_type.h"
-#include "api/video_codecs/video_codec.h"
 #include "call/rtp_packet_sink_interface.h"
 #include "call/syncable.h"
 #include "call/video_receive_stream.h"
@@ -132,15 +130,6 @@ class RtpVideoStreamReceiver : public LossNotificationSender,
                        VideoCodecType codec_type,
                        const std::map<std::string, std::string>& codec_params,
                        bool raw_payload);
-
-  ABSL_DEPRECATED("Use AddReceiveCodec above")
-  void AddReceiveCodec(uint8_t payload_type,
-                       const VideoCodec& video_codec,
-                       const std::map<std::string, std::string>& codec_params,
-                       bool raw_payload) {
-    AddReceiveCodec(payload_type, video_codec.codecType, codec_params,
-                    raw_payload);
-  }
 
   RtpRtcp* rtp_rtcp() const { return rtp_rtcp_.get(); }
 

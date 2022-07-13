@@ -185,7 +185,6 @@ rtc_source_set("video_legacy") {
     "../api/video:recordable_encoded_frame",
     "../api/video:video_frame",
     "../api/video:video_rtp_headers",
-    "../api/video_codecs:video_codecs_api",
     "../call:call_interfaces",
     "../call:rtp_interfaces",
     "../call:rtp_receiver",  # For RtxReceiveStream.
