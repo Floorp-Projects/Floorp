@@ -796,7 +796,6 @@ if (current_os == "linux" || is_android) {
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_task_queue",
       "../../rtc_base:threading",
-      "../../rtc_base/system:thread_registry",
       "../../system_wrappers:field_trial",
     ]
     absl_deps = [

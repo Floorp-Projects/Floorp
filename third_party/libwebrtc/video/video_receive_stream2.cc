@@ -54,7 +54,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/system/thread_registry.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/task_utils/to_queued_task.h"
