@@ -154,35 +154,6 @@ TEST_F(RRSendQueueTest, BufferBecomesFullAndEmptied) {
   EXPECT_TRUE(buf_.IsEmpty());
 }
 
-TEST_F(RRSendQueueTest, WillNotSendTooSmallPacket) {
-  std::vector<uint8_t> payload(RRSendQueue::kMinimumFragmentedPayload + 1);
-  buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
-
-  // Wouldn't fit enough payload (wouldn't want to fragment)
-  EXPECT_FALSE(
-      buf_.Produce(kNow,
-                   /*max_size=*/RRSendQueue::kMinimumFragmentedPayload - 1)
-          .has_value());
-
-  // Minimum fragment
-  absl::optional<SendQueue::DataToSend> chunk_one =
-      buf_.Produce(kNow,
-                   /*max_size=*/RRSendQueue::kMinimumFragmentedPayload);
-  ASSERT_TRUE(chunk_one.has_value());
-  EXPECT_EQ(chunk_one->data.stream_id, kStreamID);
-  EXPECT_EQ(chunk_one->data.ppid, kPPID);
-
-  // There is only one byte remaining - it can be fetched as it doesn't require
-  // additional fragmentation.
-  absl::optional<SendQueue::DataToSend> chunk_two =
-      buf_.Produce(kNow, /*max_size=*/1);
-  ASSERT_TRUE(chunk_two.has_value());
-  EXPECT_EQ(chunk_two->data.stream_id, kStreamID);
-  EXPECT_EQ(chunk_two->data.ppid, kPPID);
-
-  EXPECT_TRUE(buf_.IsEmpty());
-}
-
 TEST_F(RRSendQueueTest, DefaultsToOrderedSend) {
   std::vector<uint8_t> payload(20);
 
@@ -773,41 +744,6 @@ TEST_F(RRSendQueueTest, WillStayInAStreamAsLongAsThatMessageIsSending) {
   EXPECT_THAT(chunk4.data.payload, SizeIs(1));
 
   EXPECT_FALSE(buf_.Produce(kNow, kOneFragmentPacketSize).has_value());
-}
-
-TEST_F(RRSendQueueTest, WillStayInStreamWhenOnlySmallFragmentRemaining) {
-  buf_.Add(kNow,
-           DcSctpMessage(StreamID(5), kPPID,
-                         std::vector<uint8_t>(kOneFragmentPacketSize * 2)));
-  buf_.Add(kNow, DcSctpMessage(StreamID(6), kPPID, std::vector<uint8_t>(1)));
-
-  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk1,
-                              buf_.Produce(kNow, kOneFragmentPacketSize));
-  EXPECT_EQ(chunk1.data.stream_id, StreamID(5));
-  EXPECT_THAT(chunk1.data.payload, SizeIs(kOneFragmentPacketSize));
-
-  // Now assume that there will be a lot of previous chunks that need to be
-  // retransmitted, which fills up the next packet and there is little space
-  // left in the packet for new chunks. What it should NOT do right now is to
-  // try to send a message from StreamID 6. And it should not try to send a very
-  // small fragment from StreamID 5 either. So just skip this one.
-  EXPECT_FALSE(buf_.Produce(kNow, 8).has_value());
-
-  // When the next produce request comes with a large buffer to fill, continue
-  // sending from StreamID 5.
-
-  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk2,
-                              buf_.Produce(kNow, kOneFragmentPacketSize));
-  EXPECT_EQ(chunk2.data.stream_id, StreamID(5));
-  EXPECT_THAT(chunk2.data.payload, SizeIs(kOneFragmentPacketSize));
-
-  // Lastly, produce a message on StreamID 6.
-  ASSERT_HAS_VALUE_AND_ASSIGN(SendQueue::DataToSend chunk3,
-                              buf_.Produce(kNow, kOneFragmentPacketSize));
-  EXPECT_EQ(chunk3.data.stream_id, StreamID(6));
-  EXPECT_THAT(chunk3.data.payload, SizeIs(1));
-
-  EXPECT_FALSE(buf_.Produce(kNow, 8).has_value());
 }
 }  // namespace
 }  // namespace dcsctp

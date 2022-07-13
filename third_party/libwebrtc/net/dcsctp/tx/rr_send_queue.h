@@ -40,9 +40,6 @@ namespace dcsctp {
 // established, this send queue is always present - even for closed connections.
 class RRSendQueue : public SendQueue {
  public:
-  // How small a data chunk's payload may be, if having to fragment a message.
-  static constexpr size_t kMinimumFragmentedPayload = 10;
-
   RRSendQueue(absl::string_view log_prefix,
               size_t buffer_size,
               std::function<void(StreamID)> on_buffered_amount_low,
@@ -126,8 +123,9 @@ class RRSendQueue : public SendQueue {
              TimeMs expires_at,
              const SendOptions& send_options);
 
-    // Possibly produces a data chunk to send.
-    absl::optional<DataToSend> Produce(TimeMs now, size_t max_size);
+    // Produces a data chunk to send. This is only called on streams that have
+    // data available.
+    DataToSend Produce(TimeMs now, size_t max_size);
 
     const ThresholdWatcher& buffered_amount() const { return buffered_amount_; }
     ThresholdWatcher& buffered_amount() { return buffered_amount_; }
