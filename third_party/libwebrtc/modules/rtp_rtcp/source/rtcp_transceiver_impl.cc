@@ -571,38 +571,35 @@ void RtcpTransceiverImpl::SchedulePeriodicCompoundPackets(TimeDelta delay) {
       });
 }
 
-RtcpTransceiverImpl::CompoundPacketInfo RtcpTransceiverImpl::FillReports(
+std::vector<uint32_t> RtcpTransceiverImpl::FillReports(
     Timestamp now,
-    size_t reserved_bytes,
+    ReservedBytes reserved,
     PacketSender& rtcp_sender) {
   // Sender/receiver reports should be first in the RTCP packet.
   RTC_DCHECK(rtcp_sender.IsEmpty());
 
   size_t available_bytes = config_.max_packet_size;
-  if (reserved_bytes > available_bytes) {
-    // Because reserved_bytes is unsigned, substracting would underflow and will
-    // not produce desired result.
+  if (reserved.per_packet > available_bytes) {
+    // Because reserved.per_packet is unsigned, substracting would underflow and
+    // will not produce desired result.
     available_bytes = 0;
   } else {
-    available_bytes -= reserved_bytes;
+    available_bytes -= reserved.per_packet;
   }
 
-  CompoundPacketInfo result;
-  result.sender_ssrc = config_.feedback_ssrc;
-  result.has_sender_report = false;
-
-  static constexpr size_t kSenderReportSizeBytes = 28;
-  static constexpr size_t kFullSenderReportSizeBytes =
-      kSenderReportSizeBytes +
+  const size_t sender_report_size_bytes = 28 + reserved.per_sender;
+  const size_t full_sender_report_size_bytes =
+      sender_report_size_bytes +
       rtcp::SenderReport::kMaxNumberOfReportBlocks * rtcp::ReportBlock::kLength;
-  size_t max_full_sender_reports = available_bytes / kFullSenderReportSizeBytes;
+  size_t max_full_sender_reports =
+      available_bytes / full_sender_report_size_bytes;
   size_t max_report_blocks =
       max_full_sender_reports * rtcp::SenderReport::kMaxNumberOfReportBlocks;
   size_t available_bytes_for_last_sender_report =
-      available_bytes - max_full_sender_reports * kFullSenderReportSizeBytes;
-  if (available_bytes_for_last_sender_report >= kSenderReportSizeBytes) {
+      available_bytes - max_full_sender_reports * full_sender_report_size_bytes;
+  if (available_bytes_for_last_sender_report >= sender_report_size_bytes) {
     max_report_blocks +=
-        (available_bytes_for_last_sender_report - kSenderReportSizeBytes) /
+        (available_bytes_for_last_sender_report - sender_report_size_bytes) /
         rtcp::ReportBlock::kLength;
   }
 
@@ -613,13 +610,13 @@ RtcpTransceiverImpl::CompoundPacketInfo RtcpTransceiverImpl::FillReports(
   // is low, more sender reports may fit in.
   size_t max_sender_reports =
       (available_bytes - report_blocks.size() * rtcp::ReportBlock::kLength) /
-      kSenderReportSizeBytes;
+      sender_report_size_bytes;
 
   auto last_handled_sender_it = local_senders_.end();
   auto report_block_it = report_blocks.begin();
-  size_t num_sender_reports = 0;
+  std::vector<uint32_t> sender_ssrcs;
   for (auto it = local_senders_.begin();
-       it != local_senders_.end() && num_sender_reports < max_sender_reports;
+       it != local_senders_.end() && sender_ssrcs.size() < max_sender_reports;
        ++it) {
     LocalSenderState& rtp_sender = *it;
     RtpStreamRtcpHandler::RtpStats stats = rtp_sender.handler->SentStats();
@@ -656,12 +653,7 @@ RtcpTransceiverImpl::CompoundPacketInfo RtcpTransceiverImpl::FillReports(
       report_block_it += num_blocks;
     }
     rtcp_sender.AppendPacket(sender_report);
-    ++num_sender_reports;
-
-    if (!result.has_sender_report) {
-      result.has_sender_report = true;
-      result.sender_ssrc = rtp_sender.ssrc;
-    }
+    sender_ssrcs.push_back(rtp_sender.ssrc);
   }
   if (last_handled_sender_it != local_senders_.end()) {
     // Rotate `local_senders_` so that the 1st unhandled sender become first in
@@ -679,14 +671,16 @@ RtcpTransceiverImpl::CompoundPacketInfo RtcpTransceiverImpl::FillReports(
 
   // In compound mode each RTCP packet has to start with a sender or receiver
   // report.
-  if (config_.rtcp_mode == RtcpMode::kCompound && num_sender_reports == 0 &&
+  if (config_.rtcp_mode == RtcpMode::kCompound && sender_ssrcs.empty() &&
       num_receiver_reports == 0) {
     num_receiver_reports = 1;
   }
 
+  uint32_t sender_ssrc =
+      sender_ssrcs.empty() ? config_.feedback_ssrc : sender_ssrcs.front();
   for (size_t i = 0; i < num_receiver_reports; ++i) {
     rtcp::ReceiverReport receiver_report;
-    receiver_report.SetSenderSsrc(result.sender_ssrc);
+    receiver_report.SetSenderSsrc(sender_ssrc);
     size_t num_blocks =
         std::min<size_t>(rtcp::ReceiverReport::kMaxNumberOfReportBlocks,
                          report_blocks.end() - report_block_it);
@@ -698,28 +692,29 @@ RtcpTransceiverImpl::CompoundPacketInfo RtcpTransceiverImpl::FillReports(
   }
   // All report blocks should be attached at this point.
   RTC_DCHECK_EQ(report_blocks.end() - report_block_it, 0);
-  return result;
+  return sender_ssrcs;
 }
 
 void RtcpTransceiverImpl::CreateCompoundPacket(Timestamp now,
                                                size_t reserved_bytes,
                                                PacketSender& sender) {
   RTC_DCHECK(sender.IsEmpty());
+  ReservedBytes reserved = {.per_packet = reserved_bytes};
   absl::optional<rtcp::Sdes> sdes;
   if (!config_.cname.empty()) {
     sdes.emplace();
     bool added = sdes->AddCName(config_.feedback_ssrc, config_.cname);
     RTC_DCHECK(added) << "Failed to add CNAME " << config_.cname
                       << " to RTCP SDES packet.";
-    reserved_bytes += sdes->BlockLength();
+    reserved.per_packet += sdes->BlockLength();
   }
   if (remb_.has_value()) {
-    reserved_bytes += remb_->BlockLength();
+    reserved.per_packet += remb_->BlockLength();
   }
-  absl::optional<rtcp::ExtendedReports> xr;
+  absl::optional<rtcp::ExtendedReports> xr_with_dlrr;
   if (!received_rrtrs_.empty()) {
     RTC_DCHECK(config_.reply_to_non_sender_rtt_measurement);
-    xr.emplace();
+    xr_with_dlrr.emplace();
     uint32_t now_ntp =
         CompactNtp(config_.clock->ConvertTimestampToNtpTime(now));
     for (const auto& [ssrc, rrtr_info] : received_rrtrs_) {
@@ -728,9 +723,13 @@ void RtcpTransceiverImpl::CreateCompoundPacket(Timestamp now,
       reply.last_rr = rrtr_info.received_remote_mid_ntp_time;
       reply.delay_since_last_rr =
           now_ntp - rrtr_info.local_receive_mid_ntp_time;
-      xr->AddDlrrItem(reply);
+      xr_with_dlrr->AddDlrrItem(reply);
     }
-    reserved_bytes += xr->BlockLength();
+    if (config_.reply_to_non_sender_rtt_mesaurments_on_all_ssrcs) {
+      reserved.per_sender += xr_with_dlrr->BlockLength();
+    } else {
+      reserved.per_packet += xr_with_dlrr->BlockLength();
+    }
   }
   if (config_.non_sender_rtt_measurement) {
     // It looks like bytes for ExtendedReport header are reserved twice, but in
@@ -740,29 +739,40 @@ void RtcpTransceiverImpl::CreateCompoundPacket(Timestamp now,
     // than it should, which is not an issue.
 
     // 4 bytes for common RTCP header + 4 bytes for the ExtenedReports header.
-    reserved_bytes += (4 + 4 + rtcp::Rrtr::kLength);
+    reserved.per_packet += (4 + 4 + rtcp::Rrtr::kLength);
   }
 
-  CompoundPacketInfo result = FillReports(now, reserved_bytes, sender);
+  std::vector<uint32_t> sender_ssrcs = FillReports(now, reserved, sender);
+  bool has_sender_report = !sender_ssrcs.empty();
+  uint32_t sender_ssrc =
+      has_sender_report ? sender_ssrcs.front() : config_.feedback_ssrc;
 
   if (sdes.has_value() && !sender.IsEmpty()) {
     sender.AppendPacket(*sdes);
   }
   if (remb_.has_value()) {
-    remb_->SetSenderSsrc(result.sender_ssrc);
+    remb_->SetSenderSsrc(sender_ssrc);
     sender.AppendPacket(*remb_);
   }
-  if (!result.has_sender_report && config_.non_sender_rtt_measurement) {
-    if (!xr.has_value()) {
-      xr.emplace();
-    }
+  if (!has_sender_report && config_.non_sender_rtt_measurement) {
+    rtcp::ExtendedReports xr_with_rrtr;
+    xr_with_rrtr.SetSenderSsrc(config_.feedback_ssrc);
     rtcp::Rrtr rrtr;
     rrtr.SetNtp(config_.clock->ConvertTimestampToNtpTime(now));
-    xr->SetRrtr(rrtr);
+    xr_with_rrtr.SetRrtr(rrtr);
+    sender.AppendPacket(xr_with_rrtr);
   }
-  if (xr.has_value()) {
-    xr->SetSenderSsrc(result.sender_ssrc);
-    sender.AppendPacket(*xr);
+  if (xr_with_dlrr.has_value()) {
+    rtc::ArrayView<const uint32_t> ssrcs(&sender_ssrc, 1);
+    if (config_.reply_to_non_sender_rtt_mesaurments_on_all_ssrcs &&
+        !sender_ssrcs.empty()) {
+      ssrcs = sender_ssrcs;
+    }
+    RTC_DCHECK(!ssrcs.empty());
+    for (uint32_t ssrc : ssrcs) {
+      xr_with_dlrr->SetSenderSsrc(ssrc);
+      sender.AppendPacket(*xr_with_dlrr);
+    }
   }
 }
 
