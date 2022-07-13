@@ -1,5 +1,5 @@
-{%- let e = self.inner() %}
-class {{ e|type_name }}(Exception):
+{%- let e = ci.get_error_definition(name).unwrap() %}
+class {{ type_name }}(Exception):
     {%- if e.is_flat() %}
 
     # Each variant is a nested class of the error itself.
@@ -27,24 +27,24 @@ class {{ e|type_name }}(Exception):
             {%- if variant.has_fields() %}
             field_parts = [
                 {%- for field in variant.fields() %}
-                '{{ field.name() }}={!r}'.format(self.{{ field.name() }}),
+                '{{ field.name()|var_name }}={!r}'.format(self.{{ field.name()|var_name }}),
                 {%- endfor %}
             ]
-            return "{{ e|type_name }}.{{ variant.name()|class_name }}({})".format(', '.join(field_parts))
+            return "{{ type_name }}.{{ variant.name()|class_name }}({})".format(', '.join(field_parts))
             {%- else %}
-            return "{{ e|type_name }}.{{ variant.name()|class_name }}"
+            return "{{ type_name }}.{{ variant.name()|class_name }}"
             {%- endif %}
 
     {%- endfor %}
     {%- endif %}
 
-class {{ e|ffi_converter_name }}(FfiConverterRustBuffer):
+class {{ ffi_converter_name }}(FfiConverterRustBuffer):
     @staticmethod
     def read(buf):
         variant = buf.readI32()
         {%- for variant in e.variants() %}
         if variant == {{ loop.index }}:
-            return {{ e|type_name }}.{{ variant.name()|class_name }}(
+            return {{ type_name }}.{{ variant.name()|class_name }}(
                 {%- if e.is_flat() %}
                 {{ Type::String.borrow()|read_fn }}(buf),
                 {%- else %}
@@ -59,7 +59,7 @@ class {{ e|ffi_converter_name }}(FfiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         {%- for variant in e.variants() %}
-        if isinstance(value, {{ e|type_name }}.{{ variant.name()|class_name }}):
+        if isinstance(value, {{ type_name }}.{{ variant.name()|class_name }}):
             buf.writeI32({{ loop.index }})
             {%- for field in variant.fields() %}
             {{ field|write_fn }}(value.{{ field.name()|var_name }}, buf)
