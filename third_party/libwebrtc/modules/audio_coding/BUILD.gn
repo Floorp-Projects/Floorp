@@ -1542,6 +1542,7 @@ if (rtc_include_tests) {
       defines = audio_codec_defines
       deps = [
         "../../rtc_base:checks",
+        "../../rtc_base:refcount",
         "../../test:fileutils",
       ]
       absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -2089,6 +2090,7 @@ if (rtc_include_tests) {
         "../../rtc_base:checks",
         "../../rtc_base:ignore_wundef",
         "../../rtc_base:macromagic",
+        "../../rtc_base:refcount",
         "../../rtc_base:rtc_base_approved",
         "../../rtc_base:rtc_base_tests_utils",
         "../../rtc_base:sanitizer",

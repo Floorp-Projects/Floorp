@@ -48,6 +48,7 @@ rtc_library("audio_mixer_impl") {
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
+    "../../rtc_base:refcount",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:safe_conversions",
     "../../rtc_base/synchronization:mutex",

@@ -93,6 +93,7 @@ rtc_library("rtp_packet_info") {
     ":refcountedbase",
     ":rtp_headers",
     ":scoped_refptr",
+    "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/system:rtc_export",
     "units:timestamp",
@@ -192,6 +193,7 @@ rtc_library("libjingle_peerconnection_api") {
     "../call:rtp_interfaces",
     "../rtc_base:logging",
     "../rtc_base:network_constants",
+    "../rtc_base:refcount",
     "adaptation:resource_adaptation_api",
     "audio:audio_mixer_api",
     "audio_codecs:audio_codecs_api",
@@ -624,6 +626,7 @@ rtc_source_set("rtc_stats_api") {
     ":scoped_refptr",
     "../api:refcountedbase",
     "../rtc_base:checks",
+    "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/system:rtc_export",
   ]
@@ -970,6 +973,7 @@ if (rtc_include_tests) {
       ":libjingle_peerconnection_api",
       ":rtp_parameters",
       "../rtc_base:checks",
+      "../rtc_base:refcount",
       "../rtc_base:rtc_base_approved",
       "crypto:frame_encryptor_interface",
     ]
@@ -987,6 +991,7 @@ if (rtc_include_tests) {
       ":libjingle_peerconnection_api",
       ":rtp_parameters",
       "../rtc_base:checks",
+      "../rtc_base:refcount",
       "../rtc_base:rtc_base_approved",
       "crypto:frame_decryptor_interface",
     ]

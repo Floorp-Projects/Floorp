@@ -71,6 +71,7 @@ rtc_library("call_interfaces") {
     "../rtc_base",
     "../rtc_base:audio_format_to_string",
     "../rtc_base:checks",
+    "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/network:sent_packet",
   ]

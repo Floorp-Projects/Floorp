@@ -47,6 +47,7 @@ rtc_library("video_codecs_api") {
     "../../modules/video_coding:codec_globals_headers",
     "../../rtc_base:checks",
     "../../rtc_base:macromagic",
+    "../../rtc_base:refcount",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:rtc_export",
     "../units:data_rate",

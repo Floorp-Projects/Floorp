@@ -68,6 +68,7 @@ rtc_library("video_frame") {
     "..:scoped_refptr",
     "..:video_track_source_constraints",
     "../../rtc_base:checks",
+    "../../rtc_base:refcount",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/memory:aligned_malloc",
     "../../rtc_base/system:rtc_export",
@@ -98,6 +99,7 @@ rtc_library("video_frame_i010") {
     "..:scoped_refptr",
     "../../rtc_base",
     "../../rtc_base:checks",
+    "../../rtc_base:refcount",
     "../../rtc_base/memory:aligned_malloc",
     #"//third_party/libyuv",
   ]
@@ -147,6 +149,7 @@ rtc_library("encoded_image") {
     "..:rtp_packet_info",
     "..:scoped_refptr",
     "../../rtc_base:checks",
+    "../../rtc_base:refcount",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:rtc_export",
   ]

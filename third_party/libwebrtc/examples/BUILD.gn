@@ -687,6 +687,7 @@ if (is_linux || is_chromeos || is_win) {
       "../rtc_base:logging",
       "../rtc_base:macromagic",
       "../rtc_base:net_helpers",
+      "../rtc_base:refcount",
       "../rtc_base:threading",
       "../rtc_base/third_party/sigslot",
       "../system_wrappers:field_trial",

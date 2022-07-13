@@ -236,6 +236,7 @@ if (is_ios || is_mac) {
           "../modules/audio_device:audio_device_generic",
           "../rtc_base:checks",
           "../rtc_base:logging",
+          "../rtc_base:refcount",
           "../rtc_base:rtc_base_approved",
           "../system_wrappers",
         ]
@@ -281,6 +282,7 @@ if (is_ios || is_mac) {
           "../rtc_base:checks",
           "../rtc_base:logging",
           "../rtc_base:macromagic",
+          "../rtc_base:refcount",
           "../rtc_base:threading",
           "../system_wrappers:field_trial",
           "../system_wrappers:metrics",
@@ -870,6 +872,7 @@ if (is_ios || is_mac) {
         "../api/video_codecs:video_codecs_api",
         "../modules/video_coding:video_codec_interface",
         "../rtc_base",
+        "../rtc_base:refcount",
       ]
     }
 
@@ -1106,6 +1109,7 @@ if (is_ios || is_mac) {
             "../rtc_base",
             "../rtc_base:gunit_helpers",
             "../rtc_base:macromagic",
+            "../rtc_base:refcount",
             "../rtc_base/system:unused",
             "../system_wrappers",
             "//third_party/libyuv",
@@ -1578,6 +1582,7 @@ if (is_ios || is_mac) {
         "../common_video",
         "../rtc_base",
         "../rtc_base:logging",
+        "../rtc_base:refcount",
         "../rtc_base:threading",
       ]
       if (is_ios) {
