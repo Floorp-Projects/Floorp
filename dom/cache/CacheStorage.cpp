@@ -558,7 +558,12 @@ bool CacheStorage::HasStorageAccess() const {
   if (NS_WARN_IF(!mGlobal)) {
     return false;
   }
-  return mGlobal->GetStorageAccess() > StorageAccess::ePrivateBrowsing;
+
+  StorageAccess access = mGlobal->GetStorageAccess();
+  return access > StorageAccess::ePrivateBrowsing ||
+         (StaticPrefs::
+              privacy_partition_always_partition_third_party_non_cookie_storage() &&
+          ShouldPartitionStorage(access));
 }
 
 }  // namespace mozilla::dom::cache
