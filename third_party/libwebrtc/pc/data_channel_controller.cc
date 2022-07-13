@@ -359,16 +359,6 @@ void DataChannelController::OnTransportChannelClosed(RTCError error) {
   }
 }
 
-SctpDataChannel* DataChannelController::FindDataChannelBySid(int sid) const {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  for (const auto& channel : sctp_data_channels_) {
-    if (channel->id() == sid) {
-      return channel;
-    }
-  }
-  return nullptr;
-}
-
 DataChannelTransportInterface* DataChannelController::data_channel_transport()
     const {
   // TODO(bugs.webrtc.org/11547): Only allow this accessor to be called on the
