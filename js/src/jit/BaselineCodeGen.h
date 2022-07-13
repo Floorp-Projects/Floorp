@@ -185,8 +185,6 @@ class BaselineCodeGen {
   [[nodiscard]] bool emitNextIC();
   [[nodiscard]] bool emitInterruptCheck();
   [[nodiscard]] bool emitWarmUpCounterIncrement();
-  [[nodiscard]] bool emitTraceLoggerResume(Register script,
-                                           AllocatableGeneralRegisterSet& regs);
 
 #define EMIT_OP(op, ...) bool emit_##op();
   FOR_EACH_OPCODE(EMIT_OP)
@@ -263,9 +261,6 @@ class BaselineCodeGen {
   template <typename F>
   [[nodiscard]] bool initEnvironmentChainHelper(const F& initFunctionEnv);
   [[nodiscard]] bool initEnvironmentChain();
-
-  [[nodiscard]] bool emitTraceLoggerEnter();
-  [[nodiscard]] bool emitTraceLoggerExit();
 
   [[nodiscard]] bool emitHandleCodeCoverageAtPrologue();
 
