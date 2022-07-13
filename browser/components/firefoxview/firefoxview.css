@@ -172,18 +172,10 @@ body > main > aside {
   padding: .2em 1em;
 }
 
-#colorways > figure {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 225px;
-  height: 225px;
-  margin: 0 0 1.5em;
-}
-
-#colorways-collection-figure {
+#colorways-collection-graphic {
   max-width: 225px;
   max-height: 225px;
+  margin-bottom: 1.5em;
 }
 
 [hidden] {
