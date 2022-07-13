@@ -7,7 +7,6 @@ import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,6 +16,7 @@ import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.RetryTestRule
 import org.mozilla.focus.helpers.TestAssetHelper.getGenericTabAsset
+import org.mozilla.focus.helpers.TestHelper.randomString
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
 
@@ -55,7 +55,7 @@ class AddToHomescreenTest {
     @Test
     fun addPageToHomeScreenTest() {
         val pageUrl = getGenericTabAsset(webServer, 1).url
-        val pageTitle = "test1"
+        val pageTitle = randomString(5)
 
         searchScreen {
         }.loadPage(pageUrl) {
@@ -71,7 +71,6 @@ class AddToHomescreenTest {
 
     @SmokeTest
     @Test
-    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/6958")
     fun noNameShortcutTest() {
         val pageUrl = getGenericTabAsset(webServer, 1).url
 
@@ -83,7 +82,9 @@ class AddToHomescreenTest {
             addShortcutNoTitle()
             handleAddAutomaticallyDialog()
         }.searchAndOpenHomeScreenShortcut(webServer.hostName) {
-            verifyPageURL(pageUrl)
+            // only checking a part of the URL that is constant,
+            // in case it opens a different shortcut on a retry
+            verifyPageURL("tab1.html")
         }
     }
 }

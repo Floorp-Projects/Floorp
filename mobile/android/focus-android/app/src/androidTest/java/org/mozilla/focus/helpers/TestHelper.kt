@@ -57,6 +57,13 @@ object TestHelper {
     const val pageLoadingTime = DateUtils.SECOND_IN_MILLIS * 25
     const val waitingTimeShort = DateUtils.SECOND_IN_MILLIS * 5
 
+    private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+    fun randomString(stringLength: Int) =
+        (1..stringLength)
+            .map { kotlin.random.Random.nextInt(0, charPool.size) }
+            .map(charPool::get)
+            .joinToString("")
+
     @JvmStatic
     val getTargetContext: Context = InstrumentationRegistry.getInstrumentation().targetContext
 
