@@ -37,6 +37,7 @@ rtc_library("transient_suppressor_impl") {
   ]
   deps = [
     ":transient_suppressor_api",
+    ":voice_probability_delay_unit",
     "../../../common_audio:common_audio",
     "../../../common_audio:common_audio_c",
     "../../../common_audio:fir_filter",
@@ -96,6 +97,7 @@ if (rtc_include_tests) {
         "//testing/gtest",
         "//third_party/abseil-cpp/absl/flags:flag",
         "//third_party/abseil-cpp/absl/flags:parse",
+        "//third_party/abseil-cpp/absl/types:optional",
       ]
     }
   }
@@ -124,5 +126,6 @@ if (rtc_include_tests) {
       "../../../test:test_support",
       "//testing/gtest",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 }

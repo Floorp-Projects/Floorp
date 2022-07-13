@@ -56,15 +56,18 @@ class TransientSuppressor {
   // of audio. If voice information is not available, `voice_probability` must
   // always be set to 1.
   // `key_pressed` determines if a key was pressed on this audio chunk.
-  virtual void Suppress(float* data,
-                        size_t data_length,
-                        int num_channels,
-                        const float* detection_data,
-                        size_t detection_length,
-                        const float* reference_data,
-                        size_t reference_length,
-                        float voice_probability,
-                        bool key_pressed) = 0;
+  // Returns a delayed version of `voice_probability` according to the
+  // algorithmic delay introduced by this method. In this way, the modified
+  // `data` and the returned voice probability will be temporally aligned.
+  virtual float Suppress(float* data,
+                         size_t data_length,
+                         int num_channels,
+                         const float* detection_data,
+                         size_t detection_length,
+                         const float* reference_data,
+                         size_t reference_length,
+                         float voice_probability,
+                         bool key_pressed) = 0;
 };
 
 }  // namespace webrtc

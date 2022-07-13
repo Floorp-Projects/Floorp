@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "modules/audio_processing/transient/transient_suppressor.h"
+#include "modules/audio_processing/transient/voice_probability_delay_unit.h"
 #include "rtc_base/gtest_prod_util.h"
 
 namespace webrtc {
@@ -37,18 +38,18 @@ class TransientSuppressorImpl : public TransientSuppressor {
                   int detector_rate_hz,
                   int num_channels) override;
 
-  void Suppress(float* data,
-                size_t data_length,
-                int num_channels,
-                const float* detection_data,
-                size_t detection_length,
-                const float* reference_data,
-                size_t reference_length,
-                float voice_probability,
-                bool key_pressed) override;
+  float Suppress(float* data,
+                 size_t data_length,
+                 int num_channels,
+                 const float* detection_data,
+                 size_t detection_length,
+                 const float* reference_data,
+                 size_t reference_length,
+                 float voice_probability,
+                 bool key_pressed) override;
 
  private:
-  FRIEND_TEST_ALL_PREFIXES(TransientSuppressorImplTest,
+  FRIEND_TEST_ALL_PREFIXES(TransientSuppressorVadModeParametrization,
                            TypingDetectionLogicWorksAsExpectedForMono);
   void Suppress(float* in_ptr, float* spectral_mean, float* out_ptr);
 
@@ -61,6 +62,7 @@ class TransientSuppressorImpl : public TransientSuppressor {
   void SoftRestoration(float* spectral_mean);
 
   const VadMode vad_mode_;
+  VoiceProbabilityDelayUnit voice_probability_delay_unit_;
 
   std::unique_ptr<TransientDetector> detector_;
 
