@@ -177,7 +177,7 @@ int32_t UlpfecReceiverImpl::ProcessReceivedFec() {
   for (const auto& received_packet : received_packets) {
     // Send received media packet to VCM.
     if (!received_packet->is_fec) {
-      ForwardErrorCorrection::Packet* packet = received_packet->pkt;
+      ForwardErrorCorrection::Packet* packet = received_packet->pkt.get();
       recovered_packet_callback_->OnRecoveredPacket(packet->data.data(),
                                                     packet->data.size());
       // Create a packet with the buffer to modify it.
@@ -211,7 +211,7 @@ int32_t UlpfecReceiverImpl::ProcessReceivedFec() {
       // Already sent to the VCM and the jitter buffer.
       continue;
     }
-    ForwardErrorCorrection::Packet* packet = recovered_packet->pkt;
+    ForwardErrorCorrection::Packet* packet = recovered_packet->pkt.get();
     ++packet_counter_.num_recovered_packets;
     // Set this flag first; in case the recovered packet carries a RED
     // header, OnRecoveredPacket will recurse back here.

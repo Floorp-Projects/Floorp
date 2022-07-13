@@ -787,7 +787,7 @@ TEST_P(RtpSenderVideoTest,
   config.clock = &fake_clock_;
   config.rtp_sender = rtp_module_->RtpSender();
   config.field_trials = &field_trials_;
-  config.frame_encryptor = encryptor;
+  config.frame_encryptor = encryptor.get();
   RTPSenderVideo rtp_sender_video(config);
 
   FrameDependencyStructure video_structure;

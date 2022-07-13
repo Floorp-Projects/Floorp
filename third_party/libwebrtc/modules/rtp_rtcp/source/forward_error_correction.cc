@@ -651,10 +651,10 @@ bool ForwardErrorCorrection::RecoverPacket(const ReceivedFecPacket& fec_packet,
       // This is the packet we're recovering.
       recovered_packet->seq_num = protected_packet->seq_num;
     } else {
-      XorHeaders(*protected_packet->pkt, recovered_packet->pkt);
+      XorHeaders(*protected_packet->pkt, recovered_packet->pkt.get());
       XorPayloads(*protected_packet->pkt,
                   protected_packet->pkt->data.size() - kRtpHeaderSize,
-                  kRtpHeaderSize, recovered_packet->pkt);
+                  kRtpHeaderSize, recovered_packet->pkt.get());
     }
   }
   if (!FinishPacketRecovery(fec_packet, recovered_packet)) {

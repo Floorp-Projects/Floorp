@@ -707,7 +707,7 @@ CaptureInputPin::GetAllocator(IMemAllocator** allocator) {
       return hr;
     allocator_.swap(allocator);
   }
-  *allocator = allocator_;
+  *allocator = allocator_.get();
   allocator_->AddRef();
   return S_OK;
 }

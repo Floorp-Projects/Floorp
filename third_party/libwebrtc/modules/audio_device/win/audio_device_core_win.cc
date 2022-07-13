@@ -23,7 +23,11 @@
 
 #ifdef WEBRTC_WINDOWS_CORE_AUDIO_BUILD
 
+// clang-format off
+// To get Windows includes in the right order, this must come before the Windows
+// includes below.
 #include "modules/audio_device/win/audio_device_core_win.h"
+// clang-format on
 
 #include <string.h>
 
@@ -40,6 +44,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/platform_thread.h"
+#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/string_utils.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/sleep.h"
@@ -2090,7 +2095,8 @@ int32_t AudioDeviceWindowsCore::InitRecordingDMO() {
         << "AudioDeviceBuffer must be attached before streaming can start";
   }
 
-  _mediaBuffer = new MediaBufferImpl(_recBlockSize * _recAudioFrameSize);
+  _mediaBuffer = rtc::make_ref_counted<MediaBufferImpl>(_recBlockSize *
+                                                        _recAudioFrameSize);
 
   // Optional, but if called, must be after media types are set.
   hr = _dmo->AllocateStreamingResources();
@@ -2996,7 +3002,7 @@ DWORD AudioDeviceWindowsCore::DoCaptureThreadPollDMO() {
       DWORD dwStatus = 0;
       {
         DMO_OUTPUT_DATA_BUFFER dmoBuffer = {0};
-        dmoBuffer.pBuffer = _mediaBuffer;
+        dmoBuffer.pBuffer = _mediaBuffer.get();
         dmoBuffer.pBuffer->AddRef();
 
         // Poll the DMO for AEC processed capture data. The DMO will
@@ -3393,32 +3399,34 @@ int AudioDeviceWindowsCore::SetDMOProperties() {
 
   // Set the AEC system mode.
   // SINGLE_CHANNEL_AEC - AEC processing only.
-  if (SetVtI4Property(ps, MFPKEY_WMAAECMA_SYSTEM_MODE, SINGLE_CHANNEL_AEC)) {
+  if (SetVtI4Property(ps.get(), MFPKEY_WMAAECMA_SYSTEM_MODE,
+                      SINGLE_CHANNEL_AEC)) {
     return -1;
   }
 
   // Set the AEC source mode.
   // VARIANT_TRUE - Source mode (we poll the AEC for captured data).
-  if (SetBoolProperty(ps, MFPKEY_WMAAECMA_DMO_SOURCE_MODE, VARIANT_TRUE) ==
-      -1) {
+  if (SetBoolProperty(ps.get(), MFPKEY_WMAAECMA_DMO_SOURCE_MODE,
+                      VARIANT_TRUE) == -1) {
     return -1;
   }
 
   // Enable the feature mode.
   // This lets us override all the default processing settings below.
-  if (SetBoolProperty(ps, MFPKEY_WMAAECMA_FEATURE_MODE, VARIANT_TRUE) == -1) {
+  if (SetBoolProperty(ps.get(), MFPKEY_WMAAECMA_FEATURE_MODE, VARIANT_TRUE) ==
+      -1) {
     return -1;
   }
 
   // Disable analog AGC (default enabled).
-  if (SetBoolProperty(ps, MFPKEY_WMAAECMA_MIC_GAIN_BOUNDER, VARIANT_FALSE) ==
-      -1) {
+  if (SetBoolProperty(ps.get(), MFPKEY_WMAAECMA_MIC_GAIN_BOUNDER,
+                      VARIANT_FALSE) == -1) {
     return -1;
   }
 
   // Disable noise suppression (default enabled).
   // 0 - Disabled, 1 - Enabled
-  if (SetVtI4Property(ps, MFPKEY_WMAAECMA_FEATR_NS, 0) == -1) {
+  if (SetVtI4Property(ps.get(), MFPKEY_WMAAECMA_FEATR_NS, 0) == -1) {
     return -1;
   }
 
@@ -3463,7 +3471,8 @@ int AudioDeviceWindowsCore::SetDMOProperties() {
                    static_cast<uint32_t>(0x0000ffff & inDevIndex);
   RTC_LOG(LS_VERBOSE) << "Capture device index: " << inDevIndex
                       << ", render device index: " << outDevIndex;
-  if (SetVtI4Property(ps, MFPKEY_WMAAECMA_DEVICE_INDEXES, devIndex) == -1) {
+  if (SetVtI4Property(ps.get(), MFPKEY_WMAAECMA_DEVICE_INDEXES, devIndex) ==
+      -1) {
     return -1;
   }
 
@@ -3766,7 +3775,7 @@ int32_t AudioDeviceWindowsCore::_GetDefaultDeviceIndex(EDataFlow dir,
       SAFE_RELEASE(ptrDevice);
     }
 
-    if (_GetDeviceID(device, szDeviceID, kDeviceIDLength) == -1) {
+    if (_GetDeviceID(device.get(), szDeviceID, kDeviceIDLength) == -1) {
       return -1;
     }
 
