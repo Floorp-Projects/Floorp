@@ -234,12 +234,19 @@ bool RRSendQueue::OutgoingStream::Discard(IsUnordered unordered,
 void RRSendQueue::OutgoingStream::Pause() {
   is_paused_ = true;
 
+  // https://datatracker.ietf.org/doc/html/rfc8831#section-6.7
+  // "Closing of a data channel MUST be signaled by resetting the corresponding
+  // outgoing streams [RFC6525].  This means that if one side decides to close
+  // the data channel, it resets the corresponding outgoing stream."
+  // ... "[RFC6525] also guarantees that all the messages are delivered (or
+  // abandoned) before the stream is reset."
+
   // A stream is paused when it's about to be reset. In this implementation,
-  // it will throw away all non-partially send messages. This is subject to
-  // change. It will however not discard any partially sent messages - only
-  // whole messages. Partially delivered messages (at the time of receiving a
-  // Stream Reset command) will always deliver all the fragments before
-  // actually resetting the stream.
+  // it will throw away all non-partially send messages - they will be abandoned
+  // as noted above. This is subject to change. It will however not discard any
+  // partially sent messages - only whole messages. Partially delivered messages
+  // (at the time of receiving a Stream Reset command) will always deliver all
+  // the fragments before actually resetting the stream.
   for (auto it = items_.begin(); it != items_.end();) {
     if (it->remaining_offset == 0) {
       buffered_amount_.Decrease(it->remaining_size);
