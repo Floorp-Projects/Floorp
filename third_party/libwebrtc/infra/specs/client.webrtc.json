@@ -7386,7 +7386,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7408,7 +7408,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7430,7 +7430,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7452,7 +7452,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7474,7 +7474,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7496,7 +7496,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ],
           "shards": 2
@@ -7519,7 +7519,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ],
           "shards": 6
@@ -7542,7 +7542,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ],
           "shards": 4
@@ -7565,7 +7565,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7587,7 +7587,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7609,7 +7609,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7631,7 +7631,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ],
           "shards": 6
@@ -7654,7 +7654,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7676,7 +7676,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7698,7 +7698,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7720,7 +7720,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ],
           "shards": 4
@@ -7743,7 +7743,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
@@ -7765,7 +7765,7 @@
             {
               "cpu": "arm64-64-Apple_M1",
               "os": "Mac",
-              "pool": "WebRTC-baremetal-try"
+              "pool": "WebRTC-baremetal"
             }
           ]
         },
