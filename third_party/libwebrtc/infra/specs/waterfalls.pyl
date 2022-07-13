@@ -280,18 +280,6 @@
           'isolated_scripts': 'desktop_perf_tests',
         },
       },
-      # TODO(tikuta): remove this (crbug.com/954875)
-      'Perf Linux Trusty': {
-        'os_type':
-        'linux',
-        'mixins': [
-          'linux-trusty', 'perf-pool', 'timeout-3h',
-          'resultdb-gtest-json-format'
-        ],
-        'test_suites': {
-          'isolated_scripts': 'desktop_perf_tests',
-        },
-      },
       'Perf Mac 10.11': {
         'os_type':
         'mac',
