@@ -81,11 +81,10 @@ def FixErrors(filename, missing_deps, deleted_sources):
                                        for dep in missing_deps[target]) +
                 ']\n') + line
         indentation_level = None
-      elif line.strip().startswith('deps'):
-        is_empty_deps = line.strip() == 'deps = []'
-        line = 'deps = [\n' if is_empty_deps else line
-        line += ''.join('  "' + dep + '",\n' for dep in missing_deps[target])
-        line += ']\n' if is_empty_deps else ''
+      elif line.strip().startswith('deps = ['):
+        joined_deps = ''.join('  "' + dep + '",\n'
+                              for dep in missing_deps[target])
+        line = line.replace('deps = [', 'deps = [' + joined_deps)
         indentation_level = None
 
     if line.strip() not in deleted_sources:
