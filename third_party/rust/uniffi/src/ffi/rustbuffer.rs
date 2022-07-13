@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::ffi::{call_with_output, ForeignBytes, RustCallStatus};
+use std::convert::{TryFrom, TryInto};
 
 /// Support for passing an allocated-by-Rust buffer of bytes over the FFI.
 ///

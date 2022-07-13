@@ -10,9 +10,9 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2021"
+edition = "2018"
 name = "uniffi_macros"
-version = "0.19.3"
+version = "0.18.0"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
 description = "a multi-language bindings generator for rust (convenience macros)"
 homepage = "https://mozilla.github.io/uniffi-rs"
@@ -23,13 +23,9 @@ keywords = [
 ]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/uniffi-rs"
-resolver = "2"
 
 [lib]
 proc-macro = true
-
-[dependencies.camino]
-version = "1.0.8"
 
 [dependencies.glob]
 version = "0.3"
@@ -45,7 +41,7 @@ version = "1.0"
 features = ["extra-traits"]
 
 [dependencies.uniffi_build]
-version = "=0.19.3"
+version = "=0.18.0"
 
 [features]
 builtin-bindgen = ["uniffi_build/builtin-bindgen"]
