@@ -746,7 +746,6 @@ rtc_static_library("dcsctp") {
     "net/dcsctp/public:types",
     "net/dcsctp/socket:dcsctp_socket",
     "net/dcsctp/timer:task_queue_timeout",
-    "rtc_base",
   ]
 }
 }

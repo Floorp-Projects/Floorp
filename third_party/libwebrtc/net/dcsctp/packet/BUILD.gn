@@ -15,7 +15,6 @@ group("packet") {
 rtc_source_set("bounded_io") {
   deps = [
     "../../../api:array_view",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
   ]
@@ -29,7 +28,6 @@ rtc_library("tlv_trait") {
   deps = [
     ":bounded_io",
     "../../../api:array_view",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
   ]
@@ -45,7 +43,6 @@ rtc_library("tlv_trait") {
 
 rtc_source_set("data") {
   deps = [
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
     "../common:internal_types",
@@ -57,7 +54,6 @@ rtc_source_set("data") {
 rtc_library("crc32c") {
   deps = [
     "../../../api:array_view",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
     "//third_party/crc32c",
@@ -74,7 +70,6 @@ rtc_library("parameter") {
     ":data",
     ":tlv_trait",
     "../../../api:array_view",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
     "../common:internal_types",
@@ -119,7 +114,6 @@ rtc_library("error_cause") {
     ":parameter",
     ":tlv_trait",
     "../../../api:array_view",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
     "../common:internal_types",
@@ -172,7 +166,6 @@ rtc_library("chunk") {
     ":parameter",
     ":tlv_trait",
     "../../../api:array_view",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
     "../common:math",
@@ -229,7 +222,6 @@ rtc_library("chunk") {
 rtc_library("chunk_validators") {
   deps = [
     ":chunk",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
   ]
@@ -245,7 +237,6 @@ rtc_library("sctp_packet") {
     ":chunk",
     ":crc32c",
     "../../../api:array_view",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
     "../common:internal_types",
