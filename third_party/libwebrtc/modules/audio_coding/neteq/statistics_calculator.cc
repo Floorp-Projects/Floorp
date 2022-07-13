@@ -230,6 +230,10 @@ void StatisticsCalculator::AcceleratedSamples(size_t num_samples) {
   lifetime_stats_.removed_samples_for_acceleration += num_samples;
 }
 
+void StatisticsCalculator::GeneratedNoiseSamples(size_t num_samples) {
+  lifetime_stats_.generated_noise_samples += num_samples;
+}
+
 void StatisticsCalculator::PacketsDiscarded(size_t num_packets) {
   operations_and_state_.discarded_primary_packets += num_packets;
 }

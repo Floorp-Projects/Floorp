@@ -1455,6 +1455,7 @@ int NetEqImpl::DecodeCng(AudioDecoder* decoder,
       return kDecodedTooMuch;
     }
   }
+  stats_->GeneratedNoiseSamples(*decoded_length);
   return 0;
 }
 

@@ -94,6 +94,12 @@ void NetEqStatsPlotter::SimulationEnded(int64_t simulation_time_ms) {
     printf("  interruption_ratio: %f\n",
            static_cast<double>(lifetime_stats.total_interruption_duration_ms) /
                simulation_time_ms);
+    printf("  removed_samples_for_acceleration: %" PRIu64 "\n",
+           lifetime_stats.removed_samples_for_acceleration);
+    printf("  inserted_samples_for_deceleration: %" PRIu64 "\n",
+           lifetime_stats.inserted_samples_for_deceleration);
+    printf("  generated_noise_samples: %" PRIu64 "\n",
+           lifetime_stats.generated_noise_samples);
   }
 }
 
