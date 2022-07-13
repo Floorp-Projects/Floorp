@@ -127,9 +127,9 @@ class TCPPort : public Port {
 class TCPConnection : public Connection {
  public:
   // Connection is outgoing unless socket is specified
-  TCPConnection(TCPPort* port,
+  TCPConnection(rtc::WeakPtr<Port> tcp_port,
                 const Candidate& candidate,
-                rtc::AsyncPacketSocket* socket = 0);
+                rtc::AsyncPacketSocket* socket = nullptr);
   ~TCPConnection() override;
 
   int Send(const void* data,
@@ -168,6 +168,11 @@ class TCPConnection : public Connection {
                     const rtc::SocketAddress& remote_addr,
                     const int64_t& packet_time_us);
   void OnReadyToSend(rtc::AsyncPacketSocket* socket);
+
+  TCPPort* tcp_port() {
+    RTC_DCHECK_EQ(port()->GetProtocol(), PROTO_TCP);
+    return static_cast<TCPPort*>(port());
+  }
 
   std::unique_ptr<rtc::AsyncPacketSocket> socket_;
   int error_;

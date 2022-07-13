@@ -283,12 +283,12 @@ int ConnectionRequest::resend_delay() {
   return CONNECTION_RESPONSE_TIMEOUT;
 }
 
-Connection::Connection(Port* port,
+Connection::Connection(rtc::WeakPtr<Port> port,
                        size_t index,
                        const Candidate& remote_candidate)
     : network_thread_(port->thread()),
       id_(rtc::CreateRandomId()),
-      port_(port),
+      port_(std::move(port)),
       local_candidate_index_(index),
       remote_candidate_(remote_candidate),
       recv_rate_tracker_(100, 10u),
@@ -298,7 +298,7 @@ Connection::Connection(Port* port,
       connected_(true),
       pruned_(false),
       use_candidate_attr_(false),
-      requests_(port->thread()),
+      requests_(port_->thread()),
       rtt_(DEFAULT_RTT),
       last_ping_sent_(0),
       last_ping_received_(0),
@@ -1422,7 +1422,7 @@ void Connection::OnConnectionRequestSent(ConnectionRequest* request) {
 }
 
 void Connection::HandleRoleConflictFromPeer() {
-  port_->SignalRoleConflict(port_);
+  port_->SignalRoleConflict(port());
 }
 
 IceCandidatePairState Connection::state() const {
@@ -1618,10 +1618,15 @@ void Connection::ForgetLearnedState() {
   pings_since_last_response_.clear();
 }
 
+ProxyConnection::ProxyConnection(rtc::WeakPtr<Port> port,
+                                 size_t index,
+                                 const Candidate& remote_candidate)
+    : Connection(std::move(port), index, remote_candidate) {}
+
 ProxyConnection::ProxyConnection(Port* port,
                                  size_t index,
                                  const Candidate& remote_candidate)
-    : Connection(port, index, remote_candidate) {}
+    : ProxyConnection(port->NewWeakPtr(), index, remote_candidate) {}
 
 int ProxyConnection::Send(const void* data,
                           size_t size,

@@ -275,7 +275,7 @@ Connection* UDPPort::CreateConnection(const Candidate& address,
              mdns_name_registration_status() !=
                  MdnsNameRegistrationStatus::kNotStarted);
 
-  Connection* conn = new ProxyConnection(this, 0, address);
+  Connection* conn = new ProxyConnection(NewWeakPtr(), 0, address);
   AddOrReplaceConnection(conn);
   return conn;
 }
