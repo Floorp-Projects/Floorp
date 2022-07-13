@@ -171,7 +171,7 @@ void ProcessThreadImpl::PostDelayedTask(std::unique_ptr<QueuedTask> task,
     MutexLock lock(&mutex_);
     recalculate_wakeup_time =
         delayed_tasks_.empty() || run_at_ms < delayed_tasks_.top().run_at_ms;
-    delayed_tasks_.emplace(run_at_ms, std::move(task));
+    delayed_tasks_.emplace(run_at_ms, sequence_id_++, std::move(task));
   }
   if (recalculate_wakeup_time) {
     wake_up_.Set();
