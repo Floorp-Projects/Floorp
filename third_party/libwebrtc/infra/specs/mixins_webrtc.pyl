@@ -45,6 +45,7 @@
   },
   'ios-device-perf': {
     'swarming': {
+      'idempotent': False,
       'dimensions': {
         'os': 'iOS-12.4.1',
         'pool': 'WebRTC',
@@ -169,6 +170,10 @@
   },
   'perf-pool': {
     'swarming': {
+      # Perf tests are marked as not idempotent, which means they're re-run even
+      # if they did not change this build. This will give the dashboard some
+      # more variance data to work with.
+      'idempotent': False,
       'dimensions': {
         'pool': 'WebRTC-perf',
       },

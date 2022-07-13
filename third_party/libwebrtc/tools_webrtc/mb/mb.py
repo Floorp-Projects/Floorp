@@ -88,7 +88,7 @@ class WebRTCMetaBuildWrapper(mb.MetaBuildWrapper):
     elif is_ios:
       cmdline += [
           vpython_exe, '../../tools_webrtc/flags_compatibility.py',
-          'bin/run_%s' % target, '--out-dir', '${ISOLATED_OUTDIR}'
+          'bin/run_%s' % target
       ]
       extra_files.append('../../tools_webrtc/flags_compatibility.py')
     elif test_type == 'raw':
