@@ -6,6 +6,8 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+import os
+
 
 def _HasLocalChanges(input_api):
   ret = input_api.subprocess.call(['git', 'diff', '--quiet'])
@@ -31,13 +33,34 @@ def CheckPatchFormatted(input_api, output_api):
   return results
 
 
+def CheckSourceSideSpecs(input_api, output_api):
+  d = os.path.dirname
+  angle_root = d(d(input_api.PresubmitLocalPath()))
+  gen_script = os.path.join(angle_root, 'testing', 'buildbot',
+                            'generate_buildbot_json.py')
+
+  commands = [
+      input_api.Command(name='generate_buildbot_json',
+                        cmd=[
+                            input_api.python_executable, gen_script, '--check',
+                            '--verbose', '--pyl-files-dir',
+                            input_api.PresubmitLocalPath()
+                        ],
+                        kwargs={},
+                        message=output_api.PresubmitError),
+  ]
+  return input_api.RunTests(commands)
+
+
 def CheckChangeOnUpload(input_api, output_api):
   results = []
   results.extend(CheckPatchFormatted(input_api, output_api))
+  results.extend(CheckSourceSideSpecs(input_api, output_api))
   return results
 
 
 def CheckChangeOnCommit(input_api, output_api):
   results = []
   results.extend(CheckPatchFormatted(input_api, output_api))
+  results.extend(CheckSourceSideSpecs(input_api, output_api))
   return results

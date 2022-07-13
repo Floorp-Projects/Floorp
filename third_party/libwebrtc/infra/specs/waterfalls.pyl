@@ -13,9 +13,29 @@
     'machines': {
       'Linux64 Release': {
         'os_type': 'linux',
-        'mixins': ['linux-bionic', 'x86-64', 'result_adapter'],
+        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_and_video_capture_tests',
+          'isolated_scripts': 'desktop_tests_linux',
+        },
+      },
+      'Win32 Release (Clang)': {
+        'os_type': 'win',
+        'mixins': ['win7', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'desktop_tests_win',
+        },
+      },
+    },
+  },
+  {
+    'name': 'tryserver.webrtc',
+    'mixins': [],
+    'machines': {
+      'linux_rel': {
+        'os_type': 'linux',
+        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'desktop_tests_linux_tryserver',
         },
       },
     },
