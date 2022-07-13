@@ -665,10 +665,6 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
       break;
   }
 
-  if (!generateTLEnterVM(masm, f)) {
-    return false;
-  }
-
   masm.setupUnalignedABICall(regs.getAny());
   masm.passABIArg(reg_cx);
 
@@ -707,10 +703,6 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
 
   masm.callWithABI(nativeFun, MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
-
-  if (!generateTLExitVM(masm, f)) {
-    return false;
-  }
 
   // SP is used to transfer stack across call boundaries.
   masm.initPseudoStackPtr();

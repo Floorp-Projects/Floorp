@@ -2192,13 +2192,6 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
     volatileRegs.add(regexp);
   }
 
-#ifdef JS_TRACE_LOGGING
-  if (TraceLogTextIdEnabled(TraceLogger_IrregexpExecute)) {
-    masm.loadTraceLogger(temp2);
-    masm.tracelogStartId(temp2, TraceLogger_IrregexpExecute);
-  }
-#endif
-
   // Execute the RegExp.
   masm.computeEffectiveAddress(
       Address(FramePointer, inputOutputDataStartOffset), temp2);
@@ -2208,13 +2201,6 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
   masm.callWithABI(codePointer);
   masm.storeCallInt32Result(temp1);
   masm.PopRegsInMask(volatileRegs);
-
-#ifdef JS_TRACE_LOGGING
-  if (TraceLogTextIdEnabled(TraceLogger_IrregexpExecute)) {
-    masm.loadTraceLogger(temp2);
-    masm.tracelogStopId(temp2, TraceLogger_IrregexpExecute);
-  }
-#endif
 
   masm.bind(&checkSuccess);
   masm.branch32(Assembler::Equal, temp1,
@@ -3715,13 +3701,6 @@ void CodeGenerator::visitOsrEntry(LOsrEntry* lir) {
   masm.flushBuffer();
   setOsrEntryOffset(masm.size());
 
-#ifdef JS_TRACE_LOGGING
-  if (JS::TraceLoggerSupported()) {
-    emitTracelogStopEvent(TraceLogger_Baseline);
-    emitTracelogStartEvent(TraceLogger_IonMonkey);
-  }
-#endif
-
   // Allocate the full frame for this function
   // Note we have a new entry here. So we reset MacroAssembler::framePushed()
   // to 0, before reserving the stack.
@@ -5119,10 +5098,6 @@ void CodeGenerator::visitCallNative(LCallNative* call) {
 
   markSafepointAt(safepointOffset, call);
 
-  if (JS::TraceLoggerSupported()) {
-    emitTracelogStartEvent(TraceLogger_Call);
-  }
-
   // Construct and execute call.
   masm.setupAlignedABICall();
   masm.passABIArg(argContextReg);
@@ -5137,10 +5112,6 @@ void CodeGenerator::visitCallNative(LCallNative* call) {
   }
   masm.callWithABI(DynamicFunction<JSNative>(native), MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
-
-  if (JS::TraceLoggerSupported()) {
-    emitTracelogStopEvent(TraceLogger_Call);
-  }
 
   // Test for failure.
   masm.branchIfFalseBool(ReturnReg, masm.failureLabel());
@@ -10770,45 +10741,6 @@ void JitRuntime::generateDoubleToInt32ValueStub(MacroAssembler& masm) {
   masm.abiret();
 }
 
-bool JitRuntime::generateTLEventVM(MacroAssembler& masm,
-                                   const VMFunctionData& f, bool enter) {
-#ifdef JS_TRACE_LOGGING
-  bool vmEventEnabled = TraceLogTextIdEnabled(TraceLogger_VM);
-  bool vmSpecificEventEnabled = TraceLogTextIdEnabled(TraceLogger_VMSpecific);
-
-  if (vmEventEnabled || vmSpecificEventEnabled) {
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
-    Register loggerReg = regs.takeAnyGeneral();
-    masm.Push(loggerReg);
-    masm.loadTraceLogger(loggerReg);
-
-    if (vmEventEnabled) {
-      if (enter) {
-        masm.tracelogStartId(loggerReg, TraceLogger_VM, /* force = */ true);
-      } else {
-        masm.tracelogStopId(loggerReg, TraceLogger_VM, /* force = */ true);
-      }
-    }
-    if (vmSpecificEventEnabled) {
-      TraceLoggerEvent event(f.name());
-      if (!event.hasTextId()) {
-        return false;
-      }
-
-      if (enter) {
-        masm.tracelogStartId(loggerReg, event.textId(), /* force = */ true);
-      } else {
-        masm.tracelogStopId(loggerReg, event.textId(), /* force = */ true);
-      }
-    }
-
-    masm.Pop(loggerReg);
-  }
-#endif
-
-  return true;
-}
-
 void CodeGenerator::visitCharCodeAt(LCharCodeAt* lir) {
   Register str = ToRegister(lir->str());
   Register index = ToRegister(lir->index());
@@ -12749,38 +12681,6 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
     Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, label.offset),
                                        ImmPtr(entry), ImmPtr((void*)-1));
   }
-
-#ifdef JS_TRACE_LOGGING
-  bool TLFailed = false;
-
-  MOZ_ASSERT_IF(!JS::TraceLoggerSupported(), patchableTLEvents_.length() == 0);
-  for (uint32_t i = 0; i < patchableTLEvents_.length(); i++) {
-    TraceLoggerEvent event(patchableTLEvents_[i].event);
-    if (!event.hasTextId() || !ionScript->addTraceLoggerEvent(event)) {
-      TLFailed = true;
-      break;
-    }
-    Assembler::PatchDataWithValueCheck(
-        CodeLocationLabel(code, patchableTLEvents_[i].offset),
-        ImmPtr((void*)uintptr_t(event.textId())), ImmPtr((void*)0));
-  }
-
-  if (!TLFailed && patchableTLScripts_.length() > 0) {
-    MOZ_ASSERT(TraceLogTextIdEnabled(TraceLogger_Scripts));
-    TraceLoggerEvent event(TraceLogger_Scripts, script);
-    if (!event.hasTextId() || !ionScript->addTraceLoggerEvent(event)) {
-      TLFailed = true;
-    }
-    if (!TLFailed) {
-      uint32_t textId = event.textId();
-      for (uint32_t i = 0; i < patchableTLScripts_.length(); i++) {
-        Assembler::PatchDataWithValueCheck(
-            CodeLocationLabel(code, patchableTLScripts_[i]),
-            ImmPtr((void*)uintptr_t(textId)), ImmPtr((void*)0));
-      }
-    }
-  }
-#endif
 
   // for generating inline caches during the execution.
   if (runtimeData_.length()) {

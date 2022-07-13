@@ -79,17 +79,6 @@ class CodeGeneratorShared : public LElementVisitor {
   };
   js::Vector<CompileTimeICInfo, 0, SystemAllocPolicy> icInfo_;
 
-#ifdef JS_TRACE_LOGGING
-  struct PatchableTLEvent {
-    CodeOffset offset;
-    const char* event;
-    PatchableTLEvent(CodeOffset offset, const char* event)
-        : offset(offset), event(event) {}
-  };
-  js::Vector<PatchableTLEvent, 0, SystemAllocPolicy> patchableTLEvents_;
-  js::Vector<CodeOffset, 0, SystemAllocPolicy> patchableTLScripts_;
-#endif
-
  protected:
   js::Vector<NativeToBytecode, 0, SystemAllocPolicy> nativeToBytecodeList_;
   uint8_t* nativeToBytecodeMap_;
@@ -407,56 +396,7 @@ class CodeGeneratorShared : public LElementVisitor {
 
   bool omitOverRecursedCheck() const;
 
-#ifdef JS_TRACE_LOGGING
- protected:
-  void emitTracelogScript(bool isStart);
-  void emitTracelogTree(bool isStart, uint32_t textId);
-  void emitTracelogTree(bool isStart, const char* text,
-                        TraceLoggerTextId enabledTextId);
-#endif
-
  public:
-#ifdef JS_TRACE_LOGGING
-  void emitTracelogScriptStart() { emitTracelogScript(/* isStart =*/true); }
-  void emitTracelogScriptStop() { emitTracelogScript(/* isStart =*/false); }
-  void emitTracelogStartEvent(uint32_t textId) {
-    emitTracelogTree(/* isStart =*/true, textId);
-  }
-  void emitTracelogStopEvent(uint32_t textId) {
-    emitTracelogTree(/* isStart =*/false, textId);
-  }
-  // Log an arbitrary text. The TraceloggerTextId is used to toggle the
-  // logging on and off.
-  // Note: the text is not copied and need to be kept alive until linking.
-  void emitTracelogStartEvent(const char* text,
-                              TraceLoggerTextId enabledTextId) {
-    emitTracelogTree(/* isStart =*/true, text, enabledTextId);
-  }
-  void emitTracelogStopEvent(const char* text,
-                             TraceLoggerTextId enabledTextId) {
-    emitTracelogTree(/* isStart =*/false, text, enabledTextId);
-  }
-  void emitTracelogIonStart() {
-    emitTracelogScriptStart();
-    emitTracelogStartEvent(TraceLogger_IonMonkey);
-  }
-  void emitTracelogIonStop() {
-    emitTracelogStopEvent(TraceLogger_IonMonkey);
-    emitTracelogScriptStop();
-  }
-#else
-  void emitTracelogScriptStart() {}
-  void emitTracelogScriptStop() {}
-  void emitTracelogStartEvent(uint32_t textId) {}
-  void emitTracelogStopEvent(uint32_t textId) {}
-  void emitTracelogStartEvent(const char* text,
-                              TraceLoggerTextId enabledTextId) {}
-  void emitTracelogStopEvent(const char* text,
-                             TraceLoggerTextId enabledTextId) {}
-  void emitTracelogIonStart() {}
-  void emitTracelogIonStop() {}
-#endif
-
   bool isGlobalObject(JSObject* object);
 };
 
