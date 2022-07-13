@@ -360,7 +360,7 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   void SetSctpDataMid(const std::string& mid) override {}
   void ResetSctpDataMid() override {}
 
-  const FieldTrialsView& trials() override { return field_trials_; }
+  const FieldTrialsView& trials() const override { return field_trials_; }
 
  protected:
   webrtc::test::ScopedKeyValueConfig field_trials_;

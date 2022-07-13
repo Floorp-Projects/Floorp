@@ -509,6 +509,7 @@ PeerConnection::PeerConnection(
     PeerConnectionDependencies& dependencies,
     bool dtls_enabled)
     : context_(context),
+      trials_(std::move(dependencies.trials), &context->field_trials()),
       options_(options),
       observer_(dependencies.observer),
       is_unified_plan_(is_unified_plan),
@@ -719,7 +720,7 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
         }
       };
 
-  config.field_trials = &context_->trials();
+  config.field_trials = trials_.get();
 
   transport_controller_.reset(
       new JsepTransportController(network_thread(), port_allocator_.get(),
@@ -1692,8 +1693,7 @@ bool PeerConnection::StartRtcEventLog(std::unique_ptr<RtcEventLogOutput> output,
 bool PeerConnection::StartRtcEventLog(
     std::unique_ptr<RtcEventLogOutput> output) {
   int64_t output_period_ms = webrtc::RtcEventLog::kImmediateOutput;
-  if (absl::StartsWith(context_->trials().Lookup("WebRTC-RtcEventLogNewFormat"),
-                       "Enabled")) {
+  if (trials().IsEnabled("WebRTC-RtcEventLogNewFormat")) {
     output_period_ms = 5000;
   }
   return StartRtcEventLog(std::move(output), output_period_ms);
@@ -2045,8 +2045,7 @@ PeerConnection::InitializePortAllocator_n(
   // by experiment.
   if (configuration.disable_ipv6) {
     port_allocator_flags &= ~(cricket::PORTALLOCATOR_ENABLE_IPV6);
-  } else if (absl::StartsWith(context_->trials().Lookup("WebRTC-IPv6Default"),
-                              "Disabled")) {
+  } else if (trials().IsDisabled("WebRTC-IPv6Default")) {
     port_allocator_flags &= ~(cricket::PORTALLOCATOR_ENABLE_IPV6);
   }
   if (configuration.disable_ipv6_on_wifi) {

@@ -123,6 +123,8 @@ class PeerConnectionSdpMethods {
   virtual void TeardownDataChannelTransport_n() = 0;
   virtual void SetSctpDataMid(const std::string& mid) = 0;
   virtual void ResetSctpDataMid() = 0;
+
+  virtual const FieldTrialsView& trials() const = 0;
 };
 
 // Functions defined in this class are called by other objects,
@@ -178,8 +180,6 @@ class PeerConnectionInternal : public PeerConnectionInterface,
   virtual void NoteDataAddedEvent() {}
   // Handler for the "channel closed" signal
   virtual void OnSctpDataChannelClosed(DataChannelInterface* channel) {}
-
-  virtual const FieldTrialsView& trials() = 0;
 };
 
 }  // namespace webrtc

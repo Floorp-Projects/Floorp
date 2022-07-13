@@ -437,7 +437,7 @@ class PeerConnection : public PeerConnectionInternal,
   }
   void RequestUsagePatternReportForTesting();
 
-  const FieldTrialsView& trials() override { return context_->trials(); }
+  const FieldTrialsView& trials() const override { return *trials_; }
 
  protected:
   // Available for rtc::scoped_refptr creation
@@ -592,6 +592,12 @@ class PeerConnection : public PeerConnectionInternal,
   InitializeRtcpCallback();
 
   const rtc::scoped_refptr<ConnectionContext> context_;
+  // Field trials active for this PeerConnection is the first of:
+  // a) Specified in PeerConnectionDependencies (owned).
+  // b) Accessed via ConnectionContext (e.g PeerConnectionFactoryDependencies>
+  // c) Created as Default (FieldTrialBasedConfig).
+  const webrtc::AlwaysValidPointer<const FieldTrialsView, FieldTrialBasedConfig>
+      trials_;
   const PeerConnectionFactoryInterface::Options options_;
   PeerConnectionObserver* observer_ RTC_GUARDED_BY(signaling_thread()) =
       nullptr;
