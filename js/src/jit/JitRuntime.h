@@ -251,16 +251,6 @@ class JitRuntime {
                           VMWrapperOffsets& offsets);
   bool generateVMWrappers(JSContext* cx, MacroAssembler& masm);
 
-  bool generateTLEventVM(MacroAssembler& masm, const VMFunctionData& f,
-                         bool enter);
-
-  inline bool generateTLEnterVM(MacroAssembler& masm, const VMFunctionData& f) {
-    return generateTLEventVM(masm, f, /* enter = */ true);
-  }
-  inline bool generateTLExitVM(MacroAssembler& masm, const VMFunctionData& f) {
-    return generateTLEventVM(masm, f, /* enter = */ false);
-  }
-
   uint32_t startTrampolineCode(MacroAssembler& masm);
 
   TrampolinePtr trampolineCode(uint32_t offset) const {

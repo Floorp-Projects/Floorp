@@ -156,20 +156,12 @@ bool CodeGeneratorShared::generatePrologue() {
   MOZ_ASSERT(masm.framePushed() == frameSize());
   masm.checkStackAlignment();
 
-  if (JS::TraceLoggerSupported()) {
-    emitTracelogIonStart();
-  }
-
   return true;
 }
 
 bool CodeGeneratorShared::generateEpilogue() {
   MOZ_ASSERT(!gen->compilingWasm());
   masm.bind(&returnLabel_);
-
-  if (JS::TraceLoggerSupported()) {
-    emitTracelogIonStop();
-  }
 
   // If profiling, jump to a trampoline to reset the JitActivation's
   // lastProfilingFrame to point to the previous frame and return to the caller.
@@ -1088,112 +1080,6 @@ ReciprocalMulConstants CodeGeneratorShared::computeDivisionConstants(
 
   return rmc;
 }
-
-#ifdef JS_TRACE_LOGGING
-
-void CodeGeneratorShared::emitTracelogScript(bool isStart) {
-  if (!TraceLogTextIdEnabled(TraceLogger_Scripts)) {
-    return;
-  }
-
-  Label done;
-
-  AllocatableRegisterSet regs(RegisterSet::Volatile());
-  Register logger = regs.takeAnyGeneral();
-  Register script = regs.takeAnyGeneral();
-
-  masm.Push(logger);
-
-  masm.loadTraceLogger(logger);
-  masm.branchTestPtr(Assembler::Zero, logger, logger, &done);
-
-  Address enabledAddress(logger, TraceLoggerThread::offsetOfEnabled());
-  masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
-
-  masm.Push(script);
-
-  CodeOffset patchScript = masm.movWithPatch(ImmWord(0), script);
-  masm.propagateOOM(patchableTLScripts_.append(patchScript));
-
-  if (isStart) {
-    masm.tracelogStartId(logger, script);
-  } else {
-    masm.tracelogStopId(logger, script);
-  }
-
-  masm.Pop(script);
-
-  masm.bind(&done);
-
-  masm.Pop(logger);
-}
-
-void CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId) {
-  if (!TraceLogTextIdEnabled(textId)) {
-    return;
-  }
-
-  Label done;
-  AllocatableRegisterSet regs(RegisterSet::Volatile());
-  Register logger = regs.takeAnyGeneral();
-
-  masm.Push(logger);
-
-  masm.loadTraceLogger(logger);
-  masm.branchTestPtr(Assembler::Zero, logger, logger, &done);
-
-  Address enabledAddress(logger, TraceLoggerThread::offsetOfEnabled());
-  masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
-
-  if (isStart) {
-    masm.tracelogStartId(logger, textId);
-  } else {
-    masm.tracelogStopId(logger, textId);
-  }
-
-  masm.bind(&done);
-
-  masm.Pop(logger);
-}
-
-void CodeGeneratorShared::emitTracelogTree(bool isStart, const char* text,
-                                           TraceLoggerTextId enabledTextId) {
-  if (!TraceLogTextIdEnabled(enabledTextId)) {
-    return;
-  }
-
-  Label done;
-
-  AllocatableRegisterSet regs(RegisterSet::Volatile());
-  Register loggerReg = regs.takeAnyGeneral();
-  Register eventReg = regs.takeAnyGeneral();
-
-  masm.Push(loggerReg);
-
-  masm.loadTraceLogger(loggerReg);
-  masm.branchTestPtr(Assembler::Zero, loggerReg, loggerReg, &done);
-
-  Address enabledAddress(loggerReg, TraceLoggerThread::offsetOfEnabled());
-  masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
-
-  masm.Push(eventReg);
-
-  PatchableTLEvent patchEvent(masm.movWithPatch(ImmWord(0), eventReg), text);
-  masm.propagateOOM(patchableTLEvents_.append(std::move(patchEvent)));
-
-  if (isStart) {
-    masm.tracelogStartId(loggerReg, eventReg);
-  } else {
-    masm.tracelogStopId(loggerReg, eventReg);
-  }
-
-  masm.Pop(eventReg);
-
-  masm.bind(&done);
-
-  masm.Pop(loggerReg);
-}
-#endif
 
 }  // namespace jit
 }  // namespace js
