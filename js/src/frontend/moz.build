@@ -14,11 +14,19 @@ include("../js-cxxflags.mozbuild")
 
 
 # Generate frontend/ReservedWordsGenerated.h from frontend/ReservedWords.h
-GeneratedFile(
-    "ReservedWordsGenerated.h",
-    script="GenerateReservedWords.py",
-    inputs=["ReservedWords.h"],
-)
+if CONFIG["ENABLE_DECORATORS"]:
+    GeneratedFile(
+        "ReservedWordsGenerated.h",
+        script="GenerateReservedWords.py",
+        inputs=["ReservedWords.h"],
+        flags=["--enable-decorators"],
+    )
+else:
+    GeneratedFile(
+        "ReservedWordsGenerated.h",
+        script="GenerateReservedWords.py",
+        inputs=["ReservedWords.h"],
+    )
 
 if CONFIG["JS_ENABLE_SMOOSH"]:
     CbindgenHeader("smoosh_generated.h", inputs=["/js/src/frontend/smoosh"])
