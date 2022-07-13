@@ -311,6 +311,7 @@ if (rtc_include_tests) {
       "../../../api/audio:aec3_config",
       "../../../rtc_base:checks",
       "../../../rtc_base:macromagic",
+      "../../../rtc_base:random",
       "../../../rtc_base:rtc_base_approved",
       "../../../rtc_base:safe_minmax",
       "../../../rtc_base:stringutils",

@@ -680,6 +680,7 @@ rtc_source_set("simulated_network_api") {
   deps = [
     "../rtc_base",
     "../rtc_base:macromagic",
+    "../rtc_base:random",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }

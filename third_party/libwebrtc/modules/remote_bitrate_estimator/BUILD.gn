@@ -129,6 +129,7 @@ if (rtc_include_tests) {
       "../../api/units:data_rate",
       "../../rtc_base",
       "../../rtc_base:checks",
+      "../../rtc_base:random",
       "../../rtc_base:rtc_base_approved",
       "../../system_wrappers",
       "../../test:field_trial",

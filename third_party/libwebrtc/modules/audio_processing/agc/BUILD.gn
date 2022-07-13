@@ -179,6 +179,7 @@ if (rtc_include_tests) {
       "..:mocks",
       "../../../api:array_view",
       "../../../rtc_base:checks",
+      "../../../rtc_base:random",
       "../../../rtc_base:rtc_base_approved",
       "../../../rtc_base:safe_conversions",
       "../../../rtc_base:stringutils",

@@ -61,6 +61,7 @@ rtc_library("emulated_network") {
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
     "../../rtc_base:network_constants",
+    "../../rtc_base:random",
     "../../rtc_base:rtc_base_tests_utils",
     "../../rtc_base:rtc_event",
     "../../rtc_base:rtc_task_queue",

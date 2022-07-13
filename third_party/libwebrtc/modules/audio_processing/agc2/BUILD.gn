@@ -307,6 +307,7 @@ rtc_library("test_utils") {
   deps = [
     "..:audio_frame_view",
     "../../../rtc_base:checks",
+    "../../../rtc_base:random",
     "../../../rtc_base:rtc_base_approved",
   ]
 }

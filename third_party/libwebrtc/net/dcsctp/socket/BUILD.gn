@@ -188,6 +188,7 @@ if (rtc_include_tests) {
       "../../../api:array_view",
       "../../../api/task_queue:task_queue",
       "../../../rtc_base:logging",
+      "../../../rtc_base:random",
       "../../../rtc_base:rtc_base_approved",
       "../../../test:test_support",
       "../public:socket",

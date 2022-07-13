@@ -298,6 +298,7 @@ rtc_library("rtp_rtcp") {
     "../../rtc_base:gtest_prod",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
+    "../../rtc_base:random",
     "../../rtc_base:rate_limiter",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_numerics",
@@ -436,6 +437,7 @@ rtc_library("fec_test_helper") {
     ":rtp_rtcp",
     ":rtp_rtcp_format",
     "../../rtc_base:checks",
+    "../../rtc_base:random",
     "../../rtc_base:rtc_base_approved",
   ]
 }
@@ -496,6 +498,7 @@ if (rtc_include_tests) {
     deps = [
       ":rtp_rtcp",
       ":rtp_rtcp_format",
+      "../../rtc_base:random",
       "../../rtc_base:rtc_base_approved",
       "../../test:fileutils",
       "../../test:test_support",
@@ -624,6 +627,7 @@ if (rtc_include_tests) {
       "../../rtc_base:checks",
       "../../rtc_base:logging",
       "../../rtc_base:macromagic",
+      "../../rtc_base:random",
       "../../rtc_base:rate_limiter",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_base_tests_utils",
