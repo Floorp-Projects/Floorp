@@ -315,6 +315,7 @@ Connection::Connection(rtc::WeakPtr<Port> port,
       field_trials_(&kDefaultFieldTrials),
       rtt_estimate_(DEFAULT_RTT_ESTIMATE_HALF_TIME_MS) {
   RTC_DCHECK_RUN_ON(network_thread_);
+  RTC_DCHECK(port_);
   RTC_LOG(LS_INFO) << ToString() << ": Connection created";
 }
 
@@ -831,10 +832,8 @@ void Connection::Prune() {
 
 void Connection::Destroy() {
   RTC_DCHECK_RUN_ON(network_thread_);
-  if (pending_delete_)
+  if (!port_)
     return;
-
-  pending_delete_ = true;
 
   RTC_DLOG(LS_VERBOSE) << ToString() << ": Connection destroyed";
 
@@ -846,6 +845,10 @@ void Connection::Destroy() {
   SignalDestroyed.disconnect_all();
 
   LogCandidatePairConfig(webrtc::IceCandidatePairConfigType::kDestroyed);
+
+  // Reset the `port_` after logging and firing the destroyed signal since
+  // information required for logging needs access to `port_`.
+  port_.reset();
 
   // Unwind the stack before deleting the object in case upstream callers
   // need to refer to the Connection's state as part of teardown.
@@ -868,16 +871,13 @@ void Connection::FailAndPrune() {
 
   // TODO(bugs.webrtc.org/13865): There's a circular dependency between Port
   // and Connection. In some cases (Port dtor), a Connection object is deleted
-  // without using the `Destroy` method (pending_delete_ won't be raised and
-  // some functionality won't run as expected), while in other cases
+  // without using the `Destroy` method (port_ won't be nulled and some
+  // functionality won't run as expected), while in other cases
   // (AddOrReplaceConnection), the Connection object is deleted asynchronously
-  // via the `Destroy` method and in that case `pending_delete_` will be raised.
+  // via the `Destroy` method and in that case `port_` will be nulled.
   // However, in that case, there's a chance that the Port object gets
-  // deleted before the Connection object ends up being deleted. So, the
-  // Connection object holds on to a potentially bogus `port_` pointer.
-  // Here, we avoid such a potential, but the cleanup operations in Port
-  // need to be made consistent and safe.
-  if (pending_delete_)
+  // deleted before the Connection object ends up being deleted.
+  if (!port_)
     return;
 
   set_state(IceCandidatePairState::FAILED);
@@ -1226,7 +1226,7 @@ std::string Connection::ToString() const {
   rtc::StringBuilder ss;
   ss << "Conn[" << ToDebugId();
 
-  if (pending_delete_) {
+  if (!port_) {
     // No content name for pending delete, so temporarily substitute the name
     // with a hash (rhyming with trash) and don't include any information about
     // the network or candidates, state that belongs to a potentially deleted
@@ -1249,7 +1249,7 @@ std::string Connection::ToString() const {
      << "|" << SELECTED_STATE_ABBREV[selected_] << "|" << remote_nomination_
      << "|" << nomination_ << "|";
 
-  if (!pending_delete_)
+  if (port_)
     ss << priority() << "|";
 
   if (rtt_ < DEFAULT_RTT) {
