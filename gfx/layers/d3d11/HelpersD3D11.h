@@ -8,6 +8,7 @@
 #define mozilla_gfx_layers_d3d11_HelpersD3D11_h
 
 #include <d3d11.h>
+#include <array>
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 
@@ -48,6 +49,16 @@ static inline bool WaitForFrameGPUQuery(ID3D11Device* aDevice,
   }
   Telemetry::AccumulateTimeDelta(Telemetry::GPU_WAIT_TIME_MS, start);
   return success;
+}
+
+inline void ClearResource(ID3D11Device* const device, ID3D11Resource* const res,
+                          const std::array<float, 4>& vals) {
+  RefPtr<ID3D11RenderTargetView> rtv;
+  (void)device->CreateRenderTargetView(res, nullptr, getter_AddRefs(rtv));
+
+  RefPtr<ID3D11DeviceContext> context;
+  device->GetImmediateContext(getter_AddRefs(context));
+  context->ClearRenderTargetView(rtv, vals.data());
 }
 
 }  // namespace layers

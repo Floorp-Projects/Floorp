@@ -53,9 +53,11 @@ add_task(async function() {
   });
 
   info("Switching tab to cause it to get restored");
+  const browserLoaded = BrowserTestUtils.browserLoaded(lazyTab.linkedBrowser);
   await BrowserTestUtils.switchTab(gBrowser, lazyTab);
 
   await tabLoaded;
+  await browserLoaded;
 
   let lazyBrowser = lazyTab.linkedBrowser;
   await checkLoginDisplayed(lazyBrowser, testGuid);

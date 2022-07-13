@@ -98,7 +98,7 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
 ]
 
 def serialized_by_servo(prop):
-    if prop.type() == "shorthand":
+    if prop.type() == "shorthand" or prop.type() == "alias":
         return True
     # Keywords are all fine, except -moz-osx-font-smoothing, which does
     # resistfingerprinting stuff.
@@ -158,6 +158,6 @@ data = [
     % endfor
 
     % for prop in data.all_aliases():
-    Alias("${prop.name}", "${prop.camel_case}", "${prop.ident}", "${prop.original.ident}", [${rules(prop)}], [], ${pref(prop)}),
+    Alias("${prop.name}", "${prop.camel_case}", "${prop.ident}", "${prop.original.ident}", [${rules(prop)}], [${flags(prop)}], ${pref(prop)}),
     % endfor
 ]
