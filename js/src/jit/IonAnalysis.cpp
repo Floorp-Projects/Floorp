@@ -2726,9 +2726,6 @@ bool jit::AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph,
 
   // If needed, update alias analysis dependencies.
   if (updateAliasAnalysis) {
-    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-    AutoTraceLog log(logger, TraceLogger_AliasAnalysis);
-
     if (!AliasAnalysis(mir, graph).analyze()) {
       return false;
     }

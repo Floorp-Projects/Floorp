@@ -399,9 +399,6 @@ BackgroundSweepTask::BackgroundSweepTask(GCRuntime* gc)
     : GCParallelTask(gc, gcstats::PhaseKind::SWEEP, GCUse::Finalizing) {}
 
 void BackgroundSweepTask::run(AutoLockHelperThreadState& lock) {
-  AutoTraceLog logSweeping(TraceLoggerForCurrentThread(),
-                           TraceLogger_GCSweeping);
-
   gc->sweepFromBackgroundThread(lock);
 }
 
@@ -439,8 +436,6 @@ BackgroundFreeTask::BackgroundFreeTask(GCRuntime* gc)
 }
 
 void BackgroundFreeTask::run(AutoLockHelperThreadState& lock) {
-  AutoTraceLog logFreeing(TraceLoggerForCurrentThread(), TraceLogger_GCFree);
-
   gc->freeFromBackgroundThread(lock);
 }
 

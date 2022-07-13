@@ -398,9 +398,6 @@ bool js::RunScript(JSContext* cx, RunState& state) {
 STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
 MOZ_ALWAYS_INLINE bool CallJSNative(JSContext* cx, Native native,
                                     CallReason reason, const CallArgs& args) {
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-  AutoTraceLog traceLog(logger, TraceLogger_Call);
-
   AutoCheckRecursionLimit recursion(cx);
   if (!recursion.check(cx)) {
     return false;

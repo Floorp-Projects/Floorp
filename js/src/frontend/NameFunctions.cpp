@@ -488,8 +488,6 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
 bool frontend::NameFunctions(JSContext* cx, ParserAtomsTable& parserAtoms,
                              ParseNode* pn) {
-  AutoTraceLog traceLog(TraceLoggerForCurrentThread(cx),
-                        TraceLogger_BytecodeNameFunctions);
   NameResolver nr(cx, parserAtoms);
   return nr.visit(pn);
 }

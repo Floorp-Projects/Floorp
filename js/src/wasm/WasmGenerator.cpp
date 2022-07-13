@@ -760,9 +760,6 @@ static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {
 }
 
 void CompileTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-  AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
-
   UniqueChars error;
   bool ok;
 

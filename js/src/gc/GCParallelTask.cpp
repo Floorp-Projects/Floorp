@@ -173,9 +173,6 @@ class MOZ_RAII AutoGCContext {
 };
 
 void js::GCParallelTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-  AutoTraceLog logCompile(logger, TraceLogger_GC);
-
   setRunning(lock);
 
   AutoGCContext gcContext(gc->rt);

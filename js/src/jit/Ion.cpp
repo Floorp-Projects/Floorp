@@ -304,11 +304,6 @@ void JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const {
 
 static bool LinkCodeGen(JSContext* cx, CodeGenerator* codegen,
                         HandleScript script, const WarpSnapshot* snapshot) {
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-  TraceLoggerEvent event(TraceLogger_AnnotateScripts, script);
-  AutoTraceLog logScript(logger, event);
-  AutoTraceLog logLink(logger, TraceLogger_IonLinking);
-
   if (!codegen->link(cx, snapshot)) {
     return false;
   }
@@ -929,7 +924,6 @@ namespace jit {
 bool OptimizeMIR(MIRGenerator* mir) {
   MIRGraph& graph = mir->graph();
   GraphSpewer& gs = mir->graphSpewer();
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
 
   if (mir->shouldCancel("Start")) {
     return false;
@@ -943,7 +937,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
                      "BuildSSA (== input to OptimizeMIR)");
 
   if (!JitOptions.disablePruning && !mir->compilingWasm()) {
-    AutoTraceLog log(logger, TraceLogger_PruneUnusedBranches);
     JitSpewCont(JitSpew_Prune, "\n");
     if (!PruneUnusedBranches(mir, graph)) {
       return false;
@@ -957,7 +950,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   {
-    AutoTraceLog log(logger, TraceLogger_FoldEmptyBlocks);
     if (!FoldEmptyBlocks(graph)) {
       return false;
     }
@@ -984,7 +976,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   {
-    AutoTraceLog log(logger, TraceLogger_FoldTests);
     if (!FoldTests(graph)) {
       return false;
     }
@@ -997,7 +988,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   {
-    AutoTraceLog log(logger, TraceLogger_SplitCriticalEdges);
     if (!SplitCriticalEdges(graph)) {
       return false;
     }
@@ -1010,7 +1000,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   {
-    AutoTraceLog log(logger, TraceLogger_RenumberBlocks);
     RenumberBlocks(graph);
     gs.spewPass("Renumber Blocks");
     AssertGraphCoherency(graph);
@@ -1021,7 +1010,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   {
-    AutoTraceLog log(logger, TraceLogger_DominatorTree);
     if (!BuildDominatorTree(graph)) {
       return false;
     }
@@ -1033,7 +1021,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   {
-    AutoTraceLog log(logger, TraceLogger_PhiAnalysis);
     // Aggressive phi elimination must occur before any code elimination. If the
     // script contains a try-statement, we only compiled the try block and not
     // the catch or finally blocks, so in this case it's also invalid to use
@@ -1064,7 +1051,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   if (!JitOptions.disableRecoverIns &&
       mir->optimizationInfo().scalarReplacementEnabled()) {
-    AutoTraceLog log(logger, TraceLogger_ScalarReplacement);
     JitSpewCont(JitSpew_Escape, "\n");
     if (!ScalarReplacement(mir, graph)) {
       return false;
@@ -1078,7 +1064,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (!mir->compilingWasm()) {
-    AutoTraceLog log(logger, TraceLogger_ApplyTypes);
     if (!ApplyTypeInformation(mir, graph)) {
       return false;
     }
@@ -1091,7 +1076,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (mir->optimizationInfo().amaEnabled()) {
-    AutoTraceLog log(logger, TraceLogger_AlignmentMaskAnalysis);
     AlignmentMaskAnalysis ama(graph);
     if (!ama.analyze()) {
       return false;
@@ -1113,8 +1097,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
       mir->optimizationInfo().gvnEnabled() ||
       mir->optimizationInfo().eliminateRedundantShapeGuardsEnabled()) {
     {
-      AutoTraceLog log(logger, TraceLogger_AliasAnalysis);
-
       AliasAnalysis analysis(mir, graph);
       JitSpewCont(JitSpew_Alias, "\n");
       if (!analysis.analyze()) {
@@ -1147,7 +1129,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (mir->optimizationInfo().gvnEnabled()) {
-    AutoTraceLog log(logger, TraceLogger_GVN);
     JitSpewCont(JitSpew_GVN, "\n");
     if (!gvn.run(ValueNumberer::UpdateAliasAnalysis)) {
       return false;
@@ -1165,7 +1146,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   // instruction has previously invalidated this script.
   if (mir->optimizationInfo().licmEnabled() &&
       !mir->outerInfo().hadLICMInvalidation()) {
-    AutoTraceLog log(logger, TraceLogger_LICM);
     JitSpewCont(JitSpew_LICM, "\n");
     if (!LICM(mir, graph)) {
       return false;
@@ -1180,7 +1160,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   RangeAnalysis r(mir, graph);
   if (mir->optimizationInfo().rangeAnalysisEnabled()) {
-    AutoTraceLog log(logger, TraceLogger_RangeAnalysis);
     JitSpewCont(JitSpew_Range, "\n");
     if (!r.addBetaNodes()) {
       return false;
@@ -1251,7 +1230,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (!JitOptions.disableRecoverIns) {
-    AutoTraceLog log(logger, TraceLogger_Sink);
     JitSpewCont(JitSpew_Sink, "\n");
     if (!Sink(mir, graph)) {
       return false;
@@ -1266,7 +1244,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   if (!JitOptions.disableRecoverIns &&
       mir->optimizationInfo().rangeAnalysisEnabled()) {
-    AutoTraceLog log(logger, TraceLogger_RemoveUnnecessaryBitops);
     JitSpewCont(JitSpew_Range, "\n");
     if (!r.removeUnnecessaryBitops()) {
       return false;
@@ -1280,7 +1257,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   {
-    AutoTraceLog log(logger, TraceLogger_FoldLinearArithConstants);
     JitSpewCont(JitSpew_FLAC, "\n");
     if (!FoldLinearArithConstants(mir, graph)) {
       return false;
@@ -1294,7 +1270,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (mir->optimizationInfo().eaaEnabled()) {
-    AutoTraceLog log(logger, TraceLogger_EffectiveAddressAnalysis);
     EffectiveAddressAnalysis eaa(mir, graph);
     JitSpewCont(JitSpew_EAA, "\n");
     if (!eaa.analyze()) {
@@ -1323,7 +1298,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   {
-    AutoTraceLog log(logger, TraceLogger_EliminateDeadCode);
     if (!EliminateDeadCode(mir, graph)) {
       return false;
     }
@@ -1337,7 +1311,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   if (mir->optimizationInfo().instructionReorderingEnabled() &&
       !mir->outerInfo().hadReorderingBailout()) {
-    AutoTraceLog log(logger, TraceLogger_ReorderInstructions);
     if (!ReorderInstructions(graph)) {
       return false;
     }
@@ -1353,7 +1326,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   // Make loops contiguous. We do this after GVN/UCE and range analysis,
   // which can remove CFG edges, exposing more blocks that can be moved.
   {
-    AutoTraceLog log(logger, TraceLogger_MakeLoopsContiguous);
     if (!MakeLoopsContiguous(graph)) {
       return false;
     }
@@ -1385,7 +1357,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   // depend on knowing the final order in which instructions will execute.
 
   if (mir->optimizationInfo().edgeCaseAnalysisEnabled()) {
-    AutoTraceLog log(logger, TraceLogger_EdgeCaseAnalysis);
     EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
     if (!edgeCaseAnalysis.analyzeLate()) {
       return false;
@@ -1399,7 +1370,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (mir->optimizationInfo().eliminateRedundantChecksEnabled()) {
-    AutoTraceLog log(logger, TraceLogger_EliminateRedundantChecks);
     // Note: check elimination has to run after all other passes that move
     // instructions. Since check uses are replaced with the actual index,
     // code motion after this pass could incorrectly move a load or store
@@ -1420,7 +1390,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (!mir->compilingWasm() && !mir->outerInfo().hadUnboxFoldingBailout()) {
-    AutoTraceLog log(logger, TraceLogger_FoldLoadsWithUnbox);
     if (!FoldLoadsWithUnbox(mir, graph)) {
       return false;
     }
@@ -1429,7 +1398,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
   }
 
   if (!mir->compilingWasm()) {
-    AutoTraceLog log(logger, TraceLogger_AddKeepAliveInstructions);
     if (!AddKeepAliveInstructions(graph)) {
       return false;
     }
@@ -1450,8 +1418,6 @@ LIRGraph* GenerateLIR(MIRGenerator* mir) {
   MIRGraph& graph = mir->graph();
   GraphSpewer& gs = mir->graphSpewer();
 
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-
   LIRGraph* lir = mir->alloc().lifoAlloc()->new_<LIRGraph>(&graph);
   if (!lir || !lir->init()) {
     return nullptr;
@@ -1459,7 +1425,6 @@ LIRGraph* GenerateLIR(MIRGenerator* mir) {
 
   LIRGenerator lirgen(mir, graph, *lir);
   {
-    AutoTraceLog log(logger, TraceLogger_GenerateLIR);
     if (!lirgen.generate()) {
       return nullptr;
     }
@@ -1475,8 +1440,6 @@ LIRGraph* GenerateLIR(MIRGenerator* mir) {
 #endif
 
   {
-    AutoTraceLog log(logger, TraceLogger_RegisterAllocation);
-
     IonRegisterAllocator allocator =
         mir->optimizationInfo().registerAllocator();
 
@@ -1522,9 +1485,6 @@ LIRGraph* GenerateLIR(MIRGenerator* mir) {
 }
 
 CodeGenerator* GenerateCode(MIRGenerator* mir, LIRGraph* lir) {
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-  AutoTraceLog log(logger, TraceLogger_GenerateCode);
-
   auto codegen = MakeUnique<CodeGenerator>(mir, lir);
   if (!codegen) {
     return nullptr;
@@ -1584,11 +1544,6 @@ static AbortReasonOr<WarpSnapshot*> CreateWarpSnapshot(JSContext* cx,
 
 static AbortReason IonCompile(JSContext* cx, HandleScript script,
                               jsbytecode* osrPc) {
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-  TraceLoggerEvent event(TraceLogger_AnnotateScripts, script);
-  AutoTraceLog logScript(logger, event);
-  AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
-
   cx->check(script);
 
   auto alloc =

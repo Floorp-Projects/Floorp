@@ -1581,8 +1581,5 @@ static bool Fold(FoldInfo info, ParseNode** pnp) {
 
 bool frontend::FoldConstants(JSContext* cx, ParserAtomsTable& parserAtoms,
                              ParseNode** pnp, FullParseHandler* handler) {
-  AutoTraceLog traceLog(TraceLoggerForCurrentThread(cx),
-                        TraceLogger_BytecodeFoldConstants);
-
   return Fold(cx, parserAtoms, handler, pnp);
 }
