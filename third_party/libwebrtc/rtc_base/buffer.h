@@ -19,6 +19,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/type_traits.h"
@@ -116,6 +117,13 @@ class BufferT {
   BufferT(U (&array)[N]) : BufferT(array, N) {}
 
   ~BufferT() { MaybeZeroCompleteBuffer(); }
+
+  // Implicit conversion to absl::string_view if T is compatible with char.
+  template <typename U = T>
+  operator typename std::enable_if<internal::BufferCompat<U, char>::value,
+                                   absl::string_view>::type() const {
+    return absl::string_view(data<char>(), size());
+  }
 
   // Get a pointer to the data. Just .data() will give you a (const) T*, but if
   // T is a byte-sized integer, you may also use .data<U>() for any other

@@ -74,7 +74,7 @@ std::string ComputeDigest(MessageDigest* digest, absl::string_view input) {
   std::unique_ptr<char[]> output(new char[digest->Size()]);
   ComputeDigest(digest, input.data(), input.size(), output.get(),
                 digest->Size());
-  return hex_encode(output.get(), digest->Size());
+  return hex_encode(absl::string_view(output.get(), digest->Size()));
 }
 
 bool ComputeDigest(absl::string_view alg,
@@ -157,7 +157,7 @@ std::string ComputeHmac(MessageDigest* digest,
   std::unique_ptr<char[]> output(new char[digest->Size()]);
   ComputeHmac(digest, key.data(), key.size(), input.data(), input.size(),
               output.get(), digest->Size());
-  return hex_encode(output.get(), digest->Size());
+  return hex_encode(absl::string_view(output.get(), digest->Size()));
 }
 
 bool ComputeHmac(absl::string_view alg,

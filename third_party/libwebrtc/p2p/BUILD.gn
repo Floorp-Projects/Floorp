@@ -284,6 +284,7 @@ rtc_library("p2p_server_utils") {
   ]
   deps = [
     ":rtc_p2p",
+    "../api:array_view",
     "../api:packet_socket_factory",
     "../api:sequence_checker",
     "../api/transport:stun_types",

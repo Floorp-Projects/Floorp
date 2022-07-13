@@ -567,7 +567,10 @@ rtc_source_set("srtp_session") {
     "../rtc_base/synchronization:mutex",
     "../system_wrappers:metrics",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/strings:strings",
+  ]
   if (rtc_build_libsrtp) {
     deps += [ "//third_party/libsrtp" ]
   }
