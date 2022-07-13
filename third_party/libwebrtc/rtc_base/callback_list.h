@@ -18,12 +18,13 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/system/assume.h"
 #include "rtc_base/system/inline.h"
+#include "rtc_base/system/rtc_export.h"
 #include "rtc_base/untyped_function.h"
 
 namespace webrtc {
 namespace callback_list_impl {
 
-class CallbackListReceivers {
+class RTC_EXPORT CallbackListReceivers {
  public:
   CallbackListReceivers();
   CallbackListReceivers(const CallbackListReceivers&) = delete;
