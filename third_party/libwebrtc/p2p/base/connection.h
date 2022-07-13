@@ -472,9 +472,6 @@ class ProxyConnection : public Connection {
                   size_t index,
                   const Candidate& remote_candidate);
 
-  // TODO(tommi): Remove this ctor once it's no longer needed.
-  ProxyConnection(Port* port, size_t index, const Candidate& remote_candidate);
-
   int Send(const void* data,
            size_t size,
            const rtc::PacketOptions& options) override;
