@@ -23,19 +23,21 @@ bool CompatibleConfigs(const EchoCanceller3Config& mono_config,
       multichannel_config.delay.fixed_capture_delay_samples) {
     return false;
   }
-
   if (mono_config.filter.export_linear_aec_output !=
       multichannel_config.filter.export_linear_aec_output) {
     return false;
   }
-
   if (mono_config.filter.high_pass_filter_echo_reference !=
       multichannel_config.filter.high_pass_filter_echo_reference) {
     return false;
   }
-
   if (mono_config.multi_channel.detect_stereo_content !=
       multichannel_config.multi_channel.detect_stereo_content) {
+    return false;
+  }
+  if (mono_config.multi_channel.stereo_detection_timeout_threshold_seconds !=
+      multichannel_config.multi_channel
+          .stereo_detection_timeout_threshold_seconds) {
     return false;
   }
   return true;

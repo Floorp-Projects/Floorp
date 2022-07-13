@@ -17,6 +17,8 @@ namespace webrtc {
 
 namespace {
 
+constexpr int kNumFramesPerSecond = 100;
+
 // Compares the left and right channels in the render `frame` to determine
 // whether the signal is a proper stereo signal. To allow for differences
 // introduced by hardware drivers, a threshold `detection_threshold` is used for
@@ -43,21 +45,37 @@ bool IsProperStereo(const std::vector<std::vector<std::vector<float>>>& frame,
 MultiChannelContentDetector::MultiChannelContentDetector(
     bool detect_stereo_content,
     int num_render_input_channels,
-    float detection_threshold)
+    float detection_threshold,
+    int stereo_detection_timeout_threshold_seconds)
     : detect_stereo_content_(detect_stereo_content),
       detection_threshold_(detection_threshold),
+      detection_timeout_threshold_frames_(
+          stereo_detection_timeout_threshold_seconds > 0
+              ? absl::make_optional(stereo_detection_timeout_threshold_seconds *
+                                    kNumFramesPerSecond)
+              : absl::nullopt),
       proper_multichannel_content_detected_(!detect_stereo_content &&
                                             num_render_input_channels > 1) {}
 
 bool MultiChannelContentDetector::UpdateDetection(
     const std::vector<std::vector<std::vector<float>>>& frame) {
-  bool previous_proper_multichannel_content_detected_ =
+  if (!detect_stereo_content_)
+    return false;
+
+  const bool previous_proper_multichannel_content_detected =
       proper_multichannel_content_detected_;
-  if (detect_stereo_content_ && !proper_multichannel_content_detected_) {
-    proper_multichannel_content_detected_ =
-        IsProperStereo(frame, detection_threshold_);
+
+  if (IsProperStereo(frame, detection_threshold_)) {
+    proper_multichannel_content_detected_ = true;
+    frames_since_stereo_detected_ = 0;
+  } else {
+    ++frames_since_stereo_detected_;
+    if (detection_timeout_threshold_frames_ &&
+        frames_since_stereo_detected_ >= *detection_timeout_threshold_frames_) {
+      proper_multichannel_content_detected_ = false;
+    }
   }
-  return previous_proper_multichannel_content_detected_ !=
+  return previous_proper_multichannel_content_detected !=
          proper_multichannel_content_detected_;
 }
 
