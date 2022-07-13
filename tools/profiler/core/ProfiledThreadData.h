@@ -81,14 +81,13 @@ class ProfiledThreadData final {
                   SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
                   const nsACString& aETLDplus1,
                   const mozilla::TimeStamp& aProcessStartTime,
-                  double aSinceTime, bool aJSTracerEnabled,
-                  ProfilerCodeAddressService* aService,
+                  double aSinceTime, ProfilerCodeAddressService* aService,
                   mozilla::ProgressLogger aProgressLogger);
   void StreamJSON(ThreadStreamingContext&& aThreadStreamingContext,
                   SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
                   const nsACString& aETLDplus1,
                   const mozilla::TimeStamp& aProcessStartTime,
-                  bool aJSTracerEnabled, ProfilerCodeAddressService* aService,
+                  ProfilerCodeAddressService* aService,
                   mozilla::ProgressLogger aProgressLogger);
 
   const mozilla::profiler::ThreadRegistrationInfo& Info() const {

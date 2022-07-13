@@ -9,7 +9,6 @@
 #include "platform.h"
 #include "ProfileBuffer.h"
 
-#include "js/TraceLoggerAPI.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Span.h"
 #include "nsXULAppAPI.h"
@@ -37,99 +36,10 @@ ProfiledThreadData::~ProfiledThreadData() {
   MOZ_COUNT_DTOR(ProfiledThreadData);
 }
 
-static void StreamTraceLoggerJSON(JSContext* aCx, SpliceableJSONWriter& aWriter,
-                                  const mozilla::TimeStamp& aProcessStartTime) {
-  aWriter.StartObjectProperty("jsTracerEvents");
-  {
-    JS::AutoTraceLoggerLockGuard lockGuard;
-    JS::SpewTraceLoggerThread(aCx);
-
-    uint32_t length = 0;
-
-    // Collect Event Ids
-    aWriter.StartArrayProperty("events", mozilla::JSONWriter::SingleLineStyle);
-    {
-      JS::TraceLoggerIdBuffer collectionBuffer(lockGuard, aCx);
-      while (collectionBuffer.NextChunk()) {
-        for (uint32_t val : collectionBuffer) {
-          aWriter.IntElement(val);
-          length++;
-        }
-      }
-    }
-    aWriter.EndArray();
-
-    // Collect Event Timestamps
-    aWriter.StartArrayProperty("timestamps",
-                               mozilla::JSONWriter::SingleLineStyle);
-    {
-      JS::TraceLoggerTimeStampBuffer collectionBuffer(lockGuard, aCx);
-      while (collectionBuffer.NextChunk()) {
-        for (mozilla::TimeStamp val : collectionBuffer) {
-          aWriter.DoubleElement((val - aProcessStartTime).ToMicroseconds());
-        }
-      }
-    }
-    aWriter.EndArray();
-
-    // Collect Event Durations
-    aWriter.StartArrayProperty("durations",
-                               mozilla::JSONWriter::SingleLineStyle);
-    {
-      JS::TraceLoggerDurationBuffer collectionBuffer(lockGuard, aCx);
-      while (collectionBuffer.NextChunk()) {
-        for (double val : collectionBuffer) {
-          if (val == -1) {
-            aWriter.NullElement();
-          } else {
-            aWriter.DoubleElement(val);
-          }
-        }
-      }
-    }
-    aWriter.EndArray();
-
-    // Collect Event LineNo
-    aWriter.StartArrayProperty("line", mozilla::JSONWriter::SingleLineStyle);
-    {
-      JS::TraceLoggerLineNoBuffer collectionBuffer(lockGuard, aCx);
-      while (collectionBuffer.NextChunk()) {
-        for (int32_t val : collectionBuffer) {
-          if (val == -1) {
-            aWriter.NullElement();
-          } else {
-            aWriter.IntElement(val);
-          }
-        }
-      }
-    }
-    aWriter.EndArray();
-
-    // Collect Event ColNo
-    aWriter.StartArrayProperty("column", mozilla::JSONWriter::SingleLineStyle);
-    {
-      JS::TraceLoggerColNoBuffer collectionBuffer(lockGuard, aCx);
-      while (collectionBuffer.NextChunk()) {
-        for (int32_t val : collectionBuffer) {
-          if (val == -1) {
-            aWriter.NullElement();
-          } else {
-            aWriter.IntElement(val);
-          }
-        }
-      }
-    }
-    aWriter.EndArray();
-
-    aWriter.IntProperty("length", length);
-  }
-  aWriter.EndObject();
-}
-
-static void StreamTablesAndTraceLogger(
-    UniqueStacks&& aUniqueStacks, JSContext* aCx, SpliceableJSONWriter& aWriter,
-    const mozilla::TimeStamp& aProcessStartTime, bool JSTracerEnabled,
-    mozilla::ProgressLogger aProgressLogger) {
+static void StreamTables(UniqueStacks&& aUniqueStacks, JSContext* aCx,
+                         SpliceableJSONWriter& aWriter,
+                         const mozilla::TimeStamp& aProcessStartTime,
+                         mozilla::ProgressLogger aProgressLogger) {
   aWriter.StartObjectProperty("stackTable");
   {
     {
@@ -180,14 +90,6 @@ static void StreamTablesAndTraceLogger(
     aProgressLogger.SetLocalProgress(90_pc, "Spliced string table");
   }
   aWriter.EndArray();
-
-  if (aCx && JSTracerEnabled) {
-    aProgressLogger.SetLocalProgress(90_pc, "Streaming trace logger...");
-    StreamTraceLoggerJSON(aCx, aWriter, aProcessStartTime);
-    aProgressLogger.SetLocalProgress(100_pc, "Streamed trace logger");
-  } else {
-    aProgressLogger.SetLocalProgress(100_pc, "No trace logger");
-  }
 }
 
 mozilla::NotNull<mozilla::UniquePtr<UniqueStacks>>
@@ -230,7 +132,7 @@ void ProfiledThreadData::StreamJSON(
     const ProfileBuffer& aBuffer, JSContext* aCx, SpliceableJSONWriter& aWriter,
     const nsACString& aProcessName, const nsACString& aETLDplus1,
     const mozilla::TimeStamp& aProcessStartTime, double aSinceTime,
-    bool JSTracerEnabled, ProfilerCodeAddressService* aService,
+    ProfilerCodeAddressService* aService,
     mozilla::ProgressLogger aProgressLogger) {
   mozilla::NotNull<mozilla::UniquePtr<UniqueStacks>> uniqueStacks =
       PrepareUniqueStacks(aBuffer, aCx, aService,
@@ -251,10 +153,9 @@ void ProfiledThreadData::StreamJSON(
             90_pc,
             "ProfiledThreadData::StreamJSON: Streamed samples and markers"));
 
-    StreamTablesAndTraceLogger(std::move(*uniqueStacks), aCx, aWriter,
-                               aProcessStartTime, JSTracerEnabled,
-                               aProgressLogger.CreateSubLoggerTo(
-                                   99_pc, "Streamed tables and trace logger"));
+    StreamTables(std::move(*uniqueStacks), aCx, aWriter, aProcessStartTime,
+                 aProgressLogger.CreateSubLoggerTo(
+                     99_pc, "Streamed tables and trace logger"));
   }
   aWriter.End();
 
@@ -265,7 +166,7 @@ void ProfiledThreadData::StreamJSON(
     ThreadStreamingContext&& aThreadStreamingContext,
     SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
     const nsACString& aETLDplus1, const mozilla::TimeStamp& aProcessStartTime,
-    bool JSTracerEnabled, ProfilerCodeAddressService* aService,
+    ProfilerCodeAddressService* aService,
     mozilla::ProgressLogger aProgressLogger) {
   aWriter.Start();
   {
@@ -279,10 +180,9 @@ void ProfiledThreadData::StreamJSON(
             "ProfiledThreadData::StreamJSON(context): Streamed samples and "
             "markers"));
 
-    StreamTablesAndTraceLogger(
+    StreamTables(
         std::move(*aThreadStreamingContext.mUniqueStacks),
         aThreadStreamingContext.mJSContext, aWriter, aProcessStartTime,
-        JSTracerEnabled,
         aProgressLogger.CreateSubLoggerTo(
             "ProfiledThreadData::StreamJSON(context): Streaming tables...",
             99_pc, "ProfiledThreadData::StreamJSON(context): Streamed tables"));
