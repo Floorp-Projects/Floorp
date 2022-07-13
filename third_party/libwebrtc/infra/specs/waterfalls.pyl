@@ -21,6 +21,22 @@
           'junit_tests': 'android_junit_tests',
         },
       },
+      'Android32 Builder arm': {
+        'test_suites': {
+          'gtest_tests': 'android_perf_tests',
+        },
+      },
+      'Android32 Builder arm64': {
+        'test_suites': {
+          'gtest_tests': 'android_perf_tests',
+        },
+      },
+      'Linux64 Builder': {
+        'os_type': 'linux',
+        'test_suites': {
+          'isolated_scripts': 'desktop_perf_tests',
+        },
+      },
       'Linux64 Release': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
@@ -28,11 +44,24 @@
           'isolated_scripts': 'linux_tests',
         },
       },
+      'Mac64 Builder': {
+        'os_type': 'mac',
+        'mixins': ['mac', 'x86-64'],
+        'test_suites': {
+          'isolated_scripts': 'desktop_perf_tests',
+        },
+      },
       'Mac64 Release': {
         'os_type': 'mac',
         'mixins': ['mac11', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'mac_tests',
+        },
+      },
+      'Win32 Builder (Clang)': {
+        'os_type': 'win',
+        'test_suites': {
+          'isolated_scripts': 'desktop_perf_tests',
         },
       },
       'Win32 Release (Clang)': {
@@ -55,9 +84,33 @@
     },
   },
   {
+    'name': 'client.webrtc.perf',
+    'mixins': [],
+    'machines': {
+      'Perf Win7': {
+        'os_type':
+        'win',
+        'mixins':
+        ['win', 'perf-pool', 'timeout-3h', 'resultdb-gtest-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'desktop_perf_tests',
+        },
+      },
+    },
+  },
+  {
     'name': 'internal.client.webrtc',
     'mixins': [],
     'machines': {
+      'iOS64 Perf': {
+        'mixins': [
+          'ios-device-perf', 'timeout-3h', 'chrome-tester-service-account',
+          'xcode_12d4e', 'mac_toolchain', 'has_native_resultdb_integration'
+        ],
+        'test_suites': {
+          'isolated_scripts': 'ios_perf_tests',
+        },
+      },
       'iOS64 Release': {
         'mixins': [
           'ios-device-15.3', 'webrtc-xctest', 'chrome-tester-service-account',

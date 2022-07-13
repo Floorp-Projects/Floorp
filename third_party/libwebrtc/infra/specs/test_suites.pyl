@@ -12,6 +12,19 @@
       'android_examples_junit_tests': {},
       'android_sdk_junit_tests': {},
     },
+    'android_perf_tests': {
+      'low_bandwidth_audio_perf_test': {
+        'mixins': ['perf-low-bandwidth-audio-perf-test'],
+        'args': [
+          '--android',
+          '--adb-path',
+          '../../third_party/android_sdk/public/platform-tools/adb',
+        ]
+      },
+      'webrtc_perf_tests': {
+        'mixins': ['perf-webrtc-perf-tests'],
+      },
+    },
     'android_tests': {
       'AppRTCMobile_test_apk': {},
       'android_instrumentation_test_apk': {},
@@ -57,6 +70,18 @@
       'webrtc_perf_tests': {
         'mixins': ['quick-perf-tests'],
       }
+    },
+    'desktop_perf_tests': {
+      'low_bandwidth_audio_perf_test': {
+        'mixins': ['perf-low-bandwidth-audio-perf-test']
+      },
+      'webrtc_perf_tests': {
+        'mixins': ['perf-webrtc-perf-tests'],
+        'args': [
+          '--test_artifacts_dir=${ISOLATED_OUTDIR}',
+          '--save_worst_frame',
+        ],
+      },
     },
     'desktop_tests': {
       'audio_decoder_unittests': {},
@@ -116,6 +141,12 @@
       'video_capture_tests': {},
       'video_engine_tests': {},
     },
+    'ios_perf_tests': {
+      'webrtc_perf_tests': {
+        'mixins': ['perf-webrtc-perf-tests'],
+        'args': ['--write_perf_output_on_ios', '--nologs']
+      },
+    },
     'ios_simulator_tests': {
       # TODO(bugs.webrtc.org/12244): Some tests are skipped on iOS simulator
       # platforms because they fail or they are flaky.
@@ -125,11 +156,10 @@
       'common_video_unittests': {},
       'dcsctp_unittests': {},
       'modules_tests': {
-        '$mixin_append': {
-          'args': [
-            '--readline-timeout=360',
-          ],
-        },
+        'args': [
+          # Some tests exceed the default 180 seconds readline timeout.
+          '--readline-timeout=360',
+        ],
       },
       'modules_unittests': {},
       'rtc_media_unittests': {},
