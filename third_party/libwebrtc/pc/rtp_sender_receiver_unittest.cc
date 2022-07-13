@@ -210,7 +210,7 @@ class RtpSenderReceiverTest
         FakeVideoTrackSource::Create(is_screencast));
     video_track_ =
         VideoTrack::Create(kVideoTrackId, source, rtc::Thread::Current());
-    EXPECT_TRUE(local_stream_->AddTrack(video_track_.get()));
+    EXPECT_TRUE(local_stream_->AddTrack(video_track_));
   }
 
   void CreateAudioRtpSender() { CreateAudioRtpSender(nullptr); }
@@ -218,7 +218,7 @@ class RtpSenderReceiverTest
   void CreateAudioRtpSender(
       const rtc::scoped_refptr<LocalAudioSource>& source) {
     audio_track_ = AudioTrack::Create(kAudioTrackId, source);
-    EXPECT_TRUE(local_stream_->AddTrack(audio_track_.get()));
+    EXPECT_TRUE(local_stream_->AddTrack(audio_track_));
     std::unique_ptr<MockSetStreamsObserver> set_streams_observer =
         std::make_unique<MockSetStreamsObserver>();
     audio_rtp_sender_ =
@@ -897,7 +897,7 @@ TEST_F(RtpSenderReceiverTest, AudioSenderCanSetParametersBeforeNegotiation) {
 
 TEST_F(RtpSenderReceiverTest, AudioSenderInitParametersMovedAfterNegotiation) {
   audio_track_ = AudioTrack::Create(kAudioTrackId, nullptr);
-  EXPECT_TRUE(local_stream_->AddTrack(audio_track_.get()));
+  EXPECT_TRUE(local_stream_->AddTrack(audio_track_));
 
   std::unique_ptr<MockSetStreamsObserver> set_streams_observer =
       std::make_unique<MockSetStreamsObserver>();

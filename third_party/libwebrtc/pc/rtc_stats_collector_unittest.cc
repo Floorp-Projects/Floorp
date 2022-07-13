@@ -476,13 +476,15 @@ class RTCStatsCollectorWrapper {
       track = CreateFakeTrack(media_type, track_id,
                               MediaStreamTrackInterface::kLive);
       if (add_stream) {
-        local_stream->AddTrack(static_cast<AudioTrackInterface*>(track.get()));
+        local_stream->AddTrack(rtc::scoped_refptr<AudioTrackInterface>(
+            static_cast<AudioTrackInterface*>(track.get())));
       }
     } else {
       track = CreateFakeTrack(media_type, track_id,
                               MediaStreamTrackInterface::kLive);
       if (add_stream) {
-        local_stream->AddTrack(static_cast<VideoTrackInterface*>(track.get()));
+        local_stream->AddTrack(rtc::scoped_refptr<VideoTrackInterface>(
+            static_cast<VideoTrackInterface*>(track.get())));
       }
     }
 
@@ -507,11 +509,13 @@ class RTCStatsCollectorWrapper {
     if (media_type == cricket::MEDIA_TYPE_AUDIO) {
       track = CreateFakeTrack(media_type, track_id,
                               MediaStreamTrackInterface::kLive);
-      remote_stream->AddTrack(static_cast<AudioTrackInterface*>(track.get()));
+      remote_stream->AddTrack(rtc::scoped_refptr<AudioTrackInterface>(
+          static_cast<AudioTrackInterface*>(track.get())));
     } else {
       track = CreateFakeTrack(media_type, track_id,
                               MediaStreamTrackInterface::kLive);
-      remote_stream->AddTrack(static_cast<VideoTrackInterface*>(track.get()));
+      remote_stream->AddTrack(rtc::scoped_refptr<VideoTrackInterface>(
+          static_cast<VideoTrackInterface*>(track.get())));
     }
 
     rtc::scoped_refptr<MockRtpReceiverInternal> receiver =
@@ -1732,8 +1736,8 @@ TEST_F(RTCStatsCollectorTest,
   rtc::scoped_refptr<MediaStreamTrackInterface> local_audio_track =
       CreateFakeTrack(cricket::MEDIA_TYPE_AUDIO, "LocalAudioTrackID",
                       MediaStreamTrackInterface::kEnded);
-  local_stream->AddTrack(
-      static_cast<AudioTrackInterface*>(local_audio_track.get()));
+  local_stream->AddTrack(rtc::scoped_refptr<AudioTrackInterface>(
+      static_cast<AudioTrackInterface*>(local_audio_track.get())));
 
   cricket::VoiceSenderInfo voice_sender_info_ssrc1;
   voice_sender_info_ssrc1.local_stats.push_back(cricket::SsrcSenderInfo());
@@ -1788,8 +1792,8 @@ TEST_F(RTCStatsCollectorTest,
   rtc::scoped_refptr<MediaStreamTrackInterface> remote_audio_track =
       CreateFakeTrack(cricket::MEDIA_TYPE_AUDIO, "RemoteAudioTrackID",
                       MediaStreamTrackInterface::kLive);
-  remote_stream->AddTrack(
-      static_cast<AudioTrackInterface*>(remote_audio_track.get()));
+  remote_stream->AddTrack(rtc::scoped_refptr<AudioTrackInterface>(
+      static_cast<AudioTrackInterface*>(remote_audio_track.get())));
 
   cricket::VoiceReceiverInfo voice_receiver_info;
   voice_receiver_info.local_stats.push_back(cricket::SsrcReceiverInfo());
@@ -1872,8 +1876,8 @@ TEST_F(RTCStatsCollectorTest,
   rtc::scoped_refptr<MediaStreamTrackInterface> local_video_track =
       CreateFakeTrack(cricket::MEDIA_TYPE_VIDEO, "LocalVideoTrackID",
                       MediaStreamTrackInterface::kLive);
-  local_stream->AddTrack(
-      static_cast<VideoTrackInterface*>(local_video_track.get()));
+  local_stream->AddTrack(rtc::scoped_refptr<VideoTrackInterface>(
+      static_cast<VideoTrackInterface*>(local_video_track.get())));
 
   cricket::VideoSenderInfo video_sender_info_ssrc1;
   video_sender_info_ssrc1.local_stats.push_back(cricket::SsrcSenderInfo());
@@ -1935,8 +1939,8 @@ TEST_F(RTCStatsCollectorTest,
   rtc::scoped_refptr<MediaStreamTrackInterface> remote_video_track_ssrc3 =
       CreateFakeTrack(cricket::MEDIA_TYPE_VIDEO, "RemoteVideoTrackID3",
                       MediaStreamTrackInterface::kEnded);
-  remote_stream->AddTrack(
-      static_cast<VideoTrackInterface*>(remote_video_track_ssrc3.get()));
+  remote_stream->AddTrack(rtc::scoped_refptr<VideoTrackInterface>(
+      static_cast<VideoTrackInterface*>(remote_video_track_ssrc3.get())));
 
   cricket::VideoReceiverInfo video_receiver_info_ssrc3;
   video_receiver_info_ssrc3.local_stats.push_back(cricket::SsrcReceiverInfo());
@@ -3186,8 +3190,8 @@ TEST_F(RTCStatsCollectorTest, CollectEchoReturnLossFromTrackAudioProcessor) {
       CreateFakeTrack(cricket::MEDIA_TYPE_AUDIO, "LocalAudioTrackID",
                       MediaStreamTrackInterface::kEnded,
                       /*create_fake_audio_processor=*/true);
-  local_stream->AddTrack(
-      static_cast<AudioTrackInterface*>(local_audio_track.get()));
+  local_stream->AddTrack(rtc::scoped_refptr<AudioTrackInterface>(
+      static_cast<AudioTrackInterface*>(local_audio_track.get())));
 
   cricket::VoiceSenderInfo voice_sender_info_ssrc1;
   voice_sender_info_ssrc1.local_stats.push_back(cricket::SsrcSenderInfo());

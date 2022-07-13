@@ -221,7 +221,7 @@ void VideoRtpReceiver::SetStreams(
       }
     }
     if (removed) {
-      existing_stream->RemoveTrack(track_.get());
+      existing_stream->RemoveTrack(video_track());
     }
   }
   // Add remote track to any streams that are new.
@@ -235,7 +235,7 @@ void VideoRtpReceiver::SetStreams(
       }
     }
     if (added) {
-      stream->AddTrack(track_.get());
+      stream->AddTrack(video_track());
     }
   }
   streams_ = streams;
