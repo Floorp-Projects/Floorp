@@ -29,7 +29,7 @@ fn uniffi_note_threadsafe_deprecation_{{ obj.name() }}() {}
 // if they are not, but unfortunately it fails with an unactionably obscure error message.
 // By asserting the requirement explicitly, we help Rust produce a more scrutable error message
 // and thus help the user debug why the requirement isn't being met.
-uniffi::deps::static_assertions::assert_impl_all!({{ obj.name() }}: Sync, Send);
+uniffi::deps::static_assertions::assert_impl_all!(r#{{ obj.name() }}: Sync, Send);
 
 {% let ffi_free = obj.ffi_object_free() -%}
 #[doc(hidden)]
@@ -38,14 +38,14 @@ pub extern "C" fn {{ ffi_free.name() }}(ptr: *const std::os::raw::c_void, call_s
     uniffi::call_with_output(call_status, || {
         assert!(!ptr.is_null());
         {#- turn it into an Arc and explicitly drop it. #}
-        drop(unsafe { std::sync::Arc::from_raw(ptr as *const {{ obj.name() }}) })
+        drop(unsafe { std::sync::Arc::from_raw(ptr as *const r#{{ obj.name() }}) })
     })
 }
 
 {%- for cons in obj.constructors() %}
     #[doc(hidden)]
     #[no_mangle]
-    pub extern "C" fn {{ cons.ffi_func().name() }}(
+    pub extern "C" fn r#{{ cons.ffi_func().name() }}(
         {%- call rs::arg_list_ffi_decl(cons.ffi_func()) %}) -> *const std::os::raw::c_void /* *const {{ obj.name() }} */ {
         uniffi::deps::log::debug!("{{ cons.ffi_func().name() }}");
         {% if obj.uses_deprecated_threadsafe_attribute() %}
@@ -61,7 +61,7 @@ pub extern "C" fn {{ ffi_free.name() }}(ptr: *const std::os::raw::c_void, call_s
 {%- for meth in obj.methods() %}
     #[doc(hidden)]
     #[no_mangle]
-    pub extern "C" fn {{ meth.ffi_func().name() }}(
+    pub extern "C" fn r#{{ meth.ffi_func().name() }}(
         {%- call rs::arg_list_ffi_decl(meth.ffi_func()) %}
     ) {% call rs::return_signature(meth) %} {
         uniffi::deps::log::debug!("{{ meth.ffi_func().name() }}");

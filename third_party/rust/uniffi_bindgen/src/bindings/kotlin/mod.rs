@@ -3,14 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use anyhow::{bail, Context, Result};
-use std::{
-    env,
-    ffi::OsString,
-    fs::File,
-    io::Write,
-    path::{Path, PathBuf},
-    process::Command,
-};
+use camino::{Utf8Path, Utf8PathBuf};
+use fs_err::{self as fs, File};
+use std::{env, ffi::OsString, io::Write, process::Command};
 
 pub mod gen_kotlin;
 pub use gen_kotlin::{generate_bindings, Config};
@@ -20,23 +15,19 @@ use super::super::interface::ComponentInterface;
 pub fn write_bindings(
     config: &Config,
     ci: &ComponentInterface,
-    out_dir: &Path,
+    out_dir: &Utf8Path,
     try_format_code: bool,
 ) -> Result<()> {
-    let mut kt_file = full_bindings_path(config, out_dir)?;
-    std::fs::create_dir_all(&kt_file)?;
+    let mut kt_file = full_bindings_path(config, out_dir);
+    fs::create_dir_all(&kt_file)?;
     kt_file.push(format!("{}.kt", ci.namespace()));
-    let mut f = File::create(&kt_file).context("Failed to create .kt file for bindings")?;
+    let mut f = File::create(&kt_file)?;
     write!(f, "{}", generate_bindings(config, ci)?)?;
     if try_format_code {
-        if let Err(e) = Command::new("ktlint")
-            .arg("-F")
-            .arg(kt_file.to_str().unwrap())
-            .output()
-        {
+        if let Err(e) = Command::new("ktlint").arg("-F").arg(&kt_file).output() {
             println!(
                 "Warning: Unable to auto-format {} using ktlint: {:?}",
-                kt_file.file_name().unwrap().to_str().unwrap(),
+                kt_file.file_name().unwrap(),
                 e
             )
         }
@@ -44,18 +35,21 @@ pub fn write_bindings(
     Ok(())
 }
 
-fn full_bindings_path(config: &Config, out_dir: &Path) -> Result<PathBuf> {
-    let package_path: PathBuf = config.package_name().split('.').collect();
-    Ok(PathBuf::from(out_dir).join(package_path))
+fn full_bindings_path(config: &Config, out_dir: &Utf8Path) -> Utf8PathBuf {
+    let package_path: Utf8PathBuf = config.package_name().split('.').collect();
+    Utf8PathBuf::from(out_dir).join(package_path)
 }
 
 /// Generate kotlin bindings for the given namespace, then use the kotlin
 /// command-line tools to compile them into a .jar file.
-pub fn compile_bindings(config: &Config, ci: &ComponentInterface, out_dir: &Path) -> Result<()> {
-    let mut kt_file = full_bindings_path(config, out_dir)?;
+pub fn compile_bindings(
+    config: &Config,
+    ci: &ComponentInterface,
+    out_dir: &Utf8Path,
+) -> Result<()> {
+    let mut kt_file = full_bindings_path(config, out_dir);
     kt_file.push(format!("{}.kt", ci.namespace()));
-    let mut jar_file = PathBuf::from(out_dir);
-    jar_file.push(format!("{}.jar", ci.namespace()));
+    let jar_file = out_dir.join(format!("{}.jar", ci.namespace()));
     let status = Command::new("kotlinc")
         // Our generated bindings should not produce any warnings; fail tests if they do.
         .arg("-Werror")
@@ -76,7 +70,7 @@ pub fn compile_bindings(config: &Config, ci: &ComponentInterface, out_dir: &Path
 
 /// Execute the specifed kotlin script, with classpath based on the generated
 // artifacts in the given output directory.
-pub fn run_script(out_dir: &Path, script_file: &Path) -> Result<()> {
+pub fn run_script(out_dir: &Utf8Path, script_file: &Utf8Path) -> Result<()> {
     let mut cmd = Command::new("kotlinc");
     // Make sure it can load the .jar and its dependencies.
     cmd.arg("-classpath").arg(classpath_for_testing(out_dir)?);
@@ -97,8 +91,8 @@ pub fn run_script(out_dir: &Path, script_file: &Path) -> Result<()> {
 }
 
 // Calculate the classpath string to use for testing
-pub fn classpath_for_testing(out_dir: &Path) -> Result<OsString> {
-    let mut classpath = env::var_os("CLASSPATH").unwrap_or_else(|| OsString::from(""));
+pub fn classpath_for_testing(out_dir: &Utf8Path) -> Result<OsString> {
+    let mut classpath = env::var_os("CLASSPATH").unwrap_or_default();
     // This lets java find the compiled library for the rust component.
     classpath.push(":");
     classpath.push(out_dir);
@@ -107,7 +101,7 @@ pub fn classpath_for_testing(out_dir: &Path) -> Result<OsString> {
     // Including all .jar files is needed for tests like ext-types that use multiple UDL files.
     // TODO: Instead of including all .jar files, we should only include jar files that we
     // previously built for this test.
-    for entry in PathBuf::from(out_dir)
+    for entry in out_dir
         .read_dir()
         .context("Failed to list target directory when running Kotlin script")?
     {
