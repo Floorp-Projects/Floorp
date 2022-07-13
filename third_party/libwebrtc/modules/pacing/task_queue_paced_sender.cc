@@ -15,6 +15,8 @@
 
 #include "absl/memory/memory.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
+#include "rtc_base/experiments/field_trial_units.h"
 #include "rtc_base/trace_event.h"
 
 namespace webrtc {
@@ -28,6 +30,15 @@ constexpr const char* kSlackedTaskQueuePacedSenderFieldTrial =
 
 const int TaskQueuePacedSender::kNoPacketHoldback = -1;
 
+TaskQueuePacedSender::SlackedPacerFlags::SlackedPacerFlags(
+    const FieldTrialsView& field_trials)
+    : allow_low_precision("Enabled"),
+      max_low_precision_expected_queue_time("max_queue_time") {
+  ParseFieldTrial(
+      {&allow_low_precision, &max_low_precision_expected_queue_time},
+      field_trials.Lookup(kSlackedTaskQueuePacedSenderFieldTrial));
+}
+
 TaskQueuePacedSender::TaskQueuePacedSender(
     Clock* clock,
     PacingController::PacketSender* packet_sender,
@@ -36,13 +47,13 @@ TaskQueuePacedSender::TaskQueuePacedSender(
     TimeDelta max_hold_back_window,
     int max_hold_back_window_in_packets)
     : clock_(clock),
-      allow_low_precision_(
-          field_trials.IsEnabled(kSlackedTaskQueuePacedSenderFieldTrial)),
-      max_hold_back_window_(allow_low_precision_
+      slacked_pacer_flags_(field_trials),
+      max_hold_back_window_(slacked_pacer_flags_.allow_low_precision
                                 ? PacingController::kMinSleepTime
                                 : max_hold_back_window),
-      max_hold_back_window_in_packets_(
-          allow_low_precision_ ? 0 : max_hold_back_window_in_packets),
+      max_hold_back_window_in_packets_(slacked_pacer_flags_.allow_low_precision
+                                           ? 0
+                                           : max_hold_back_window_in_packets),
       pacing_controller_(clock,
                          packet_sender,
                          field_trials,
@@ -279,9 +290,19 @@ void TaskQueuePacedSender::MaybeProcessPackets(
       next_process_time_ > next_send_time) {
     // Prefer low precision if allowed and not probing.
     TaskQueueBase::DelayPrecision precision =
-        allow_low_precision_ && !pacing_controller_.IsProbing()
+        slacked_pacer_flags_.allow_low_precision &&
+                !pacing_controller_.IsProbing()
             ? TaskQueueBase::DelayPrecision::kLow
             : TaskQueueBase::DelayPrecision::kHigh;
+    // Optionally disable low precision if the expected queue time is greater
+    // than `max_low_precision_expected_queue_time`.
+    if (precision == TaskQueueBase::DelayPrecision::kLow &&
+        slacked_pacer_flags_.max_low_precision_expected_queue_time &&
+        pacing_controller_.ExpectedQueueTime() >=
+            slacked_pacer_flags_.max_low_precision_expected_queue_time
+                .Value()) {
+      precision = TaskQueueBase::DelayPrecision::kHigh;
+    }
 
     task_queue_.PostDelayedTaskWithPrecision(
         precision,
