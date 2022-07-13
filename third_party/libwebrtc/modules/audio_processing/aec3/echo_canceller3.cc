@@ -702,7 +702,9 @@ EchoCanceller3::EchoCanceller3(
           config_selector_.active_config().multi_channel.detect_stereo_content,
           num_render_input_channels_,
           config_selector_.active_config()
-              .multi_channel.stereo_detection_threshold),
+              .multi_channel.stereo_detection_threshold,
+          config_selector_.active_config()
+              .multi_channel.stereo_detection_timeout_threshold_seconds),
       output_framer_(num_bands_, num_capture_channels_),
       capture_blocker_(num_bands_, num_capture_channels_),
       render_transfer_queue_(

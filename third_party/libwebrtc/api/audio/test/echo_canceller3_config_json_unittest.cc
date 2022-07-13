@@ -33,8 +33,8 @@ TEST(EchoCanceller3JsonHelpers, ToStringAndParseJson) {
   cfg.suppressor.subband_nearend_detection.snr_threshold = 100.f;
   cfg.multi_channel.detect_stereo_content =
       !cfg.multi_channel.detect_stereo_content;
-  cfg.multi_channel.stereo_detection_threshold =
-      cfg.multi_channel.stereo_detection_threshold + 1.0f;
+  cfg.multi_channel.stereo_detection_threshold += 1.0f;
+  cfg.multi_channel.stereo_detection_timeout_threshold_seconds += 1;
   std::string json_string = Aec3ConfigToJsonString(cfg);
   EchoCanceller3Config cfg_transformed = Aec3ConfigFromJsonString(json_string);
 
@@ -83,5 +83,8 @@ TEST(EchoCanceller3JsonHelpers, ToStringAndParseJson) {
             cfg_transformed.multi_channel.detect_stereo_content);
   EXPECT_EQ(cfg.multi_channel.stereo_detection_threshold,
             cfg_transformed.multi_channel.stereo_detection_threshold);
+  EXPECT_EQ(
+      cfg.multi_channel.stereo_detection_timeout_threshold_seconds,
+      cfg_transformed.multi_channel.stereo_detection_timeout_threshold_seconds);
 }
 }  // namespace webrtc
