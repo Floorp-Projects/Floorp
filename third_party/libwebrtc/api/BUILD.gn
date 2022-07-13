@@ -194,6 +194,7 @@ rtc_library("libjingle_peerconnection_api") {
     "../rtc_base:logging",
     "../rtc_base:network_constants",
     "../rtc_base:refcount",
+    "../rtc_base:stringutils",
     "adaptation:resource_adaptation_api",
     "audio:audio_mixer_api",
     "audio_codecs:audio_codecs_api",

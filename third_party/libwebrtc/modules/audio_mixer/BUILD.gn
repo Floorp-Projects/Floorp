@@ -122,6 +122,7 @@ if (rtc_include_tests) {
       "../../audio/utility:audio_frame_operations",
       "../../rtc_base:checks",
       "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:stringutils",
       "../../rtc_base:task_queue_for_test",
       "../../test:test_support",
     ]

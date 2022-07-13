@@ -643,7 +643,10 @@ webrtc_fuzzer_test("field_trial_fuzzer") {
 
 webrtc_fuzzer_test("string_to_number_fuzzer") {
   sources = [ "string_to_number_fuzzer.cc" ]
-  deps = [ "../../rtc_base:rtc_base_approved" ]
+  deps = [
+    "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:stringutils",
+  ]
   seed_corpus = "corpora/string_to_number-corpus"
 }
 

@@ -59,6 +59,7 @@ if (!build_with_chromium) {
       "../../rtc_base:macromagic",
       "../../rtc_base:refcount",
       "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:stringutils",
       "../../rtc_base/synchronization:mutex",
       "../../system_wrappers",
     ]

@@ -65,6 +65,7 @@ rtc_library("video_file_reader") {
     "../rtc_base:logging",
     "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:stringutils",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/strings",
@@ -591,6 +592,7 @@ if (rtc_include_tests) {
           "../rtc_base:macromagic",
           "../rtc_base:protobuf_utils",
           "../rtc_base:rtc_base_approved",
+          "../rtc_base:stringutils",
           "//third_party/abseil-cpp/absl/flags:flag",
           "//third_party/abseil-cpp/absl/flags:parse",
         ]

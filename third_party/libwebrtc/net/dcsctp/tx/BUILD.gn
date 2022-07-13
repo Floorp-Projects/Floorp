@@ -106,6 +106,7 @@ rtc_library("retransmission_queue") {
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
     "../../../rtc_base:rtc_base_approved",
+    "../../../rtc_base:stringutils",
     "../common:math",
     "../common:sequence_numbers",
     "../common:str_join",

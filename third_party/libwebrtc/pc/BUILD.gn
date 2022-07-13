@@ -51,6 +51,7 @@ rtc_library("proxy") {
     "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_event",
+    "../rtc_base:stringutils",
     "../rtc_base:threading",
     "../rtc_base/system:rtc_export",
   ]
@@ -85,6 +86,7 @@ rtc_source_set("channel") {
     "../rtc_base:macromagic",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:socket",
+    "../rtc_base:stringutils",
     "../rtc_base:threading",
     "../rtc_base/containers:flat_set",
     "../rtc_base/network:sent_packet",
@@ -245,6 +247,7 @@ rtc_source_set("jsep_transport") {
     "../rtc_base:macromagic",
     "../rtc_base:refcount",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:stringutils",
     "../rtc_base:threading",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -347,6 +350,7 @@ rtc_source_set("media_session") {
     "../rtc_base",
     "../rtc_base:checks",
     "../rtc_base:logging",
+    "../rtc_base:stringutils",
     "../rtc_base/third_party/base64",
   ]
   absl_deps = [
@@ -578,6 +582,7 @@ rtc_source_set("srtp_session") {
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
+    "../rtc_base:stringutils",
     "../rtc_base/synchronization:mutex",
     "../system_wrappers:metrics",
   ]
@@ -1904,6 +1909,7 @@ rtc_library("rtp_parameters_conversion") {
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:rtc_base",
+    "../rtc_base:stringutils",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
@@ -2091,6 +2097,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:socket_address",
+      "../rtc_base:stringutils",
       "../rtc_base:threading",
       "../rtc_base/containers:flat_set",
       "../rtc_base/task_utils:pending_task_safety_flag",
@@ -2339,6 +2346,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:rtc_json",
       "../rtc_base:socket_address",
+      "../rtc_base:stringutils",
       "../rtc_base:threading",
       "../rtc_base/synchronization:mutex",
       "../rtc_base/third_party/base64",
@@ -2616,6 +2624,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:refcount",
       "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_task_queue",
+      "../rtc_base:stringutils",
       "../rtc_base:task_queue_for_test",
       "../rtc_base:threading",
       "../rtc_base/synchronization:mutex",
