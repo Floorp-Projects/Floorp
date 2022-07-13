@@ -67,23 +67,24 @@ const UINT kNoOp = WM_APP;
 const UINT kDestroyWindow = WM_APP + 1;
 const UINT kQuitRunning = WM_APP + 2;
 
-enum CaptureType { kWindowCapture = 0, kScreenCapture = 1 };
-
 }  // namespace
 
 class WgcCapturerWinTest : public ::testing::TestWithParam<CaptureType>,
                            public DesktopCapturer::Callback {
  public:
   void SetUp() override {
-    if (rtc::rtc_win::GetVersion() < rtc::rtc_win::Version::VERSION_WIN10_RS5) {
-      RTC_LOG(LS_INFO)
-          << "Skipping WgcCapturerWinTests on Windows versions < RS5.";
-      GTEST_SKIP();
-    }
-
     com_initializer_ =
         std::make_unique<ScopedCOMInitializer>(ScopedCOMInitializer::kMTA);
     EXPECT_TRUE(com_initializer_->Succeeded());
+
+    // Most tests (except `CaptureAllMonitors`) avoid the bug in screen capture,
+    // so we check support for window capture so these tests can run on more
+    // systems.
+    if (!IsWgcSupported(CaptureType::kWindow)) {
+      RTC_LOG(LS_INFO)
+          << "Skipping WgcCapturerWinTests on unsupported platforms.";
+      GTEST_SKIP();
+    }
   }
 
   void SetUpForWindowCapture(int window_width = kMediumWindowWidth,
@@ -260,7 +261,7 @@ class WgcCapturerWinTest : public ::testing::TestWithParam<CaptureType>,
 };
 
 TEST_P(WgcCapturerWinTest, SelectValidSource) {
-  if (GetParam() == CaptureType::kWindowCapture) {
+  if (GetParam() == CaptureType::kWindow) {
     SetUpForWindowCapture();
   } else {
     SetUpForScreenCapture();
@@ -270,7 +271,7 @@ TEST_P(WgcCapturerWinTest, SelectValidSource) {
 }
 
 TEST_P(WgcCapturerWinTest, SelectInvalidSource) {
-  if (GetParam() == CaptureType::kWindowCapture) {
+  if (GetParam() == CaptureType::kWindow) {
     capturer_ = WgcCapturerWin::CreateRawWindowCapturer(
         DesktopCaptureOptions::CreateDefault());
     source_id_ = kNullWindowId;
@@ -284,7 +285,7 @@ TEST_P(WgcCapturerWinTest, SelectInvalidSource) {
 }
 
 TEST_P(WgcCapturerWinTest, Capture) {
-  if (GetParam() == CaptureType::kWindowCapture) {
+  if (GetParam() == CaptureType::kWindow) {
     SetUpForWindowCapture();
   } else {
     SetUpForScreenCapture();
@@ -303,7 +304,7 @@ TEST_P(WgcCapturerWinTest, Capture) {
 }
 
 TEST_P(WgcCapturerWinTest, CaptureTime) {
-  if (GetParam() == CaptureType::kWindowCapture) {
+  if (GetParam() == CaptureType::kWindow) {
     SetUpForWindowCapture();
   } else {
     SetUpForScreenCapture();
@@ -331,8 +332,8 @@ TEST_P(WgcCapturerWinTest, CaptureTime) {
 
 INSTANTIATE_TEST_SUITE_P(SourceAgnostic,
                          WgcCapturerWinTest,
-                         ::testing::Values(CaptureType::kWindowCapture,
-                                           CaptureType::kScreenCapture));
+                         ::testing::Values(CaptureType::kWindow,
+                                           CaptureType::kScreen));
 
 // Monitor specific tests.
 TEST_F(WgcCapturerWinTest, FocusOnMonitor) {
@@ -344,6 +345,13 @@ TEST_F(WgcCapturerWinTest, FocusOnMonitor) {
 }
 
 TEST_F(WgcCapturerWinTest, CaptureAllMonitors) {
+  // Trying to capture all monitors causes a crash on Windows versions <20H1.
+  if (!IsWgcSupported(CaptureType::kScreen)) {
+    RTC_LOG(LS_INFO)
+        << "Skipping CaptureAllMonitors test on unsupported platforms.";
+    GTEST_SKIP();
+  }
+
   SetUpForScreenCapture();
   EXPECT_TRUE(capturer_->SelectSource(kFullDesktopScreenId));
 

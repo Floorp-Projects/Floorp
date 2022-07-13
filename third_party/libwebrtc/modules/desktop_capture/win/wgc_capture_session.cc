@@ -144,7 +144,7 @@ HRESULT WgcCaptureSession::StartCapture() {
 
   ComPtr<WGC::IDirect3D11CaptureFramePoolStatics> frame_pool_statics;
   hr = GetActivationFactory<
-      ABI::Windows::Graphics::Capture::IDirect3D11CaptureFramePoolStatics,
+      WGC::IDirect3D11CaptureFramePoolStatics,
       RuntimeClass_Windows_Graphics_Capture_Direct3D11CaptureFramePool>(
       &frame_pool_statics);
   if (FAILED(hr)) {
