@@ -26,6 +26,9 @@
 
 namespace webrtc {
 
+// Checks if the WGC API is present and supported on the system.
+bool IsWgcSupported(CaptureType capture_type);
+
 // WgcCapturerWin is initialized with an implementation of this base class,
 // which it uses to find capturable sources of a particular type. This way,
 // WgcCapturerWin can remain source-agnostic.

@@ -22,6 +22,8 @@ typedef int pid_t; // matching what used to be in
 
 namespace webrtc {
 
+enum class CaptureType { kWindow, kScreen };
+
 // Type used to identify windows on the desktop. Values are platform-specific:
 //   - On Windows: HWND cast to intptr_t.
 //   - On Linux (with X11): X11 Window (unsigned long) type cast to intptr_t.

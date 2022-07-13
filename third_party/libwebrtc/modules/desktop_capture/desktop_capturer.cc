@@ -59,8 +59,7 @@ bool DesktopCapturer::IsOccluded(const DesktopVector& pos) {
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
     const DesktopCaptureOptions& options) {
 #if defined(RTC_ENABLE_WIN_WGC)
-  if (options.allow_wgc_capturer() &&
-      rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN10_RS5) {
+  if (options.allow_wgc_capturer() && IsWgcSupported(CaptureType::kWindow)) {
     return WgcCapturerWin::CreateRawWindowCapturer(options);
   }
 #endif  // defined(RTC_ENABLE_WIN_WGC)
@@ -83,8 +82,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
     const DesktopCaptureOptions& options) {
 #if defined(RTC_ENABLE_WIN_WGC)
-  if (options.allow_wgc_capturer() &&
-      rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN10_20H1) {
+  if (options.allow_wgc_capturer() && IsWgcSupported(CaptureType::kScreen)) {
     return WgcCapturerWin::CreateRawScreenCapturer(options);
   }
 #endif  // defined(RTC_ENABLE_WIN_WGC)
