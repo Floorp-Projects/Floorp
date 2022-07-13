@@ -2114,6 +2114,54 @@ TEST_P(PacingControllerTest, GapInPacingDoesntAccumulateBudget) {
   pacer_->ProcessPackets();
 }
 
+TEST_P(PacingControllerTest, HandlesSubMicrosecondSendIntervals) {
+  if (PeriodicProcess()) {
+    GTEST_SKIP() << "This test checks behavior when not using interval budget.";
+  }
+
+  static constexpr DataSize kPacketSize = DataSize::Bytes(1);
+  static constexpr TimeDelta kPacketSendTime = TimeDelta::Micros(1);
+
+  // Set pacing rate such that a packet is sent in 0.5us.
+  pacer_->SetPacingRates(/*pacing_rate=*/2 * kPacketSize / kPacketSendTime,
+                         /*padding_rate=*/DataRate::Zero());
+
+  // Enqueue three packets, the first two should be sent immediately - the third
+  // should cause a non-zero delta to the next process time.
+  EXPECT_CALL(callback_, SendPacket).Times(2);
+  for (int i = 0; i < 3; ++i) {
+    Send(RtpPacketMediaType::kVideo, /*ssrc=*/12345, /*sequence_number=*/i,
+         clock_.TimeInMilliseconds(), kPacketSize.bytes());
+  }
+  pacer_->ProcessPackets();
+
+  EXPECT_GT(pacer_->NextSendTime(), clock_.CurrentTime());
+}
+
+TEST_P(PacingControllerTest, HandlesSubMicrosecondPaddingInterval) {
+  if (PeriodicProcess()) {
+    GTEST_SKIP() << "This test checks behavior when not using interval budget.";
+  }
+
+  static constexpr DataSize kPacketSize = DataSize::Bytes(1);
+  static constexpr TimeDelta kPacketSendTime = TimeDelta::Micros(1);
+
+  // Set both pacing and padding rates to 1 byte per 0.5us.
+  pacer_->SetPacingRates(/*pacing_rate=*/2 * kPacketSize / kPacketSendTime,
+                         /*padding_rate=*/2 * kPacketSize / kPacketSendTime);
+
+  // Enqueue and send one packet.
+  EXPECT_CALL(callback_, SendPacket);
+  Send(RtpPacketMediaType::kVideo, /*ssrc=*/12345, /*sequence_number=*/1234,
+       clock_.TimeInMilliseconds(), kPacketSize.bytes());
+  pacer_->ProcessPackets();
+
+  // The padding debt is now 1 byte, and the pacing time for that is lower than
+  // the precision of a TimeStamp tick. Make sure the pacer still indicates a
+  // non-zero sleep time is needed until the next process.
+  EXPECT_GT(pacer_->NextSendTime(), clock_.CurrentTime());
+}
+
 INSTANTIATE_TEST_SUITE_P(
     WithAndWithoutIntervalBudget,
     PacingControllerTest,
