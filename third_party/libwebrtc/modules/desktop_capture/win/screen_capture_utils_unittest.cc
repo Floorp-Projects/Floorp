@@ -34,7 +34,7 @@ TEST(ScreenCaptureUtilsTest, GetScreenList) {
 TEST(ScreenCaptureUtilsTest, DeviceIndexToHmonitor) {
   DesktopCapturer::SourceList screens;
   ASSERT_TRUE(GetScreenList(&screens));
-  if (screens.size() == 0) {
+  if (screens.empty()) {
     RTC_LOG(LS_INFO)
         << "Skip ScreenCaptureUtilsTest on systems with no monitors.";
     GTEST_SKIP();

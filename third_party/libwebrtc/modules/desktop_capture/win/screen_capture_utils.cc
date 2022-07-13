@@ -26,18 +26,14 @@ namespace webrtc {
 
 bool HasActiveDisplay() {
   DesktopCapturer::SourceList screens;
-  if (!GetScreenList(&screens))
-    return false;
 
-  return screens.size() >= 1;
+  return GetScreenList(&screens) && !screens.empty();
 }
 
 bool GetScreenList(DesktopCapturer::SourceList* screens,
                    std::vector<std::string>* device_names /* = nullptr */) {
-  RTC_DCHECK_EQ(screens->size(), 0U);
-  if (device_names) {
-    RTC_DCHECK_EQ(device_names->size(), 0U);
-  }
+  RTC_DCHECK(screens->empty());
+  RTC_DCHECK(!device_names || device_names->empty());
 
   BOOL enum_result = TRUE;
   for (int device_index = 0;; ++device_index) {
