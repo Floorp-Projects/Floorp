@@ -59,6 +59,14 @@
       }
     }
   },
+  'hammerhead': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'hammerhead',
+        'os': 'Android'
+      }
+    }
+  },
   'has_native_resultdb_integration': {
     'resultdb': {
       'enable': True,
@@ -129,6 +137,13 @@
       }
     }
   },
+  'linux-trusty': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Ubuntu-14.04'
+      }
+    }
+  },
   'logdog-butler': {
     'swarming': {
       'cipd_packages': [{
@@ -164,6 +179,14 @@
       }
     }
   },
+  'mac_10.12': {
+    'swarming': {
+      'dimensions': {
+        'cpu': 'x86-64',
+        'os': 'Mac-10.12.6'
+      }
+    }
+  },
   'mac_toolchain': {
     'swarming': {
       'cipd_packages': [{
@@ -180,6 +203,13 @@
     'swarming': {
       'dimensions': {
         'device_os': 'MMB29Q'
+      }
+    }
+  },
+  'marshmallow_generic': {
+    'swarming': {
+      'dimensions': {
+        'device_os': 'M'
       }
     }
   },
@@ -225,10 +255,26 @@
       'result_format': 'json'
     }
   },
+  'shamu': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'shamu',
+        'os': 'Android'
+      }
+    }
+  },
   'timeout-3h': {
     'swarming': {
       'hard_timeout': 10800,
       'io_timeout': 10800
+    }
+  },
+  'walleye': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'walleye',
+        'os': 'Android'
+      }
     }
   },
   'webrtc-xctest': {
