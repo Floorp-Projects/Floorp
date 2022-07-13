@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '14b836593fe9608129fd06679467c8b43e6df944',
+  'chromium_revision': 'a929241fb2c7c4d03ef3cba5d73ebaf69fcb2a66',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,9 +23,9 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@38a0a966d90ce48d1fa89e9c184de8819a6448d6',
+    'https://chromium.googlesource.com/chromium/src/base@676395445eeb87c3da877a791fc925a6392fc71b',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@eec2571debcd5f098ed904eaf9f4c2231903b1de',
+    'https://chromium.googlesource.com/chromium/src/build@13488f684b0d01791f67e6df8c85929601cd5b51',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@c2e4795660817c2776dbabd778b92ed58c074032',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -34,19 +34,19 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@7ad2f4ee6a43fd4710cc8ebbb62688cec92fb326',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@7d92c2079d310b132ce5ca7c1557eaf1064c98ad',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@0427a6b9aab6a10b280010c3aac84ce95a62732f',
+    'https://chromium.googlesource.com/chromium/src/testing@044964b58cfb5a20ada7b5de6617851ee30c5ead',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@043acc4f78cda8f15584da141e6d5a3a24ca1bc5',
+    'https://chromium.googlesource.com/chromium/src/third_party@0670b315986bf8485a91f7d799fdd7405f997fe3',
 
   'src/buildtools/linux64': {
     'packages': [
       {
         'package': 'gn/gn/linux-amd64',
-        'version': 'git_revision:ab9104586734cb45aa77c70ca5042edbcc9f6aa5',
+        'version': 'git_revision:04a2891d554d2325f04631bac356c29ffcdebf2a',
       }
     ],
     'dep_type': 'cipd',
@@ -56,7 +56,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/mac-${{arch}}',
-        'version': 'git_revision:ab9104586734cb45aa77c70ca5042edbcc9f6aa5',
+        'version': 'git_revision:04a2891d554d2325f04631bac356c29ffcdebf2a',
       }
     ],
     'dep_type': 'cipd',
@@ -66,7 +66,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/windows-amd64',
-        'version': 'git_revision:ab9104586734cb45aa77c70ca5042edbcc9f6aa5',
+        'version': 'git_revision:04a2891d554d2325f04631bac356c29ffcdebf2a',
       }
     ],
     'dep_type': 'cipd',
@@ -149,7 +149,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@ba94bbeaa857d50798437275242ec7cb72cca7b1',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@0a6b544e206b3adada64b01fb51d4a63c0faa580',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@32b2d1d52612e47531df9289e3f5fdd5447507dd',
   'src/third_party/findbugs': {
@@ -225,7 +225,7 @@ deps = {
   'src/third_party/dav1d/libdav1d':
     'https://chromium.googlesource.com/external/github.com/videolan/dav1d.git@87f9a81cd770e49394a45deca7a3df41243de00b',
   'src/third_party/libaom/source/libaom':
-    'https://aomedia.googlesource.com/aom.git@cc31d8c4b722cf7ecd68ac351bf3d288de07bc68',
+    'https://aomedia.googlesource.com/aom.git@d48a17ce9848b793ecd774ce41a44bd19359385e',
   'src/third_party/libunwindstack': {
       'url': 'https://chromium.googlesource.com/chromium/src/third_party/libunwindstack.git@6868358481bb1e5e20d155c1084dc436c88b5e6b',
       'condition': 'checkout_android',
@@ -286,7 +286,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@a0b14da565342a4882d30ae49c7b08f07c3d72fe',
+    'https://chromium.googlesource.com/chromium/src/tools@6dbc00b623de2c12091e19e46edf7fe51ec32b39',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
