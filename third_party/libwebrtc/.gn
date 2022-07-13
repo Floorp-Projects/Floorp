@@ -66,5 +66,8 @@ default_args = {
   # Differently from Chromium, WebRTC still support SDK 21.
   default_min_sdk_version = 21
 
+  # Prevent jsoncpp to pass -Wno-deprecated-declarations to users
+  jsoncpp_no_deprecated_declarations = false
+
   use_custom_libcxx = false
 }
