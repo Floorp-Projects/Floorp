@@ -30,6 +30,7 @@ rtc_library("agc") {
     "../../../api:array_view",
     "../../../common_audio",
     "../../../common_audio:common_audio_c",
+    "../../../rtc_base:atomicops",
     "../../../rtc_base:checks",
     "../../../rtc_base:gtest_prod",
     "../../../rtc_base:logging",

@@ -80,6 +80,7 @@ rtc_source_set("callback_list") {
 rtc_library("rtc_base_approved") {
   visibility = [ "*" ]
   deps = [
+    ":atomicops",
     ":checks",
     ":rtc_task_queue",
     ":safe_compare",
@@ -172,7 +173,6 @@ rtc_library("rtc_base_approved") {
   }
 
   public_deps += [  # no-presubmit-check TODO(webrtc:8603)
-    ":atomicops",
     ":logging",
     ":macromagic",
     ":platform_thread",
@@ -1397,6 +1397,7 @@ if (rtc_include_tests) {
         sources += [ "win/windows_version_unittest.cc" ]
       }
       deps = [
+        ":atomicops",
         ":bitstream_reader",
         ":bounded_inline_vector",
         ":checks",
@@ -1536,6 +1537,7 @@ if (rtc_include_tests) {
         "unique_id_generator_unittest.cc",
       ]
       deps = [
+        ":atomicops",
         ":checks",
         ":gunit_helpers",
         ":ip_address",

@@ -109,6 +109,7 @@ rtc_library("video") {
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:video_coding_utility",
     "../modules/video_processing",
+    "../rtc_base:atomicops",
     "../rtc_base:checks",
     "../rtc_base:rate_limiter",
     "../rtc_base:rtc_base",
