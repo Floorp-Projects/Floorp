@@ -41,8 +41,6 @@ class BaselineCodeGen {
 
   typename Handler::FrameInfoT& frame;
 
-  js::Vector<CodeOffset> traceLoggerToggleOffsets_;
-
   // Shared epilogue code to return to the caller.
   NonAssertingLabel return_;
 
@@ -373,8 +371,6 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
   DebugTrapEntryVector debugTrapEntries_;
 
   CodeOffset profilerPushToggleOffset_;
-
-  CodeOffset traceLoggerScriptTextIdOffset_;
 
 #if defined(JS_ION_PERF)
   BaselinePerfSpewer perfSpewer_;

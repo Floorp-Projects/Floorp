@@ -183,7 +183,6 @@ class RetAddrEntry {
 //    RetAddrEntry[]          retAddrEntries()
 //    OSREntry[]              osrEntries()
 //    DebugTrapEntry[]        debugTrapEntries()
-//    uint32_t[]              traceLoggerToggleOffsets()
 //
 // Note: The arrays are arranged in order of descending alignment requires so
 // that padding is not required.
@@ -211,7 +210,6 @@ class alignas(uintptr_t) BaselineScript final : public TrailingArray {
   Offset retAddrEntriesOffset_ = 0;
   Offset osrEntriesOffset_ = 0;
   Offset debugTrapEntriesOffset_ = 0;
-  Offset traceLoggerToggleOffsetsOffset_ = 0;
   Offset allocBytes_ = 0;
 
   // See `Flag` type below.
@@ -249,9 +247,6 @@ class alignas(uintptr_t) BaselineScript final : public TrailingArray {
   Offset retAddrEntriesOffset() const { return retAddrEntriesOffset_; }
   Offset osrEntriesOffset() const { return osrEntriesOffset_; }
   Offset debugTrapEntriesOffset() const { return debugTrapEntriesOffset_; }
-  Offset traceLoggerToggleOffsetsOffset() const {
-    return traceLoggerToggleOffsetsOffset_;
-  }
   Offset endOffset() const { return allocBytes_; }
 
   // Use BaselineScript::New to create new instances. It will properly
@@ -282,8 +277,7 @@ class alignas(uintptr_t) BaselineScript final : public TrailingArray {
     return makeSpan<OSREntry>(osrEntriesOffset(), debugTrapEntriesOffset());
   }
   mozilla::Span<DebugTrapEntry> debugTrapEntries() {
-    return makeSpan<DebugTrapEntry>(debugTrapEntriesOffset(),
-                                    traceLoggerToggleOffsetsOffset());
+    return makeSpan<DebugTrapEntry>(debugTrapEntriesOffset(), endOffset());
   }
 
  public:
@@ -291,8 +285,7 @@ class alignas(uintptr_t) BaselineScript final : public TrailingArray {
                              uint32_t profilerEnterToggleOffset,
                              uint32_t profilerExitToggleOffset,
                              size_t retAddrEntries, size_t osrEntries,
-                             size_t debugTrapEntries, size_t resumeEntries,
-                             size_t traceLoggerToggleOffsetEntries);
+                             size_t debugTrapEntries, size_t resumeEntries);
 
   static void Destroy(JS::GCContext* gcx, BaselineScript* script);
 

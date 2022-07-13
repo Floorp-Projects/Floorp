@@ -88,14 +88,12 @@ template <typename... HandlerArgs>
 BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, HandlerArgs&&... args)
     : handler(cx, masm, std::forward<HandlerArgs>(args)...),
       cx(cx),
-      frame(handler.frame()),
-      traceLoggerToggleOffsets_(cx) {}
+      frame(handler.frame()) {}
 
 BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc,
                                    JSScript* script)
     : BaselineCodeGen(cx, /* HandlerArgs = */ alloc, script),
-      profilerPushToggleOffset_(),
-      traceLoggerScriptTextIdOffset_() {
+      profilerPushToggleOffset_() {
 #ifdef JS_CODEGEN_NONE
   MOZ_CRASH();
 #endif
@@ -257,8 +255,7 @@ MethodStatus BaselineCompiler::compile() {
           profilerEnterFrameToggleOffset_.offset(),
           profilerExitFrameToggleOffset_.offset(),
           handler.retAddrEntries().length(), handler.osrEntries().length(),
-          debugTrapEntries_.length(), script->resumeOffsets().size(),
-          traceLoggerToggleOffsets_.length()),
+          debugTrapEntries_.length(), script->resumeOffsets().size()),
       JS::DeletePolicy<BaselineScript>(cx->runtime()));
   if (!baselineScript) {
     return Method_Error;

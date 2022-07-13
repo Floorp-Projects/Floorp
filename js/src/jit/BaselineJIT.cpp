@@ -452,18 +452,19 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
   MOZ_CRASH("Unexpected status");
 }
 
-BaselineScript* BaselineScript::New(
-    JSContext* cx, uint32_t warmUpCheckPrologueOffset,
-    uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
-    size_t retAddrEntries, size_t osrEntries, size_t debugTrapEntries,
-    size_t resumeEntries, size_t traceLoggerToggleOffsetEntries) {
+BaselineScript* BaselineScript::New(JSContext* cx,
+                                    uint32_t warmUpCheckPrologueOffset,
+                                    uint32_t profilerEnterToggleOffset,
+                                    uint32_t profilerExitToggleOffset,
+                                    size_t retAddrEntries, size_t osrEntries,
+                                    size_t debugTrapEntries,
+                                    size_t resumeEntries) {
   // Compute size including trailing arrays.
   CheckedInt<Offset> size = sizeof(BaselineScript);
   size += CheckedInt<Offset>(resumeEntries) * sizeof(uintptr_t);
   size += CheckedInt<Offset>(retAddrEntries) * sizeof(RetAddrEntry);
   size += CheckedInt<Offset>(osrEntries) * sizeof(OSREntry);
   size += CheckedInt<Offset>(debugTrapEntries) * sizeof(DebugTrapEntry);
-  size += CheckedInt<Offset>(traceLoggerToggleOffsetEntries) * sizeof(uint32_t);
 
   if (!size.isValid()) {
     ReportAllocationOverflow(cx);
@@ -499,8 +500,6 @@ BaselineScript* BaselineScript::New(
   cursor += debugTrapEntries * sizeof(DebugTrapEntry);
 
   MOZ_ASSERT(isAlignedOffset<uint32_t>(cursor));
-  script->traceLoggerToggleOffsetsOffset_ = cursor;
-  cursor += traceLoggerToggleOffsetEntries * sizeof(uint32_t);
 
   script->allocBytes_ = cursor;
 
