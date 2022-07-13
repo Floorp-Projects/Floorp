@@ -41,6 +41,10 @@ class SearchBox extends PureComponent {
       onChange: PropTypes.func.isRequired,
       onClearButtonClick: PropTypes.func,
       onFocus: PropTypes.func,
+      // Optional function that will be called on the focus keyboard shortcut, before
+      // setting the focus to the input. If the function returns false, the input won't
+      // get focused.
+      onFocusKeyboardShortcut: PropTypes.func,
       onKeyDown: PropTypes.func,
       placeholder: PropTypes.string.isRequired,
       summary: PropTypes.string,
@@ -77,6 +81,10 @@ class SearchBox extends PureComponent {
       window,
     });
     this.shortcuts.on(this.props.keyShortcut, event => {
+      if (this.props.onFocusKeyboardShortcut?.(event)) {
+        return;
+      }
+
       event.preventDefault();
       this.focus();
     });
