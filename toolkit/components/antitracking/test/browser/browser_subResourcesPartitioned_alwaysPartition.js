@@ -192,12 +192,8 @@ async function runTests(topPage, limitForeignContexts) {
       }
     });
 
-  let expectTrackerBlocked = (item, blocked) => {
-    is(
-      item[0],
-      Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
-      "Correct blocking type reported"
-    );
+  let expectTrackerBlocked = (item, blocked, type) => {
+    is(item[0], type, "Correct blocking type reported");
     is(item[1], blocked, "Correct blocking status reported");
     ok(item[2] >= 1, "Correct repeat count reported");
   };
@@ -246,10 +242,19 @@ async function runTests(topPage, limitForeignContexts) {
       case "https://tracking.example.org":
         is(
           originLog.length,
-          1,
-          "We should have 1 entries in the compressed log"
+          2,
+          "We should have 2 entries in the compressed log"
         );
-        expectTrackerBlocked(originLog[0], false);
+        expectTrackerBlocked(
+          originLog[0],
+          true,
+          Ci.nsIWebProgressListener.STATE_COOKIES_LOADED
+        );
+        expectTrackerBlocked(
+          originLog[1],
+          false,
+          Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER
+        );
         break;
     }
   }
@@ -279,7 +284,7 @@ add_task(async function() {
       ["network.cookie.sameSite.laxByDefault", false],
       [
         "privacy.partition.always_partition_third_party_non_cookie_storage",
-        false,
+        true,
       ],
     ],
   });
