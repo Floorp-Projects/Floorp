@@ -45,6 +45,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/rate_limiter.h"
+#include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/task_utils/to_queued_task.h"
@@ -104,6 +105,12 @@ enum VideoFormat {
   kVP8,
 };
 
+struct Vp9TestParams {
+  std::string scalability_mode;
+  uint8_t num_spatial_layers;
+  uint8_t num_temporal_layers;
+  InterLayerPredMode inter_layer_pred;
+};
 }  // namespace
 
 class VideoSendStreamTest : public test::CallTest {
@@ -118,9 +125,8 @@ class VideoSendStreamTest : public test::CallTest {
                               uint8_t retransmit_payload_type);
   void TestPacketFragmentationSize(VideoFormat format, bool with_fec);
 
-  void TestVp9NonFlexMode(uint8_t num_spatial_layers,
-                          uint8_t num_temporal_layers,
-                          InterLayerPredMode inter_layer_pred);
+  void TestVp9NonFlexMode(const Vp9TestParams& params,
+                          bool use_scalability_mode_identifier);
 
   void TestRequestSourceRotateVideo(bool support_orientation_ext);
 
@@ -3286,80 +3292,53 @@ class Vp9HeaderObserver : public test::SendTest {
   int expected_height_;
 };
 
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L1T1) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/1, /*num_temporal_layers=*/1,
-                     InterLayerPredMode::kOn);
-}
+class Vp9Test : public VideoSendStreamTest,
+                public ::testing::WithParamInterface<
+                    ::testing::tuple<Vp9TestParams, bool>> {
+ public:
+  Vp9Test()
+      : params_(::testing::get<0>(GetParam())),
+        use_scalability_mode_identifier_(::testing::get<1>(GetParam())) {}
 
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L1T2) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/1, /*num_temporal_layers=*/2,
-                     InterLayerPredMode::kOn);
-}
+ protected:
+  const Vp9TestParams params_;
+  const bool use_scalability_mode_identifier_;
+};
 
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L1T3) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/1, /*num_temporal_layers=*/3,
-                     InterLayerPredMode::kOn);
-}
+INSTANTIATE_TEST_SUITE_P(
+    ScalabilityMode,
+    Vp9Test,
+    ::testing::Combine(
+        ::testing::ValuesIn<Vp9TestParams>(
+            {{"L1T1", 1, 1, InterLayerPredMode::kOn},
+             {"L1T2", 1, 2, InterLayerPredMode::kOn},
+             {"L1T3", 1, 3, InterLayerPredMode::kOn},
+             {"L2T1", 2, 1, InterLayerPredMode::kOn},
+             {"L2T1_KEY", 2, 1, InterLayerPredMode::kOnKeyPic},
+             {"L2T2", 2, 2, InterLayerPredMode::kOn},
+             {"L2T2_KEY", 2, 2, InterLayerPredMode::kOnKeyPic},
+             {"L2T3", 2, 3, InterLayerPredMode::kOn},
+             {"L2T3_KEY", 2, 3, InterLayerPredMode::kOnKeyPic},
+             {"L3T1", 3, 1, InterLayerPredMode::kOn},
+             {"L3T3", 3, 3, InterLayerPredMode::kOn},
+             {"L3T3_KEY", 3, 3, InterLayerPredMode::kOnKeyPic},
+             {"S2T1", 2, 1, InterLayerPredMode::kOff},
+             {"S3T3", 3, 3, InterLayerPredMode::kOff}}),
+        ::testing::Values(false)),  // use_scalability_mode_identifier
+    [](const ::testing::TestParamInfo<Vp9Test::ParamType>& info) {
+      rtc::StringBuilder sb;
+      sb << std::get<0>(info.param).scalability_mode << "_"
+         << (std::get<1>(info.param) ? "WithIdentifier" : "WithoutIdentifier");
+      return sb.str();
+    });
 
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L2T1) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/2, /*num_temporal_layers=*/1,
-                     InterLayerPredMode::kOn);
-}
-
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L2T1_KEY) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/2, /*num_temporal_layers=*/1,
-                     InterLayerPredMode::kOnKeyPic);
-}
-
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L2T2) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/2, /*num_temporal_layers=*/2,
-                     InterLayerPredMode::kOn);
-}
-
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L2T2_KEY) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/2, /*num_temporal_layers=*/2,
-                     InterLayerPredMode::kOnKeyPic);
-}
-
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L2T3) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/2, /*num_temporal_layers=*/3,
-                     InterLayerPredMode::kOn);
-}
-
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L2T3_KEY) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/2, /*num_temporal_layers=*/3,
-                     InterLayerPredMode::kOnKeyPic);
-}
-
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L3T1) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/3, /*num_temporal_layers=*/1,
-                     InterLayerPredMode::kOn);
-}
-
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L3T3) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/3, /*num_temporal_layers=*/3,
-                     InterLayerPredMode::kOn);
-}
-
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_L3T3_KEY) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/3, /*num_temporal_layers=*/3,
-                     InterLayerPredMode::kOnKeyPic);
-}
-
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_S2T1) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/2, /*num_temporal_layers=*/1,
-                     InterLayerPredMode::kOff);
-}
-
-TEST_F(VideoSendStreamTest, Vp9NonFlexMode_S3T3) {
-  TestVp9NonFlexMode(/*num_spatial_layers=*/3, /*num_temporal_layers=*/3,
-                     InterLayerPredMode::kOff);
+TEST_P(Vp9Test, NonFlexMode) {
+  TestVp9NonFlexMode(params_, use_scalability_mode_identifier_);
 }
 
 void VideoSendStreamTest::TestVp9NonFlexMode(
-    uint8_t num_spatial_layers,
-    uint8_t num_temporal_layers,
-    InterLayerPredMode inter_layer_pred) {
+    const Vp9TestParams& params,
+    bool use_scalability_mode_identifier) {
   static const size_t kNumFramesToSend = 100;
   // Set to < kNumFramesToSend and coprime to length of temporal layer
   // structures to verify temporal id reset on key frame.
@@ -3370,13 +3349,12 @@ void VideoSendStreamTest::TestVp9NonFlexMode(
   static const float kGoodBitsPerPixel = 0.1f;
   class NonFlexibleMode : public Vp9HeaderObserver {
    public:
-    NonFlexibleMode(uint8_t num_spatial_layers,
-                    uint8_t num_temporal_layers,
-                    InterLayerPredMode inter_layer_pred)
-        : num_spatial_layers_(num_spatial_layers),
-          num_temporal_layers_(num_temporal_layers),
-          inter_layer_pred_(inter_layer_pred),
-          l_field_(num_temporal_layers > 1 || num_spatial_layers > 1) {}
+    NonFlexibleMode(const Vp9TestParams& params,
+                    bool use_scalability_mode_identifier)
+        : params_(params),
+          use_scalability_mode_identifier_(use_scalability_mode_identifier),
+          l_field_(params.num_temporal_layers > 1 ||
+                   params.num_spatial_layers > 1) {}
 
     void ModifyVideoConfigsHook(
         VideoSendStream::Config* send_config,
@@ -3384,7 +3362,7 @@ void VideoSendStreamTest::TestVp9NonFlexMode(
         VideoEncoderConfig* encoder_config) override {
       encoder_config->codec_type = kVideoCodecVP9;
       int bitrate_bps = 0;
-      for (int sl_idx = 0; sl_idx < num_spatial_layers_; ++sl_idx) {
+      for (int sl_idx = 0; sl_idx < params_.num_spatial_layers; ++sl_idx) {
         const int width = kWidth << sl_idx;
         const int height = kHeight << sl_idx;
         const float bpp = kGoodBitsPerPixel / (1 << sl_idx);
@@ -3392,20 +3370,28 @@ void VideoSendStreamTest::TestVp9NonFlexMode(
       }
       encoder_config->max_bitrate_bps = bitrate_bps * 2;
 
+      EXPECT_EQ(1u, encoder_config->number_of_streams);
+      EXPECT_EQ(1u, encoder_config->simulcast_layers.size());
+
       vp9_settings_.flexibleMode = false;
       vp9_settings_.frameDroppingOn = false;
       vp9_settings_.automaticResizeOn = false;
       vp9_settings_.keyFrameInterval = kKeyFrameInterval;
-      vp9_settings_.numberOfTemporalLayers = num_temporal_layers_;
-      vp9_settings_.numberOfSpatialLayers = num_spatial_layers_;
-      vp9_settings_.interLayerPred = inter_layer_pred_;
+      if (!use_scalability_mode_identifier_) {
+        vp9_settings_.numberOfTemporalLayers = params_.num_temporal_layers;
+        vp9_settings_.numberOfSpatialLayers = params_.num_spatial_layers;
+        vp9_settings_.interLayerPred = params_.inter_layer_pred;
+      } else {
+        encoder_config->simulcast_layers[0].scalability_mode =
+            params_.scalability_mode;
+      }
     }
 
     void ModifyVideoCaptureStartResolution(int* width,
                                            int* height,
                                            int* frame_rate) override {
-      expected_width_ = kWidth << (num_spatial_layers_ - 1);
-      expected_height_ = kHeight << (num_spatial_layers_ - 1);
+      expected_width_ = kWidth << (params_.num_spatial_layers - 1);
+      expected_height_ = kHeight << (params_.num_spatial_layers - 1);
       *width = expected_width_;
       *height = expected_height_;
     }
@@ -3417,8 +3403,8 @@ void VideoSendStreamTest::TestVp9NonFlexMode(
       EXPECT_EQ(ss_data_expected, vp9.ss_data_available);
 
       bool is_key_frame = frames_sent_ % kKeyFrameInterval == 0;
-      if (num_spatial_layers_ > 1) {
-        switch (inter_layer_pred_) {
+      if (params_.num_spatial_layers > 1) {
+        switch (params_.inter_layer_pred) {
           case InterLayerPredMode::kOff:
             EXPECT_FALSE(vp9.inter_layer_predicted);
             break;
@@ -3437,24 +3423,24 @@ void VideoSendStreamTest::TestVp9NonFlexMode(
       EXPECT_EQ(is_key_frame, !vp9.inter_pic_predicted);
 
       if (IsNewPictureId(vp9)) {
-        if (num_temporal_layers_ == 1 && num_spatial_layers_ == 1) {
+        if (params_.num_temporal_layers == 1 &&
+            params_.num_spatial_layers == 1) {
           EXPECT_EQ(kNoSpatialIdx, vp9.spatial_idx);
         } else {
           EXPECT_EQ(0, vp9.spatial_idx);
         }
-        if (num_spatial_layers_ > 1)
-          EXPECT_EQ(num_spatial_layers_ - 1, last_vp9_.spatial_idx);
+        if (params_.num_spatial_layers > 1)
+          EXPECT_EQ(params_.num_spatial_layers - 1, last_vp9_.spatial_idx);
       }
 
-      VerifyFixedTemporalLayerStructure(vp9,
-                                        l_field_ ? num_temporal_layers_ : 0);
+      VerifyFixedTemporalLayerStructure(
+          vp9, l_field_ ? params_.num_temporal_layers : 0);
 
       if (frames_sent_ > kNumFramesToSend)
         observation_complete_.Set();
     }
-    const uint8_t num_spatial_layers_;
-    const uint8_t num_temporal_layers_;
-    const InterLayerPredMode inter_layer_pred_;
+    const Vp9TestParams params_;
+    const bool use_scalability_mode_identifier_;
     const bool l_field_;
 
    private:
@@ -3464,7 +3450,7 @@ void VideoSendStreamTest::TestVp9NonFlexMode(
       bitrate_config->min_bitrate_bps = kBitrateBps;
       bitrate_config->start_bitrate_bps = kBitrateBps;
     }
-  } test(num_spatial_layers, num_temporal_layers, inter_layer_pred);
+  } test(params, use_scalability_mode_identifier);
 
   RunBaseTest(&test);
 }
