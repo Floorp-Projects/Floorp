@@ -28,7 +28,6 @@
 #include "sdk/android/generated_base_jni/NetworkMonitor_jni.h"
 #include "sdk/android/native_api/jni/java_types.h"
 #include "sdk/android/src/jni/jni_helpers.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace jni {
@@ -227,11 +226,13 @@ std::string NetworkInformation::ToString() const {
 
 AndroidNetworkMonitor::AndroidNetworkMonitor(
     JNIEnv* env,
-    const JavaRef<jobject>& j_application_context)
+    const JavaRef<jobject>& j_application_context,
+    const FieldTrialsView& field_trials)
     : android_sdk_int_(Java_NetworkMonitor_androidSdkInt(env)),
       j_application_context_(env, j_application_context),
       j_network_monitor_(env, Java_NetworkMonitor_getInstance(env)),
-      network_thread_(rtc::Thread::Current()) {}
+      network_thread_(rtc::Thread::Current()),
+      field_trials_(field_trials) {}
 
 AndroidNetworkMonitor::~AndroidNetworkMonitor() {
   RTC_DCHECK(!started_);
@@ -244,13 +245,12 @@ void AndroidNetworkMonitor::Start() {
   }
   started_ = true;
   surface_cellular_types_ =
-      webrtc::field_trial::IsEnabled("WebRTC-SurfaceCellularTypes");
-  find_network_handle_without_ipv6_temporary_part_ =
-      webrtc::field_trial::IsEnabled(
-          "WebRTC-FindNetworkHandleWithoutIpv6TemporaryPart");
+      field_trials_.IsEnabled("WebRTC-SurfaceCellularTypes");
+  find_network_handle_without_ipv6_temporary_part_ = field_trials_.IsEnabled(
+      "WebRTC-FindNetworkHandleWithoutIpv6TemporaryPart");
   bind_using_ifname_ =
-      !webrtc::field_trial::IsDisabled("WebRTC-BindUsingInterfaceName");
-  disable_is_adapter_available_ = webrtc::field_trial::IsDisabled(
+      !field_trials_.IsDisabled("WebRTC-BindUsingInterfaceName");
+  disable_is_adapter_available_ = field_trials_.IsDisabled(
       "WebRTC-AndroidNetworkMonitor-IsAdapterAvailable");
 
   // This pointer is also accessed by the methods called from java threads.
@@ -260,7 +260,9 @@ void AndroidNetworkMonitor::Start() {
 
   JNIEnv* env = AttachCurrentThreadIfNeeded();
   Java_NetworkMonitor_startMonitoring(
-      env, j_network_monitor_, j_application_context_, jlongFromPointer(this));
+      env, j_network_monitor_, j_application_context_, jlongFromPointer(this),
+      NativeToJavaString(
+          env, field_trials_.Lookup("WebRTC-NetworkMonitorAutoDetect")));
 }
 
 void AndroidNetworkMonitor::Stop() {
@@ -608,7 +610,7 @@ rtc::NetworkMonitorInterface*
 AndroidNetworkMonitorFactory::CreateNetworkMonitor(
     const FieldTrialsView& field_trials) {
   return new AndroidNetworkMonitor(AttachCurrentThreadIfNeeded(),
-                                   j_application_context_);
+                                   j_application_context_, field_trials);
 }
 
 void AndroidNetworkMonitor::NotifyConnectionTypeChanged(
