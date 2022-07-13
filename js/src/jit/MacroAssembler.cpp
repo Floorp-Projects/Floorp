@@ -4744,9 +4744,9 @@ void MacroAssembler::iteratorClose(Register obj, Register temp1, Register temp2,
   // The shared iterator used for for-in with null/undefined is immutable and
   // unlinked. See NativeIterator::isEmptyIteratorSingleton.
   Label done;
-  branchPtr(Assembler::Equal,
-            Address(temp1, NativeIterator::offsetOfObjectBeingIterated()),
-            ImmPtr(nullptr), &done);
+  branchTest32(Assembler::NonZero,
+               Address(temp1, NativeIterator::offsetOfFlagsAndCount()),
+               Imm32(NativeIterator::Flags::IsEmptyIteratorSingleton), &done);
 
   // Clear active bit.
   and32(Imm32(~NativeIterator::Flags::Active),
