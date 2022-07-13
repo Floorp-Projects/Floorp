@@ -92,6 +92,7 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface {
       absl::string_view if_name) override;
   rtc::NetworkPreference GetNetworkPreference(
       absl::string_view if_name) override;
+  bool IsAdapterAvailable(absl::string_view if_name) override;
 
   // Always expected to be called on the network thread.
   void SetNetworkInfos(const std::vector<NetworkInformation>& network_infos);
@@ -152,6 +153,11 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface {
   // This applies to adapter_type_by_name_, vpn_underlying_adapter_type_by_name_
   // and FindNetworkHandleFromIfname.
   bool bind_using_ifname_ RTC_GUARDED_BY(network_thread_) = true;
+
+  // NOTE: disable_is_adapter_available_ is a kill switch for the impl.
+  // of IsAdapterAvailable().
+  bool disable_is_adapter_available_ RTC_GUARDED_BY(network_thread_) = false;
+
   rtc::scoped_refptr<PendingTaskSafetyFlag> safety_flag_
       RTC_PT_GUARDED_BY(network_thread_) = nullptr;
 };
