@@ -143,6 +143,9 @@ struct Params {
   BitrateSettings bitrate_settings;
   std::vector<PeerConnectionE2EQualityTestFixture::VideoCodecConfig>
       video_codecs;
+  PeerConnectionE2EQualityTestFixture::VideoSubscription video_subscription =
+      PeerConnectionE2EQualityTestFixture::VideoSubscription()
+          .SubscribeToAllPeers();
 };
 
 }  // namespace webrtc_pc_e2e
