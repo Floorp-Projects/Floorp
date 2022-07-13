@@ -45,7 +45,7 @@ class MultiChannelContentDetector {
     return persistent_multichannel_content_detected_;
   }
 
-  bool IsTemporaryMultiChannelContentDetectedForTesting() const {
+  bool IsTemporaryMultiChannelContentDetected() const {
     return temporary_multichannel_content_detected_;
   }
 

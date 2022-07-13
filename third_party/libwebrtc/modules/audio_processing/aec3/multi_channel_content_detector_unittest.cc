@@ -274,7 +274,7 @@ TEST_P(MultiChannelContentDetectorHysteresisBehavior,
     } else {
       EXPECT_TRUE(mc.IsProperMultiChannelContentDetected());
     }
-    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetected());
   }
 
   // Pass a two true stereo frames and verify that they are properly detected.
@@ -289,16 +289,16 @@ TEST_P(MultiChannelContentDetectorHysteresisBehavior,
           EXPECT_FALSE(mc.UpdateDetection(true_stereo_frame));
         }
         EXPECT_TRUE(mc.IsProperMultiChannelContentDetected());
-        EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+        EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetected());
       } else {
         EXPECT_FALSE(mc.UpdateDetection(true_stereo_frame));
         EXPECT_FALSE(mc.IsProperMultiChannelContentDetected());
-        EXPECT_TRUE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+        EXPECT_TRUE(mc.IsTemporaryMultiChannelContentDetected());
       }
     } else {
       EXPECT_FALSE(mc.UpdateDetection(true_stereo_frame));
       EXPECT_TRUE(mc.IsProperMultiChannelContentDetected());
-      EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+      EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetected());
     }
   }
 
@@ -311,11 +311,11 @@ TEST_P(MultiChannelContentDetectorHysteresisBehavior,
     if (detect_stereo_content) {
       EXPECT_FALSE(mc.UpdateDetection(true_stereo_frame));
       EXPECT_FALSE(mc.IsProperMultiChannelContentDetected());
-      EXPECT_TRUE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+      EXPECT_TRUE(mc.IsTemporaryMultiChannelContentDetected());
     } else {
       EXPECT_FALSE(mc.UpdateDetection(true_stereo_frame));
       EXPECT_TRUE(mc.IsProperMultiChannelContentDetected());
-      EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+      EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetected());
     }
   }
 
@@ -323,11 +323,11 @@ TEST_P(MultiChannelContentDetectorHysteresisBehavior,
   if (detect_stereo_content) {
     EXPECT_TRUE(mc.UpdateDetection(true_stereo_frame));
     EXPECT_TRUE(mc.IsProperMultiChannelContentDetected());
-    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetected());
   } else {
     EXPECT_FALSE(mc.UpdateDetection(true_stereo_frame));
     EXPECT_TRUE(mc.IsProperMultiChannelContentDetected());
-    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetected());
   }
 
   // Pass an additional true stereo frame and verify that it is properly
@@ -335,22 +335,22 @@ TEST_P(MultiChannelContentDetectorHysteresisBehavior,
   if (detect_stereo_content) {
     EXPECT_FALSE(mc.UpdateDetection(true_stereo_frame));
     EXPECT_TRUE(mc.IsProperMultiChannelContentDetected());
-    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetected());
   } else {
     EXPECT_FALSE(mc.UpdateDetection(true_stereo_frame));
     EXPECT_TRUE(mc.IsProperMultiChannelContentDetected());
-    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetected());
   }
 
   // Pass a fake stereo frame and verify that it is properly detected.
   if (detect_stereo_content) {
     EXPECT_FALSE(mc.UpdateDetection(fake_stereo_frame));
     EXPECT_TRUE(mc.IsProperMultiChannelContentDetected());
-    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetected());
   } else {
     EXPECT_FALSE(mc.UpdateDetection(fake_stereo_frame));
     EXPECT_TRUE(mc.IsProperMultiChannelContentDetected());
-    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetectedForTesting());
+    EXPECT_FALSE(mc.IsTemporaryMultiChannelContentDetected());
   }
 }
 
