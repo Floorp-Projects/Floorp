@@ -20,7 +20,31 @@
 namespace webrtc {
 namespace {
 static constexpr DataSize kMaxLeadingSize = DataSize::Bytes(1400);
+
+int GetPriorityForType(RtpPacketMediaType type) {
+  // Lower number takes priority over higher.
+  switch (type) {
+    case RtpPacketMediaType::kAudio:
+      // Audio is always prioritized over other packet types.
+      return 0;
+    case RtpPacketMediaType::kRetransmission:
+      // Send retransmissions before new media.
+      return 1;
+    case RtpPacketMediaType::kVideo:
+    case RtpPacketMediaType::kForwardErrorCorrection:
+      // Video has "normal" priority, in the old speak.
+      // Send redundancy concurrently to video. If it is delayed it might have a
+      // lower chance of being useful.
+      return 2;
+    case RtpPacketMediaType::kPadding:
+      // Packets that are in themselves likely useless, only sent to keep the
+      // BWE high.
+      return 3;
+  }
+  RTC_CHECK_NOTREACHED();
 }
+
+}  // namespace
 
 RoundRobinPacketQueue::QueuedPacket::QueuedPacket(const QueuedPacket& rhs) =
     default;
@@ -125,11 +149,11 @@ RoundRobinPacketQueue::~RoundRobinPacketQueue() {
   }
 }
 
-void RoundRobinPacketQueue::Push(int priority,
-                                 Timestamp enqueue_time,
+void RoundRobinPacketQueue::Push(Timestamp enqueue_time,
                                  uint64_t enqueue_order,
                                  std::unique_ptr<RtpPacketToSend> packet) {
   RTC_DCHECK(packet->packet_type().has_value());
+  int priority = GetPriorityForType(*packet->packet_type());
   if (size_packets_ == 0) {
     // Single packet fast-path.
     single_packet_queue_.emplace(

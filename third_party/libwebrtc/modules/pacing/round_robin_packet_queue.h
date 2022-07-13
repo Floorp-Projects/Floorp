@@ -36,8 +36,7 @@ class RoundRobinPacketQueue {
   explicit RoundRobinPacketQueue(Timestamp start_time);
   ~RoundRobinPacketQueue();
 
-  void Push(int priority,
-            Timestamp enqueue_time,
+  void Push(Timestamp enqueue_time,
             uint64_t enqueue_order,
             std::unique_ptr<RtpPacketToSend> packet);
   std::unique_ptr<RtpPacketToSend> Pop();
