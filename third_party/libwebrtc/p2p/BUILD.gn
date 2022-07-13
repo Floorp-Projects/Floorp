@@ -110,6 +110,7 @@ rtc_library("rtc_p2p") {
     "../rtc_base:macromagic",
     "../rtc_base:net_helpers",
     "../rtc_base:network_constants",
+    "../rtc_base:rate_tracker",
     "../rtc_base:refcount",
     "../rtc_base:rtc_numerics",
     "../rtc_base:socket",
