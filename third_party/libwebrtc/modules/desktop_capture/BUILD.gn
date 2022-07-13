@@ -323,6 +323,7 @@ if (is_mac) {
       ":desktop_capture_generic",
       ":primitives",
       "../../api:scoped_refptr",
+      "../../api:sequence_checker",
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:logging",

@@ -55,6 +55,7 @@ if (!build_with_chromium) {
     deps = [
       ":video_capture_module",
       "../../api:scoped_refptr",
+      "../../api:sequence_checker",
       "../../rtc_base:checks",
       "../../rtc_base:logging",
       "../../rtc_base:macromagic",

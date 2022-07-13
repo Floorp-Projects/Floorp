@@ -153,6 +153,7 @@ rtc_source_set("audio_device_module_from_input_and_output") {
       ":audio_device_buffer",
       ":windows_core_audio_utility",
       "../../api:scoped_refptr",
+      "../../api:sequence_checker",
       "../../api/task_queue",
       "../../rtc_base:checks",
       "../../rtc_base:logging",

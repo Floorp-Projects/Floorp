@@ -182,7 +182,6 @@ rtc_library("rtc_base_approved") {
   public_deps += [  # no-presubmit-check TODO(webrtc:8603)
     ":platform_thread",
     ":platform_thread_types",
-    "../api:sequence_checker",
   ]
 }
 
