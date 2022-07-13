@@ -100,6 +100,7 @@ rtc_source_set("stun_types") {
 
   deps = [
     "../../api:array_view",
+    "../../rtc_base:byte_buffer",
     "../../rtc_base:byte_order",
     "../../rtc_base:checks",
     "../../rtc_base:ip_address",
@@ -144,6 +145,7 @@ if (rtc_include_tests) {
     deps = [
       ":stun_types",
       "../../rtc_base",
+      "../../rtc_base:byte_buffer",
       "../../rtc_base:byte_order",
       "../../rtc_base:macromagic",
       "../../rtc_base:rtc_base_approved",

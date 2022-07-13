@@ -85,6 +85,7 @@ rtc_library("rtc_base_approved") {
     ":bit_buffer",
     ":buffer",
     ":buffer_queue",
+    ":byte_buffer",
     ":byte_order",
     ":checks",
     ":histogram_percentile_counter",
@@ -132,8 +133,7 @@ rtc_library("rtc_base_approved") {
     "bit_buffer.h",  # Transitional, use :bit_buffer
     "buffer.h",  # Transitional, use :buffer
     "buffer_queue.h",  # Transitional, use :buffer_queue
-    "byte_buffer.cc",
-    "byte_buffer.h",
+    "byte_buffer.h",  # Transitional, use :byte_buffer
     "byte_order.h",  # Transitional, use :byte_order
     "copy_on_write_buffer.cc",
     "copy_on_write_buffer.h",
@@ -261,6 +261,19 @@ rtc_library("bit_buffer") {
   ]
   deps = [ ":checks" ]
   absl_deps = [ "//third_party/abseil-cpp/absl/numeric:bits" ]
+}
+
+rtc_library("byte_buffer") {
+  visibility = [ "*" ]
+  sources = [
+    "byte_buffer.cc",
+    "byte_buffer.h",
+  ]
+  deps = [
+    ":buffer",
+    ":byte_order",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("buffer_queue") {
@@ -1130,6 +1143,7 @@ rtc_library("rtc_base") {
     ":async_resolver_interface",
     ":async_socket",
     ":buffer",
+    ":byte_buffer",
     ":byte_order",
     ":callback_list",
     ":checks",
@@ -1433,6 +1447,7 @@ rtc_library("rtc_base_tests_utils") {
   ]
   deps = [
     ":async_socket",
+    ":byte_buffer",
     ":checks",
     ":ip_address",
     ":location",
@@ -1624,6 +1639,7 @@ if (rtc_include_tests) {
         ":bounded_inline_vector",
         ":buffer",
         ":buffer_queue",
+        ":byte_buffer",
         ":byte_order",
         ":checks",
         ":criticalsection",
