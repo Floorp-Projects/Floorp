@@ -782,9 +782,6 @@ BackgroundAllocTask::BackgroundAllocTask(GCRuntime* gc, ChunkPool& pool)
 void BackgroundAllocTask::run(AutoLockHelperThreadState& lock) {
   AutoUnlockHelperThreadState unlock(lock);
 
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-  AutoTraceLog logAllocation(logger, TraceLogger_GCAllocation);
-
   AutoLockGC gcLock(gc);
   while (!isCancelled() && gc->wantBackgroundAllocation(gcLock)) {
     TenuredChunk* chunk;

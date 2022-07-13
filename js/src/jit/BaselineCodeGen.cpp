@@ -204,10 +204,6 @@ MethodStatus BaselineCompiler::compile() {
           script->filename(), script->lineno(), script->column());
 
   AutoIncrementalTimer timer(cx->realm()->timers.baselineCompileTime);
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-  TraceLoggerEvent scriptEvent(TraceLogger_AnnotateScripts, script);
-  AutoTraceLog logScript(logger, scriptEvent);
-  AutoTraceLog logCompile(logger, TraceLogger_BaselineCompilation);
 
   AutoKeepJitScripts keepJitScript(cx);
   if (!script->ensureHasJitScript(cx, keepJitScript)) {

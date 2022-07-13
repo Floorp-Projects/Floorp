@@ -2526,8 +2526,6 @@ void BackgroundUnmarkTask::initZones() {
 void BackgroundUnmarkTask::run(AutoLockHelperThreadState& helperTheadLock) {
   AutoUnlockHelperThreadState unlock(helperTheadLock);
 
-  AutoTraceLog log(TraceLoggerForCurrentThread(), TraceLogger_GCUnmarking);
-
   for (Zone* zone : zones) {
     for (auto kind : AllAllocKinds()) {
       ArenaList& arenas = zone->arenas.collectingArenaList(kind);
@@ -3940,7 +3938,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
 
   stats().log("GC slice starting in state %s", StateName(incrementalState));
 
-  AutoTraceLog logGC(TraceLoggerForCurrentThread(), TraceLogger_GC);
   AutoStopVerifyingBarriers av(rt, isShutdownGC());
   AutoMaybeLeaveAtomsZone leaveAtomsZone(rt->mainContextFromOwnThread());
   AutoSetZoneSliceThresholds sliceThresholds(this);
@@ -4192,8 +4189,6 @@ void GCRuntime::collectNursery(JS::GCOptions options, JS::GCReason reason,
   gcstats::AutoPhase ap(stats(), phase);
 
   nursery().clearMinorGCRequest();
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-  AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
   nursery().collect(options, reason);
   MOZ_ASSERT(nursery().isEmpty());
 

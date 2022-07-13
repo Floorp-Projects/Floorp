@@ -1635,9 +1635,6 @@ void SourceCompressionTask::runTask() {
     return;
   }
 
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-  AutoTraceLog logCompile(logger, TraceLogger_CompressSource);
-
   MOZ_ASSERT(source_->hasUncompressedSource());
 
   source_->performTaskWork(this);
