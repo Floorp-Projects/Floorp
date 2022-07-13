@@ -205,6 +205,12 @@ static unsigned long getauxval(unsigned long type)
 #endif
 #endif /* defined(__FreeBSD__) */
 
+#if defined(__OpenBSD__)
+#include <sys/sysctl.h>
+#include <machine/cpu.h>
+#include <machine/armreg.h>
+#endif /* defined(__OpenBSD__) */
+
 void
 CheckARMSupport()
 {
@@ -231,6 +237,16 @@ CheckARMSupport()
         arm_sha1_support_ = ID_AA64ISAR0_SHA1_VAL(isar0) >= ID_AA64ISAR0_SHA1_BASE;
         arm_sha2_support_ = ID_AA64ISAR0_SHA2_VAL(isar0) >= ID_AA64ISAR0_SHA2_BASE;
     }
+#elif defined(__OpenBSD__)
+    const int isar0_mib[] = { CTL_MACHDEP, CPU_ID_AA64ISAR0 };
+    uint64_t isar0;
+    size_t len = sizeof(isar0);
+    if (sysctl(isar0_mib, 2, &isar0, &len, NULL, 0) < 0)
+        return;
+    arm_aes_support_ = ID_AA64ISAR0_AES(isar0) >= ID_AA64ISAR0_AES_BASE;
+    arm_pmull_support_ = ID_AA64ISAR0_AES(isar0) >= ID_AA64ISAR0_AES_PMULL;
+    arm_sha1_support_ = ID_AA64ISAR0_SHA1(isar0) >= ID_AA64ISAR0_SHA1_BASE;
+    arm_sha2_support_ = ID_AA64ISAR0_SHA2(isar0) >= ID_AA64ISAR0_SHA2_BASE;
 #elif defined(__ARM_FEATURE_CRYPTO)
     /*
      * Although no feature detection, default compiler option allows ARM
