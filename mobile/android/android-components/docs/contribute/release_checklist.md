@@ -6,73 +6,45 @@ permalink: /contributing/release-checklist
 
 These are instructions for preparing a release branch for Android Components and starting the next Nightly development cycle.
 
-## Creating a new Beta release branch
+## [Release Management] Creating a new Beta release branch
+
+**This part is 100% covered by the Release Management team. Please do not handle it anymore.**
 
 1. Create a branch name with the format `releases/[beta_version].0` off of the `main` branch (for example, `releases/98.0`) through the GitHub UI.
 `[beta_version]` should follow the Firefox Beta release number. See [Firefox Release Calendar](https://wiki.mozilla.org/Release_Management/Calendar).
 2. In [Gecko.kt](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt):
-   - Set the `version` to the first build of GeckoView `[beta_version]` that is available in [maven/geckoview-beta](https://maven.mozilla.org/?prefix=maven2/org/mozilla/geckoview/geckoview-beta/).
    - Set the `channel` to `val channel = GeckoChannel.BETA`.
 
     ```diff
     diff --git a/buildSrc/src/main/java/Gecko.kt b/buildSrc/src/main/java/Gecko.kt
-    index 991dd702bb5..3b110e803c7 100644
+    index 80b4113cae..bea6243f69 100644
     --- a/buildSrc/src/main/java/Gecko.kt
     +++ b/buildSrc/src/main/java/Gecko.kt
-    @@ -9,12 +9,12 @@ object Gecko {
-      /**
-       * GeckoView Version.
-       */
-    -    const val version = "98.0.20220207065816"
-    +    const val version = "98.0.20220207151916"
-
-       /**
-        * GeckoView channel
-        */
+    @@ -14,7 +14,7 @@ object Gecko {
+        /**
+          * GeckoView channel
+          */
     -    val channel = GeckoChannel.NIGHTLY
     +    val channel = GeckoChannel.BETA
-        }
+    }
+
+    /**
     ```
+3. Create a commit and pull request named `Switch to GeckoView Beta` for this change. The pull request should be committed into the `releases/[beta_version].0` branch. Land the pull request. This will create busted builds which are expected. The next step should green it up.
+4. Let the Github Action bump the geckoview version like in [#12485](https://github.com/mozilla-mobile/android-components/pull/12485).
+5. Once both pull requests are landed, go to [Shipit](https://shipit.mozilla-releng.net/) and kick off a new release.
+6. After 30-60 minutes, follow up to see if a `[beta_version].0.0` build is available in one of the AC components on [maven/components](https://maven.mozilla.org/?prefix=maven2/org/mozilla/components/).
+7. Tell the dev team they can handle the changes down below ⬇️
 
-3. Create a commit and pull request named `Update to first GeckoView [beta_version] Beta` for this change. The pull request should be committed into the `releases/[beta_version].0` branch.
-4. After this pull request has landed, [Draft a new release](https://github.com/mozilla-mobile/android-components/releases/new):
-    - Release title: `Android-Components [beta_version].0.0`
-    - Create a new tag and select it in "Choose a tag": `v[beta_version].0.0`
-    - Target: `releases/[beta_version].0`
-    - Description: Follow this template and bump the release note URL, specify the correct commit range and milestone.
+## [Dev team] Starting the next Nightly development cycle
 
-    ```
-    * [Release notes](https://mozac.org/changelog/#9800)
-    * [Commits](https://github.com/mozilla-mobile/android-components/compare/v97.0.0...v98.0.0)
-    * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/145?closed=1)
-    ```
+**Please handle this part once Release Management gives you the go.**
 
-    - Push the "Publish release.
-
-    <img width="1385" alt="Screen Shot 2022-02-08 at 9 55 58 AM" src="https://user-images.githubusercontent.com/1190888/153047976-cffdf1c1-e3c1-45eb-83ed-cedd021a68b4.png">
-
-5. After 30-60 minutes, follow up to see if a `[beta_version].0.0` build is available in one of the AC components on [maven/components](https://maven.mozilla.org/?prefix=maven2/org/mozilla/components/).
-
-See [https://github.com/mozilla-mobile/android-components/pull/11520](https://github.com/mozilla-mobile/android-components/pull/11520) for an example.
-
-## Starting the next Nightly development cycle
-
+0. Wait for greenlight coming from Release Management.
 1. Create a local development branch off of the `main` branch.
-2. Create a commit named `Start [nightly_version].0.0 development cycle` In [.buildconfig.yml](https://github.com/mozilla-mobile/android-components/blob/main/.buildconfig.yml) and [version.txt](https://github.com/mozilla-mobile/android-components/blob/main/version.txt), bump the current `componentsVersion` up by 1 and ensure this change is also synced with `version.txt`. `[nightly_version]` should follow the Firefox Nightly release number. See [Firefox Release Calendar](https://wiki.mozilla.org/Release_Management/Calendar).
+2. Create a commit named `Start [nightly_version].0.0 development cycle`. In [version.txt](https://github.com/mozilla-mobile/android-components/blob/main/version.txt), bump the major number by 1. `[nightly_version]` should follow the Firefox Nightly release number. See [Firefox Release Calendar](https://wiki.mozilla.org/Release_Management/Calendar).
 
     ```diff
-    diff --git a/.buildconfig.yml b/.buildconfig.yml
-    index 62e0d8729b9..4f3f9cb5f94 100644
-    --- a/.buildconfig.yml
-    +++ b/.buildconfig.yml
-    @@ -1,6 +1,6 @@
-    # Please keep this version in sync with version.txt
-    # version.txt should be the new source of truth for version numbers
-    -componentsVersion: 98.0.0
-    +componentsVersion: 99.0.0
-    # Please add a treeherder group in taskcluster/ci/config.yml if you add a new project here.
-    projects:
-      compose-awesomebar:
     diff --git a/version.txt b/version.txt
     index be9ad8dac55..511c658edc3 100644
     --- a/version.txt
@@ -82,7 +54,7 @@ See [https://github.com/mozilla-mobile/android-components/pull/11520](https://gi
     +99.0.0
     ```
 
-3. Create a new [Milestone](https://github.com/mozilla-mobile/android-components/milestones) with the following format `[nightly_version].0.0 <insert an emoji>` (for example, `99.0.0 🛎`). Close the existing milestone and bump all the remaining opened issues to the next milestone or simply remove the tagged milestone depending on what is appropriate.
+3. Create a new [Github Milestone](https://github.com/mozilla-mobile/android-components/milestones) with the following format `[nightly_version].0.0 <insert an emoji>` (for example, `99.0.0 🛎`). Close the existing milestone and bump all the remaining opened issues to the next milestone or simply remove the tagged milestone depending on what is appropriate.
 4. Create a commit named `Update changelog for [nightly_version].0.0 release` that will update the following in [changelog.md](https://github.com/mozilla-mobile/android-components/blob/main/docs/changelog.md):
   - Add a new `[nightly_version].0.0 (In Development)` section for the next Nightly version of AC with the next commit and milestone numbers.
   - Update the `[beta_version].0.0` section, change `blob` in the links to `v[beta_version].0.0` and specifying the correct commit ranges.
