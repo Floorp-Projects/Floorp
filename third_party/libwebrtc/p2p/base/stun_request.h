@@ -86,7 +86,7 @@ class StunRequest : public rtc::MessageHandler {
  public:
   explicit StunRequest(StunRequestManager& manager);
   StunRequest(StunRequestManager& manager,
-              std::unique_ptr<StunMessage> request);
+              std::unique_ptr<StunMessage> message);
   ~StunRequest() override;
 
   // Causes our wrapped StunMessage to be Prepared
@@ -117,7 +117,7 @@ class StunRequest : public rtc::MessageHandler {
 
   // Fills in a request object to be sent.  Note that request's transaction ID
   // will already be set and cannot be changed.
-  virtual void Prepare(StunMessage* request) {}
+  virtual void Prepare(StunMessage* message) {}
 
   // Called when the message receives a response or times out.
   virtual void OnResponse(StunMessage* response) {}

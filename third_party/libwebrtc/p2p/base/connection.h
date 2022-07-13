@@ -58,7 +58,7 @@ struct CandidatePair final : public CandidatePairInterface {
 class ConnectionRequest : public StunRequest {
  public:
   ConnectionRequest(StunRequestManager& manager, Connection* connection);
-  void Prepare(StunMessage* request) override;
+  void Prepare(StunMessage* message) override;
   void OnResponse(StunMessage* response) override;
   void OnErrorResponse(StunMessage* response) override;
   void OnTimeout() override;
@@ -306,8 +306,8 @@ class Connection : public CandidatePairInterface, public sigslot::has_slots<> {
   // Does not trigger SignalStateChange
   void ForgetLearnedState();
 
-  void SendStunBindingResponse(const StunMessage* request);
-  void SendGoogPingResponse(const StunMessage* request);
+  void SendStunBindingResponse(const StunMessage* message);
+  void SendGoogPingResponse(const StunMessage* message);
   void SendResponseMessage(const StunMessage& response);
 
   // An accessor for unit tests.

@@ -99,8 +99,8 @@ class StunRequestThunker : public StunRequest {
   }
   virtual void OnTimeout() { test_->OnTimeout(); }
 
-  virtual void Prepare(StunMessage* request) {
-    request->SetType(STUN_BINDING_REQUEST);
+  virtual void Prepare(StunMessage* message) {
+    message->SetType(STUN_BINDING_REQUEST);
   }
 
   StunRequestTest* test_;

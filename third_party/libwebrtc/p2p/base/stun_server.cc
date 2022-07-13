@@ -83,15 +83,15 @@ void StunServer::SendResponse(const StunMessage& msg,
     RTC_LOG_ERR(LS_ERROR) << "sendto";
 }
 
-void StunServer::GetStunBindResponse(StunMessage* request,
+void StunServer::GetStunBindResponse(StunMessage* message,
                                      const rtc::SocketAddress& remote_addr,
                                      StunMessage* response) const {
   response->SetType(STUN_BINDING_RESPONSE);
-  response->SetTransactionID(request->transaction_id());
+  response->SetTransactionID(message->transaction_id());
 
-  // Tell the user the address that we received their request from.
+  // Tell the user the address that we received their message from.
   std::unique_ptr<StunAddressAttribute> mapped_addr;
-  if (request->IsLegacy()) {
+  if (message->IsLegacy()) {
     mapped_addr = StunAttribute::CreateAddress(STUN_ATTR_MAPPED_ADDRESS);
   } else {
     mapped_addr = StunAttribute::CreateXorAddress(STUN_ATTR_XOR_MAPPED_ADDRESS);

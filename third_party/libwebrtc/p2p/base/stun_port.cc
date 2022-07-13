@@ -47,8 +47,8 @@ class StunBindingRequest : public StunRequest {
 
   const rtc::SocketAddress& server_addr() const { return server_addr_; }
 
-  void Prepare(StunMessage* request) override {
-    request->SetType(STUN_BINDING_REQUEST);
+  void Prepare(StunMessage* message) override {
+    message->SetType(STUN_BINDING_REQUEST);
   }
 
   void OnResponse(StunMessage* response) override {
