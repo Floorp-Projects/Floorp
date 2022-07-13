@@ -236,6 +236,11 @@ struct RTC_EXPORT EchoCanceller3Config {
     float floor_first_increase = 0.00001f;
     bool conservative_hf_suppression = false;
   } suppressor;
+
+  struct MultiChannel {
+    bool detect_stereo_content = true;
+    float stereo_detection_threshold = 0.0f;
+  } multi_channel;
 };
 }  // namespace webrtc
 

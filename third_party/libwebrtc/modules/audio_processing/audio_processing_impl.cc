@@ -1726,14 +1726,14 @@ void AudioProcessingImpl::InitializeEchoController() {
           proc_sample_rate_hz(), num_reverse_channels(), num_proc_channels());
       RTC_DCHECK(submodules_.echo_controller);
     } else {
-      EchoCanceller3Config config =
-          use_setup_specific_default_aec3_config_
-              ? EchoCanceller3::CreateDefaultConfig(num_reverse_channels(),
-                                                    num_proc_channels())
-              : EchoCanceller3Config();
+      EchoCanceller3Config config;
+      absl::optional<EchoCanceller3Config> multichannel_config;
+      if (use_setup_specific_default_aec3_config_) {
+        multichannel_config = EchoCanceller3::CreateDefaultMultichannelConfig();
+      }
       submodules_.echo_controller = std::make_unique<EchoCanceller3>(
-          config, proc_sample_rate_hz(), num_reverse_channels(),
-          num_proc_channels());
+          config, multichannel_config, proc_sample_rate_hz(),
+          num_reverse_channels(), num_proc_channels());
     }
 
     // Setup the storage for returning the linear AEC output.

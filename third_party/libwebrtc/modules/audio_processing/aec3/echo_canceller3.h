@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/audio/echo_canceller3_config.h"
 #include "api/audio/echo_control.h"
@@ -23,7 +24,9 @@
 #include "modules/audio_processing/aec3/block_delay_buffer.h"
 #include "modules/audio_processing/aec3/block_framer.h"
 #include "modules/audio_processing/aec3/block_processor.h"
+#include "modules/audio_processing/aec3/config_selector.h"
 #include "modules/audio_processing/aec3/frame_blocker.h"
+#include "modules/audio_processing/aec3/multi_channel_content_detector.h"
 #include "modules/audio_processing/audio_buffer.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/checks.h"
@@ -84,10 +87,12 @@ class Aec3RenderQueueItemVerifier {
 // AnalyzeRender call which can be called concurrently with the other methods.
 class EchoCanceller3 : public EchoControl {
  public:
-  EchoCanceller3(const EchoCanceller3Config& config,
-                 int sample_rate_hz,
-                 size_t num_render_channels,
-                 size_t num_capture_channels);
+  EchoCanceller3(
+      const EchoCanceller3Config& config,
+      const absl::optional<EchoCanceller3Config>& multichannel_config,
+      int sample_rate_hz,
+      size_t num_render_channels,
+      size_t num_capture_channels);
 
   ~EchoCanceller3() override;
 
@@ -130,19 +135,36 @@ class EchoCanceller3 : public EchoControl {
     block_processor_->UpdateEchoLeakageStatus(leakage_detected);
   }
 
-  // Produces a default configuration that is suitable for a certain combination
-  // of render and capture channels.
-  static EchoCanceller3Config CreateDefaultConfig(size_t num_render_channels,
-                                                  size_t num_capture_channels);
+  // Produces a default configuration for multichannel.
+  static EchoCanceller3Config CreateDefaultMultichannelConfig();
 
  private:
-  class RenderWriter;
   friend class EchoCanceller3Tester;
-  FRIEND_TEST_ALL_PREFIXES(EchoCanceller3Metrics, EchoReturnLossEnhancement);
+  FRIEND_TEST_ALL_PREFIXES(EchoCanceller3, DetectionOfProperStereo);
+  FRIEND_TEST_ALL_PREFIXES(EchoCanceller3,
+                           DetectionOfProperStereoUsingThreshold);
+  FRIEND_TEST_ALL_PREFIXES(EchoCanceller3,
+                           StereoContentDetectionForMonoSignals);
 
-  // Replaces the internal block processor with a custom one for testing.
+  class RenderWriter;
+
+  // (Re-)Initializes the selected subset of the EchoCanceller3 fields, at
+  // creation as well as during reconfiguration.
+  void Initialize();
+
+  // Only for testing. Replaces the internal block processor.
   void SetBlockProcessorForTesting(
       std::unique_ptr<BlockProcessor> block_processor);
+
+  // Only for testing. Returns whether stereo processing is active.
+  bool StereoRenderProcessingActiveForTesting() const {
+    return multichannel_content_detector_.IsMultiChannelContentDetected();
+  }
+
+  // Only for testing.
+  const EchoCanceller3Config& GetActiveConfigForTesting() const {
+    return config_selector_.active_config();
+  }
 
   // Empties the render SwapQueue.
   void EmptyRenderQueue();
@@ -166,13 +188,17 @@ class EchoCanceller3 : public EchoControl {
   const EchoCanceller3Config config_;
   const int sample_rate_hz_;
   const int num_bands_;
-  const size_t num_render_channels_;
+  const size_t num_render_input_channels_;
+  size_t num_render_channels_to_aec_;
   const size_t num_capture_channels_;
+  ConfigSelector config_selector_;
+  MultiChannelContentDetector multichannel_content_detector_;
   std::unique_ptr<BlockFramer> linear_output_framer_
       RTC_GUARDED_BY(capture_race_checker_);
   BlockFramer output_framer_ RTC_GUARDED_BY(capture_race_checker_);
   FrameBlocker capture_blocker_ RTC_GUARDED_BY(capture_race_checker_);
-  FrameBlocker render_blocker_ RTC_GUARDED_BY(capture_race_checker_);
+  std::unique_ptr<FrameBlocker> render_blocker_
+      RTC_GUARDED_BY(capture_race_checker_);
   SwapQueue<std::vector<std::vector<std::vector<float>>>,
             Aec3RenderQueueItemVerifier>
       render_transfer_queue_;

@@ -560,6 +560,7 @@ webrtc_fuzzer_test("aec3_fuzzer") {
     "../../modules/audio_processing:audio_buffer",
     "../../modules/audio_processing/aec3",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 webrtc_fuzzer_test("comfort_noise_decoder_fuzzer") {
