@@ -293,9 +293,6 @@ class Port : public PortInterface,
   // Returns the connection to the given address or NULL if none exists.
   Connection* GetConnection(const rtc::SocketAddress& remote_addr) override;
 
-  // Called each time a connection is created.
-  sigslot::signal2<Port*, Connection*> SignalConnectionCreated;
-
   // In a shared socket mode each port which shares the socket will decide
   // to accept the packet based on the `remote_addr`. Currently only UDP
   // port implemented this method.
