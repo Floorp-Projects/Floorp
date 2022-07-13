@@ -225,6 +225,7 @@ rtc_library("field_trial") {
     "field_trial.h",
   ]
 
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
   deps = [
     "../rtc_base:checks",
     "../system_wrappers:field_trial",

@@ -11,6 +11,7 @@
 #ifndef TEST_EXPLICIT_KEY_VALUE_CONFIG_H_
 #define TEST_EXPLICIT_KEY_VALUE_CONFIG_H_
 
+#include <functional>
 #include <map>
 #include <string>
 
@@ -22,11 +23,13 @@ namespace test {
 
 class ExplicitKeyValueConfig : public FieldTrialsView {
  public:
-  explicit ExplicitKeyValueConfig(const std::string& s);
+  explicit ExplicitKeyValueConfig(absl::string_view s);
   std::string Lookup(absl::string_view key) const override;
 
  private:
-  std::map<std::string, std::string> key_value_map_;
+  // Unlike std::less<std::string>, std::less<> is transparent and allows
+  // heterogeneous lookup directly with absl::string_view.
+  std::map<std::string, std::string, std::less<>> key_value_map_;
 };
 
 }  // namespace test
