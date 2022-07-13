@@ -171,6 +171,7 @@ class TurnPort : public Port {
   void OnAllocateMismatch();
 
   rtc::AsyncPacketSocket* socket() const { return socket_; }
+  StunRequestManager& request_manager() { return request_manager_; }
 
   // Signal with resolved server address.
   // Parameters are port, server address and resolved server address.
@@ -188,7 +189,11 @@ class TurnPort : public Port {
   sigslot::signal2<TurnPort*, int> SignalTurnRefreshResult;
   sigslot::signal3<TurnPort*, const rtc::SocketAddress&, int>
       SignalCreatePermissionResult;
-  void FlushRequests(int msg_type) { request_manager_.Flush(msg_type); }
+
+  void FlushRequestsForTest(int msg_type) {
+    request_manager_.FlushForTest(msg_type);
+  }
+
   bool HasRequests() { return !request_manager_.empty(); }
   void set_credentials(const RelayCredentials& credentials) {
     credentials_ = credentials;

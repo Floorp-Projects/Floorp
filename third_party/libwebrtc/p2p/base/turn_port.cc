@@ -1361,7 +1361,8 @@ void TurnPort::MaybeAddTurnLoggingId(StunMessage* msg) {
 }
 
 TurnAllocateRequest::TurnAllocateRequest(TurnPort* port)
-    : StunRequest(new TurnMessage()), port_(port) {}
+    : StunRequest(port->request_manager(), std::make_unique<TurnMessage>()),
+      port_(port) {}
 
 void TurnAllocateRequest::Prepare(StunMessage* request) {
   // Create the request as indicated in RFC 5766, Section 6.1.
@@ -1549,7 +1550,9 @@ void TurnAllocateRequest::OnTryAlternate(StunMessage* response, int code) {
 }
 
 TurnRefreshRequest::TurnRefreshRequest(TurnPort* port)
-    : StunRequest(new TurnMessage()), port_(port), lifetime_(-1) {}
+    : StunRequest(port->request_manager(), std::make_unique<TurnMessage>()),
+      port_(port),
+      lifetime_(-1) {}
 
 void TurnRefreshRequest::Prepare(StunMessage* request) {
   // Create the request as indicated in RFC 5766, Section 7.1.
@@ -1630,7 +1633,7 @@ TurnCreatePermissionRequest::TurnCreatePermissionRequest(
     TurnEntry* entry,
     const rtc::SocketAddress& ext_addr,
     const std::string& remote_ufrag)
-    : StunRequest(new TurnMessage()),
+    : StunRequest(port->request_manager(), std::make_unique<TurnMessage>()),
       port_(port),
       entry_(entry),
       ext_addr_(ext_addr),
@@ -1703,7 +1706,7 @@ TurnChannelBindRequest::TurnChannelBindRequest(
     TurnEntry* entry,
     int channel_id,
     const rtc::SocketAddress& ext_addr)
-    : StunRequest(new TurnMessage()),
+    : StunRequest(port->request_manager(), std::make_unique<TurnMessage>()),
       port_(port),
       entry_(entry),
       channel_id_(channel_id),

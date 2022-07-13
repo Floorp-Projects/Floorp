@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "rtc_base/checks.h"
@@ -56,7 +57,8 @@ void StunRequestManager::Send(StunRequest* request) {
 }
 
 void StunRequestManager::SendDelayed(StunRequest* request, int delay) {
-  request->set_manager(this);
+  RTC_DCHECK_RUN_ON(thread_);
+  RTC_DCHECK_EQ(this, request->manager());
   RTC_DCHECK(requests_.find(request->id()) == requests_.end());
   request->Construct();
   requests_[request->id()] = request;
@@ -67,7 +69,8 @@ void StunRequestManager::SendDelayed(StunRequest* request, int delay) {
   }
 }
 
-void StunRequestManager::Flush(int msg_type) {
+void StunRequestManager::FlushForTest(int msg_type) {
+  RTC_DCHECK_RUN_ON(thread_);
   for (const auto& kv : requests_) {
     StunRequest* request = kv.second;
     if (msg_type == kAllRequests || msg_type == request->type()) {
@@ -77,7 +80,8 @@ void StunRequestManager::Flush(int msg_type) {
   }
 }
 
-bool StunRequestManager::HasRequest(int msg_type) {
+bool StunRequestManager::HasRequestForTest(int msg_type) {
+  RTC_DCHECK_RUN_ON(thread_);
   for (const auto& kv : requests_) {
     StunRequest* request = kv.second;
     if (msg_type == kAllRequests || msg_type == request->type()) {
@@ -88,6 +92,7 @@ bool StunRequestManager::HasRequest(int msg_type) {
 }
 
 void StunRequestManager::Remove(StunRequest* request) {
+  RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK(request->manager() == this);
   RequestMap::iterator iter = requests_.find(request->id());
   if (iter != requests_.end()) {
@@ -98,6 +103,7 @@ void StunRequestManager::Remove(StunRequest* request) {
 }
 
 void StunRequestManager::Clear() {
+  RTC_DCHECK_RUN_ON(thread_);
   std::vector<StunRequest*> requests;
   for (RequestMap::iterator i = requests_.begin(); i != requests_.end(); ++i)
     requests.push_back(i->second);
@@ -110,6 +116,7 @@ void StunRequestManager::Clear() {
 }
 
 bool StunRequestManager::CheckResponse(StunMessage* msg) {
+  RTC_DCHECK_RUN_ON(thread_);
   RequestMap::iterator iter = requests_.find(msg->transaction_id());
   if (iter == requests_.end()) {
     // TODO(pthatcher): Log unknown responses without being too spammy
@@ -156,7 +163,13 @@ bool StunRequestManager::CheckResponse(StunMessage* msg) {
   return true;
 }
 
+bool StunRequestManager::empty() const {
+  RTC_DCHECK_RUN_ON(thread_);
+  return requests_.empty();
+}
+
 bool StunRequestManager::CheckResponse(const char* data, size_t size) {
+  RTC_DCHECK_RUN_ON(thread_);
   // Check the appropriate bytes of the stream to see if they match the
   // transaction ID of a response we are expecting.
 
@@ -186,32 +199,33 @@ bool StunRequestManager::CheckResponse(const char* data, size_t size) {
   return CheckResponse(response.get());
 }
 
-StunRequest::StunRequest()
-    : count_(0),
-      timeout_(false),
-      manager_(0),
+StunRequest::StunRequest(StunRequestManager& manager)
+    : manager_(manager),
       msg_(new StunMessage()),
-      tstamp_(0) {
+      tstamp_(0),
+      count_(0),
+      timeout_(false) {
   msg_->SetTransactionID(rtc::CreateRandomString(kStunTransactionIdLength));
 }
 
-StunRequest::StunRequest(StunMessage* request)
-    : count_(0), timeout_(false), manager_(0), msg_(request), tstamp_(0) {
+StunRequest::StunRequest(StunRequestManager& manager,
+                         std::unique_ptr<StunMessage> request)
+    : manager_(manager),
+      msg_(std::move(request)),
+      tstamp_(0),
+      count_(0),
+      timeout_(false) {
   msg_->SetTransactionID(rtc::CreateRandomString(kStunTransactionIdLength));
 }
 
 StunRequest::~StunRequest() {
-  RTC_DCHECK(manager_ != NULL);
-  if (manager_) {
-    manager_->Remove(this);
-    manager_->thread_->Clear(this);
-  }
-  delete msg_;
+  manager_.Remove(this);
+  manager_.network_thread()->Clear(this);
 }
 
 void StunRequest::Construct() {
   if (msg_->type() == 0) {
-    Prepare(msg_);
+    Prepare(msg_.get());
     RTC_DCHECK(msg_->type() != 0);
   }
 }
@@ -222,24 +236,16 @@ int StunRequest::type() {
 }
 
 const StunMessage* StunRequest::msg() const {
-  return msg_;
-}
-
-StunMessage* StunRequest::mutable_msg() {
-  return msg_;
+  return msg_.get();
 }
 
 int StunRequest::Elapsed() const {
+  RTC_DCHECK_RUN_ON(network_thread());
   return static_cast<int>(rtc::TimeMillis() - tstamp_);
 }
 
-void StunRequest::set_manager(StunRequestManager* manager) {
-  RTC_DCHECK(!manager_);
-  manager_ = manager;
-}
-
 void StunRequest::OnMessage(rtc::Message* pmsg) {
-  RTC_DCHECK(manager_ != NULL);
+  RTC_DCHECK_RUN_ON(network_thread());
   RTC_DCHECK(pmsg->message_id == MSG_STUN_SEND);
 
   if (timeout_) {
@@ -252,30 +258,37 @@ void StunRequest::OnMessage(rtc::Message* pmsg) {
 
   rtc::ByteBufferWriter buf;
   msg_->Write(&buf);
-  manager_->SignalSendPacket(buf.Data(), buf.Length(), this);
+  manager_.SignalSendPacket(buf.Data(), buf.Length(), this);
 
   OnSent();
-  manager_->thread_->PostDelayed(RTC_FROM_HERE, resend_delay(), this,
-                                 MSG_STUN_SEND, NULL);
+  manager_.network_thread()->PostDelayed(RTC_FROM_HERE, resend_delay(), this,
+                                         MSG_STUN_SEND, NULL);
 }
 
 void StunRequest::OnSent() {
+  RTC_DCHECK_RUN_ON(network_thread());
   count_ += 1;
   int retransmissions = (count_ - 1);
   if (retransmissions >= STUN_MAX_RETRANSMISSIONS) {
     timeout_ = true;
   }
-  RTC_LOG(LS_VERBOSE) << "Sent STUN request " << count_
-                      << "; resend delay = " << resend_delay();
+  RTC_DLOG(LS_VERBOSE) << "Sent STUN request " << count_
+                       << "; resend delay = " << resend_delay();
 }
 
 int StunRequest::resend_delay() {
+  RTC_DCHECK_RUN_ON(network_thread());
   if (count_ == 0) {
     return 0;
   }
   int retransmissions = (count_ - 1);
   int rto = STUN_INITIAL_RTO << retransmissions;
   return std::min(rto, STUN_MAX_RTO);
+}
+
+void StunRequest::set_timed_out() {
+  RTC_DCHECK_RUN_ON(network_thread());
+  timeout_ = true;
 }
 
 }  // namespace cricket

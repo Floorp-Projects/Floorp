@@ -393,7 +393,7 @@ TEST_F(StunPortTest, TestStunBindingRequestShortLifetime) {
   PrepareAddress();
   EXPECT_TRUE_SIMULATED_WAIT(done(), kTimeoutMs, fake_clock);
   EXPECT_TRUE_SIMULATED_WAIT(
-      !port()->HasPendingRequest(cricket::STUN_BINDING_REQUEST), 2000,
+      !port()->HasPendingRequestForTest(cricket::STUN_BINDING_REQUEST), 2000,
       fake_clock);
 }
 
@@ -404,7 +404,7 @@ TEST_F(StunPortTest, TestStunBindingRequestLongLifetime) {
   PrepareAddress();
   EXPECT_TRUE_SIMULATED_WAIT(done(), kTimeoutMs, fake_clock);
   EXPECT_TRUE_SIMULATED_WAIT(
-      port()->HasPendingRequest(cricket::STUN_BINDING_REQUEST), 1000,
+      port()->HasPendingRequestForTest(cricket::STUN_BINDING_REQUEST), 1000,
       fake_clock);
 }
 
