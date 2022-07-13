@@ -11,7 +11,6 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "js/AllocationRecording.h"
 #include "js/ProfilingStack.h"
-#include "js/TraceLoggerAPI.h"
 
 #if defined(XP_WIN)
 #  include <windows.h>
@@ -226,9 +225,7 @@ void ThreadRegistrationLockedRWOnThread::PollJSSampling() {
     if (mJSSampling == ACTIVE_REQUESTED) {
       mJSSampling = ACTIVE;
       js::EnableContextProfilingStack(mJSContext, true);
-      if (JSTracerEnabled()) {
-        JS::StartTraceLogger(mJSContext);
-      }
+
       if (JSAllocationsEnabled()) {
         // TODO - This probability should not be hardcoded. See Bug 1547284.
         JS::EnableRecordingAllocations(mJSContext,
@@ -240,9 +237,7 @@ void ThreadRegistrationLockedRWOnThread::PollJSSampling() {
     } else if (mJSSampling == INACTIVE_REQUESTED) {
       mJSSampling = INACTIVE;
       js::EnableContextProfilingStack(mJSContext, false);
-      if (JSTracerEnabled()) {
-        JS::StopTraceLogger(mJSContext);
-      }
+
       if (JSAllocationsEnabled()) {
         JS::DisableRecordingAllocations(mJSContext);
       }

@@ -217,13 +217,8 @@ class ThreadRegistrationData {
   // Flags to conveniently track various JS instrumentations.
   enum class JSInstrumentationFlags {
     StackSampling = 0x1,
-    TraceLogging = 0x2,
-    Allocations = 0x4,
+    Allocations = 0x2,
   };
-
-  [[nodiscard]] bool JSTracerEnabled() const {
-    return mJSFlags & uint32_t(JSInstrumentationFlags::TraceLogging);
-  }
 
   [[nodiscard]] bool JSAllocationsEnabled() const {
     return mJSFlags & uint32_t(JSInstrumentationFlags::Allocations);

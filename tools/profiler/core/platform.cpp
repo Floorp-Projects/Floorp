@@ -45,7 +45,6 @@
 #include "shared-libraries.h"
 #include "VTuneProfiler.h"
 
-#include "js/TraceLoggerAPI.h"
 #include "js/ProfilingFrameIterator.h"
 #include "memory_hooks.h"
 #include "mozilla/ArrayUtils.h"
@@ -348,9 +347,7 @@ static uint32_t AvailableFeatures() {
   // The memory hooks are not available.
   ProfilerFeature::ClearNativeAllocations(features);
 #endif
-  if (!JS::TraceLoggerSupported()) {
-    ProfilerFeature::ClearJSTracer(features);
-  }
+
 #if !defined(GP_OS_windows)
   ProfilerFeature::ClearNoTimerResolutionChange(features);
 #endif
@@ -1097,9 +1094,7 @@ class ActivePS {
     uint32_t Flags = 0;
     Flags |=
         FeatureJS(aLock) ? uint32_t(JSInstrumentationFlags::StackSampling) : 0;
-    Flags |= FeatureJSTracer(aLock)
-                 ? uint32_t(JSInstrumentationFlags::TraceLogging)
-                 : 0;
+
     Flags |= FeatureJSAllocations(aLock)
                  ? uint32_t(JSInstrumentationFlags::Allocations)
                  : 0;
@@ -3293,8 +3288,7 @@ static void locked_profiler_stream_json_for_this_process(
       threadStreamingContext.mProfiledThreadData.StreamJSON(
           std::move(threadStreamingContext), aWriter,
           CorePS::ProcessName(aLock), CorePS::ETLDplus1(aLock),
-          CorePS::ProcessStartTime(), ActivePS::FeatureJSTracer(aLock),
-          aService, std::move(progressLogger));
+          CorePS::ProcessStartTime(), aService, std::move(progressLogger));
     }
     aProgressLogger.SetLocalProgress(92_pc, "Wrote samples and markers");
 
@@ -3310,7 +3304,7 @@ static void locked_profiler_stream_json_for_this_process(
         threadData.StreamJSON(
             javaBuffer, nullptr, aWriter, CorePS::ProcessName(aLock),
             CorePS::ETLDplus1(aLock), CorePS::ProcessStartTime(), aSinceTime,
-            ActivePS::FeatureJSTracer(aLock), nullptr,
+            nullptr,
             aProgressLogger.CreateSubLoggerTo("Streaming Java thread...", 96_pc,
                                               "Streamed Java thread"));
       }
@@ -3329,23 +3323,6 @@ static void locked_profiler_stream_json_for_this_process(
     }
   }
   aWriter.EndArray();
-
-  SLOW_DOWN_FOR_TESTING();
-
-  if (ActivePS::FeatureJSTracer(aLock)) {
-    aWriter.StartArrayProperty("jsTracerDictionary");
-    {
-      JS::AutoTraceLoggerLockGuard lockGuard;
-      // Collect Event Dictionary
-      JS::TraceLoggerDictionaryBuffer collectionBuffer(lockGuard);
-      while (collectionBuffer.NextChunk()) {
-        aWriter.StringElement(
-            MakeStringSpan(collectionBuffer.internalBuffer()));
-      }
-    }
-    aWriter.EndArray();
-  }
-  aProgressLogger.SetLocalProgress(98_pc, "Handled JS Tracer dictionary");
 
   SLOW_DOWN_FOR_TESTING();
 
