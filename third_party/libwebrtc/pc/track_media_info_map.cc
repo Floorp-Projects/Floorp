@@ -52,7 +52,7 @@ void GetAudioAndVideoTrackBySsrc(
   RTC_DCHECK(remote_video_track_by_ssrc->empty());
   for (const auto& rtp_sender : rtp_senders) {
     cricket::MediaType media_type = rtp_sender->media_type();
-    MediaStreamTrackInterface* track = rtp_sender->track();
+    MediaStreamTrackInterface* track = rtp_sender->track().get();
     if (!track) {
       continue;
     }
@@ -74,7 +74,7 @@ void GetAudioAndVideoTrackBySsrc(
   }
   for (const auto& rtp_receiver : rtp_receivers) {
     cricket::MediaType media_type = rtp_receiver->media_type();
-    MediaStreamTrackInterface* track = rtp_receiver->track();
+    MediaStreamTrackInterface* track = rtp_receiver->track().get();
     RTC_DCHECK(track);
     RtpParameters params = rtp_receiver->GetParameters();
     for (const RtpEncodingParameters& encoding : params.encodings) {
@@ -126,10 +126,10 @@ TrackMediaInfoMap::TrackMediaInfoMap(
       &unsignaled_video_track);
 
   for (const auto& sender : rtp_senders) {
-    attachment_id_by_track_[sender->track()] = sender->AttachmentId();
+    attachment_id_by_track_[sender->track().get()] = sender->AttachmentId();
   }
   for (const auto& receiver : rtp_receivers) {
-    attachment_id_by_track_[receiver->track()] = receiver->AttachmentId();
+    attachment_id_by_track_[receiver->track().get()] = receiver->AttachmentId();
   }
 
   if (voice_media_info_) {

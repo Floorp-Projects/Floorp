@@ -472,9 +472,9 @@ TEST_F(PeerConnectionFactoryTest, LocalRendering) {
 
   ASSERT_TRUE(source.get() != NULL);
   rtc::scoped_refptr<VideoTrackInterface> track(
-      factory_->CreateVideoTrack("testlabel", source));
+      factory_->CreateVideoTrack("testlabel", source.get()));
   ASSERT_TRUE(track.get() != NULL);
-  FakeVideoTrackRenderer local_renderer(track);
+  FakeVideoTrackRenderer local_renderer(track.get());
 
   EXPECT_EQ(0, local_renderer.num_rendered_frames());
   source->InjectFrame(frame_source.GetFrame());

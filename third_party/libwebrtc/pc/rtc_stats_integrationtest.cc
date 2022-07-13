@@ -174,8 +174,8 @@ class RTCStatsIntegrationTest : public ::testing::Test {
       PeerConnectionInterface* pc) {
     rtc::scoped_refptr<RTCStatsObtainer> stats_obtainer =
         RTCStatsObtainer::Create();
-    pc->GetStats(stats_obtainer);
-    EXPECT_TRUE_WAIT(stats_obtainer->report(), kGetStatsTimeoutMs);
+    pc->GetStats(stats_obtainer.get());
+    EXPECT_TRUE_WAIT(stats_obtainer->report() != nullptr, kGetStatsTimeoutMs);
     return stats_obtainer->report();
   }
 
@@ -186,7 +186,7 @@ class RTCStatsIntegrationTest : public ::testing::Test {
     rtc::scoped_refptr<RTCStatsObtainer> stats_obtainer =
         RTCStatsObtainer::Create();
     pc->GetStats(selector, stats_obtainer);
-    EXPECT_TRUE_WAIT(stats_obtainer->report(), kGetStatsTimeoutMs);
+    EXPECT_TRUE_WAIT(stats_obtainer->report() != nullptr, kGetStatsTimeoutMs);
     return stats_obtainer->report();
   }
 
@@ -432,7 +432,7 @@ class RTCStatsReportVerifier {
   }
 
   bool VerifyRTCCertificateStats(const RTCCertificateStats& certificate) {
-    RTCStatsVerifier verifier(report_, &certificate);
+    RTCStatsVerifier verifier(report_.get(), &certificate);
     verifier.TestMemberIsDefined(certificate.fingerprint);
     verifier.TestMemberIsDefined(certificate.fingerprint_algorithm);
     verifier.TestMemberIsDefined(certificate.base64_certificate);
@@ -442,7 +442,7 @@ class RTCStatsReportVerifier {
   }
 
   bool VerifyRTCCodecStats(const RTCCodecStats& codec) {
-    RTCStatsVerifier verifier(report_, &codec);
+    RTCStatsVerifier verifier(report_.get(), &codec);
     verifier.TestMemberIsIDReference(codec.transport_id,
                                      RTCTransportStats::kType);
     verifier.TestMemberIsDefined(codec.payload_type);
@@ -460,7 +460,7 @@ class RTCStatsReportVerifier {
   }
 
   bool VerifyRTCDataChannelStats(const RTCDataChannelStats& data_channel) {
-    RTCStatsVerifier verifier(report_, &data_channel);
+    RTCStatsVerifier verifier(report_.get(), &data_channel);
     verifier.TestMemberIsDefined(data_channel.label);
     verifier.TestMemberIsDefined(data_channel.protocol);
     verifier.TestMemberIsDefined(data_channel.data_channel_identifier);
@@ -475,7 +475,7 @@ class RTCStatsReportVerifier {
   bool VerifyRTCIceCandidatePairStats(
       const RTCIceCandidatePairStats& candidate_pair,
       bool is_selected_pair) {
-    RTCStatsVerifier verifier(report_, &candidate_pair);
+    RTCStatsVerifier verifier(report_.get(), &candidate_pair);
     verifier.TestMemberIsIDReference(candidate_pair.transport_id,
                                      RTCTransportStats::kType);
     verifier.TestMemberIsIDReference(candidate_pair.local_candidate_id,
@@ -526,7 +526,7 @@ class RTCStatsReportVerifier {
   }
 
   bool VerifyRTCIceCandidateStats(const RTCIceCandidateStats& candidate) {
-    RTCStatsVerifier verifier(report_, &candidate);
+    RTCStatsVerifier verifier(report_.get(), &candidate);
     verifier.TestMemberIsIDReference(candidate.transport_id,
                                      RTCTransportStats::kType);
     verifier.TestMemberIsDefined(candidate.is_remote);
@@ -561,7 +561,7 @@ class RTCStatsReportVerifier {
   }
 
   bool VerifyRTCMediaStreamStats(const RTCMediaStreamStats& media_stream) {
-    RTCStatsVerifier verifier(report_, &media_stream);
+    RTCStatsVerifier verifier(report_.get(), &media_stream);
     verifier.TestMemberIsDefined(media_stream.stream_identifier);
     verifier.TestMemberIsIDReference(media_stream.track_ids,
                                      RTCMediaStreamTrackStats::kType);
@@ -570,7 +570,7 @@ class RTCStatsReportVerifier {
 
   bool VerifyRTCMediaStreamTrackStats(
       const RTCMediaStreamTrackStats& media_stream_track) {
-    RTCStatsVerifier verifier(report_, &media_stream_track);
+    RTCStatsVerifier verifier(report_.get(), &media_stream_track);
     verifier.TestMemberIsDefined(media_stream_track.track_identifier);
     verifier.TestMemberIsDefined(media_stream_track.remote_source);
     verifier.TestMemberIsDefined(media_stream_track.ended);
@@ -771,7 +771,7 @@ class RTCStatsReportVerifier {
 
   bool VerifyRTCPeerConnectionStats(
       const RTCPeerConnectionStats& peer_connection) {
-    RTCStatsVerifier verifier(report_, &peer_connection);
+    RTCStatsVerifier verifier(report_.get(), &peer_connection);
     verifier.TestMemberIsNonNegative<uint32_t>(
         peer_connection.data_channels_opened);
     verifier.TestMemberIsNonNegative<uint32_t>(
@@ -808,7 +808,7 @@ class RTCStatsReportVerifier {
 
   bool VerifyRTCInboundRTPStreamStats(
       const RTCInboundRTPStreamStats& inbound_stream) {
-    RTCStatsVerifier verifier(report_, &inbound_stream);
+    RTCStatsVerifier verifier(report_.get(), &inbound_stream);
     VerifyRTCReceivedRtpStreamStats(inbound_stream, verifier,
                                     inbound_stream.media_type.is_defined() &&
                                         *inbound_stream.media_type == "audio");
@@ -936,7 +936,7 @@ class RTCStatsReportVerifier {
 
   bool VerifyRTCOutboundRTPStreamStats(
       const RTCOutboundRTPStreamStats& outbound_stream) {
-    RTCStatsVerifier verifier(report_, &outbound_stream);
+    RTCStatsVerifier verifier(report_.get(), &outbound_stream);
     VerifyRTCRTPStreamStats(outbound_stream, verifier);
     if (outbound_stream.media_type.is_defined() &&
         *outbound_stream.media_type == "video") {
@@ -1048,7 +1048,7 @@ class RTCStatsReportVerifier {
 
   bool VerifyRTCRemoteInboundRtpStreamStats(
       const RTCRemoteInboundRtpStreamStats& remote_inbound_stream) {
-    RTCStatsVerifier verifier(report_, &remote_inbound_stream);
+    RTCStatsVerifier verifier(report_.get(), &remote_inbound_stream);
     VerifyRTCReceivedRtpStreamStats(remote_inbound_stream, verifier, false);
     verifier.TestMemberIsDefined(remote_inbound_stream.fraction_lost);
     verifier.TestMemberIsIDReference(remote_inbound_stream.local_id,
@@ -1064,7 +1064,7 @@ class RTCStatsReportVerifier {
 
   bool VerifyRTCRemoteOutboundRTPStreamStats(
       const RTCRemoteOutboundRtpStreamStats& remote_outbound_stream) {
-    RTCStatsVerifier verifier(report_, &remote_outbound_stream);
+    RTCStatsVerifier verifier(report_.get(), &remote_outbound_stream);
     VerifyRTCRTPStreamStats(remote_outbound_stream, verifier);
     VerifyRTCSentRTPStreamStats(remote_outbound_stream, verifier);
     verifier.TestMemberIsIDReference(remote_outbound_stream.local_id,
@@ -1088,7 +1088,7 @@ class RTCStatsReportVerifier {
   }
 
   bool VerifyRTCAudioSourceStats(const RTCAudioSourceStats& audio_source) {
-    RTCStatsVerifier verifier(report_, &audio_source);
+    RTCStatsVerifier verifier(report_.get(), &audio_source);
     VerifyRTCMediaSourceStats(audio_source, &verifier);
     // Audio level, unlike audio energy, only gets updated at a certain
     // frequency, so we don't require that one to be positive to avoid a race
@@ -1106,7 +1106,7 @@ class RTCStatsReportVerifier {
   }
 
   bool VerifyRTCVideoSourceStats(const RTCVideoSourceStats& video_source) {
-    RTCStatsVerifier verifier(report_, &video_source);
+    RTCStatsVerifier verifier(report_.get(), &video_source);
     VerifyRTCMediaSourceStats(video_source, &verifier);
     // TODO(hbos): This integration test uses fakes that doesn't support
     // VideoTrackSourceInterface::Stats. When this is fixed we should
@@ -1120,7 +1120,7 @@ class RTCStatsReportVerifier {
   }
 
   bool VerifyRTCTransportStats(const RTCTransportStats& transport) {
-    RTCStatsVerifier verifier(report_, &transport);
+    RTCStatsVerifier verifier(report_.get(), &transport);
     verifier.TestMemberIsNonNegative<uint64_t>(transport.bytes_sent);
     verifier.TestMemberIsNonNegative<uint64_t>(transport.packets_sent);
     verifier.TestMemberIsNonNegative<uint64_t>(transport.bytes_received);
@@ -1240,7 +1240,7 @@ TEST_F(RTCStatsIntegrationTest,
 
   rtc::scoped_refptr<RTCStatsObtainer> stats_obtainer =
       RTCStatsObtainer::Create();
-  caller_->pc()->GetStats(stats_obtainer);
+  caller_->pc()->GetStats(stats_obtainer.get());
   // This will destroy the peer connection.
   caller_ = nullptr;
   // Any pending stats requests should have completed in the act of destroying
@@ -1257,7 +1257,7 @@ TEST_F(RTCStatsIntegrationTest, GetsStatsWhileClosingPeerConnection) {
 
   rtc::scoped_refptr<RTCStatsObtainer> stats_obtainer =
       RTCStatsObtainer::Create();
-  caller_->pc()->GetStats(stats_obtainer);
+  caller_->pc()->GetStats(stats_obtainer.get());
   caller_->pc()->Close();
 
   ASSERT_TRUE(stats_obtainer->report());

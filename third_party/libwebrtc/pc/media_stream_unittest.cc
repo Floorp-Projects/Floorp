@@ -66,10 +66,10 @@ class MediaStreamTest : public ::testing::Test {
     ASSERT_TRUE(audio_track_.get() != NULL);
     EXPECT_EQ(MediaStreamTrackInterface::kLive, audio_track_->state());
 
-    EXPECT_TRUE(stream_->AddTrack(video_track_));
-    EXPECT_FALSE(stream_->AddTrack(video_track_));
-    EXPECT_TRUE(stream_->AddTrack(audio_track_));
-    EXPECT_FALSE(stream_->AddTrack(audio_track_));
+    EXPECT_TRUE(stream_->AddTrack(video_track_.get()));
+    EXPECT_FALSE(stream_->AddTrack(video_track_.get()));
+    EXPECT_TRUE(stream_->AddTrack(audio_track_.get()));
+    EXPECT_FALSE(stream_->AddTrack(audio_track_.get()));
   }
 
   void ChangeTrack(MediaStreamTrackInterface* track) {
@@ -118,17 +118,17 @@ TEST_F(MediaStreamTest, GetTrackInfo) {
 }
 
 TEST_F(MediaStreamTest, RemoveTrack) {
-  MockObserver observer(stream_);
+  MockObserver observer(stream_.get());
 
   EXPECT_CALL(observer, OnChanged()).Times(Exactly(2));
 
-  EXPECT_TRUE(stream_->RemoveTrack(audio_track_));
-  EXPECT_FALSE(stream_->RemoveTrack(audio_track_));
+  EXPECT_TRUE(stream_->RemoveTrack(audio_track_.get()));
+  EXPECT_FALSE(stream_->RemoveTrack(audio_track_.get()));
   EXPECT_EQ(0u, stream_->GetAudioTracks().size());
   EXPECT_EQ(0u, stream_->GetAudioTracks().size());
 
-  EXPECT_TRUE(stream_->RemoveTrack(video_track_));
-  EXPECT_FALSE(stream_->RemoveTrack(video_track_));
+  EXPECT_TRUE(stream_->RemoveTrack(video_track_.get()));
+  EXPECT_FALSE(stream_->RemoveTrack(video_track_.get()));
 
   EXPECT_EQ(0u, stream_->GetVideoTracks().size());
   EXPECT_EQ(0u, stream_->GetVideoTracks().size());

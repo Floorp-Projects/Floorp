@@ -123,14 +123,15 @@ class PeerConnectionWrapperForRampUpTest : public PeerConnectionWrapper {
     video_track_sources_.back()->Start();
     return rtc::scoped_refptr<VideoTrackInterface>(
         pc_factory()->CreateVideoTrack(rtc::CreateRandomUuid(),
-                                       video_track_sources_.back()));
+                                       video_track_sources_.back().get()));
   }
 
   rtc::scoped_refptr<AudioTrackInterface> CreateLocalAudioTrack(
       const cricket::AudioOptions options) {
     rtc::scoped_refptr<AudioSourceInterface> source =
         pc_factory()->CreateAudioSource(options);
-    return pc_factory()->CreateAudioTrack(rtc::CreateRandomUuid(), source);
+    return pc_factory()->CreateAudioTrack(rtc::CreateRandomUuid(),
+                                          source.get());
   }
 
  private:

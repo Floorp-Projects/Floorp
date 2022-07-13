@@ -110,7 +110,7 @@ class PeerConnectionCryptoBaseTest : public ::testing::Test {
       return nullptr;
     }
 
-    observer->SetPeerConnectionInterface(result.value());
+    observer->SetPeerConnectionInterface(result.value().get());
     return std::make_unique<PeerConnectionWrapper>(
         pc_factory_, result.MoveValue(), std::move(observer));
   }
@@ -662,10 +662,10 @@ TEST_P(PeerConnectionCryptoDtlsCertGenTest, TestCertificateGeneration) {
         rtc::make_ref_counted<MockCreateSessionDescriptionObserver>();
     observers.push_back(observer);
     if (sdp_type_ == SdpType::kOffer) {
-      pc->pc()->CreateOffer(observer,
+      pc->pc()->CreateOffer(observer.get(),
                             PeerConnectionInterface::RTCOfferAnswerOptions());
     } else {
-      pc->pc()->CreateAnswer(observer,
+      pc->pc()->CreateAnswer(observer.get(),
                              PeerConnectionInterface::RTCOfferAnswerOptions());
     }
   }

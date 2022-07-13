@@ -140,7 +140,7 @@ class PeerConnectionSimulcastTests : public ::testing::Test {
     auto result =
         pc_factory_->CreatePeerConnectionOrError(config, std::move(pcd));
     EXPECT_TRUE(result.ok());
-    observer->SetPeerConnectionInterface(result.value());
+    observer->SetPeerConnectionInterface(result.value().get());
     return result.MoveValue();
   }
 

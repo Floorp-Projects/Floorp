@@ -175,7 +175,7 @@ class PeerConnectionIceBaseTest : public ::testing::Test {
       return nullptr;
     }
 
-    observer->SetPeerConnectionInterface(result.value());
+    observer->SetPeerConnectionInterface(result.value().get());
     auto wrapper = std::make_unique<PeerConnectionWrapperForIceTest>(
         pc_factory_, result.MoveValue(), std::move(observer));
     wrapper->set_network(fake_network);
@@ -809,7 +809,7 @@ TEST_P(PeerConnectionIceTest,
   // Chain an operation that will block AddIceCandidate() from executing.
   auto answer_observer =
       rtc::make_ref_counted<MockCreateSessionDescriptionObserver>();
-  callee->pc()->CreateAnswer(answer_observer, RTCOfferAnswerOptions());
+  callee->pc()->CreateAnswer(answer_observer.get(), RTCOfferAnswerOptions());
 
   auto jsep_candidate =
       callee->CreateJsepCandidateForFirstTransport(&candidate);
@@ -857,7 +857,7 @@ TEST_P(PeerConnectionIceTest,
   // Chain an operation that will block AddIceCandidate() from executing.
   auto answer_observer =
       rtc::make_ref_counted<MockCreateSessionDescriptionObserver>();
-  callee->pc()->CreateAnswer(answer_observer, RTCOfferAnswerOptions());
+  callee->pc()->CreateAnswer(answer_observer.get(), RTCOfferAnswerOptions());
 
   auto jsep_candidate =
       callee->CreateJsepCandidateForFirstTransport(&candidate);

@@ -106,7 +106,7 @@ bool PeerConnectionTestWrapper::CreatePc(
   RTC_DCHECK_RUN_ON(&pc_thread_checker_);
 
   fake_audio_capture_module_ = FakeAudioCaptureModule::Create();
-  if (fake_audio_capture_module_ == NULL) {
+  if (fake_audio_capture_module_ == nullptr) {
     return false;
   }
 
@@ -184,7 +184,7 @@ void PeerConnectionTestWrapper::OnIceCandidate(
 
 void PeerConnectionTestWrapper::OnDataChannel(
     rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
-  SignalOnDataChannel(data_channel);
+  SignalOnDataChannel(data_channel.get());
 }
 
 void PeerConnectionTestWrapper::OnSuccess(SessionDescriptionInterface* desc) {
@@ -237,7 +237,7 @@ void PeerConnectionTestWrapper::SetLocalDescription(SdpType type,
 
   auto observer = rtc::make_ref_counted<MockSetSessionDescriptionObserver>();
   peer_connection_->SetLocalDescription(
-      observer, webrtc::CreateSessionDescription(type, sdp).release());
+      observer.get(), webrtc::CreateSessionDescription(type, sdp).release());
 }
 
 void PeerConnectionTestWrapper::SetRemoteDescription(SdpType type,
@@ -248,7 +248,7 @@ void PeerConnectionTestWrapper::SetRemoteDescription(SdpType type,
 
   auto observer = rtc::make_ref_counted<MockSetSessionDescriptionObserver>();
   peer_connection_->SetRemoteDescription(
-      observer, webrtc::CreateSessionDescription(type, sdp).release());
+      observer.get(), webrtc::CreateSessionDescription(type, sdp).release());
 }
 
 void PeerConnectionTestWrapper::AddIceCandidate(const std::string& sdp_mid,
@@ -333,8 +333,8 @@ PeerConnectionTestWrapper::GetUserMedia(
         peer_connection_factory_->CreateAudioSource(options);
     rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
         peer_connection_factory_->CreateAudioTrack(kAudioTrackLabelBase,
-                                                   source));
-    stream->AddTrack(audio_track);
+                                                   source.get()));
+    stream->AddTrack(audio_track.get());
   }
 
   if (video) {
@@ -348,9 +348,10 @@ PeerConnectionTestWrapper::GetUserMedia(
 
     std::string videotrack_label = stream_id + kVideoTrackLabelBase;
     rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-        peer_connection_factory_->CreateVideoTrack(videotrack_label, source));
+        peer_connection_factory_->CreateVideoTrack(videotrack_label,
+                                                   source.get()));
 
-    stream->AddTrack(video_track);
+    stream->AddTrack(video_track.get());
   }
   return stream;
 }

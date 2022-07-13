@@ -202,7 +202,7 @@ webrtc::RTCError JsepTransport::SetLocalJsepTransportDescription(
   if (!local_fp) {
     local_certificate_ = nullptr;
   } else {
-    error = VerifyCertificateFingerprint(local_certificate_, local_fp);
+    error = VerifyCertificateFingerprint(local_certificate_.get(), local_fp);
     if (!error.ok()) {
       local_description_.reset();
       return error;

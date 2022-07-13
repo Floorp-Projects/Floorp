@@ -171,7 +171,7 @@ WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
     // `SignalCertificateReady`.
     signaling_thread_->Post(
         RTC_FROM_HERE, this, MSG_USE_CONSTRUCTOR_CERTIFICATE,
-        new rtc::ScopedRefMessageData<rtc::RTCCertificate>(certificate));
+        new rtc::ScopedRefMessageData<rtc::RTCCertificate>(certificate.get()));
   } else {
     // Generate certificate.
     certificate_request_state_ = CERTIFICATE_WAITING;
@@ -350,7 +350,7 @@ void WebRtcSessionDescriptionFactory::InternalCreateOffer(
                                ? sdp_info_->local_description()->description()
                                : nullptr);
   if (!desc) {
-    PostCreateSessionDescriptionFailed(request.observer,
+    PostCreateSessionDescriptionFailed(request.observer.get(),
                                        "Failed to initialize the offer.");
     return;
   }
@@ -377,7 +377,8 @@ void WebRtcSessionDescriptionFactory::InternalCreateOffer(
       }
     }
   }
-  PostCreateSessionDescriptionSucceeded(request.observer, std::move(offer));
+  PostCreateSessionDescriptionSucceeded(request.observer.get(),
+                                        std::move(offer));
 }
 
 void WebRtcSessionDescriptionFactory::InternalCreateAnswer(
@@ -411,7 +412,7 @@ void WebRtcSessionDescriptionFactory::InternalCreateAnswer(
               ? sdp_info_->local_description()->description()
               : nullptr);
   if (!desc) {
-    PostCreateSessionDescriptionFailed(request.observer,
+    PostCreateSessionDescriptionFailed(request.observer.get(),
                                        "Failed to initialize the answer.");
     return;
   }
@@ -438,7 +439,8 @@ void WebRtcSessionDescriptionFactory::InternalCreateAnswer(
       }
     }
   }
-  PostCreateSessionDescriptionSucceeded(request.observer, std::move(answer));
+  PostCreateSessionDescriptionSucceeded(request.observer.get(),
+                                        std::move(answer));
 }
 
 void WebRtcSessionDescriptionFactory::FailPendingRequests(
@@ -448,7 +450,7 @@ void WebRtcSessionDescriptionFactory::FailPendingRequests(
     const CreateSessionDescriptionRequest& request =
         create_session_description_requests_.front();
     PostCreateSessionDescriptionFailed(
-        request.observer,
+        request.observer.get(),
         ((request.type == CreateSessionDescriptionRequest::kOffer)
              ? "CreateOffer"
              : "CreateAnswer") +
