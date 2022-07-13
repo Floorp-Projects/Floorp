@@ -821,7 +821,7 @@ lkgr_config = {
     "project": "webrtc",
     "source_url": WEBRTC_GIT,
     "status_url": "https://webrtc-status.appspot.com",
-    "allowed_lag": 4,  # hours (up to 10x during low commit volume periods)
+    "allowed_lag": 9,  # hours (up to 10x during low commit volume periods)
     "allowed_gap": 150,  # commits behind
     "error_recipients": WEBRTC_TROOPER_EMAIL,
     "buckets": {
@@ -840,7 +840,6 @@ lkgr_config = {
                 "WebRTC Chromium FYI Android Builder ARM64 (dbg)",
                 "WebRTC Chromium FYI Android Builder",
                 "WebRTC Chromium FYI Android Tests (dbg) (M Nexus5X)",
-                "WebRTC Chromium FYI Android Tests (dbg) (N Nexus5X)",
                 "WebRTC Chromium FYI Linux Builder (dbg)",
                 "WebRTC Chromium FYI Linux Builder",
                 "WebRTC Chromium FYI Linux Tester",
