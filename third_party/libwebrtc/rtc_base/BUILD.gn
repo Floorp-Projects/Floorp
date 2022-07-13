@@ -85,6 +85,7 @@ rtc_library("rtc_base_approved") {
     ":bit_buffer",
     ":buffer",
     ":buffer_queue",
+    ":byte_order",
     ":checks",
     ":histogram_percentile_counter",
     ":location",
@@ -133,7 +134,7 @@ rtc_library("rtc_base_approved") {
     "buffer_queue.h",  # Transitional, use :buffer_queue
     "byte_buffer.cc",
     "byte_buffer.h",
-    "byte_order.h",
+    "byte_order.h",  # Transitional, use :byte_order
     "copy_on_write_buffer.cc",
     "copy_on_write_buffer.h",
     "event_tracer.cc",
@@ -204,6 +205,12 @@ rtc_source_set("buffer") {
     "../api:array_view",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+}
+
+rtc_source_set("byte_order") {
+  visibility = [ "*" ]
+  sources = [ "byte_order.h" ]
+  deps = [ "system:arch" ]
 }
 
 rtc_source_set("mod_ops") {
@@ -906,6 +913,7 @@ rtc_library("ip_address") {
     "ip_address.h",
   ]
   deps = [
+    ":byte_order",
     ":net_helpers",
     ":rtc_base_approved",
     ":stringutils",
@@ -924,6 +932,7 @@ rtc_library("socket_address") {
     "socket_address.h",
   ]
   deps = [
+    ":byte_order",
     ":checks",
     ":ip_address",
     ":logging",
@@ -986,6 +995,7 @@ rtc_library("threading") {
   deps = [
     ":async_resolver_interface",
     ":atomicops",
+    ":byte_order",
     ":checks",
     ":criticalsection",
     ":ip_address",
@@ -1092,6 +1102,7 @@ if (is_win) {
     ]
 
     deps = [
+      ":byte_order",
       ":checks",
       ":logging",
       ":macromagic",
@@ -1119,6 +1130,7 @@ rtc_library("rtc_base") {
     ":async_resolver_interface",
     ":async_socket",
     ":buffer",
+    ":byte_order",
     ":callback_list",
     ":checks",
     ":ip_address",
@@ -1612,6 +1624,7 @@ if (rtc_include_tests) {
         ":bounded_inline_vector",
         ":buffer",
         ":buffer_queue",
+        ":byte_order",
         ":checks",
         ":criticalsection",
         ":divide_round",
