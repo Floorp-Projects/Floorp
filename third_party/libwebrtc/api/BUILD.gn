@@ -438,9 +438,13 @@ if (!build_with_mozilla) {
 rtc_source_set("peer_connection_quality_test_fixture_api") {
   visibility = [ "*" ]
   testonly = true
-  sources = [ "test/peerconnection_quality_test_fixture.h" ]
+  sources = [
+    "test/peerconnection_quality_test_fixture.cc",
+    "test/peerconnection_quality_test_fixture.h",
+  ]
 
   deps = [
+    ":array_view",
     ":audio_quality_analyzer_api",
     ":callfactory_api",
     ":fec_controller_api",
@@ -1186,6 +1190,7 @@ if (rtc_include_tests) {
       "scoped_refptr_unittest.cc",
       "sequence_checker_unittest.cc",
       "test/create_time_controller_unittest.cc",
+      "test/peerconnection_quality_test_fixture_unittest.cc",
     ]
 
     deps = [
@@ -1195,6 +1200,7 @@ if (rtc_include_tests) {
       ":field_trials_view",
       ":function_view",
       ":libjingle_peerconnection_api",
+      ":peer_connection_quality_test_fixture_api",
       ":rtc_error",
       ":rtc_event_log_output_file",
       ":rtp_packet_info",
@@ -1222,6 +1228,7 @@ if (rtc_include_tests) {
       "video:rtp_video_frame_assembler_unittests",
       "video:video_unittests",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 
   rtc_library("compile_all_headers") {

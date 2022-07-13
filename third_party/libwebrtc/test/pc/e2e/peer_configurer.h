@@ -145,6 +145,12 @@ class PeerConfigurerImpl final
     video_sources_.push_back(index);
     return this;
   }
+  PeerConfigurer* SetVideoSubscription(
+      PeerConnectionE2EQualityTestFixture::VideoSubscription subscription)
+      override {
+    params_->video_subscription = std::move(subscription);
+    return this;
+  }
   PeerConfigurer* SetAudioConfig(
       PeerConnectionE2EQualityTestFixture::AudioConfig config) override {
     params_->audio_config = std::move(config);
