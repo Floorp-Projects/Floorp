@@ -448,6 +448,7 @@ rtc_library("video_coding_legacy") {
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
+    "../../rtc_base:one_time_event",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_event",
     "../../rtc_base:safe_conversions",

@@ -85,6 +85,7 @@ rtc_library("rtc_base_approved") {
     ":checks",
     ":logging",
     ":macromagic",
+    ":one_time_event",
     ":platform_thread",
     ":platform_thread_types",
     ":random",
@@ -132,7 +133,7 @@ rtc_library("rtc_base_approved") {
     "numerics/moving_max_counter.h",
     "numerics/sample_counter.cc",
     "numerics/sample_counter.h",
-    "one_time_event.h",
+    "one_time_event.h",  # Transitional, use :one_time_event
     "race_checker.cc",
     "race_checker.h",
     "random.h",  # Transitional, use :random
@@ -179,6 +180,12 @@ rtc_library("rtc_base_approved") {
   if (is_android) {
     libs = [ "log" ]
   }
+}
+
+rtc_source_set("one_time_event") {
+  visibility = [ "*" ]
+  sources = [ "one_time_event.h" ]
+  deps = [ "synchronization:mutex" ]
 }
 
 rtc_source_set("strong_alias") {
@@ -1434,6 +1441,7 @@ if (rtc_include_tests) {
         ":logging",
         ":macromagic",
         ":null_socket_server",
+        ":one_time_event",
         ":platform_thread",
         ":random",
         ":rate_limiter",
