@@ -222,6 +222,13 @@
         ],
       }
     },
+    'more_configs_tests': {
+      'peerconnection_unittests': {
+        'swarming': {
+          'shards': 4
+        },
+      },
+    },
     'win_video_capture_tests': {
       'video_capture_tests': {
         'remove_mixins': ['win7'],
