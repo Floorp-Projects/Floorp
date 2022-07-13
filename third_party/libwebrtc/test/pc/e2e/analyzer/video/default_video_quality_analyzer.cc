@@ -711,7 +711,7 @@ VideoStreamsInfo DefaultVideoQualityAnalyzer::GetKnownStreams() const {
                           std::move(stream_to_receivers));
 }
 
-const FrameCounters& DefaultVideoQualityAnalyzer::GetGlobalCounters() const {
+FrameCounters DefaultVideoQualityAnalyzer::GetGlobalCounters() const {
   MutexLock lock(&mutex_);
   return frame_counters_;
 }

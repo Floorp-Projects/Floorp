@@ -83,7 +83,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // Returns set of stream labels, that were met during test call.
   std::set<StatsKey> GetKnownVideoStreams() const;
   VideoStreamsInfo GetKnownStreams() const;
-  const FrameCounters& GetGlobalCounters() const;
+  FrameCounters GetGlobalCounters() const;
   // Returns frame counter per stream label. Valid stream labels can be obtained
   // by calling GetKnownVideoStreams()
   std::map<StatsKey, FrameCounters> GetPerStreamCounters() const;
