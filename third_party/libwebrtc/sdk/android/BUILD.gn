@@ -1637,6 +1637,7 @@ if (is_android) {
       "../../rtc_base:logging",
       "../../rtc_base:macromagic",
       "../../rtc_base:rtc_base",
+      "../../rtc_base:rtc_event",
       "../../rtc_base:threading",
       "../../rtc_base/synchronization:mutex",
       "../../rtc_base/system:inline",

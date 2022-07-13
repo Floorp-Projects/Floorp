@@ -53,6 +53,7 @@ rtc_executable("data_channel_benchmark") {
     "../../rtc_base",
     "../../rtc_base:logging",
     "../../rtc_base:refcount",
+    "../../rtc_base:rtc_event",
     "../../rtc_base:threading",
     "../../system_wrappers:field_trial",
     "//third_party/abseil-cpp/absl/cleanup:cleanup",
