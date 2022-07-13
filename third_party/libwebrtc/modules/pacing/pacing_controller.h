@@ -167,9 +167,6 @@ class PacingController {
       const PacedPacketInfo& pacing_info,
       Timestamp target_send_time,
       Timestamp now);
-  DataSize SendPacket(std::unique_ptr<RtpPacketToSend> packet,
-                      const PacedPacketInfo& pacing_info,
-                      Timestamp now);
   void OnPacketSent(RtpPacketMediaType packet_type,
                     DataSize packet_size,
                     Timestamp send_time);
