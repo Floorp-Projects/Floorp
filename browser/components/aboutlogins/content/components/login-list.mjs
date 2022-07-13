@@ -96,17 +96,18 @@ function headerFromDate(timestamp) {
 }
 
 export default class LoginList extends HTMLElement {
+  // An array of login GUIDs, stored in sorted order.
+  _loginGuidsSortedOrder = [];
+  // A map of login GUID -> {login, listItem}.
+  _logins = {};
+  // A map of section header -> sectionItem
+  _sections = {};
+  _filter = "";
+  _selectedGuid = null;
+  _blankLoginListItem = LoginListItemFactory.create({});
+
   constructor() {
     super();
-    // An array of login GUIDs, stored in sorted order.
-    this._loginGuidsSortedOrder = [];
-    // A map of login GUID -> {login, listItem}.
-    this._logins = {};
-    // A map of section header -> sectionItem
-    this._sections = {};
-    this._filter = "";
-    this._selectedGuid = null;
-    this._blankLoginListItem = LoginListItemFactory.create({});
     this._blankLoginListItem.hidden = true;
   }
 
