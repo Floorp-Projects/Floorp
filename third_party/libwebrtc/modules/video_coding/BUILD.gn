@@ -1282,6 +1282,7 @@ if (rtc_include_tests) {
       "../../media:rtc_media_base",
       "../../rtc_base",
       "../../rtc_base:checks",
+      "../../rtc_base:platform_thread",
       "../../rtc_base:refcount",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_base_tests_utils",

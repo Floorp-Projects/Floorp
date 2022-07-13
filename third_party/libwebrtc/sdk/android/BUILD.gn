@@ -1210,6 +1210,7 @@ if (current_os == "linux" || is_android) {
       "../../rtc_base:checks",
       "../../rtc_base:logging",
       "../../rtc_base:macromagic",
+      "../../rtc_base:platform_thread",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:timeutils",
       "../../system_wrappers:field_trial",
@@ -1269,6 +1270,7 @@ if (current_os == "linux" || is_android) {
       "../../rtc_base:checks",
       "../../rtc_base:logging",
       "../../rtc_base:macromagic",
+      "../../rtc_base:platform_thread",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:timeutils",
     ]
@@ -1650,6 +1652,7 @@ if (is_android) {
       "../../rtc_base:ip_address",
       "../../rtc_base:logging",
       "../../rtc_base:macromagic",
+      "../../rtc_base:platform_thread",
       "../../rtc_base:rtc_base",
       "../../rtc_base:rtc_event",
       "../../rtc_base:stringutils",

@@ -65,6 +65,7 @@ if (rtc_include_tests) {
       "../../api:scoped_refptr",
       "../../rtc_base:checks",
       "../../rtc_base:logging",
+      "../../rtc_base:platform_thread",
       "../../rtc_base:timeutils",
     ]
     if (rtc_desktop_capture_supported) {

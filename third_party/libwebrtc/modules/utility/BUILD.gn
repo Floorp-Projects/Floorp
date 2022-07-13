@@ -36,6 +36,7 @@ rtc_library("utility") {
     "../../common_audio",
     "../../rtc_base:checks",
     "../../rtc_base:logging",
+    "../../rtc_base:platform_thread",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_event",
     "../../rtc_base:timeutils",

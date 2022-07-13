@@ -57,6 +57,7 @@ rtc_library("remote_bitrate_estimator") {
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
+    "../../rtc_base:platform_thread",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_numerics",
     "../../rtc_base:safe_minmax",
