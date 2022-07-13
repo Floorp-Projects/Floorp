@@ -11,6 +11,13 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
+  'android-devices': {
+    'swarming': {
+      'dimensions': {
+        'android_devices': '1'
+      }
+    }
+  },
   'baremetal-pool': {
     'swarming': {
       'dimensions': {
@@ -22,6 +29,14 @@
     'swarming': {
       'dimensions': {
         'pool': 'WebRTC-baremetal-try'
+      }
+    }
+  },
+  'bullhead': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'bullhead',
+        'os': 'Android'
       }
     }
   },
@@ -39,6 +54,18 @@
       }
     }
   },
+  'logdog-butler': {
+    'swarming': {
+      'cipd_packages': [{
+        'cipd_package':
+        'infra/tools/luci/logdog/butler/${platform}',
+        'location':
+        'bin',
+        'revision':
+        'git_revision:ff387eadf445b24c935f1cf7d6ddd279f8a6b04c'
+      }]
+    }
+  },
   'mac': {
     'swarming': {
       'dimensions': {
@@ -50,6 +77,13 @@
     'swarming': {
       'dimensions': {
         'os': 'Mac-11'
+      }
+    }
+  },
+  'marshmallow': {
+    'swarming': {
+      'dimensions': {
+        'device_os': 'MMB29Q'
       }
     }
   },
