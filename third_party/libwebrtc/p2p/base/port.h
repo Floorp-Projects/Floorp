@@ -312,12 +312,12 @@ class Port : public PortInterface,
       const rtc::SocketAddress& remote_addr) const;
 
   // Sends a response error to the given request.
-  void SendBindingErrorResponse(StunMessage* request,
+  void SendBindingErrorResponse(StunMessage* message,
                                 const rtc::SocketAddress& addr,
                                 int error_code,
                                 const std::string& reason) override;
   void SendUnknownAttributesErrorResponse(
-      StunMessage* request,
+      StunMessage* message,
       const rtc::SocketAddress& addr,
       const std::vector<uint16_t>& unknown_types);
 

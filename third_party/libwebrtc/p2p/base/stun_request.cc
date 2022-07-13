@@ -191,9 +191,9 @@ StunRequest::StunRequest(StunRequestManager& manager)
 }
 
 StunRequest::StunRequest(StunRequestManager& manager,
-                         std::unique_ptr<StunMessage> request)
+                         std::unique_ptr<StunMessage> message)
     : manager_(manager),
-      msg_(std::move(request)),
+      msg_(std::move(message)),
       tstamp_(0),
       count_(0),
       timeout_(false) {

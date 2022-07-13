@@ -107,7 +107,7 @@ class PortInterface {
 
   // Sends a response message (normal or error) to the given request.  One of
   // these methods should be called as a response to SignalUnknownAddress.
-  virtual void SendBindingErrorResponse(StunMessage* request,
+  virtual void SendBindingErrorResponse(StunMessage* message,
                                         const rtc::SocketAddress& addr,
                                         int error_code,
                                         const std::string& reason) = 0;
