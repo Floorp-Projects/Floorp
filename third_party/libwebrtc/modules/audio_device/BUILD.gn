@@ -77,6 +77,7 @@ rtc_library("audio_device_buffer") {
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base:safe_conversions",
+    "../../rtc_base:timestamp_aligner",
     "../../rtc_base:timeutils",
     "../../rtc_base/synchronization:mutex",
     "../../system_wrappers",

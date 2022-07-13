@@ -95,6 +95,7 @@ rtc_library("rtc_base_approved") {
     ":safe_conversions",
     ":stringutils",
     ":strong_alias",
+    ":timestamp_aligner",
     ":timeutils",
     ":type_traits",
     "../api:array_view",
@@ -143,8 +144,7 @@ rtc_library("rtc_base_approved") {
     "rate_tracker.h",
     "strong_alias.h",  # Transitional, use :strong_alias
     "swap_queue.h",
-    "timestamp_aligner.cc",
-    "timestamp_aligner.h",
+    "timestamp_aligner.h",  # Transitional, use :timestamp_aligner
     "trace_event.h",
     "zero_memory.cc",
     "zero_memory.h",
@@ -179,6 +179,12 @@ rtc_library("rtc_base_approved") {
 
   if (is_android) {
     libs = [ "log" ]
+  }
+
+  if (build_with_chromium) {
+    # Remove when the dependency has been propagated to Chromium
+    public_deps +=  # no-presubmit-check TODO(webrtc:8603)
+        [ ":timestamp_aligner" ]
   }
 }
 
@@ -220,6 +226,20 @@ rtc_library("random") {
   deps = [
     ":checks",
     ":safe_conversions",
+  ]
+}
+
+rtc_library("timestamp_aligner") {
+  visibility = [ "*" ]
+  sources = [
+    "timestamp_aligner.cc",
+    "timestamp_aligner.h",
+  ]
+  deps = [
+    ":checks",
+    ":logging",
+    ":timeutils",
+    "system:rtc_export",
   ]
 }
 
@@ -1477,6 +1497,7 @@ if (rtc_include_tests) {
         ":strong_alias",
         ":testclient",
         ":threading",
+        ":timestamp_aligner",
         ":timeutils",
         "../api:array_view",
         "../api:scoped_refptr",
