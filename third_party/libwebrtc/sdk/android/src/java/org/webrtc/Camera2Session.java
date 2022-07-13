@@ -357,7 +357,7 @@ class Camera2Session implements CameraSession {
 
     try {
       cameraManager.openCamera(cameraId, new CameraStateCallback(), cameraThreadHandler);
-    } catch (CameraAccessException | IllegalArgumentException e) {
+    } catch (CameraAccessException | IllegalArgumentException | SecurityException e) {
       reportError("Failed to open camera: " + e);
       return;
     }
