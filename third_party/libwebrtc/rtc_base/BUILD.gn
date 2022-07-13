@@ -84,6 +84,7 @@ rtc_library("rtc_base_approved") {
     ":atomicops",
     ":bit_buffer",
     ":buffer",
+    ":buffer_queue",
     ":checks",
     ":histogram_percentile_counter",
     ":location",
@@ -129,8 +130,7 @@ rtc_library("rtc_base_approved") {
   sources = [
     "bit_buffer.h",  # Transitional, use :bit_buffer
     "buffer.h",  # Transitional, use :buffer
-    "buffer_queue.cc",
-    "buffer_queue.h",
+    "buffer_queue.h",  # Transitional, use :buffer_queue
     "byte_buffer.cc",
     "byte_buffer.h",
     "byte_order.h",
@@ -254,6 +254,20 @@ rtc_library("bit_buffer") {
   ]
   deps = [ ":checks" ]
   absl_deps = [ "//third_party/abseil-cpp/absl/numeric:bits" ]
+}
+
+rtc_library("buffer_queue") {
+  visibility = [ "*" ]
+  sources = [
+    "buffer_queue.cc",
+    "buffer_queue.h",
+  ]
+  deps = [
+    ":buffer",
+    ":macromagic",
+    "../api:sequence_checker",
+    "system:no_unique_address",
+  ]
 }
 
 rtc_library("histogram_percentile_counter") {
@@ -1597,6 +1611,7 @@ if (rtc_include_tests) {
         ":bitstream_reader",
         ":bounded_inline_vector",
         ":buffer",
+        ":buffer_queue",
         ":checks",
         ":criticalsection",
         ":divide_round",
@@ -1757,6 +1772,7 @@ if (rtc_include_tests) {
       deps = [
         ":atomicops",
         ":buffer",
+        ":buffer_queue",
         ":checks",
         ":gunit_helpers",
         ":ip_address",
