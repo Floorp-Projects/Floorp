@@ -17,6 +17,7 @@
 
 #include "absl/types/optional.h"
 #include "api/units/data_rate.h"
+#include "api/video/render_resolution.h"
 #include "api/video_codecs/sdp_video_format.h"
 
 namespace webrtc {
@@ -46,6 +47,13 @@ class VideoEncoderFactory {
     // non-empty if an encoder switch should be performed.
     virtual absl::optional<SdpVideoFormat> OnAvailableBitrate(
         const DataRate& rate) = 0;
+
+    // Called every time the encoder input resolution change. Should return a
+    // non-empty if an encoder switch should be performed.
+    virtual absl::optional<SdpVideoFormat> OnResolutionChange(
+        const RenderResolution& resolution) {
+      return absl::nullopt;
+    }
 
     // Called if the currently used encoder reports itself as broken. Should
     // return a non-empty if an encoder switch should be performed.

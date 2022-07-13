@@ -788,6 +788,10 @@ class MockEncoderSelector
               OnAvailableBitrate,
               (const DataRate& rate),
               (override));
+  MOCK_METHOD(absl::optional<SdpVideoFormat>,
+              OnResolutionChange,
+              (const RenderResolution& resolution),
+              (override));
   MOCK_METHOD(absl::optional<SdpVideoFormat>, OnEncoderBroken, (), (override));
 };
 
@@ -7558,6 +7562,43 @@ TEST_F(VideoStreamEncoderTest, EncoderSelectorBitrateSwitch) {
       /*fraction_lost=*/0,
       /*round_trip_time_ms=*/0,
       /*cwnd_reduce_ratio=*/0);
+  AdvanceTime(TimeDelta::Zero());
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest, EncoderSelectorResolutionSwitch) {
+  NiceMock<MockEncoderSelector> encoder_selector;
+  StrictMock<MockEncoderSwitchRequestCallback> switch_callback;
+  video_send_config_.encoder_settings.encoder_switch_request_callback =
+      &switch_callback;
+  auto encoder_factory = std::make_unique<test::VideoEncoderProxyFactory>(
+      &fake_encoder_, &encoder_selector);
+  video_send_config_.encoder_settings.encoder_factory = encoder_factory.get();
+
+  // Reset encoder for new configuration to take effect.
+  ConfigureEncoder(video_encoder_config_.Copy());
+
+  EXPECT_CALL(encoder_selector, OnResolutionChange(RenderResolution(640, 480)))
+      .WillOnce(Return(absl::nullopt));
+  EXPECT_CALL(encoder_selector, OnResolutionChange(RenderResolution(320, 240)))
+      .WillOnce(Return(SdpVideoFormat("AV1")));
+  EXPECT_CALL(switch_callback,
+              RequestEncoderSwitch(Field(&SdpVideoFormat::name, "AV1"),
+                                   /*allow_default_fallback=*/false));
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      /*target_bitrate=*/DataRate::KilobitsPerSec(800),
+      /*stable_target_bitrate=*/DataRate::KilobitsPerSec(1000),
+      /*link_allocation=*/DataRate::KilobitsPerSec(1000),
+      /*fraction_lost=*/0,
+      /*round_trip_time_ms=*/0,
+      /*cwnd_reduce_ratio=*/0);
+
+  video_source_.IncomingCapturedFrame(CreateFrame(1, 640, 480));
+  video_source_.IncomingCapturedFrame(CreateFrame(2, 640, 480));
+  video_source_.IncomingCapturedFrame(CreateFrame(3, 320, 240));
+
   AdvanceTime(TimeDelta::Zero());
 
   video_stream_encoder_->Stop();

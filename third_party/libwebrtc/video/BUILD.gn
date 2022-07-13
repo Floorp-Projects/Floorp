@@ -453,6 +453,7 @@ rtc_library("video_stream_encoder_impl") {
     "../api/task_queue:task_queue",
     "../api/units:data_rate",
     "../api/video:encoded_image",
+    "../api/video:render_resolution",
     "../api/video:video_adaptation",
     "../api/video:video_bitrate_allocation",
     "../api/video:video_bitrate_allocator",

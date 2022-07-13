@@ -132,6 +132,11 @@ class VideoEncoderProxyFactory : public VideoEncoderFactory {
       return encoder_selector_->OnAvailableBitrate(rate);
     }
 
+    absl::optional<SdpVideoFormat> OnResolutionChange(
+        const RenderResolution& resolution) override {
+      return encoder_selector_->OnResolutionChange(resolution);
+    }
+
     absl::optional<SdpVideoFormat> OnEncoderBroken() override {
       return encoder_selector_->OnEncoderBroken();
     }
