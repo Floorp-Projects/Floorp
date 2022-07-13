@@ -287,6 +287,8 @@ add_task(async function test_tab_sync_loading() {
       },
     ],
   });
+  const { document } = browser.contentWindow;
+
   await SpecialPowers.pushPrefEnv({
     set: [["services.sync.engine.tabs", true]],
   });
@@ -295,17 +297,58 @@ add_task(async function test_tab_sync_loading() {
   await waitForElementVisible(browser, "#tabpickup-steps", false);
   await waitForElementVisible(browser, "#tabpickup-tabs-container", true);
 
-  const tabsContainer = browser.contentWindow.document.querySelector(
-    "#tabpickup-tabs-container"
+  const tabsContainer = document.querySelector("#tabpickup-tabs-container");
+  const tabsList = document.querySelector(
+    "#tabpickup-tabs-container tab-pickup-list"
   );
-  ok(
-    tabsContainer.classList.contains("loading"),
-    "Tabs container has loading class"
+  const loadingElem = document.querySelector(
+    "#tabpickup-tabs-container .loading-content"
   );
+  const setupElem = document.querySelector("#tabpickup-steps");
 
-  const recentFetchTime = Math.floor(Date.now() / 1000);
-  info("updating lastFetch:" + recentFetchTime);
-  Services.prefs.setIntPref("services.sync.lastTabFetch", recentFetchTime);
+  function checkLoadingState(isLoading = false) {
+    if (isLoading) {
+      ok(
+        tabsContainer.classList.contains("loading"),
+        "Tabs container has loading class"
+      );
+      BrowserTestUtils.is_visible(
+        loadingElem,
+        "Loading content is visible when loading"
+      );
+      BrowserTestUtils.is_hidden(
+        tabsList,
+        "Synced tabs list is not visible when loading"
+      );
+      BrowserTestUtils.is_hidden(
+        setupElem,
+        "Setup content is not visible when loading"
+      );
+    } else {
+      ok(
+        !tabsContainer.classList.contains("loading"),
+        "Tabs container has no loading class"
+      );
+      BrowserTestUtils.is_hidden(
+        loadingElem,
+        "Loading content is not visible when tabs are loaded"
+      );
+      BrowserTestUtils.is_visible(
+        tabsList,
+        "Synced tabs list is visible when loaded"
+      );
+      BrowserTestUtils.is_hidden(
+        setupElem,
+        "Setup content is not visible when tabs are loaded"
+      );
+    }
+  }
+  checkLoadingState(true);
+
+  // lastTabFetch stores a timestamp in *seconds*.
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  info("updating lastFetch:" + nowSeconds);
+  Services.prefs.setIntPref("services.sync.lastTabFetch", nowSeconds);
 
   await BrowserTestUtils.waitForMutationCondition(
     tabsContainer,
@@ -314,8 +357,24 @@ add_task(async function test_tab_sync_loading() {
       return !tabsContainer.classList.contains("loading");
     }
   );
-  await SpecialPowers.popPrefEnv();
+  checkLoadingState(false);
 
+  // Simulate stale data by setting lastTabFetch to 10mins ago
+  const TEN_MINUTES_MS = 1000 * 60 * 10;
+  const staleFetchSeconds = Math.floor((Date.now() - TEN_MINUTES_MS) / 1000);
+  info("updating lastFetch:" + staleFetchSeconds);
+  Services.prefs.setIntPref("services.sync.lastTabFetch", staleFetchSeconds);
+
+  await BrowserTestUtils.waitForMutationCondition(
+    tabsContainer,
+    { attributeFilter: ["class"], attributes: true },
+    () => {
+      return tabsContainer.classList.contains("loading");
+    }
+  );
+  checkLoadingState(true);
+
+  await SpecialPowers.popPrefEnv();
   sandbox.restore();
   Services.prefs.clearUserPref("services.sync.engine.tabs");
   Services.prefs.clearUserPref("services.sync.lastTabFetch");

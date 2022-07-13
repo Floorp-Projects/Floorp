@@ -271,6 +271,7 @@ class TabsPickupContainer extends HTMLElement {
     let setupElem = this.setupContainerElem;
     let tabsElem = this.tabsContainerElem;
     const stateIndex = this._currentSetupStateIndex;
+    const isLoading = stateIndex == 3;
 
     // show/hide either the setup or tab list containers, creating each as necessary
     if (stateIndex < 3) {
@@ -292,15 +293,14 @@ class TabsPickupContainer extends HTMLElement {
         "tabpickup-tabs-container"
       );
       tabsElem = this.tabsContainerElem;
-      tabsElem.classList.toggle("loading", stateIndex == 3);
     }
     if (setupElem) {
       setupElem.hidden = true;
     }
     tabsElem.hidden = false;
+    tabsElem.classList.toggle("loading", isLoading);
 
     if (stateIndex == 4) {
-      tabsElem.classList.toggle("loading", false);
       this.collapsibleButton.hidden = false;
     }
   }
