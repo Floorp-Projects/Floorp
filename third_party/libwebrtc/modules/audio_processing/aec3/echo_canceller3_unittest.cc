@@ -178,6 +178,20 @@ class RenderTransportVerificationProcessor : public BlockProcessor {
       received_render_blocks_;
 };
 
+std::string ProduceDebugText(int sample_rate_hz) {
+  rtc::StringBuilder ss;
+  ss << "Sample rate: " << sample_rate_hz;
+  return ss.Release();
+}
+
+std::string ProduceDebugText(int sample_rate_hz, int variant) {
+  rtc::StringBuilder ss;
+  ss << "Sample rate: " << sample_rate_hz << ", variant: " << variant;
+  return ss.Release();
+}
+
+}  // namespace
+
 class EchoCanceller3Tester {
  public:
   explicit EchoCanceller3Tester(int sample_rate_hz)
@@ -206,10 +220,9 @@ class EchoCanceller3Tester {
   // and that the processor data is properly passed to the EchoCanceller3
   // output.
   void RunCaptureTransportVerificationTest() {
-    EchoCanceller3 aec3(
-        EchoCanceller3Config(), sample_rate_hz_, 1, 1,
-        std::unique_ptr<BlockProcessor>(
-            new CaptureTransportVerificationProcessor(num_bands_)));
+    EchoCanceller3 aec3(EchoCanceller3Config(), sample_rate_hz_, 1, 1);
+    aec3.SetBlockProcessorForTesting(
+        std::make_unique<CaptureTransportVerificationProcessor>(num_bands_));
 
     for (size_t frame_index = 0; frame_index < kNumFramesToProcess;
          ++frame_index) {
@@ -231,10 +244,9 @@ class EchoCanceller3Tester {
   // Test method for testing that the render data is properly received by the
   // block processor.
   void RunRenderTransportVerificationTest() {
-    EchoCanceller3 aec3(
-        EchoCanceller3Config(), sample_rate_hz_, 1, 1,
-        std::unique_ptr<BlockProcessor>(
-            new RenderTransportVerificationProcessor(num_bands_)));
+    EchoCanceller3 aec3(EchoCanceller3Config(), sample_rate_hz_, 1, 1);
+    aec3.SetBlockProcessorForTesting(
+        std::make_unique<RenderTransportVerificationProcessor>(num_bands_));
 
     std::vector<std::vector<float>> render_input(1);
     std::vector<float> capture_output;
@@ -301,8 +313,8 @@ class EchoCanceller3Tester {
         break;
     }
 
-    EchoCanceller3 aec3(EchoCanceller3Config(), sample_rate_hz_, 1, 1,
-                        std::move(block_processor_mock));
+    EchoCanceller3 aec3(EchoCanceller3Config(), sample_rate_hz_, 1, 1);
+    aec3.SetBlockProcessorForTesting(std::move(block_processor_mock));
 
     for (size_t frame_index = 0; frame_index < kNumFramesToProcess;
          ++frame_index) {
@@ -381,8 +393,8 @@ class EchoCanceller3Tester {
       } break;
     }
 
-    EchoCanceller3 aec3(EchoCanceller3Config(), sample_rate_hz_, 1, 1,
-                        std::move(block_processor_mock));
+    EchoCanceller3 aec3(EchoCanceller3Config(), sample_rate_hz_, 1, 1);
+    aec3.SetBlockProcessorForTesting(std::move(block_processor_mock));
 
     for (size_t frame_index = 0; frame_index < kNumFramesToProcess;
          ++frame_index) {
@@ -467,8 +479,8 @@ class EchoCanceller3Tester {
       } break;
     }
 
-    EchoCanceller3 aec3(EchoCanceller3Config(), sample_rate_hz_, 1, 1,
-                        std::move(block_processor_mock));
+    EchoCanceller3 aec3(EchoCanceller3Config(), sample_rate_hz_, 1, 1);
+    aec3.SetBlockProcessorForTesting(std::move(block_processor_mock));
     for (size_t frame_index = 0; frame_index < kNumFramesToProcess;
          ++frame_index) {
       for (int k = 0; k < fullband_frame_length_; ++k) {
@@ -506,10 +518,9 @@ class EchoCanceller3Tester {
   // capture and render API calls.
   void RunRenderSwapQueueVerificationTest() {
     const EchoCanceller3Config config;
-    EchoCanceller3 aec3(
-        config, sample_rate_hz_, 1, 1,
-        std::unique_ptr<BlockProcessor>(
-            new RenderTransportVerificationProcessor(num_bands_)));
+    EchoCanceller3 aec3(config, sample_rate_hz_, 1, 1);
+    aec3.SetBlockProcessorForTesting(
+        std::make_unique<RenderTransportVerificationProcessor>(num_bands_));
 
     std::vector<std::vector<float>> render_input(1);
     std::vector<float> capture_output;
@@ -617,20 +628,6 @@ class EchoCanceller3Tester {
   AudioBuffer capture_buffer_;
   AudioBuffer render_buffer_;
 };
-
-std::string ProduceDebugText(int sample_rate_hz) {
-  rtc::StringBuilder ss;
-  ss << "Sample rate: " << sample_rate_hz;
-  return ss.Release();
-}
-
-std::string ProduceDebugText(int sample_rate_hz, int variant) {
-  rtc::StringBuilder ss;
-  ss << "Sample rate: " << sample_rate_hz << ", variant: " << variant;
-  return ss.Release();
-}
-
-}  // namespace
 
 TEST(EchoCanceller3Buffering, CaptureBitexactness) {
   for (auto rate : {16000, 32000, 48000}) {

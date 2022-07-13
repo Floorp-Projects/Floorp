@@ -84,18 +84,13 @@ class Aec3RenderQueueItemVerifier {
 // AnalyzeRender call which can be called concurrently with the other methods.
 class EchoCanceller3 : public EchoControl {
  public:
-  // Normal c-tor to use.
   EchoCanceller3(const EchoCanceller3Config& config,
                  int sample_rate_hz,
                  size_t num_render_channels,
                  size_t num_capture_channels);
-  // Testing c-tor that is used only for testing purposes.
-  EchoCanceller3(const EchoCanceller3Config& config,
-                 int sample_rate_hz,
-                 size_t num_render_channels,
-                 size_t num_capture_channels,
-                 std::unique_ptr<BlockProcessor> block_processor);
+
   ~EchoCanceller3() override;
+
   EchoCanceller3(const EchoCanceller3&) = delete;
   EchoCanceller3& operator=(const EchoCanceller3&) = delete;
 
@@ -142,6 +137,12 @@ class EchoCanceller3 : public EchoControl {
 
  private:
   class RenderWriter;
+  friend class EchoCanceller3Tester;
+  FRIEND_TEST_ALL_PREFIXES(EchoCanceller3Metrics, EchoReturnLossEnhancement);
+
+  // Replaces the internal block processor with a custom one for testing.
+  void SetBlockProcessorForTesting(
+      std::unique_ptr<BlockProcessor> block_processor);
 
   // Empties the render SwapQueue.
   void EmptyRenderQueue();

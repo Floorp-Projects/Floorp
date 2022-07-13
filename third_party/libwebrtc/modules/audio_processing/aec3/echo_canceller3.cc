@@ -294,7 +294,6 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
     adjusted_cfg.ep_strength.use_conservative_tail_frequency_response = false;
   }
 
-
   if (field_trial::IsEnabled("WebRTC-Aec3ShortHeadroomKillSwitch")) {
     // Two blocks headroom.
     adjusted_cfg.delay.delay_headroom_samples = kBlockSize * 2;
@@ -672,23 +671,9 @@ EchoCanceller3::EchoCanceller3(const EchoCanceller3Config& config,
                                int sample_rate_hz,
                                size_t num_render_channels,
                                size_t num_capture_channels)
-    : EchoCanceller3(AdjustConfig(config),
-                     sample_rate_hz,
-                     num_render_channels,
-                     num_capture_channels,
-                     std::unique_ptr<BlockProcessor>(
-                         BlockProcessor::Create(AdjustConfig(config),
-                                                sample_rate_hz,
-                                                num_render_channels,
-                                                num_capture_channels))) {}
-EchoCanceller3::EchoCanceller3(const EchoCanceller3Config& config,
-                               int sample_rate_hz,
-                               size_t num_render_channels,
-                               size_t num_capture_channels,
-                               std::unique_ptr<BlockProcessor> block_processor)
     : data_dumper_(
           new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
-      config_(config),
+      config_(AdjustConfig(config)),
       sample_rate_hz_(sample_rate_hz),
       num_bands_(NumBandsForRate(sample_rate_hz_)),
       num_render_channels_(num_render_channels),
@@ -706,7 +691,6 @@ EchoCanceller3::EchoCanceller3(const EchoCanceller3Config& config,
           Aec3RenderQueueItemVerifier(num_bands_,
                                       num_render_channels_,
                                       AudioBuffer::kSplitBandSize)),
-      block_processor_(std::move(block_processor)),
       render_queue_output_frame_(
           num_bands_,
           std::vector<std::vector<float>>(
@@ -727,6 +711,9 @@ EchoCanceller3::EchoCanceller3(const EchoCanceller3Config& config,
           num_bands_,
           std::vector<rtc::ArrayView<float>>(num_capture_channels_)) {
   RTC_DCHECK(ValidFullBandRate(sample_rate_hz_));
+
+  block_processor_.reset(BlockProcessor::Create(
+      config_, sample_rate_hz_, num_render_channels_, num_capture_channels_));
 
   if (config_.delay.fixed_capture_delay_samples > 0) {
     block_delay_buffer_.reset(new BlockDelayBuffer(
@@ -883,6 +870,13 @@ EchoCanceller3Config EchoCanceller3::CreateDefaultConfig(
     cfg.suppressor.normal_tuning.max_inc_factor = 1.5f;
   }
   return cfg;
+}
+
+void EchoCanceller3::SetBlockProcessorForTesting(
+    std::unique_ptr<BlockProcessor> block_processor) {
+  RTC_DCHECK_RUNS_SERIALIZED(&capture_race_checker_);
+  RTC_DCHECK(block_processor);
+  block_processor_ = std::move(block_processor);
 }
 
 void EchoCanceller3::EmptyRenderQueue() {
