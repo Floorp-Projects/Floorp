@@ -68,11 +68,7 @@ class DecisionLogic : public NetEqController {
   // Resets the `cng_state_` to kCngOff.
   void SetCngOff() override { cng_state_ = kCngOff; }
 
-  // Reports back to DecisionLogic whether the decision to do expand remains or
-  // not. Note that this is necessary, since an expand decision can be changed
-  // to kNormal in NetEqImpl::GetDecision if there is still enough data in the
-  // sync buffer.
-  void ExpandDecision(NetEq::Operation operation) override;
+  void ExpandDecision(NetEq::Operation operation) override {}
 
   // Adds `value` to `sample_memory_`.
   void AddSampleMemory(int32_t value) override { sample_memory_ += value; }
@@ -85,7 +81,7 @@ class DecisionLogic : public NetEqController {
 
   void RegisterEmptyPacket() override {}
 
-  void NotifyMutedState() override {}
+  void NotifyMutedState() override;
 
   bool SetMaximumDelay(int delay_ms) override {
     return delay_manager_->SetMaximumDelay(delay_ms);
