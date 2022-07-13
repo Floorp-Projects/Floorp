@@ -2371,9 +2371,6 @@ bool BytecodeEmitter::emitDeclarationInstantiation(ParseNode* body) {
 }
 
 bool BytecodeEmitter::emitScript(ParseNode* body) {
-  AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission,
-                                parser->errorReporter(), body);
-
   setScriptStartOffsetIfUnset(body->pn_pos.begin);
 
   MOZ_ASSERT(inPrologue());
@@ -2527,8 +2524,6 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode) {
   ListNode* paramsBody = &funNode->body()->as<ListNode>();
   MOZ_ASSERT(paramsBody->isKind(ParseNodeKind::ParamsBody));
   FunctionBox* funbox = sc->asFunctionBox();
-  AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission,
-                                parser->errorReporter(), funbox);
 
   setScriptStartOffsetIfUnset(paramsBody->pn_pos.begin);
 
