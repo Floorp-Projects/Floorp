@@ -27,19 +27,19 @@ module {{ ci.namespace()|class_name_rb }}
 
   # Public interface members begin here.
 
-  {% for e in ci.iter_enum_definitions() %}
+  {% for e in ci.enum_definitions() %}
   {% include "EnumTemplate.rb" %}
   {%- endfor -%}
 
-  {%- for rec in ci.iter_record_definitions() %}
+  {%- for rec in ci.record_definitions() %}
   {% include "RecordTemplate.rb" %}
   {% endfor %}
 
-  {% for func in ci.iter_function_definitions() %}
+  {% for func in ci.function_definitions() %}
   {% include "TopLevelFunctionTemplate.rb" %}
   {% endfor %}
 
-  {% for obj in ci.iter_object_definitions() %}
+  {% for obj in ci.object_definitions() %}
   {% include "ObjectTemplate.rb" %}
   {% endfor %}
 end

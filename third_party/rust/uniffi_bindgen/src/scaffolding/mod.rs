@@ -42,17 +42,17 @@ mod filters {
             Type::String => "String".into(),
             Type::Timestamp => "std::time::SystemTime".into(),
             Type::Duration => "std::time::Duration".into(),
-            Type::Enum(name) | Type::Record(name) | Type::Error(name) => name.clone(),
-            Type::Object(name) => format!("std::sync::Arc<{}>", name),
-            Type::CallbackInterface(name) => format!("Box<dyn {}>", name),
+            Type::Enum(name) | Type::Record(name) | Type::Error(name) => format!("r#{}", name),
+            Type::Object(name) => format!("std::sync::Arc<r#{}>", name),
+            Type::CallbackInterface(name) => format!("Box<dyn r#{}>", name),
             Type::Optional(t) => format!("std::option::Option<{}>", type_rs(t)?),
             Type::Sequence(t) => format!("std::vec::Vec<{}>", type_rs(t)?),
             Type::Map(k, v) => format!(
-                "std::collections::HashMap<{}, {}>",
+                "std::collections::HashMap<r#{}, r#{}>",
                 type_rs(k)?,
                 type_rs(v)?
             ),
-            Type::Custom { name, .. } => name.clone(),
+            Type::Custom { name, .. } => format!("r#{}", name),
             Type::External { .. } => panic!("External types coming to a uniffi near you soon!"),
         })
     }
@@ -69,7 +69,7 @@ mod filters {
             FFIType::UInt64 => "u64".into(),
             FFIType::Float32 => "f32".into(),
             FFIType::Float64 => "f64".into(),
-            FFIType::RustArcPtr => "*const std::os::raw::c_void".into(),
+            FFIType::RustArcPtr(_) => "*const std::os::raw::c_void".into(),
             FFIType::RustBuffer => "uniffi::RustBuffer".into(),
             FFIType::ForeignBytes => "uniffi::ForeignBytes".into(),
             FFIType::ForeignCallback => "uniffi::ForeignCallback".into(),
@@ -87,7 +87,7 @@ mod filters {
             Type::Timestamp => "std::time::SystemTime".into(),
             Type::Duration => "std::time::Duration".into(),
             // Object is handled by Arc<T>
-            Type::Object(name) => format!("std::sync::Arc<{}>", name),
+            Type::Object(name) => format!("std::sync::Arc<r#{}>", name),
             // Other user-defined types are handled by a unit-struct that we generate.  The
             // FfiConverter implementation for this can be found in one of the scaffolding template code.
             //
@@ -100,10 +100,12 @@ mod filters {
             }
             // Wrapper types are implemented by generics that wrap the FfiConverter implementation of the
             // inner type.
-            Type::Optional(inner) => format!("std::option::Option<{}>", ffi_converter_name(inner)?),
-            Type::Sequence(inner) => format!("std::vec::Vec<{}>", ffi_converter_name(inner)?),
+            Type::Optional(inner) => {
+                format!("std::option::Option<r#{}>", ffi_converter_name(inner)?)
+            }
+            Type::Sequence(inner) => format!("std::vec::Vec<r#{}>", ffi_converter_name(inner)?),
             Type::Map(k, v) => format!(
-                "std::collections::HashMap<{}, {}>",
+                "std::collections::HashMap<r#{}, r#{}>",
                 ffi_converter_name(k)?,
                 ffi_converter_name(v)?
             ),
