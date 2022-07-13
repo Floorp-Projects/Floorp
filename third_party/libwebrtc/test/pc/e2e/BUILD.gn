@@ -490,6 +490,9 @@ if (!build_with_chromium) {
         "../../../test:test_support",
       ]
       data = peer_connection_e2e_smoke_test_resources
+      if (is_mac || is_ios) {
+        deps += [ "../../../modules/video_coding:objc_codec_factory_helper" ]
+      }
       if (is_ios) {
         deps += [ ":peer_connection_e2e_smoke_test_resources_bundle_data" ]
       }
