@@ -16,7 +16,6 @@ rtc_source_set("bounded_io") {
   deps = [
     "../../../api:array_view",
     "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base_approved",
   ]
   sources = [
     "bounded_byte_reader.h",
@@ -30,7 +29,6 @@ rtc_library("tlv_trait") {
     "../../../api:array_view",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
-    "../../../rtc_base:rtc_base_approved",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/strings:strings",
@@ -45,7 +43,6 @@ rtc_library("tlv_trait") {
 rtc_source_set("data") {
   deps = [
     "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base_approved",
     "../common:internal_types",
     "../public:types",
   ]
@@ -56,7 +53,6 @@ rtc_library("crc32c") {
   deps = [
     "../../../api:array_view",
     "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base_approved",
     "//third_party/crc32c",
   ]
   sources = [
@@ -73,7 +69,6 @@ rtc_library("parameter") {
     "../../../api:array_view",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:stringutils",
     "../common:internal_types",
     "../common:math",
@@ -119,7 +114,6 @@ rtc_library("error_cause") {
     "../../../api:array_view",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:stringutils",
     "../common:internal_types",
     "../common:math",
@@ -173,7 +167,6 @@ rtc_library("chunk") {
     "../../../api:array_view",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:stringutils",
     "../common:math",
     "../common:str_join",
@@ -231,7 +224,6 @@ rtc_library("chunk_validators") {
     ":chunk",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
-    "../../../rtc_base:rtc_base_approved",
   ]
   sources = [
     "chunk_validators.cc",
@@ -247,7 +239,6 @@ rtc_library("sctp_packet") {
     "../../../api:array_view",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:stringutils",
     "../common:internal_types",
     "../common:math",
@@ -280,7 +271,6 @@ if (rtc_include_tests) {
       "../../../rtc_base:buffer",
       "../../../rtc_base:checks",
       "../../../rtc_base:gunit_helpers",
-      "../../../rtc_base:rtc_base_approved",
       "../../../test:test_support",
       "../common:internal_types",
       "../common:math",

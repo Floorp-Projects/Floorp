@@ -77,7 +77,6 @@ rtc_library("system_wrappers") {
   }
 
   deps += [
-    "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_numerics",
   ]
 }
@@ -108,7 +107,6 @@ rtc_library("metrics") {
     "../rtc_base:atomicops",
     "../rtc_base:checks",
     "../rtc_base:macromagic",
-    "../rtc_base:rtc_base_approved",
     "../rtc_base/synchronization:mutex",
   ]
 }
@@ -146,7 +144,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":system_wrappers",
       "../rtc_base:checks",
       "../rtc_base:random",
-      "../rtc_base:rtc_base_approved",
       "../test:rtc_expect_death",
       "../test:test_main",
       "../test:test_support",

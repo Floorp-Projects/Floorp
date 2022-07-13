@@ -34,7 +34,6 @@ rtc_library("agc") {
     "../../../rtc_base:checks",
     "../../../rtc_base:gtest_prod",
     "../../../rtc_base:logging",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base:safe_minmax",
     "../../../system_wrappers:field_trial",
     "../../../system_wrappers:metrics",
@@ -95,7 +94,6 @@ rtc_library("clipping_predictor_level_buffer") {
   deps = [
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
-    "../../../rtc_base:rtc_base_approved",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -137,7 +135,6 @@ rtc_library("legacy_agc") {
     "../../../common_audio:common_audio_c",
     "../../../common_audio/third_party/ooura:fft_size_256",
     "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base_approved",
     "../../../system_wrappers",
   ]
 
@@ -180,7 +177,6 @@ if (rtc_include_tests) {
       "../../../api:array_view",
       "../../../rtc_base:checks",
       "../../../rtc_base:random",
-      "../../../rtc_base:rtc_base_approved",
       "../../../rtc_base:safe_conversions",
       "../../../rtc_base:stringutils",
       "../../../system_wrappers:metrics",

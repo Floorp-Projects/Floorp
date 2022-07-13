@@ -52,7 +52,6 @@ rtc_source_set("audio_device_api") {
     "../../api/task_queue",
     "../../rtc_base:checks",
     "../../rtc_base:refcount",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:stringutils",
   ]
 }
@@ -75,7 +74,6 @@ rtc_library("audio_device_buffer") {
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base:safe_conversions",
     "../../rtc_base:timestamp_aligner",
@@ -95,7 +93,6 @@ rtc_library("audio_device_generic") {
     ":audio_device_api",
     ":audio_device_buffer",
     "../../rtc_base:logging",
-    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -196,7 +193,6 @@ rtc_library("audio_device_impl") {
     "../../rtc_base:platform_thread",
     "../../rtc_base:random",
     "../../rtc_base:refcount",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_event",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base:safe_conversions",

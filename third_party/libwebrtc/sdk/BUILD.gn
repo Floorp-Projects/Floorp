@@ -237,7 +237,6 @@ if (is_ios || is_mac) {
           "../rtc_base:checks",
           "../rtc_base:logging",
           "../rtc_base:refcount",
-          "../rtc_base:rtc_base_approved",
           "../system_wrappers",
         ]
       }
@@ -351,7 +350,6 @@ if (is_ios || is_mac) {
           "../rtc_base",
           "../rtc_base:atomicops",
           "../rtc_base:checks",
-          "../rtc_base:rtc_base_approved",
           "../rtc_base/synchronization:mutex",
         ]
 
@@ -445,7 +443,6 @@ if (is_ios || is_mac) {
         "//api/video:video_rtp_headers",
         "//common_video",
         "//rtc_base:checks",
-        "//rtc_base:rtc_base_approved",
         "//third_party/libyuv",
       ]
       configs += [
@@ -593,7 +590,6 @@ if (is_ios || is_mac) {
         "../api/video:video_frame",
         "../api/video:video_rtp_headers",
         "../rtc_base:checks",
-        "../rtc_base:rtc_base_approved",
       ]
       configs += [ "..:common_objc" ]
       public_configs = [ ":common_config_objc" ]
@@ -667,7 +663,6 @@ if (is_ios || is_mac) {
         "../media:rtc_media_base",
         "../modules/video_coding:video_codec_interface",
         "../rtc_base:checks",
-        "../rtc_base:rtc_base_approved",
       ]
     }
 
@@ -1366,7 +1361,6 @@ if (is_ios || is_mac) {
           ":videocapture_objc",
           ":videocodec_objc",
           ":videotoolbox_objc",
-          "../rtc_base:rtc_base_approved",
         ]
         if (rtc_ios_macos_use_opengl_rendering) {
           deps += [ ":opengl_ui_objc" ]
@@ -1502,7 +1496,6 @@ if (is_ios || is_mac) {
           ":videocapture_objc",
           ":videocodec_objc",
           ":videotoolbox_objc",
-          "../rtc_base:rtc_base_approved",
         ]
         if (!build_with_chromium) {
           deps += [

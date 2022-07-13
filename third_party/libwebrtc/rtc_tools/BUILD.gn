@@ -64,7 +64,6 @@ rtc_library("video_file_reader") {
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:refcount",
-    "../rtc_base:rtc_base_approved",
     "../rtc_base:stringutils",
   ]
   absl_deps = [
@@ -84,7 +83,6 @@ rtc_library("video_file_writer") {
     "../api/video:video_frame",
     "../api/video:video_rtp_headers",
     "../rtc_base:logging",
-    "../rtc_base:rtc_base_approved",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/strings",
@@ -116,7 +114,6 @@ rtc_library("video_quality_analysis") {
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:refcount",
-    "../rtc_base:rtc_base_approved",
     "../test:perf_test",
     "//third_party/libyuv",
   ]
@@ -208,7 +205,6 @@ if (!is_component_build) {
       "../media:rtc_audio_video",
       "../media:rtc_media_base",
       "../rtc_base",
-      "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_json",
       "../rtc_base:threading",
       "../rtc_base/system:file_wrapper",
@@ -408,7 +404,6 @@ if (!build_with_chromium) {
         "../modules/rtp_rtcp",
         "../modules/rtp_rtcp:rtp_rtcp_format",
         "../rtc_base:checks",
-        "../rtc_base:rtc_base_approved",
         "../rtc_base:rtc_numerics",
         "../rtc_base:stringutils",
         "../system_wrappers",
@@ -483,7 +478,6 @@ if (rtc_include_tests) {
           "../rtc_base:checks",
           "../rtc_base:logging",
           "../rtc_base:protobuf_utils",
-          "../rtc_base:rtc_base_approved",
           "../system_wrappers:field_trial",
           "../test:field_trial",
           "../test:fileutils",
@@ -572,7 +566,6 @@ if (rtc_include_tests) {
           "../api:audioproc_f_api",
           "../modules/audio_processing",
           "../modules/audio_processing:api",
-          "../rtc_base:rtc_base_approved",
         ]
       }
 
@@ -592,7 +585,6 @@ if (rtc_include_tests) {
           "../rtc_base:ignore_wundef",
           "../rtc_base:macromagic",
           "../rtc_base:protobuf_utils",
-          "../rtc_base:rtc_base_approved",
           "../rtc_base:stringutils",
           "//third_party/abseil-cpp/absl/flags:flag",
           "//third_party/abseil-cpp/absl/flags:parse",

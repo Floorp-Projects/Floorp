@@ -211,7 +211,6 @@ if (!build_with_chromium) {
       deps = [
         "../../../api:peer_connection_quality_test_fixture_api",
         "../../../modules/audio_device:audio_device_impl",
-        "../../../rtc_base:rtc_base_approved",
         "../../../rtc_base:swap_queue",
       ]
     }
@@ -347,7 +346,6 @@ if (!build_with_chromium) {
         "../../../rtc_base:criticalsection",
         "../../../rtc_base:location",
         "../../../rtc_base:logging",
-        "../../../rtc_base:rtc_base_approved",
         "../../../rtc_base:task_queue_for_test",
         "../../../rtc_base/synchronization:mutex",
         "../../../rtc_base/task_utils:repeating_task",
@@ -403,7 +401,6 @@ if (!build_with_chromium) {
         "../../../rtc_base",
         "../../../rtc_base:gunit_helpers",
         "../../../rtc_base:macromagic",
-        "../../../rtc_base:rtc_base_approved",
         "../../../rtc_base:safe_conversions",
         "../../../rtc_base:stringutils",
         "../../../rtc_base:task_queue_for_test",
@@ -424,7 +421,6 @@ if (!build_with_chromium) {
         ":single_process_encoded_image_data_injector",
         "../../../api/video:encoded_image",
         "../../../rtc_base:buffer",
-        "../../../rtc_base:rtc_base_approved",
         "../../../test:test_support",
       ]
     }
@@ -437,7 +433,6 @@ if (!build_with_chromium) {
         ":video_frame_tracking_id_injector",
         "../../../api/video:encoded_image",
         "../../../rtc_base:buffer",
-        "../../../rtc_base:rtc_base_approved",
         "../../../test:test_support",
       ]
     }
@@ -516,7 +511,6 @@ if (!build_with_chromium) {
         "../../../api:stats_observer_interface",
         "../../../rtc_base:logging",
         "../../../rtc_base:macromagic",
-        "../../../rtc_base:rtc_base_approved",
         "../../../rtc_base/synchronization:mutex",
       ]
     }
@@ -676,7 +670,6 @@ if (!build_with_chromium) {
       "../../../rtc_base:criticalsection",
       "../../../rtc_base:logging",
       "../../../rtc_base:platform_thread",
-      "../../../rtc_base:rtc_base_approved",
       "../../../rtc_base:rtc_event",
       "../../../rtc_base:rtc_numerics",
       "../../../rtc_base:stringutils",
@@ -716,7 +709,6 @@ if (!build_with_chromium) {
       "../../../common_video",
       "../../../rtc_base:checks",
       "../../../rtc_base:platform_thread",
-      "../../../rtc_base:rtc_base_approved",
       "../../../rtc_base:rtc_base_tests_utils",
       "../../../rtc_base:rtc_event",
       "../../../rtc_base:stringutils",

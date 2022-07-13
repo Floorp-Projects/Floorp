@@ -88,7 +88,6 @@ if (rtc_include_tests) {
         ":voice_probability_delay_unit",
         "..:audio_processing",
         "../../../common_audio",
-        "../../../rtc_base:rtc_base_approved",
         "../../../rtc_base/system:file_wrapper",
         "../../../system_wrappers",
         "../../../test:fileutils",

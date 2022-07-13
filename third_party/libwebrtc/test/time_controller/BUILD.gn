@@ -64,7 +64,6 @@ if (rtc_include_tests) {
       "../../rtc_base",
       "../../rtc_base:location",
       "../../rtc_base:macromagic",
-      "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_event",
       "../../rtc_base:rtc_task_queue",
       "../../rtc_base:threading",
