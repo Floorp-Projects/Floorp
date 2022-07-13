@@ -494,11 +494,6 @@ class PeerConnection : public PeerConnectionInternal,
 
   void OnNegotiationNeeded();
 
-  // Returns the specified SCTP DataChannel in sctp_data_channels_,
-  // or nullptr if not found.
-  SctpDataChannel* FindDataChannelBySid(int sid) const
-      RTC_RUN_ON(signaling_thread());
-
   // Called when first configuring the port allocator.
   struct InitializePortAllocatorResult {
     bool enable_ipv6;

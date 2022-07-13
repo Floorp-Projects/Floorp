@@ -2027,10 +2027,6 @@ void PeerConnection::OnSctpDataChannelClosed(DataChannelInterface* channel) {
       static_cast<SctpDataChannel*>(channel));
 }
 
-SctpDataChannel* PeerConnection::FindDataChannelBySid(int sid) const {
-  return data_channel_controller_.FindDataChannelBySid(sid);
-}
-
 PeerConnection::InitializePortAllocatorResult
 PeerConnection::InitializePortAllocator_n(
     const cricket::ServerAddresses& stun_servers,
