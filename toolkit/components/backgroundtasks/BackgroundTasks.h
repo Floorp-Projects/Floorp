@@ -49,10 +49,10 @@ class BackgroundTasks final : public nsIBackgroundTasks {
 
   static bool IsBackgroundTaskMode();
 
-  static nsresult CreateTemporaryProfileDirectory(const nsCString& aInstallHash,
+  static nsresult CreateEphemeralProfileDirectory(const nsCString& aInstallHash,
                                                   nsIFile** aFile);
 
-  static bool IsUsingTemporaryProfile();
+  static bool IsEphemeralProfile();
 
   static nsresult RunBackgroundTask(nsICommandLine* aCmdLine);
 
@@ -72,14 +72,14 @@ class BackgroundTasks final : public nsIBackgroundTasks {
   Maybe<nsCString> mBackgroundTask;
   nsCOMPtr<nsIFile> mProfD;
 
-  nsresult CreateTemporaryProfileDirectoryImpl(const nsCString& aInstallHash,
+  nsresult CreateEphemeralProfileDirectoryImpl(const nsCString& aInstallHash,
                                                nsIFile** aFile);
 
   /*
    * Iterates children of `aRoot` and removes unlocked profiles matching
    * `aPrefix`.
    */
-  static nsresult RemoveStaleTemporaryProfileDirectories(
+  static nsresult RemoveStaleEphemeralProfileDirectories(
       nsIFile* const aRoot, const nsCString& aPrefix);
 
   virtual ~BackgroundTasks() = default;

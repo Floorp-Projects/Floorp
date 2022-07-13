@@ -4881,7 +4881,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       mDirProvider.GetInstallHash(installHash);
 
       nsCOMPtr<nsIFile> file;
-      nsresult rv = BackgroundTasks::CreateTemporaryProfileDirectory(
+      nsresult rv = BackgroundTasks::CreateEphemeralProfileDirectory(
           NS_LossyConvertUTF16toASCII(installHash), getter_AddRefs(file));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return 1;
