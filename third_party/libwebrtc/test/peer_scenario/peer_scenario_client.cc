@@ -306,7 +306,7 @@ PeerScenarioClient::AudioSendTrack PeerScenarioClient::CreateAudio(
   RTC_DCHECK_RUN_ON(signaling_thread_);
   AudioSendTrack res;
   auto source = pc_factory_->CreateAudioSource(options);
-  auto track = pc_factory_->CreateAudioTrack(track_id, source);
+  auto track = pc_factory_->CreateAudioTrack(track_id, source.get());
   res.track = track;
   res.sender = peer_connection_->AddTrack(track, {kCommonStreamId}).value();
   return res;
@@ -323,9 +323,10 @@ PeerScenarioClient::VideoSendTrack PeerScenarioClient::CreateVideo(
   capturer->Init();
   res.source = rtc::make_ref_counted<FrameGeneratorCapturerVideoTrackSource>(
       std::move(capturer), config.screencast);
-  auto track = pc_factory_->CreateVideoTrack(track_id, res.source);
-  res.track = track;
-  res.sender = peer_connection_->AddTrack(track, {kCommonStreamId}).MoveValue();
+  auto track = pc_factory_->CreateVideoTrack(track_id, res.source.get());
+  res.track = track.get();
+  res.sender =
+      peer_connection_->AddTrack(track, {kCommonStreamId}).MoveValue().get();
   return res;
 }
 
@@ -355,7 +356,8 @@ void PeerScenarioClient::CreateAndSetSdp(
                     [sdp_offer, offer_handler](RTCError) {
                       offer_handler(sdp_offer);
                     }));
-          }),
+          })
+          .get(),
       PeerConnectionInterface::RTCOfferAnswerOptions());
 }
 
@@ -385,7 +387,8 @@ void PeerScenarioClient::SetSdpOfferAndGetAnswer(
                           [answer_handler, sdp_answer](RTCError) {
                             answer_handler(sdp_answer);
                           }));
-                }),
+                })
+                .get(),
             PeerConnectionInterface::RTCOfferAnswerOptions());
       }));
 }

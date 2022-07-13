@@ -163,7 +163,7 @@ MappableNativeBuffer::GetOrCreateMappedBuffer(int width, int height) {
     case VideoFrameBuffer::Type::kI420: {
       rtc::scoped_refptr<I420Buffer> i420_buffer =
           I420Buffer::Create(width, height);
-      I420Buffer::SetBlack(i420_buffer);
+      I420Buffer::SetBlack(i420_buffer.get());
       mapped_buffer = i420_buffer;
       break;
     }
