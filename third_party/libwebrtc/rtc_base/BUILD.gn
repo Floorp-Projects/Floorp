@@ -87,6 +87,8 @@ rtc_library("rtc_base_approved") {
     ":location",
     ":logging",
     ":macromagic",
+    ":mod_ops",
+    ":moving_max_counter",
     ":one_time_event",
     ":platform_thread",
     ":platform_thread_types",
@@ -134,8 +136,8 @@ rtc_library("rtc_base_approved") {
     "location.h",  # Transitional, use :location
     "numerics/histogram_percentile_counter.cc",
     "numerics/histogram_percentile_counter.h",
-    "numerics/mod_ops.h",
-    "numerics/moving_max_counter.h",
+    "numerics/mod_ops.h",  # Transitional, use :mod_ops
+    "numerics/moving_max_counter.h",  # Transitional, use :moving_max_counter
     "numerics/sample_counter.cc",
     "numerics/sample_counter.h",
     "one_time_event.h",  # Transitional, use :one_time_event
@@ -188,6 +190,19 @@ rtc_library("rtc_base_approved") {
     public_deps +=  # no-presubmit-check TODO(webrtc:8603)
         [ ":timestamp_aligner" ]
   }
+}
+
+rtc_source_set("mod_ops") {
+  visibility = [ "*" ]
+  sources = [ "numerics/mod_ops.h" ]
+  deps = [ ":checks" ]
+}
+
+rtc_source_set("moving_max_counter") {
+  visibility = [ "*" ]
+  sources = [ "numerics/moving_max_counter.h" ]
+  deps = [ ":checks" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_source_set("one_time_event") {
@@ -718,6 +733,7 @@ rtc_library("rtc_numerics") {
   ]
   deps = [
     ":checks",
+    ":mod_ops",
     ":rtc_base_approved",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -1521,6 +1537,8 @@ if (rtc_include_tests) {
         ":location",
         ":logging",
         ":macromagic",
+        ":mod_ops",
+        ":moving_max_counter",
         ":null_socket_server",
         ":one_time_event",
         ":platform_thread",
