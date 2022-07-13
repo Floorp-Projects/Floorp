@@ -1390,6 +1390,68 @@ TEST(RtcpTransceiverImplTest, RepliesToRrtrWhenEnabled) {
                                         /*delay=*/kComactNtpOneSecond / 2)));
 }
 
+TEST(RtcpTransceiverImplTest, CanReplyToRrtrOnceForAllLocalSsrcs) {
+  static constexpr uint32_t kRemoteSsrc = 4321;
+  static constexpr uint32_t kLocalSsrcs[] = {1234, 5678};
+  SimulatedClock clock(0);
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.clock = &clock;
+  config.reply_to_non_sender_rtt_measurement = true;
+  config.reply_to_non_sender_rtt_mesaurments_on_all_ssrcs = false;
+  RtcpPacketParser rtcp_parser;
+  RtcpParserTransport transport(&rtcp_parser);
+  config.outgoing_transport = &transport;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  MockRtpStreamRtcpHandler local_sender0;
+  MockRtpStreamRtcpHandler local_sender1;
+  rtcp_transceiver.AddMediaSender(kLocalSsrcs[0], &local_sender0);
+  rtcp_transceiver.AddMediaSender(kLocalSsrcs[1], &local_sender1);
+
+  rtcp::ExtendedReports xr;
+  rtcp::Rrtr rrtr;
+  rrtr.SetNtp(NtpTime(uint64_t{0x1111'2222'3333'4444}));
+  xr.SetRrtr(rrtr);
+  xr.SetSenderSsrc(kRemoteSsrc);
+  rtcp_transceiver.ReceivePacket(xr.Build(), clock.CurrentTime());
+  clock.AdvanceTime(TimeDelta::Millis(1'500));
+
+  rtcp_transceiver.SendCompoundPacket();
+
+  EXPECT_EQ(rtcp_parser.xr()->num_packets(), 1);
+}
+
+TEST(RtcpTransceiverImplTest, CanReplyToRrtrForEachLocalSsrc) {
+  static constexpr uint32_t kRemoteSsrc = 4321;
+  static constexpr uint32_t kLocalSsrc[] = {1234, 5678};
+  SimulatedClock clock(0);
+  RtcpTransceiverConfig config = DefaultTestConfig();
+  config.clock = &clock;
+  config.reply_to_non_sender_rtt_measurement = true;
+  config.reply_to_non_sender_rtt_mesaurments_on_all_ssrcs = true;
+  RtcpPacketParser rtcp_parser;
+  RtcpParserTransport transport(&rtcp_parser);
+  config.outgoing_transport = &transport;
+  RtcpTransceiverImpl rtcp_transceiver(config);
+
+  MockRtpStreamRtcpHandler local_sender0;
+  MockRtpStreamRtcpHandler local_sender1;
+  rtcp_transceiver.AddMediaSender(kLocalSsrc[0], &local_sender0);
+  rtcp_transceiver.AddMediaSender(kLocalSsrc[1], &local_sender1);
+
+  rtcp::ExtendedReports xr;
+  rtcp::Rrtr rrtr;
+  rrtr.SetNtp(NtpTime(uint64_t{0x1111'2222'3333'4444}));
+  xr.SetRrtr(rrtr);
+  xr.SetSenderSsrc(kRemoteSsrc);
+  rtcp_transceiver.ReceivePacket(xr.Build(), clock.CurrentTime());
+  clock.AdvanceTime(TimeDelta::Millis(1'500));
+
+  rtcp_transceiver.SendCompoundPacket();
+
+  EXPECT_EQ(rtcp_parser.xr()->num_packets(), 2);
+}
+
 TEST(RtcpTransceiverImplTest, SendsNoXrRrtrWhenDisabled) {
   SimulatedClock clock(0);
   RtcpTransceiverConfig config;
