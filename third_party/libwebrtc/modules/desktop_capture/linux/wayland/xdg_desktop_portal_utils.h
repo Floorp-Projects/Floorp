@@ -64,6 +64,8 @@ using SessionStartRequestedHandler = void (*)(GDBusProxy*,
 // Contains type of responses that can be observed when making a request to
 // a desktop portal interface.
 enum class RequestResponse {
+  // Unknown, the initialized status.
+  kUnknown,
   // Success, the request is carried out.
   kSuccess,
   // The user cancelled the interaction.
@@ -133,7 +135,7 @@ void RequestSessionUsingProxy(T* portal,
       return;
     RTC_LOG(LS_ERROR) << "Failed to get a proxy for the portal: "
                       << error->message;
-    portal->PortalFailed(RequestResponse::kError);
+    portal->OnPortalDone(RequestResponse::kError);
     return;
   }
 
@@ -155,7 +157,7 @@ void SessionRequestHandler(T* portal,
     if (g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED))
       return;
     RTC_LOG(LS_ERROR) << "Failed to session: " << error->message;
-    portal->PortalFailed(RequestResponse::kError);
+    portal->OnPortalDone(RequestResponse::kError);
     return;
   }
 
@@ -167,7 +169,7 @@ void SessionRequestHandler(T* portal,
   if (!handle) {
     RTC_LOG(LS_ERROR) << "Failed to initialize the session.";
     portal->UnsubscribeSignalHandlers();
-    portal->PortalFailed(RequestResponse::kError);
+    portal->OnPortalDone(RequestResponse::kError);
     return;
   }
 }
@@ -192,7 +194,7 @@ void SessionRequestResponseSignalHelper(
 
   if (session_handle.empty() || portal_response) {
     RTC_LOG(LS_ERROR) << "Failed to request the session subscription.";
-    portal->PortalFailed(RequestResponse::kError);
+    portal->OnPortalDone(RequestResponse::kError);
     return;
   }
 
@@ -213,7 +215,7 @@ void StartRequestedHandler(T* portal, GDBusProxy* proxy, GAsyncResult* result) {
       return;
     RTC_LOG(LS_ERROR) << "Failed to start the portal session: "
                       << error->message;
-    portal->PortalFailed(RequestResponse::kError);
+    portal->OnPortalDone(RequestResponse::kError);
     return;
   }
 
@@ -222,7 +224,7 @@ void StartRequestedHandler(T* portal, GDBusProxy* proxy, GAsyncResult* result) {
   if (!handle) {
     RTC_LOG(LS_ERROR) << "Failed to initialize the start portal session.";
     portal->UnsubscribeSignalHandlers();
-    portal->PortalFailed(RequestResponse::kError);
+    portal->OnPortalDone(RequestResponse::kError);
     return;
   }
 

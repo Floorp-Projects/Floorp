@@ -92,7 +92,7 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
   xdg_portal::SessionDetails GetSessionDetails() override;
 
   // Method to notify the reason for failure of a portal request.
-  void PortalFailed(xdg_portal::RequestResponse result);
+  void OnPortalDone(xdg_portal::RequestResponse result);
 
   // Sends a create session request to the portal.
   void SessionRequest(GDBusProxy* proxy);
