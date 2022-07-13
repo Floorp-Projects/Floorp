@@ -1,5 +1,5 @@
 {
-  "webrtc": {
+  "base": {
       "exclusions": [
           "DEPS",
           "infra/specs/.*"

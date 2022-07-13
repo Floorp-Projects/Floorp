@@ -1,0 +1,54 @@
+# Copyright (c) 2022 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+{
+  'baremetal-pool': {
+    'swarming': {
+      'dimensions': {
+        'pool': 'WebRTC-baremetal',
+      },
+    },
+  },
+  'baremetal-try-pool': {
+    'swarming': {
+      'dimensions': {
+        'pool': 'WebRTC-baremetal-try',
+      },
+    },
+  },
+  'quick-perf-tests': {
+    'args': [
+      '--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/',
+      '--nologs',
+      '--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json',
+    ],
+    'resultdb': {
+      'result_format': 'gtest_json',
+      'result_file': '${ISOLATED_OUTDIR}/gtest_output.json',
+    },
+  },
+  'linux': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Ubuntu'
+      }
+    }
+  },
+  'resultdb-json-format': {
+    'resultdb': {
+      'result_format': 'json'
+    }
+  },
+  'win': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Windows'
+      }
+    }
+  },
+}
