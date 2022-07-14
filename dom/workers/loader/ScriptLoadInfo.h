@@ -33,6 +33,7 @@ class ScriptLoadInfo {
   ~ScriptLoadInfo();
 
   nsString mURL;
+  nsCOMPtr<nsIURI> mURI;
 
   // This full URL string is populated only if this object is used in a
   // ServiceWorker.

@@ -344,14 +344,17 @@ class ModifyBusyCountRunnable final : public WorkerControlRunnable {
 
 class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
   nsString mScriptURL;
+  const mozilla::Encoding* mDocumentEncoding;
   UniquePtr<SerializedStackHolder> mOriginStack;
 
  public:
   explicit CompileScriptRunnable(WorkerPrivate* aWorkerPrivate,
                                  UniquePtr<SerializedStackHolder> aOriginStack,
-                                 const nsAString& aScriptURL)
+                                 const nsAString& aScriptURL,
+                                 const mozilla::Encoding* aDocumentEncoding)
       : WorkerDebuggeeRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
         mScriptURL(aScriptURL),
+        mDocumentEncoding(aDocumentEncoding),
         mOriginStack(aOriginStack.release()) {}
 
  private:
@@ -375,7 +378,8 @@ class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
 
     ErrorResult rv;
     workerinternals::LoadMainScript(aWorkerPrivate, std::move(mOriginStack),
-                                    mScriptURL, WorkerScript, rv);
+                                    mScriptURL, WorkerScript, rv,
+                                    mDocumentEncoding);
 
     if (aWorkerPrivate->ExtensionAPIAllowed()) {
       MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
@@ -2600,8 +2604,16 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
     stack = GetCurrentStackForNetMonitor(aCx);
   }
 
-  RefPtr<CompileScriptRunnable> compiler =
-      new CompileScriptRunnable(worker, std::move(stack), aScriptURL);
+  // This should be non-null for dedicated workers and null for Shared and
+  // Service workers. All Encoding values are static and will live as long
+  // as the process and the convention is to therefore use raw pointers.
+  const mozilla::Encoding* aDocumentEncoding =
+      NS_IsMainThread() && !worker->GetParent() && worker->GetDocument()
+          ? worker->GetDocument()->GetDocumentCharacterSet().get()
+          : nullptr;
+
+  RefPtr<CompileScriptRunnable> compiler = new CompileScriptRunnable(
+      worker, std::move(stack), aScriptURL, aDocumentEncoding);
   if (!compiler->Dispatch()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;

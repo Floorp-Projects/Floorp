@@ -146,6 +146,7 @@ class WorkerScriptLoader final : public nsINamed {
                      UniquePtr<SerializedStackHolder> aOriginStack,
                      nsIEventTarget* aSyncLoopTarget,
                      nsTArray<ScriptLoadInfo> aLoadInfos,
+                     const mozilla::Encoding* aDocumentEncoding,
                      const Maybe<ClientInfo>& aClientInfo,
                      const Maybe<ServiceWorkerDescriptor>& aController,
                      bool aIsMainScript, WorkerScriptType aWorkerScriptType,
@@ -239,7 +240,8 @@ void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
 void LoadMainScript(WorkerPrivate* aWorkerPrivate,
                     UniquePtr<SerializedStackHolder> aOriginStack,
                     const nsAString& aScriptURL,
-                    WorkerScriptType aWorkerScriptType, ErrorResult& aRv);
+                    WorkerScriptType aWorkerScriptType, ErrorResult& aRv,
+                    const mozilla::Encoding* aDocumentEncoding);
 
 void Load(WorkerPrivate* aWorkerPrivate,
           UniquePtr<SerializedStackHolder> aOriginStack,
