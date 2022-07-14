@@ -54,9 +54,9 @@ mozilla::loader::ComponentLoadContext* LoadContextBase::AsComponentContext() {
   return static_cast<mozilla::loader::ComponentLoadContext*>(this);
 }
 
-mozilla::dom::ScriptLoadInfo* LoadContextBase::AsWorkerContext() {
+mozilla::dom::WorkerLoadContext* LoadContextBase::AsWorkerContext() {
   MOZ_ASSERT(IsWorkerContext());
-  return static_cast<mozilla::dom::ScriptLoadInfo*>(this);
+  return static_cast<mozilla::dom::WorkerLoadContext*>(this);
 }
 
 }  // namespace JS::loader

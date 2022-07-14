@@ -471,7 +471,7 @@ WorkerScriptLoader::WorkerScriptLoader(
   MOZ_ASSERT_IF(aIsMainScript, aScriptURLs.Length() == 1);
 
   for (const nsString& aScriptURL : aScriptURLs) {
-    RefPtr<ScriptLoadInfo> loadContext = new ScriptLoadInfo(aScriptURL);
+    RefPtr<WorkerLoadContext> loadContext = new WorkerLoadContext(aScriptURL);
 
     // Create ScriptLoadRequests for this WorkerScriptLoader
     ReferrerPolicy aReferrerPolicy = mWorkerPrivate->GetReferrerPolicy();
@@ -538,7 +538,7 @@ void WorkerScriptLoader::LoadingFinished(ScriptLoadRequest* aRequest,
                                          nsresult aRv) {
   AssertIsOnMainThread();
 
-  ScriptLoadInfo* loadContext = aRequest->GetWorkerLoadContext();
+  WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
 
   loadContext->mLoadResult = aRv;
 
@@ -558,7 +558,7 @@ void WorkerScriptLoader::MaybeExecuteFinishedScripts(
 
   // We execute the last step if we don't have a pending operation with the
   // cache and the loading is completed.
-  ScriptLoadInfo* loadContext = aRequest->GetWorkerLoadContext();
+  WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
   if (loadContext->Finished()) {
     loadContext->ClearCacheCreator();
     DispatchMaybeMoveToLoadedList(aRequest);
@@ -567,7 +567,7 @@ void WorkerScriptLoader::MaybeExecuteFinishedScripts(
 
 void WorkerScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
   mWorkerPrivate->AssertIsOnWorkerThread();
-  ScriptLoadInfo* loadContext = aRequest->GetWorkerLoadContext();
+  WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
   MOZ_ASSERT(!loadContext->mExecutionScheduled);
   loadContext->mExecutionScheduled = true;
 
@@ -620,7 +620,7 @@ bool WorkerScriptLoader::ProcessPendingRequests(JSContext* aCx) {
 
   while (!mLoadedRequests.isEmpty()) {
     RefPtr<ScriptLoadRequest> req = mLoadedRequests.StealFirst();
-    ScriptLoadInfo* loadInfo = req->GetWorkerLoadContext();
+    WorkerLoadContext* loadInfo = req->GetWorkerLoadContext();
     // We don't have a ProcessRequest method (like we do on the DOM), as there
     // isn't much processing that we need to do per request that isn't related
     // to evaluation (the processsing done for the DOM is handled in
@@ -687,7 +687,7 @@ nsresult WorkerScriptLoader::LoadScripts() {
 
   for (ScriptLoadRequest* req = mLoadingRequests.getFirst(); req;
        req = req->getNext()) {
-    ScriptLoadInfo* loadInfo = req->GetWorkerLoadContext();
+    WorkerLoadContext* loadInfo = req->GetWorkerLoadContext();
     loadInfo->SetCacheCreator(cacheCreator);
     loadInfo->GetCacheCreator()->AddLoader(
         MakeNotNull<RefPtr<CacheLoadHandler>>(mWorkerPrivate, req,
@@ -715,7 +715,7 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadRequest* aRequest) {
   AssertIsOnMainThread();
   MOZ_ASSERT_IF(IsMainWorkerScript(), !IsDebuggerScript());
 
-  ScriptLoadInfo* loadContext = aRequest->GetWorkerLoadContext();
+  WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
 
   // The URL passed to us for loading was invalid, stop loading at this point.
   if (loadContext->mLoadResult != NS_ERROR_NOT_INITIALIZED) {
@@ -854,7 +854,7 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadRequest* aRequest) {
     channelLoadInfo->SetLoadingEmbedderPolicy(respectedCOEP);
   }
 
-  if (loadContext->mCacheStatus != ScriptLoadInfo::ToBeCached) {
+  if (loadContext->mCacheStatus != WorkerLoadContext::ToBeCached) {
     rv = channel->AsyncOpen(loader);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -863,7 +863,7 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadRequest* aRequest) {
     nsCOMPtr<nsIOutputStream> writer;
 
     // In case we return early.
-    loadContext->mCacheStatus = ScriptLoadInfo::Cancel;
+    loadContext->mCacheStatus = WorkerLoadContext::Cancel;
 
     rv = NS_NewPipe(
         getter_AddRefs(loadContext->mCacheReadStream), getter_AddRefs(writer),
@@ -909,7 +909,7 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
                                         ScriptLoadRequest* aRequest) {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  ScriptLoadInfo* loadContext = aRequest->GetWorkerLoadContext();
+  WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
 
   NS_ASSERTION(loadContext->mExecutionScheduled, "Should be scheduled!");
   NS_ASSERTION(!loadContext->mExecutionResult, "Should not have executed yet!");

@@ -10,33 +10,33 @@
 namespace mozilla {
 namespace dom {
 
-ScriptLoadInfo::ScriptLoadInfo(const nsString& aURL)
+WorkerLoadContext::WorkerLoadContext(const nsString& aURL)
     : JS::loader::LoadContextBase(JS::loader::ContextKind::Worker), mURL(aURL) {
   MOZ_ASSERT(mScriptIsUTF8 == false, "set by member initializer");
   MOZ_ASSERT(mScriptLength == 0, "set by member initializer");
   mScript.mUTF16 = nullptr;
 }
 
-ScriptLoadInfo::~ScriptLoadInfo() {
+WorkerLoadContext::~WorkerLoadContext() {
   if (void* data = mScriptIsUTF8 ? static_cast<void*>(mScript.mUTF8)
                                  : static_cast<void*>(mScript.mUTF16)) {
     js_free(data);
   }
 }
 
-void ScriptLoadInfo::SetCacheCreator(
+void WorkerLoadContext::SetCacheCreator(
     RefPtr<workerinternals::loader::CacheCreator> aCacheCreator) {
   AssertIsOnMainThread();
   mCacheCreator = aCacheCreator;
 }
 
-void ScriptLoadInfo::ClearCacheCreator() {
+void WorkerLoadContext::ClearCacheCreator() {
   AssertIsOnMainThread();
   mCacheCreator = nullptr;
 }
 
 RefPtr<workerinternals::loader::CacheCreator>
-ScriptLoadInfo::GetCacheCreator() {
+WorkerLoadContext::GetCacheCreator() {
   return mCacheCreator;
 }
 
