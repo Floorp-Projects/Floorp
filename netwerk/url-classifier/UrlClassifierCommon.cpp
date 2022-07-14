@@ -176,6 +176,10 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
       NS_SetRequestBlockingReason(
           channel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_SOCIALTRACKING_URI);
       break;
+    case NS_ERROR_EMAILTRACKING_URI:
+      NS_SetRequestBlockingReason(
+          channel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_EMAILTRACKING_URI);
+      break;
     default:
       MOZ_CRASH(
           "Missing nsILoadInfo::BLOCKING_REASON* for the classification error");
