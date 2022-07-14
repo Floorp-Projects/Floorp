@@ -7,10 +7,13 @@
 #ifndef mozilla_dom_workers_ScriptLoadInfo_h__
 #define mozilla_dom_workers_ScriptLoadInfo_h__
 
-#include "nsIRequest.h"
-#include "mozilla/dom/Promise.h"
 #include "nsIInputStream.h"
 #include "nsIChannel.h"
+#include "nsIRequest.h"
+#include "mozilla/CORSMode.h"
+#include "mozilla/dom/Promise.h"
+#include "js/loader/ScriptKind.h"
+#include "js/loader/ScriptLoadRequest.h"
 
 class nsIChannel;
 class nsIReferrerInfo;

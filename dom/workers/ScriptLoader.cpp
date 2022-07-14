@@ -509,14 +509,14 @@ nsIURI* WorkerScriptLoader::GetBaseURI() {
   return baseURI;
 }
 
-void WorkerScriptLoader::LoadingFinished(ScriptLoadInfo& aLoadInfo,
+void WorkerScriptLoader::LoadingFinished(ScriptLoadInfo* aLoadInfo,
                                          nsresult aRv) {
   AssertIsOnMainThread();
 
-  aLoadInfo.mLoadResult = aRv;
+  aLoadInfo->mLoadResult = aRv;
 
-  MOZ_ASSERT(!aLoadInfo.mLoadingFinished);
-  aLoadInfo.mLoadingFinished = true;
+  MOZ_ASSERT(!aLoadInfo->mLoadingFinished);
+  aLoadInfo->mLoadingFinished = true;
 
   if (IsMainWorkerScript() && NS_SUCCEEDED(aRv)) {
     MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate->PrincipalURIMatchesScriptURL());
@@ -526,12 +526,12 @@ void WorkerScriptLoader::LoadingFinished(ScriptLoadInfo& aLoadInfo,
 }
 
 void WorkerScriptLoader::MaybeExecuteFinishedScripts(
-    const ScriptLoadInfo& aLoadInfo) {
+    const ScriptLoadInfo* aLoadInfo) {
   AssertIsOnMainThread();
 
   // We execute the last step if we don't have a pending operation with the
   // cache and the loading is completed.
-  if (aLoadInfo.Finished()) {
+  if (aLoadInfo->Finished()) {
     DispatchProcessPendingRequests();
   }
 }
@@ -582,7 +582,7 @@ bool WorkerScriptLoader::ProcessPendingRequests(
     if (mExecutionAborted) {
       break;
     }
-    if (!EvaluateScript(aCx, loadInfo)) {
+    if (!EvaluateScript(aCx, &loadInfo)) {
       mExecutionAborted = true;
       mMutedErrorFlag = loadInfo.mMutedErrorFlag.valueOr(true);
     }
@@ -591,7 +591,7 @@ bool WorkerScriptLoader::ProcessPendingRequests(
   return true;
 }
 
-nsresult WorkerScriptLoader::OnStreamComplete(ScriptLoadInfo& aLoadInfo,
+nsresult WorkerScriptLoader::OnStreamComplete(ScriptLoadInfo* aLoadInfo,
                                               nsresult aStatus) {
   AssertIsOnMainThread();
 
@@ -635,7 +635,7 @@ void WorkerScriptLoader::CancelMainThread(nsresult aCancelResult) {
     }
 
     if (callLoadingFinished && !loadInfo.Finished()) {
-      LoadingFinished(loadInfo, aCancelResult);
+      LoadingFinished(&loadInfo, aCancelResult);
     }
   }
 
@@ -669,9 +669,9 @@ nsresult WorkerScriptLoader::LoadScripts() {
 
   if (!mWorkerPrivate->IsServiceWorker() || IsDebuggerScript()) {
     for (ScriptLoadInfo& loadInfo : mLoadInfos) {
-      nsresult rv = LoadScript(loadInfo);
+      nsresult rv = LoadScript(&loadInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        LoadingFinished(loadInfo, rv);
+        LoadingFinished(&loadInfo, rv);
         return rv;
       }
     }
@@ -684,7 +684,7 @@ nsresult WorkerScriptLoader::LoadScripts() {
 
   for (ScriptLoadInfo& loadInfo : mLoadInfos) {
     mCacheCreator->AddLoader(MakeNotNull<RefPtr<CacheLoadHandler>>(
-        mWorkerPrivate, loadInfo, IsMainWorkerScript(), this));
+        mWorkerPrivate, &loadInfo, IsMainWorkerScript(), this));
   }
 
   // The worker may have a null principal on first load, but in that case its
@@ -704,7 +704,7 @@ nsresult WorkerScriptLoader::LoadScripts() {
   return NS_OK;
 }
 
-nsresult WorkerScriptLoader::LoadScript(ScriptLoadInfo& aLoadInfo) {
+nsresult WorkerScriptLoader::LoadScript(ScriptLoadInfo* aLoadInfo) {
   AssertIsOnMainThread();
   MOZ_ASSERT_IF(IsMainWorkerScript(), !IsDebuggerScript());
 
@@ -742,7 +742,7 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadInfo& aLoadInfo) {
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
   NS_ASSERTION(secMan, "This should never be null!");
 
-  nsresult& rv = aLoadInfo.mLoadResult;
+  nsresult& rv = aLoadInfo->mLoadResult;
 
   nsLoadFlags loadFlags = mWorkerPrivate->GetLoadFlags();
 
@@ -773,7 +773,7 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadInfo& aLoadInfo) {
     // script uri encoding. Otherwise, default encoding (UTF-8) is applied.
     bool useDefaultEncoding = !(!parentWorker && IsMainWorkerScript());
     nsCOMPtr<nsIURI> url;
-    rv = ConstructURI(aLoadInfo.mURL, baseURI, parentDoc, useDefaultEncoding,
+    rv = ConstructURI(aLoadInfo->mURL, baseURI, parentDoc, useDefaultEncoding,
                       getter_AddRefs(url));
     if (NS_FAILED(rv)) {
       return rv;
@@ -853,7 +853,7 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadInfo& aLoadInfo) {
     channelLoadInfo->SetLoadingEmbedderPolicy(respectedCOEP);
   }
 
-  if (aLoadInfo.mCacheStatus != ScriptLoadInfo::ToBeCached) {
+  if (aLoadInfo->mCacheStatus != ScriptLoadInfo::ToBeCached) {
     rv = channel->AsyncOpen(loader);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -862,10 +862,10 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadInfo& aLoadInfo) {
     nsCOMPtr<nsIOutputStream> writer;
 
     // In case we return early.
-    aLoadInfo.mCacheStatus = ScriptLoadInfo::Cancel;
+    aLoadInfo->mCacheStatus = ScriptLoadInfo::Cancel;
 
     rv = NS_NewPipe(
-        getter_AddRefs(aLoadInfo.mCacheReadStream), getter_AddRefs(writer), 0,
+        getter_AddRefs(aLoadInfo->mCacheReadStream), getter_AddRefs(writer), 0,
         UINT32_MAX,    // unlimited size to avoid writer WOULD_BLOCK case
         true, false);  // non-blocking reader, blocking writer
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -885,7 +885,7 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadInfo& aLoadInfo) {
     }
   }
 
-  aLoadInfo.mChannel.swap(channel);
+  aLoadInfo->mChannel.swap(channel);
 
   return NS_OK;
 }
@@ -951,18 +951,18 @@ void WorkerScriptLoader::DispatchProcessPendingRequests() {
 }
 
 bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
-                                        ScriptLoadInfo& aLoadInfo) {
+                                        ScriptLoadInfo* aLoadInfo) {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  NS_ASSERTION(!aLoadInfo.mChannel, "Should no longer have a channel!");
-  NS_ASSERTION(aLoadInfo.mExecutionScheduled, "Should be scheduled!");
-  NS_ASSERTION(!aLoadInfo.mExecutionResult, "Should not have executed yet!");
+  NS_ASSERTION(!aLoadInfo->mChannel, "Should no longer have a channel!");
+  NS_ASSERTION(aLoadInfo->mExecutionScheduled, "Should be scheduled!");
+  NS_ASSERTION(!aLoadInfo->mExecutionResult, "Should not have executed yet!");
 
   MOZ_ASSERT(!mRv.Failed(), "Who failed it and why?");
   mRv.MightThrowJSException();
-  if (NS_FAILED(aLoadInfo.mLoadResult)) {
-    workerinternals::ReportLoadError(mRv, aLoadInfo.mLoadResult,
-                                     aLoadInfo.mURL);
+  if (NS_FAILED(aLoadInfo->mLoadResult)) {
+    workerinternals::ReportLoadError(mRv, aLoadInfo->mLoadResult,
+                                     aLoadInfo->mURL);
     return false;
   }
 
@@ -977,16 +977,16 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     mWorkerPrivate->ExecutionReady();
   }
 
-  NS_ConvertUTF16toUTF8 filename(aLoadInfo.mURL);
+  NS_ConvertUTF16toUTF8 filename(aLoadInfo->mURL);
 
   JS::CompileOptions options(aCx);
   options.setFileAndLine(filename.get(), 1).setNoScriptRval(true);
 
-  MOZ_ASSERT(aLoadInfo.mMutedErrorFlag.isSome());
-  options.setMutedErrors(aLoadInfo.mMutedErrorFlag.valueOr(true));
+  MOZ_ASSERT(aLoadInfo->mMutedErrorFlag.isSome());
+  options.setMutedErrors(aLoadInfo->mMutedErrorFlag.valueOr(true));
 
-  if (aLoadInfo.mSourceMapURL) {
-    options.setSourceMapURL(aLoadInfo.mSourceMapURL->get());
+  if (aLoadInfo->mSourceMapURL) {
+    options.setSourceMapURL(aLoadInfo->mSourceMapURL->get());
   }
 
   // Our ErrorResult still shouldn't be a failure.
@@ -994,21 +994,21 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
 
   // Transfer script length to a local variable, encoding-agnostically.
   size_t scriptLength = 0;
-  std::swap(scriptLength, aLoadInfo.mScriptLength);
+  std::swap(scriptLength, aLoadInfo->mScriptLength);
 
-  // This transfers script data out of the active arm of |aLoadInfo.mScript|.
+  // This transfers script data out of the active arm of |aLoadInfo->mScript|.
   bool successfullyEvaluated =
-      aLoadInfo.mScriptIsUTF8
-          ? EvaluateSourceBuffer(aCx, options, aLoadInfo.mScript.mUTF8,
+      aLoadInfo->mScriptIsUTF8
+          ? EvaluateSourceBuffer(aCx, options, aLoadInfo->mScript.mUTF8,
                                  scriptLength)
-          : EvaluateSourceBuffer(aCx, options, aLoadInfo.mScript.mUTF16,
+          : EvaluateSourceBuffer(aCx, options, aLoadInfo->mScript.mUTF16,
                                  scriptLength);
-  MOZ_ASSERT(aLoadInfo.ScriptTextIsNull());
+  MOZ_ASSERT(aLoadInfo->ScriptTextIsNull());
   if (!successfullyEvaluated) {
     mRv.StealExceptionFromJSContext(aCx);
     return false;
   }
-  aLoadInfo.mExecutionResult = true;
+  aLoadInfo->mExecutionResult = true;
   return true;
 }
 
