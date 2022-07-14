@@ -1,9 +1,6 @@
 /* import-globals-from antitracking_head.js */
 /* import-globals-from storageAccessAPIHelpers.js */
 
-const APS_PREF =
-  "privacy.partition.always_partition_third_party_non_cookie_storage";
-
 AntiTracking.runTest(
   "Storage Access API called in a sandboxed iframe",
   // blocking callback
@@ -27,10 +24,7 @@ AntiTracking.runTest(
       );
     });
   },
-  [
-    ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
-  ], // extra prefs
+  [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
   0, // no blocking notifications
@@ -71,7 +65,6 @@ AntiTracking.runTest(
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
-    [APS_PREF, false],
   ], // extra prefs
   false, // no window open test
   false, // no user-interaction test
@@ -94,10 +87,7 @@ AntiTracking.runTest(
 
   null, // non-blocking callback
   null, // cleanup function
-  [
-    ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
-  ], // extra prefs
+  [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
   Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expect blocking notifications
@@ -122,10 +112,7 @@ AntiTracking.runTest(
 
   null, // non-blocking callback
   null, // cleanup function
-  [
-    ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
-  ], // extra prefs
+  [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
   Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expect blocking notifications
@@ -147,10 +134,7 @@ AntiTracking.runTest(
 
   null, // non-blocking callback
   null, // cleanup function
-  [
-    ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
-  ], // extra prefs
+  [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
   0, // no blocking notifications
@@ -175,10 +159,7 @@ AntiTracking.runTest(
 
   null, // non-blocking callback
   null, // cleanup function
-  [
-    ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
-  ], // extra prefs
+  [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
   Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expect blocking notifications
@@ -205,10 +186,7 @@ AntiTracking.runTest(
       );
     });
   },
-  [
-    ["dom.storage_access.enabled", true],
-    [APS_PREF, false],
-  ], // extra prefs
+  [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
   0 // no blocking notifications
