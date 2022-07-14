@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '62b50a78d71d678823858e68b4d7156d8c075712',
+  'chromium_revision': 'b0579bf7df6420046013780c9d161e8d56283aeb',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,9 +23,9 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@86eacc9ca2ea1eb6c45b9d5d95f70b92557def47',
+    'https://chromium.googlesource.com/chromium/src/base@93f872454a94db5bbac688bb813439627a995c72',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@06b5f6897469f1ab5dd35d230eaf322ba64008de',
+    'https://chromium.googlesource.com/chromium/src/build@35387279e41ed871ec4a43f8733778b193a8e1d6',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@113378f9b3aff02ba827411ea1b7ad462cffae02',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -34,19 +34,19 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@405a1c108a71fa4c51274063bb35e482d75423f7',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@fe8021fcccddad453850a1dec5b6fb3a33a23475',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@3e4e4e96fbc77f5b6e267c8daabe44a1190384fe',
+    'https://chromium.googlesource.com/chromium/src/testing@e04b1ba07e0ec613ec7533692ca963c436134289',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@1bfb6b5d049e257391b4f18ce6a139d0caca3780',
+    'https://chromium.googlesource.com/chromium/src/third_party@e83b9e5544ca3cf4a7df20d9a9d3618e182e542c',
 
   'src/buildtools/linux64': {
     'packages': [
       {
         'package': 'gn/gn/linux-amd64',
-        'version': 'git_revision:48b013c9d9debc0f5fc1dd71a257b3c38c5acb43',
+        'version': 'git_revision:53ef169800760fdc09f0773bf380fe99eaeab339',
       }
     ],
     'dep_type': 'cipd',
@@ -56,7 +56,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/mac-${{arch}}',
-        'version': 'git_revision:48b013c9d9debc0f5fc1dd71a257b3c38c5acb43',
+        'version': 'git_revision:53ef169800760fdc09f0773bf380fe99eaeab339',
       }
     ],
     'dep_type': 'cipd',
@@ -66,7 +66,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/windows-amd64',
-        'version': 'git_revision:48b013c9d9debc0f5fc1dd71a257b3c38c5acb43',
+        'version': 'git_revision:53ef169800760fdc09f0773bf380fe99eaeab339',
       }
     ],
     'dep_type': 'cipd',
