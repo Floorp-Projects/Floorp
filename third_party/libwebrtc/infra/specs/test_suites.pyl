@@ -44,11 +44,7 @@
           'shards': 6
         },
       },
-      'peerconnection_unittests': {
-        'swarming': {
-          'shards': 4
-        },
-      },
+      'peerconnection_unittests': {},
       'rtc_media_unittests': {},
       'rtc_pc_unittests': {},
       'rtc_stats_unittests': {},
@@ -57,6 +53,7 @@
           'shards': 6
         },
       },
+      'slow_peer_connection_unittests': {},
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
       'tools_unittests': {},
@@ -104,11 +101,7 @@
           'shards': 6
         },
       },
-      'peerconnection_unittests': {
-        'swarming': {
-          'shards': 4
-        },
-      },
+      'peerconnection_unittests': {},
       'rtc_media_unittests': {},
       'rtc_pc_unittests': {},
       'rtc_stats_unittests': {},
@@ -117,6 +110,7 @@
           'shards': 6
         },
       },
+      'slow_peer_connection_unittests': {},
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
       'tools_unittests': {},
@@ -229,11 +223,7 @@
       }
     },
     'more_configs_tests': {
-      'peerconnection_unittests': {
-        'swarming': {
-          'shards': 4
-        },
-      },
+      'peerconnection_unittests': {},
     },
     'win_video_capture_tests': {
       'video_capture_tests': {

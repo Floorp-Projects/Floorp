@@ -2268,6 +2268,31 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
   }
 
+  rtc_test("slow_peer_connection_unittests") {
+    testonly = true
+    sources = [ "slow_peer_connection_integration_test.cc" ]
+    deps = [
+      ":integration_test_helpers",
+      ":pc_test_utils",
+      "../api:libjingle_peerconnection_api",
+      "../api:scoped_refptr",
+      "../api/units:time_delta",
+      "../p2p:p2p_server_utils",
+      "../p2p:p2p_test_utils",
+      "../p2p:rtc_p2p",
+      "../rtc_base",
+      "../rtc_base:gunit_helpers",
+      "../rtc_base:logging",
+      "../rtc_base:rtc_base_tests_utils",
+      "../rtc_base:socket_address",
+      "../test:test_main",
+      "../test:test_support",
+      "//third_party/abseil-cpp/absl/algorithm:container",
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
+  }
+
   rtc_test("peerconnection_unittests") {
     testonly = true
     sources = [

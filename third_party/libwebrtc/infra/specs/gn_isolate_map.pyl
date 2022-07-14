@@ -104,6 +104,10 @@
     "label": "//sdk:sdk_unittests",
     "type": "console_test_launcher",
   },
+  "slow_peer_connection_unittests": {
+    "label": "//pc:slow_peer_connection_unittests",
+    "type": "console_test_launcher",
+  },
   "system_wrappers_unittests": {
     "label": "//system_wrappers:system_wrappers_unittests",
     "type": "console_test_launcher",

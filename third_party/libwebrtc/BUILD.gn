@@ -66,6 +66,7 @@ if (!build_with_chromium && !build_with_mozilla) {
         "net/dcsctp:dcsctp_unittests",
         "pc:peerconnection_unittests",
         "pc:rtc_pc_unittests",
+        "pc:slow_peer_connection_unittests",
         "rtc_tools:rtp_generator",
         "rtc_tools:video_replay",
         "stats:rtc_stats_unittests",
