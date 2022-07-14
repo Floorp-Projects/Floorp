@@ -306,21 +306,6 @@ struct ParamTraits<mozilla::APZScrollAnimationType>
           mozilla::APZScrollAnimationType::TriggeredByUserInput> {};
 
 template <>
-struct ParamTraits<mozilla::ScrollSnapTargetIds> {
-  typedef mozilla::ScrollSnapTargetIds paramType;
-
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.mIdsOnX);
-    WriteParam(aWriter, aParam.mIdsOnY);
-  }
-
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadParam(aReader, &aResult->mIdsOnX) &&
-           ReadParam(aReader, &aResult->mIdsOnY);
-  }
-};
-
-template <>
 struct ParamTraits<mozilla::layers::RepaintRequest>
     : BitfieldHelper<mozilla::layers::RepaintRequest> {
   typedef mozilla::layers::RepaintRequest paramType;
@@ -342,7 +327,6 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
     WriteParam(aWriter, aParam.mPaintRequestTime);
     WriteParam(aWriter, aParam.mScrollUpdateType);
     WriteParam(aWriter, aParam.mScrollAnimationType);
-    WriteParam(aWriter, aParam.mLastSnapTargetIds);
     WriteParam(aWriter, aParam.mIsRootContent);
     WriteParam(aWriter, aParam.mIsScrollInfoLayer);
   }
@@ -365,7 +349,6 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
         ReadParam(aReader, &aResult->mPaintRequestTime) &&
         ReadParam(aReader, &aResult->mScrollUpdateType) &&
         ReadParam(aReader, &aResult->mScrollAnimationType) &&
-        ReadParam(aReader, &aResult->mLastSnapTargetIds) &&
         ReadBoolForBitfield(aReader, aResult, &paramType::SetIsRootContent) &&
         ReadBoolForBitfield(aReader, aResult,
                             &paramType::SetIsScrollInfoLayer));
@@ -481,58 +464,8 @@ struct ParamTraits<mozilla::ScrollGeneration<T>>
     : PlainOldDataSerializer<mozilla::ScrollGeneration<T>> {};
 
 template <>
-struct ParamTraits<mozilla::ScrollUpdateType>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::ScrollUpdateType, mozilla::ScrollUpdateType::Absolute,
-          mozilla::ScrollUpdateType::PureRelative> {};
-
-template <>
-struct ParamTraits<mozilla::ScrollMode>
-    : public ContiguousEnumSerializerInclusive<mozilla::ScrollMode,
-                                               mozilla::ScrollMode::Instant,
-                                               mozilla::ScrollMode::Normal> {};
-
-template <>
-struct ParamTraits<mozilla::ScrollOrigin>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::ScrollOrigin, mozilla::ScrollOrigin::None,
-          mozilla::ScrollOrigin::Scrollbars> {};
-
-template <>
-struct ParamTraits<mozilla::ScrollTriggeredByScript>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::ScrollTriggeredByScript,
-          mozilla::ScrollTriggeredByScript::No,
-          mozilla::ScrollTriggeredByScript::Yes> {};
-
-template <>
-struct ParamTraits<mozilla::ScrollPositionUpdate> {
-  typedef mozilla::ScrollPositionUpdate paramType;
-
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.mScrollGeneration);
-    WriteParam(aWriter, aParam.mType);
-    WriteParam(aWriter, aParam.mScrollMode);
-    WriteParam(aWriter, aParam.mScrollOrigin);
-    WriteParam(aWriter, aParam.mDestination);
-    WriteParam(aWriter, aParam.mSource);
-    WriteParam(aWriter, aParam.mDelta);
-    WriteParam(aWriter, aParam.mTriggeredByScript);
-    WriteParam(aWriter, aParam.mSnapTargetIds);
-  }
-
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadParam(aReader, &aResult->mScrollGeneration) &&
-           ReadParam(aReader, &aResult->mType) &&
-           ReadParam(aReader, &aResult->mScrollMode) &&
-           ReadParam(aReader, &aResult->mScrollOrigin) &&
-           ReadParam(aReader, &aResult->mDestination) &&
-           ReadParam(aReader, &aResult->mSource) &&
-           ReadParam(aReader, &aResult->mDelta) &&
-           ReadParam(aReader, &aResult->mTriggeredByScript) &&
-           ReadParam(aReader, &aResult->mSnapTargetIds);
-  }
-};
+struct ParamTraits<mozilla::ScrollPositionUpdate>
+    : PlainOldDataSerializer<mozilla::ScrollPositionUpdate> {};
 
 template <>
 struct ParamTraits<mozilla::layers::ScrollMetadata>

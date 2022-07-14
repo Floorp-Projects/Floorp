@@ -13,14 +13,12 @@ SmoothMsdScrollAnimation::SmoothMsdScrollAnimation(
     AsyncPanZoomController& aApzc, const CSSPoint& aInitialPosition,
     const CSSPoint& aInitialVelocity, const CSSPoint& aDestination,
     double aSpringConstant, double aDampingRatio,
-    ScrollSnapTargetIds&& aSnapTargetIds,
     ScrollTriggeredByScript aTriggeredByScript)
     : mApzc(aApzc),
       mXAxisModel(aInitialPosition.x, aDestination.x, aInitialVelocity.x,
                   aSpringConstant, aDampingRatio),
       mYAxisModel(aInitialPosition.y, aDestination.y, aInitialVelocity.y,
                   aSpringConstant, aDampingRatio),
-      mSnapTargetIds(std::move(aSnapTargetIds)),
       mTriggeredByScript(aTriggeredByScript) {}
 
 bool SmoothMsdScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
@@ -118,11 +116,10 @@ bool SmoothMsdScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
 }
 
 void SmoothMsdScrollAnimation::SetDestination(
-    const CSSPoint& aNewDestination, ScrollSnapTargetIds&& aSnapTargetIds,
+    const CSSPoint& aNewDestination,
     ScrollTriggeredByScript aTriggeredByScript) {
   mXAxisModel.SetDestination(aNewDestination.x);
   mYAxisModel.SetDestination(aNewDestination.y);
-  mSnapTargetIds = std::move(aSnapTargetIds);
   mTriggeredByScript = aTriggeredByScript;
 }
 
