@@ -33,7 +33,7 @@ function closeWindow(aClose, aPromptFunction, aSource) {
 
     // If the user explicitly closes the last tabs in the window close remaining tabs. Bug 490136
     if (aClose) {
-      window.SessionStore?.maybeDontRestoreTabs(window);
+      window.SessionStore?.maybeDontSaveTabs(window);
     }
   } else if (
     typeof aPromptFunction == "function" &&
