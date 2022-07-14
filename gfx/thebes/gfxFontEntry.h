@@ -329,8 +329,8 @@ class gfxFontEntry {
   // cached instance; but we also don't return already_AddRefed, because
   // the caller may only need to use the font temporarily and doesn't need
   // a strong reference.
-  already_AddRefed<gfxFont> FindOrMakeFont(
-      const gfxFontStyle* aStyle, gfxCharacterMap* aUnicodeRangeMap = nullptr);
+  gfxFont* FindOrMakeFont(const gfxFontStyle* aStyle,
+                          gfxCharacterMap* aUnicodeRangeMap = nullptr);
 
   // Get an existing font table cache entry in aBlob if it has been
   // registered, or return false if not.  Callers must call

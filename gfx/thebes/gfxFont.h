@@ -317,9 +317,8 @@ class gfxFontCache final
 
   // Look up a font in the cache. Returns null if there's nothing matching
   // in the cache
-  already_AddRefed<gfxFont> Lookup(const gfxFontEntry* aFontEntry,
-                                   const gfxFontStyle* aStyle,
-                                   const gfxCharacterMap* aUnicodeRangeMap);
+  gfxFont* Lookup(const gfxFontEntry* aFontEntry, const gfxFontStyle* aStyle,
+                  const gfxCharacterMap* aUnicodeRangeMap);
 
   // We created a new font (presumably because Lookup returned null);
   // put it in the cache. The font's refcount should be nonzero. It is
@@ -335,7 +334,13 @@ class gfxFontCache final
   // Cleans out the hashtable and removes expired fonts waiting for cleanup.
   // Other gfxFont objects may be still in use but they will be pushed
   // into the expiration queues and removed.
-  void Flush();
+  void Flush() {
+    {
+      mozilla::MutexAutoLock lock(mMutex);
+      mFonts.Clear();
+    }
+    AgeAllGenerations();
+  }
 
   void FlushShapedWordCaches();
   void NotifyGlyphsChanged();
@@ -369,7 +374,15 @@ class gfxFontCache final
   void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               FontCacheSizes* aSizes) const;
 
-  void AgeAllGenerations();
+  void AgeAllGenerations() {
+    AutoLock lock(mMutex);
+    AgeAllGenerationsLocked(lock);
+  }
+
+  void RemoveObject(gfxFont* aFont) {
+    AutoLock lock(mMutex);
+    RemoveObjectLocked(aFont, lock);
+  }
 
  protected:
   class MemoryReporter final : public nsIMemoryReporter {
@@ -398,10 +411,10 @@ class gfxFontCache final
   // font; we just delete it.
   void NotifyExpiredLocked(gfxFont* aFont, const AutoLock&)
       REQUIRES(mMutex) override;
-  void NotifyHandlerEnd() override;
+  void NotifyExpired(gfxFont* aFont);
 
+  void DestroyFont(gfxFont* aFont);
   void DestroyFontLocked(gfxFont* aFont) REQUIRES(mMutex);
-  void DestroyDiscard(nsTArray<gfxFont*>& aDiscard);
 
   static gfxFontCache* gGlobalCache;
 
@@ -441,8 +454,6 @@ class gfxFontCache final
   };
 
   nsTHashtable<HashEntry> mFonts GUARDED_BY(mMutex);
-
-  nsTArray<gfxFont*> mTrackerDiscard GUARDED_BY(mMutex);
 
   static void WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache);
 
@@ -1428,6 +1439,14 @@ class gfxFont {
 
   nsrefcnt AddRef(void) {
     MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
+    nsExpirationState state;
+    {
+      mozilla::AutoReadLock lock(mLock);
+      state = mExpirationState;
+    }
+    if (state.IsTracked()) {
+      gfxFontCache::GetCache()->RemoveObject(this);
+    }
     ++mRefCnt;
     NS_LOG_ADDREF(this, mRefCnt, "gfxFont", sizeof(*this));
     return mRefCnt;
@@ -1947,8 +1966,7 @@ class gfxFont {
 
   // Return a cloned font resized and offset to simulate sub/superscript
   // glyphs. This does not add a reference to the returned font.
-  already_AddRefed<gfxFont> GetSubSuperscriptFont(
-      int32_t aAppUnitsPerDevPixel) const;
+  gfxFont* GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel) const;
 
   bool HasColorGlyphFor(uint32_t aCh, uint32_t aNextCh);
 
@@ -1999,7 +2017,7 @@ class gfxFont {
   // Return a font that is a "clone" of this one, but reduced to 80% size
   // (and with variantCaps set to normal). This does not add a reference to
   // the returned font.
-  already_AddRefed<gfxFont> GetSmallCapsFont() const;
+  gfxFont* GetSmallCapsFont() const;
 
   // subclasses may provide (possibly hinted) glyph widths (in font units);
   // if they do not override this, harfbuzz will use unhinted widths
@@ -2221,9 +2239,7 @@ class gfxFont {
   // This is OK because we only multiply by this factor, never divide.
   float mFUnitsConvFactor;
 
-  // This is guarded by gfxFontCache::GetCache()->GetMutex() but it is difficult
-  // to annotate that fact.
-  nsExpirationState mExpirationState;
+  nsExpirationState mExpirationState GUARDED_BY(mLock);
 
   // Glyph ID of the font's <space> glyph, zero if missing
   uint16_t mSpaceGlyph = 0;

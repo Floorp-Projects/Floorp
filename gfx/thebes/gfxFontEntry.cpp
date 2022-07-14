@@ -266,9 +266,9 @@ nsCString gfxFontEntry::RealFaceName() {
   return Name();
 }
 
-already_AddRefed<gfxFont> gfxFontEntry::FindOrMakeFont(
-    const gfxFontStyle* aStyle, gfxCharacterMap* aUnicodeRangeMap) {
-  RefPtr<gfxFont> font =
+gfxFont* gfxFontEntry::FindOrMakeFont(const gfxFontStyle* aStyle,
+                                      gfxCharacterMap* aUnicodeRangeMap) {
+  gfxFont* font =
       gfxFontCache::GetCache()->Lookup(this, aStyle, aUnicodeRangeMap);
 
   if (!font) {
@@ -284,7 +284,7 @@ already_AddRefed<gfxFont> gfxFontEntry::FindOrMakeFont(
     font->SetUnicodeRangeMap(aUnicodeRangeMap);
     gfxFontCache::GetCache()->AddNew(font);
   }
-  return font.forget();
+  return font;
 }
 
 uint16_t gfxFontEntry::UnitsPerEm() {
