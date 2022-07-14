@@ -201,8 +201,8 @@ class RtpTransceiver : public RtpTransceiverInterface,
 
   // Sets the fired direction for this transceiver. The fired direction is null
   // until SetRemoteDescription is called or an answer is set (either local or
-  // remote).
-  void set_fired_direction(RtpTransceiverDirection direction);
+  // remote) after which the only valid reason to go back to null is rollback.
+  void set_fired_direction(absl::optional<RtpTransceiverDirection> direction);
 
   // According to JSEP rules for SetRemoteDescription, RtpTransceivers can be
   // reused only if they were added by AddTrack.
