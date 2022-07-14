@@ -9,7 +9,7 @@ with Files("**"):
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
-    "ScriptLoadInfo.h",
+    "WorkerLoadContext.h",
 ]
 
 # Private stuff.
@@ -22,8 +22,8 @@ EXPORTS.mozilla.dom.workerinternals += [
 UNIFIED_SOURCES += [
     "CacheLoadHandler.cpp",
     "NetworkLoadHandler.cpp",
-    "ScriptLoadInfo.cpp",
     "ScriptResponseHeaderProcessor.cpp",
+    "WorkerLoadContext.cpp",
 ]
 
 

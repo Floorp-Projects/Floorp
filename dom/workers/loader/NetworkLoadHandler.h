@@ -8,7 +8,7 @@
 #define mozilla_dom_workers_NetworkLoadHandler_h__
 
 #include "nsIStreamLoader.h"
-#include "mozilla/dom/ScriptLoadInfo.h"
+#include "mozilla/dom/WorkerLoadContext.h"
 
 namespace mozilla::dom::workerinternals::loader {
 
