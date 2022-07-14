@@ -270,7 +270,8 @@
               "device_type": "bullhead",
               "os": "Android"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test": "peerconnection_unittests",
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
@@ -900,7 +901,8 @@
               "device_type": "bullhead",
               "os": "Android"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test": "peerconnection_unittests",
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
@@ -1288,7 +1290,8 @@
               "device_type": "bullhead",
               "os": "Android"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test": "peerconnection_unittests",
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
@@ -1567,7 +1570,8 @@
               "device_type": "bullhead",
               "os": "Android"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test": "peerconnection_unittests",
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
@@ -2197,7 +2201,8 @@
               "device_type": "bullhead",
               "os": "Android"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test": "peerconnection_unittests",
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
@@ -2579,7 +2584,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       }
@@ -2756,7 +2762,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -3166,7 +3173,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -3576,7 +3584,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -3986,7 +3995,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -4396,7 +4406,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -4806,7 +4817,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -5217,7 +5229,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -5629,7 +5642,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -6040,7 +6054,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -6482,7 +6497,8 @@
               "cpu": "x86-64",
               "os": "Mac-11"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -6912,7 +6928,8 @@
               "cpu": "x86-64",
               "os": "Mac-11"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -7333,7 +7350,8 @@
               "cpu": "x86-64",
               "os": "Mac-11"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -7773,7 +7791,8 @@
               "os": "Mac",
               "pool": "WebRTC-baremetal"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -8042,7 +8061,8 @@
               "cpu": "x86-64",
               "os": "Windows-7-SP1"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       }
@@ -8221,7 +8241,8 @@
               "cpu": "x86-64",
               "os": "Windows-7-SP1"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
@@ -8653,7 +8674,8 @@
               "cpu": "x86-64",
               "os": "Windows-10-15063"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
