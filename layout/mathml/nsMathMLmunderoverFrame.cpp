@@ -452,7 +452,7 @@ nsresult nsMathMLmunderoverFrame::Place(DrawTarget* aDrawTarget,
 
   nscoord xHeight = fm->XHeight();
   nscoord oneDevPixel = fm->AppUnitsPerDevPixel();
-  gfxFont* mathFont = fm->GetThebesFontGroup()->GetFirstMathFont();
+  RefPtr<gfxFont> mathFont = fm->GetThebesFontGroup()->GetFirstMathFont();
 
   nscoord ruleThickness;
   GetRuleThickness(aDrawTarget, fm, ruleThickness);
