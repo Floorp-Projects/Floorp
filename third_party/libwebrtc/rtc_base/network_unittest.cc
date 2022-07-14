@@ -1533,4 +1533,93 @@ TEST_F(NetworkTest, HardcodedVpn) {
   EXPECT_FALSE(NetworkManagerBase::IsVpnMacAddress(nullptr));
 }
 
+TEST(CompareNetworks, IrreflexivityTest) {
+  // x < x is false
+  auto network = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network, network));
+}
+
+TEST(CompareNetworks, AsymmetryTest) {
+  // x < y and y < x cannot be both true
+  auto network_a = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+  auto network_b = std::make_unique<Network>(
+      "test_eth1", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+  EXPECT_TRUE(webrtc_network_internal::CompareNetworks(network_a, network_b));
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network_b, network_a));
+
+  auto network_c = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345500U), 24);
+  auto network_d = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+  EXPECT_TRUE(webrtc_network_internal::CompareNetworks(network_c, network_d));
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network_d, network_c));
+}
+
+TEST(CompareNetworks, TransitivityTest) {
+  // x < y and y < z imply x < z
+  auto network_a = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+  auto network_b = std::make_unique<Network>(
+      "test_eth1", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+  auto network_c = std::make_unique<Network>(
+      "test_eth2", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+  EXPECT_TRUE(webrtc_network_internal::CompareNetworks(network_a, network_b));
+  EXPECT_TRUE(webrtc_network_internal::CompareNetworks(network_b, network_c));
+
+  auto network_d = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+  auto network_e = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345700U), 24);
+  auto network_f = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345800U), 24);
+  EXPECT_TRUE(webrtc_network_internal::CompareNetworks(network_d, network_e));
+  EXPECT_TRUE(webrtc_network_internal::CompareNetworks(network_e, network_f));
+  EXPECT_TRUE(webrtc_network_internal::CompareNetworks(network_d, network_f));
+  EXPECT_TRUE(webrtc_network_internal::CompareNetworks(network_a, network_c));
+}
+
+TEST(CompareNetworks, TransitivityOfIncomparabilityTest) {
+  // x == y and y == z imply x == z,
+  // where x == y means x < y and y < x are both false
+  auto network_a = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345600U), 23);
+  auto network_b = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+  auto network_c = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345700U), 24);
+
+  // network_a < network_b
+  EXPECT_TRUE(webrtc_network_internal::CompareNetworks(network_a, network_b));
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network_b, network_a));
+
+  // network_b < network_c
+  EXPECT_TRUE(webrtc_network_internal::CompareNetworks(network_b, network_c));
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network_c, network_b));
+
+  // network_a < network_c
+  EXPECT_TRUE(webrtc_network_internal::CompareNetworks(network_a, network_c));
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network_c, network_a));
+
+  auto network_d = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+  auto network_e = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+  auto network_f = std::make_unique<Network>(
+      "test_eth0", "Test Network Adapter 1", IPAddress(0x12345600U), 24);
+
+  // network_d == network_e
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network_d, network_e));
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network_e, network_d));
+
+  // network_e == network_f
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network_e, network_f));
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network_f, network_e));
+
+  // network_d == network_f
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network_d, network_f));
+  EXPECT_FALSE(webrtc_network_internal::CompareNetworks(network_f, network_d));
+}
+
 }  // namespace rtc

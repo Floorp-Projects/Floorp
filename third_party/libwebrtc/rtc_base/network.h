@@ -53,6 +53,11 @@ class Thread;
 // By default, ignore loopback interfaces on the host.
 const int kDefaultNetworkIgnoreMask = ADAPTER_TYPE_LOOPBACK;
 
+namespace webrtc_network_internal {
+bool CompareNetworks(const std::unique_ptr<Network>& a,
+                     const std::unique_ptr<Network>& b);
+}  // namespace webrtc_network_internal
+
 // Makes a string key for this network. Used in the network manager's maps.
 // Network objects are keyed on interface name, network prefix and the
 // length of that prefix.
