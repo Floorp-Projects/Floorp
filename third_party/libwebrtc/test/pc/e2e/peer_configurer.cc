@@ -70,12 +70,8 @@ void PeerParamsPreprocessor::SetDefaultValuesForMissingParams(
   peer_names_provider_.MaybeSetName(params->name);
   DefaultNamesProvider video_stream_names_provider(*params->name +
                                                    "_auto_video_stream_label_");
-  for (size_t i = 0; i < configurable_params->video_configs.size(); ++i) {
-    video_stream_names_provider.MaybeSetName(
-        configurable_params->video_configs[i].stream_label);
-    // TODO(titovartem): remove when downstream will migrate on new API.
-    params->video_configs[i].stream_label =
-        configurable_params->video_configs[i].stream_label;
+  for (VideoConfig& config : configurable_params->video_configs) {
+    video_stream_names_provider.MaybeSetName(config.stream_label);
   }
   if (params->audio_config) {
     DefaultNamesProvider audio_stream_names_provider(
