@@ -1498,7 +1498,7 @@ firefox-photon =
  .label = Firefox Legacy Photon UI
  
 floorp-legacy =  
- .label = Floorp Legacy material UI 
+ .label = Floorp Legacy material UI・Unsupported
 
 floorp-fluentUI =
  .label = fluentUI
