@@ -325,14 +325,13 @@ class PeerParamsPreprocessor {
   void ValidateParams(const PeerConfigurerImpl& peer);
 
  private:
-  DefaultNamesProvider peer_names_provider;
+  DefaultNamesProvider peer_names_provider_;
 
-  std::set<std::string> peer_names;
-  std::set<std::string> video_labels;
-  std::set<std::string> audio_labels;
-  std::set<std::string> video_sync_groups;
-  std::set<std::string> audio_sync_groups;
-  int media_streams_count = 0;
+  std::set<std::string> peer_names_;
+  std::set<std::string> video_labels_;
+  std::set<std::string> audio_labels_;
+  std::set<std::string> video_sync_groups_;
+  std::set<std::string> audio_sync_groups_;
 };
 
 }  // namespace webrtc_pc_e2e
