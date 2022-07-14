@@ -57,7 +57,6 @@ CppUnitTests(
         "TestScopeExit",
         "TestSegmentedVector",
         "TestSHA1",
-        "TestSIMD",
         "TestSmallPointerArray",
         "TestSplayTree",
         "TestTemplateLib",
