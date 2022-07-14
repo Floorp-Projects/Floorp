@@ -651,7 +651,8 @@ bool AccessibleWrap::HandleLiveRegionEvent(AccEvent* aEvent) {
     return false;
   }
 
-  RefPtr<AccAttributes> attributes = Attributes();
+  RefPtr<AccAttributes> attributes = new AccAttributes();
+  nsAccUtils::SetLiveContainerAttributes(attributes, this);
   nsString live;
   if (!attributes->GetAttribute(nsGkAtoms::containerLive, live)) {
     return false;
