@@ -49,7 +49,7 @@ DEF_TEST(DeserializedStackFrameUbiStackFrames, {
   EXPECT_FALSE(ubiFrame.isSelfHosted(cx));
   EXPECT_FALSE(ubiFrame.isSystem());
 
-  JS::RootedObject savedFrame(cx);
+  JS::Rooted<JSObject*> savedFrame(cx);
   EXPECT_TRUE(ubiFrame.constructSavedFrameStack(cx, &savedFrame));
 
   JSPrincipals* principals = JS::GetRealmPrincipals(js::GetContextRealm(cx));
@@ -64,7 +64,7 @@ DEF_TEST(DeserializedStackFrameUbiStackFrames, {
             JS::GetSavedFrameColumn(cx, principals, savedFrame, &frameColumn));
   EXPECT_EQ(column, frameColumn);
 
-  JS::RootedObject parent(cx);
+  JS::Rooted<JSObject*> parent(cx);
   ASSERT_EQ(JS::SavedFrameResult::Ok,
             JS::GetSavedFrameParent(cx, principals, savedFrame, &parent));
   EXPECT_EQ(nullptr, parent);
