@@ -657,7 +657,7 @@ rtc_library("desktop_capture_generic") {
       "win/wgc_desktop_frame.cc",
       "win/wgc_desktop_frame.h",
     ]
-
+    libs += [ "dwmapi.lib" ]
     deps += [ "../../rtc_base/win:hstring" ]
   }
 }

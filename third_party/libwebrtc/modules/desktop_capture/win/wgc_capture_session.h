@@ -13,6 +13,7 @@
 
 #include <d3d11.h>
 #include <windows.graphics.capture.h>
+#include <windows.graphics.h>
 #include <wrl/client.h>
 
 #include <memory>
@@ -28,7 +29,8 @@ class WgcCaptureSession final {
   WgcCaptureSession(
       Microsoft::WRL::ComPtr<ID3D11Device> d3d11_device,
       Microsoft::WRL::ComPtr<
-          ABI::Windows::Graphics::Capture::IGraphicsCaptureItem> item);
+          ABI::Windows::Graphics::Capture::IGraphicsCaptureItem> item,
+      ABI::Windows::Graphics::SizeInt32 size);
 
   // Disallow copy and assign.
   WgcCaptureSession(const WgcCaptureSession&) = delete;
@@ -87,10 +89,10 @@ class WgcCaptureSession final {
   // frame.
   Microsoft::WRL::ComPtr<ID3D11Texture2D> mapped_texture_;
 
-  // This lets us know when the source has been resized, which is important
-  // because we must resize the framepool and our texture to be able to hold
-  // enough data for the frame.
-  ABI::Windows::Graphics::SizeInt32 previous_size_;
+  // This is the size of `mapped_texture_` and the buffers in `frame_pool_`. We
+  // store this as a member so we can compare it to the size of incoming frames
+  // and resize if necessary.
+  ABI::Windows::Graphics::SizeInt32 size_;
 
   // The capture session lets us set properties about the capture before it
   // starts such as whether to capture the mouse cursor, and it lets us tell WGC

@@ -245,7 +245,8 @@ void WgcCapturerWin::CaptureFrame() {
         iter_success_pair = ongoing_captures_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(capture_source_->GetSourceId()),
-            std::forward_as_tuple(d3d11_device_, item));
+            std::forward_as_tuple(d3d11_device_, item,
+                                  capture_source_->GetSize()));
     RTC_DCHECK(iter_success_pair.second);
     capture_session = &iter_success_pair.first->second;
   } else {
