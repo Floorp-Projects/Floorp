@@ -21,6 +21,9 @@
 #import "components/renderer/metal/RTCMTLNV12Renderer.h"
 #import "components/video_frame_buffer/RTCCVPixelBuffer.h"
 
+static size_t kBufferWidth = 200;
+static size_t kBufferHeight = 200;
+
 // Extension of RTC_OBJC_TYPE(RTCMTLVideoView) for testing purposes.
 @interface RTC_OBJC_TYPE (RTCMTLVideoView)
 (Testing)
@@ -68,14 +71,21 @@
   id frameMock = OCMClassMock([RTC_OBJC_TYPE(RTCVideoFrame) class]);
   if (hasCVPixelBuffer) {
     CVPixelBufferRef pixelBufferRef;
-    CVPixelBufferCreate(
-        kCFAllocatorDefault, 200, 200, kCVPixelFormatType_420YpCbCr8Planar, nil, &pixelBufferRef);
+    CVPixelBufferCreate(kCFAllocatorDefault,
+                        kBufferWidth,
+                        kBufferHeight,
+                        kCVPixelFormatType_420YpCbCr8Planar,
+                        nil,
+                        &pixelBufferRef);
     OCMStub([frameMock buffer])
         .andReturn([[RTC_OBJC_TYPE(RTCCVPixelBuffer) alloc] initWithPixelBuffer:pixelBufferRef]);
   } else {
     OCMStub([frameMock buffer])
-        .andReturn([[RTC_OBJC_TYPE(RTCI420Buffer) alloc] initWithWidth:200 height:200]);
+        .andReturn([[RTC_OBJC_TYPE(RTCI420Buffer) alloc] initWithWidth:kBufferWidth
+                                                                height:kBufferHeight]);
   }
+  OCMStub([((RTC_OBJC_TYPE(RTCVideoFrame) *)frameMock) width]).andReturn(kBufferWidth);
+  OCMStub([((RTC_OBJC_TYPE(RTCVideoFrame) *)frameMock) height]).andReturn(kBufferHeight);
   OCMStub([frameMock timeStampNs]).andReturn(arc4random_uniform(INT_MAX));
   return frameMock;
 }
@@ -131,8 +141,6 @@
   [self.classMock verify];
 }
 
-// TODO(crbug.com/webrtc/13990): method was not invoked: drawFrame.
-#if !TARGET_IPHONE_SIMULATOR
 - (void)testRTCVideoRenderFrameCallbackI420 {
   // given
   OCMStub([self.classMock isMetalAvailable]).andReturn(YES);
@@ -257,7 +265,6 @@
 
   [self.rendererNV12Mock verify];
 }
-#endif
 
 - (void)testReportsSizeChangesToDelegate {
   OCMStub([self.classMock isMetalAvailable]).andReturn(YES);
