@@ -73,9 +73,9 @@ void ExtensionTest::CallWebExtMethodAssertEq(
     return;
   }
 
-  JS::RootedString expectedJSString(aCx, JS::ToString(aCx, expectedVal));
-  JS::RootedString actualJSString(aCx, JS::ToString(aCx, actualVal));
-  JS::RootedString messageJSString(aCx, JS::ToString(aCx, messageVal));
+  JS::Rooted<JSString*> expectedJSString(aCx, JS::ToString(aCx, expectedVal));
+  JS::Rooted<JSString*> actualJSString(aCx, JS::ToString(aCx, actualVal));
+  JS::Rooted<JSString*> messageJSString(aCx, JS::ToString(aCx, messageVal));
 
   nsString expected;
   nsString actual;
@@ -127,7 +127,8 @@ MOZ_CAN_RUN_SCRIPT bool ExtensionTest::AssertMatchInternal(
   bool matched = false;
 
   if (aExpectedMatchValue.isObject()) {
-    JS::RootedObject expectedMatchObj(aCx, &aExpectedMatchValue.toObject());
+    JS::Rooted<JSObject*> expectedMatchObj(aCx,
+                                           &aExpectedMatchValue.toObject());
 
     bool isRegexp;
     NS_ENSURE_TRUE(JS::ObjectIsRegExp(aCx, expectedMatchObj, &isRegexp), false);
@@ -137,7 +138,7 @@ MOZ_CAN_RUN_SCRIPT bool ExtensionTest::AssertMatchInternal(
       // match.
       nsString input(actualString);
       size_t index = 0;
-      JS::RootedValue rxResult(aCx);
+      JS::Rooted<JS::Value> rxResult(aCx);
       NS_ENSURE_TRUE(JS::ExecuteRegExpNoStatics(
                          aCx, expectedMatchObj, input.BeginWriting(),
                          actualString.Length(), &index, true, &rxResult),
@@ -195,7 +196,7 @@ MOZ_CAN_RUN_SCRIPT bool ExtensionTest::AssertMatchInternal(
     // TODO(Bug 1731094): as a low priority follow up, we may want to reconsider
     // and compare the entire stringified error (which is also often a common
     // behavior in many third party JS test frameworks).
-    JS::RootedValue messageVal(aCx);
+    JS::Rooted<JS::Value> messageVal(aCx);
     if (aActualValue.isObject()) {
       JS::Rooted<JSObject*> actualValueObj(aCx, &aActualValue.toObject());
 
@@ -349,7 +350,7 @@ class AssertRejectsHandler final : public dom::PromiseNativeHandler {
 
   static void Create(ExtensionTest* aExtensionTest, dom::Promise* aPromise,
                      dom::Promise* outPromise,
-                     JS::HandleValue aExpectedMatchValue,
+                     JS::Handle<JS::Value> aExpectedMatchValue,
                      const nsAString& aMessage,
                      UniquePtr<dom::SerializedStackHolder>&& aCallerStack) {
     MOZ_ASSERT(aPromise);
@@ -434,7 +435,7 @@ class AssertRejectsHandler final : public dom::PromiseNativeHandler {
 
  private:
   AssertRejectsHandler(ExtensionTest* aExtensionTest, dom::Promise* mOutPromise,
-                       JS::HandleValue aExpectedMatchValue,
+                       JS::Handle<JS::Value> aExpectedMatchValue,
                        const nsAString& aMessage,
                        UniquePtr<dom::SerializedStackHolder>&& aCallerStack)
       : mOutPromise(mOutPromise), mExtensionTest(aExtensionTest) {

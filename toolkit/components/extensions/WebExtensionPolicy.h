@@ -180,7 +180,8 @@ class WebExtensionPolicy final : public nsISupports,
 
   bool CanAccessWindow(const dom::WindowProxyHolder& aWindow) const;
 
-  void GetReadyPromise(JSContext* aCx, JS::MutableHandleObject aResult) const;
+  void GetReadyPromise(JSContext* aCx,
+                       JS::MutableHandle<JSObject*> aResult) const;
   dom::Promise* ReadyPromise() const { return mReadyPromise; }
 
   void GetBackgroundWorker(nsString& aScriptURL) const {
@@ -218,7 +219,7 @@ class WebExtensionPolicy final : public nsISupports,
   nsISupports* GetParentObject() const { return mParent; }
 
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::HandleObject aGivenProto) override;
+                               JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
   virtual ~WebExtensionPolicy() = default;

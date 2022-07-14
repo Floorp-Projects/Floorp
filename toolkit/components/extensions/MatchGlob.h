@@ -41,7 +41,7 @@ class MatchGlob final : public nsISupports, public nsWrapperCache {
   nsISupports* GetParentObject() const { return mParent; }
 
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::HandleObject aGivenProto) override;
+                               JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
   virtual ~MatchGlob();

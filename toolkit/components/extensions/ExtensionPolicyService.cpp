@@ -357,8 +357,8 @@ nsresult ExtensionPolicyService::InjectContentScripts(
     MOZ_TRY(ExecuteContentScripts(jsapi.cx(), inner,
                                   GetScripts(RunAt::Document_start))
                 ->ThenWithCycleCollectedArgs(
-                    [](JSContext* aCx, JS::HandleValue aValue, ErrorResult& aRv,
-                       ExtensionPolicyService* aSelf,
+                    [](JSContext* aCx, JS::Handle<JS::Value> aValue,
+                       ErrorResult& aRv, ExtensionPolicyService* aSelf,
                        nsPIDOMWindowInner* aInner, Scripts&& aScripts) {
                       return aSelf->ExecuteContentScripts(aCx, aInner, aScripts)
                           .forget();
@@ -366,7 +366,7 @@ nsresult ExtensionPolicyService::InjectContentScripts(
                     this, inner, GetScripts(RunAt::Document_end))
                 .andThen([&](auto aPromise) {
                   return aPromise->ThenWithCycleCollectedArgs(
-                      [](JSContext* aCx, JS::HandleValue aValue,
+                      [](JSContext* aCx, JS::Handle<JS::Value> aValue,
                          ErrorResult& aRv, ExtensionPolicyService* aSelf,
                          nsPIDOMWindowInner* aInner, Scripts&& aScripts) {
                         return aSelf

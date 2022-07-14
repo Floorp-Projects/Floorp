@@ -151,7 +151,7 @@ class MozDocumentMatcher : public nsISupports, public nsWrapperCache {
 
   WebExtensionPolicy* GetParentObject() const { return mExtension; }
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::HandleObject aGivenProto) override;
+                               JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
   friend class WebExtensionPolicy;
@@ -217,7 +217,7 @@ class WebExtensionContentScript final : public MozDocumentMatcher {
   }
 
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::HandleObject aGivenProto) override;
+                               JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
   friend class WebExtensionPolicy;
