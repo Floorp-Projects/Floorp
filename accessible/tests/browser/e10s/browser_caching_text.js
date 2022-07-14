@@ -1136,3 +1136,54 @@ addAccessibleTask(
     remoteIframe: !isWinNoCache,
   }
 );
+
+/**
+ * Tabbing to an input selects all its text. Test that the cached selection
+ *reflects this. This has to be done separately from the other selection tests
+ * because prior contentEditable selection changes the events that get fired.
+ */
+addAccessibleTask(
+  `
+<button id="before">Before</button>
+<input id="input" value="test">
+  `,
+  async function(browser, docAcc) {
+    // The tab order is different when there's an iframe, so focus a control
+    // before the input to make tab consistent.
+    info("Focusing before");
+    const before = findAccessibleChildByID(docAcc, "before");
+    // Focusing a button fires a selection event. We must swallow this to
+    // avoid confusing the later test.
+    let events = waitForOrderedEvents([
+      [EVENT_FOCUS, before],
+      [EVENT_TEXT_SELECTION_CHANGED, docAcc],
+    ]);
+    before.takeFocus();
+    await events;
+
+    const input = findAccessibleChildByID(docAcc, "input", [nsIAccessibleText]);
+    info("Tabbing to input");
+    events = waitForEvents(
+      {
+        expected: [
+          [EVENT_FOCUS, input],
+          [EVENT_TEXT_SELECTION_CHANGED, input],
+        ],
+        unexpected: [[EVENT_TEXT_SELECTION_CHANGED, docAcc]],
+      },
+      "input",
+      false,
+      (args, task) => invokeContentTask(browser, args, task)
+    );
+    EventUtils.synthesizeKey("KEY_Tab");
+    await events;
+    testSelectionRange(browser, input, input, 0, input, 4);
+    testTextGetSelection(input, 0, 4, 0);
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+    remoteIframe: !isWinNoCache,
+  }
+);
