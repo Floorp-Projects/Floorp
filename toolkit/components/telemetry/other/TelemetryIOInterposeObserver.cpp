@@ -130,7 +130,7 @@ bool TelemetryIOInterposeObserver::ReflectFileStats(FileIOEntryType* entry,
     stats[5].setNumber(fileStats.stats);
 
     // Create jsStats as array of elements above
-    JS::RootedObject jsStats(cx, JS::NewArrayObject(cx, stats));
+    JS::Rooted<JSObject*> jsStats(cx, JS::NewArrayObject(cx, stats));
     if (!jsStats) {
       continue;
     }
