@@ -63,16 +63,6 @@ struct AddressList {
   std::vector<InterfaceAddress> ips;
 };
 
-bool CompareNetworks(const std::unique_ptr<Network>& a,
-                     const std::unique_ptr<Network>& b) {
-  if (a->prefix_length() == b->prefix_length()) {
-    if (a->name() == b->name()) {
-      return a->prefix() < b->prefix();
-    }
-  }
-  return a->name() < b->name();
-}
-
 bool SortNetworks(const Network* a, const Network* b) {
   // Network types will be preferred above everything else while sorting
   // Networks.
@@ -194,6 +184,19 @@ bool ShouldAdapterChangeTriggerNetworkChange(rtc::AdapterType old_type,
 const char kPublicIPv4Host[] = "8.8.8.8";
 const char kPublicIPv6Host[] = "2001:4860:4860::8888";
 const int kPublicPort = 53;  // DNS port.
+
+namespace webrtc_network_internal {
+bool CompareNetworks(const std::unique_ptr<Network>& a,
+                     const std::unique_ptr<Network>& b) {
+  if (a->prefix_length() != b->prefix_length()) {
+    return a->prefix_length() < b->prefix_length();
+  }
+  if (a->name() != b->name()) {
+    return a->name() < b->name();
+  }
+  return a->prefix() < b->prefix();
+}
+}  // namespace webrtc_network_internal
 
 std::string MakeNetworkKey(absl::string_view name,
                            const IPAddress& prefix,
@@ -337,7 +340,7 @@ void NetworkManagerBase::MergeNetworkList(
   // AddressList in this map will track IP addresses for all Networks
   // with the same key.
   std::map<std::string, AddressList> consolidated_address_list;
-  absl::c_sort(new_networks, CompareNetworks);
+  absl::c_sort(new_networks, rtc::webrtc_network_internal::CompareNetworks);
   // First, build a set of network-keys to the ipaddresses.
   for (auto& network : new_networks) {
     bool might_add_to_merged_list = false;
