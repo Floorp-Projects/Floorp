@@ -68,6 +68,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   void OnDecodedFrame(const VideoFrameMetaData& frame_meta,
                       absl::optional<uint8_t> qp,
                       int32_t decode_time_ms,
+                      webrtc::TimeDelta processing_delay_ms,
                       VideoContentType content_type);
 
   void OnSyncOffsetUpdated(int64_t video_playout_ntp_ms,
