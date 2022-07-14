@@ -188,7 +188,6 @@ void TableUnselectRow(uint32_t aRow);
 RemoteAccessible* AtkTableColumnHeader(int32_t aCol);
 RemoteAccessible* AtkTableRowHeader(int32_t aRow);
 
-KeyBinding AccessKey();
 void AtkKeyBinding(nsString& aBinding);
 
 double CurValue() const override;

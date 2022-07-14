@@ -379,6 +379,11 @@ class Accessible {
    */
   virtual bool DoAction(uint8_t aIndex) const = 0;
 
+  /**
+   * Return access key, such as Alt+D.
+   */
+  virtual KeyBinding AccessKey() const = 0;
+
   //////////////////////////////////////////////////////////////////////////////
   // SelectAccessible
 

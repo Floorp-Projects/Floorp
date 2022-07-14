@@ -833,7 +833,10 @@ void RemoteAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   aName.Assign(name);
 }
 
-KeyBinding RemoteAccessible::AccessKey() {
+KeyBinding RemoteAccessible::AccessKey() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::AccessKey();
+  }
   uint32_t key = 0;
   uint32_t modifierMask = 0;
   Unused << mDoc->SendAccessKey(mID, &key, &modifierMask);

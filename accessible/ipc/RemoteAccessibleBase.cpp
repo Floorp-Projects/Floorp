@@ -1002,6 +1002,17 @@ bool RemoteAccessibleBase<Derived>::DoAction(uint8_t aIndex) const {
 }
 
 template <class Derived>
+KeyBinding RemoteAccessibleBase<Derived>::AccessKey() const {
+  if (mCachedFields) {
+    if (auto value =
+            mCachedFields->GetAttribute<uint64_t>(nsGkAtoms::accesskey)) {
+      return KeyBinding(*value);
+    }
+  }
+  return KeyBinding();
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::SelectionRanges(
     nsTArray<TextRange>* aRanges) const {
   Document()->SelectionRanges(aRanges);
