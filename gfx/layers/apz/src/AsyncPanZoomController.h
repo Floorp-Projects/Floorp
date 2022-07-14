@@ -1521,7 +1521,7 @@ class AsyncPanZoomController {
 
   // Start a smooth-scrolling animation to the given destination, with MSD
   // physics that is suited for scroll-snapping.
-  void SmoothMsdScrollTo(CSSSnapTarget&& aDestination,
+  void SmoothMsdScrollTo(const CSSPoint& aDestination,
                          ScrollTriggeredByScript aTriggeredByScript);
 
   // Returns whether overscroll is allowed during an event.
@@ -1754,7 +1754,6 @@ class AsyncPanZoomController {
   // is in a panning state.
   TimeDuration mTouchStartRestingTimeBeforePan;
   Maybe<ParentLayerCoord> mMinimumVelocityDuringPan;
-  ScrollSnapTargetIds mLastSnapTargetIds;
   // Extra offset to add to the async scroll position for testing
   CSSPoint mTestAsyncScrollOffset;
   // Extra zoom to include in the aync zoom for testing
@@ -1795,19 +1794,20 @@ class AsyncPanZoomController {
   // |aUnit| affects the snapping behaviour (see ScrollSnapUtils::
   // GetSnapPointForDestination).
   // Returns true iff. a target snap point was found.
-  Maybe<CSSSnapTarget> MaybeAdjustDeltaForScrollSnapping(
-      ScrollUnit aUnit, ScrollSnapFlags aSnapFlags, ParentLayerPoint& aDelta,
-      CSSPoint& aStartPosition);
+  bool MaybeAdjustDeltaForScrollSnapping(ScrollUnit aUnit,
+                                         ScrollSnapFlags aFlags,
+                                         ParentLayerPoint& aDelta,
+                                         CSSPoint& aStartPosition);
 
   // A wrapper function of MaybeAdjustDeltaForScrollSnapping for
   // ScrollWheelInput.
-  Maybe<CSSSnapTarget> MaybeAdjustDeltaForScrollSnappingOnWheelInput(
+  bool MaybeAdjustDeltaForScrollSnappingOnWheelInput(
       const ScrollWheelInput& aEvent, ParentLayerPoint& aDelta,
       CSSPoint& aStartPosition);
 
-  Maybe<CSSSnapTarget> MaybeAdjustDestinationForScrollSnapping(
-      const KeyboardInput& aEvent, CSSPoint& aDestination,
-      ScrollSnapFlags aSnapFlags);
+  bool MaybeAdjustDestinationForScrollSnapping(const KeyboardInput& aEvent,
+                                               CSSPoint& aDestination,
+                                               ScrollSnapFlags aSnapFlags);
 
   // Snap to a snap position nearby the current scroll position, if appropriate.
   void ScrollSnap(ScrollSnapFlags aSnapFlags);
@@ -1824,9 +1824,9 @@ class AsyncPanZoomController {
   // |aUnit| affects the snapping behaviour (see ScrollSnapUtils::
   // GetSnapPointForDestination). It should generally be determined by the
   // type of event that's triggering the scroll.
-  Maybe<CSSSnapTarget> FindSnapPointNear(const CSSPoint& aDestination,
-                                         ScrollUnit aUnit,
-                                         ScrollSnapFlags aSnapFlags);
+  Maybe<CSSPoint> FindSnapPointNear(const CSSPoint& aDestination,
+                                    ScrollUnit aUnit,
+                                    ScrollSnapFlags aSnapFlags);
 
   friend std::ostream& operator<<(
       std::ostream& aOut, const AsyncPanZoomController::PanZoomState& aState);
