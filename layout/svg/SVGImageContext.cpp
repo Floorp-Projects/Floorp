@@ -19,7 +19,7 @@
 namespace mozilla {
 
 /* static */
-void SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
+void SVGImageContext::MaybeStoreContextPaint(SVGImageContext& aContext,
                                              nsIFrame* aFromFrame,
                                              imgIContainer* aImgContainer) {
   return MaybeStoreContextPaint(aContext, *aFromFrame->PresContext(),
@@ -27,7 +27,7 @@ void SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
 }
 
 /* static */
-void SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
+void SVGImageContext::MaybeStoreContextPaint(SVGImageContext& aContext,
                                              const nsPresContext& aPresContext,
                                              const ComputedStyle& aStyle,
                                              imgIContainer* aImgContainer) {
@@ -38,12 +38,9 @@ void SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
 
   if (StaticPrefs::svg_embedder_prefers_color_scheme_content_enabled() ||
       aPresContext.Document()->IsDocumentURISchemeChrome()) {
-    if (!aContext) {
-      aContext.emplace();
-    }
     auto scheme = LookAndFeel::ColorSchemeForStyle(
         *aPresContext.Document(), aStyle.StyleUI()->mColorScheme.bits);
-    aContext->SetColorScheme(Some(scheme));
+    aContext.SetColorScheme(Some(scheme));
   }
 
   const nsStyleSVG* style = aStyle.StyleSVG();
@@ -83,10 +80,7 @@ void SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
   }
 
   if (haveContextPaint) {
-    if (!aContext) {
-      aContext.emplace();
-    }
-    aContext->mContextPaint = std::move(contextPaint);
+    aContext.mContextPaint = std::move(contextPaint);
   }
 }
 

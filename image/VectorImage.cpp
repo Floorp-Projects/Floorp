@@ -696,7 +696,7 @@ VectorImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
   RefPtr<SourceSurface> sourceSurface;
   IntSize decodeSize;
   Tie(sourceSurface, decodeSize) =
-      LookupCachedSurface(aSize, Nothing(), aFlags);
+      LookupCachedSurface(aSize, SVGImageContext(), aFlags);
   if (sourceSurface) {
     return sourceSurface.forget();
   }
@@ -715,7 +715,7 @@ VectorImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
   // flags, having an animation, etc). Otherwise CreateSurface will assume that
   // the caller is capable of drawing directly to its own draw target if we
   // cannot cache.
-  Maybe<SVGImageContext> svgContext;
+  SVGImageContext svgContext;
   SVGDrawingParameters params(
       nullptr, decodeSize, aSize, ImageRegion::Create(decodeSize),
       SamplingFilter::POINT, svgContext, animTime, aFlags, 1.0);
@@ -757,7 +757,7 @@ VectorImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
 NS_IMETHODIMP_(ImgDrawResult)
 VectorImage::GetImageProvider(WindowRenderer* aRenderer,
                               const gfx::IntSize& aSize,
-                              const Maybe<SVGImageContext>& aSVGContext,
+                              const SVGImageContext& aSVGContext,
                               const Maybe<ImageIntRegion>& aRegion,
                               uint32_t aFlags,
                               WebRenderImageProvider** aProvider) {
@@ -863,7 +863,7 @@ VectorImage::GetImageProvider(WindowRenderer* aRenderer,
         SamplingFilter::POINT, aSVGContext, animTime, aFlags, 1.0);
 
     RefPtr<gfxDrawable> svgDrawable = CreateSVGDrawable(params);
-    bool contextPaint = aSVGContext && aSVGContext->GetContextPaint();
+    bool contextPaint = aSVGContext.GetContextPaint();
     AutoRestoreSVGState autoRestore(params, mSVGDocumentWrapper, contextPaint);
 
     mSVGDocumentWrapper->UpdateViewportBounds(params.viewportSize);
@@ -911,40 +911,30 @@ VectorImage::GetImageProvider(WindowRenderer* aRenderer,
   return ImgDrawResult::SUCCESS;
 }
 
-bool VectorImage::MaybeRestrictSVGContext(
-    Maybe<SVGImageContext>& aNewSVGContext,
-    const Maybe<SVGImageContext>& aSVGContext, uint32_t aFlags) {
-  bool overridePAR =
-      (aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) && aSVGContext;
+bool VectorImage::MaybeRestrictSVGContext(SVGImageContext& aSVGContext,
+                                          uint32_t aFlags) {
+  bool overridePAR = (aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE);
 
-  bool haveContextPaint = aSVGContext && aSVGContext->GetContextPaint();
-  bool blockContextPaint = false;
-  if (haveContextPaint) {
-    blockContextPaint = !SVGContextPaint::IsAllowedForImageFromURI(mURI);
-  }
+  bool haveContextPaint = aSVGContext.GetContextPaint();
+  bool blockContextPaint =
+      haveContextPaint && !SVGContextPaint::IsAllowedForImageFromURI(mURI);
 
   if (overridePAR || blockContextPaint) {
-    // The key that we create for the image surface cache must match the way
-    // that the image will be painted, so we need to initialize a new matching
-    // SVGImageContext here in order to generate the correct key.
-
-    aNewSVGContext = aSVGContext;  // copy
-
     if (overridePAR) {
       // The SVGImageContext must take account of the preserveAspectRatio
       // override:
-      MOZ_ASSERT(!aSVGContext->GetPreserveAspectRatio(),
+      MOZ_ASSERT(!aSVGContext.GetPreserveAspectRatio(),
                  "FLAG_FORCE_PRESERVEASPECTRATIO_NONE is not expected if a "
                  "preserveAspectRatio override is supplied");
       Maybe<SVGPreserveAspectRatio> aspectRatio = Some(SVGPreserveAspectRatio(
           SVG_PRESERVEASPECTRATIO_NONE, SVG_MEETORSLICE_UNKNOWN));
-      aNewSVGContext->SetPreserveAspectRatio(aspectRatio);
+      aSVGContext.SetPreserveAspectRatio(aspectRatio);
     }
 
     if (blockContextPaint) {
       // The SVGImageContext must not include context paint if the image is
       // not allowed to use it:
-      aNewSVGContext->ClearContextPaint();
+      aSVGContext.ClearContextPaint();
     }
   }
 
@@ -956,7 +946,7 @@ NS_IMETHODIMP_(ImgDrawResult)
 VectorImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
                   const ImageRegion& aRegion, uint32_t aWhichFrame,
                   SamplingFilter aSamplingFilter,
-                  const Maybe<SVGImageContext>& aSVGContext, uint32_t aFlags,
+                  const SVGImageContext& aSVGContext, uint32_t aFlags,
                   float aOpacity) {
   if (aWhichFrame > FRAME_MAX_VALUE) {
     return ImgDrawResult::BAD_ARGS;
@@ -993,7 +983,7 @@ VectorImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
   }
 
   MOZ_ASSERT(!(aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) ||
-                 (aSVGContext && aSVGContext->GetViewportSize()),
+                 aSVGContext.GetViewportSize(),
              "Viewport size is required when using "
              "FLAG_FORCE_PRESERVEASPECTRATIO_NONE");
 
@@ -1003,13 +993,11 @@ VectorImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
                        ? 0.0f
                        : mSVGDocumentWrapper->GetCurrentTimeAsFloat();
 
-  Maybe<SVGImageContext> newSVGContext;
-  bool contextPaint =
-      MaybeRestrictSVGContext(newSVGContext, aSVGContext, aFlags);
+  SVGImageContext newSVGContext = aSVGContext;
+  bool contextPaint = MaybeRestrictSVGContext(newSVGContext, aFlags);
 
   SVGDrawingParameters params(aContext, aSize, aSize, aRegion, aSamplingFilter,
-                              newSVGContext ? newSVGContext : aSVGContext,
-                              animTime, aFlags, aOpacity);
+                              newSVGContext, animTime, aFlags, aOpacity);
 
   // If we have an prerasterized version of this image that matches the
   // drawing parameters, use that.
@@ -1058,8 +1046,7 @@ already_AddRefed<gfxDrawable> VectorImage::CreateSVGDrawable(
 }
 
 Tuple<RefPtr<SourceSurface>, IntSize> VectorImage::LookupCachedSurface(
-    const IntSize& aSize, const Maybe<SVGImageContext>& aSVGContext,
-    uint32_t aFlags) {
+    const IntSize& aSize, const SVGImageContext& aSVGContext, uint32_t aFlags) {
   // We can't use cached surfaces if we:
   // - Explicitly disallow it via FLAG_BYPASS_SURFACE_CACHE
   // - Want a blob recording which aren't supported by the cache.

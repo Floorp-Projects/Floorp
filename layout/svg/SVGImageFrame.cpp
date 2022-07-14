@@ -399,9 +399,9 @@ void SVGImageFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
       // come from width/height *attributes* in SVG). They influence the region
       // of the SVG image's internal document that is visible, in combination
       // with preserveAspectRatio and viewBox.
-      const Maybe<SVGImageContext> context(Some(
-          SVGImageContext(Some(CSSIntSize::Truncate(width, height)),
-                          Some(imgElem->mPreserveAspectRatio.GetAnimValue()))));
+      const SVGImageContext context(
+          Some(CSSIntSize::Truncate(width, height)),
+          Some(imgElem->mPreserveAspectRatio.GetAnimValue()));
 
       // For the actual draw operation to draw crisply (and at the right size),
       // our destination rect needs to be |width|x|height|, *in dev pixels*.
@@ -420,7 +420,7 @@ void SVGImageFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
       aImgParams.result &= nsLayoutUtils::DrawSingleUnscaledImage(
           aContext, PresContext(), mImageContainer,
           nsLayoutUtils::GetSamplingFilterForFrame(this), nsPoint(0, 0),
-          aDirtyRect ? &dirtyRect : nullptr, Nothing(), flags);
+          aDirtyRect ? &dirtyRect : nullptr, SVGImageContext(), flags);
     }
 
     if (opacity != 1.0f ||
@@ -608,14 +608,15 @@ bool SVGImageFrame::CreateWebRenderCommands(
     }
   }
 
-  Maybe<SVGImageContext> svgContext;
+  SVGImageContext svgContext;
   if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
     if (StaticPrefs::image_svg_blob_image()) {
       flags |= imgIContainer::FLAG_RECORD_BLOB;
     }
     // Forward preserveAspectRatio to inner SVGs
-    svgContext.emplace(Some(CSSIntSize::Truncate(width, height)),
-                       Some(imgElem->mPreserveAspectRatio.GetAnimValue()));
+    svgContext.SetViewportSize(Some(CSSIntSize::Truncate(width, height)));
+    svgContext.SetPreserveAspectRatio(
+        Some(imgElem->mPreserveAspectRatio.GetAnimValue()));
   }
 
   Maybe<ImageIntRegion> region;

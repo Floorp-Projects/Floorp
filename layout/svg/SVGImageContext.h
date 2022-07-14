@@ -52,11 +52,11 @@ class SVGImageContext {
         mPreserveAspectRatio(aPreserveAspectRatio),
         mColorScheme(aColorScheme) {}
 
-  static void MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
+  static void MaybeStoreContextPaint(SVGImageContext& aContext,
                                      nsIFrame* aFromFrame,
                                      imgIContainer* aImgContainer);
 
-  static void MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
+  static void MaybeStoreContextPaint(SVGImageContext& aContext,
                                      const nsPresContext&, const ComputedStyle&,
                                      imgIContainer*);
 

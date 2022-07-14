@@ -46,13 +46,13 @@ class FrozenImage : public ImageWrapper {
                             uint32_t aFlags) override;
   NS_IMETHOD_(ImgDrawResult)
   GetImageProvider(WindowRenderer* aRenderer, const gfx::IntSize& aSize,
-                   const Maybe<SVGImageContext>& aSVGContext,
+                   const SVGImageContext& aSVGContext,
                    const Maybe<ImageIntRegion>& aRegion, uint32_t aFlags,
                    WebRenderImageProvider** aProvider) override;
   NS_IMETHOD_(ImgDrawResult)
   Draw(gfxContext* aContext, const nsIntSize& aSize, const ImageRegion& aRegion,
        uint32_t aWhichFrame, gfx::SamplingFilter aSamplingFilter,
-       const Maybe<SVGImageContext>& aSVGContext, uint32_t aFlags,
+       const SVGImageContext& aSVGContext, uint32_t aFlags,
        float aOpacity) override;
   NS_IMETHOD StartDecoding(uint32_t aFlags, uint32_t aWhichFrame) override;
   NS_IMETHOD_(bool)

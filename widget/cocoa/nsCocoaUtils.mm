@@ -409,7 +409,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, ui
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(drawTarget);
     MOZ_ASSERT(context);
 
-    Maybe<SVGImageContext> svgContext;
+    SVGImageContext svgContext;
     if (aPresContext && aComputedStyle) {
       SVGImageContext::MaybeStoreContextPaint(svgContext, *aPresContext, *aComputedStyle, aImage);
     }

@@ -61,7 +61,7 @@ class SurfaceKey {
   PLDHashNumber Hash() const {
     PLDHashNumber hash = HashGeneric(mSize.width, mSize.height);
     hash = AddToHash(hash, mRegion.map(HashIIR).valueOr(0));
-    hash = AddToHash(hash, mSVGContext.map(HashSIC).valueOr(0));
+    hash = AddToHash(hash, HashSIC(mSVGContext));
     hash = AddToHash(hash, uint8_t(mPlayback), uint32_t(mFlags));
     return hash;
   }
@@ -72,13 +72,13 @@ class SurfaceKey {
 
   const IntSize& Size() const { return mSize; }
   const Maybe<ImageIntRegion>& Region() const { return mRegion; }
-  const Maybe<SVGImageContext>& SVGContext() const { return mSVGContext; }
+  const SVGImageContext& SVGContext() const { return mSVGContext; }
   PlaybackType Playback() const { return mPlayback; }
   SurfaceFlags Flags() const { return mFlags; }
 
  private:
   SurfaceKey(const IntSize& aSize, const Maybe<ImageIntRegion>& aRegion,
-             const Maybe<SVGImageContext>& aSVGContext, PlaybackType aPlayback,
+             const SVGImageContext& aSVGContext, PlaybackType aPlayback,
              SurfaceFlags aFlags)
       : mSize(aSize),
         mRegion(aRegion),
@@ -97,15 +97,15 @@ class SurfaceKey {
   friend SurfaceKey RasterSurfaceKey(const IntSize&, SurfaceFlags,
                                      PlaybackType);
   friend SurfaceKey VectorSurfaceKey(const IntSize&,
-                                     const Maybe<SVGImageContext>&);
+                                     const SVGImageContext&);
   friend SurfaceKey VectorSurfaceKey(const IntSize&,
                                      const Maybe<ImageIntRegion>&,
-                                     const Maybe<SVGImageContext>&,
+                                     const SVGImageContext&,
                                      SurfaceFlags, PlaybackType);
 
   IntSize mSize;
   Maybe<ImageIntRegion> mRegion;
-  Maybe<SVGImageContext> mSVGContext;
+  SVGImageContext mSVGContext;
   PlaybackType mPlayback;
   SurfaceFlags mFlags;
 };
@@ -113,19 +113,19 @@ class SurfaceKey {
 inline SurfaceKey RasterSurfaceKey(const gfx::IntSize& aSize,
                                    SurfaceFlags aFlags,
                                    PlaybackType aPlayback) {
-  return SurfaceKey(aSize, Nothing(), Nothing(), aPlayback, aFlags);
+  return SurfaceKey(aSize, Nothing(), SVGImageContext(), aPlayback, aFlags);
 }
 
 inline SurfaceKey VectorSurfaceKey(const gfx::IntSize& aSize,
                                    const Maybe<ImageIntRegion>& aRegion,
-                                   const Maybe<SVGImageContext>& aSVGContext,
+                                   const SVGImageContext& aSVGContext,
                                    SurfaceFlags aFlags,
                                    PlaybackType aPlayback) {
   return SurfaceKey(aSize, aRegion, aSVGContext, aPlayback, aFlags);
 }
 
 inline SurfaceKey VectorSurfaceKey(const gfx::IntSize& aSize,
-                                   const Maybe<SVGImageContext>& aSVGContext) {
+                                   const SVGImageContext& aSVGContext) {
   // We don't care about aFlags for VectorImage because none of the flags we
   // have right now influence VectorImage's rendering. If we add a new flag that
   // *does* affect how a VectorImage renders, we'll have to change this.

@@ -6345,7 +6345,7 @@ static ImgDrawResult DrawImageInternal(
     gfxContext& aContext, nsPresContext* aPresContext, imgIContainer* aImage,
     const SamplingFilter aSamplingFilter, const nsRect& aDest,
     const nsRect& aFill, const nsPoint& aAnchor, const nsRect& aDirty,
-    const Maybe<SVGImageContext>& aSVGContext, uint32_t aImageFlags,
+    const SVGImageContext& aSVGContext, uint32_t aImageFlags,
     ExtendMode aExtendMode = ExtendMode::CLAMP, float aOpacity = 1.0) {
   ImgDrawResult result = ImgDrawResult::SUCCESS;
 
@@ -6374,19 +6374,14 @@ static ImgDrawResult DrawImageInternal(
 
     aContext.SetMatrixDouble(params.imageSpaceToDeviceSpace);
 
-    Maybe<SVGImageContext> fallbackContext;
-    if (!aSVGContext) {
-      // Use the default viewport.
-      fallbackContext.emplace(Some(params.svgViewportSize));
-    } else if (!aSVGContext->GetViewportSize()) {
-      fallbackContext = aSVGContext;
-      fallbackContext->SetViewportSize(Some(params.svgViewportSize));
+    SVGImageContext newContext = aSVGContext;
+    if (!aSVGContext.GetViewportSize()) {
+      newContext.SetViewportSize(Some(params.svgViewportSize));
     }
 
     result = aImage->Draw(&aContext, params.size, params.region,
                           imgIContainer::FRAME_CURRENT, aSamplingFilter,
-                          fallbackContext ? fallbackContext : aSVGContext,
-                          aImageFlags, aOpacity);
+                          newContext, aImageFlags, aOpacity);
   }
 
   return result;
@@ -6396,7 +6391,7 @@ static ImgDrawResult DrawImageInternal(
 ImgDrawResult nsLayoutUtils::DrawSingleUnscaledImage(
     gfxContext& aContext, nsPresContext* aPresContext, imgIContainer* aImage,
     const SamplingFilter aSamplingFilter, const nsPoint& aDest,
-    const nsRect* aDirty, const Maybe<SVGImageContext>& aSVGContext,
+    const nsRect* aDirty, const SVGImageContext& aSVGContext,
     uint32_t aImageFlags, const nsRect* aSourceArea) {
   CSSIntSize imageSize;
   aImage->GetWidth(&imageSize.width);
@@ -6431,7 +6426,7 @@ ImgDrawResult nsLayoutUtils::DrawSingleUnscaledImage(
 ImgDrawResult nsLayoutUtils::DrawSingleImage(
     gfxContext& aContext, nsPresContext* aPresContext, imgIContainer* aImage,
     SamplingFilter aSamplingFilter, const nsRect& aDest, const nsRect& aDirty,
-    const Maybe<SVGImageContext>& aSVGContext, uint32_t aImageFlags,
+    const SVGImageContext& aSVGContext, uint32_t aImageFlags,
     const nsPoint* aAnchorPoint, const nsRect* aSourceArea) {
   nscoord appUnitsPerCSSPixel = AppUnitsPerCSSPixel();
   // NOTE(emilio): We can hardcode resolution to 1 here, since we're interested
@@ -6600,7 +6595,7 @@ IntSize nsLayoutUtils::ComputeImageContainerDrawingParameters(
     imgIContainer* aImage, nsIFrame* aForFrame,
     const LayoutDeviceRect& aDestRect, const LayoutDeviceRect& aFillRect,
     const StackingContextHelper& aSc, uint32_t aFlags,
-    Maybe<SVGImageContext>& aSVGContext, Maybe<ImageIntRegion>& aRegion) {
+    SVGImageContext& aSVGContext, Maybe<ImageIntRegion>& aRegion) {
   MOZ_ASSERT(aImage);
   MOZ_ASSERT(aForFrame);
 
@@ -6613,17 +6608,13 @@ IntSize nsLayoutUtils::ComputeImageContainerDrawingParameters(
   SVGImageContext::MaybeStoreContextPaint(aSVGContext, aForFrame, aImage);
   if ((scaleFactors.xScale != 1.0 || scaleFactors.yScale != 1.0) &&
       aImage->GetType() == imgIContainer::TYPE_VECTOR &&
-      (!aSVGContext || !aSVGContext->GetViewportSize())) {
+      (!aSVGContext.GetViewportSize())) {
     gfxSize gfxDestSize(aDestRect.Width(), aDestRect.Height());
     IntSize viewportSize = aImage->OptimalImageSizeForDest(
         gfxDestSize, imgIContainer::FRAME_CURRENT, samplingFilter, aFlags);
 
     CSSIntSize cssViewportSize(viewportSize.width, viewportSize.height);
-    if (!aSVGContext) {
-      aSVGContext.emplace(Some(cssViewportSize));
-    } else {
-      aSVGContext->SetViewportSize(Some(cssViewportSize));
-    }
+    aSVGContext.SetViewportSize(Some(cssViewportSize));
   }
 
   const gfx::Matrix& itm = aSc.GetInheritedTransform();
@@ -6696,7 +6687,7 @@ ImgDrawResult nsLayoutUtils::DrawBackgroundImage(
   CSSIntSize destCSSSize{nsPresContext::AppUnitsToIntCSSPixels(aDest.width),
                          nsPresContext::AppUnitsToIntCSSPixels(aDest.height)};
 
-  Maybe<SVGImageContext> svgContext(Some(SVGImageContext(Some(destCSSSize))));
+  SVGImageContext svgContext(Some(destCSSSize));
   SVGImageContext::MaybeStoreContextPaint(svgContext, aForFrame, aImage);
 
   /* Fast path when there is no need for image spacing */
@@ -6740,7 +6731,7 @@ ImgDrawResult nsLayoutUtils::DrawImage(
     const SamplingFilter aSamplingFilter, const nsRect& aDest,
     const nsRect& aFill, const nsPoint& aAnchor, const nsRect& aDirty,
     uint32_t aImageFlags, float aOpacity) {
-  Maybe<SVGImageContext> svgContext;
+  SVGImageContext svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, *aPresContext,
                                           *aComputedStyle, aImage);
 

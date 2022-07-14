@@ -191,19 +191,16 @@ Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
     return Nothing();
   }
 
-  bool contextPaint = svgContext && svgContext->GetContextPaint();
+  bool contextPaint = svgContext.GetContextPaint();
 
   float animTime = (GetSurfaceKey().Playback() == PlaybackType::eStatic)
                        ? 0.0f
                        : mSVGDocumentWrapper->GetCurrentTimeAsFloat();
 
   IntSize viewportSize = size;
-  if (svgContext) {
-    auto cssViewportSize = svgContext->GetViewportSize();
-    if (cssViewportSize) {
-      // XXX losing unit
-      viewportSize.SizeTo(cssViewportSize->width, cssViewportSize->height);
-    }
+  if (auto cssViewportSize = svgContext.GetViewportSize()) {
+    // XXX losing unit
+    viewportSize.SizeTo(cssViewportSize->width, cssViewportSize->height);
   }
 
   {

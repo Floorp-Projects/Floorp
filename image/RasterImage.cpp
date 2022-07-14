@@ -597,7 +597,7 @@ RasterImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
 NS_IMETHODIMP_(ImgDrawResult)
 RasterImage::GetImageProvider(WindowRenderer* aRenderer,
                               const gfx::IntSize& aSize,
-                              const Maybe<SVGImageContext>& aSVGContext,
+                              const SVGImageContext& aSVGContext,
                               const Maybe<ImageIntRegion>& aRegion,
                               uint32_t aFlags,
                               WebRenderImageProvider** aProvider) {
@@ -1381,7 +1381,7 @@ NS_IMETHODIMP_(ImgDrawResult)
 RasterImage::Draw(gfxContext* aContext, const IntSize& aSize,
                   const ImageRegion& aRegion, uint32_t aWhichFrame,
                   SamplingFilter aSamplingFilter,
-                  const Maybe<SVGImageContext>& /*aSVGContext - ignored*/,
+                  const SVGImageContext& /*aSVGContext - ignored*/,
                   uint32_t aFlags, float aOpacity) {
   if (aWhichFrame > FRAME_MAX_VALUE) {
     return ImgDrawResult::BAD_ARGS;

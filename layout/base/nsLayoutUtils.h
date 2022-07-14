@@ -1939,7 +1939,7 @@ class nsLayoutUtils {
   static ImgDrawResult DrawSingleUnscaledImage(
       gfxContext& aContext, nsPresContext* aPresContext, imgIContainer* aImage,
       const SamplingFilter aSamplingFilter, const nsPoint& aDest,
-      const nsRect* aDirty, const mozilla::Maybe<SVGImageContext>& aSVGContext,
+      const nsRect* aDirty, const mozilla::SVGImageContext& aSVGContext,
       uint32_t aImageFlags, const nsRect* aSourceArea = nullptr);
 
   /**
@@ -1971,7 +1971,7 @@ class nsLayoutUtils {
   static ImgDrawResult DrawSingleImage(
       gfxContext& aContext, nsPresContext* aPresContext, imgIContainer* aImage,
       SamplingFilter aSamplingFilter, const nsRect& aDest, const nsRect& aDirty,
-      const mozilla::Maybe<SVGImageContext>& aSVGContext, uint32_t aImageFlags,
+      const mozilla::SVGImageContext& aSVGContext, uint32_t aImageFlags,
       const nsPoint* aAnchorPoint = nullptr,
       const nsRect* aSourceArea = nullptr);
 
@@ -2024,7 +2024,7 @@ class nsLayoutUtils {
       imgIContainer* aImage, nsIFrame* aForFrame,
       const LayoutDeviceRect& aDestRect, const LayoutDeviceRect& aFillRect,
       const StackingContextHelper& aSc, uint32_t aFlags,
-      mozilla::Maybe<SVGImageContext>& aSVGContext,
+      mozilla::SVGImageContext& aSVGContext,
       mozilla::Maybe<mozilla::image::ImageIntRegion>& aRegion);
 
   /**
