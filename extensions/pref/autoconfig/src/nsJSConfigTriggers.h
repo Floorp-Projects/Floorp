@@ -15,7 +15,7 @@ nsresult EvaluateAdminConfigScript(const char* js_buffer, size_t length,
                                    bool bCallbacks, bool skipFirstLine,
                                    bool isPrivileged = false);
 
-nsresult EvaluateAdminConfigScript(JS::HandleObject sandbox,
+nsresult EvaluateAdminConfigScript(JS::Handle<JSObject*> sandbox,
                                    const char* js_buffer, size_t length,
                                    const char* filename, bool bGlobalContext,
                                    bool bCallbacks, bool skipFirstLine);
