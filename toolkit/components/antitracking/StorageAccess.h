@@ -70,8 +70,6 @@ StorageAccess StorageAllowedForWindow(nsPIDOMWindowInner* aWindow,
  */
 StorageAccess StorageAllowedForDocument(const dom::Document* aDoc);
 
-StorageAccess CookieAllowedForDocument(const dom::Document* aDoc);
-
 /*
  * Checks if storage should be allowed for a new window with the given
  * principal, load URI, and parent.

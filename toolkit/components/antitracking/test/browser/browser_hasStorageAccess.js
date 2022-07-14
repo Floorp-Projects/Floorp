@@ -173,12 +173,7 @@ var testCases = [
         cookieBehavior: test.behavior,
         allowList: false,
         callback,
-        extraPrefs: [
-          [
-            "privacy.partition.always_partition_third_party_non_cookie_storage",
-            false,
-          ],
-        ],
+        extraPrefs: null,
         expectedBlockingNotifications: 0,
         runInPrivateWindow: false,
         iframeSandbox: null,
