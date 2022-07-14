@@ -301,7 +301,10 @@ rtc_library("perf_test") {
 if (is_ios) {
   rtc_library("test_support_objc") {
     testonly = true
-    visibility = [ ":test_support" ]
+    visibility = [
+      ":google_test_runner_objc",
+      ":test_support",
+    ]
     sources = [
       "ios/coverage_util_ios.h",
       "ios/coverage_util_ios.mm",
@@ -315,6 +318,15 @@ if (is_ios) {
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
     configs += [ ":test_support_objc_config" ]
+  }
+
+  rtc_library("google_test_runner_objc") {
+    testonly = true
+    visibility = [ "*" ]
+    sources = [ "ios/google_test_runner.mm" ]
+    deps = [ ":test_support_objc" ]
+    configs += [ "//build/config/ios:xctest_config" ]
+    frameworks = [ "UIKit.framework" ]
   }
 
   config("test_support_objc_config") {
@@ -979,9 +991,7 @@ if (is_mac) {
       "mac/video_renderer_mac.h",
       "mac/video_renderer_mac.mm",
     ]
-    deps = [
-      ":test_renderer_generic",
-    ]
+    deps = [ ":test_renderer_generic" ]
     frameworks = [
       "Cocoa.framework",
       "OpenGL.framework",
