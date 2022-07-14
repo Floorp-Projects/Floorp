@@ -343,7 +343,7 @@ bool ScreenGetterWayland::RemoveMonitorConfig(int aId) {
 ScreenGetterWayland::ScreenGetterWayland() = default;
 
 ScreenGetterWayland::~ScreenGetterWayland() {
-  g_clear_pointer(&mRegistry, wl_registry_destroy);
+  MozClearPointer(mRegistry, wl_registry_destroy);
 }
 
 static bool GdkMonitorGetWorkarea(GdkMonitor* monitor, GdkRectangle* workarea) {
