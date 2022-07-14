@@ -75,13 +75,6 @@ rtc_source_set("callback_list") {
   ]
 }
 
-# The subset of rtc_base approved for use outside of libjingle.
-# TODO(bugs.webrtc.org/9838): Create small and focused build targets and remove
-# the old concept of rtc_base and rtc_base_approved.
-rtc_source_set("rtc_base_approved") {
-  visibility = [ "*" ]
-}
-
 rtc_source_set("buffer") {
   visibility = [ "*" ]
   sources = [ "buffer.h" ]
@@ -495,7 +488,6 @@ rtc_library("rate_limiter") {
   deps = [
     ":macromagic",
     ":rate_statistics",
-    ":rtc_base_approved",
     "../system_wrappers",
     "synchronization:mutex",
   ]
@@ -760,7 +752,6 @@ rtc_library("rtc_numerics") {
   deps = [
     ":checks",
     ":mod_ops",
-    ":rtc_base_approved",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -855,7 +846,6 @@ rtc_library("ip_address") {
   deps = [
     ":byte_order",
     ":net_helpers",
-    ":rtc_base_approved",
     ":stringutils",
     "system:rtc_export",
   ]
@@ -877,7 +867,6 @@ rtc_library("socket_address") {
     ":ip_address",
     ":logging",
     ":net_helpers",
-    ":rtc_base_approved",
     ":safe_conversions",
     ":stringutils",
     "system:rtc_export",
@@ -948,7 +937,6 @@ rtc_library("threading") {
     ":platform_thread",
     ":platform_thread_types",
     ":refcount",
-    ":rtc_base_approved",
     ":rtc_event",
     ":rtc_task_queue",
     ":socket_address",
@@ -1047,7 +1035,6 @@ if (is_win) {
       ":checks",
       ":logging",
       ":macromagic",
-      ":rtc_base_approved",
       ":stringutils",
     ]
 
@@ -1124,7 +1111,6 @@ rtc_library("rtc_base") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
-  public_deps = [ ":rtc_base_approved" ]  # no-presubmit-check TODO(webrtc:8603)
   public_configs = []
 
   sources = [
@@ -1418,7 +1404,6 @@ rtc_library("task_queue_for_test") {
     ":checks",
     ":location",
     ":macromagic",
-    ":rtc_base_approved",
     ":rtc_event",
     ":rtc_task_queue",
     "../api/task_queue",
@@ -1459,7 +1444,6 @@ if (rtc_include_tests) {
     deps = [
       ":gunit_helpers",
       ":rtc_base",
-      ":rtc_base_approved",
       ":rtc_event",
       ":rtc_operations_chain",
       ":threading",
@@ -1589,7 +1573,6 @@ if (rtc_include_tests) {
         ":rate_tracker",
         ":refcount",
         ":rtc_base",
-        ":rtc_base_approved",
         ":rtc_base_tests_utils",
         ":rtc_event",
         ":rtc_numerics",
@@ -1644,7 +1627,6 @@ if (rtc_include_tests) {
       sources = [ "task_queue_unittest.cc" ]
       deps = [
         ":gunit_helpers",
-        ":rtc_base_approved",
         ":rtc_base_tests_utils",
         ":rtc_event",
         ":rtc_task_queue",
@@ -1662,7 +1644,6 @@ if (rtc_include_tests) {
       sources = [ "weak_ptr_unittest.cc" ]
       deps = [
         ":gunit_helpers",
-        ":rtc_base_approved",
         ":rtc_base_tests_utils",
         ":rtc_event",
         ":task_queue_for_test",
@@ -1685,7 +1666,6 @@ if (rtc_include_tests) {
         "numerics/sequence_number_util_unittest.cc",
       ]
       deps = [
-        ":rtc_base_approved",
         ":rtc_numerics",
         "../test:test_main",
         "../test:test_support",
@@ -1743,7 +1723,6 @@ if (rtc_include_tests) {
         ":null_socket_server",
         ":refcount",
         ":rtc_base",
-        ":rtc_base_approved",
         ":rtc_base_tests_utils",
         ":rtc_event",
         ":safe_conversions",

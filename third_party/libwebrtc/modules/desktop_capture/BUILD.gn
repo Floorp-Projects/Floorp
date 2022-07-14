@@ -573,15 +573,14 @@ rtc_library("desktop_capture_generic") {
     deps += [ "../../rtc_base:sanitizer" ]
   }
 
-  if (build_with_mozilla) {
-    deps += [ "../../rtc_base:rtc_base_approved" ]
+  if (!build_with_mozilla) {
+    deps += [ "//third_party/libyuv" ]
+  } else {
     include_dirs += [
       "/media/libyuv",
       "/media/libyuv/libyuv/include",
       "/third_party/pipewire",
     ]
-  } else {
-    deps += [ "//third_party/libyuv" ]
   }
 
   if (use_desktop_capture_differ_sse2) {
