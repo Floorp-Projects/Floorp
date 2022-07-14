@@ -280,17 +280,3 @@ addAccessibleTask(
     is(stringForRange(macDoc, range), "", "string value is correct");
   }
 );
-
-addAccessibleTask(
-  `<div role="listbox" id="box">
-    <input type="radio" name="test" role="option" title="First item"/>
-    <input type="radio" name="test" role="option" title="Second item"/>
-  </div>`,
-  async (browser, accDoc) => {
-    let box = getNativeInterface(accDoc, "box");
-    const children = box.getAttributeValue("AXChildren");
-    is(children.length, 2, "Listbox contains two items");
-    is(children[0].getAttributeValue("AXValue"), "First item");
-    is(children[1].getAttributeValue("AXValue"), "Second item");
-  }
-);
