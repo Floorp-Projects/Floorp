@@ -19,9 +19,6 @@ const SOCIAL_ANNOTATION_TABLE_PREF =
 const SOCIAL_TRACKING_TABLE_NAME = "mochitest4-track-simple";
 const SOCIAL_TRACKING_TABLE_PREF =
   "urlclassifier.features.socialtracking.blacklistTables";
-const EMAIL_TRACKING_TABLE_NAME = "mochitest5-track-simple";
-const EMAIL_TRACKING_TABLE_PREF =
-  "urlclassifier.features.emailtracking.blocklistTables";
 
 let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
@@ -39,7 +36,6 @@ var UrlClassifierTestUtils = {
     let trackingURL3 = "trackertest.org/";
     let entitylistedURL = "itisatrap.org/?resource=itisatracker.org";
     let socialTrackingURL = "social-tracking.example.org/";
-    let emailTrackingURL = "email-tracking.example.org/";
 
     let annotationUpdate =
       "n:1000\ni:" +
@@ -116,15 +112,6 @@ var UrlClassifierTestUtils = {
       "\n" +
       socialTrackingURL +
       "\n";
-    let emailTrackingUpdate =
-      "n:1000\ni:" +
-      EMAIL_TRACKING_TABLE_NAME +
-      "\nad:1\n" +
-      "a:1:32:" +
-      emailTrackingURL.length +
-      "\n" +
-      emailTrackingURL +
-      "\n";
     let entitylistUpdate =
       "n:1000\ni:" +
       ENTITYLIST_TABLE_NAME +
@@ -162,11 +149,6 @@ var UrlClassifierTestUtils = {
         update: socialTrackingUpdate,
       },
       {
-        pref: EMAIL_TRACKING_TABLE_PREF,
-        name: EMAIL_TRACKING_TABLE_NAME,
-        update: emailTrackingUpdate,
-      },
-      {
         pref: ENTITYLIST_TABLE_PREF,
         name: ENTITYLIST_TABLE_NAME,
         update: entitylistUpdate,
@@ -201,7 +183,6 @@ var UrlClassifierTestUtils = {
     Services.prefs.clearUserPref(ANNOTATION_ENTITYLIST_TABLE_PREF);
     Services.prefs.clearUserPref(TRACKING_TABLE_PREF);
     Services.prefs.clearUserPref(SOCIAL_TRACKING_TABLE_PREF);
-    Services.prefs.clearUserPref(EMAIL_TRACKING_TABLE_PREF);
     Services.prefs.clearUserPref(ENTITYLIST_TABLE_PREF);
   },
 
