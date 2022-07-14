@@ -36,6 +36,7 @@
 #include "net/dcsctp/packet/error_cause/error_cause.h"
 #include "net/dcsctp/packet/error_cause/unrecognized_chunk_type_cause.h"
 #include "net/dcsctp/packet/parameter/heartbeat_info_parameter.h"
+#include "net/dcsctp/packet/parameter/outgoing_ssn_reset_request_parameter.h"
 #include "net/dcsctp/packet/parameter/parameter.h"
 #include "net/dcsctp/packet/sctp_packet.h"
 #include "net/dcsctp/packet/tlv_trait.h"
@@ -223,6 +224,44 @@ MATCHER(HasSackWithNoGapAckBlocks, "") {
 
   if (!sc->gap_ack_blocks().empty()) {
     *result_listener << "there are gap ack blocks";
+    return false;
+  }
+
+  return true;
+}
+
+MATCHER_P(HasReconfigWithStreams, streams_matcher, "") {
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg);
+  if (!packet.has_value()) {
+    *result_listener << "data didn't parse as an SctpPacket";
+    return false;
+  }
+
+  if (packet->descriptors()[0].type != ReConfigChunk::kType) {
+    *result_listener << "the first chunk in the packet is not a data chunk";
+    return false;
+  }
+
+  absl::optional<ReConfigChunk> reconfig =
+      ReConfigChunk::Parse(packet->descriptors()[0].data);
+  if (!reconfig.has_value()) {
+    *result_listener << "The first chunk didn't parse as a data chunk";
+    return false;
+  }
+
+  const Parameters& parameters = reconfig->parameters();
+  if (parameters.descriptors().size() != 1 ||
+      parameters.descriptors()[0].type !=
+          OutgoingSSNResetRequestParameter::kType) {
+    *result_listener << "Expected the reconfig chunk to have an outgoing SSN "
+                        "reset request parameter";
+    return false;
+  }
+
+  absl::optional<OutgoingSSNResetRequestParameter> p =
+      OutgoingSSNResetRequestParameter::Parse(parameters.descriptors()[0].data);
+  testing::Matcher<rtc::ArrayView<const StreamID>> matcher = streams_matcher;
+  if (!matcher.MatchAndExplain(p->stream_ids(), result_listener)) {
     return false;
   }
 
@@ -2232,5 +2271,76 @@ TEST(DcSctpSocketTest, CloseThreeStreamsAtTheSameTime) {
 
   ExchangeMessages(a, z);
 }
+
+TEST(DcSctpSocketTest, CloseStreamsWithPendingRequest) {
+  // Checks that stream reset requests are properly paused when they can't be
+  // immediately reset - i.e. when there is already an ongoing stream reset
+  // request (and there can only be a single one in-flight).
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+
+  EXPECT_CALL(z.cb, OnIncomingStreamsReset(ElementsAre(StreamID(1)))).Times(1);
+  EXPECT_CALL(z.cb, OnIncomingStreamsReset(
+                        UnorderedElementsAre(StreamID(2), StreamID(3))))
+      .Times(1);
+  EXPECT_CALL(a.cb, OnStreamsResetPerformed(ElementsAre(StreamID(1)))).Times(1);
+  EXPECT_CALL(a.cb, OnStreamsResetPerformed(
+                        UnorderedElementsAre(StreamID(2), StreamID(3))))
+      .Times(1);
+
+  ConnectSockets(a, z);
+
+  SendOptions send_options = {.unordered = IsUnordered(false)};
+
+  // Send a few ordered messages
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(53), {1, 2}), send_options);
+  a.socket.Send(DcSctpMessage(StreamID(2), PPID(53), {1, 2}), send_options);
+  a.socket.Send(DcSctpMessage(StreamID(3), PPID(53), {1, 2}), send_options);
+
+  ExchangeMessages(a, z);
+
+  // Receive these messages
+  absl::optional<DcSctpMessage> msg1 = z.cb.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg1.has_value());
+  EXPECT_EQ(msg1->stream_id(), StreamID(1));
+  absl::optional<DcSctpMessage> msg2 = z.cb.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg2.has_value());
+  EXPECT_EQ(msg2->stream_id(), StreamID(2));
+  absl::optional<DcSctpMessage> msg3 = z.cb.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg3.has_value());
+  EXPECT_EQ(msg3->stream_id(), StreamID(3));
+
+  // Reset the streams - not all at once.
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(1)}));
+
+  std::vector<uint8_t> packet = a.cb.ConsumeSentPacket();
+  EXPECT_THAT(packet, HasReconfigWithStreams(ElementsAre(StreamID(1))));
+  z.socket.ReceivePacket(std::move(packet));
+
+  // Sending more reset requests while this one is ongoing.
+
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(2)}));
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(3)}));
+
+  ExchangeMessages(a, z);
+
+  // Send a few more ordered messages
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(53), {1, 2}), send_options);
+  a.socket.Send(DcSctpMessage(StreamID(2), PPID(53), {1, 2}), send_options);
+  a.socket.Send(DcSctpMessage(StreamID(3), PPID(53), {1, 2}), send_options);
+
+  ExchangeMessages(a, z);
+
+  // Receive these messages
+  absl::optional<DcSctpMessage> msg4 = z.cb.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg4.has_value());
+  EXPECT_EQ(msg4->stream_id(), StreamID(1));
+  absl::optional<DcSctpMessage> msg5 = z.cb.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg5.has_value());
+  EXPECT_EQ(msg5->stream_id(), StreamID(2));
+  absl::optional<DcSctpMessage> msg6 = z.cb.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg6.has_value());
+  EXPECT_EQ(msg6->stream_id(), StreamID(3));
+}  // namespace
 }  // namespace
 }  // namespace dcsctp
