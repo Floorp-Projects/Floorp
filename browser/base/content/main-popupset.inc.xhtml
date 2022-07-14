@@ -544,6 +544,12 @@
               id="syncedTabsOpenSelected" where="current"/>
     <menuitem data-lazy-l10n-id="synced-tabs-context-open-in-tab"
               id="syncedTabsOpenSelectedInTab" where="tab"/>
+    <menu data-lazy-l10n-id="synced-tabs-context-open-in-container-tab"
+          id="syncedTabsOpenSelectedInContainerTab"
+          hidden="true">
+      <menupopup id="SyncedTabsOpenSelectedInContainerTabMenu"
+                 onpopupshowing="createUserContextMenu(event, { isContextMenu: true });"/>
+    </menu>
     <menuitem data-lazy-l10n-id="synced-tabs-context-open-in-window"
               id="syncedTabsOpenSelectedInWindow" where="window"/>
     <menuitem data-lazy-l10n-id="synced-tabs-context-open-in-private-window"

@@ -370,6 +370,15 @@ TabListView.prototype = {
     }
   },
 
+  onOpenSelectedInContainerTab(event) {
+    let item = this._getSelectedTabNode();
+    if (item) {
+      this.props.onOpenTab(item.dataset.url, "tab", {
+        userContextId: parseInt(event.target?.dataset.usercontextid),
+      });
+    }
+  },
+
   onOpenAllInTabs() {
     let item = this._getSelectedClientNode();
     if (item) {
@@ -460,6 +469,10 @@ TabListView.prototype = {
         switch (menu.getAttribute("id")) {
           case "SyncedTabsSidebarContext":
             this.handleContentContextMenuCommand(event);
+            break;
+
+          case "SyncedTabsOpenSelectedInContainerTabMenu":
+            this.onOpenSelectedInContainerTab(event);
             break;
 
           case "SyncedTabsSidebarTabsFilterContext":
@@ -556,6 +569,14 @@ TabListView.prototype = {
       if (showTabOptions) {
         if (el.getAttribute("id") == "syncedTabsOpenSelectedInPrivateWindow") {
           show = lazy.PrivateBrowsingUtils.enabled;
+        } else if (
+          el.getAttribute("id") === "syncedTabsOpenSelectedInContainerTab"
+        ) {
+          show =
+            Services.prefs.getBoolPref("privacy.userContext.enabled", false) &&
+            !lazy.PrivateBrowsingUtils.isWindowPrivate(
+              getChromeWindow(this._window)
+            );
         } else if (
           el.getAttribute("id") != "syncedTabsOpenAllInTabs" &&
           el.getAttribute("id") != "syncedTabsManageDevices"
