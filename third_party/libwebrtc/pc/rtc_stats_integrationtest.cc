@@ -1143,6 +1143,7 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsDefined(transport.srtp_cipher);
     verifier.TestMemberIsPositive<uint32_t>(
         transport.selected_candidate_pair_changes);
+    verifier.TestMemberIsDefined(transport.ice_role);
     return verifier.ExpectAllMembersSuccessfullyTested();
   }
 

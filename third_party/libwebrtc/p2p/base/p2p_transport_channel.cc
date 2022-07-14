@@ -1663,6 +1663,9 @@ bool P2PTransportChannel::GetStats(IceTransportStats* ice_transport_stats) {
   ice_transport_stats->bytes_received = bytes_received_;
   ice_transport_stats->packets_sent = packets_sent_;
   ice_transport_stats->packets_received = packets_received_;
+
+  ice_transport_stats->ice_role = GetIceRole();
+
   return true;
 }
 
