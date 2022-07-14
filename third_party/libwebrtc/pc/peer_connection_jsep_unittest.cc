@@ -1927,10 +1927,17 @@ TEST_F(PeerConnectionJsepTest, RollbackRemovesTransceiver) {
   caller->AddTransceiver(cricket::MEDIA_TYPE_AUDIO);
   auto callee = CreatePeerConnection();
   EXPECT_TRUE(callee->SetRemoteDescription(caller->CreateOffer()));
-  EXPECT_EQ(callee->pc()->GetTransceivers().size(), 1u);
+  ASSERT_EQ(callee->pc()->GetTransceivers().size(), 1u);
+  auto transceiver = callee->pc()->GetTransceivers()[0];
   EXPECT_TRUE(callee->SetRemoteDescription(caller->CreateRollback()));
   EXPECT_EQ(callee->pc()->GetTransceivers().size(), 0u);
   EXPECT_EQ(callee->observer()->remove_track_events_.size(), 1u);
+  // The removed transceiver should be stopped and its receiver track should be
+  // ended.
+  EXPECT_TRUE(transceiver->stopping());
+  EXPECT_TRUE(transceiver->stopping());
+  EXPECT_EQ(transceiver->receiver()->track()->state(),
+            MediaStreamTrackInterface::kEnded);
 }
 
 TEST_F(PeerConnectionJsepTest, RollbackKeepsTransceiverAndClearsMid) {
@@ -1949,6 +1956,13 @@ TEST_F(PeerConnectionJsepTest, RollbackKeepsTransceiverAndClearsMid) {
   EXPECT_TRUE(callee->SetRemoteDescription(caller->CreateOffer()));
   EXPECT_EQ(callee->pc()->GetTransceivers().size(), 1u);
   EXPECT_EQ(callee->observer()->remove_track_events_.size(), 1u);
+  // Because the transceiver is reusable, it must not be stopped and its
+  // receiver track must still be live.
+  auto transceiver = callee->pc()->GetTransceivers()[0];
+  EXPECT_FALSE(transceiver->stopping());
+  EXPECT_FALSE(transceiver->stopping());
+  EXPECT_EQ(transceiver->receiver()->track()->state(),
+            MediaStreamTrackInterface::kLive);
 }
 
 TEST_F(PeerConnectionJsepTest,

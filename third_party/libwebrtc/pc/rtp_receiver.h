@@ -47,15 +47,6 @@ class RtpReceiverInternal : public RtpReceiverInterface {
   // state set to `kEnded`, a final state that cannot be reversed.
   virtual void Stop() = 0;
 
-  // Call on the signaling thread to set the source's state to `ended` before
-  // clearing the media channel (`SetMediaChannel(nullptr)`) on the worker
-  // thread.
-  // The difference between `Stop()` and `SetSourceEnded()` is that the latter
-  // does not change the state of the associated track.
-  // NOTE: Calling this function should be followed with a call to
-  // `SetMediaChannel(nullptr)` on the worker thread, to complete the operation.
-  virtual void SetSourceEnded() = 0;
-
   // Sets the underlying MediaEngine channel associated with this RtpSender.
   // A VoiceMediaChannel should be used for audio RtpSenders and
   // a VideoMediaChannel should be used for video RtpSenders.

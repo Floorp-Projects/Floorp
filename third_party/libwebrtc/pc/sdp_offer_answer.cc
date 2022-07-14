@@ -2933,6 +2933,7 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
       if (transceiver->internal()->reused_for_addtrack()) {
         transceiver->internal()->set_created_by_addtrack(true);
       } else {
+        transceiver->internal()->StopTransceiverProcedure();
         transceivers()->Remove(transceiver);
       }
     }
@@ -3395,9 +3396,9 @@ RTCError SdpOfferAnswerHandler::UpdateTransceiversAndDataChannels(
           AssociateTransceiver(source, new_session.GetType(), i, new_content,
                                old_local_content, old_remote_content);
       if (!transceiver_or_error.ok()) {
-        // In the case where a transceiver is rejected locally, we don't
-        // expect to find a transceiver, but might find it in the case
-        // where state is still "stopping", not "stopped".
+        // In the case where a transceiver is rejected locally prior to being
+        // associated, we don't expect to find a transceiver, but might find it
+        // in the case where state is still "stopping", not "stopped".
         if (new_content.rejected) {
           continue;
         }
@@ -3406,6 +3407,36 @@ RTCError SdpOfferAnswerHandler::UpdateTransceiversAndDataChannels(
       auto transceiver = transceiver_or_error.MoveValue();
       RTCError error =
           UpdateTransceiverChannel(transceiver, new_content, bundle_group);
+      // Handle locally rejected content. This code path is only needed for apps
+      // that SDP munge. Remote rejected content is handled in
+      // ApplyRemoteDescriptionUpdateTransceiverState().
+      if (source == cricket::ContentSource::CS_LOCAL && new_content.rejected) {
+        // Local offer.
+        if (new_session.GetType() == SdpType::kOffer) {
+          // If the RtpTransceiver API was used, it would already have made the
+          // transceiver stopping. But if the rejection was caused by SDP
+          // munging then we need to ensure the transceiver is stopping here.
+          if (!transceiver->internal()->stopping()) {
+            transceiver->internal()->StopStandard();
+          }
+          RTC_DCHECK(transceiver->internal()->stopping());
+        } else {
+          // Local answer.
+          RTC_DCHECK(new_session.GetType() == SdpType::kAnswer ||
+                     new_session.GetType() == SdpType::kPrAnswer);
+          // When RtpTransceiver API is used, rejection happens in the offer and
+          // the transceiver will already be stopped at local answer time
+          // (calling stop between SRD(offer) and SLD(answer) would not reject
+          // the content in the answer - instead this would trigger a follow-up
+          // O/A exchange). So if the content was rejected but the transceiver
+          // is not already stopped, SDP munging has happened and we need to
+          // ensure the transceiver is stopped.
+          if (!transceiver->internal()->stopped()) {
+            transceiver->internal()->StopTransceiverProcedure();
+          }
+          RTC_DCHECK(transceiver->internal()->stopped());
+        }
+      }
       if (!error.ok()) {
         return error;
       }
