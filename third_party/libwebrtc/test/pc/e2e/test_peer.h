@@ -33,10 +33,9 @@ namespace webrtc_pc_e2e {
 // Describes a single participant in the call.
 class TestPeer final {
  public:
-  // TODO(titovartem): remove when downstream projects will stop using it.
-  Params* params() { return &params_; }
+  const Params& params() const { return params_; }
 
-  // TODO(titovartem): rename to params after removing the method above.
+  // TODO(titovartem): delete when downstreams will migrate to the new method.
   const Params& params2() const { return params_; }
 
   PeerConfigurerImpl::VideoSource ReleaseVideoSource(size_t i) {
