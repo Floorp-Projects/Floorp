@@ -17,6 +17,7 @@
 #include "media/engine/fake_webrtc_call.h"
 #include "p2p/base/fake_dtls_transport.h"
 #include "p2p/base/p2p_constants.h"
+#include "pc/channel.h"
 #include "pc/dtls_srtp_transport.h"
 #include "pc/rtp_transport_internal.h"
 #include "rtc_base/arraysize.h"

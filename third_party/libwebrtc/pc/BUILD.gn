@@ -59,7 +59,10 @@ rtc_library("proxy") {
 }
 
 rtc_source_set("channel") {
-  visibility = [ ":*" ]
+  visibility = [
+    ":*",
+    "../test/peer_scenario",
+  ]
   sources = [
     "channel.cc",
     "channel.h",
@@ -2617,6 +2620,7 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
 
     deps = [
+      ":channel",
       ":channel_interface",
       ":jitter_buffer_delay",
       ":libjingle_peerconnection",

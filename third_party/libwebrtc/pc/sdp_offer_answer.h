@@ -41,7 +41,6 @@
 #include "media/base/media_channel.h"
 #include "media/base/stream_params.h"
 #include "p2p/base/port_allocator.h"
-#include "pc/channel.h"
 #include "pc/channel_manager.h"
 #include "pc/connection_context.h"
 #include "pc/data_channel_controller.h"

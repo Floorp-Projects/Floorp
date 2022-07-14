@@ -18,6 +18,7 @@
 #include "api/media_types.h"
 #include "api/sequence_checker.h"
 #include "media/base/media_constants.h"
+#include "pc/channel.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/trace_event.h"
