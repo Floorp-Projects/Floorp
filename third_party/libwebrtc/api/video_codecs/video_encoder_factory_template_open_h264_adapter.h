@@ -30,8 +30,7 @@ struct OpenH264EncoderTemplateAdapter {
     return H264Encoder::Create(cricket::VideoCodec(format));
   }
 
-  static bool IsScalabilityModeSupported(
-      const absl::string_view scalability_mode) {
+  static bool IsScalabilityModeSupported(ScalabilityMode scalability_mode) {
     return H264Encoder::SupportsScalabilityMode(scalability_mode);
   }
 };

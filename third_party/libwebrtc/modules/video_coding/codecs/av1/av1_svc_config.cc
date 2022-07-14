@@ -21,6 +21,12 @@
 
 namespace webrtc {
 
+bool LibaomAv1EncoderSupportsScalabilityMode(ScalabilityMode scalability_mode) {
+  // For libaom AV1, the scalability mode is supported if we can create the
+  // scalability structure.
+  return ScalabilityStructureConfig(scalability_mode) != absl::nullopt;
+}
+
 bool SetAv1SvcConfig(VideoCodec& video_codec) {
   RTC_DCHECK_EQ(video_codec.codecType, kVideoCodecAV1);
 

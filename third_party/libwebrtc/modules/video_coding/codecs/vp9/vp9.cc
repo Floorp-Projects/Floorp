@@ -13,6 +13,7 @@
 #include <memory>
 
 #include "api/transport/field_trial_based_config.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/vp9_profile.h"
 #include "modules/video_coding/codecs/vp9/libvpx_vp9_decoder.h"
@@ -24,11 +25,18 @@
 
 namespace webrtc {
 namespace {
-constexpr absl::string_view kSupportedScalabilityModes[] = {
-    "L1T2",     "L1T3",     "L2T1",    "L2T2",  "L2T3",     "L3T1",
-    "L3T2",     "L3T3",     "L1T2h",   "L1T3h", "L2T1h",    "L2T2h",
-    "L2T3h",    "L3T1h",    "L3T2h",   "L3T3h", "L2T2_KEY", "L2T3_KEY",
-    "L3T1_KEY", "L3T2_KEY", "L3T3_KEY"};
+constexpr ScalabilityMode kSupportedScalabilityModes[] = {
+    ScalabilityMode::kL1T2,     ScalabilityMode::kL1T3,
+    ScalabilityMode::kL2T1,     ScalabilityMode::kL2T2,
+    ScalabilityMode::kL2T3,     ScalabilityMode::kL3T1,
+    ScalabilityMode::kL3T2,     ScalabilityMode::kL3T3,
+    ScalabilityMode::kL1T2h,    ScalabilityMode::kL1T3h,
+    ScalabilityMode::kL2T1h,    ScalabilityMode::kL2T2h,
+    ScalabilityMode::kL2T3h,    ScalabilityMode::kL3T1h,
+    ScalabilityMode::kL3T2h,    ScalabilityMode::kL3T3h,
+    ScalabilityMode::kL2T2_KEY, ScalabilityMode::kL2T3_KEY,
+    ScalabilityMode::kL3T1_KEY, ScalabilityMode::kL3T2_KEY,
+    ScalabilityMode::kL3T3_KEY};
 }  // namespace
 
 std::vector<SdpVideoFormat> SupportedVP9Codecs() {
@@ -93,7 +101,7 @@ std::unique_ptr<VP9Encoder> VP9Encoder::Create(
 #endif
 }
 
-bool VP9Encoder::SupportsScalabilityMode(absl::string_view scalability_mode) {
+bool VP9Encoder::SupportsScalabilityMode(ScalabilityMode scalability_mode) {
   for (const auto& entry : kSupportedScalabilityModes) {
     if (entry == scalability_mode) {
       return true;

@@ -44,7 +44,8 @@ bool IsH264CodecSupported() {
 #endif
 }
 
-constexpr absl::string_view kSupportedScalabilityModes[] = {"L1T2", "L1T3"};
+constexpr ScalabilityMode kSupportedScalabilityModes[] = {
+    ScalabilityMode::kL1T1, ScalabilityMode::kL1T2, ScalabilityMode::kL1T3};
 
 }  // namespace
 
@@ -127,7 +128,7 @@ bool H264Encoder::IsSupported() {
   return IsH264CodecSupported();
 }
 
-bool H264Encoder::SupportsScalabilityMode(absl::string_view scalability_mode) {
+bool H264Encoder::SupportsScalabilityMode(ScalabilityMode scalability_mode) {
   for (const auto& entry : kSupportedScalabilityModes) {
     if (entry == scalability_mode) {
       return true;

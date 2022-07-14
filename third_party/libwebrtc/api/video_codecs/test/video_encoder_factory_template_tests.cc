@@ -40,9 +40,9 @@ struct FooEncoderTemplateAdapter {
     return std::make_unique<testing::StrictMock<MockVideoEncoder>>();
   }
 
-  static bool IsScalabilityModeSupported(
-      const absl::string_view scalability_mode) {
-    return scalability_mode == "L1T2" || scalability_mode == "L1T3";
+  static bool IsScalabilityModeSupported(ScalabilityMode scalability_mode) {
+    return scalability_mode == ScalabilityMode::kL1T2 ||
+           scalability_mode == ScalabilityMode::kL1T3;
   }
 };
 
@@ -56,10 +56,11 @@ struct BarEncoderTemplateAdapter {
     return std::make_unique<testing::StrictMock<MockVideoEncoder>>();
   }
 
-  static bool IsScalabilityModeSupported(
-      const absl::string_view scalability_mode) {
-    return scalability_mode == "L1T2" || scalability_mode == "L1T3" ||
-           scalability_mode == "S2T2" || scalability_mode == "S2T3";
+  static bool IsScalabilityModeSupported(ScalabilityMode scalability_mode) {
+    return scalability_mode == ScalabilityMode::kL1T2 ||
+           scalability_mode == ScalabilityMode::kL1T3 ||
+           scalability_mode == ScalabilityMode::kS2T1 ||
+           scalability_mode == ScalabilityMode::kS3T3;
   }
 };
 
@@ -76,7 +77,7 @@ TEST(VideoEncoderFactoryTemplate, OneTemplateAdapterCodecSupport) {
               Field(&CodecSupport::is_supported, true));
   EXPECT_THAT(factory.QueryCodecSupport(kFooSdp, "L1T2"),
               Field(&CodecSupport::is_supported, true));
-  EXPECT_THAT(factory.QueryCodecSupport(kFooSdp, "S2T3"),
+  EXPECT_THAT(factory.QueryCodecSupport(kFooSdp, "S3T3"),
               Field(&CodecSupport::is_supported, false));
   EXPECT_THAT(factory.QueryCodecSupport(SdpVideoFormat("FooX"), absl::nullopt),
               Field(&CodecSupport::is_supported, false));
@@ -110,13 +111,13 @@ TEST(VideoEncoderFactoryTemplate, TwoTemplateAdaptersCodecSupport) {
               Field(&CodecSupport::is_supported, true));
   EXPECT_THAT(factory.QueryCodecSupport(kFooSdp, "L1T2"),
               Field(&CodecSupport::is_supported, true));
-  EXPECT_THAT(factory.QueryCodecSupport(kFooSdp, "S2T3"),
+  EXPECT_THAT(factory.QueryCodecSupport(kFooSdp, "S3T3"),
               Field(&CodecSupport::is_supported, false));
   EXPECT_THAT(factory.QueryCodecSupport(kBarLowSdp, absl::nullopt),
               Field(&CodecSupport::is_supported, true));
   EXPECT_THAT(factory.QueryCodecSupport(kBarHighSdp, absl::nullopt),
               Field(&CodecSupport::is_supported, true));
-  EXPECT_THAT(factory.QueryCodecSupport(kBarLowSdp, "S2T2"),
+  EXPECT_THAT(factory.QueryCodecSupport(kBarLowSdp, "S2T1"),
               Field(&CodecSupport::is_supported, true));
   EXPECT_THAT(factory.QueryCodecSupport(kBarHighSdp, "S3T2"),
               Field(&CodecSupport::is_supported, false));
