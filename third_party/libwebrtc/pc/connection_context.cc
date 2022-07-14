@@ -16,6 +16,7 @@
 #include "api/transport/field_trial_based_config.h"
 #include "media/base/media_engine.h"
 #include "media/sctp/sctp_transport_factory.h"
+#include "pc/channel_manager.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/socket_server.h"

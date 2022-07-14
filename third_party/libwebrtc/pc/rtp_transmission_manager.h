@@ -27,7 +27,6 @@
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
 #include "media/base/media_channel.h"
-#include "pc/channel_manager.h"
 #include "pc/rtp_receiver.h"
 #include "pc/rtp_receiver_proxy.h"
 #include "pc/rtp_sender.h"
@@ -40,6 +39,10 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/weak_ptr.h"
+
+namespace cricket {
+class ChannelManager;
+}
 
 namespace rtc {
 class Thread;
@@ -255,9 +258,9 @@ class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
 
   bool closed_ = false;
   bool const is_unified_plan_;
-  rtc::Thread* signaling_thread_;
-  rtc::Thread* worker_thread_;
-  cricket::ChannelManager* channel_manager_;
+  rtc::Thread* const signaling_thread_;
+  rtc::Thread* const worker_thread_;
+  cricket::ChannelManager* const channel_manager_;
   UsagePattern* usage_pattern_;
   PeerConnectionObserver* observer_;
   StatsCollectorInterface* const stats_;

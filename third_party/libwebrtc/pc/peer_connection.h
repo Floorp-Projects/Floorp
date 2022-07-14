@@ -55,7 +55,6 @@
 #include "p2p/base/port_allocator.h"
 #include "p2p/base/transport_description.h"
 #include "pc/channel_interface.h"
-#include "pc/channel_manager.h"
 #include "pc/connection_context.h"
 #include "pc/data_channel_controller.h"
 #include "pc/data_channel_utils.h"
@@ -84,6 +83,10 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/weak_ptr.h"
+
+namespace cricket {
+class ChannelManager;
+}
 
 namespace webrtc {
 
@@ -340,7 +343,6 @@ class PeerConnection : public PeerConnectionInternal,
   const RtpTransmissionManager* rtp_manager() const override {
     return rtp_manager_.get();
   }
-  cricket::ChannelManager* channel_manager();
 
   JsepTransportController* transport_controller_s() override {
     RTC_DCHECK_RUN_ON(signaling_thread());
@@ -588,6 +590,10 @@ class PeerConnection : public PeerConnectionInternal,
   std::function<void(const rtc::CopyOnWriteBuffer& packet,
                      int64_t packet_time_us)>
   InitializeRtcpCallback();
+
+  cricket::ChannelManager* channel_manager() {
+    return context_->channel_manager();
+  }
 
   const rtc::scoped_refptr<ConnectionContext> context_;
   // Field trials active for this PeerConnection is the first of:

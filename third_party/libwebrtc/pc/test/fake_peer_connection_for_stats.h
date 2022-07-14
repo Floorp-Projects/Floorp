@@ -20,6 +20,7 @@
 
 #include "media/base/fake_media_engine.h"
 #include "pc/channel.h"
+#include "pc/channel_manager.h"
 #include "pc/stream_collection.h"
 #include "pc/test/fake_data_channel_provider.h"
 #include "pc/test/fake_peer_connection_base.h"
