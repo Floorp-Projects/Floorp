@@ -131,6 +131,8 @@
   [self.classMock verify];
 }
 
+// TODO(crbug.com/webrtc/13990): method was not invoked: drawFrame.
+#if !TARGET_IPHONE_SIMULATOR
 - (void)testRTCVideoRenderFrameCallbackI420 {
   // given
   OCMStub([self.classMock isMetalAvailable]).andReturn(YES);
@@ -255,6 +257,7 @@
 
   [self.rendererNV12Mock verify];
 }
+#endif
 
 - (void)testReportsSizeChangesToDelegate {
   OCMStub([self.classMock isMetalAvailable]).andReturn(YES);
