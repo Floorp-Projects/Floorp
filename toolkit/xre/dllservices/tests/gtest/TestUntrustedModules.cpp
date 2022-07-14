@@ -225,19 +225,19 @@ class UntrustedModulesFixture : public TelemetryTestFixture {
     EXPECT_TRUE(!!serializer);
     aDataFetcher(serializer);
 
-    JS::RootedValue jsval(cx.GetJSContext());
+    JS::Rooted<JS::Value> jsval(cx.GetJSContext());
     serializer.GetObject(&jsval);
 
     nsAutoString json;
     EXPECT_TRUE(nsContentUtils::StringifyJSON(cx.GetJSContext(), &jsval, json));
 
-    JS::RootedObject re(
+    JS::Rooted<JSObject*> re(
         cx.GetJSContext(),
         JS::NewUCRegExpObject(cx.GetJSContext(), aPattern, aPatternLength,
                               JS::RegExpFlag::Global));
     EXPECT_TRUE(!!re);
 
-    JS::RootedValue matchResult(cx.GetJSContext(), JS::NullValue());
+    JS::Rooted<JS::Value> matchResult(cx.GetJSContext(), JS::NullValue());
     size_t idx = 0;
     EXPECT_TRUE(JS::ExecuteRegExpNoStatics(cx.GetJSContext(), re, json.get(),
                                            json.Length(), &idx, true,

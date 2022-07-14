@@ -205,7 +205,7 @@ class AbstractResult : public nsINativeOSFileResult {
   }
 
   virtual nsresult GetCacheableResult(JSContext* cx,
-                                      JS::MutableHandleValue aResult) = 0;
+                                      JS::MutableHandle<JS::Value> aResult) = 0;
 
  private:
   TimeStamp mStartDate;
@@ -248,7 +248,7 @@ AbstractResult::GetExecutionDurationMS(double* aExecutionDuration) {
 }
 
 NS_IMETHODIMP
-AbstractResult::GetResult(JSContext* cx, JS::MutableHandleValue aResult) {
+AbstractResult::GetResult(JSContext* cx, JS::MutableHandle<JS::Value> aResult) {
   if (mCachedResult.isUndefined()) {
     nsresult rv = GetCacheableResult(cx, aResult);
     if (NS_FAILED(rv)) {
@@ -286,14 +286,14 @@ class StringResult final : public AbstractResult {
 
  protected:
   nsresult GetCacheableResult(JSContext* cx,
-                              JS::MutableHandleValue aResult) override;
+                              JS::MutableHandle<JS::Value> aResult) override;
 
  private:
   nsString mContents;
 };
 
-nsresult StringResult::GetCacheableResult(JSContext* cx,
-                                          JS::MutableHandleValue aResult) {
+nsresult StringResult::GetCacheableResult(
+    JSContext* cx, JS::MutableHandle<JS::Value> aResult) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mContents.get());
 
@@ -330,7 +330,7 @@ class TypedArrayResult final : public AbstractResult {
 
  protected:
   nsresult GetCacheableResult(JSContext* cx,
-                              JS::MutableHandleValue aResult) override;
+                              JS::MutableHandle<JS::Value> aResult) override;
 
  private:
   ScopedArrayBufferContents mContents;
@@ -388,14 +388,14 @@ class Int32Result final : public AbstractResult {
 
  protected:
   nsresult GetCacheableResult(JSContext* cx,
-                              JS::MutableHandleValue aResult) override;
+                              JS::MutableHandle<JS::Value> aResult) override;
 
  private:
   int32_t mContents;
 };
 
 nsresult Int32Result::GetCacheableResult(JSContext* cx,
-                                         JS::MutableHandleValue aResult) {
+                                         JS::MutableHandle<JS::Value> aResult) {
   MOZ_ASSERT(NS_IsMainThread());
   aResult.set(JS::NumberValue(mContents));
   return NS_OK;
@@ -1120,7 +1120,7 @@ NS_IMPL_ISUPPORTS(NativeOSFileInternalsService,
 
 NS_IMETHODIMP
 NativeOSFileInternalsService::Read(const nsAString& aPath,
-                                   JS::HandleValue aOptions,
+                                   JS::Handle<JS::Value> aOptions,
                                    nsINativeOSFileSuccessCallback* aOnSuccess,
                                    nsINativeOSFileErrorCallback* aOnError,
                                    JSContext* cx) {
@@ -1175,8 +1175,8 @@ NativeOSFileInternalsService::Read(const nsAString& aPath,
 // Note: This method steals the contents of `aBuffer`.
 NS_IMETHODIMP
 NativeOSFileInternalsService::WriteAtomic(
-    const nsAString& aPath, JS::HandleValue aBuffer, JS::HandleValue aOptions,
-    nsINativeOSFileSuccessCallback* aOnSuccess,
+    const nsAString& aPath, JS::Handle<JS::Value> aBuffer,
+    JS::Handle<JS::Value> aOptions, nsINativeOSFileSuccessCallback* aOnSuccess,
     nsINativeOSFileErrorCallback* aOnError, JSContext* cx) {
   MOZ_ASSERT(NS_IsMainThread());
   // Extract typed-array/string into buffer. We also need to store the length
@@ -1189,7 +1189,7 @@ NativeOSFileInternalsService::WriteAtomic(
     return NS_ERROR_INVALID_ARG;
   }
 
-  JS::RootedObject bufferObject(cx, nullptr);
+  JS::Rooted<JSObject*> bufferObject(cx, nullptr);
   if (!JS_ValueToObject(cx, aBuffer, &bufferObject)) {
     return NS_ERROR_FAILURE;
   }

@@ -36,7 +36,7 @@ TEST_F(NimbusTelemetryFixture, NimbusFeaturesTelemetry) {
   ASSERT_EQ(NimbusFeatures::RecordExposureEvent("bar"_ns), NS_ERROR_UNEXPECTED)
       << "Should fail because we don't have an experiment for bar";
 
-  JS::RootedValue eventsSnapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> eventsSnapshot(cx.GetJSContext());
   GetEventSnapshot(cx.GetJSContext(), &eventsSnapshot);
   ASSERT_TRUE(EventPresent(cx.GetJSContext(), eventsSnapshot, "normandy"_ns,
                            "expose"_ns, "nimbus_experiment"_ns));
