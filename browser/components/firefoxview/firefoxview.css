@@ -360,9 +360,19 @@ body > main > aside {
 .synced-tab-li:not(:first-child) > .synced-tab-li-title,
 .synced-tab-li-device,
 .synced-tab-li-url-device {
+  overflow: hidden;
+}
+
+.closed-tab-li-title,
+.synced-tab-li:not(:first-child) > .synced-tab-li-title,
+.synced-tab-li-device {
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
+}
+
+.synced-tab-li-url,
+.closed-tab-li-url {
+  word-break: break-word;
 }
 
 .synced-tabs-list {

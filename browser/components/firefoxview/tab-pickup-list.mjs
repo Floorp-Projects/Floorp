@@ -198,6 +198,7 @@ class TabPickupList extends HTMLElement {
     device.title = deviceText;
 
     url.textContent = formatURIForDisplay(tab.url);
+    url.title = tab.url;
     url.classList.add("synced-tab-li-url");
     device.classList.add("synced-tab-li-device");
 
