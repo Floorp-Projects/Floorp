@@ -422,6 +422,7 @@ class PeerConnectionE2EQualityTestFixture {
     // subscribed to with specific resolution.
     std::vector<std::string> GetSubscribedPeers() const {
       std::vector<std::string> subscribed_streams;
+      subscribed_streams.reserve(peers_resolution_.size());
       for (const auto& entry : peers_resolution_) {
         subscribed_streams.push_back(entry.first);
       }
