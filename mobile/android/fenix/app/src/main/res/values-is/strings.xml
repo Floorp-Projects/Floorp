@@ -41,8 +41,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Nýleg bókamerki</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Birta allt</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Sýna öll vistuð bókamerki</string>
 
@@ -356,7 +354,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Sérsníða</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Samstilla bókamerki, feril og fleira með Firefox reikningnum þínum</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Samstilla bókamerki, feril og fleira með Firefox reikningnum þínum</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Skráðu þig inn til að samstilla flipana þína, bókamerki, lykilorð og fleira.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox reikningur</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -528,7 +528,9 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Kveikja á samstillingu</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Kveikja á samstillingu</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Samstilltu og vistaðu gögnin þín</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Skráðu þig inn til að tengjast aftur</string>
     <!-- Preference for removing FxA account -->
@@ -1065,8 +1067,6 @@
     <string name="snackbar_tabs_closed">Flipum lokað</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Bókamerki vistuð!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Bætt við toppvefina!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Bætt við flýtileiðir!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1683,10 +1683,6 @@
     <string name="no_site_exceptions">Engar undantekningar</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ertu viss um að þú viljir eyða þessu bókamerki?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Bæta við helstu vefsvæði</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Fjarlægja af lista yfir vinsæl vefsvæði</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Bæta við flýtileiðir</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1763,12 +1759,8 @@
     <string name="synced_tabs_collapse_group">Fella saman hóp samstilltra flipa</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Ekki hægt að bæta fleiri vefjum við helstu vefsvæði</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Hámarki flýtileiða náð</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Fjarlægðu eitt til að bæta við nýju helstu vefsvæði. Ýttu og haltu niðri á síðuna og veldu að fjarlægja.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">Fjarlægðu eina til að bæta við nýrri flýtileið. Ýttu og haltu niðri á síðuna og veldu að fjarlægja.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1778,8 +1770,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">Flýtileiðir</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Heiti</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Nafn helsta vefsvæðis</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Heiti flýtileiðar</string>
 	<!-- Button caption to confirm the renaming of the top site. -->

@@ -41,8 +41,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Nodau tudalen diweddar</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Dangos y cyfan</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Dangos pob nod tudalen wedi’u cadw</string>
 
@@ -356,7 +354,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Cyfaddasu</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Cydweddu nodau tudalen, hanes, a mwy gyda’ch Cyfrif Firefox</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Cydweddu nodau tudalen, hanes, a mwy gyda’ch Cyfrif Firefox</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Mewngofnodwch i gydweddu tabiau, nodau tudalen, cyfrineiriau, a rhagor.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Cyfrif Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -528,7 +528,9 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Cychwyn Sync</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Cychwyn Sync</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Cydweddu a chadw eich data</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Mewngofnodi i ailgysylltu</string>
     <!-- Preference for removing FxA account -->
@@ -1068,8 +1070,6 @@
     <string name="snackbar_tabs_closed">Tab wedi’i gau</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Nodau tudalen wedi’u cadw!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Cadw fel Hoff wefan!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Ychwanegwyd at y llwybrau byr!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1687,10 +1687,6 @@
     <string name="no_site_exceptions">Dim eithriadau i wefannau</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ydych chi’n siŵr eich bod am ddileu’r nod tudalen yma?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Ychwanegu i Hoff wefan</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Tynnu o’r hoff wefannau</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Ychwanegu at y llwybrau byr</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1767,12 +1763,8 @@
     <string name="synced_tabs_collapse_group">Cau’r grŵp o dabiau wedi’u cydweddu</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Wedi cyrraedd terfyn nifer eich Hoff wefannau</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Cyrhaeddwyd terfyn llwybr byr</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">I ychwanegu hoff wefan newydd, tynnwch un. Pwyswch a dal y wefan a dewis tynnu.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">I ychwanegu llwybr byr newydd, tynnwch un. Cyffyrddwch a daliwch y wefan a dewiswch dileu.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1782,8 +1774,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">Llwybrau byr</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Enw</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Enw’r hoff wefan</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Enw llwybr byr</string>
 	<!-- Button caption to confirm the renaming of the top site. -->

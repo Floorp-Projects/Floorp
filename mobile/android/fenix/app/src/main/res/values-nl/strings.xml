@@ -44,8 +44,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Recente bladwijzers</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Alles tonen</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Alle opgeslagen bladwijzers tonen</string>
 
@@ -364,7 +362,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Aanpassen</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Synchroniseer bladwijzers, geschiedenis en meer met uw Firefox-account</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Synchroniseer bladwijzers, geschiedenis en meer met uw Firefox-account</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Meld u aan om uw tabbladen, bladwijzers, wachtwoorden en meer te synchroniseren.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox-account</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -537,7 +537,9 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Sync inschakelen</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Sync inschakelen</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Synchroniseren en uw gegevens opslaan</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Aanmelden om opnieuw te verbinden</string>
     <!-- Preference for removing FxA account -->
@@ -1082,8 +1084,6 @@
     <string name="snackbar_tabs_closed">Tabbladen gesloten</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Bladwijzers opgeslagen!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Toegevoegd aan topwebsites!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Toegevoegd aan snelkoppelingen!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1700,10 +1700,6 @@
     <string name="no_site_exceptions">Geen website-uitzonderingen</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Weet u zeker dat u deze bladwijzer wilt verwijderen?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Aan topwebsites toevoegen</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Verwijderen uit topwebsites</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Aan snelkoppelingen toevoegen</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1780,12 +1776,8 @@
     <string name="synced_tabs_collapse_group">Groep gesynchroniseerde tabbladen samenvouwen</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Limiet voor topwebsites bereikt</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Snelkoppelingslimiet bereikt</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Verwijder een topwebsite om er een toe te voegen. Houd de website ingedrukt en selecteer Verwijderen.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">Verwijder een snelkoppeling om er een toe te voegen. Houd de website ingedrukt en selecteer Verwijderen.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1795,8 +1787,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">Snelkoppelingen</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Naam</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Naam topwebsite</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Naam snelkoppeling</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
