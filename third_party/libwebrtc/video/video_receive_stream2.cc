@@ -245,9 +245,6 @@ VideoReceiveStream2::VideoReceiveStream2(
       rtp_stream_sync_(call->worker_thread(), this),
       max_wait_for_keyframe_ms_(DetermineMaxWaitForFrame(config_, true)),
       max_wait_for_frame_ms_(DetermineMaxWaitForFrame(config_, false)),
-      low_latency_renderer_enabled_("enabled", true),
-      low_latency_renderer_include_predecode_buffer_("include_predecode_buffer",
-                                                     true),
       maximum_pre_stream_decoders_("max", kDefaultMaximumPreStreamDecoders),
       decode_sync_(decode_sync),
       decode_queue_(task_queue_factory_->CreateTaskQueue(
@@ -287,9 +284,6 @@ VideoReceiveStream2::VideoReceiveStream2(
                                                        true);
   }
 
-  ParseFieldTrial({&low_latency_renderer_enabled_,
-                   &low_latency_renderer_include_predecode_buffer_},
-                  call_->trials().Lookup("WebRTC-LowLatencyRenderer"));
   ParseFieldTrial(
       {
           &maximum_pre_stream_decoders_,
@@ -986,18 +980,16 @@ void VideoReceiveStream2::UpdatePlayoutDelays() const {
   if (minimum_delay_ms >= 0) {
     timing_->set_min_playout_delay(TimeDelta::Millis(minimum_delay_ms));
     if (frame_minimum_playout_delay_ms_ == 0 &&
-        frame_maximum_playout_delay_ms_ > 0 && low_latency_renderer_enabled_) {
+        frame_maximum_playout_delay_ms_ > 0) {
       // TODO(kron): Estimate frame rate from video stream.
       constexpr double kFrameRate = 60.0;
       // Convert playout delay in ms to number of frames.
       int max_composition_delay_in_frames = std::lrint(
           static_cast<double>(frame_maximum_playout_delay_ms_ * kFrameRate) /
           rtc::kNumMillisecsPerSec);
-      if (low_latency_renderer_include_predecode_buffer_) {
-        // Subtract frames in buffer.
-        max_composition_delay_in_frames = std::max<int16_t>(
-            max_composition_delay_in_frames - frame_buffer_->Size(), 0);
-      }
+      // Subtract frames in buffer.
+      max_composition_delay_in_frames = std::max<int16_t>(
+          max_composition_delay_in_frames - frame_buffer_->Size(), 0);
       timing_->SetMaxCompositionDelayInFrames(
           absl::make_optional(max_composition_delay_in_frames));
     }

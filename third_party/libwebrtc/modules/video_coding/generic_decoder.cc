@@ -33,18 +33,12 @@ VCMDecodedFrameCallback::VCMDecodedFrameCallback(
     : _clock(clock),
       _timing(timing),
       _timestampMap(kDecoderFrameMemoryLength),
-      _extra_decode_time("t", absl::nullopt),
-      low_latency_renderer_enabled_("enabled", true),
-      low_latency_renderer_include_predecode_buffer_("include_predecode_buffer",
-                                                     true) {
+      _extra_decode_time("t", absl::nullopt) {
   ntp_offset_ =
       _clock->CurrentNtpInMilliseconds() - _clock->TimeInMilliseconds();
 
   ParseFieldTrial({&_extra_decode_time},
                   field_trials.Lookup("WebRTC-SlowDownDecoder"));
-  ParseFieldTrial({&low_latency_renderer_enabled_,
-                   &low_latency_renderer_include_predecode_buffer_},
-                  field_trials.Lookup("WebRTC-LowLatencyRenderer"));
 }
 
 VCMDecodedFrameCallback::~VCMDecodedFrameCallback() {}
@@ -123,19 +117,15 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
   decodedImage.set_packet_infos(frameInfo->packet_infos);
   decodedImage.set_rotation(frameInfo->rotation);
 
-  if (low_latency_renderer_enabled_) {
-    absl::optional<int> max_composition_delay_in_frames =
-        _timing->MaxCompositionDelayInFrames();
-    if (max_composition_delay_in_frames) {
-      // Subtract frames that are in flight.
-      if (low_latency_renderer_include_predecode_buffer_) {
-        *max_composition_delay_in_frames -= timestamp_map_size;
-        *max_composition_delay_in_frames =
-            std::max(0, *max_composition_delay_in_frames);
-      }
-      decodedImage.set_max_composition_delay_in_frames(
-          max_composition_delay_in_frames);
-    }
+  absl::optional<int> max_composition_delay_in_frames =
+      _timing->MaxCompositionDelayInFrames();
+  if (max_composition_delay_in_frames) {
+    // Subtract frames that are in flight.
+    *max_composition_delay_in_frames -= timestamp_map_size;
+    *max_composition_delay_in_frames =
+        std::max(0, *max_composition_delay_in_frames);
+    decodedImage.set_max_composition_delay_in_frames(
+        max_composition_delay_in_frames);
   }
 
   RTC_DCHECK(frameInfo->decodeStart);

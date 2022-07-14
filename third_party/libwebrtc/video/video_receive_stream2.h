@@ -309,16 +309,6 @@ class VideoReceiveStream2
   std::vector<std::unique_ptr<EncodedFrame>> buffered_encoded_frames_
       RTC_GUARDED_BY(decode_queue_);
 
-  // Set by the field trial WebRTC-LowLatencyRenderer. The parameter `enabled`
-  // determines if the low-latency renderer algorithm should be used for the
-  // case min playout delay=0 and max playout delay>0.
-  FieldTrialParameter<bool> low_latency_renderer_enabled_;
-  // Set by the field trial WebRTC-LowLatencyRenderer. The parameter
-  // `include_predecode_buffer` determines if the predecode buffer should be
-  // taken into account when calculating maximum number of frames in composition
-  // queue.
-  FieldTrialParameter<bool> low_latency_renderer_include_predecode_buffer_;
-
   // Set by the field trial WebRTC-PreStreamDecoders. The parameter `max`
   // determines the maximum number of decoders that are created up front before
   // any video frame has been received.
