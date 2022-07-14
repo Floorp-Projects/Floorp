@@ -6,6 +6,7 @@ package org.mozilla.geckoview.test
 
 import androidx.test.filters.MediumTest
 import android.util.SparseArray
+import android.view.KeyEvent
 import android.view.View
 import org.hamcrest.Matchers.*
 import org.junit.Test
@@ -13,6 +14,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.mozilla.geckoview.Autofill
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.TextInputDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
 
 @RunWith(Parameterized::class)
@@ -509,5 +511,27 @@ class AutofillDelegateTest : BaseSessionTest() {
         // Each page has 3 nodes for autofill.
         assertThat("autofill hint count",
                    checkAutofillChild(root), equalTo(6))
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test fun autofillWaitForKeyboard() {
+        // Wait for the accessibility nodes to populate.
+        mainSession.loadUri(pageUrl)
+        mainSession.waitForPageStop()
+
+        mainSession.pressKey(KeyEvent.KEYCODE_CTRL_LEFT)
+        mainSession.evaluateJS("document.querySelector('#pass2').focus()")
+
+        sessionRule.waitUntilCalled(object : Autofill.Delegate, TextInputDelegate {
+            @AssertCalled(order = [2])
+            override fun onNodeFocus(session: GeckoSession,
+                                     node: Autofill.Node,
+                                     data: Autofill.NodeData) {
+                assertThat("ID should be valid", node, notNullValue())
+            }
+
+            @AssertCalled(order = [1])
+            override fun showSoftInput(session: GeckoSession) {}
+        })
     }
 }
