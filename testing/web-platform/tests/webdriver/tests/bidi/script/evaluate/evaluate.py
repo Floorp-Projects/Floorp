@@ -1,8 +1,5 @@
 import pytest
-from webdriver.bidi.modules.script import ContextTarget, ScriptEvaluateResultException
-
-from ... import any_int, any_string, recursive_compare
-from .. import any_stack_trace
+from webdriver.bidi.modules.script import ContextTarget
 
 
 @pytest.mark.asyncio
@@ -15,47 +12,6 @@ async def test_eval(bidi_session, top_context):
     assert result == {
         "type": "number",
         "value": 3}
-
-
-@pytest.mark.asyncio
-async def test_params_expression_invalid_script(bidi_session, top_context):
-    with pytest.raises(ScriptEvaluateResultException) as exception:
-        await bidi_session.script.evaluate(
-            expression='))) !!@@## some invalid JS script (((',
-            target=ContextTarget(top_context["context"]),
-            await_promise=True)
-    recursive_compare({
-        'realm': any_string,
-        'exceptionDetails': {
-            'columnNumber': any_int,
-            'exception': {
-                'handle': any_string,
-                'type': 'error'},
-            'lineNumber': any_int,
-            'stackTrace': any_stack_trace,
-            'text': any_string}},
-        exception.value.result)
-
-
-@pytest.mark.asyncio
-async def test_exception(bidi_session, top_context):
-    with pytest.raises(ScriptEvaluateResultException) as exception:
-        await bidi_session.script.evaluate(
-            expression="throw Error('SOME_ERROR_MESSAGE')",
-            target=ContextTarget(top_context["context"]),
-            await_promise=True)
-
-    recursive_compare({
-        'realm': any_string,
-        'exceptionDetails': {
-            'columnNumber': any_int,
-            'exception': {
-                'handle': any_string,
-                'type': 'error'},
-            'lineNumber': any_int,
-            'stackTrace': any_stack_trace,
-            'text': any_string}},
-        exception.value.result)
 
 
 @pytest.mark.asyncio
