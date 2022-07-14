@@ -27,8 +27,6 @@ var prefs = [
   // Increase the content response timeout because some tests do preventDefault
   // and we want to make sure APZ actually waits for them.
   ["apz.content_response_timeout", 60000],
-  // Use the desktop zooming scrollbars
-  ["apz.force_disable_desktop_zooming_scrollbars", false],
   // Force consistent scroll-to-click behaviour across all platforms.
   ["ui.scrollToClick", 0],
   // Disable touch resampling so that touch events are processed without delay
